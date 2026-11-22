@@ -9998,6 +9998,7 @@
       "TrenchInfantry": 0
     }
   },
+  "projectFoodPercent": 25,
   "projectGoldPercent": 25,
   "projectSciencePercent": 10,
   "promotion": {
@@ -10163,7 +10164,7 @@
   "rocketArtilleryRange": 3,
   "rollMax": 120,
   "rollMin": 80,
-  "saveVersion": 54,
+  "saveVersion": 55,
   "settlerCostStep": 50,
   "siege": {
     "baseGold": 160,

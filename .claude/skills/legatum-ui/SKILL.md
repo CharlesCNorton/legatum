@@ -83,6 +83,7 @@ This file holds the current rules, one line each. The user's words, dates, as-bu
 - Eliminated empires leave active lists; the race panel always shows the race (extras shrink first) (user, 2026-10-06, 2026-10-17).
 - Lobby: Easy, Normal and Hard only; a new Single Player lobby starts at the map size's default count (6 on Standard); choosing a map size snaps the count; no game-type preset bar (2026-11-21, user 2026-11-03, 2026-10-06, 2026-10-27). Two settings never share a name (user, 2026-11-15).
 - No "coalition" in the UI; say the plain facts (user, 2026-11-11).
+- A select or chip gets a fixed width only when its longest option fits; when option labels change, check the longest at 1000x600. A reason line never repeats its heading or mentions a queue the city doesn't have. A banner icon that stands for a yield is drawn in that yield's colour, not ink (UI review, 2026-11-22, PR #98).
 
 ## Look and feel
 
@@ -159,7 +160,7 @@ Every word a player reads (sheets, cards, the Guide, tooltips, breakdowns, repor
 | at Peace, at War, Alliance | treaty states, capitalised | at peace, at war |
 | supply | the Iron or Coal your deposits give; each building or unit that needs it uses 1 while it exists ("Iron 5 / 6") | stockpile, stored Iron/Coal, Iron per turn, Coal per turn |
 | interest | Swiss Gold earned from the treasury | treasury bonus |
-| Gold project, Science project | what a city runs instead of building, turning part of its Production (Egypt: its Food-made build progress) into Gold or Science; every empire since 2026-11-22 | Industry project, Industry: Gold (a copy test bans "Industry project") |
+| Gold project, Science project, Food project | what a city runs instead of building, turning part of its Production (Egypt: its Food-made build progress) into Gold, Science or Food; every empire since 2026-11-22 (Food: rules 55, not Egypt). The automation menu names its stream focuses by these project names | Industry project, Industry: Gold (a copy test bans "Industry project") |
 | Grow | Egypt's project that grows a city with its surplus Food instead of building (2026-11-21); "surplus Food" is Food beyond 2 per population | growth project, grow mode |
 | tribute | Byzantium buying peace | bribe, peace payment |
 | level | a unit's promotion level ("level 4 or higher") | rank, promotion tier |
