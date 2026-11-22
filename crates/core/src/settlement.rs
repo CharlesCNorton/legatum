@@ -347,6 +347,9 @@ pub struct SettlementSite {
     pub band: SiteBand,
     /// A visible foreign border makes an unseen city within spacing range possible.
     pub border_risk: bool,
+    /// Rome only: this founder, founding here, founds the Colonia Victrix (`goals`).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub colonia: bool,
     /// What the quality is made of, for the hover (explained sites only).
     pub resources: Vec<SiteResource>,
     pub wonders: Vec<SiteWonder>,
@@ -908,6 +911,9 @@ pub struct SettlementScore {
     pub quality: i32,
     pub band: SiteBand,
     pub border_risk: bool,
+    /// Rome only: this founder, founding here, founds the Colonia Victrix (`goals`).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub colonia: bool,
     pub rank: Option<u8>,
     pub travel_turns: Option<i32>,
 }
@@ -928,6 +934,7 @@ pub fn settlement_scores(
             quality: s.quality,
             band: s.band,
             border_risk: s.border_risk,
+            colonia: s.colonia,
             rank: s.rank,
             travel_turns: s.travel_turns,
         })
@@ -972,6 +979,7 @@ fn analyze_sites(
     if unit.owner != view.me || (unit.kind != UnitKind::Settler && !roman_founder) {
         return Vec::new();
     }
+    let colonia_founder = crate::goals::known_colonia_founder(view, unit);
     let own: Vec<_> = view.cities.iter().filter(|c| c.owner == view.me).collect();
     let capital = own.iter().find(|c| c.is_capital);
     let travel = travel_field(view, unit, true, i32::MAX);
@@ -1134,6 +1142,7 @@ fn analyze_sites(
                 quality,
                 band: SiteBand::of(quality),
                 border_risk: facts.risk,
+                colonia: colonia_founder && crate::goals::known_colonia_site(view, pos),
                 resources: if explain { site_resources(view, pos) } else { Vec::new() },
                 wonders: if explain { site_wonders_near(view, pos) } else { Vec::new() },
                 breakdown,
