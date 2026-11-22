@@ -93,8 +93,8 @@ fn we_garrison_and_defend_a_goal_city_we_hold_first() {
     assert!(p.goal_city_unguarded(city(&v, 1)));
     assert_eq!(p.hall_defense_percent(city(&v, 1)), 150);
     let v = ViewBuilder { view: v }
-        .unit(10, ME, UnitKind::Soldier, off(4, 4))
-        .unit(11, ME, UnitKind::Soldier, off(5, 4))
+        .unit(10, ME, UnitKind::Spearman, off(4, 4))
+        .unit(11, ME, UnitKind::Spearman, off(5, 4))
         .build();
     assert!(!hard(&v).goal_city_unguarded(city(&v, 1)));
     // A captured one is ours to hold too; with the Rome gene off our own is ordinary.

@@ -13,8 +13,8 @@ fn rome() -> PlayerView {
         .faction(Faction::Rome)
         .city(1, ME, HOME, 4)
         .city(5, ENEMY, RIVAL, 6)
-        .unit(2, ME, UnitKind::Soldier, HOME)
-        .unit(3, ME, UnitKind::Soldier, HOME.neighbors()[0]);
+        .unit(2, ME, UnitKind::Spearman, HOME)
+        .unit(3, ME, UnitKind::Spearman, HOME.neighbors()[0]);
     for h in RIVAL.within(2) {
         b = b.owner(h, ENEMY);
     }
@@ -25,7 +25,7 @@ fn rome() -> PlayerView {
 
 fn veteran(v: PlayerView, id: u32, pos: Hex, level: u8, xp: u32) -> PlayerView {
     let mut v = ViewBuilder { view: v }
-        .unit(id, ME, UnitKind::Soldier, pos)
+        .unit(id, ME, UnitKind::Spearman, pos)
         .build();
     let u = v.units.iter_mut().find(|u| u.id == UnitId(id)).unwrap();
     u.level = level;
@@ -102,8 +102,8 @@ fn with_no_colonia_site_the_founder_waits_instead_of_founding_an_ordinary_city()
         .faction(Faction::Rome)
         .city(1, ME, HOME, 4)
         .city(5, ENEMY, RIVAL, 6)
-        .unit(2, ME, UnitKind::Soldier, HOME)
-        .unit(3, ME, UnitKind::Soldier, HOME.neighbors()[0])
+        .unit(2, ME, UnitKind::Spearman, HOME)
+        .unit(3, ME, UnitKind::Spearman, HOME.neighbors()[0])
         .build();
     v.players[0].faction_goal_done = false;
     let ordinary = Hex::new(10, 13);
@@ -185,7 +185,7 @@ fn a_site_under_a_rival_army_is_riskier_than_one_beside_our_own() {
         .enumerate()
     {
         threatened = ViewBuilder { view: threatened }
-            .unit(50 + i as u32, ENEMY, UnitKind::Soldier, h)
+            .unit(50 + i as u32, ENEMY, UnitKind::Spearman, h)
             .build();
     }
     let risky = hard(&threatened).colonia_hold_risk(site, UnitId(1));
@@ -196,7 +196,7 @@ fn a_site_under_a_rival_army_is_riskier_than_one_beside_our_own() {
         .enumerate()
     {
         supported = ViewBuilder { view: supported }
-            .unit(60 + i as u32, ME, UnitKind::Soldier, h)
+            .unit(60 + i as u32, ME, UnitKind::Spearman, h)
             .build();
     }
     let held = hard(&supported).colonia_hold_risk(site, UnitId(1));
@@ -210,7 +210,7 @@ fn a_site_under_a_rival_army_is_riskier_than_one_beside_our_own() {
         .enumerate()
     {
         massed = ViewBuilder { view: massed }
-            .unit(70 + i as u32, ENEMY, UnitKind::Soldier, h)
+            .unit(70 + i as u32, ENEMY, UnitKind::Spearman, h)
             .build();
     }
     assert!(hard(&massed).colonia_site(&massed.units[2]).is_none());
@@ -282,7 +282,7 @@ fn a_wounded_level_three_veteran_rests_for_the_colonia() {
     );
     // In enemy reach it is left to the war passes, which know how to retreat it.
     let exposed = ViewBuilder { view: v.clone() }
-        .unit(50, ENEMY, UnitKind::Soldier, Hex::new(10, 14))
+        .unit(50, ENEMY, UnitKind::Spearman, Hex::new(10, 14))
         .build();
     let mut p = hard(&exposed);
     assert!(p.exposure_at(Hex::new(10, 12)) > 0);

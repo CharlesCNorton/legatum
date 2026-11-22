@@ -65,7 +65,7 @@ export function goalCitiesFixture(mode: GoalCityMode) {
   const romeCapital = romeNamed && f.cities.find((c) => c.owner === romeNamed.owner && c.isCapital);
   if (romeNamed && romeCapital) [romeNamed.name, romeCapital.name] = [romeCapital.name, romeNamed.name];
   B.population = 5; B.producing = { kind: 'Building', building: 'Granary' } as never; B.prod = 12;
-  C.producing = { kind: 'Unit', unit: 'Soldier' } as never; C.prod = 8;
+  C.producing = { kind: 'Unit', unit: 'Spearman' } as never; C.prod = 8;
   // Borders reach two hexes around each city (three for capitals), so the Colonia's site has rival land in reach.
   for (const c of [A, B, C, D, E, ...(V ? [V] : [])]) {
     for (const h of within(c.pos, c.isCapital ? 3 : 2)) { const i = idxOf(f, h); if (i >= 0 && f.terrain[i] !== 'Ocean' && f.owner[i] < 0) { f.owner[i] = c.owner; f.tileCity[i] = c.id; } }
@@ -89,7 +89,7 @@ export function goalCitiesFixture(mode: GoalCityMode) {
   // Rome's veteran: level 2 on its home land, or level 3 on the Colonia's site (or off it).
   let veteran: number | undefined;
   if (mode === 'romeBefore' || mode === 'romeReady' || mode === 'romeNoSite' || mode === 'romeOffRing') {
-    const u = spawnUnit(f, 0, 'Soldier', mode === 'romeOffRing' ? fromOffset(15, 4) : fromOffset(mode === 'romeReady' ? 19 : mode === 'romeNoSite' ? 9 : 13, 6), false);
+    const u = spawnUnit(f, 0, 'Spearman', mode === 'romeOffRing' ? fromOffset(15, 4) : fromOffset(mode === 'romeReady' ? 19 : mode === 'romeNoSite' ? 9 : 13, 6), false);
     u.xp = mode === 'romeBefore' ? XP_LEVEL_2 : XP_LEVEL_3;
     veteran = u.id;
   }
@@ -110,7 +110,7 @@ export function goalCitiesFixture(mode: GoalCityMode) {
   let attacker: number | undefined;
   if (mode === 'romeRival') {
     for (const r of f.diplomacy!.relations) if (r.a + r.b === 1) r.state = 'War';
-    attacker = spawnUnit(f, 0, 'Soldier', fromOffset(20, 6), false).id;
+    attacker = spawnUnit(f, 0, 'Spearman', fromOffset(20, 6), false).id;
   }
   f.players[0].gold = 300;
   refreshVision(f);

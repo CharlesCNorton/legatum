@@ -31,7 +31,7 @@ On the redesigned sheets he said "the symmetry is wrong. they should all feel th
 
 **Rome: rule kept (user, 2026-11-21):** no Settlers, veterans found cities; it forces early war by design ("i played with the rule and had no issues. it's a fun rule break and forces you into early war."). Hard Rome must seek the fight: camps, else a planned early war on the weakest reachable neighbour. Fixes for a slow Hard Rome are AI only, never a rule change.
 
-## Rome and Egypt goals: Colonia Victrix and the Royal Tomb (user, 2026-11-22; rules 52)
+## Rome and Egypt goals: Colonia Victrix and the Royal Tomb (user, 2026-11-22; rules 54)
 Both were `GoalRule::None` until he asked for real goals ("yes please design them. give them some real thought").
 
 **Rome: Colonia Victrix (he picked it: "for rome, I like R1"; border condition confirmed "1. yes").** A city founded by a level-3 melee veteran within 2 tiles of a rival's land (`goals::COLONIA_LEVEL`, `COLONIA_BORDER_REACH`) is the Colonia Victrix: held 2 VP, capture transfers, one at a time, refoundable if razed. It pays Rome's identity (veterans found cities) and its cost is the identity's own currency: a level-3 unit, which barbarians cannot give (their XP caps at level 1), spent on an exposed border city a rival can take. A new city owns one ring and no city may stand within 3 tiles of another, so a qualifying site exists only where a rival city has grown to its second ring on that side.

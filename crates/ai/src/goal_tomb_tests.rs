@@ -26,8 +26,8 @@ fn egypt(turn: u32, vp: u32, target: u32) -> PlayerView {
         .city(1, ME, off(4, 4), 6)
         .city(2, ME, off(4, 12), 4)
         .city(3, ENEMY, off(34, 20), 5)
-        .unit(10, ME, UnitKind::Soldier, off(4, 4))
-        .unit(11, ME, UnitKind::Soldier, off(5, 4))
+        .unit(10, ME, UnitKind::Spearman, off(4, 4))
+        .unit(11, ME, UnitKind::Spearman, off(5, 4))
         .build();
     v.turn = turn;
     v.turn_limit = None;
@@ -57,7 +57,7 @@ fn tomb_orders(v: &PlayerView) -> (bool, bool) {
 
 fn with_enemy(v: PlayerView, id: u32, pos: legatum_core::Hex) -> PlayerView {
     ViewBuilder { view: v }
-        .unit(id, ENEMY, UnitKind::Soldier, pos)
+        .unit(id, ENEMY, UnitKind::Spearman, pos)
         .build()
 }
 
@@ -96,7 +96,7 @@ fn the_tomb_waits_for_its_city_to_be_garrisoned() {
     let mut beside = egypt(180, 5, 10);
     beside.units.retain(|u| u.id.0 != 10);
     beside = ViewBuilder { view: beside }
-        .unit(12, ME, UnitKind::Soldier, off(4, 5))
+        .unit(12, ME, UnitKind::Spearman, off(4, 5))
         .build();
     assert_eq!(tomb_orders(&beside), (false, false));
 }
@@ -165,7 +165,7 @@ fn barbarians_that_spare_no_one_count_only_at_two_hexes() {
     .unit(
         60,
         legatum_core::PlayerId::BARBARIAN,
-        UnitKind::Soldier,
+        UnitKind::Spearman,
         off(4, 8),
     )
     .build();
@@ -177,7 +177,7 @@ fn barbarians_that_spare_no_one_count_only_at_two_hexes() {
     .unit(
         60,
         legatum_core::PlayerId::BARBARIAN,
-        UnitKind::Soldier,
+        UnitKind::Spearman,
         off(4, 10),
     )
     .build();

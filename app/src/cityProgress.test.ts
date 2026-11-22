@@ -71,6 +71,22 @@ it('banners carry growth and production meters only for your own cities', () => 
   if (rival) expect(bannerMeters(rival)).toEqual([]);
 });
 
+it('a city told what to build this turn shows that item on its banner at once, not the red Build prompt', () => {
+  const { capital } = fixtureView();
+  const idle = { ...capital, detail: { ...capital.detail!, producing: null, production_queue: [] } };
+  expect(bannerMeters(idle).find((m) => m.kind === 'production')).toMatchObject({ text: 'Build', bad: true });
+  const option = idle.detail.options[0];
+  const chosen = bannerMeters(idle, undefined, null, option.item).find((m) => m.kind === 'production')!;
+  expect(chosen.text).toBe(String(option.turns));
+  expect(chosen.bad).toBeUndefined();
+  expect(chosen.icon).toBeTruthy();
+  // An option with no turn count (Egypt's Grow, or no output) shows a dash, never "-1".
+  const noForecast = { ...idle, detail: { ...idle.detail, options: [{ ...option, turns: -1 }] } };
+  expect(bannerMeters(noForecast, undefined, null, option.item).find((m) => m.kind === 'production')!.text).toBe('–');
+  // Re-choosing what the city already builds keeps the live meter.
+  expect(bannerMeters(capital, undefined, null, capital.detail!.producing)).toEqual(bannerMeters(capital));
+});
+
 it('a city frozen by the occupation lock shows Held on its banner, not the red Build prompt', () => {
   const { capital } = fixtureView();
   const idle = { ...capital, occupation_lock: 1, detail: { ...capital.detail!, producing: null, production_queue: [] } };
@@ -82,12 +98,12 @@ it('while the Royal Tomb is built, every banner shows the tomb count in place of
   const { capital, second } = fixtureView();
   const tomb = { working: true, turns: 6, target: 15, left: 9 };
   for (const c of [capital, second]) {
-    const [growth, production] = bannerMeters(c, 'Egypt', null, tomb);
+    const [growth, production] = bannerMeters(c, 'Egypt', null, null, tomb);
     expect(growth).toMatchObject({ kind: 'growth', text: '–', paused: true, bad: false });
     expect(production).toMatchObject({ kind: 'production', text: '6/15', paused: true, icon: 'goal-royal-tomb', inkIcon: true });
   }
   // Paused work leaves the city's own meters.
-  expect(bannerMeters(capital, undefined, null, { ...tomb, working: false })[1]).toMatchObject({ icon: 'building-granary' });
+  expect(bannerMeters(capital, undefined, null, null, { ...tomb, working: false })[1]).toMatchObject({ icon: 'building-granary' });
 });
 
 /** A minimal own city with detail, for production-meter states the fixture doesn't cover. */

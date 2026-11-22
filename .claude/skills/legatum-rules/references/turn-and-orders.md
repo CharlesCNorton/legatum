@@ -18,7 +18,7 @@ diplomacy (`DeclareWar{against,breach}`, `BreakTreaty` = leave an Alliance,
 `SetScienceConversion` after the last technology);
 and **one-time empire actions** through a single variant, `Action { action }` (`orders.rs::Action`,
 serde tag `"action"`: `{"type":"Action","action":{"action":"Sakoku","close":true}}`): `Swarm` (the Aztecs' New Fire),
-`Sakoku{close}` (Japan closes or reopens the country), `Tomb{build}` (Egypt starts or pauses work on the Royal Tomb, rules 52), `Broadcast`,
+`Sakoku{close}` (Japan closes or reopens the country), `Tomb{build}` (Egypt starts or pauses work on the Royal Tomb, rules 54), `Broadcast`,
 `ChooseFreeTechs{techs}`, `RetireVeteran{unit}` (a unit action: several veterans may retire in one turn,
 each once), and `CallTheWild` (`ClaimObjective`, the Demobilise card's order, was removed in rules 40); later goal increments add their variants here, never a new order shape.
 Checks are `rules/actions.rs::validate_action` (run by `validate_orders`: each action once per turn;

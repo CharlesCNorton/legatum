@@ -366,11 +366,11 @@ mod occupation_lock_tests {
         let home = crate::fixture::off(5, 5);
         let mut view = crate::fixture::ViewBuilder::new(12, 12)
             .city(1, crate::fixture::ME, home, 3)
-            .unit(10, crate::fixture::ME, UnitKind::Soldier, home)
+            .unit(10, crate::fixture::ME, UnitKind::Spearman, home)
             .unit(
                 11,
                 crate::fixture::ME,
-                UnitKind::Soldier,
+                UnitKind::Spearman,
                 crate::fixture::off(4, 5),
             )
             .build();
@@ -402,7 +402,7 @@ mod occupation_lock_tests {
         let buy = || Order::BuyItem {
             city: legatum_core::CityId(1),
             item: legatum_core::ProductionItem::Unit {
-                unit: UnitKind::Soldier,
+                unit: UnitKind::Spearman,
             },
         };
         let mut bought = vec![buy()];
@@ -443,8 +443,8 @@ mod automatic_garrison_tests {
         let enemy = crate::fixture::off(6, 5);
         let view = crate::fixture::ViewBuilder::new(12, 12)
             .city(1, crate::fixture::ME, home, 3)
-            .unit(10, crate::fixture::ME, UnitKind::Ranger, home)
-            .unit(20, crate::fixture::ENEMY, UnitKind::Soldier, enemy)
+            .unit(10, crate::fixture::ME, UnitKind::Archer, home)
+            .unit(20, crate::fixture::ENEMY, UnitKind::Spearman, enemy)
             .build();
         assert_eq!(automatic_garrison_target(&view, UnitId(10)), Some(enemy));
         let mut peaceful = view.clone();
@@ -466,8 +466,8 @@ mod automatic_garrison_tests {
             let view = crate::fixture::ViewBuilder::new(12, 12)
                 .faction(faction)
                 .city(1, crate::fixture::ME, home, 3)
-                .unit(10, crate::fixture::ME, UnitKind::Ranger, home)
-                .unit(20, PlayerId::BARBARIAN, UnitKind::Soldier, camp_guard)
+                .unit(10, crate::fixture::ME, UnitKind::Archer, home)
+                .unit(20, PlayerId::BARBARIAN, UnitKind::Spearman, camp_guard)
                 .build();
             assert_eq!(
                 automatic_garrison_target(&view, UnitId(10)),
@@ -493,9 +493,9 @@ mod automatic_garrison_tests {
         let view = crate::fixture::ViewBuilder::new(12, 12)
             .faction(legatum_core::Faction::Celts)
             .city(1, crate::fixture::ME, home, 3)
-            .unit(10, crate::fixture::ME, UnitKind::Ranger, home)
-            .unit(20, PlayerId::BARBARIAN, UnitKind::Soldier, barbarian)
-            .unit(21, crate::fixture::ENEMY, UnitKind::Soldier, rival)
+            .unit(10, crate::fixture::ME, UnitKind::Archer, home)
+            .unit(20, PlayerId::BARBARIAN, UnitKind::Spearman, barbarian)
+            .unit(21, crate::fixture::ENEMY, UnitKind::Spearman, rival)
             .build();
         assert_eq!(automatic_garrison_target(&view, UnitId(10)), Some(rival));
     }
@@ -508,8 +508,8 @@ mod automatic_garrison_tests {
         let view = crate::fixture::ViewBuilder::new(12, 12)
             .city(1, crate::fixture::ME, home, 3)
             .terrain(middle, legatum_core::Terrain::Forest)
-            .unit(10, crate::fixture::ME, UnitKind::Ranger, home)
-            .unit(20, crate::fixture::ENEMY, UnitKind::Soldier, enemy)
+            .unit(10, crate::fixture::ME, UnitKind::Archer, home)
+            .unit(20, crate::fixture::ENEMY, UnitKind::Spearman, enemy)
             .build();
         assert_eq!(automatic_garrison_target(&view, UnitId(10)), None);
         let mut walled = view;
