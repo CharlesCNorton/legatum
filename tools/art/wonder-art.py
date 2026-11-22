@@ -59,7 +59,7 @@ def key_magenta(raw: Image.Image) -> Image.Image:
     return out
 
 
-def fill_lattice(raw: Image.Image, darken: float = 0.55, gap: int = 14) -> Image.Image:
+def fill_lattice(raw: Image.Image, darken: float = 0.55, gap: int = 30) -> Image.Image:
     """Fill the magenta seen through an open-lattice tower with a dark iron tone, before keying.
 
     The generator paints the Eiffel Tower's shaft as open lattice over the magenta field; keyed as is, the pull-in eats
@@ -96,6 +96,28 @@ def fill_lattice(raw: Image.Image, darken: float = 0.55, gap: int = 14) -> Image
     out = a.copy()
     out[holes] = (np.concatenate(iron).mean(axis=0) * darken).astype(int)
     return Image.fromarray(out.clip(0, 255).astype("uint8"))
+
+
+def drop_floaters(img: Image.Image) -> Image.Image:
+    """Clear opaque bits separated from the painting by a fully clear row (a keyed-off crane jib or mast tip)."""
+    import numpy as np
+
+    a = np.asarray(img.getchannel("A"))
+    rows = a.max(axis=1) > 28
+    runs, start = [], None
+    for y, on in enumerate(list(rows) + [False]):
+        if on and start is None:
+            start = y
+        elif not on and start is not None:
+            runs.append((start, y))
+            start = None
+    if len(runs) < 2:
+        return img
+    keep = max(runs, key=lambda r: r[1] - r[0])
+    out = np.asarray(img).copy()
+    out[:keep[0], :, 3] = 0
+    out[keep[1]:, :, 3] = 0
+    return Image.fromarray(out)
 
 
 def bbox(img: Image.Image):
@@ -146,7 +168,7 @@ def save(img: Image.Image, path: Path, sizes):
 
 def master(raw: Path, stem: str, cool_amount=0.0, light=1.0, lattice=False):
     src = Image.open(raw)
-    keyed = key_magenta(fill_lattice(src) if lattice else src)
+    keyed = drop_floaters(key_magenta(fill_lattice(src) if lattice else src))
     canvas, so = fit(keyed)
     canvas = cool(canvas, cool_amount, light) if (cool_amount or light != 1.0) else canvas
     table = fits()
@@ -161,7 +183,7 @@ def master(raw: Path, stem: str, cool_amount=0.0, light=1.0, lattice=False):
 
 def stage(raw: Path, stem: str, n: int, lattice=False):
     src = Image.open(raw)
-    keyed = key_magenta(fill_lattice(src) if lattice else src)
+    keyed = drop_floaters(key_magenta(fill_lattice(src) if lattice else src))
     entry = fits()[stem]
     if list(keyed.size) != entry["raw_size"]:
         keyed = keyed.resize(tuple(entry["raw_size"]), Image.Resampling.LANCZOS)
