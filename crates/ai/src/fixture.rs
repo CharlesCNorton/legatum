@@ -497,6 +497,7 @@ impl ViewBuilder {
             has_air_defence: false,
             occupation_lock: None,
             construction: None,
+            walls_building: false,
             great_works: detail
                 .as_ref()
                 .map(|d| {
@@ -537,6 +538,14 @@ impl ViewBuilder {
                 BuildingKind::ALL
                     .iter()
                     .map(|b| ProductionItem::Building { building: *b }),
+            )
+            // Every empire's Gold and Science projects, as in core.
+            .chain(
+                [
+                    legatum_core::IndustryProject::Gold,
+                    legatum_core::IndustryProject::Science,
+                ]
+                .map(|project| ProductionItem::Project { project }),
             )
             .filter(|i| data::item_requires(*i).is_none_or(|t| known.contains(&t)))
             // The Rice Storehouse, Yam Relay Station and Heir belong to one faction each, as in core.

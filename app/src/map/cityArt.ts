@@ -65,6 +65,11 @@ export function wallStem(era: number, bastion: boolean, exists: Has = has): stri
   return pick ? `${pick}-walls` : null;
 }
 
+/** A city's visible wall level for its banner: 0 none (or not in sight), 1 Walls, 2 Castle, 3 Star Fort. */
+export function wallTierOf(c: { visible: boolean; walls: boolean; citadel?: boolean; star_fort?: boolean }): number {
+  return c.visible && c.walls ? 1 + (c.citadel ? 1 : 0) + (c.star_fort ? 1 : 0) : 0;
+}
+
 /** Shared far-zoom mark for a tier (not era-specific). */
 export function markStem(tier: CityTier): string {
   return `marks/${tier}-mark`;
