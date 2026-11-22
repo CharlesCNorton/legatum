@@ -13,8 +13,6 @@ import type { BuildingKind, Faction, ProductionItem, TechId } from './types';
 
 /** Tiles from the capital at which an Indian city's Food, Gold and Science reach zero. */
 const indiaZeroAt = INDIA_CAPITAL_RADIUS + 100 / INDIA_YIELD_PERCENT_PER_HEX;
-/** Project shares in words (half, a quarter), falling back to a percentage. */
-const share = (percent: number) => ({ 50: 'half', 25: 'a quarter' } as Record<number, string>)[percent] ?? `${percent}%`;
 const keshig = unitStatsFor('Mongols', KESHIG_KIND);
 /** The row for a faction's special unit: what it replaces and the edge that sets it apart (the Guide prints it; the sheet shows the unit's card instead). */
 const specialRow = (faction: Faction, icon: string): FactionPair =>
@@ -169,7 +167,7 @@ export const FACTION_SHEETS: Record<Faction, FactionSheet> = {
       { strength: 'Ruhr Foundry: +6 Production (a Forge gives +3).', strengthIcon: 'building-foundry', onCard: true },
       { price: 'Each Production building in a German city costs 1 Food.', priceIcon: 'yield-food' },
       { strength: 'Your strategic deposits supply twice as much.', strengthIcon: 'resource-iron' },
-      { strength: `Your Gold and Science projects pay more: ${share(GERMANY_PROJECT_GOLD_PERCENT)} and ${share(GERMANY_PROJECT_SCIENCE_PERCENT)} of a city’s Production. Other empires get ${share(PROJECT_GOLD_PERCENT)} and ${share(PROJECT_SCIENCE_PERCENT)}.`, strengthIcon: 'yield-gold' },
+      { strength: `Your Gold and Science projects turn ${GERMANY_PROJECT_GOLD_PERCENT}% and ${GERMANY_PROJECT_SCIENCE_PERCENT}% of a city’s Production into Gold and Science. Other empires get ${PROJECT_GOLD_PERCENT}% and ${PROJECT_SCIENCE_PERCENT}%.`, strengthIcon: 'yield-gold' },
       specialRow('Germany', 'unit-panzer'),
     ],
     counteredBy: 'Attack early, before their Production builds up.',
