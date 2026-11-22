@@ -119,7 +119,7 @@ function ageLine(view: PlayerView, era: number): SheetLine {
     const line = o?.lines[0];
     if (!ev || !o) { boxes.push({ state: 'later', mark: roman(e), title: `${eraName(e - 1)}: not begun yet` }); continue; }
     if (o.state === 'scored') { boxes.push({ state: 'kept', mark: roman(e), title: `${ev.name}: scored, yours for good` }); continue; }
-    // The name and its plain ask, "Breach, capture a walled city"; a card with no name is its ask, "Gain 4 cities".
+    // The name and its plain ask, "Breach, capture a walled city"; every card has a name ("Dominion, gain 4 cities").
     const card = line ? (line.text.includes(':') ? `${cardName(line.text)}, ${line.text.slice(line.text.indexOf(':') + 1).trim()}` : line.text) : 'its card';
     boxes.push({ state: e === newest ? 'new' : 'open', mark: roman(e), title: `${ev.name}: ${card}, still open` });
     open.push({ era: e, name: ev.name, card, current: line?.current ?? 0, target: line?.target ?? 0 });

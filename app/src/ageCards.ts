@@ -14,7 +14,7 @@ export function cardHint(kind: string | undefined): string {
   }
 }
 
-/** A card's short name for compact places: "Veterans", "Humble the mighty", "Breach", "Gain 3 cities". */
+/** A card's short name for compact places: "Veterans", "Humble the mighty", "Breach", "Dominion". */
 export const cardName = (text: string): string => text.split(':')[0];
 
 /** The meter of a card that counts something done in play: how far the Age's own count has come, in words. */
