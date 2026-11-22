@@ -246,13 +246,13 @@ it('a captured city is a major card with what you gain; a lost city is a sober l
   const rival = view.players.find((p) => p.team !== view.team)!;
   const taken: Event = { type: 'CityCaptured', city: city.id, from: rival.id, to: 0 };
   const [gain] = map([taken]);
-  expect(gain).toMatchObject({ tier: 'major', title: city.name, effect: `Captured from ${rival.name}`, kicker: 'A city taken', at: city.pos });
+  expect(gain).toMatchObject({ tier: 'major', title: city.name, effect: `Captured from ${empireOfPlayer(view, rival.id)}`, kicker: 'A city taken', at: city.pos });
   expect(gain.loss).toBeUndefined();
   expect(gain.details[0]).toBe(`Population ${city.population}.`);
   expect(soundHooksForMoments([gain], [taken])).toEqual({ cityCaptured: 'sting.major' });
   const lost: Event = { type: 'CityCaptured', city: city.id, from: 0, to: rival.id };
   const [loss] = map([lost]);
-  expect(loss).toMatchObject({ tier: 'major', effect: `Taken by ${rival.name}`, kicker: 'A city is lost', loss: true });
+  expect(loss).toMatchObject({ tier: 'major', effect: `Taken by ${empireOfPlayer(view, rival.id)}`, kicker: 'A city is lost', loss: true });
   // No triumphant hook: the consequential cityLost feedback stays in charge.
   expect(soundHooksForMoments([loss], [lost])).toEqual({});
   // Captures between two other empires are not ours to celebrate.
@@ -533,7 +533,7 @@ describe('world wonder moments', () => {
       { type: 'GreatWorkCompleted', player: 0, of: r.id, building: 'Pyramids', vp: 2, again: true },
     ], 0, view, withWonder(c.id, r.id));
     expect(moments).toHaveLength(1);
-    expect(moments[0]).toMatchObject({ tier: 'legendary', title: 'Pyramids', kicker: 'World wonder taken', place: c.name, effect: `+2 VP · captured from ${r.name}`, deltas: [{ counter: 'vp', amount: 2 }] });
+    expect(moments[0]).toMatchObject({ tier: 'legendary', title: 'Pyramids', kicker: 'World wonder taken', place: c.name, effect: `+2 VP · captured from ${empireOfPlayer(view, r.id)}`, deltas: [{ counter: 'vp', amount: 2 }] });
     expect(moments[0].loss).toBeFalsy();
   });
 
@@ -554,7 +554,7 @@ describe('world wonder moments', () => {
       { type: 'GreatWorkCompleted', player: r.id, of: 0, building: 'Pyramids', vp: 2, again: true },
     ], 0, view, withWonder(c.id, 0));
     expect(moments).toHaveLength(1);
-    expect(moments[0]).toMatchObject({ tier: 'major', loss: true, title: 'Pyramids', kicker: 'World wonder lost', place: c.name, effect: `−2 VP · taken by ${r.name}`, deltas: [{ counter: 'vp', amount: -2 }] });
+    expect(moments[0]).toMatchObject({ tier: 'major', loss: true, title: 'Pyramids', kicker: 'World wonder lost', place: c.name, effect: `−2 VP · taken by ${empireOfPlayer(view, r.id)}`, deltas: [{ counter: 'vp', amount: -2 }] });
   });
 
   it('a wonder destroyed with a razed city is a loss card that says it cannot be built again', () => {
