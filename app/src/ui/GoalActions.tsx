@@ -78,7 +78,8 @@ export function GoalActionRow() {
       {st.ordered
         ? <button className="btn goal-action-btn" onClick={() => editOrders((o) => clearAction(o, st.kind))}>Cancel the order</button>
         : <button className="btn goal-action-btn" disabled={!!st.blocker} onClick={() => { closeTips(); set({ goalDialog: dialogFor(view, st.kind), goalDecisionSeen: { ...useGame.getState().goalDecisionSeen, [view.me]: true } }); }}>
-          {label}{!undoing && <span className="goal-action-vp"> · +{factionGoalVp(me.faction)} VP</span>}{!touch && <> <Kbd>G</Kbd></>}
+          {/* One inline run, so a narrow button wraps "Build the Royal Tomb · +2 VP" as text, keeping "· +2 VP" whole. */}
+          <span>{label}{!undoing && <span className="goal-action-vp"> · +{factionGoalVp(me.faction)} VP</span>}</span>{!touch && <> <Kbd>G</Kbd></>}
         </button>}
     </Tip>
     {sakoku && <SakokuMeter view={view} />}

@@ -37,6 +37,8 @@
   /* Rome's Colonia row has no action button, so its status line is the row: it stays, held or lost alike. The rule
      under it moves to the medallion's hover. */
   .goal-action .colonia-compact, .goal-action.ordered .colonia-compact, .goal-action .goal-compact { display: block; position: static; width: auto; height: auto; overflow: visible; clip-path: none; white-space: normal; flex: 1 1 calc(100% - 44px); min-width: 0; color: var(--ink-2); }
+  /* The tomb's paused count sits under its button, the full width of the row. */
+  .goal-action .goal-compact { flex: 1 0 100%; }
   .goal-action .colonia-why { display: none; }
 }
 
