@@ -32,7 +32,7 @@ Current rules only, one line each with the date and who. Detail, the user's full
 - AI fixes ship before they are measured; every finished fix gets its own build; measure after and back out a bad one (user, 2026-11-15).
 - A decided feature is not done until it is on master (2026-10-31).
 - Check release notes against the actual diff: never list cut rules as new (2026-10-11, 2026-11-07).
-- Playtest build: `tools/release/check.sh <worktree> <log> "Playtest N"`, then `LEGATUM_BUILD_LABEL="Playtest N" scripts/deploy-preview.sh playtest-n` publishes a Pages preview (2026-11-22). A redeploy to the same address keeps earlier builds' files (`LEGATUM_CARRY_ASSETS_FROM`; set it by hand for any other production deploy) so an open game keeps its art.
+- Playtest build: `tools/release/check.sh <worktree> <log> "Playtest N"`, then `LEGATUM_BUILD_LABEL="Playtest N" scripts/deploy-preview.sh playtest-n` publishes a Pages preview (2026-11-22). A redeploy to the same address keeps earlier builds' files (`LEGATUM_CARRY_ASSETS_FROM`; set it by hand for any other production deploy) so an open game keeps its art. Every deploy also keeps earlier builds playable at `v/<id>/` for 30 days and lists them in `versions.json` (`tools/release/keep-builds.mjs`), so an older-rules save opens in its own build and reloading is safe (user, 2026-11-22: deploy on every update without breaking games in flight). Never bump the autosave database's version: kept builds open it too.
 - Two-player online game: both open the web build, Multiplayer; the host's tab runs the game and must stay open; both need the same build (2026-11-22).
 - Local Playwright runs need a build made for the e2e relay: `LEGATUM_RELAY_URL=http://127.0.0.1:8787 scripts/build-web.sh` (`--skip-wasm` to reuse the engine); online tests start `infra/relay` under `wrangler dev` (2026-11-22).
 - After every playtest he finishes, run `legatum-game-coach` on a copy of the save (user, 2026-10-17).
@@ -70,7 +70,7 @@ Current rules only, one line each with the date and who. Detail, the user's full
 ## AI work
 
 - Read `docs/status/state-of-the-ai.md` before any AI work and update it with every AI landing (user, 2026-11-06).
-- Judge AI work by his games first: the designer-seat score from the hill-climb suite (`tools/hill-climb/`), then short paired scenarios (`tools/sim/scenario-gate.sh`), then large censuses (user, 2026-10-31; 2026-11-09).
+- Judge AI work by his games first: the designer-seat score from the hill-climb suite (`tools/hill-climb/`), then short paired scenarios (`tools/sim/scenario-gate.sh`), then large censuses (user, 2026-10-31; 2026-11-09). A census summary reports win rates plus median end turn, ending shares and the World War share, and each record carries `max_era` (`crates/sim/src/stats.rs`; absent in older reports, meaning unknown, not Ancient). With more factions than seats, use `--rotate-factions` with explicit rosters so every faction plays equal seats (`docs/sim-results/2026-11-22-census-eleven-factions-rules50.md`).
 - Measure AI changes seat-only and opponents-only on the same maps and salts (user, 2026-10-10).
 - Any branch that changes units, buildings, techs, factions or rules ships with AI support for the new content (lead, 2026-10-11).
 - AI improvement is compute-heavy and token-light; explore strategies, not only tune numbers (user, 2026-10-18, 2026-10-26).

@@ -1,5 +1,6 @@
 import { soundHooksForMoments } from './celebrate/feedback';
-import { DAMAGED_SAVE_MESSAGE, loadErrorMessage, olderRulesMessage, saveHasCurrentRules } from './saveErrors';
+import { DAMAGED_SAVE_MESSAGE, loadErrorMessage, olderRulesMessage, saveHasCurrentRules, saveRulesVersion } from './saveErrors';
+import { BUILD_ID, buildForSave, buildUrl, fetchVersions, handOffSave, navigate, pageLaunch } from './platform/versions';
 import { RULES } from './data';
 import { buildLabel } from './buildLabel';
 import { momentsForTurn, type Moment } from './celebrate/moments';
@@ -41,6 +42,7 @@ import {
   fetchStatus,
   serverBase,
   setServerBase,
+  setJoinCode,
   hostGame,
   hostingHere,
   rememberSeat,
@@ -92,6 +94,8 @@ export interface NetState {
   conn: ConnState;
   /** The last join was refused; only an explicit loopback action may replace its token. */
   credentialRejected?: boolean;
+  /** A guest: the host wants a join code for a seat (the lobby row said Locked, or the host refused a claim). */
+  locked?: boolean;
 }
 
 /** A scenario in play (scenarios/*.json): its objective status and the run being recorded. */
@@ -153,6 +157,8 @@ export interface SaveFile {
   game: string;
   rulesVersion?: number;
   playtest?: string;
+  /** The website build that wrote it (platform/versions.ts): an older save opens there. Absent in older saves. */
+  build?: string;
   /** Written by an online host's "Save to file": the game has human seats, and can be hosted again. */
   online?: true;
   /** Coach questions: the toggle and what was already asked (app-side; never part of the game state). */
@@ -309,14 +315,19 @@ interface State {
   refreshStatus(): Promise<ServerStatus | null>;
   /** Hosting: create the game directly (humans first; the host takes seat 0). */
   hostNewGame(setup: GameSetup): Promise<void>;
-  /** Open an online game in this tab and go to its game room. Resolves to an error message, or null. */
-  hostOnline(name: string): Promise<string | null>;
+  /** The join code a guest has typed for a locked game (kept in memory only). */
+  joinCodeText: string;
+  setJoinCodeText(text: string): void;
+  /** Open an online game in this tab and go to its game room. `code` (4 to 12 letters or digits) locks the game. Resolves to an error message, or null. */
+  hostOnline(name: string, code?: string): Promise<string | null>;
   /** Host a game from a save file in this tab: guests join from the list and take their seats again. Resolves to an error message, or null. */
-  hostOnlineFromSave(name: string, save: SaveFile): Promise<string | null>;
+  hostOnlineFromSave(name: string, save: SaveFile, code?: string): Promise<string | null>;
   joinSeat(seat: Seat, name: string): void;
   /** Online play: join a hosted game from the lobby list as a guest. Resolves to an error message, or null. */
-  joinOnline(relay: string, room: string): Promise<string | null>;
+  joinOnline(relay: string, room: string, locked?: boolean): Promise<string | null>;
   releaseOnlineSeat(seat: Seat): void;
+  /** Host only: take a remote player out of a seat in the running game; the seat stays closed. */
+  removeOnlinePlayer(seat: Seat): void;
   /** Take the seat back after another window took it over. */
   rejoinOnline(): void;
   reclaimOnlineSeat(): void;
@@ -330,6 +341,8 @@ interface State {
   exitStaging(): void;
   takeStagingSeat(seat: number, name: string): void;
   releaseStagingSeat(seat: number): void;
+  /** Host only: take a remote player out of a room seat; the seat stays closed. */
+  removeStagingPlayer(seat: number): void;
   updateStagingSeat(p: { name?: string; faction?: Faction | 'Random' }): void;
   setStagingReady(ready: boolean): void;
   leaveStagingSeat(): void;
@@ -418,6 +431,7 @@ export function saveFile(client: GameClient, views: PlayerView[]): SaveFile {
     game: client.save(),
     rulesVersion: RULES.saveVersion,
     playtest: buildLabel,
+    ...(BUILD_ID ? { build: BUILD_ID } : {}),
     ...(useGame.getState().why.enabled ? { why: useGame.getState().why } : {}),
   };
 }
@@ -438,6 +452,7 @@ export function onlineSaveFile(game: string, views: PlayerView[]): SaveFile {
     game,
     rulesVersion: RULES.saveVersion,
     playtest: buildLabel,
+    ...(BUILD_ID ? { build: BUILD_ID } : {}),
     online: true,
   };
 }
@@ -475,6 +490,26 @@ export async function readAutosave(): Promise<SaveFile | null> {
 let campaign = newCampaignId();
 let resumeCampaign: string | null = null;
 let noticedCampaign: string | null = null;
+
+/**
+ * Open a save made with other rules in a build the site still serves (platform/versions.ts). An autosave is found
+ * there by its campaign (the same browser database); a chosen file is handed over through browser storage.
+ * True once the other page is opening.
+ */
+async function openInOwnBuild(save: SaveFile, campaign: string | null): Promise<boolean> {
+  // A page another build sent this save to never sends it on again (no back and forth if the list is wrong).
+  const arrived = pageLaunch();
+  if (arrived?.kind === 'continue' || arrived?.kind === 'open') return false;
+  const target = buildForSave(await fetchVersions(), saveRulesVersion(save.game), save.build);
+  if (!target) return false;
+  if (campaign) {
+    navigate(buildUrl(target.id, { continue: campaign }));
+    return true;
+  }
+  if (!(await handOffSave(JSON.stringify(save)))) return false;
+  navigate(buildUrl(target.id, { open: 'save' }));
+  return true;
+}
 
 function writeAutosave(client: GameClient, views: PlayerView[]) {
   if (client.archive && (views[0].finished || (views[0].turn - 1) % 5 === 0)) {
@@ -874,7 +909,8 @@ export const useGame = create<State>((set, get) => {
     dropRemote();
     setServerBase('');
     rememberRoom(null);
-    set({ net: null, staging: null, stagingSeat: null, stagingConnected: false, stagingLeaving: false });
+    setJoinCode('');
+    set({ net: null, staging: null, stagingSeat: null, stagingConnected: false, stagingLeaving: false, joinCodeText: '' });
   };
 
   const connectRemote = (seat: Seat, name: string, token?: string) => {
@@ -939,6 +975,13 @@ export const useGame = create<State>((set, get) => {
         if (code === 'invalid_seat_credential') {
           setNet({ credentialRejected: true });
           if (!active()) set({ screen: 'join' });
+        }
+        if (code === 'join_code_needed' || code === 'wrong_join_code') setNet({ locked: true });
+        if (code === 'removed') {
+          // The host took this player out: leave the game screen, keep the room, show why.
+          if (remote === rc) dropRemote();
+          set({ client: null, views: null, screen: 'join', error: message, busy: null });
+          return;
         }
         set({ error: message, busy: null });
       },
@@ -1266,7 +1309,9 @@ export const useGame = create<State>((set, get) => {
       else if (arrival) set({ screen: 'setup', setupMode: 'host' });
     },
 
-    joinOnline: async (relay, room) => {
+    joinOnline: async (relay, room, locked = false) => {
+      setJoinCode('');
+      set({ joinCodeText: '' });
       const previous = serverBase();
       setServerBase(roomBase(relay, room));
       const status = await fetchStatus(undefined, undefined, 6000);
@@ -1283,7 +1328,7 @@ export const useGame = create<State>((set, get) => {
       }
       startRelayWatch();
       rememberRoom(serverBase());
-      set({ error: null, net: { status, mySeat: null, seats: status.seats, conn: 'closed' }, screen: status.staging ? 'staging' : 'join' });
+      set({ error: null, net: { status, mySeat: null, seats: status.seats, conn: 'closed', locked }, screen: status.staging ? 'staging' : 'join' });
 
       return null;
     },
@@ -1295,13 +1340,19 @@ export const useGame = create<State>((set, get) => {
       return status;
     },
 
-    hostOnline: async (name) => {
+    joinCodeText: '',
+    setJoinCodeText: (text) => {
+      setJoinCode(text);
+      set({ joinCodeText: text });
+    },
+
+    hostOnline: async (name, code) => {
       const relay = get().online?.relay;
       if (!relay) return 'This version has no online play.';
       const info = get().online!;
       set({ error: null, hostRefusal: null });
       try {
-        await startHosting(relay, { name, build: info.build, rules_version: info.rules_version, protocol: info.protocol }, null, hostingEvents());
+        await startHosting(relay, { name, build: info.build, rules_version: info.rules_version, protocol: info.protocol, locked: !!code }, null, hostingEvents(), null, code ?? null);
       } catch (e) {
         if (e instanceof RelayRefusal) set({ hostRefusal: e });
         return e instanceof RelayRefusal ? e.message : 'Could not open your game. Check your internet connection and try again.';
@@ -1316,7 +1367,7 @@ export const useGame = create<State>((set, get) => {
       return null;
     },
 
-    hostOnlineFromSave: async (name, save) => {
+    hostOnlineFromSave: async (name, save, code) => {
       const info = get().online;
       if (!info?.relay) return 'This version has no online play.';
       if (save.client !== 'wasm' || typeof save.game !== 'string') return 'This save cannot be hosted.';
@@ -1328,7 +1379,7 @@ export const useGame = create<State>((set, get) => {
       }
       set({ error: null });
       try {
-        await startHosting(info.relay, { name, build: info.build, rules_version: info.rules_version, protocol: info.protocol }, null, hostingEvents(), save.game);
+        await startHosting(info.relay, { name, build: info.build, rules_version: info.rules_version, protocol: info.protocol, locked: !!code }, null, hostingEvents(), save.game, code ?? null);
       } catch (e) {
         const message = e instanceof Error ? e.message : String(e);
         return /cannot resume/i.test(message) ? DAMAGED_SAVE_MESSAGE : 'Could not open your game. Check your internet connection and try again.';
@@ -1369,6 +1420,14 @@ export const useGame = create<State>((set, get) => {
       if (!net?.status.is_local || seat === net.mySeat || !target || target.connected || target.reserved === false) return;
       set({ error: null });
       if (!remote?.releaseSeat(seat)) set({ error: connectionFirst('open') });
+    },
+
+    removeOnlinePlayer: (seat) => {
+      const net = get().net;
+      const target = net?.seats.find((s) => s.seat === seat);
+      if (!net?.status.is_local || seat === net.mySeat || !target?.connected) return;
+      set({ error: null });
+      if (!remote?.removeSeat(seat)) set({ error: connectionFirst('open') });
     },
 
     rejoinOnline: () => {
@@ -1423,7 +1482,10 @@ export const useGame = create<State>((set, get) => {
           staging: null, stagingSeat: null, error: 'The host closed the game room.',
           net: s.net ? { ...s.net, status: { ...s.net.status, staging: null } } : null,
         })),
-        error: (message) => set({ error: message, stagingSeat: staging?.seat ?? null }),
+        error: (message, code) => set((s) => ({
+          error: message, stagingSeat: staging?.seat ?? null,
+          net: s.net && (code === 'join_code_needed' || code === 'wrong_join_code') ? { ...s.net, locked: true } : s.net,
+        })),
       }, undefined, undefined, host);
       staging.connect();
     },
@@ -1447,6 +1509,14 @@ export const useGame = create<State>((set, get) => {
         state.staging?.config.seats[seat]?.kind !== 'open' || !occupant || occupant.connected) return;
       set({ error: null });
       if (!staging?.release(seat)) set({ error: connectionFirst('open') });
+    },
+
+    removeStagingPlayer: (seat) => {
+      const state = get();
+      const occupant = state.staging?.occupants[seat];
+      if (!state.net?.status.is_local || seat === state.stagingSeat || state.staging?.config.seats[seat]?.kind !== 'open' || !occupant?.connected) return;
+      set({ error: null });
+      if (!staging?.remove(seat)) set({ error: connectionFirst('open') });
     },
 
     updateStagingSeat: (p) => {
@@ -1489,7 +1559,14 @@ export const useGame = create<State>((set, get) => {
       set({ busy: 'Loading…', error: null });
       try {
         checkSaveText(save.game);
-        if (!saveHasCurrentRules(save.game)) throw new Error(olderRulesMessage(save.playtest));
+        if (!saveHasCurrentRules(save.game)) {
+          // The site may still serve the build that made it: the game continues there, on its own rules.
+          if (await openInOwnBuild(save, resumeCampaign)) {
+            set({ busy: 'Opening the version this game started on…' });
+            return;
+          }
+          throw new Error(olderRulesMessage(save.playtest));
+        }
         if (save.client !== 'wasm') throw new Error('This save used the retired TypeScript engine and cannot be loaded by the Rust engine.');
         const client = await createClient(save.client);
         measureTurn('loadClient', () => client.load(save.game));

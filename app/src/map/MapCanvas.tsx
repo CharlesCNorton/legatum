@@ -36,7 +36,7 @@ import { civilianCaptureRace, reinforcementNote } from '../ui/forecastWarnings';
 import type { CardAnchor } from '../ui/usePlacedCard';
 import { PeaceHint } from '../ui/PeaceHint';
 import { empireTitle } from '../empires';
-import { bannerTooltip } from './bannerTooltip';
+import { bannerCityAt, bannerTooltip } from './bannerTooltip';
 import { TileCard } from '../ui/TileCard';
 import { mapPlayerColor } from './style';
 import { shotBlockReason } from '../los';
@@ -116,6 +116,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
   const labels = useRef<Rect[]>([]);
   const banners = useRef<Rect[]>([]);
   const bannerHits = useRef<ReturnType<typeof draw>['bannerHits']>([]);
+  const liftedHits = useRef<ReturnType<typeof draw>['liftedHits']>([]);
   const cam = useRef<Camera>({ x: 0, y: 0, zoom: 0.9 });
   const size = useRef({ w: 800, h: 600, dpr: 1 });
   const dirty = useRef(true);
@@ -772,6 +773,8 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
       get reportArrow() { return drawnArrow.current; },
       /** The lens tiles as last built (Settle: one per legal site, with its band). */
       get lensTiles() { return frame.current.lensTiles; },
+      /** The city banners as last drawn: the name plate (hover) and the whole cover with meters (click), in CSS pixels. */
+      get banners() { return bannerHits.current.map((b) => ({ city: b.city.id, rect: b.rect, cover: b.cover, parts: b.parts, far: b.far })); },
       /** The cities drawn alarmed (under attack), by id. */
       get siege() { return [...frame.current.siege.keys()]; },
       /** The placement overlay as last built: the lit tiles of a tile-chosen build, or null. */
@@ -974,7 +977,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
         for (const box of clipBoxes) ctx.rect(box.x, box.y, box.w, box.h);
         ctx.clip();
       }
-      const { pending, labelRects, bannerRects, bannerHits: hits, idle: idleSeen, ring, ambient } = draw(ctx, {
+      const { pending, labelRects, bannerRects, bannerHits: hits, liftedHits: lifted, idle: idleSeen, ring, ambient } = draw(ctx, {
         view: f.view,
         cam: cam.current,
         width: size.current.w,
@@ -1051,6 +1054,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
       idleInView = idleSeen;
       banners.current = bannerRects ?? [];
       bannerHits.current = hits ?? [];
+      liftedHits.current = lifted ?? [];
       placeCompass();
       const c = cam.current;
       if (c.x !== lastCam.x || c.y !== lastCam.y || c.zoom !== lastCam.zoom) {
@@ -1122,6 +1126,16 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
   const hexAtScreen = (sx: number, sy: number): Hex => {
     const w = screenToWorld(cam.current, size.current.w, size.current.h, sx, sy);
     return pixelToHex(w.x, w.y, HEX_SIZE);
+  };
+  // What a click or hover at a screen point acts on: a city banner is drawn above the units, so the
+  // banner's city wins where the banner overhangs the hex above, then a token raised clear of a banner
+  // (its head pokes above its own hex), then the hex (except while picking a tile or a plane's target).
+  const targetAtScreen = (sx: number, sy: number): Hex => {
+    const s = useGame.getState();
+    if (s.place || (s.air.plane !== null && s.air.what)) return hexAtScreen(sx, sy);
+    return bannerCityAt(bannerHits.current, sx, sy)?.pos
+      ?? liftedHits.current.findLast(({ rect: r }) => sx >= r.x && sx <= r.x + r.w && sy >= r.y && sy <= r.y + r.h)?.hex
+      ?? hexAtScreen(sx, sy);
   };
 
   const local = (e: { clientX: number; clientY: number }) => {
@@ -1227,7 +1241,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
   };
 
   const touchHex = (point: Point, context: boolean) => {
-    const hex = hexAtScreen(point.x, point.y);
+    const hex = targetAtScreen(point.x, point.y);
     const s = useGame.getState();
     const v = s.views?.[s.seat];
     if (!v || s.busy || tileIndex(hex, v.width, v.height) < 0) { clearTouch(); return; }
@@ -1297,7 +1311,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
       moveSelected(hexAtScreen(intent.point.x, intent.point.y));
     } else if (intent.kind === 'mouse') {
       clearTouch();
-      const hex = hexAtScreen(intent.point.x, intent.point.y);
+      const hex = targetAtScreen(intent.point.x, intent.point.y);
       if (mode === 'normal' && lens === 'settle' && siteAt(hex)) {
         setTouchInfo({ hex, context: false, placement: intent.point.y > size.current.h / 2 ? 'top' : 'bottom' });
       } else clickHex(hex);
@@ -1325,7 +1339,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
   const bannerAt = (point: Point) =>
     bannerHits.current.findLast(({ rect }) => point.x >= rect.x && point.x <= rect.x + rect.w && point.y >= rect.y && point.y <= rect.y + rect.h)?.city.id ?? null;
   const updateMouseHover = (point: Point) => {
-    const h = hexAtScreen(point.x, point.y);
+    const h = targetAtScreen(point.x, point.y);
     if (!hover || !hexEq(hover.hex, h) || bannerAt({ x: hover.sx, y: hover.sy }) !== bannerAt(point)) {
       setHover({ hex: h, sx: point.x, sy: point.y });
       return;
@@ -1363,7 +1377,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
     if (lastPointerType.current !== 'mouse' || ('pointerType' in e.nativeEvent && e.nativeEvent.pointerType === 'touch')) return;
     clearTouch();
     const p = local(e);
-    moveSelected(hexAtScreen(p.x, p.y));
+    moveSelected(targetAtScreen(p.x, p.y));
   };
 
   const onWheel = (e: React.WheelEvent) => {

@@ -39,7 +39,7 @@
 
 ---
 
-Legatum is a turn-based strategy game in the tradition of Civilization VI. You found cities, research through nine eras, raise armies, make and break alliances, and race your rivals for victory points. A full game is paced for about 300 turns.
+Legatum is a turn-based strategy game in the tradition of Civilization VI. You found cities, research through nine eras, raise armies, make and break alliances, and race your rivals for victory points. A full game is designed for 250 to 300 turns; in the 2026-11-22 census of 2,112 all-Hard eight-empire games the median game ended on turn 220.
 
 It is an open-source project in active development. The game runs in a browser, on a laptop, tablet or phone, and online for two or more players. There is no stable release yet; see [Status](#status).
 
@@ -51,7 +51,8 @@ These are the design rules the project holds itself to. Where the game falls sho
 - **Nobody waits.** Turns are simultaneous. Every empire, human or AI, plans at the same time, and the engine resolves all the orders together in fixed stages.
 - **No hidden maths.** Yields, costs and combat strengths open into a breakdown. Attacks, advances and Peace offers show a forecast before you commit.
 - **The race is always visible.** Victory points (VP) are public from turn one. World Age cards, faction goals, world wonders and held rival capitals are on one screen, with who holds each. A team that holds its target for ten turns wins, so a leader is on a clock everyone can see.
-- **Eleven peoples, nine of them finished.** Switzerland, India, Byzantium, Germany, the Celts, the Mongols, Sparta, Athens and the Aztecs each have a signature strength, a drawback that pays for it and a faction goal worth 2 VP. Egypt and Rome are playable early designs with no faction goal yet. <!-- peoples-count -->
+- **Eleven peoples, nine of them finished.** Switzerland, India, Byzantium (an early design: its rule kit is under review), Germany, the Celts, the Mongols, Sparta, Athens and the Aztecs each have a signature strength, a drawback that pays for it and a faction goal worth 2 VP. Egypt and Rome are playable early designs with no faction goal yet. <!-- peoples-count -->
+- **No navy.** There are no ships or naval units; all fighting is on land.
 - **An AI that plays by your rules.** Easy, Normal and Hard get no extra yields, no cheaper costs, no stronger units and no extra sight. Each AI empire plans from the same fogged view a player in its seat would have. A harder level decides better. The exact scope is under [What the AI can see and do](#what-the-ai-can-see-and-do).
 - **Strategy with a counter.** Rushing, expanding wide, turtling, building an economy and playing diplomatically are each designed to have an answer, so the best plan depends on your people, the map and your neighbours. Expansion, by settling or by conquest, is the core loop. Staying small is deliberately weak.
 - **Close to the end.** A leader can pull ahead, but each technology costs less for every other empire that already knows it, a public warning names whoever is closest to winning, and the Hard AI will go to war to contain them.
@@ -83,7 +84,7 @@ These clips are recorded from the running game.
 
 <table align="center">
   <tr>
-    <td width="50%"><img src="docs/media/loop-race.webp" alt="The race panel opens into the score ledger: every way to score, and which of eight empires holds each point." width="100%"></td>
+    <td width="50%"><img src="docs/media/loop-race.webp" alt="The Victory race opens into the Score ledger: every way to score, and which of eight empires holds each point." width="100%"></td>
     <td width="50%"><img src="docs/media/loop-research.webp" alt="The research screen with illustrated unlock cards and a unit hovercard." width="100%"></td>
   </tr>
   <tr>
@@ -91,7 +92,7 @@ These clips are recorded from the running game.
     <td valign="top"><sub><b>Technologies worth wanting.</b> Every unlock is illustrated, and a hover shows what it beats, what it loses to and how it compares with what it replaces.</sub></td>
   </tr>
   <tr>
-    <td width="50%"><img src="docs/media/loop-diplomacy.webp" alt="The Diplomacy inbox: an empire declined an Alliance, with every factor in its decision listed." width="100%"></td>
+    <td width="50%"><img src="docs/media/loop-diplomacy.webp" alt="Diplomacy, Inbox tab: an empire declined an Alliance, with every factor in its decision listed." width="100%"></td>
     <td width="50%"><img src="docs/media/loop-factions.webp" alt="The faction picker: the peoples, each with a sheet of strengths and the price that pays for them." width="100%"></td>
   </tr>
   <tr>
@@ -115,7 +116,7 @@ These clips are recorded from the running game.
 
 ## Play it
 
-**[Play in your browser](https://legatum-game.pages.dev).** Nothing to install. Single player against the AI, hot seat on one computer, the scenarios and online games all work there. It runs on a laptop or desktop and in a phone or tablet browser; it is tested most in Chrome. The first load is about 7 MB. Your game is autosaved in that browser, and Menu → Save to file gives you a copy to keep. The game's record is also uploaded to the project, without player names; see [Privacy](#privacy).
+**[Play in your browser](https://playlegatum.com).** Nothing to install. Single player against the AI, hot seat on one computer, the scenarios and online games all work there. It runs on a laptop or desktop and in a phone or tablet browser; it is tested most in Chrome. The first load is about 7 MB. Your game is autosaved in that browser, and Menu → Save to file gives you a copy to keep. The game's record is also uploaded to the project, without player names; see [Privacy](#privacy).
 
 ### Privacy
 
@@ -123,7 +124,7 @@ Every game played in the browser version is uploaded to us, so we can measure ho
 
 - **What is sent:** the game's record: the setup, every turn's orders, the score each turn, how long turns took, and how smoothly the game ran each turn (frame times, input delay and how many units were on screen, with the size of the map canvas). Player names are replaced with "Player 1", "AI 2" and so on before anything leaves your browser, and the server refuses a record with any other name.
 - **Coach questions:** if coach questions are on, your typed answers are uploaded with the game.
-- **What is not sent:** no account, no email, no cookies and no tracking. The timing numbers carry no browser, device, window or screen description. Legatum keeps no IP addresses or request logs.
+- **What is not sent:** no account, no email, no cookies and no tracking. The timing numbers carry no browser, device, window or screen description. Legatum keeps no request logs. To limit abuse, the upload server remembers a scrambled form of your internet address until the end of the day (UTC), which cannot be turned back into the address, and nothing else about you.
 - **Who can read it:** the records are stored privately and only the maintainer can read them. They may be used to train and test the game's AI.
 - **Turning it off:** uploads cannot be turned off in the browser version. Builds from source upload nothing.
 
@@ -142,7 +143,7 @@ The first engine build compiles the whole Rust engine with full optimisation and
 
 ### Online games
 
-Online games need no server program. When a player picks Multiplayer > Host Game, the game runs in that player's browser tab, in the same engine as single-player games. The tab lists the game on the Legatum relay, a small Cloudflare Worker (`infra/relay`) that only keeps the list of open games and passes messages between players. Other players pick Join Game, see the open games, and join one. The host's tab makes every decision, runs the AI empires and keeps the save. Everyone needs the same version of the game. Keep the host's tab open while you play: closing it ends the game for everyone unless the host saved it (Menu → Save to file, then Multiplayer > Host from a save to carry on; players rejoin their old seats from Join Game). Reloading it resumes the game, and a guest who reloads goes back to their seat. A game holds up to 8 players. The contract is [plans/online-play.md](plans/online-play.md).
+Online games need no server program. When a player picks Multiplayer > Host Game, the game runs in that player's browser tab, in the same engine as single-player games. The tab lists the game on the Legatum relay, a small Cloudflare Worker (`infra/relay`) that only keeps the list of open games and passes messages between players. Other players pick Join Game, see the open games, and join one. The host's tab makes every decision, runs the AI empires and keeps the save. Everyone needs the same version of the game. Keep the host's tab open while you play: closing it ends the game for everyone unless the host saved it (Menu → Save to file, then Multiplayer > Host from a save to carry on; players rejoin their old seats from Join Game). Reloading it resumes the game, and a guest who reloads goes back to their seat. A host can lock a game with a join code, which players type once to take a seat, and can remove a player from a seat. A game holds up to 8 players. The contract is [plans/online-play.md](plans/online-play.md).
 
 To try a branch with other people, `scripts/deploy-preview.sh <label>` publishes it at `https://<label>.legatum-game.pages.dev`.
 
@@ -214,7 +215,7 @@ Legatum is built largely with AI coding agents, and all of its art is AI-generat
 
 ## Status
 
-Pre-release and moving fast. Rules, content and balance change often, and a save from an older rules version is refused with a clear message instead of being migrated. The web build is the only way to play. It is played through a short game in Chromium before every deploy; other browsers and the Rust crates on other systems should work but are not routinely tested.
+Pre-release and moving fast. Rules, content and balance change often, and a save from an older rules version is never migrated: the hosted site opens it in the earlier build that made it (kept for 30 days), and a build refuses it with a clear message when none is kept. The web build is the only way to play. It is played through a short game in Chromium before every deploy; other browsers and the Rust crates on other systems should work but are not routinely tested.
 
 ## Roadmap
 
@@ -222,7 +223,7 @@ Direction, in rough order of how soon it matters:
 
 - **An AI that plays like a strong human.** The AI is being tuned against milestones recorded from human games, and it has not reached its targets yet. This comes before faction balance work, because balance numbers mean little while the AI is weak.
 - **Finishing Egypt and Rome.** Neither has a faction goal yet.
-- **Faction balance.** The aim is that the best people's win rate is at most 1.5 times the worst's, checked on about 2,000 games plus held-out seeds. Balance changes add drawbacks or deepen a weak identity; they do not flatten strengths.
+- **Faction balance.** The aim is that the best people's win rate is at most 1.5 times the worst's, checked on about 2,000 games plus held-out seeds. It is not met yet: the 2026-11-22 census ([results](docs/sim-results/2026-11-22-census-eleven-factions-rules50.md)) has Egypt at 21.4% and Rome at 2.3% of wins, a ratio of 9.1 (2.6 among the nine finished peoples). Balance changes add drawbacks or deepen a weak identity; they do not flatten strengths.
 - **A late-game way to score for stalemated games.** A stalled game should have a hard path to two more points in the Future era. It waits until simulations show it is needed.
 - **Delegation for the mid-game.** War across a big empire is tedious by hand. Generals who run a campaign for you are planned once the AI's own campaign logic is good enough to trust.
 
