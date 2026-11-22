@@ -144,9 +144,8 @@ for (const width of [1024, 1440]) for (const look of ['atlas']) {
     await page.setViewportSize({ width, height: 900 });
     await holdCardsForLayout(page);
     await page.evaluate(async () => {
-      const hints = '/src/ui/hintState.ts';
-      const preferences = (await import(/* @vite-ignore */ hints)).useHintPreferences.getState();
-      preferences.reset();
+      const hints = '/src/ui/advisorModel.ts';
+      const preferences = (await import(/* @vite-ignore */ hints)).useAdvisor.getState();
       preferences.setEnabled(false);
       const moments = '/src/celebrate/moments.ts';
       const { DURATION } = await import(/* @vite-ignore */ moments);

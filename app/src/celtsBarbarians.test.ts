@@ -7,7 +7,7 @@ import { atWar, barbariansSpareMe, isThreat } from './diplomacy';
 import { enemyReach } from './enemyReach';
 import { citiesUnderAttack } from './siege';
 import { airState, aircraftNeedingOrders, pickerCandidates, spotsIn, type Hold } from './airWing';
-import { stepReady } from './ui/tutorial';
+import { advisorWhy } from './ui/advisorModel';
 import { reinforcementNote, woundedNearEnemies } from './ui/forecastWarnings';
 import { fromOffset, hexEq, neighbors } from './hex';
 import { BARBARIAN } from './barbarians';
@@ -63,10 +63,10 @@ describe('alarms and danger marks', () => {
     expect(reinforcementNote(v, me, HOME)).not.toBeNull();
   });
 
-  it.each(CELTS)('%s: sighting a barbarian is a "rival in sight" tutorial step only for non-Celts', async (faction, hinted) => {
-    const v = await arenaView(faction);
-    addUnit(v, 0, 'Spearman', NEXT, { owner: BARBARIAN });
-    expect(stepReady('rival', { view: v, orders: [], selection: null, humans: 1, touch: false }, ['report'])).toBe(hinted);
+  it.each(CELTS)('%s: a nearby barbarian is an advisor build threat only for non-Celts', async (faction, threatened) => {
+    const { v, city } = await scene(faction);
+    const why = advisorWhy({ type: 'SetProduction', city: city.id, item: { kind: 'Unit', unit: 'Spearman' } }, v, city);
+    expect(why.includes('enemy')).toBe(threatened);
   });
 });
 

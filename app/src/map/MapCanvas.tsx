@@ -235,7 +235,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
     // Desktop: beside the inspected hex (never over it or its units), in a band clear of the
     // story above and the command dock below. Only when neither side fits (a cramped iPad
     // layout), fall back to the centred slot between the story and the dock.
-    const above = [...document.querySelectorAll('.topbar, .tutorial-card')];
+    const above = [...document.querySelectorAll('.topbar, .advisor-card')];
     const below = [...document.querySelectorAll('.unit-panel, .up-hints, .seatbar, .map-lenses')];
     const sides = [...document.querySelectorAll('.game .panel, .game .report, .vp')];
     const shown = (el: Element) => el.getBoundingClientRect().height > 0 && getComputedStyle(el).visibility !== 'hidden' && !el.contains(inspector);
@@ -862,7 +862,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
       const wrap = wrapRef.current;
       if (!wrap) return;
       const o = wrap.getBoundingClientRect();
-      panels.current = [...document.querySelectorAll('.game .panel, .game .vp, .game .report, .map-lenses, .tutorial-card, .topbar')].map((e) => {
+      panels.current = [...document.querySelectorAll('.game .panel, .game .vp, .game .report, .map-lenses, .advisor-card, .topbar')].map((e) => {
         const r = e.getBoundingClientRect();
         return { x: r.left - o.left, y: r.top - o.top, w: r.width, h: r.height };
       });

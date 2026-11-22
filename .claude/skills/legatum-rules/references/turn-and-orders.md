@@ -83,3 +83,5 @@ attack; ranged click-to-target with range check; Sleep/Found/Disband/Upgrade/Ski
 each issue one order. Production/research queues (city-panel code, not inspected): Shift-click
 queues a technology (Guide, Controls: "Research: click / Shift+click", `app/src/ui/GuideContent.tsx`). **One purchase per city per
 turn**, an item (`economy.rs::buy_blocker`, `City::last_purchase_turn`).
+
+**Advisor UI** (`crates/wasm/src/lib.rs::advisor_orders_json`, `app/src/ui/advisorModel.ts::advisorSuggestion`): recommends Hard's plan from the seat's own fogged view, explains only, and shows one card and one gilt ring; it never submits orders.
