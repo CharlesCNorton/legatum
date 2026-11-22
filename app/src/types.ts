@@ -505,6 +505,8 @@ export interface CityView {
   great_works: BuildingKind[];
   /** Public chosen wonder tile and current construction stage, including through fog. */
   construction?: { building: BuildingKind; tile: Hex; stage: number; progress: number } | null;
+  /** The city is building Walls: public, including through fog, like a wonder site. */
+  walls_building?: boolean;
   visible: boolean;
   detail: CityDetail | null;
 }

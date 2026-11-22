@@ -59,6 +59,7 @@ import { drawMarchDust, drawMomentFx, drawMomentGround, drawRevealed, revealAt, 
 import { drawAirCandidates, drawAirLabels, drawAirOffscreen, drawAirRings, drawTileCandidates, type AirOverlay } from './airOverlay';
 import { aircraftAsUnit } from '../airWing';
 import { unworkedClaimIndexes } from './unworkedClaims';
+import { wallTierOf } from './cityArt';
 
 export { HEX_SIZE } from './grid';
 
@@ -1365,7 +1366,7 @@ interface FarCity { x: number; y: number; seal: ReturnType<typeof sealSprite>; n
 
 /** What a city's banner and far-zoom seal show. The star marks the original capital for the whole game, in the founder's ink; a replacement capital gets none. */
 export function bannerSpec(view: Pick<PlayerView, 'me' | 'team' | 'players'>, c: CityView, glyph: string | null, selected: boolean): BannerSpec {
-  return { owner: c.owner, name: c.name, pop: c.visible ? c.population : null, color: mapPlayerColor(c.owner), capital: capitalStar(view, c), selected, glyph, walls: c.visible && c.walls };
+  return { owner: c.owner, name: c.name, pop: c.visible ? c.population : null, color: mapPlayerColor(c.owner), capital: capitalStar(view, c), selected, glyph, wallTier: wallTierOf(c) };
 }
 
 /** Every on-screen city banner: its spec, anchor and the screen rect it covers (health bar included). Zoomed out, the banner is a seal and a name instead. */

@@ -754,6 +754,9 @@ pub struct CityView {
     /// A chosen wonder tile under construction. Public at the city, including through fog.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub construction: Option<ConstructionView>,
+    /// The city is building Walls. Public at the city, including through fog, like a wonder site.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub walls_building: bool,
     /// Currently in sight (otherwise only identity and ownership are current).
     pub visible: bool,
     pub detail: Option<Shared<CityDetail>>,
@@ -807,6 +810,7 @@ impl CityView {
             occupation_lock: None,
             great_works: Vec::new(),
             construction: None,
+            walls_building: false,
             visible,
             detail: detail.map(Shared::from),
         }
@@ -1983,6 +1987,12 @@ pub fn player_view_cached(
                 && state.players.iter().any(|r| {
                     r.alive && crate::rules::battle::greece_captive_available(state, c.id, r.id)
                 });
+            observed.walls_building = matches!(
+                c.producing,
+                Some(ProductionItem::Building {
+                    building: BuildingKind::Walls
+                })
+            );
             if let Some(ProductionItem::Wonder { building, tile }) = c.producing {
                 let cost = economy::city_production_cost(state, c, c.producing.unwrap()).max(1);
                 let progress = ((c.production_stored.max(0) as i64 * 1000) / cost as i64)
@@ -3235,6 +3245,24 @@ pub(crate) mod tests {
         assert!(!fogged.visible);
         assert!(fogged.detail.is_none());
         assert_eq!(fogged.construction, Some(progress));
+    }
+
+    #[test]
+    fn rival_walls_under_construction_are_public_even_in_fog() {
+        let mut s = test_state(24, 16);
+        let rival = add_city(&mut s, P2, at(5, 5), 3);
+        let scout = spawn_unit(&mut s, P0, UnitKind::Scout, at(4, 5));
+        visibility::update_explored(&mut s);
+        assert!(!city(&player_view(&s, P0), rival).unwrap().walls_building);
+        s.cities.get_mut(&rival).unwrap().producing = Some(ProductionItem::Building {
+            building: BuildingKind::Walls,
+        });
+        assert!(city(&player_view(&s, P0), rival).unwrap().walls_building);
+        s.units.get_mut(&scout).unwrap().pos = at(20, 12);
+        visibility::update_explored(&mut s);
+        let fogged = city(&player_view(&s, P0), rival).unwrap().clone();
+        assert!(!fogged.visible);
+        assert!(fogged.walls_building);
     }
 
     #[test]
