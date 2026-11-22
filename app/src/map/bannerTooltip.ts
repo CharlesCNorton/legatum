@@ -13,7 +13,7 @@ export function bannerTooltip(view: Pick<PlayerView, 'players'>, city: CityView)
     const building = (['Walls', 'Walls', 'Castle', 'StarFort'] as const)[tier];
     const faction = view.players.find((p) => p.id === city.owner)?.faction;
     const label = WALL_TIER_LABEL[tier];
-    parts.push(`${itemName({ kind: 'Building', building }, faction)}${label ? ` (${label})` : ''}: fires at units within 2 tiles`);
+    parts.push(`${itemName({ kind: 'Building', building }, faction)}${label ? ` (${label})` : ''}: fires at enemy military units within 2 tiles`);
   }
   if (city.original_capital) {
     const founder = empireOfPlayer(view, city.original_capital_of ?? city.owner);
