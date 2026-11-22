@@ -62,7 +62,7 @@ export function EarlierTurnDialog({ campaign, current, onClose }: { campaign: st
     {turns === null ? <p>Looking for saved turns…</p>
       : !turns.length ? <p>No earlier turn is saved yet. The game keeps the last {AUTOSAVE_SLOTS} turns.</p>
       : <>
-        <p>The game opens at the start of the turn you choose. Turns after it are discarded.</p>
+        <p>The game opens at the start of the turn you choose. You lose the turns after it.</p>
         <div className="earlier-turn-list" role="radiogroup" aria-label="Saved turns">
           {turns.map((t) => (
             <label key={t.id} className={`earlier-turn-row ${t.id === chosen ? 'chosen' : ''}`}>
