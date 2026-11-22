@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { LANDMARK_REF_ZOOM, landmarkArtUrl, landmarkBox, landmarkBoxes, landmarkCore, landmarksOf, shortLabel } from './landmarks';
+import { LANDMARK_REF_ZOOM, townCover, landmarkArtUrl, landmarkBox, landmarkBoxes, landmarkCore, landmarksOf, shortLabel } from './landmarks';
 import { itemArtUrl } from '../unlockArt';
 import { GREAT_WORKS } from '../data';
 import { CITY_WORLD } from './terrain';
@@ -108,6 +108,15 @@ describe('constructed wonder landmarks', () => {
     const uses = src.split('referenceBannerCovers(').length - 1;
     expect(uses, 'the definition and the one landmarkBoxes call').toBe(2);
     expect(src).toMatch(/landmarkBoxes\([^;]*referenceBannerCovers\(/);
+  });
+  it('keeps a wonder beside a city off the painted town', () => {
+    const city = { q: 4, r: 4 }, site = { q: 5, r: 4 };
+    const refPx = HEX_SIZE * LANDMARK_REF_ZOOM;
+    const ref = (h: Hex) => { const p = hexToPixel(h, HEX_SIZE); return { x: p.x * LANDMARK_REF_ZOOM, y: p.y * LANDMARK_REF_ZOOM }; };
+    const town = townCover(ref(city), refPx);
+    const b = landmarkBoxes([{ tile: 1, hex: site }], (p) => ({ x: p.x * LANDMARK_REF_ZOOM, y: p.y * LANDMARK_REF_ZOOM }), refPx, [town]).get(1)!;
+    const core = landmarkCore(b);
+    expect(Math.max(0, Math.min(core.x + core.w, town.x + town.w) - Math.max(core.x, town.x))).toBe(0);
   });
 });
 

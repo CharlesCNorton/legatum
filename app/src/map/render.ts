@@ -51,7 +51,7 @@ import { aircraftPassProgress, drawCombatFx, drawSiegeAmbient, siegeAmbientBox }
 import { smoulderVisible } from './smoulder';
 import type { March, MomentHold, MomentPlan } from './momentFx';
 import { drawChimneySmoke, drawWaterGlints, idleBoxes, type IdleView } from './idleLife';
-import { drawLandmarks, LANDMARK_REF_ZOOM, landmarkBoxes, landmarksOf } from './landmarks';
+import { drawLandmarks, LANDMARK_REF_ZOOM, landmarkBoxes, landmarksOf, townCover } from './landmarks';
 import { drawConstructionSites } from './constructionFx';
 import { constructionStage, sitesOf, type ConstructionSite } from './constructionSites';
 import { CONSTRUCTION_ANIMATION, buildPhases } from './momentFx';
@@ -1420,7 +1420,7 @@ function bannerBlock(c: CityView, spec: BannerSpec, meters: BannerMeter[], p: { 
 }
 
 /**
- * Every city's banner block as it stands at LANDMARK_REF_ZOOM, in world units × LANDMARK_REF_ZOOM: what a wonder's footprint
+ * Every city's banner block and painted town as they stand at LANDMARK_REF_ZOOM, in world units × LANDMARK_REF_ZOOM: what a wonder's footprint
  * is chosen against (landmarks.ts), so the choice depends on neither the camera's zoom nor what is on screen.
  */
 const refCoverMemo = new WeakMap<PlayerView, { look: LookId; siege: ReadonlyMap<number, SiegeLevel>; covers: Rect[] }>();
@@ -1434,8 +1434,10 @@ export function referenceBannerCovers(view: PlayerView, look: LookId, siege: Rea
     const faction = view.players.find((pl) => pl.id === c.owner)?.faction;
     const spec = bannerSpec(view, c, faction ? `glyph-${faction.toLowerCase()}` : null, false);
     const meters = c.owner === view.me && c.visible ? bannerMeters(c, faction) : [];
-    return bannerBlock(c, spec, meters, { x: world.x * LANDMARK_REF_ZOOM, y: world.y * LANDMARK_REF_ZOOM }, hexPx, fs, look, 1, siege).cover;
-  });
+    const at = { x: world.x * LANDMARK_REF_ZOOM, y: world.y * LANDMARK_REF_ZOOM };
+    // The painted town too, so a wonder beside a city never stands on its towers (UI review, 2026-11-22).
+    return [bannerBlock(c, spec, meters, at, hexPx, fs, look, 1, siege).cover, townCover(at, hexPx)];
+  }).flat();
   refCoverMemo.set(view, { look, siege, covers });
   return covers;
 }

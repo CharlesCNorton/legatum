@@ -74,6 +74,11 @@ function boxAt(c: { x: number; y: number }, hexPx: number, spot: readonly [numbe
   return { x: c.x - s / 2 + spot[0] * hexPx, y: c.y - s * 0.36 + spot[1] * hexPx, s };
 }
 
+/** The solid part of a city's painted town (walls and towers, not its faded ground), centred on the city's hex. */
+export function townCover(c: { x: number; y: number }, hexPx: number): Rect {
+  return { x: c.x - 0.8 * hexPx, y: c.y - 0.5 * hexPx, w: 1.6 * hexPx, h: 1.2 * hexPx };
+}
+
 /** Which of SPOTS keeps the painting clearest of `covers` (banners and earlier landmarks, never moving units). */
 function landmarkSpot(c: { x: number; y: number }, hexPx: number, covers: readonly Rect[]) {
   const overlap = (a: Rect, r: Rect) =>
