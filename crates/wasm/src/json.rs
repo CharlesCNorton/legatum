@@ -130,7 +130,9 @@ pub fn upgrade_from_49(json: &str) -> Result<GameState, String> {
     let v: Value = serde_json::from_str(json).map_err(|e| format!("invalid JSON: {e}"))?;
     match v.get("save_version").and_then(Value::as_u64) {
         None if carries_rules_49_fields(&v) => upgrade_value_from_49(v),
-        None | Some(50) | Some(51) | Some(52) | Some(53) | Some(54) | Some(55) => upgrade_value_from_50(v),
+        None | Some(50) | Some(51) | Some(52) | Some(53) | Some(54) | Some(55) => {
+            upgrade_value_from_50(v)
+        }
         Some(49) => upgrade_value_from_49(v),
         Some(n) if n == u64::from(legatum_core::RULES_VERSION) => parse_state(json),
         Some(n) => Err(format!(
