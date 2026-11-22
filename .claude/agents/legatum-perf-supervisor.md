@@ -54,10 +54,11 @@ games do, so this is the first place to look for what to fix.
   `LEGATUM_GAMES_READ_TOKEN` from the environment. Never print the token, and never copy records out of the
   container: they are players' games (the Privacy promise in `README.md`). If you need a number it does not
   print, add it to `telemetry_numbers` with the same checks and a test, in a PR.
-- **Nightly:** summarise what the records hold for games uploaded since the last run: `turn_times` (active
-  seconds per turn, per session), the per-turn `telemetry`, and `frame_times` (one `TurnFrameTime` row per turn
-  from 2026-11-22: frame p50/p95/max gaps, input lag, long tasks, map draw cost, units and cities in view, zoom,
-  canvas megapixels; `analyse_games.py telemetry` prints the checked numbers). Games played before
+- **Nightly:** summarise what `analyse_games.py telemetry` prints for games uploaded since the last run: per
+  game, the `turn_times` summary (active seconds per turn: total, median, p95, slowest turn) and the
+  `frame_times` summary (from 2026-11-22: slow frames, long tasks, map draw mean, worst input lag, and the three
+  worst turns by frame p95 with their units, cities, zoom and canvas megapixels). The archive's per-turn
+  `telemetry` and the other `TurnFrameTime` fields are not printed. Games played before
   that build have none: say so in the ledger note instead of reporting a quiet night. AI-wait is not recorded yet.
   Append the summary to the ledger and flag any game or turn range clearly worse than the rest, with the game id
   and turn.
@@ -93,9 +94,9 @@ should be looking out for proactively?" Yes: this class is the first thing to hu
   anything in `app/src` that maps over `view.units`, `view.cities` or `view.tiles` inside a render or a
   pointer handler; AI planning per unit pair.
 - **Real games are the judge:** uploads carry `frame_times` from 2026-11-22 (`frame_summary()` in
-  `tools/games/analyse_games.py`): plot frame p95, slow frames, input lag and map-draw time against the units,
-  cities and canvas megapixels of that turn. Older games have only `turn_times` and `telemetry`. A slope is a
-  finding.
+  `tools/games/analyse_games.py`): read frame p95, slow frames, input lag and map-draw time against the units,
+  cities and canvas megapixels of each game's worst turns (`worst_turns` in `analyse_games.py telemetry`). Older
+  games have only `turn_times`. A slope is a finding.
 
 ## Weekly: improve (one or two small PRs)
 Pick the single biggest win from this list, by expected gain over effort:

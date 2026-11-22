@@ -308,7 +308,10 @@ def telemetry_numbers(record) -> dict:
                    long_task_ms=sum(f["long_task_ms"] for f in frames),
                    map_draw_mean_ms10=sum(f["map_draw_mean_ms10"] * f["map_draws"] for f in frames) // max(1, draws),
                    input_p95_ms_max=laggy["input_p95_ms"], input_p95_ms_max_turn=laggy["turn"],
-                   worst_turns=[{"turn": f["turn"], "frame_p95_ms10": f["frame_p95_ms10"], "units": f["units"]}
+                   # What was on screen on the worst turns, to read a slope from; extra fields only when checked.
+                   worst_turns=[{**{k: f[k] for k in ("turn", "frame_p95_ms10", "slow_frames", "input_p95_ms",
+                                                      "map_draw_mean_ms10", "units")},
+                                 **{k: f[k] for k in ("cities", "zoom100", "canvas_mp10") if whole(f.get(k)) is not None}}
                                 for f in worst])
     return out
 
