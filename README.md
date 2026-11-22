@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/media/banner.jpg" alt="Legatum: a historical 4X on a hex map. Empires rise and fall. Some are remembered." width="100%">
+  <img src="docs/media/banner.jpg" alt="Legatum. Empires rise and fall. Some are remembered." width="100%">
 </p>
 
 <p align="center">

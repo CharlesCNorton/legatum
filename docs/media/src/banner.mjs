@@ -19,6 +19,8 @@ const face = (family, file, weight, style = "normal") => `@font-face{font-family
 const og = process.argv[2] === "og";
 const [width, height] = og ? [1200, 630] : [1600, 560];
 const out = og ? "app/public/og.jpg" : "docs/media/banner.jpg";
+// The README banner has no eyebrow: the heading under it already says what the game is (user, 2026-11-22).
+// The link card keeps it, since nothing else beside an unfurl says so.
 // The card is narrower and taller than the banner: a smaller wordmark, and the art kept clear on the right.
 const fit = og ? ".in{left:72px;top:118px}.in svg{width:520px!important}.t{font-size:38px;max-width:600px}.f{left:72px;bottom:52px}.b::before{background:linear-gradient(90deg,rgba(24,19,14,.94) 0%,rgba(24,19,14,.84) 40%,rgba(24,19,14,.30) 70%,rgba(24,19,14,0) 90%),linear-gradient(0deg,rgba(24,19,14,.55),rgba(24,19,14,0) 38%)}" : "";
 const html = `<!doctype html><meta charset=utf-8><style>
@@ -35,7 +37,7 @@ html,body{margin:0}
 .f i{color:#d6b25c;font-style:normal;padding:0 12px}
 .frame{position:absolute;inset:18px;border:1.5px solid rgba(214,178,92,.55);pointer-events:none}
 .frame::after{content:"";position:absolute;inset:6px;border:1px solid rgba(242,234,216,.22)}
-${fit}</style><div class=b><div class=frame></div><div class=in><p class=k>A HISTORICAL 4X ON A HEX MAP</p>${logo}<p class=t>Empires rise and fall.<br>Some are remembered.</p></div>
+${fit}</style><div class=b><div class=frame></div><div class=in>${og ? "<p class=k>A HISTORICAL 4X ON A HEX MAP</p>" : ""}${logo}<p class=t>Empires rise and fall.<br>Some are remembered.</p></div>
 <div class=f>OPEN SOURCE<i>·</i>RUST ENGINE<i>·</i>PLAY IN YOUR BROWSER</div></div>`;
 const b = await chromium.launch();
 const p = await b.newPage({ viewport: { width, height }, deviceScaleFactor: 1 });
