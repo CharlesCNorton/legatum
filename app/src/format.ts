@@ -897,7 +897,7 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
       if (e.reason.startsWith(OUTMATCHED_PREFIX)) {
         return line('orders', `${unitLabel(ctx, e.unit, e.owner)} couldn't enter ${e.toward ? location(ctx, e.toward) : 'the tile'}: ${rename(e.reason.slice(OUTMATCHED_PREFIX.length))}`, {
           at: e.at, players: [e.owner], weight: mine(e.owner) ? 2 : 0, tone: 'neutral',
-          details: ['When units of empires not at War step onto the same tile, the stronger side moves in and the other stays put. Nobody is attacked.'],
+          details: ['Empires not at War never fight over a tile: the stronger side moves in. This unit stayed put and keeps its order; give it a new route.'],
         });
       }
       // The attack's target died to ranged fire before movement and nothing hostile is left there.

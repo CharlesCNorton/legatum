@@ -1185,7 +1185,7 @@ fn settle_peaceful_contest(
             format!("{name} {verb} just as strong ({top} each) and won the draw to move in")
         } else {
             // A side as strong as the winner whose every claimant was pinned by an attack.
-            format!("{name} moved in while this unit was held by an attack")
+            format!("it was attacked, and {name} moved in")
         };
         out.insert(*u, format!("{OUTMATCHED_PREFIX}{why}"));
     }

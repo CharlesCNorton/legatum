@@ -287,7 +287,7 @@ describe('event formatting', () => {
       reason: `${OUTMATCHED_PREFIX}Saint Veyra's Hoplite is stronger (28 against 20) and moved in` }, ctx);
     expect(l).toMatchObject({ category: 'orders', weight: 2, tone: 'neutral',
       text: "Your Spearman couldn't enter this tile: Saint Veyra's Hoplite is stronger (28 against 20) and moved in" });
-    expect(l.details[0]).toContain('Nobody is attacked');
+    expect(l.details[0]).toContain('keeps its order');
   });
 
   it('G2: attack pursuit outcomes say plainly what happened', () => {
