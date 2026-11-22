@@ -17,28 +17,54 @@ for (const size of SIZES) test.describe(`first run with advisor ${size.name}`, (
     await expect(page.getByTestId('turn-number')).toHaveText('1', { timeout: 60_000 });
     const card = page.getByTestId('advisor');
     const ring = page.getByTestId('advisor-ring');
+    const intersects = (a: { x: number; y: number; width: number; height: number }, b: { x: number; y: number; width: number; height: number }) =>
+      a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
+    let tileRadius = 24;
     const capture = async (name: string) => {
       await expect(card).toBeVisible();
       await page.mouse.move(5, size.height / 2);
       await shot(page, size, name);
       const cta = await page.locator('.seatbar .cta').boundingBox();
       const box = await card.boundingBox();
-      if (cta && box) expect(box.x + box.width <= cta.x || cta.x + cta.width <= box.x || box.y + box.height <= cta.y || cta.y + cta.height <= box.y,
-        'the advisor never covers the turn button').toBe(true);
+      if (!box) return;
+      if (cta) expect(intersects(box, cta), 'the advisor never covers the turn button').toBe(false);
+      const ringBox = await ring.boundingBox();
+      if (ringBox) {
+        expect(intersects(box, ringBox), 'the advisor never covers its ring').toBe(false);
+        if (await ring.evaluate((el) => el.classList.contains('map-target'))) tileRadius = ringBox.width / 2;
+      }
+      const selected = await page.evaluate(() => {
+        const s = (window as unknown as GameWindow).legatum.getState(), v = s.views?.[s.seat];
+        const entity = s.selection?.kind === 'city' ? v?.cities.find((c) => c.id === s.selection?.id)
+          : s.selection?.kind === 'unit' ? v?.units.find((u) => u.id === s.selection?.id) : null;
+        if (!entity) return null;
+        const p = (window as unknown as GameWindow).legatumMap.toScreen(entity.pos);
+        const map = document.querySelector('[data-game-map]')!.getBoundingClientRect();
+        return { x: map.left + p.x, y: map.top + p.y };
+      });
+      if (selected) expect(intersects(box, { x: selected.x - tileRadius, y: selected.y - tileRadius, width: 2 * tileRadius, height: 2 * tileRadius }),
+        'the advisor never covers the selected tile').toBe(false);
+      for (const target of await page.locator('dialog[open] .btn.primary, dialog[open] .era-card-title').all()) {
+        const r = await target.boundingBox();
+        if (r) expect(intersects(box, r), 'the advisor never covers a dialog primary or technology name').toBe(false);
+      }
     };
     await expect(card).toHaveAttribute('data-advisor-id', 'welcome');
+    await expect(card.getByRole('button', { name: /Continue/ })).toContainText('Return');
+    await expect(page.locator('.seatbar .cta .kbd')).toHaveCount(0);
     await capture('01-welcome');
-    await card.getByRole('button', { name: 'Continue' }).click();
+    await card.getByRole('button', { name: /^Continue/ }).click();
     await expect(card).toHaveAttribute('data-advisor-id', /^city:/);
     // On some layouts the capital is already selected on turn 1, so the card may open on its second step.
     await expect(ring).toBeVisible();
+    const buildStepShown = await card.getByText('Step 2 of 2').isVisible().catch(() => false);
     await capture('02-build-first-ring');
     const cityId = Number((await card.getAttribute('data-advisor-id'))!.split(':')[1]);
     await page.evaluate((id) => { const s = (window as unknown as GameWindow).legatum.getState(); s.select({ kind: 'city', id }, true); }, cityId);
     await expect(page.locator('.city-panel')).toBeVisible();
     await expect(card).toContainText('Step 2 of 2');
     await expect(ring).toBeVisible();
-    await capture('03-build-button-ring');
+    if (!buildStepShown) await capture('03-build-button-ring');
     const buildInstruction = (await card.locator('.advisor-step strong').textContent())!;
     const buildName = /Build on (.+)\./.exec(buildInstruction)?.[1];
     expect(buildName).toBeTruthy();

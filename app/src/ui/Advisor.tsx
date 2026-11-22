@@ -1,9 +1,11 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useCelebration } from '../celebrate/MomentLane';
+import { useCombatFx } from '../feel';
 import { tileOnScreen } from '../map/screenPos';
 import { useGame } from '../store';
 import { loadWasmModule, loadedWasmModule } from '../wasmClient';
+import { FactionMark } from './bits';
 import { Kbd } from './index';
 import { useGuide } from './guideState';
 import { advisorSuggestion, useAdvisor, type AdvisorTarget } from './advisorModel';
@@ -11,13 +13,15 @@ import { useCoarsePointer } from './useCoarsePointer';
 import './Advisor.css';
 
 /** Look up mounted controls afresh: a panel can open or move without changing the suggestion. */
-function targetElement(target: Exclude<NonNullable<AdvisorTarget>, { kind: 'tile' }>): HTMLElement | null {
+export function targetElement(target: Exclude<NonNullable<AdvisorTarget>, { kind: 'tile' }>): HTMLElement | null {
   const first = (...selectors: string[]) => selectors.map((s) => document.querySelector<HTMLElement>(s)).find((e) => e && e.getClientRects().length && !e.closest('[hidden]')) ?? null;
   const action = (label: RegExp) => [...document.querySelectorAll<HTMLElement>('.unit-panel button, .phone-primary-actions button')]
     .find((e) => label.test(e.getAttribute('aria-label') ?? e.textContent?.trim() ?? '') && e.getClientRects().length) ?? null;
   switch (target.name) {
     case 'research': return first('.topbar .research-chip', '.topbar .tb-nav-tech');
-    case 'turn': return first('.seatbar .cta', '.phone-turn-dock button');
+    case 'turn': return target.value === 'end'
+      ? first('.seatbar .cta', '.phone-turn-dock button:last-of-type')
+      : first('.seatbar .cta', '.phone-turn-dock button[aria-label^="Next decision"]');
     case 'race': return first('.game .panel.vp', '.phone-vp-strip');
     case 'found': return action(/^Found City/i);
     case 'fortify': return action(/^(Fortify|Wait)/i);
@@ -48,7 +52,7 @@ function targetRect(target: AdvisorTarget): { x: number; y: number; width: numbe
   return { x: r.x - pad, y: r.y - pad, width: r.width + pad * 2, height: r.height + pad * 2, tile: false };
 }
 
-function AdvisorRing({ target }: { target: AdvisorTarget }) {
+function AdvisorRing({ target, still }: { target: AdvisorTarget; still: boolean }) {
   const [rect, setRect] = useState<ReturnType<typeof targetRect>>(null);
   useEffect(() => {
     if (!target) { setRect(null); return; }
@@ -70,8 +74,10 @@ function AdvisorRing({ target }: { target: AdvisorTarget }) {
     return () => { cancelAnimationFrame(frame); window.clearTimeout(scroll); };
   }, [target?.kind, target?.kind === 'tile' ? `${target.hex.q},${target.hex.r}` : target?.kind === 'control' ? `${target.name}:${target.value}` : '']);
   if (!rect) return null;
-  return <div className={`advisor-ring${rect.tile ? ' map-target' : ''}`} data-testid="advisor-ring" aria-hidden="true"
-    style={{ left: rect.x, top: rect.y, width: rect.width, height: rect.height }} />;
+  return <div className={`advisor-ring${rect.tile ? ' map-target' : ''}${still ? ' still' : ''}`} data-testid="advisor-ring" aria-hidden="true"
+    style={{ left: rect.x, top: rect.y, width: rect.width, height: rect.height }}>
+      {rect.tile && <svg viewBox="0 0 100 100" width="100%" height="100%" preserveAspectRatio="none"><polygon points="50,3 97,26 97,74 50,97 3,74 3,26" fill="none" stroke="currentColor" strokeWidth="5" /></svg>}
+    </div>;
 }
 
 export function Advisor() {
@@ -86,8 +92,18 @@ export function Advisor() {
   const mode = useGame((s) => s.mode);
   const techOpen = useGame((s) => s.techOpen);
   const client = useGame((s) => s.client);
-  const paused = useGame((s) => !!s.scenario || !!s.busy || !!s.endTurnConfirmation || s.reportOpen || s.diplomacyOpen || !!s.ready[s.seat] || !!s.place ||
+  const animationsOn = useCombatFx((s) => s.enabled);
+  const paused = useGame((s) => !!s.scenario || !!s.busy || s.handoff !== null || !!s.endTurnConfirmation || s.reportOpen || s.diplomacyOpen || !!s.ready[s.seat] || !!s.place ||
     (s.client?.kind === 'remote' && s.net?.conn !== 'open'));
+  const [blockingOverlay, setBlockingOverlay] = useState(false);
+  useEffect(() => {
+    const check = () => setBlockingOverlay(!!document.querySelector('[data-game-overlay]:not([data-dismissible])'));
+    check();
+    const observer = new MutationObserver(check);
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['data-game-overlay', 'data-dismissible'] });
+    const unsubscribe = useGame.subscribe(check);
+    return () => { observer.disconnect(); unsubscribe(); };
+  }, []);
   const guideOpen = useGuide((s) => s.open);
   const { active: celebration, holding } = useCelebration();
   const { enabled, seen, skipped, skippedTurn, markSeen, skip, setEnabled } = useAdvisor();
@@ -98,13 +114,51 @@ export function Advisor() {
     void loadWasmModule().then(() => { if (active) refreshPlan((n) => n + 1); }).catch(() => { /* Basic guidance remains available. */ });
     return () => { active = false; };
   }, [view, enabled]);
-  const hidden = paused || guideOpen || holding || !!celebration || !enabled || !view || view.finished;
+  const hidden = paused || blockingOverlay || guideOpen || holding || !!celebration || !enabled || !view || view.finished;
+  const turnLabel = document.querySelector<HTMLElement>('.seatbar .cta-label')?.textContent?.trim()
+    ?? document.querySelector<HTMLElement>('.phone-turn-dock button[aria-label^="Next decision"]')?.textContent?.trim() ?? undefined;
   const suggestion = view && enabled ? advisorSuggestion({ view, orders: orders[seat] ?? [], errors: errors[seat], selection,
-    humans: humans.length, touch, techOpen, mode, local: { humans, orders, errors },
+    humans: humans.length, touch, techOpen, mode, turnLabel, local: useGame.getState(),
     forecast: client ? (unit, at, mode) => client.forecast(view.me, unit, at, mode) : undefined }, seen,
     skippedTurn === view.turn ? skipped : []) : null;
   const [modal, setModal] = useState<HTMLDialogElement | null>(null);
   useEffect(() => { setModal(techOpen ? document.querySelector<HTMLDialogElement>('dialog.tech-modal[open]') : null); }, [techOpen]);
+  const [bottomSlot, setBottomSlot] = useState(false);
+  const [dialogRect, setDialogRect] = useState<DOMRect | null>(null);
+  useEffect(() => setBottomSlot(false), [suggestion?.id, suggestion?.current]);
+  useLayoutEffect(() => {
+    if (hidden || !suggestion) return;
+    let frame = 0, previous = '';
+    const measure = () => {
+      const el = card.current;
+      if (modal) {
+        const r = modal.getBoundingClientRect(), key = `${r.x},${r.y},${r.width},${r.height}`;
+        if (key !== previous) { previous = key; setDialogRect(r); }
+      } else if (el) {
+        const box = el.getBoundingClientRect();
+        const hit = (r: { left: number; right: number; top: number; bottom: number }) =>
+          box.left < r.right && box.right > r.left && box.top < r.bottom && box.bottom > r.top;
+        const step = suggestion.steps[suggestion.current];
+        let target: DOMRect | null = null;
+        if (step?.target?.kind === 'control') target = targetElement(step.target)?.getBoundingClientRect() ?? null;
+        else if (step?.target?.kind === 'tile') {
+          const p = tileOnScreen(step.target.hex);
+          if (p) target = new DOMRect(p.x - p.radius, p.y - p.radius, 2 * p.radius, 2 * p.radius);
+        }
+        let selectedTile: DOMRect | null = null;
+        if (selection) {
+          const entity = selection.kind === 'unit' ? view?.units.find((u) => u.id === selection.id) : selection.kind === 'city' ? view?.cities.find((c) => c.id === selection.id) : null;
+          const p = entity && tileOnScreen(entity.pos);
+          if (p) selectedTile = new DOMRect(p.x - p.radius, p.y - p.radius, 2 * p.radius, 2 * p.radius);
+        }
+        const shouldMove = !!((target && hit(target)) || (selectedTile && hit(selectedTile)));
+        if (shouldMove && !bottomSlot) setBottomSlot(true);
+      }
+      frame = requestAnimationFrame(measure);
+    };
+    measure();
+    return () => cancelAnimationFrame(frame);
+  }, [hidden, suggestion?.id, suggestion?.current, modal, selection, view, bottomSlot]);
   useLayoutEffect(() => {
     const el = card.current, game = document.querySelector<HTMLElement>('.game');
     if (!el || !game) return;
@@ -119,21 +173,23 @@ export function Advisor() {
   const welcome = suggestion.id === 'welcome';
   const lesson = suggestion.acknowledge && !welcome;
   const content = <>
-    <AdvisorRing target={step?.target ?? null} />
-    <aside ref={card} className={`advisor-card${welcome ? ' welcome' : ''}`} data-overlay-slot="story-hint" data-testid="advisor" data-advisor-id={suggestion.id} aria-label="Advisor" onKeyDown={(e) => e.stopPropagation()}>
-      <span className="advisor-label">Advisor</span>
+    <AdvisorRing target={step?.target ?? null} still={!animationsOn} />
+    <aside ref={card} className={`advisor-card${welcome ? ' welcome' : ''}${modal ? ' in-dialog' : ''}${bottomSlot && !modal ? ' bottom-slot' : ''}`}
+      style={modal && dialogRect ? { left: dialogRect.left, bottom: innerHeight - dialogRect.bottom, width: dialogRect.width } : undefined}
+      data-overlay-slot="story-hint" data-testid="advisor" data-advisor-id={suggestion.id} aria-label="Advisor" onKeyDown={(e) => e.stopPropagation()}>
+      <span className="advisor-label">{!welcome && view && <FactionMark faction={view.players.find((p) => p.id === view.me)?.faction ?? 'Switzerland'} size={18} />}Advisor</span>
       <div className="advisor-copy" role="status" aria-live="polite" aria-atomic="true">
         <h3>{suggestion.title}</h3>
         <p>{suggestion.why}</p>
       </div>
-      {step && <div className="advisor-step"><span className="advisor-count">Step {suggestion.current + 1} of {suggestion.steps.length}</span>
-        <strong>{step.instruction}</strong>{step.key && <Kbd>{step.key}</Kbd>}
+      {step && <div className="advisor-step">{suggestion.steps.length > 1 && <span className="advisor-count">Step {suggestion.current + 1} of {suggestion.steps.length}</span>}
+        <strong>{step.instruction}</strong>{step.key && <Kbd>{step.key}</Kbd>}{modal && <span className="advisor-dialog-why">{suggestion.why}</span>}
       </div>}
       <div className="advisor-actions">
-        {welcome ? <button className="btn primary" onClick={() => markSeen('welcome')}>Continue</button>
+        {welcome ? <button className="btn primary" onClick={() => markSeen('welcome')}>Continue {!touch && <Kbd>Return</Kbd>}</button>
           : lesson ? <button className="btn primary" onClick={() => markSeen(suggestion.id)}>Got it</button>
             : <button className="advisor-link" onClick={() => skip(suggestion.id, view!.turn)}>Not now</button>}
-        <button className="advisor-link" onClick={() => setEnabled(false)}>Turn off advisor</button>
+        <button className="advisor-link" onClick={() => setEnabled(false)}>Turn off</button>
       </div>
     </aside>
   </>;
@@ -143,7 +199,7 @@ export function Advisor() {
 export function AdvisorSettings() {
   const { enabled, setEnabled } = useAdvisor();
   return <div className="hint-settings" onKeyDown={(e) => e.stopPropagation()}>
-    <label><input type="checkbox" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} />Advisor</label>
-    <div className="hint-settings-foot"><span>Shown until you turn it off</span></div>
+    <label><input type="checkbox" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} />Show the advisor</label>
+    <div className="hint-settings-foot"><span>On by default. Turn it off any time.</span></div>
   </div>;
 }
