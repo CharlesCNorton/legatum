@@ -730,6 +730,8 @@ dialog.settings-modal::backdrop {
     height: 64px !important;
   }
   .title-menu { margin-top: 16px; padding: 14px 24px 8px; }
+  /* With a game open, the menu gives up that gap so the online Multiplayer menu clears the footer (UI review of PR #104). */
+  .title-screen:has(.title-resume) .title-menu { margin-top: 0; }
   .title-actions .btn.big.primary { min-height: 60px; margin-bottom: 6px; }
   .title-actions .btn.big:not(.primary) { padding: 6px 16px 4px; }
   .title-settings { margin-top: 4px; padding-top: 4px; }
