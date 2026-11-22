@@ -132,7 +132,7 @@ pub struct ScenarioFile {
     pub seat: PlayerId,
     /// Difficulty of every other empire.
     pub difficulty: AiDifficulty,
-    /// Legacy version-1 field retained for format compatibility; new cuts set it to zero.
+    /// Required by the version-1 format; new cuts set it to zero.
     pub minutes: u32,
     pub briefing: String,
     /// What the scenario tests, for the comparison report.
