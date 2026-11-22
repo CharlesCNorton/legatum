@@ -162,7 +162,7 @@ impl Planner<'_> {
             self.ctx.own_cities.iter().copied().enumerate().collect();
         for (ci, c) in cities {
             let Some(d) = &c.detail else { continue };
-            if d.resistance > 0 || self.funding_front(ci, c) {
+            if d.resistance > 0 {
                 continue;
             }
             let ordered = self.orders.iter().rev().find_map(|o| match o {
@@ -175,6 +175,14 @@ impl Planner<'_> {
             let civilian = matches!(item, Some(ProductionItem::Unit { .. })) && !troop;
             // A troop completing this turn is already in the planned upkeep.
             let counted = ordered.is_none() && d.turns_to_complete == Some(1);
+            let front_insolvent = self.difficulty == legatum_core::AiDifficulty::Hard
+                && self.decisions.treasury_build_guard > 0
+                && matches!(item, Some(ProductionItem::Unit { unit })
+                    if legatum_core::data::pays_upkeep(unit))
+                && self.planned_runway(i32::from(!counted)) == Some(0);
+            if self.funding_front(ci, c) && !front_insolvent {
+                continue;
+            }
             let pause = troop
                 && self
                     .planned_runway(i32::from(!counted))
@@ -290,6 +298,10 @@ impl Planner<'_> {
 #[cfg(test)]
 mod tests {
     use super::runway_of;
+    use crate::Knobs;
+    use crate::fixture::{ENEMY, ME, ViewBuilder, off};
+    use crate::scripted::Planner;
+    use legatum_core::{AiDifficulty, Faction, Order, ProductionItem, UnitKind};
 
     #[test]
     fn runway_counts_the_turns_the_treasury_still_pays() {
@@ -299,5 +311,83 @@ mod tests {
         assert_eq!(runway_of(0, 0), None);
         assert_eq!(runway_of(5, 3), None);
         assert_eq!(runway_of(2, -2), Some(1));
+    }
+
+    fn insolvent_front() -> legatum_core::PlayerView {
+        let troop = ProductionItem::Unit {
+            unit: UnitKind::Spearman,
+        };
+        let mut view = ViewBuilder::new(20, 16)
+            .faction(Faction::India)
+            .city(1, ME, off(5, 5), 3)
+            .city(2, ENEMY, off(10, 5), 3)
+            .unit(1, ME, UnitKind::Spearman, off(5, 5))
+            .unit(2, ME, UnitKind::Spearman, off(6, 5))
+            .gold(0)
+            .build();
+        view.economy.gold_per_turn.total = 0;
+        let detail = view.cities[0].detail.as_mut().unwrap();
+        detail.producing = Some(troop);
+        detail.turns_to_complete = Some(1);
+        view
+    }
+
+    #[test]
+    fn insolvent_front_pauses_completing_troop_when_enabled() {
+        let view = insolvent_front();
+        let front = &view.cities[0];
+        let mut planner =
+            Planner::new(&view, Knobs::for_faction(Faction::India), Faction::India, 7);
+        planner.difficulty = AiDifficulty::Hard;
+        planner.decisions.treasury_build_guard = 0;
+        assert!(planner.funding_front(0, front));
+        assert_eq!(planner.planned_runway(0), Some(0));
+        planner.fund_production_runway();
+        assert!(planner.orders.is_empty());
+
+        planner.decisions.treasury_build_guard = 1;
+        planner.fund_production_runway();
+        assert!(planner.orders.iter().any(|order| matches!(order,
+            Order::SetProduction { city, item } if *city == front.id && !matches!(item, ProductionItem::Unit { .. })
+        )));
+        assert_eq!(planner.planned_runway(0), None);
+    }
+
+    #[test]
+    fn insolvent_front_rejects_new_upkeep_when_enabled() {
+        let mut view = insolvent_front();
+        let detail = view.cities[0].detail.as_mut().unwrap();
+        detail.producing = None;
+        detail.turns_to_complete = None;
+        let front = &view.cities[0];
+        let mut planner =
+            Planner::new(&view, Knobs::for_faction(Faction::India), Faction::India, 7);
+        planner.difficulty = AiDifficulty::Hard;
+        planner.decisions.treasury_build_guard = 0;
+        assert!(!planner.troop_unfunded(0, front, UnitKind::Spearman));
+        planner.decisions.treasury_build_guard = 1;
+        assert!(planner.troop_unfunded(0, front, UnitKind::Spearman));
+    }
+
+    #[test]
+    fn final_budget_counts_a_troop_that_cannot_be_paused() {
+        let mut view = insolvent_front();
+        view.cities[0].detail.as_mut().unwrap().options.clear();
+        let extra = view.units[1].clone();
+        view.units.push(extra);
+        view.units.last_mut().unwrap().id = legatum_core::UnitId(3);
+        view.economy.gold_per_turn.total = 0;
+        let mut planner =
+            Planner::new(&view, Knobs::for_faction(Faction::India), Faction::India, 7);
+        planner.difficulty = AiDifficulty::Hard;
+        planner.decisions.treasury_build_guard = 1;
+        assert_eq!(planner.planned_runway(0), Some(0));
+        planner.disband_if_this_turn_overspent();
+        assert!(
+            planner
+                .orders
+                .iter()
+                .any(|order| matches!(order, Order::DisbandUnit { .. }))
+        );
     }
 }
