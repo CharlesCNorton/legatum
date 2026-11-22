@@ -42,7 +42,7 @@ The set is **solid silhouettes with knocked-out detail** (the majority of the or
 | `unit-stealthbomber.svg` | Air, Future: the Stealth Bomber, a flying wing with a saw-toothed rear edge (hangar unit). |
 | `unit-keshig.svg` | Mongol Keshig (the Mongols' Classical mounted unit, replacing the Cataphract; a mounted archer): a horse head in profile with a drawn recurved bow and an arrow flying back over it (the Parthian shot), so it never reads as `unit-horseman` (the head alone) or `unit-archer` (a bow alone). |
 | `unit-oathbearer.svg` | Sparta's Spearman (the Spartan Hoplite; the file keeps its older name): a Corinthian helmet in profile with a tall horsehair crest on a stand, the eye opening and cheek-guard gap knocked out, matching the painted Spartan Hoplite (redrawn 2026-11-22; it used to be the old Oathbearer's medieval closed helm). |
-| `unit-legionary.svg` | Byzantium Pikeman, the Varangian Guard (the file keeps its pre-rename name): a long-hafted Dane axe, broad bearded blade with a hole in it, spike on the haft's head and a butt cap. |
+| `unit-legionary.svg` | Rome's Phalangite replacement, the Legionary: a tall curved scutum with its boss beside an upright pilum. |
 | `unit-heirtothethrone.svg` | The Byzantium's Heir: a crowned head over a cloak with the house star cut into it (civilian; never the Settler's dome). |
 
 ## Tile improvements
