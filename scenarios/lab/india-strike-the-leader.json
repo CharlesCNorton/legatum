@@ -80,12 +80,6 @@
     "win_percent": 0,
     "measured_at": "2026-11-08T22:01:35Z"
   },
-  "lab": {
-    "question": "Can you take Gergovia and Nicomedia within twelve turns?",
-    "blurb": "Turn 148. India has Flight, 1,286 Gold and a rival at 8 VP. Two enemy cities lie just past your border.",
-    "era": 5,
-    "order": 21
-  },
   "state": {
     "encoding": "gzip-base64",
     "hash": "2429644284591962238",

@@ -72,12 +72,6 @@
     "median_turns": 5,
     "measured_at": "2026-11-08T22:02:47Z"
   },
-  "lab": {
-    "question": "Can you take the open Byzantine city with your Horsemen and keep your own cities?",
-    "blurb": "Turn 37. Your mounted army is near Dyrrachium, which has no Walls yet. Nearby Nicomedia is walled.",
-    "era": 1,
-    "order": 22
-  },
   "state": {
     "encoding": "gzip-base64",
     "hash": "17078502520846874123",

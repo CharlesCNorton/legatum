@@ -71,11 +71,6 @@
     "win_percent": 0,
     "measured_at": "2026-11-08T22:26:02Z"
   },
-  "lab": {
-    "question": "With the strongest army after the Mongols, would you strike them now, and where?",
-    "blurb": "Turn 74. The Mongols have eaten Germany and most of India and lead 5 VP to your 2. Their army is ten tiles east; walled Almaliq has no defender.",
-    "era": 2
-  },
   "state": {
     "encoding": "gzip-base64",
     "hash": "9381886280891728036",

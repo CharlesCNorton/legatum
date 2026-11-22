@@ -71,11 +71,6 @@
     "win_percent": 0,
     "measured_at": "2026-11-04T02:25:31Z"
   },
-  "lab": {
-    "question": "Can you turn Germany's first Settler into your next city?",
-    "blurb": "Turn 12. Germany, eight tiles south, has just trained its first Settler and has one Spearman. You have two Spearmen and a Scout.",
-    "era": 0
-  },
   "state": {
     "encoding": "gzip-base64",
     "hash": "2820465143633111666",

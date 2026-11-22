@@ -67,12 +67,6 @@
     "median_turns": 10,
     "measured_at": "2026-11-15T20:15:22Z"
   },
-  "lab": {
-    "question": "Can India finish two Early Tanks before T156?",
-    "blurb": "India, turn 146: several cities are poised to build Early Tanks while Srinagar is empty.",
-    "era": 5,
-    "requires": "AI validation only"
-  },
   "state": {
     "encoding": "gzip-base64",
     "hash": "1100311458653270182",

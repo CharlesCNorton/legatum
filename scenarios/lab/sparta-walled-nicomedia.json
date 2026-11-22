@@ -72,12 +72,6 @@
     "median_turns": 12,
     "measured_at": "2026-11-08T22:26:19Z"
   },
-  "lab": {
-    "question": "Can six Spartan units take walled Nicomedia in 12 turns?",
-    "blurb": "Turn 64, one turn into a war with Byzantium. Six Spartan units stand four tiles from walled Nicomedia.",
-    "era": 2,
-    "order": 1
-  },
   "state": {
     "encoding": "gzip-base64",
     "hash": "6375267725808723505",

@@ -71,11 +71,6 @@
     "win_percent": 0,
     "measured_at": "2026-11-08T22:26:18Z"
   },
-  "lab": {
-    "question": "Athens has nine cities and three military units. Can Sparta take its capital before its Bomber decides the game?",
-    "blurb": "Turn 150. You are Sparta, at Peace with Athens, with the strongest army on the map. Athens has Walls everywhere but almost nobody inside them, and one Bomber.",
-    "era": 4
-  },
   "state": {
     "encoding": "gzip-base64",
     "hash": "17055977991447638751",

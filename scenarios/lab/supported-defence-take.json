@@ -71,11 +71,6 @@
     "win_percent": 0,
     "measured_at": "2026-11-15T16:13:26Z"
   },
-  "lab": {
-    "question": "Does supporting a city feel right, and can three attackers still take it?",
-    "blurb": "Three Indian Riflemen stand at the west gate of walled Munich. Its Rifleman garrison has three more German Riflemen just east of it.",
-    "era": 4
-  },
   "state": {
     "encoding": "gzip-base64",
     "hash": "8849256182022680404",

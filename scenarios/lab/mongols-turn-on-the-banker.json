@@ -71,11 +71,6 @@
     "win_percent": 0,
     "measured_at": "2026-11-21T05:01:25Z"
   },
-  "lab": {
-    "question": "Leading 6 VP to 4, would you turn on the quiet Swiss, and can you take Bern before they reach their Reserve?",
-    "blurb": "Turn 135. You lead with 6 VP and are at War with Byzantium and the Aztecs. Switzerland has 4 VP, 4,191 Gold, and all 6 of its military units far to the east.",
-    "era": 4
-  },
   "state": {
     "encoding": "gzip-base64",
     "hash": "9041490070839198164",

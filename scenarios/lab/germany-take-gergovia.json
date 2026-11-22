@@ -71,11 +71,6 @@
     "win_percent": 0,
     "measured_at": "2026-11-08T22:26:05Z"
   },
-  "lab": {
-    "question": "Can you take an undefended Celtic city when your empire is already at War with them?",
-    "blurb": "Turn 100. You are Germany, at War with the Celts for 45 turns. Walled Gergovia, four tiles from your city Essen, has no military unit in it.",
-    "era": 3
-  },
   "state": {
     "encoding": "gzip-base64",
     "hash": "13309295967084914701",

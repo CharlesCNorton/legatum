@@ -73,11 +73,6 @@
     "median_turns": 12,
     "measured_at": "2026-11-15T18:43:49Z"
   },
-  "lab": {
-    "question": "Can the Aztecs hold Chalco and Texcoco for 12 turns?",
-    "blurb": "Turn 115. Germany is at War and its Cavalry is approaching two walled, empty Aztec cities.",
-    "era": 4
-  },
   "state": {
     "encoding": "gzip-base64",
     "hash": "3024969930535888194",

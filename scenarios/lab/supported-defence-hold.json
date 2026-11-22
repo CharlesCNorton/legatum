@@ -58,12 +58,6 @@
     "win_percent": 0,
     "measured_at": "2026-11-15T16:13:53Z"
   },
-  "lab": {
-    "question": "Does supporting a city feel right, and can three attackers still take it?",
-    "blurb": "Munich is walled and held by one Rifleman. Three Indian Riflemen stand at its west gate; three of yours stand just east of it.",
-    "era": 4,
-    "opponent": "India follows a fixed plan: every unit it has marches on Munich and attacks once three stand near it, and it never makes peace."
-  },
   "rusher": {
     "player": 1,
     "wars": [

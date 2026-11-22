@@ -59,11 +59,6 @@
     "median_turns": 15,
     "measured_at": "2026-11-09T02:04:12Z"
   },
-  "lab": {
-    "question": "Can you grow from four Aztec cities to eight in 15 turns?",
-    "blurb": "Turn 56, at Peace with everyone left. Four cities, eight Spearmen, 376 Gold, and open land toward Sparta.",
-    "era": 2
-  },
   "state": {
     "encoding": "gzip-base64",
     "hash": "9334432112700329394",

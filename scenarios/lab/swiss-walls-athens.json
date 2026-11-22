@@ -71,13 +71,6 @@
     "win_percent": 0,
     "measured_at": "2026-11-08T22:26:21Z"
   },
-  "lab": {
-    "question": "Switzerland has been at War with Athens for 30 turns and never took a city. Can you break a walled Athenian city?",
-    "blurb": "Turn 190. Athens leads with 5 VP and every Athenian city has Walls. You have 6 military units, 602 Gold and Metallurgy.",
-    "ask": "Could you take it, and what did you need that the AI did not do?",
-    "era": 4,
-    "order": 25
-  },
   "state": {
     "encoding": "gzip-base64",
     "hash": "8385231578909481012",

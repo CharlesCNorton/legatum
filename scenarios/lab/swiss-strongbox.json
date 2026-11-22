@@ -72,12 +72,6 @@
     "median_turns": 20,
     "measured_at": "2026-11-03T03:23:01Z"
   },
-  "lab": {
-    "question": "Can you take a rich Swiss capital before its owner buys an army?",
-    "blurb": "Turn 50. You are the Mongols, with six military units against two Swiss. Their capital sits seven tiles away, and the Swiss treasury holds 810 Gold to buy defenders.",
-    "era": 1,
-    "order": 40
-  },
   "state": {
     "encoding": "gzip-base64",
     "hash": "5576821939764103755",

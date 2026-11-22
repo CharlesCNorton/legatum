@@ -48,11 +48,6 @@
     "win_percent": null,
     "measured_at": "2026-11-08T22:26:12Z"
   },
-  "lab": {
-    "question": "You lead India 8 VP to 5, and India has Flight. Can you close it out?",
-    "blurb": "Turn 147. You are the Mongols with 8 VP and 11 cities after eating the Celts. India has 20 cities, 5 military units, 1,000 Gold and Flight.",
-    "era": 5
-  },
   "state": {
     "encoding": "gzip-base64",
     "hash": "9496033170214438878",

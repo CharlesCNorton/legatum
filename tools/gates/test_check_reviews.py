@@ -33,6 +33,13 @@ class Reviews(unittest.TestCase):
         self.assertEqual(kinds["artimpact"], ["app/src/unitArt.ts"])
         self.assertEqual(kinds["art"], ["app/public/terrain/grass.png"])
 
+    def test_position_only_branch_uses_fast_scenario_gate(self):
+        files = ["scenarios/lab/probe.json", "docs/sim-results/scenarios/probe-baseline.md"]
+        kinds = check.classify(".", "HEAD", "HEAD", files)
+        self.assertEqual(kinds["scenario"], ["scenarios/lab/probe.json"])
+        self.assertEqual(kinds["code"], [])
+        self.assertEqual(kinds["copy"], [])
+
     def test_a_comment_must_name_the_reviewer_and_the_head_sha(self):
         reviews = check.required_reviews(KINDS)
         comments = ["legatum-docs-reviewer: PASS at 8d5a6c66c",

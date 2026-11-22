@@ -71,11 +71,6 @@
     "win_percent": 0,
     "measured_at": "2026-11-08T22:26:01Z"
   },
-  "lab": {
-    "question": "Switzerland is one turn from starting its 10-turn hold. Can you break it by taking Geneva?",
-    "blurb": "Turn 134. You are the Celts, at Peace with Switzerland, the VP leader on 9. Geneva, an unwalled Swiss city of 5, stands 4 tiles from Tara.",
-    "era": 4
-  },
   "state": {
     "encoding": "gzip-base64",
     "hash": "6368770856159763883",

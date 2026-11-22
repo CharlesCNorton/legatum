@@ -58,12 +58,6 @@
     "win_percent": 0,
     "measured_at": "2026-11-08T22:26:19Z"
   },
-  "lab": {
-    "question": "Can you hold Biel against ten Indian units with one Field Cannon inside and 6,104 Gold?",
-    "blurb": "Turn 132. You are Switzerland. India's army has surrounded Biel, and your only unit inside is a Field Cannon.",
-    "era": 5,
-    "order": 4
-  },
   "state": {
     "encoding": "gzip-base64",
     "hash": "15601052702920334504",
