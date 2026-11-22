@@ -1,4 +1,5 @@
 // @vitest-environment happy-dom
+import { useCombatFx } from '../feel';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -166,6 +167,27 @@ describe('the research screen header', () => {
     };
     expect(research(machine([2])).querySelector('[data-testid=research-objectives-current] h4')?.textContent).toBe('Machine Age: score 1 VP');
     expect(research(machine([2, 3])).querySelector('[data-testid=research-objectives-current] h4')?.textContent).toBe('Machine Age: 1 VP scored');
+  });
+
+  it('stamps the seal in once per Age state, flashes a newly met card once, and stays still with animations off', () => {
+    const media = window.matchMedia;
+    window.matchMedia = ((q: string) => ({ matches: false, media: q, addEventListener() {}, removeEventListener() {} })) as unknown as typeof window.matchMedia;
+    try {
+      act(() => useCombatFx.getState().update({ enabled: false }));
+      const still = research(withV2(base, { era: 3, scored: [], progress: { '3:0': [14, 14], '3:1': [11, 40], '3:2': [0, 1] } }));
+      expect(still.querySelector('.eor-seal.stamp')).toBeNull();
+      expect(still.querySelectorAll('.eo-line.flash')).toHaveLength(0);
+      act(() => root.render(<></>));
+      act(() => useCombatFx.getState().update({ enabled: true }));
+      // A state not yet shown with animations on: the Medieval Age once you scored it, with its met card.
+      const view = withV2(base, { era: 3, scored: [3], progress: { '3:0': [14, 14], '3:1': [11, 40], '3:2': [0, 1] } });
+      const first = research(view);
+      expect(first.querySelector('.eor-seal.stamp')).not.toBeNull();
+      act(() => root.render(<></>));
+      const again = research(view);
+      expect(again.querySelector('.eor-seal.stamp')).toBeNull();
+      expect(again.querySelectorAll('.eo-line.flash')).toHaveLength(0);
+    } finally { window.matchMedia = media; }
   });
 
   it('before any Age begins it says so and when the first one does', () => {
