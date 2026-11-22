@@ -307,7 +307,11 @@ fn a_captured_colonia_scores_for_its_captor_and_a_razed_one_can_be_refounded() {
     assert_eq!(crate::goals::colonia_holder(&state, P0), None);
     assert!(crate::goals::colonia_open(&state, P0));
     crate::scoring::update(&mut state, &mut Vec::new());
-    assert!(!crate::goals::holders(&state).iter().any(|(of, _)| *of == P0));
+    assert!(
+        !crate::goals::holders(&state)
+            .iter()
+            .any(|(of, _)| *of == P0)
+    );
 }
 
 #[test]
@@ -327,10 +331,19 @@ fn a_colonia_founder_is_recommended_only_colonia_sites() {
     let view = crate::view::player_view(&state, P0);
     let unit = view.units.iter().find(|u| u.id == id).unwrap();
     let scores = crate::settlement::settlement_scores(&view, unit, &[]);
-    assert!(scores.iter().any(|s| s.colonia), "the veteran knows a Colonia site");
+    assert!(
+        scores.iter().any(|s| s.colonia),
+        "the veteran knows a Colonia site"
+    );
     let ranked: Vec<_> = scores.iter().filter(|s| s.rank.is_some()).collect();
-    assert!(!ranked.is_empty(), "at least one Colonia site is recommended");
-    assert!(ranked.iter().all(|s| s.colonia), "every marker sits on a Colonia site");
+    assert!(
+        !ranked.is_empty(),
+        "at least one Colonia site is recommended"
+    );
+    assert!(
+        ranked.iter().all(|s| s.colonia),
+        "every marker sits on a Colonia site"
+    );
     // An ordinary founder (a level-1 veteran) is ranked as before: no Colonia flags, no border-risk sites.
     let mut low = state.clone();
     low.units.get_mut(&id).unwrap().xp = crate::rules::promotion::threshold(1).unwrap();
@@ -338,5 +351,10 @@ fn a_colonia_founder_is_recommended_only_colonia_sites() {
     let unit = view.units.iter().find(|u| u.id == id).unwrap();
     let scores = crate::settlement::settlement_scores(&view, unit, &[]);
     assert!(scores.iter().all(|s| !s.colonia));
-    assert!(scores.iter().filter(|s| s.rank.is_some()).all(|s| !s.border_risk));
+    assert!(
+        scores
+            .iter()
+            .filter(|s| s.rank.is_some())
+            .all(|s| !s.border_risk)
+    );
 }

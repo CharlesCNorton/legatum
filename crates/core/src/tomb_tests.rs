@@ -42,7 +42,13 @@ fn only_egypt_builds_the_tomb_and_the_work_is_public() {
     assert_eq!(tomb_blocker(&s, P0, true), None);
     assert!(tomb_blocker(&s, P0, false).is_some(), "nothing to pause");
     let ev = order(&mut s, true);
-    assert!(matches!(ev[..], [Event::TombStarted { player: P0, turns: 0 }]));
+    assert!(matches!(
+        ev[..],
+        [Event::TombStarted {
+            player: P0,
+            turns: 0
+        }]
+    ));
     assert!(tomb_working(&s, P0));
     assert!(tomb_blocker(&s, P0, true).is_some(), "already building");
     let rival = crate::view::player_view(&s, P1);
@@ -69,11 +75,20 @@ fn while_the_tomb_is_built_no_city_builds_or_grows() {
         let y = crate::economy::city_yields(&s, city);
         assert_eq!(y.total.production, 0);
         assert!(y.total.food <= crate::data::FOOD_PER_POP * city.population);
-        assert_eq!(y.total.gold, crate::economy::city_yields(&{
-            let mut open = s.clone();
-            open.player_mut(P0).tomb_work = false;
-            open
-        }, city).total.gold, "Gold is untouched");
+        assert_eq!(
+            y.total.gold,
+            crate::economy::city_yields(
+                &{
+                    let mut open = s.clone();
+                    open.player_mut(P0).tomb_work = false;
+                    open
+                },
+                city
+            )
+            .total
+            .gold,
+            "Gold is untouched"
+        );
     }
     // Through real turns: population and build progress stand still.
     let stored: Vec<_> = [capital, second]
@@ -99,7 +114,13 @@ fn the_count_survives_a_pause_and_the_tomb_stands_in_the_capital() {
         end_turn(&mut s);
     }
     let ev = order(&mut s, false);
-    assert!(matches!(ev[..], [Event::TombPaused { player: P0, turns: 5 }]));
+    assert!(matches!(
+        ev[..],
+        [Event::TombPaused {
+            player: P0,
+            turns: 5
+        }]
+    ));
     end_turn(&mut s);
     assert_eq!(s.player(P0).tomb_turns, 5, "no count while paused");
     order(&mut s, true);
@@ -112,10 +133,11 @@ fn the_count_survives_a_pause_and_the_tomb_stands_in_the_capital() {
         e,
         Event::TombRaised { player: P0, city, .. } if *city == capital
     )));
-    assert!(raised.iter().any(|e| matches!(
-        e,
-        Event::FactionGoalCompleted { player: P0, .. }
-    )));
+    assert!(
+        raised
+            .iter()
+            .any(|e| matches!(e, Event::FactionGoalCompleted { player: P0, .. }))
+    );
     assert!(!tomb_working(&s, P0), "the work ends with the tomb");
     assert_eq!(tomb_holder(&s, P0), Some(P0));
     assert!(holders(&s).contains(&(P0, P0)));
@@ -136,8 +158,14 @@ fn a_captured_tomb_scores_for_its_captor_and_a_razed_one_can_be_rebuilt() {
     let ev = end_turn(&mut s);
     assert_eq!(tomb_holder(&s, P0), Some(P1));
     assert!(holders(&s).contains(&(P0, P1)));
-    assert!(ev.iter().any(|e| matches!(e, Event::FactionGoalLost { player: P0, .. })));
-    assert!(tomb_blocker(&s, P0, true).is_some(), "the tomb still stands");
+    assert!(
+        ev.iter()
+            .any(|e| matches!(e, Event::FactionGoalLost { player: P0, .. }))
+    );
+    assert!(
+        tomb_blocker(&s, P0, true).is_some(),
+        "the tomb still stands"
+    );
     s.cities.remove(&capital);
     assert_eq!(tomb_holder(&s, P0), None);
     assert_eq!(tomb_blocker(&s, P0, true), None, "Egypt may build another");
@@ -165,7 +193,10 @@ fn the_egypt_goal_switch_turns_the_tomb_off() {
 #[test]
 fn rivals_see_where_the_tomb_under_construction_will_stand() {
     let (mut s, capital, _) = world();
-    assert!(crate::view::player_view(&s, P1).tomb_sites.is_empty(), "no work, no site");
+    assert!(
+        crate::view::player_view(&s, P1).tomb_sites.is_empty(),
+        "no work, no site"
+    );
     order(&mut s, true);
     let rival = crate::view::player_view(&s, P1);
     assert_eq!(rival.tomb_sites.len(), 1);
@@ -175,7 +206,14 @@ fn rivals_see_where_the_tomb_under_construction_will_stand() {
     s.player_mut(P0).tomb_turns = 6;
     order(&mut s, false);
     assert_eq!(s.player(P0).tomb_turns, 6, "the pause keeps the count");
-    assert_eq!(crate::view::player_view(&s, P1).tomb_sites.len(), 1, "a paused tomb with turns counted keeps its site");
+    assert_eq!(
+        crate::view::player_view(&s, P1).tomb_sites.len(),
+        1,
+        "a paused tomb with turns counted keeps its site"
+    );
     s.player_mut(P0).tomb_turns = 0;
-    assert!(crate::view::player_view(&s, P1).tomb_sites.is_empty(), "no work and no count, no site");
+    assert!(
+        crate::view::player_view(&s, P1).tomb_sites.is_empty(),
+        "no work and no count, no site"
+    );
 }

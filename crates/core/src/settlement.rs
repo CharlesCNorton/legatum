@@ -884,7 +884,11 @@ fn rank_sites(view: &PlayerView, reserved: &[Hex], sites: &mut [SettlementSite])
         .enumerate()
         .filter(|(_, s)| {
             s.score > 0
-                && (if colonia_only { s.colonia } else { !s.border_risk })
+                && (if colonia_only {
+                    s.colonia
+                } else {
+                    !s.border_risk
+                })
                 && s.threats == 0
                 && s.travel_turns.is_some_and(|t| t <= RECOMMEND_TRAVEL_TURNS)
                 && !reserved.iter().any(|h| {

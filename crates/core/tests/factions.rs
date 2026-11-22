@@ -1162,7 +1162,6 @@ fn goal_thresholds_do_not_accept_nearly_complete_empires_or_allied_territory() {
                 // A rival holds the Hall's city: Mongols itself no longer scores.
                 s.cities.values_mut().next().unwrap().owner = PlayerId(1);
             }
-            Faction::Egypt => unreachable!("Egypt has no faction goal"),
         }
         assert!(!goals::reached(&s, P), "{f:?}");
     }

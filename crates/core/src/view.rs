@@ -2229,9 +2229,9 @@ pub fn player_view_cached(
         actions: crate::rules::actions::view(state, me),
         courier_halls: crate::goals::courier_halls(state),
         imperial_diwans: crate::goals::imperial_diwans(state),
-            colonias: crate::goals::colonias(state),
-            royal_tombs: crate::goals::royal_tombs(state),
-            tomb_sites: crate::goals::tomb_sites(state),
+        colonias: crate::goals::colonias(state),
+        royal_tombs: crate::goals::royal_tombs(state),
+        tomb_sites: crate::goals::tomb_sites(state),
         aircraft: aircraft_views(state, team),
         air_sightings: state
             .aircraft

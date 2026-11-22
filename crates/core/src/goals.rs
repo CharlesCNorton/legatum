@@ -532,8 +532,7 @@ pub fn tomb_turn_end(state: &mut GameState, p: PlayerId) -> Option<CityId> {
     if !tomb_working(state, p) {
         return None;
     }
-    if rule(state, p) != GoalRule::Tomb || switched_off(state, p) || tomb_city(state, p).is_some()
-    {
+    if rule(state, p) != GoalRule::Tomb || switched_off(state, p) || tomb_city(state, p).is_some() {
         state.player_mut(p).tomb_work = false;
         return None;
     }
