@@ -66,7 +66,7 @@ describe('alarms and danger marks', () => {
   it.each(CELTS)('%s: a nearby barbarian is an advisor build threat only for non-Celts', async (faction, threatened) => {
     const { v, city } = await scene(faction);
     const why = advisorWhy({ type: 'SetProduction', city: city.id, item: { kind: 'Unit', unit: 'Spearman' } }, v, city);
-    expect(why.includes('enemy')).toBe(threatened);
+    expect(/enemy/i.test(why)).toBe(threatened);
   });
 });
 

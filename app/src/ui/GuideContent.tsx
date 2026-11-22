@@ -365,7 +365,7 @@ export function GuideContent({ section }: { section: GuideSection }) {
       <p>To undo a mistake, choose Menu → Load an earlier turn and pick a turn. The game opens at the start of that turn, and you lose the turns after it. Online games and scenarios cannot go back.</p>
       <p>In an online game, the host’s tab keeps the game: a reload carries on, and closing the tab ends it unless the host saved it. To carry on later, the host chooses Save to file in the menu, then Host from a save on the Multiplayer screen. Players rejoin from the game list and take their old seats. The Guide keeps your screen and pending plans in place, but other players can still finish the turn while you read.</p>
       <h3>Help when you need it</h3>
-      <p>Open How to Play from the main menu, Menu in a game, or <kbd>?</kbd>. The advisor is on by default. It explains one recommended action at a time and points to its control; turn it off in Settings or the Menu.</p>
+      <p>Open How to Play from the main menu, Menu in a game, or <kbd>?</kbd>. The advisor is on by default. It explains one recommended action at a time and shows where to click. It never gives orders for you: you make each move yourself. Its advice is what a strong AI empire would do with what you can see. Not now moves to the next decision; turn it off in Settings or the Menu.</p>
     </>;
     case 'credits': return <Credits />;
   }
