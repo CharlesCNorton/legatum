@@ -50,7 +50,8 @@ pub mod rules;
 /// 51: Units of empires not at War stepping onto one tile in the same round no longer all bounce: the team with the most combined strength among its claimants moves in, the rest stay put, nobody fights; equal totals are drawn by seed, and so is an exact force tie at a fallen city, which used to bounce everyone (Sam, 2026-11-22).
 /// 52: No rule changed. Unit, building and improvement identifiers were renamed to the PascalCase of their display names (`Soldier` is `Spearman`, `RelayUplink` is `GreatLibrary`, ...), which changes the serialized state and so every state hash. The old names still load through serde aliases (`types.rs`), for tapes, archived games and fixtures.
 /// 53: Humble the mighty: when no rival team is ahead of yours on VP, a capture from the rival team with the most VP counts (owner, 2026-11-22). The save shape is unchanged.
-pub const RULES_VERSION: u32 = 53;
+/// 55: City names follow the faction list in order, so the capital is the historic capital (Rome, Athens, Karakorum, ...); every list holds 60 or more real cities, then "New <name>", before "<Faction> Colony N" (Sam, 2026-11-22). The save shape is unchanged.
+pub const RULES_VERSION: u32 = 55;
 pub mod scenario;
 pub mod scoring;
 pub mod settlement;

@@ -20,6 +20,7 @@ pub mod air;
 pub mod barbarians;
 pub mod battle;
 pub mod cities;
+pub mod city_names;
 pub mod gifts;
 pub mod movement;
 pub mod occupation;
