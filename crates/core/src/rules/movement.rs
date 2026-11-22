@@ -52,10 +52,11 @@
 //!    (G18, Civ 6): a fighter whose opponent survived ends its order when movement is over. It
 //!    stays where it fought with no destination and needs orders; it never re-attacks next turn.
 //!    **Peaceful contests** (Sam, 2026-11-22). Units of different teams that are not at war
-//!    with each other stepping onto the same tile (no city there) never fight: the team of the
-//!    strongest unit (meeting strength after damage; civilians 0) keeps its claim and every
-//!    other team's claimant stays put with a MoveBlocked naming the winner and both strengths.
-//!    Equal best strengths are drawn by seed, turn and tile (`settle_peaceful_contest`).
+//!    with each other stepping onto the same tile (no city there) never fight: the team with
+//!    the most combined strength among its claimants (meeting strength after damage; civilians
+//!    0) keeps its claim, as force decides a fallen city (`settle_by_force`), and every other
+//!    team's claimant stays put with a MoveBlocked naming the winner and both totals. Equal
+//!    best totals are drawn by seed, turn and tile (`settle_peaceful_contest`).
 //! 5. **Advance, military first.** A military claimant of tile T advances iff it survived, is
 //!    not pinned, wins the surviving claims to T, no hostile military unit is left
 //!    alive on T, any hostile city on T is at 0 HP (capture), and a
@@ -1085,12 +1086,15 @@ fn contest_strength(state: &GameState, u: &Unit) -> i32 {
 
 /// Units of empires that are not at war stepping onto the same tile in the same round (Sam,
 /// 2026-11-22, a ruin both a Spartan and a weaker unit went for): nobody attacks, and the side
-/// of the strongest unit moves in while every other side stays where it is. A side is one
-/// permanent team, so co-op partners count as one; inside the winning side the usual claim
-/// rules apply. Strength is `contest_strength`; equal best strengths are drawn by seed, turn
-/// and tile, so no seat is favoured. Pinned units cannot win. Applies only when no two
-/// claimants are at war (a war meeting is fought as before) and the tile has no city.
-/// Returns the MoveBlocked reason for each unit that stays out.
+/// with the most combined strength moves in while every other side stays where it is. This is
+/// the open-ground twin of `settle_by_force` at a fallen city (user, 2026-11-11 and 2026-11-14:
+/// "the one with the most force walks in"): a side is one permanent team, so co-op partners add
+/// up, and its force is the sum of `contest_strength` over its claimants of the tile. Inside the
+/// winning side the usual claim rules apply. A side needs an unpinned claimant to win; pinned
+/// units still add their strength. Equal best forces are drawn by seed, turn and tile, so no
+/// seat is favoured (rules 50's seeded ties). Applies only when no two claimants are at war (a
+/// war meeting is fought as before) and the tile has no city. Returns the MoveBlocked reason
+/// for each unit that stays out.
 fn settle_peaceful_contest(
     state: &GameState,
     tile: Hex,
@@ -1099,7 +1103,8 @@ fn settle_peaceful_contest(
 ) -> BTreeMap<UnitId, String> {
     let mut out = BTreeMap::new();
     let owner = |u: &UnitId| state.units[u].owner;
-    let teams: BTreeSet<TeamId> = units.iter().map(|u| state.team_of(owner(u))).collect();
+    let team = |u: &UnitId| state.team_of(owner(u));
+    let teams: BTreeSet<TeamId> = units.iter().map(team).collect();
     if teams.len() < 2
         || units
             .iter()
@@ -1107,22 +1112,24 @@ fn settle_peaceful_contest(
     {
         return out;
     }
-    // Each side's strongest unit that can still move in (ties: lowest id).
-    let mut best: BTreeMap<TeamId, (i32, UnitId)> = BTreeMap::new();
-    for u in units.iter().filter(|u| !pinned.contains(u)) {
-        let s = contest_strength(state, &state.units[u]);
-        let e = best.entry(state.team_of(owner(u))).or_insert((s, *u));
-        if s > e.0 || (s == e.0 && *u < e.1) {
-            *e = (s, *u);
-        }
+    let mut force: BTreeMap<TeamId, i32> = BTreeMap::new();
+    let mut members: BTreeMap<TeamId, Vec<UnitId>> = BTreeMap::new();
+    for u in units {
+        *force.entry(team(u)).or_default() += contest_strength(state, &state.units[u]);
+        members.entry(team(u)).or_default().push(*u);
     }
-    let Some(top) = best.values().map(|(s, _)| *s).max() else {
+    let candidates: Vec<TeamId> = members
+        .iter()
+        .filter(|(_, us)| us.iter().any(|u| !pinned.contains(u)))
+        .map(|(t, _)| *t)
+        .collect();
+    let Some(top) = candidates.iter().map(|t| force[t]).max() else {
         return out;
     };
-    let tied: Vec<TeamId> = best
+    let tied: Vec<TeamId> = candidates
         .iter()
-        .filter(|(_, (s, _))| *s == top)
-        .map(|(t, _)| *t)
+        .copied()
+        .filter(|t| force[t] == top)
         .collect();
     let drawn = tied.len() > 1;
     let side = crate::rng::seeded_order(
@@ -1135,24 +1142,42 @@ fn settle_peaceful_contest(
         ],
         &tied,
     )[0];
-    let winner = &state.units[&best[&side].1];
-    let p = state.player(winner.owner);
-    let name = format!(
-        "{}'s {}",
-        p.name,
-        data::unit_name_for(p.faction, winner.kind)
-    );
+    // Name the winning side by its unit ("Sparta's Spartan Hoplite"), or by its strongest
+    // unit's owner when several of its units add up ("Sparta's units").
+    let winners = &members[&side];
+    let lead = winners
+        .iter()
+        .max_by_key(|u| {
+            (
+                contest_strength(state, &state.units[*u]),
+                std::cmp::Reverse(**u),
+            )
+        })
+        .expect("a side has a claimant");
+    let p = state.player(owner(lead));
+    let (name, verb) = if winners.len() == 1 {
+        (
+            format!(
+                "{}'s {}",
+                p.name,
+                data::unit_name_for(p.faction, state.units[lead].kind)
+            ),
+            "is",
+        )
+    } else {
+        (format!("{}'s units", p.name), "are")
+    };
     for u in units {
-        if state.team_of(owner(u)) == side {
+        if team(u) == side {
             continue;
         }
-        let mine = contest_strength(state, &state.units[u]);
+        let mine = force[&team(u)];
         let why = if mine < top {
-            format!("{name} is stronger ({top} against {mine}) and moved in")
-        } else if drawn {
-            format!("{name} is just as strong ({top} each) and won the draw to move in")
+            format!("{name} {verb} stronger ({top} against {mine}) and moved in")
+        } else if drawn && candidates.contains(&team(u)) {
+            format!("{name} {verb} just as strong ({top} each) and won the draw to move in")
         } else {
-            // A pinned unit as strong as the winner: it could not move in this round.
+            // A side as strong as the winner whose every claimant was pinned by an attack.
             format!("{name} moved in while this unit was held by an attack")
         };
         out.insert(*u, format!("{OUTMATCHED_PREFIX}{why}"));

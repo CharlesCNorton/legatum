@@ -1,6 +1,6 @@
 //! Units of empires not at war stepping onto the same tile in the same round (Sam, 2026-11-22:
-//! a Spartan unit and a weaker one both went for a ruin and both bounced). The stronger unit
-//! moves in, the other stays where it was, and nobody is attacked.
+//! a Spartan unit and a weaker one both went for a ruin and both bounced). The side with the
+//! most combined strength moves in, the others stay where they were, and nobody is attacked.
 use super::*;
 use crate::diplomacy::RelationState;
 use crate::rules::test_support::*;
@@ -126,8 +126,8 @@ fn equal_strength_is_drawn_by_seed_and_the_same_on_every_replay() {
 
 #[test]
 fn co_op_partners_are_one_side_against_a_stronger_unit() {
-    // P0 and P1 share a team; P2 is at Peace with both. P2's Spearman beats P1's Scout even
-    // though P0's Settler also claims the tile: the strongest unit of all decides.
+    // P0 and P1 share a team; P2 is at Peace with both. Their Settler and Scout add up to 5,
+    // less than P2's Spearman.
     let mut s = at_peace(&[0, 0, 1]);
     let tile = hex(5, 5);
     let settler = unit(&mut s, 0, UnitKind::Settler, tile.neighbor(0));
@@ -169,4 +169,41 @@ fn at_war_the_two_units_still_fight_a_meeting_engagement() {
     let (_, events) = resolve_units(&s, &no_orders());
     assert!(events.iter().any(|e| matches!(e, Event::Battle { .. })));
     assert!(reason(&events, b).is_none_or(|r| !r.starts_with(OUTMATCHED_PREFIX)));
+}
+
+#[test]
+fn several_units_of_one_side_add_up_against_a_single_stronger_unit() {
+    // As at a fallen city (`settle_by_force`), force is summed per side: a hurt Spearman and a
+    // Scout together outweigh one fresh Spearman that beats either alone.
+    let mut s = at_peace(&[0, 1]);
+    let tile = hex(5, 5);
+    let hurt = unit(&mut s, 0, UnitKind::Soldier, tile.neighbor(0));
+    s.units.get_mut(&hurt).unwrap().hp = 60;
+    let scout = unit(&mut s, 0, UnitKind::Scout, tile.neighbor(1));
+    let fresh = unit(&mut s, 1, UnitKind::Soldier, tile.neighbor(3));
+    let strength = |kind, hp| combat::unit_meeting_strength(kind, hp).total;
+    let (a, b, c) = (
+        strength(UnitKind::Soldier, 60),
+        strength(UnitKind::Scout, 100),
+        strength(UnitKind::Soldier, 100),
+    );
+    assert!(a < c && b < c && a + b > c, "{a} + {b} against {c}");
+    for u in [hurt, scout, fresh] {
+        goto(&mut s, u, tile);
+    }
+    let (next, events) = resolve_units(&s, &no_orders());
+    assert_eq!(next.units[&fresh].pos, tile.neighbor(3));
+    assert_eq!(
+        reason(&events, fresh).as_deref(),
+        Some(
+            format!(
+                "outmatched: P0's units are stronger ({} against {c}) and moved in",
+                a + b
+            )
+            .as_str()
+        )
+    );
+    // One of P0's two units takes the tile (lowest id first); the other waits behind it.
+    assert_eq!(next.units[&hurt].pos, tile);
+    assert!(no_fights(&events));
 }
