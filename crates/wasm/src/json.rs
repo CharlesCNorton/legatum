@@ -121,7 +121,7 @@ pub const UPGRADABLE_RULES_VERSION: u32 = 49;
 
 /// Simulation only (the app keeps refusing a version-49 save): read a rules-49 saved state as a
 /// rules-50 one, for analysis that starts from recorded positions which cannot be regenerated
-/// (hill-climb do-no-harm states). `json` is a save (`save_version` 49 or 50) or a bare state
+/// (hill-climb do-no-harm states). `json` is a save (`save_version` 49 or the current one) or a bare state
 /// line with no `save_version` (`audit_states` output). See `upgrade_value_from_49` for what changes.
 pub fn upgrade_from_49(json: &str) -> Result<GameState, String> {
     check_json_size(json)?;
@@ -293,9 +293,9 @@ mod tests {
         // and a 47 save is refused rather than migrated. Rules 49: Egypt starts knowing the Bronze
         // Working it skips; the save shape is unchanged, and a 48 save is refused. Rules 50: a
         // rival capital's VP is held, so `Player::capitals_taken` is gone, and a 49 save is refused.
-        // Rules 51: an Age card fix, no save change. Rules 52: Rome's Colonia Victrix and Egypt's royal tomb add `Player` fields, and a 51
-        // save is refused.
-        assert_eq!(legatum_core::RULES_VERSION, 52);
+        // Rules 51 changes resolution only (peaceful contests), not the save shape. Rules 52: Rome's
+        // Colonia Victrix and Egypt's royal tomb add `Player` fields, and a 51 save is refused.
+        const _: () = assert!(legatum_core::RULES_VERSION >= 52);
         let mut setup = GameSetup::all_ai(3);
         setup.players[0].faction = legatum_core::Faction::Egypt;
         let mut state = legatum_core::new_game(&setup);
@@ -318,7 +318,7 @@ mod tests {
         );
         assert_eq!(state.cities[&city].producing, Some(grow), "{events:?}");
         let save = state_to_json(&state);
-        assert!(save.contains("\"save_version\":52"));
+        assert!(save.contains(&format!("\"save_version\":{}", legatum_core::RULES_VERSION)));
         assert!(!save.contains("capitals_taken"));
         assert!(
             state
@@ -333,7 +333,10 @@ mod tests {
         assert!(
             parse_state(&old.to_string())
                 .unwrap_err()
-                .contains("incompatible rules version: saved Some(51), current 52")
+                .contains(&format!(
+                    "incompatible rules version: saved Some(51), current {}",
+                    legatum_core::RULES_VERSION
+                ))
         );
     }
 
