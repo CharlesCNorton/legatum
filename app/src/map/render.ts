@@ -751,7 +751,7 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
   }
 
   // Path preview with turn markers.
-  if (inp.path && selUnit) drawRoute(ctx, inp, S, look, S2, selUnit);
+  const routeBox = inp.path && selUnit ? drawRoute(ctx, inp, S, look, S2, selUnit) : null;
   if (inp.path && inp.pathRisk) drawRouteRisk(ctx, S, S2(inp.pathRisk), hexPx);
   if (inp.pathUnreachable) {
     const p = S2(inp.pathUnreachable);
@@ -808,6 +808,8 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
   // A damaged city burns for the whole turn: smoke and fires over its art, under banners and units.
   // Each box is what a clipped ambient frame repaints (MapCanvas: smoke and siege rings move without a full redraw).
   const ambient: Rect[] = [];
+  // The route's dashes march on the pulse clock, so selection-pulse frames repaint its box too.
+  if (routeBox) ambient.push(routeBox);
   if (inp.ambientT != null) {
     for (const c of view.cities) {
       if (!smoulderVisible(c, cityHp(c), cam, w, h)) continue;
@@ -1562,9 +1564,9 @@ function drawRoute(
   look: LookId,
   P: (h: Hex) => { x: number; y: number },
   unit: UnitView,
-) {
+): Rect | null {
   const path = inp.path!;
-  if (!path.length) return;
+  if (!path.length) return null;
   const color = inp.pathAttack ? S.ink.attack : S.ink.route;
   const pts = [P(unit.pos), ...path.map((st) => P(st.hex))];
   const last = pts[pts.length - 1];
@@ -1597,7 +1599,7 @@ function drawRoute(
   ctx.lineWidth = 2;
   if (S.ink.routeDash) {
     ctx.setLineDash(S.ink.routeDash);
-    ctx.lineDashOffset = -inp.time / 60;
+    ctx.lineDashOffset = -(inp.pulseTime ?? inp.time) / 60;
   }
   ctx.stroke();
   ctx.setLineDash([]);
@@ -1629,4 +1631,10 @@ function drawRoute(
     ctx.textBaseline = 'alphabetic';
   }
   ctx.restore();
+  if (!S.ink.routeDash) return null;
+  // Everything the route draws: the line and its shadow, and the turn roundels (radius 11).
+  const pad = 14;
+  const xs = pts.map((p) => p.x), ys = pts.map((p) => p.y);
+  const x0 = Math.min(...xs) - pad, y0 = Math.min(...ys) - pad;
+  return { x: x0, y: y0, w: Math.max(...xs) + pad - x0, h: Math.max(...ys) + pad - y0 };
 }
