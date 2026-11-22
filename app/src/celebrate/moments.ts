@@ -51,6 +51,8 @@ export interface Moment {
   unit?: { kind: UnitKind; faction?: Faction };
   /** A faction goal building's painted miniature as the card's picture (resolved by the card, like `unit`). */
   building?: BuildingKind;
+  /** A painted goal scene (an `assets/unlocks` slug such as `goal-reserve`) as the card's picture, for goals with no building. */
+  artSlug?: string;
   /** The card's picture is this faction's paired people portrait, greyed: the empire that lost the city. */
   frame?: Faction;
   /** A VP seal on the picture: the points this card scores (signed by `loss`). */
@@ -63,6 +65,8 @@ export interface Moment {
 
 /** The painted building a faction goal's generic completion card shows (the faction's own version: Ruhr Foundry, Lyceum). */
 const GOAL_BUILDING: Partial<Record<Faction, BuildingKind>> = { Germany: 'Forge', Athens: 'Library' };
+/** The painted scene a goal with no building shows: Switzerland's Reserve, the Celts' Warbands, the Aztecs' New Fire (not live yet). */
+const GOAL_ART: Partial<Record<Faction, string>> = { Switzerland: 'goal-reserve', Celts: 'goal-warbands', Aztecs: 'goal-newfire' };
 
 export function ruinText(reward: RuinReward, cityName: (id: number) => string, faction?: Faction): { title: string; effect: string; lore: string; details: string[]; tier: Tier; deltas: Moment['deltas']; gains: Gain[]; emblem: Emblem } {
   const text: ReturnType<typeof ruinText> = (() => { switch (reward.kind) {
@@ -352,11 +356,11 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
         }
         if (e.faction === 'Celts') {
           push(i, e.player, { tier: 'legendary', at: capital(e.player), title: 'The warbands gather', effect: `+${e.vp} VP while every city has a camp`,
-            lore: 'Warbands gather near every city; rivals may drive them away.', details: ['A rival that clears a camp takes the points away until you call again.'], deltas: [{ counter: 'vp', amount: e.vp }] });
+            lore: 'Warbands gather near every city; rivals may drive them away.', details: ['A rival that clears a camp takes the points away until you call again.'], deltas: [{ counter: 'vp', amount: e.vp }], artSlug: GOAL_ART.Celts });
           break;
         }
         push(i, e.player, { tier: 'legendary', at: capital(e.player), title: 'An inheritance fulfilled', effect: `Faction goal complete · +${e.vp} VP`,
-          lore: 'The promise survived its makers. You have kept it.', details: [], deltas: [{ counter: 'vp', amount: e.vp }], building: GOAL_BUILDING[e.faction] }); break;
+          lore: 'The promise survived its makers. You have kept it.', details: [], deltas: [{ counter: 'vp', amount: e.vp }], building: GOAL_BUILDING[e.faction], artSlug: GOAL_ART[e.faction] }); break;
       }
       case 'VeteranRetired':
         // The last retirement is the goal's own legendary card (above): only the ones before it get a card.
