@@ -1967,6 +1967,7 @@ mod tests {
         // The survive-him genes (2026-11-21: neighbour_alarm, the production-thrash fix) leave four cities at T62 and no VP at T100.
         // The leader war and the siege clock (2026-11-21) left five cities at T62, no VP at T100 and an elimination win at T169; with the clock off by default (held-out finding, 2026-11-21) it is four cities at T62, no VP at T100 and no win.
         // Hard weighing a site's whole ring-one terrain (site_terrain_weight 20, 2026-11-22) gives five cities at T50 and T62, two VP at T100 and an elimination win at T225.
+        // Gold and Science projects for every empire (2026-11-22) bring the elimination win to T218.
         assert_eq!(
             first_map_game(false),
             json!({
@@ -1976,7 +1977,7 @@ mod tests {
                 "vp_t100": 2,
                 "vp_t60": 0,
                 "win": true,
-                "win_turn": 225,
+                "win_turn": 218,
                 "win_type": "elimination",
             })
         );
