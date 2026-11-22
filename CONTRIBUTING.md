@@ -82,6 +82,10 @@ scripts/build-wasm.sh && cd app && npm ci && npx playwright install chromium && 
 These are the commands CI runs (`.github/workflows/ci.yml`). Browser end-to-end tests (Playwright) are
 described in [app/README.md](app/README.md#browser-end-to-end-tests); CI does not run them.
 
+Positions in `scenarios/` are AI measurement fixtures, including the stable `scenarios/lab/` cuts from
+recorded games. They are not a player menu. See [scenarios/README.md](scenarios/README.md) for cutting,
+checking and measuring a position.
+
 ## What a pull request needs
 
 **CI is the bar for an outside pull request.** If the checks above pass and the change is focused, it is
