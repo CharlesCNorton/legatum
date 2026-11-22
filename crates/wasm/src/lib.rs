@@ -2045,6 +2045,64 @@ pub fn explore_step(view_json: &str, unit: u32) -> Result<String, JsError> {
     js(explore_step_json(view_json, unit))
 }
 
+/// The in-game advisor: what a Hard AI would order for this seat this turn, planned only from the
+/// seat's own fogged view (no hidden information, pillar 6). The client explains each order in
+/// plain words and never submits them itself.
+#[wasm_bindgen]
+pub fn advisor_orders(view_json: &str) -> Result<String, JsError> {
+    js(guard(|| advisor_orders_json(view_json)))
+}
+
+thread_local! {
+    /// One advisor brain per seat and faction, kept across turns so its plans (openings, campaigns)
+    /// carry on like a real Hard seat's, with this turn's answer kept so asking again is free.
+    /// A new game, an earlier turn or another seat starts a new brain.
+    static ADVISOR: RefCell<Option<AdvisorSeat>> = const { RefCell::new(None) };
+}
+
+struct AdvisorSeat {
+    me: PlayerId,
+    faction: Faction,
+    turn: u32,
+    brain: Box<dyn legatum_ai::Brain>,
+    answer: String,
+}
+
+pub fn advisor_orders_json(view_json: &str) -> Result<String, String> {
+    let view: PlayerView =
+        serde_json::from_str(view_json).map_err(|e| format!("invalid view: {e}"))?;
+    let faction = view
+        .players
+        .iter()
+        .find(|p| p.id == view.me)
+        .map(|p| p.faction)
+        .ok_or("the view has no player for its seat")?;
+    ADVISOR.with(|cell| {
+        let mut slot = cell.borrow_mut();
+        let same_seat = slot.as_ref().is_some_and(|a| a.me == view.me && a.faction == faction);
+        if same_seat && let Some(a) = slot.as_ref().filter(|a| a.turn == view.turn) {
+            return Ok(a.answer.clone());
+        }
+        if !same_seat || slot.as_ref().is_some_and(|a| a.turn > view.turn) {
+            let brain: Box<dyn legatum_ai::Brain> = if view.rule_experiments.hard_v2_ai {
+                legatum_ai::hard_v2::brain(faction, 0, view.me)
+            } else {
+                Box::new(legatum_ai::ScriptedBrain::with_difficulty(
+                    faction,
+                    0,
+                    view.me,
+                    legatum_core::AiDifficulty::Hard,
+                ))
+            };
+            *slot = Some(AdvisorSeat { me: view.me, faction, turn: view.turn, brain, answer: String::new() });
+        }
+        let seat = slot.as_mut().expect("advisor seat");
+        seat.turn = view.turn;
+        seat.answer = to_json(&seat.brain.orders(&view))?;
+        Ok(seat.answer.clone())
+    })
+}
+
 /// Filter a proposed event list with the core's privacy rules for one player view.
 #[wasm_bindgen]
 pub fn visible_events_json(

@@ -6,7 +6,7 @@ import { ReplaceGameDialog } from '../ui/ReplaceGameDialog';
 import { pickSaveFile } from '../ui/GameMenu';
 import { DecoRule, Fan, Wordmark } from '../brand/ornaments';
 import { openGuide } from '../ui/guideState';
-import { HintSettings } from '../ui/FirstGameHints';
+import { TutorialSettings } from '../ui/Tutorial';
 import { HapticsSettings } from '../ui/HapticsSettings';
 import { SoundSettings } from '../ui/SoundSettings';
 import { CombatFxSettings } from '../ui/CombatFxSettings';
@@ -392,7 +392,7 @@ function SettingsDialog({ onClose }: { onClose: () => void }) {
         </button>
       </header>
       <div className="settings-body">
-        <HintSettings />
+        <TutorialSettings />
         <HapticsSettings />
         <SoundSettings />
         <CombatFxSettings />

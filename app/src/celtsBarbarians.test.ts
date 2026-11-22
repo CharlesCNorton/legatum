@@ -7,7 +7,7 @@ import { atWar, barbariansSpareMe, isThreat } from './diplomacy';
 import { enemyReach } from './enemyReach';
 import { citiesUnderAttack } from './siege';
 import { airState, aircraftNeedingOrders, pickerCandidates, spotsIn, type Hold } from './airWing';
-import { eligibleHints } from './ui/hintState';
+import { stepReady } from './ui/tutorial';
 import { reinforcementNote, woundedNearEnemies } from './ui/forecastWarnings';
 import { fromOffset, hexEq, neighbors } from './hex';
 import { BARBARIAN } from './barbarians';
@@ -63,10 +63,10 @@ describe('alarms and danger marks', () => {
     expect(reinforcementNote(v, me, HOME)).not.toBeNull();
   });
 
-  it.each(CELTS)('%s: sighting a barbarian is a "rival in sight" hint only for non-Celts', async (faction, hinted) => {
+  it.each(CELTS)('%s: sighting a barbarian is a "rival in sight" tutorial step only for non-Celts', async (faction, hinted) => {
     const v = await arenaView(faction);
     addUnit(v, 0, 'Spearman', NEXT, { owner: BARBARIAN });
-    expect(eligibleHints(v, []).includes('enemy')).toBe(hinted);
+    expect(stepReady('rival', { view: v, orders: [], selection: null, humans: 1, touch: false }, ['report'])).toBe(hinted);
   });
 });
 
