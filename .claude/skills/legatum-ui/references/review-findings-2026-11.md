@@ -208,3 +208,5 @@ Moved verbatim from SKILL.md on 2026-11-22 (original order kept). The current ru
 - **An older save opens in the kept build that made it** (`platform/versions.ts`); the refusal notice appears only when no kept build has its rules.
 - **"New version" news rides on Single Player's sub-line, never a separate title note:** the note pushed the menu off the screen at 1000x600. It shows between games only.
 - **A joinable game on another version gets a neutral mark, never the red "!":** red is for rows that cannot be joined.
+
+- **Walls on the map (Sam, 2026-11-22, PR #87).** Walls under construction show only the era's footings for the whole build, public to every viewer, through fog too. A walled city's banner ends in the Walls mark after the name, plus II for a Castle or III for a Star Fort (plain Walls: the mark alone; never the six-point Star Fort icon, and a star on a banner means the capital seal). A city banner's tooltip names every mark the banner draws, in order: a new banner mark adds its tooltip part in the same change. Every new map mark gets a tour shot with its hover (`e2e/tour/wall-levels.spec.ts`).
