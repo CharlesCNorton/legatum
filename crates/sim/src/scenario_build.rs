@@ -334,7 +334,7 @@ fn rush_defense() -> Result<Built, String> {
         notes.extend(unit_lines(&state, glass));
         let source = format!(
             "All-AI Hard game, Standard speed, seed {seed}; Mongols (player {glass}) played the \
-             Rush opening. Played to turn 20, then a force of three Soldiers and two Rangers was \
+             Rush opening. Played to turn 20, then a force of three Spearmen and two Archers was \
              staged 2-3 hexes from {city} ({moved} existing Mongols units moved, {spawned} \
              spawned), {garrison}and Mongols declared war as an ordinary order on turn 20 (its \
              staged units held). Built by `legatum-sim scenario-build rush-defense`.",
@@ -343,7 +343,7 @@ fn rush_defense() -> Result<Built, String> {
             city = state.cities[&target].name,
             spawned = kinds.len() - moved,
             garrison = if garrison.is_some() {
-                "the threatened city was given a Soldier garrison (it had none), "
+                "the threatened city was given a Spearman garrison (it had none), "
             } else {
                 ""
             }

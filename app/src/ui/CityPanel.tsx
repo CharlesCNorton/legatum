@@ -371,7 +371,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
   const claimTip = claim ? <Tip content={<span data-testid="claim-rule">
     <Amounts text={`Ring ${claim.ring}. ${claim.worked ? `Worked as soon as it is claimed: ${claim.effect}.` : claim.handoffTo ? `Beyond ${WORK_RADIUS} tiles from this city: ${claim.handoffTo} takes over and works it at the end of the turn.` : `Beyond ${WORK_RADIUS} tiles from the city: claimed but not worked. It keeps rivals out.`} `} />
     {`Claims the nearest ring first, then the best tile for your focus (${yields.focus}${focusReason.startsWith('building') ? `, from ${focusReason}` : `, ${focusReason}`}). `}
-    {`${yields.focus} is this city's focus, and you never set it by hand. It follows what the city builds: Soldiers and world wonders favour Production, a Settler at population 1 favours Food. ${TILE_PRIORITY_INFO[yields.focus]}`}
+    {`${yields.focus} is this city's focus, and you never set it by hand. It follows what the city builds: military units and world wonders favour Production, a Settler at population 1 favours Food. ${TILE_PRIORITY_INFO[yields.focus]}`}
     {pendingQueue && ' Preview after Ready.'}
   </span>}>{claim.text}</Tip> : null;
   // Under the bar: what the claim adds, as icons with counts (or that it only blocks rivals).
