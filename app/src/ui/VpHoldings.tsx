@@ -157,7 +157,7 @@ export function HeldToken({ t, props }: { t: Token; props: TokenProps }) {
   // A held goal's token also shows him on the map when he is in view: a click pans there.
   const locate = s.held && s.heldAt ? s.heldAt : undefined;
   const click = props.onClick as ((ev: MouseEvent<HTMLElement>) => void) | undefined;
-  return <button type="button" className={`vhc-tok k-${s.kind}${s.live ? ' live' : ''}`} style={empireVars(e)} aria-label={`${heldLabel(s, e, t.of)}${locate ? `. Click to show ${s.faction === 'Mongols' ? 'it' : 'him'} on the map` : ''}`} data-held={s.held || undefined} data-locate={locate ? `${locate.q},${locate.r}` : undefined} {...props}
+  return <button type="button" className={`vhc-tok k-${s.kind}${s.live ? ' live' : ''}`} style={empireVars(e)} aria-label={`${heldLabel(s, e, t.of)}${locate ? `. Click to show ${s.faction === 'Byzantium' ? 'him' : 'it'} on the map` : ''}`} data-held={s.held || undefined} data-locate={locate ? `${locate.q},${locate.r}` : undefined} {...props}
     onClick={locate ? (ev) => { click?.(ev); useGame.getState().jumpTo(locate); } : click}>
     {s.kind === 'goal' && !s.held ? <CrestMedallion faction={t.of?.faction ?? e.faction} color={t.of?.ink ?? e.ink} size={15} /> : s.kind === 'era' ? <b className="vhc-era-n">{roman(s.era!.era)}</b> : <Icon name={s.icon} size={14} />}
     {s.vp > 1 && <small>+{s.vp}</small>}

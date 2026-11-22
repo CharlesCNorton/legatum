@@ -2,6 +2,7 @@
 // here, so the minimap can never show more than the viewer knows (pillar 6): unexplored tiles stay
 // blank, remembered tiles are dimmed, and foreign units only show on tiles in sight right now.
 import { capitalMark } from '../capitalMark';
+import { goalCities } from '../goalCities';
 import type { Hex, PlayerId, PlayerView, Terrain, UnitKind } from '../types';
 import { DIRECTIONS, edgeCorners, fromOffset, hexAt, hexCorner, hexToPixel, neighbor, pixelToHex, tileIndex, toOffset } from '../hex';
 import { HEX_SIZE, worldBounds } from './render';
@@ -274,6 +275,14 @@ export function drawMinimapOverlay(
       ctx.strokeRect(p.x - f, p.y - f, f * 2, f * 2);
       ctx.setLineDash([]);
     }
+  }
+  // Rome's Colonia and Egypt's tomb: public wherever they stand (fog and unexplored land included), a gilt ring like the Heir's
+  // round the holder's square.
+  const known = new Set(minimapCities(view).map((c) => c.id));
+  for (const g of goalCities(view)) {
+    const p = at(g.at);
+    if (!known.has(g.city)) { ctx.fillStyle = color(g.holder); ctx.strokeStyle = ink.dark; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.rect(p.x - 3.6, p.y - 3.6, 7.2, 7.2); ctx.fill(); ctx.stroke(); }
+    dot(p.x, p.y, 7.4, 'rgba(0,0,0,0)', ink.dark, 3.4); dot(p.x, p.y, 7.4, 'rgba(0,0,0,0)', '#c9a227', 1.8);
   }
   for (const u of units) {
     if (!u.scout) continue;

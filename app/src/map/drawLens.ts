@@ -39,6 +39,8 @@ export function drawLens(ctx: CanvasRenderingContext2D, tiles: LensTile[], cam: 
   const r = HEX_SIZE * cam.zoom;
   const metrics = lensMetrics(r);
   ctx.save();
+  // The house VP gilt (the capital seal's ring).
+  const COLONIA_GILT = '#c9a227';
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.font = `700 ${metrics.font}px ${FONTS[look].sans}`;
@@ -69,6 +71,14 @@ export function drawLens(ctx: CanvasRenderingContext2D, tiles: LensTile[], cam: 
       }
       // The top three: an ink line with a paper edge outside it, so the ring shows on the deepest green too.
       if (tile.rank) { ctx.strokeStyle = paper; ctx.lineWidth = MAP_STYLES[look].pen.line + 2.4; ctx.stroke(); ctx.strokeStyle = ink; ctx.lineWidth = MAP_STYLES[look].pen.line; ctx.stroke(); }
+      // Rome's Colonia Victrix: a site where the selected veteran founds it wears a gilt ring inside the hex (the legend names it).
+      if (tile.colonia) {
+        ctx.beginPath(); hexPath(ctx, x, y, r * 0.74);
+        ctx.globalAlpha = tile.faded ? 0.75 : 1;
+        ctx.strokeStyle = ink; ctx.lineWidth = Math.max(3.6, r * 0.14) + 1.6; ctx.stroke();
+        ctx.strokeStyle = COLONIA_GILT; ctx.lineWidth = Math.max(3.6, r * 0.14); ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
       continue;
     }
     // Pure tint treatments carry no chip.

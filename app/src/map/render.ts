@@ -11,7 +11,7 @@ import { isFighter } from '../airText';
 import { capitalStar } from '../capitalMark';
 import { distance as hexDistance, hexToPixel, tileIndex } from '../hex';
 import { healthColor, playerInk, rgba } from '../theme';
-import { GOAL_CITY_ICON, goalCitiesAt } from '../goalCities';
+import { GOAL_CITY_ICON, goalCities, goalCitiesAt, isColoniaFounder } from '../goalCities';
 import type { PathStep } from '../path';
 import { tintedIcon } from '../icons';
 import type { LookId } from '../brand/look';
@@ -852,6 +852,18 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
 
   drawHallBadge(ctx, view, S2, hexPx, w, h);
 
+  // Rome's Colonia and Egypt's tomb are public to every empire, like the Heir: where the viewer has never seen the city,
+  // its banner (or far seal) still stands on the map, faded, so every player can find the points.
+  for (const g of goalCities(view)) {
+    if (view.cities.some((c) => c.id === g.city)) continue;
+    const p = S2(g.at);
+    if (p.x < -200 || p.x > w + 200 || p.y < -80 || p.y > h + 120) continue;
+    const spec: BannerSpec = { owner: g.holder, name: g.name, pop: null, color: mapPlayerColor(g.holder), capital: null,
+      goal: { icon: GOAL_CITY_ICON[g.kind], ink: playerInk(g.of) }, selected: false, glyph: null, walls: false };
+    if (isFar(hexPx)) drawSprite(ctx, sealSprite(look, spec, sealRadius(hexPx), dpr), p.x, p.y - hexPx * 0.1, 0.85);
+    else drawBanner(ctx, look, spec, p.x, p.y - hexPx * BANNER_BOTTOM, Math.round(Math.max(11, Math.min(16, hexPx * 0.42)) * 2) / 2, dpr, 0.85);
+  }
+
   // Units. Sharing a tile, they fan out side by side (military right, civilian left) so both
   // tokens read; three or more also carry a count badge.
   const selectedPlane = inp.selectedAir == null ? null : view.aircraft?.find((a) => a.id === inp.selectedAir);
@@ -929,7 +941,7 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
       continue;
     }
     if (u.occupation_lock != null) lockMarks.push({ x, y, w: tw });
-    drawUnit(ctx, look, u, x, y, tw, dpr, u.owner === view.me, inp.pendingMarks.get(u.id), u.origin ?? factionOf.get(u.owner), strengthCue, siegePropFor(view, u), hexBox, contractLeft(u, view), heirTag(view, u));
+    drawUnit(ctx, look, u, x, y, tw, dpr, u.owner === view.me, inp.pendingMarks.get(u.id), u.origin ?? factionOf.get(u.owner), strengthCue, siegePropFor(view, u), hexBox, contractLeft(u, view), heirTag(view, u), u.owner === view.me && isColoniaFounder(view, u.id));
     if (stack.length > 2 && stack[0].id === u.id) drawBadge(ctx, look, x - tw, y - tw, tw * 0.45, String(stack.length), true);
   }
 
@@ -1471,7 +1483,7 @@ function drawLockMark(ctx: CanvasRenderingContext2D, look: LookId, x: number, y:
   drawBadge(ctx, look, x - w * 0.95, y - w * 0.85, w * 0.55, '', false, 'mark-lock');
 }
 
-function drawUnit(ctx: CanvasRenderingContext2D, look: LookId, u: UnitView, x: number, y: number, w: number, dpr: number, mine: boolean, mark: PendingMark | undefined, faction?: Faction, cue?: StrengthCue | null, prop?: SiegeProp | null, hexBox?: { cx: number; half: number }, contract?: number | null, heirLabel?: string | null) {
+function drawUnit(ctx: CanvasRenderingContext2D, look: LookId, u: UnitView, x: number, y: number, w: number, dpr: number, mine: boolean, mark: PendingMark | undefined, faction?: Faction, cue?: StrengthCue | null, prop?: SiegeProp | null, hexBox?: { cx: number; half: number }, contract?: number | null, heirLabel?: string | null, colonia = false) {
   if (isBarbarian(u.owner)) drawBarbarianToken(ctx, look, u.kind as UnitKind, u.military, x, y, w, dpr);
   else drawToken(ctx, look, u.kind as UnitKind, mapPlayerColor(u.owner), u.military, x, y, w, dpr, u.owner, 1, faction, u.heir_of == null ? undefined : { crestColor: u.heir_of === u.owner ? undefined : mapPlayerColor(u.heir_of) });
   // A unit an Engineer covers wears its siege gear in front of its feet, on the hex's right side and always inside the hex: the
@@ -1493,6 +1505,16 @@ function drawUnit(ctx: CanvasRenderingContext2D, look: LookId, u: UnitView, x: n
   }
   if (u.hp < 100) drawTokenHealth(ctx, look, u.hp, x, y, w, drop);
   if (u.military && u.level) drawPromotion(ctx, look, u.level, x, y, w, faction);
+  // Rome: a veteran that founds the Colonia Victrix wears its laurel on a gilt-ringed seal over the token's head (16 px or more),
+  // clear of the owner roundel (upper left) and the order badge (upper right).
+  if (colonia) {
+    const r = Math.max(8, w * 0.42), cx = x, cy = y - w * 1.12;
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fillStyle = TOKEN_INK.atlas.paper; ctx.fill();
+    ctx.strokeStyle = TOKEN_INK.atlas.ink; ctx.lineWidth = 1; ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx, cy, r - 1.8, 0, Math.PI * 2); ctx.strokeStyle = '#c9a227'; ctx.lineWidth = 1.3; ctx.stroke();
+    const s = (r - 2) * 1.6, ic = tintedIcon('goal-colonia', '#6f5512', s * dpr);
+    if (ic) ctx.drawImage(ic, cx - s / 2, cy - s / 2, s, s);
+  }
   const bx = x + w * 0.95;
   if (u.fortify > 0) {
     const ic = tintedIcon('fortify', TOKEN_INK.atlas.ink, 14 * dpr);

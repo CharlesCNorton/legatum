@@ -1,4 +1,5 @@
 import { Amounts } from '../ui/Amounts';
+import { COLONIA_RING_KEY, COLONIA_SITE_RULE } from '../goalCities';
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import type { Hex, PlayerPublic, Resource, SupplyView } from '../types';
 import { RESOURCE_INFO, eraResource, lackedResources, resourceUsersThisEra, revealHint, STRATEGIC_RESOURCES, supplyTotalsText } from '../resources';
@@ -36,8 +37,10 @@ function useShortWindow() {
 
 /** `collapsed`: a unit or city is selected, so the dock yields height to its panel and
  * shows only the "Lens: X" toggle (as on phones) until the selection is cleared. */
-export function LensSwitcher({ lens, onChange, sites, onInspect, settlerId, players, me, visibleBarbarians = false, supply = [], era, empty = false, overlayEmpty = {}, collapsed = false }: {
+export function LensSwitcher({ lens, onChange, sites, onInspect, settlerId, players, me, visibleBarbarians = false, supply = [], era, empty = false, overlayEmpty = {}, collapsed = false, coloniaFounder = false }: {
   lens: MapLens; onChange(lens: MapLens): void; sites: SettlementScore[]; onInspect(hex: Hex): void; settlerId: number | null; players: PlayerPublic[]; me?: number; visibleBarbarians?: boolean; supply?: SupplyView[]; era?: number; empty?: boolean; overlayEmpty?: Partial<Record<Overlay, boolean>>; collapsed?: boolean;
+  /** Rome: the selected unit founds the Colonia Victrix on a qualifying site; the legend names the gilt ring, or says what a site needs when none is in view. */
+  coloniaFounder?: boolean;
 }) {
   const overlays = useOverlays();
   const overlaysOn = OVERLAYS.filter((o) => overlays[o]);
@@ -93,6 +96,9 @@ export function LensSwitcher({ lens, onChange, sites, onInspect, settlerId, play
   const settleLegend = <div className="settle-legend">
     <p>Better places to found a city are darker green. {touch ? 'Tap' : 'Hover'} a tile for why. No tint: not a site.</p>
     <div className="settle-scale" aria-label="Site quality, from poor to exceptional">{SETTLE_BANDS.map((band) => <span key={band} data-settle-band={band} title={`${band}: site quality ${bandRange(band)}. The same scale on every map.`}><i className={`settle-swatch band-${band.toLowerCase()}`} aria-hidden="true" /><em>{band}</em></span>)}</div>
+    {coloniaFounder && (sites.some((s) => s.colonia)
+      ? <p className="settle-colonia-key" data-testid="settle-colonia-key"><i className="settle-ring-gilt" aria-hidden="true" />{COLONIA_RING_KEY}</p>
+      : <p className="settle-colonia-key none" data-testid="settle-colonia-none"><i className="settle-ring-gilt" aria-hidden="true" />No site you know founds your Colonia Victrix. {COLONIA_SITE_RULE}</p>)}
   </div>;
   return <section ref={panel} className="map-lenses" data-overlay-slot="map-tools" data-compact={compact} data-open={compact && open} aria-label="Map options" onKeyDown={(e) => {
     if (compact && open && e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); }

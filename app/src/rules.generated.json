@@ -5207,7 +5207,7 @@
     },
     "Egypt": {
       "kind": "Held",
-      "label": "Royal tomb held",
+      "label": "Royal Tomb held",
       "rule": "Tomb",
       "target": 1,
       "vp": 2

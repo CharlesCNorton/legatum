@@ -12,7 +12,7 @@ import { eraName } from './eraResearch';
 import { cardMeter, scoredCard } from '../ageCards';
 import { useGame } from '../store';
 import { ownWords, type EraObjective, type Progress, type Source, type VpEmpire, type VpModel } from '../vpModel';
-import type { ObjectiveFamily } from '../types';
+import type { Faction, ObjectiveFamily } from '../types';
 import './vpParts.css';
 
 const css = (v: Record<string, string | number>) => v as CSSProperties;
@@ -132,16 +132,25 @@ const liveWords = (faction: NonNullable<Source['faction']>) => {
 /** A held goal's public facts: whose item it is, who holds it now, and whether it can be placed on the map. */
 function HeldLines({ model, s, goalOwner }: { model: VpModel; s: Source; goalOwner?: VpEmpire }) {
   const holder = s.owners.length === 1 ? model.empires.find((e) => e.id === s.owners[0]) : undefined;
-  const hall = s.faction === 'Mongols';
+  const words = heldWords(s.faction);
   return <div className="vh-held" data-held-by={holder?.id}>
-    {goalOwner && <div className="vh-held-row"><Marker e={goalOwner} size={16} title={goalOwner.name} /><span>{`${goalOwner.isMe ? 'Your' : `${goalOwner.name}’s`} ${hall ? 'Yam Relay Station' : 'Heir'}`}</span></div>}
+    {goalOwner && <div className="vh-held-row"><Marker e={goalOwner} size={16} title={goalOwner.name} /><span>{`${goalOwner.isMe ? 'Your' : `${goalOwner.name}’s`} ${words.item}`}</span></div>}
     <div className={`vh-held-row now${holder ? '' : ' nobody'}`}>
       {holder ? <Marker e={holder} size={16} /> : <Socket size={16} />}
       <b>{s.holdNote}</b>
     </div>
-    {s.heldAt && <p className="vh-private" data-testid="heir-locate-hint">{hall ? 'Its city is on your map: click its token in the race panel to show it.' : 'His position is public: click his token in the race panel to show him on the map.'}</p>}
-    {holder && <p className="vh-private">{hall ? 'The points and the open road go with its city: a rival that captures the city scores them, and they return when it is retaken.' : 'The points go with him: a rival that captures him scores them, and they return when he is retaken.'}</p>}
+    {s.heldAt && <p className="vh-private" data-testid="heir-locate-hint">{words.locate}</p>}
+    {holder && <p className="vh-private">{words.moves}</p>}
   </div>;
+}
+
+/** What a held goal's item is called, how to find it and what a capture does, per faction (the Heir is a unit; the others stand in a city). */
+function heldWords(faction?: Faction): { item: string; locate: string; moves: string } {
+  const city = 'The points go with its city: a rival that captures the city scores them, and they return when it is retaken.';
+  if (faction === 'Mongols') return { item: 'Yam Relay Station', locate: 'Its city is on your map: click its token in the race panel to show it.', moves: 'The points and the open road go with its city: a rival that captures the city scores them, and they return when it is retaken.' };
+  if (faction === 'India') return { item: 'Imperial Diwan', locate: 'Its city is on your map: click its token in the race panel to show it.', moves: city };
+  if (faction === 'Rome' || faction === 'Egypt') return { item: faction === 'Rome' ? 'Colonia Victrix' : 'Royal Tomb', locate: 'Its place is public: click its token in the race panel to show it on the map.', moves: city };
+  return { item: 'Heir', locate: 'His position is public: click his token in the race panel to show him on the map.', moves: 'The points go with him: a rival that captures him scores them, and they return when he is retaken.' };
 }
 
 /** The objective card: its band says whose it is, the markers or standings show who has it. */

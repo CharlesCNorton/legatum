@@ -26,6 +26,7 @@ import { RankMark } from './RankMark';
 import { sleepOrderText } from '../orders';
 import { capitalMark, replacementTileLine } from '../capitalMark';
 import { CapitalNote, ReplacementNote } from './CapitalStar';
+import { GOAL_CITY_ICON, goalCities, goalCitiesAt, goalCityLine } from '../goalCities';
 
 /** "Mongol Scout", but a faction's own piece already carries its name ("Spartan Hoplite"). */
 const ownedName = (adjective: string, unit: string) => unit.startsWith(`${adjective} `) ? unit : `${adjective} ${unit}`;
@@ -47,6 +48,13 @@ export function TileCard({ view, hex, anchor, routeWarning, blockedReason, reinf
     </div>;
     // Byzantium's Heir is public wherever he stands: an unexplored tile that holds him still answers the hover, with only what is known.
     const lone = view.units.find((u) => isHeir(u) && hexEq(u.pos, hex));
+    // Rome's Colonia and Egypt's tomb are public too: their tile answers the hover with whose goal it is and who scores.
+    const goalHere = goalCities(view).filter((g) => hexEq(g.at, hex));
+    if (!lone && goalHere.length) return <div className="tilecard" ref={placed.ref} style={placed.style}>
+      <div className="tilecard-head"><b>{goalHere[0].name}</b><span className="muted">{placeName(view, hex)}</span></div>
+      {goalHere.map((g) => <div key={g.kind} className="tilecard-row tilecard-goal-city" data-testid={`tile-goal-${g.kind}`}><Icon name={GOAL_CITY_ICON[g.kind]} size={14} /> <Amounts text={goalCityLine(view, g)} /></div>)}
+      <div className="tilecard-row muted">Unexplored: its place is public, the land around it is not.</div>
+    </div>;
     if (!lone) return null;
     return <div className="tilecard" ref={placed.ref} style={placed.style}>
       <div className="tilecard-head"><b>{heirTag(view, lone) ?? 'Heir'}</b><span className="muted">{placeName(view, hex)}</span></div>
@@ -182,6 +190,7 @@ export function TileCard({ view, hex, anchor, routeWarning, blockedReason, reinf
         return mark ? <div className="tilecard-row"><CapitalNote view={view} mark={mark} testId="tile-capital" /></div>
           : replaced && <div className="tilecard-row"><ReplacementNote text={replaced} testId="tile-replacement" /></div>;
       })()}
+      {city && goalCitiesAt(view, city.id).map((g) => <div key={g.kind} className="tilecard-row tilecard-goal-city" data-testid={`tile-goal-${g.kind}`}><Icon name={GOAL_CITY_ICON[g.kind]} size={14} /> <Amounts text={goalCityLine(view, g)} /></div>)}
       {/* Production is private (pillar 6): only your own city's banner meter gets this tooltip line. */}
       {city && city.visible && city.owner === view.me && (() => {
         const p = productionProgress(city);
