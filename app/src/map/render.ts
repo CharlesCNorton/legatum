@@ -54,6 +54,7 @@ import { drawLandmarks, LANDMARK_REF_ZOOM, landmarkBoxes, landmarksOf, townCover
 import { drawConstructionSites } from './constructionFx';
 import { constructionStage, sitesOf, type ConstructionSite } from './constructionSites';
 import { CONSTRUCTION_ANIMATION, buildPhases } from './momentFx';
+import { drawPingGhost, drawPings, type PingMark } from './pingDraw';
 import { drawMarchDust, drawMomentFx, drawMomentGround, drawRevealed, revealAt, type MomentView } from './momentFxDraw';
 import { drawAirCandidates, drawAirLabels, drawAirOffscreen, drawAirRings, drawTileCandidates, type AirOverlay } from './airOverlay';
 import { aircraftAsUnit } from '../airWing';
@@ -113,9 +114,13 @@ export interface RenderInput {
   cues?: MapCue[];
   /** A clicked combat line: attacker → target arrow (or a target ring when the attacker went unseen). */
   reportArrow?: ReportArrow | null;
+  /** Teammates' map pings (teamPing.ts), with each ring's age for its pulse. */
+  pings?: PingMark[];
   celebration?: MapCelebration;
   /** The hovered tile holds the player's own unit or city: draw a select ring, not a path. */
   hoverSelect?: boolean;
+  /** Ping is armed: no move preview, and the hovered tile shows a ghost ping ring. */
+  pingArmed?: boolean;
   selectedUnit: number | null;
   selectedAir?: number | null;
   selectedCity: number | null;
@@ -937,6 +942,10 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
     ctx.restore();
   }
 
+  // Team pings sit above the tokens and under every city banner. Armed, the hovered tile shows a ghost ring.
+  if (inp.pings?.length) drawPings(ctx, inp.pings, S2, hexPx, S.tone.vellum, !!inp.reducedMotion);
+  if (inp.pingArmed && inp.hover && tileIndex(inp.hover, W, H) >= 0) drawPingGhost(ctx, S2(inp.hover), hexPx, S.tone.vellum);
+
   // Zoomed out, the names go over the units, so a stack never hides a city's name.
   for (const { far: city, alpha } of banners) if (city?.name) drawSprite(ctx, city.name.sprite, city.name.x, city.name.y, alpha);
   // Zoomed out, an automated city wears an "Auto" tag above its seal (zoomed in, the banner's meter strip carries it).
@@ -1370,7 +1379,7 @@ export function hoverClipBoxes(inp: Pick<RenderInput, 'view' | 'cam' | 'width' |
   const around = (hx: Hex, half: number): Rect => { const p = at(hx); return { x: p.x - half, y: p.y - half, w: half * 2, h: half * 2 }; };
   const out: Rect[] = [];
   // The hover hex (radius 0.94 of a hex) and its select ring, with room for the stroke.
-  if (inp.hover) out.push(around(inp.hover, hexPx + 4));
+  if (inp.hover) out.push(around(inp.hover, Math.max(hexPx + 4, 26))); // 26: room for the armed Ping ghost on a small hex
   const unit = inp.selectedUnit !== null ? view.units.find((u) => u.id === inp.selectedUnit) ?? null : null;
   if (unit && inp.path?.length) {
     // The route line, its shadow and turn roundels (radius 11), and the risk mark on one of its tiles.

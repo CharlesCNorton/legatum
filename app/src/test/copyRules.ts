@@ -20,9 +20,11 @@ export interface CopyRule {
 
 /** Mechanics-speak and code terms: describe what the player gets, not the integer maths behind it. */
 export const BANNED: CopyRule[] = [
+  { pattern: /\bAIs\b/, reason: 'say AI empires in player text (UI review, 2026-11-22)', instead: '"AI empires"', source: true },
   { pattern: /\bNearest you know\b/i, reason: 'reads oddly (plain-language review, 2026-11-22)', instead: '"Nearest known: Sarai (Mongols), 5 tiles from your city Ajmer."', source: true },
   { pattern: /\bPeace (?:ends|would end|ended) (?:all|every) (?:wars?|conflicts?)\b/i, reason: 'Peace ends only the war between its two named teams', instead: 'name that war and any wars that continue', source: true },
   { pattern: /\bPeace (?:covers|includes|binds) (?:their |your )?allies\b/i, reason: 'Alliances stay, but allies are not included in a Peace', instead: 'Peace is between the two named teams', source: true },
+  { pattern: /\bIndustry project/i, reason: 'every empire has projects since 2026-11-22; the items are the Gold project and the Science project', instead: 'Gold project / Science project', source: true },
   { pattern: /\bWar Shrine\b/i, reason: 'Sparta’s building is called the Agoge', instead: 'Agoge', source: true },
   { pattern: /\bin this family\b/i, reason: 'building refusal does not name what stands', instead: 'name the standing building or upgrade', source: true },
   { pattern: /\bNutrient Synthesis\b/i, reason: 'removed technology', instead: 'describe the growth cost without it', source: true },

@@ -39,6 +39,14 @@ class Reviews(unittest.TestCase):
         self.assertEqual(kinds["scenario"], ["scenarios/lab/probe.json"])
         self.assertEqual(kinds["code"], [])
         self.assertEqual(kinds["copy"], [])
+    def test_the_front_door_needs_the_docs_and_art_reviewers(self):
+        kinds = check.classify(".", "HEAD", "HEAD", ["README.md", "docs/media/banner.jpg", "docs/learnings/2026-11.md"])
+        self.assertEqual(kinds["code"], [])
+        self.assertEqual(kinds["front"], ["README.md", "docs/media/banner.jpg"])
+        self.assertEqual([r for _, r, _ in check.required_reviews(kinds)],
+                         ["legatum-docs-reviewer", "legatum-art-reviewer"])
+        docs = check.classify(".", "HEAD", "HEAD", ["docs/learnings/2026-11.md"])
+        self.assertEqual(check.required_reviews(docs), [])
 
     def test_a_comment_must_name_the_reviewer_and_the_head_sha(self):
         reviews = check.required_reviews(KINDS)

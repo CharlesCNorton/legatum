@@ -69,6 +69,7 @@ import { cancelTurnFeedback, feel, feedbackForTurn, playTurnFeedback } from './f
 import { NO_WHY, answerLine, remember as rememberWhy, MAX_SAVED_ANSWERS, withAnswer, writeAnswer, type WhyEngine, type WhyMemory, type WhyQuestion } from './why';
 import { TrainingDriver, reportLine as trainingReportLine, trainingCapMs, writeTrainingLog, type TrainingEngine, type TrainingProgress, type TrainingUi } from './training';
 import { setSeatFactions } from './theme';
+import { PING_MIN_GAP_MS, pingAvailable, withPing, type TeamPing } from './teamPing';
 
 function isMissingWasmError(message: string): boolean {
   return message.startsWith('The game engine (WASM) is missing from this build.');
@@ -211,6 +212,10 @@ interface State {
   reportTurn: number | null;
   /** A clicked combat line: the map draws an arrow from the attacker (when seen) to the target. */
   reportArrow: { from: Hex | null; to: Hex; seq: number } | null;
+  /** Team map pings (teamPing.ts): this turn's, from the viewer's team and teammates. Never in the game state. */
+  pings: TeamPing[];
+  /** The next map click pings that tile (the Ping control, or P). */
+  pingMode: boolean;
   reportOpen: boolean;
   reportFocus?: EventCategory;
   /** Seats that have dismissed the latest report's alarm screen (each local seat sees its own). */
@@ -359,6 +364,11 @@ interface State {
    */
   rewindTo(campaign: string, save: SaveFile): Promise<void>;
   setSeat(seat: Seat): void;
+  /** Whether pings can go to a teammate in this game: a human teammate, and (online) a host that relays them. */
+  canPing(): boolean;
+  setPingMode(on: boolean): void;
+  /** Mark a tile for your team. Returns false when pings are unavailable or you pinged a moment ago. */
+  sendPing(hex: Hex): boolean;
   select(sel: Selection, jump?: boolean): void;
   setMode(mode: 'normal' | 'ranged' | 'move'): void;
   editOrders(fn: (orders: Order[], view: PlayerView) => Order[], feedback?: OrderFeedback): void;
@@ -499,6 +509,8 @@ export const currentCampaign = () => campaign;
 let pendingRewind: { from: number; prior: Rewind[] } | null = null;
 let resumeCampaign: string | null = null;
 let noticedCampaign: string | null = null;
+let lastPingAt = 0;
+let pingSeq = 0;
 
 /**
  * Open a save made with other rules in a build the site still serves (platform/versions.ts). An autosave is found
@@ -675,6 +687,8 @@ export const useGame = create<State>((set, get) => {
       reportHistory: [],
       reportTurn: null,
       reportArrow: null,
+      pings: [],
+      pingMode: false,
       lastHash: null,
       reportOpen: false,
       // Coach questions belong to one game: startGame and load set the toggle again after this.
@@ -771,6 +785,8 @@ export const useGame = create<State>((set, get) => {
       reportHistory: pushReport(get().reportHistory, report),
       reportTurn: null,
       reportArrow: null,
+      pings: [],
+      pingMode: false,
       // Open the report when something notable happened to this team.
       reportOpen: !isEliminated(next[seat]) && lines[seat].some((l) => l.weight > 0 && l.category !== 'movement' && l.players.some((p) => team.includes(p))),
       anim: paths.size || plan || moments ? { start: performance.now(), duration: glide, paths, plan, moments } : null,
@@ -925,6 +941,15 @@ export const useGame = create<State>((set, get) => {
         setNet({ seats });
         queueMicrotask(readyObserver);
       },
+      // A teammate's ping: only this turn's, only from someone on this team.
+      ping: (from, hex, turn) => {
+        if (!active()) return;
+        const view = get().views?.[0];
+        if (!view || turn !== view.turn || view.players.find((p) => p.id === from)?.team !== view.team) return;
+        // The host is another player's browser: a ping whose tile is not two whole numbers is dropped, not drawn.
+        if (!Number.isSafeInteger(hex?.q) || !Number.isSafeInteger(hex?.r)) return;
+        set({ pings: withPing(get().pings, { from, team: view.team, hex, turn, seq: ++pingSeq }) });
+      },
       validation: (errs, validatedOrders) => {
         if (!active()) return;
         set({ errors: [errs] });
@@ -981,6 +1006,8 @@ export const useGame = create<State>((set, get) => {
             reportHistory: [],
             reportTurn: null,
             reportArrow: null,
+            pings: [],
+            pingMode: false,
             lastHash: null,
             reportOpen: false,
             busy: null,
@@ -1008,6 +1035,8 @@ export const useGame = create<State>((set, get) => {
             reportHistory: [],
             reportTurn: null,
             reportArrow: null,
+            pings: [],
+            pingMode: false,
             reportOpen: false,
             anim: null,
             lastHash: null,
@@ -1145,6 +1174,8 @@ export const useGame = create<State>((set, get) => {
     reportHistory: [],
     reportTurn: null,
     reportArrow: null,
+    pings: [],
+    pingMode: false,
     reportOpen: false,
     alarmSeen: [],
     alarmStep: {},
@@ -1576,11 +1607,32 @@ export const useGame = create<State>((set, get) => {
       pendingRewind = null;
     },
 
+    canPing: () => {
+      const { client, views, seat } = get();
+      return pingAvailable(views?.[seat], client instanceof RemoteClient ? client.canPing() : client !== null);
+    },
+
+    setPingMode: (on) => set({ pingMode: on && get().canPing() }),
+
+    sendPing: (hex) => {
+      const { client, views, seat, pings } = get();
+      const view = views?.[seat];
+      if (!client || !view || !get().canPing()) return false;
+      const now = Date.now();
+      if (now - lastPingAt < PING_MIN_GAP_MS) return false;
+      lastPingAt = now;
+      if (client instanceof RemoteClient) client.sendPing(hex);
+      // You see your own ping at once; a teammate's arrives over the host (online) or when they take the device (hot seat).
+      set({ pings: withPing(pings, { from: view.me, team: view.team, hex, turn: view.turn, seq: ++pingSeq }), pingMode: false });
+      return true;
+    },
+
     setSeat: (seat) => {
       if (get().client?.kind === 'remote') return; // one seat per browser in online play
       const views = get().views;
       if (!views || seat < 0 || seat >= views.length) return;
-      set({ seat, selection: null, mode: 'normal', anim: null, endTurnConfirmation: null, warPrompt: null, attacker: null, notice: null });
+      // An armed Ping never survives a hand-over: the next player must not ping by accident.
+      set({ seat, selection: null, mode: 'normal', anim: null, endTurnConfirmation: null, warPrompt: null, attacker: null, notice: null, pingMode: false });
       if (views) {
         const first = nextUnitNeedingOrders(views[seat], get().orders[seat], null);
         if (first) get().select({ kind: first.kind, id: first.id }, true);

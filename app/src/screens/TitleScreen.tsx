@@ -4,7 +4,7 @@ import { parseAutosave, useGame, type SaveFile } from '../store';
 import { listAutosaves, type AutosaveRecord } from '../platform/autosaveStore';
 import { ReplaceGameDialog } from '../ui/ReplaceGameDialog';
 import { pickSaveFile } from '../ui/GameMenu';
-import { DecoRule, Fan, Wordmark } from '../brand/ornaments';
+import { Fan, Wordmark } from '../brand/ornaments';
 import { openGuide } from '../ui/guideState';
 import { HintSettings } from '../ui/FirstGameHints';
 import { HapticsSettings } from '../ui/HapticsSettings';
@@ -50,19 +50,12 @@ export function TitleScreen() {
         <h1 className="title-logo">
           <Wordmark height={112} />
         </h1>
-        <div className="title-kicker">
-          <DecoRule width={72} />
-          <span>A Contest Through History</span>
-          <DecoRule width={72} flip />
-        </div>
-        <p className="title-tag">Build a civilization. Contest its legacy.</p>
         <div className="title-menu">
           {menu === 'main' ? <MainMenu onMultiplayer={() => setMenu('multi')} /> : <MultiplayerMenu onBack={() => setMenu('main')} />}
         </div>
       </div>
       <div className="title-foot">
         <span>{buildLabel}</span>
-        <span>Explore · expand · build · compete</span>
       </div>
     </div>
   );
@@ -194,7 +187,7 @@ function MainMenu({ onMultiplayer }: { onMultiplayer: () => void }) {
         <button className="btn big quiet" onClick={() => pickSaveFile(askThenLoad, (m) => set({ error: m }))}>
           Load Game…
         </button>
-        <button className="btn big quiet" onClick={openGuide}>How to Play <span className="btn-sub">The field guide · ?</span></button>
+        <button className="btn big quiet" onClick={openGuide}>How to Play</button>
         <Settings />
       </div>
       {uploadsGames() && (
