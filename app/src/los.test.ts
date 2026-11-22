@@ -30,7 +30,7 @@ it('walled garrisons bypass Forest, while unwalled cities and field hills keep o
   const from = { q: 1, r: 1 }, to = { q: 3, r: 1 };
   const view = { me: 0, width: 10, height: 10, tiles,
     cities: [{ owner: 0, pos: from, walls: false, name: 'Home' }], research: { known: [] } } as unknown as PlayerView;
-  expect(shotBlockReason(view, from, to, 'Ranger')).toContain('blocks the shot. Home has no Walls. With Walls, units inside shoot over terrain. Fire from a hill or move adjacent.');
+  expect(shotBlockReason(view, from, to, 'Ranger')).toContain('blocks the shot. Fire from a hill, move adjacent, or build Walls in Home.');
   expect(rangedClear('Ranger', from, to, viewTerrain(view))).toBe(false);
   view.cities[0].walls = true;
   expect(walledGarrisonAt(view, 0, from)).toBe(true);

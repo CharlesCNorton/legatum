@@ -1097,24 +1097,23 @@ pub fn ranged_target(
     ) {
         let at = los::blocker(u.pos, target, |h| state.map.get(h).map(|t| t.terrain)).unwrap();
         let terrain = state.map.get(at).map(|t| t.terrain);
-        let no_walls = state
+        let mut options = if terrain == Some(Terrain::Mountains) {
+            vec!["Move adjacent".to_string(), "around it".to_string()]
+        } else {
+            vec!["Fire from a hill".to_string(), "move adjacent".to_string()]
+        };
+        if let Some(c) = state
             .cities
             .values()
             .find(|c| c.owner == u.owner && c.pos == u.pos)
-            .map(|c| {
-                format!(
-                    " {} has no Walls. With Walls, units inside shoot over terrain.",
-                    c.name
-                )
-            })
-            .unwrap_or_default();
-        let remedy = if terrain == Some(Terrain::Mountains) {
-            "Move adjacent or around it."
-        } else {
-            "Fire from a hill or move adjacent."
-        };
+        {
+            options.push(format!("build Walls in {}", c.name));
+        }
+        let last = options.pop().unwrap_or_default();
+        let comma = if options.len() > 1 { "," } else { "" };
+        let remedy = format!("{}{comma} or {last}.", options.join(", "));
         return Err(format!(
-            "No line of sight: the {:?} at ({}, {}) blocks the shot.{no_walls} {remedy}",
+            "No line of sight: the {:?} at ({}, {}) blocks the shot. {remedy}",
             terrain.unwrap_or(Terrain::Mountains),
             at.q,
             at.r

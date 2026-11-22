@@ -1148,7 +1148,7 @@ fn walled_garrison_shoots_through_forest_but_unwalled_garrison_and_field_unit_do
     let name = s.cities[&home].name.clone();
     assert!(
         error.contains(&format!(
-            "{name} has no Walls. With Walls, units inside shoot over terrain."
+            "Fire from a hill, move adjacent, or build Walls in {name}."
         )),
         "{error}"
     );
