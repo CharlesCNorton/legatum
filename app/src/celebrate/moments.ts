@@ -1,5 +1,5 @@
 import type { BuildingKind, Event, Faction, Hex, PlayerId, PlayerView, Resource, RuinReward, UnitKind } from '../types';
-import { ageName, BUILDING_NAME, BUILDING_STATS, factionGoalVp, TECH_NAME, isGreatWork, itemName } from '../data';
+import { ageName, BUILDING_NAME, BUILDING_STATS, factionGoalVp, RULES, TECH_NAME, isGreatWork, itemName } from '../data';
 import { TECH_QUOTE } from '../techQuotes';
 import { claimedTile, growthUnlocks } from '../milestones';
 import { yieldsText } from '../cityProgress';
@@ -16,6 +16,7 @@ import { WONDER_INFO, wonderArt, wonderBonusSentence } from '../wonders';
 import { isAircraft, readyNotice } from '../airText';
 import { revealedByTech } from '../resources';
 import { hexAt } from '../hex';
+import { GOAL_CITY_ICON, GOAL_CITY_TITLE, goalCities, goalCitiesAt, goalCityKindOf, tombSites } from '../goalCities';
 
 export type Tier = 'minor' | 'notable' | 'major' | 'legendary';
 export type Counter = 'gold' | 'science' | 'population' | 'vp';
@@ -55,6 +56,8 @@ export interface Moment {
   frame?: Faction;
   /** A VP seal on the picture: the points this card scores (signed by `loss`). */
   seal?: number;
+  /** A goal's mark (`goal-colonia`, `goal-royal-tomb`): the card's medallion, with the empire's crest as its corner badge. */
+  goalMark?: string;
   /** The city a wonder card is about, shown under its title (the kicker names the event). */
   place?: string;
   /** The event leaves this city without a build: the card's primary is Choose production there. */
@@ -116,6 +119,7 @@ function wonderYieldLine(building: Parameters<typeof isGreatWork>[0], city: stri
   return text === 'no yield' ? null : `${text} in ${city}`;
 }
 const WONDER_ONLY_ONE = 'Only one in the world: no other empire can build it.';
+const possessive = (name: string) => (name.endsWith('s') ? `${name}'` : `${name}'s`);
 const signedVp = (n: number) => `${n < 0 ? '−' : '+'}${Math.abs(n)} VP`;
 
 /** Presentation only. Caller supplies this viewer's fog-filtered events and views. */
@@ -136,8 +140,38 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
       deltas: owner === viewer ? value.deltas : [],
     });
   };
+  // A card every empire sees about another empire (a rival's Heir, Colonia or Royal Tomb): it wears that empire's crest.
+  const publicCard = (index: number, owner: PlayerId, value: Omit<Moment, 'id' | 'eventIndex' | 'owner' | 'faction' | 'partner'>) => {
+    const player = after.players.find((p) => p.id === owner);
+    if (player) out.push({ ...value, id: `${after.turn}:${index}:${owner}`, eventIndex: index, owner, faction: player.faction, partner: false });
+  };
+  // Where a held goal city stands now, from the public lists (every empire can find it, through fog).
+  const goalCityOf = (faction: Faction, holder: PlayerId) => {
+    const kind = goalCityKindOf(faction);
+    return kind ? goalCities(after).find((g) => g.kind === kind && g.holder === holder) : undefined;
+  };
+  // Where an empire's Royal Tomb under construction will stand (public while the work is on).
+  const tombSiteOf = (player: PlayerId) => tombSites(after).find((g) => g.of === player);
+  const siteOf = (player: PlayerId) => tombSiteOf(player)?.at ?? null;
   events.forEach((e, i) => {
     switch (e.type) {
+      // Egypt's Royal Tomb work is public: every empire learns when it starts and when it pauses.
+      case 'TombStarted': {
+        if (team.has(e.player)) break; // Egypt's own team ordered it: the report line is enough.
+        const left = Math.max(0, RULES.tombTurns - e.turns);
+        publicCard(i, e.player, { tier: 'major', at: siteOf(e.player) ?? capital(e.player), goalMark: GOAL_CITY_ICON.tomb, title: 'The Royal Tomb', kicker: empireOfPlayer(after, e.player),
+          effect: `${empireOfPlayer(after, e.player)} is building its Royal Tomb${tombSiteOf(e.player) ? ` in ${tombSiteOf(e.player)!.name}` : ''}: ${factionGoalVp('Egypt')} VP to whoever holds the city. ${left} ${left === 1 ? 'turn' : 'turns'} of work left.`,
+          lore: 'The valley falls quiet while the tomb is cut.',
+          details: ['Its cities do not build or grow while the work is on. It may pause and keep its count.'], deltas: [] });
+        break;
+      }
+      case 'TombPaused': {
+        if (team.has(e.player)) break;
+        publicCard(i, e.player, { tier: 'notable', at: capital(e.player), goalMark: GOAL_CITY_ICON.tomb, title: 'The Royal Tomb', kicker: empireOfPlayer(after, e.player),
+          effect: `${empireOfPlayer(after, e.player)} paused its Royal Tomb at ${e.turns} of ${RULES.tombTurns} turns: its cities build and grow again.`,
+          lore: 'The work stops. The count is kept.', details: [], deltas: [] });
+        break;
+      }
       case 'WonderDiscovered': {
         const name = WONDER_INFO[e.wonder].name;
         const reward = e.gold ? `+${e.gold} Gold` : `+${e.science} stored Science`;
@@ -294,6 +328,42 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
       // The Byzantium's held goal changes hands: capturing the Heir is a big moment for the captor, losing him a sober card
       // for the loser (the premium tier of a captured city); a plain retake by the Byzantium is a major card too.
       case 'FactionGoalCompleted': {
+        const goalKind = goalCityKindOf(e.faction);
+        if (goalKind) {
+          const title = GOAL_CITY_TITLE[goalKind];
+          const g = goalCityOf(e.faction, e.player);
+          const captured = events.find((x): x is Extract<Event, { type: 'CityCaptured' }> => x.type === 'CityCaptured' && x.to === e.player);
+          const name = g?.name ?? (captured ? cityName(captured.city) : undefined);
+          const at = g?.at ?? (captured ? cities.get(captured.city)?.pos ?? null : capital(e.player));
+          const ownFaction = faction(e.player) === e.faction;
+          if (team.has(e.player)) {
+            if (captured) {
+              push(i, e.player, { goalMark: GOAL_CITY_ICON[goalKind], tier: 'major', at, title: ownFaction ? `The ${title} is retaken` : `${possessive(e.faction)} ${title} is taken`, kicker: name ? `Taken with ${name}` : undefined,
+                effect: `+${e.vp} VP while you hold ${name ?? 'its city'}`, lore: 'The banners changed. The points follow the city.',
+                details: [`A rival that takes ${name ?? 'the city'} takes the points.`], deltas: [{ counter: 'vp', amount: e.vp }], seal: e.vp });
+            } else if (goalKind === 'colonia') {
+              push(i, e.player, { goalMark: GOAL_CITY_ICON[goalKind], tier: 'legendary', at, title: 'Colonia Victrix', kicker: name ? `Founded at ${name}` : 'Your veterans found the Colonia Victrix',
+                effect: `+${e.vp} VP while you hold it`, lore: 'The veterans were given land on the frontier they won.',
+                details: ['Every empire sees where it stands. A rival that captures it takes the points.', 'If it is razed, found another.'],
+                deltas: [{ counter: 'vp', amount: e.vp }], seal: e.vp });
+            } else {
+              push(i, e.player, { goalMark: GOAL_CITY_ICON[goalKind], tier: 'legendary', at, title: 'The Royal Tomb', kicker: name ? `It stands in ${name}` : 'The tomb stands',
+                effect: `+${e.vp} VP while you hold it · your cities build and grow again`, lore: 'Cut into the cliff, sealed for eternity.',
+                details: ['Every empire sees where it stands. A rival that captures its city takes the points.'],
+                deltas: [{ counter: 'vp', amount: e.vp }], seal: e.vp });
+            }
+          } else if (!captured) {
+            // Every empire is told when a goal city appears, and where: 2 VP to whoever holds it.
+            const who = empireOfPlayer(after, e.player);
+            publicCard(i, e.player, { goalMark: GOAL_CITY_ICON[goalKind], tier: 'major', at, title, kicker: who,
+              effect: goalKind === 'colonia'
+                ? `${who} founded its Colonia Victrix${name ? ` at ${name}` : ''}: ${e.vp} VP to whoever holds it`
+                : `The Royal Tomb stands${name ? ` in ${name}` : ''}: ${e.vp} VP to whoever holds it`,
+              lore: goalKind === 'colonia' ? 'Veterans settle on the frontier.' : 'Cut into the cliff, sealed for eternity.',
+              details: ['Every empire sees where it stands, even through fog. Be at War with its holder and capture the city to take the points.'], deltas: [], seal: e.vp });
+          }
+          break;
+        }
         if (e.faction === 'Byzantium') {
           const from = events.find((x): x is Extract<Event, { type: 'FactionGoalLost' }> => x.type === 'FactionGoalLost' && x.faction === 'Byzantium')?.player ?? null;
           if (faction(e.player) !== 'Byzantium') {
@@ -364,6 +434,23 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
           effect: `${e.retired} of ${e.of} retired`, lore: 'He earned his rest. His service is recorded.', details: [`${e.of - e.retired} more to retire for +2 VP, kept for good.`], deltas: [], emblem: 'milestone' });
         break;
       case 'FactionGoalLost': {
+        const lostKind = goalCityKindOf(e.faction);
+        if (lostKind) {
+          if (!team.has(e.player)) break;
+          const title = GOAL_CITY_TITLE[lostKind];
+          const to = events.find((x): x is Extract<Event, { type: 'FactionGoalCompleted' }> => x.type === 'FactionGoalCompleted' && x.faction === e.faction)?.player ?? null;
+          const cap = events.find((x): x is Extract<Event, { type: 'CityCaptured' }> => x.type === 'CityCaptured' && x.from === e.player);
+          const razed = events.find((x): x is Extract<Event, { type: 'CityRazed' }> => x.type === 'CityRazed' && x.from === e.player);
+          const city = cap ? cityName(cap.city) : razed ? cityName(razed.city) : null;
+          const again = lostKind === 'colonia' ? 'Rome may found another.' : 'Egypt may build another, from the start.';
+          push(i, e.player, { goalMark: GOAL_CITY_ICON[lostKind], tier: 'major', at: (cap && cities.get(cap.city)?.pos) ?? razed?.at ?? capital(e.player), kicker: 'A loss',
+            title: to !== null ? `The ${title} is taken` : razed ? `The ${title} is razed` : `The ${title} is lost`,
+            effect: `−${e.vp} VP · ${to !== null ? `${empireOfPlayer(after, to)} took ${city ?? 'its city'}` : razed ? `${city ?? 'its city'} was razed` : 'nobody holds it now'}`,
+            lore: to !== null ? 'The points follow the banner over the city.' : 'Nothing is left to retake.',
+            details: to !== null ? [`Retake ${city ?? 'the city'} and the points return.`] : razed ? [again] : ['Nobody scores it until its city is retaken.'],
+            deltas: [{ counter: 'vp', amount: -e.vp }], loss: true });
+          break;
+        }
         if (e.faction === 'Celts') {
           // The clearing is in the same batch; the camp belongs to your nearest city. Fog may hide who did it.
           const cleared = events.find((x): x is Extract<Event, { type: 'BarbarianCampCleared' }> => x.type === 'BarbarianCampCleared' && !team.has(x.by));
@@ -396,6 +483,8 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
         if (events.some((x) => x.type === 'CapitalTaken' && x.capital === e.city) && team.has(e.to)) break;
         // The Yam Relay Station's city is told by the Station's own moment (the road and the points went with it).
         if (after.courier_halls?.some((h) => h.city === e.city)) break;
+        // A goal city's capture is told by the goal's own card (the points went with it).
+        if (goalCitiesAt(after, e.city).length && events.some((x) => x.type === 'FactionGoalCompleted' && x.player === e.to && goalCityKindOf(x.faction))) break;
         // A capture is a major moment for the taker; a loss is a sober card of the same weight.
         const city = after.cities.find((c) => c.id === e.city) ?? cities.get(e.city);
         const nameOf = (id: number) => isBarbarian(id) ? 'Barbarians' : empireOfPlayer(after, id);

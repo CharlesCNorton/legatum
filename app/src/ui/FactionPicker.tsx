@@ -4,7 +4,7 @@
 // it the seat's faction at once and shows its sheet. There is no hover preview and no confirm
 // button; Close (or Return, or Esc) just closes the dialog and the choice stays.
 import { useEffect, useId, useRef, useState } from 'react';
-import { FACTIONS, FACTION_GOAL, FACTION_INFO, factionGoalTerms, factionGoalVp, type FactionGoal } from '../data';
+import { RULES, FACTIONS, FACTION_GOAL, FACTION_INFO, factionGoalTerms, factionGoalVp, type FactionGoal } from '../data';
 import { FACTION_SHEETS, sheetCards } from '../factionSheets';
 import type { FactionChoice } from '../lobby';
 import { Icon, Kbd } from './bits';
@@ -197,6 +197,7 @@ const FACT_ICONS = { lose: 'ui-trend-down', counter: 'unit-spearman' } as const;
 /** Where in the game a goal is acted on (only goals with an action of their own). */
 const goalWhere = (faction: Exclude<FactionChoice, 'Random'>, goal: FactionGoal): string | null => {
   if (faction === 'Sparta') return 'In the game: Retire this veteran on its unit card, or use the Victory race (G).';
+  if (faction === 'Rome') return `In the game: select a level ${RULES.coloniaLevel} melee veteran and open the Settle lens; gilt rings mark the sites.`;
   return goal.action ? `In the game: ${goal.action} in the Victory race (G).` : null;
 };
 

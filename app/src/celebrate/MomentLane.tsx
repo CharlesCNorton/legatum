@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useLayoutEffect, use
 import { pendingAlarms, useGame, type TurnReport } from '../store';
 import type { Event as GameEvent } from '../types';
 import { CrestMedallion } from '../brand/ornaments';
+import { RingMedallion } from '../ui/ringMedallion';
 import { playerColor } from '../theme';
 import { useReducedMotion } from '../ui/useReducedMotion';
 import { motionStill } from '../ui/motion';
@@ -238,7 +239,9 @@ export function MomentLane() {
           {card.frame ? <span className="moment-frame"><PortraitFrame faction={card.frame} fallen crestSize={30} style={{ ['--pw' as string]: '84px', ['--ph' as string]: '104px' }} />{card.seal ? <VpSeal vp={card.seal} /> : null}</span>
             : picture ? <img className="moment-wonder-art" src={picture} alt="" /> :
             <span className="moment-crest"><span className="moment-rays" aria-hidden="true" />
-              {card.emblem ? <RewardEmblem kind={card.emblem} color={playerColor(card.owner)} size={card.tier === 'legendary' ? 88 : 68} />
+              {card.goalMark ? <RingMedallion icon={card.goalMark} tone={card.loss ? 'hollow' : 'gilt'} size={card.tier === 'legendary' ? 72 : 56}
+                  badge={<CrestMedallion faction={card.faction} color={playerColor(card.owner)} size={card.tier === 'legendary' ? 30 : 24} />} />
+                : card.emblem ? <RewardEmblem kind={card.emblem} color={playerColor(card.owner)} size={card.tier === 'legendary' ? 88 : 68} />
                 : <CrestMedallion faction={card.faction} color={playerColor(card.owner)} size={card.tier === 'legendary' ? 64 : 40} />}</span>}
           <h2>{card.title}</h2>
           {card.place && <p className="moment-place">{card.place}</p>}

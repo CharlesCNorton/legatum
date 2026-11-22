@@ -2474,10 +2474,12 @@ impl Planner<'_> {
                 (threat > 0).then_some((threat, stake, *c))
             })
             .collect();
-        // A Station city (its land is open to every empire) is answered first, and widest.
+        // A Station city (its land is open to every empire) is answered first, and widest; so is
+        // a Colonia or royal tomb city (its holder scores 2 VP).
+        let first = |c: &CityView| self.holds_hall_city(c) || self.holds_goal_city(c);
         order.sort_by(|a, b| {
-            self.holds_hall_city(b.2)
-                .cmp(&self.holds_hall_city(a.2))
+            first(b.2)
+                .cmp(&first(a.2))
                 .then(b.0.cmp(&a.0))
                 .then(b.1.cmp(&a.1))
                 .then(a.2.id.cmp(&b.2.id))
@@ -2740,6 +2742,7 @@ impl Planner<'_> {
                 std::cmp::Reverse(
                     self.hall_guard_city(c)
                         || self.diwan_guard_city(c)
+                        || self.goal_city_guard(c)
                         || self.wonder_guard_city(c)
                         || self.own_original_capital(c),
                 ),
@@ -4276,7 +4279,9 @@ impl Planner<'_> {
                     + if contain {
                         self.heir_in_city_value(city)
                             + if self.decisions.vp_denial > 0 {
-                                (self.hall_in_city_value(city) + self.forge_denial_value(city))
+                                (self.hall_in_city_value(city)
+                                    + self.goal_city_in_city_value(city)
+                                    + self.forge_denial_value(city))
                                     * self.decisions.vp_denial
                                     / 100
                             } else {
