@@ -170,6 +170,16 @@ describe('the research screen header', () => {
     expect(el.querySelector('[data-testid=research-objectives-next]')?.textContent).toBe('The next Age begins when any empire enters the Renaissance era.');
   });
 
+  it('names the Machine Age once: its era name already ends in Age', () => {
+    const machine = (scored: number[]) => {
+      const view = withV2(base, { era: 3, scored });
+      view.eras.find((e) => e.era === 3)!.name = 'Machine Age';
+      return view;
+    };
+    expect(research(machine([2])).querySelector('[data-testid=research-objectives-current] h4')?.textContent).toBe('Machine Age: score 1 VP');
+    expect(research(machine([2, 3])).querySelector('[data-testid=research-objectives-current] h4')?.textContent).toBe('Machine Age: 1 VP scored');
+  });
+
   it('stamps the seal in once per Age state, flashes a newly met card once, and stays still with animations off', () => {
     const media = window.matchMedia;
     window.matchMedia = ((q: string) => ({ matches: false, media: q, addEventListener() {}, removeEventListener() {} })) as unknown as typeof window.matchMedia;

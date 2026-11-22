@@ -479,13 +479,13 @@ describe('the Mongols’ Yam Relay Station moments', () => {
     expect(theirs[0]).toMatchObject({ tier: 'major', loss: true, partner: true, owner: 1 });
     expect(theirs[0].effect).toContain('−2 VP');
   });
-  it('a sacked Hall is a loss that says it can be built again; a rival-to-rival hand-over shows nothing', () => {
+  it('a sacked Station is a loss that says it can be built again; a rival-to-rival hand-over shows nothing', () => {
     const razed = map([{ type: 'CityRazed', city: 1, from: 0, by: 3, at: { q: 2, r: 2 } }, lost(0)]);
     expect(razed.find((m) => m.loss)).toMatchObject({ title: 'The Yam Relay Station is sacked' });
     expect(razed.find((m) => m.loss)!.details.join(' ')).toContain('built again');
     expect(map([got(2), lost(3)])).toEqual([]);
   });
-  it('a captured Hall city has one card, not the Hall’s and a plain capture', () => {
+  it('a captured Station city has one card, not the Station’s and a plain capture', () => {
     const after = structuredClone(view);
     const city = after.cities.find((c) => c.owner === 0)!;
     after.courier_halls = [{ of: 2, holder: 0, city: city.id }];
