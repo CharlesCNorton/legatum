@@ -30,7 +30,7 @@ import { AIR_ORDERS, nextUnitNeedingOrders } from './orders';
 import { peacefulRangedAt } from './diplomacy';
 import { nextDecision, pendingDecisions } from './turnFlow';
 import { pendingRetire } from './goalActions';
-import { seenGoalsAfterTurn } from './goalDecision';
+import { coloniaFounder, seenGoalsAfterTurn } from './goalDecision';
 import { spotsIn, strikeRange, type Hold } from './airWing';
 import { releasedGarrison, type ReleasedUnit } from './releasedGarrison';
 import { contextFromViews, formatEvents, movementPaths, objectiveCloseLines, releasedGarrisonLines, settlerSiteLines, type HoldCard, type ReportLine, type EventCategory } from './format';
@@ -267,7 +267,7 @@ interface State {
   /** The Heir whose Disband is waiting for confirmation (it forfeits Byzantium's 2 VP). */
   heirDisbandAsk: number | null;
   /** The goal action being confirmed (the Great Migration or the broadcast): the dialog, and the map's preview of what it does. */
-  goalDialog: 'Swarm' | 'Sakoku' | 'SakokuReopen' | 'Broadcast' | 'CallTheWild' | 'RetireVeteran' | null;
+  goalDialog: 'Swarm' | 'Sakoku' | 'SakokuReopen' | 'Broadcast' | 'CallTheWild' | 'RetireVeteran' | 'Tomb' | 'TombPause' | null;
   /** The veteran whose retirement the confirm weighs (`goalDialog === 'RetireVeteran'`). */
   goalDialogUnit: number | null;
   /** Per player, the first ready faction-goal decision was opened or deferred. */
@@ -1737,7 +1737,11 @@ export const useGame = create<State>((set, get) => {
       else if (decision.kind === 'freeTechs') set({ selection: null, freeTechsOpen: true, mode: 'normal' });
       else if (decision.kind === 'goal') {
         set({ goalDecisionSeen: { ...s.goalDecisionSeen, [view.me]: true } });
-        if (decision.action === 'Retire') {
+        if (decision.action === 'Colonia') {
+          // The veteran himself: selecting him opens the Settle lens, where gilt rings mark the sites.
+          const founder = coloniaFounder(view, s.orders[s.seat]);
+          if (founder !== null) get().select({ kind: 'unit', id: founder }, true);
+        } else if (decision.action === 'Retire') {
           const veteran = view.actions?.retire?.veterans.find((v) => !v.blocker && !pendingRetire(s.orders[s.seat], v.unit));
           if (veteran) set({ goalDialog: 'RetireVeteran', goalDialogUnit: veteran.unit });
         } else set({ goalDialog: decision.action });

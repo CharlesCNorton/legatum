@@ -31,7 +31,7 @@ for (const size of sizes) {
   for (const level of ['Hard', 'Training'] as const) {
     test(`${size.name}, ${level}`, async ({ page }, info) => {
       test.setTimeout(30 * 60_000);
-      // First-game hint cards cover the End Turn button after a few dozen turns; they aren't what's measured.
+      // Keep the advisor out of this turn-timing run.
       await page.addInitScript(() => localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] })));
       // Training is offered only by a development build with the switch on (`npm run dev`), never by `app/dist`.
       await page.goto(level === 'Training' ? '/?client=wasm&training=1' : '/?client=wasm');

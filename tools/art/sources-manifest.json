@@ -57,6 +57,11 @@
    "sha256": "73ce4bd79f69d4e9af1d2cc5dc523e1cd434edf8ec2bfa2f8b391945cfceee34"
   },
   {
+   "path": "app/src/assets/art/random-choice.png",
+   "bytes": 3023494,
+   "sha256": "b270c47a47c3b9ea4b8e00e7ea6213212d5986d833dfef19ad3abc6b728f79d4"
+  },
+  {
    "path": "app/src/assets/art/title-keyart-c-road-at-dawn.png",
    "bytes": 5503492,
    "sha256": "8e7b107a645e9ea6d7181df35ea16081f7a505d0d14bddcd6438dc7891e345e9"
@@ -330,6 +335,21 @@
    "path": "app/src/assets/units/war-elephant-source.png",
    "bytes": 1660799,
    "sha256": "ba648e2a651130dce9f6668f2bddc818c9ac3cb4f1764c967541dd8ad55ced82"
+  },
+  {
+   "path": "app/src/assets/unlocks/goal-newfire-source.png",
+   "bytes": 2399289,
+   "sha256": "421a1f4f232286d5f14fe5d67995f420761fbe59ff6b603a11eae56183094bff"
+  },
+  {
+   "path": "app/src/assets/unlocks/goal-reserve-source.png",
+   "bytes": 2591333,
+   "sha256": "68837f2218392550a13a3ca64cb1127105e90e843148d70e3c1839de83a3fd6a"
+  },
+  {
+   "path": "app/src/assets/unlocks/goal-warbands-source.png",
+   "bytes": 2682748,
+   "sha256": "0d7a5f2beb2bcb8291dd8d602ca5a09a3e1c7ca512be2b06be3cf8376bc6dd88"
   },
   {
    "path": "docs/design/art-pass-2/all-portraits-48.png",

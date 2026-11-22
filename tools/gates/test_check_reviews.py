@@ -39,6 +39,17 @@ class Reviews(unittest.TestCase):
         self.assertEqual(kinds["scenario"], ["scenarios/lab/probe.json"])
         self.assertEqual(kinds["code"], [])
         self.assertEqual(kinds["copy"], [])
+
+    def test_controls_and_rules_the_advisor_teaches_need_the_advisor_reviewer(self):
+        files = ["app/src/map/MapCanvas.tsx", "app/src/ui/Advisor.tsx", "crates/core/src/rules/cities.rs",
+                 "app/src/ui/advisor.test.ts", "app/src/ui/DiplomacyPanel.tsx", "crates/ai/src/scripted.rs"]
+        kinds = check.classify(".", "HEAD", "HEAD", files)
+        self.assertEqual(kinds["advisor"], ["app/src/map/MapCanvas.tsx", "app/src/ui/Advisor.tsx",
+                                            "crates/core/src/rules/cities.rs"])
+        advisor = dict(KINDS, code=["app/src/ui/Advisor.tsx"], copy=[], ui=[], advisor=["app/src/ui/Advisor.tsx"])
+        self.assertEqual([r for _, r, _ in check.required_reviews(advisor)],
+                         ["legatum-docs-reviewer", "legatum-advisor-reviewer"])
+
     def test_the_front_door_needs_the_docs_and_art_reviewers(self):
         kinds = check.classify(".", "HEAD", "HEAD", ["README.md", "docs/media/banner.jpg", "docs/learnings/2026-11.md"])
         self.assertEqual(kinds["code"], [])

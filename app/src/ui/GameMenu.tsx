@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { currentCampaign, hostedSaveText, saveFile, useGame, type SaveFile } from '../store';
 import { EarlierTurnDialog } from './EarlierTurnDialog';
 import { openGuide } from './guideState';
-import { HintSettings } from './FirstGameHints';
+import { AdvisorSettings } from './Advisor';
 import { HapticsSettings } from './HapticsSettings';
 import { SoundSettings } from './SoundSettings';
 import { CombatFxSettings } from './CombatFxSettings';
@@ -137,7 +137,7 @@ export function GameMenu() {
               <hr />
             </>
           )}
-          <HintSettings />
+          <AdvisorSettings />
           <HapticsSettings />
           <SoundSettings />
           <CombatFxSettings />

@@ -1,3 +1,4 @@
+import { setMapProjector } from './screenPos';
 import { retirePreview, swarmPreview, wildPreview } from '../goalActions';
 import { useCelebration } from '../celebrate/MomentLane';
 import { drawCounterFlights, EFFECT_MS, FLIGHT_MS, type MapCelebration } from '../celebrate/mapEffect';
@@ -26,6 +27,7 @@ import { buildLensTiles, resolveLens, type MapLens } from './lenses';
 import { buildOverlayTiles, overlayEmpty, useOverlays } from './overlays';
 import { settleTileNote, withProxySettler } from './settleAdvice';
 import { LensSwitcher } from './LensSwitcher';
+import { isColoniaFounder } from '../goalCities';
 import { isBarbarian } from '../barbarians';
 import { SettlementCard, SettlementDetails } from './SettlementCard';
 import { PING_PULSE_MS, pingsFor } from '../teamPing';
@@ -243,7 +245,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
     // Desktop: beside the inspected hex (never over it or its units), in a band clear of the
     // story above and the command dock below. Only when neither side fits (a cramped iPad
     // layout), fall back to the centred slot between the story and the dock.
-    const above = [...document.querySelectorAll('.topbar, .first-game-hint')];
+    const above = [...document.querySelectorAll('.topbar, .advisor-card')];
     const below = [...document.querySelectorAll('.unit-panel, .up-hints, .seatbar, .map-lenses')];
     const sides = [...document.querySelectorAll('.game .panel, .game .report, .vp')];
     const shown = (el: Element) => el.getBoundingClientRect().height > 0 && getComputedStyle(el).visibility !== 'hidden' && !el.contains(inspector);
@@ -800,6 +802,13 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
     const offLandmarkArt = onLandmarkArtLoad(() => (dirty.current = true));
     const offWonderArt = onWonderArtLoad(() => (dirty.current = true));
     void document.fonts?.ready.then(() => (dirty.current = true));
+    // Where a tile is in the viewport, for DOM overlays that point at the map (the advisor's ring).
+    setMapProjector((h: Hex) => {
+      const canvas = canvasRef.current;
+      if (!canvas) return null;
+      const rect = canvas.getBoundingClientRect(), p = hexToPixel(h, HEX_SIZE), c = cam.current;
+      return { x: rect.left + (p.x - c.x) * c.zoom + size.current.w / 2, y: rect.top + (p.y - c.y) * c.zoom + size.current.h / 2, radius: HEX_SIZE * c.zoom };
+    });
     // Debug/testing hook: where a hex is on screen (CSS pixels, relative to the canvas).
     (window as unknown as { legatumMap: unknown }).legatumMap = {
       toScreen: (h: Hex) => {
@@ -841,6 +850,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
       },
     });
     return () => {
+      setMapProjector(null);
       unregister();
       offCityArt();
       offImprovementArt();
@@ -866,7 +876,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
       const wrap = wrapRef.current;
       if (!wrap) return;
       const o = wrap.getBoundingClientRect();
-      panels.current = [...document.querySelectorAll('.game .panel, .game .vp, .game .report, .map-lenses, .first-game-hint, .topbar')].map((e) => {
+      panels.current = [...document.querySelectorAll('.game .panel, .game .vp, .game .report, .map-lenses, .advisor-card, .topbar')].map((e) => {
         const r = e.getBoundingClientRect();
         return { x: r.left - o.left, y: r.top - o.top, w: r.width, h: r.height };
       });
@@ -1520,7 +1530,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
         {bannerTooltip(view, hoveredBanner.city)}
       </div>}
       <CompassRose ref={compassRef} />
-      <LensSwitcher players={view?.players ?? []} me={view?.me} visibleBarbarians={!!view?.units.some((u) => isBarbarian(u.owner))} supply={view?.supply} era={view?.research.era} lens={lens} empty={!lensTiles.length} overlayEmpty={{ resources: !!view && overlayEmpty(view, 'resources', overlayTiles), borders: !!view && overlayEmpty(view, 'borders', overlayTiles) }} collapsed={!!selection} onChange={(next) => { clearTouch(); setLens(next); }} sites={sites} settlerId={settleUnit?.id ?? null} onInspect={(hex) => {
+      <LensSwitcher players={view?.players ?? []} me={view?.me} visibleBarbarians={!!view?.units.some((u) => isBarbarian(u.owner))} supply={view?.supply} era={view?.research.era} lens={lens} empty={!lensTiles.length} overlayEmpty={{ resources: !!view && overlayEmpty(view, 'resources', overlayTiles), borders: !!view && overlayEmpty(view, 'borders', overlayTiles) }} collapsed={!!selection} onChange={(next) => { clearTouch(); setLens(next); }} sites={sites} settlerId={settleUnit?.id ?? null} coloniaFounder={!!view && !!settleUnit && isColoniaFounder(view, settleUnit.id)} founderName={settleUnit ? itemName({ kind: 'Unit', unit: settleUnit.kind }, view?.players.find((p) => p.id === settleUnit.owner)?.faction) : undefined} onInspect={(hex) => {
         useGame.getState().jumpTo(hex);
         setHover(null);
         setTapPreview(null);

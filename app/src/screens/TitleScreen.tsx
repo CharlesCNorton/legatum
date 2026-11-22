@@ -6,7 +6,7 @@ import { ReplaceGameDialog } from '../ui/ReplaceGameDialog';
 import { pickSaveFile } from '../ui/GameMenu';
 import { Fan, Wordmark } from '../brand/ornaments';
 import { openGuide } from '../ui/guideState';
-import { HintSettings } from '../ui/FirstGameHints';
+import { AdvisorSettings } from '../ui/Advisor';
 import { HapticsSettings } from '../ui/HapticsSettings';
 import { SoundSettings } from '../ui/SoundSettings';
 import { CombatFxSettings } from '../ui/CombatFxSettings';
@@ -17,6 +17,7 @@ import { DEFAULT_PLAYER_NAME, MAX_PLAYER_NAME, rememberPlayerName, savedPlayerNa
 import { TitleArt } from './TitleArt';
 import { usePerfOverlay } from '../ui/PerfOverlay';
 import { buildLabel } from '../buildLabel';
+import { buildTime } from '../buildTime';
 import { PRIVACY_URL, uploadsGames } from '../platform/gameUpload';
 import { isOlderVersionMessage, loadErrorMessage, olderAutosaveMessage, parseSaveFile, saveHasCurrentRules, saveRulesVersion } from '../saveErrors';
 import { buildForSave, isBehind, navigate, newestUrl, pageLaunch, takeHandedOffSave } from '../platform/versions';
@@ -55,7 +56,7 @@ export function TitleScreen() {
         </div>
       </div>
       <div className="title-foot">
-        <span>{buildLabel}</span>
+        <span>{buildTime ? `${buildLabel} · Last updated ${buildTime}` : buildLabel}</span>
       </div>
     </div>
   );
@@ -220,7 +221,7 @@ function MultiplayerMenu({ onBack }: { onBack: () => void }) {
   const codeNote = joinCodeProblem(code);
   const typed = name.trim();
   const shown = cleanRoomName(typed);
-  const listedAs = typed && shown !== typed ? (shown ? `Shown in the game list as “${shown}”.` : 'The game list will show “Game” and four characters.') : null;
+  const listedAs = typed && shown !== typed ? (shown ? `Shown in the game list as “${shown}”.` : 'Listed as “Game” and four characters.') : null;
   // After a refusal that pressing Host Game again cannot fix, Host Game is not the next action: Join Game is.
   const hostCannotRetry = hosting === 'failed' && !!refusal && retryWouldFail(refusal.kind);
   const hostPrimary = hosting === 'failed' && !views && !hostCannotRetry;
@@ -329,7 +330,7 @@ function MultiplayerMenu({ onBack }: { onBack: () => void }) {
   );
 }
 
-/** Settings open in a modal over the title, so the menu never changes size: first-game hints and the frame-rate readout. */
+/** Settings open in a modal over the title, so the menu never changes size. */
 function Settings() {
   const [open, setOpen] = useState(false);
   const trigger = useRef<HTMLButtonElement>(null);
@@ -381,7 +382,7 @@ function SettingsDialog({ onClose }: { onClose: () => void }) {
         </button>
       </header>
       <div className="settings-body">
-        <HintSettings />
+        <AdvisorSettings />
         <HapticsSettings />
         <SoundSettings />
         <CombatFxSettings />
