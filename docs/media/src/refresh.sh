@@ -46,5 +46,4 @@ loop() {
 ffmpeg -y -loglevel error -ss 2.0 -i "$out/legatum-teaser.mp4" -i "$here/play-mark.png" -filter_complex overlay -frames:v 1 -q:v 3 "$out/teaser-poster.jpg"
 
 node "$here/banner.mjs"
-node "$here/diagrams.mjs"
 ls -l "$out"/*.mp4 "$out"/*.webp "$out"/*.jpg | awk '{printf "%8.2f MB  %s\n", $5/1048576, $9}'

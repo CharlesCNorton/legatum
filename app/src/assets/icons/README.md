@@ -9,6 +9,7 @@ The set is **solid silhouettes with knocked-out detail** (the majority of the or
 - `viewBox="0 0 24 24"`, drawn on a 2 px safe margin. Cut-outs and gaps are at least 1.2 units wide (1.5 for anything that must survive at 16 px), so they stay readable at 16 px.
 - Strokes are the exception: a hairline hanger, arc or the question mark may use `stroke="currentColor"` with round caps, 1.1 to 2.4 wide. Never `stroke="black"` or a bare fill, which would break tinting.
 - Touching parts overlap by about 0.2 so no seam shows when scaled.
+- Separate parts that sit close (a crest over a helmet dome, a pennant by its pole) either overlap by about 0.2 or keep a gap of at least 1.5: a thinner sliver turns into a grey smudge at 16 px. Check by rendering large and measuring the gaps (art review, 2026-11-22).
 - One metaphor per concept, and a different concept gets its own drawing: every unit, every building tier and every faction replacement piece has its own icon, so nothing falls back to a family icon or a text glyph. A test (`src/icons.test.ts`) fails when one is missing or duplicated.
 - Naming: `unit-<kind>`, `building-<kind>` (lower case, no separators), a faction piece is named after the piece (`unit-keshig`, `building-alpineredoubt`; `itemIcon(item, faction)` resolves it), `ui-*` for interface marks, `mark-*` for the map's pending-order badges.
 - Faction emblems: `viewBox="0 0 64 64"`, two tones (solid `currentColor` plus a secondary layer at `opacity=".42"`). Logo: wide viewBox (about 300 x 50), scaled by height.
@@ -41,8 +42,8 @@ The set is **solid silhouettes with knocked-out detail** (the majority of the or
 | `unit-stealthfighter.svg` | Air, Future: the Stealth Fighter, a faceted arrowhead with a notched tail and a canopy cut-out (hangar unit). |
 | `unit-stealthbomber.svg` | Air, Future: the Stealth Bomber, a flying wing with a saw-toothed rear edge (hangar unit). |
 | `unit-keshig.svg` | Mongol Keshig (the Mongols' Classical mounted unit, replacing the Cataphract; a mounted archer): a horse head in profile with a drawn recurved bow and an arrow flying back over it (the Parthian shot), so it never reads as `unit-horseman` (the head alone) or `unit-archer` (a bow alone). |
-| `unit-spartanhoplite.svg` | Sparta's Spearman (the Spartan Hoplite): a closed helm in profile with a visor slit and vents. |
-| `unit-legionary.svg` | Byzantium Pikeman, the Varangian Guard (the file keeps its pre-rename name): a long-hafted Dane axe, broad bearded blade with a hole in it, spike on the haft's head and a butt cap. |
+| `unit-spartanhoplite.svg` | Sparta's Spearman (the Spartan Hoplite): a Corinthian helmet in profile with a tall horsehair crest on a stand, the eye opening and cheek-guard gap knocked out, matching the painted Spartan Hoplite (redrawn 2026-11-22; it used to be the old Oathbearer's medieval closed helm). |
+| `unit-legionary.svg` | Rome's Phalangite replacement, the Legionary: a tall curved scutum with its boss beside an upright pilum. |
 | `unit-heirtothethrone.svg` | The Byzantium's Heir: a crowned head over a cloak with the house star cut into it (civilian; never the Settler's dome). |
 
 ## Tile improvements

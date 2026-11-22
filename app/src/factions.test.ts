@@ -68,7 +68,7 @@ describe('faction content and setup', () => {
   });
   it('shows the simulation-adjusted strengths and the requested cost and movement limits', () => {
     expect(FACTION_INFO.Germany.unique).toContain('320 Production, +6 Production');
-    expect(FACTION_INFO.Germany.ability).toContain('Industry project instead of building');
+    expect(FACTION_INFO.Germany.ability).toContain('Your Gold and Science projects pay more');
     expect(FACTION_INFO.Sparta.unique).toContain('20 strength');
     expect(FACTION_INFO.Sparta.ability).toContain('Spartan Veteran');
     expect(FACTION_INFO.Sparta.goal).toContain('+2 VP once, kept for good');
@@ -138,7 +138,8 @@ describe('faction-accurate items', () => {
     expect(itemDescription(lab, 'Byzantium')).toBe(itemDescription(lab, 'India'));
     expect(itemDescription({ kind: 'Building', building: 'University' }, 'Byzantium')).toBe('+4 Science. Upgrades your Library. Needs 5 population.');
   expect(buildingStatsFor('Byzantium', 'Library').yields.science).toBeGreaterThan(0);
-    expect(availableToFaction('India', { kind: 'Project', project: 'Gold' })).toBe(false);
+    expect(availableToFaction('India', { kind: 'Project', project: 'Gold' })).toBe(true);
+    expect(availableToFaction('India', { kind: 'Project', project: 'Grow' })).toBe(false);
     expect(availableToFaction('Germany', { kind: 'Project', project: 'Science' })).toBe(true);
     expect(availableToFaction('Rome', { kind: 'Unit', unit: 'Settler' })).toBe(false);
     expect(itemDescription(FACTION_PIECES.Byzantium.item, 'Byzantium')).toContain('Tagmatic Soldier replaces Pikeman');

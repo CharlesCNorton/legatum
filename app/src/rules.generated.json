@@ -9998,6 +9998,8 @@
       "TrenchInfantry": 0
     }
   },
+  "projectGoldPercent": 25,
+  "projectSciencePercent": 10,
   "promotion": {
     "cityAttackXp": 3,
     "cityDefeatedXp": 10,

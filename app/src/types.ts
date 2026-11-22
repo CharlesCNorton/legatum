@@ -505,6 +505,8 @@ export interface CityView {
   great_works: BuildingKind[];
   /** Public chosen wonder tile and current construction stage, including through fog. */
   construction?: { building: BuildingKind; tile: Hex; stage: number; progress: number } | null;
+  /** The city is building Walls: public, including through fog, like a wonder site. */
+  walls_building?: boolean;
   visible: boolean;
   detail: CityDetail | null;
 }
@@ -947,6 +949,8 @@ export interface ArmyContribution {
 export interface PlayerView {
   army_breakdown?: ArmyContribution[];
   rule_experiments?: RuleSwitches;
+  /** The game started with the AI-only teams allied in pairs. Omitted when off. */
+  ai_alliances?: boolean;
   diplomacy: DiplomacyView;
   turn: number;
   turn_limit: number | null;
@@ -1378,6 +1382,8 @@ export interface GameSetup {
   legacy_all_war?: boolean;
   /** Civ 6 style barbarian camps. Omitted (off) in setups from before barbarians existed. */
   barbarians?: boolean;
+  /** The teams with no human seat start in Alliances of two (core `GameSetup::ai_alliances`). Omitted when off. */
+  ai_alliances?: boolean;
   /** Core rule experiments (only the switches the app reads); omitted when all default. */
   rule_experiments?: RuleSwitches;
 }
