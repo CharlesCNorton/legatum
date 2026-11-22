@@ -49,6 +49,17 @@ scripts/build-web.sh                            # the hosted web build, as deplo
 Releases (the web deploy, the secrets it needs) are described in
 [docs/ops/releasing.md](docs/ops/releasing.md).
 
+### Art masters (only if you change art)
+
+The full-size art masters are not in git; a build and the tests never need them. To work on a unit source, a people painting or the title key art, fetch it by path:
+
+```sh
+export LEGATUM_ART_SOURCES_URL=https://pub-fb5c281dd12d4ea4bbd38d657cdeb907.r2.dev
+python3 tools/art/fetch-sources.py app/src/assets/art/people-athens.png
+```
+
+`tools/art/sources-manifest.json` lists every master with its size and sha256. The `docs/design` and `docs/playtests` entries are kept in a private archive, so `--all` reports those as missing.
+
 ## Test
 
 ### Quick checks
