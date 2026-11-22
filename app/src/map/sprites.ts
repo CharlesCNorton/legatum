@@ -913,7 +913,7 @@ function atlasBanner(b: BannerSpec, fs: number, dpr: number): Sprite {
   const popS = b.pop === null ? 0 : Math.round(h * 0.69);
   const glyphW = b.glyph ? fs * 0.95 + 4 : 0;
   const wallLabel = b.wallTier > 0 ? WALL_TIER_LABEL[b.wallTier] ?? '' : null;
-  const wallFont = `700 ${Math.round(fs * 0.7)}px ${F.sans}`;
+  const wallFont = disp(Math.round(fs * 0.8));
   m.font = wallFont;
   const wallLabelW = wallLabel ? m.measureText(wallLabel).width + 1 : 0;
   const wallW = wallLabel !== null ? fs * 1.05 + 4 + wallLabelW : 0;
