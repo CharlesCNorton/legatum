@@ -135,11 +135,12 @@ it('explains map resources, reveals, supply and idle buildings and units (G11)',
   expect(cities).toContain('Every start has a Copper deposit two tiles away and an Iron deposit three to five tiles away');
 });
 
-it('explains the Mongol Medieval-era Walls and Siege gate', () => {
+it('explains that the Mongols never have Walls and buy Siege from the Medieval era', () => {
   const combat = renderToStaticMarkup(<GuideContent section="combat" />);
   expect(combat).not.toContain('unless they capture');
-  expect(combat).toContain('Before the Medieval era, Mongols cannot build Walls, Castles or Star Forts');
-  expect(combat).toContain('From the Medieval era they build both.');
+  expect(combat).toContain('The Mongols never build Walls, at any level and in any era');
+  expect(combat).toContain('a walled city they capture loses its Walls');
+  expect(combat).toContain('They buy no Siege before the Medieval era.');
 });
 
 it('explains Germany’s Forge replacement and double supply', () => {

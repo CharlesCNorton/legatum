@@ -90,9 +90,9 @@ for (const size of sizes) test.describe(`${size.width}×${size.height}`, () => {
   });
 });
 
-test('Mongols: Masonry lists the Walls the Mongols raise from the Medieval era', async ({ page }) => {
-  // Until 2026-10-19 Masonry gave the Mongols nothing (they could not build Walls). A tech that gives a faction nothing is now skipped
-  // (known from the start), so no card ever says it does nothing.
+test('Mongols: Masonry gives the Mongols its Quarry bonus and never lists Walls', async ({ page }) => {
+  // The Mongols never build Walls (rules 55), so Masonry lists only what it gives them. A tech that gives a faction nothing is
+  // skipped (known from the start), so no card ever says it does nothing.
   const { researchFixture } = await import('../src/test/researchFixture');
   const { coreFixture } = await import('../src/test/coreFixture');
   await page.setViewportSize({ width: 1000, height: 600 });
@@ -110,6 +110,7 @@ test('Mongols: Masonry lists the Walls the Mongols raise from the Medieval era',
   const masonry = dialog.locator('[data-tech="Masonry"]');
   await masonry.scrollIntoViewIfNeeded();
   await expect(masonry).not.toContainText('No benefit');
-  await expect(masonry).toContainText('Walls for the Mongols from the Medieval era');
+  await expect(masonry).not.toContainText('Walls');
+  await expect(masonry).toContainText('Quarries +1 Production');
   await expect(dialog).not.toContainText('No benefit');
 });

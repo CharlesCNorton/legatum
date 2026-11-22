@@ -2583,7 +2583,7 @@ exports[`Yam Relay Station and the Mongols goal: WASM behavior > greys out Mongo
         "kind": "Building",
       },
       "production_banked": 0,
-      "reason": "The Mongols raise Walls from the Medieval era",
+      "reason": "The Mongols never build Walls",
     },
   ],
 }
@@ -2593,7 +2593,7 @@ exports[`Yam Relay Station and the Mongols goal: WASM behavior > greys out Mongo
 [
   {
     "index": 0,
-    "message": "C1 cannot produce Walls: The Mongols raise Walls from the Medieval era",
+    "message": "C1 cannot produce Walls: The Mongols never build Walls",
   },
 ]
 `;
@@ -2619,7 +2619,7 @@ exports[`Yam Relay Station and the Mongols goal: WASM behavior > greys out Mongo
       },
       "prerequisite_building": "Walls",
       "production_banked": 0,
-      "reason": "The Mongols raise Walls from the Medieval era",
+      "reason": "The Mongols never build Walls",
     },
   ],
 }
@@ -2629,7 +2629,7 @@ exports[`Yam Relay Station and the Mongols goal: WASM behavior > greys out Mongo
 [
   {
     "index": 0,
-    "message": "C1 cannot produce Castle: The Mongols raise Walls from the Medieval era",
+    "message": "C1 cannot produce Castle: The Mongols never build Walls",
   },
 ]
 `;
