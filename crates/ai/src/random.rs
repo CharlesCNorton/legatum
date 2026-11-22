@@ -51,13 +51,22 @@ impl Brain for RandomBrain {
             .filter(|c| c.owner == me && c.detail.is_some())
             .collect();
         cities.sort_by_key(|c| c.id);
+        let germany = view
+            .players
+            .iter()
+            .any(|p| p.id == me && p.faction == legatum_core::Faction::Germany);
         for c in cities {
             let d = c.detail.as_ref().expect("filtered");
-            // Only items that finish: a never-ending project would park the city for good.
+            // The options it had before every empire could run a Gold or Science project (only
+            // Germany then), so its games, and the tests built on them, stay the same.
             let finite: Vec<_> = d
                 .options
                 .iter()
-                .filter(|o| !matches!(o.item, legatum_core::ProductionItem::Project { .. }))
+                .filter(|o| {
+                    germany
+                        || !matches!(o.item, legatum_core::ProductionItem::Project { project }
+                            if project != legatum_core::IndustryProject::Grow)
+                })
                 .collect();
             if d.producing.is_none() && !finite.is_empty() {
                 let i = pick(&mut rng, finite.len());
