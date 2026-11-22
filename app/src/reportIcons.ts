@@ -35,10 +35,11 @@ export function eventIcon(e: Event, faction?: (player: number) => Faction | unde
     case 'CapitalSacked': return 'vp';
     case 'GoldGiven': return 'yield-gold';
     case 'CapitalLost': return 'vp';
-    case 'FactionGoalCompleted': return e.faction === 'Byzantium' ? 'unit-heir' : e.faction === 'Mongols' ? 'building-courierhall' : 'emblem-milestone';
-    case 'FactionGoalLost': return e.faction === 'Byzantium' ? 'unit-heir' : e.faction === 'Mongols' ? 'building-courierhall' : 'ui-trend-down';
+    case 'FactionGoalCompleted': return e.faction === 'Byzantium' ? 'unit-heir' : e.faction === 'Mongols' ? 'building-courierhall' : e.faction === 'Rome' ? 'goal-colonia' : e.faction === 'Egypt' ? 'goal-royal-tomb' : 'emblem-milestone';
+    case 'FactionGoalLost': return e.faction === 'Byzantium' ? 'unit-heir' : e.faction === 'Mongols' ? 'building-courierhall' : e.faction === 'Rome' ? 'goal-colonia' : e.faction === 'Egypt' ? 'goal-royal-tomb' : 'ui-trend-down';
     case 'SwarmUnleashed': return 'emblem-milestone';
     case 'SakokuClosed': case 'SakokuReopened': return 'ui-sakoku';
+    case 'TombStarted': case 'TombPaused': case 'TombRaised': return 'goal-royal-tomb';
     case 'SignalBroadcast': return 'building-listeninghouse';
     case 'RoadsLaid': return 'building-courierhall';
     case 'VeteranRetired': return 'building-warshrine';

@@ -71,23 +71,23 @@ pub fn sakoku_blocker(state: &GameState, p: PlayerId, close: bool) -> Option<Str
 /// Why `p` can't start (`build`) or pause work on its royal tomb now, or None.
 pub fn tomb_blocker(state: &GameState, p: PlayerId, build: bool) -> Option<String> {
     if goals::rule(state, p) != GoalRule::Tomb {
-        return Some("Only Egypt can build the royal tomb".into());
+        return Some("Only Egypt can build the Royal Tomb".into());
     }
     if goals::switched_off(state, p) {
         return Some(goals::SWITCHED_OFF.into());
     }
     let working = goals::tomb_working(state, p);
     if !build {
-        return (!working).then(|| "The royal tomb is not being built".to_string());
+        return (!working).then(|| "The Royal Tomb is not being built".to_string());
     }
     if working {
-        return Some("The royal tomb is already being built".into());
+        return Some("The Royal Tomb is already being built".into());
     }
     if let Some(city) = goals::tomb_city(state, p) {
-        return Some(format!("The royal tomb already stands in {}", city.name));
+        return Some(format!("The Royal Tomb already stands in {}", city.name));
     }
     if goals::tomb_site(state, p).is_none() {
-        return Some("The royal tomb needs a city".into());
+        return Some("The Royal Tomb needs a city".into());
     }
     None
 }

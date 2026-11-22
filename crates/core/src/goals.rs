@@ -205,7 +205,7 @@ pub fn spec_for(rule: GoalRule) -> GoalSpec {
         // The Colonia Victrix: held, not counted.
         GoalRule::Colonia => goal(GoalKind::Held, 1, "Colonia Victrix held"),
         // The royal tomb: held, not counted.
-        GoalRule::Tomb => goal(GoalKind::Held, 1, "Royal tomb held"),
+        GoalRule::Tomb => goal(GoalKind::Held, 1, "Royal Tomb held"),
     }
 }
 
@@ -822,18 +822,18 @@ pub fn view(state: &GameState, p: PlayerId) -> Option<FactionGoalView> {
             let target = TOMB_TURNS as i32;
             match tomb_city(state, p).map(|c| (c.owner, c.name.as_str())) {
                 Some((o, name)) if o == p => {
-                    (target, target, format!("The royal tomb stands in {name}"))
+                    (target, target, format!("The Royal Tomb stands in {name}"))
                 }
-                Some((_, name)) => (0, target, format!("A rival holds the royal tomb in {name}")),
+                Some((_, name)) => (0, target, format!("A rival holds the Royal Tomb in {name}")),
                 None => {
                     let n = player.tomb_turns.min(TOMB_TURNS) as i32;
                     (
                         n,
                         target,
                         if player.tomb_work {
-                            format!("Building the royal tomb · {n} of {target} turns")
+                            format!("Building the Royal Tomb · {n} of {target} turns")
                         } else {
-                            format!("{n} of {target} turns of work on the royal tomb")
+                            format!("{n} of {target} turns of work on the Royal Tomb")
                         },
                     )
                 }

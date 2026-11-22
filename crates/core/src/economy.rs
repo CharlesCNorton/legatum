@@ -463,7 +463,7 @@ fn yields_for_item<const FULL: bool>(
         let production = y.y.total.production.max(0);
         if surplus > 0 || production > 0 {
             y.add(
-                "The royal tomb: this city works on it",
+                "The Royal Tomb: this city works on it",
                 Yields::new(-surplus, -production, 0, 0),
             );
         }
