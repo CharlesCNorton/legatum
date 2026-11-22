@@ -1483,6 +1483,37 @@ export function idleClipBoxes(view: PlayerView, cam: Camera, w: number, h: numbe
   return idleBoxes(view, t, { toScreen: (p) => worldToScreen(cam, w, h, p.x, p.y), hexPx, far: isFar(hexPx), w, h, dpr: 1 });
 }
 
+/**
+ * Where the hover mark and the route preview draw, in CSS pixels: what a frame repaints when only the tile under
+ * the pointer changed (MapCanvas clips to these boxes for the old and the new hover instead of redrawing the map).
+ */
+export function hoverClipBoxes(inp: Pick<RenderInput, 'view' | 'cam' | 'width' | 'height' | 'hover' | 'path' | 'pathRisk' | 'pathUnreachable' | 'selectedUnit' | 'pendingMarks'>): Rect[] {
+  const { view, cam, width: w, height: h } = inp;
+  const hexPx = HEX_SIZE * cam.zoom;
+  const at = (hx: Hex) => { const p = hexToPixel(hx, HEX_SIZE); return worldToScreen(cam, w, h, p.x, p.y); };
+  const around = (hx: Hex, half: number): Rect => { const p = at(hx); return { x: p.x - half, y: p.y - half, w: half * 2, h: half * 2 }; };
+  const out: Rect[] = [];
+  // The hover hex (radius 0.94 of a hex) and its select ring, with room for the stroke.
+  if (inp.hover) out.push(around(inp.hover, hexPx + 4));
+  const unit = inp.selectedUnit !== null ? view.units.find((u) => u.id === inp.selectedUnit) ?? null : null;
+  if (unit && inp.path?.length) {
+    // The route line, its shadow and turn roundels (radius 11), and the risk mark on one of its tiles.
+    const pts = [unit.pos, ...inp.path.map((st) => st.hex)].map(at);
+    const pad = Math.max(16, hexPx);
+    const xs = pts.map((p) => p.x), ys = pts.map((p) => p.y);
+    const x0 = Math.min(...xs) - pad, y0 = Math.min(...ys) - pad;
+    out.push({ x: x0, y: y0, w: Math.max(...xs) + pad - x0, h: Math.max(...ys) + pad - y0 });
+  }
+  if (inp.pathRisk) out.push(around(inp.pathRisk, hexPx + 4));
+  if (inp.pathUnreachable) out.push(around(inp.pathUnreachable, Math.max(12, hexPx)));
+  // A Settler's proposed city: the dashed ring around the target tile and its six neighbours.
+  if (unit?.kind === 'Settler' && unit.owner === view.me) {
+    const target = inp.pendingMarks.get(unit.id) === 'found' ? unit.pos : inp.path?.length ? inp.path[inp.path.length - 1].hex : null;
+    if (target) out.push(around(target, hexPx * 2.75 + 4));
+  }
+  return out;
+}
+
 /** The device-pixel boxes an ambient-only frame repaints: the selection ring's, then each smoke column's and siege ring's, kept on the canvas. */
 export function ambientClipRects(ring: SelectionRing | null, ambient: readonly Rect[], dpr: number, pad = 2): { x: number; y: number; w: number; h: number }[] {
   const out = ring ? [ringClipRect(ring, dpr, pad)] : [];
