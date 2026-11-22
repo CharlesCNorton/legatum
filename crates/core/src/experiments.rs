@@ -386,12 +386,14 @@ impl RuleExperiments {
         match (project, german) {
             (Gold, true) => crate::data::GERMANY_GOLD_PROJECT_PERCENT,
             (Science, true) => crate::data::GERMANY_SCIENCE_PROJECT_PERCENT,
-            (Gold, false) => {
-                i32::from(self.project_gold.unwrap_or(crate::data::PROJECT_GOLD_PERCENT))
-            }
-            (Science, false) => {
-                i32::from(self.project_science.unwrap_or(crate::data::PROJECT_SCIENCE_PERCENT))
-            }
+            (Gold, false) => i32::from(
+                self.project_gold
+                    .unwrap_or(crate::data::PROJECT_GOLD_PERCENT),
+            ),
+            (Science, false) => i32::from(
+                self.project_science
+                    .unwrap_or(crate::data::PROJECT_SCIENCE_PERCENT),
+            ),
             (Grow, _) => 0,
         }
     }

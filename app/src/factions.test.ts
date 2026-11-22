@@ -138,7 +138,8 @@ describe('faction-accurate items', () => {
     expect(itemDescription(lab, 'Byzantium')).toBe(itemDescription(lab, 'India'));
     expect(itemDescription({ kind: 'Building', building: 'College' }, 'Byzantium')).toBe('+4 Science. Upgrades your Library. Needs 5 population.');
   expect(buildingStatsFor('Byzantium', 'Laboratory').yields.science).toBeGreaterThan(0);
-    expect(availableToFaction('India', { kind: 'Project', project: 'Gold' })).toBe(false);
+    expect(availableToFaction('India', { kind: 'Project', project: 'Gold' })).toBe(true);
+    expect(availableToFaction('India', { kind: 'Project', project: 'Grow' })).toBe(false);
     expect(availableToFaction('Germany', { kind: 'Project', project: 'Science' })).toBe(true);
     expect(availableToFaction('Rome', { kind: 'Unit', unit: 'Settler' })).toBe(false);
     expect(itemDescription(FACTION_PIECES.Byzantium.item, 'Byzantium')).toContain('Tagmatic Soldier replaces Pikeman');

@@ -137,13 +137,19 @@ fn every_empire_runs_projects_below_germanys_rate() {
     let rules = crate::experiments::RuleExperiments::default();
     for faction in Faction::ALL {
         for p in [IndustryProject::Gold, IndustryProject::Science] {
-            assert!(data::available_to_faction(faction, project(p)), "{faction:?} {p:?}");
+            assert!(
+                data::available_to_faction(faction, project(p)),
+                "{faction:?} {p:?}"
+            );
             let pct = rules.project_percent(faction, p);
             let german = rules.project_percent(Faction::Germany, p);
             if faction == Faction::Germany {
                 assert_eq!(pct, if p == IndustryProject::Gold { 50 } else { 25 });
             } else {
-                assert!(pct > 0 && pct * 2 <= german, "{faction:?} {p:?} {pct} vs {german}");
+                assert!(
+                    pct > 0 && pct * 2 <= german,
+                    "{faction:?} {p:?} {pct} vs {german}"
+                );
             }
         }
     }
@@ -178,8 +184,10 @@ fn an_egyptian_project_converts_food_funded_progress() {
     let progress = y.total.production;
     assert!(progress > 0, "surplus Food builds: {y:?}");
     assert!(
-        y.sources.iter().any(|src| src.label.starts_with("Gold project")
-            && src.yields.gold == progress * i32::from(data::PROJECT_GOLD_PERCENT) / 100),
+        y.sources
+            .iter()
+            .any(|src| src.label.starts_with("Gold project")
+                && src.yields.gold == progress * i32::from(data::PROJECT_GOLD_PERCENT) / 100),
         "{y:?}"
     );
 }

@@ -3798,8 +3798,7 @@ impl Planner<'_> {
     ) -> Option<ProductionItem> {
         use legatum_core::IndustryProject::{Gold, Science};
         let project = want.unwrap_or_else(|| {
-            let research_done =
-                self.view().research.known.len() >= legatum_core::TechId::ALL.len();
+            let research_done = self.view().research.known.len() >= legatum_core::TechId::ALL.len();
             if self.view().economy.gold_per_turn.total <= 0 || research_done {
                 Gold
             } else {
@@ -6743,19 +6742,42 @@ mod automation_tests {
             }
             let mut v = b.build();
             let d = v.cities[0].detail.as_mut().unwrap();
-            d.buildings.extend([BuildingKind::Market, BuildingKind::Laboratory, BuildingKind::Granary]);
-            d.options.retain(|o| !matches!(o.item, ProductionItem::Building { .. }));
+            d.buildings.extend([
+                BuildingKind::Market,
+                BuildingKind::Laboratory,
+                BuildingKind::Granary,
+            ]);
+            d.options
+                .retain(|o| !matches!(o.item, ProductionItem::Building { .. }));
             v
         };
         let project = |project| Some(ProductionItem::Project { project });
-        let scout = Some(ProductionItem::Unit { unit: UnitKind::Scout });
+        let scout = Some(ProductionItem::Unit {
+            unit: UnitKind::Scout,
+        });
         for explore in [false, true] {
             let v = view(explore);
-            assert!(v.cities[0].detail.as_ref().unwrap().options.iter().any(|o| Some(o.item) == scout));
+            assert!(
+                v.cities[0]
+                    .detail
+                    .as_ref()
+                    .unwrap()
+                    .options
+                    .iter()
+                    .any(|o| Some(o.item) == scout)
+            );
             let gold = city_automation_choice(&v, CityId(1), CityBuildFocus::Gold);
             let science = city_automation_choice(&v, CityId(1), CityBuildFocus::Science);
-            assert_eq!(gold, project(legatum_core::IndustryProject::Gold), "explore {explore}");
-            assert_eq!(science, project(legatum_core::IndustryProject::Science), "explore {explore}");
+            assert_eq!(
+                gold,
+                project(legatum_core::IndustryProject::Gold),
+                "explore {explore}"
+            );
+            assert_eq!(
+                science,
+                project(legatum_core::IndustryProject::Science),
+                "explore {explore}"
+            );
         }
         assert_ne!(
             city_automation_choice(&view(false), CityId(1), CityBuildFocus::Balanced),
@@ -6769,7 +6791,14 @@ mod automation_tests {
     #[test]
     fn military_focus_skips_outdated_units() {
         let view = ViewBuilder::new(20, 20)
-            .known_techs(&[TechId::Mathematics, TechId::Engineering, TechId::IronWorking, TechId::Machinery, TechId::Feudalism, TechId::Chivalry])
+            .known_techs(&[
+                TechId::Mathematics,
+                TechId::Engineering,
+                TechId::IronWorking,
+                TechId::Machinery,
+                TechId::Feudalism,
+                TechId::Chivalry,
+            ])
             .city(1, ME, off(8, 8), 6)
             .unit(2, ME, UnitKind::Soldier, off(8, 8))
             .build();
