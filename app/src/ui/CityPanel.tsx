@@ -410,7 +410,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
     </div>
   );
   const faction = owner?.faction;
-  // The Mongols's Courier Hall in its own city: a greyed card too, so the Hall reads as built where it is bought.
+  // The Mongols's Yam Relay Station in its own city: a greyed card too, so the Station reads as built where it is bought.
   const hallHere = city.owner === view.me && faction === 'Mongols' && d.buildings.includes('YamRelayStation');
   const unavailable: UnavailableOption[] = [...(d.unavailable ?? []), ...(hallHere && !(d.unavailable ?? []).some((u) => sameItem(u.item, { kind: 'Building', building: 'YamRelayStation' })) ? [{ item: { kind: 'Building' as const, building: 'YamRelayStation' as const }, cost: 0, reason: `The Yam Relay Station already stands in ${city.name}`, production_banked: 0 }] : [])];
   const listOptions = d.options;

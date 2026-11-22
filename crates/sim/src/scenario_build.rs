@@ -437,7 +437,7 @@ fn rush_offense() -> Result<Built, String> {
         force.sort_by_key(|u| (state.units[u].pos.distance(tpos), *u));
         force.truncate(4);
         let moved = force.len();
-        let has_ranger = force
+        let has_archer = force
             .iter()
             .any(|u| state.units[u].kind == UnitKind::Archer);
         let mut spawned = vec![];
@@ -445,7 +445,7 @@ fn rush_offense() -> Result<Built, String> {
             match force.get(i) {
                 Some(u) => relocate(&mut state, *u, *to),
                 None => {
-                    let kind = if !has_ranger && spawned.is_empty() {
+                    let kind = if !has_archer && spawned.is_empty() {
                         UnitKind::Archer
                     } else {
                         UnitKind::Spearman
