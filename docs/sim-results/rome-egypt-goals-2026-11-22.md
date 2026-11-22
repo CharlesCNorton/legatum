@@ -83,3 +83,37 @@ Fixes in 61ce740 (one test each in `goal_colonia_tests.rs`): the site search use
 | 20 | 22.5% (36) | 81 | 42 (26%) | 52% | T210 | 33 | 4 | 0.59 | 7 |
 
 The work starts on the same 81 seats at every length (median T189): the AI's start decision does not read the length. A longer count raises fewer tombs (69% to 52% of starts) and later, but the ones raised are captured less, so the tombs held at the end fall only from 41 to 33. Egypt's win share does not follow the length (95% interval about ±6.5 points at 160 games), so the count's length is not a balance lever at this sample size.
+
+## Round 3: the founder kept out of the occupation lock
+
+**Change** (commits 115df24 and 9b0deab, gene `rome_colonia`, AI only). While the Colonia is open, `unit_order` keeps the would-be founder (`colonia_reserved`: every level-3 melee veteran, or the best veteran below level 3 that is being kept) from any move that ends in a city whose occupation lock would hold it: a capture, or entering an occupied city of Rome's. If another free Roman melee unit can reach the city this turn, it takes the move instead. If not, and another unit is within two turns, an enemy capture waits one turn (never two in a row). Otherwise the founder captures. The founder's own Colonia walk never ends in such a city, and the modernization return no longer cancels the founder's healing rest. Decision-trace rows (`colonia`, outcome `stood_aside` or `allowed`) record each choice.
+
+**Baseline.** The branch now carries three merges of master, which changed the games themselves. On the merged tree, games 95 and 118 no longer produce a Roman veteran of level 2 or higher, so their replays say nothing about this change. To separate the change from the merge, the same 320 games were run on the merged tree before the change: "Merged base", commit d84fc4c, Rules 52. Round 3 is commit 9b0deab. Both used the arm A command with goals on, seeds 9000-9319, in four chunks of 80 games (`--games 80 --seed 9000/9080/9160/9240`; 80 is a multiple of 8, so the rotation is unchanged).
+
+| Measure | Arm A (round 2, pre-merge) | Merged base | Round 3 |
+|---|---|---|---|
+| Rome win | 1.6% (5) | 2.2% (7) | 1.2% (4) |
+| Rome cities captured per seat | 1.83 | 1.93 | 1.76 |
+| Rome seats with a level-2 unit | 39 | 35 | 25 |
+| Rome seats with a level-3 unit | 5 | 2 | 4 |
+| Level-3 seat-turns | 55 | 56 | 130 |
+| Of those, all level-3 units locked | 35 | 51 | 30 |
+| Colonias founded | 2 | 0 | 1 |
+| Colonias held at the end | 2 | 0 | 1 |
+| Egypt win | 20.0% (64) | 17.8% (57) | 20.3% (65) |
+| Tombs started / raised / held at end | 173 / 112 / 84 | 179 / 104 / 80 | 168 / 104 / 78 |
+
+Paired against the merged base:
+- Rome's captures per seat: −0.17 (95% interval ±0.18).
+- Rome's win share: −0.9 points (±1.6).
+- Egypt's win share: +2.5 points (±1.9). Egypt's AI did not change, so this comes from Rome's games playing out differently; treat it as noise until a second pool repeats it.
+
+The lock share of level-3 turns fell from 91% (51 of 56) to 23% (30 of 130). Of round 3's four level-3 seats:
+- Game 301 founded the Colonia at T205, held it 57 turns and won.
+- Game 291 was locked for 11 of 30 turns.
+- Game 211 was locked for 18 of 18.
+- Game 131 was locked for 1 of 1.
+
+In games 211 and 291 the trace shows the founder took cities when no other unit was within reach ("no other unit can take the city"); that trade is intended.
+
+Seats that reached level 2 fell from 35 to 25. A kept veteran that no longer captures cities earns XP more slowly. Captures per seat are down too, though within noise.
