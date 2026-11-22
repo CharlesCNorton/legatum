@@ -58,12 +58,13 @@ export function shotBlockReason(view: PlayerView, from: Hex, to: Hex, kind?: Uni
   const at = losBlocker(from, to, viewTerrain(view));
   if (!at) return null;
   const terrain = viewTerrain(view)(at) ?? 'unknown terrain';
-  const ownUnwalledCity = view.cities.some((c) => c.owner === owner && hexEq(c.pos, from) && !c.walls);
+  const ownUnwalledCity = view.cities.find((c) => c.owner === owner && hexEq(c.pos, from) && !c.walls);
+  const noWalls = ownUnwalledCity ? ` ${ownUnwalledCity.name} has no Walls. With Walls, units inside shoot over terrain.` : '';
   const remedy = terrain === 'Mountains'
-    ? ownUnwalledCity ? 'Move adjacent, around it, or build Walls.' : 'Move adjacent or around it.'
+    ? 'Move adjacent or around it.'
     : terrain === 'unknown terrain'
-      ? ownUnwalledCity ? 'Scout the route, move adjacent, or build Walls.' : 'Scout the route or move adjacent.'
-      : ownUnwalledCity ? 'Fire from a hill, move adjacent, or build Walls.' : 'Fire from a hill or move adjacent.';
+      ? 'Scout the route or move adjacent.'
+      : 'Fire from a hill or move adjacent.';
   const place = placeName(view, at, Infinity);
-  return `No line of sight: the ${terrain} ${place ? place.includes(' of ') ? place : `at ${place}` : 'on this tile'} blocks the shot. ${remedy}`;
+  return `No line of sight: the ${terrain} ${place ? place.includes(' of ') ? place : `at ${place}` : 'on this tile'} blocks the shot.${noWalls} ${remedy}`;
 }
