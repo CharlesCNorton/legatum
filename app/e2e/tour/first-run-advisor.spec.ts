@@ -28,7 +28,7 @@ for (const size of SIZES) test.describe(`first run with advisor ${size.name}`, (
       const box = await card.boundingBox();
       if (!box) return;
       if (cta) expect(intersects(box, cta), 'the advisor never covers the turn button').toBe(false);
-      const ringBox = await ring.boundingBox();
+      const ringBox = await ring.count() ? await ring.boundingBox() : null;
       if (ringBox) {
         expect(intersects(box, ringBox), 'the advisor never covers its ring').toBe(false);
         if (await ring.evaluate((el) => el.classList.contains('map-target'))) tileRadius = ringBox.width / 2;

@@ -123,9 +123,10 @@ export function Advisor() {
     skippedTurn === view.turn ? skipped : []) : null;
   const [modal, setModal] = useState<HTMLDialogElement | null>(null);
   useEffect(() => { setModal(techOpen ? document.querySelector<HTMLDialogElement>('dialog.tech-modal[open]') : null); }, [techOpen]);
-  const [bottomSlot, setBottomSlot] = useState(false);
+  // The card's top edge in pixels when the usual slot would cover the step's target or the selected tile; null keeps the CSS slot.
+  const [cardTop, setCardTop] = useState<number | null>(null);
   const [dialogRect, setDialogRect] = useState<DOMRect | null>(null);
-  useEffect(() => setBottomSlot(false), [suggestion?.id, suggestion?.current]);
+  useEffect(() => setCardTop(null), [suggestion?.id, suggestion?.current]);
   useLayoutEffect(() => {
     if (hidden || !suggestion) return;
     let frame = 0, previous = '';
@@ -136,8 +137,6 @@ export function Advisor() {
         if (key !== previous) { previous = key; setDialogRect(r); }
       } else if (el) {
         const box = el.getBoundingClientRect();
-        const hit = (r: { left: number; right: number; top: number; bottom: number }) =>
-          box.left < r.right && box.right > r.left && box.top < r.bottom && box.bottom > r.top;
         const step = suggestion.steps[suggestion.current];
         let target: DOMRect | null = null;
         if (step?.target?.kind === 'control') target = targetElement(step.target)?.getBoundingClientRect() ?? null;
@@ -151,14 +150,22 @@ export function Advisor() {
           const p = entity && tileOnScreen(entity.pos);
           if (p) selectedTile = new DOMRect(p.x - p.radius, p.y - p.radius, 2 * p.radius, 2 * p.radius);
         }
-        const shouldMove = !!((target && hit(target)) || (selectedTile && hit(selectedTile)));
-        if (shouldMove && !bottomSlot) setBottomSlot(true);
+        const blockers = [target, selectedTile].filter((r): r is DOMRect => !!r && r.right > box.left && r.left < box.right);
+        const clear = (top: number) => blockers.every((r) => top + box.height + 8 <= r.top || top >= r.bottom + 8);
+        const home = 76;
+        const floor = innerHeight - box.height - 8;
+        // Prefer the usual slot, then just below a blocker, then just above one.
+        const options = [home, ...blockers.map((r) => r.bottom + 12), ...blockers.map((r) => r.top - 12 - box.height)]
+          .filter((top) => top >= 64 && top <= floor);
+        const best = options.find(clear);
+        const next = best === undefined || best === home ? null : Math.round(best);
+        if (next !== cardTop) setCardTop(next);
       }
       frame = requestAnimationFrame(measure);
     };
     measure();
     return () => cancelAnimationFrame(frame);
-  }, [hidden, suggestion?.id, suggestion?.current, modal, selection, view, bottomSlot]);
+  }, [hidden, suggestion?.id, suggestion?.current, modal, selection, view, cardTop]);
   useLayoutEffect(() => {
     const el = card.current, game = document.querySelector<HTMLElement>('.game');
     if (!el || !game) return;
@@ -174,8 +181,8 @@ export function Advisor() {
   const lesson = suggestion.acknowledge && !welcome;
   const content = <>
     <AdvisorRing target={step?.target ?? null} still={!animationsOn} />
-    <aside ref={card} className={`advisor-card${welcome ? ' welcome' : ''}${modal ? ' in-dialog' : ''}${bottomSlot && !modal ? ' bottom-slot' : ''}`}
-      style={modal && dialogRect ? { left: dialogRect.left, bottom: innerHeight - dialogRect.bottom, width: dialogRect.width } : undefined}
+    <aside ref={card} className={`advisor-card${welcome ? ' welcome' : ''}${modal ? ' in-dialog' : ''}`}
+      style={modal && dialogRect ? { left: dialogRect.left, bottom: innerHeight - dialogRect.bottom, width: dialogRect.width } : cardTop !== null ? { top: cardTop, bottom: 'auto' } : undefined}
       data-overlay-slot="story-hint" data-testid="advisor" data-advisor-id={suggestion.id} aria-label="Advisor" onKeyDown={(e) => e.stopPropagation()}>
       <span className="advisor-label">{!welcome && view && <FactionMark faction={view.players.find((p) => p.id === view.me)?.faction ?? 'Switzerland'} size={18} />}Advisor</span>
       <div className="advisor-copy" role="status" aria-live="polite" aria-atomic="true">
@@ -198,7 +205,7 @@ export function Advisor() {
 
 export function AdvisorSettings() {
   const { enabled, setEnabled } = useAdvisor();
-  return <div className="hint-settings" onKeyDown={(e) => e.stopPropagation()}>
+  return <div className="hint-settings" onKeyDown={(e) => { if (e.key !== 'Escape') e.stopPropagation(); }}>
     <label><input type="checkbox" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} />Show the advisor</label>
     <div className="hint-settings-foot"><span>On by default. Turn it off any time.</span></div>
   </div>;

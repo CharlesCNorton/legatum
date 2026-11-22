@@ -15,7 +15,6 @@
 }
 .advisor-card.welcome { width: min(340px, calc(100vw - 32px)); }
 .advisor-card.welcome .advisor-label { display: none; }
-.advisor-card.bottom-slot { top: auto; bottom: 76px; }
 .advisor-card.in-dialog {
   top: auto;
   transform: none;

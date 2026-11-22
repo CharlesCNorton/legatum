@@ -84,8 +84,9 @@ test('in-game guide contains keys; advisor moves on and its switch persists', as
   await page.getByLabel('Show the advisor').uncheck();
   await expect(advisor).toHaveCount(0);
   await page.reload();
-  await page.getByRole('button', { name: /^Single Player/ }).click();
-  await page.getByRole('button', { name: /^Start game/ }).click();
+  // The game in progress resumes; the switch stayed off across the reload.
+  await page.getByRole('button', { name: /^Continue/ }).click();
+  await expect(page.getByTestId('turn-number')).toHaveText('1');
   await expect(advisor).toHaveCount(0);
   await page.getByRole('button', { name: 'Menu', exact: true }).click();
   await expect(page.getByLabel('Show the advisor')).not.toBeChecked();
