@@ -963,10 +963,12 @@ const CITY_HELD: &str = "another of your units holds the city";
 /// shot at it this turn; a side is one permanent team, so allies of other teams do not add up)
 /// walks in, if it has a melee unit that can.
 /// Sides without one count no less but cannot win. Returns the units of the winning side, or
-/// the MoveBlocked reason for every claimant: for the losers, the winner and both forces; on an
-/// exact tie, everyone stays out.
+/// the MoveBlocked reason for every claimant: for the losers, the winner and both forces. An
+/// exact tie between the strongest sides is drawn by seed, turn and tile (Sam, 2026-11-22, rules
+/// 51; it was a bounce for everyone), as on open ground (`settle_peaceful_contest`).
 fn settle_by_force(
     state: &GameState,
+    tile: Hex,
     force: &BTreeMap<UnitId, i32>,
     rivals: &[UnitId],
     pinned: &BTreeSet<UnitId>,
@@ -1011,40 +1013,45 @@ fn settle_by_force(
         let o = strongest.get(s).map_or(*s, |e| e.2);
         state.player(o).name.clone()
     };
-    let mut candidates: Vec<PlayerId> = rivals
+    let candidates: Vec<PlayerId> = rivals
         .iter()
         .filter(|r| !pinned.contains(r) && data::attacks_in_melee(state.units[*r].kind))
         .map(|r| side[&state.units[r].owner])
         .collect::<BTreeSet<_>>()
         .into_iter()
         .collect();
-    candidates.sort_by_key(|s| (std::cmp::Reverse(force_of(s)), *s));
     let mut reasons = BTreeMap::new();
-    let Some(&best) = candidates.first() else {
+    let Some(top) = candidates.iter().map(force_of).max() else {
         return (Vec::new(), reasons);
     };
-    if let Some(&second) = candidates.get(1)
-        && force_of(&second) == force_of(&best)
-    {
-        for r in rivals {
-            let mine = side[&state.units[r].owner];
-            let other = if mine == best { second } else { best };
-            reasons.insert(
-                *r,
-                format!(
-                    "{} brought equal force ({} each), so nobody took the city",
-                    name(&other),
-                    force_of(&best)
-                ),
-            );
-        }
-        return (Vec::new(), reasons);
-    }
+    let tied: Vec<PlayerId> = candidates
+        .iter()
+        .copied()
+        .filter(|s| force_of(s) == top)
+        .collect();
+    let best = crate::rng::seeded_order(
+        state.dice_seed(),
+        &[
+            state.turn as u64,
+            purpose::UNIT_CONTEST,
+            tile.q as u64,
+            tile.r as u64,
+        ],
+        &tied,
+    )[0];
     let mut winners = Vec::new();
     for r in rivals {
         let mine = side[&state.units[r].owner];
         if mine == best {
             winners.push(*r);
+        } else if tied.contains(&mine) {
+            reasons.insert(
+                *r,
+                format!(
+                    "{} brought equal force ({top} each) and won the draw for the city",
+                    name(&best)
+                ),
+            );
         } else {
             reasons.insert(
                 *r,
@@ -1191,7 +1198,7 @@ fn reported_after_a_fight(reason: &str) -> bool {
     reason == RANGED_CAPTURE
         || reason == CITY_REINFORCED
         || reason.contains(" took the city with force ")
-        || reason.ends_with("so nobody took the city")
+        || reason.ends_with("and won the draw for the city")
 }
 
 /// One round. Returns false when nobody had a step to declare.
@@ -1929,7 +1936,7 @@ fn movement_round(
             let Some(force) = forces.get(tile) else {
                 continue;
             };
-            let (winners, reasons) = settle_by_force(state, force, &rivals, &pinned);
+            let (winners, reasons) = settle_by_force(state, *tile, force, &rivals, &pinned);
             decided.extend(reasons);
             if winners.is_empty() {
                 continue;
