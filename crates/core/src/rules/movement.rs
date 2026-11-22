@@ -51,6 +51,11 @@
 //!    movement ended for the turn and its fortification cleared. **One attack per order**
 //!    (G18, Civ 6): a fighter whose opponent survived ends its order when movement is over. It
 //!    stays where it fought with no destination and needs orders; it never re-attacks next turn.
+//! 4b. **Peaceful contests** (Sam, 2026-11-22). Units of different teams that are not at war
+//!    with each other stepping onto the same tile (no city there) never fight: the team of the
+//!    strongest unit (meeting strength after damage; civilians 0) keeps its claim and every
+//!    other team's claimant stays put with a MoveBlocked naming the winner and both strengths.
+//!    Equal best strengths are drawn by seed, turn and tile (`settle_peaceful_contest`).
 //! 5. **Advance, military first.** A military claimant of tile T advances iff it survived, is
 //!    not pinned, wins the surviving claims to T, no hostile military unit is left
 //!    alive on T, any hostile city on T is at 0 HP (capture), and a
@@ -1054,6 +1059,103 @@ fn settle_by_force(
     (winners, reasons)
 }
 
+/// Reason prefix of a MoveBlocked event for a unit that lost a peaceful contest for a tile
+/// (`settle_peaceful_contest`); the rest names the winner and both strengths ("Sparta's
+/// Hoplite is stronger (25 against 15) and moved in"). The client headlines it.
+pub const OUTMATCHED_PREFIX: &str = "outmatched: ";
+
+/// A unit's strength in a peaceful contest for a tile: its meeting strength (combat strength
+/// after damage, with no terrain or fortification). Civilians have none.
+fn contest_strength(state: &GameState, u: &Unit) -> i32 {
+    if !is_military(u.kind) {
+        return 0;
+    }
+    let off = state.setup.rule_experiments.faction_rules_off;
+    let faction = state.player(u.owner).faction;
+    combat::unit_meeting_strength_for_rules(
+        off,
+        faction,
+        state.made_by(u),
+        u.kind,
+        u.hp,
+        super::promotion::level_for_rules(off, faction, u.xp),
+    )
+    .total
+}
+
+/// Units of empires that are not at war stepping onto the same tile in the same round (Sam,
+/// 2026-11-22, a ruin both a Spartan and a weaker unit went for): nobody attacks, and the side
+/// of the strongest unit moves in while every other side stays where it is. A side is one
+/// permanent team, so co-op partners count as one; inside the winning side the usual claim
+/// rules apply. Strength is `contest_strength`; equal best strengths are drawn by seed, turn
+/// and tile, so no seat is favoured. Pinned units cannot win. Applies only when no two
+/// claimants are at war (a war meeting is fought as before) and the tile has no city.
+/// Returns the MoveBlocked reason for each unit that stays out.
+fn settle_peaceful_contest(
+    state: &GameState,
+    tile: Hex,
+    units: &[UnitId],
+    pinned: &BTreeSet<UnitId>,
+) -> BTreeMap<UnitId, String> {
+    let mut out = BTreeMap::new();
+    let owner = |u: &UnitId| state.units[u].owner;
+    let teams: BTreeSet<TeamId> = units.iter().map(|u| state.team_of(owner(u))).collect();
+    if teams.len() < 2
+        || units
+            .iter()
+            .any(|a| units.iter().any(|b| hostile(state, owner(a), owner(b))))
+    {
+        return out;
+    }
+    // Each side's strongest unit that can still move in (ties: lowest id).
+    let mut best: BTreeMap<TeamId, (i32, UnitId)> = BTreeMap::new();
+    for u in units.iter().filter(|u| !pinned.contains(u)) {
+        let s = contest_strength(state, &state.units[u]);
+        let e = best.entry(state.team_of(owner(u))).or_insert((s, *u));
+        if s > e.0 || (s == e.0 && *u < e.1) {
+            *e = (s, *u);
+        }
+    }
+    let Some(top) = best.values().map(|(s, _)| *s).max() else {
+        return out;
+    };
+    let tied: Vec<TeamId> = best
+        .iter()
+        .filter(|(_, (s, _))| *s == top)
+        .map(|(t, _)| *t)
+        .collect();
+    let drawn = tied.len() > 1;
+    let side = crate::rng::seeded_order(
+        state.dice_seed(),
+        &[
+            state.turn as u64,
+            purpose::UNIT_CONTEST,
+            tile.q as u64,
+            tile.r as u64,
+        ],
+        &tied,
+    )[0];
+    let winner = &state.units[&best[&side].1];
+    let p = state.player(winner.owner);
+    let name = format!("{}'s {}", p.name, data::unit_name_for(p.faction, winner.kind));
+    for u in units {
+        if state.team_of(owner(u)) == side {
+            continue;
+        }
+        let mine = contest_strength(state, &state.units[u]);
+        let why = if mine < top {
+            format!("{name} is stronger ({top} against {mine}) and moved in")
+        } else if drawn {
+            format!("{name} is just as strong ({top} each) and won the draw to move in")
+        } else {
+            // A pinned unit as strong as the winner: it could not move in this round.
+            format!("{name} moved in while this unit was held by an attack")
+        };
+        out.insert(*u, format!("{OUTMATCHED_PREFIX}{why}"));
+    }
+    out
+}
+
 /// A MoveBlocked reason worth reporting for a unit that also fought this round: why its
 /// fight did not take the city.
 fn reported_after_a_fight(reason: &str) -> bool {
@@ -1850,6 +1952,26 @@ fn movement_round(
             team_captors.insert(*tile, eligible[chosen]);
         }
     }
+    // Units of teams not at war contesting one tile: the strongest side moves in, the others
+    // stay put; nobody attacks (Sam, 2026-11-22).
+    let mut peaceful: BTreeMap<Hex, Vec<UnitId>> = BTreeMap::new();
+    for ((tile, _), units) in &claimants {
+        if at(*tile).city.is_some() || holders.contains_key(tile) {
+            continue;
+        }
+        peaceful.entry(*tile).or_default().extend(
+            units
+                .iter()
+                .copied()
+                .filter(|u| alive(state, *u) && !decided.contains_key(u)),
+        );
+    }
+    let mut outmatched: BTreeSet<UnitId> = BTreeSet::new();
+    for (tile, units) in &peaceful {
+        let lost = settle_peaceful_contest(state, *tile, units, &pinned);
+        outmatched.extend(lost.keys().copied());
+        decided.extend(lost);
+    }
     let mut waiting = BTreeSet::new();
     let mut succeeded: BTreeSet<UnitId> = BTreeSet::new();
     let mut captures_city: BTreeMap<UnitId, CityId> = BTreeMap::new();
@@ -1884,7 +2006,9 @@ fn movement_round(
                 continue;
             }
             // Different classes may stack only within a permanent team. Neutral claimants
-            // bounce even when the other claimant is a civilian; neither enters combat.
+            // left after `settle_peaceful_contest` (a tile with a city, or a war among the
+            // claimants) bounce even when the other claimant is a civilian; neither enters
+            // combat.
             let neutral_rival = intents.values().any(|j| {
                 j.to == i.to
                     && alive(state, j.unit)
@@ -1924,7 +2048,8 @@ fn movement_round(
                 reasons.insert(i.unit, CITY_HELD.into());
                 continue;
             }
-            let rivals = alive_claimants(state, i.to, military);
+            let mut rivals = alive_claimants(state, i.to, military);
+            rivals.retain(|r| !outmatched.contains(r));
             if rivals.len() > 1 {
                 if team_captors.contains_key(&i.to) {
                     // Wait until dependencies resolve before choosing the city captor.
@@ -3131,3 +3256,7 @@ mod capture_orders_tests;
 #[cfg(test)]
 #[path = "held_shot_tests.rs"]
 mod held_shot_tests;
+
+#[cfg(test)]
+#[path = "peaceful_contest_tests.rs"]
+mod peaceful_contest_tests;

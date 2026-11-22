@@ -121,7 +121,7 @@ pub const UPGRADABLE_RULES_VERSION: u32 = 49;
 
 /// Simulation only (the app keeps refusing a version-49 save): read a rules-49 saved state as a
 /// rules-50 one, for analysis that starts from recorded positions which cannot be regenerated
-/// (hill-climb do-no-harm states). `json` is a save (`save_version` 49 or 50) or a bare state
+/// (hill-climb do-no-harm states). `json` is a save (`save_version` 49 or the current one) or a bare state
 /// line with no `save_version` (`audit_states` output). See `upgrade_value_from_49` for what changes.
 pub fn upgrade_from_49(json: &str) -> Result<GameState, String> {
     check_json_size(json)?;
@@ -316,7 +316,10 @@ mod tests {
         );
         assert_eq!(state.cities[&city].producing, Some(grow), "{events:?}");
         let save = state_to_json(&state);
-        assert!(save.contains("\"save_version\":50"));
+        assert!(save.contains(&format!(
+            "\"save_version\":{}",
+            legatum_core::RULES_VERSION
+        )));
         assert!(!save.contains("capitals_taken"));
         assert!(
             state

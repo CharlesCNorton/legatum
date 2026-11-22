@@ -36,6 +36,8 @@ export const FRIEND_BLOCK_PREFIX = 'blocked by ';
 export const TARGET_GONE = 'its target was destroyed before it could attack';
 /** Core `PEACE_BLOCK_PREFIX`: a move onto a unit of a team at Peace; the rest names that unit. */
 export const PEACE_BLOCK_PREFIX = 'at Peace: ';
+/** Core `OUTMATCHED_PREFIX`: a stronger unit of a team not at War took the tile this unit also stepped onto; the rest names it and both strengths. */
+export const OUTMATCHED_PREFIX = 'outmatched: ';
 
 export type EventCategory = 'attack' | 'combat' | 'cities' | 'movement' | 'science' | 'victory' | 'economy' | 'orders' | 'diplomacy' | 'discoveries';
 
@@ -889,6 +891,13 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
         return line('orders', `${unitLabel(ctx, e.unit, e.owner)} couldn't enter ${e.toward ? location(ctx, e.toward) : 'the tile'}: ${blocker} is there and ${e.owner === ctx.me ? "you're" : "they're"} at Peace`, {
           at: e.at, players: [e.owner], weight: 2, tone: 'neutral',
           details: ['A move never attacks a unit of a team at Peace. To attack it, click it and confirm Declare War; or give this unit a new order.'],
+        });
+      }
+      // Units of teams not at War stepped onto one tile: the stronger moved in, nobody fought.
+      if (e.reason.startsWith(OUTMATCHED_PREFIX)) {
+        return line('orders', `${unitLabel(ctx, e.unit, e.owner)} couldn't enter ${e.toward ? location(ctx, e.toward) : 'the tile'}: ${rename(e.reason.slice(OUTMATCHED_PREFIX.length))}`, {
+          at: e.at, players: [e.owner], weight: mine(e.owner) ? 2 : 0, tone: 'neutral',
+          details: ['When units of empires not at War step onto the same tile, the stronger one moves in and the other stays put. Nobody is attacked. Equal strength: a random draw.'],
         });
       }
       // The attack's target died to ranged fire before movement and nothing hostile is left there.
