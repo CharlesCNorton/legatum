@@ -43,7 +43,7 @@ export function eventIcon(e: Event, faction?: (player: number) => Faction | unde
     case 'SwarmUnleashed': return SWARM_GOAL.icon;
     case 'SakokuClosed': case 'SakokuReopened': return 'ui-sakoku';
     case 'TombStarted': case 'TombPaused': case 'TombRaised': return 'goal-royal-tomb';
-    case 'SignalBroadcast': return 'building-listeninghouse';
+    case 'SignalBroadcast': return 'building-lyceum';
     case 'RoadsLaid': return 'building-yamrelaystation';
     case 'VeteranRetired': return 'building-agoge';
     case 'WildCalled': return 'ui-camp';
