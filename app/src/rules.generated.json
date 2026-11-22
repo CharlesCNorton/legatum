@@ -9996,6 +9996,8 @@
       "TrenchInfantry": 0
     }
   },
+  "projectGoldPercent": 25,
+  "projectSciencePercent": 10,
   "promotion": {
     "cityAttackXp": 3,
     "cityDefeatedXp": 10,
@@ -10159,7 +10161,7 @@
   "rocketArtilleryRange": 3,
   "rollMax": 120,
   "rollMin": 80,
-  "saveVersion": 52,
+  "saveVersion": 53,
   "settlerCostStep": 50,
   "siege": {
     "baseGold": 160,

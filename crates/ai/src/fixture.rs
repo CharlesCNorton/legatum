@@ -181,6 +181,7 @@ impl ViewBuilder {
             view: PlayerView {
                 army_breakdown: Vec::new(),
                 rule_experiments: legatum_core::experiments::RuleExperiments::default(),
+                ai_alliances: false,
                 // Existing tactical fixtures explicitly model the legacy all-war rules.
                 diplomacy: legatum_core::diplomacy::DiplomacyView {
                     replies: Vec::new(),
@@ -497,6 +498,7 @@ impl ViewBuilder {
             has_air_defence: false,
             occupation_lock: None,
             construction: None,
+            walls_building: false,
             great_works: detail
                 .as_ref()
                 .map(|d| {
@@ -538,8 +540,16 @@ impl ViewBuilder {
                     .iter()
                     .map(|b| ProductionItem::Building { building: *b }),
             )
+            // Every empire's Gold and Science projects, as in core.
+            .chain(
+                [
+                    legatum_core::IndustryProject::Gold,
+                    legatum_core::IndustryProject::Science,
+                ]
+                .map(|project| ProductionItem::Project { project }),
+            )
             .filter(|i| data::item_requires(*i).is_none_or(|t| known.contains(&t)))
-            // The Brood Hall, Courier Hall and Heir belong to one faction each, as in core.
+            // The Rice Storehouse, Yam Relay Station and Heir belong to one faction each, as in core.
             .filter(|i| {
                 data::available_to_faction(self.view.faction_of(ME), *i)
                     || !matches!(

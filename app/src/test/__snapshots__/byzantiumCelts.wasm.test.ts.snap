@@ -879,7 +879,7 @@ exports[`Germany industry core behavior > converts city Production into recurrin
 exports[`Germany industry core behavior > converts city Production into recurring Gold or Science with ordinary unit movement 3`] = `
 {
   "focus": "Balanced",
-  "focus_reason": "building Industry: Gold",
+  "focus_reason": "building Gold project",
   "sources": [
     {
       "label": "City center",
@@ -927,7 +927,7 @@ exports[`Germany industry core behavior > converts city Production into recurrin
       },
     },
     {
-      "label": "Industry project: Gold (50% Production)",
+      "label": "Gold project (50% of Production)",
       "yields": {
         "food": 0,
         "gold": 2,
@@ -982,7 +982,7 @@ exports[`Germany industry core behavior > converts city Production into recurrin
 exports[`Germany industry core behavior > converts city Production into recurring Gold or Science with ordinary unit movement 6`] = `
 {
   "focus": "Balanced",
-  "focus_reason": "building Industry: Science",
+  "focus_reason": "building Science project",
   "sources": [
     {
       "label": "City center",
@@ -1030,7 +1030,7 @@ exports[`Germany industry core behavior > converts city Production into recurrin
       },
     },
     {
-      "label": "Industry project: Science (25% Production)",
+      "label": "Science project (25% of Production)",
       "yields": {
         "food": 0,
         "gold": 0,

@@ -471,7 +471,7 @@ Moved verbatim from `game-rules.md` on 2026-11-22, in the original order; the or
   (no threat, no resistance, no at-war army or city within 5) does not start or continue a
   troop whose upkeep leaves the runway under the floor unless the campaign's capture comes
   first, switching to its best-Gold non-unit option; on a short runway it also takes any
-  option that raises Gold (a Germany Gold project). Optional purchases that would leave the
+  option that raises Gold (a Gold project, Germany only: `production.rs::gold_swap_allows`; Egypt's Grow stays allowed). Optional purchases that would leave the
   runway short are withdrawn newest first (emergency and threat-defense purchases stand),
   and unit upgrades need the runway too. **Hard troop funding (`troop_runway`, default 10 turns,
   2026-10-11, `production.rs::troop_unfunded`):** away from the front a Hard
