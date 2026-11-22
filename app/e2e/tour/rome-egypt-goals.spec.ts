@@ -69,7 +69,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     const spot = await hexPoint(page, f.coloniaPos);
     await page.mouse.move(spot.x - 3, spot.y - 3);
     await page.mouse.move(spot.x, spot.y);
-    await expect(page.getByText(/a city founded here is your Colonia Victrix/).first()).toBeVisible();
+    await expect(page.getByText(/Founding here makes your Colonia Victrix/).first()).toBeVisible();
     await shot(page, size, 'r07-rome-site-hover-card');
     await away(page, size.height);
     const closeLens = page.getByRole('button', { name: 'Close map options' });

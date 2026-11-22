@@ -238,7 +238,7 @@ export function GoalActionDialog() {
       <div className="war-prompt-main">
         <h2 id={title} className="war-prompt-head"><RingMedallion icon={goal.icon} tone="gilt" size={30} /><span>{heading}</span></h2>
         <p id={description}>{kind === 'Tomb'
-          ? <>While the work is on, none of your cities builds or grows: their Production and their Food beyond what their people eat go to the tomb. Gold and Science go on, and you can still buy with Gold. <b data-testid="tomb-count">{tomb!.turns} of {tomb!.target} turns done</b>{tombSite ? <>; it will stand in <b>{tombSite}</b></> : ''}.</>
+          ? <>While the work is on, none of your cities builds or grows. Gold and Science go on, and you can still buy with Gold. <b data-testid="tomb-count">{tomb!.turns} of {tomb!.target} turns done</b>{tombSite ? <>; it will stand in <b>{tombSite}</b></> : ''}.</>
           : kind === 'TombPause'
           ? <>Stop the work at <b data-testid="tomb-count">{tomb!.turns} of {tomb!.target} turns</b>. Your cities build and grow again. The count is kept: building again carries on from {tomb!.turns}.</>
           : kind === 'Sakoku'
@@ -317,7 +317,7 @@ export function GoalActionDialog() {
             <ForYouLine tone="cost">{rows.length} {rows.length === 1 ? 'city shrinks' : 'cities shrink'}: their yields and city strength fall with population{tiles ? `, and ${tiles} ${tiles === 1 ? 'tile' : 'tiles'} of territory return to the map` : ''}.</ForYouLine>
             <ForYouLine tone="cost">Rivals will see a thin empire.</ForYouLine>
           </>}
-          {kind === 'Tomb' && <ForYouLine tone="cost">{tombCities.length === 1 ? 'Your city stops' : `All ${tombCities.length} of your cities stop`} building and growing for {tombLeft} {tombLeft === 1 ? 'turn' : 'turns'} of work. Every empire sees the work and its count.</ForYouLine>}
+          {kind === 'Tomb' && <ForYouLine tone="cost">{tombCities.length === 1 ? 'Your city stops' : `All ${tombCities.length} of your cities stop`} building and growing for {tombLeft} {tombLeft === 1 ? 'turn' : 'turns'}.</ForYouLine>}
           {kind === 'Tomb' && <ForYouLine tone="note">You may pause at any time: the count is kept.</ForYouLine>}
           {kind === 'TombPause' && <ForYouLine tone="cost">The tomb waits: {tombLeft} {tombLeft === 1 ? 'turn' : 'turns'} of work still to do.</ForYouLine>}
           {kind === 'SakokuReopen' && <ForYouLine tone="gain">You can declare war and sign Alliances again, and technologies others know get cheaper for you again.</ForYouLine>}

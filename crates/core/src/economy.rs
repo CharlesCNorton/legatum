@@ -457,7 +457,7 @@ fn yields_for_item<const FULL: bool>(
     }
     if owner.tomb_work {
         // The royal tomb (Egypt, `goals::GoalRule::Tomb`): the city's Production and its Food
-        // beyond what its people eat go to the tomb, so it neither builds nor grows. A Food
+        // beyond what its people eat are taken, so it neither builds nor grows. A Food
         // deficit is left, so it still starves.
         let surplus = (y.y.total.food - FOOD_PER_POP * city.population).max(0);
         let production = y.y.total.production.max(0);

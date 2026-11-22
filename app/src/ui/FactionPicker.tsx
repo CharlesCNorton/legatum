@@ -196,7 +196,7 @@ const FACT_ICONS = { lose: 'ui-trend-down', counter: 'ui-alert' } as const;
 /** Where in the game a goal is acted on (only goals with an action of their own). */
 const goalWhere = (faction: Exclude<FactionChoice, 'Random'>, goal: FactionGoal): string | null => {
   if (faction === 'Sparta') return 'In the game: Retire this veteran on its unit card, or use the race sidebar (G).';
-  if (faction === 'Rome') return 'In the game: select a level 3 melee veteran and open the Settle lens: gilt rings mark the sites.';
+  if (faction === 'Rome') return 'In the game: select a level 3 melee veteran and open the Settle lens; gilt rings mark the sites.';
   return goal.action ? `In the game: ${goal.action} in the race sidebar (G).` : null;
 };
 

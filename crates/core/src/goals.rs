@@ -810,9 +810,9 @@ pub fn view(state: &GameState, p: PlayerId) -> Option<FactionGoalView> {
                         i32::from(best),
                         target,
                         if best >= COLONIA_LEVEL {
-                            "A level 3 veteran is ready to found it".to_string()
+                            "A level 3 melee veteran is ready to found it".to_string()
                         } else {
-                            format!("Your best veteran is level {best} of {target}")
+                            format!("Your best melee veteran is level {best} of {target}")
                         },
                     )
                 }

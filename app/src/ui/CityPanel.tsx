@@ -971,7 +971,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
         {/* How Build and Queue differ is one hover away, so the choices start right under the title. */}
         <Tip as="div" className="cp-choose-title" content={owner?.faction === 'Egypt' ? EGYPT_BUILD_RULE : BUILD_RULE}>{buildFocus && idleChoice && productionWarning !== AUTOMATION_NO_CHOICE ? `Chooses at Ready · ${buildFocus} focus` : `Choose what ${city.name} builds`}</Tip>
       </div>
-      {tombStopped && <p className="hint" data-testid="city-tomb-picker">Nothing here progresses while the Royal Tomb is being built. You can still buy with Gold, and what you choose starts once the tomb stands or you pause it.</p>}
+      {tombStopped && <p className="hint" data-testid="city-tomb-picker">This city does nothing while the Royal Tomb is built. You can still buy with Gold; what you pick starts when the work ends or pauses.</p>}
       <div className="cp-buyline">
         <div className="purchase-status" id={`purchase-status-${city.id}`} role="status">
           <Tip content="Gold available for purchases this turn."><span><Amount n={purchases.gold} unit="Gold" /> ({signed(view.economy.gold_per_turn.total)}/turn) to spend</span></Tip>

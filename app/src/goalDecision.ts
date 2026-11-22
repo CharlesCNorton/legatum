@@ -13,7 +13,7 @@ export type GoalDecisionKind = 'Swarm' | 'Sakoku' | 'Broadcast' | 'CallTheWild' 
 /** The action's own name (the primary's title) and what it scores (its line): the VP is kept for good for a one-time act, and counts toward a goal that takes several. */
 export function goalDecisionText(kind: GoalDecisionKind, vp: number): { title: string; line: string } {
   // Rome's veteran reached the founding level: he is the action (selecting him opens the Settle lens with its gilt rings).
-  if (kind === 'Colonia') return { title: 'Found the Colonia Victrix', line: `A level ${COLONIA_LEVEL} veteran can found it · +${vp} VP while you hold it` };
+  if (kind === 'Colonia') return { title: 'Found the Colonia Victrix', line: `A level ${COLONIA_LEVEL} melee veteran can found it · +${vp} VP while you hold it` };
   const title = kind === 'Swarm' ? 'Kindle the New Fire' : kind === 'Retire' ? 'Retire a veteran' : kind === 'Sakoku' ? 'Close the country' : kind === 'CallTheWild' ? 'Raise the Warbands' : 'Share the Learning';
   return { title, line: kind === 'Swarm' || kind === 'Broadcast' ? `+${vp} VP, kept for good` : `Counts toward +${vp} VP` };
 }

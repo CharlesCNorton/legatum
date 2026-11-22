@@ -329,7 +329,7 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
             } else if (goalKind === 'colonia') {
               push(i, e.player, { tier: 'legendary', at, title: 'Colonia Victrix', kicker: name ? `Founded at ${name}` : 'Your veterans found the Colonia',
                 effect: `+${e.vp} VP while you hold it`, lore: 'The veterans were given land on the frontier they won.',
-                details: ['Every empire sees where it stands. A rival that captures it takes the points.', 'If it is razed, found another with a veteran.'],
+                details: ['Every empire sees where it stands. A rival that captures it takes the points.', 'If it is razed, found another.'],
                 deltas: [{ counter: 'vp', amount: e.vp }], seal: e.vp });
             } else {
               push(i, e.player, { tier: 'legendary', at, title: 'The Royal Tomb', kicker: name ? `It stands in ${name}` : 'The tomb stands',
@@ -427,7 +427,7 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
           const cap = events.find((x): x is Extract<Event, { type: 'CityCaptured' }> => x.type === 'CityCaptured' && x.from === e.player);
           const razed = events.find((x): x is Extract<Event, { type: 'CityRazed' }> => x.type === 'CityRazed' && x.from === e.player);
           const city = cap ? cityName(cap.city) : razed ? cityName(razed.city) : null;
-          const again = lostKind === 'colonia' ? 'Rome may found another with a veteran.' : 'Egypt may build another, from the start.';
+          const again = lostKind === 'colonia' ? 'Rome may found another.' : 'Egypt may build another, from the start.';
           push(i, e.player, { tier: 'major', at: (cap && cities.get(cap.city)?.pos) ?? razed?.at ?? capital(e.player), kicker: 'A loss',
             title: to !== null ? `The ${title} is taken` : razed ? `The ${title} is razed` : `The ${title} is lost`,
             effect: `−${e.vp} VP · ${to !== null ? `${empireOfPlayer(after, to)} took ${city ?? 'its city'}` : razed ? `${city ?? 'its city'} was razed` : 'nobody holds it now'}`,

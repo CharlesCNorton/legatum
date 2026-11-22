@@ -178,10 +178,10 @@ export function coloniaOpen(view: Pick<PlayerView, 'actions'>): boolean {
 }
 
 /** What a qualifying site is, in one line (the settle legend's key and the no-site note). */
-export const COLONIA_SITE_RULE = `A site qualifies within ${tiles(COLONIA_REACH)} of a rival's land.`;
+export const COLONIA_SITE_RULE = `A site counts if it is within ${tiles(COLONIA_REACH)} of a rival's land.`;
 /** The legend line for the gilt ring. */
 export const COLONIA_RING_KEY = `Gilt ring: founds your Colonia Victrix (+${factionGoalVp('Rome')} VP)`;
 /** The founding button on a qualifying site. */
 export const COLONIA_FOUND_LABEL = `Found Colonia Victrix · +${factionGoalVp('Rome')} VP`;
 /** The hover's lead on a qualifying site. */
-export const COLONIA_SITE_LEAD = `+${factionGoalVp('Rome')} VP while you hold it: a city founded here is your Colonia Victrix.`;
+export const COLONIA_SITE_LEAD = `Founding here makes your Colonia Victrix: +${factionGoalVp('Rome')} VP while you hold it.`;

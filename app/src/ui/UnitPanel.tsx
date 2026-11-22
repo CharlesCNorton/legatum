@@ -197,7 +197,7 @@ export function UnitPanel({ unit, view, peek = false }: { unit: UnitView; view: 
             {unit.military && <> · <Tip content={`${eraName(unitEra(unit.kind as UnitKind))} era. Every military miniature wears this numeral on its base, so a newer unit of the same class reads apart on the map.`} className="up-era"><EraTab era={unitEra(unit.kind as UnitKind)} /></Tip></>}
           </div>
           {unit.military && <PromotionLine unit={unit} faction={owner?.faction} />}
-          {mine && isColoniaFounder(view, unit.id) && <p className="up-colonia" data-testid="unit-colonia"><Icon name="goal-colonia" size={14} /> Can found your Colonia Victrix (+{factionGoalVp('Rome')} VP){coloniaHere ? ' here' : ': gilt rings on the Settle lens mark the sites'}</p>}
+          {mine && isColoniaFounder(view, unit.id) && <p className="up-colonia" data-testid="unit-colonia"><Icon name="goal-colonia" size={14} /> Can found your Colonia Victrix{coloniaHere ? ' here' : ''} (+{factionGoalVp('Rome')} VP){coloniaHere ? '' : ': gilt rings on the Settle lens mark the sites'}</p>}
           {isCompany(unit) && <CompanyTag unit={unit} view={view} />}
         </div>
         {status && <div className={`up-status ${broken ? 'bad' : pending ? 'pending' : exploring || unit.goto || standing ? 'standing' : ''}`}><Amounts text={status} />{broken && ' · won’t resolve'}</div>}
@@ -255,7 +255,7 @@ export function UnitPanel({ unit, view, peek = false }: { unit: UnitView; view: 
           {canFound && (
             <Action label={foundLabel} hotkey="B" primary={leads} active={pending?.type === 'FoundCity'} onClick={foundCitySelected}
               disabled={!!foundBlocked} reason={foundBlocked ?? undefined}
-              tip={coloniaHere ? `${COLONIA_SITE_LEAD} Found it here and consume this level-${unit.level} veteran. Combat resolves first: if this unit is wounded or killed, the city does not appear. Whoever holds the city scores the points.` : unit.kind === 'Settler' ? `Found a city here, on land you or nobody owns. Cities need ${minCityGap(owner?.faction ?? 'Athens')} tiles between them.` : `Found a city here and consume this level-${unit.level} veteran. Combat resolves first: if this unit is wounded or killed, the city does not appear, and a surviving unit stays. A Legionary starts the city at population 2.`} />
+              tip={coloniaHere ? `${COLONIA_SITE_LEAD} This veteran is used up.` : unit.kind === 'Settler' ? `Found a city here, on land you or nobody owns. Cities need ${minCityGap(owner?.faction ?? 'Athens')} tiles between them.` : `Found a city here and consume this level-${unit.level} veteran. Combat resolves first: if this unit is wounded or killed, the city does not appear, and a surviving unit stays. A Legionary starts the city at population 2.`} />
           )}
           {movePrimary && !locked && <Action label={mode === 'move' ? 'Cancel targeting' : unit.military && attacksInMelee(unit.kind) ? 'Move or attack' : 'Move'} primary={leads}
             onClick={toggleMoveSelected} active={mode === 'move'} hotkey={mode === 'move' ? 'Esc' : undefined} 
