@@ -31,7 +31,7 @@ export CLOUDFLARE_API_TOKEN=...      # a token with "Edit Cloudflare Workers"
 npx wrangler deploy
 ```
 
-The URL is `https://legatum-relay.<your-subdomain>.workers.dev`. Nothing secret or account-specific is
+The URL is `https://relay.playlegatum.com` (the `routes` entry in `wrangler.jsonc`; a fork changes it to a domain in its own Cloudflare account, or removes it and uses `https://legatum-relay.<your-subdomain>.workers.dev`). Nothing secret is
 committed. If the token sees several accounts, also set `CLOUDFLARE_ACCOUNT_ID`.
 
 The limits' vars deploy with the Worker from `wrangler.jsonc`. To stop new rooms in an emergency without a
@@ -101,24 +101,42 @@ under the Worker's Variables) without a code change; a missing or unusable value
   (empty for now: add entries there), becomes `Game <first 4 characters of the room id>`. `POST /rooms`
   returns the name it kept as `name`. The build label holds letters, digits, spaces and `. · ( ) _ + -` only,
   and starts with a letter or digit; anything else is refused with 400.
+- `POST /rooms` may carry `locked: true` (a boolean, default false; any other type is refused with 400). It means the
+  host set a join code. The relay stores and lists only that flag in `GET /lobby` rows (`locked`); the code itself is
+  checked by the host's engine and never reaches the relay. Deploy the relay before an app build that sends `locked`.
 - Every answer carries `X-Content-Type-Options: nosniff`, since `/api/status` and the lobby hand back text a
   host wrote.
 
-On top of this, a Cloudflare rate-limiting rule (Security > WAF > Rate limiting rules) on `POST /rooms`
-can stop a flood at the edge before it reaches the Worker. It needs a custom domain or zone; it is optional.
+### Edge rule
+
+The relay is served at `https://relay.playlegatum.com` (a custom domain, set in `wrangler.jsonc`), so the
+zone's rate-limiting rule stops a flood at Cloudflare's edge before it reaches the Worker or counts toward
+the day's requests. The rule is set once in the dashboard (Security > WAF > Rate limiting rules); the free
+plan allows one rule with a 10-second window, shared with `games.playlegatum.com`:
+
+- When incoming requests match: hostname is `relay.playlegatum.com` or `games.playlegatum.com`
+  (expression `http.host in {"relay.playlegatum.com" "games.playlegatum.com"}`).
+- Same characteristics: IP. Requests: 40. Period: 10 seconds. Action: Block for 10 seconds.
+
+A player sends a handful of requests a minute (the list refreshes, one socket per game; messages inside a
+socket are not requests), so the rule only meets scripts. The `workers.dev` address stays on for builds
+published before the domain and is outside the rule; turn it off (`"workers_dev": false`) once no kept
+build uses it.
 
 ## Security model
 
 - The lobby is public: anyone can list rooms and open guest sockets. Room ids are unguessable, but they
   are not secrets once listed.
 - Only the holder of the host key can open the tunnel. The key is returned once by `POST /rooms`.
+- A host can lock its game with a join code and remove players; both are decided in the host's tab, so the relay
+  learns nothing more than the `locked` flag.
 - Seat tokens and every game message stay end to end between guest and host. The relay copies the bytes
   and cannot tell a seat token from any other text.
 - `POST /rooms` needs no account, and CORS stays open (`*`) because an origin check stops no one who
   scripts requests. What bounds a stranger is the limits table above: one address can hold 2 rooms and
   make 6 every 10 minutes, so filling the 64-room lobby takes 32 addresses, and `LOBBY_OPEN=0` stops new rooms
-  at once if it happens. Someone with many addresses can still fill it; then add a Cloudflare rate-limiting
-  rule or a shared secret on `POST /rooms`.
+  at once if it happens. Someone with many addresses can still fill it; then tighten the edge
+  rule above (lower the limit) or add a shared secret on `POST /rooms`.
 
 ## Cost on the free plan
 
