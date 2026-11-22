@@ -497,6 +497,7 @@ impl ViewBuilder {
             has_air_defence: false,
             occupation_lock: None,
             construction: None,
+            walls_building: false,
             great_works: detail
                 .as_ref()
                 .map(|d| {
