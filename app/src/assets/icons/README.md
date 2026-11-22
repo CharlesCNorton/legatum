@@ -126,8 +126,7 @@ All milestones share a hexagon badge outline.
 | `fortify.svg` | Double-walled heater shield. |
 | `vp.svg` | Laurel wreath around a star: victory points. |
 | `goal-new-fire.svg` | A torch with its flame: the Aztecs' New Fire. |
-| `goal-colonia.svg` | Laurel wreath around a crenellated gate with an arched door, tied with a ribbon: Rome's Colonia Victrix. A gate, never vp's star, so the two read apart. |
-| `goal-colonia-far.svg` | The same laurel and gate as `goal-colonia`, drawn solid and heavy for the far-zoom banner seal, where the fine wreath would blur. Map only. |
+| `goal-colonia.svg` | A laurel wreath, a solid band and five heavy leaves a side, around a wide crenellated gate with an arched door: Rome's Colonia Victrix. Drawn heavy so it reads at 14 to 16 px on the banner seal and the founder's badge; a gate, never vp's star. |
 | `goal-royal-tomb.svg` | A rock-cut doorway with a lintel in a broken cliff face: Egypt's Royal Tomb. A cliff, never a pyramid, so it reads apart from `building-pyramids`. |
 
 ## Interface and map badges

@@ -2814,6 +2814,8 @@ dialog.settings-modal::backdrop {
   text-transform: uppercase;
   color: var(--primary-sub);
 }
+/* What Return does, when it is not the title's own act ("Select the veteran"). */
+.cta-act { display: flex; align-items: center; justify-content: center; gap: 6px; font: 600 10px/1.2 var(--sans); letter-spacing: 0.18em; text-transform: uppercase; color: var(--primary-sub); }
 .cta-production {
   height: auto;
   min-height: 64px;
@@ -4219,6 +4221,8 @@ dialog.gameover::backdrop {
 .city-panel .cp-now-name { font-size: 20px; }
 .cp-now-line { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; min-width: 0; }
 .cp-now-turns { flex-shrink: 0; white-space: nowrap; }
+/* Egypt's Royal Tomb: "12/50 stored · waits for the tomb" may wrap rather than clip. */
+.cp-now-turns.wrap { flex-shrink: 1; white-space: normal; min-width: 0; }
 .city-panel .cp-now-line .cp-now-name { font-size: 16px; }
 /* The sticky head is a name and three numbers on one line at every window height (1440x900 used to wrap Health onto a second
    line and spend 110 px; astra full review 2026-10-31, section 3). */

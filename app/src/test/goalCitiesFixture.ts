@@ -10,6 +10,7 @@
 //  egyptRival:  you are Sparta; Egypt is working on its Royal Tomb
 //  tombRival:   you are Sparta; Egypt's Royal Tomb stands in its capital, in sight
 //  egyptPaused: you are Egypt; the work paused at 6 of 15 turns
+//  egyptRivalPaused: you are Sparta; Egypt paused its Royal Tomb at 6 of 15 turns
 //  egyptHeld:   you are Egypt; your Royal Tomb stands in your capital
 //  tombLost:    you are Egypt; Sparta captured the city where your Royal Tomb stands
 //  coloniaThird: you are Egypt, a third empire; Sparta holds Rome's captured Colonia Victrix, in sight
@@ -22,14 +23,14 @@ import { idxOf, refreshVision } from './fixtureEngine';
 import type { Faction } from '../types';
 
 export type GoalCityMode = 'romeBefore' | 'romeReady' | 'romeHeld' | 'romeLost' | 'romeRival' | 'egyptIdle' | 'egyptWork' | 'egyptRival' | 'tombRival'
-  | 'egyptPaused' | 'egyptHeld' | 'tombLost' | 'coloniaThird' | 'romeNoSite' | 'romeOffRing';
+  | 'egyptPaused' | 'egyptRivalPaused' | 'egyptHeld' | 'tombLost' | 'coloniaThird' | 'romeNoSite' | 'romeOffRing';
 
 /** Level 2 and level 3 need these cumulative XP (`data::PROMOTION_XP`). */
 const XP_LEVEL_2 = 46, XP_LEVEL_3 = 90;
 
 export function goalCitiesFixture(mode: GoalCityMode) {
   const third = mode === 'coloniaThird';
-  const rome = mode.startsWith('rome') || third, rival = mode === 'romeRival' || mode === 'egyptRival' || mode === 'tombRival';
+  const rome = mode.startsWith('rome') || third, rival = mode === 'romeRival' || mode === 'egyptRival' || mode === 'egyptRivalPaused' || mode === 'tombRival';
   const goal: Faction = rome ? 'Rome' : 'Egypt';
   // Seat 0 is the viewer: the goal's empire, Sparta (a rival), or Egypt (a third empire).
   const factions: Faction[] = third ? ['Egypt', 'Rome', 'Sparta'] : rival ? ['Sparta', goal, rome ? 'Egypt' : 'Rome'] : [goal, 'Sparta', rome ? 'Egypt' : 'Rome'];
@@ -59,6 +60,10 @@ export function goalCitiesFixture(mode: GoalCityMode) {
   const V = colonia ? at(19, 6) : undefined;
   for (const c of f.cities) { c.population = 4; c.buildings = []; c.producing = null; c.prod = 0; c.productionQueue = []; c.productionBanked = []; c.isCapital = false; }
   A.isCapital = true; A.population = 7; D.isCapital = true; D.population = 6;
+  // Only the capital is called Rome: founding order can give that name to another Roman city.
+  const romeNamed = f.cities.find((c) => c.name === 'Rome' && !c.isCapital);
+  const romeCapital = romeNamed && f.cities.find((c) => c.owner === romeNamed.owner && c.isCapital);
+  if (romeNamed && romeCapital) [romeNamed.name, romeCapital.name] = [romeCapital.name, romeNamed.name];
   B.population = 5; B.producing = { kind: 'Building', building: 'Granary' } as never; B.prod = 12;
   C.producing = { kind: 'Unit', unit: 'Soldier' } as never; C.prod = 8;
   // Borders reach two hexes around each city (three for capitals), so the Colonia's site has rival land in reach.
@@ -74,7 +79,7 @@ export function goalCitiesFixture(mode: GoalCityMode) {
     if (holder !== g) { V!.owner = holder; for (let i = 0; i < f.owner.length; i++) if (f.tileCity[i] === V!.id) f.owner[i] = holder; }
   }
   if (mode === 'egyptWork' || mode === 'egyptRival') { P.tombWork = true; P.tombTurns = 6; }
-  if (mode === 'egyptPaused') { P.tombWork = false; P.tombTurns = 6; }
+  if (mode === 'egyptPaused' || mode === 'egyptRivalPaused') { P.tombWork = false; P.tombTurns = 6; }
   if (mode === 'tombRival' || mode === 'egyptHeld') { P.tombCity = A.id; P.goalHolder = g; P.factionGoalDone = true; P.factionGoalReachedBefore = true; }
   if (mode === 'tombLost') {
     P.tombCity = A.id; P.goalHolder = o; P.factionGoalDone = false; P.factionGoalReachedBefore = true;
@@ -99,7 +104,7 @@ export function goalCitiesFixture(mode: GoalCityMode) {
     if (f.knownCities?.[team]) for (const [k, c] of Object.entries(f.knownCities[team])) if (c.owner !== 0) delete f.knownCities[team][k as never];
   }
   // A Scout of the viewer's beside the goal city, so a rival sees it.
-  const scoutAt = mode === 'romeRival' || third ? fromOffset(20, 8) : mode === 'tombRival' || mode === 'egyptRival' || mode === 'tombLost' ? fromOffset(8, 5) : fromOffset(4, 6);
+  const scoutAt = mode === 'romeRival' || third ? fromOffset(20, 8) : mode === 'tombRival' || mode === 'egyptRival' || mode === 'egyptRivalPaused' || mode === 'tombLost' ? fromOffset(8, 5) : fromOffset(4, 6);
   const scout = spawnUnit(f, 0, 'Scout', scoutAt, false);
   // Sparta at war with Rome, a Soldier beside the Colonia: the attack forecast says what a capture scores.
   let attacker: number | undefined;

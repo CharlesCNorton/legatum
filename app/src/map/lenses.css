@@ -70,6 +70,8 @@
 .settle-legend p { margin: 6px 0 2px; }
 .settle-colonia-key { display: flex; align-items: center; gap: 6px; font-weight: 600; }
 .settle-colonia-key.none { font-weight: 400; }
+/* No Colonia site known: the ring is empty, so it never promises a gilt ring on the map. */
+.settle-ring-empty { flex: 0 0 auto; width: 14px; height: 14px; border-radius: 50%; border: 1.5px dashed var(--ink-2, #5a4a3a); }
 .settle-ring-gilt { flex: 0 0 auto; width: 14px; height: 14px; border-radius: 50%; border: 3px solid #c9a227; box-shadow: 0 0 0 1px var(--ink, #2b2118), inset 0 0 0 1px var(--ink, #2b2118); }
 .lens-owner-key { display: flex; flex-wrap: wrap; gap: 3px 5px; margin-top: 3px; }
 .lens-owner-key span { gap: 3px; padding-right: 2px; font-variant-numeric: tabular-nums; font-weight: 600; }

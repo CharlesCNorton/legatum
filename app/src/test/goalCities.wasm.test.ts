@@ -72,13 +72,16 @@ describe.skipIf(!available)('goal cities through the engine', () => {
     expect(tombSites(view)).toEqual([expect.objectContaining({ kind: 'tomb', of: 1, city: f.a })]);
     expect(goalSealFor(view, f.a)).toEqual({ kind: 'tomb', of: 1, dashed: true });
     expect(goalSealFor(view, f.b)).toBeNull();
-    expect(tombSiteLine(view, tombSites(view)[0])).toBe("Egypt's Royal Tomb will stand here: 6 of 15 turns.");
+    expect(tombSiteLine(view, tombSites(view)[0])).toBe("Egypt's Royal Tomb will stand here in 9 turns: 2 VP to whoever holds the city.");
     const own = viewOf('egyptWork');
-    expect(tombSiteLine(own.view, { of: 0 })).toBe('Your Royal Tomb will stand here: 6 of 15 turns.');
-    // Paused work plans nothing on the map; the count stays public.
+    expect(tombSiteLine(own.view, { of: 0 })).toBe('Your Royal Tomb will stand here in 9 turns.');
+    // A paused count keeps its site on the map, and the hover says it is paused.
     const paused = viewOf('egyptPaused').view;
-    expect(tombSites(paused)).toEqual([]);
+    expect(tombSites(paused)).toHaveLength(1);
     expect(tombStatus(paused.players[0])).toMatchObject({ working: false, turns: 6 });
+    const rivalPaused = viewOf('egyptRivalPaused').view;
+    expect(goalSealFor(rivalPaused, f.a)).toEqual({ kind: 'tomb', of: 1, dashed: true });
+    expect(tombSiteLine(rivalPaused, tombSites(rivalPaused)[0])).toBe("Egypt's Royal Tomb, paused at 6 of 15 turns, will stand here.");
   });
 
   it('a goal city held by a third empire, and a captured tomb', () => {

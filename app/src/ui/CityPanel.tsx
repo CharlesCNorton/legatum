@@ -642,7 +642,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
         <span className="prod-turns">{o.turns > 0 ? `${o.turns} turn${o.turns === 1 ? '' : 's'}` : 'No output'}</span>
         {o.item.kind === 'Unit' && <span className={`prod-upkeep ${o.upkeep ? o.upkeep.free ? 'free' : 'paid' : 'none'}`}><Amounts text={upkeepText(o.upkeep)} />{o.upkeep && o.upkeep.gold_per_turn_after < 0 && <span className="prod-upkeep-after" title="Your total Gold/turn once this unit exists"> → <Amounts text={`${signed(o.upkeep.gold_per_turn_after)} Gold/turn`} /></span>}</span>}
         {imp && <span className="prod-upkeep none">No upkeep</span>}
-        <span className="prod-go" title={chosen ? 'Chosen: it starts when the turn ends' : undefined}>{placingHere ? 'Cancel' : resourceBlocked ? headOnly ? 'Blocked' : 'Queue →' : chosen ? active ? 'Chosen' : 'Queued' : 'Build →'}</span>
+        <span className="prod-go" title={chosen ? 'Chosen: it starts when the turn ends' : undefined}>{placingHere ? 'Cancel' : resourceBlocked ? headOnly ? 'Blocked' : 'Queue →' : chosen ? active ? 'Chosen' : 'Queued' : tombStopped ? 'Queue' : 'Build →'}</span>
       </button>
     </>;
     return <div className={`production-choice ${picked ? ' picked' : ''}${resourceBlocked ? ' supply-blocked' : ''}${site ? ' wonder-site' : ''}`} key={key} data-item={key} data-picked={picked || undefined}
@@ -922,8 +922,8 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
             return <Tip content={tip} placement="top" className="cp-now-stop-tip"><button className="queue-remove cp-now-stop" data-testid="production-stop" aria-label={`Stop building ${name}`}
               disabled={view.finished} onClick={() => changeQueue(after)}><Icon name="ui-cross" size={12} /></button></Tip>;
           })()}</span>}
-          turns={<span className="cp-now-turns">
-            {tombStopped ? (producing ? <>{d.production_stored}/{d.production_cost ?? option?.cost ?? '—'} stored · starts when the tomb stands or the work pauses</> : 'Nothing queued') : <>
+          turns={<span className={`cp-now-turns${tombStopped ? ' wrap' : ''}`}>
+            {tombStopped ? (producing ? <>{d.production_stored}/{d.production_cost ?? option?.cost ?? '—'} stored · waits for the tomb</> : 'Nothing queued') : <>
             {producing && pendingQueue && <><span className="pending-dot" aria-hidden="true" /><span className="pending-label" title="Pending until Ready">pending</span>{' '}</>}
             {buildChanged
               ? !producing ? '—' : producing.kind === 'Project' ? projectRate(producing, yields) : option
@@ -988,7 +988,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
         {/* How Build and Queue differ is one hover away, so the choices start right under the title. */}
         <Tip as="div" className="cp-choose-title" content={owner?.faction === 'Egypt' ? EGYPT_BUILD_RULE : BUILD_RULE}>{buildFocus && idleChoice && productionWarning !== AUTOMATION_NO_CHOICE ? `Chooses at Ready · ${buildFocus} focus` : tombStopped ? 'Queue for after the tomb' : `Choose what ${city.name} builds`}</Tip>
       </div>
-      {tombStopped && <p className="hint" data-testid="city-tomb-picker">This city does nothing while the Royal Tomb is built. You can still buy with Gold; what you pick starts when the work ends or pauses.</p>}
+      {tombStopped && <p className="hint" data-testid="city-tomb-picker">You can still buy with Gold.</p>}
       <div className="cp-buyline">
         <div className="purchase-status" id={`purchase-status-${city.id}`} role="status">
           <Tip content="Gold available for purchases this turn."><span><Amount n={purchases.gold} unit="Gold" /> ({signed(view.economy.gold_per_turn.total)}/turn) to spend</span></Tip>

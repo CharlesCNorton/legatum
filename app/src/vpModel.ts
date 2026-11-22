@@ -291,7 +291,8 @@ export function buildVpModel(view: PlayerView): VpModel {
     const s: Source = {
       id: goalId(p.id), kind: 'goal', name: g.name, icon: g.icon, vp: factionGoalVp(p.faction),
       rule: factionGoalRule(p.faction), detail: g.detail(),
-      terms: `${FACTION_INFO[p.faction].name} only · ${held ? 'Held goal' : factionGoalTerms(p.faction)}`,
+      terms: p.faction === 'Rome' ? 'Only Rome can found it' : p.faction === 'Egypt' ? 'Only Egypt can build it'
+        : `${FACTION_INFO[p.faction].name} only · ${held ? 'Held goal' : factionGoalTerms(p.faction)}`,
       live: g.live || held, owners, own: own(owners), only: p.id, faction: p.faction, facts: [], unit: '', held: held || undefined,
     };
     if (held) {

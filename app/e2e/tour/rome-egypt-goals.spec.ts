@@ -64,7 +64,10 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     const f = await open(page, 'romeReady');
     // The dock offers the goal once, as This Turn's next step.
     const cta = page.locator('.right-sidebar .cta');
-    await expect(cta).toContainText('Found the Colonia Victrix');
+    // Nothing selected: the dock's offer is the turn's one primary.
+    await page.evaluate(() => (window as unknown as GameWindow).legatum.getState().set({ selection: null }));
+    await expect(cta).toContainText('Veteran ready: Colonia Victrix');
+    await expect(cta).toContainText('Select the veteran');
     await away(page, size.height);
     await shot(page, size, 'r05-rome-level3-announcement');
     await selectThing(page, 'unit', f.veteran!);
@@ -234,8 +237,16 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
       const spot = await hexPoint(p, g.capitalPos);
       await p.mouse.move(spot.x - 3, spot.y - 3);
       await p.mouse.move(spot.x, spot.y);
-      await expect(p.getByTestId('tile-goal-tomb-site')).toContainText("Egypt's Royal Tomb will stand here: 6 of 15 turns.");
+      await expect(p.getByTestId('tile-goal-tomb-site')).toContainText("Egypt's Royal Tomb will stand here in 9 turns: 2 VP to whoever holds the city.");
       await shot(p, size, 'e15-rival-tomb-site-hover');
+    });
+    await withMode(browser, size, 'egyptRivalPaused', async (p, g) => {
+      await frameHall(p, g.capitalPos, 1.25);
+      const spot = await hexPoint(p, g.capitalPos);
+      await p.mouse.move(spot.x - 3, spot.y - 3);
+      await p.mouse.move(spot.x, spot.y);
+      await expect(p.getByTestId('tile-goal-tomb-site')).toContainText("Egypt's Royal Tomb, paused at 6 of 15 turns, will stand here.");
+      await shot(p, size, 'e21-rival-paused-tomb-site-hover');
     });
     for (const [mode, name] of [['egyptPaused', 'e16-egypt-row-paused'], ['egyptHeld', 'e17-egypt-row-standing'], ['tombLost', 'e18-egypt-row-rival-holds']] as const) {
       await withMode(browser, size, mode, async (p) => {

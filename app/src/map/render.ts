@@ -12,7 +12,7 @@ import { isFighter } from '../airText';
 import { capitalStar } from '../capitalMark';
 import { hexToPixel, tileIndex } from '../hex';
 import { healthColor, playerInk, rgba } from '../theme';
-import { GOAL_CITY_FAR_ICON, GOAL_CITY_ICON, goalCities, goalSealFor, isColoniaFounder, tombChip, tombStatus, type GoalCityKind, type TombStatus } from '../goalCities';
+import { GOAL_CITY_ICON, goalCities, goalSealFor, isColoniaFounder, tombChip, tombStatus, type GoalCityKind, type TombStatus } from '../goalCities';
 import type { PathStep } from '../path';
 import { tintedIcon } from '../icons';
 import type { LookId } from '../brand/look';
@@ -32,7 +32,7 @@ import { attackableEnemies, drawEraPlaque, drawStrengthChip, matchupStrength, pl
 import { contractLeft } from '../company';
 import { heirTag } from '../heir';
 import { rankLevel } from '../rankInsignia';
-import { FONTS, type BannerSpec, type GoalSeal, bannerMetersSize, bannerRect, drawBadge, drawBanner, drawBannerMeters, type BannerMeter, barbarianMiniature, drawBarbarianToken, drawContractPip, drawContractTag, drawHeirHalo, drawLabel, drawPip, drawPromotion, drawRankInsignia, drawSprite, drawTag, drawToken, drawTokenHealth, miniatureGeometry, nameSprite, sealSprite, TOKEN_INK, capitalSealRadius } from './sprites';
+import { FONTS, type BannerSpec, type GoalSeal, bannerMetersSize, bannerRect, drawBadge, drawBanner, drawBannerMeters, type BannerMeter, barbarianMiniature, drawBarbarianToken, drawContractPip, drawContractTag, drawHeirHalo, drawLabel, drawPip, drawPromotion, drawRankInsignia, drawSprite, drawTag, drawToken, drawTokenHealth, miniatureGeometry, nameSprite, sealSprite, TOKEN_INK, capitalSealRadius, CAPITAL_GILT } from './sprites';
 import { mapFeatureImage } from './mapFeatures';
 import { BARBARIAN, isBarbarian } from '../barbarians';
 import type { Rect } from './compass';
@@ -1374,7 +1374,7 @@ interface FarCity { x: number; y: number; seal: ReturnType<typeof sealSprite>; n
 
 /** A goal city's banner seal: its mark (and the solid far variant) in the ink of the empire whose goal it is; dashed while not yet standing. */
 function goalSeal(g: { kind: GoalCityKind; of: number; dashed: boolean }): GoalSeal {
-  return { icon: GOAL_CITY_ICON[g.kind], farIcon: GOAL_CITY_FAR_ICON[g.kind], ink: playerInk(g.of), dashed: g.dashed };
+  return { icon: GOAL_CITY_ICON[g.kind], ink: playerInk(g.of), dashed: g.dashed };
 }
 
 /** What a city's banner and far-zoom seal show. The star marks the original capital for the whole game, in the founder's ink; a replacement capital gets none. */
@@ -1544,8 +1544,8 @@ function drawUnit(ctx: CanvasRenderingContext2D, look: LookId, u: UnitView, x: n
     const r = Math.max(8, w * 0.42), cx = x, cy = y - w * 1.12;
     ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fillStyle = TOKEN_INK.atlas.paper; ctx.fill();
     ctx.strokeStyle = TOKEN_INK.atlas.ink; ctx.lineWidth = 1; ctx.stroke();
-    ctx.beginPath(); ctx.arc(cx, cy, r - 1.8, 0, Math.PI * 2); ctx.strokeStyle = '#c9a227'; ctx.lineWidth = 1.3; ctx.stroke();
-    const s = (r - 2) * 1.6, ic = tintedIcon('goal-colonia', '#6f5512', s * dpr);
+    ctx.beginPath(); ctx.arc(cx, cy, r - 1.8, 0, Math.PI * 2); ctx.strokeStyle = CAPITAL_GILT; ctx.lineWidth = 1.3; ctx.stroke();
+    const s = (r - 2) * 1.6, ic = tintedIcon('goal-colonia', TOKEN_INK.atlas.ink, s * dpr);
     if (ic) ctx.drawImage(ic, cx - s / 2, cy - s / 2, s, s);
   }
   const bx = x + w * 0.95;

@@ -6,6 +6,7 @@ import { goalCities } from '../goalCities';
 import type { Hex, PlayerId, PlayerView, Terrain, UnitKind } from '../types';
 import { DIRECTIONS, edgeCorners, fromOffset, hexAt, hexCorner, hexToPixel, neighbor, pixelToHex, tileIndex, toOffset } from '../hex';
 import { HEX_SIZE, worldBounds } from './render';
+import { CAPITAL_GILT } from './sprites';
 import type { MapStyle } from './style';
 import type { MapViewport } from './camera';
 
@@ -235,7 +236,7 @@ export function drawMinimapOverlay(
   for (const u of units) if (!u.mine) { const p = at(u.hex); dot(p.x, p.y, 2.2, color(u.owner), ink.dark, 1); }
   for (const u of units) if (u.mine && !u.scout) { const p = at(u.hex); dot(p.x, p.y, 2.8, color(u.owner), ink.light, 1.3); }
   // The Heir: whoever holds him, wherever he is (fog included), a gilt ring round the holder's dot.
-  for (const u of units) if (u.heir) { const p = at(u.hex); dot(p.x, p.y, 5.4, 'rgba(0,0,0,0)', ink.dark, 3.4); dot(p.x, p.y, 5.4, 'rgba(0,0,0,0)', '#c9a227', 1.8); dot(p.x, p.y, 2.6, color(u.owner), ink.dark, 1); }
+  for (const u of units) if (u.heir) { const p = at(u.hex); dot(p.x, p.y, 5.4, 'rgba(0,0,0,0)', ink.dark, 3.4); dot(p.x, p.y, 5.4, 'rgba(0,0,0,0)', CAPITAL_GILT, 1.8); dot(p.x, p.y, 2.6, color(u.owner), ink.dark, 1); }
   for (const c of minimapCities(view)) {
     const p = at(c.hex);
     const size = c.capital ? 4.6 : 3.6;
@@ -282,7 +283,7 @@ export function drawMinimapOverlay(
   for (const g of goalCities(view)) {
     const p = at(g.at);
     if (!known.has(g.city)) { ctx.fillStyle = color(g.holder); ctx.strokeStyle = ink.dark; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.rect(p.x - 3.6, p.y - 3.6, 7.2, 7.2); ctx.fill(); ctx.stroke(); }
-    dot(p.x, p.y, 7.4, 'rgba(0,0,0,0)', ink.dark, 3.4); dot(p.x, p.y, 7.4, 'rgba(0,0,0,0)', '#c9a227', 1.8);
+    dot(p.x, p.y, 7.4, 'rgba(0,0,0,0)', ink.dark, 3.4); dot(p.x, p.y, 7.4, 'rgba(0,0,0,0)', CAPITAL_GILT, 1.8);
   }
   for (const u of units) {
     if (!u.scout) continue;

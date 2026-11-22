@@ -692,14 +692,14 @@ export function sealSprite(look: LookId, b: BannerSpec, r: number, dpr: number):
     }
     if (b.goal) {
       // A goal city's mark, small, on the upper left (the capital's star keeps the upper right): the same plate, rule and gilt ring.
-      // Its glyph is the solid far variant, at the size and weight of the capital's star beside it.
+      // Its glyph is drawn in ink, as the capital's star beside it is, at the same size and weight.
       const sx = o - q * 1.1, sy = o - q * 1.1, rd = q * 0.75;
       g.beginPath(); g.arc(sx, sy, rd, 0, Math.PI * 2); g.fillStyle = seat.plate; g.fill();
       if (b.goal.dashed) g.setLineDash([2, 1.6]);
       g.strokeStyle = I.ink; g.lineWidth = pen.thin; g.stroke();
       g.beginPath(); g.arc(sx, sy, rd - 1.5, 0, Math.PI * 2); g.strokeStyle = CAPITAL_GILT; g.lineWidth = 1.1; g.stroke();
       g.setLineDash([]);
-      const gw = rd * 1.55, ic = tintedIcon(b.goal.farIcon ?? b.goal.icon, b.goal.ink, gw * dpr);
+      const gw = rd * 1.55 * goalGlyphScale(b.goal.icon), ic = tintedIcon(b.goal.icon, I.ink, gw * dpr);
       if (ic) g.drawImage(ic, sx - gw / 2, sy - gw / 2, gw, gw);
     }
     return { c, ax: o, ay: o, w: size, h: size };
@@ -903,14 +903,16 @@ const starKey = (star: CapitalStar | null) => (star ? `${star.ink}${star.scored 
 export interface GoalSeal {
   icon: string; ink: string;
   /** A solid, heavier variant for the small far-zoom seal, where a thin-line glyph would not read. */
-  farIcon?: string;
   /** Not yet standing (the Royal Tomb under construction): the seal's rule and gilt ring are dashed. */
   dashed?: boolean;
 }
-const goalKey = (goal: GoalSeal | null | undefined) => (goal ? `${goal.icon}${goal.ink}${goal.farIcon ?? ''}${goal.dashed ? 'd' : ''}` : '-');
+const goalKey = (goal: GoalSeal | null | undefined) => (goal ? `${goal.icon}${goal.ink}${goal.dashed ? 'd' : ''}` : '-');
 
 /** The fine ring on an original capital's seals (gilt is the house's VP colour). */
-const CAPITAL_GILT = '#c9a227';
+/** The laurel's round wreath leaves its gate small in the box: drawn larger, it fills its seal as the tomb and the capital's star do. */
+const goalGlyphScale = (icon: string) => (icon === 'goal-colonia' ? 1.17 : 1);
+/** The gilt of a scoring seal's ring (capital star, goal cities, the Colonia founder's badge and the Settle lens's Colonia marks). */
+export const CAPITAL_GILT = '#c9a227';
 
 /** Radius of the banner's star seal: a disc about 1.4 banners tall (never under 16 px across at the smallest banner). */
 export function capitalSealRadius(fs: number): number {
@@ -1024,7 +1026,7 @@ function atlasBanner(b: BannerSpec, fs: number, dpr: number): Sprite {
     g.beginPath(); g.arc(sx, sy, L - 2.8, 0, Math.PI * 2);
     g.strokeStyle = CAPITAL_GILT; g.lineWidth = 1.3; g.stroke();
     g.setLineDash([]);
-    const gw = (L - 3.5) * 1.45, ic = tintedIcon(b.goal.icon, b.goal.ink, gw * dpr);
+    const gw = (L - 3.5) * 1.45 * goalGlyphScale(b.goal.icon), ic = tintedIcon(b.goal.icon, b.goal.ink, gw * dpr);
     if (ic) g.drawImage(ic, sx - gw / 2, sy - gw / 2, gw, gw);
   }
   return { c, ax: totalW / 2, ay: pad + h + 1, w: totalW, h: h + 2 + 2 * pad };

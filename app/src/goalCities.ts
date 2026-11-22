@@ -64,12 +64,15 @@ export function tombSiteAt(view: Pick<PlayerView, 'tomb_sites'>, city: CityId): 
   return tombSites(view).find((g) => g.city === city);
 }
 
-/** A planned tomb's hover line: "Egypt's Royal Tomb will stand here: 6 of 15 turns." */
+/** A planned tomb's hover line: "Egypt's Royal Tomb will stand here in 9 turns: 2 VP to whoever holds the city.",
+ *  "Your Royal Tomb will stand here in 9 turns.", or, paused, "Egypt's Royal Tomb, paused at 6 of 15 turns, will stand here." */
 export function tombSiteLine(view: Pick<PlayerView, 'me' | 'players'>, g: Pick<GoalCity, 'of'>): string {
   const p = view.players.find((x) => x.id === g.of);
   const st = p ? tombStatus(p) : null;
   const whose = goalCityName(view, { kind: 'tomb', of: g.of });
-  return `${whose} will stand here${st ? `: ${st.turns} of ${st.target} turns` : ''}.`;
+  if (st && !st.working) return `${whose}, paused at ${st.turns} of ${st.target} turns, will stand here.`;
+  const when = st ? ` in ${st.left} ${st.left === 1 ? 'turn' : 'turns'}` : '';
+  return g.of === view.me ? `${whose} will stand here${when}.` : `${whose} will stand here${when}: ${goalVp('tomb')} VP to whoever holds the city.`;
 }
 
 /** The seal a city's banner wears: a standing goal city (the tomb first if a city holds both), else a planned tomb, dashed. */
@@ -80,8 +83,6 @@ export function goalSealFor(view: Pick<PlayerView, 'colonias' | 'royal_tombs' | 
   return site ? { kind: 'tomb', of: site.of, dashed: true } : null;
 }
 
-/** The solid far-zoom variant of each goal's mark (the laurel's thin leaves vanish at seal size). */
-export const GOAL_CITY_FAR_ICON: Record<GoalCityKind, string> = { colonia: 'goal-colonia-far', tomb: 'goal-royal-tomb' };
 
 /** "Rome's Colonia Victrix", "Your Royal Tomb", "the Colonia Victrix" (lower-case start for mid-sentence). */
 export function goalCityName(view: Pick<PlayerView, 'me' | 'players'>, g: Pick<GoalCity, 'kind' | 'of'>): string {

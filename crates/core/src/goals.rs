@@ -576,7 +576,11 @@ pub fn tomb_sites(state: &GameState) -> Vec<crate::view::GoalCityView> {
     state
         .players
         .iter()
-        .filter(|p| tomb_working(state, p.id))
+        // At work, or paused with turns counted, and no tomb standing yet: a paused count keeps its site.
+        .filter(|p| {
+            (tomb_working(state, p.id) || (!p.id.is_barbarian() && p.tomb_turns > 0))
+                && tomb_city(state, p.id).is_none()
+        })
         .filter_map(|p| {
             let city = state.cities.get(&tomb_site(state, p.id)?)?;
             Some(crate::view::GoalCityView {

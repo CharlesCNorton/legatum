@@ -5,7 +5,7 @@ import type { Camera } from './render';
 import type { Rect } from './compass';
 import { SETTLE_BANDS, type SiteBand } from './settleAdvice';
 import { MAP_STYLES } from './style';
-import { FONTS } from './sprites';
+import { CAPITAL_GILT, FONTS } from './sprites';
 import { yieldIconSize } from './yieldIcons';
 
 /** Each band's colour and how much of it covers the ground, from the shared tokens (the legend reads the same ones). */
@@ -40,7 +40,7 @@ export function drawLens(ctx: CanvasRenderingContext2D, tiles: LensTile[], cam: 
   const metrics = lensMetrics(r);
   ctx.save();
   // The house VP gilt (the capital seal's ring).
-  const COLONIA_GILT = '#c9a227';
+  const COLONIA_GILT = CAPITAL_GILT;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.font = `700 ${metrics.font}px ${FONTS[look].sans}`;

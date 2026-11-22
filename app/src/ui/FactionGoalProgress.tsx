@@ -10,6 +10,7 @@ import { VpSeal } from './vpParts';
 import { goalCities, COLONIA_SITE_RULE, tombChip, tombShort } from '../goalCities';
 import { Icon } from './bits';
 import { coloniaFounder } from '../goalDecision';
+import { empireOfPlayer } from '../empires';
 
 const number = (n: number) => n.toLocaleString('en-US');
 
@@ -90,8 +91,9 @@ function ColoniaGoalRow({ view }: { view: PlayerView }) {
   const tip = <><p>{factionGoalRule('Rome')}.</p><p className="muted">{factionGoalTerms('Rome')}.</p></>;
   // The short window's one line keeps the goal's name and reward: "Colonia Victrix · +2 VP: best melee veteran is level 2 of 3".
   const c = view.actions?.colonia, level = c?.level ?? 3;
+  const lost = state === 'lost' ? `${empireOfPlayer(view, standing!.holder)} holds it in ${standing!.name}. Retake the city.` : null;
   const short = ordered ? 'founded when the turn ends'
-    : state === 'held' ? `you hold it in ${standing!.name}` : state === 'lost' ? `a rival holds it in ${standing!.name}`
+    : state === 'held' ? `you hold it in ${standing!.name}` : lost ? lost
     : state === 'ready' ? `a level ${level} melee veteran is ready`
     : c && c.best > 0 ? `best melee veteran is level ${c.best} of ${level}` : 'no melee veteran yet';
   return <section className={`goal-action${state === 'held' ? ' ordered' : ''}`} aria-label={`${goal.name}: your faction goal`} data-goal-action="Colonia" data-colonia-state={state}>
@@ -100,7 +102,7 @@ function ColoniaGoalRow({ view }: { view: PlayerView }) {
       <h3>{goal.name}</h3>
       <VpSeal vp={factionGoalVp('Rome')} />
     </Tip>
-    <p className="goal-action-note goal-action-progress colonia-status" data-testid="colonia-progress">{ordered ? 'Ordered: your veteran founds it when the turn ends' : label}</p>
+    <p className="goal-action-note goal-action-progress colonia-status" data-testid="colonia-progress">{ordered ? 'Ordered: your veteran founds it when the turn ends' : lost ?? label}</p>
     <p className="goal-action-note colonia-compact" data-testid="colonia-compact">{goal.name} · +{factionGoalVp('Rome')} VP: {short}</p>
     {state === 'before' && <span className="faction-goal-meter" role="progressbar" aria-label={`${goal.name}: ${label}`} aria-valuemin={0} aria-valuemax={p.target} aria-valuenow={Math.min(p.value, p.target)}><i style={{ width: `${Math.min(100, 100 * p.value / Math.max(1, p.target))}%` }} /></span>}
     {state === 'ready' && founder !== null && !founderSelected && <button className="btn goal-action-btn" onClick={() => useGame.getState().select({ kind: 'unit', id: founder }, true)}>Select the veteran</button>}

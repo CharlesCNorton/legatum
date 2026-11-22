@@ -154,9 +154,9 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
         if (team.has(e.player)) break; // Egypt's own team ordered it: the report line is enough.
         const left = Math.max(0, RULES.tombTurns - e.turns);
         publicCard(i, e.player, { tier: 'major', at: siteOf(e.player) ?? capital(e.player), goalMark: GOAL_CITY_ICON.tomb, title: 'The Royal Tomb', kicker: `${possessive(empireOfPlayer(after, e.player))} Royal Tomb`,
-          effect: `${empireOfPlayer(after, e.player)} is building its Royal Tomb: its cities do not build or grow. ${left} ${left === 1 ? 'turn' : 'turns'} of work left.${tombSiteOf(e.player) ? ` It will stand in ${tombSiteOf(e.player)!.name}.` : ''}`,
+          effect: `${empireOfPlayer(after, e.player)} is building its Royal Tomb: its cities do not build or grow. ${left} ${left === 1 ? 'turn' : 'turns'} of work left.${tombSiteOf(e.player) ? ` It will stand in ${tombSiteOf(e.player)!.name}: ${factionGoalVp('Egypt')} VP to whoever holds it.` : ''}`,
           lore: 'The valley falls quiet while the tomb is cut.',
-          details: ['It may pause the work and keep its count. When the tomb stands, whoever holds its city scores the points.'], deltas: [] });
+          details: [`It may pause the work and keep its count. When the tomb stands, whoever holds its city scores ${factionGoalVp('Egypt')} VP.`], deltas: [] });
         break;
       }
       case 'TombPaused': {
@@ -349,7 +349,7 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
           } else if (!captured) {
             // Every empire is told when a goal city appears, and where: 2 VP to whoever holds it.
             const who = empireOfPlayer(after, e.player);
-            publicCard(i, e.player, { goalMark: GOAL_CITY_ICON[goalKind], tier: 'major', at, title, kicker: `${possessive(who)} ${title}`,
+            publicCard(i, e.player, { goalMark: GOAL_CITY_ICON[goalKind], tier: 'major', at, title, kicker: who,
               effect: goalKind === 'colonia'
                 ? `${who} founded its Colonia Victrix${name ? ` at ${name}` : ''}: ${e.vp} VP to whoever holds it`
                 : `The Royal Tomb stands${name ? ` in ${name}` : ''}: ${e.vp} VP to whoever holds it`,

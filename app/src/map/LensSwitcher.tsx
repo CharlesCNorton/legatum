@@ -104,7 +104,7 @@ export function LensSwitcher({ lens, onChange, sites, onInspect, settlerId, play
     <div className="settle-scale" aria-label="Site quality, from poor to exceptional">{SETTLE_BANDS.map((band) => <span key={band} data-settle-band={band} title={`${band}: site quality ${bandRange(band)}. The same scale on every map.`}><i className={`settle-swatch band-${band.toLowerCase()}`} aria-hidden="true" /><em>{band}</em></span>)}</div>
     {coloniaFounder && (sites.some((s) => s.colonia)
       ? <p className="settle-colonia-key" data-testid="settle-colonia-key"><i className="settle-ring-gilt" aria-hidden="true" />{COLONIA_RING_KEY}</p>
-      : <p className="settle-colonia-key none" data-testid="settle-colonia-none"><i className="settle-ring-gilt" aria-hidden="true" />No site you know founds your Colonia Victrix. {COLONIA_SITE_RULE}</p>)}
+      : <p className="settle-colonia-key none" data-testid="settle-colonia-none"><i className="settle-ring-empty" aria-hidden="true" />No site you know founds your Colonia Victrix. {COLONIA_SITE_RULE}</p>)}
   </div>;
   return <section ref={panel} className="map-lenses" data-overlay-slot="map-tools" data-compact={compact} data-chip={chip || undefined} data-open={compact && open} aria-label="Map options" onKeyDown={(e) => {
     if (compact && open && e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); }

@@ -35,8 +35,8 @@ import { useUnitCardLeads } from './turnLead';
 import { MAX_LEVEL, STRENGTH_PERCENT, strengthBonus } from '../promotion';
 import { attackableEnemies, unitEra } from '../map/unitEra';
 import { EraTab } from './EraTab';
-import { foundCityUnitBlocker, isFounderCandidate, settlementSite } from '../settlement';
-import { COLONIA_FOUND_LABEL, COLONIA_SITE_LEAD, isColoniaFounder } from '../goalCities';
+import { coloniaSiteKnown, foundCityUnitBlocker, isFounderCandidate, settlementSite } from '../settlement';
+import { COLONIA_FOUND_LABEL, COLONIA_REACH, COLONIA_SITE_LEAD, isColoniaFounder } from '../goalCities';
 import { UnitImprovements, upgradeCheck } from './UnitImprovements';
 import { pendingSpend, goldOnHand } from './productionPurchases';
 export { upgradeCheck, upgradeStepBreakdown } from './UnitImprovements';
@@ -197,7 +197,7 @@ export function UnitPanel({ unit, view, peek = false }: { unit: UnitView; view: 
             {unit.military && <> · <Tip content={`${eraName(unitEra(unit.kind as UnitKind))} era. Every military miniature wears this numeral on its base, so a newer unit of the same class reads apart on the map.`} className="up-era"><EraTab era={unitEra(unit.kind as UnitKind)} /></Tip></>}
           </div>
           {unit.military && <PromotionLine unit={unit} faction={owner?.faction} />}
-          {mine && isColoniaFounder(view, unit.id) && <p className="up-colonia" data-testid="unit-colonia"><Icon name="goal-colonia" size={14} /> Can found your Colonia Victrix{coloniaHere ? ' here' : ''} (+{factionGoalVp('Rome')} VP){coloniaHere ? '' : ': gilt rings on the Settle lens mark the sites'}</p>}
+          {mine && isColoniaFounder(view, unit.id) && <p className="up-colonia" data-testid="unit-colonia"><Icon name="goal-colonia" size={14} /> Can found your Colonia Victrix{coloniaHere ? ' here' : ''} (+{factionGoalVp('Rome')} VP){coloniaHere ? '' : coloniaSiteKnown(view) === false ? `. No site known yet: it must be within ${COLONIA_REACH} tiles of a rival's land.` : ': gilt rings on the Settle lens mark the sites'}</p>}
           {isCompany(unit) && <CompanyTag unit={unit} view={view} />}
         </div>
         {status && <div className={`up-status ${broken ? 'bad' : pending ? 'pending' : exploring || unit.goto || standing ? 'standing' : ''}`}><Amounts text={status} />{broken && ' · won’t resolve'}</div>}

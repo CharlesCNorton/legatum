@@ -172,6 +172,10 @@ fn rivals_see_where_the_tomb_under_construction_will_stand() {
     assert_eq!(rival.tomb_sites[0].of, P0);
     assert_eq!(rival.tomb_sites[0].city, capital);
     assert_eq!(rival.tomb_sites[0].at, at(4, 4));
+    s.player_mut(P0).tomb_turns = 6;
     order(&mut s, false);
-    assert!(crate::view::player_view(&s, P1).tomb_sites.is_empty(), "a paused tomb has no site");
+    assert_eq!(s.player(P0).tomb_turns, 6, "the pause keeps the count");
+    assert_eq!(crate::view::player_view(&s, P1).tomb_sites.len(), 1, "a paused tomb with turns counted keeps its site");
+    s.player_mut(P0).tomb_turns = 0;
+    assert!(crate::view::player_view(&s, P1).tomb_sites.is_empty(), "no work and no count, no site");
 }
