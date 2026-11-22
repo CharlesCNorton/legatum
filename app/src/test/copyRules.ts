@@ -20,6 +20,8 @@ export interface CopyRule {
 
 /** Mechanics-speak and code terms: describe what the player gets, not the integer maths behind it. */
 export const BANNED: CopyRule[] = [
+  { pattern: /\bresolved when the turn ends\b/i, reason: 'code-speak (plain-language review, 2026-11-22)', instead: '"it happens when the turn ends"', source: true },
+  { pattern: /\b(?:Gold|Science|Food|Production) (?:and (?:Gold|Science|Food|Production) )?go(?:es)? on\b/i, reason: 'vague (plain-language review, 2026-11-22)', instead: '"Gold and Science still come in."', source: true },
   { pattern: /\bmelee veteran of level\b/i, reason: 'wordy (plain-language review, 2026-11-22)', instead: '"a level 3 melee veteran"', source: true },
   { pattern: /\bqualif(?:y|ies|ied|ying)\b/i, reason: 'rulebook jargon (plain-language review, 2026-11-22: "a site qualifies")', instead: '"A site counts if it is within 2 tiles of a rival\'s land."', source: true },
   { pattern: /\bNearest you know\b/i, reason: 'reads oddly (plain-language review, 2026-11-22)', instead: '"Nearest known: Sarai (Mongols), 5 tiles from your city Ajmer."', source: true },

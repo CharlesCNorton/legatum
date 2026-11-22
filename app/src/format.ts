@@ -660,7 +660,7 @@ function goalCityGoalLine(e: GoalEvent, ctx: ReportContext): ReportLine {
     return line('victory', `${text}${gain}`, { ...opts, tone: 'good' });
   }
   if (mine(from)) return line('victory', `${who(ctx, taker)} took ${whose}, ${city}: retake the city to score again${from === ctx.me ? ` (−${e.vp} VP)` : ''}`, { ...opts, tone: 'bad' });
-  return line('victory', `${who(ctx, taker)} took ${whose}, ${city}, from ${whom(ctx, from)}: it scores the ${e.vp} VP now`, { ...opts, tone: 'neutral' });
+  return line('victory', `${who(ctx, taker)} took ${whose}, ${city}, from ${whom(ctx, from)}: ${who(ctx, taker)} now scores the ${e.vp} VP`, { ...opts, tone: 'neutral' });
 }
 
 /** Format one event, with its report icon. UnitMoved steps are collapsed by `formatEvents`. */

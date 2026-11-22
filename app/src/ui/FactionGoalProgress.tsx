@@ -50,7 +50,7 @@ export function TombReadout({ view }: { view: PlayerView }) {
   const t = view.actions?.tomb;
   if (!t?.working) return null;
   const st = { working: true, turns: t.turns, target: t.target, left: Math.max(0, t.target - t.turns) };
-  return <Tip className="stat tomb-stat" content={<><p><b>{tombShort(st)}</b></p><p>None of your cities builds or grows while the work is on. Gold and Science go on.</p><p className="muted">Pause it from the race sidebar (G). The count is kept.</p></>}>
+  return <Tip className="stat tomb-stat" content={<><p><b>{tombShort(st)}</b></p><p>None of your cities builds or grows while the work is on. Gold and Science still come in.</p><p className="muted">Pause it from the Victory race (G). The count is kept.</p></>}>
     <span className="tomb-readout" data-testid="tomb-readout" style={{ ['--tomb-done' as string]: `${Math.round(100 * st.turns / Math.max(1, st.target))}%` }}><Icon name="goal-royal-tomb" size={16} /><span className="tomb-long">{tombShort(st)}</span><b className="tomb-short">{tombChip(st)}</b></span>
   </Tip>;
 }

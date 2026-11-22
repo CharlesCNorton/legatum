@@ -66,7 +66,7 @@ export function GoalActionRow() {
   const progress = st.kind === 'Sakoku' || st.kind === 'Tomb' ? view.faction_goal?.label : wild ? `${wild.with_camp} of ${wild.cities} ${wild.cities === 1 ? 'city has' : 'cities have'} a wild camp in ${wild.cities === 1 ? 'its' : 'their'} territory.` : null;
   const whyText = why ? (st.kind === 'Swarm' && spare ? `${spare.spare} of ${RULES.swarmPopulation} population to spare: every city keeps 1.` : why) : null;
   // The button's hover carries everything the short window's one-line row leaves out: the rule, the reason it is blocked and the progress.
-  const how = st.kind === 'Tomb' ? 'build or pause, confirmed first, resolved when the turn ends' : 'one action, confirmed first, resolved when the turn ends';
+  const how = st.kind === 'Tomb' ? 'build or pause; you confirm first, and it happens when the turn ends' : 'one action; you confirm first, and it happens when the turn ends';
   const buttonTip = <><p>{rule}.</p>{whyText && <p>{whyText}</p>}{progress && <p>{progress}</p>}<p className="muted">{terms} · {how}.</p></>;
   return <section className={`goal-action${st.ordered ? ' ordered' : ''}${why ? ' blocked' : ''}`} aria-label={`${goalName}: your faction goal`} data-goal-action={st.kind}>
     <Tip as="div" className="goal-action-head" content={<><p>{rule}.</p><p className="muted">{terms} · {how}.</p></>}>
@@ -247,7 +247,7 @@ export function GoalActionDialog() {
       <div className="war-prompt-main">
         <h2 id={title} className="war-prompt-head"><RingMedallion icon={goal.icon} tone="gilt" size={30} /><span>{heading}</span></h2>
         <p id={description}>{kind === 'Tomb'
-          ? <>While the work is on, none of your cities builds or grows. Gold and Science go on, and you can still buy with Gold. <b data-testid="tomb-count">{tomb!.turns} of {tomb!.target} turns done</b>{tombSite ? <>; it will stand in <b>{tombSite}</b></> : ''}.</>
+          ? <>While the work is on, none of your cities builds or grows. Gold and Science still come in, and you can still buy with Gold. <b data-testid="tomb-count">{tomb!.turns} of {tomb!.target} turns done</b>{tombSite ? <>; it will stand in <b>{tombSite}</b></> : ''}.</>
           : kind === 'TombPause'
           ? <>Stop the work on the tomb. The count is kept: <b data-testid="tomb-count">{tomb!.turns} of {tomb!.target} turns</b> stay done.</>
           : kind === 'Sakoku'
