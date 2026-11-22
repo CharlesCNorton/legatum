@@ -45,6 +45,7 @@ Current principles and decisions, one line each with date and who. The user's fu
 
 - Victory: hold the VP target for 10 turns, or take every capital (user, 2026-10-06, 2026-11-15). Every faction goal is worth exactly 2 VP. Crowns and decadence are deleted (user, 2026-11-11).
 - Era scoring is World Ages only (owner, 2026-11-22, rules 50): the three-objective era arm and its switch are deleted; iterate on World Ages itself (cards, counts, pacing). Each Age's pool has three peaceful cards every faction can reach; one card is drawn per Age.
+- At Peace, strength settles a contested tile (Sam, 2026-11-22, rules 51): units of empires not at War stepping onto one tile never both bounce; the team with the most combined strength among its claimants moves in (as force decides a fallen city), nobody fights, ties are a seeded draw; an exact force tie at a fallen city is a seeded draw too. Nobody is pushed off a tile they already stand on.
 - Fable review batch (Sam, 2026-11-22, rules 50): a rival's original capital is 1 VP only while held (the Celtic sack keeps its point for good); Alliance upkeep is waived while at War with a near-winner; same-turn ties between empires are drawn by seed; co-op Gold gifts to a teammate exist; `no_purchase_under_threat` is an off-by-default experiment. First pass the owner may veto: wonder prices on one era curve, Star Fort at Machinery. Details: `references/decided-2026-10-31-onward.md`.
 - Diplomacy: Peace, Alliance or War; Alliances cost Gold per turn, no signing fee; defenders join at once and an ally's offensive war raises a call to arms (user, 2026-10-03, 2026-10-23, 2026-11-01). Folding calls into plain war was decided on 2026-11-11, but `WarCall` is still in `crates/core` on 2026-11-22: check the code before relying on either. Peace starts a 10-turn truce (user, 2026-10-25).
 - Captures: a captured city loses half its population; the occupation lock is the rule in every game; any empire can raze a captured city (user, 2026-11-13, 2026-10-25/31).
@@ -53,6 +54,7 @@ Current principles and decisions, one line each with date and who. The user's fu
 - Buying tiles with Gold is back as a trial (user, 2026-11-20). City automation is the first delegation feature (user, 2026-10-31).
 - Resolution order when a defender slips into a besieged city: slip in, then ranged, then melee (user, 2026-11-21).
 - Saves from other rules versions are refused; no migrations (user, 2026-10-31).
+- Going back a turn is allowed in local games (Sam, 2026-11-22): save-scumming is acceptable, because training should learn only from moves the player meant. Menu → Load an earlier turn opens any of the last 10 autosaved turns; the uploaded record keeps only the line played on and lists each rewind (`rewinds`). Online games cannot go back (the host would rewind everyone).
 - Rules freeze: lifted 2026-11-11 (user). Talk before building tech-tree changes (user, 2026-11-01).
 
 ## How to propose

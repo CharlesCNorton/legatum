@@ -6,6 +6,7 @@
 use super::*;
 use crate::rules::test_support::*;
 use crate::{Order, resolve_turn};
+use std::collections::BTreeSet;
 
 fn reasons(events: &[Event], unit: UnitId) -> Vec<String> {
     events
@@ -46,9 +47,9 @@ fn send(s: &mut GameState, owner: u8, kind: UnitKind, dir: usize) -> UnitId {
 #[test]
 fn lucerne_the_side_with_more_force_takes_the_ruined_city() {
     let (mut s, c) = lucerne();
-    let a1 = send(&mut s, 1, UnitKind::Soldier, 0);
-    let a2 = send(&mut s, 1, UnitKind::Soldier, 1);
-    let b = send(&mut s, 2, UnitKind::Soldier, 3);
+    let a1 = send(&mut s, 1, UnitKind::Spearman, 0);
+    let a2 = send(&mut s, 1, UnitKind::Spearman, 1);
+    let b = send(&mut s, 2, UnitKind::Spearman, 3);
     let force = battle::city_force(&s, a1, c, false);
     assert!(force > 0);
     let (next, events) = resolve_units(&s, &no_orders());
@@ -76,36 +77,51 @@ fn lucerne_the_side_with_more_force_takes_the_ruined_city() {
     );
 }
 
+/// One side of an exact tie, drawn by seed (Sam, 2026-11-22, rules 51: "in that case,
+/// random"), takes the city; the other stays where it stood, told it lost the draw.
+fn equal_force_is_drawn(make: fn() -> (GameState, CityId)) {
+    let mut taken = BTreeSet::new();
+    for seed in 0..12 {
+        let (mut s, c) = make();
+        s.setup.seed = seed;
+        let a = send(&mut s, 1, UnitKind::Spearman, 0);
+        let b = send(&mut s, 2, UnitKind::Spearman, 3);
+        let force = battle::city_force(&s, a, c, false);
+        assert_eq!(force, battle::city_force(&s, b, c, false));
+        let (next, events) = resolve_units(&s, &no_orders());
+        assert_eq!(
+            resolve_units(&s, &no_orders()),
+            (next.clone(), events.clone())
+        );
+        let owner = next.cities[&c].owner;
+        assert!(owner == PlayerId(1) || owner == PlayerId(2), "{owner:?}");
+        taken.insert(owner);
+        let (won, lost, loser_start) = if owner == PlayerId(1) {
+            (a, b, hex(5, 4).neighbor(3))
+        } else {
+            (b, a, hex(5, 4).neighbor(0))
+        };
+        assert_eq!(next.units[&won].pos, hex(5, 4));
+        assert_eq!(next.units[&lost].pos, loser_start);
+        assert_eq!(
+            battles_between_attackers(&events, PlayerId(1), PlayerId(2)),
+            0
+        );
+        assert_eq!(bounces(&events), 0, "{events:#?}");
+        assert_eq!(
+            reasons(&events, lost),
+            vec![format!(
+                "{} brought equal force ({force} each) and won the draw for the city",
+                s.player(owner).name
+            )]
+        );
+    }
+    assert_eq!(taken.len(), 2, "neither side always wins the draw");
+}
+
 #[test]
-fn lucerne_equal_force_still_bounces_everyone() {
-    let (mut s, c) = lucerne();
-    let a = send(&mut s, 1, UnitKind::Soldier, 0);
-    let b = send(&mut s, 2, UnitKind::Soldier, 3);
-    let force = battle::city_force(&s, a, c, false);
-    assert_eq!(force, battle::city_force(&s, b, c, false));
-    let (next, events) = resolve_units(&s, &no_orders());
-    assert_eq!(next.cities[&c].owner, PlayerId(0));
-    assert_eq!(next.units[&a].pos, hex(5, 4).neighbor(0));
-    assert_eq!(next.units[&b].pos, hex(5, 4).neighbor(3));
-    assert_eq!(
-        battles_between_attackers(&events, PlayerId(1), PlayerId(2)),
-        0
-    );
-    let name = |p: u8| s.player(PlayerId(p)).name.clone();
-    assert_eq!(
-        reasons(&events, a),
-        vec![format!(
-            "{} brought equal force ({force} each), so nobody took the city",
-            name(2)
-        )]
-    );
-    assert_eq!(
-        reasons(&events, b),
-        vec![format!(
-            "{} brought equal force ({force} each), so nobody took the city",
-            name(1)
-        )]
-    );
+fn lucerne_equal_force_is_drawn_by_seed() {
+    equal_force_is_drawn(lucerne);
 }
 
 #[test]
@@ -116,11 +132,11 @@ fn lucerne_a_ranged_side_with_more_force_cannot_take_it_and_the_melee_side_does(
         city(&mut s, p, hex(1 + 8 * (p as i32 - 1), 1), 3);
         s.players[p as usize].gold = 500;
     }
-    // P1: two Rangers shoot the ruin and one more steps onto it (bounced: ranged can't capture).
-    let r1 = unit(&mut s, 1, UnitKind::Ranger, hex(5, 4).neighbor(0));
-    let r2 = unit(&mut s, 1, UnitKind::Ranger, hex(5, 4).neighbor(1));
-    let r3 = send(&mut s, 1, UnitKind::Ranger, 2);
-    let b = send(&mut s, 2, UnitKind::Soldier, 3);
+    // P1: two Archers shoot the ruin and one more steps onto it (bounced: ranged can't capture).
+    let r1 = unit(&mut s, 1, UnitKind::Archer, hex(5, 4).neighbor(0));
+    let r2 = unit(&mut s, 1, UnitKind::Archer, hex(5, 4).neighbor(1));
+    let r3 = send(&mut s, 1, UnitKind::Archer, 2);
+    let b = send(&mut s, 2, UnitKind::Spearman, 3);
     let shots: i32 = [r1, r2]
         .iter()
         .map(|r| battle::city_force(&s, *r, c, true))
@@ -152,14 +168,14 @@ fn lucerne_a_ranged_side_with_more_force_cannot_take_it_and_the_melee_side_does(
 #[test]
 fn rivals_behind_a_relief_chain_settle_by_force_once_every_defender_is_dead() {
     let (mut s, c) = lucerne();
-    let g = unit(&mut s, 0, UnitKind::Soldier, hex(5, 4));
+    let g = unit(&mut s, 0, UnitKind::Spearman, hex(5, 4));
     s.units.get_mut(&g).unwrap().hp = 5;
-    let relief = unit(&mut s, 0, UnitKind::Soldier, hex(5, 4).neighbor(5));
+    let relief = unit(&mut s, 0, UnitKind::Spearman, hex(5, 4).neighbor(5));
     s.units.get_mut(&relief).unwrap().hp = 5;
     goto(&mut s, relief, hex(5, 4));
-    let a1 = send(&mut s, 1, UnitKind::Soldier, 0);
-    let a2 = send(&mut s, 1, UnitKind::Soldier, 1);
-    let b = send(&mut s, 2, UnitKind::Soldier, 3);
+    let a1 = send(&mut s, 1, UnitKind::Spearman, 0);
+    let a2 = send(&mut s, 1, UnitKind::Spearman, 1);
+    let b = send(&mut s, 2, UnitKind::Spearman, 3);
     let (next, events) = resolve_units(&s, &no_orders());
     assert!(!next.units.contains_key(&g));
     assert!(!next.units.contains_key(&relief), "the relief fell too");
@@ -214,7 +230,7 @@ fn tara_attackers_at_peace_with_each_other_settle_by_force() {
     }
     let phalanx = send(&mut s, 1, UnitKind::Phalangite, 0);
     let horse = send(&mut s, 2, UnitKind::Horseman, 3);
-    let archer = unit(&mut s, 2, UnitKind::Ranger, hex(5, 4).neighbor(4));
+    let archer = unit(&mut s, 2, UnitKind::Archer, hex(5, 4).neighbor(4));
     let f1 = battle::city_force(&s, phalanx, c, false);
     let f2 = battle::city_force(&s, horse, c, false) + battle::city_force(&s, archer, c, true);
     assert_ne!(f1, f2, "the fixture needs a stronger side");
@@ -250,11 +266,11 @@ fn tara_attackers_at_peace_with_each_other_settle_by_force() {
 #[test]
 fn tara_both_peaceful_attackers_kill_the_garrison_and_the_stronger_enters_that_round() {
     let (mut s, c) = tara();
-    let g = unit(&mut s, 0, UnitKind::Soldier, hex(5, 4));
+    let g = unit(&mut s, 0, UnitKind::Spearman, hex(5, 4));
     s.units.get_mut(&g).unwrap().hp = 5;
-    let a1 = send(&mut s, 1, UnitKind::Soldier, 0);
-    let a2 = send(&mut s, 1, UnitKind::Soldier, 1);
-    let b = send(&mut s, 2, UnitKind::Soldier, 3);
+    let a1 = send(&mut s, 1, UnitKind::Spearman, 0);
+    let a2 = send(&mut s, 1, UnitKind::Spearman, 1);
+    let b = send(&mut s, 2, UnitKind::Spearman, 3);
     let (next, events) = resolve_units(&s, &no_orders());
     assert!(!next.units.contains_key(&g), "the garrison fell");
     assert_eq!(next.cities[&c].owner, PlayerId(1), "that same round");
@@ -270,30 +286,8 @@ fn tara_both_peaceful_attackers_kill_the_garrison_and_the_stronger_enters_that_r
 }
 
 #[test]
-fn tara_equal_force_says_so_instead_of_bouncing_silently() {
-    let (mut s, c) = tara();
-    let a = send(&mut s, 1, UnitKind::Soldier, 0);
-    let b = send(&mut s, 2, UnitKind::Soldier, 3);
-    let force = battle::city_force(&s, a, c, false);
-    assert_eq!(force, battle::city_force(&s, b, c, false));
-    let (next, events) = resolve_units(&s, &no_orders());
-    assert_eq!(next.cities[&c].owner, PlayerId(0));
-    assert_eq!(bounces(&events), 0, "{events:#?}");
-    let name = |p: u8| s.player(PlayerId(p)).name.clone();
-    assert_eq!(
-        reasons(&events, a),
-        vec![format!(
-            "{} brought equal force ({force} each), so nobody took the city",
-            name(2)
-        )]
-    );
-    assert_eq!(
-        reasons(&events, b),
-        vec![format!(
-            "{} brought equal force ({force} each), so nobody took the city",
-            name(1)
-        )]
-    );
+fn tara_equal_force_is_drawn_by_seed() {
+    equal_force_is_drawn(tara);
 }
 
 #[test]
@@ -303,10 +297,10 @@ fn tara_a_third_attacker_at_peace_with_two_warring_attackers_stays_its_own_side(
     s.cities.get_mut(&c).unwrap().hp = 0;
     make_peace(&mut s, 1, 3);
     make_peace(&mut s, 2, 3);
-    let a = send(&mut s, 1, UnitKind::Soldier, 0);
-    let b = send(&mut s, 2, UnitKind::Soldier, 3);
-    let t1 = send(&mut s, 3, UnitKind::Soldier, 1);
-    let t2 = send(&mut s, 3, UnitKind::Soldier, 2);
+    let a = send(&mut s, 1, UnitKind::Spearman, 0);
+    let b = send(&mut s, 2, UnitKind::Spearman, 3);
+    let t1 = send(&mut s, 3, UnitKind::Spearman, 1);
+    let t2 = send(&mut s, 3, UnitKind::Spearman, 2);
     let force = battle::city_force(&s, a, c, false);
     let (next, events) = resolve_units(&s, &no_orders());
     assert_eq!(

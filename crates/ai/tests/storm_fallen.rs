@@ -1,8 +1,8 @@
 //! Regression (gene `storm_fallen`): a fallen (0 HP) coastal enemy city whose only land approach
-//! is held by our own Archer, with our Soldier behind it. Every Hard staging search wants a free
-//! tile beside the city and finds none, so without the gene the Soldier holds forever. The pattern
+//! is held by our own Archer, with our Spearman behind it. Every Hard staging search wants a free
+//! tile beside the city and finds none, so without the gene the Spearman holds forever. The pattern
 //! of the rules-50 all-Hard base game 21999, where Egypt held the Mongols' Karakorum at 0 HP for
-//! 888 turns with its own Drone on the city's only land neighbour on its side.
+//! 888 turns with its own CombatDrone on the city's only land neighbour on its side.
 use legatum_ai::{Brain, ScriptedBrain};
 use legatum_core::game::{blank_game, spawn_unit};
 use legatum_core::rules::cities::found_city;
@@ -43,8 +43,8 @@ fn spit() -> (GameState, UnitId) {
     for c in state.cities.values_mut().filter(|c| c.pos == TARGET) {
         c.hp = 0;
     }
-    let archer = spawn_unit(&mut state, ME, UnitKind::Ranger, APPROACH);
-    let soldier = spawn_unit(&mut state, ME, UnitKind::Soldier, Hex::new(10, 8));
+    let archer = spawn_unit(&mut state, ME, UnitKind::Archer, APPROACH);
+    let soldier = spawn_unit(&mut state, ME, UnitKind::Spearman, Hex::new(10, 8));
     legatum_core::visibility::update_explored(&mut state);
     assert!(
         TARGET
@@ -82,9 +82,9 @@ fn a_fallen_city_behind_our_own_archer_is_stormed_only_with_the_gene() {
     assert_eq!(
         play(0, 12),
         None,
-        "gene off: the Soldier holds behind the Archer"
+        "gene off: the Spearman holds behind the Archer"
     );
     let taken = play(1, 12).expect("gene on: the city falls");
-    // T300 the Soldier and the Archer swap places; T301 the Soldier storms the city.
+    // T300 the Spearman and the Archer swap places; T301 the Spearman storms the city.
     assert!(taken <= 302, "taken on turn {taken}");
 }
