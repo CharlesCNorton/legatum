@@ -228,14 +228,14 @@ describe.skipIf(!available)('WASM production banking', () => {
   it('faction-unavailable items are rejected with the reason', () => {
     const { s, a } = fixture();
     s.players[0].faction = s.setup.players[0].faction = 'India';
-    const project = { kind: 'Project', project: 'Science' } as const;
+    const project = { kind: 'Project', project: 'Grow' } as const;
     const { reports } = play(s, [
       { 0: [{ type: 'SetProduction', city: a.id, item: project }] },
       { 0: [{ type: 'SetProductionQueue', city: a.id, queue: [spearman, project] }] },
     ]);
     const reasons = reports.flatMap(failures).map(String);
-    expect(reasons.some((r) => /^A cannot produce .+: Only German cities can run industry projects$/.test(r))).toBe(true);
-    expect(reasons.some((r) => r.startsWith('Queue item 2: ') && r.endsWith('Only German cities can run industry projects'))).toBe(true);
+    expect(reasons.some((r) => /^A cannot produce .+: Only Egyptian cities can choose Grow$/.test(r))).toBe(true);
+    expect(reasons.some((r) => r.startsWith('Queue item 2: ') && r.endsWith('Only Egyptian cities can choose Grow'))).toBe(true);
   });
 
   it('the first growth costs FIRST_GROWTH', () => {
