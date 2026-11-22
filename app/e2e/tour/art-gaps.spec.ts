@@ -68,6 +68,8 @@ for (const size of SIZES) test.describe(`art gaps ${size.name}`, () => {
       ['23-sparta-veterans', 'The veterans are honoured', [
         { type: 'VeteranRetired', player: 0, unit: 3, kind: 'Spearman', city: 1, retired: 3, of: 3 },
         { type: 'FactionGoalCompleted', player: 0, faction: 'Sparta', vp: 2 }]],
+      ['24-swiss-reserve', 'An inheritance fulfilled', [{ type: 'FactionGoalCompleted', player: 0, faction: 'Switzerland', vp: 2 }]],
+      ['25-celt-warbands', 'The warbands gather', [{ type: 'FactionGoalCompleted', player: 0, faction: 'Celts', vp: 2 }]],
     ];
     for (const [name, title, events] of cases) {
       await stageHallReport(page, events);
