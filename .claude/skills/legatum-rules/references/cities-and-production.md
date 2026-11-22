@@ -36,7 +36,12 @@ research building (Science), economy building (Gold) or combat unit (Military) o
 a value of at least 1 even when Hard would see no use for it, and other items fill in only when none of that kind can
 start (for Military, when no unit's upkeep can be funded: `troop_unfunded`). Science and Gold exclude military units altogether,
 even when a city has no garrison or a nearby enemy (`ai/production.rs::automated_choice`). Focused modes leave Settlers to Balanced,
-which uses Hard's normal choice. With no active build, the choice becomes a `SetProduction` order. If the
+which uses Hard's normal choice. **No filler (Sam, 2026-11-22, after a finished Gold city built Scouts at turn 100):**
+automation builds a Scout only under Balanced and only while unexplored land or an unseen rival city is reachable
+(`Planner::scout_explores`; Hard's information value no longer counts for a human city), and never a unit whose upgrade
+its owner has researched (`composition::obsolete`; the melee line excepted, which waits on Iron). When nothing is left to
+build, the city runs its focus's project (Gold or Science) instead of stopping at "Choose production"; Balanced and Military run Gold while the treasury's
+per-turn total is 0 or less, or once every technology is known, otherwise Science (`Planner::idle_project`). With no active build, the choice becomes a `SetProduction` order. If the
 current build is forecast to finish this turn and the queue is empty, the choice is
 queued behind it with `SetProductionQueue`. An existing player queue takes precedence.
 If the chooser finds no build for a city that needs a choice, Ready stops before turn resolution
@@ -45,7 +50,8 @@ production order handles this turn. When WASM is loaded, the city warns before R
 same chooser result. The WASM plan returns `orders` and `unchosen_cities`; a later chooser change
 can attach a per-city reason there (`wasm/src/lib.rs::city_automation_orders_json`,
 `app/src/automation.ts::cityAutomationPreview`, `app/src/turnFlow.ts::pendingDecisions`).
-An active Industry project has no completion; automation replaces it at Ready. Egypt's Grow project (rules 48) never completes either.
+**Gold and Science projects (every empire since 2026-11-22, Sam; Germany-only before).** `ProductionItem::Project {Gold|Science}` is open to every faction (`data::available_to_faction_rules`). It never completes and banks nothing; each turn it adds `RuleExperiments::project_percent(faction, project)` percent of the city's Production total (after the Nile, before decadence, rounded down) as Gold or Science (`economy.rs::yields_for_item`, label "Gold project (25% of Production)"). Rates: Germany 50% Gold / 25% Science (`data::GERMANY_*_PROJECT_PERCENT`, its faction strength; with `germany_industry_projects` switched off Germany gets everyone's rate), everyone else `data::PROJECT_GOLD_PERCENT` 25% / `PROJECT_SCIENCE_PERCENT` 10% (sim arms `project-gold=N`, `project-science=N`, 1..100). Egypt has no Production: on a project its surplus Food still becomes build progress (the Nile), and the project converts that progress. The AI runs a project only when no item has positive value and idling would waste Production past the idle cap (`production.rs::choose_item`, `idle_project`); its Gold-seeking swaps (campaign Gold clock, paused troops, India's Diwan fallback) pick a project only for Germany (`gold_swap_allows`). Egypt still prefers Grow when growth pays back within `egypt_grow_payback`. No `RULES_VERSION` bump: the save shape is unchanged and no earlier order becomes illegal, so old tapes replay identically.
+An active project has no completion; automation replaces it at Ready. Egypt's Grow project (rules 48) never completes either.
 Changing or stopping automation keeps the active item and replaces or removes an
 unstarted item that automation itself queued; manual queue edits replace that marker
 (`City.auto_queued`).
@@ -108,7 +114,7 @@ item to another (`state.rs::City::switch_production`, `production_for`; used by
 `data.rs::available_to_faction(faction, item)` is the one shared rule (production choices, the
 tech tree, the AI through its options, `app/src/data.ts::availableToFaction`).
 `data.rs::faction_unavailable_reason(item, faction)` wraps it for validation and greyed-out
-text ("Only Germany cities can run industry projects", "Only Egyptian cities can choose Grow", "Workshops, Forges and Factories do nothing for Egypt, which has no Production", otherwise "Does nothing for the X"),
+text ("Only Egyptian cities can choose Grow", "Workshops, Forges and Factories do nothing for Egypt, which has no Production", otherwise "Does nothing for the X"),
 checked first in `economy.rs::production_blocker`; such items are not listed as unavailable,
 just absent. Faction replacements are the same item under the faction's name
 (`data.rs::building_name_for`, TS `factionItemName`).
