@@ -39,9 +39,12 @@ it('lists the earlier kept turns, newest first, and goes back to the one chosen'
   expect([...host.querySelectorAll('.earlier-turn-name')].map((n) => n.textContent)).toEqual(['Turn 4', 'Turn 3', 'Turn 2', 'Turn 1']);
   const primary = () => host.querySelector<HTMLButtonElement>('.btn.primary')!;
   expect(primary().textContent).toBe('Go back to turn 4');
+  const forecast = () => host.querySelector('.earlier-turn-forecast')!.textContent;
+  expect(forecast()).toBe('Turn 4 is played again. What you did in it is lost.');
   // Turn 2 is gzipped in storage: it still opens.
   await act(async () => host.querySelectorAll<HTMLInputElement>('.earlier-turn-row input')[2].click());
   expect(primary().textContent).toBe('Go back to turn 2');
+  expect(forecast()).toBe('Turns 2 to 4 are played again. What you did in them is lost.');
   await act(async () => primary().click());
   await vi.waitFor(() => expect(rewindTo).toHaveBeenCalledOnce());
   expect(rewindTo.mock.calls[0]).toMatchObject(['g', { turn: 2 }]);

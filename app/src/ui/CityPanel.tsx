@@ -440,14 +440,18 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
     clearTimeout(flashTimer.current);
     flashTimer.current = setTimeout(() => setFlash(null), 1500);
   };
-  const buildNow = (item: ProductionItem, from?: Element | null) => {
+  /** True when it replaced the current build: that shows the G17 notice, which must not be hidden by the next decision. */
+  const buildNow = (item: ProductionItem, from?: Element | null): boolean => {
     setNotice(null);
     keepInPlace(from);
     const next = queueAfterBuild(queue, producing, item);
     // Misclick guard: replacing the current build names both, with Undo (G17).
-    if (producing && !sameItem(producing, item))
+    if (producing && !sameItem(producing, item)) {
       answerDecision(`${city.name} now builds ${itemName(item, faction)} instead of ${itemName(producing, faction)}.`, (o) => setProductionQueue(o, city.id, next), undefined, 'queue');
-    else changeQueue(next);
+      return true;
+    }
+    changeQueue(next);
+    return false;
   };
   /** Buying names the city, with Undo (G17): a buy in the wrong city is easy to miss before End Turn. */
   const buy = (item: ProductionItem, price: number | null) => answerDecision(
@@ -546,7 +550,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
       <button className="btn primary" data-primary-action disabled={view.finished || !choice || choiceBlocked}
         aria-label={choice ? `Build ${itemName(choice.item, owner?.faction)}` : 'Build'}
         aria-description={choiceBlocked ? choice!.resource_blocker! : undefined}
-        onClick={() => { if (choice) { buildNow(choice.item); advanceAfterBuild(); } }}><span>{choice?.item.kind === 'Project' ? 'Run project' : 'Build'}</span></button>
+        onClick={() => { if (choice && !buildNow(choice.item)) advanceAfterBuild(); }}><span>{choice?.item.kind === 'Project' ? 'Run project' : 'Build'}</span></button>
       {choiceBlocked && <small className="phone-action-why prod-blocked" role="note"><ResourceReason text={choice!.resource_blocker!} resource={choice!.supply_need!} /></small>}
     </div>;
   }
@@ -631,7 +635,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
         aria-disabled={resourceBlocked || undefined}
         aria-description={resourceBlocked ? `${o.resource_blocker}${o.supply_need ? ` Open ${o.supply_need} supply.` : ''}` : undefined}
         title={imp || site ? detail : undefined}
-        disabled={view.finished} onClick={(event) => { if (unplaced) { startPlace(site!.building, event.shiftKey ? 'queue' : 'build'); return; } if (resourceBlocked) { if (headOnly) { if (o.supply_need) openResourceChip(o.supply_need); return; } if (!duplicate && queue.length < 50) append(o.item, event.currentTarget); return; } if (event.shiftKey) { if (!duplicate && queue.length < 50) append(o.item, event.currentTarget); } else { buildNow(o.item, event.currentTarget); advanceAfterBuild(); } }}>
+        disabled={view.finished} onClick={(event) => { if (unplaced) { startPlace(site!.building, event.shiftKey ? 'queue' : 'build'); return; } if (resourceBlocked) { if (headOnly) { if (o.supply_need) openResourceChip(o.supply_need); return; } if (!duplicate && queue.length < 50) append(o.item, event.currentTarget); return; } if (event.shiftKey) { if (!duplicate && queue.length < 50) append(o.item, event.currentTarget); } else if (!buildNow(o.item, event.currentTarget)) advanceAfterBuild(); }}>
         <span className="prod-icons"><ItemArt item={o.item} faction={owner?.faction} size={20} />{imp && preview && <Icon name={`resource-${preview.resource.toLowerCase()}`} size={18} label={RESOURCE_INFO[preview.resource].name} />}</span>
         <span className="prod-name">{imp ? <><span className="prod-what">{improvementName(imp.improvement, preview?.resource)}</span><span className="prod-where">{improvementWhere(imp, city.pos)}</span></> : site ? <><span className="prod-what">{baseItemName(site, owner?.faction)}</span>{unplaced && !isGreatWork(site.building) && <span className="prod-where place-where">{placingHere ? 'Click a lit tile on the map' : 'Choose its tile on the map'}</span>}{!unplaced && <><span className="prod-where">{sitePlace(site.tile)}</span>{o.wonder && <span className="prod-where site-cost"><Amounts text={`gives up ${yieldsText(o.wonder.lost)}`} /></span>}</>}</> : name} {positions.length > 1
           ? <span className="queue-badge queue-count" title={`In the queue ${positions.length} times (positions ${positions.join(', ')})`}>×{positions.length}</span>

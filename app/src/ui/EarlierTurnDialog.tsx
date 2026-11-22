@@ -6,11 +6,6 @@ import './EndTurnConfirmation.css';
 import './ReplaceGameDialog.css';
 import './EarlierTurnDialog.css';
 
-const savedTime = (iso: string) => {
-  const t = new Date(iso);
-  return Number.isFinite(t.getTime()) ? t.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '';
-};
-
 /**
  * "Load an earlier turn" (local games only): the turns this browser kept for one game, newest first, below the turn
  * being left. Choosing one opens it at its start; the turns after it are discarded (store.ts rewindTo).
@@ -62,17 +57,18 @@ export function EarlierTurnDialog({ campaign, current, onClose }: { campaign: st
     {turns === null ? <p>Looking for saved turns…</p>
       : !turns.length ? <p>No earlier turn is saved yet. The game keeps the last {AUTOSAVE_SLOTS} turns.</p>
       : <>
-        <p>The game opens at the start of the turn you choose. You lose the turns after it.</p>
+        <p>You are on turn {current}. The game opens at the start of the turn you choose.</p>
         <div className="earlier-turn-list" role="radiogroup" aria-label="Saved turns">
           {turns.map((t) => (
             <label key={t.id} className={`earlier-turn-row ${t.id === chosen ? 'chosen' : ''}`}>
               <input type="radio" name="earlier-turn" checked={t.id === chosen} disabled={opening} onChange={() => setChosen(t.id)} />
               <span className="earlier-turn-name">Turn {t.turn}</span>
-              <span className="earlier-turn-when">{calendarLabel(t.turn)}{savedTime(t.savedAt) && ` · saved ${savedTime(t.savedAt)}`}</span>
+              <span className="earlier-turn-when">{calendarLabel(t.turn)}</span>
             </label>
           ))}
         </div>
       </>}
+    {pick && <p className="earlier-turn-forecast">{pick.turn === current - 1 ? `Turn ${pick.turn} is played again. What you did in it is lost.` : `Turns ${pick.turn} to ${current - 1} are played again. What you did in them is lost.`}</p>}
     {problem && <p className="earlier-turn-problem" role="alert">{problem}</p>}
     <div className="end-turn-actions">
       {pick && <button className="btn primary" disabled={opening} onClick={() => void goBack()}>{opening ? 'Opening…' : `Go back to turn ${pick.turn}`}</button>}

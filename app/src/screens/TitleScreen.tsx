@@ -3,7 +3,6 @@ import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { parseAutosave, useGame, type SaveFile } from '../store';
 import { listAutosaves, type AutosaveRecord } from '../platform/autosaveStore';
 import { ReplaceGameDialog } from '../ui/ReplaceGameDialog';
-import { EarlierTurnDialog } from '../ui/EarlierTurnDialog';
 import { pickSaveFile } from '../ui/GameMenu';
 import { DecoRule, Fan, Wordmark } from '../brand/ornaments';
 import { openGuide } from '../ui/guideState';
@@ -160,9 +159,6 @@ function MainMenu({ onMultiplayer }: { onMultiplayer: () => void }) {
   });
   // A file chosen with Load Game replaces the saved game in progress, so it asks first, like a new game does.
   const [chosen, setChosen] = useState<{ save: SaveFile; saved: { label: string; turn: number } } | null>(null);
-  const [earlier, setEarlier] = useState(false);
-  // Going back a turn from here: the newest game this browser kept, when it opens in this version.
-  const rewindable = !views && !!auto && !elsewhere && !olderAuto && usable[0] && usable[0].record.turn > 1 ? usable[0].record : null;
   const askThenLoad = async (save: SaveFile) => {
     const [newest] = await listAutosaves();
     if (newest) setChosen({ save, saved: { label: newest.faction || newest.label, turn: newest.turn } });
@@ -175,7 +171,6 @@ function MainMenu({ onMultiplayer }: { onMultiplayer: () => void }) {
     <>
       {chosen && <ReplaceGameDialog file saved={chosen.saved} onCancel={() => setChosen(null)}
         onStart={() => { const { save } = chosen; setChosen(null); void loadSave(save, true); }} />}
-      {earlier && rewindable && <EarlierTurnDialog campaign={rewindable.campaign} current={rewindable.turn} onClose={() => setEarlier(false)} />}
       <TitleNotice error={error ?? (olderAuto ? olderAutosaveMessage(auto?.playtest) : skipped !== null ? `Your latest save (turn ${skipped}) could not be opened. Continue opens turn ${auto?.turn} instead.` : null)} />
       <div className="title-actions">
         <ResumeButton />
@@ -196,10 +191,6 @@ function MainMenu({ onMultiplayer }: { onMultiplayer: () => void }) {
               : auto ? `${auto.names.join(' & ')} · turn ${auto.turn} · ${calendarLabel(auto.turn)} · ${new Date(auto.savedAt).toLocaleString()}` : records === null ? 'Looking for your game…' : 'No autosave yet'}
           </span>
         </button>
-        {rewindable && <button className="btn big quiet" disabled={!!busy} onClick={() => setEarlier(true)}>
-          Load an earlier turn…
-          <span className="btn-sub">Go back in this game</span>
-        </button>}
         <button className="btn big quiet" onClick={() => pickSaveFile(askThenLoad, (m) => set({ error: m }))}>
           Load Game…
         </button>
