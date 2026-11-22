@@ -1250,7 +1250,7 @@ fn city_names_are_unique_deterministic_and_fall_back() {
     let mut s = two_players();
     let athens = city_names(Faction::Athens);
     let template = found(&mut s, P1, at(2, 2));
-    let mut give = |s: &mut GameState, name: String| {
+    let give = |s: &mut GameState, name: String| {
         let id = CityId(10_000 + s.cities.len() as u32);
         let mut c = s.cities[&template].clone();
         c.id = id;
