@@ -17,6 +17,7 @@ import { DEFAULT_PLAYER_NAME, MAX_PLAYER_NAME, rememberPlayerName, savedPlayerNa
 import { TitleArt } from './TitleArt';
 import { usePerfOverlay } from '../ui/PerfOverlay';
 import { buildLabel } from '../buildLabel';
+import { buildTime } from '../buildTime';
 import { PRIVACY_URL, uploadsGames } from '../platform/gameUpload';
 import { isOlderVersionMessage, loadErrorMessage, olderAutosaveMessage, parseSaveFile, saveHasCurrentRules, saveRulesVersion } from '../saveErrors';
 import { buildForSave, isBehind, navigate, newestUrl, pageLaunch, takeHandedOffSave } from '../platform/versions';
@@ -61,7 +62,10 @@ export function TitleScreen() {
         </div>
       </div>
       <div className="title-foot">
-        <span>{buildLabel}</span>
+        <span className="title-build">
+          {buildTime && <span>Last updated {buildTime}</span>}
+          <span>{buildLabel}</span>
+        </span>
         <span>Explore · expand · build · compete</span>
       </div>
     </div>

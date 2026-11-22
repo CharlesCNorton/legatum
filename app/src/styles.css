@@ -706,6 +706,9 @@ dialog.settings-modal::backdrop {
   text-transform: uppercase;
   color: var(--ink-2);
 }
+/* The build's time sits above its label, the same small caps, aligned to the footer's baseline. */
+.title-foot { align-items: flex-end; }
+.title-build { display: flex; flex-direction: column; gap: 7px; }
 /* Short windows: tighten the vertical rhythm. */
 @media (max-height: 820px) {
   .title-inner::before {
