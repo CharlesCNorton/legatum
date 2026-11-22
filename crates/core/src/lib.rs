@@ -51,7 +51,8 @@ pub mod rules;
 /// 52: No rule changed. Unit, building and improvement identifiers were renamed to the PascalCase of their display names (`Soldier` is `Spearman`, `RelayUplink` is `GreatLibrary`, ...), which changes the serialized state and so every state hash. The old names still load through serde aliases (`types.rs`), for tapes, archived games and fixtures.
 /// 53: Humble the mighty: when no rival team is ahead of yours on VP, a capture from the rival team with the most VP counts (owner, 2026-11-22). The save shape is unchanged.
 /// 54: Rome and Egypt get faction goals (Sam, 2026-11-22). Rome's Colonia Victrix: a city founded by a level-3 melee veteran within two tiles of a rival's land is held 2 VP. Egypt's royal tomb (`Action::Tomb`): while it is built no Egyptian city builds or grows; after 15 turn ends of work it stands in the capital, held 2 VP. `Player` gains `colonia_city`, `tomb_work`, `tomb_turns` and `tomb_city`.
-pub const RULES_VERSION: u32 = 54;
+/// 55: The Mongols never have Walls (Sam, 2026-11-22: "no walls ever"): no Walls, Castle, Star Fort or later wall level in any era (it opened in the Medieval era before), and a city they capture loses its Walls line. Their Siege still opens in the Medieval era. The save shape is unchanged.
+pub const RULES_VERSION: u32 = 55;
 pub mod scenario;
 pub mod scoring;
 pub mod settlement;

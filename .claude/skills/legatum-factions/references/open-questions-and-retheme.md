@@ -32,7 +32,7 @@ Factions are real peoples: Switzerland = Switzerland, Mongols = Mongols, Sparta 
 
 
 ## Current Mongol rule
-The Mongols cannot build Siege Engines and cannot build Walls before the Medieval era. Siege is available from the Medieval era. See the rules reference for current details.
+The Mongols never build Walls (rules 55), and a city they capture loses its Walls. Siege is available from the Medieval era. See the rules reference for current details.
 
 - **Unit rules by class (A2, 2026-10-10):** faction unit rules now read the class, not a unit list: Sparta melee line ignores wounds; the Celts' hunter line (`data::is_hunter_kind`; Archer, Composite Archer, Crossbowman, Arquebusier; +3 ranged; Celtic Ambushers) was removed on 2026-11-06 with the Ambusher cut, and the melee −2 and the +20 cost went 2026-11-02; Byzantium Tagmatic Soldier replaces the Pikeman and the other melee units after the Spearman get +4 strength and +5 cost; Mongols cannot build any siege-class unit (Catapult, Bombard); a faction that cannot build a class (Aztecs and mounted, later) is one line in `data::faction_unavailable_reason`, its Horseman has 5 moves; Germany mounted has 3 (superseded 2026-11-06: German units move normally).
 **Open proposal (design agent, 2026-10-10; awaiting the user, not decided):** `docs/design/historical-factions/flavour-redesign-2026-10-10.md` (+ PNG card).

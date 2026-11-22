@@ -535,26 +535,22 @@ fn faction_rules_follow_the_class_through_the_lineage() {
         data::unit_stats_for(Faction::Mongols, UnitKind::Horseman).moves,
         MOUNTED_MOVES + 1
     );
-    // Mongols builds no Walls before the Medieval era (user, 2026-10-19) and buys no Siege
-    // before it; from then on both.
+    // The Mongols build no Walls in any era (rules 55; before, from the Medieval era) and buy
+    // no Siege before the Medieval era.
     let walls = ProductionItem::Building {
         building: BuildingKind::Walls,
     };
     assert!(!data::available_to_player(Faction::Mongols, 1, walls));
-    assert!(data::available_to_player(
-        Faction::Mongols,
-        data::MONGOL_WALLS_ERA,
-        walls
-    ));
+    assert!(!data::available_to_player(Faction::Mongols, 8, walls));
     assert!(!data::siege_available(Faction::Mongols, 1));
     assert!(data::siege_available(
         Faction::Mongols,
-        data::MONGOL_WALLS_ERA
+        data::MONGOL_SIEGE_ERA
     ));
     assert!(data::siege_available(Faction::Switzerland, 0));
     assert_eq!(
         data::player_unavailable_reason(walls, Faction::Mongols, 1).as_deref(),
-        Some("The Mongols raise Walls from the Medieval era")
+        Some(data::MONGOL_WALLS_REASON)
     );
     assert!(data::available_to_faction(
         Faction::Mongols,

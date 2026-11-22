@@ -1435,8 +1435,8 @@ fn a_star_fort_needs_a_castle_which_needs_walls() {
 }
 
 #[test]
-fn mongols_raises_no_walls_tier_before_the_medieval_era_and_every_tier_after() {
-    // The Mongols may raise Walls from the Medieval era.
+fn mongols_raise_no_walls_tier_in_any_era() {
+    // The Mongols never raise Walls (rules 55).
     use BuildingKind::{Castle, StarFort, Walls};
     let mut s = game(&[0, 1]);
     s.player_mut(P0).faction = Faction::Mongols;
@@ -1447,36 +1447,30 @@ fn mongols_raises_no_walls_tier_before_the_medieval_era_and_every_tier_after() {
     for building in [Walls, Castle, StarFort] {
         let item = ProductionItem::Building { building };
         assert!(
-            data::available_to_faction(Faction::Mongols, item),
+            !data::available_to_faction(Faction::Mongols, item),
             "{building:?}"
         );
         assert!(
             !data::available_to_player(Faction::Mongols, 1, item),
             "{building:?}"
         );
-        assert!(data::available_to_player(
-            Faction::Mongols,
-            data::MONGOL_WALLS_ERA,
-            item
-        ));
+        assert!(!data::available_to_player(Faction::Mongols, 8, item));
         assert_eq!(
             data::faction_excluded_building_at(Faction::Mongols, building, 1),
-            Some("The Mongols raise Walls from the Medieval era")
+            Some(data::MONGOL_WALLS_REASON)
         );
         assert_eq!(
-            data::faction_excluded_building_at(Faction::Mongols, building, 2),
-            None
+            data::faction_excluded_building_at(Faction::Mongols, building, 8),
+            Some(data::MONGOL_WALLS_REASON)
         );
         assert_eq!(
-            data::player_unavailable_reason(item, Faction::Mongols, 1).as_deref(),
-            Some("The Mongols raise Walls from the Medieval era")
+            data::player_unavailable_reason(item, Faction::Mongols, 8).as_deref(),
+            Some(data::MONGOL_WALLS_REASON)
         );
     }
-    // In a game: with every Ancient and Classical technology and the Walls techs it is the
-    // Medieval era and the line opens; with fewer it stays shut, whatever else is known.
-    let walls_techs = [TechId::Masonry, TechId::Feudalism, TechId::Machinery];
-    s.player_mut(P0).techs.extend(walls_techs);
-    assert!(s.era_of(P0) < 2);
+    // In a game: shut before the Medieval era and after it, with every technology known.
+    s.player_mut(P0).techs.extend(TechId::ALL);
+    assert!(s.era_of(P0) >= 2);
     for building in [Walls, Castle, StarFort] {
         let item = ProductionItem::Building { building };
         assert!(
@@ -1484,21 +1478,6 @@ fn mongols_raises_no_walls_tier_before_the_medieval_era_and_every_tier_after() {
             "{building:?}"
         );
         assert!(validate_city_order(&s, P0, &Order::SetProduction { city: id, item }).is_err());
-    }
-    let earlier: Vec<TechId> = (0..2).flat_map(crate::eras::era_techs).collect();
-    s.player_mut(P0).techs.extend(earlier);
-    assert_eq!(s.era_of(P0), 2);
-    s.cities.get_mut(&id).unwrap().buildings.insert(Walls);
-    s.cities.get_mut(&id).unwrap().buildings.insert(Castle);
-    for building in [Walls, Castle, StarFort] {
-        let item = ProductionItem::Building { building };
-        // Already built tiers are not offered again; the rest are.
-        let built = s.cities[&id].buildings.contains(&building);
-        assert_eq!(
-            economy::can_produce(&s, &s.cities[&id], item),
-            !built,
-            "{building:?}"
-        );
     }
     assert!(economy::can_produce(
         &s,
