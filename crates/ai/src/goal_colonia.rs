@@ -343,6 +343,10 @@ impl Planner<'_> {
             } else {
                 self.escort_sites.push(site);
                 self.move_settler(&s, site);
+                if !self.has_acted(s.id) {
+                    // Its walk would have ended in a city that locks it: it waits a turn.
+                    self.unit_order(s.id, Order::SkipUnit { unit: s.id });
+                }
             }
             if self.decision_trace.is_some() {
                 let tag = format!("unit: {:?}", s.id);
@@ -412,6 +416,31 @@ impl Planner<'_> {
             return None;
         }
         let u = u.clone();
+        let note = |p: &Self, outcome: &'static str, why: String| {
+            if p.decision_trace.is_some() {
+                let mut row = crate::DecisionOption::new(
+                    "colonia",
+                    format!("unit={:?} lock city at {to:?}", u.id),
+                    outcome,
+                );
+                row.gate = Some(why);
+                p.note_option(row);
+            }
+        };
+        // The founder's own Colonia walk (a retreat home included) never ends in such a city,
+        // and a city it stood aside from this turn is not entered behind its substitute.
+        if self.colonia_founder == Some(unit) || self.colonia_aside.contains(&to) {
+            note(
+                self,
+                "stood_aside",
+                if self.colonia_founder == Some(unit) {
+                    "the founder's walk does not end in a city that would lock it".into()
+                } else {
+                    "the founder already stood aside from this city this turn".into()
+                },
+            );
+            return Some(false);
+        }
         let others: Vec<UnitView> = self
             .own_melee()
             .filter(|m| m.id != unit && !self.has_acted(m.id) && !self.colonia_reserved(m))
@@ -431,17 +460,6 @@ impl Planner<'_> {
         let near = others
             .iter()
             .any(|m| m.pos.distance(to) <= 2 * m.max_moves.max(1));
-        let note = |p: &Self, outcome: &'static str, why: String| {
-            if p.decision_trace.is_some() {
-                let mut row = crate::DecisionOption::new(
-                    "colonia",
-                    format!("unit={:?} lock city at {to:?}", u.id),
-                    outcome,
-                );
-                row.gate = Some(why);
-                p.note_option(row);
-            }
-        };
         if let Some(m) = substitute {
             note(
                 self,
@@ -451,6 +469,7 @@ impl Planner<'_> {
                     m.id
                 ),
             );
+            self.colonia_aside.push(to);
             return Some(self.unit_order(m.id, Order::MoveUnit { unit: m.id, to }));
         }
         let turn = self.view().turn;
@@ -464,6 +483,7 @@ impl Planner<'_> {
             if !self.campaigns.colonia_waits.contains(&(to, turn)) {
                 self.campaigns.colonia_waits.push((to, turn));
             }
+            self.colonia_aside.push(to);
             note(
                 self,
                 "stood_aside",

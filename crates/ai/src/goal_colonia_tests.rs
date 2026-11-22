@@ -348,6 +348,27 @@ fn another_unit_takes_the_capture_that_would_lock_the_founder() {
         !p.has_acted(UnitId(1)),
         "the founder stays free to fight in the field"
     );
+    // A later pass sending it into the same city again does not walk it in behind unit 10.
+    assert!(!p.unit_order(
+        UnitId(1),
+        Order::MoveUnit {
+            unit: UnitId(1),
+            to: RIVAL
+        }
+    ));
+    assert!(!moves_to(&p, 1, RIVAL));
+    // The Colonia's own walk (here a retreat home) never ends there, and hands no one else
+    // the founder's move (seed 9000 game 301: the walk home became another unit's march).
+    let mut p = hard(&v);
+    p.colonia_founder = Some(UnitId(1));
+    assert!(!p.unit_order(
+        UnitId(1),
+        Order::MoveUnit {
+            unit: UnitId(1),
+            to: RIVAL
+        }
+    ));
+    assert!(p.orders.is_empty(), "{:?}", p.orders);
     // A move that locks nobody is untouched.
     let mut p = hard(&v);
     let field = RIVAL.neighbors()[0].neighbors()[0];

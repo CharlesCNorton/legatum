@@ -1154,6 +1154,9 @@ pub(crate) struct Planner<'a> {
     pub(crate) roman_founder: Option<UnitId>,
     /// Gene `rome_colonia`: the Roman veteran sent to found the Colonia Victrix this turn.
     pub(crate) colonia_founder: Option<UnitId>,
+    /// Gene `rome_colonia`: cities the would-be founder stood aside from this turn
+    /// (`colonia_lock_guard`): it does not follow another unit in.
+    pub(crate) colonia_aside: Vec<Hex>,
     /// Gold not yet committed this turn.
     pub gold_left: i32,
     /// A funded objective may save toward its next purchase after emergency defense.
@@ -1344,6 +1347,7 @@ impl<'a> Planner<'a> {
             escort_sites: Vec::new(),
             roman_founder: None,
             colonia_founder: None,
+            colonia_aside: Vec::new(),
             gold_left: view.economy.gold,
             faction_goal_savings: 0,
             siege_savings: 0,
