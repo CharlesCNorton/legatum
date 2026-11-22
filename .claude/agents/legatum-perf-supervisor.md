@@ -75,9 +75,10 @@ should be looking out for proactively?" Yes: this class is the first thing to hu
   load, archive, the upload copy, memory. Run it nightly when crates changed and compare the last rows
   (turn 200+) with the ledger; a cost that grows faster than the game does is a finding even when today's
   number is small. In the browser, `?perf=1` marks each End Turn step (`measureTurn` in `app/src/store.ts`).
-- **Where to look next** (known suspects, cross off with a measurement): map draw at device pixel ratio 2
-  (fill cost scales with pixels: Sam's turn-141 game still showed pointer lag there after the first fix);
-  the engine save going through a JSON value tree; the save text being escaped again inside the autosave
+- **Where to look next** (known suspects, cross off with a measurement): map draw at device pixel ratio 2 on a
+  real screen (the headless leftover was hover redrawing the whole map, fixed 2026-11-22, plus software
+  rendering, which says nothing about a GPU: judge it from players' `frame_times` at high `canvas_mp10`); new
+  terrain chunks while panning at DPR 2 (four times the chunks per screen); the engine save going through a JSON value tree; the save text being escaped again inside the autosave
   envelope; the 1.2 MB view parsed per seat per turn; report, notice and history lists that only grow;
   anything in `app/src` that maps over `view.units`, `view.cities` or `view.tiles` inside a render or a
   pointer handler; AI planning per unit pair.
@@ -134,6 +135,9 @@ CI about 15 minutes on 4 cores (after PR #14).
   turns (about 1 s native by turn 220, on the main thread, for any player who typed a name) and two engine
   saves per turn (47 ms each natively at 1.7 MB). Neither showed in any benchmark, because every benchmark
   measured a turn, not what happens around it. Fixed by resuming the replay and reusing the save.
+- 2026-11-22: headless Chromium has no GPU, so at DPR 2 most of a frame is the browser copying the whole canvas
+  (`Commit`, `SoftwareRenderer`), whatever we draw. In the cloud, count work (full against clipped map draws,
+  chunk renders) and compare runs on the same DPR; never call a retina screen slow or smooth from it.
 - 2026-11-22 (user): this agent always runs on Fable.
 - 2026-11-21: performance used to be sections of the ops supervisor and lapsed after late October
   (last sim baseline 10-31, AI turn budget 10-27, app size 10-23) because the run grew into fleet
