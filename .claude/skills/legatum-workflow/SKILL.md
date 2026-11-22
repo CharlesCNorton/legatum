@@ -43,6 +43,7 @@ Current rules only, one line each with the date and who. Detail, the user's full
 - Number anything that needs his answer so he can reply by number (user, 2026-11-21).
 - Be a thought partner: recommend with reasons, push back when evidence says so, offer alternatives to his ideas, and say plainly when an earlier claim was wrong (user, 2026-10-31).
 - Decide on judgement; ask only when genuinely unsure (user, 2026-10-31).
+- Never ask him to capture data by hand (screenshots of the frame-rate readout, game exports): his games upload themselves with per-turn `frame_times`; fetch them, and add telemetry (nothing that identifies a player or device) when a report needs data the game does not record yet (user, 2026-11-22).
 - Talk in plain language with concrete numbers and a one-line takeaway (user, 2026-10-09).
 - Parallelize to the maximum and estimate in wall-clock hours at parallel speed; name the critical path; never quote human-team days (user, 2026-11-21).
 - Never idle the AI work while waiting for a playtest (user, 2026-10-29/30). Long paid runs show interim evidence (user, 2026-10-09).
@@ -69,7 +70,7 @@ Current rules only, one line each with the date and who. Detail, the user's full
 ## AI work
 
 - Read `docs/status/state-of-the-ai.md` before any AI work and update it with every AI landing (user, 2026-11-06).
-- Judge AI work by his games first: the designer-seat score from the hill-climb suite (`tools/hill-climb/`), then short paired scenarios (`tools/sim/scenario-gate.sh`), then large censuses (user, 2026-10-31; 2026-11-09).
+- Judge AI work by his games first: the designer-seat score from the hill-climb suite (`tools/hill-climb/`), then short paired scenarios (`tools/sim/scenario-gate.sh`), then large censuses (user, 2026-10-31; 2026-11-09). A census summary reports win rates plus median end turn, ending shares and the World War share, and each record carries `max_era` (`crates/sim/src/stats.rs`; absent in older reports, meaning unknown, not Ancient). With more factions than seats, use `--rotate-factions` with explicit rosters so every faction plays equal seats (`docs/sim-results/2026-11-22-census-eleven-factions-rules50.md`).
 - Measure AI changes seat-only and opponents-only on the same maps and salts (user, 2026-10-10).
 - Any branch that changes units, buildings, techs, factions or rules ships with AI support for the new content (lead, 2026-10-11).
 - AI improvement is compute-heavy and token-light; explore strategies, not only tune numbers (user, 2026-10-18, 2026-10-26).
