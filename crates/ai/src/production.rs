@@ -1531,7 +1531,7 @@ impl Planner<'_> {
     /// saves a falling city can itself be what tips net gold negative this turn (a bought
     /// unit's upkeep is paid the same turn it completes). Re-check after every purchase
     /// this turn is decided, using existing units (never the one just bought).
-    fn disband_if_this_turn_overspent(&mut self) {
+    pub(crate) fn disband_if_this_turn_overspent(&mut self) {
         // `gold_per_turn.total` already deducted upkeep for the units that existed at the
         // start of this turn (`view.units`, unaffected by ctx mutations below); credit that
         // back and charge the current count (after any disbands so far) plus this turn's
@@ -1546,9 +1546,14 @@ impl Planner<'_> {
         let original_upkeep = self.military_upkeep_at(original);
         let current = self.upkeep_unit_count();
         let projected_upkeep = self.military_upkeep_at(current + self.planned_military_purchases());
-        let projected = self.gold_left + self.view().economy.gold_per_turn.total + original_upkeep
-            - projected_upkeep
-            + self.campaign_income_delta();
+        let projected =
+            if self.difficulty == AiDifficulty::Hard && self.decisions.treasury_build_guard > 0 {
+                self.gold_left + self.planned_net_gold(0)
+            } else {
+                self.gold_left + self.view().economy.gold_per_turn.total + original_upkeep
+                    - projected_upkeep
+                    + self.campaign_income_delta()
+            };
         self.settle_insolvency(-projected);
     }
 
@@ -3208,6 +3213,13 @@ impl Planner<'_> {
     /// Gold runway once its upkeep is paid. A city defending itself is
     /// never held back.
     pub(crate) fn troop_unfunded(&self, ci: usize, c: &CityView, unit: UnitKind) -> bool {
+        if self.difficulty == AiDifficulty::Hard
+            && self.decisions.treasury_build_guard > 0
+            && legatum_core::data::pays_upkeep(unit)
+            && self.planned_runway(1) == Some(0)
+        {
+            return true;
+        }
         if self.faction == Faction::India
             && legatum_core::data::pays_upkeep(unit)
             && (self.difficulty != legatum_core::AiDifficulty::Hard
@@ -7807,6 +7819,9 @@ mod india_office_tests {
         let mut planner =
             Planner::new(&view, Knobs::for_faction(Faction::India), Faction::India, 7);
         planner.difficulty = legatum_core::AiDifficulty::Hard;
+        // The treasury is empty and losing Gold, so `treasury_build_guard` would refuse the troop
+        // whatever the front says; this test is about the front exception alone.
+        planner.decisions.treasury_build_guard = 0;
         assert!(planner.assessed_border_threat(city.pos));
         planner.decisions.india_prewar_guard = 0;
         assert!(!planner.funding_front(0, city));
@@ -7814,6 +7829,9 @@ mod india_office_tests {
         planner.decisions.india_prewar_guard = 1;
         assert!(planner.funding_front(0, city));
         assert!(!planner.troop_unfunded(0, city, UnitKind::Spearman));
+        // With the guard on, a troop this turn cannot pay for is refused even at the front.
+        planner.decisions.treasury_build_guard = 1;
+        assert!(planner.troop_unfunded(0, city, UnitKind::Spearman));
     }
 
     #[test]
@@ -7829,11 +7847,15 @@ mod india_office_tests {
         let mut planner =
             Planner::new(&view, Knobs::for_faction(Faction::India), Faction::India, 7);
         planner.difficulty = legatum_core::AiDifficulty::Hard;
+        // As above: the empty, losing treasury would trip `treasury_build_guard` on its own.
+        planner.decisions.treasury_build_guard = 0;
         assert!(planner.funding_front(0, city));
         planner.decisions.india_emergency_defense = 0;
         assert!(planner.troop_unfunded(0, city, UnitKind::Spearman));
         planner.decisions.india_emergency_defense = 1;
         assert!(!planner.troop_unfunded(0, city, UnitKind::Spearman));
+        planner.decisions.treasury_build_guard = 1;
+        assert!(planner.troop_unfunded(0, city, UnitKind::Spearman));
     }
 }
 
