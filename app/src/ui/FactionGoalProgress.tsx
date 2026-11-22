@@ -92,10 +92,10 @@ function ColoniaGoalRow({ view }: { view: PlayerView }) {
       <h3>{goal.name}</h3>
       <VpSeal vp={factionGoalVp('Rome')} />
     </Tip>
-    <p className="goal-action-note goal-action-progress" data-testid="colonia-progress">{ordered ? 'Ordered: your veteran founds it when the turn ends' : label}</p>
+    <p className="goal-action-note goal-action-progress colonia-status" data-testid="colonia-progress">{ordered ? 'Ordered: your veteran founds it when the turn ends' : label}</p>
     {state === 'before' && <span className="faction-goal-meter" role="progressbar" aria-label={`${goal.name}: ${label}`} aria-valuemin={0} aria-valuemax={p.target} aria-valuenow={Math.min(p.value, p.target)}><i style={{ width: `${Math.min(100, 100 * p.value / Math.max(1, p.target))}%` }} /></span>}
     {state === 'ready' && founder !== null && <button className="btn goal-action-btn" onClick={() => useGame.getState().select({ kind: 'unit', id: founder }, true)}>Select the veteran</button>}
     {(state === 'held' || state === 'lost') && standing && <button className="link" onClick={() => useGame.getState().jumpTo(standing.at)}>Show on map</button>}
-    {state === 'before' && <p className="goal-action-why">Promote a melee unit to level {view.actions?.colonia?.level ?? 3}. {COLONIA_SITE_RULE}</p>}
+    {state === 'before' && <p className="goal-action-why colonia-why">Promote a melee unit to level {view.actions?.colonia?.level ?? 3}. {COLONIA_SITE_RULE}</p>}
   </section>;
 }

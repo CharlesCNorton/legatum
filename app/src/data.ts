@@ -614,7 +614,7 @@ export const FACTION_GOAL: Record<Faction, FactionGoal> = {
     name: 'The Royal Tomb', live: goalLive('Egypt'), held: goalHeld('Egypt'), heldItem: 'its city', icon: 'goal-royal-tomb', action: 'Build the Royal Tomb',
     rule: () => `Build the Royal Tomb: ${RULES.tombTurns} turns in which no city builds or grows. Whoever holds its city scores ${goalVp('Egypt')} VP`,
     ask: () => `Build the Royal Tomb: ${RULES.tombTurns} turns in which no city builds or grows`,
-    detail: () => `While you build it, none of your cities builds or grows; Gold, Science and Gold purchases go on. After ${RULES.tombTurns} turns of work it stands in your capital (or your largest city). You may pause, and the count is kept. Whoever holds its city scores ${goalVp('Egypt')} VP; capture takes the points. If the city is razed, build another`,
+    detail: () => `While you build it, none of your cities builds or grows. Gold and Science go on, and you can still buy with Gold. After ${RULES.tombTurns} turns of work it stands in your capital (or your largest city). You may pause, and the count is kept. Whoever holds its city scores ${goalVp('Egypt')} VP; capture takes the points. If the city is razed, build another`,
   },
   Aztecs: SWARM_GOAL,
   Switzerland: {
@@ -667,7 +667,7 @@ export const FACTION_GOAL: Record<Faction, FactionGoal> = {
     name: 'Colonia Victrix', live: goalLive('Rome'), held: goalHeld('Rome'), heldItem: 'its city', icon: 'goal-colonia',
     rule: () => `Found a city with a level ${RULES.coloniaLevel} melee veteran within ${RULES.coloniaBorderReach} tiles of a rival's land. Whoever holds it scores ${goalVp('Rome')} VP`,
     ask: () => `Found a city with a level ${RULES.coloniaLevel} melee veteran within ${RULES.coloniaBorderReach} tiles of a rival's land`,
-    detail: () => `Found a city with a melee veteran of level ${RULES.coloniaLevel} or higher, on a site within ${RULES.coloniaBorderReach} tiles of land a rival owns: that city is your Colonia Victrix. One stands at a time. Whoever holds it scores ${goalVp('Rome')} VP; capture takes the points. If it is razed, found another`,
+    detail: () => `Found a city with a melee veteran of level ${RULES.coloniaLevel} or higher, within ${RULES.coloniaBorderReach} tiles of a rival's land: it is your Colonia Victrix. One stands at a time. Whoever holds it scores ${goalVp('Rome')} VP; capture takes the points. If it is razed, found another`,
   },
 };
 

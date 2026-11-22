@@ -29,6 +29,10 @@
   .goal-action-btn .kbd { display: none; }
   .goal-action-note, .goal-action-why { flex: 1 0 100%; line-height: 1.25; }
   .goal-action.ordered .goal-action-note { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  /* Rome's Colonia row has no action button, so its status line is the row: it stays, held or lost alike. The rule
+     under it moves to the medallion's hover. */
+  .goal-action .goal-action-progress.colonia-status { display: block; position: static; width: auto; height: auto; overflow: visible; clip-path: none; white-space: normal; flex: 1 1 calc(100% - 44px); min-width: 0; color: var(--ink-2); }
+  .goal-action .colonia-why { display: none; }
 }
 
 /* ---- the confirm ---- */
