@@ -174,7 +174,7 @@ pub const SCIENCE_HISTORY_TURNS: usize = 10;
 /// The Heir's Production cost (provisional, to calibrate): expensive on purpose, and the Byzantium
 /// can keep only one (`goals`).
 pub const HEIR_COST: i32 = 800;
-/// The Courier Hall's Production cost (provisional, to calibrate): pricey, one per Mongols
+/// The Yam Relay Station's Production cost (provisional, to calibrate): pricey, one per Mongols
 /// empire, and it opens the holder's whole land to every empire.
 pub const YAM_RELAY_STATION_COST: i32 = 600;
 /// Roadworks: Production cost, and the range in hexes of the cities its city is linked to.
@@ -1353,7 +1353,7 @@ pub fn is_panzer_rules(off: FactionRuleSet, faction: Faction, kind: UnitKind) ->
 }
 
 /// Buildings a faction can never construct, with the reason shown in choices and validation.
-/// The Sparta alone can build the War Shrine.
+/// The Sparta alone can build the Agoge.
 pub fn faction_excluded_building(faction: Faction, building: BuildingKind) -> Option<&'static str> {
     match (faction, building) {
         (f, BuildingKind::Agoge) if f != Faction::Sparta => Some("Only Sparta can build an Agoge"),
@@ -1417,9 +1417,8 @@ pub fn available_to_faction_rules(
         ProductionItem::Project {
             project: crate::IndustryProject::Grow,
         } => faction == Faction::Egypt && !off.contains(FactionRule::EgyptNile),
-        ProductionItem::Project { .. } => {
-            faction == Faction::Germany && !off.contains(FactionRule::GermanyIndustryProjects)
-        }
+        // Every empire can run a Gold or Science project (Sam, 2026-11-22); Germany's rate is better.
+        ProductionItem::Project { .. } => true,
         ProductionItem::Unit {
             unit: UnitKind::HeirToTheThrone,
         } => faction == Faction::Byzantium,
@@ -1584,6 +1583,10 @@ pub fn building_name(kind: BuildingKind) -> &'static str {
 /// faction selects the piece; modifiers are applied exactly once, here.
 pub const GERMANY_GOLD_PROJECT_PERCENT: i32 = 50;
 pub const GERMANY_SCIENCE_PROJECT_PERCENT: i32 = 25;
+/// Every other empire's Gold and Science projects (Sam, 2026-11-22: a finished city needs something
+/// useful to do, at a much steeper loss than Germany's). Sim arms: `project-gold=N`, `project-science=N`.
+pub const PROJECT_GOLD_PERCENT: u16 = 25;
+pub const PROJECT_SCIENCE_PERCENT: u16 = 10;
 
 pub fn unit_moves_for(faction: Faction, kind: UnitKind) -> i32 {
     unit_moves_for_rules(FactionRuleSet::EMPTY, faction, kind)
@@ -1700,7 +1703,7 @@ pub fn building_stats_for_rules(
         }
         _ => {}
     }
-    // The Hall's price is its own goal cost.
+    // The Station's price is its own goal cost.
     s
 }
 
@@ -1881,7 +1884,6 @@ pub fn faction_unavailable_reason(item: ProductionItem, faction: Faction) -> Opt
         {
             "Workshops, Forges and Factories do nothing for Egypt, which has no Production".into()
         }
-        ProductionItem::Project { .. } => "Only German cities can run industry projects".into(),
         ProductionItem::Building {
             building: BuildingKind::RiceStorehouse,
         } => "No people can build the Rice Storehouse yet".into(),
@@ -1920,12 +1922,6 @@ pub fn player_unavailable_reason_rules(
 ) -> Option<String> {
     if available_to_player_rules(off, faction, era, item) {
         return None;
-    }
-    if matches!(item, ProductionItem::Project { project } if project != crate::IndustryProject::Grow)
-        && faction == Faction::Germany
-        && off.contains(FactionRule::GermanyIndustryProjects)
-    {
-        return Some("Industry projects are switched off".into());
     }
     if faction == Faction::Mongols && is_mongol_gated(item) {
         return Some(MONGOL_WALLS_REASON.into());

@@ -9,7 +9,7 @@ import type { BuildingKind, CityView, Faction, Order, PlayerView, ProductionItem
 import { comparisonSentence, pieceAgainst, pieceComparison } from '../pieceCompare';
 import { PieceVsLine } from './PieceVs';
 import { razeLossLines, razeLosses, razeWorkText } from '../razeLosses';
-import { BUILDING_NAME, BUILDING_STATS, TERRAIN_NAME, FIRST_GROWTH, GROWTH_BASE, GROWTH_PER_POP, WORK_RADIUS, GERMANY_PROJECT_GOLD_PERCENT, GERMANY_PROJECT_SCIENCE_PERCENT, costInFactionYield, costYield, isGrow, greatWorkRules, greatWorkRequirement, GREAT_WORKS, isGreatWork, isProductionBuilding, TECH_NAME, CAPTURE_RESISTANCE_TURNS, itemCardText, itemDescription, itemSummary, moreText, itemKey, itemName as baseItemName, IMPROVEMENT_INFO, sameItem, buildingFamily, RULES, HORSE_MOUNTED } from '../data';
+import { BUILDING_NAME, BUILDING_STATS, TERRAIN_NAME, FIRST_GROWTH, GROWTH_BASE, GROWTH_PER_POP, WORK_RADIUS, projectPercent, costInFactionYield, costYield, isGrow, greatWorkRules, greatWorkRequirement, GREAT_WORKS, isGreatWork, isProductionBuilding, TECH_NAME, CAPTURE_RESISTANCE_TURNS, itemCardText, itemDescription, itemSummary, moreText, itemKey, itemName as baseItemName, IMPROVEMENT_INFO, sameItem, buildingFamily, RULES, HORSE_MOUNTED } from '../data';
 import { effectiveProduction, errorsWhere, orderCity, productionQueue, queueAfterBuild, setProductionQueue, toggleBuy } from '../orders';
 import { distance, hexEq, tileIndex } from '../hex';
 import { WONDER_INFO, WONDER_PERCENT, cityWonders, wonderArt, wonderBonusSentence, wonderYieldWord } from '../wonders';
@@ -346,7 +346,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
       const turns = Math.max(1, Math.ceil((d.growth_threshold - d.food_stored) / gain));
       return `Grows in ${turns} turn${turns === 1 ? '' : 's'}`;
     }
-    return `+${Math.floor(y.total.production * (item.project === 'Gold' ? GERMANY_PROJECT_GOLD_PERCENT : GERMANY_PROJECT_SCIENCE_PERCENT) / 100)} ${item.project}/turn`;
+    return `+${Math.floor(Math.max(0, y.total.production) * projectPercent(owner?.faction, item.project) / 100)} ${item.project}/turn`;
   };
   const growOption = owner?.faction === 'Egypt' ? d.options.find((o) => isGrow(o.item)) ?? null : null;
   const nileSurplus = egyptBuilding ? -(yields.sources.find((src) => src.label.startsWith('The Nile: surplus Food builds'))?.yields.food ?? 0) : 0;
@@ -371,7 +371,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
   const claimTip = claim ? <Tip content={<span data-testid="claim-rule">
     <Amounts text={`Ring ${claim.ring}. ${claim.worked ? `Worked as soon as it is claimed: ${claim.effect}.` : claim.handoffTo ? `Beyond ${WORK_RADIUS} tiles from this city: ${claim.handoffTo} takes over and works it at the end of the turn.` : `Beyond ${WORK_RADIUS} tiles from the city: claimed but not worked. It keeps rivals out.`} `} />
     {`Claims the nearest ring first, then the best tile for your focus (${yields.focus}${focusReason.startsWith('building') ? `, from ${focusReason}` : `, ${focusReason}`}). `}
-    {`${yields.focus} is this city's focus, and you never set it by hand. It follows what the city builds: Soldiers and world wonders favour Production, a Settler at population 1 favours Food. ${TILE_PRIORITY_INFO[yields.focus]}`}
+    {`${yields.focus} is this city's focus, and you never set it by hand. It follows what the city builds: military units and world wonders favour Production, a Settler at population 1 favours Food. ${TILE_PRIORITY_INFO[yields.focus]}`}
     {pendingQueue && ' Preview after Ready.'}
   </span>}>{claim.text}</Tip> : null;
   // Under the bar: what the claim adds, as icons with counts (or that it only blocks rivals).
@@ -411,7 +411,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
     </div>
   );
   const faction = owner?.faction;
-  // The Mongols's Courier Hall in its own city: a greyed card too, so the Hall reads as built where it is bought.
+  // The Mongols's Yam Relay Station in its own city: a greyed card too, so the Station reads as built where it is bought.
   const hallHere = city.owner === view.me && faction === 'Mongols' && d.buildings.includes('YamRelayStation');
   const unavailable: UnavailableOption[] = [...(d.unavailable ?? []), ...(hallHere && !(d.unavailable ?? []).some((u) => sameItem(u.item, { kind: 'Building', building: 'YamRelayStation' })) ? [{ item: { kind: 'Building' as const, building: 'YamRelayStation' as const }, cost: 0, reason: `The Yam Relay Station already stands in ${city.name}`, production_banked: 0 }] : [])];
   const listOptions = d.options;
@@ -1010,7 +1010,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
         </div> : renderUnavailable(r.unavailable))}{permanentLine(listUnavailable.filter((u) => u.item.kind === 'Unit'), listOptions.filter((o) => o.item.kind === 'Unit')) && <p className="prod-faction-rule" role="note">{permanentLine(listUnavailable.filter((u) => u.item.kind === 'Unit'), listOptions.filter((o) => o.item.kind === 'Unit'))}</p>}
       </div>
       {hire}
-      {owner?.faction === 'Germany' && <><div className="cp-sub">Industry projects</div><div className="prod-list">{d.options.filter((o) => o.item.kind === 'Project').map((o) => renderOption(o))}</div></>}
+      {d.options.some((o) => o.item.kind === 'Project' && !isGrow(o.item)) && <><div className="cp-sub">Projects</div><div className="prod-list">{d.options.filter((o) => o.item.kind === 'Project' && !isGrow(o.item)).map((o) => renderOption(o))}</div></>}
       <div className="cp-sub">Buildings</div>
       {idleNote}
       <div className={`prod-list ${producing ? '' : 'choosing'}`}>{renderBuildingPicker(listOptions.filter((o) => o.item.kind === 'Building'), listUnavailable.filter((u) => u.item.kind === 'Building'))}</div>

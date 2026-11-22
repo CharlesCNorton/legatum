@@ -5,7 +5,7 @@
 // wording. Ratings and the lore paragraph are new presentation, not duplicates of anything.
 import {
   FLOWER_WARS, AZTEC_NO_HORSES, BUILDING_STATS, INDIA_CAPITAL_RADIUS, INDIA_NETWORK_PERCENT_PER_CITY, INDIA_NETWORK_RADIUS, INDIA_YIELD_PERCENT_PER_HEX,
-  GERMANY_PROJECT_GOLD_PERCENT, GERMANY_PROJECT_SCIENCE_PERCENT, EGYPT_NILE_BUILD_PERCENT,
+  GERMANY_PROJECT_GOLD_PERCENT, GERMANY_PROJECT_SCIENCE_PERCENT, PROJECT_GOLD_PERCENT, PROJECT_SCIENCE_PERCENT, EGYPT_NILE_BUILD_PERCENT,
   KESHIG_KIND, RULES, SPECIAL_UNIT, TECH_NAME, UNIT_NAME, UNIT_STATS, specialUnitEdge, specialUnitName, companyRule, THIN_LEVIES, factionGoalVp, itemName, swissInterestRule, swissTollRule, SWISS_CHEAP_BUYS, SWISS_CAPTURE_RULE, unitStatsFor,
 } from './data';
 import { pieceAgainst } from './pieceCompare';
@@ -13,8 +13,6 @@ import type { BuildingKind, Faction, ProductionItem, TechId } from './types';
 
 /** Tiles from the capital at which an Indian city's Food, Gold and Science reach zero. */
 const indiaZeroAt = INDIA_CAPITAL_RADIUS + 100 / INDIA_YIELD_PERCENT_PER_HEX;
-/** Germany's Industry project shares in words (half, a quarter), falling back to a percentage. */
-const share = (percent: number) => ({ 50: 'half', 25: 'a quarter' } as Record<number, string>)[percent] ?? `${percent}%`;
 const keshig = unitStatsFor('Mongols', KESHIG_KIND);
 /** The row for a faction's special unit: what it replaces and the edge that sets it apart (the Guide prints it; the sheet shows the unit's card instead). */
 const specialRow = (faction: Faction, icon: string): FactionPair =>
@@ -169,7 +167,7 @@ export const FACTION_SHEETS: Record<Faction, FactionSheet> = {
       { strength: 'Ruhr Foundry: +6 Production (a Forge gives +3).', strengthIcon: 'building-foundry', onCard: true },
       { price: 'Each Production building in a German city costs 1 Food.', priceIcon: 'yield-food' },
       { strength: 'Your strategic deposits supply twice as much.', strengthIcon: 'resource-iron' },
-      { strength: `A city can work on an Industry project instead of building: each turn it turns ${share(GERMANY_PROJECT_GOLD_PERCENT)} of its Production into Gold, or ${share(GERMANY_PROJECT_SCIENCE_PERCENT)} into Science.`, strengthIcon: 'yield-gold' },
+      { strength: `Your Gold and Science projects turn ${GERMANY_PROJECT_GOLD_PERCENT}% and ${GERMANY_PROJECT_SCIENCE_PERCENT}% of a city’s Production into Gold and Science. Other empires get ${PROJECT_GOLD_PERCENT}% and ${PROJECT_SCIENCE_PERCENT}%.`, strengthIcon: 'yield-gold' },
       specialRow('Germany', 'unit-panzer'),
     ],
     counteredBy: 'Attack early, before their Production builds up.',
@@ -201,7 +199,7 @@ export const FACTION_SHEETS: Record<Faction, FactionSheet> = {
     lore: 'Spartan citizens trained for war through the agoge and fought in disciplined hoplite formations, supported by coerced helot labour.',
     ratings: { aggression: 5, economy: 1, complexity: 3 },
     pairs: [
-      { strength: `Your military units start at level 1, gain XP 50% faster and can reach level 6, Spartan Veteran. Each level adds ${RULES.promotion.strengthPercent}% to a unit’s strength.`, strengthIcon: 'unit-oathbearer' },
+      { strength: `Your military units start at level 1, gain XP 50% faster and can reach level 6, Spartan Veteran. Each level adds ${RULES.promotion.strengthPercent}% to a unit’s strength.`, strengthIcon: 'unit-spartanhoplite' },
       { strength: 'Destroying an enemy unit restores up to 100 HP, shared among your units that hit it. Capturing a city fully heals your military units within 2 tiles.', strengthIcon: 'mark-heal' },
       { price: 'Settlers and non-military buildings cost 50% more Production. Walls, Castles, Star Forts and the Agoge cost the normal price.', priceIcon: 'unit-settler' },
     ],
@@ -213,7 +211,7 @@ export const FACTION_SHEETS: Record<Faction, FactionSheet> = {
     ratings: { aggression: 1, economy: 4, complexity: 2 },
     pairs: [
       { strength: 'Every ruin also gives you 20 Science.', price: `Your Markets give +1 Gold a turn instead of +3, at the normal ${BUILDING_STATS.Market.cost} Production.`, strengthIcon: 'ruin', priceIcon: 'building-market' },
-      { strength: 'The Lyceum replaces the Library and gives +6 Science a turn.', strengthIcon: 'building-listeninghouse', onCard: true },
+      { strength: 'The Lyceum replaces the Library and gives +6 Science a turn.', strengthIcon: 'building-lyceum', onCard: true },
       { price: 'A rival that captures one of your cities gets one free technology (once per city for each rival).', priceIcon: 'ui-trend-down' },
       specialRow('Athens', 'unit-peltast'),
     ],

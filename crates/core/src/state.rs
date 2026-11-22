@@ -63,6 +63,11 @@ pub struct GameSetup {
     /// serializes exactly as before, so old tapes and hashes are unchanged.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub barbarians: bool,
+    /// The teams with no human seat start in Alliances of two (`GameSetup::ai_alliance_pairs`).
+    /// The app's Co-op preset turns it on. Omitted when false, so every existing setup, save,
+    /// tape and hash is unchanged.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub ai_alliances: bool,
 }
 
 impl GameSetup {
@@ -70,6 +75,36 @@ impl GameSetup {
     /// Egypt and Rome are available through explicit seats, including the app's faction picker.
     fn seeded_faction_pool() -> Vec<Faction> {
         Faction::ALL[..9].to_vec()
+    }
+
+    /// The Alliances the AI-only teams start in when `ai_alliances` is on: the teams with no
+    /// human seat, put in a seeded order (`rng::seeded_order`, so the same seed gives the same
+    /// pairs and the order the seats are listed in doesn't matter), then taken two at a time.
+    /// An odd team out stays unallied. Each pair has the lower team id first. Empty when off.
+    pub fn ai_alliance_pairs(&self) -> Vec<(TeamId, TeamId)> {
+        if !self.ai_alliances || self.legacy_all_war {
+            return Vec::new();
+        }
+        let humans: std::collections::BTreeSet<TeamId> = self
+            .players
+            .iter()
+            .filter(|p| p.is_human)
+            .map(|p| p.team)
+            .collect();
+        let ai_teams: std::collections::BTreeSet<TeamId> = self
+            .players
+            .iter()
+            .map(|p| p.team)
+            .filter(|t| !humans.contains(t))
+            .collect();
+        let ai_teams: Vec<TeamId> = ai_teams.into_iter().collect();
+        let order =
+            crate::rng::seeded_order(self.seed, &[crate::rng::purpose::AI_ALLIANCES], &ai_teams);
+        let (pairs, _odd_team_out) = order.as_chunks::<2>();
+        pairs
+            .iter()
+            .map(|[a, b]| crate::diplomacy::pair(*a, *b))
+            .collect()
     }
 
     /// The standard game: two humans on team 0, six AIs on their own teams.
@@ -116,6 +151,7 @@ impl GameSetup {
             players,
             turn_limit: None,
             legacy_all_war: false,
+            ai_alliances: false,
             barbarians: true,
             rule_experiments: Default::default(),
         }
@@ -141,6 +177,7 @@ impl GameSetup {
             players,
             turn_limit: None,
             legacy_all_war: false,
+            ai_alliances: false,
             barbarians: true,
             rule_experiments: Default::default(),
         }
@@ -200,11 +237,11 @@ pub struct Map {
     pub height: i32,
     /// Row-major, odd-r offset: index = row * width + col.
     pub tiles: Vec<Tile>,
-    /// Where the Courier Hall's road network is rooted: the first Hall's city tile
+    /// Where the Yam Relay Station's road network is rooted: the first Station's city tile
     /// (`crate::roads`). Omitted when `None`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub road_hub: Option<Hex>,
-    /// Whether any tile carries a road (Hall roads or a city's Roadworks). Omitted when false.
+    /// Whether any tile carries a road (Station roads or a city's Roadworks). Omitted when false.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub roaded: bool,
     /// Line-of-sight footprints already worked out on this map (`visibility::SightMemo`),
@@ -768,9 +805,9 @@ pub struct Player {
     /// holder. Used to report each change of hands once.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub goal_holder: Option<PlayerId>,
-    /// Mongols only: the city its Courier Hall was built in. The Hall is a Held goal: the city
-    /// can change hands (the Hall goes with it and so does the goal), and razing it destroys the
-    /// Hall (`goals::hall_city` checks the city still stands with the Hall in it).
+    /// Mongols only: the city its Yam Relay Station was built in. The Station is a Held goal: the city
+    /// can change hands (the Station goes with it and so does the goal), and razing it destroys the
+    /// Station (`goals::hall_city` checks the city still stands with the Station in it).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub hall_city: Option<CityId>,
     /// India's Imperial Diwan stays with its city when captured.
@@ -787,7 +824,7 @@ pub struct Player {
     /// (None for a broadcast), so the prompt names its real source.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub free_techs_captured: Option<CityId>,
-    /// Sparta goal, Honour the Fallen: veterans retired in War Shrine cities so far
+    /// Sparta goal, Honour the Fallen: veterans retired in Agoge cities so far
     /// (`Action::RetireVeteran`). Progress is kept; the goal is done at
     /// `goals::SPARTA_RETIRE_COUNT`.
     #[serde(default, skip_serializing_if = "is_zero_u8")]
