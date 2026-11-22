@@ -123,7 +123,11 @@ fn an_enemy_army_on_the_approaches_holds_the_start_and_pauses_the_work() {
     let mut army = with_enemy(with_enemy(near, 51, off(6, 13)), 52, off(5, 14));
     assert_eq!(tomb_orders(&army), (false, true));
     army.actions.tomb = Some(tomb(true, 5));
-    assert_eq!(tomb_orders(&army), (false, true), "one tolerated at five turns");
+    assert_eq!(
+        tomb_orders(&army),
+        (false, true),
+        "one tolerated at five turns"
+    );
 }
 
 #[test]
@@ -146,19 +150,37 @@ fn the_work_pauses_when_the_game_ends_before_it_can_finish() {
     v.actions.tomb = Some(tomb(true, 2));
     assert_eq!(tomb_orders(&v), (false, true));
     v.actions.tomb = Some(tomb(true, 10));
-    assert_eq!(tomb_orders(&v), (false, false), "five turn ends left, ten turns");
+    assert_eq!(
+        tomb_orders(&v),
+        (false, false),
+        "five turn ends left, ten turns"
+    );
 }
 
 #[test]
 fn barbarians_that_spare_no_one_count_only_at_two_hexes() {
-    let v = ViewBuilder { view: egypt(180, 5, 10) }
-        .unit(60, legatum_core::PlayerId::BARBARIAN, UnitKind::Soldier, off(4, 8))
-        .build();
+    let v = ViewBuilder {
+        view: egypt(180, 5, 10),
+    }
+    .unit(
+        60,
+        legatum_core::PlayerId::BARBARIAN,
+        UnitKind::Soldier,
+        off(4, 8),
+    )
+    .build();
     // Four hexes from both cities: a raider that far is no threat to the work.
     assert_eq!(tomb_orders(&v), (true, false));
-    let v = ViewBuilder { view: egypt(180, 5, 10) }
-        .unit(60, legatum_core::PlayerId::BARBARIAN, UnitKind::Soldier, off(4, 10))
-        .build();
+    let v = ViewBuilder {
+        view: egypt(180, 5, 10),
+    }
+    .unit(
+        60,
+        legatum_core::PlayerId::BARBARIAN,
+        UnitKind::Soldier,
+        off(4, 10),
+    )
+    .build();
     assert_eq!(tomb_orders(&v), (false, false));
 }
 
@@ -186,8 +208,7 @@ fn nothing_is_ordered_when_the_tomb_stands_is_blocked_or_the_gene_is_off() {
 fn the_brain_orders_a_valid_start() {
     let v = egypt(180, 5, 10);
     for difficulty in [AiDifficulty::Normal, AiDifficulty::Hard] {
-        let orders =
-            ScriptedBrain::with_difficulty(Faction::Egypt, 7, ME, difficulty).orders(&v);
+        let orders = ScriptedBrain::with_difficulty(Faction::Egypt, 7, ME, difficulty).orders(&v);
         assert_valid(&v, &orders);
         assert!(
             orders.contains(&Order::Action {
@@ -206,6 +227,14 @@ fn a_rival_sees_where_a_working_egypts_tomb_will_stand() {
         .city(6, ENEMY, off(30, 18), 8)
         .build();
     assert_eq!(rival_tomb_site(&v, ENEMY), Some(CityId(5)), "the capital");
-    v.cities.iter_mut().find(|c| c.id == CityId(5)).unwrap().is_capital = false;
-    assert_eq!(rival_tomb_site(&v, ENEMY), Some(CityId(6)), "else the largest");
+    v.cities
+        .iter_mut()
+        .find(|c| c.id == CityId(5))
+        .unwrap()
+        .is_capital = false;
+    assert_eq!(
+        rival_tomb_site(&v, ENEMY),
+        Some(CityId(6)),
+        "else the largest"
+    );
 }

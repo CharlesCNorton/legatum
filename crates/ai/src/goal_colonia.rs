@@ -20,7 +20,7 @@
 //! (`goals::known_colonia_site`), and a founder's level is its own.
 
 use crate::scripted::Planner;
-use legatum_core::settlement::settlement_candidates_with;
+use legatum_core::settlement::settlement_candidates_with_risky;
 use legatum_core::view::UnitView;
 use legatum_core::{Faction, Hex, Order, UnitClass, UnitKind, data, goals};
 
@@ -155,43 +155,78 @@ impl Planner<'_> {
     /// whose hold risk leaves the 2 VP worth more than the swing they risk. Returns the value,
     /// the site and its travel turns.
     pub(crate) fn colonia_site(&self, s: &UnitView) -> Option<(i32, Hex, i32)> {
+        self.colonia_site_tally(s, None)
+    }
+
+    /// `colonia_site`, also counting why each candidate was dropped when `tally` is given
+    /// (decision trace only; never changes the choice).
+    fn colonia_site_tally(
+        &self,
+        s: &UnitView,
+        mut tally: Option<&mut std::collections::BTreeMap<&'static str, i32>>,
+    ) -> Option<(i32, Hex, i32)> {
+        let mut note = |gate: &'static str| {
+            if let Some(t) = tally.as_deref_mut() {
+                *t.entry(gate).or_default() += 1;
+            }
+        };
         let v = self.view();
         let gap = v.rule_experiments.min_city_gap(v.faction_of(self.ctx.me));
         let points = goals::spec_for(goals::GoalRule::Colonia).vp as i32;
         let mut best: Option<(i32, Hex, i32)> = None;
-        for site in settlement_candidates_with(
-            v,
-            self.ctx.site_score.basics(),
-            s,
-            &self.settle_targets,
-        ) {
+        // A Colonia site is beside a rival's border, which is exactly where the settler search
+        // flags border risk (an unseen rival city could stand within the spacing gap): the
+        // ordinary search drops those sites, which left Rome's veterans with no Colonia site at
+        // all. The founder walks there anyway; arriving reveals the land, and an illegal site
+        // then drops out of the list on its own.
+        for site in settlement_candidates_with_risky(v, self.ctx.site_score.basics(), s) {
             let h = site.pos;
             let Some(turns) = site.travel_turns else {
+                note("no route");
                 continue;
             };
-            if turns > COLONIA_MAX_TRAVEL
-                || !goals::known_colonia_site(v, h)
-                || self.enemy_war_tile(h)
-                || self.enemy_army_near(h)
-                || self.ctx.in_danger(h)
-                || site.threats > 0
-                || self.settle_targets.iter().any(|t| t.distance(h) <= gap)
-                || v.units.iter().any(|u| {
-                    u.owner != self.ctx.me
-                        && u.kind == UnitKind::Settler
-                        && u.pos.distance(h) <= v.rule_experiments.min_city_gap(v.faction_of(u.owner))
-                })
-                || turns + 8 >= self.turns_remaining()
-                || self.campaigns.found_tried.iter().any(|&(unit, at, turn)| {
-                    unit == s.id && at == h && turn + 1 == v.turn
-                })
+            let gate = if turns > COLONIA_MAX_TRAVEL {
+                Some("too far")
+            } else if !goals::known_colonia_site(v, h) {
+                Some("not a Colonia site")
+            } else if self.enemy_war_tile(h) {
+                Some("enemy war tile")
+            } else if self.enemy_army_near(h) {
+                Some("enemy army near")
+            } else if self.ctx.in_danger(h) {
+                Some("in danger")
+            } else if site.threats > 0 {
+                Some("threats")
+            } else if self.settle_targets.iter().any(|t| t.distance(h) <= gap) {
+                Some("claimed by another settler")
+            } else if v.units.iter().any(|u| {
+                u.owner != self.ctx.me
+                    && u.kind == UnitKind::Settler
+                    && u.pos.distance(h) <= v.rule_experiments.min_city_gap(v.faction_of(u.owner))
+            }) {
+                Some("foreign settler")
+            } else if turns + 8 >= self.turns_remaining() {
+                Some("too late")
+            } else if self
+                .campaigns
+                .found_tried
+                .iter()
+                .any(|&(unit, at, turn)| unit == s.id && at == h && turn + 1 == v.turn)
             {
+                Some("found tried")
+            } else {
+                None
+            };
+            if let Some(gate) = gate {
+                note(gate);
                 continue;
             }
             let risk = self.colonia_hold_risk(h, s.id);
             if risk > COLONIA_MAX_RISK {
+                note("hold risk");
                 continue;
             }
+            note("passed");
             let value = points * COLONIA_VALUE_PER_VP * (100 - 2 * risk) / 100
                 + site.score.max(0) / 4
                 - turns * COLONIA_TRAVEL_COST;
@@ -202,21 +237,80 @@ impl Planner<'_> {
         best
     }
 
-    /// Gene `rome_colonia`: send this turn's Colonia founder. Of the full-health level-3 melee
-    /// units free to leave (not the last defender of a threatened city, not a live siege's
-    /// unit), the one with the best site founds there, or walks toward it. Returns whether a
-    /// founder was ordered.
+    /// Decision trace only: one row per level-3 melee unit saying which founder gate it
+    /// fails, or how its candidate sites fared.
+    fn trace_colonia_founders(
+        &self,
+        siege: Option<&(legatum_core::view::CityView, Vec<legatum_core::UnitId>)>,
+    ) {
+        for u in self
+            .own_melee()
+            .filter(|u| goals::known_colonia_founder(self.view(), u))
+        {
+            let gate = if u.hp != data::UNIT_HP {
+                Some(format!("hp {}", u.hp))
+            } else if self.has_acted(u.id) {
+                Some("already ordered".into())
+            } else if u.occupation_lock.is_some() {
+                Some("locked in a captured city".into())
+            } else if !self.roman_unit_can_leave(u) {
+                Some("cannot leave".into())
+            } else if siege.is_some_and(|(city, ids)| {
+                ids.contains(&u.id) && {
+                    let rest: Vec<_> = ids.iter().copied().filter(|id| *id != u.id).collect();
+                    !self.roman_capture_holds(city, &rest)
+                }
+            }) {
+                Some("needed for siege".into())
+            } else {
+                None
+            };
+            let mut tally = std::collections::BTreeMap::new();
+            let best = self.colonia_site_tally(&healed(u), Some(&mut tally));
+            let sites: Vec<String> = tally.iter().map(|(k, n)| format!("{k}={n}")).collect();
+            let mut row = crate::DecisionOption::new(
+                "colonia",
+                format!(
+                    "unit={:?} pos={:?} level={} sites[{}]",
+                    u.id,
+                    u.pos,
+                    u.level,
+                    sites.join(",")
+                ),
+                if gate.is_some() {
+                    "gated_out"
+                } else if best.is_some() {
+                    "candidate"
+                } else {
+                    "no_site"
+                },
+            );
+            row.gate = gate;
+            row.score = best.map(|(value, _, _)| value);
+            self.note_option(row);
+        }
+    }
+
+    /// Gene `rome_colonia`: send this turn's Colonia founder. Of the level-3 melee units free
+    /// to leave (not the last defender of a threatened city, not a live siege's unit), the
+    /// full-health one with the best site founds there, or walks toward it. Founding needs full
+    /// health, so when only wounded veterans have a site, the best of them that is out of
+    /// enemy reach rests this turn to heal for it; without this claim the war passes kept
+    /// spending a wounded veteran, which never healed. Returns whether a founder was ordered.
     pub(crate) fn plan_colonia(&mut self) -> bool {
         if !self.colonia_on() {
             return false;
         }
         let siege = self.roman_live_siege();
-        let founders: Vec<UnitView> = self
+        if self.decision_trace.is_some() {
+            self.trace_colonia_founders(siege.as_ref());
+        }
+        let free: Vec<UnitView> = self
             .own_melee()
             .filter(|u| {
                 goals::known_colonia_founder(self.view(), u)
-                    && u.hp == data::UNIT_HP
                     && !self.has_acted(u.id)
+                    && u.occupation_lock.is_none()
                     && self.roman_unit_can_leave(u)
                     && siege.as_ref().is_none_or(|(city, ids)| {
                         !ids.contains(&u.id) || {
@@ -228,28 +322,70 @@ impl Planner<'_> {
             })
             .cloned()
             .collect();
-        let Some((s, (_, site, _))) = founders
-            .iter()
-            .filter_map(|u| self.colonia_site(u).map(|best| (u, best)))
-            .max_by_key(|(u, (value, _, _))| (*value, std::cmp::Reverse(u.id)))
-        else {
+        let best = |wounded: bool| {
+            free.iter()
+                .filter(|u| (u.hp < data::UNIT_HP) == wounded)
+                .filter(|u| !wounded || self.colonia_can_rest(u))
+                .filter_map(|u| self.colonia_site(&healed(u)).map(|best| (u, best)))
+                .max_by_key(|(u, (value, _, _))| (*value, std::cmp::Reverse(u.id)))
+        };
+        if let Some((s, (_, site, _))) = best(false) {
+            let s = s.clone();
+            self.colonia_founder = Some(s.id);
+            self.settle_targets.push(site);
+            if site == s.pos {
+                let turn = self.view().turn;
+                self.campaigns
+                    .found_tried
+                    .retain(|&(unit, _, t)| unit != s.id && t + 1 >= turn);
+                self.campaigns.found_tried.push((s.id, s.pos, turn));
+                self.unit_order(s.id, Order::FoundCity { unit: s.id });
+            } else {
+                self.escort_sites.push(site);
+                self.move_settler(&s, site);
+            }
+            if self.decision_trace.is_some() {
+                let tag = format!("unit: {:?}", s.id);
+                let order = self
+                    .orders
+                    .iter()
+                    .map(|o| format!("{o:?}"))
+                    .rfind(|o| o.contains(&tag));
+                self.note_option(crate::DecisionOption::new(
+                    "colonia",
+                    format!("unit={:?} site={site:?} order={order:?}", s.id),
+                    "executed",
+                ));
+            }
+            return true;
+        }
+        let Some((s, _)) = best(true) else {
             return false;
         };
-        let s = s.clone();
-        self.colonia_founder = Some(s.id);
-        self.settle_targets.push(site);
-        if site == s.pos {
-            let turn = self.view().turn;
-            self.campaigns
-                .found_tried
-                .retain(|&(unit, _, t)| unit != s.id && t + 1 >= turn);
-            self.campaigns.found_tried.push((s.id, s.pos, turn));
-            self.unit_order(s.id, Order::FoundCity { unit: s.id });
-        } else {
-            self.escort_sites.push(site);
-            self.move_settler(&s, site);
-        }
+        let id = s.id;
+        self.colonia_founder = Some(id);
+        self.mil_dest.insert(s.pos);
+        self.unit_order(id, Order::SkipUnit { unit: id });
         true
+    }
+
+    /// Whether a wounded veteran can rest where it stands: out of known enemy reach, on land
+    /// that heals it (Rome's own, or nobody's).
+    fn colonia_can_rest(&self, u: &UnitView) -> bool {
+        self.exposure_at(u.pos) == 0
+            && self
+                .view()
+                .tile(u.pos)
+                .is_some_and(|t| t.owner.is_none_or(|o| o == self.ctx.me))
+    }
+}
+
+/// The veteran as it will be once healed: founding needs full health, and the site search
+/// lists sites only for a founder that has it.
+fn healed(u: &UnitView) -> UnitView {
+    UnitView {
+        hp: data::UNIT_HP,
+        ..u.clone()
     }
 }
 

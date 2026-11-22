@@ -70,10 +70,8 @@ impl Planner<'_> {
         self.holds_goal_city(c)
             || (self.faction == Faction::Egypt
                 && self.decisions.egypt_tomb > 0
-                && crate::goal_tomb::tomb_guard_site(
-                    self.view(),
-                    self.decisions.goal_open_end > 0,
-                ) == Some(c.id))
+                && crate::goal_tomb::tomb_guard_site(self.view(), self.decisions.goal_open_end > 0)
+                    == Some(c.id))
     }
 
     /// A goal city without its garrison: units are the first thing it builds.

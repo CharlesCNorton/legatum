@@ -103,10 +103,9 @@ pub(crate) fn tomb_garrison(view: &PlayerView, site: CityId) -> (usize, bool) {
             && u.kind != UnitKind::Scout
             && u.pos.distance(city.pos) <= 1
     });
-    let on_tile = view
-        .units
-        .iter()
-        .any(|u| u.owner == view.me && u.military && u.kind != UnitKind::Scout && u.pos == city.pos);
+    let on_tile = view.units.iter().any(|u| {
+        u.owner == view.me && u.military && u.kind != UnitKind::Scout && u.pos == city.pos
+    });
     (guards.count(), on_tile)
 }
 

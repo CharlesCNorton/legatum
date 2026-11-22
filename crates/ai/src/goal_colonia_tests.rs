@@ -82,7 +82,9 @@ fn a_level_three_veteran_walks_past_an_ordinary_site_to_the_colonia() {
     let target = p.settle_targets.first().copied().expect("a Colonia site");
     assert!(goals::known_colonia_site(&v, target), "{target:?}");
     assert!(
-        p.orders.iter().any(|o| legatum_core::rules::units::order_unit(o) == Some(UnitId(1))),
+        p.orders
+            .iter()
+            .any(|o| legatum_core::rules::units::order_unit(o) == Some(UnitId(1))),
         "{:?}",
         p.orders
     );
@@ -123,11 +125,23 @@ fn the_most_experienced_level_two_is_kept_until_a_level_three_exists() {
     let unit = |id: u32| v.units.iter().find(|u| u.id == UnitId(id)).unwrap();
     assert!(!p.colonia_reserved(unit(1)));
     assert!(p.colonia_reserved(unit(4)), "the closest to level 3");
-    assert!(!p.colonia_reserved(unit(6)), "lower veterans still found cities");
+    assert!(
+        !p.colonia_reserved(unit(6)),
+        "lower veterans still found cities"
+    );
     // With only level-1 veterans, the best is kept once Rome has three cities.
-    let ones = veteran(veteran(rome(), 1, Hex::new(10, 12), 1, 30), 4, Hex::new(11, 12), 1, 20);
+    let ones = veteran(
+        veteran(rome(), 1, Hex::new(10, 12), 1, 30),
+        4,
+        Hex::new(11, 12),
+        1,
+        20,
+    );
     let unit = |id: u32| ones.units.iter().find(|u| u.id == UnitId(id)).unwrap();
-    assert!(!hard(&ones).colonia_reserved(unit(1)), "one city: expansion first");
+    assert!(
+        !hard(&ones).colonia_reserved(unit(1)),
+        "one city: expansion first"
+    );
     let three = ViewBuilder { view: ones.clone() }
         .city(2, ME, Hex::new(4, 3), 2)
         .city(3, ME, Hex::new(4, 13), 2)
@@ -227,4 +241,70 @@ fn other_factions_and_lower_difficulties_never_reserve() {
     let mut v = v.clone();
     v.players[0].faction = Faction::Sparta;
     assert!(!hard(&v).colonia_on());
+}
+
+#[test]
+fn a_colonia_site_with_border_risk_is_still_a_site() {
+    // Beyond the rival's land the map is out of sight, so an unseen rival city could stand
+    // there: the settler search flags the sites beside that border (`border_risk`) and drops
+    // them. Those are most of the Colonia sites; in seed 9000 game 118 the level-3 veteran
+    // saw none.
+    let mut v = rome();
+    for (i, t) in v.tiles.iter_mut().enumerate() {
+        let h = Hex::from_offset(i as i32 % 32, i as i32 / 32);
+        t.visible = h.distance(RIVAL) <= 2 || h.distance(HOME) <= 3;
+    }
+    let site = colonia_site(&v);
+    let risks = legatum_core::settlement::border_city_risks(&v);
+    assert!(risks[v.index(site).unwrap()], "the fixture flags the site");
+    let v = veteran(v, 1, site, 3, 60);
+    let mut p = hard(&v);
+    assert!(p.colonia_site(&v.units[2]).is_some());
+    p.plan_settlers();
+    assert!(founds(&p, 1), "{:?}", p.orders);
+}
+
+#[test]
+fn a_wounded_level_three_veteran_rests_for_the_colonia() {
+    // Founding needs full health. The war passes kept spending a wounded veteran (seed 9000
+    // game 118: 86 to 96 HP for eight turns, moving every turn and so never healing); the
+    // Colonia claims it first and it rests.
+    let v = rome();
+    let mut v = veteran(v, 1, Hex::new(10, 12), 3, 60);
+    v.units[2].hp = 60;
+    let mut p = hard(&v);
+    p.plan_settlers();
+    assert_eq!(p.colonia_founder, Some(UnitId(1)));
+    assert!(
+        p.orders.contains(&Order::SkipUnit { unit: UnitId(1) }),
+        "{:?}",
+        p.orders
+    );
+    // In enemy reach it is left to the war passes, which know how to retreat it.
+    let exposed = ViewBuilder { view: v.clone() }
+        .unit(50, ENEMY, UnitKind::Soldier, Hex::new(10, 14))
+        .build();
+    let mut p = hard(&exposed);
+    assert!(p.exposure_at(Hex::new(10, 12)) > 0);
+    p.plan_settlers();
+    assert_ne!(p.colonia_founder, Some(UnitId(1)));
+}
+
+#[test]
+fn a_veteran_locked_in_a_captured_city_is_not_the_founder() {
+    // The occupation lock refuses its move (seed 9000 game 95: the level-3 veteran took
+    // Cologne and was held there; the founder's walk was dropped every turn).
+    let v = rome();
+    let mut v = veteran(v, 1, Hex::new(10, 12), 3, 60);
+    v.units[2].occupation_lock = Some(ENEMY);
+    let mut p = hard(&v);
+    p.plan_settlers();
+    assert_eq!(p.colonia_founder, None);
+    assert!(
+        !p.orders
+            .iter()
+            .any(|o| legatum_core::rules::units::order_unit(o) == Some(UnitId(1))),
+        "{:?}",
+        p.orders
+    );
 }

@@ -550,8 +550,7 @@ impl Collector {
     /// Call once after Session::step, using the turn number from BEFORE that step.
     pub fn observe_resolved_turn(&mut self, resolved_turn: u32, state: &GameState) {
         self.holds.observe_resolved_turn(resolved_turn);
-        self.goal_cities
-            .observe_resolved_turn(resolved_turn, state);
+        self.goal_cities.observe_resolved_turn(resolved_turn, state);
         self.borders.observe_resolved_turn(resolved_turn, state);
         for (seat, item) in self.completed_items.drain(..) {
             self.empire_flow

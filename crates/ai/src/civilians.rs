@@ -833,7 +833,11 @@ impl Planner<'_> {
     /// Whether `force` still forecasts the capture of `city` (the campaign's own tests). A
     /// visible city shot down to 0 HP falls to the first melee unit that walks in; the siege
     /// forecasts stop pricing it there, which is exactly when the veterans must stay.
-    pub(crate) fn roman_capture_holds(&self, city: &legatum_core::view::CityView, force: &[UnitId]) -> bool {
+    pub(crate) fn roman_capture_holds(
+        &self,
+        city: &legatum_core::view::CityView,
+        force: &[UnitId],
+    ) -> bool {
         (city.visible
             && city.hp <= 0
             && force.iter().any(|id| {

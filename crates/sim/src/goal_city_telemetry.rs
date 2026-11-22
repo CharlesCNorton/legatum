@@ -35,6 +35,20 @@ pub struct GoalCityTelemetry {
     /// information, reachability ignored): a level-3 veteran had nowhere to found it.
     #[serde(default)]
     pub no_site_turns: u32,
+    /// Rome: first resolved turn the seat had a level-2 melee unit while the Colonia was open
+    /// (the Colonia's founder in waiting).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub level2_turn: Option<u32>,
+    /// Rome: resolved turns with at least one level-2 melee unit and the Colonia open.
+    #[serde(default)]
+    pub level2_turns: u32,
+    /// Rome: distinct melee units seen at level 2 while the Colonia was open.
+    #[serde(default)]
+    pub level2_units: u32,
+    /// Rome: turns on which every level-3 melee unit was held in a captured city by the
+    /// occupation lock (it cannot leave to found).
+    #[serde(default)]
+    pub founder_locked_turns: u32,
     /// Egypt: first resolved turn the work was on.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub work_started_turn: Option<u32>,
@@ -53,6 +67,7 @@ pub struct GoalCityTelemetry {
 pub struct Observer {
     seats: BTreeMap<u8, GoalCityTelemetry>,
     last: BTreeMap<u8, (Option<legatum_core::CityId>, Option<PlayerId>)>,
+    level2_seen: std::collections::BTreeSet<legatum_core::UnitId>,
 }
 
 /// Whether a legal site beside a rival's border exists anywhere for `p` now.
@@ -80,8 +95,10 @@ fn colonia_site_exists(state: &GameState, p: PlayerId) -> bool {
 impl Observer {
     pub fn observe_initial(&mut self, state: &GameState) {
         for p in &state.players {
-            if matches!(goals::rule(state, p.id), goals::GoalRule::Colonia | goals::GoalRule::Tomb)
-            {
+            if matches!(
+                goals::rule(state, p.id),
+                goals::GoalRule::Colonia | goals::GoalRule::Tomb
+            ) {
                 self.seats.insert(
                     p.id.0,
                     GoalCityTelemetry {
@@ -130,10 +147,7 @@ impl Observer {
                     goals::tomb_holder(state, p),
                 ),
             };
-            let (last_city, last) = self
-                .last
-                .insert(seat, (city, holder))
-                .unwrap_or_default();
+            let (last_city, last) = self.last.insert(seat, (city, holder)).unwrap_or_default();
             if city.is_some() && city != last_city {
                 t.established += 1;
                 t.established_turn.get_or_insert(resolved_turn);
@@ -154,12 +168,36 @@ impl Observer {
                 t.work_turns += 1;
             }
             if player.alive && goals::colonia_open(state, p) {
-                let founder = state.units.values().any(|u| {
-                    u.owner == p
-                        && data::unit_class(u.kind) == Some(UnitClass::Melee)
-                        && legatum_core::rules::promotion::level_for(player.faction, u.xp)
-                            >= goals::COLONIA_LEVEL
-                });
+                let melee = || {
+                    state.units.values().filter(|u| {
+                        u.owner == p && data::unit_class(u.kind) == Some(UnitClass::Melee)
+                    })
+                };
+                let level = |u: &legatum_core::state::Unit| {
+                    legatum_core::rules::promotion::level_for(player.faction, u.xp)
+                };
+                let mut level2 = false;
+                for u in melee().filter(|u| level(u) == goals::COLONIA_LEVEL - 1) {
+                    level2 = true;
+                    if self.level2_seen.insert(u.id) {
+                        t.level2_units += 1;
+                    }
+                }
+                if level2 {
+                    t.level2_turns += 1;
+                    t.level2_turn.get_or_insert(resolved_turn);
+                }
+                let founders: Vec<_> = melee()
+                    .filter(|u| level(u) >= goals::COLONIA_LEVEL)
+                    .collect();
+                if !founders.is_empty()
+                    && founders
+                        .iter()
+                        .all(|u| legatum_core::rules::occupation::lock(state, u).is_some())
+                {
+                    t.founder_locked_turns += 1;
+                }
+                let founder = !founders.is_empty();
                 if founder {
                     t.founder_turns += 1;
                     t.founder_turn.get_or_insert(resolved_turn);
@@ -194,16 +232,33 @@ mod tests {
         let mut o = Observer::default();
         o.observe_initial(&state);
         assert_eq!(o.seats.len(), 2, "one Rome and one Egypt seat");
-        o.observe_event(3, &Event::TombStarted { player: egypt, turns: 0 });
+        o.observe_event(
+            3,
+            &Event::TombStarted {
+                player: egypt,
+                turns: 0,
+            },
+        );
         state.player_mut(egypt).tomb_work = true;
         o.observe_resolved_turn(3, &state);
         o.observe_resolved_turn(4, &state);
-        o.observe_event(5, &Event::TombPaused { player: egypt, turns: 2 });
+        o.observe_event(
+            5,
+            &Event::TombPaused {
+                player: egypt,
+                turns: 2,
+            },
+        );
         state.player_mut(egypt).tomb_work = false;
         o.observe_resolved_turn(5, &state);
         let t = &o.finish()[&egypt.0];
         assert_eq!(
-            (t.work_started_turn, t.work_turns, t.work_starts, t.work_pauses),
+            (
+                t.work_started_turn,
+                t.work_turns,
+                t.work_starts,
+                t.work_pauses
+            ),
             (Some(3), 2, 1, 1)
         );
         // The tomb stands in Egypt's capital, then a rival takes it.
@@ -215,7 +270,10 @@ mod tests {
         let t = &o.finish()[&egypt.0];
         assert_eq!(t.established_turn, Some(20));
         assert_eq!(t.first_scored_turn, Some(20));
-        assert_eq!((t.held_turns, t.rival_held_turns, t.holder_changes), (1, 1, 1));
+        assert_eq!(
+            (t.held_turns, t.rival_held_turns, t.holder_changes),
+            (1, 1, 1)
+        );
         assert!(!t.held_at_end && t.rival_holds_at_end);
     }
 
@@ -232,10 +290,27 @@ mod tests {
             .values_mut()
             .find(|u| u.owner == rome && data::unit_class(u.kind) == Some(UnitClass::Melee))
             .expect("a Roman melee unit at start");
-        unit.xp = 1000;
+        unit.xp = (0..1000)
+            .find(|xp| legatum_core::rules::promotion::level_for(Faction::Rome, *xp) == 2)
+            .unwrap();
         o.observe_resolved_turn(2, &state);
+        o.observe_resolved_turn(3, &state);
         let t = &o.finish()[&1];
-        assert_eq!((t.founder_turn, t.founder_turns), (Some(2), 1));
+        assert_eq!(
+            (t.level2_turn, t.level2_turns, t.level2_units),
+            (Some(2), 2, 1)
+        );
+        assert_eq!(t.founder_turns, 0);
+        let unit = state
+            .units
+            .values_mut()
+            .find(|u| u.owner == rome && data::unit_class(u.kind) == Some(UnitClass::Melee))
+            .unwrap();
+        unit.xp = 1000;
+        o.observe_resolved_turn(4, &state);
+        let t = &o.finish()[&1];
+        assert_eq!((t.founder_turn, t.founder_turns), (Some(4), 1));
+        assert_eq!(t.founder_locked_turns, 0, "not in a captured city");
         // At the start no rival land reaches ring 2, so no Colonia site exists yet.
         assert_eq!(t.no_site_turns, 1);
     }
