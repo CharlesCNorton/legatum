@@ -857,7 +857,7 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
     const p = S2(g.at);
     if (p.x < -200 || p.x > w + 200 || p.y < -80 || p.y > h + 120) continue;
     const spec: BannerSpec = { owner: g.holder, name: g.name, pop: null, color: mapPlayerColor(g.holder), capital: null,
-      goal: goalSeal({ kind: g.kind, of: g.of, dashed: false }), selected: false, glyph: null, walls: false };
+      goal: goalSeal({ kind: g.kind, of: g.of, dashed: false }), selected: false, glyph: null, wallTier: 0 };
     if (isFar(hexPx)) drawSprite(ctx, sealSprite(look, spec, sealRadius(hexPx), dpr), p.x, p.y - hexPx * 0.1, 0.85);
     else drawBanner(ctx, look, spec, p.x, p.y - hexPx * BANNER_BOTTOM, Math.round(Math.max(11, Math.min(16, hexPx * 0.42)) * 2) / 2, dpr, 0.85);
   }
