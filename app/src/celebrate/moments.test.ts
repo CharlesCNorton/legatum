@@ -412,6 +412,10 @@ describe('reward emblems and gain lists', () => {
     for (const [event, emblem] of kinds) expect(map([event])[0]?.emblem, event.type).toBe(emblem);
   });
 
+  it('a generic goal card shows the faction’s own goal building where one is painted', () => {
+    expect(map([{ type: 'FactionGoalCompleted', player: 0, faction: 'Athens', vp: 2 }])[0]).toMatchObject({ title: 'An inheritance fulfilled', building: 'Library' });
+  });
+
   describe('India’s Imperial Diwan', () => {
     it('holding the Diwan the first time is a legendary card and regaining it is a report line', () => {
       expect(map([{ type: 'FactionGoalCompleted', player: 0, faction: 'India', vp: 2 }]).map((m) => [m.tier, m.title, m.building])).toEqual([['legendary', 'The Imperial Diwan', 'ImperialDiwan']]);
@@ -481,7 +485,7 @@ describe('the Mongols’ Yam Relay Station moments', () => {
   });
   it('a sacked Station is a loss that says it can be built again; a rival-to-rival hand-over shows nothing', () => {
     const razed = map([{ type: 'CityRazed', city: 1, from: 0, by: 3, at: { q: 2, r: 2 } }, lost(0)]);
-    expect(razed.find((m) => m.loss)).toMatchObject({ title: 'The Yam Relay Station is sacked' });
+    expect(razed.find((m) => m.loss)).toMatchObject({ title: 'The Yam Relay Station is sacked', building: 'YamRelayStation' });
     expect(razed.find((m) => m.loss)!.details.join(' ')).toContain('built again');
     expect(map([got(2), lost(3)])).toEqual([]);
   });

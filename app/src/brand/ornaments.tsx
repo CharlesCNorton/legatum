@@ -82,11 +82,11 @@ export function PanelHead({ title, sub, right, kicker }: { title: ReactNode; sub
   );
 }
 
-/** The paired historical people portrait (360 px JPEG) for a faction. */
 const randomPortrait = import.meta.glob<string>('../assets/art/random-choice-360.jpg', { eager: true, query: '?url', import: 'default' });
 /** The Random choice's painting on the faction sheet: a still life of cast knucklebones on an unfinished chart (no people of its own). */
 export const RANDOM_PORTRAIT_URL: string | null = Object.values(randomPortrait)[0] ?? null;
 
+/** The paired historical people portrait (360 px JPEG) for a faction. */
 export function leaderPortraitUrl(faction: string): string | null {
   return pick(portraits, faction);
 }

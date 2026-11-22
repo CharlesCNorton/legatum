@@ -61,6 +61,9 @@ export interface Moment {
   choose?: number;
 }
 
+/** The painted building a faction goal's generic completion card shows (the faction's own version: Ruhr Foundry, Lyceum). */
+const GOAL_BUILDING: Partial<Record<Faction, BuildingKind>> = { Germany: 'Forge', Athens: 'Library' };
+
 export function ruinText(reward: RuinReward, cityName: (id: number) => string, faction?: Faction): { title: string; effect: string; lore: string; details: string[]; tier: Tier; deltas: Moment['deltas']; gains: Gain[]; emblem: Emblem } {
   const text: ReturnType<typeof ruinText> = (() => { switch (reward.kind) {
     case 'Gold': return {
@@ -353,7 +356,7 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
           break;
         }
         push(i, e.player, { tier: 'legendary', at: capital(e.player), title: 'An inheritance fulfilled', effect: `Faction goal complete · +${e.vp} VP`,
-          lore: 'The promise survived its makers. You have kept it.', details: [], deltas: [{ counter: 'vp', amount: e.vp }] }); break;
+          lore: 'The promise survived its makers. You have kept it.', details: [], deltas: [{ counter: 'vp', amount: e.vp }], building: GOAL_BUILDING[e.faction] }); break;
       }
       case 'VeteranRetired':
         // The last retirement is the goal's own legendary card (above): only the ones before it get a card.
@@ -379,7 +382,7 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
           push(i, e.player, { tier: 'major', at: (cap && cities.get(cap.city)?.pos) ?? capital(e.player), title: to !== null ? 'The Yam Relay Station is taken from you' : razed ? 'The Yam Relay Station is sacked' : 'The Yam Relay Station is lost', kicker: 'A loss',
             effect: `−${e.vp} VP · ${clause}`, lore: to !== null ? 'The road follows the banner over the city.' : 'The road is closed again.',
             details: to !== null ? ['The open road went with the city: retake it and the points return.'] : razed ? ['The station is destroyed with its city. It can be built again.'] : ['Nobody scores the Yam Network until its city is retaken.'],
-            deltas: [{ counter: 'vp', amount: -e.vp }], loss: true, emblem: 'hall' }); break;
+            deltas: [{ counter: 'vp', amount: -e.vp }], loss: true, emblem: 'hall', building: 'YamRelayStation' }); break;
         }
         if (e.faction !== 'Byzantium') break;
         const to = events.find((x): x is Extract<Event, { type: 'FactionGoalCompleted' }> => x.type === 'FactionGoalCompleted' && x.faction === 'Byzantium')?.player ?? null;
