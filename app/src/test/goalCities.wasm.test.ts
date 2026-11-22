@@ -81,7 +81,7 @@ describe.skipIf(!available)('goal cities through the engine', () => {
     expect(tombStatus(paused.players[0])).toMatchObject({ working: false, turns: 6 });
     const rivalPaused = viewOf('egyptRivalPaused').view;
     expect(goalSealFor(rivalPaused, f.a)).toEqual({ kind: 'tomb', of: 1, dashed: true });
-    expect(tombSiteLine(rivalPaused, tombSites(rivalPaused)[0])).toBe("Egypt's Royal Tomb, paused at 6 of 15 turns, will stand here.");
+    expect(tombSiteLine(rivalPaused, tombSites(rivalPaused)[0])).toBe("Egypt's Royal Tomb will stand here: 2 VP to whoever holds the city. Paused at 6 of 15 turns.");
   });
 
   it('a goal city held by a third empire, and a captured tomb', () => {

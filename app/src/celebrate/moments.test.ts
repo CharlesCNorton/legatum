@@ -577,7 +577,7 @@ describe('goal city moments', () => {
     after.tomb_sites = [{ of: rival.id, holder: rival.id, city: 99, at: { q: 3, r: 3 }, name: 'Thebes' }];
     const [card] = momentsForTurn([{ type: 'TombStarted', player: rival.id, turns: 6 }], 0, view, after);
     expect(card).toMatchObject({ goalMark: 'goal-royal-tomb', at: { q: 3, r: 3 } });
-    expect(card.effect).toMatch(/9 turns of work left\. It will stand in Thebes: 2 VP to whoever holds it\.$/);
+    expect(card.effect).toMatch(/is building its Royal Tomb in Thebes: 2 VP to whoever holds the city\. 9 turns of work left\.$/);
   });
 
   it('the owner’s own Colonia Victrix card wears the laurel', () => {

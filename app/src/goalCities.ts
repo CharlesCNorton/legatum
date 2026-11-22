@@ -65,12 +65,12 @@ export function tombSiteAt(view: Pick<PlayerView, 'tomb_sites'>, city: CityId): 
 }
 
 /** A planned tomb's hover line: "Egypt's Royal Tomb will stand here in 9 turns: 2 VP to whoever holds the city.",
- *  "Your Royal Tomb will stand here in 9 turns.", or, paused, "Egypt's Royal Tomb, paused at 6 of 15 turns, will stand here." */
+ *  "Your Royal Tomb will stand here in 9 turns.", or, paused, "Egypt's Royal Tomb will stand here: 2 VP to whoever holds the city. Paused at 6 of 15 turns." */
 export function tombSiteLine(view: Pick<PlayerView, 'me' | 'players'>, g: Pick<GoalCity, 'of'>): string {
   const p = view.players.find((x) => x.id === g.of);
   const st = p ? tombStatus(p) : null;
   const whose = goalCityName(view, { kind: 'tomb', of: g.of });
-  if (st && !st.working) return `${whose}, paused at ${st.turns} of ${st.target} turns, will stand here.`;
+  if (st && !st.working) return g.of === view.me ? `${whose}, paused at ${st.turns} of ${st.target} turns, will stand here.` : `${whose} will stand here: ${goalVp('tomb')} VP to whoever holds the city. Paused at ${st.turns} of ${st.target} turns.`;
   const when = st ? ` in ${st.left} ${st.left === 1 ? 'turn' : 'turns'}` : '';
   return g.of === view.me ? `${whose} will stand here${when}.` : `${whose} will stand here${when}: ${goalVp('tomb')} VP to whoever holds the city.`;
 }

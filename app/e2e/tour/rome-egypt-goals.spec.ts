@@ -245,7 +245,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
       const spot = await hexPoint(p, g.capitalPos);
       await p.mouse.move(spot.x - 3, spot.y - 3);
       await p.mouse.move(spot.x, spot.y);
-      await expect(p.getByTestId('tile-goal-tomb-site')).toContainText("Egypt's Royal Tomb, paused at 6 of 15 turns, will stand here.");
+      await expect(p.getByTestId('tile-goal-tomb-site')).toContainText("Egypt's Royal Tomb will stand here: 2 VP to whoever holds the city. Paused at 6 of 15 turns.");
       await shot(p, size, 'e21-rival-paused-tomb-site-hover');
     });
     for (const [mode, name] of [['egyptPaused', 'e16-egypt-row-paused'], ['egyptHeld', 'e17-egypt-row-standing'], ['tombLost', 'e18-egypt-row-rival-holds']] as const) {
