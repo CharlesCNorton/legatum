@@ -54,8 +54,12 @@ export function GoalActionRow() {
   if (!st) return view.actions?.retire ? <RetireProgressRow view={view} orders={orders} /> : null;
   const goal = st.kind === 'Swarm' ? SWARM_GOAL : FACTION_GOAL[me.faction];
   const spare = view.actions?.swarm, wild = view.actions?.wild, sakoku = view.actions?.sakoku, tomb = view.actions?.tomb;
-  const why = st.blocker && !st.ordered ? (st.kind === 'Tomb' ? tombBlockerPhrase(st.blocker) : st.blocker) : null;
+  // A standing tomb that a rival holds says who holds it, not only where it stands.
+  const tombHeld = st.kind === 'Tomb' && tomb?.tomb != null ? (view.royal_tombs ?? []).find((g) => g.of === view.me && g.holder !== view.me) : undefined;
+  const why = st.blocker && !st.ordered ? (tombHeld ? `${empireOfPlayer(view, tombHeld.holder)} holds it in ${tombHeld.name}: retake the city.` : st.kind === 'Tomb' ? tombBlockerPhrase(st.blocker) : st.blocker) : null;
   const label = st.kind === 'Sakoku' ? (sakoku?.closed ? 'Reopen the country' : 'Close the country') : st.kind === 'Tomb' && tomb?.working ? 'Pause the Royal Tomb' : goal.action;
+  // Pausing the tomb or reopening the country scores nothing, and a standing tomb has scored: those buttons carry no VP.
+  const undoing = (st.kind === 'Sakoku' && !!sakoku?.closed) || (st.kind === 'Tomb' && (!!tomb?.working || tomb?.tomb != null));
   const goalName = st.kind === 'Sakoku' ? 'Sakoku' : goal.name;
   const rule = st.kind === 'Sakoku' ? `Close the country for ${sakoku?.target ?? 30} turn ends to hold +${factionGoalVp(me.faction)} VP` : factionGoalRule(me.faction);
   const terms = st.kind === 'Sakoku' ? 'Reopening loses the held VP' : factionGoalTerms(me.faction);
@@ -74,7 +78,7 @@ export function GoalActionRow() {
       {st.ordered
         ? <button className="btn goal-action-btn" onClick={() => editOrders((o) => clearAction(o, st.kind))}>Cancel the order</button>
         : <button className="btn goal-action-btn" disabled={!!st.blocker} onClick={() => { closeTips(); set({ goalDialog: dialogFor(view, st.kind), goalDecisionSeen: { ...useGame.getState().goalDecisionSeen, [view.me]: true } }); }}>
-          {label}{!touch && <> <Kbd>G</Kbd></>}
+          {label}{!undoing && <span className="goal-action-vp"> · +{factionGoalVp(me.faction)} VP</span>}{!touch && <> <Kbd>G</Kbd></>}
         </button>}
     </Tip>
     {sakoku && <SakokuMeter view={view} />}
@@ -99,11 +103,15 @@ function SakokuMeter({ view }: { view: PlayerView }) {
 function TombMeter({ view }: { view: PlayerView }) {
   const g = view.faction_goal, t = view.actions!.tomb!;
   if (!g) return null;
-  const standing = t.tomb !== null;
-  return <div className="goal-action-sakoku" data-testid="tomb-progress">
-    <span className="goal-action-note goal-action-progress">{g.label}</span>
-    {!standing && t.turns > 0 && <span className="faction-goal-meter" role="progressbar" aria-label={`The Royal Tomb: ${t.turns} of ${t.target} turns`} aria-valuemin={0} aria-valuemax={t.target} aria-valuenow={Math.min(t.turns, t.target)}><i style={{ width: `${Math.min(100, 100 * t.turns / Math.max(1, t.target))}%` }} /></span>}
-  </div>;
+  const standing = t.tomb !== null, paused = !standing && !t.working && t.turns > 0;
+  return <>
+    <div className="goal-action-sakoku" data-testid="tomb-progress">
+      <span className="goal-action-note goal-action-progress">{paused ? `Paused: ${g.label}` : g.label}</span>
+      {!standing && t.turns > 0 && <span className="faction-goal-meter" role="progressbar" aria-label={`The Royal Tomb: ${t.turns} of ${t.target} turns`} aria-valuemin={0} aria-valuemax={t.target} aria-valuenow={Math.min(t.turns, t.target)}><i style={{ width: `${Math.min(100, 100 * t.turns / Math.max(1, t.target))}%` }} /></span>}
+    </div>
+    {/* The short window hides the line above; a paused count still shows, since the top bar drops it while paused. */}
+    {paused && <p className="goal-action-note goal-compact" data-testid="tomb-compact">Paused at {t.turns} of {t.target} turns</p>}
+  </>;
 }
 
 /** Sparta's goal progress and a direct confirm for the first veteran ready to retire. */
@@ -206,7 +214,7 @@ export function GoalActionDialog() {
       return;
     }
     if (kind === 'Tomb' || kind === 'TombPause') {
-      answerDecision(kind === 'Tomb' ? 'Work on the Royal Tomb is ordered: it begins when the turn ends' : 'The pause is ordered: your cities build and grow again when the turn ends',
+      answerDecision(kind === 'Tomb' ? 'Work on the Royal Tomb is ordered: it starts when the turn ends' : 'The pause is ordered: your cities build and grow again when the turn ends',
         (orders) => setAction(orders, { action: 'Tomb', build: kind === 'Tomb' }), undefined, 'commit');
       return;
     }
@@ -240,7 +248,7 @@ export function GoalActionDialog() {
         <p id={description}>{kind === 'Tomb'
           ? <>While the work is on, none of your cities builds or grows. Gold and Science go on, and you can still buy with Gold. <b data-testid="tomb-count">{tomb!.turns} of {tomb!.target} turns done</b>{tombSite ? <>; it will stand in <b>{tombSite}</b></> : ''}.</>
           : kind === 'TombPause'
-          ? <>Stop the work at <b data-testid="tomb-count">{tomb!.turns} of {tomb!.target} turns</b>. Your cities build and grow again. The count is kept: building again carries on from {tomb!.turns}.</>
+          ? <>Stop the work on the tomb. The count is kept: <b data-testid="tomb-count">{tomb!.turns} of {tomb!.target} turns</b> stay done.</>
           : kind === 'Sakoku'
           ? <>Take the vow of Sakoku, in public: every empire sees the closed country and its count.</>
           : kind === 'SakokuReopen'
@@ -301,7 +309,7 @@ export function GoalActionDialog() {
           {kind === 'Tomb'
             ? <ForYouLine tone="gain"><Amount sign="+" n={vp} unit="VP" /> while you hold its city, once the tomb stands: {tombLeft} more {tombLeft === 1 ? 'turn' : 'turns'} of work.</ForYouLine>
             : kind === 'TombPause'
-            ? <ForYouLine tone="gain">Your cities build and grow again from this turn end.</ForYouLine>
+            ? <ForYouLine tone="gain">Your cities build and grow again when this turn ends.</ForYouLine>
             : kind === 'Sakoku'
             ? <ForYouLine tone="gain"><Amount sign="+" n={vp} unit="VP" /> after {sakokuTurns} turns closed.</ForYouLine>
             : kind === 'SakokuReopen'

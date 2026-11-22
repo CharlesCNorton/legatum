@@ -20,6 +20,8 @@ export interface CopyRule {
 
 /** Mechanics-speak and code terms: describe what the player gets, not the integer maths behind it. */
 export const BANNED: CopyRule[] = [
+  { pattern: /\bmelee veteran of level\b/i, reason: 'wordy (plain-language review, 2026-11-22)', instead: '"a level 3 melee veteran"', source: true },
+  { pattern: /\bqualif(?:y|ies|ied|ying)\b/i, reason: 'rulebook jargon (plain-language review, 2026-11-22: "a site qualifies")', instead: '"A site counts if it is within 2 tiles of a rival\'s land."', source: true },
   { pattern: /\bNearest you know\b/i, reason: 'reads oddly (plain-language review, 2026-11-22)', instead: '"Nearest known: Sarai (Mongols), 5 tiles from your city Ajmer."', source: true },
   { pattern: /\bPeace (?:ends|would end|ended) (?:all|every) (?:wars?|conflicts?)\b/i, reason: 'Peace ends only the war between its two named teams', instead: 'name that war and any wars that continue', source: true },
   { pattern: /\bPeace (?:covers|includes|binds) (?:their |your )?allies\b/i, reason: 'Alliances stay, but allies are not included in a Peace', instead: 'Peace is between the two named teams', source: true },

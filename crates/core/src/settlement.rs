@@ -874,13 +874,17 @@ fn candidates(
 
 /// The top three recommendable sites: highest band first, so a marker never sits on a lower band
 /// than a later one, then the travel-adjusted score (nearer and safer first), then tile order.
+/// For a Colonia Victrix founder with any known Colonia site, only those sites rank (a Colonia
+/// site sits by a rival border by definition, so the border-risk filter does not apply to them).
+/// UI ranking only: `score` and `quality`, which the AI reads, are unchanged.
 fn rank_sites(view: &PlayerView, reserved: &[Hex], sites: &mut [SettlementSite]) {
+    let colonia_only = sites.iter().any(|s| s.colonia);
     let mut ranked: Vec<_> = sites
         .iter()
         .enumerate()
         .filter(|(_, s)| {
             s.score > 0
-                && !s.border_risk
+                && (if colonia_only { s.colonia } else { !s.border_risk })
                 && s.threats == 0
                 && s.travel_turns.is_some_and(|t| t <= RECOMMEND_TRAVEL_TURNS)
                 && !reserved.iter().any(|h| {

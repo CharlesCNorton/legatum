@@ -133,14 +133,16 @@ const liveWords = (faction: NonNullable<Source['faction']>) => {
 function HeldLines({ model, s, goalOwner }: { model: VpModel; s: Source; goalOwner?: VpEmpire }) {
   const holder = s.owners.length === 1 ? model.empires.find((e) => e.id === s.owners[0]) : undefined;
   const words = heldWords(s.faction);
+  // Rome's and Egypt's cards are short: the rule already names whose goal it is and that a capture takes it.
+  const cityGoal = s.faction === 'Rome' || s.faction === 'Egypt';
   return <div className="vh-held" data-held-by={holder?.id}>
-    {goalOwner && <div className="vh-held-row"><Marker e={goalOwner} size={16} title={goalOwner.name} /><span>{`${goalOwner.isMe ? 'Your' : `${goalOwner.name}’s`} ${words.item}`}</span></div>}
+    {goalOwner && !cityGoal && <div className="vh-held-row"><Marker e={goalOwner} size={16} title={goalOwner.name} /><span>{`${goalOwner.isMe ? 'Your' : `${goalOwner.name}’s`} ${words.item}`}</span></div>}
     <div className={`vh-held-row now${holder ? '' : ' nobody'}`}>
       {holder ? <Marker e={holder} size={16} /> : <Socket size={16} />}
       <b>{s.holdNote}</b>
     </div>
-    {s.heldAt && <p className="vh-private" data-testid="heir-locate-hint">{words.locate}</p>}
-    {holder && <p className="vh-private">{words.moves}</p>}
+    {s.heldAt && !cityGoal && <p className="vh-private" data-testid="heir-locate-hint">{words.locate}</p>}
+    {holder && !cityGoal && <p className="vh-private">{words.moves}</p>}
   </div>;
 }
 
@@ -175,7 +177,7 @@ export function SourceCard({ model, s, compact, terms = true, as: As = 'article'
       <SourceMedal model={model} s={s} size={compact ? 26 : 30} />
       <h3>{s.name}</h3>
     </div>
-    <p className="vh-rule">{s.rule}</p>
+    <p className="vh-rule">{s.rule}{(s.faction === 'Rome' || s.faction === 'Egypt') && s.kind === 'goal' && !/[.!?]$/.test(s.rule) ? '.' : ''}</p>
     {terms && <p className="vh-terms">{s.terms}</p>}
     {s.kind === 'era' && <EraObjectives model={model} s={s} />}
     {s.kind === 'era' && s.era && <p className="vh-private">{s.era.myScored ? 'You have scored this Age.' : 'Every empire sees this card the turn the first empire enters the era, and it never expires.'}</p>}

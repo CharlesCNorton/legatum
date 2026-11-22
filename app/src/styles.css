@@ -1045,8 +1045,11 @@ dialog.settings-modal::backdrop {
   .topbar[data-compact~='brand'] .brand { display: none; }
   /* The Switzerland' hoard readout is also in the race row and the Gold tooltip. */
   .topbar[data-compact~='hoard'] .gold-hoard-readout { display: none; }
-  .topbar[data-compact~='hoard'] .tomb-readout .tomb-long { display: none; }
-  .topbar[data-compact~='hoard'] .tomb-readout .tomb-short { display: inline; font: 600 16px/1 var(--num-font); }
+  /* Egypt's tomb readout: icon and "6/15" with a thin progress underline, early, so the brand and Gold income stay. */
+  .topbar[data-compact~='tomb'] .tomb-readout .tomb-long { display: none; }
+  .topbar[data-compact~='tomb'] .tomb-readout .tomb-short { display: inline; font: 600 16px/1 var(--num-font); }
+  .topbar[data-compact~='tomb'] .tomb-readout { position: relative; padding-bottom: 4px; }
+  .topbar[data-compact~='tomb'] .tomb-readout::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: linear-gradient(to right, var(--gilt, #8f6f1c) var(--tomb-done, 0%), var(--rule-2, #cbbd9c) var(--tomb-done, 0%)); }
   /* Keep painted art legible; narrow chips shed figures before art. */
   .topbar[data-compact~='art'] .supply-stat .supply-art { width: 24px; height: 24px; }
   .topbar[data-compact~='erachip'] .supply-stat b { font-size: 0; }

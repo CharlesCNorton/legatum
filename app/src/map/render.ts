@@ -11,7 +11,7 @@ import { isFighter } from '../airText';
 import { capitalStar } from '../capitalMark';
 import { distance as hexDistance, hexToPixel, tileIndex } from '../hex';
 import { healthColor, playerInk, rgba } from '../theme';
-import { GOAL_CITY_ICON, goalCities, goalCitiesAt, isColoniaFounder } from '../goalCities';
+import { GOAL_CITY_FAR_ICON, GOAL_CITY_ICON, goalCities, goalSealFor, isColoniaFounder, tombChip, tombStatus, type GoalCityKind, type TombStatus } from '../goalCities';
 import type { PathStep } from '../path';
 import { tintedIcon } from '../icons';
 import type { LookId } from '../brand/look';
@@ -31,7 +31,7 @@ import { attackableEnemies, drawEraPlaque, drawStrengthChip, matchupStrength, pl
 import { contractLeft } from '../company';
 import { heirTag } from '../heir';
 import { rankLevel } from '../rankInsignia';
-import { FONTS, type BannerSpec, bannerMetersSize, bannerRect, drawBadge, drawBanner, drawBannerMeters, type BannerMeter, barbarianMiniature, drawBarbarianToken, drawContractPip, drawContractTag, drawHeirHalo, drawLabel, drawPip, drawPromotion, drawRankInsignia, drawSprite, drawTag, drawToken, drawTokenHealth, miniatureGeometry, nameSprite, sealSprite, TOKEN_INK, capitalSealRadius } from './sprites';
+import { FONTS, type BannerSpec, type GoalSeal, bannerMetersSize, bannerRect, drawBadge, drawBanner, drawBannerMeters, type BannerMeter, barbarianMiniature, drawBarbarianToken, drawContractPip, drawContractTag, drawHeirHalo, drawLabel, drawPip, drawPromotion, drawRankInsignia, drawSprite, drawTag, drawToken, drawTokenHealth, miniatureGeometry, nameSprite, sealSprite, TOKEN_INK, capitalSealRadius } from './sprites';
 import { mapFeatureImage } from './mapFeatures';
 import { BARBARIAN, isBarbarian } from '../barbarians';
 import type { Rect } from './compass';
@@ -859,7 +859,7 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
     const p = S2(g.at);
     if (p.x < -200 || p.x > w + 200 || p.y < -80 || p.y > h + 120) continue;
     const spec: BannerSpec = { owner: g.holder, name: g.name, pop: null, color: mapPlayerColor(g.holder), capital: null,
-      goal: { icon: GOAL_CITY_ICON[g.kind], ink: playerInk(g.of) }, selected: false, glyph: null, walls: false };
+      goal: goalSeal({ kind: g.kind, of: g.of, dashed: false }), selected: false, glyph: null, walls: false };
     if (isFar(hexPx)) drawSprite(ctx, sealSprite(look, spec, sealRadius(hexPx), dpr), p.x, p.y - hexPx * 0.1, 0.85);
     else drawBanner(ctx, look, spec, p.x, p.y - hexPx * BANNER_BOTTOM, Math.round(Math.max(11, Math.min(16, hexPx * 0.42)) * 2) / 2, dpr, 0.85);
   }
@@ -1337,13 +1337,19 @@ const FOCUS_ICON: Record<CityBuildFocus, string> = { Balanced: 'ui-random', Scie
 const q24 = (f: number) => Math.round(Math.max(0, Math.min(1, f)) * 24) / 24;
 
 /** Growth (the territory bar: each growth claims a tile) and production meters for an own city's banner, from the same forecasts as the city panel. */
-export function bannerMeters(c: CityView, faction?: Faction, focus: CityBuildFocus | null = null): BannerMeter[] {
+export function bannerMeters(c: CityView, faction?: Faction, focus: CityBuildFocus | null = null, tomb: TombStatus | null = null): BannerMeter[] {
   const growth = growthProgress(c);
   if (!growth) return [];
+  // Egypt's Royal Tomb stops every city: growth is paused, and the production meter is the tomb's mark and count.
+  const stopped = !!tomb?.working;
   const out: BannerMeter[] = [{
     kind: 'growth', fraction: q24(growth.needed > 0 ? growth.stored / growth.needed : 0),
-    text: growth.turns !== null ? String(growth.turns) : '–', bad: growth.state === 'starving', paused: growth.state !== 'growing' && growth.state !== 'starving',
+    text: stopped ? '–' : growth.turns !== null ? String(growth.turns) : '–', bad: !stopped && growth.state === 'starving', paused: stopped || (growth.state !== 'growing' && growth.state !== 'starving'),
   }];
+  if (stopped) {
+    out.push({ kind: 'production', fraction: q24(tomb.turns / Math.max(1, tomb.target)), text: tombChip(tomb), paused: true, icon: GOAL_CITY_ICON.tomb, inkIcon: true });
+    return out;
+  }
   const production = productionProgress(c);
   // Occupation lock experiment: a frozen city shows the seal of a held city, not the red Build prompt.
   if (production && c.occupation_lock != null) out.push({ kind: 'production', fraction: 0, text: 'Held', paused: true, icon: 'fortify', inkIcon: true });
@@ -1364,12 +1370,18 @@ export function bannerMeters(c: CityView, faction?: Faction, focus: CityBuildFoc
 /** A city zoomed out: its seal (centred on the hex) and, if there is clear room, its name beside it. */
 interface FarCity { x: number; y: number; seal: ReturnType<typeof sealSprite>; name: { sprite: ReturnType<typeof nameSprite>; x: number; y: number } | null }
 
+/** A goal city's banner seal: its mark (and the solid far variant) in the ink of the empire whose goal it is; dashed while not yet standing. */
+function goalSeal(g: { kind: GoalCityKind; of: number; dashed: boolean }): GoalSeal {
+  return { icon: GOAL_CITY_ICON[g.kind], farIcon: GOAL_CITY_FAR_ICON[g.kind], ink: playerInk(g.of), dashed: g.dashed };
+}
+
 /** What a city's banner and far-zoom seal show. The star marks the original capital for the whole game, in the founder's ink; a replacement capital gets none. */
-export function bannerSpec(view: Pick<PlayerView, 'me' | 'team' | 'players'> & Partial<Pick<PlayerView, 'colonias' | 'royal_tombs'>>, c: CityView, glyph: string | null, selected: boolean): BannerSpec {
-  // Rome's Colonia and Egypt's tomb wear their mark in the ink of the empire whose goal it is (the tomb first if a city holds both).
-  const goal = goalCitiesAt(view, c.id).sort((a, b) => Number(b.kind === 'tomb') - Number(a.kind === 'tomb'))[0];
+export function bannerSpec(view: Pick<PlayerView, 'me' | 'team' | 'players'> & Partial<Pick<PlayerView, 'colonias' | 'royal_tombs' | 'tomb_sites'>>, c: CityView, glyph: string | null, selected: boolean): BannerSpec {
+  // Rome's Colonia and Egypt's tomb wear their mark in the ink of the empire whose goal it is (the tomb first if a city holds both);
+  // a tomb still being built wears it dashed on the city where it will stand.
+  const goal = goalSealFor(view, c.id);
   return { owner: c.owner, name: c.name, pop: c.visible ? c.population : null, color: mapPlayerColor(c.owner), capital: capitalStar(view, c),
-    goal: goal ? { icon: GOAL_CITY_ICON[goal.kind], ink: playerInk(goal.of) } : null, selected, glyph, walls: c.visible && c.walls };
+    goal: goal ? goalSeal(goal) : null, selected, glyph, walls: c.visible && c.walls };
 }
 
 /** Every on-screen city banner: its spec, anchor and the screen rect it covers (health bar included). Zoomed out, the banner is a seal and a name instead. */
@@ -1377,6 +1389,8 @@ function cityBanners(view: PlayerView, cam: Camera, w: number, h: number, dpr: n
   const hexPx = HEX_SIZE * cam.zoom;
   const far = isFar(hexPx);
   const fs = Math.round(Math.max(11, Math.min(16, hexPx * 0.42)) * 2) / 2;
+  // The viewer's own Royal Tomb work, public on its player row: while it is on, every own banner shows its count.
+  const myTomb = tombStatus(view.players.find((pl) => pl.id === view.me) ?? {});
   const items = view.cities.flatMap((c) => {
     const p = worldToScreen(cam, w, h, hexToPixel(c.pos, HEX_SIZE).x, hexToPixel(c.pos, HEX_SIZE).y);
     if (p.x < -200 || p.x > w + 200 || p.y < -80 || p.y > h + 120) return [];
@@ -1398,7 +1412,7 @@ function cityBanners(view: PlayerView, cam: Camera, w: number, h: number, dpr: n
     // Own cities only (rivals' Food, borders and production are private): growth, border and
     // production meters, readable from normal zoom in, so the player can watch them without
     // opening the city.
-    const meters = mine && c.visible && hexPx >= 20 ? bannerMeters(c, faction, focusOf(c)) : [];
+    const meters = mine && c.visible && hexPx >= 20 ? bannerMeters(c, faction, focusOf(c), myTomb) : [];
     const metersH = meters.length ? bannerMetersSize(look, meters, dpr).h + 1 : 0;
     // The block (plate and meters) ends BANNER_BOTTOM above the centre, over the town's roofline: the meters are a fixed
     // 17 px, so hung under the plate they covered the top of the town, most of it at small zoom.

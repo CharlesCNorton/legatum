@@ -161,3 +161,17 @@ fn the_egypt_goal_switch_turns_the_tomb_off() {
     assert!(tomb_blocker(&s, P0, true).is_some());
     assert!(crate::view::player_view(&s, P0).actions.tomb.is_none());
 }
+
+#[test]
+fn rivals_see_where_the_tomb_under_construction_will_stand() {
+    let (mut s, capital, _) = world();
+    assert!(crate::view::player_view(&s, P1).tomb_sites.is_empty(), "no work, no site");
+    order(&mut s, true);
+    let rival = crate::view::player_view(&s, P1);
+    assert_eq!(rival.tomb_sites.len(), 1);
+    assert_eq!(rival.tomb_sites[0].of, P0);
+    assert_eq!(rival.tomb_sites[0].city, capital);
+    assert_eq!(rival.tomb_sites[0].at, at(4, 4));
+    order(&mut s, false);
+    assert!(crate::view::player_view(&s, P1).tomb_sites.is_empty(), "a paused tomb has no site");
+}

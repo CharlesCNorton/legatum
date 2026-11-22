@@ -146,7 +146,7 @@ export function UnitPanel({ unit, view, peek = false }: { unit: UnitView; view: 
   // From the player's knowledge only: an order that is certain to fail is not offered.
   const canFound = mine && isFounderCandidate(view, unit);
   const foundBlocked = canFound ? foundCityUnitBlocker(view, unit) : null;
-  // Rome's Colonia Victrix: a level-3 melee veteran on a qualifying site founds it, and the button says so.
+  // Rome's Colonia Victrix: a level 3 melee veteran on a site that counts founds it, and the button says so.
   const coloniaHere = canFound && !foundBlocked && coloniaSiteHere(view, unit);
   const foundLabel = coloniaHere ? COLONIA_FOUND_LABEL : 'Found City';
   // Heal is offered to a damaged unit (or one already healing, to stop it); where nothing heals it says why, right under the row.
@@ -253,15 +253,15 @@ export function UnitPanel({ unit, view, peek = false }: { unit: UnitView; view: 
         <div className="actions">
           {unit.kind === 'Scout' && exploreAction}
           {canFound && (
-            <Action label={foundLabel} hotkey="B" primary={leads} active={pending?.type === 'FoundCity'} onClick={foundCitySelected}
+            <Action label={foundLabel} hotkey="B" primary={coloniaHere || (leads && roleAction)} active={pending?.type === 'FoundCity'} onClick={foundCitySelected}
               disabled={!!foundBlocked} reason={foundBlocked ?? undefined}
               tip={coloniaHere ? `${COLONIA_SITE_LEAD} This veteran is used up.` : unit.kind === 'Settler' ? `Found a city here, on land you or nobody owns. Cities need ${minCityGap(owner?.faction ?? 'Athens')} tiles between them.` : `Found a city here and consume this level-${unit.level} veteran. Combat resolves first: if this unit is wounded or killed, the city does not appear, and a surviving unit stays. A Legionary starts the city at population 2.`} />
           )}
-          {movePrimary && !locked && <Action label={mode === 'move' ? 'Cancel targeting' : unit.military && attacksInMelee(unit.kind) ? 'Move or attack' : 'Move'} primary={leads}
+          {movePrimary && !locked && <Action label={mode === 'move' ? 'Cancel targeting' : unit.military && attacksInMelee(unit.kind) ? 'Move or attack' : 'Move'} primary={leads && !coloniaHere}
             onClick={toggleMoveSelected} active={mode === 'move'} hotkey={mode === 'move' ? 'Esc' : undefined} 
             tip="Choose a tile on the map. Your route and combat forecast appear before you click. Esc cancels targeting. You can also right-click a destination, or drag from the unit to plot a path." />}
           {unit.kind !== 'Scout' && exploreAction}
-          <UnitImprovements unit={unit} view={view} check={upgrade} primary={leads ? improvePrimary : null} pending={pending?.type} gold={gold} siegeGold={siegeGold} siegeBlocker={siegeBlocked} />
+          <UnitImprovements unit={unit} view={view} check={upgrade} primary={leads && !coloniaHere ? improvePrimary : null} pending={pending?.type} gold={gold} siegeGold={siegeGold} siegeBlocker={siegeBlocked} />
           {veteran && <RetireAction unit={unit} view={view} retiring={retiring} blocker={veteran.blocker} />}
           {unit.ranged > 0 && (
             <Action label="Ranged Attack" disabled={closed} reason={closed ? "Leave closed foreign territory before attacking" : undefined} hotkey="R" active={mode === 'ranged' || pending?.type === 'RangedAttack'} onClick={toggleRangedMode} tip={bow ? `Shoot a target ${unit.range === 1 ? 'next to' : `within ${unit.range} tiles of`} this ${fromLabel}, from where it stands: no return fire, and it never moves. A shot cannot take a city. Right-click the target instead to charge it. One order a turn.` : `Pick a target within ${unit.range} tiles. Only if the unit doesn't move this turn.`} />

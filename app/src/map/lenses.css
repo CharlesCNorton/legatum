@@ -85,6 +85,9 @@
 .settle-top-key { margin: 6px 0 3px; }
 .settle-recommendations { display: flex; gap: 6px; }
 .settle-recommendations .btn { flex: 1; padding: 5px 6px; min-height: 30px; font-size: 12px; }
+/* A Colonia founder's picks wear the ring's gilt, as their map markers do. */
+.settle-recommendations.colonia .btn { background: #c9a227; border-color: var(--ink, #2b2118); color: var(--ink, #2b2118); }
+.settle-recommendations.colonia .btn:first-child { flex: 2; }
 .settlement-card.tilecard { width: 268px; max-width: min(268px, calc(100vw - 24px)); font-size: 11px; line-height: 1.35; }
 .settlement-card p, .map-touch-card .settlement-details p { margin: 5px 0; }
 .settlement-summary { display: flex; align-items: flex-start; gap: 6px; font-size: 12px; line-height: 1.4; }
@@ -127,6 +130,6 @@
 .lens-key-toggle:hover { border-color: var(--accent); }
 .lens-key-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-/* Rome: the Colonia Victrix lead on a qualifying site's card, in gilt like the forecast's VP line. */
+/* Rome: the Colonia Victrix lead on a site that counts's card, in gilt like the forecast's VP line. */
 .settlement-colonia { display: flex; align-items: flex-start; gap: 6px; margin: 0 0 6px; padding: 4px 6px; font-weight: 600; border-left: 3px solid #c9a227; background: color-mix(in srgb, #c9a227 12%, transparent); }
 .settlement-colonia svg { flex: 0 0 auto; color: #8f6f1c; }

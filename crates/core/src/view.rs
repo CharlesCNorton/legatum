@@ -1188,6 +1188,10 @@ pub struct PlayerView {
     /// Each royal tomb on the map and who holds it. Public: rivals see the city is worth 2 VP.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub royal_tombs: Vec<GoalCityView>,
+    /// Where each royal tomb under construction will stand (`goals::tomb_site`), for every
+    /// empire whose work is on. Public, like the work and its count: rivals see the city to watch.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub tomb_sites: Vec<GoalCityView>,
     /// Your team's aircraft, each in one city's hangar (`rules::air`); nobody else's are visible.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub aircraft: Vec<AircraftView>,
@@ -2070,6 +2074,7 @@ pub fn player_view_cached(
             imperial_diwans: crate::goals::imperial_diwans(state),
             colonias: crate::goals::colonias(state),
             royal_tombs: crate::goals::royal_tombs(state),
+            tomb_sites: crate::goals::tomb_sites(state),
             aircraft: aircraft_views(state, team),
             air_sightings: Vec::new(),
             air_contacts: Vec::new(),
@@ -2226,6 +2231,7 @@ pub fn player_view_cached(
         imperial_diwans: crate::goals::imperial_diwans(state),
             colonias: crate::goals::colonias(state),
             royal_tombs: crate::goals::royal_tombs(state),
+            tomb_sites: crate::goals::tomb_sites(state),
         aircraft: aircraft_views(state, team),
         air_sightings: state
             .aircraft

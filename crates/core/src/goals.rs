@@ -570,6 +570,26 @@ pub fn royal_tombs(state: &GameState) -> Vec<crate::view::GoalCityView> {
         .collect()
 }
 
+/// Where each royal tomb under construction will stand if the work finished now, for the public
+/// view: one entry per empire whose work is on (`tomb_working`) and that has a city.
+pub fn tomb_sites(state: &GameState) -> Vec<crate::view::GoalCityView> {
+    state
+        .players
+        .iter()
+        .filter(|p| tomb_working(state, p.id))
+        .filter_map(|p| {
+            let city = state.cities.get(&tomb_site(state, p.id)?)?;
+            Some(crate::view::GoalCityView {
+                of: p.id,
+                holder: city.owner,
+                city: city.id,
+                at: city.pos,
+                name: city.name.clone(),
+            })
+        })
+        .collect()
+}
+
 pub fn imperial_diwans(state: &GameState) -> Vec<crate::view::ImperialDiwanView> {
     state
         .players

@@ -870,7 +870,7 @@ export interface ColoniaFoundersView {
   level: number;
   /** The highest level among the empire's melee units. */
   best: number;
-  /** Melee veterans of that level, in id order: each founds the Colonia on a qualifying site. */
+  /** Melee veterans of that level, in id order: each founds the Colonia on a site that counts. */
   founders: UnitId[];
 }
 interface BroadcastView { techs_each: number; blocker: string | null; receivers: PlayerId[] }
@@ -985,6 +985,8 @@ export interface PlayerView {
   colonias?: GoalCityView[];
   /** Every standing Royal Tomb (public, as `colonias`). */
   royal_tombs?: GoalCityView[];
+  /** Where each Royal Tomb under construction will stand (core `goals::tomb_site`), one per empire whose work is on (public). `holder` is the city's owner. */
+  tomb_sites?: GoalCityView[];
   /** Your team's aircraft, each in one city's hangar (never on the map). */
   aircraft?: AircraftView[];
   /** Rival aircraft currently visible in a city's hangar; no private health or supply. */

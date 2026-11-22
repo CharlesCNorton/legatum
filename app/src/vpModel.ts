@@ -411,8 +411,8 @@ function heldHoldNote(view: PlayerView, faction: Faction, holders: PlayerId[], a
   const kind = goalCityKindOf(faction);
   if (kind) {
     const title = GOAL_CITY_TITLE[kind];
-    if (!holders.length) return `No ${title} stands`;
-    return `${names} ${verb} the ${title}${at?.city ? ` in ${at.city}` : ''}`;
+    if (!holders.length) return `No ${title} stands.`;
+    return `${names} ${verb} the ${title}${at?.city ? ` in ${at.city}` : ''}.`;
   }
   const who = holders.length ? `${names} ${verb} the Heir` : at?.barbarian ? 'Barbarians hold the Heir: nobody scores until the camp is cleared' : 'Nobody holds the Heir now';
   return `${who}${at ? (at.seen ? ' · in view' : ' · out of sight') : ''}`;

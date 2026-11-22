@@ -1397,7 +1397,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
         {bannerTooltip(view, hoveredBanner.city)}
       </div>}
       <CompassRose ref={compassRef} />
-      <LensSwitcher players={view?.players ?? []} me={view?.me} visibleBarbarians={!!view?.units.some((u) => isBarbarian(u.owner))} supply={view?.supply} era={view?.research.era} lens={lens} empty={!lensTiles.length} overlayEmpty={{ resources: !!view && overlayEmpty(view, 'resources', overlayTiles), borders: !!view && overlayEmpty(view, 'borders', overlayTiles) }} collapsed={!!selection} onChange={(next) => { clearTouch(); setLens(next); }} sites={sites} settlerId={settleUnit?.id ?? null} coloniaFounder={!!view && !!settleUnit && isColoniaFounder(view, settleUnit.id)} onInspect={(hex) => {
+      <LensSwitcher players={view?.players ?? []} me={view?.me} visibleBarbarians={!!view?.units.some((u) => isBarbarian(u.owner))} supply={view?.supply} era={view?.research.era} lens={lens} empty={!lensTiles.length} overlayEmpty={{ resources: !!view && overlayEmpty(view, 'resources', overlayTiles), borders: !!view && overlayEmpty(view, 'borders', overlayTiles) }} collapsed={!!selection} onChange={(next) => { clearTouch(); setLens(next); }} sites={sites} settlerId={settleUnit?.id ?? null} coloniaFounder={!!view && !!settleUnit && isColoniaFounder(view, settleUnit.id)} founderName={settleUnit ? itemName({ kind: 'Unit', unit: settleUnit.kind }, view?.players.find((p) => p.id === settleUnit.owner)?.faction) : undefined} onInspect={(hex) => {
         useGame.getState().jumpTo(hex);
         setHover(null);
         setTapPreview(null);

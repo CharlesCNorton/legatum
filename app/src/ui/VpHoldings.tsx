@@ -10,7 +10,7 @@ import { Icon } from './bits';
 import { RingMedallion } from './ringMedallion';
 import { Amount } from './Amounts';
 import { sakokuChip, sakokuLine } from '../sakoku';
-import { tombChip, tombPublicLine, tombShort } from '../goalCities';
+import { GOAL_CITY_ICON, goalCityKindOf, tombChip, tombPublicLine, tombShort } from '../goalCities';
 import { useGame } from '../store';
 import { PortraitRoundel } from './premium';
 import { SourceCard, empireVars } from './vpParts';
@@ -164,12 +164,20 @@ export function HeldToken({ t, props }: { t: Token; props: TokenProps }) {
   </button>;
 }
 
-/** An empire's own goal, not done yet: its crest in a dashed ring. */
+/** An empire's own goal, not done yet: its crest in a dashed ring. A goal that lives in a city (Rome's Colonia Victrix,
+ * Egypt's Royal Tomb) shows the goal's own mark instead, the same mark its held token and the map seal wear; Egypt's
+ * token also carries the tomb's public count ("6/15"), so its row has one tomb mark. */
 export function PendingGoal({ t, props }: { t: Token; props: TokenProps }) {
   const { source: s, owner: e } = t;
+  const kind = goalCityKindOf(e.faction);
+  const st = kind === 'tomb' ? e.tomb : null;
+  const count = st ? `, Royal Tomb ${st.turns} of ${st.target} turns${st.working ? '' : ', paused'}` : '';
   return <span className={`vhc-goal-wrap${e.isMe && s.progress ? ' mine' : ''}`}>
-    <button type="button" className="vhc-goal-open" style={empireVars(e)} aria-label={`${s.name}, +${s.vp} VP, not yet${e.isMe ? `, yours, ${s.progress?.label ?? ''}` : `, ${e.name}`}`} {...props}>
-      <CrestMedallion faction={e.faction} color={e.ink} size={13} />
+    <button type="button" className={`vhc-goal-open${kind ? ' goal-city' : ''}${st ? ` tomb${st.working ? ' working' : ' paused'}` : ''}`} style={empireVars(e)}
+      data-testid={st ? 'tomb-chip' : undefined} data-owner={st ? e.id : undefined}
+      aria-label={`${s.name}, +${s.vp} VP, not yet${e.isMe ? `, yours, ${s.progress?.label ?? ''}` : `, ${e.name}`}${count}`} {...props}>
+      {kind ? <Icon name={GOAL_CITY_ICON[kind]} size={13} /> : <CrestMedallion faction={e.faction} color={e.ink} size={13} />}
+      {st && <small className="vhc-tomb-count">{tombChip(st)}</small>}
     </button>
     {e.isMe && s.progress && <small className="vhc-goal-progress">{s.progress.label}</small>}
   </span>;

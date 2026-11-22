@@ -6,7 +6,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { WasmClient } from '../wasmClient';
 import { coreFixture } from './coreFixture';
 import { goalCitiesFixture, type GoalCityMode } from './goalCitiesFixture';
-import { goalCitiesAt, goalCityLine, tombPublicLine, tombStatus } from '../goalCities';
+import { goalCitiesAt, goalCityLine, goalSealFor, tombPublicLine, tombSiteLine, tombSites, tombStatus } from '../goalCities';
 import { bannerTooltip } from '../map/bannerTooltip';
 
 const available = existsSync(fileURLToPath(new URL('../wasm-pkg/legatum.js', import.meta.url)));
@@ -63,5 +63,38 @@ describe.skipIf(!available)('goal cities through the engine', () => {
   it('the standing tomb is public', () => {
     const { f, view } = viewOf('tombRival');
     expect(view.royal_tombs).toEqual([expect.objectContaining({ of: 1, holder: 1, city: f.a })]);
+    expect(goalSealFor(view, f.a)).toEqual({ kind: 'tomb', of: 1, dashed: false });
+    expect(tombSites(view)).toEqual([]);
+  });
+
+  it('while Egypt builds, every empire sees where the tomb will stand: a dashed seal on that city', () => {
+    const { f, view } = viewOf('egyptRival');
+    expect(tombSites(view)).toEqual([expect.objectContaining({ kind: 'tomb', of: 1, city: f.a })]);
+    expect(goalSealFor(view, f.a)).toEqual({ kind: 'tomb', of: 1, dashed: true });
+    expect(goalSealFor(view, f.b)).toBeNull();
+    expect(tombSiteLine(view, tombSites(view)[0])).toBe("Egypt's Royal Tomb will stand here: 6 of 15 turns.");
+    const own = viewOf('egyptWork');
+    expect(tombSiteLine(own.view, { of: 0 })).toBe('Your Royal Tomb will stand here: 6 of 15 turns.');
+    // Paused work plans nothing on the map; the count stays public.
+    const paused = viewOf('egyptPaused').view;
+    expect(tombSites(paused)).toEqual([]);
+    expect(tombStatus(paused.players[0])).toMatchObject({ working: false, turns: 6 });
+  });
+
+  it('a goal city held by a third empire, and a captured tomb', () => {
+    const third = viewOf('coloniaThird');
+    expect(third.view.colonias).toEqual([expect.objectContaining({ of: 1, holder: 2, city: third.f.colonia })]);
+    expect(goalSealFor(third.view, third.f.colonia!)).toEqual({ kind: 'colonia', of: 1, dashed: false });
+    const lost = viewOf('tombLost');
+    expect(lost.view.royal_tombs).toEqual([expect.objectContaining({ of: 0, holder: 1, city: lost.f.a })]);
+    expect(viewOf('egyptHeld').view.royal_tombs).toEqual([expect.objectContaining({ of: 0, holder: 0, city: lost.f.a })]);
+  });
+
+  it('a level 3 veteran off a ring is still a founder; with no known site the goal stays ready', () => {
+    for (const mode of ['romeOffRing', 'romeNoSite'] as const) {
+      const { f, view } = viewOf(mode);
+      expect(view.actions?.colonia?.best).toBe(3);
+      expect(view.actions?.colonia?.founders).toContain(f.veteran);
+    }
   });
 });

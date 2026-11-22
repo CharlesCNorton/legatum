@@ -692,11 +692,14 @@ export function sealSprite(look: LookId, b: BannerSpec, r: number, dpr: number):
     }
     if (b.goal) {
       // A goal city's mark, small, on the upper left (the capital's star keeps the upper right): the same plate, rule and gilt ring.
+      // Its glyph is the solid far variant, at the size and weight of the capital's star beside it.
       const sx = o - q * 1.1, sy = o - q * 1.1, rd = q * 0.75;
       g.beginPath(); g.arc(sx, sy, rd, 0, Math.PI * 2); g.fillStyle = seat.plate; g.fill();
+      if (b.goal.dashed) g.setLineDash([2, 1.6]);
       g.strokeStyle = I.ink; g.lineWidth = pen.thin; g.stroke();
       g.beginPath(); g.arc(sx, sy, rd - 1.5, 0, Math.PI * 2); g.strokeStyle = CAPITAL_GILT; g.lineWidth = 1.1; g.stroke();
-      const gw = rd * 1.35, ic = tintedIcon(b.goal.icon, b.goal.ink, gw * dpr);
+      g.setLineDash([]);
+      const gw = rd * 1.55, ic = tintedIcon(b.goal.farIcon ?? b.goal.icon, b.goal.ink, gw * dpr);
       if (ic) g.drawImage(ic, sx - gw / 2, sy - gw / 2, gw, gw);
     }
     return { c, ax: o, ay: o, w: size, h: size };
@@ -897,8 +900,14 @@ function drawCapitalStar(g: CanvasRenderingContext2D, star: CapitalStar, x: numb
 const starKey = (star: CapitalStar | null) => (star ? `${star.ink}${star.scored ? 'h' : 'f'}` : '-');
 
 /** A goal city's banner mark: the goal's icon in the ink of the empire whose goal it is. */
-export interface GoalSeal { icon: string; ink: string }
-const goalKey = (goal: GoalSeal | null | undefined) => (goal ? `${goal.icon}${goal.ink}` : '-');
+export interface GoalSeal {
+  icon: string; ink: string;
+  /** A solid, heavier variant for the small far-zoom seal, where a thin-line glyph would not read. */
+  farIcon?: string;
+  /** Not yet standing (the Royal Tomb under construction): the seal's rule and gilt ring are dashed. */
+  dashed?: boolean;
+}
+const goalKey = (goal: GoalSeal | null | undefined) => (goal ? `${goal.icon}${goal.ink}${goal.farIcon ?? ''}${goal.dashed ? 'd' : ''}` : '-');
 
 /** The fine ring on an original capital's seals (gilt is the house's VP colour). */
 const CAPITAL_GILT = '#c9a227';
@@ -1009,9 +1018,12 @@ function atlasBanner(b: BannerSpec, fs: number, dpr: number): Sprite {
     const sx = x0, sy = 0.5 + h / 2;
     g.beginPath(); g.arc(sx, sy, L, 0, Math.PI * 2);
     g.fillStyle = I.vellum; g.fill();
+    // Dashed: not yet standing (a Royal Tomb under construction); solid: it stands, and holding the city scores.
+    if (b.goal.dashed) g.setLineDash([3, 2.2]);
     g.strokeStyle = b.selected ? I.red : I.ink; g.lineWidth = b.selected ? 1.6 : 1.2; g.stroke();
     g.beginPath(); g.arc(sx, sy, L - 2.8, 0, Math.PI * 2);
     g.strokeStyle = CAPITAL_GILT; g.lineWidth = 1.3; g.stroke();
+    g.setLineDash([]);
     const gw = (L - 3.5) * 1.45, ic = tintedIcon(b.goal.icon, b.goal.ink, gw * dpr);
     if (ic) g.drawImage(ic, sx - gw / 2, sy - gw / 2, gw, gw);
   }

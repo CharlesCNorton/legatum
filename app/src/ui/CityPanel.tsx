@@ -882,7 +882,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
       <div className="cp-block">
         {/* The active item shares this row, keeping at least five choices visible at 1280x800. */}
         <ProgressBar className="cp-production" testId="city-production" name={egyptBuilding ? 'Built from Food' : 'Production'} color={YIELD_COLORS.production}
-          label={<span className="cp-now-line"><span className="lbl">Now producing</span>{producing ? <>
+          label={<span className="cp-now-line"><span className="lbl">{tombStopped ? 'Waiting for the tomb' : 'Now producing'}</span>{producing ? <>
             <span className="cp-now-item"><ItemArt item={producing} faction={owner?.faction} size={16} /><span className="cp-now-name">{meterName(producing)}</span></span>
           </> : raceLost ? <>
             <span className="cp-now-item"><ItemArt item={{ kind: 'Building', building: raceLost.building }} faction={owner?.faction} size={16} /><span className="cp-now-name">{BUILDING_NAME[raceLost.building]}</span></span>
@@ -908,6 +908,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
               disabled={view.finished} onClick={() => changeQueue(after)}><Icon name="ui-cross" size={12} /></button></Tip>;
           })()}</span>}
           turns={<span className="cp-now-turns">
+            {tombStopped ? (producing ? <>{d.production_stored}/{d.production_cost ?? option?.cost ?? '—'} stored · starts when the tomb stands or the work pauses</> : 'Nothing queued') : <>
             {producing && pendingQueue && <><span className="pending-dot" aria-hidden="true" /><span className="pending-label" title="Pending until Ready">pending</span>{' '}</>}
             {buildChanged
               ? !producing ? '—' : producing.kind === 'Project' ? projectRate(producing, yields) : option
@@ -918,6 +919,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
                 ? <>{d.production_stored}/{d.production_cost} stored · {egyptBuilding ? `+${egyptProgress} from Food` : <Amount sign="+" n={yields.total.production} unit="Production" />}/turn · {d.production_stall ? 'Stalled' : `${d.turns_to_complete ?? '—'} turn${d.turns_to_complete === 1 ? '' : 's'}`}</>
                 : raceLost ? (d.production_stored > 0 ? `Stopped · ${d.production_stored} Production held for the next build` : 'Stopped · choose a new build')
                 : waitingCap !== null ? `${d.production_stored}/${waitingCap} held` : `${d.production_stored}/${d.idle_production_cap} stored`}
+            </>}
           </span>}
           value={storedProduction} max={waitingCap !== null ? Math.max(1, waitingCap) : pendingQueue ? producing ? option?.cost ?? d.production_cost ?? 1 : d.idle_production_cap : d.production_cost ?? d.idle_production_cap} />
 
@@ -969,7 +971,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
       {occupiedLine ? <><p className="hint warn" data-testid="city-occupied">{occupiedLine}. Food, Gold and Science continue.</p></> : <>
       <div className="cp-block production-choose-block">
         {/* How Build and Queue differ is one hover away, so the choices start right under the title. */}
-        <Tip as="div" className="cp-choose-title" content={owner?.faction === 'Egypt' ? EGYPT_BUILD_RULE : BUILD_RULE}>{buildFocus && idleChoice && productionWarning !== AUTOMATION_NO_CHOICE ? `Chooses at Ready · ${buildFocus} focus` : `Choose what ${city.name} builds`}</Tip>
+        <Tip as="div" className="cp-choose-title" content={owner?.faction === 'Egypt' ? EGYPT_BUILD_RULE : BUILD_RULE}>{buildFocus && idleChoice && productionWarning !== AUTOMATION_NO_CHOICE ? `Chooses at Ready · ${buildFocus} focus` : tombStopped ? 'Queue for after the tomb' : `Choose what ${city.name} builds`}</Tip>
       </div>
       {tombStopped && <p className="hint" data-testid="city-tomb-picker">This city does nothing while the Royal Tomb is built. You can still buy with Gold; what you pick starts when the work ends or pauses.</p>}
       <div className="cp-buyline">

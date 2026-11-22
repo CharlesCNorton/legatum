@@ -558,3 +558,23 @@ describe('world wonder moments', () => {
     expect(loss.details).toContain('It can never be built again.');
   });
 });
+
+describe('goal city moments', () => {
+  it('a rival starting the Royal Tomb wears the tomb mark and says where it will stand', () => {
+    const after = structuredClone(view);
+    const me = after.players.find((p) => p.id === 0)!;
+    const rival = after.players.find((p) => p.team !== me.team)!;
+    rival.faction = 'Egypt';
+    after.tomb_sites = [{ of: rival.id, holder: rival.id, city: 99, at: { q: 3, r: 3 }, name: 'Thebes' }];
+    const [card] = momentsForTurn([{ type: 'TombStarted', player: rival.id, turns: 6 }], 0, view, after);
+    expect(card).toMatchObject({ goalMark: 'goal-royal-tomb', at: { q: 3, r: 3 } });
+    expect(card.effect).toMatch(/9 turns of work left\. It will stand in Thebes\.$/);
+  });
+
+  it('the owner’s own Colonia Victrix card wears the laurel', () => {
+    const after = structuredClone(view);
+    after.players[0].faction = 'Rome';
+    const [card] = momentsForTurn([{ type: 'FactionGoalCompleted', player: 0, faction: 'Rome', vp: 2 }], 0, view, after);
+    expect(card).toMatchObject({ tier: 'legendary', title: 'Colonia Victrix', goalMark: 'goal-colonia' });
+  });
+});

@@ -41,7 +41,7 @@ const COLUMNS: { key: CitySortKey; label: string; yield?: 'food' | 'production' 
 
 function BuildCell({ row, faction, tomb }: { row: CityRow; faction?: Faction; tomb?: boolean }) {
   // Egypt's Royal Tomb work stops every city: the row says so rather than "Idle".
-  if (tomb) return <Tip content={TOMB_CITY_NOTE}><span className="co-building co-tomb" data-testid="city-tomb"><span className="co-build-top"><Icon name="goal-royal-tomb" size={14} /><span className="co-build-name">Royal Tomb</span></span><span className="co-sub">{row.build ? `${row.build.name} waits` : 'no build, no growth'}</span></span></Tip>;
+  if (tomb) return <Tip content={TOMB_CITY_NOTE}><span className="co-building co-tomb" data-testid="city-tomb"><span className="co-build-top"><Icon name="goal-royal-tomb" size={14} /><span className="co-build-name">Royal Tomb</span></span><span className="co-sub">{row.build ? `${row.build.name} waits` : 'Nothing queued'}</span></span></Tip>;
   if (row.focus && !row.build) return <span className="co-building" data-testid="city-auto-wait">Choosing at Ready<span className="co-sub">{row.focus} focus</span></span>;
   if (row.idle || !row.build) {
     return <span className="co-idle" data-testid="city-idle"><span className="co-idle-mark" aria-hidden="true">!</span><b>Idle</b><span className="co-sub">choose what it builds</span></span>;

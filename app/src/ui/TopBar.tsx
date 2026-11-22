@@ -26,12 +26,13 @@ import { TrainingLine, TrainingTip } from './Training';
 /**
  * Desktop and tablet top bar compaction, in order: each step hides more secondary text (all of it
  * stays in the tooltips) until the totals fit and the research cell shows its text in full. The
+ * Egypt's Royal Tomb readout goes to its short form ("6/15") early, before the brand or the Gold income go. The
  * first step drops the Technologies button (the research cell opens the same dialog); the resource names go late,
  * and the painted resource art keeps the strategic resources apart after them. The "Pop." and "Armed" words go first, and shortage chips keep their names at every size. The
  * research cell truncates only after the last step. Measured, not media queries, because what the
  * bar holds varies (0 to 6 supply chips, the treasury warning, a one- or two-line research plan).
  */
-const TOP_BAR_COMPACTION = ['counts', 'nav', 'cities', 'warning', 'tight', 'score', 'era', 'brand', 'incomes', 'hoard', 'art', 'names', 'label', 'eraname', 'erachip'] as const;
+const TOP_BAR_COMPACTION = ['counts', 'nav', 'cities', 'tomb', 'warning', 'tight', 'score', 'era', 'brand', 'incomes', 'hoard', 'art', 'names', 'label', 'eraname', 'erachip'] as const;
 
 function fitsTopBar(bar: HTMLElement) {
   const stats = bar.querySelector<HTMLElement>('.tb-stats');

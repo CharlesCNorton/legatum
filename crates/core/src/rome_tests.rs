@@ -320,3 +320,23 @@ fn the_rome_goal_switch_turns_the_colonia_off() {
         .insert(crate::experiments::FactionRule::RomeGoal);
     assert!(!crate::goals::founds_colonia(&state, &state.units[&id]));
 }
+
+#[test]
+fn a_colonia_founder_is_recommended_only_colonia_sites() {
+    let (state, id, _) = colonia_setup();
+    let view = crate::view::player_view(&state, P0);
+    let unit = view.units.iter().find(|u| u.id == id).unwrap();
+    let scores = crate::settlement::settlement_scores(&view, unit, &[]);
+    assert!(scores.iter().any(|s| s.colonia), "the veteran knows a Colonia site");
+    let ranked: Vec<_> = scores.iter().filter(|s| s.rank.is_some()).collect();
+    assert!(!ranked.is_empty(), "at least one Colonia site is recommended");
+    assert!(ranked.iter().all(|s| s.colonia), "every marker sits on a Colonia site");
+    // An ordinary founder (a level-1 veteran) is ranked as before: no Colonia flags, no border-risk sites.
+    let mut low = state.clone();
+    low.units.get_mut(&id).unwrap().xp = crate::rules::promotion::threshold(1).unwrap();
+    let view = crate::view::player_view(&low, P0);
+    let unit = view.units.iter().find(|u| u.id == id).unwrap();
+    let scores = crate::settlement::settlement_scores(&view, unit, &[]);
+    assert!(scores.iter().all(|s| !s.colonia));
+    assert!(scores.iter().filter(|s| s.rank.is_some()).all(|s| !s.border_risk));
+}

@@ -6,7 +6,7 @@ import { coreFixture } from '../../src/test/coreFixture';
 import { goalCitiesFixture, type GoalCityMode } from '../../src/test/goalCitiesFixture';
 import { revealSidebar } from '../sidebarAssertions';
 import { SIZES, aim, dismissCelebrations, frameHall, hexPoint, loadFixture, selectThing, shot, stageHallReport, type GameWindow } from './helpers';
-import type { Page } from '@playwright/test';
+import type { Browser, Page } from '@playwright/test';
 
 test.describe.configure({ mode: 'parallel' });
 
@@ -22,6 +22,15 @@ async function away(page: Page, h: number) {
   const bar = page.locator('.right-sidebar');
   const box = await bar.count() ? await bar.boundingBox() : null;
   await page.mouse.move(box ? box.x + 2 : 5, box ? box.y + 2 : h / 2);
+}
+
+// One more state in a fresh window of the same size.
+async function withMode(browser: Browser, size: { width: number; height: number }, mode: GoalCityMode, fn: (p: Page, f: ReturnType<typeof goalCitiesFixture>) => Promise<void>) {
+  const context = await browser.newContext({ viewport: { width: size.width, height: size.height } });
+  try {
+    const p = await context.newPage();
+    await fn(p, await open(p, mode));
+  } finally { await context.close(); }
 }
 
 for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
@@ -77,6 +86,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     const found = page.getByRole('button', { name: /Found Colonia Victrix/ });
     await expect(found).toBeVisible();
     await found.scrollIntoViewIfNeeded();
+    await away(page, size.height);
     await shot(page, size, 'r08-rome-found-button');
   });
 
@@ -136,7 +146,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await away(page, size.height);
     await shot(page, size, 'e04-egypt-work-city-panel');
     await page.evaluate(() => (window as unknown as GameWindow).legatum.getState().set({ selection: null, citiesOpen: true }));
-    await expect(page.getByText(/Royal Tomb/).first()).toBeVisible();
+    await expect(page.getByTestId('cities-tomb')).toBeVisible();
     await shot(page, size, 'e05-egypt-work-cities-overview');
     await page.evaluate(() => (window as unknown as GameWindow).legatum.getState().set({ citiesOpen: false }));
     await row.locator('.goal-action-btn').click();
@@ -147,7 +157,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
   test('Egypt seen by a rival: the work under way, then the standing tomb', async ({ page, browser }) => {
     test.setTimeout(150_000);
     const f = await open(page, 'egyptRival');
-    await stageHallReport(page, [{ type: 'TombStarted', player: f.goalSeat, turns: 9 }]);
+    await stageHallReport(page, [{ type: 'TombStarted', player: f.goalSeat, turns: 6 }]);
     await expect(page.locator('.moment-card').first()).toContainText('Royal Tomb');
     await shot(page, size, 'e07-rival-tomb-started-card');
     await dismissCelebrations(page);
@@ -182,6 +192,69 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     } finally { await context.close(); }
   });
 
+  test('Rome: your own Colonia, a third empire holding it, and a veteran with no site or off the rings', async ({ page, browser }) => {
+    test.setTimeout(240_000);
+    const f = await open(page, 'romeHeld');
+    await frameHall(page, f.coloniaPos, 1.25);
+    await shot(page, size, 'r15-own-colonia-banner');
+    await stageHallReport(page, [{ type: 'FactionGoalCompleted', player: 0, faction: 'Rome', vp: 2 }]);
+    await expect(page.locator('.moment-card').first()).toContainText('Colonia Victrix');
+    await shot(page, size, 'r16-own-colonia-founded-card');
+    await withMode(browser, size, 'coloniaThird', async (p, g) => {
+      await frameHall(p, g.coloniaPos, 1.25);
+      await shot(p, size, 'r17-third-empire-holds-colonia-banner');
+      await revealSidebar(p, 'standings');
+      await p.locator('.panel.vp .vhc-tok[data-held]').first().hover();
+      await expect(p.locator('.vhc-pop .vh-card.k-goal .vh-held')).toContainText('Colonia Victrix');
+      await shot(p, size, 'r18-third-empire-holds-colonia-race');
+    });
+    for (const [mode, name] of [['romeNoSite', 'r19-rome-no-site-lens'], ['romeOffRing', 'r20-rome-veteran-off-ring']] as const) {
+      await withMode(browser, size, mode, async (p, g) => {
+        await selectThing(p, 'unit', g.veteran!);
+        const settle = p.getByRole('radio', { name: 'Settle', exact: true });
+        if (!await settle.isVisible()) await p.getByRole('button', { name: /^Lens: Settle/ }).click();
+        await expect(settle).toBeChecked();
+        if (mode === 'romeNoSite') await expect(p.getByTestId('settle-colonia-none')).toContainText('No site you know founds your Colonia Victrix');
+        else await expect(p.getByTestId('settle-colonia-key')).toBeVisible();
+        await away(p, size.height);
+        await shot(p, size, name);
+      });
+    }
+  });
+
+  test('Egypt: the planned tomb on the map, the row paused, standing and lost, and your own tomb', async ({ page, browser }) => {
+    test.setTimeout(240_000);
+    const f = await open(page, 'egyptWork');
+    // Your capital: the dashed tomb seal, the capital star and the tomb count in place of production.
+    await frameHall(page, f.capitalPos, 1.25);
+    await shot(page, size, 'e13-own-tomb-site-banner');
+    await withMode(browser, size, 'egyptRival', async (p, g) => {
+      await frameHall(p, g.capitalPos, 1.25);
+      await shot(p, size, 'e14-rival-tomb-site-banner');
+      const spot = await hexPoint(p, g.capitalPos);
+      await p.mouse.move(spot.x - 3, spot.y - 3);
+      await p.mouse.move(spot.x, spot.y);
+      await expect(p.getByTestId('tile-goal-tomb-site')).toContainText("Egypt's Royal Tomb will stand here: 6 of 15 turns.");
+      await shot(p, size, 'e15-rival-tomb-site-hover');
+    });
+    for (const [mode, name] of [['egyptPaused', 'e16-egypt-row-paused'], ['egyptHeld', 'e17-egypt-row-standing'], ['tombLost', 'e18-egypt-row-rival-holds']] as const) {
+      await withMode(browser, size, mode, async (p) => {
+        const row = p.locator('[data-goal-action="Tomb"]');
+        await expect(row).toBeVisible();
+        await row.scrollIntoViewIfNeeded();
+        await away(p, size.height);
+        await shot(p, size, name);
+      });
+    }
+    await withMode(browser, size, 'egyptHeld', async (p, g) => {
+      await frameHall(p, g.capitalPos, 1.25);
+      await shot(p, size, 'e19-own-tomb-banner');
+      await stageHallReport(p, [{ type: 'FactionGoalCompleted', player: 0, faction: 'Egypt', vp: 2 }]);
+      await expect(p.locator('.moment-card').first()).toContainText('Royal Tomb');
+      await shot(p, size, 'e20-own-tomb-stands-card');
+    });
+  });
+
   test('the faction sheets and the Guide entries', async ({ page }) => {
     await page.goto('/?client=wasm');
     await page.getByRole('button', { name: /^Single Player/ }).click();
@@ -199,7 +272,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await page.getByRole('button', { name: /^How to Play/ }).click();
     const guide = page.getByRole('dialog', { name: 'How to Play', exact: true });
     await guide.getByRole('button', { name: /The victory race/ }).click();
-    for (const [lead, name] of [['Colonia Victrix (Rome):', 'g03-guide-colonia'], ['The Royal Tomb (Egypt):', 'g04-guide-tomb']] as const) {
+    for (const [lead, name] of [['Colonia Victrix (Rome):', 'g03-guide-colonia'], ['The Royal Tomb (Egypt):', 'g04-guide-tomb'], ['A gilt-ringed seal', 'g05-guide-seals']] as const) {
       const p = guide.locator('.guide-page p', { hasText: lead });
       await p.scrollIntoViewIfNeeded();
       await expect(p).toBeVisible();

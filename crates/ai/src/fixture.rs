@@ -262,6 +262,7 @@ impl ViewBuilder {
                 imperial_diwans: Vec::new(),
                 colonias: Vec::new(),
                 royal_tombs: Vec::new(),
+                tomb_sites: Vec::new(),
                 aircraft: Vec::new(),
                 air_sightings: Vec::new(),
                 air_contacts: Vec::new(),

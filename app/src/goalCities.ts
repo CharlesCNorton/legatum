@@ -32,7 +32,7 @@ export const goalCityKindOf = (faction: Faction): GoalCityKind | null => (factio
 
 /** Core `goals::COLONIA_LEVEL`: the level a founding veteran needs. */
 export const COLONIA_LEVEL: number = RULES.coloniaLevel;
-/** Core `goals::COLONIA_BORDER_REACH`: a site qualifies when a rival owns a tile this close. */
+/** Core `goals::COLONIA_BORDER_REACH`: a site counts when a rival owns a tile this close. */
 export const COLONIA_REACH: number = RULES.coloniaBorderReach;
 /** Core `goals::TOMB_TURNS`: turns of work before the tomb stands. */
 export const TOMB_TURNS: number = RULES.tombTurns;
@@ -53,6 +53,35 @@ export function goalCities(view: Pick<PlayerView, 'colonias' | 'royal_tombs'>): 
 export function goalCitiesAt(view: Pick<PlayerView, 'colonias' | 'royal_tombs'>, city: CityId): GoalCity[] {
   return goalCities(view).filter((g) => g.city === city);
 }
+
+/** Where each Royal Tomb under construction will stand (core `goals::tomb_site`, public): one per empire whose work is on. */
+export function tombSites(view: Pick<PlayerView, 'tomb_sites'>): GoalCity[] {
+  return (view.tomb_sites ?? []).map((g) => ({ kind: 'tomb' as const, ...g }));
+}
+
+/** The tomb under construction that will stand in this city, if any. */
+export function tombSiteAt(view: Pick<PlayerView, 'tomb_sites'>, city: CityId): GoalCity | undefined {
+  return tombSites(view).find((g) => g.city === city);
+}
+
+/** A planned tomb's hover line: "Egypt's Royal Tomb will stand here: 6 of 15 turns." */
+export function tombSiteLine(view: Pick<PlayerView, 'me' | 'players'>, g: Pick<GoalCity, 'of'>): string {
+  const p = view.players.find((x) => x.id === g.of);
+  const st = p ? tombStatus(p) : null;
+  const whose = goalCityName(view, { kind: 'tomb', of: g.of });
+  return `${whose} will stand here${st ? `: ${st.turns} of ${st.target} turns` : ''}.`;
+}
+
+/** The seal a city's banner wears: a standing goal city (the tomb first if a city holds both), else a planned tomb, dashed. */
+export function goalSealFor(view: Pick<PlayerView, 'colonias' | 'royal_tombs' | 'tomb_sites'>, city: CityId): { kind: GoalCityKind; of: PlayerId; dashed: boolean } | null {
+  const standing = goalCitiesAt(view, city).sort((a, b) => Number(b.kind === 'tomb') - Number(a.kind === 'tomb'))[0];
+  if (standing) return { kind: standing.kind, of: standing.of, dashed: false };
+  const site = tombSiteAt(view, city);
+  return site ? { kind: 'tomb', of: site.of, dashed: true } : null;
+}
+
+/** The solid far-zoom variant of each goal's mark (the laurel's thin leaves vanish at seal size). */
+export const GOAL_CITY_FAR_ICON: Record<GoalCityKind, string> = { colonia: 'goal-colonia-far', tomb: 'goal-royal-tomb' };
 
 /** "Rome's Colonia Victrix", "Your Royal Tomb", "the Colonia Victrix" (lower-case start for mid-sentence). */
 export function goalCityName(view: Pick<PlayerView, 'me' | 'players'>, g: Pick<GoalCity, 'kind' | 'of'>): string {
@@ -167,7 +196,7 @@ export function tombBlockerPhrase(blocker: string): string {
 
 // ---- Rome's Colonia Victrix: the founders and the sites ----
 
-/** Whether this unit of yours founds the Colonia Victrix on a qualifying site (a melee veteran at the level, while none stands). */
+/** Whether this unit of yours founds the Colonia Victrix on a site that counts (a melee veteran at the level, while none stands). */
 export function isColoniaFounder(view: Pick<PlayerView, 'actions'>, unit: UnitId): boolean {
   return !!view.actions?.colonia?.founders.includes(unit);
 }
@@ -177,11 +206,11 @@ export function coloniaOpen(view: Pick<PlayerView, 'actions'>): boolean {
   return !!view.actions?.colonia;
 }
 
-/** What a qualifying site is, in one line (the settle legend's key and the no-site note). */
+/** What a site that counts is, in one line (the settle legend's key and the no-site note). */
 export const COLONIA_SITE_RULE = `A site counts if it is within ${tiles(COLONIA_REACH)} of a rival's land.`;
 /** The legend line for the gilt ring. */
 export const COLONIA_RING_KEY = `Gilt ring: founds your Colonia Victrix (+${factionGoalVp('Rome')} VP)`;
-/** The founding button on a qualifying site. */
+/** The founding button on a site that counts. */
 export const COLONIA_FOUND_LABEL = `Found Colonia Victrix · +${factionGoalVp('Rome')} VP`;
-/** The hover's lead on a qualifying site. */
+/** The hover's lead on a site that counts. */
 export const COLONIA_SITE_LEAD = `Founding here makes your Colonia Victrix: +${factionGoalVp('Rome')} VP while you hold it.`;
