@@ -316,10 +316,7 @@ mod tests {
         );
         assert_eq!(state.cities[&city].producing, Some(grow), "{events:?}");
         let save = state_to_json(&state);
-        assert!(save.contains(&format!(
-            "\"save_version\":{}",
-            legatum_core::RULES_VERSION
-        )));
+        assert!(save.contains(&format!("\"save_version\":{}", legatum_core::RULES_VERSION)));
         assert!(!save.contains("capitals_taken"));
         assert!(
             state

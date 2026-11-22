@@ -51,7 +51,7 @@
 //!    movement ended for the turn and its fortification cleared. **One attack per order**
 //!    (G18, Civ 6): a fighter whose opponent survived ends its order when movement is over. It
 //!    stays where it fought with no destination and needs orders; it never re-attacks next turn.
-//! 4b. **Peaceful contests** (Sam, 2026-11-22). Units of different teams that are not at war
+//!    **Peaceful contests** (Sam, 2026-11-22). Units of different teams that are not at war
 //!    with each other stepping onto the same tile (no city there) never fight: the team of the
 //!    strongest unit (meeting strength after damage; civilians 0) keeps its claim and every
 //!    other team's claimant stays put with a MoveBlocked naming the winner and both strengths.
@@ -1137,7 +1137,11 @@ fn settle_peaceful_contest(
     )[0];
     let winner = &state.units[&best[&side].1];
     let p = state.player(winner.owner);
-    let name = format!("{}'s {}", p.name, data::unit_name_for(p.faction, winner.kind));
+    let name = format!(
+        "{}'s {}",
+        p.name,
+        data::unit_name_for(p.faction, winner.kind)
+    );
     for u in units {
         if state.team_of(owner(u)) == side {
             continue;

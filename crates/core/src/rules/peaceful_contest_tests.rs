@@ -42,7 +42,10 @@ fn the_stronger_unit_takes_a_contested_ruin_and_the_weaker_stays_put() {
     assert_eq!(next.units[&spear].pos, ruin);
     assert_eq!(next.units[&scout].pos, ruin.neighbor(0));
     assert_eq!(next.units[&scout].hp, 100);
-    assert!(!next.map.get(ruin).unwrap().ruin, "the winner explored the ruin");
+    assert!(
+        !next.map.get(ruin).unwrap().ruin,
+        "the winner explored the ruin"
+    );
     assert!(no_fights(&events));
     assert_eq!(
         reason(&events, scout).as_deref(),
@@ -69,7 +72,10 @@ fn damage_counts_and_a_civilian_never_wins_against_a_military_unit() {
     goto(&mut s, hurt, tile);
     goto(&mut s, fresh, tile);
     let (next, events) = resolve_units(&s, &no_orders());
-    assert_eq!(next.units[&fresh].pos, tile, "the unhurt Spearman is stronger");
+    assert_eq!(
+        next.units[&fresh].pos, tile,
+        "the unhurt Spearman is stronger"
+    );
     assert_eq!(next.units[&hurt].pos, tile.neighbor(0));
     assert!(no_fights(&events));
 
@@ -97,7 +103,10 @@ fn equal_strength_is_drawn_by_seed_and_the_same_on_every_replay() {
         goto(&mut s, a, tile);
         goto(&mut s, b, tile);
         let (next, events) = resolve_units(&s, &no_orders());
-        assert_eq!(resolve_units(&s, &no_orders()), (next.clone(), events.clone()));
+        assert_eq!(
+            resolve_units(&s, &no_orders()),
+            (next.clone(), events.clone())
+        );
         let won = [a, b]
             .into_iter()
             .filter(|u| next.units[u].pos == tile)
