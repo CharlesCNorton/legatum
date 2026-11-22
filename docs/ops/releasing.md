@@ -85,8 +85,8 @@ The game reads `versions.json` (`app/src/platform/versions.ts`). Saves record th
   its rules: an autosave by its address (`v/<id>/?continue=<game>`, the same browser database), a chosen file
   handed over through browser storage (`?open=save`). Only when no kept build has its rules does the game refuse it.
 - **Join Game** on a game whose host runs another kept build opens that build and joins (`?join=<room>`).
-- **Between games**, a tab whose build is not the newest says so on Single Player's sub-line ("A new version is ready:
-  new games start on it"), and Single Player and Multiplayer open the newest version (`/?menu=solo` or `multi`). A
+- **Between games**, a tab whose build is not the newest says so on Single Player's sub-line ("New games start on the
+  newest version"), and Single Player and Multiplayer open the newest version (`/?menu=solo` or `multi`). A
   game in progress is never interrupted.
 
 Builds from before `versions.json` existed can be added once by their Pages deployment address (from

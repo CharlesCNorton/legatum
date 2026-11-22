@@ -175,7 +175,7 @@ function MainMenu({ onMultiplayer }: { onMultiplayer: () => void }) {
         <ResumeButton />
         <button className={`btn big ${newGamePrimary ? 'primary' : ''}`} onClick={startSolo}>
           Single Player
-          <span className="btn-sub">{behind ? 'A new version is ready: new games start on it' : `You against ${MIN_SEATS - 1} to ${MAX_PLAYERS - 1} AI empires`}</span>
+          <span className="btn-sub">{behind ? 'New games start on the newest version' : `You against ${MIN_SEATS - 1} to ${MAX_PLAYERS - 1} AI empires`}</span>
         </button>
         <button className="btn big" onClick={openMultiplayer}>
           Multiplayer
