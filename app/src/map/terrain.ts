@@ -143,6 +143,19 @@ function jitter(c: string, j: number): string {
   return `rgb(${f(r)},${f(g)},${f(b)})`;
 }
 
+/**
+ * Whether a tile's signature change (TerrainCache.update) touches what the blurred land fields are built from: the
+ * tile being explored, its terrain, a city standing on it (organic features keep clear of cities) or its organic
+ * region. Sight, owners, population, walls and eras repaint chunks but leave the fields as they are; in a late game
+ * sight changes on hundreds of tiles every turn, and rebuilding the whole map's fields for it was the slowest map
+ * frame of each turn.
+ */
+export function landChanged(before: number, after: number): boolean {
+  const LAND = 1 | (0xf << 2) | (0x7f << 25);
+  const city = (s: number) => ((s >>> 11) & 0x3f) !== 0;
+  return ((before ^ after) & LAND) !== 0 || city(before) !== city(after);
+}
+
 /** What payoff moments hold back from the cache (momentFx.ts `MomentHold`): `sig` changes when any of it does. */
 export interface TerrainHold {
   towns: ReadonlySet<number>;
@@ -270,6 +283,8 @@ export class TerrainCache {
     let regions: Regions | null = null;
     if (this.organic) regions = computeRegions(this.w, this.h, (i) => (view.tiles[i].explored ? organicKind(view.tiles[i].terrain) : null));
     let dirty = false;
+    // Whether the land itself changed (see landChanged): only then are the blurred land fields rebuilt.
+    let land = false;
     let minX = Infinity;
     let minY = Infinity;
     let maxX = -Infinity;
@@ -291,6 +306,7 @@ export class TerrainCache {
         (c ? (Math.min(7, ownerEra.get(c.owner) ?? 0) + 1) << 21 : 0) |
         (regions ? organicSig(regions, i) << 25 : 0);
       if (s === this.sig[i]) continue;
+      if (landChanged(this.sig[i], s)) land = true;
       this.sig[i] = s;
       dirty = true;
       const x = centerX(i, this.w);
@@ -312,7 +328,7 @@ export class TerrainCache {
       this.regions = regions;
       this.plans = { near: planOrganic({ regions, isCity, tundraNear, far: false }), far: planOrganic({ regions, isCity, tundraNear, far: true }) };
     }
-    this.rebuildFields();
+    if (land) this.rebuildFields();
     this.staleNear(rects);
   }
 
