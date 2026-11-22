@@ -4,6 +4,7 @@ import { TECH_QUOTE } from '../techQuotes';
 import { claimedTile, growthUnlocks } from '../milestones';
 import { yieldsText } from '../cityProgress';
 import { empireOfPlayer, placeName } from '../empires';
+import { isBarbarian } from '../barbarians';
 import { blockedQueueHead, wonderLostLine } from '../wonderRace';
 import { distance } from '../hex';
 import { unlockCardFor, type UnlockCard } from './unlockCard';
@@ -392,7 +393,7 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
         if (after.courier_halls?.some((h) => h.city === e.city)) break;
         // A capture is a major moment for the taker; a loss is a sober card of the same weight.
         const city = after.cities.find((c) => c.id === e.city) ?? cities.get(e.city);
-        const nameOf = (id: number) => after.players.find((p) => p.id === id)?.name ?? `Empire ${id}`;
+        const nameOf = (id: number) => isBarbarian(id) ? 'Barbarians' : empireOfPlayer(after, id);
         // A city that holds a world wonder moves its points with it: one card names the wonder and the VP that moved.
         const taken = events.flatMap((x) => x.type === 'GreatWorkCompleted' && x.again && x.player === e.to ? [x] : []);
         const lost = events.flatMap((x) => x.type === 'GreatWorkLost' && x.player === e.from ? [x] : []);

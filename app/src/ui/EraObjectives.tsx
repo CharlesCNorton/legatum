@@ -14,6 +14,7 @@ import { Tip } from './Tip';
 import { CrestMedallion } from '../brand/ornaments';
 import { cardHint, cardName, scoredCard } from '../ageCards';
 import { eraHud, eraObjectivesFor, FAMILY_LABEL, glance, howYouWin, type EraHud, type EraObjectives, type HowYouWin, type ObjectiveLine } from '../eraObjectives';
+import { empireOfPlayer } from '../empires';
 import type { PlayerView } from '../types';
 import type { VpModel } from '../vpModel';
 import { noEraHud, setEraHudOpen, useEraHudOpen } from './eraHudOpen';
@@ -66,7 +67,7 @@ export function ObjectiveRows({ lines, preview = false, big = false, inline = fa
           <span className="eo-account" data-testid="era-count-account">{l.countTotal} {COUNT_UNIT[l.kind] ?? 'total'} now · counting since turn {l.countingSinceTurn}, from {l.countBaseline}</span>}
         {!compact && !inline && !preview && !l.scoredHere && !idle && cardHint(l.kind) && <span className="eo-scored-by">{cardHint(l.kind)}</span>}
         {l.scoredHere && turn !== undefined && <span className="eo-scored-by">Scored on turn {turn} with {cardName(l.text)}</span>}
-        {view && l.scoredBy.length > 0 && !(l.scoredHere && turn !== undefined) && <span className="eo-scored-by">Scored by {l.scoredBy.map(id => id === view.me ? 'you' : view.players.find(p => p.id === id)?.name ?? `Empire ${id}`).join(', ')}</span>}
+        {view && l.scoredBy.length > 0 && !(l.scoredHere && turn !== undefined) && <span className="eo-scored-by">Scored by {l.scoredBy.map(id => id === view.me ? 'you' : empireOfPlayer(view, id)).join(', ')}</span>}
         <span className="eo-bar" role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={l.target} aria-valuenow={preview || idle ? 0 : l.shown}>
           <i style={{ width: `${preview || idle ? 0 : l.target > 0 ? Math.min(100, (l.shown / l.target) * 100) : 0}%` }} />
         </span>

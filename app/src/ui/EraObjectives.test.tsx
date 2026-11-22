@@ -139,6 +139,17 @@ describe('the World Ages block in the race panel', () => {
     expect(scored.querySelector('[data-testid=era-hud-next]')).toBeNull();
   });
 
+  it('a card a rival scored names the rival by its faction, never its seat name', () => {
+    const rival = base.players.find((p) => p.id !== base.me)!;
+    rival.name = 'AI 2';
+    const view = withV2(base, { era: 3, scored: [2] });
+    view.eras = view.eras.map((e) => (e.era === 3 ? { ...e, scored_by: [{ player: rival.id, slot: 0, turn: 40 }] } : e));
+    act(() => setEraHudOpen(true));
+    act(() => root.render(<EraObjectivesHud view={view} model={buildVpModel(view)} />));
+    const by = [...host.querySelectorAll('.eo-scored-by')].map((x) => x.textContent).find((t) => t?.startsWith('Scored by'));
+    expect(by).toBe('Scored by Byzantium');
+  });
+
   it('an earlier Age you have not scored is a link to the sheet, with its card below', () => {
     const el = hud({ era: 3, scored: [] });
     expect(el.querySelector('[data-testid=era-older]')?.textContent).toContain('Classical is still open to score');
