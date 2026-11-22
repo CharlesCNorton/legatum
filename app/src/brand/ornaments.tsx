@@ -41,16 +41,6 @@ export function Star({ size = 10, className }: { size?: number; className?: stri
   );
 }
 
-/** A rule ending in a diamond used around the title kicker; `flip` mirrors it. */
-export function DecoRule({ width = 48, flip }: { width?: number; flip?: boolean }) {
-  return (
-    <svg className="deco-rule" width={width} height="8" viewBox={`0 0 ${width} 8`} aria-hidden style={flip ? { transform: 'scaleX(-1)' } : undefined}>
-      <path d={`M0 4H${width - 10}`} stroke="currentColor" strokeWidth="1" />
-      <path d={`M${width - 8} 4l4 -4l4 4l-4 4z`} fill="currentColor" />
-    </svg>
-  );
-}
-
 /** Deco sunburst: the house star over nine rays (at most one per screen region). */
 export function Fan({ width = 48 }: { width?: number }) {
   return (

@@ -63,7 +63,6 @@ export function GuideContent({ section }: { section: GuideSection }) {
   const company = RULES.company;
   switch (section) {
     case 'start': return <>
-      <p className="guide-lede">Legatum brings peoples from different periods of human history onto one map. Explore ancient ruins, found cities and contest the legacy they leave behind.</p>
       <p>Lead an empire, explore ruins, found cities and race for victory points (VP): reach your target, then hold it. If you know Civilization VI, the pieces will feel familiar. The difference is timing: everyone’s plans resolve together.</p>
       <h3>Choose how you play</h3>
       <div className="guide-modes">
@@ -81,7 +80,6 @@ export function GuideContent({ section }: { section: GuideSection }) {
     </>;
     case 'turns': return <>
       <p className="touch-only">Tap any number for its breakdown. Use ⓘ beside an action to inspect it, and Close or tap outside to dismiss.</p>
-      <p className="guide-lede">Plan now. Resolve together.</p>
       <ol className="guide-steps">
         <li><h3>Your capital is ready</h3><p>Every empire starts with its capital founded on its starting tile. Choose what it builds on turn 1. Your Scout explores and your Spearman can protect the start.</p></li>
         <li><h3>Give units destinations</h3>
@@ -99,6 +97,8 @@ export function GuideContent({ section }: { section: GuideSection }) {
       </ol>
       <p>Peace keeps borders closed to foreign units, except an ally’s and the land of whoever holds a Yam Relay Station. Crossing like this is not a provocation.</p>
       <p>You cannot attack a rival you are at Peace with. Declaring War while at Peace is a surprise war. It takes effect at once, so an attack ordered with it resolves the same turn. Signing Peace after War starts a {TREATY_TERMS.guaranteeTurns}-turn truce between the two teams. Neither may declare War on the other or be pulled back into that war by an ally until the shown end turn has passed. Permanent teammates share vision and victory. You can give Gold to a teammate from the Your team section of the diplomacy panel. It arrives next turn, after this turn's purchases, and you can give at most the Gold you had at the start of the turn. Alliances with other teams do not combine victory scores.</p>
+      <p>In a co-op game the AI empires start allied in pairs, so your team meets AI empires that also stand together. To turn this off, set AI alliances to Off in the lobby’s Game settings. The pairs are picked when the game starts, and your team is never in one. If the number of AI empires is odd, one stays alone.</p>
+      <p>These are ordinary Alliances. They cost upkeep and share no VP, and they end the way any Alliance ends. You can still make your own treaties with any of them.</p>
       <p>An Alliance gives shared sight and open borders. Each side’s units may enter the other’s land and pass through allied units of the same class, but cannot end on their tiles. Allied cities are also transit-only. It also changes how wars work (see below). Each empire pays {alliance.upkeep} Gold per owned city each turn, and never less than {alliance.upkeep} Gold in all. Its Gold breakdown lists the total as Treaty upkeep.</p>
       <p>No Alliance upkeep while at War with an empire close to winning. An empire is close to winning when it is within 2 VP of its victory target or holding its target. The Alliance pays nothing on any turn either ally is at War with such an empire, and the Gold breakdown shows the upkeep and the waiver as two lines.</p>
       <p>You must have met an empire to offer it an Alliance, which means one of your units or cities has seen one of its units, cities or borders. Peace and War need no contact.</p>
@@ -106,6 +106,7 @@ export function GuideContent({ section }: { section: GuideSection }) {
       <p><b>Allies defend each other, and join wars by choice.</b> If an empire declares War on your ally, you are at War with that empire too, in the same turn. If your ally declares War on someone, you get a call to arms: join the war, or decline and stay allied and at Peace with the target. Declining has no penalty and is no betrayal. A call you don’t answer lapses after two turns, which counts as declining. An Alliance that would make an empire fight its own ally cannot be signed, and neither can one that would break a recent peace.</p>
       <p>If either of you is at War when you sign, the offer lists what changes. The new ally joins at once the wars its partner is defending, and gets a call to arms for the wars its partner started.</p>
       <p>A Peace offer is between two teams. Both must agree. It ends only the war between them. Wars with their allies go on, and both Alliances stay. Making Peace on your own is not a betrayal.</p>
+      <p>With a human teammate you can ping. Press Ping at the foot of the right-hand panel, then click a tile. A ring marks it on their map until the turn ends. Your next ping replaces your last. Your teammate gets a Go to ping button that jumps to it. On a touch screen, use Ping this tile on the tile card. Pings are not saved with the game.</p>
       <p><b>Mercenary Companies (Byzantium):</b> a Byzantine city can hire the special unit of any empire it has met and is not at War with. Each empire sells only its own special unit, and the Company is that empire’s version of it. It has that unit’s name, stats and own rules (the Hoplite’s phalanx, the Keshig’s bow), not the empire’s faction-wide rules. That empire must know the unit’s technology and, for a resource unit, own an improved deposit of its resource. Hiring needs no spare supply and uses no supply slot. The price is {company.hirePercent}% of that version’s Production cost, in Gold, and all of it goes to the seller. It uses the city’s one purchase for the turn. The Company appears next turn at level 1, serves {company.turns} turns, then goes home, and costs <Amount n={company.upkeep} unit="Gold" /> a turn while it stays. It fights and captures like any unit, cannot be upgraded and does not count against thin levies. If Byzantium cannot pay its upkeep, a Company turns on it as a barbarian. Every Company shows its seller and its contract countdown on the map, so everyone can see when it leaves.</p>
       <p><b>Thin levies (Byzantium):</b> Byzantium fields at most one military unit per city, plus one more, not counting Scouts. Losing a city never disbands units. It only stops you training new ones until you are back under that limit. The top bar, the city panel and the diplomacy panel show the count.</p>
       <p>Before you commit, every diplomatic action shows its Gold cost, its upkeep, when it takes effect and whether it is a betrayal.</p>
@@ -123,7 +124,6 @@ export function GuideContent({ section }: { section: GuideSection }) {
       <p>Barbarians can be turned off in the game settings. The Celtic goal Raise the Warbands still raises camps when barbarians are off. Borders never disperse those camps, and Celtic players get no Gold for clearing them.</p>
     </>;
     case 'cities': return <>
-      <p className="guide-lede">Give every city a job, and enough Food to do it.</p>
       <h3>Raze a captured city</h3>
       <p>From the planning turn after capture, select a city you hold but did not found and choose Raze. The city burns at the turn boundary, its tiles are released and you gain 10 Gold per population. World wonders and faction goal buildings in it are destroyed, along with any VP they give. The Celts instead burn cities automatically on capture for a stronger sack.</p>
       <h3>Growth and production</h3>
@@ -203,7 +203,6 @@ export function GuideContent({ section }: { section: GuideSection }) {
       </dl>
     </>;
     case 'combat': return <>
-      <p className="guide-lede">Read the forecast. Leave room for the unexpected.</p>
       <h3>Fight on your terms</h3>
       <p>Order a military unit into an enemy unit or city to attack in melee. Both sides can take damage, and wounds normally reduce a unit’s strength. Spartan infantry ignore that penalty. Forests and hills help defenders, but not Mongol military units. Fortification helps every faction. Armies that meet while moving get no terrain or fortification bonus.</p>
       <p>Archers and every other ranged unit fire from up to two tiles away with no retaliation. Choose Ranged attack (<kbd>R</kbd>), then click the target. They cannot shoot and move in the same turn. A ranged unit in one of your cities can turn on Auto-fire from its unit card. It stays there and shoots the best visible enemy in range each turn, or holds when no shot is legal. It never declares War or spends Gold. Moving it or turning Auto-fire off returns it to manual control. A manual shot chooses its target for that turn. While auto-firing, it does not appear in the Return queue.</p>
@@ -265,7 +264,6 @@ export function GuideContent({ section }: { section: GuideSection }) {
       <p>If units of empires that are not at War try to enter the same tile, nobody fights. The side with more total strength moves in and the other stays where it was. Your units and your teammate’s add up, a damaged unit counts for less, and a civilian counts for nothing. Equal strength is decided at random. A unit already on a tile is never pushed off.</p>
     </>;
     case 'victory': return <>
-      <p className="guide-lede">Build permanent points. Contest the lead.</p>
       <div className="guide-targets"><div><b>10</b><span>VP · one-empire team</span></div><div><b>20</b><span>VP · two-empire team</span></div><div><b>+10</b><span>target per extra teammate</span></div></div>
       <p>Scores are checked after every turn. Teammates combine their points. Open the score ledger from the top bar’s VP chip or the victory race’s “Score ledger” link. Its columns show teams and empires in rank order, with your column in gilt and the team’s VP over its first member. Every way to score has a row; open a row for its rule and progress. The ledger shows the actual target and standings for your game.</p>
       <h3>Winning · hold the target</h3>
@@ -301,7 +299,6 @@ export function GuideContent({ section }: { section: GuideSection }) {
       <p>If several teams finish holding their target on the same turn, the higher VP wins, then the higher population. An exact tie is a draw. With a turn limit, a team still counting down when the limit arrives does not win early. The team with the most VP at that turn wins instead, and tied leaders draw. The last surviving team also wins.</p>
     </>;
     case 'factions': return <>
-      <p className="guide-lede">Peoples with different ways to shape history.</p>
       <p>Every faction is playable, with a rule it bends and a weakness that pays for it. Egypt and Rome have no faction goal yet; the other faction goals each score 2 VP.</p>
       <p>Production and Gold figures below are the listed prices.</p>
       <div className="guide-heirs">
@@ -324,7 +321,6 @@ export function GuideContent({ section }: { section: GuideSection }) {
       </div>
     </>;
     case 'controls': return <>
-      <p className="guide-lede">Keep your attention on the map.</p>
       <dl className="guide-definitions guide-controls">
         <div className="touch-only"><dt>Tap, then tap again</dt><dd>Select a unit, tap a destination for the path and forecast, then tap it again or Confirm to order.</dd></div>
         <div className="touch-only"><dt>Drag / pinch / double-tap</dt><dd>Pan with one finger. Pinch to zoom around both fingers. Double-tap a selected unit or an inspection tile to zoom in; a second destination tap confirms its order.</dd></div>
@@ -348,6 +344,7 @@ export function GuideContent({ section }: { section: GuideSection }) {
         <div><dt>Shift+Return</dt><dd>End turn or Ready. If decisions remain, review the list and confirm once or go to the first decision. The End Turn button and Ready anyway use the same review.</dd></div>
         <div><dt>1–8</dt><dd>Switch between local human seats.</dd></div>
         <div><dt>Backspace / Delete</dt><dd>Cancel the selected unit’s pending order.</dd></div>
+        <div><dt>P</dt><dd>Ping: mark a tile for your teammate. Press P, then click the tile. Escape cancels. Works only when you have a human teammate.</dd></div>
         <div><dt>Shift + X</dt><dd>Disband the selected unit.</dd></div>
         <div><dt>Escape</dt><dd>Close a panel, cancel targeting, or deselect. On a coach question, Escape only hides the card. The Coach question button, or the Turn report (<kbd>L</kbd>), brings it back.</dd></div>
         <div><dt>A / D</dt><dd>With Diplomacy open: accept or decline the offer awaiting your reply. Diplomacy then moves to the next offer, or closes.</dd></div>
@@ -376,7 +373,6 @@ function Credits() {
   const others = SOUND_MANIFEST.filter((e) => !e.file.startsWith('music/') && e.license === 'CC0-1.0' && e.author !== 'Kenney')
     .filter((e, i, all) => all.findIndex((o) => o.attribution === e.attribution) === i);
   return <>
-    <p className="guide-lede">Art and sound.</p>
     <h3>Artwork</h3>
     <p>Legatum’s original artwork is offered under CC BY 4.0 to the extent rights exist. The Niter, Oil and Silicon resource medallions were generated with an OpenAI image model, selected and resized for the game. Their prompts and provenance are in the resource art README.</p>
     <h3>Music</h3>

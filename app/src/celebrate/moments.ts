@@ -320,12 +320,12 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
           const named = hall ? cities.get(hall.city)?.name : undefined;
           const nameOf = (id: number) => empireOfPlayer(after, id);
           if (from !== null && from !== e.player) {
-            push(i, e.player, { tier: 'major', at, title: 'The Yam Relay Station is taken', kicker: 'The open road is yours',
+            push(i, e.player, { tier: 'major', at, title: 'The Yam Relay Station is taken',
               effect: `+${e.vp} VP · you hold the Yam Relay Station${named ? ` in ${named}` : ''}`, lore: 'The road follows the banner over the city. So do the points.',
               details: [`Every empire may cross all of your land at Peace now: guard it, or accept the traffic.`, `${nameOf(from)} lost the points and the road. A rival that takes the city takes both.`],
               deltas: [{ counter: 'vp', amount: e.vp }], emblem: 'hall', building: 'YamRelayStation' });
           } else if (e.again || from !== null) {
-            push(i, e.player, { tier: 'major', at, title: 'The Yam Relay Station stands again', kicker: 'The open road',
+            push(i, e.player, { tier: 'major', at, title: 'The Yam Relay Station stands again',
               effect: `+${e.vp} VP · every empire crosses your land at Peace`, lore: 'Rebuilt from the foundations. The road is open.',
               details: ['Keep its city: a rival that captures it takes the points and the road.'], deltas: [{ counter: 'vp', amount: e.vp }], emblem: 'hall', building: 'YamRelayStation' });
           } else {
@@ -344,7 +344,7 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
           break;
         }
         if (e.faction === 'India') {
-          push(i, e.player, { tier: 'legendary', at: capital(e.player), title: 'The Imperial Diwan', kicker: 'The regional courts',
+          push(i, e.player, { tier: 'legendary', at: capital(e.player), title: 'The Imperial Diwan',
             effect: `+${e.vp} VP while you hold its city`, lore: 'The regional accounts now reach the imperial treasury.',
             details: ['A rival that captures the Diwan’s city takes its points.'],
             deltas: [{ counter: 'vp', amount: e.vp }], building: 'ImperialDiwan' });
