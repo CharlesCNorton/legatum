@@ -107,6 +107,7 @@ Every word a player reads (sheets, cards, the Guide, tooltips, breakdowns, repor
 - **A card's way to the rulebook (UI review, 2026-11-21):** a faction sheet ends with "Full rules in How to Play", which opens the Guide at that faction's own rules. A link-style button is at least 13px in the accent colour with a `:focus-visible` ring, so it reads as clickable before hover. A deep link into a modal scrolls only the modal's content pane, never the dialog shell: the title and Close stay in view.
 - **A number the player can change is never stated as fixed (user, 2026-11-22, on the title screen's "You against five AI empires": "it could be more or less than that"):** say the range ("1 to 7 AI empires", built from the constants) or show the live count; "five" is only true as "five by default".
 - **Numbers first, in the player's terms:** "+1 Gold for every 2 population", not "per complete pair of population". "Up to 100 HP", not "(max 100)". "At least 1 move", not "(minimum 1)".
+- **Rates side by side use one form (plain-language review, 2026-11-22):** two or more rates in a sentence are all percentages or all words, in the same order as the things they rate: "turn 50% and 25% of a city's Production into Gold and Science. Other empires get 25% and 10%", never "half and a quarter … a quarter and 10%".
 - **No mechanics-speak or code terms,** unless the game teaches the word: floor, rounded down, complete, held (for Gold: say "in your treasury"), accrue, tick, live or permanent VP source, base (strength, cost), adjusted, multiplier, stage, view, excepted, retain, provided that, mutually exclusive, Σ, max/min, i.e./e.g. A rounding rule is never worth a clause: state the number or say "about".
 - **In-theme words for mechanics:** interest (Swiss Gold from the treasury), tribute (bought peace), levy (Byzantine armies), the agoge, a vow (Sakoku). Lore may be colourful; rules lines are plain.
 - **Every rule fits one plain sentence** (user, `legatum-design`). If a rule needs a paragraph of exceptions to say, flag it as a design smell rather than writing the paragraph.
@@ -140,6 +141,7 @@ Every word a player reads (sheets, cards, the Guide, tooltips, breakdowns, repor
 | at Peace, at War, Alliance | treaty states, capitalised | at peace, at war |
 | supply | the Iron or Coal your deposits give; each building or unit that needs it uses 1 while it exists ("Iron 5 / 6") | stockpile, stored Iron/Coal, Iron per turn, Coal per turn |
 | interest | Swiss Gold earned from the treasury | treasury bonus |
+| Gold project, Science project | what a city runs instead of building, turning part of its Production (Egypt: its Food-made build progress) into Gold or Science; every empire since 2026-11-22 | Industry project, Industry: Gold (a copy test bans "Industry project") |
 | Grow | Egypt's project that grows a city with its surplus Food instead of building (2026-11-21); "surplus Food" is Food beyond 2 per population | growth project, grow mode |
 | tribute | Byzantium buying peace | bribe, peace payment |
 | level | a unit's promotion level ("level 4 or higher") | rank, promotion tier |
