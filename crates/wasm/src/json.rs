@@ -294,7 +294,7 @@ mod tests {
         // Working it skips; the save shape is unchanged, and a 48 save is refused. Rules 50: a
         // rival capital's VP is held, so `Player::capitals_taken` is gone, and a 49 save is refused.
         // Rules 51 changes resolution only (peaceful contests), not the save shape.
-        assert!(legatum_core::RULES_VERSION >= 50);
+        const _: () = assert!(legatum_core::RULES_VERSION >= 50);
         let mut setup = GameSetup::all_ai(3);
         setup.players[0].faction = legatum_core::Faction::Egypt;
         let mut state = legatum_core::new_game(&setup);
