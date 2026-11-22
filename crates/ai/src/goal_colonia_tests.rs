@@ -124,6 +124,17 @@ fn the_most_experienced_level_two_is_kept_until_a_level_three_exists() {
     assert!(!p.colonia_reserved(unit(1)));
     assert!(p.colonia_reserved(unit(4)), "the closest to level 3");
     assert!(!p.colonia_reserved(unit(6)), "lower veterans still found cities");
+    // With only level-1 veterans, the best is kept once Rome has three cities.
+    let ones = veteran(veteran(rome(), 1, Hex::new(10, 12), 1, 30), 4, Hex::new(11, 12), 1, 20);
+    let unit = |id: u32| ones.units.iter().find(|u| u.id == UnitId(id)).unwrap();
+    assert!(!hard(&ones).colonia_reserved(unit(1)), "one city: expansion first");
+    let three = ViewBuilder { view: ones.clone() }
+        .city(2, ME, Hex::new(4, 3), 2)
+        .city(3, ME, Hex::new(4, 13), 2)
+        .build();
+    let p = hard(&three);
+    assert!(p.colonia_reserved(unit(1)));
+    assert!(!p.colonia_reserved(unit(4)));
     // Once a level 3 exists, it is the founder and the level 2s found as before.
     let v = veteran(v, 7, Hex::new(9, 12), 3, 60);
     let p = hard(&v);

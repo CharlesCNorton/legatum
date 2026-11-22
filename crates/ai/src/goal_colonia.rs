@@ -5,9 +5,9 @@
 //! `goals::COLONIA_BORDER_REACH` tiles of a rival's land is the Colonia: 2 VP to whoever holds it.
 //! Rome's veterans found its cities, so the goal is a question of which veteran founds where:
 //! - **reserve**: while the Colonia is open a level-3 veteran never founds an ordinary city, and
-//!   while no unit is level 3 the most experienced level-2 melee unit is kept from founding too,
-//!   so the war that earns the third level has a unit to earn it (`colonia_reserved`). Lower
-//!   veterans found cities as before, so expansion is not slowed.
+//!   while no unit is level 3 the most experienced veteran below it is kept from founding too
+//!   (at level 2 always, at level 1 once Rome has three cities), so the war that earns the third
+//!   level has a unit to earn it (`colonia_reserved`). The other veterans found cities as before.
 //! - **found**: a level-3 veteran walks to the most defensible reachable site beside a rival's
 //!   border and founds there (`plan_colonia`). The city must be held: a Colonia that falls
 //!   hands its captor the 2 VP, so a site is priced by its hold risk (the rival army that can
@@ -34,6 +34,10 @@ const COLONIA_TRAVEL_COST: i32 = 25;
 /// beyond adds this much hold risk (percent).
 const COLONIA_HOME_REACH: i32 = 5;
 const COLONIA_FAR_RISK_PER_HEX: i32 = 6;
+/// Cities Rome founds before it keeps its best level-1 veteran from founding, to grow it into
+/// the Colonia's founder (level 3 needs 90 XP: in a 160-game smoke without this no Roman unit
+/// ever reached it, each level-1 veteran being spent on a city).
+const COLONIA_RESERVE_CITIES: usize = 3;
 /// Hold-risk percent above which a site is not worth founding: the expected swing is negative.
 const COLONIA_MAX_RISK: i32 = 45;
 
@@ -57,8 +61,10 @@ impl Planner<'_> {
     }
 
     /// Gene `rome_colonia`: `u` is kept from ordinary founding. Every level-3 melee unit while
-    /// the Colonia is open; while none exists, the single most experienced level-2 melee unit
-    /// (highest XP, then lowest id), the one closest to earning the founder.
+    /// the Colonia is open; while none exists, the single most experienced veteran below level 3
+    /// (highest level, then XP, then lowest id), the one closest to earning the founder: always
+    /// at level 2, and at level 1 once Rome has `COLONIA_RESERVE_CITIES` cities (before that
+    /// every veteran founds, since expansion comes first).
     pub(crate) fn colonia_reserved(&self, u: &UnitView) -> bool {
         if !self.colonia_on() || data::unit_class(u.kind) != Some(UnitClass::Melee) {
             return false;
@@ -69,12 +75,12 @@ impl Planner<'_> {
         if self.own_melee().any(|m| m.level >= goals::COLONIA_LEVEL) {
             return false;
         }
-        let candidate = goals::COLONIA_LEVEL - 1;
-        u.level == candidate
+        (u.level + 1 == goals::COLONIA_LEVEL
+            || (u.level >= 1 && self.ctx.own_cities.len() >= COLONIA_RESERVE_CITIES))
             && self
                 .own_melee()
-                .filter(|m| m.level == candidate)
-                .max_by_key(|m| (m.xp.unwrap_or(0), std::cmp::Reverse(m.id)))
+                .filter(|m| m.level >= 1)
+                .max_by_key(|m| (m.level, m.xp.unwrap_or(0), std::cmp::Reverse(m.id)))
                 .is_some_and(|best| best.id == u.id)
     }
 
