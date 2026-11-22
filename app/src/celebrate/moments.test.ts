@@ -414,7 +414,7 @@ describe('reward emblems and gain lists', () => {
 
   describe('India’s Imperial Diwan', () => {
     it('holding the Diwan the first time is a legendary card and regaining it is a report line', () => {
-      expect(map([{ type: 'FactionGoalCompleted', player: 0, faction: 'India', vp: 2 }]).map((m) => [m.tier, m.title])).toEqual([['legendary', 'The Imperial Diwan']]);
+      expect(map([{ type: 'FactionGoalCompleted', player: 0, faction: 'India', vp: 2 }]).map((m) => [m.tier, m.title, m.building])).toEqual([['legendary', 'The Imperial Diwan', 'ImperialDiwan']]);
       expect(map([{ type: 'FactionGoalCompleted', player: 0, faction: 'India', vp: 2, again: true }])).toEqual([]);
       expect(map([{ type: 'FactionGoalLost', player: 0, faction: 'India', vp: 2 }])).toEqual([]);
     });
@@ -424,7 +424,7 @@ describe('reward emblems and gain lists', () => {
     it('the last retirement is the goal’s legendary card, earlier ones are major cards, and a rival’s retirement is no moment of yours', () => {
       const retired = (n: number): Event => ({ type: 'VeteranRetired', player: 0, unit: 3, kind: 'Spearman', city: 1, retired: n, of: 3 });
       expect(map([retired(1)]).map((m) => [m.tier, m.title, m.effect])).toEqual([['major', 'A veteran retires with honour', '1 of 3 retired']]);
-      expect(map([retired(3), { type: 'FactionGoalCompleted', player: 0, faction: 'Sparta', vp: 2 }]).map((m) => [m.tier, m.title])).toEqual([['legendary', 'The veterans are honoured']]);
+      expect(map([retired(3), { type: 'FactionGoalCompleted', player: 0, faction: 'Sparta', vp: 2 }]).map((m) => [m.tier, m.title, m.building])).toEqual([['legendary', 'The veterans are honoured', 'Agoge']]);
     });
     it('the Celts’ first call is legendary, a regained goal is a report line, a lost camp is a sober major card', () => {
       expect(map([{ type: 'FactionGoalCompleted', player: 0, faction: 'Celts', vp: 2 }]).map((m) => [m.tier, m.title])).toEqual([['legendary', 'The warbands gather']]);
@@ -466,7 +466,7 @@ describe('the Mongols’ Yam Relay Station moments', () => {
   const lost = (player: number): Event => ({ type: 'FactionGoalLost', player, faction: 'Mongols', vp: 2 });
   const got = (player: number, again?: boolean): Event => ({ type: 'FactionGoalCompleted', player, faction: 'Mongols', vp: 2, ...(again ? { again } : {}) });
   it('building it is the legendary moment, rebuilding a major card', () => {
-    expect(map([got(0)])[0]).toMatchObject({ tier: 'legendary', title: 'The Yam Network', deltas: [{ counter: 'vp', amount: 2 }] });
+    expect(map([got(0)])[0]).toMatchObject({ tier: 'legendary', title: 'The Yam Network', deltas: [{ counter: 'vp', amount: 2 }], building: 'YamRelayStation' });
     expect(map([got(0, true)])[0]).toMatchObject({ tier: 'major', title: 'The Yam Relay Station stands again' });
   });
   it('capturing it is a major card for the captor and a sober loss for the loser', () => {

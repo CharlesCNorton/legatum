@@ -23,6 +23,7 @@ import { atWar } from '../diplomacy';
 import { WONDER_INFO, cityWonders, holdingCity, wonderArt, wonderBonusParts, wonderDiscoveryLine, wonderYieldWord } from '../wonders';
 import { FactionSeal } from '../brand/ornaments';
 import { RankMark } from './RankMark';
+import { buildingArtSlug, slugUrl } from '../unlockArt';
 import { pendingProduction, sleepOrderText } from '../orders';
 import { capitalMark, replacementTileLine } from '../capitalMark';
 import { CapitalNote, ReplacementNote } from './CapitalStar';
@@ -104,7 +105,7 @@ export function TileCard({ view, hex, anchor, routeWarning, blockedReason, reinf
     : dormantNote;
   return (
     <div className="tilecard" ref={placed.ref} style={placed.style}>
-      {t.landmark ? <div className="tilecard-lead" data-testid="tile-landmark"><Icon name={buildingIconName(t.landmark.building)} size={46} /><div><b className="tilecard-lead-name">{BUILDING_NAME[t.landmark.building]}</b><span className="tilecard-lead-kind">Wonder tile · {owner ? empireOfPlayer(view, owner.id) : 'unclaimed'}</span></div></div> : t.wonder ? <WonderLead view={view} hex={hex} t={t} /> : resource ? (
+      {t.landmark ? <div className="tilecard-lead" data-testid="tile-landmark"><LeadArt url={slugUrl(buildingArtSlug(t.landmark.building, owner?.faction), 128) ?? slugUrl(buildingArtSlug(t.landmark.building), 128)} icon={buildingIconName(t.landmark.building)} /><div><b className="tilecard-lead-name">{BUILDING_NAME[t.landmark.building]}</b><span className="tilecard-lead-kind">Wonder tile · {owner ? empireOfPlayer(view, owner.id) : 'unclaimed'}</span></div></div> : t.wonder ? <WonderLead view={view} hex={hex} t={t} /> : resource ? (
         <div className="tilecard-lead" data-testid="tile-resource">
           <Icon name={`resource-${resource.toLowerCase()}`} size={46} label={RESOURCE_INFO[resource].name} />
           <div>
@@ -253,4 +254,9 @@ function WonderLead({ view, hex, t }: { view: PlayerView; hex: Hex; t: PlayerVie
       </ul>
     </div>
   );
+}
+
+/** The card's lead picture: the painting (the same 56 px as a natural wonder's), else the engraved icon. */
+function LeadArt({ url, icon }: { url: string | null; icon: string }) {
+  return url ? <img src={url} width={56} height={56} alt="" draggable={false} /> : <Icon name={icon} size={46} />;
 }
