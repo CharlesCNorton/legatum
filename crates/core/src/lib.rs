@@ -49,7 +49,7 @@ pub mod rules;
 /// 50: Fable review batch (Sam, 2026-11-22): a rival's original capital scores 1 VP only while held; Alliance upkeep is waived at War with a team close to winning; experiment `no_purchase_under_threat`; same-turn tile buys, era firsts and exact world-wonder ties between empires are drawn by seed. `Player::capitals_taken` is gone from the save.
 /// 51: Units of empires not at War stepping onto one tile in the same round no longer all bounce: the team with the most combined strength among its claimants moves in, the rest stay put, nobody fights; equal totals are drawn by seed, and so is an exact force tie at a fallen city, which used to bounce everyone (Sam, 2026-11-22).
 /// 52: No rule changed. Unit, building and improvement identifiers were renamed to the PascalCase of their display names (`Soldier` is `Spearman`, `RelayUplink` is `GreatLibrary`, ...), which changes the serialized state and so every state hash. The old names still load through serde aliases (`types.rs`), for tapes, archived games and fixtures.
-/// 53: reserved for the Age card fix (Humble the mighty), landing separately.
+/// 53: Humble the mighty: when no rival team is ahead of yours on VP, a capture from the rival team with the most VP counts (owner, 2026-11-22). The save shape is unchanged.
 /// 54: Rome and Egypt get faction goals (Sam, 2026-11-22). Rome's Colonia Victrix: a city founded by a level-3 melee veteran within two tiles of a rival's land is held 2 VP. Egypt's royal tomb (`Action::Tomb`): while it is built no Egyptian city builds or grows; after 15 turn ends of work it stands in the capital, held 2 VP. `Player` gains `colonia_city`, `tomb_work`, `tomb_turns` and `tomb_city`.
 pub const RULES_VERSION: u32 = 54;
 pub mod scenario;
