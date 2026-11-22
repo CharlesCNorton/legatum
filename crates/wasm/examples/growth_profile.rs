@@ -81,8 +81,11 @@ fn main() {
         let (save, save_ms) = ms(|| game.save_json());
         let (loaded, load_ms) = ms(|| Game::from_save_json(&save));
         assert!(loaded.is_ok(), "the save reads back");
-        let (archive, archive_ms) = ms(|| game.archive().ok().expect("archive"));
-        let (_, public_ms) = ms(|| game.public_archive().ok().expect("public archive"));
+        let (archive, archive_ms) = ms(|| game.archive().unwrap_or_else(|_| panic!("archive")));
+        let (_, public_ms) = ms(|| {
+            game.public_archive()
+                .unwrap_or_else(|_| panic!("public archive"))
+        });
         println!(
             "{t},{},{},{end_ms:.1},{view_ms:.1},{},{save_ms:.1},{},{load_ms:.1},{archive_ms:.1},{},{public_ms:.1},{}",
             count("units"),
