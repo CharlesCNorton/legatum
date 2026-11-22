@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cardHint, cardMeter, cardName } from './ageCards';
+import { cardHint, cardMeter, cardName, cardNameAndAsk } from './ageCards';
 
 describe('World Age cards', () => {
   it('names a card shortly', () => {
@@ -16,5 +16,8 @@ describe('World Age cards', () => {
 
   it('words the meters of the capture kinds', () => {
     expect(cardMeter({ kind: 'Breach' }, 0, 1)?.label).toBe('Walled cities captured since the Age began: 0 of 1');
+    expect(cardMeter({ kind: 'Population', n: 9 }, 6, 9)?.label).toBe('Population grown since the Age began: 6 of 9');
+    expect(cardMeter({ kind: 'Cities', n: 4 }, 3, 4)?.label).toBe('Cities gained since the Age began: 3 of 4');
+    expect(cardNameAndAsk('Dominion: gain 4 cities')).toBe('Dominion, gain 4 cities');
   });
 });

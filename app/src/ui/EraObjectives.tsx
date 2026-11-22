@@ -4,7 +4,7 @@
 import { useGame } from '../store';
 import { eraName, eraNumeral } from './eraResearch';
 import { RingMedallion } from './ringMedallion';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useCombatFx } from '../feel';
 import { useReducedMotion } from './useReducedMotion';
 import { motionStill } from './motion';
@@ -55,10 +55,12 @@ export function ObjectiveRows({ lines, preview = false, big = false, inline = fa
       const idle = done && !l.scoredHere;
       const label = `${family}: ${l.text}, ${l.scoredHere ? 'scored' : idle ? `not needed: the Age is scored` : preview ? 'revealed when the first empire enters the era' : `${l.shown} of ${l.target}`}`;
       return <li key={l.slot} className={`eo-line fam-${l.family.toLowerCase()}${l.met && !preview && !idle ? ' met' : ''}${l.scoredHere ? ' scored' : ''}${idle ? ' idle' : ''}${l === nearest ? ' nearest' : ''}${flash.includes(l.slot) ? ' flash' : ''}`} data-testid="era-objective" data-slot={l.slot} data-family={l.family}>
-        <span className="eo-fam" title={compact ? family : undefined}>
-          {compact ? <><Icon name={FAMILY_ICON[l.family]} size={14} /><span className="sr-only">{family}</span></> : inline ? <><Icon name={FAMILY_ICON[l.family]} size={13} />{family}</> : family}
+        <span className="eo-fam" title={compact || inline ? family : undefined}>
+          {compact || inline ? <><Icon name={FAMILY_ICON[l.family]} size={14} /><span className="sr-only">{family}</span></> : family}
         </span>
-        <span className="eo-text" title={cardName(l.text) !== l.text ? l.text : undefined}>{cardName(l.text)}</span>
+        {inline && l.text.includes(':')
+          ? <span className="eo-text" title={l.text}>{cardName(l.text)} <span className="eo-ask">· {l.text.slice(l.text.indexOf(':') + 1).trim()}</span></span>
+          : <span className="eo-text" title={cardName(l.text) !== l.text ? l.text : undefined}>{cardName(l.text)}</span>}
         {!idle && <Count l={l} preview={preview} />}
         {accounting && !preview && !l.scoredHere && !idle && l.countBaseline != null && l.countTotal != null && l.countingSinceTurn != null && !l.objective?.kind.match(/^(Breach|HumbleTheMighty|Veterans)$/) &&
           <span className="eo-account" data-testid="era-count-account">{l.countTotal} {COUNT_UNIT[l.kind] ?? 'total'} now · counting since turn {l.countingSinceTurn}, from {l.countBaseline}</span>}
@@ -187,12 +189,20 @@ export function EraObjectivesResearch({ view }: { view: PlayerView }) {
   const hud = eraHud(view);
   const { focus } = hud;
   const still = motionStill(useReducedMotion(), useCombatFx((st) => st.enabled));
-  const sealKey = `${focus.era}:${focus.state}`;
-  const metKeys = focus.lines.filter((l) => l.met).map((l) => `${focus.era}:${l.slot}:met`);
-  // A newly opened or newly scored Age stamps its seal in; a card newly met flashes once. Never under reduced motion or with animations off.
-  const stamp = !hud.noObjective && !still && !seenStamps.has(sealKey);
-  const flash = still ? [] : metKeys.filter((k) => !seenStamps.has(k));
-  useEffect(() => { if (!hud.noObjective) [sealKey, ...metKeys].forEach((k) => seenStamps.add(k)); });
+  // Keyed by seat, so each hot-seat player sees their own stamp.
+  const sealKey = `${view.me}:${focus.era}:${focus.state}`;
+  const metSlots = focus.lines.filter((l) => l.met).map((l) => l.slot);
+  const metKey = (slot: number) => `${view.me}:${focus.era}:${slot}:met`;
+  // A newly opened or newly scored Age stamps its seal in; a card newly met flashes once. Never under reduced motion or with
+  // animations off. Decided once per key while mounted, so a re-render mid-animation does not cut it short.
+  const decided = useRef(new Map<string, boolean>());
+  const decide = (key: string) => {
+    if (!decided.current.has(key)) decided.current.set(key, !still && !seenStamps.has(key));
+    return decided.current.get(key)!;
+  };
+  const stamp = !hud.noObjective && decide(sealKey);
+  const flash = hud.noObjective ? [] : metSlots.filter((slot) => decide(metKey(slot)));
+  useEffect(() => { if (!hud.noObjective) [sealKey, ...metSlots.map(metKey)].forEach((k) => seenStamps.add(k)); });
   return <section className={`era-objectives-research${hud.noObjective ? ' no-obj' : ''}`} data-testid="research-objectives" aria-label="World Ages">
     {hud.noObjective
       ? <div className="eor-col current" data-testid="research-objectives-current">
@@ -207,7 +217,7 @@ export function EraObjectivesResearch({ view }: { view: PlayerView }) {
             <h4>{focus.state === 'scored' ? <>{focus.name} Age: 1 VP scored</> : <>{focus.name} Age: score 1 VP</>}</h4>
             {focus.era < ERA_COUNT && <p className="eo-sub eor-next" data-testid="research-objectives-next">The next Age begins when any empire enters the {eraName(focus.era)} era.</p>}
           </header>
-          <ObjectiveRows lines={focus.lines} inline accounting view={view} era={focus.era} flash={flash.map((k) => Number(k.split(':')[1]))} />
+          <ObjectiveRows lines={focus.lines} inline accounting view={view} era={focus.era} flash={flash} />
         </div>
       </div>}
   </section>;
