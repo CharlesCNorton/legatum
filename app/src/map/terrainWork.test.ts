@@ -24,3 +24,24 @@ describe('what rebuilds the blurred land fields', () => {
     expect(landChanged(sig({ ...plain, region: 9 }), sig({ ...plain, region: 70 }))).toBe(true);
   });
 });
+
+describe('where the coast formula is settled', () => {
+  it('finds the field value past which a rising distance stays over or under a target', async () => {
+    const { coastBound } = await import('./terrain');
+    const ds = (a: number) => (a - 0.5) * 100;
+    const hi = coastBound(ds, 5, true), lo = coastBound(ds, -20, false);
+    expect(hi).toBeGreaterThanOrEqual(0.55);
+    expect(hi).toBeCloseTo(0.55, 6);
+    expect(ds(hi)).toBeGreaterThanOrEqual(5);
+    expect(lo).toBeLessThanOrEqual(0.3);
+    expect(lo).toBeCloseTo(0.3, 6);
+    expect(ds(lo)).toBeLessThanOrEqual(-20);
+  });
+
+  it('is out of reach when the distance never gets there', async () => {
+    const { coastBound } = await import('./terrain');
+    const flat = (a: number) => a - 0.5;
+    expect(coastBound(flat, 5, true)).toBe(2);
+    expect(coastBound(flat, -5, false)).toBe(-1);
+  });
+});
