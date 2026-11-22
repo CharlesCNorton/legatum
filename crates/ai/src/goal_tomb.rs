@@ -12,8 +12,10 @@
 //!   finish with time to hold its points, no enemy army stands near a city, and the would-be
 //!   tomb city (`TombView::site`) is garrisoned. A count already started is finished whenever it
 //!   is safe: the turns already given are sunk and the rest is cheaper every turn.
-//! - **pause** when an enemy army comes near a city, so the cities can build defenders again,
-//!   unless the tomb is a turn or two from standing; and when the game would end first.
+//! - **pause** when an enemy army comes near a city, so the cities can build defenders again; a
+//!   count further along tolerates a larger army (its turns are kept, so finishing is worth more
+//!   as it grows), and a tomb a turn or two from standing is finished. Also when the game would
+//!   end first.
 //! - **guard** the would-be tomb city while the work is wanted, and the tomb city once it stands
 //!   (`goal_cities.rs`), like the Courier Hall's city.
 //!
@@ -40,6 +42,9 @@ pub(crate) const TOMB_GARRISON: usize = 2;
 /// A tomb this many turn ends from standing is finished through a threat: pausing would give
 /// the cities one or two turns of building and cost the points' arrival as long.
 const TOMB_FINISH_THROUGH: u32 = 2;
+/// Every this many turn ends already given to the tomb, one more enemy unit at the gates is
+/// tolerated before the work pauses (turns 0-4: any unit pauses it; 5-9: two; 10-12: three).
+const TOMB_PAUSE_TOLERANCE_TURNS: u32 = 5;
 /// An enemy army this close to one of our cities stops (or pauses) the work.
 const THREAT_HEXES: i32 = 3;
 /// Before the work starts the approaches must be clear this far out: an army two turns away
@@ -163,8 +168,9 @@ fn tomb_ready(view: &PlayerView, open_end: bool) -> bool {
     on_tile && guards >= need
 }
 
-/// The work should pause now: an enemy army has come near one of our cities and the tomb is
-/// more than `TOMB_FINISH_THROUGH` turn ends from standing, or the game ends before it can.
+/// The work should pause now: an enemy army has come near one of our cities (larger the more
+/// of the count is done) and the tomb is more than `TOMB_FINISH_THROUGH` turn ends from
+/// standing, or the game ends before it can.
 fn tomb_pause(view: &PlayerView, open_end: bool) -> bool {
     let Some(t) = open_tomb(view) else {
         return false;
@@ -176,7 +182,10 @@ fn tomb_pause(view: &PlayerView, open_end: bool) -> bool {
     if i64::from(view.turn) + i64::from(left) > i64::from(last_turn(view, open_end)) {
         return true;
     }
-    left > TOMB_FINISH_THROUGH && enemies_near_cities(view, THREAT_HEXES, None) > 0
+    // The count is kept across a pause, so the more of it is done the more it is worth
+    // finishing on time: a larger army is needed to stop it.
+    let tolerated = (t.turns / TOMB_PAUSE_TOLERANCE_TURNS) as usize;
+    left > TOMB_FINISH_THROUGH && enemies_near_cities(view, THREAT_HEXES, None) > tolerated
 }
 
 /// This turn's tomb order, if any (gene `egypt_tomb`).

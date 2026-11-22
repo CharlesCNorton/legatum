@@ -117,6 +117,13 @@ fn an_enemy_army_on_the_approaches_holds_the_start_and_pauses_the_work() {
     // Two turn ends from standing: finish it.
     near.actions.tomb = Some(tomb(true, goals::TOMB_TURNS - 2));
     assert_eq!(tomb_orders(&near), (false, false));
+    // Ten turns in, one unit at the gates does not stop it; three do.
+    near.actions.tomb = Some(tomb(true, 10));
+    assert_eq!(tomb_orders(&near), (false, false));
+    let mut army = with_enemy(with_enemy(near, 51, off(6, 13)), 52, off(5, 14));
+    assert_eq!(tomb_orders(&army), (false, true));
+    army.actions.tomb = Some(tomb(true, 5));
+    assert_eq!(tomb_orders(&army), (false, true), "one tolerated at five turns");
 }
 
 #[test]
