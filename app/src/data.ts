@@ -708,7 +708,7 @@ export const FACTION_INFO: Record<Faction, FactionInfo> = {
   Byzantium: factionInfo("byzantium", "Byzantium", "Hold Constantinople. Hire the swords.", companyRule(), BYZANTIUM_LEGIONARY, goalLine('Byzantium'), THIN_LEVIES),
   Germany: factionInfo("germany", "Germany", "Coal, steel, and skilled hands.", `Your strategic deposits supply twice as much. Your Gold and Science projects pay more: ${RULES.germanyProjectGoldPercent}% and ${RULES.germanyProjectSciencePercent}% of a city’s Production. Other empires get ${RULES.projectGoldPercent}% and ${RULES.projectSciencePercent}%.`, uniquePieceText(UNIQUE_PIECE.Germany), goalLine('Germany'), 'Each Production building in a German city costs 1 Food.'),
   Celts: factionInfo("celts", "Celts", "Raid, burn and move on.", `A sack takes ${RULES.celtsSackGoldPerPopulation} Gold per population and raises a warband camp. A sacked rival capital scores 1 VP for good. Barbarians don't attack the Celts.`, '', goalLine('Celts'), "Celts can't keep cities they capture: they sack and burn them. A city you founded comes home intact when you retake it."),
-  Mongols: factionInfo("mongols", "Mongols", "Across the steppe, news travels.", "Military units, Scouts too, get +1 move. Settlers keep 2 moves. A city with a Market at least 8 tiles from your capital earns +2 Gold.", uniquePieceText(UNIQUE_PIECE.Mongols), goalLine('Mongols'), "Mongol military units get no defence bonus from terrain, though fortifying still works. The Mongols never build Walls, and a city they capture loses its Walls. They buy no Siege before the Medieval era."),
+  Mongols: factionInfo("mongols", "Mongols", "Across the steppe, news travels.", "Military units, Scouts too, get +1 move. Settlers keep 2 moves. A city with a Market at least 8 tiles from your capital earns +2 Gold.", uniquePieceText(UNIQUE_PIECE.Mongols), goalLine('Mongols'), "Mongol military units get no defence bonus from terrain, though fortifying still works. The Mongols never build Walls and buy no Siege before the Medieval era."),
   Sparta: factionInfo("sparta", "Sparta", "Train in the agoge. Hold the line.", `Spartan military units start at level 1, gain XP 50% faster, and alone can reach level 6, Spartan Veteran. Each level adds ${RULES.promotion.strengthPercent}% to a unit's strength. Hoplites gain +${HOPLITE_PHALANX_STRENGTH} strength next to another Hoplite. The melee line fights at full strength when wounded. Destroying an enemy military unit restores up to 100 HP, shared among the Spartan units that hit it that turn and survived. Capturing a city fully heals Spartan military units within 2 tiles.`, uniquePieceText(UNIQUE_PIECE.Sparta), goalLine('Sparta'), `Settlers and non-military buildings cost 50% more Production, except Walls, Castles, Star Forts and the Agoge.`),
   Athens: factionInfo("athens", "Athens", "Debate in the agora. Study at the Lyceum.", "Every ruin also gives you 20 Science.", uniquePieceText(UNIQUE_PIECE.Athens), goalLine('Athens'), `Markets yield only +1 Gold instead of +3, at the normal ${RULES.buildingStats.Market.cost} Production cost. A rival that captures one of your cities gets one free technology (once per city for each rival).`),
   Rome: factionInfo('rome', 'Rome', 'Serve the legion. Earn the land.', 'A full-health melee veteran (level 1 or higher) can found a city; the unit is consumed.', 'Legionary replaces the Phalangite: a city it founds starts at population 2. ' + uniquePieceText(UNIQUE_PIECE.Rome), goalLine('Rome'), 'Rome cannot train or buy Settlers.'),
@@ -720,14 +720,16 @@ export const factionGoalVp = (faction: Faction): number => goalVp(faction);
 export const GERMANY_PROJECT_GOLD_PERCENT = RULES.germanyProjectGoldPercent;
 export const EGYPT_NILE_BUILD_PERCENT = RULES.egyptNileBuildPercent;
 export const GERMANY_PROJECT_SCIENCE_PERCENT = RULES.germanyProjectSciencePercent;
-/** Every other empire's Gold and Science projects (core `data::PROJECT_*_PERCENT`). */
+/** Every other empire's Gold and Science projects, and everyone's Food project (core `data::PROJECT_*_PERCENT`). */
 export const PROJECT_GOLD_PERCENT = RULES.projectGoldPercent;
 export const PROJECT_SCIENCE_PERCENT = RULES.projectSciencePercent;
-/** A faction's share of city Production a Gold or Science project converts (core `project_percent`). */
-export const projectPercent = (faction: Faction | undefined, project: 'Gold' | 'Science'): number =>
-  faction === 'Germany'
-    ? project === 'Gold' ? GERMANY_PROJECT_GOLD_PERCENT : GERMANY_PROJECT_SCIENCE_PERCENT
-    : project === 'Gold' ? PROJECT_GOLD_PERCENT : PROJECT_SCIENCE_PERCENT;
+export const PROJECT_FOOD_PERCENT: number = RULES.projectFoodPercent;
+/** A faction's share of city Production a project converts (core `project_percent`). */
+export const projectPercent = (faction: Faction | undefined, project: 'Gold' | 'Science' | 'Food'): number =>
+  project === 'Food' ? PROJECT_FOOD_PERCENT
+    : faction === 'Germany'
+      ? project === 'Gold' ? GERMANY_PROJECT_GOLD_PERCENT : GERMANY_PROJECT_SCIENCE_PERCENT
+      : project === 'Gold' ? PROJECT_GOLD_PERCENT : PROJECT_SCIENCE_PERCENT;
 /** Food for the first growth (population 1 to 2) (core `FIRST_GROWTH`). */
 export const FIRST_GROWTH = RULES.firstGrowth;
 /** The game's expected length in turns: the horizon forecasts and the AI pace against (core `data::EXPECTED_GAME_TURNS`). */
@@ -749,6 +751,7 @@ export function factionUnavailableReason(item: ProductionItem, faction: Faction)
   if (availableToPlayer(faction, item)) return null;
   if (faction === 'Aztecs' && item.kind === 'Unit' && HORSE_MOUNTED.includes(item.unit)) return AZTEC_NO_HORSES;
   if (item.kind === 'Project' && item.project === 'Grow') return 'Only Egyptian cities can choose Grow';
+  if (item.kind === 'Project' && item.project === 'Food') return 'Egyptian cities use Grow instead';
   if (faction === 'Egypt' && item.kind === 'Building' && isWorkshopLine(item.building)) return 'Workshops, Forges and Factories do nothing for Egypt, which has no Production';
   if (item.kind === 'Building' && item.building === 'RiceStorehouse') return 'No people can build the Rice Storehouse yet';
   if ((item.kind === 'Building' || item.kind === 'Wonder') && item.building === 'YamRelayStation') return 'Only Mongols can build the Yam Relay Station';
@@ -771,13 +774,13 @@ export const IMPROVEMENT_SUMMARY: Record<ImprovementKind, string> = {
   SaltpetreWorks: 'Adds tile yields and Niter supply',
 };
 /** A project's card text. Egypt's projects convert the build progress its surplus Food makes. */
-function projectCopy(project: 'Gold' | 'Science' | 'Grow', faction?: Faction): { summary: string; blurb: string } {
+function projectCopy(project: 'Gold' | 'Science' | 'Food' | 'Grow', faction?: Faction): { summary: string; blurb: string } {
   if (project === 'Grow') return { summary: 'Grows the city with its surplus Food instead of building', blurb: 'This city builds nothing, and its surplus Food grows it. It never finishes: pick something to build to stop it.' };
   const pct = projectPercent(faction, project);
-  const from = faction === 'Egypt' ? 'the build progress your Food makes' : 'city Production';
+  const from = faction === 'Egypt' ? 'the city’s Food-made build progress' : 'city Production';
   return {
     summary: `Turns ${pct}% of ${from} into ${project} each turn`,
-    blurb: `While it runs, this city builds nothing else, and ${pct}% of ${faction === 'Egypt' ? 'the build progress your Food makes' : 'its Production'} comes out as ${project} every turn. It never finishes: pick another item to stop it.`,
+    blurb: `While it runs, this city builds nothing else, and ${pct}% of ${faction === 'Egypt' ? 'the city’s Food-made build progress' : 'its Production'} comes out as ${project} every turn. It never finishes: pick another item to stop it.`,
   };
 }
 export const improvementName = (kind: ImprovementKind, upgraded = false): string =>
@@ -806,7 +809,7 @@ export function isWallsLine(building: BuildingKind): boolean {
   return false;
 }
 
-/** Mirrors core `data::faction_excluded_building_at`: the Mongols never have the Walls line (rules 55). */
+/** Mirrors core `data::faction_excluded_building_at`: the Mongols never have the Walls line (rules 56). */
 export function factionExcludedBuilding(faction: Faction, building: BuildingKind): string | null {
   if (faction !== 'Sparta' && building === 'Agoge') return 'Only Sparta can build an Agoge';
   if (building === 'RiceStorehouse') return 'No people can build the Rice Storehouse yet';
@@ -825,7 +828,8 @@ function isWorkshopLine(building: BuildingKind): boolean {
 }
 
 export function availableToFaction(faction: Faction, item: ProductionItem): boolean {
-  if (item.kind === 'Project') return item.project !== 'Grow' || faction === 'Egypt';
+  // Nile Egypt grows with Grow, so it has no Food project (core `available_to_faction_rules`).
+  if (item.kind === 'Project') return item.project === 'Grow' ? faction === 'Egypt' : item.project !== 'Food' || faction !== 'Egypt';
   // The Nile: Egypt has no Production, so the Workshop line would do nothing.
   if (faction === 'Egypt' && item.kind === 'Building' && isWorkshopLine(item.building)) return false;
   if (item.kind === 'Unit') return (item.unit !== 'HeirToTheThrone' || faction === 'Byzantium') && (faction !== 'Aztecs' || !HORSE_MOUNTED.includes(item.unit)) && (faction !== 'Rome' || item.unit !== 'Settler');
@@ -836,7 +840,7 @@ export function availableToFaction(faction: Faction, item: ProductionItem): bool
     || Object.values(buildingStatsFor(faction, b).yields).some((n) => !!n);
 }
 
-/** Core `data::available_to_player`: no rule reads the era since the Mongols' Walls stopped opening in the Medieval era (rules 55). */
+/** Core `data::available_to_player`: no rule reads the era since the Mongols' Walls stopped opening in the Medieval era (rules 56). */
 export function availableToPlayer(faction: Faction, item: ProductionItem): boolean {
   return availableToFaction(faction, item);
 }

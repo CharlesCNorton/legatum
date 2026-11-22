@@ -72,7 +72,7 @@ describe.skipIf(!available)('the unlock card for every technology', () => {
     const names = (faction: Faction, tech: TechId) => unlockCardFor(views.get(faction)!, tech).tiles.map((t) => t.name);
     expect(names('India', 'CropRotation')).toContain('Farms and Pastures upgrade: Irrigated Farm, Ranch (+1 Food)');
     expect(names('Byzantium', 'IronWorking')).toContain('Mines upgrade: Deep Mine (+1 Gold on Copper, +1 Production on Iron and Coal)');
-    // The Mongols never raise Walls (rules 55): their Masonry card keeps its Quarry bonus and leaves Walls out.
+    // The Mongols never raise Walls (rules 56): their Masonry card keeps its Quarry bonus and leaves Walls out.
     expect(names('Mongols', 'Masonry')).not.toEqual([]);
     expect(names('Mongols', 'Masonry')).not.toContain('Walls');
     expect(unlockCardFor(views.get('India')!, 'Masonry').tiles.find((t) => t.name === 'Walls')!.locked).toBeNull();

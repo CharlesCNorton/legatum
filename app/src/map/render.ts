@@ -39,7 +39,7 @@ import type { Rect } from './compass';
 import type { LensTile, MapLens } from './lenses';
 import { drawLens, drawOwnerOverlay } from './drawLens';
 import { artFadeFor, DEFAULT_OVERLAYS, ownerWashScale, type OverlaySet } from './overlays';
-import { drawYieldIcons, yieldClusterRects } from './yieldIcons';
+import { drawYieldIcons, yieldClusterRects, YIELD_FILL } from './yieldIcons';
 import { drawImprovements } from './improvementArt';
 import { drawResourceIcons, medallionTop, resourceDetail, STACK_LIFT } from './resourceIcons';
 import type { ScenarioTarget } from '../scenarios/scenarios';
@@ -1347,7 +1347,9 @@ function drawTargetMark(ctx: CanvasRenderingContext2D, look: LookId, S: MapStyle
 }
 
 /** The icon each automatic-build focus wears on the banner. */
-const FOCUS_ICON: Record<CityBuildFocus, string> = { Balanced: 'ui-random', Science: 'yield-science', Gold: 'yield-gold', Military: 'unit-spearman' };
+/** A project focus's icon is drawn in its yield's ink; Military and Economy are labels, in ink. */
+const FOCUS_YIELD = { Gold: 'gold', Science: 'science', Food: 'food' } as const;
+const FOCUS_ICON: Record<CityBuildFocus, string> = { Military: 'unit-spearman', Economy: 'building-workshop', Gold: 'yield-gold', Science: 'yield-science', Food: 'yield-food' };
 
 const q24 = (f: number) => Math.round(Math.max(0, Math.min(1, f)) * 24) / 24;
 
@@ -1380,7 +1382,7 @@ export function bannerMeters(c: CityView, faction?: Faction, focus: CityBuildFoc
     const auto = focus ? { label: 'Auto', icon: FOCUS_ICON[focus] } : undefined;
     out.push(production.state === 'idle'
       // An automated idle city chooses at Ready: it shows its focus, not the red "Build" prompt.
-      ? auto ? { kind: 'production', fraction: 0, text: 'Auto', paused: true, icon: auto.icon, inkIcon: true } : { kind: 'production', fraction: 0, text: 'Build', bad: true, icon: null }
+      ? auto ? { kind: 'production', fraction: 0, text: 'Auto', paused: true, icon: auto.icon, ...(focus === 'Military' || focus === 'Economy' ? { inkIcon: true } : { iconColor: YIELD_FILL[FOCUS_YIELD[focus as keyof typeof FOCUS_YIELD]] }) } : { kind: 'production', fraction: 0, text: 'Build', bad: true, icon: null }
       : {
         kind: 'production', fraction: q24(production.needed > 0 ? production.stored / production.needed : 0),
         text: production.state === 'building' ? (production.turns !== null ? String(production.turns) : '–') : '–',

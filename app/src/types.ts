@@ -155,7 +155,7 @@ export type ProductionItem =
   | { kind: 'Unit'; unit: UnitKind }
   | { kind: 'Building'; building: BuildingKind }
   | { kind: 'Wonder'; building: BuildingKind; tile: Hex }
-  | { kind: 'Project'; project: 'Gold' | 'Science' | 'Grow' }
+  | { kind: 'Project'; project: 'Gold' | 'Science' | 'Food' | 'Grow' }
   /** Improve one owned, worked resource tile (core `improvements`); `improvement` matches the tile's resource. */
   | { kind: 'Improvement'; improvement: ImprovementKind; tile: Hex };
 
@@ -269,7 +269,8 @@ interface IdleBuilding {
 }
 
 export type Automation = 'Explore';
-export type CityBuildFocus = 'Balanced' | 'Science' | 'Gold' | 'Military';
+/** Military and Economy pick builds; Gold, Science and Food run that project (core `CityBuildFocus`). */
+export type CityBuildFocus = 'Military' | 'Economy' | 'Gold' | 'Science' | 'Food';
 export type StandingOrder = 'Sleep' | 'Heal' | 'AutoFire';
 export type ExploreStopReason = 'Complete' | 'Threatened' | 'Damaged' | 'Blocked';
 
@@ -629,7 +630,7 @@ export interface TechUnlock {
   upgrade_from?: UnitKind | null;
   predecessor?: BuildingKind | null;
   min_population?: number;
-  /** Core `research::locked_note`: why this faction cannot build the item yet; said in place of the build line and prices. Always null since rules 55 (its one use, the Mongols' Medieval-era Walls, is gone). */
+  /** Core `research::locked_note`: why this faction cannot build the item yet; said in place of the build line and prices. Always null since rules 56 (its one use, the Mongols' Medieval-era Walls, is gone). */
   locked_note?: string | null;
   cities?: { city: CityId; blocker: string | null; build_turns: number | null; yields_after: CityYields; food_surplus_after: number; turns_to_six_after?: number | null; turns_to_eight_at_gate?: number | null; turns_to_eight_after?: number | null }[];
 }

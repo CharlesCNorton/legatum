@@ -50,7 +50,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await expect(research.locator('.era-card[data-tech="Writing"]')).not.toContainText(/salvage/i);
     await shot(page, size, '60-research-byzantium');
 
-    // The Mongols never raise Walls (rules 55): Masonry's card lists only its Quarry bonus for them.
+    // The Mongols never raise Walls (rules 56): Masonry's card lists only its Quarry bonus for them.
     {
       const context0 = await browser.newContext({ viewport: { width: size.width, height: size.height } });
       try {

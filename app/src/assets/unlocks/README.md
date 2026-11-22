@@ -23,6 +23,8 @@ Painted art needs about 24 px to read (legatum-ui); below that, surfaces keep th
 
 The four later world wonders were painted on 2026-11-01 to match the Great Library, Grand Bazaar and Royal Arsenal: `building-pyramids` (Giza, three pyramids with the temple and causeway), `building-hagiasophia` (Justinian's church of 537: dome, semi-domes, buttresses, atrium, no minarets), `building-eiffeltower` (the 1889 tower of puddled-iron lattice on the Champ de Mars; repainted 2026-11-22 with the real tower's curved taper and a full diorama, keyed with `--lattice`) and `building-iterfusionreactor` (the Cadarache tokamak complex, assembly hall and cooling towers). They went through `tools/art/wonder-art.py` (key the generator's magenta field, fit to the shared 1254 px footprint, then `landmark-atlas-edit.py`'s map-palette grade and ground wash); prompts are beside the masters.
 
+Three faction goals with no building of their own have a painted scene for their goal card (2026-11-22): `goal-reserve` (Switzerland's Reserve, an Alpine strongroom with its gold), `goal-warbands` (the Celts' warband muster camp, thatched roundhouses and a carnyx standard, distinct from the barbarian camp) and `goal-newfire` (the Aztec New Fire altar, shown when the rite completes). `celebrate/moments.ts` `GOAL_ART` maps them; prompts sit beside the files.
+
 India uses generated painted miniatures (given a ground patch by an image edit, 2026-11-22) `building-market-india-*` for its Revenue Office (Market replacement) and `building-imperialdiwan-*` for its held-goal building. Prompt records sit beside the assets.
 
 ## Card art and map art (2026-11-22)

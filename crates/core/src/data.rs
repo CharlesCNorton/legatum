@@ -1128,7 +1128,7 @@ pub fn is_walls_line(building: BuildingKind) -> bool {
     building_family(building) == BuildingKind::Walls
 }
 
-/// Whether `faction` may never have the Walls line (rules 55, user 2026-11-22: "no walls ever"):
+/// Whether `faction` may never have the Walls line (rules 56, user 2026-11-22: "no walls ever"):
 /// the Mongols, unless the ablation switch turns the rule off. Every wall level, every era.
 pub fn never_walls(off: FactionRuleSet, faction: Faction) -> bool {
     faction == Faction::Mongols && !off.contains(FactionRule::MongolsNoWalls)
@@ -1140,7 +1140,7 @@ fn is_mongol_gated(item: ProductionItem) -> bool {
 }
 
 /// Whether a player can build an item now. `era` is the player's era (no rule reads it since
-/// the Mongols' Walls stopped opening in the Medieval era, rules 55; kept for callers).
+/// the Mongols' Walls stopped opening in the Medieval era, rules 56; kept for callers).
 pub fn available_to_player(faction: Faction, era: u8, item: ProductionItem) -> bool {
     available_to_player_rules(FactionRuleSet::EMPTY, faction, era, item)
 }
@@ -1370,10 +1370,10 @@ pub fn faction_excluded_building(faction: Faction, building: BuildingKind) -> Op
     }
 }
 
-/// The reason the Mongols cannot raise the Walls line (rules 55: never).
+/// The reason the Mongols cannot raise the Walls line (rules 56: never).
 pub const MONGOL_WALLS_REASON: &str = "The Mongols never build Walls";
 
-/// `faction_excluded_building`, with the Mongols' Walls line shut (every era since rules 55).
+/// `faction_excluded_building`, with the Mongols' Walls line shut (every era since rules 56).
 pub fn faction_excluded_building_at(
     faction: Faction,
     building: BuildingKind,
@@ -1413,6 +1413,10 @@ pub fn available_to_faction_rules(
         ProductionItem::Project {
             project: crate::IndustryProject::Grow,
         } => faction == Faction::Egypt && !off.contains(FactionRule::EgyptNile),
+        // Nile Egypt grows with Grow, which turns all of its surplus Food into growth.
+        ProductionItem::Project {
+            project: crate::IndustryProject::Food,
+        } => faction != Faction::Egypt || off.contains(FactionRule::EgyptNile),
         // Every empire can run a Gold or Science project (Sam, 2026-11-22); Germany's rate is better.
         ProductionItem::Project { .. } => true,
         ProductionItem::Unit {
@@ -1585,6 +1589,9 @@ pub const GERMANY_SCIENCE_PROJECT_PERCENT: i32 = 25;
 /// useful to do, at a much steeper loss than Germany's). Sim arms: `project-gold=N`, `project-science=N`.
 pub const PROJECT_GOLD_PERCENT: u16 = 25;
 pub const PROJECT_SCIENCE_PERCENT: u16 = 10;
+/// Every empire's Food project (Sam, 2026-11-22: a city can run a Science, Gold or Food stream).
+/// Germany has no better rate here. Sim arm: `project-food=N`.
+pub const PROJECT_FOOD_PERCENT: u16 = 25;
 
 pub fn unit_moves_for(faction: Faction, kind: UnitKind) -> i32 {
     unit_moves_for_rules(FactionRuleSet::EMPTY, faction, kind)
@@ -1877,6 +1884,9 @@ pub fn faction_unavailable_reason(item: ProductionItem, faction: Faction) -> Opt
         ProductionItem::Project {
             project: crate::IndustryProject::Grow,
         } => "Only Egyptian cities can choose Grow".into(),
+        ProductionItem::Project {
+            project: crate::IndustryProject::Food,
+        } => "Egyptian cities use Grow instead".into(),
         ProductionItem::Building { building }
             if faction == Faction::Egypt && is_workshop_line_building(building) =>
         {

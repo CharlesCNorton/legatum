@@ -1436,7 +1436,7 @@ fn a_star_fort_needs_a_castle_which_needs_walls() {
 
 #[test]
 fn mongols_raise_no_walls_tier_in_any_era() {
-    // The Mongols never raise Walls (rules 55).
+    // The Mongols never raise Walls (rules 56).
     use BuildingKind::{Castle, StarFort, Walls};
     let mut s = game(&[0, 1]);
     s.player_mut(P0).faction = Faction::Mongols;
