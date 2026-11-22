@@ -319,10 +319,10 @@ it('shows every Buy price as a spend chip on the button, and the chosen buy agai
 
 it('a Buy names the city in a notice with Undo, and Undo takes the purchase back (misclick guard)', async () => {
   const { city } = await renderCity('Switzerland', 5000);
-  const buy = container.querySelector<HTMLButtonElement>('.production-choice[data-item="u:Soldier"] .btn-buy')!;
+  const buy = container.querySelector<HTMLButtonElement>('.production-choice[data-item="u:Spearman"] .btn-buy')!;
   act(() => buy.click());
   const s = useGame.getState();
-  expect(s.orders[0]).toContainEqual({ type: 'BuyItem', city: city.id, item: { kind: 'Unit', unit: 'Soldier' } });
+  expect(s.orders[0]).toContainEqual({ type: 'BuyItem', city: city.id, item: { kind: 'Unit', unit: 'Spearman' } });
   expect(s.notice?.text).toMatch(new RegExp(`^Buying Spearman in ${city.name} for \\d+ Gold\\.$`));
   const { undoNotice } = await import('../notice');
   act(() => undoNotice());
