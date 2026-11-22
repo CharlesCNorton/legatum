@@ -225,7 +225,7 @@ function MultiplayerMenu({ onBack }: { onBack: () => void }) {
   const codeNote = joinCodeProblem(code);
   const typed = name.trim();
   const shown = cleanRoomName(typed);
-  const listedAs = typed && shown !== typed ? (shown ? `Shown in the game list as “${shown}”.` : 'The game list will show “Game” and four characters.') : null;
+  const listedAs = typed && shown !== typed ? (shown ? `Shown in the game list as “${shown}”.` : 'Listed as “Game” and four characters.') : null;
   // After a refusal that pressing Host Game again cannot fix, Host Game is not the next action: Join Game is.
   const hostCannotRetry = hosting === 'failed' && !!refusal && retryWouldFail(refusal.kind);
   const hostPrimary = hosting === 'failed' && !views && !hostCannotRetry;
