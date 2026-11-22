@@ -62,10 +62,7 @@ export function TitleScreen() {
         </div>
       </div>
       <div className="title-foot">
-        <span className="title-build">
-          {buildTime && <span>Last updated {buildTime}</span>}
-          <span>{buildLabel}</span>
-        </span>
+        <span>{buildTime ? `${buildLabel} · Last updated ${buildTime}` : buildLabel}</span>
         <span>Explore · expand · build · compete</span>
       </div>
     </div>
