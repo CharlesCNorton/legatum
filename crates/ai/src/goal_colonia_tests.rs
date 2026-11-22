@@ -1,0 +1,219 @@
+use super::*;
+use crate::fixture::{ENEMY, ME, ViewBuilder, planner};
+use legatum_core::view::{GoalCityView, PlayerView};
+use legatum_core::{AiDifficulty, CityId, Order, UnitId};
+
+const HOME: Hex = Hex::new(10, 8);
+const RIVAL: Hex = Hex::new(20, 8);
+
+/// A Hard Rome with its capital at `HOME`, two home guards, and a rival city at `RIVAL` whose
+/// land has grown to ring 2, so the legal sites four hexes from it are Colonia sites.
+fn rome() -> PlayerView {
+    let mut b = ViewBuilder::new(32, 16)
+        .faction(Faction::Rome)
+        .city(1, ME, HOME, 4)
+        .city(5, ENEMY, RIVAL, 6)
+        .unit(2, ME, UnitKind::Soldier, HOME)
+        .unit(3, ME, UnitKind::Soldier, HOME.neighbors()[0]);
+    for h in RIVAL.within(2) {
+        b = b.owner(h, ENEMY);
+    }
+    let mut v = b.build();
+    v.players[0].faction_goal_done = false;
+    v
+}
+
+fn veteran(v: PlayerView, id: u32, pos: Hex, level: u8, xp: u32) -> PlayerView {
+    let mut v = ViewBuilder { view: v }
+        .unit(id, ME, UnitKind::Soldier, pos)
+        .build();
+    let u = v.units.iter_mut().find(|u| u.id == UnitId(id)).unwrap();
+    u.level = level;
+    u.xp = Some(xp);
+    v
+}
+
+fn hard(v: &PlayerView) -> Planner<'_> {
+    let mut p = planner(v, 7);
+    p.difficulty = AiDifficulty::Hard;
+    p.decisions.roman_founders = 1;
+    p.decisions.roman_soldier_route = 1;
+    p.decisions.rome_colonia = 1;
+    p
+}
+
+fn founds(p: &Planner<'_>, unit: u32) -> bool {
+    p.orders.contains(&Order::FoundCity { unit: UnitId(unit) })
+}
+
+/// The first Colonia site the fixture offers: four hexes from the rival, so two from its land.
+fn colonia_site(v: &PlayerView) -> Hex {
+    let site = Hex::new(16, 8);
+    assert_eq!(site.distance(RIVAL), 4);
+    assert!(goals::known_colonia_site(v, site));
+    assert!(legatum_core::settlement::known_legal_site(v, site));
+    site
+}
+
+#[test]
+fn a_level_three_veteran_founds_the_colonia_where_it_stands() {
+    let v = rome();
+    let site = colonia_site(&v);
+    let v = veteran(v, 1, site, 3, 60);
+    let mut p = hard(&v);
+    assert!(p.colonia_on());
+    p.plan_settlers();
+    assert!(founds(&p, 1), "{:?}", p.orders);
+    assert_eq!(p.colonia_founder, Some(UnitId(1)));
+}
+
+#[test]
+fn a_level_three_veteran_walks_past_an_ordinary_site_to_the_colonia() {
+    // It stands on a legal site far from the rival's land: an ordinary city there would spend
+    // the Colonia's founder.
+    let v = rome();
+    let ordinary = Hex::new(10, 13);
+    assert!(legatum_core::settlement::known_legal_site(&v, ordinary));
+    assert!(!goals::known_colonia_site(&v, ordinary));
+    let v = veteran(v, 1, ordinary, 3, 60);
+    let mut p = hard(&v);
+    p.plan_settlers();
+    assert!(!founds(&p, 1), "{:?}", p.orders);
+    let target = p.settle_targets.first().copied().expect("a Colonia site");
+    assert!(goals::known_colonia_site(&v, target), "{target:?}");
+    assert!(
+        p.orders.iter().any(|o| legatum_core::rules::units::order_unit(o) == Some(UnitId(1))),
+        "{:?}",
+        p.orders
+    );
+    // Gene off: the old founder pass founds where it stands.
+    let mut off_gene = hard(&v);
+    off_gene.decisions.rome_colonia = 0;
+    off_gene.plan_settlers();
+    assert!(founds(&off_gene, 1), "{:?}", off_gene.orders);
+}
+
+#[test]
+fn with_no_colonia_site_the_founder_waits_instead_of_founding_an_ordinary_city() {
+    // The rival's land reaches only ring 1: no legal site lies within two tiles of it.
+    let mut v = ViewBuilder::new(32, 16)
+        .faction(Faction::Rome)
+        .city(1, ME, HOME, 4)
+        .city(5, ENEMY, RIVAL, 6)
+        .unit(2, ME, UnitKind::Soldier, HOME)
+        .unit(3, ME, UnitKind::Soldier, HOME.neighbors()[0])
+        .build();
+    v.players[0].faction_goal_done = false;
+    let ordinary = Hex::new(10, 13);
+    let v = veteran(v, 1, ordinary, 3, 60);
+    let mut p = hard(&v);
+    assert!(p.colonia_site(&v.units[2]).is_none());
+    assert!(p.colonia_reserved(&v.units[2]));
+    p.plan_settlers();
+    assert!(!founds(&p, 1), "{:?}", p.orders);
+}
+
+#[test]
+fn the_most_experienced_level_two_is_kept_until_a_level_three_exists() {
+    let v = rome();
+    let v = veteran(v, 1, Hex::new(10, 12), 2, 40);
+    let v = veteran(v, 4, Hex::new(11, 12), 2, 50);
+    let v = veteran(v, 6, Hex::new(12, 12), 1, 20);
+    let p = hard(&v);
+    let unit = |id: u32| v.units.iter().find(|u| u.id == UnitId(id)).unwrap();
+    assert!(!p.colonia_reserved(unit(1)));
+    assert!(p.colonia_reserved(unit(4)), "the closest to level 3");
+    assert!(!p.colonia_reserved(unit(6)), "lower veterans still found cities");
+    // Once a level 3 exists, it is the founder and the level 2s found as before.
+    let v = veteran(v, 7, Hex::new(9, 12), 3, 60);
+    let p = hard(&v);
+    let unit = |id: u32| v.units.iter().find(|u| u.id == UnitId(id)).unwrap();
+    assert!(p.colonia_reserved(unit(7)));
+    assert!(!p.colonia_reserved(unit(4)));
+}
+
+#[test]
+fn a_reserved_level_two_does_not_found_but_a_lesser_veteran_does() {
+    let v = rome();
+    let site = Hex::new(10, 13);
+    let v = veteran(v, 4, site, 2, 50);
+    let mut p = hard(&v);
+    p.plan_settlers();
+    assert!(!founds(&p, 4), "{:?}", p.orders);
+    let v = rome();
+    let v = veteran(v, 4, site, 1, 20);
+    let mut p = hard(&v);
+    p.plan_settlers();
+    assert!(founds(&p, 4), "{:?}", p.orders);
+}
+
+#[test]
+fn a_site_under_a_rival_army_is_riskier_than_one_beside_our_own() {
+    let v = rome();
+    let site = colonia_site(&v);
+    let v = veteran(v, 1, Hex::new(15, 8), 3, 60);
+    let quiet = hard(&v).colonia_hold_risk(site, UnitId(1));
+    // A rival army four or five hexes out raises the risk; our own army beside the site lowers it.
+    let mut threatened = v.clone();
+    for (i, h) in [Hex::new(19, 9), Hex::new(19, 10), Hex::new(20, 9)]
+        .into_iter()
+        .enumerate()
+    {
+        threatened = ViewBuilder { view: threatened }
+            .unit(50 + i as u32, ENEMY, UnitKind::Soldier, h)
+            .build();
+    }
+    let risky = hard(&threatened).colonia_hold_risk(site, UnitId(1));
+    assert!(risky > quiet, "{risky} > {quiet}");
+    let mut supported = threatened.clone();
+    for (i, h) in [Hex::new(15, 7), Hex::new(16, 7), Hex::new(17, 9)]
+        .into_iter()
+        .enumerate()
+    {
+        supported = ViewBuilder { view: supported }
+            .unit(60 + i as u32, ME, UnitKind::Soldier, h)
+            .build();
+    }
+    let held = hard(&supported).colonia_hold_risk(site, UnitId(1));
+    assert!(held < risky, "{held} < {risky}");
+    // A big enough rival army rules every site out: the veteran waits.
+    let mut massed = v.clone();
+    for (i, h) in RIVAL
+        .within(3)
+        .into_iter()
+        .filter(|h| h.distance(RIVAL) == 3)
+        .enumerate()
+    {
+        massed = ViewBuilder { view: massed }
+            .unit(70 + i as u32, ENEMY, UnitKind::Soldier, h)
+            .build();
+    }
+    assert!(hard(&massed).colonia_site(&massed.units[2]).is_none());
+}
+
+#[test]
+fn a_standing_colonia_closes_the_goal() {
+    let mut v = veteran(rome(), 1, Hex::new(16, 8), 3, 60);
+    assert!(hard(&v).colonia_on());
+    v.colonias = vec![GoalCityView {
+        of: ME,
+        holder: ENEMY,
+        city: CityId(9),
+        at: Hex::new(26, 2),
+        name: "Colonia".into(),
+    }];
+    let p = hard(&v);
+    assert!(!p.colonia_on());
+    assert!(!p.colonia_reserved(&v.units[2]));
+}
+
+#[test]
+fn other_factions_and_lower_difficulties_never_reserve() {
+    let v = veteran(rome(), 1, Hex::new(16, 8), 3, 60);
+    let mut p = hard(&v);
+    p.difficulty = AiDifficulty::Normal;
+    assert!(!p.colonia_on());
+    let mut v = v.clone();
+    v.players[0].faction = Faction::Sparta;
+    assert!(!hard(&v).colonia_on());
+}
