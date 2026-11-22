@@ -194,9 +194,6 @@ function MainMenu({ onMultiplayer }: { onMultiplayer: () => void }) {
         <button className="btn big quiet" onClick={() => pickSaveFile(askThenLoad, (m) => set({ error: m }))}>
           Load Game…
         </button>
-        <button className="btn big quiet" onClick={() => { set({ error: null }); goto('scenarios'); }}>
-          Scenarios
-        </button>
         <button className="btn big quiet" onClick={openGuide}>How to Play <span className="btn-sub">The field guide · ?</span></button>
         <Settings />
       </div>

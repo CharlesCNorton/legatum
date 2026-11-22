@@ -27,7 +27,6 @@ import { TurnReport } from '../ui/TurnReport';
 import { HandoffScreen } from '../ui/HandoffScreen';
 import { GameOver } from '../ui/GameOver';
 import { plainOrderError } from '../format';
-import { ScenarioBar, ScenarioResult } from '../ui/ScenarioHud';
 import { handleAircraftKey, handleGameKey } from './gameKeyHandler';
 import { handleOverlayKey, notePointerDown, returnFocusAfterPointer } from '../gameplayKeys';
 import { playerColor } from '../theme';
@@ -89,7 +88,6 @@ export function GameScreen() {
       <MapCanvas />
       <div className="seat-frame" />
       <TopBar />
-      <ScenarioBar />
       <MomentLane />
       <ObjectiveSheet />
       <aside className="right-sidebar paper-grain" aria-label="Empire sidebar"><SeatBar race={<VpTrack />} /><Minimap /></aside>
@@ -113,7 +111,6 @@ export function GameScreen() {
       <TechPanel />
       <CitiesOverview />
       <GameOver />
-      <ScenarioResult />
       <HandoffScreen />
       <AlarmScreen />
       <FreeTechsPrompt />
