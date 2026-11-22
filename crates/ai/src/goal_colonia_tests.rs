@@ -332,7 +332,7 @@ fn moves_to(p: &Planner<'_>, unit: u32, to: Hex) -> bool {
 fn another_unit_takes_the_capture_that_would_lock_the_founder() {
     // Seed 9000 game 95: the level-3 veteran took Cologne and was locked there until Peace.
     let v = ViewBuilder { view: lock_city() }
-        .unit(10, ME, UnitKind::Soldier, RIVAL.neighbors()[1])
+        .unit(10, ME, UnitKind::Spearman, RIVAL.neighbors()[1])
         .build();
     let mut p = hard(&v);
     assert!(p.unit_order(
@@ -389,7 +389,7 @@ fn the_capture_waits_a_turn_for_a_unit_two_turns_out_but_not_for_none() {
     let far = Hex::new(17, 8);
     assert_eq!(far.distance(RIVAL), 3);
     let waiting = ViewBuilder { view: v.clone() }
-        .unit(10, ME, UnitKind::Soldier, far)
+        .unit(10, ME, UnitKind::Spearman, far)
         .build();
     let mut p = hard(&waiting);
     assert!(
@@ -452,7 +452,7 @@ fn the_founder_does_not_garrison_an_occupied_city_of_ours_when_another_can() {
         view: veteran(rome(), 1, Hex::new(14, 5), 3, 60),
     }
     .city(6, ME, held, 2)
-    .unit(10, ME, UnitKind::Soldier, Hex::new(13, 4))
+    .unit(10, ME, UnitKind::Spearman, Hex::new(13, 4))
     .build();
     v.cities
         .iter_mut()

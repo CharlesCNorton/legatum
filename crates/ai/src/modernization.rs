@@ -775,7 +775,7 @@ pub(crate) mod tests {
         let id = v
             .units
             .iter()
-            .find(|u| u.owner == v.me && u.kind == UnitKind::Trooper)
+            .find(|u| u.owner == v.me && u.kind == UnitKind::Pikeman)
             .unwrap()
             .id;
         let home = v.units.iter().find(|u| u.id == id).unwrap().pos;
