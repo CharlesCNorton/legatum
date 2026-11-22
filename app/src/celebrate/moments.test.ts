@@ -414,6 +414,7 @@ describe('reward emblems and gain lists', () => {
 
   it('a generic goal card shows the faction’s own goal building where one is painted', () => {
     expect(map([{ type: 'FactionGoalCompleted', player: 0, faction: 'Athens', vp: 2 }])[0]).toMatchObject({ title: 'An inheritance fulfilled', building: 'Library' });
+    expect(map([{ type: 'FactionGoalCompleted', player: 0, faction: 'Switzerland', vp: 2 }])[0]).toMatchObject({ title: 'An inheritance fulfilled', artSlug: 'goal-reserve' });
   });
 
   describe('India’s Imperial Diwan', () => {

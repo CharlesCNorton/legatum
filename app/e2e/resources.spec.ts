@@ -29,7 +29,7 @@ const SHOTS = process.env.LEGATUM_SHOTS_DIR;
  * Industrialization (which reveals Coal), so it is in the Industrial era and Coal is its era resource.
  */
 async function ironScenario(page: Page, { coal = false, deposit = true }: { coal?: boolean; deposit?: boolean } = {}) {
-  // Screenshots should show the resource UI, not the first-game hints.
+  // Screenshots should show the resource UI without the advisor.
   await page.addInitScript(() => {
     if (location.protocol.startsWith('http')) localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
   });

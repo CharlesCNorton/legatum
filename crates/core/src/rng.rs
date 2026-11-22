@@ -8,7 +8,7 @@ pub mod purpose {
     pub const COMBAT: u64 = 2;
     pub const RUINS: u64 = 3;
     pub const AI: u64 = 4;
-    /// Retired (rules 55): city names no longer start at a seeded place in the list. Kept so the
+    /// Retired (rules 56): city names no longer start at a seeded place in the list. Kept so the
     /// number is never reused.
     pub const NAMES: u64 = 5;
     pub const SETUP: u64 = 6;

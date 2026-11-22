@@ -2,6 +2,7 @@ import { stepReport, toggleLastTurnReport, useGame } from '../store';
 import { gameplayKeyAllowed } from '../gameplayKeys';
 import { readyAndPass } from '../ui/SeatBar';
 import { pendingDecisions } from '../turnFlow';
+import { useAdvisor } from '../ui/advisorModel';
 import { toggleOverlay } from '../map/overlays';
 import { airState, rebaseOptions, reconBlocker } from '../airWing';
 import { cityAutomationFocus, lastAutomationFocus, nextAutomationFocus, setCityAutomation } from '../automation';
@@ -85,6 +86,7 @@ export function handleGameKey(e: KeyboardEvent) {
       break;
     case 'Enter': {
       e.preventDefault();
+      if (document.querySelector('[data-advisor-id="welcome"]')) { useAdvisor.getState().markSeen('welcome'); break; }
       const finished = s.views?.[s.seat];
       // A finished game's one action: reopen its report.
       if (finished?.finished) { if (finished.history) s.openGameReport(); break; }

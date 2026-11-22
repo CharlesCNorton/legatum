@@ -1511,6 +1511,7 @@ fn all_items() -> impl Iterator<Item = ProductionItem> {
             [
                 IndustryProject::Gold,
                 IndustryProject::Science,
+                IndustryProject::Food,
                 IndustryProject::Grow,
             ]
             .map(|project| ProductionItem::Project { project }),

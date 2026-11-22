@@ -720,14 +720,16 @@ export const factionGoalVp = (faction: Faction): number => goalVp(faction);
 export const GERMANY_PROJECT_GOLD_PERCENT = RULES.germanyProjectGoldPercent;
 export const EGYPT_NILE_BUILD_PERCENT = RULES.egyptNileBuildPercent;
 export const GERMANY_PROJECT_SCIENCE_PERCENT = RULES.germanyProjectSciencePercent;
-/** Every other empire's Gold and Science projects (core `data::PROJECT_*_PERCENT`). */
+/** Every other empire's Gold and Science projects, and everyone's Food project (core `data::PROJECT_*_PERCENT`). */
 export const PROJECT_GOLD_PERCENT = RULES.projectGoldPercent;
 export const PROJECT_SCIENCE_PERCENT = RULES.projectSciencePercent;
-/** A faction's share of city Production a Gold or Science project converts (core `project_percent`). */
-export const projectPercent = (faction: Faction | undefined, project: 'Gold' | 'Science'): number =>
-  faction === 'Germany'
-    ? project === 'Gold' ? GERMANY_PROJECT_GOLD_PERCENT : GERMANY_PROJECT_SCIENCE_PERCENT
-    : project === 'Gold' ? PROJECT_GOLD_PERCENT : PROJECT_SCIENCE_PERCENT;
+export const PROJECT_FOOD_PERCENT: number = RULES.projectFoodPercent;
+/** A faction's share of city Production a project converts (core `project_percent`). */
+export const projectPercent = (faction: Faction | undefined, project: 'Gold' | 'Science' | 'Food'): number =>
+  project === 'Food' ? PROJECT_FOOD_PERCENT
+    : faction === 'Germany'
+      ? project === 'Gold' ? GERMANY_PROJECT_GOLD_PERCENT : GERMANY_PROJECT_SCIENCE_PERCENT
+      : project === 'Gold' ? PROJECT_GOLD_PERCENT : PROJECT_SCIENCE_PERCENT;
 /** Food for the first growth (population 1 to 2) (core `FIRST_GROWTH`). */
 export const FIRST_GROWTH = RULES.firstGrowth;
 /** The game's expected length in turns: the horizon forecasts and the AI pace against (core `data::EXPECTED_GAME_TURNS`). */
@@ -749,6 +751,7 @@ export function factionUnavailableReason(item: ProductionItem, faction: Faction,
   if (availableToPlayer(faction, item, era)) return null;
   if (faction === 'Aztecs' && item.kind === 'Unit' && HORSE_MOUNTED.includes(item.unit)) return AZTEC_NO_HORSES;
   if (item.kind === 'Project' && item.project === 'Grow') return 'Only Egyptian cities can choose Grow';
+  if (item.kind === 'Project' && item.project === 'Food') return 'Egyptian cities use Grow instead';
   if (faction === 'Egypt' && item.kind === 'Building' && isWorkshopLine(item.building)) return 'Workshops, Forges and Factories do nothing for Egypt, which has no Production';
   if (item.kind === 'Building' && item.building === 'RiceStorehouse') return 'No people can build the Rice Storehouse yet';
   if ((item.kind === 'Building' || item.kind === 'Wonder') && item.building === 'YamRelayStation') return 'Only Mongols can build the Yam Relay Station';
@@ -771,13 +774,13 @@ export const IMPROVEMENT_SUMMARY: Record<ImprovementKind, string> = {
   SaltpetreWorks: 'Adds tile yields and Niter supply',
 };
 /** A project's card text. Egypt's projects convert the build progress its surplus Food makes. */
-function projectCopy(project: 'Gold' | 'Science' | 'Grow', faction?: Faction): { summary: string; blurb: string } {
+function projectCopy(project: 'Gold' | 'Science' | 'Food' | 'Grow', faction?: Faction): { summary: string; blurb: string } {
   if (project === 'Grow') return { summary: 'Grows the city with its surplus Food instead of building', blurb: 'This city builds nothing, and its surplus Food grows it. It never finishes: pick something to build to stop it.' };
   const pct = projectPercent(faction, project);
-  const from = faction === 'Egypt' ? 'the build progress your Food makes' : 'city Production';
+  const from = faction === 'Egypt' ? 'the city’s Food-made build progress' : 'city Production';
   return {
     summary: `Turns ${pct}% of ${from} into ${project} each turn`,
-    blurb: `While it runs, this city builds nothing else, and ${pct}% of ${faction === 'Egypt' ? 'the build progress your Food makes' : 'its Production'} comes out as ${project} every turn. It never finishes: pick another item to stop it.`,
+    blurb: `While it runs, this city builds nothing else, and ${pct}% of ${faction === 'Egypt' ? 'the city’s Food-made build progress' : 'its Production'} comes out as ${project} every turn. It never finishes: pick another item to stop it.`,
   };
 }
 export const improvementName = (kind: ImprovementKind, upgraded = false): string =>
@@ -819,7 +822,8 @@ function isWorkshopLine(building: BuildingKind): boolean {
 }
 
 export function availableToFaction(faction: Faction, item: ProductionItem): boolean {
-  if (item.kind === 'Project') return item.project !== 'Grow' || faction === 'Egypt';
+  // Nile Egypt grows with Grow, so it has no Food project (core `available_to_faction_rules`).
+  if (item.kind === 'Project') return item.project === 'Grow' ? faction === 'Egypt' : item.project !== 'Food' || faction !== 'Egypt';
   // The Nile: Egypt has no Production, so the Workshop line would do nothing.
   if (faction === 'Egypt' && item.kind === 'Building' && isWorkshopLine(item.building)) return false;
   if (item.kind === 'Unit') return (item.unit !== 'HeirToTheThrone' || faction === 'Byzantium') && (faction !== 'Aztecs' || !HORSE_MOUNTED.includes(item.unit)) && (faction !== 'Rome' || item.unit !== 'Settler');

@@ -337,6 +337,21 @@
    "sha256": "ba648e2a651130dce9f6668f2bddc818c9ac3cb4f1764c967541dd8ad55ced82"
   },
   {
+   "path": "app/src/assets/unlocks/goal-newfire-source.png",
+   "bytes": 2399289,
+   "sha256": "421a1f4f232286d5f14fe5d67995f420761fbe59ff6b603a11eae56183094bff"
+  },
+  {
+   "path": "app/src/assets/unlocks/goal-reserve-source.png",
+   "bytes": 2591333,
+   "sha256": "68837f2218392550a13a3ca64cb1127105e90e843148d70e3c1839de83a3fd6a"
+  },
+  {
+   "path": "app/src/assets/unlocks/goal-warbands-source.png",
+   "bytes": 2682748,
+   "sha256": "0d7a5f2beb2bcb8291dd8d602ca5a09a3e1c7ca512be2b06be3cf8376bc6dd88"
+  },
+  {
    "path": "docs/design/art-pass-2/all-portraits-48.png",
    "bytes": 78245,
    "sha256": "39046cd87fc16fa0d1829ba0e59c8bed4b07e632dbf7c4ae4c873a47027f8367"

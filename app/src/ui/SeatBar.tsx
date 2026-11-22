@@ -25,6 +25,7 @@ import { empireOfPlayer } from '../empires';
 import { bankruptcyWarning, FORECAST_ASSUMPTIONS, idleProductionWarning, woundedNearEnemies } from './forecastWarnings';
 import { usePhoneLayout } from './usePhoneLayout';
 import { useCoarsePointer } from './useCoarsePointer';
+import { useAdvisor } from './advisorModel';
 import { LastTurnButton } from './TurnReport';
 import { useScrollHint } from './useScrollHint';
 import { useRowsBelow } from './useRowsBelow';
@@ -167,7 +168,8 @@ export function SeatBar({ phoneDetails = false, onOpenDetails, race }: { phoneDe
   // turn's call to action steps back and drops its key chip until it closes.
   const { active: moment, deferred: momentDeferred } = useCelebration();
   const alarmUp = useGame((s) => pendingAlarms(s).length > 0);
-  const returnOwned = alarmUp || (!!moment && moment.tier !== 'minor' && !momentDeferred);
+  const advisorWelcome = useAdvisor((s) => s.enabled && !s.seen.includes('welcome')) && views?.[seat]?.turn === 1;
+  const returnOwned = alarmUp || advisorWelcome || (!!moment && moment.tier !== 'minor' && !momentDeferred);
   const report = useGame((s) => s.report);
   const scenario = useGame((s) => s.scenario);
   const remote = useGame((s) => s.client?.kind === 'remote');
@@ -368,7 +370,7 @@ export function SeatBar({ phoneDetails = false, onOpenDetails, race }: { phoneDe
     </button>
     <button className={`btn${cta.kind === 'todo' || stepBack ? '' : ' primary'}`} onClick={readyAndPass}
       disabled={!!busy || view.finished || disconnected || (eliminated && !observerCanAdvance) || resolvingToEnd}>
-      {ready[seat] ? 'Keep planning' : !remote && humans.length === 1 ? 'End Turn' : 'Ready'}
+      {ready[seat] ? 'Keep planning' : !remote && humans.length === 1 ? 'End turn' : 'Ready'}
     </button>
     <EndTurnConfirmation onConfirm={confirmEndTurn} />
   </div>;
@@ -407,7 +409,7 @@ export function SeatBar({ phoneDetails = false, onOpenDetails, race }: { phoneDe
       <div className="touch-turn-controls touch-only">
         <button className="btn" onClick={() => nextDecision()} disabled={!!busy || view.finished || eliminated || disconnected}>Next decision</button>
         <button className="btn primary" onClick={readyAndPass} disabled={!!busy || view.finished || disconnected || (eliminated && !observerCanAdvance) || resolvingToEnd}>
-          {ready[seat] ? 'Keep planning' : !remote && humans.length === 1 ? 'End Turn' : 'Ready'}
+          {ready[seat] ? 'Keep planning' : !remote && humans.length === 1 ? 'End turn' : 'Ready'}
         </button>
       </div>
     </div>
