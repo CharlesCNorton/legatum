@@ -449,6 +449,7 @@ impl Game {
             state_change: 0,
             view_cache: RefCell::new(None),
             forecast_view: RefCell::new(None),
+            anonymized: RefCell::new(None),
         })
     }
 
@@ -461,6 +462,7 @@ impl Game {
             state_change: 0,
             view_cache: RefCell::new(None),
             forecast_view: RefCell::new(None),
+            anonymized: RefCell::new(None),
         })
     }
 
@@ -475,6 +477,7 @@ impl Game {
             state_change: 0,
             view_cache: RefCell::new(None),
             forecast_view: RefCell::new(None),
+            anonymized: RefCell::new(None),
         })
     }
 
@@ -808,6 +811,8 @@ pub struct Game {
     /// The viewer's `PlayerView` for hover forecasts, kept until the state changes: hovering a fight asks for
     /// two or three forecasts per tile, and rebuilding the whole view for each made late-game hover lag.
     forecast_view: RefCell<Option<(PlayerId, u64, Rc<PlayerView>)>>,
+    /// Where the last `public_archive` stopped, so the next upload replays only the turns since.
+    anonymized: RefCell<Option<history::AnonymizedResume>>,
 }
 
 #[wasm_bindgen]
@@ -1074,7 +1079,7 @@ impl Game {
     pub fn public_archive(&self) -> Result<String, JsError> {
         js(guard(|| {
             let history = self.session.history.as_ref().ok_or("No recorded history")?;
-            to_json(&history.anonymized()?)
+            to_json(&history.anonymized_resuming(&mut self.anonymized.borrow_mut())?)
         }))
     }
 
@@ -1768,6 +1773,7 @@ mod tests {
             state_change: 0,
             view_cache: RefCell::new(None),
             forecast_view: RefCell::new(None),
+            anonymized: RefCell::new(None),
         };
         let result: Value =
             serde_json::from_str(&game.end_turn_json(&to_json(&orders).unwrap()).unwrap()).unwrap();
