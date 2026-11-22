@@ -138,6 +138,8 @@ CI about 15 minutes on 4 cores (after PR #14).
 - 2026-11-22: headless Chromium has no GPU, so at DPR 2 most of a frame is the browser copying the whole canvas
   (`Commit`, `SoftwareRenderer`), whatever we draw. In the cloud, count work (full against clipped map draws,
   chunk renders) and compare runs on the same DPR; never call a retina screen slow or smooth from it.
+  Measured on the Mac's GPU the same day (lead's ask; headless with `--use-angle=metal --ignore-gpu-blocklist`),
+  the dense turn-131 hover sweep at DPR 2 ran at 60 fps with no slow frames, before and after the hover fix.
 - 2026-11-22 (user): this agent always runs on Fable.
 - 2026-11-21: performance used to be sections of the ops supervisor and lapsed after late October
   (last sim baseline 10-31, AI turn budget 10-27, app size 10-23) because the run grew into fleet
