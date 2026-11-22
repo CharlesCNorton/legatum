@@ -1252,6 +1252,53 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
     idle: idleLive > 0, ring, ambient };
 }
 
+/** The icon each automatic-build focus wears on the banner. */
+const FOCUS_ICON: Record<CityBuildFocus, string> = { Balanced: 'ui-random', Science: 'yield-science', Gold: 'yield-gold', Military: 'unit-spearman' };
+
+const q24 = (f: number) => Math.round(Math.max(0, Math.min(1, f)) * 24) / 24;
+
+/** Growth (the territory bar: each growth claims a tile) and production meters for an own city's banner, from the same forecasts as the city panel. */
+export function bannerMeters(c: CityView, faction?: Faction, focus: CityBuildFocus | null = null, chosen: ProductionItem | null = null): BannerMeter[] {
+  const growth = growthProgress(c);
+  if (!growth) return [];
+  const out: BannerMeter[] = [{
+    kind: 'growth', fraction: q24(growth.needed > 0 ? growth.stored / growth.needed : 0),
+    text: growth.turns !== null ? String(growth.turns) : '–', bad: growth.state === 'starving', paused: growth.state !== 'growing' && growth.state !== 'starving',
+  }];
+  const production = productionProgress(c);
+  // Occupation lock experiment: a frozen city shows the seal of a held city, not the red Build prompt.
+  if (production && c.occupation_lock != null) out.push({ kind: 'production', fraction: 0, text: 'Held', paused: true, icon: 'fortify', inkIcon: true });
+  else if (production && chosen && !sameItem(chosen, c.detail?.producing ?? null)) {
+    // Chosen this turn, not yet resolved: the banner shows the choice at once, with the forecast its build card gives.
+    const option = c.detail?.options.find((o) => sameItem(o.item, chosen));
+    out.push({
+      kind: 'production', fraction: q24(option && option.cost > 0 ? option.production_stored / option.cost : 0),
+      // No output (or a project with no turn count) has no forecast: a dash, as the build card prints no number.
+      text: option && option.turns > 0 ? String(option.turns) : '–', icon: itemIcon(chosen, faction),
+    });
+  } else if (production) {
+    const auto = focus ? { label: 'Auto', icon: FOCUS_ICON[focus] } : undefined;
+    out.push(production.state === 'idle'
+      // An automated idle city chooses at Ready: it shows its focus, not the red "Build" prompt.
+      ? auto ? { kind: 'production', fraction: 0, text: 'Auto', paused: true, icon: auto.icon, inkIcon: true } : { kind: 'production', fraction: 0, text: 'Build', bad: true, icon: null }
+      : {
+        kind: 'production', fraction: q24(production.needed > 0 ? production.stored / production.needed : 0),
+        text: production.state === 'building' ? (production.turns !== null ? String(production.turns) : '–') : '–',
+        bad: production.state === 'stalled', paused: production.state === 'waiting', icon: itemIcon(production.item!, faction), auto,
+      });
+  }
+  return out;
+}
+
+/** A city zoomed out: its seal (centred on the hex) and, if there is clear room, its name beside it. */
+interface FarCity { x: number; y: number; seal: ReturnType<typeof sealSprite>; name: { sprite: ReturnType<typeof nameSprite>; x: number; y: number } | null }
+
+/** What a city's banner and far-zoom seal show. The star marks the original capital for the whole game, in the founder's ink; a replacement capital gets none. */
+export function bannerSpec(view: Pick<PlayerView, 'me' | 'team' | 'players'>, c: CityView, glyph: string | null, selected: boolean): BannerSpec {
+  return { owner: c.owner, name: c.name, pop: c.visible ? c.population : null, color: mapPlayerColor(c.owner), capital: capitalStar(view, c), selected, glyph, wallTier: wallTierOf(c) };
+}
+
+/** Every on-screen city banner: its spec, anchor and the screen rect it covers (health bar included). Zoomed out, the banner is a seal and a name instead. */
 function cityBanners(view: PlayerView, cam: Camera, w: number, h: number, dpr: number, look: LookId, selectedCity: number | null, siege: ReadonlyMap<number, SiegeLevel>, focusOf: (c: CityView) => CityBuildFocus | null, unscored?: ReadonlySet<number>, builds?: ReadonlyMap<number, ProductionItem>) {
   const hexPx = HEX_SIZE * cam.zoom;
   const far = isFar(hexPx);

@@ -83,7 +83,6 @@ function ResumeButton() {
 function MainMenu({ onMultiplayer }: { onMultiplayer: () => void }) {
   const online = useGame((s) => s.online);
   const openSetup = useGame((s) => s.openSetup);
-  const goto = useGame((s) => s.goto);
   const loadSave = useGame((s) => s.loadSave);
   const set = useGame((s) => s.set);
   const error = useGame((s) => s.error);
