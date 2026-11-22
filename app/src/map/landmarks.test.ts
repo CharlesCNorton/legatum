@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { LANDMARK_REF_ZOOM, landmarkArtUrl, landmarkBox, landmarkBoxes, landmarkCore, landmarksOf, shortLabel } from './landmarks';
 import { itemArtUrl } from '../unlockArt';
 import { GREAT_WORKS } from '../data';
@@ -98,6 +100,14 @@ describe('constructed wonder landmarks', () => {
     for (const zoom of [0.62, 0.9, 1.3, 1.8, 2.4]) {
       for (const [px, py] of [[world.x, world.y], [world.x + 400, world.y - 250], [world.x - 900, world.y + 600]]) expect(spotOf(zoom, px, py), `zoom ${zoom}`).toEqual(at);
     }
+  });
+  it('only the landmark footprint uses the reference-zoom banners; labels, badges and medallions avoid the banners as drawn', () => {
+    // PR #81 first fed the reference covers to everything that keeps clear of banners, in the wrong coordinates.
+    const src = readFileSync(resolve(__dirname, 'render.ts'), 'utf8');
+    expect(src).toMatch(/const bannerCovers = banners\.map\(\(b\) => b\.cover\);/);
+    const uses = src.split('referenceBannerCovers(').length - 1;
+    expect(uses, 'the definition and the one landmarkBoxes call').toBe(2);
+    expect(src).toMatch(/landmarkBoxes\([^;]*referenceBannerCovers\(/);
   });
 });
 

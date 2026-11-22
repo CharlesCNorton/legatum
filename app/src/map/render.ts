@@ -287,11 +287,12 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
   const bannerView = held?.size ? { ...view, cities: view.cities.map((c) => held.has(c.id) ? { ...c, owner: held.get(c.id)! } : c) } : view;
   const focusOf = (c: CityView) => c.owner === view.me ? (inp.cityFocuses?.has(c.id) ? inp.cityFocuses.get(c.id) : c.detail?.build_automation) ?? null : null;
   const banners = cityBanners(bannerView, cam, w, h, dpr, look, inp.selectedCity, siege, focusOf, moments?.hold.unscored, inp.cityBuilds);
-  // Landmarks use a fixed footprint chosen from banners and other landmarks, never moving units, at one reference zoom.
-  const bannerCovers = referenceBannerCovers(bannerView, look, siege);
+  // What labels, badges and medallions keep clear of: the banners as drawn this frame (screen px).
+  const bannerCovers = banners.map((b) => b.cover);
   const toScreen = (p: { x: number; y: number }) => worldToScreen(cam, w, h, p.x, p.y);
   const landmarkSites = [...landmarksOf(view), ...sitesOf(view).filter((s) => !s.walls), ...(moments?.plan.builds.filter((b) => b.wonder).map((b) => ({ tile: b.tile, hex: b.at })) ?? [])];
-  const fixedLandmarkBoxes = landmarkBoxes(landmarkSites, toScreen, hexPx, bannerCovers);
+  // Landmarks use a fixed footprint chosen from every banner at one reference zoom (never these screen covers, never moving units).
+  const fixedLandmarkBoxes = landmarkBoxes(landmarkSites, toScreen, hexPx, referenceBannerCovers(bannerView, look, siege));
   // The ink-and-wash landmark sits in the land, under everything else the map draws (full colour belongs to its cards).
   drawWonderArt(ctx, view, cam, w, h, dpr, inp.lens, overlays.yields);
   // Improvements change the land itself: drawn on it, under every lens, overlay, unit and banner.
