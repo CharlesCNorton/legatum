@@ -333,7 +333,7 @@ mod tests {
         assert!(
             parse_state(&old.to_string())
                 .unwrap_err()
-                .contains("incompatible rules version: saved Some(49), current 50")
+                .contains("incompatible rules version: saved Some(51), current 52")
         );
     }
 
