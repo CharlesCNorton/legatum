@@ -343,13 +343,13 @@
   },
   {
    "path": "app/src/assets/unlocks/goal-reserve-source.png",
-   "bytes": 2816052,
-   "sha256": "c26a6370ea40bd15f3d4add9131aa256fb63b3e8efd0f334de37336d8facc2d8"
+   "bytes": 2591333,
+   "sha256": "68837f2218392550a13a3ca64cb1127105e90e843148d70e3c1839de83a3fd6a"
   },
   {
    "path": "app/src/assets/unlocks/goal-warbands-source.png",
-   "bytes": 2870057,
-   "sha256": "907f762a8f7483b6b8161caaf013e650c821f0649f39de6fcf03be5d94c52d15"
+   "bytes": 2682748,
+   "sha256": "0d7a5f2beb2bcb8291dd8d602ca5a09a3e1c7ca512be2b06be3cf8376bc6dd88"
   },
   {
    "path": "docs/design/art-pass-2/all-portraits-48.png",

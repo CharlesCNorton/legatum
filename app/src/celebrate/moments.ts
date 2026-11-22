@@ -65,7 +65,7 @@ export interface Moment {
 
 /** The painted building a faction goal's generic completion card shows (the faction's own version: Ruhr Foundry, Lyceum). */
 const GOAL_BUILDING: Partial<Record<Faction, BuildingKind>> = { Germany: 'Forge', Athens: 'Library' };
-/** The painted scene a goal with no building shows: Switzerland's Reserve, the Celts' Warbands, the Aztecs' New Fire (not live yet). */
+/** The painted scene a goal with no building shows: Switzerland's Reserve, the Celts' Warbands, the Aztecs' New Fire. */
 const GOAL_ART: Partial<Record<Faction, string>> = { Switzerland: 'goal-reserve', Celts: 'goal-warbands', Aztecs: 'goal-newfire' };
 
 export function ruinText(reward: RuinReward, cityName: (id: number) => string, faction?: Faction): { title: string; effect: string; lore: string; details: string[]; tier: Tier; deltas: Moment['deltas']; gains: Gain[]; emblem: Emblem } {
