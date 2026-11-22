@@ -21,6 +21,7 @@ This file holds the current rules, one line each. The user's words, dates, as-bu
 
 ## The next action is always obvious (pillar 9)
 
+- A goal that a unit or a place can score says who can score it (the unit is announced and marked the turn it qualifies), where (the view already used for that action marks the places and its button names the reward), and tells rivals (the same mark on the map with its VP, a public card, a line in the capture forecast); one mark per goal (user, 2026-11-22, Colonia Victrix and the Royal Tomb; `references/feedback-rules-2.md`).
 - One unmistakable primary action per screen, visible at 1000x600 in every seat setup; anything clickable looks clickable before hover; one live Return primary at a time.
 - Keyboard first: Return confirms or advances, Esc closes; Escape never throws away something he has to answer, and the turn report (L) brings back whatever it hides (user, 2026-11-21).
 - Invalid choices are greyed out with the reason next to them, in one line, where the price would be; never accept an order that will fail (offer "Declare war on X?" instead); a broken order is the next decision ("Fix order").

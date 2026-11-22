@@ -287,15 +287,15 @@ mod tests {
     }
 
     #[test]
-    fn rules_51_saves_round_trip_and_a_version_50_save_is_refused() {
+    fn rules_52_saves_round_trip_and_a_version_51_save_is_refused() {
         // Rules 47: held shots at fallen cities; 48: Egypt's Nile and its Grow project. The save
         // shape only gains the project value, so a city growing on the Nile round-trips at 48,
         // and a 47 save is refused rather than migrated. Rules 49: Egypt starts knowing the Bronze
         // Working it skips; the save shape is unchanged, and a 48 save is refused. Rules 50: a
         // rival capital's VP is held, so `Player::capitals_taken` is gone, and a 49 save is refused.
-        // Rules 51: Rome's Colonia Victrix and Egypt's royal tomb add `Player` fields, and a 50
+        // Rules 51: an Age card fix, no save change. Rules 52: Rome's Colonia Victrix and Egypt's royal tomb add `Player` fields, and a 51
         // save is refused.
-        assert_eq!(legatum_core::RULES_VERSION, 51);
+        assert_eq!(legatum_core::RULES_VERSION, 52);
         let mut setup = GameSetup::all_ai(3);
         setup.players[0].faction = legatum_core::Faction::Egypt;
         let mut state = legatum_core::new_game(&setup);
@@ -318,7 +318,7 @@ mod tests {
         );
         assert_eq!(state.cities[&city].producing, Some(grow), "{events:?}");
         let save = state_to_json(&state);
-        assert!(save.contains("\"save_version\":51"));
+        assert!(save.contains("\"save_version\":52"));
         assert!(!save.contains("capitals_taken"));
         assert!(
             state
@@ -329,7 +329,7 @@ mod tests {
         assert!(save.contains("\"Grow\""));
         assert_eq!(parse_state(&save).unwrap(), state);
         let mut old: Value = serde_json::from_str(&save).unwrap();
-        old["save_version"] = Value::from(50);
+        old["save_version"] = Value::from(51);
         assert!(
             parse_state(&old.to_string())
                 .unwrap_err()
