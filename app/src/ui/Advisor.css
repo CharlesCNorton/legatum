@@ -29,16 +29,17 @@
   position: fixed;
   z-index: 70;
   pointer-events: none;
-  border: 3px solid var(--gilt);
+  border: 4px solid var(--gilt);
   border-radius: 8px;
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--gilt) 28%, transparent);
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--gilt) 35%, transparent), 0 0 18px 4px color-mix(in srgb, var(--gilt) 45%, transparent);
 }
 @media (prefers-reduced-motion: no-preference) {
   .advisor-ring { animation: advisor-ring 1.6s ease-in-out infinite; }
 }
+/* Big and unmissable (user, 2026-11-22): the ring swells and its halo spreads, then settles. */
 @keyframes advisor-ring {
-  0%, 100% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--gilt) 30%, transparent); }
-  50% { box-shadow: 0 0 0 9px color-mix(in srgb, var(--gilt) 0%, transparent); }
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 4px color-mix(in srgb, var(--gilt) 45%, transparent), 0 0 12px 2px color-mix(in srgb, var(--gilt) 50%, transparent); }
+  50% { transform: scale(1.12); box-shadow: 0 0 0 16px color-mix(in srgb, var(--gilt) 0%, transparent), 0 0 28px 8px color-mix(in srgb, var(--gilt) 25%, transparent); }
 }
 
 .hint-settings { padding: 12px; border-top: 1px solid var(--rule); text-align: left; }

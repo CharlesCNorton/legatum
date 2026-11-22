@@ -37,6 +37,13 @@ describe('one decision at a time', () => {
     expect(advisorSuggestion(ctx(unitDone), ['welcome'], [])?.title).toBeTruthy();
   });
 
+  it('follows the screen: the open Research panel or the selected unit comes first', async () => {
+    const { city, unit, plan, ctx } = await opening();
+    expect(advisorSuggestion({ ...ctx([plan[0]]), techOpen: true }, ['welcome'], [])?.id).toBe('research');
+    expect(advisorSuggestion(ctx([], { kind: 'unit', id: unit.id }), ['welcome'], [])?.id).toBe(`unit:${unit.id}`);
+    expect(advisorSuggestion(ctx([], { kind: 'city', id: city.id }), ['welcome'], [])?.id).toBe(`city:${city.id}`);
+  });
+
   it('accepts a different build and research choice as that decision made', async () => {
     const { city, view, ctx } = await opening();
     const chosen = city.detail!.options.at(-1)!.item;

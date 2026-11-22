@@ -148,7 +148,10 @@ export function advisorSuggestion(ctx: AdvisorContext, seen: readonly string[], 
   const plan = ctx.plan === undefined ? advisorOrders(v) : ctx.plan;
   const orders = validOrders(ctx);
   const decisions = pendingDecisions(v, orders, ctx.errors ?? [], ctx.local);
-  for (const d of decisions) {
+  // Follow the screen: the open Research panel or the selected city or unit is the decision in hand.
+  const inHand = (d: (typeof decisions)[number]) => (d.kind === 'research' && ctx.techOpen)
+    || ((d.kind === 'city' || d.kind === 'unit') && ctx.selection?.kind === d.kind && ctx.selection.id === d.id);
+  for (const d of [...decisions.filter(inHand), ...decisions.filter((d) => !inHand(d))]) {
     if (d.kind === 'city') {
       const city = ownCities(v).find((c) => c.id === d.id);
       if (!city || skipped.includes(`city:${d.id}`)) continue;

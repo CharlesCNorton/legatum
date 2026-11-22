@@ -61,7 +61,13 @@ function AdvisorRing({ target }: { target: AdvisorTarget }) {
       frame = requestAnimationFrame(measure);
     };
     measure();
-    return () => cancelAnimationFrame(frame);
+    // A build card or technology further down its list is brought into view once, inside its own panel.
+    const scroll = window.setTimeout(() => {
+      if (target.kind !== 'control') return;
+      const el = targetElement(target), r = el?.getBoundingClientRect();
+      if (el && r && (r.top < 0 || r.bottom > innerHeight || !targetRect(target))) el.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    }, 150);
+    return () => { cancelAnimationFrame(frame); window.clearTimeout(scroll); };
   }, [target?.kind, target?.kind === 'tile' ? `${target.hex.q},${target.hex.r}` : target?.kind === 'control' ? `${target.name}:${target.value}` : '']);
   if (!rect) return null;
   return <div className={`advisor-ring${rect.tile ? ' map-target' : ''}`} data-testid="advisor-ring" aria-hidden="true"

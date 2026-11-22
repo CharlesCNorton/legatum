@@ -30,8 +30,9 @@ for (const size of SIZES) test.describe(`first run with advisor ${size.name}`, (
     await capture('01-welcome');
     await card.getByRole('button', { name: 'Continue' }).click();
     await expect(card).toHaveAttribute('data-advisor-id', /^city:/);
+    // On some layouts the capital is already selected on turn 1, so the card may open on its second step.
     await expect(ring).toBeVisible();
-    await capture('02-build-city-ring');
+    await capture('02-build-first-ring');
     const cityId = Number((await card.getAttribute('data-advisor-id'))!.split(':')[1]);
     await page.evaluate((id) => { const s = (window as unknown as GameWindow).legatum.getState(); s.select({ kind: 'city', id }, true); }, cityId);
     await expect(page.locator('.city-panel')).toBeVisible();
@@ -42,6 +43,22 @@ for (const size of SIZES) test.describe(`first run with advisor ${size.name}`, (
     const buildName = /Build on (.+)\./.exec(buildInstruction)?.[1];
     expect(buildName).toBeTruthy();
     await page.locator('.city-panel').getByRole('button', { name: `Build ${buildName}`, exact: true }).click();
+
+    // Choosing a build moves the game to its next decision; on this seed that opens Research, and the advisor follows.
+    const tech = page.locator('dialog.tech-modal[open]');
+    if (!(await tech.isVisible())) {
+      await expect(card).toHaveAttribute('data-advisor-id', 'research');
+      await expect(ring).toBeVisible();
+      await capture('04-research-ring');
+      await page.keyboard.press('t');
+    }
+    await expect(tech).toBeVisible();
+    await expect(card).toHaveAttribute('data-advisor-id', 'research');
+    await expect(card).toContainText('Step 2 of 2');
+    await expect(ring).toBeVisible();
+    await capture('05-research-card-ring');
+    await tech.getByRole('button', { name: 'Research now' }).first().click();
+    if (await tech.isVisible()) await page.keyboard.press('Escape');
     await page.evaluate(() => (window as unknown as GameWindow).legatum.getState().select(null));
 
     // The first Hard unit move teaches the right-click command and its exact destination.
@@ -49,35 +66,27 @@ for (const size of SIZES) test.describe(`first run with advisor ${size.name}`, (
     for (let i = 0; i < 12; i++) {
       await expect(card).toBeVisible();
       if (/^Move with your /.test((await card.locator('h3').textContent()) ?? '')) { move = true; break; }
-      if ((await card.getAttribute('data-advisor-id')) === 'research') break;
+      if ((await card.getAttribute('data-advisor-id')) === 'endTurn') break;
       await card.getByRole('button', { name: 'Not now' }).click();
     }
     expect(move, 'Hard should recommend a unit move in this opening').toBe(true);
     const unitId = Number((await card.getAttribute('data-advisor-id'))!.split(':')[1]);
-    await capture('04-unit-ring');
+    await expect(ring).toBeVisible();
+    await capture('06-unit-ring');
     await page.evaluate((id) => { const s = (window as unknown as GameWindow).legatum.getState(); s.select({ kind: 'unit', id }, true); }, unitId);
     await expect(card).toContainText('Step 2 of 2');
     await expect(ring).toBeVisible();
-    await capture('05-move-destination-ring');
+    await capture('07-move-destination-ring');
     const destination = (await ring.boundingBox())!;
     await page.mouse.click(destination.x + destination.width / 2, destination.y + destination.height / 2, { button: 'right' });
 
-    // Other units can be ordered without adding more tour shots; the next lesson is research.
+    // Other units can be ordered without more tour shots; then the advisor points at End turn.
     await page.evaluate(() => {
       const s = (window as unknown as GameWindow).legatum.getState(), v = s.views![s.seat];
       s.editOrders((orders) => [...orders, ...v.units.filter((u) => u.owner === v.me && !orders.some((o) => 'unit' in o && o.unit === u.id))
         .map((u) => ({ type: 'SkipUnit' as const, unit: u.id }))]);
+      s.select(null);
     });
-    await expect(card).toHaveAttribute('data-advisor-id', 'research');
-    await capture('06-research-ring');
-    await page.keyboard.press('t');
-    const tech = page.locator('dialog.tech-modal[open]');
-    await expect(tech).toBeVisible();
-    await expect(card).toContainText('Step 2 of 2');
-    await expect(ring).toBeVisible();
-    await capture('07-research-card-ring');
-    await tech.getByRole('button', { name: 'Research now' }).first().click();
-    if (await tech.isVisible()) await page.keyboard.press('Escape');
     await expect(card).toHaveAttribute('data-advisor-id', 'endTurn');
     await expect(ring).toBeVisible();
     await capture('08-end-turn-ring');
