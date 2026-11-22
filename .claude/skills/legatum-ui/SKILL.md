@@ -93,6 +93,8 @@ This file holds the current rules, one line each. The user's words, dates, as-bu
 - **Tour helpers import only modules without `?url` asset imports** (Playwright can't load them): keep pure helpers such as `roman` in `brand/roman.ts`, not in an asset-importing `.tsx`.
 - **Copy changes update tour assertions in the same change:** grep `app/e2e/tour` for the old string; the tour is not in local CI.
 
+- **No eyebrows, taglines or mottos in chrome (user, 2026-11-22):** a small-caps label over a heading, a decorative tagline, a lede or a footer motto stays only if it tells the player something the heading doesn't (a turn, an era, an event type, "From your ally"). "A Contest Through History", "Plan now. Resolve together.", "Chapter 03" and "Explore · expand · build · compete" were cut as clutter. Faction mottos on a faction's own cards are identity, not chrome, and stay.
+
 ## Game text: plain language
 
 Every word a player reads (sheets, cards, the Guide, tooltips, breakdowns, report lines, refusals) follows this guide (user, 2026-10-17: "'per complete pair' is not normal language... is there a rule... to make sure we use normal language"). The cause of the bad wording was agents translating code literally (`floor(pop / 2)` became "per complete pair"). Write what the player gets, not how the code computes it.

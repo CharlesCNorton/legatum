@@ -63,7 +63,6 @@ export function GuideContent({ section }: { section: GuideSection }) {
   const company = RULES.company;
   switch (section) {
     case 'start': return <>
-      <p className="guide-lede">Legatum brings peoples from different periods of human history onto one map. Explore ancient ruins, found cities and contest the legacy they leave behind.</p>
       <p>Lead an empire, explore ruins, found cities and race for victory points (VP): reach your target, then hold it. If you know Civilization VI, the pieces will feel familiar. The difference is timing: everyone’s plans resolve together.</p>
       <h3>Choose how you play</h3>
       <div className="guide-modes">
@@ -81,7 +80,6 @@ export function GuideContent({ section }: { section: GuideSection }) {
     </>;
     case 'turns': return <>
       <p className="touch-only">Tap any number for its breakdown. Use ⓘ beside an action to inspect it, and Close or tap outside to dismiss.</p>
-      <p className="guide-lede">Plan now. Resolve together.</p>
       <ol className="guide-steps">
         <li><h3>Your capital is ready</h3><p>Every empire starts with its capital founded on its starting tile. Choose what it builds on turn 1. Your Scout explores and your Spearman can protect the start.</p></li>
         <li><h3>Give units destinations</h3>
@@ -123,7 +121,6 @@ export function GuideContent({ section }: { section: GuideSection }) {
       <p>Barbarians can be turned off in the game settings. The Celtic goal Raise the Warbands still raises camps when barbarians are off. Borders never disperse those camps, and Celtic players get no Gold for clearing them.</p>
     </>;
     case 'cities': return <>
-      <p className="guide-lede">Give every city a job, and enough Food to do it.</p>
       <h3>Raze a captured city</h3>
       <p>From the planning turn after capture, select a city you hold but did not found and choose Raze. The city burns at the turn boundary, its tiles are released and you gain 10 Gold per population. World wonders and faction goal buildings in it are destroyed, along with any VP they give. The Celts instead burn cities automatically on capture for a stronger sack.</p>
       <h3>Growth and production</h3>
@@ -202,7 +199,6 @@ export function GuideContent({ section }: { section: GuideSection }) {
       </dl>
     </>;
     case 'combat': return <>
-      <p className="guide-lede">Read the forecast. Leave room for the unexpected.</p>
       <h3>Fight on your terms</h3>
       <p>Order a military unit into an enemy unit or city to attack in melee. Both sides can take damage, and wounds normally reduce a unit’s strength. Spartan infantry ignore that penalty. Forests and hills help defenders, but not Mongol military units. Fortification helps every faction. Armies that meet while moving get no terrain or fortification bonus.</p>
       <p>Archers and every other ranged unit fire from up to two tiles away with no retaliation. Choose Ranged attack (<kbd>R</kbd>), then click the target. They cannot shoot and move in the same turn. A ranged unit in one of your cities can turn on Auto-fire from its unit card. It stays there and shoots the best visible enemy in range each turn, or holds when no shot is legal. It never declares War or spends Gold. Moving it or turning Auto-fire off returns it to manual control. A manual shot chooses its target for that turn. While auto-firing, it does not appear in the Return queue.</p>
@@ -264,7 +260,6 @@ export function GuideContent({ section }: { section: GuideSection }) {
       <p>If units of empires that are not at War try to enter the same tile, nobody fights. The side with more total strength moves in and the other stays where it was. Your units and your teammate’s add up, a damaged unit counts for less, and a civilian counts for nothing. Equal strength is decided at random. A unit already on a tile is never pushed off.</p>
     </>;
     case 'victory': return <>
-      <p className="guide-lede">Build permanent points. Contest the lead.</p>
       <div className="guide-targets"><div><b>10</b><span>VP · one-empire team</span></div><div><b>20</b><span>VP · two-empire team</span></div><div><b>+10</b><span>target per extra teammate</span></div></div>
       <p>Scores are checked after every turn. Teammates combine their points. Open the score ledger from the top bar’s VP chip or the victory race’s “Score ledger” link. Its columns show teams and empires in rank order, with your column in gilt and the team’s VP over its first member. Every way to score has a row; open a row for its rule and progress. The ledger shows the actual target and standings for your game.</p>
       <h3>Winning · hold the target</h3>
@@ -300,7 +295,6 @@ export function GuideContent({ section }: { section: GuideSection }) {
       <p>If several teams finish holding their target on the same turn, the higher VP wins, then the higher population. An exact tie is a draw. With a turn limit, a team still counting down when the limit arrives does not win early. The team with the most VP at that turn wins instead, and tied leaders draw. The last surviving team also wins.</p>
     </>;
     case 'factions': return <>
-      <p className="guide-lede">Peoples with different ways to shape history.</p>
       <p>Every faction is playable, with a rule it bends and a weakness that pays for it. Egypt and Rome have no faction goal yet; the other faction goals each score 2 VP.</p>
       <p>Production and Gold figures below are the listed prices.</p>
       <div className="guide-heirs">
@@ -323,7 +317,6 @@ export function GuideContent({ section }: { section: GuideSection }) {
       </div>
     </>;
     case 'controls': return <>
-      <p className="guide-lede">Keep your attention on the map.</p>
       <dl className="guide-definitions guide-controls">
         <div className="touch-only"><dt>Tap, then tap again</dt><dd>Select a unit, tap a destination for the path and forecast, then tap it again or Confirm to order.</dd></div>
         <div className="touch-only"><dt>Drag / pinch / double-tap</dt><dd>Pan with one finger. Pinch to zoom around both fingers. Double-tap a selected unit or an inspection tile to zoom in; a second destination tap confirms its order.</dd></div>
@@ -375,7 +368,6 @@ function Credits() {
   const others = SOUND_MANIFEST.filter((e) => !e.file.startsWith('music/') && e.license === 'CC0-1.0' && e.author !== 'Kenney')
     .filter((e, i, all) => all.findIndex((o) => o.attribution === e.attribution) === i);
   return <>
-    <p className="guide-lede">Art and sound.</p>
     <h3>Artwork</h3>
     <p>Legatum’s original artwork is offered under CC BY 4.0 to the extent rights exist. The Niter, Oil and Silicon resource medallions were generated with an OpenAI image model, selected and resized for the game. Their prompts and provenance are in the resource art README.</p>
     <h3>Music</h3>
