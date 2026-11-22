@@ -568,6 +568,4 @@ mod target_tests {
         let (_, t) = targets("opening-race");
         assert!(t.is_empty(), "{t:?}");
     }
-
-
 }
