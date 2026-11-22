@@ -99,7 +99,7 @@ upload Worker address changed cannot reach the old one. A save made with rules t
 as before.
 
 Every web build, and CI's app build, also runs `tools/release/check-dist-refs.mjs`: it fails if the JS, CSS or HTML
-points to a file the build does not contain.
+points to a file the build does not contain (a link to a folder, such as `/`, counts when the folder has an `index.html`).
 
 ## Third-party licence notices
 
