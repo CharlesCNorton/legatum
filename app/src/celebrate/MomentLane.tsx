@@ -12,6 +12,7 @@ import { Amounts } from '../ui/Amounts';
 import { PortraitFrame } from '../ui/premium';
 import { VpSeal } from '../ui/vpParts';
 import { unitMiniatureUrl } from '../unitArt';
+import { buildingArtSlug, slugUrl } from '../unlockArt';
 import { resourceArtUrl } from '../icons';
 import { RewardEmblem } from './RewardEmblem';
 import { DURATION, momentsForTurn, planMoments, type Counter, type Emblem, type Moment } from './moments';
@@ -210,7 +211,7 @@ export function MomentLane() {
   const { active, deferred, reduced, collapsed, dismiss, more } = useCelebration();
   const lane = useRef<HTMLDivElement>(null);
   const card = active && active.tier !== 'minor' ? active : null;
-  const picture = card ? card.art ?? (card.resource ? resourceArtUrl(card.resource, 256) : null) ?? (card.unit ? unitMiniatureUrl(card.unit.kind, card.unit.faction) : null) : null;
+  const picture = card ? card.art ?? (card.resource ? resourceArtUrl(card.resource, 256) : null) ?? (card.unit ? unitMiniatureUrl(card.unit.kind, card.unit.faction) : null) ?? (card.building ? slugUrl(buildingArtSlug(card.building, card.faction), 256) ?? slugUrl(buildingArtSlug(card.building), 256) : null) : null;
   const vignette = card && !card.unlock && !card.eraUp && !card.scoreCheck ? vignetteFor(card) : null;
   // Global layout owns the reservations; publish the actual card + overflow-chip height so
   // reports and phone selection panels can share the screen without guessing text/font sizes.
