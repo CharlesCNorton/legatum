@@ -378,6 +378,111 @@ impl Planner<'_> {
                 .tile(u.pos)
                 .is_some_and(|t| t.owner.is_none_or(|o| o == self.ctx.me))
     }
+
+    /// Gene `rome_colonia`, called by `unit_order` for every move: keeps the would-be founder
+    /// (`colonia_reserved`) out of a city whose occupation lock would hold it there until
+    /// Peace. The lock is the city's, so a locked veteran can never be swapped out: in a
+    /// 320-game run, 35 of the 55 turns Rome had a level-3 veteran, every one was locked in a
+    /// city it had taken. The move is any `MoveUnit`/`MoveUnitPath` ending on a city that
+    /// carries `CityView::occupation_lock`: a capture, or entering Rome's own occupied city.
+    ///
+    /// `None` lets the order stand. Otherwise the founder stands aside: another free Roman
+    /// melee unit that reaches the city this turn takes the same move (`Some` of whether its
+    /// order went in), or, for an enemy city, the capture waits a turn when such a unit is
+    /// within two turns (`Some(false)`), once: a capture that waited last turn goes ahead.
+    /// Otherwise the founder captures: Rome does not give up a city it would have taken. It
+    /// keeps fighting in the field either way.
+    pub(crate) fn colonia_lock_guard(
+        &mut self,
+        unit: legatum_core::UnitId,
+        order: &Order,
+    ) -> Option<bool> {
+        let to = match order {
+            Order::MoveUnit { to, .. } | Order::MoveUnitPath { to, .. } => *to,
+            _ => return None,
+        };
+        let v = self.view();
+        let city = v
+            .cities
+            .iter()
+            .find(|c| c.pos == to && c.occupation_lock.is_some())?;
+        let enemy = !v.same_team(v.me, city.owner);
+        let u = self.ctx.own_units.iter().find(|u| u.id == unit).copied()?;
+        if u.pos == to || u.occupation_lock.is_some() || !self.colonia_reserved(u) {
+            return None;
+        }
+        let u = u.clone();
+        let others: Vec<UnitView> = self
+            .own_melee()
+            .filter(|m| m.id != unit && !self.has_acted(m.id) && !self.colonia_reserved(m))
+            .filter(|m| m.occupation_lock.is_none() && self.ctx.reachable(m.pos, to))
+            .cloned()
+            .collect();
+        let substitute = others
+            .iter()
+            .filter(|m| m.pos.distance(to) <= m.max_moves.max(1))
+            .max_by_key(|m| {
+                (
+                    crate::analysis::attack_power(self.view(), m),
+                    std::cmp::Reverse(m.id),
+                )
+            })
+            .cloned();
+        let near = others
+            .iter()
+            .any(|m| m.pos.distance(to) <= 2 * m.max_moves.max(1));
+        let note = |p: &Self, outcome: &'static str, why: String| {
+            if p.decision_trace.is_some() {
+                let mut row = crate::DecisionOption::new(
+                    "colonia",
+                    format!("unit={:?} lock city at {to:?}", u.id),
+                    outcome,
+                );
+                row.gate = Some(why);
+                p.note_option(row);
+            }
+        };
+        if let Some(m) = substitute {
+            note(
+                self,
+                "stood_aside",
+                format!(
+                    "founder kept out of the occupation lock; {:?} moves instead",
+                    m.id
+                ),
+            );
+            return Some(self.unit_order(m.id, Order::MoveUnit { unit: m.id, to }));
+        }
+        let turn = self.view().turn;
+        let waited = self
+            .campaigns
+            .colonia_waits
+            .iter()
+            .any(|&(at, t)| at == to && t + 1 == turn);
+        if enemy && near && !waited {
+            self.campaigns.colonia_waits.retain(|&(_, t)| t + 1 >= turn);
+            if !self.campaigns.colonia_waits.contains(&(to, turn)) {
+                self.campaigns.colonia_waits.push((to, turn));
+            }
+            note(
+                self,
+                "stood_aside",
+                "founder kept out of the occupation lock; the capture waits for another unit"
+                    .into(),
+            );
+            return Some(false);
+        }
+        note(
+            self,
+            "allowed",
+            if waited {
+                "the capture already waited a turn".into()
+            } else {
+                "no other unit can take the city".into()
+            },
+        );
+        None
+    }
 }
 
 /// The veteran as it will be once healed: founding needs full health, and the site search

@@ -308,3 +308,144 @@ fn a_veteran_locked_in_a_captured_city_is_not_the_founder() {
         p.orders
     );
 }
+
+/// `rome()` with the rival city capturable into an occupation lock and a level-3 veteran
+/// beside it.
+fn lock_city() -> PlayerView {
+    let mut v = veteran(rome(), 1, RIVAL.neighbors()[0], 3, 60);
+    v.cities
+        .iter_mut()
+        .find(|c| c.pos == RIVAL)
+        .unwrap()
+        .occupation_lock = Some(ENEMY);
+    v
+}
+
+fn moves_to(p: &Planner<'_>, unit: u32, to: Hex) -> bool {
+    p.orders.iter().any(|o| {
+        matches!(o, Order::MoveUnit { unit: u, to: t } | Order::MoveUnitPath { unit: u, to: t, .. }
+            if *u == UnitId(unit) && *t == to)
+    })
+}
+
+#[test]
+fn another_unit_takes_the_capture_that_would_lock_the_founder() {
+    // Seed 9000 game 95: the level-3 veteran took Cologne and was locked there until Peace.
+    let v = ViewBuilder { view: lock_city() }
+        .unit(10, ME, UnitKind::Soldier, RIVAL.neighbors()[1])
+        .build();
+    let mut p = hard(&v);
+    assert!(p.unit_order(
+        UnitId(1),
+        Order::MoveUnit {
+            unit: UnitId(1),
+            to: RIVAL
+        }
+    ));
+    assert!(moves_to(&p, 10, RIVAL), "{:?}", p.orders);
+    assert!(!moves_to(&p, 1, RIVAL));
+    assert!(
+        !p.has_acted(UnitId(1)),
+        "the founder stays free to fight in the field"
+    );
+    // A move that locks nobody is untouched.
+    let mut p = hard(&v);
+    let field = RIVAL.neighbors()[0].neighbors()[0];
+    assert!(p.unit_order(
+        UnitId(1),
+        Order::MoveUnit {
+            unit: UnitId(1),
+            to: field
+        }
+    ));
+    assert!(moves_to(&p, 1, field));
+}
+
+#[test]
+fn the_capture_waits_a_turn_for_a_unit_two_turns_out_but_not_for_none() {
+    let v = lock_city();
+    // A soldier two turns away: the capture waits rather than lock the founder.
+    let far = Hex::new(17, 8);
+    assert_eq!(far.distance(RIVAL), 3);
+    let waiting = ViewBuilder { view: v.clone() }
+        .unit(10, ME, UnitKind::Soldier, far)
+        .build();
+    let mut p = hard(&waiting);
+    assert!(
+        far.distance(RIVAL)
+            > p.ctx
+                .own_units
+                .iter()
+                .find(|u| u.id == UnitId(10))
+                .unwrap()
+                .max_moves
+    );
+    assert!(!p.unit_order(
+        UnitId(1),
+        Order::MoveUnit {
+            unit: UnitId(1),
+            to: RIVAL
+        }
+    ));
+    assert!(p.orders.is_empty(), "{:?}", p.orders);
+    assert_eq!(p.campaigns.colonia_waits, vec![(RIVAL, waiting.turn)]);
+    // It waits one turn only: a capture that waited last turn goes ahead.
+    let mut later = waiting.clone();
+    later.turn += 1;
+    let mut p = hard(&later);
+    p.campaigns.colonia_waits = vec![(RIVAL, waiting.turn)];
+    assert!(p.unit_order(
+        UnitId(1),
+        Order::MoveUnit {
+            unit: UnitId(1),
+            to: RIVAL
+        }
+    ));
+    // Nobody else near: Rome takes the city with the founder rather than not at all.
+    let mut p = hard(&v);
+    assert!(p.unit_order(
+        UnitId(1),
+        Order::MoveUnit {
+            unit: UnitId(1),
+            to: RIVAL
+        }
+    ));
+    assert!(moves_to(&p, 1, RIVAL));
+    // Gene off: the old behaviour.
+    let mut p = hard(&waiting);
+    p.decisions.rome_colonia = 0;
+    assert!(p.unit_order(
+        UnitId(1),
+        Order::MoveUnit {
+            unit: UnitId(1),
+            to: RIVAL
+        }
+    ));
+}
+
+#[test]
+fn the_founder_does_not_garrison_an_occupied_city_of_ours_when_another_can() {
+    // An own city still held down against its former owner locks whoever enters it.
+    let held = Hex::new(14, 4);
+    let mut v = ViewBuilder {
+        view: veteran(rome(), 1, Hex::new(14, 5), 3, 60),
+    }
+    .city(6, ME, held, 2)
+    .unit(10, ME, UnitKind::Soldier, Hex::new(13, 4))
+    .build();
+    v.cities
+        .iter_mut()
+        .find(|c| c.pos == held)
+        .unwrap()
+        .occupation_lock = Some(ENEMY);
+    let mut p = hard(&v);
+    assert!(p.unit_order(
+        UnitId(1),
+        Order::MoveUnit {
+            unit: UnitId(1),
+            to: held
+        }
+    ));
+    assert!(moves_to(&p, 10, held), "{:?}", p.orders);
+    assert!(!moves_to(&p, 1, held));
+}

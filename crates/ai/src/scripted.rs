@@ -1398,6 +1398,13 @@ impl<'a> Planner<'a> {
 
     /// Issue a unit-action order, unless the unit already has one. Returns whether it was issued.
     pub fn unit_order(&mut self, unit: UnitId, order: Order) -> bool {
+        if self.has_acted(unit) {
+            return false;
+        }
+        // Rome's Colonia founder never walks into an occupation lock (`goal_colonia.rs`).
+        if let Some(placed) = self.colonia_lock_guard(unit, &order) {
+            return placed;
+        }
         if !self.acted.insert(unit) {
             return false;
         }
