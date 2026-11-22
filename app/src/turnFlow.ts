@@ -12,9 +12,10 @@ import { aircraftNeedingOrders, type Hold } from './airWing';
 import { strikeRange } from './airText';
 import { goalDecisionText, readyGoalAction } from './goalDecision';
 import { AUTOMATION_NO_CHOICE, cityAutomationPreview } from './automation';
+import { tombOnAfterOrders } from './goalCities';
 
 export type DecisionTarget = { kind: 'unit' | 'city' | 'siege'; id: number } | { kind: 'air'; id: number; city?: number } | { kind: 'research' } | { kind: 'freeTechs' } | { kind: 'diplomacy'; id: number; team: number }
-  | { kind: 'goal'; action: 'Swarm' | 'Sakoku' | 'Broadcast' | 'CallTheWild' | 'Retire'; title: string; line: string }
+  | { kind: 'goal'; action: 'Swarm' | 'Sakoku' | 'Broadcast' | 'CallTheWild' | 'Retire' | 'Colonia'; title: string; line: string }
   | { kind: 'treasury'; target: { kind: 'unit' | 'city'; id: number } | null };
 /** `issue`: why the unit's queued order fails; `fix`: that as one sentence naming the unit. */
 /** `healed`: a unit whose Heal order ended at full health in the turn that just resolved. */
@@ -115,7 +116,7 @@ export function pendingDecisions(view: PlayerView, orders: Order[], errors: Orde
     ...(view.actions?.free_techs && !valid.some((o) => o.type === 'Action' && o.action.action === 'ChooseFreeTechs')
       ? [{ kind: 'freeTechs' as const, label: `Choose ${freeTechTarget(view)} free ${freeTechTarget(view) === 1 ? 'technology' : 'technologies'}` }] : []),
     ...[treasuryDecision(view, valid)].filter((d): d is PendingDecision => d !== null),
-    ...view.cities.filter((c) => c.owner === view.me && unchosen.has(c.id)).sort((a, b) => a.id - b.id)
+    ...view.cities.filter((c) => c.owner === view.me && unchosen.has(c.id) && !tombOnAfterOrders(view, valid)).sort((a, b) => a.id - b.id)
       .map((c): PendingDecision => ({ kind: 'city', id: c.id, label: `Choose what ${c.name} builds · ${AUTOMATION_NO_CHOICE}` })),
     // The founding decision is already made: the first playable choice is the capital's build.
     ...(view.turn === 1 ? idleCityDecisions : []),

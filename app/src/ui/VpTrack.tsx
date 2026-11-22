@@ -11,7 +11,7 @@ import { Icon } from './bits';
 import { usePhoneLayout } from './usePhoneLayout';
 import { feel } from '../feel';
 import { empireOfPlayer } from '../empires';
-import { CAPITALS_RULE, CapitalChip, ClosedChip, DecadenceChip, HeldToken, HoldStrips, NobodyRow, LeadChip, PendingGoal, RowWho, TokenCard, tokenKey, useTokenCards, type RowRelation } from './VpHoldings';
+import { CAPITALS_RULE, CapitalChip, ClosedChip, DecadenceChip, TombChip, HeldToken, HoldStrips, NobodyRow, LeadChip, PendingGoal, RowWho, TokenCard, tokenKey, useTokenCards, type RowRelation } from './VpHoldings';
 import { empireVars } from './vpParts';
 import { SidebarObjective } from './EraObjectives';
 /** Always-visible victory race (pillar 4): what each empire holds, and what nobody does. "All objectives" opens the sheet. */
@@ -88,6 +88,7 @@ export function VpTrack() {
               <LeadChip members={row.members} rules={model!.raceRules.rules} />
               <DecadenceChip members={row.members} rules={model!.raceRules.rules} />
               <ClosedChip members={row.members} />
+              <TombChip members={row.members} />
               <CapitalChip row={row} nameOf={(e) => name(e.id)} />
               {row.pendingGoals.map((t) => <PendingGoal key={tokenKey(t)} t={t} props={cards.tokenProps(tokenKey(t), t.source.id, t.owner.id)} />)}
             </span>

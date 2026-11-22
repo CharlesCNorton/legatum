@@ -17,7 +17,7 @@ import { ScienceHoverSummary } from './ScienceHover';
 import { Amount, Amounts, Quantity } from './Amounts';
 import { VpChip } from './ObjectiveSheet';
 import { CitiesButton } from './CitiesOverview';
-import { HoardReadout } from './FactionGoalProgress';
+import { HoardReadout, TombReadout } from './FactionGoalProgress';
 import { LevyCounter } from './Levy';
 import { DecadenceNote } from './DecadenceNote';
 import { pendingSpend } from './productionPurchases';
@@ -116,6 +116,7 @@ export function TopBar() {
           <HoardReadout view={view} gold={gold} />
           <span className={e.gold_per_turn.total < 0 ? 'neg' : 'pos'}>({signed(e.gold_per_turn.total)})</span>
         </Tip>
+        <TombReadout view={view} />
         {!phone && warning && e.bankruptcy && (
           <Tip className="gold-warning" content={warning}>
             <span className="gold-warning-text"><b><Icon name="ui-alert" size={13} className="ui-mark" /> Treasury <Quantity value={e.bankruptcy.gold.total} unit="Gold" /><span className="gw-long"> next turn</span></b><span className="gw-long"> {e.bankruptcy.disband ? `${itemName({ kind: 'Unit', unit: e.bankruptcy.disband.kind }, view.players.find((p) => p.id === view.me)?.faction)} will be disbanded` : 'treasury resets to 0'}</span></span>

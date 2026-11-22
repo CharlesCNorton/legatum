@@ -6,7 +6,7 @@
 // Rules live in the core (`goals.rs`); nothing here decides who scores.
 import { RULES, factionGoalVp } from './data';
 import { empireOfPlayer } from './empires';
-import type { CityId, Faction, Hex, PlayerId, PlayerPublic, PlayerView, UnitId } from './types';
+import type { CityId, Faction, Hex, Order, PlayerId, PlayerPublic, PlayerView, UnitId } from './types';
 
 export type GoalCityKind = 'colonia' | 'tomb';
 
@@ -140,6 +140,17 @@ export function tombSiteName(view: PlayerView): string | null {
 /** Whether the viewer's empire is building its tomb now: every one of its cities is stopped. */
 export function tombWorking(view: Pick<PlayerView, 'actions'>): boolean {
   return !!view.actions?.tomb?.working;
+}
+
+/** The Royal Tomb order queued this turn, if any: true builds, false pauses. */
+export function pendingTomb(orders: readonly Order[]): boolean | null {
+  const o = [...orders].reverse().find((x) => x.type === 'Action' && x.action.action === 'Tomb');
+  return o && o.type === 'Action' && o.action.action === 'Tomb' ? o.action.build : null;
+}
+
+/** Whether the tomb work will be on at this turn's end, counting a Build or Pause order queued now: no city needs a build then. */
+export function tombOnAfterOrders(view: Pick<PlayerView, 'actions'>, orders: readonly Order[]): boolean {
+  return pendingTomb(orders) ?? tombWorking(view);
 }
 
 /** The city panel's and the overview's note on a stopped city. */

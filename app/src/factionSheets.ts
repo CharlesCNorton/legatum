@@ -38,7 +38,7 @@ export interface FactionSheet {
   piecePairs?: boolean;
   /** Three-word identity shown on the gallery tile. */
   identity: string;
-  /** An early design: playable, but with no faction goal yet (Egypt and Rome; marked on the tile and sheet). */
+  /** An early design: playable, but with no faction goal yet (none now; marked on the tile and sheet). */
   early?: true;
   /** 2-3 sentence lore paragraph in the existing voice. */
   lore: string;
@@ -98,7 +98,6 @@ export function sheetCards(faction: Faction): SheetCard[] {
 export const FACTION_SHEETS: Record<Faction, FactionSheet> = {
   Egypt: {
     identity: 'The river builds everything',
-    early: true,
     lore: 'The Nile flood fed the builders of Egypt. In play, each city chooses between building with its Food and growing with it.',
     ratings: { aggression: 2, economy: 5, complexity: 3 },
     pairs: [
@@ -106,11 +105,10 @@ export const FACTION_SHEETS: Record<Faction, FactionSheet> = {
       { strength: 'Royal Granary replaces the Granary and gives +3 Food total.', strengthIcon: 'building-royalgranary', onCard: true },
       specialRow('Egypt', 'unit-medjay'),
     ],
-    counteredBy: 'Strike while its cities are busy growing, and take its Food-rich sites.',
+    counteredBy: 'Strike while its cities are busy growing or working on the Royal Tomb, and take its Food-rich sites.',
   },
   Rome: {
     identity: 'Veterans found cities',
-    early: true,
     lore: 'Roman veterans received land after military service. In play, each new city costs a seasoned soldier, leaving fewer defenders in the field.',
     ratings: { aggression: 4, economy: 2, complexity: 3 },
     pairs: [

@@ -136,6 +136,7 @@
 /* A legacy Sakoku vow: a torii mark and countdown beside the empire's tokens (the icon and figure identify it). */
 .vhc-closed { display: inline-flex; align-items: center; gap: 3px; height: 20px; padding: 0 5px 0 4px; border-radius: 10px; cursor: help; font: 700 10.5px/1 var(--num-font, var(--sans)); color: var(--ink-2); background: color-mix(in srgb, var(--ink) 6%, var(--panel)); box-shadow: inset 0 0 0 1px var(--rule-2); white-space: nowrap; }
 .vhc-closed.holding { color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--gilt); background: color-mix(in srgb, var(--gilt) 14%, var(--panel)); }
+.vhc-tomb.working { color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--gilt); }
 .vhc-closed.blocked { color: var(--bad); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--bad) 55%, transparent); }
 
 /* ---------- Room for the rows (raceFit.ts, VpTrack.tsx): the race is the panel's job, so its furniture is tight ---------- */

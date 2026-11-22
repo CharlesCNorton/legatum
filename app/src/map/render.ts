@@ -10,7 +10,8 @@ import { itemIcon } from '../data';
 import { isFighter } from '../airText';
 import { capitalStar } from '../capitalMark';
 import { distance as hexDistance, hexToPixel, tileIndex } from '../hex';
-import { healthColor, rgba } from '../theme';
+import { healthColor, playerInk, rgba } from '../theme';
+import { GOAL_CITY_ICON, goalCitiesAt } from '../goalCities';
 import type { PathStep } from '../path';
 import { tintedIcon } from '../icons';
 import type { LookId } from '../brand/look';
@@ -1352,8 +1353,11 @@ export function bannerMeters(c: CityView, faction?: Faction, focus: CityBuildFoc
 interface FarCity { x: number; y: number; seal: ReturnType<typeof sealSprite>; name: { sprite: ReturnType<typeof nameSprite>; x: number; y: number } | null }
 
 /** What a city's banner and far-zoom seal show. The star marks the original capital for the whole game, in the founder's ink; a replacement capital gets none. */
-export function bannerSpec(view: Pick<PlayerView, 'me' | 'team' | 'players'>, c: CityView, glyph: string | null, selected: boolean): BannerSpec {
-  return { owner: c.owner, name: c.name, pop: c.visible ? c.population : null, color: mapPlayerColor(c.owner), capital: capitalStar(view, c), selected, glyph, walls: c.visible && c.walls };
+export function bannerSpec(view: Pick<PlayerView, 'me' | 'team' | 'players'> & Partial<Pick<PlayerView, 'colonias' | 'royal_tombs'>>, c: CityView, glyph: string | null, selected: boolean): BannerSpec {
+  // Rome's Colonia and Egypt's tomb wear their mark in the ink of the empire whose goal it is (the tomb first if a city holds both).
+  const goal = goalCitiesAt(view, c.id).sort((a, b) => Number(b.kind === 'tomb') - Number(a.kind === 'tomb'))[0];
+  return { owner: c.owner, name: c.name, pop: c.visible ? c.population : null, color: mapPlayerColor(c.owner), capital: capitalStar(view, c),
+    goal: goal ? { icon: GOAL_CITY_ICON[goal.kind], ink: playerInk(goal.of) } : null, selected, glyph, walls: c.visible && c.walls };
 }
 
 /** Every on-screen city banner: its spec, anchor and the screen rect it covers (health bar included). Zoomed out, the banner is a seal and a name instead. */

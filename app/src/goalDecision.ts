@@ -1,11 +1,19 @@
 import { FACTION_GOAL, factionGoalVp } from './data';
 import { pendingAction, pendingRetire } from './goalActions';
-import type { Order, PlayerView } from './types';
+import type { Order, PlayerView, UnitId } from './types';
+import { COLONIA_LEVEL } from './goalCities';
 
-export type GoalDecisionKind = 'Swarm' | 'Sakoku' | 'Broadcast' | 'CallTheWild' | 'Retire';
+/** Rome's first veteran that can found the Colonia Victrix and has no founding order yet, or null. */
+export function coloniaFounder(view: PlayerView, orders: readonly Order[]): UnitId | null {
+  return view.actions?.colonia?.founders.find((u) => !orders.some((o) => o.type === 'FoundCity' && o.unit === u)) ?? null;
+}
+
+export type GoalDecisionKind = 'Swarm' | 'Sakoku' | 'Broadcast' | 'CallTheWild' | 'Retire' | 'Colonia';
 
 /** The action's own name (the primary's title) and what it scores (its line): the VP is kept for good for a one-time act, and counts toward a goal that takes several. */
 export function goalDecisionText(kind: GoalDecisionKind, vp: number): { title: string; line: string } {
+  // Rome's veteran reached the founding level: he is the action (selecting him opens the Settle lens with its gilt rings).
+  if (kind === 'Colonia') return { title: 'Found the Colonia Victrix', line: `A level ${COLONIA_LEVEL} veteran can found it · +${vp} VP while you hold it` };
   const title = kind === 'Swarm' ? 'Kindle the New Fire' : kind === 'Retire' ? 'Retire a veteran' : kind === 'Sakoku' ? 'Close the country' : kind === 'CallTheWild' ? 'Raise the Warbands' : 'Share the Learning';
   return { title, line: kind === 'Swarm' || kind === 'Broadcast' ? `+${vp} VP, kept for good` : `Counts toward +${vp} VP` };
 }
@@ -28,8 +36,9 @@ export function readyGoalAction(view: PlayerView, orders: readonly Order[], seen
     : a?.sakoku && !a.sakoku.closed && !a.sakoku.blocker ? 'Sakoku'
       : a?.broadcast && !a.broadcast.blocker && closeToVictory(view, factionGoalVp(me.faction), BROADCAST_OFFER_SLACK) ? 'Broadcast'
         : a?.wild && !a.wild.blocker && closeToVictory(view, factionGoalVp(me.faction), WILD_OFFER_SLACK) ? 'CallTheWild'
-          : a?.retire?.veterans.some((v) => !v.blocker && !pendingRetire(orders, v.unit)) ? 'Retire' : null;
-  if (!kind || (kind !== 'Retire' && pendingAction(orders, kind))) return null;
+          : a?.retire?.veterans.some((v) => !v.blocker && !pendingRetire(orders, v.unit)) ? 'Retire'
+            : coloniaFounder(view, orders) !== null ? 'Colonia' : null;
+  if (!kind || (kind !== 'Retire' && kind !== 'Colonia' && pendingAction(orders, kind))) return null;
   return { kind, name: kind === 'Sakoku' ? 'Sakoku' : FACTION_GOAL[me.faction].name, vp: factionGoalVp(me.faction) };
 }
 

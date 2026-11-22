@@ -30,6 +30,7 @@ import { closeTips } from './Tip';
 import { CapitalNote, CapitalStarGlyph, KickerDot } from './CapitalStar';
 import { capitalLine, capitalMark, replacementKickerLine } from '../capitalMark';
 import { hallCardText, hallStands } from './goalText';
+import { GOAL_CITY_ICON, TOMB_CITY_NOTE, goalCitiesAt, goalCityLine, tombWorking } from '../goalCities';
 import { isPermanentlyUnavailable, nestBuildingUpgrades, progressText, unavailableText, unitLines, withUnavailable, type BuildingLineNode } from './productionChoices';
 import { feel } from '../feel';
 import { RESOURCE_INFO, isStrategic, needText, nileYields, supplyPerMine, supplyRuleText, withArticle } from '../resources';
@@ -227,10 +228,17 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
     </div>
   );
 
+  // Egypt's Royal Tomb work: none of its cities builds or grows (core `economy`), and every panel says so.
+  const tombStopped = city.owner === view.me && tombWorking(view);
   // Healing, fire and bounty scroll with the list instead of riding in the sticky head: the head stays a name and three numbers, so the build cards keep the room.
   const status = (
     <>
       {capMark && !(capMark.own && city.owner === view.me) && <div className="cp-capital"><CapitalNote view={view} mark={capMark} testId="city-capital" /></div>}
+      {/* Rome's Colonia and Egypt's tomb: public goal cities, named with whose goal it is and who scores now. */}
+      {goalCitiesAt(view, city.id).map((g) => <div key={g.kind} className="cp-capital cp-goal-city" data-testid={`city-goal-${g.kind}`}>
+        <Icon name={GOAL_CITY_ICON[g.kind]} size={16} /><span>{goalCityLine(view, g)}</span>
+      </div>)}
+      {tombStopped && <div className="cp-capital cp-goal-city cp-tomb-work" data-testid="city-tomb-work"><Icon name="goal-royal-tomb" size={16} /><span>{TOMB_CITY_NOTE}</span></div>}
       {(fire || heal || bounty !== null || city.greece_captive_at_risk) && <div className="cp-status">
         {heal && <Tip as="div" className="cp-healing-wrap" content={CITY_HEAL_RULE}>
           <ProgressBar className="cp-healing" testId="city-heal" name="City HP healing"
@@ -369,7 +377,8 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
   const growthLabelText = growth?.state === 'starving' ? 'Starving' : `Grows to ${city.population + 1}${claim ? ` · ${claim.text}` : ''}${unlockNames ? ` · unlocks ${unlockNames}` : ''}`;
   const counts = territoryCounts(d);
   const ownedWonders = cityWonders(view, city);
-  const growthTurns = egyptBuilding && d.resistance === 0 ? 'Food builds instead'
+  const growthTurns = tombStopped && d.resistance === 0 ? 'Paused'
+    : egyptBuilding && d.resistance === 0 ? 'Food builds instead'
     : growth?.state === 'resisting' ? 'Paused'
     : growth?.state === 'starving' ? `−1 population in ${growth.turns}`
     : growth?.state === 'growing' ? `${growth.turns} turn${growth.turns === 1 ? '' : 's'}`
@@ -387,6 +396,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
       <div className="bd-note"><Amounts text={
         growth?.state === 'starving' ? `Stored Food runs out and ${city.name} loses 1 population in ${growth.turns} turn${growth.turns === 1 ? '' : 's'}. Build a Farm or a Granary to add Food.`
           : growth?.state === 'resisting' ? `No growth during resistance (${d.resistance} turns).`
+          : tombStopped ? TOMB_CITY_NOTE
           : egyptBuilding ? `While ${city.name} is building, its surplus Food goes into the build and the city doesn't grow. Choose Grow to grow it instead.`
           : `Grows at ${d.growth_threshold} Food. The first growth costs ${FIRST_GROWTH} Food. After that, each growth costs ${GROWTH_BASE} Food plus ${GROWTH_PER_POP} for every population above 1. Leftover Food carries over, and a city grows at most 1 population a turn. Each growth claims one more tile.`
       } /></div>
@@ -961,6 +971,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
         {/* How Build and Queue differ is one hover away, so the choices start right under the title. */}
         <Tip as="div" className="cp-choose-title" content={owner?.faction === 'Egypt' ? EGYPT_BUILD_RULE : BUILD_RULE}>{buildFocus && idleChoice && productionWarning !== AUTOMATION_NO_CHOICE ? `Chooses at Ready · ${buildFocus} focus` : `Choose what ${city.name} builds`}</Tip>
       </div>
+      {tombStopped && <p className="hint" data-testid="city-tomb-picker">Nothing here progresses while the Royal Tomb is being built. You can still buy with Gold, and what you choose starts once the tomb stands or you pause it.</p>}
       <div className="cp-buyline">
         <div className="purchase-status" id={`purchase-status-${city.id}`} role="status">
           <Tip content="Gold available for purchases this turn."><span><Amount n={purchases.gold} unit="Gold" /> ({signed(view.economy.gold_per_turn.total)}/turn) to spend</span></Tip>

@@ -997,6 +997,10 @@ dialog.settings-modal::backdrop {
   font: 600 16px/1 var(--num-font);
 }
 .gold-hoard-readout { font: 600 9.5px/1.1 var(--sans); color: var(--ink-2); white-space: nowrap; }
+/* Egypt's tomb work while it is on: every city is stopped, so the count stays in the top bar. */
+.tomb-readout { display: inline-flex; align-items: center; gap: 5px; color: var(--ink); font: 600 12px/1.1 var(--sans); white-space: nowrap; }
+.tomb-readout svg { color: var(--gilt, #8f6f1c); }
+.tomb-readout .tomb-short { display: none; }
 .faction-goal-progress { display: grid; gap: 3px; padding: 4px 8px; border-left: 3px solid var(--gilt); background: color-mix(in srgb, var(--gilt) 10%, var(--panel)); font: 600 11px/1.25 var(--sans); color: var(--ink); cursor: help; }
 .faction-goal-meter { display: block; height: 4px; overflow: hidden; border-radius: 2px; background: color-mix(in srgb, var(--gilt) 20%, var(--panel)); box-shadow: inset 0 0 0 1px var(--rule); }
 .faction-goal-meter i { display: block; height: 100%; background: var(--gilt); }
@@ -1041,6 +1045,8 @@ dialog.settings-modal::backdrop {
   .topbar[data-compact~='brand'] .brand { display: none; }
   /* The Switzerland' hoard readout is also in the race row and the Gold tooltip. */
   .topbar[data-compact~='hoard'] .gold-hoard-readout { display: none; }
+  .topbar[data-compact~='hoard'] .tomb-readout .tomb-long { display: none; }
+  .topbar[data-compact~='hoard'] .tomb-readout .tomb-short { display: inline; font: 600 16px/1 var(--num-font); }
   /* Keep painted art legible; narrow chips shed figures before art. */
   .topbar[data-compact~='art'] .supply-stat .supply-art { width: 24px; height: 24px; }
   .topbar[data-compact~='erachip'] .supply-stat b { font-size: 0; }
@@ -1775,6 +1781,8 @@ dialog.settings-modal::backdrop {
 }
 .capital-note .capital-star { flex: none; margin-top: 2px; }
 .city-panel > .cp-capital { padding: 4px 14px; }
+.cp-goal-city { display: flex; align-items: flex-start; gap: 6px; font: 600 12px/1.3 var(--sans); color: var(--ink); }
+.cp-goal-city svg { flex: 0 0 auto; color: var(--gilt, #8f6f1c); margin-top: 1px; }
 .cp-kicker .capital-star { display: block; }
 /* Every other city's kicker: a plain dot, so the star only ever means an original capital. */
 .kicker-dot { width: 4px; height: 4px; border-radius: 50%; background: currentColor; opacity: 0.7; flex: none; }
