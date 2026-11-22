@@ -33,6 +33,16 @@ class Reviews(unittest.TestCase):
         self.assertEqual(kinds["artimpact"], ["app/src/unitArt.ts"])
         self.assertEqual(kinds["art"], ["app/public/terrain/grass.png"])
 
+    def test_controls_and_rules_the_advisor_teaches_need_the_advisor_reviewer(self):
+        files = ["app/src/map/MapCanvas.tsx", "app/src/ui/Advisor.tsx", "crates/core/src/rules/cities.rs",
+                 "app/src/ui/advisor.test.ts", "app/src/ui/DiplomacyPanel.tsx", "crates/ai/src/scripted.rs"]
+        kinds = check.classify(".", "HEAD", "HEAD", files)
+        self.assertEqual(kinds["advisor"], ["app/src/map/MapCanvas.tsx", "app/src/ui/Advisor.tsx",
+                                            "crates/core/src/rules/cities.rs"])
+        advisor = dict(KINDS, code=["app/src/ui/Advisor.tsx"], copy=[], ui=[], advisor=["app/src/ui/Advisor.tsx"])
+        self.assertEqual([r for _, r, _ in check.required_reviews(advisor)],
+                         ["legatum-docs-reviewer", "legatum-advisor-reviewer"])
+
     def test_a_comment_must_name_the_reviewer_and_the_head_sha(self):
         reviews = check.required_reviews(KINDS)
         comments = ["legatum-docs-reviewer: PASS at 8d5a6c66c",
