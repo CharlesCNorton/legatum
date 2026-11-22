@@ -35,6 +35,21 @@ export async function addAutomatedOrders(view: PlayerView, orders: Order[]): Pro
 
 const generated = new WeakSet<Order>();
 const previews = new WeakMap<PlayerView, Map<string, CityAutomationPlan>>();
+const advisorPlans = new WeakMap<PlayerView, Order[]>();
+
+/** The Hard brain plans only from this seat's fogged view; this is advice, never submitted orders. */
+export function advisorOrders(view: PlayerView): Order[] | null {
+  const cached = advisorPlans.get(view);
+  if (cached) return cached;
+  const wasm = loadedWasmModule();
+  if (!wasm) return null;
+  try {
+    const orders = JSON.parse(wasm.advisor_orders(JSON.stringify(view))) as Order[];
+    if (!Array.isArray(orders)) return null;
+    advisorPlans.set(view, orders);
+    return orders;
+  } catch { return null; }
+}
 
 export const AUTOMATION_NO_CHOICE = "Nothing here fits its automation focus. Choose this turn's build.";
 export interface CityAutomationPlan { orders: Order[]; unchosen_cities: number[] }
