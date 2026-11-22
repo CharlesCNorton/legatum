@@ -914,7 +914,9 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
       return line('movement', `${unitLabel(ctx, e.unit, e.owner)} was blocked ${e.at ? at(ctx, e.at) : 'beyond sight'}`, {
         at: e.at,
         players: [e.owner],
-        details: [rename(e.reason).replace(/^you /, 'You ')],
+        // Core's reason is written for the unit's owner ("against your 30"); for anyone else's unit, name the owner.
+        details: [(e.owner === ctx.me ? rename(e.reason) : rename(e.reason).replace(/ against your /, ` against ${possessive(ctx, e.owner)} `))
+          .replace(/^you /, 'You ')],
         weight: mine(e.owner) ? 1 : 0,
       });
     case 'AttackPursuit': {

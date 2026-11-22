@@ -613,6 +613,10 @@ it('names players as the rest of the UI does: You, or the empire, never a raw se
   expect(cityTie('AI 4 brought equal force (30 each) and won the draw for the city')).toContain('Celts · AI 4 brought equal force (30 each)');
   expect(cityTie('AI 4 took the city with force 40 against your 30')).toContain('Celts · AI 4 took the city');
   expect(cityTie('Player 1 brought equal force (30 each) and won the draw for the city')).toBe('You brought equal force (30 each) and won the draw for the city');
+  // The reason is written for the losing unit's owner: a rival's loss names that rival, never "your".
+  const rivalLoss = (reason: string) => formatEvent({ type: 'MoveBlocked', unit: 9, owner: 1, at: { q: 2, r: 1 }, toward: { q: 3, r: 1 }, reason } as Event,
+    { ...ctx, unitKind: () => 'Soldier' }).details?.[0];
+  expect(rivalLoss('Player 1 took the city with force 40 against your 30')).toBe("You took the city with force 40 against Switzerland's 30");
 });
 
 it('renames leading player subjects in invalidation reasons, including elimination and regex characters', () => {
