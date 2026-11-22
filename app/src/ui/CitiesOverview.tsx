@@ -124,7 +124,7 @@ export function CitiesOverview() {
         </div>
         <p className="co-count" data-testid="cities-count"><b>{rows.length}</b> {rows.length === 1 ? 'city' : 'cities'}{idle > 0 && <> · <b className="co-idle-count">{idle} idle</b></>}{tomb && tombNow && <> · <span className="co-tomb-count" data-testid="cities-tomb">{tombShort({ working: true, turns: tombNow.turns, target: tombNow.target, left: tombNow.target - tombNow.turns })}: no city builds or grows</span></>}</p>
         <p className="co-help">Click a heading to sort. Click a city to go to it.</p>
-        <button ref={closeButton} className={`btn co-close${chosen.length ? '' : ' primary'}`} onClick={close} aria-label="Close cities">Close <kbd className="kbd">Esc</kbd></button>
+        <button ref={closeButton} className="btn quiet co-close" onClick={close} aria-label="Close cities">Close <kbd className="kbd">Esc</kbd></button>
       </header>
       <div className="co-automation" aria-label="Automate selected cities">
         <span>{chosen.length ? `${chosen.length} selected` : 'Select cities to automate'}</span>
@@ -171,7 +171,7 @@ export function CitiesOverview() {
                   <td className="co-num">{row.production}</td>
                   <td className="co-num">{row.gold}</td>
                   <td className="co-num">{row.science}</td>
-                  <td className="co-def"><Tip content={row.strengthRule}><span><b>{row.strength}</b><span className="co-sub">{row.fort ?? 'No walls'}{row.hp < row.maxHp && <span className="co-hurt"> · HP {row.hp}/{row.maxHp}</span>}</span></span></Tip></td>
+                  <td className="co-def"><Tip content={row.strengthRule}><span><b>{row.strength}</b><span className="co-sub">{row.fort ?? 'No Walls'}{row.hp < row.maxHp && <span className="co-hurt"> · HP {row.hp}/{row.maxHp}</span>}</span></span></Tip></td>
                   <td className="co-buildcell"><BuildCell row={row} faction={faction} tomb={tomb} /></td>
                   <td className="co-go" aria-hidden="true"><span className="co-chevron">›</span></td>
                 </tr>

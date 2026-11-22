@@ -142,17 +142,16 @@ function HeldLines({ model, s, goalOwner }: { model: VpModel; s: Source; goalOwn
       <b>{s.holdNote}</b>
     </div>
     {s.heldAt && !cityGoal && <p className="vh-private" data-testid="heir-locate-hint">{words.locate}</p>}
-    {holder && !cityGoal && <p className="vh-private">{words.moves}</p>}
   </div>;
 }
 
 /** What a held goal's item is called, how to find it and what a capture does, per faction (the Heir is a unit; the others stand in a city). */
-function heldWords(faction?: Faction): { item: string; locate: string; moves: string } {
-  const city = 'The points go with its city: a rival that captures the city scores them, and they return when it is retaken.';
-  if (faction === 'Mongols') return { item: 'Yam Relay Station', locate: 'Its city is on your map: click its token in the race panel to show it.', moves: 'The points and the open road go with its city: a rival that captures the city scores them, and they return when it is retaken.' };
-  if (faction === 'India') return { item: 'Imperial Diwan', locate: 'Its city is on your map: click its token in the race panel to show it.', moves: city };
-  if (faction === 'Rome' || faction === 'Egypt') return { item: faction === 'Rome' ? 'Colonia Victrix' : 'Royal Tomb', locate: 'Its place is public: click its token in the race panel to show it on the map.', moves: city };
-  return { item: 'Heir', locate: 'His position is public: click his token in the race panel to show him on the map.', moves: 'The points go with him: a rival that captures him scores them, and they return when he is retaken.' };
+function heldWords(faction?: Faction): { item: string; locate: string } {
+  const its = 'Click its token in the race panel to show it on the map.';
+  if (faction === 'Mongols') return { item: 'Yam Relay Station', locate: its };
+  if (faction === 'India') return { item: 'Imperial Diwan', locate: its };
+  if (faction === 'Rome' || faction === 'Egypt') return { item: faction === 'Rome' ? 'Colonia Victrix' : 'Royal Tomb', locate: its };
+  return { item: 'Heir', locate: 'Click his token in the race panel to show him on the map.' };
 }
 
 /** The objective card: its band says whose it is, the markers or standings show who has it. */

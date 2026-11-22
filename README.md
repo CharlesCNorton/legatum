@@ -83,7 +83,7 @@ These clips are recorded from the running game.
 
 <table align="center">
   <tr>
-    <td width="50%"><img src="docs/media/loop-race.webp" alt="The race panel opens into the score ledger: every way to score, and which of eight empires holds each point." width="100%"></td>
+    <td width="50%"><img src="docs/media/loop-race.webp" alt="The Victory race opens into the Score ledger: every way to score, and which of eight empires holds each point." width="100%"></td>
     <td width="50%"><img src="docs/media/loop-research.webp" alt="The research screen with illustrated unlock cards and a unit hovercard." width="100%"></td>
   </tr>
   <tr>
@@ -91,7 +91,7 @@ These clips are recorded from the running game.
     <td valign="top"><sub><b>Technologies worth wanting.</b> Every unlock is illustrated, and a hover shows what it beats, what it loses to and how it compares with what it replaces.</sub></td>
   </tr>
   <tr>
-    <td width="50%"><img src="docs/media/loop-diplomacy.webp" alt="The Diplomacy inbox: an empire declined an Alliance, with every factor in its decision listed." width="100%"></td>
+    <td width="50%"><img src="docs/media/loop-diplomacy.webp" alt="Diplomacy, Inbox tab: an empire declined an Alliance, with every factor in its decision listed." width="100%"></td>
     <td width="50%"><img src="docs/media/loop-factions.webp" alt="The faction picker: the peoples, each with a sheet of strengths and the price that pays for them." width="100%"></td>
   </tr>
   <tr>
@@ -123,7 +123,7 @@ Every game played in the browser version is uploaded to us, so we can measure ho
 
 - **What is sent:** the game's record: the setup, every turn's orders, the score each turn and how long turns took. Player names are replaced with "Player 1", "AI 2" and so on before anything leaves your browser, and the server refuses a record with any other name.
 - **Coach questions:** if coach questions are on, your typed answers are uploaded with the game.
-- **What is not sent:** no account, no email, no cookies and no tracking. Legatum keeps no IP addresses or request logs.
+- **What is not sent:** no account, no email, no cookies and no tracking. Legatum keeps no request logs. To limit abuse, the upload server remembers a scrambled form of your internet address until the end of the day (UTC), which cannot be turned back into the address, and nothing else about you.
 - **Who can read it:** the records are stored privately and only the maintainer can read them. They may be used to train and test the game's AI.
 - **Turning it off:** uploads cannot be turned off in the browser version. Builds from source upload nothing.
 
@@ -142,7 +142,7 @@ The first engine build compiles the whole Rust engine with full optimisation and
 
 ### Online games
 
-Online games need no server program. When a player picks Multiplayer > Host Game, the game runs in that player's browser tab, in the same engine as single-player games. The tab lists the game on the Legatum relay, a small Cloudflare Worker (`infra/relay`) that only keeps the list of open games and passes messages between players. Other players pick Join Game, see the open games, and join one. The host's tab makes every decision, runs the AI empires and keeps the save. Everyone needs the same version of the game. Keep the host's tab open while you play: closing it ends the game for everyone unless the host saved it (Menu → Save to file, then Multiplayer > Host from a save to carry on; players rejoin their old seats from Join Game). Reloading it resumes the game, and a guest who reloads goes back to their seat. A game holds up to 8 players. The contract is [plans/online-play.md](plans/online-play.md).
+Online games need no server program. When a player picks Multiplayer > Host Game, the game runs in that player's browser tab, in the same engine as single-player games. The tab lists the game on the Legatum relay, a small Cloudflare Worker (`infra/relay`) that only keeps the list of open games and passes messages between players. Other players pick Join Game, see the open games, and join one. The host's tab makes every decision, runs the AI empires and keeps the save. Everyone needs the same version of the game. Keep the host's tab open while you play: closing it ends the game for everyone unless the host saved it (Menu → Save to file, then Multiplayer > Host from a save to carry on; players rejoin their old seats from Join Game). Reloading it resumes the game, and a guest who reloads goes back to their seat. A host can lock a game with a join code, which players type once to take a seat, and can remove a player from a seat. A game holds up to 8 players. The contract is [plans/online-play.md](plans/online-play.md).
 
 To try a branch with other people, `scripts/deploy-preview.sh <label>` publishes it at `https://<label>.legatum-game.pages.dev`.
 
@@ -214,7 +214,7 @@ Legatum is built largely with AI coding agents, and all of its art is AI-generat
 
 ## Status
 
-Pre-release and moving fast. Rules, content and balance change often, and a save from an older rules version is refused with a clear message instead of being migrated. The web build is the only way to play. It is played through a short game in Chromium before every deploy; other browsers and the Rust crates on other systems should work but are not routinely tested.
+Pre-release and moving fast. Rules, content and balance change often, and a save from an older rules version is never migrated: the hosted site opens it in the earlier build that made it (kept for 30 days), and a build refuses it with a clear message when none is kept. The web build is the only way to play. It is played through a short game in Chromium before every deploy; other browsers and the Rust crates on other systems should work but are not routinely tested.
 
 ## Roadmap
 

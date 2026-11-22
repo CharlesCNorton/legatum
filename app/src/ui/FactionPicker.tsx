@@ -191,13 +191,13 @@ export function FactionPicker({
   );
 }
 
-const FACT_ICONS = { lose: 'ui-trend-down', counter: 'ui-alert' } as const;
+const FACT_ICONS = { lose: 'ui-trend-down', counter: 'unit-soldier' } as const;
 
 /** Where in the game a goal is acted on (only goals with an action of their own). */
 const goalWhere = (faction: Exclude<FactionChoice, 'Random'>, goal: FactionGoal): string | null => {
-  if (faction === 'Sparta') return 'In the game: Retire this veteran on its unit card, or use the race sidebar (G).';
+  if (faction === 'Sparta') return 'In the game: Retire this veteran on its unit card, or use the Victory race (G).';
   if (faction === 'Rome') return 'In the game: select a level 3 melee veteran and open the Settle lens; gilt rings mark the sites.';
-  return goal.action ? `In the game: ${goal.action} in the race sidebar (G).` : null;
+  return goal.action ? `In the game: ${goal.action} in the Victory race (G).` : null;
 };
 
 export function FactionSheetView({
@@ -251,8 +251,8 @@ export function FactionSheetView({
           {goal && (
             <div className="fs-fact fs-goal">
               <span className="lbl"><Icon name={goal.icon} size={13} />Goal</span>
-              <div className="fs-goal-head"><b>{goal.name}</b><span>{factionGoalTerms(faction)}</span></div>
-              <p><Amounts text={`${goal.detail()}.`} /></p>
+              <div className="fs-goal-head"><b>{goal.name}</b><span><Amounts text={factionGoalTerms(faction)} /></span></div>
+              <p><Amounts text={`${(goal.sheet ?? goal.detail)()}.`} /></p>
               {where && <p className="fs-goal-location">{where}</p>}
             </div>
           )}
