@@ -32,7 +32,7 @@ import { ScenarioBar, ScenarioResult } from '../ui/ScenarioHud';
 import { handleAircraftKey, handleGameKey } from './gameKeyHandler';
 import { handleOverlayKey, notePointerDown, returnFocusAfterPointer } from '../gameplayKeys';
 import { playerColor } from '../theme';
-import { FirstGameHints } from '../ui/FirstGameHints';
+import { Advisor } from '../ui/Advisor';
 import { ReclaimSeatButton } from '../ui/ReclaimSeatButton';
 import '../ui/sidebar.css';
 
@@ -118,7 +118,7 @@ export function GameScreen() {
       <HandoffScreen />
       <AlarmScreen />
       <FreeTechsPrompt />
-      <FirstGameHints />
+      <Advisor />
       <WhyCard />
       {busy && (
         <div className={`busy${training?.waiting ? ' training-wait' : ''}`}>

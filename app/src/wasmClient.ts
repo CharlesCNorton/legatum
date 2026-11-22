@@ -64,6 +64,7 @@ interface WasmGameClass {
 
 interface WasmModule {
   explore_step(view: string, unit: number): string;
+  advisor_orders(view: string): string;
   city_automation_orders(view: string, orders: string): string;
   scenario_targets?(scenarioJson: string): string;
   default?: (input?: unknown) => Promise<unknown>;

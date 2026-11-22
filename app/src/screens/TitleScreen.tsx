@@ -6,7 +6,7 @@ import { ReplaceGameDialog } from '../ui/ReplaceGameDialog';
 import { pickSaveFile } from '../ui/GameMenu';
 import { Fan, Wordmark } from '../brand/ornaments';
 import { openGuide } from '../ui/guideState';
-import { HintSettings } from '../ui/FirstGameHints';
+import { AdvisorSettings } from '../ui/Advisor';
 import { HapticsSettings } from '../ui/HapticsSettings';
 import { SoundSettings } from '../ui/SoundSettings';
 import { CombatFxSettings } from '../ui/CombatFxSettings';
@@ -334,7 +334,7 @@ function MultiplayerMenu({ onBack }: { onBack: () => void }) {
   );
 }
 
-/** Settings open in a modal over the title, so the menu never changes size: first-game hints and the frame-rate readout. */
+/** Settings open in a modal over the title, so the menu never changes size. */
 function Settings() {
   const [open, setOpen] = useState(false);
   const trigger = useRef<HTMLButtonElement>(null);
@@ -386,7 +386,7 @@ function SettingsDialog({ onClose }: { onClose: () => void }) {
         </button>
       </header>
       <div className="settings-body">
-        <HintSettings />
+        <AdvisorSettings />
         <HapticsSettings />
         <SoundSettings />
         <CombatFxSettings />
