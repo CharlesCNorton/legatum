@@ -3780,9 +3780,12 @@ impl Planner<'_> {
     /// Whether a Gold-seeking swap (a campaign's Gold clock, a paused troop) may pick `item`. A
     /// swapped-out build keeps its banked Production but a project banks nothing, so only
     /// Germany's projects (twice everyone's rate) are worth it; every other empire runs a
-    /// project only when nothing is worth building (`idle_project`).
+    /// project only when nothing is worth building (`idle_project`). Egypt's Grow is not a Gold
+    /// or Science project and stays a choice, as before projects opened to everyone (excluding it
+    /// cut AI Egypt's win rate from 27% to 6% in the all-Hard sims).
     pub(crate) fn gold_swap_allows(&self, item: ProductionItem) -> bool {
-        !matches!(item, ProductionItem::Project { .. }) || self.faction == Faction::Germany
+        !matches!(item, ProductionItem::Project { project } if project != legatum_core::IndustryProject::Grow)
+            || self.faction == Faction::Germany
     }
 
     /// What a city with nothing worth building runs instead (Sam, 2026-11-22: never junk such as
