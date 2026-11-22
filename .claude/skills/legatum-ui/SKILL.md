@@ -37,6 +37,7 @@ This file holds the current rules, one line each. The user's words, dates, as-bu
 - A confirm dialog opens on the safe choice and Esc means the safe choice; a dialog Esc closes also shows a visible close control; a button's label says what the click does (2026-11-22 reviews). A turn-failure dialog (`TurnFailureDialog`) follows that: the X sits top-right with `title="Close (Esc)"`, its destructive button says whose orders it drops (several human seats on one engine: "End the turn with all orders cleared"; alone: "with my orders cleared"), and a status note ("Saved.") clears when the dialog reopens for the next state (PR #30 review, 2026-11-22).
 - A refusal from the game server is a short plain notice with one next step, never "relay", "socket" or a code; offer a retry only when it can work (relay review, 2026-11-22).
 - Online hosting admin (join-code review, 2026-11-22): an optional host setting sits beside the name box, not under it, so the Multiplayer menu keeps its height at 1000x600; a locked game shows a lock mark and the word "Locked" in the list; a guest types the join code once, inline on the seat screen, and the seat buttons wait for it with the reason beside them. Remove (host only, destructive) asks inline ("Remove <name>?" with Keep focused, Esc keeps) and never uses `window.confirm`; the seat then stays closed until the host presses Open seat. A rare admin action never forces a fold open: in a game, Remove waits behind Turn details, and at 1000x600 the race panel and the primary action stay whole with the host's default sidebar. An inline confirm scrolls itself fully into view. A field's error replaces its hint; it is never a toast above that moves the buttons. Player text never says "relay", "socket", "token" or "connection".
+- **Team map pings (2026-11-22, `claude/review-team-pings`):** the control is a quiet "Ping" strip at the foot of the right sidebar (`ui/PingControl.tsx`), shown only with a human teammate (never in solo, never on a host that does not relay pings), plus the P key and "Ping this tile" in the touch tile card. Do not hang it on the minimap (hidden at 1000x600 with a unit selected) or the hover tile card (not clickable). The map ring (`map/pingDraw.ts`) pulses once for a new viewer, then stays still; it adds no per-frame work when no ping is live. Guide text says "VP", sentences at most 30 words.
 - A new order kind goes into `ORDER_KINDS` (`app/src/orderDecoding.ts`) in the same change, with a tour shot of the pending-orders line (PR 31 review, 2026-11-22).
 - Online: an action that ends a shared game says so and asks first, with the label branching on host or guest; status text is written from the viewer's role; durability text matches the storage behind it (no "saved" for a tab-lifetime copy) (co-op review, 2026-11-22).
 - Big moments get a full interstitial: war declared on you, entering an era, the end of the game; a rival closing on victory and a city under attack are never a surprise (user, 2026-10-08, 2026-11-11).
@@ -60,6 +61,11 @@ This file holds the current rules, one line each. The user's words, dates, as-bu
 - Every unit names its owner in words and emblem, never by colour alone; each faction has its preferred colour in every game (user, 2026-10-18, 2026-11-11).
 - No raw coordinates anywhere: name places relative to cities.
 - A tile-chosen build is placed on the map like Civ's districts; buying a tile starts from one obvious button (user, 2026-10-29, 2026-11-20).
+- A map targeting mode owns the hover: while Ping (or any armed mode) waits for a click, no route, move forecast or select ring shows; a ghost of the mark follows the pointer (UI review of team pings, 2026-11-22).
+- An armed mode never survives a seat switch or a turn change.
+- A teammate's message arrives as an event: a named sender, and a control that looks like a button before hover and works from anywhere on the map ("Bo pinged · Go to ping"); live marks also show on the minimap.
+- A map mark in an empire's colour is checked for the reddest and the palest empire (Sparta, Germany), has its own shape (the ping is a ring with four ticks), and carries an ink keyline outside its halo. Marks sit under city banners.
+- A toggle's "on" state uses the shared ink fill (`--primary-bg`), never the accent red; a toggle with a key shows it as a key chip ("Ping P", "Cancel ping Esc").
 
 ## Cities, units and lists
 
@@ -93,6 +99,10 @@ This file holds the current rules, one line each. The user's words, dates, as-bu
 - **A shortage sentence states the gap, never "N in use" above supply** (in use can't exceed supply): "Siege needs 1 Iron. You are already 2 Iron short: claim another Iron deposit or build a Mine (+1)."
 - **Tour helpers import only modules without `?url` asset imports** (Playwright can't load them): keep pure helpers such as `roman` in `brand/roman.ts`, not in an asset-importing `.tsx`.
 - **Copy changes update tour assertions in the same change:** grep `app/e2e/tour` for the old string; the tour is not in local CI.
+
+## From the co-op preset review (2026-11-22)
+- **A default-on setting that changes the rules is never hidden (UI review, 2026-11-22, AI alliances):** it shows in the Start button's sub-line ("8 empires · standard map · AI empires allied in pairs") and is said once in the game where its effect is read (the Diplomacy Relations note: "In this game the AI empires started allied in pairs."). The game reads the flag from the view (`PlayerView.ai_alliances`), never from the lobby, so a loaded game says it too.
+- **"Allies" means Alliance partners only; players on one team are "teammates" (UI review, 2026-11-22).** The lobby's Victory card says "Teammates share vision and victory." Player text says "AI empires", never "AIs" (`copyRules.ts`).
 
 ## Game text: plain language
 
