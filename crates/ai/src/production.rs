@@ -7819,6 +7819,9 @@ mod india_office_tests {
         let mut planner =
             Planner::new(&view, Knobs::for_faction(Faction::India), Faction::India, 7);
         planner.difficulty = legatum_core::AiDifficulty::Hard;
+        // The treasury is empty and losing Gold, so `treasury_build_guard` would refuse the troop
+        // whatever the front says; this test is about the front exception alone.
+        planner.decisions.treasury_build_guard = 0;
         assert!(planner.assessed_border_threat(city.pos));
         planner.decisions.india_prewar_guard = 0;
         assert!(!planner.funding_front(0, city));
@@ -7826,6 +7829,9 @@ mod india_office_tests {
         planner.decisions.india_prewar_guard = 1;
         assert!(planner.funding_front(0, city));
         assert!(!planner.troop_unfunded(0, city, UnitKind::Spearman));
+        // With the guard on, a troop this turn cannot pay for is refused even at the front.
+        planner.decisions.treasury_build_guard = 1;
+        assert!(planner.troop_unfunded(0, city, UnitKind::Spearman));
     }
 
     #[test]
@@ -7841,11 +7847,15 @@ mod india_office_tests {
         let mut planner =
             Planner::new(&view, Knobs::for_faction(Faction::India), Faction::India, 7);
         planner.difficulty = legatum_core::AiDifficulty::Hard;
+        // As above: the empty, losing treasury would trip `treasury_build_guard` on its own.
+        planner.decisions.treasury_build_guard = 0;
         assert!(planner.funding_front(0, city));
         planner.decisions.india_emergency_defense = 0;
         assert!(planner.troop_unfunded(0, city, UnitKind::Spearman));
         planner.decisions.india_emergency_defense = 1;
         assert!(!planner.troop_unfunded(0, city, UnitKind::Spearman));
+        planner.decisions.treasury_build_guard = 1;
+        assert!(planner.troop_unfunded(0, city, UnitKind::Spearman));
     }
 }
 
