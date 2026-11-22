@@ -79,9 +79,10 @@ should be looking out for proactively?" Yes: this class is the first thing to hu
   envelope; the 1.2 MB view parsed per seat per turn; report, notice and history lists that only grow;
   anything in `app/src` that maps over `view.units`, `view.cities` or `view.tiles` inside a render or a
   pointer handler; AI planning per unit pair.
-- **Real games are the judge:** the per-turn `frame_times` in uploads (`frame_summary()` in
-  `tools/games/analyse_games.py`) give frame p95, slow frames, input lag and map-draw time next to the unit
-  and city counts of that turn. Plot cost against units; a slope is a finding.
+- **Real games are the judge:** once uploads carry frame times (being added from 2026-11-22; check
+  `frame_summary()` in `tools/games/analyse_games.py` exists before relying on it), plot frame p95, slow
+  frames, input lag and map-draw time against the units and cities of that turn. Until then use `turn_times`
+  and `telemetry`, which are recorded. A slope is a finding.
 
 ## Weekly: improve (one or two small PRs)
 Pick the single biggest win from this list, by expected gain over effort:
