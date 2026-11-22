@@ -1152,6 +1152,8 @@ pub(crate) struct Planner<'a> {
     pub escort_sites: Vec<Hex>,
     /// Gene `roman_found_first`: the Roman veteran sent to found a city this turn.
     pub(crate) roman_founder: Option<UnitId>,
+    /// Gene `rome_colonia`: the Roman veteran sent to found the Colonia Victrix this turn.
+    pub(crate) colonia_founder: Option<UnitId>,
     /// Gold not yet committed this turn.
     pub gold_left: i32,
     /// A funded objective may save toward its next purchase after emergency defense.
@@ -1341,6 +1343,7 @@ impl<'a> Planner<'a> {
             settle_targets: Vec::new(),
             escort_sites: Vec::new(),
             roman_founder: None,
+            colonia_founder: None,
             gold_left: view.economy.gold,
             faction_goal_savings: 0,
             siege_savings: 0,
