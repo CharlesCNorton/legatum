@@ -153,7 +153,7 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
       case 'TombStarted': {
         if (team.has(e.player)) break; // Egypt's own team ordered it: the report line is enough.
         const left = Math.max(0, RULES.tombTurns - e.turns);
-        publicCard(i, e.player, { tier: 'major', at: siteOf(e.player) ?? capital(e.player), goalMark: GOAL_CITY_ICON.tomb, title: 'The Royal Tomb', kicker: `${possessive(empireOfPlayer(after, e.player))} Royal Tomb`,
+        publicCard(i, e.player, { tier: 'major', at: siteOf(e.player) ?? capital(e.player), goalMark: GOAL_CITY_ICON.tomb, title: 'The Royal Tomb', kicker: empireOfPlayer(after, e.player),
           effect: `${empireOfPlayer(after, e.player)} is building its Royal Tomb: its cities do not build or grow. ${left} ${left === 1 ? 'turn' : 'turns'} of work left.${tombSiteOf(e.player) ? ` It will stand in ${tombSiteOf(e.player)!.name}: ${factionGoalVp('Egypt')} VP to whoever holds it.` : ''}`,
           lore: 'The valley falls quiet while the tomb is cut.',
           details: [`It may pause the work and keep its count. When the tomb stands, whoever holds its city scores ${factionGoalVp('Egypt')} VP.`], deltas: [] });
@@ -161,7 +161,7 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
       }
       case 'TombPaused': {
         if (team.has(e.player)) break;
-        publicCard(i, e.player, { tier: 'notable', at: capital(e.player), goalMark: GOAL_CITY_ICON.tomb, title: 'The Royal Tomb', kicker: `${possessive(empireOfPlayer(after, e.player))} Royal Tomb`,
+        publicCard(i, e.player, { tier: 'notable', at: capital(e.player), goalMark: GOAL_CITY_ICON.tomb, title: 'The Royal Tomb', kicker: empireOfPlayer(after, e.player),
           effect: `${empireOfPlayer(after, e.player)} paused its Royal Tomb at ${e.turns} of ${RULES.tombTurns} turns: its cities build and grow again.`,
           lore: 'The work stops. The count is kept.', details: [], deltas: [] });
         break;
