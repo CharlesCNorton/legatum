@@ -104,6 +104,8 @@ This file holds the current rules, one line each. The user's words, dates, as-bu
 - **Tour helpers import only modules without `?url` asset imports** (Playwright can't load them): keep pure helpers such as `roman` in `brand/roman.ts`, not in an asset-importing `.tsx`.
 - **Copy changes update tour assertions in the same change:** grep `app/e2e/tour` for the old string; the tour is not in local CI.
 
+- **No eyebrows, taglines or mottos in chrome (user, 2026-11-22):** a small-caps label over a heading, a decorative tagline, a lede or a footer motto stays only if it tells the player something the heading doesn't (a turn, an era, an event type, "From your ally"). "A Contest Through History", "Plan now. Resolve together.", "Chapter 03" and "Explore · expand · build · compete" were cut as clutter. Faction mottos on a faction's own cards are identity, not chrome, and stay.
+
 ## From the co-op preset review (2026-11-22)
 - **A default-on setting that changes the rules is never hidden (UI review, 2026-11-22, AI alliances):** it shows in the Start button's sub-line ("8 empires · standard map · AI empires allied in pairs") and is said once in the game where its effect is read (the Diplomacy Relations note: "In this game the AI empires started allied in pairs."). The game reads the flag from the view (`PlayerView.ai_alliances`), never from the lobby, so a loaded game says it too.
 - **"Allies" means Alliance partners only; players on one team are "teammates" (UI review, 2026-11-22).** The lobby's Victory card says "Teammates share vision and victory." Player text says "AI empires", never "AIs" (`copyRules.ts`).

@@ -231,7 +231,7 @@ export function MomentLane() {
       {card?.scoreCheck && !deferred && <ScoreCheck moment={card} dismiss={dismiss} />}
       {card && !card.unlock && !card.eraUp && !card.scoreCheck && <article key={card.id} className={`moment-card ${card.tier} ${card.partner ? 'partner' : ''} ${card.loss ? 'loss' : ''}`} data-tier={card.tier} aria-label={card.title} onClick={(e) => { if (!(e.target as Element).closest('button')) dismiss(); }}>
         <button className="moment-dismiss" aria-label="Dismiss celebration" onClick={dismiss}><Icon name="ui-cross" size={14} /></button>
-        <div className="moment-kicker">{card.kicker ?? (card.partner ? 'From your ally' : card.tier === 'legendary' ? 'Written in the chronicle' : card.tier === 'major' ? 'A moment of consequence' : 'An inheritance recovered')}</div>
+        {(card.kicker ?? (card.partner ? 'From your ally' : null)) && <div className="moment-kicker">{card.kicker ?? 'From your ally'}</div>}
         <div className="moment-body">
         <div className="moment-heading">
           {vignette && <img className="moment-vignette" src={vignette} alt="" />}
