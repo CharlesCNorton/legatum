@@ -10,9 +10,19 @@ for clip,(count,fps,loop) in clips.items():
  if requested and clip!=requested:continue
  bpy.ops.wm.open_mainfile(filepath=str(src));sc=bpy.context.scene;root=bpy.data.objects['RIG-flight'];prop=bpy.data.objects['RIG-propeller'];rest=root.location.copy();rot=root.rotation_euler.copy();support=bpy.data.objects['GEO-curved-display-support'];flash=[]
  # Brief 3D muzzle streaks, never volume meshes or zero-scale hide tricks.
- for side in [-1,1]:
-  bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=1,radius=1,location=(-1.13,side*.10,.30));o=bpy.context.object;o.name='GEO-muzzle-flash';o.scale=(.14,.027,.027);o.parent=root
-  ma=bpy.data.materials.new('MAT-muzzle');ma.use_nodes=True;s=ma.node_tree.nodes.get('Principled BSDF');s.inputs['Base Color'].default_value=(1,.3,.02,1);s.inputs['Emission Color'].default_value=(1,.45,.02,1);s.inputs['Emission Strength'].default_value=3;o.data.materials.append(ma);flash.append(o)
+ # Position bursts from the finished barrel endpoints, not the pre-registration
+ # coordinates: the old flashes sat inside the cowling after silhouette fitting.
+ bpy.context.view_layer.update()
+ for gun in [o for o in sc.objects if o.name.startswith('GEO-synchronized-gun')]:
+  end=min((gun.matrix_world@v.co for v in gun.data.vertices),key=lambda p:p.x)
+  local=root.matrix_world.inverted()@end
+  local.x-=.25;local.z+=.055
+  bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=1,radius=1,location=local)
+  o=bpy.context.object;o.name='GEO-muzzle-flash';o.scale=(.22,.038,.038);o.parent=root
+  ma=bpy.data.materials.new('MAT-muzzle');ma.use_nodes=True
+  s=ma.node_tree.nodes.get('Principled BSDF');s.inputs['Base Color'].default_value=(1,.3,.02,1)
+  s.inputs['Emission Color'].default_value=(1,.55,.06,1);s.inputs['Emission Strength'].default_value=3
+  o.data.materials.append(ma);flash.append(o)
  # Upper-wing stitching follows the physical wing during the crash.
  upper=bpy.data.objects['GEO-upper-cambered-wing']
  for rib in list(sc.objects):

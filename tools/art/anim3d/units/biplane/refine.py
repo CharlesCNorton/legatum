@@ -80,6 +80,10 @@ strut_fits={};shoe_offsets=[]
 for index,targets in enumerate(strut_targets):
     name='GEO-varnished-interplane-strut'+(f'.{index:03}' if index else '')
     o=bpy.data.objects[name]
+    # Match the broad varnished spar face, retaining its closed cross section.
+    for vertex in o.data.vertices:
+        vertex.co.x *= 1.24
+        vertex.co.y *= 1.24
     lo=min(v.co.z for v in o.data.vertices);hi=max(v.co.z for v in o.data.vertices)
     ends=[o.matrix_world@Vector((0,0,z)) for z in (lo,hi)]
     shifts=[Vector(target)-screen(w) for target,w in zip(targets,ends)]
@@ -118,6 +122,14 @@ for o in list(sc.objects):
     after = bounds(o)
     if any(abs(a-b)>.01 for a,b in zip(before,after)):
         records.append({'object':name,'before':before,'after':after})
+
+# The source has small dull hubs, not prominent polished brass buttons.
+for o in sc.objects:
+    if o.name.startswith('GEO-wheel-brass-hub'):
+        for vertex in o.data.vertices:
+            vertex.co.x *= .70
+            vertex.co.z *= .70
+        o.data.materials[0] = bpy.data.materials['MAT-rubbed-steel']
 
 # Shorten both solid blades around the spindle, not in image space. Move the
 # spindle with its boss; propeller rotation remains about its real mechanical axis.

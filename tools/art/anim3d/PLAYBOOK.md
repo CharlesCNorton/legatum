@@ -263,3 +263,28 @@ axis throughout all forty poses. Clear excluded meshes' keyed visibility only in
 follow the actual upper-wing pivot in death; the final wreck pose and decoded
 last two frames are identical. Review the source-painted surfaces exposed in banking
 and crash poses; geometric/encoding checks do not establish clean art or motion.
+
+### Driver round 2 after a verified GPU pass
+
+Preserve round-one GPU evidence before rebuilding: this lane keeps it under
+`masters/biplane/driver-r1-gpu/` and `review/3d-v2/biplane-driver-r1-gpu/`.
+The round-one receipt verifies Cycles GPU512/64, 191,950 bytes at Q80 and the
+8-second MP4; its visual approval remains false. New CPU256 previews must not
+inherit old files in the active `512/` directory.
+
+Thicken the closed strut cross sections before fitting their attachment endpoints.
+Small wheel hubs use dull steel, while the rotating propeller uses a separate
+amber-tinted generated wood material. A shared dark wood fill made its silhouette
+much heavier than the painting even with the right blade length.
+
+The cream disc blends fine object-space grain with frozen source UV pigment only
+below the support/contact region (feathered from source y=212 to 218 at 256 px).
+This preserves the painted lower rim without leaving an image of the support in
+the wreck. Its centre remains physical/procedural stone. Retain the automatic
+rest-derived histogram grade, fixed for every clip.
+
+Attack effects must be attached to the **finished, registered** gun endpoints.
+Using original construction coordinates buried them in the cowling. The revised
+short solid amber bursts use keyed visibility and keep nonzero thickness.
+`gpu.sh` invalidates any old PASS when a new run starts; a successful GPU receipt
+still does not approve the art.

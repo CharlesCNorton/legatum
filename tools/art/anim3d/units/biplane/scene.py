@@ -109,9 +109,18 @@ for y in [-.56,.56]:
   uvball('linen-wheel-disc',(-1.0,y+s*.062,-.61),(.205,.014,.205),linen)
   uvball('wheel-brass-hub',(-1.0,y+s*.084,-.61),(.055,.035,.055),brass)
 rod('wheel-axle',(-1.0,-.65,-.61),(-1.0,.65,-.61),.03,brass)
+# The propeller's varnish is bright amber in the painting; it is not the dark
+# underside wood used by the static spars. Retain generated grain in the tint.
+propwood=wood.copy();propwood.name='MAT-amber-propeller'
+n=propwood.node_tree.nodes;l=propwood.node_tree.links;s=n.get('Principled BSDF')
+source=s.inputs['Base Color'].links[0].from_socket
+amber=n.new('ShaderNodeMixRGB');amber.blend_type='MIX';amber.inputs[0].default_value=.55
+l.new(source,amber.inputs[1]);amber.inputs[2].default_value=(.72,.205,.028,1)
+l.new(amber.outputs[0],s.inputs['Base Color'])
+s.inputs['Roughness'].default_value=.44
 # True two-bladed propeller, mounted on an X rotation spindle.
 for sign in [-1,1]:
- p=uvball('laminated-propeller',(0,sign*.30,sign*.42),(.036,.095,.55),wood,prop);p.rotation_euler.x=-.62
+ p=uvball('laminated-propeller',(0,sign*.30,sign*.42),(.036,.095,.55),propwood,prop);p.rotation_euler.x=-.62
 rod('propeller-shaft',(-1.43,0,0),(-1.20,0,0),.045,steel)
 uvball('propeller-boss',(-.06,0,0),(.095,.105,.105),brass,prop)
 # Panel seams/rivets sit on real fuselage skin, never a flat image plane.

@@ -14,7 +14,7 @@ exec >> "$LOG" 2>&1
 stage=preflight
 trap 'rc=$?; printf "round=%s failed stage=%s exit=%s\n" "$ROUND" "$stage" "$rc" > "$STATUS"; exit "$rc"' ERR
 printf 'round=%s running\n' "$ROUND" > "$STATUS"
-rm -f "$RECEIPT"
+rm -f "$RECEIPT" "$ANIM_ROOT/review/3d-v2/biplane-PASS"
 printf 'Biplane round %s GPU handoff\n' "$ROUND"
 git rev-parse HEAD
 git status --short
