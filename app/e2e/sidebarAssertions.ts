@@ -31,7 +31,7 @@ export async function expectSidebarGlance(page: Page) {
   }
   const overflows = await sidebar.evaluate(el => [...el.querySelectorAll<HTMLElement>('p, summary, .eo-text, .cta-label, .cta-sub, .sidebar-section-link, .vp-team-name, .goal-action-note, .goal-action-why, .siege-title, .siege-who, .siege-forecast')].filter(x => x.checkVisibility() && x.clientWidth > 0 && x.scrollWidth > x.clientWidth + 1).map(x => `${x.className}: ${x.scrollWidth}/${x.clientWidth}`));
   expect(overflows, 'no horizontally clipped sidebar text').toEqual([]);
-  await expect(page.locator('.vh-chip')).not.toContainText(/\d|wins? in/);
+  await expect(page.locator('.vp .vhc-head button.link')).not.toContainText(/\d|wins? in/);
 }
 
 export async function expectSidebarReachable(page: Page) {
