@@ -70,3 +70,16 @@
 - e-attack: 10 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
 - e-hit: 4 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
 - e-death: 10 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- Driver round2 refinements: replaced split hood/crown with one thick continuous surface; fitted leg/boot volumes, slimmed bolt case, lowered/registered the physical cream stone and added pigment grain. Retained fixed surface camera projection, generated linen/now leather fills, physical key/fill/rim, real AO/curvature bakes and one automatic rest histogram grade. Deepened the steel prod curve and straightened the rest string to match the painting.
+- Motion: reused pinned CC0 Quaternius Idle_Loop, Walk_Loop, Hit_Chest and Death01 with rest/roll calibrated Blender constraints, translation-only ground/stance adaptation and raised weapon-carry arm. Retained the authored crossbow attack. Fixed trouser extraction accidentally including hands; hit now recovers to guard. Extra loop keys close exactly after audit caught residual source idle endpoint drift.
+- New source audit checks provenance, weapon wrist grip in idle/move/attack/hit and loop/recovery matrix continuity. First passing audit: idle/move closure0; hit <4e-18; max stock/wrist error .000362mm. Actual front/top eight-frame foot views now published; toe stance residual <.001mm at one virtual ground speed, support yaw2.645deg. These limits do not prove clean heel rollover or cloth collisions; boot projection/shape still looks rough in the diagnostic view.
+- b: genuine front, three-quarter and side geometry views.
+- c: 1 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- d: 4 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- e-idle: 8 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- e-move: 8 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- e-attack: 10 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- e-hit: 4 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- e-death: 10 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- Packed 40 frames, trimmed 160px cells, WebP quality 90, 165030 bytes.
+- Wrote 8 second five-clip H.264 yuv420p review barbarian-crossbowman-round2.mp4
