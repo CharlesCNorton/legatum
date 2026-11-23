@@ -256,3 +256,13 @@ Authored hit: 4 output samples at 12 fps; 150 mechanical controls; loop=False.
 Authored death: 10 output samples at 10 fps; 150 mechanical controls; loop=False.
 Rendered c: 1 PNGs, 256 px, CYCLES CPU, 8 samples.
 Published c review immediately; frozen grade 7aba41295809, 256 masters retained.
+Prepared full-source projection; read all six Blender skills, vehicle chapter, art skill and standing feedback 12–22.
+Built true 3D hard-surface geometry and rigid rig: 1115 objects; bevels, open muzzle, sensors, six wheels per side, 128 articulated tracks.
+Finished materials: three actual AO/curvature bake pairs, generated unseen paint, 956 genuine projected meshes; all textures packed.
+Authored idle: 8 output samples at 10 fps; 150 mechanical controls; loop=True.
+Authored move: 8 output samples at 12 fps; 150 mechanical controls; loop=True.
+Authored attack: 10 output samples at 14 fps; 150 mechanical controls; loop=False.
+Authored hit: 4 output samples at 12 fps; 150 mechanical controls; loop=False.
+Authored death: 10 output samples at 10 fps; 150 mechanical controls; loop=False.
+Rendered c: 1 PNGs, 256 px, CYCLES CPU, 8 samples.
+Published c review immediately; frozen grade bb931e70ad71, 256 masters retained.

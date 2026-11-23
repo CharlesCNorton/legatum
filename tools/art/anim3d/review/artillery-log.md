@@ -114,3 +114,17 @@
 - Published e-hit: 4 actual rendered frames, 12 fps; CPU 256px 16 samples.
 - Published e-death: 10 actual rendered frames, 10 fps; CPU 256px 16 samples.
 - Completed all five clips and geometry audit; delivery pack may now run.
+- Published b-plain CPU/GPU geometry stage before texture work.
+- Baked 256px AO and curvature maps on GEO-Shield wing -1, GEO-Shield wing 1, GEO-Hollow tapered barrel
+- Published painted rest pose and 50/50 comparison; real AO shader, micrograin, edge geometry and hidden-surface fill.
+- Rebuilt raised split-trail beams, collars, bolts, upright spades and diagonal braces; fitted full-depth U supports, narrowed the muzzle and adjusted whole-wheel mounting yaw. Applied bevels/triangulation before UVs. Published intermediate b/c/detail comparisons immediately after each build.
+- Projection diagnosis: averaged radial normals on flat hub caps suppressed the painting. Confidence now uses flat face normals, interior corner ray samples and front self-hit acceptance; existing generated olive fills remain on hidden surfaces. Extended cream exclusion to tires/hubs to remove rotating stone-colored streaks. Kept fixed UVs and genuine 3D alpha.
+- Added separate source-sampled gun/stone histogram curves, fixed for all clips; first full-CDF experiment amplified low-sample base noise, replaced with bounded median/10th/90th-percentile affine curves. Added fine pigment grain to the camera-visible stone; retained warm key, cool rim, fill, contact AO and real AO/Pointiness bakes.
+- Added 16 actual top/front running-gear renders from the saved eight-frame move clip. Review exposed a depth gap between camera-fitted near trail and axle; added a real hinge arm and pin. This check is mechanical, not human/animal mocap, and does not claim world-travel no-slip validation.
+- Reduced the hit roll to keep the chassis jolt restrained. Move retains full rolling motion; cream contamination is fixed, but rotating baked illumination is still visible. Death remains a slumped disabled gun. Final CPU rebuild in progress; not art PASS.
+- Published e-idle: 8 actual rendered frames, 10 fps; CPU 256px 16 samples.
+- Published e-move: 8 actual rendered frames, 12 fps; CPU 256px 16 samples.
+- Published e-attack: 10 actual rendered frames, 14 fps; CPU 256px 16 samples.
+- Published e-hit: 4 actual rendered frames, 12 fps; CPU 256px 16 samples.
+- Published e-death: 10 actual rendered frames, 10 fps; CPU 256px 16 samples.
+- Completed all five clips and geometry audit; delivery pack may now run.
