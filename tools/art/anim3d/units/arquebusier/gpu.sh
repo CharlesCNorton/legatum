@@ -28,6 +28,8 @@ stage=audit
 blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python "$unit/audit.py"
 stage=render
 "$unit/render.sh" render
+stage=feet
+"$unit/render.sh" feet
 stage=verify-masters
 "$python" "$unit/check_delivery.py"
 stage=pack-validate-video

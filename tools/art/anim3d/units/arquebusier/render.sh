@@ -8,6 +8,7 @@ stage="${1:-preview}"
 case "$stage" in
  build) "$ANIM_ROOT/venv/bin/python" "$unit/prepare.py"; blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python "$unit/scene.py" -- build ;;
  refine) blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python "$unit/refine.py" ;;
+ feet) blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python "$unit/feet.py" ;;
  bake) blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python "$unit/bake.py" ;;
  pack) "$ANIM_ROOT/venv/bin/python" "$unit/finish.py" ;;
  *) blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python "$unit/scene.py" -- "$stage" ;;

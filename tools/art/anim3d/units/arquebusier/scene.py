@@ -8,6 +8,8 @@ R=Path(os.environ.get('ANIM_ROOT',Path.home()/'LegatumRuns/anim-pilot'))
 M=R/'masters/arquebusier'; A=R/'assets/arquebusier'; V=R/'review/3d-v2'
 for p in (M,V,M/'clips',M/'renders'):p.mkdir(parents=True,exist_ok=True)
 HERE=Path(__file__).resolve().parent
+sys.path.insert(0,str(HERE))
+from retarget import prepare as retarget_motion, apply_matrices
 CLIPS={'idle':(8,10,True),'move':(8,12,True),'attack':(10,14,False),'hit':(4,12,False),'death':(10,10,False)}
 def log(s):
  with (V/'arquebusier-log.md').open('a') as f:f.write('- '+s+'\n')
@@ -260,7 +262,8 @@ def animate(clip):
  global rig
  bpy.ops.wm.open_mainfile(filepath=str(M/'arquebusier.blend'));rig=bpy.data.objects['RIG-Arquebusier MPFB'];gun=bpy.data.objects['CTRL-matchlock'];sc=configure();count,fps,loop=CLIPS[clip];sc.render.fps=fps;sc.frame_start=1;sc.frame_end=count
  rest={n:Matrix(m) for n,m in json.loads(rig['rest_pose']).items()}
- for p in rig.pose.bones:p.rotation_mode='XYZ';p.matrix_basis=rest[p.name].copy()
+ for p in rig.pose.bones:p.rotation_mode='QUATERNION';p.matrix_basis=rest[p.name].copy()
+ bpy.context.view_layer.update()
  loc=Vector(rig['rest_location']);gw=gun.matrix_world.copy();gb=gun.matrix_basis.copy()
  if clip in ('attack','death'):gun.parent=None;gun.matrix_world=gw
  right_wrist=rig.matrix_world @ rig.pose.bones['hand_r'].head
@@ -269,18 +272,32 @@ def animate(clip):
  stock=bpy.data.objects['GEO-walnut matchlock butt and fore-end'];points=[stock.matrix_world @ v.co for v in stock.data.vertices];zmin=min(v.z for v in points);bottom=[v for v in points if v.z<zmin+.04];butt=sum(bottom,Vector())/len(bottom)
  # Weapon rests against the right palm. During aim both arms solve toward the weapon.
  frames=count+1 if loop else count
+ motion=None
+ if clip!='attack':
+  phases=[i/count if loop else min(1,i/(count-2)) if clip=='death' else i/(count-1) for i in range(frames)]
+  motion,motion_meta=retarget_motion(rig,R,clip,phases)
+  if loop:motion[-1]=motion[0]
+  (M/'clips'/f'{clip}-motion.json').write_text(json.dumps(motion_meta,indent=2))
+  sc.render.fps=fps
  for idx in range(frames):
   sc.frame_set(idx+1)
   for p in rig.pose.bones:p.matrix_basis=rest[p.name].copy()
-  rig.location=loc.copy();rig.rotation_euler=(0,0,0);gun.matrix_basis=gb.copy() if clip not in ('attack','death') else gw.copy();bpy.context.view_layer.update();t=idx/count if loop else idx/(count-1);s=sin(2*pi*t)
-  if clip=='idle':
-   rig.pose.bones['spine_03'].rotation_mode='XYZ';rig.pose.bones['spine_03'].rotation_euler.x+=.012*s
-  elif clip=='move':
-   rig.location.z+=.018*(1-cos(4*pi*t));bpy.context.view_layer.update()
-   for side,sign in [('r',-1),('l',1)]:
-    phase=s*sign;target=(sign*.20,-.10*phase,.085+.065*max(0,phase));limb('thigh_'+side,'calf_'+side,target,(sign*.22,-.38,.48))
-   rig.pose.bones['spine_03'].rotation_euler.z+=.025*s
-  elif clip=='attack':
+  rig.location=loc.copy();rig.rotation_euler=(0,0,0);gun.matrix_basis=gb.copy() if clip not in ('attack','death') else gw.copy();bpy.context.view_layer.update();t=idx/count if loop else idx/(count-1)
+  if motion:
+   sample=motion[idx];apply_matrices(rig,sample['matrices'])
+   weight=min(1,idx/3) if clip=='death' else (0 if idx in (0,count-1) else 1) if clip=='hit' else 1
+   if weight<1:
+    for p in rig.pose.bones:p.matrix_basis=rest[p.name].lerp(p.matrix_basis,weight)
+   rig.location=loc+sample['root']*weight
+   bpy.context.view_layer.update()
+  if clip=='move':
+   # Ground the finished soles, not anatomical ankle heads; keep source foot rotations.
+   lows=[];deps=bpy.context.evaluated_depsgraph_get()
+   for side in ('l','r'):
+    shoe=bpy.data.objects['GEO-latchet shoe '+side];ev=shoe.evaluated_get(deps);me=ev.to_mesh();lows.append(min((ev.matrix_world @ v.co).z for v in me.vertices));ev.to_mesh_clear()
+   base=bpy.data.objects['GEO-stationary cream base'];top=max((base.matrix_world @ Vector(c)).z for c in base.bound_box)
+   rig.location.z+=top+.002-min(lows);bpy.context.view_layer.update()
+  if clip=='attack':
    # Weapon is a rigid body; hands solve to its trigger and fore-end.
    amount=[0,.28,.72,1,1,1,.92,.65,.27,0][idx]
    direction=Vector((.72,-.69,.05)).normalized()
@@ -300,28 +317,49 @@ def animate(clip):
      limb('upperarm_'+side,'lowerarm_'+side,inv @ target,pole)
      p=rig.pose.bones['hand_'+side];pose=hand.copy();orientation=rot.to_3x3() @ hand.to_3x3();pose=orientation.to_4x4();pose.translation=p.head;p.matrix=pose
     bpy.context.view_layer.update()
-  elif clip=='hit':
-   a=[0,.20,-.08,0][idx];rig.pose.bones['spine_03'].rotation_euler.x-=a;rig.pose.bones['head'].rotation_euler.x+=a*.45
   elif clip=='death':
-   u=min(1,t/.78);ease=u*u*(3-2*u);rig.rotation_euler.y=-1.50*ease;rig.rotation_euler.z=.45*ease;rig.location.x=.86*ease;rig.location.y=loc.y+.15*ease;rig.location.z=loc.z+.18*ease
-   rig.pose.bones['thigh_l'].rotation_euler.x+=.75*ease;rig.pose.bones['calf_l'].rotation_euler.x-=1.35*ease
-   rig.pose.bones['thigh_r'].rotation_euler.x+=.20*ease;rig.pose.bones['calf_r'].rotation_euler.x-=.55*ease
+   u=min(1,t/.78)
+   # Reorient the captured backward fall onto the disc, retaining source articulation.
+   turn=Matrix.Rotation(.65*min(1,idx/4),4,'Z')
+   rig.rotation_euler=turn.to_euler();rig.location=loc+turn.to_3x3() @ (rig.location-loc)
+   bpy.context.view_layer.update()
+   # Covered anatomy is masked, so center the complete visible costume, not
+   # the remaining torso alone (which would push the feet outside the cell).
+   coords=[];deps=bpy.context.evaluated_depsgraph_get()
+   for obj in sc.objects:
+    if obj.type!='MESH' or 'base' in obj.name or 'muzzle' in obj.name or obj.parent==gun:continue
+    ev=obj.evaluated_get(deps);me=ev.to_mesh();coords.extend(ev.matrix_world @ v.co for v in me.vertices);ev.to_mesh_clear()
+   center=Vector(((min(v.x for v in coords)+max(v.x for v in coords))/2,(min(v.y for v in coords)+max(v.y for v in coords))/2,0))
+   settle=max(0,min(1,(idx-2)/2));settle=settle*settle*(3-2*settle)
+   base=bpy.data.objects['GEO-stationary cream base'];rig.location+=(Vector((base.location.x,base.location.y,0))-center)*settle
    fall=max(0,min(1,(u-.15)/.85));pivot=Vector((-.305,-.25,.17));gun.matrix_world=Matrix.Translation((-.48*fall,0,.01*fall)) @ Matrix.Translation(pivot) @ Matrix.Rotation(1.57*fall,4,'Y') @ Matrix.Translation(-pivot) @ gw
    for digit in ('index','middle','ring','pinky'):
-    for k in range(1,4):rig.pose.bones[f'{digit}_{k:02d}_r'].rotation_euler.x*=1-fall
+    for k in range(1,4):
+     finger=rig.pose.bones[f'{digit}_{k:02d}_r'];finger.matrix_basis=rest[finger.name].lerp(Matrix.Identity(4),fall)
   bpy.context.view_layer.update()
   if clip=='death' and t>0:
    # Settle the evaluated figure on the actual offset disc/world ground.
-   base=bpy.data.objects['GEO-stationary cream base'];invbase=base.matrix_world.inverted();deps=bpy.context.evaluated_depsgraph_get();lift=-10
+   base=bpy.data.objects['GEO-stationary cream base'];invbase=base.matrix_world.inverted();top=max((base.matrix_world @ Vector(c)).z for c in base.bound_box);ground=min((base.matrix_world @ Vector(c)).z for c in base.bound_box);deps=bpy.context.evaluated_depsgraph_get();lift=-10
    for obj in sc.objects:
     if obj.type!='MESH' or obj==base or 'muzzle' in obj.name or obj.parent==gun:continue
     ev=obj.evaluated_get(deps);me=ev.to_mesh()
     for v in me.vertices:
-     w=ev.matrix_world @ v.co;local=invbase @ w;floor=.085 if local.x**2+local.y**2<.48**2 else .01
+     w=ev.matrix_world @ v.co;local=invbase @ w;floor=top if local.x**2+local.y**2<.48**2 else ground
      lift=max(lift,floor-w.z)
     ev.to_mesh_clear()
    rig.location.z+=lift*min(1,t/.5)
    bpy.context.view_layer.update()
+   # The released rigid gun settles against the same actual raised disc/ground.
+   if t>.25:
+    lift=-10
+    for obj in sc.objects:
+     if obj.type!='MESH' or obj.parent!=gun or 'muzzle' in obj.name:continue
+     for v in obj.data.vertices:
+      w=obj.matrix_world @ v.co;local=invbase @ w;floor=top if local.x**2+local.y**2<.48**2 else ground
+      lift=max(lift,floor-w.z)
+    gun.location.z+=lift*min(1,(t-.25)/.35)
+    bpy.context.view_layer.update()
+
   for p in rig.pose.bones:
    p.keyframe_insert('location',frame=idx+1)
    p.keyframe_insert('rotation_quaternion' if p.rotation_mode=='QUATERNION' else 'rotation_euler',frame=idx+1);p.keyframe_insert('scale',frame=idx+1)
@@ -332,7 +370,7 @@ def animate(clip):
  # Keep every action editable, with proper loop endpoint and no sampled duplicate endpoint.
  if rig.animation_data:rig.animation_data.action.name='Arquebusier '+clip
  sc.frame_set(1);bpy.ops.wm.save_as_mainfile(filepath=str(M/'clips'/f'{clip}.blend'))
- (M/'clips'/f'{clip}.json').write_text(json.dumps({'frames':count,'fps':fps,'loop':loop,'source_sha256':hashlib.sha256((M/'arquebusier.blend').read_bytes()).hexdigest()}));log('Authored and saved '+clip+' action ('+str(count)+' output frames).')
+ (M/'clips'/f'{clip}.json').write_text(json.dumps({'frames':count,'fps':fps,'loop':loop,'source_sha256':hashlib.sha256((M/'arquebusier.blend').read_bytes()).hexdigest()}));log(('Retargeted CC0 and saved ' if motion else 'Authored and saved ')+clip+' action ('+str(count)+' output frames).')
 
 
 def render(stage,blend,frames):

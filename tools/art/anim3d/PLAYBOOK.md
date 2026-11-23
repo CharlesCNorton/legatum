@@ -232,3 +232,41 @@ frame, verifies the atlas/grade hashes and exact decoded death hold. The 160 px
 logical frame, per-frame offsets, five logical rows, frame counts, Q75 floor and
 200,000-byte cap are unchanged. Three delivery tests cover monotone grades, alpha
 preservation, premultiplied edge colour and WebP trim reconstruction.
+
+
+### Arquebusier driver round 2: bind depth and open motion
+
+The actual round-one GPU pass succeeded at 512 px, 64 samples, 191,478 bytes/Q90.
+Its evidence is preserved externally in `masters/arquebusier/driver-round1-gpu/`.
+The technical pass did not meet painting parity. Stock faces had inward normals,
+rejecting their projected paint. Recalculate winding before projection and after
+fitting; the real bevels then retain the painting's wood grain and highlights.
+
+Camera registration must fit depth as well as screen landmarks. Prior footwear
+had been displaced behind the skeletal ankles along camera rays; small authored
+keys hid that error. Open motion exposed detached shoes. `bind_fit.py` preserves
+the native anatomy and painted rest view, relocates disc and shoes together along
+camera rays, connects stocking surfaces in depth, bakes the fitted rest pose and
+calibrates ankle/toe bind joints before retargeting. Flush the dependency graph
+before reading matrix_world after location/scale fitting, or the old matrix can
+silently undo the stone placement. Thick folded knee panels
+blend thigh/calf weights across the joint. Closed leg clothing masks its
+covered anatomical mesh while retaining all 19,158 original vertices and weights.
+
+The human motion default is now open motion: Quaternius Universal Animation
+Library Standard (CC0), with pinned input hashes and provenance in the unit's
+`SOURCES.md` and external `assets/SOURCES.md`. Idle_Loop, Walk_Loop, Hit_Chest and
+Death01 are retargeted with Blender world rotation constraints, calibrated rest
+matrices and bone rolls. The carry arms use the source idle through NLA; only the
+weapon attack remains authored. No post-retarget foot orientation edits are made.
+Small root translations match the sampled stance toes to one virtual ground speed.
+
+Every round renders actual top/front footwear over all eight move samples to
+`arquebusier-g-feet-check.png`. The supporting evidence records foot yaw, virtual
+stance error, source clip hash and CPU/GPU provenance. Bone-only metrics can pass
+with badly bound footwear; the geometry audit now also measures each ankle
+against the actual shoe surface in every clip. Inspect the rendered shoe/stocking
+connection too.
+The GPU handoff includes this stage and rejects stale or CPU-only foot evidence.
+The fixed rest histogram grade, image-generated hidden fills, genuine bevels and
+cloth folds, product lighting and 160 px/Q75/200,000-byte delivery contract remain.

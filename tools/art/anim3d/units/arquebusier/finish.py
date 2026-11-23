@@ -153,7 +153,19 @@ def video():
  probe=json.loads(subprocess.check_output(['ffprobe','-v','error','-show_streams','-of','json',str(out)]));s=probe['streams'][0];assert s['codec_name']=='h264' and s['pix_fmt']=='yuv420p' and int(s['nb_frames'])==240 and (s['width'],s['height'])==(1600,348) and abs(float(s['duration'])-8)<.01
  print('MP4 verified:',out)
 
+def feet_review():
+ sheet=Image.new('RGBA',(8*192,432),CREAM);d=ImageDraw.Draw(sheet)
+ for row,view in enumerate(('top','front')):
+  for i in range(8):
+   im=Image.open(M/'feet'/f'{view}-{i:02}.png').convert('RGBA')
+   for size in (256,512):
+    if im.width>=size:
+     folder=M/str(size)/'g-feet-check';folder.mkdir(parents=True,exist_ok=True);im.resize((size,size),Image.Resampling.LANCZOS).save(folder/f'{view}-{i:02}.png')
+   sheet.alpha_composite(canvas(im,192),(i*192,24+row*216));d.text((i*192+4,row*216+5),f'{view} {i+1}',fill='#3c3025')
+ sheet.save(V/'arquebusier-g-feet-check.png')
+
 if __name__=='__main__':
  if len(sys.argv)>1 and sys.argv[1]=='review':review(sys.argv[2])
  elif len(sys.argv)>1 and sys.argv[1]=='validate':validate()
+ elif len(sys.argv)>1 and sys.argv[1]=='feet':feet_review()
  else:pack();video()

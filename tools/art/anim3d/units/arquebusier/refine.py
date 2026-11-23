@@ -1,5 +1,5 @@
 """Repeatable full-depth rest fitting from the original unpainted checkpoint."""
-import bpy, bmesh, math, json, os, shutil
+import bpy, bmesh, math, json, os, shutil, sys
 from pathlib import Path
 from mathutils import Vector, Matrix
 from bpy_extras.object_utils import world_to_camera_view
@@ -45,6 +45,7 @@ for o in list(sc.objects):
   bm=bmesh.new();bm.from_mesh(o.data)
   edges=[e for e in bm.edges if e.calc_length()>.09]
   if edges:bmesh.ops.subdivide_edges(bm,edges=edges,cuts=5,use_grid_fill=True)
+  bmesh.ops.recalc_face_normals(bm,faces=list(bm.faces))
   bm.to_mesh(o.data);bm.free()
  bpy.context.view_layer.update()
  # Body subdivision is disabled only for the inverse-skin solve; native topology remains.
@@ -67,15 +68,16 @@ for o in list(sc.objects):
    dx+=(128-x)*max(0,67-y)/45
   if 'morion swept brim' in o.name or 'morion rolled brass lip' in o.name:
    fitted_x=x+dx
-   dy+=.70*((44-.40*(fitted_x-103))-(y+dy))
+   target_y=45-.38*(fitted_x-108)-.025*(fitted_x-118)**2
+   dy+=.80*(target_y-(y+dy))
    dx+=max(0,108-fitted_x)*.5
   if 'morion raised comb' in o.name or 'comb bright edge' in o.name:
-   dx+=(118-(x+dx))*.23;dy+=2
+   dx+=(116-(x+dx))*.30;dy+=2
   if 'shoe' in o.name:
    if o.parent_bone=='foot_l':dx+=(x-150)*.9+4;dy-=5
    else:dx+=4;dy-=2
   if 'matchlock' in o.name or o.parent and o.parent.name=='CTRL-matchlock':
-   dx=(x-94)*.3*max(0,min(1,(y-155)/50)) if 'fore-end' in o.name else 0;dy=-6 if y>160 else -8
+   dx=((x-94)*.3+6)*max(0,min(1,(y-155)/50)) if 'fore-end' in o.name else 0;dy=-6 if y>160 else -8
   d=right*(dx*unit)-up*(dy*unit)
   # Move footwear onto the same physical contact plane along camera rays.
   if 'shoe' in o.name:
@@ -93,6 +95,9 @@ for o in list(sc.objects):
   else:v.co+=o.matrix_world.to_3x3().inverted() @ d
  for m in saved:m.show_viewport=True
  o.data.update()
+ # Recompute outward normals after nonlinear fitting, before frozen UV projection.
+ if 'MPFB' not in o.name:
+  bm=bmesh.new();bm.from_mesh(o.data);bmesh.ops.recalc_face_normals(bm,faces=list(bm.faces));bm.to_mesh(o.data);bm.free()
 base=bpy.data.objects['GEO-stationary cream base'];base.location.y+=.25;base.location.x-=.012;base.scale.x=base.scale.y=.96
 for mod in base.modifiers:
  if mod.type=='BEVEL':mod.width=.014;mod.segments=5
@@ -115,6 +120,11 @@ geo=n.new('ShaderNodeNewGeometry');sep=n.new('ShaderNodeSeparateXYZ');l.new(geo.
 ramp=n.new('ShaderNodeValToRGB');ramp.color_ramp.elements[0].position=.2;ramp.color_ramp.elements[0].color=(.79,.56,.30,1);ramp.color_ramp.elements[1].position=.8;ramp.color_ramp.elements[1].color=(.94,.76,.50,1);l.new(sep.outputs['Z'],ramp.inputs[0])
 ao=n.new('ShaderNodeAmbientOcclusion');ao.inputs['Distance'].default_value=.12;l.new(ramp.outputs[0],ao.inputs['Color'])
 em=n.new('ShaderNodeEmission');l.new(ao.outputs['Color'],em.inputs['Color']);camera=n.new('ShaderNodeLightPath');weight=n.new('ShaderNodeMath');weight.operation='MULTIPLY';weight.inputs[1].default_value=.8;l.new(camera.outputs['Is Camera Ray'],weight.inputs[0]);mix=n.new('ShaderNodeMixShader');l.new(weight.outputs[0],mix.inputs[0]);l.new(p.outputs[0],mix.inputs[1]);l.new(em.outputs[0],mix.inputs[2]);l.new(mix.outputs[0],out.inputs['Surface'])
+sys.path.insert(0,str(Path(__file__).resolve().parent))
+from bind_fit import calibrate
+bind_joints=calibrate(rig)
+rig['rest_pose']=json.dumps({p.name:[list(row) for row in p.matrix_basis] for p in rig.pose.bones})
+(M/'bind-joints.json').write_text(json.dumps(bind_joints,indent=2))
 bpy.context.view_layer.update()
 sc['refinement']='round2 full-depth screen landmark fit; frozen MPFB macro mix and finished rigid surfaces'
 bpy.ops.wm.save_as_mainfile(filepath=str(M/'plain.blend'))
