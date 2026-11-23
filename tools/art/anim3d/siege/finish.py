@@ -76,6 +76,20 @@ for obj in bpy.data.objects:
     if obj.name.startswith(('Bronze turned moulding', 'Bronze wear scratch')):
         obj.data.materials[0] = aged
 
+# Real porous wool sponge, separate from the deliberately unprojected cannon bore.
+sponge = bpy.data.objects['Rammer sponge']
+sponge_mat = bpy.data.materials['Siege black boot leather'].copy()
+sponge_mat.name = 'Siege rammer charcoal wool'
+sponge.data.materials[0] = sponge_mat
+nodes, links = sponge_mat.node_tree.nodes, sponge_mat.node_tree.links
+p = nodes.get('Principled BSDF')
+p.inputs['Roughness'].default_value = .95
+noise = nodes.new('ShaderNodeTexNoise'); noise.inputs['Scale'].default_value = 38
+noise.inputs['Detail'].default_value = 3
+bump = nodes.new('ShaderNodeBump'); bump.inputs['Strength'].default_value = .7
+bump.inputs['Distance'].default_value = .008
+links.new(noise.outputs['Fac'], bump.inputs['Height']); links.new(bump.outputs[0], p.inputs['Normal'])
+
 key = bpy.data.objects['Warm left key']; key.data.energy = 560
 key.data.color = (1.0, .95, .86); key.data.size = 2.2
 fill = bpy.data.objects['Cool fill']; fill.data.energy = 95; fill.data.size = 4

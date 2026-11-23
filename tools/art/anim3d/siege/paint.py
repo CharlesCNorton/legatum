@@ -10,6 +10,7 @@ bpy.ops.wm.open_mainfile(filepath=str(M/'field-cannon.blend'))
 sc=bpy.context.scene;cam=sc.camera;source=R/'assets/field-cannon/painting-source.png'
 image=bpy.data.images.load(str(source),check_existing=True)
 navy=bpy.data.images.load(str(R/'assets/field-cannon/projection-navy.png'),check_existing=True)
+leather=bpy.data.images.load(str(R/'assets/field-cannon/projection-leather.png'),check_existing=True)
 ivory=bpy.data.images.load(str(R/'assets/field-cannon/projection-ivory.png'),check_existing=True)
 machine=bpy.data.images.load(str(R/'assets/field-cannon/projection-machine.png'),check_existing=True)
 base=bpy.data.images.load(str(R/'assets/field-cannon/projection-base.png'),check_existing=True)
@@ -53,13 +54,18 @@ for obj in list(sc.objects):
   if not old:
    rgb=n.new('ShaderNodeRGB');rgb.outputs[0].default_value=p.inputs['Base Color'].default_value;old=rgb.outputs[0]
   tc=n.new('ShaderNodeUVMap');tc.uv_map=uv.name
-  tex=n.new('ShaderNodeTexImage');tex.image=navy if mat.name.startswith('Siege indigo wool') else ivory if mat.name.startswith('Siege ivory linen') else machine if obj in gun_meshes else base if obj.name=='Stationary cream base' else image;tex.extension='CLIP';links.new(tc.outputs[0],tex.inputs[0])
+  tex=n.new('ShaderNodeTexImage');tex.image=navy if mat.name.startswith('Siege indigo wool') else ivory if mat.name.startswith('Siege ivory linen') else leather if mat.name.startswith('Siege black boot leather') and not obj.name.startswith(('Black felt shako','Black shako visor')) else machine if obj in gun_meshes else base if obj.name=='Stationary cream base' else image;tex.extension='CLIP';links.new(tc.outputs[0],tex.inputs[0])
   attr=n.new('ShaderNodeVertexColor');attr.layer_name=mask.name
   mult=n.new('ShaderNodeMath');mult.operation='MULTIPLY';links.new(attr.outputs['Color'],mult.inputs[0]);links.new(tex.outputs['Alpha'],mult.inputs[1])
-  weight=n.new('ShaderNodeMath');weight.operation='MULTIPLY';weight.inputs[1].default_value=.92;links.new(mult.outputs[0],weight.inputs[0])
+  weight=n.new('ShaderNodeMath');weight.operation='MULTIPLY';weight.inputs[1].default_value=.96;links.new(mult.outputs[0],weight.inputs[0])
   mix=n.new('ShaderNodeMixRGB');links.new(weight.outputs[0],mix.inputs[0]);links.new(old,mix.inputs[1]);links.new(tex.outputs[0],mix.inputs[2]);links.new(mix.outputs[0],p.inputs['Base Color'])
   # A restrained painted-light contribution avoids multiplying all source shadows twice.
   strength=n.new('ShaderNodeMath');strength.operation='MULTIPLY';strength.inputs[1].default_value=.22;links.new(mult.outputs[0],strength.inputs[0]);links.new(strength.outputs[0],p.inputs['Emission Strength']);links.new(tex.outputs[0],p.inputs['Emission Color'])
+  if obj.name=='Stationary cream base':
+   # AgX and the common rest grade otherwise turn the warm cream stone pink-grey.
+   # Keep the shared source/palette; compensate its lit material before the frozen grade.
+   pigment=n.new('ShaderNodeMixRGB');pigment.name='Cream pigment pre-AgX compensation';pigment.blend_type='MULTIPLY';pigment.inputs[0].default_value=1; pigment.inputs[2].default_value=(1.02,.98,.72,1)
+   links.new(mix.outputs[0],pigment.inputs[1]);links.new(pigment.outputs[0],p.inputs['Base Color']);links.new(pigment.outputs[0],p.inputs['Emission Color'])
  records.append({'object':obj.name,'visible_vertices':sum(w>0 for w in weights),'vertices':len(weights)})
 sc['painted_projection']='One frozen camera UV projection; native geometry and filled occluded/back surfaces. Registration residuals are in registration.json.'
 bpy.ops.file.pack_all();bpy.ops.wm.save_as_mainfile(filepath=str(M/'field-cannon.blend'))

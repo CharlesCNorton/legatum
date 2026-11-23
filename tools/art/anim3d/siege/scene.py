@@ -87,7 +87,7 @@ linen=mat('Siege ivory linen',(.73,.66,.48),0,.88)
 leather=mat('Siege black boot leather',(.025,.023,.018),0,.56)
 skin=mat('Siege painted warm skin',(.52,.30,.16),0,.66)
 stone=mat('Siege cream limestone',(.82,.70,.49),0,.86)
-dark=mat('Siege bore soot',(.012,.009,.006),0,.95)
+dark=mat('Siege bore soot',(.045,.028,.014),0,.95)
 # Physical gun, forward along +X; axle along Y. Radius is the rolling radius.
 gun=empty('Gun travel and recoil');gun['wheel_radius']=.48
 ax=.08;wz=.585;radius=.48
@@ -115,7 +115,7 @@ for sy in [-1,1]:
  fs=[tuple(range(n-1,-1,-1)),tuple(range(n,2*n))]+[(i,(i+1)%n,(i+1)%n+n,i+n) for i in range(n)]
  cheek=bevel(mesh('Oak carriage cheek '+str(sy),vs,fs,wood));parent(cheek,gun)
  for x,z in [(-.55,.30),(-.10,.60),(.34,.65)]:
-  plate=cube('Iron cheek strap',(x,y+sy*.063,z),(.085,.018,.25),iron,gun)
+  plate=cube('Iron cheek strap',(x,y+sy*.063,z),(.22 if x==-.10 else .085,.022,.27),iron,gun)
   for zz in [-.08,.08]:rod('Square bolt', (x,y+sy*.07,z+zz),(x,y+sy*.088,z+zz),.016,brightiron,gun)
  curve('Worn cheek upper edge',[(x,y-sy*.059,z+.004) for x,z in outline[:4]],.006,rawwood,gun)
  ring('Tow eye',(-.70,y,.22),.04,.01,iron,axis='X',p=gun)
@@ -183,18 +183,26 @@ def shell(name,predicate,m,inflate):
  o.parent=rig;ar=o.modifiers.new('Native MPFB skinning','ARMATURE');ar.object=rig;solid(o,.006)
  su=o.modifiers.new('Tailored smoothing','SUBSURF');su.levels=1
  return o
-shell('White wool breeches',lambda v:.43<v.z<1.01 and abs(v.x)<.32,linen,.013)
+shell('White wool breeches',lambda v:.43<v.z<1.07 and abs(v.x)<.32,linen,.013)
 shell('Tall fitted black gaiters',lambda v:v.z<.49,leather,.009)
-shell('Blue fitted coat and sleeves',lambda v: .95<v.z<1.43 and not(abs(v.x)>.455),navy,.018)
+shell('Blue fitted coat and sleeves',lambda v: 1.02<v.z<1.43 and not(abs(v.x)>.455),navy,.018)
 # Hide clothed skin under shells, retaining original anatomy and weights in master.
 # Transparent skin under covered regions avoids tiny seams showing through white trousers.
 body.data.materials.append(navy);body.data.materials.append(linen);body.data.materials.append(leather)
 for p in body.data.polygons:
  c=sum((body.data.vertices[i].co for i in p.vertices),Vector())/len(p.vertices)
  hand_weight=sum(g.weight for i in p.vertices for g in body.data.vertices[i].groups if any(k in body.vertex_groups[g.group].name for k in ['hand_', 'thumb_', 'index_', 'middle_', 'ring_', 'pinky_']))/len(p.vertices)
+ coverage={}
+ for i in p.vertices:
+  for group in body.data.vertices[i].groups:
+   name=body.vertex_groups[group.group].name
+   if name in rig.data.bones:coverage[name]=coverage.get(name,0)+group.weight
+ dominant=max(coverage,key=coverage.get) if coverage else ''
  if hand_weight>.3:p.material_index=0
+ elif dominant.startswith(('foot_','toe','calf_')):p.material_index=3
+ elif dominant.startswith(('thigh_','pelvis')):p.material_index=2
  elif c.z<.49:p.material_index=3
- elif c.z<1.0 and abs(c.x)<.32:p.material_index=2
+ elif c.z<1.07 and abs(c.x)<.32:p.material_index=2
  elif c.z<1.43 and abs(c.x)<.455:p.material_index=1
 
 def attach(o,bone):
@@ -202,7 +210,7 @@ def attach(o,bone):
 # Tailored torso, closed fitted coat, central ivory waistcoat and sculpted folds.
 vs=[];fs=[]
 for j in range(21):
- t=j/20;z=.94+t*.44;rx=.145+.06*sin(t*pi*.68);ry=.150+.025*sin(t*pi)
+ t=j/20;z=1.005+t*.475;rx=.158+.067*sin(t*pi*.68);ry=.150+.025*sin(t*pi)
  for i in range(64):
   a=i*2*pi/64
   # Compression folds radiate from the belt and loaded shoulder, rather than regular ribs.
@@ -232,7 +240,7 @@ for side in ['l','r']:
    t=j/24;center=a.lerp(b,t)
    for k in range(40):
     angle=2*pi*k/40;wrinkle=(.006*sin(t*22+2.2*sin(angle*2))+.002*sin(t*43-angle*3))*sin(pi*t)**.6
-    radius=r0*(1-t)+r1*t+wrinkle;vs.append(tuple(center+radius*(u*cos(angle)+v*sin(angle))))
+    sleeve_radius=r0*(1-t)+r1*t+wrinkle;vs.append(tuple(center+sleeve_radius*(u*cos(angle)+v*sin(angle))))
   for j in range(24):
    for k in range(40):q=j*40+k;z=j*40+(k+1)%40;fs.append((q,z,z+40,q+40))
   attach(solid(mesh('Folded blue sleeve '+segment+' '+side,vs,fs,navy),.004),segment+'_'+side)
@@ -244,8 +252,11 @@ for side in ['l','r']:
  for t in [.025,.066]:
   pos=tip-v*t+Vector((0,-.047,0));attach(ball('Cuff brass button',pos,(.007,.005,.007),edge),'lowerarm_'+side)
 def coat_front(x,z):
- t=max(0,min(1,(z-.94)/.44));rx=.145+.06*sin(t*pi*.68);ry=.150+.025*sin(t*pi)
- return -ry*max(.05,1-(x/rx)**2)**.5
+ t=max(0,min(1,(z-1.005)/.475));rx=.158+.067*sin(t*pi*.68);ry=.150+.025*sin(t*pi)
+ a=math.asin(max(-.99,min(.99,x/rx)))
+ fold=(.009*sin(a*9+t*19)+.005*sin(a*17-t*11))*sin(t*pi)
+ fold+=.008*sin(t*37+a*3)*max(0,cos(a))*(1-t)
+ return -(ry+fold)*max(.05,1-(x/(rx+fold))**2)**.5
 # Flat cross belts, fitted over the actual coat surface, not round ropes. Ribbon surface follows the chest.
 def ribbon(name,pts,width,m,bone):
  vs=[]
@@ -254,27 +265,27 @@ def ribbon(name,pts,width,m,bone):
   side=Vector((tangent.z,0,-tangent.x)).normalized()*width/2
   pair=[Vector(p)-side,Vector(p)+side]
   if name=='Ivory cross belt':
-   for vertex in pair:vertex.y=coat_front(vertex.x,vertex.z)-.012
+   for vertex in pair:vertex.y=coat_front(vertex.x,vertex.z)-.022
   vs.extend(pair)
  fs=[(2*i,2*i+1,2*i+3,2*i+2) for i in range(len(pts)-1)]
  return attach(bevel(solid(mesh(name,vs,fs,m),.006),.002),bone)
 for sg in [-1,1]:
- ribbon('Ivory cross belt',[(sg*(-.14+.27*t),-.125-.029*sin(t*pi),1.39-.40*t) for t in [i/16 for i in range(17)]],.053,linen,'spine_02')
- for z in [1.02,1.09,1.16,1.23,1.30]:attach(ball('Brass uniform button',(sg*.055,coat_front(sg*.055,z)-.013,z),(.011,.008,.011),edge),'spine_02')
+ ribbon('Ivory cross belt',[(sg*(-.14+.27*t),-.125-.029*sin(t*pi),1.49-.45*t) for t in [i/16 for i in range(17)]],.053,linen,'spine_02')
+ for z in [1.10,1.15,1.20,1.25,1.30]:attach(ball('Brass uniform button',(sg*.055,coat_front(sg*.055,z)-.013,z),(.011,.008,.011),edge),'spine_02')
 # Raised belt plate, central pin and fine stitches: physical detail, not projected substitutes.
 attach(curve('Crossbelt brass buckle',[(x,coat_front(x,z)-.027,z) for x,z in [(.077,1.086),(.124,1.086),(.124,1.138),(.077,1.138),(.077,1.086)]],.004,edge),'spine_02')
 attach(rod('Crossbelt buckle pin',(.078,coat_front(.10,1.11)-.029,1.11),(.124,coat_front(.10,1.11)-.029,1.11),.0025,edge),'spine_02')
 for sg in [-1,1]:
  for edge_side in [-1,1]:
   for j in range(26):
-   t=(j+.4)/26;x=sg*(-.14+.27*t)+edge_side*.020;z=1.39-.40*t;y=coat_front(x,z)-.020
+   t=(j+.4)/26;x=sg*(-.14+.27*t)+edge_side*.020;z=1.49-.45*t;y=coat_front(x,z)-.029
    attach(curve('Ivory belt hand stitching',[(x-.002,y,z+.002),(x+.002,y,z-.002)],.0013,rawwood),'spine_02')
 attach(curve('Red standing collar',[(.073*sin(a),-.061*cos(a),1.415) for a in [i*2*pi/48 for i in range(49)]],.018,red),'neck_01')
 for sg in [-1,1]:
  attach(cube('Red shoulder board',(sg*.185,-.015,1.385),(.105,.07,.018),red),'upperarm_'+('l' if sg>0 else 'r'))
 # The painting has a closed navy coat, not a third vertical ivory chest strap.
 for sg in [-1,1]:
- attach(curve('Red lapel piping',[(sg*.10,-.155,1.38),(sg*.065,-.172,1.24),(sg*.046,-.155,1.02)],.0035,red),'spine_02')
+ attach(curve('Red lapel piping',[(sg*.10,-.155,1.38),(sg*.065,-.172,1.24),(sg*.046,-.155,1.10)],.0035,red),'spine_02')
 # Shako fitted to anatomical head; no maker marks or national emblems.
 head=rig.data.bones['head'];hc=(head.head_local+head.tail_local)*.5;hz=hc.z+.07
 attach(rod('Black felt shako',(0,hc.y,hz),(0,hc.y,hz+.20),.105,leather,r2=.12),'head')
@@ -331,7 +342,7 @@ p=rig.pose.bones['head'];p.matrix_basis=p.matrix_basis @ Matrix.Rotation(-.14,4,
 rig.pose.bones['head'].scale=(1.12,1.12,1.12)
 rig.location=(-.60,.06,.105);rig.scale=(1.16,1.03,1.0)
 # Stationary cream stone base, matched to the painting's low plain disc.
-bpy.ops.mesh.primitive_cylinder_add(vertices=128,radius=1.05,depth=.095,location=(0,0,.0475));base=bpy.context.object;base.name='Stationary cream base';base.data.materials.append(stone);bevel(base,.022)
+bpy.ops.mesh.primitive_cylinder_add(vertices=128,radius=1.05,depth=.095,location=(0,0,.0475));base=bpy.context.object;base.name='Stationary cream base';base.data.materials.append(stone);bevel(base,.009)
 # Camera and warm painterly lighting.
 sc=bpy.context.scene;sc.render.engine='CYCLES';sc.cycles.device='CPU';sc.cycles.samples=12;sc.cycles.use_denoising=True;sc.render.threads_mode='FIXED';sc.render.threads=3
 sc.render.resolution_x=sc.render.resolution_y=256;sc.render.resolution_percentage=100;sc.render.film_transparent=True;sc.render.image_settings.file_format='PNG';sc.render.image_settings.color_mode='RGBA'

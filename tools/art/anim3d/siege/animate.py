@@ -15,9 +15,11 @@ def lowest(objects):
   zs.extend((ev.matrix_world @ v.co).z for v in me.vertices);ev.to_mesh_clear()
  return min(zs)
 def aim(rig,name,d):
- p=rig.pose.bones[name];q=p.bone.matrix_local.to_quaternion();rot=((q @ Vector((0,1,0))).rotation_difference(Vector(d).normalized()) @ q).to_matrix().to_4x4();rot.translation=p.head.copy();p.matrix=rot;bpy.context.view_layer.update()
+ p=rig.pose.bones[name];q=p.bone.matrix_local.to_quaternion();rot=((q @ Vector((0,1,0))).rotation_difference(Vector(d).normalized()) @ q).to_matrix().to_4x4();rot.translation=p.head.copy()
+ if name.startswith(('upperarm_','lowerarm_')):rot=rot @ Matrix.Diagonal((1,rig.get('arm_length_factor',1),1,1))
+ p.matrix=rot;bpy.context.view_layer.update()
 def limb(rig,up,low,t,pole):
- a=rig.pose.bones[up].head.copy();delta=Vector(t)-a;l1=rig.data.bones[up].length;l2=rig.data.bones[low].length;d=min(delta.length,l1+l2-.0001);delta.normalize();along=(l1*l1-l2*l2+d*d)/(2*d);h=max(0,l1*l1-along*along)**.5
+ a=rig.pose.bones[up].head.copy();delta=Vector(t)-a;factor=rig.get('arm_length_factor',1) if up.startswith('upperarm_') else 1;l1=rig.data.bones[up].length*factor;l2=rig.data.bones[low].length*factor;d=min(delta.length,l1+l2-.0001);delta.normalize();along=(l1*l1-l2*l2+d*d)/(2*d);h=max(0,l1*l1-along*along)**.5
  side=Vector(pole)-a;side=(side-delta*side.dot(delta)).normalized();el=a+delta*along+side*h;aim(rig,up,el-a);aim(rig,low,Vector(t)-el)
 def rotate(rig,bone,axis,a):
  p=rig.pose.bones[bone];p.matrix_basis=p.matrix_basis @ Matrix.Rotation(a,4,axis);bpy.context.view_layer.update()
@@ -109,7 +111,7 @@ for clip,(count,fps,loop) in CLIPS.items():
    bpy.context.view_layer.update()
    # Settle actual evaluated geometry on top of the disc, including carried tool.
    rig.location.z+=.098-lowest(crew);gun.location.z+=.098-lowest(gunparts)
-   prop_ease=min(1,fall*2.2);rammer.location=rammer_start_pos.lerp(Vector((.40,-.65,.16)),prop_ease);rammer.rotation_quaternion=rammer_start_rot.slerp(Matrix.Rotation(pi/2,4,'Y').to_quaternion(),prop_ease)
+   prop_ease=min(1,fall*2.2);rammer.location=rammer_start_pos.lerp(Vector((.60,-.65,.16)),prop_ease);rammer.rotation_quaternion=rammer_start_rot.slerp(Matrix.Rotation(pi/2,4,'Y').to_quaternion(),prop_ease)
    bpy.context.view_layer.update();rammer.location.z+=.098-lowest(descendants(rammer))
    rammer.keyframe_insert(data_path='location',frame=frame);rammer.keyframe_insert(data_path='rotation_quaternion',frame=frame)
   bpy.context.view_layer.update()

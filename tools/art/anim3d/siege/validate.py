@@ -75,10 +75,11 @@ def main():
         delivery.paste(large, (x, 36), large); delivery.paste(small, (x + 96, 302), small)
     delivery.save(REVIEW / 'field-cannon-g-delivery.png')
     (REVIEW / 'field-cannon-validation.json').write_text(json.dumps(dict(contract='PASS' if not findings else 'FAIL', bounds=boxes, findings=findings), indent=2))
+    if findings:
+        for finding in findings:
+            print('FAIL:', finding)
+        raise SystemExit(1)
     print('PASS: v2 rectangles/offsets, all 40 frames, exact alpha, anchor, padding, motion, held death, provenance, quality and byte cap')
-    for finding in findings:
-        print('FAIL:', finding)
-    raise SystemExit(bool(findings))
 
 
 if __name__ == '__main__':

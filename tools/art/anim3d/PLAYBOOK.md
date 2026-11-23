@@ -188,7 +188,7 @@ The carriage stays close to wheel-supported height rather than levering the whol
 source PNGs are identical; the second terminal PNG is reused after asserting all transforms match.
 
 Lead's final host GPU pass, from this branch's checkout: run
-`ROUND=3 tools/art/anim3d/units/field-cannon/gpu.sh`. It audits geometry, renders every stage
+`ROUND=4 tools/art/anim3d/units/field-cannon/gpu.sh`. It audits geometry, renders every stage
 (including plain views) at 512 px / 64 samples, writes 256 px gallery copies, packs and validates the
 saved external master, and encodes the decoded atlas as the driver-requested round MP4. The old
 `siege/gpu-final.sh` delegates to this entry point. The equivalent individual stages are:
@@ -291,6 +291,50 @@ The detail sheet labels its actual source resolution; enlarging a CPU preview is
 tailoring, belt drape and wheel perspective remain visibly different at 256 px. At 64 px the unit is
 recognizable; it is not an exact token match. Histogram agreement (luminance spread 65.52 vs65.54;
 saturation85.46 vs84.66) does not establish that the reference painting's craft has been matched.
+
+### Round-four registration and finish
+
+Inspect the actual round-three GPU comparison, every strip and the decoded MP4 before rebuilding;
+the preserved evidence is `masters/field-cannon/round3-gpu/`. That GPU pass succeeded at Q80,
+183,976 bytes. Do not describe its technical pass as art acceptance.
+
+`register.py` now fits barrel elevation, length and position from two explicit source-axis landmarks,
+keeping the wheels perpendicular to its horizontal heading. It records both axis residuals, shoulders,
+elbow, wrist and wheel centres. The gunner's shoulders fit through the clavicles; a ten percent arm
+segment adjustment carries both native weighted anatomy and the thick sleeves. Child bones disable
+inherited scale to prevent compounded stretching. The foreshortened rammer arm is solved by
+intersecting the elbow/wrist camera rays with actual segment-length spheres. Unreachable projected
+landmarks fail rather than silently stretching the hand. Idle/move still require palm contact <2 mm.
+
+The fuller coat and straps share the same fold-aware surface function, with clearance for real strap
+thickness, so folds cannot poke through the belts. The source masks now exclude dark and coloured
+contamination from ivory and cream pixels from black leather. Native foot/toe bone weights identify
+covered boot surfaces; the boot soles use their anatomical rest orientation. The rammer sponge has
+its own rough porous wool shader, independent of the unprojected bore soot. A wider middle carriage
+brace and a smaller base bevel retain the painting's structural detail. The shared cream palette and
+source projection remain; pre-AgX stone pigment compensation reduces the pink cast before the one
+frozen automatic histogram grade. Existing generated wool fills, AO/curvature bakes, beveled kit,
+stitching and product softboxes are retained. No new external asset or image service is used.
+
+The sleeve radius previously overwrote the scene's wheel-radius metadata; it now has a separate
+name, and the geometry audit checks the rolling radius against both scene and gun metadata.
+`gpu.sh` defaults to round 4 and verifies every stage is GPU64/512 plus matching 256 px copies before
+packing. It remains the single no-argument lead entry point, writes the five-clip round MP4 and never
+creates a PASS marker. Round-four CPU results and the remaining art gaps are recorded in the log.
+
+Round-four CPU delivery: all 40 samples at 256 px / Cycles CPU8, **198,488 bytes at Q85**,
+782 × 977 atlas pixels, 37 unique rectangles, lossless alpha. The full validator and geometry audit
+pass; the decoded MP4 is H.264/yuv420p, 1600 × 348, 240 frames/eight seconds. Six regression tests,
+17 Python files plus the embedded GPU gate, three shell scripts and whitespace checks pass. The
+GPU master gate correctly rejects CPU previews. Current masters/frames are archived in `round4-cpu`;
+round-three GPU512 evidence remains in `round3-gpu`. The released rammer's landing was shifted to
+remove a clipped death frame; bounds failures now suppress the validator's PASS line.
+
+**Still not art-approved; no PASS marker.** Silhouette IoU is .826 versus the prior roughly .811.
+The barrel axis and shoulder/elbow landmarks fit more closely, but face/gaze, tailoring and wheel
+perspective remain visibly different. At 64 px the identity survives; it is not the same token silhouette.
+Projection masks must distinguish objects as well as shared materials: boots and shako share black
+leather, but the hat must retain its painted brass ornament. GPU64/512 review remains pending.
 
 ### Trimmed JSON format, version 2
 

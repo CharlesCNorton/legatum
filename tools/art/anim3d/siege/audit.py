@@ -5,6 +5,7 @@ from mathutils import Vector
 R=Path(os.environ['ANIM_ROOT']);M=R/'masters/field-cannon';records={}
 for clip,count in [('idle',8),('move',8),('attack',10),('hit',4),('death',10)]:
  bpy.ops.wm.open_mainfile(filepath=str(M/'clips'/f'{clip}.blend'));sc=bpy.context.scene;rig=bpy.data.objects['Gunner MPFB game_engine'];gun=bpy.data.objects['Gun travel and recoil'];base=bpy.data.objects['Stationary cream base'];body=bpy.data.objects['MPFB artillery gunner anatomy']
+ assert abs(sc['wheel_radius']-.48)<1e-6 and abs(gun['wheel_radius']-.48)<1e-6,'Wheel radius metadata drifted from geometry'
  assert len(body.data.vertices)>10000 and len(rig.data.bones)==53,'MPFB topology/rig missing'
  assert json.loads(sc['sample_frames'])==list(range(1,count+1));base_matrix=base.matrix_world.copy();samples=[];held_values=None
  for i in range(count):
