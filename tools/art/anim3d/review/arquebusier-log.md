@@ -246,3 +246,4 @@
 - Retargeted CC0 and saved death action (10 output frames).
 - Posted b-plain review (GPU, 512 px).
 - Posted c-textured-lit review (GPU, 512 px).
+- Posted d-rig-poses review (GPU, 512 px).
