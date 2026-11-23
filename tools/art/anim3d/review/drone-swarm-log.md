@@ -39,3 +39,5 @@ c: 1 frames at 256/64 from 512px CYCLES/GPU, 96 samples.
 d: 4 frames at 256/64 from 512px CYCLES/GPU, 96 samples.
 e-idle: 8 frames at 256/64 from 512px CYCLES/GPU, 96 samples.
 e-move: 8 frames at 256/64 from 512px CYCLES/GPU, 96 samples.
+e-attack: 10 frames at 256/64 from 512px CYCLES/GPU, 96 samples.
+e-hit: 4 frames at 256/64 from 512px CYCLES/GPU, 96 samples.
