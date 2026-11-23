@@ -14,3 +14,8 @@
 - Published rest, detail and attack-pose comparisons. Added painting projection to actual base geometry; warm top improved, rough side/rim remains an issue.
 - Death review caught a real defect: retained wide stance lifted the torso, and late frames cropped the head at the left edge. Correcting thigh collapse, fall angle and lateral placement before delivery; no pass based on process success.
 - Independent rig audit found attack wrist-to-shaft distance 18.1 cm: the depth thrust exceeded the rear arm's reach. Replacing it with a shorter diagonal thrust and holding feet fixed against root shifts; rerender affected clips before packing.
+
+# Round 2 — resumed from WIP
+- Opened latest rest split, rig poses and native 256/64 comparison first. At 256 the forward elbow/hand protrude too far right, the leg folds look faceted/muddy, the pike is too thick and pale, and the base has a rough grey edge plus excessive ellipse depth. At 64 the long diagonal pike and buff/red identity survive, but the arm silhouette and broad base make it visibly different. No PASS.
+- Read all shared feedback (1–22), unit log and both advanced eight-round family playbooks. Unit-specific FEEDBACK.md is absent. Loaded six Blender skills: modeling, materials, lighting, cameras, animation and rendering. Preserve prior evidence under masters/barbarian-pikeman/round1-preserved.
+- Current review labels and validation say CPU256, not GPU. Prior round MP4 exists, but no GPU completion is inferred. Prioritize finished-surface frozen projection, reachable elbow pose, camera-only painted pigment, clean physical stone and durable GPU receipts.

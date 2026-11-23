@@ -81,3 +81,8 @@
 - Published e-idle-strip: CYCLES CPU, 256 px, 8 samples; not GPU approval.
 - Built MPFB female, full folded robes, open hood, shawl/fringe, pack/spiral bedroll, staff, straps and sandals; plain master saved.
 - Published b-plain: CYCLES CPU, 256 px, 8 samples; not GPU approval.
+- Applied frozen-camera painting, generated unseen linen/olive/rust/leather, fine bump, warm product lights, physical AO and ten actual AO/curvature maps.
+- Geometry registration now edits complete volumetric garments and freezes static MPFB morphs; removed independent garment/face UV remapping. Finished rigid bevel/subdivision surfaces are projected; original weights and 53-bone rig retained. Camera-only painted pigment avoids double shading while physical BSDF and generated fills remain on other rays.
+- Inspected CPU256 rest/plain views. Face and woven coloration improved; torso penetration corrected with opaque-clothing body mask. Replaced an unsuccessful direct foot-mesh adjustment with ankle-bone posing, preserving foot orientation. A controlled review-boundary stop prevents rendering stale clips during these corrections.
+- Created executable no-argument gpu.sh with GPU-only provenance gate, all stages, 512/256 export, trim-aware packing/validation and an 8-second decoded-atlas MP4. Missing-input preflight and CPU-evidence rejection passed. No actual Metal run is claimed in this sandbox.
+- Published c-textured-lit: CYCLES CPU, 256 px, 8 samples; not GPU approval.

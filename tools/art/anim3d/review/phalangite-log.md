@@ -42,3 +42,14 @@
 - Latest supplied render provenance is CPU; no GPU execution inferred from gallery filenames. Preserved round-1 masters and review evidence before rebuilding. Read all standing feedback (1–22); phalangite-FEEDBACK.md is absent. Loaded six Blender skills and advanced spearman/siege playbooks.
 - Published c review from 256px CPU renders.
 - Published c review from 256px CPU renders.
+- Published b review from 256px CPU renders.
+- Published c review from 256px CPU renders.
+- Published d review from 256px CPU renders.
+- Published e-idle review from 256px CPU renders.
+- Published e-move review from 256px CPU renders.
+- Published e-attack review from 256px CPU renders.
+- Published e-hit review from 256px CPU renders.
+- Round-2 first rest preview: large improvement in visible arm volume, shield brushwork, low helmet and warm cream stone; face/greaves/shoulder contours remain visibly unlike the painting. Added inverse-skinned full-depth fitting, frozen MPFB macro mix, finished rigid surfaces, camera-only painted illumination, physical limestone contact shading, and short volumetric nape hair. Reusing pinned generated bronze/linen fills.
+- Motion inspection caught a second shaft painted on the armour. Added a narrow source-paint exclusion (never an opacity cutout); real sarissa remains continuous geometry. Folded both leg chains before death grounding.
+- GPU missing-input preflight and CPU512 rejection checks passed. Script retains log/status and writes its receipt only after fresh GPU512 masters, all 256 copies, pack/validation and decoded movie. Actual Metal execution is unavailable in this sandbox.
+- Published e-death review from 256px CPU renders.

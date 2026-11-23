@@ -49,3 +49,4 @@ Round 2 fitting: preserved round1 masters; new round2-3d checkpoint. Single froz
 Round 2 GPU handoff: executable no-argument gpu.sh, sequential Cycles GPU512/64 stages, scene/rig audits, source/master/grade provenance gate, pack/validation and trimmed decoded 8s movie. Missing-input preflight correctly fails before Blender and records failed stage. Actual Metal run remains host-only.
 Baked clip move
 Baked clip attack
+Baked clip hit

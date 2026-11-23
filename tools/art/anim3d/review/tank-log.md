@@ -104,3 +104,17 @@
 - Emitted tank-b-plain.png from actual b renders; visual review pending.
 - Emitted tank-c-textured-lit.png from actual c renders; visual review pending.
 - Emitted tank-c-textured-lit.png from actual c renders; visual review pending.
+- Emitted tank-c-textured-lit.png from actual c renders; visual review pending.
+- Emitted tank-b-plain.png from actual b renders; visual review pending.
+- Emitted tank-c-textured-lit.png from actual c renders; visual review pending.
+- Emitted tank-c-details.png from actual details renders; visual review pending.
+- Emitted tank-d-rig-poses.png from actual d renders; visual review pending.
+- Emitted tank-e-idle-strip.png from actual e-idle renders; visual review pending.
+- Emitted tank-e-move-strip.png from actual e-move renders; visual review pending.
+- Emitted tank-e-attack-strip.png from actual e-attack renders; visual review pending.
+- Emitted tank-e-hit-strip.png from actual e-hit renders; visual review pending.
+- Round-3 fitting uses real circular end sprockets and a closed arc-length belt around four support circles per side; fenders and transmission casting follow the new gear. Near/far side source registration is local and approximate, not an exact physical-camera solution. First symmetric trial exposed the far belt above the hull and was rejected; a separate far-side fit corrected it.
+- Materials/lighting skills: source pigment is now 96% camera-only at full confidence under Standard/None; non-camera rays retain physical shading and product lights run at 55% of old power. Existing image-generated olive fill, six real AO/curvature bakes, bevelled hardware, folded canvas/straps and one frozen automatic histogram grade remain. Moving shoes keep physical dusty pigment instead of source wheel fragments.
+- Camera/modeling skills: fitted front/rear axle centres, lowered/compressed stowage, broadened the rear shoulder, retained full-depth parts. Animation skill: closed constant-speed routes, per-side wheel travel/radius, original frame counts and keyed visibility; no zero-scale effects. Rendering skill: serial CPU256/12 previews, refreshed plain/c/detail/pose/clip sheets, source-sized master exports and decoded video checks.
+- GPU handoff strengthened with input and Metal preflights, retained direct transcript, failed-stage status and current master/grade hash checks. Missing-input test exits 1 before Blender and records stage=inputs. Three belt tests pass (length/closure, contact/constant speed, shoe tangent). Trimmed delivery now keeps the exact scaled fractional anchor, lossless reconstructed alpha and one shared decoded terminal-death rectangle.
+- Emitted tank-e-death-strip.png from actual e-death renders; visual review pending.
