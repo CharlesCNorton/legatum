@@ -3,3 +3,11 @@
 - Emitted panzer-c-textured-lit.png from actual c renders; visual review pending.
 - First plain review saved immediately: three-quarter/front/side. Real hull/skirt/track depth established; turret and muzzle too low, skirts too deep versus painting. Raised turret/cupola, elevated gun, shortened skirt drop before projection.
 - Reused vehicle family arc-length track path, projection, actual AO/curvature bakes, grade and trimmed-atlas validation. Adapted all scripts under units/panzer; no shared pipeline mutation.
+- Emitted panzer-c-details.png from actual details renders; visual review pending.
+- Emitted panzer-d-rig-poses.png from actual d renders; visual review pending.
+- Emitted panzer-e-idle-strip.png from actual e-idle renders; visual review pending.
+- Emitted panzer-e-move-strip.png from actual e-move renders; visual review pending.
+- Emitted panzer-e-attack-strip.png from actual e-attack renders; visual review pending.
+- Emitted panzer-e-hit-strip.png from actual e-hit renders; visual review pending.
+- Emitted panzer-e-death-strip.png from actual e-death renders; visual review pending.
+- Emitted panzer-g-feet-check.png from actual g renders; visual review pending.

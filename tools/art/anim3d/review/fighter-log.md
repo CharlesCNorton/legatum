@@ -30,3 +30,4 @@
 - Rendered b: 256px, CYCLES; review published.
 - Rendered c: 256px, CYCLES; review published.
 - Rendered c: 256px, CYCLES; review published.
+- Rendered c: 256px, CYCLES; review published.
