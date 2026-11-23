@@ -630,7 +630,7 @@ export interface TechUnlock {
   upgrade_from?: UnitKind | null;
   predecessor?: BuildingKind | null;
   min_population?: number;
-  /** Core `research::locked_note`: why this faction cannot build the item yet ("Walls for the Mongols from the Medieval era"); said in place of the build line and prices. */
+  /** Core `research::locked_note`: why this faction cannot build the item yet; said in place of the build line and prices. Always null since rules 57 (its one use, the Mongols' Medieval-era Walls, is gone). */
   locked_note?: string | null;
   cities?: { city: CityId; blocker: string | null; build_turns: number | null; yields_after: CityYields; food_surplus_after: number; turns_to_six_after?: number | null; turns_to_eight_at_gate?: number | null; turns_to_eight_after?: number | null }[];
 }
