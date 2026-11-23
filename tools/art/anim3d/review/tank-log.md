@@ -82,3 +82,13 @@
 - Emitted tank-e-attack-strip.png from actual e-attack renders; visual review pending.
 - Emitted tank-e-hit-strip.png from actual e-hit renders; visual review pending.
 - Emitted tank-e-death-strip.png from actual e-death renders; visual review pending.
+- Emitted tank-b-plain.png from actual b renders; visual review pending.
+- Emitted tank-c-textured-lit.png from actual c renders; visual review pending.
+- Emitted tank-c-details.png from actual details renders; visual review pending.
+- Emitted tank-d-rig-poses.png from actual d renders; visual review pending.
+- Emitted tank-e-idle-strip.png from actual e-idle renders; visual review pending.
+- Rejected the raised-sprocket belt experiment: upper-run/fender interference remained and the hit audit measured minimum contact z=0.1527 (required >0.17). Restored the planted original belt and matching end-sprocket positions. Kept road-wheel centre/radius/bogie registration, removed invented spokes/plug meshes, and locally centred source sprocket UVs around the real axles. This preserves coherent machinery but end-sprocket placement still differs from the painting; no parity claim.
+- Emitted tank-e-move-strip.png from actual e-move renders; visual review pending.
+- Emitted tank-e-attack-strip.png from actual e-attack renders; visual review pending.
+- Emitted tank-e-hit-strip.png from actual e-hit renders; visual review pending.
+- Emitted tank-e-death-strip.png from actual e-death renders; visual review pending.
