@@ -1,10 +1,15 @@
 """Frozen camera UVs on articulated geometry; generated backfill on unseen surfaces."""
-import bpy,os,json,math
+import bpy,os,json,math,sys
 from pathlib import Path
 from mathutils import Vector
 from bpy_extras.object_utils import world_to_camera_view
 R=Path(os.environ['ANIM_ROOT']);M=R/'masters/cavalry';A=R/'assets/cavalry'
 bpy.ops.wm.open_mainfile(filepath=str(M/'cavalry-unpainted.blend'));sc=bpy.context.scene;sc.frame_set(0);bpy.context.view_layer.update()
+sys.path.insert(0,str(Path(__file__).parent))
+from refine import refine
+registration=refine(sc)
+(M/'registration.json').write_text(json.dumps(registration,indent=2))
+bpy.ops.wm.save_as_mainfile(filepath=str(M/'cavalry-plain.blend'))
 image=bpy.data.images.load(str(A/'painting-aligned-1024.png'),check_existing=True)
 # No view-facing replacement meshes. Projection weight fades over occluded sides.
 records=[]
@@ -43,14 +48,19 @@ for ob in list(sc.objects):
   l.new(tinted.outputs[0],back.inputs[2])
   uvnode=n.new('ShaderNodeUVMap');uvnode.uv_map=uv.name;tex=n.new('ShaderNodeTexImage');tex.image=bpy.data.images.load(str(A/('projection-coat.png' if ob.name=='Horse' else 'projection-cloth.png' if any(w in ob.name for w in ['jacket','trousers','kepi-crown','saddle-blanket']) else 'projection-skin.png' if ob.name=='Rider MPFB CC0 anatomy' else 'painting-aligned-1024.png')),check_existing=True);tex.extension='CLIP';l.new(uvnode.outputs[0],tex.inputs['Vector'])
   att=n.new('ShaderNodeVertexColor');att.layer_name=attr.name;mult=n.new('ShaderNodeMath');mult.operation='MULTIPLY';l.new(att.outputs[0],mult.inputs[0]);l.new(tex.outputs['Alpha'],mult.inputs[1])
-  fac=n.new('ShaderNodeMath');fac.operation='MULTIPLY';fac.inputs[1].default_value=.90;l.new(mult.outputs[0],fac.inputs[0])
-  mix=n.new('ShaderNodeMixRGB');l.new(fac.outputs[0],mix.inputs[0]);l.new(back.outputs[0],mix.inputs[1]);l.new(tex.outputs[0],mix.inputs[2]);l.new(mix.outputs[0],s.inputs['Base Color'])
-  l.new(mix.outputs[0],s.inputs['Emission Color']);s.inputs['Emission Strength'].default_value=.12
+  fac=n.new('ShaderNodeMath');fac.operation='MULTIPLY';fac.inputs[1].default_value=.96;l.new(mult.outputs[0],fac.inputs[0])
+  # Painted light is camera-only; physical rays retain real material/shadows.
+  l.new(back.outputs[0],s.inputs['Base Color'])
+  pigment=n.new('ShaderNodeEmission');pigment.name='Camera-only painted pigment';l.new(tex.outputs[0],pigment.inputs['Color'])
+  ray=n.new('ShaderNodeLightPath');camera_weight=n.new('ShaderNodeMath');camera_weight.operation='MULTIPLY';l.new(ray.outputs['Is Camera Ray'],camera_weight.inputs[0]);l.new(fac.outputs[0],camera_weight.inputs[1])
+  blend=n.new('ShaderNodeMixShader');l.new(camera_weight.outputs[0],blend.inputs[0]);l.new(s.outputs[0],blend.inputs[1]);l.new(pigment.outputs[0],blend.inputs[2]);l.new(blend.outputs[0],n.get('Material Output').inputs['Surface'])
  records.append({'name':ob.name,'vertices':len(ob.data.vertices),'fixed_uv':True})
 stone=bpy.data.materials['Cream limestone'];s=stone.node_tree.nodes.get('Principled BSDF')
 for link in list(s.inputs['Base Color'].links):stone.node_tree.links.remove(link)
 s.inputs['Base Color'].default_value=(.815,.624,.352,1)
-sc.view_settings.look='AgX - Medium High Contrast';sc.view_settings.exposure=.1
-bpy.data.objects['Cool fill'].data.energy=150
+sc.view_settings.view_transform='Standard';sc.view_settings.look='None';sc.view_settings.exposure=0
+for name,energy in [('Warm key',340),('Cool fill',68),('Cool rim',110)]:bpy.data.objects[name].data.energy=energy
+bpy.data.objects['Warm key'].data.color=(1,.95,.86)
+s.inputs['Roughness'].default_value=.86
 (M/'projection.json').write_text(json.dumps({'objects':records,'cream_srgb':'#E9CFA0','method':'rest camera projection on genuine meshes; generated backfill; no alpha cutout geometry','limitation':'Round-one alignment and uncovered seams require visual review.'},indent=2))
 bpy.ops.file.pack_all();bpy.ops.wm.save_as_mainfile(filepath=str(M/'cavalry.blend'))
