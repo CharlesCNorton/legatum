@@ -160,6 +160,7 @@ Run sequentially from the repository root:
 ```sh
 UNIT=composite-archer tools/art/anim3d/render.sh prepare
 UNIT=composite-archer tools/art/anim3d/render.sh build
+UNIT=composite-archer tools/art/anim3d/render.sh refine
 UNIT=composite-archer tools/art/anim3d/render.sh paint
 UNIT=composite-archer tools/art/anim3d/render.sh round
 UNIT=composite-archer tools/art/anim3d/render.sh audit
@@ -191,7 +192,7 @@ clips. Keep the 512px raw/graded frames and 256px gallery set outside git.
 
 The candidate `app/src/assets/units/anim/composite-archer.{webp,json}` retains the
 five clip rows in idle/move/attack/hit/death order and lengths **8/8/10/4/10**.
-`frame` is `{w:160,h:160,ax:79,ay:138}` in the common untrimmed frame coordinates.
+`frame` is `{w:160,h:160,ax:79.375,ay:138.125}` in the common untrimmed frame coordinates.
 `clips[name]` retains `{row,frames,fps,loop}` with numeric frame counts. The new
 `frames[name][index]` gives `{x,y,w,h,ox,oy}`: packed atlas rectangle plus its top-left
 offset inside the original 160px square. Draw the crop at `(ox-ax, oy-ay)` relative
@@ -201,7 +202,7 @@ must honor the rectangles/offsets for version 2; do not interpret this as the ol
 fixed grid. Runtime support is a separate integration task, not silently supplied
 by this art-only candidate.
 
-All 40 frames remain. Only alpha is quantized (16 levels). WebP quality searches
+All 40 frames remain. Alpha remains lossless 8-bit after premultiplied bicubic reduction. WebP quality searches
 90/85/80/75 and must stay at least 75 and at most 200,000 bytes; failure is reported,
 never hidden by dropping frames or lowering quality. The pack report binds raw
 frames, clip/master and grade hashes. Validation checks transparent bounds, original
@@ -209,3 +210,61 @@ frames, clip/master and grade hashes. Validation checks transparent bounds, orig
 The geometry audit checks MPFB topology, finite/nonzero scales, stationary base,
 source hashes and held terminal bones. It is not a full body/equipment collision
 solver or art approval.
+
+### Round 2: geometry registration and complete GPU delivery
+
+`refine.py` starts from the unchanged `plain.blend` checkpoint. It freezes current
+MPFB morphs, fits actual full-depth anatomy and kit in the rest camera, inverts
+weighted bone transforms to preserve articulation, and finishes rigid modifiers
+before painting. The original body vertex count and 53-bone skeleton remain.
+The tunic skirt and its real stitched hem share the same additional flare.
+The painting now uses one frozen camera mapping without the prior local UV warp.
+Occlusion and head-region masks prevent the drawing hand remaining painted on the
+cheek after release. Copy evaluated vertex data before ray queries: refreshing the
+dependency graph while holding an evaluated vertex reference invalidates it.
+
+Camera-only pigment preserves the painting's illumination, with physical materials
+on non-camera rays and existing generated fills on unseen surfaces. Standard/None
+avoids applying AgX compression to that pigment a second time; the existing product
+lights are reduced accordingly. The physical stone retains contact shadows and a
+calibrated camera pigment for its cream top and warmer rim. The single automatic
+rest histogram grade stays frozen across all clips. This is not an exact camera
+match or art approval; the base ellipse and contact still need visual scrutiny.
+
+The complete no-argument host entry point is
+`ROUND=2 tools/art/anim3d/units/composite-archer/gpu.sh` (the driver supplies ROUND).
+It retains its own transcript, rebuilds all clips from the saved current master,
+renders plain/rest/details/poses/all clips at Cycles GPU / 64 samples / 512 px, exports native 512 px
+and gallery 256 px images, audits geometry, packs and validates, and encodes all five
+decoded clips at 2x on cream for eight seconds. Missing inputs and CPU provenance
+are rejected; a receipt is written only after the GPU master and video checks pass.
+The MP4 is H.264/yuv420p, 1600x348, 240 frames. The script never writes art PASS.
+
+Native 256 px CPU previews no longer manufacture 512 px masters. Trim anchors retain the
+fractional scaling of 127/221, and duplicate terminal death images share a rectangle
+so lossy encoding cannot introduce hold flicker. Validation compares reconstructed
+alpha byte-for-byte against the source, verifies current clip/master/grade
+hashes and requires an identical decoded death hold. Original 40 frame counts,
+Q75 floor and 200,000-byte cap remain. Round1 evidence is in `round1-backup`.
+
+Low anatomical/boot vertices are seated along their camera rays onto the stone,
+retaining the registered silhouette. After authored leg poses, foot bones receive
+small corrections from the evaluated sole minimum inside the disc footprint;
+airborne feet retain their lift. The audit independently measures boot clearance
+against the .085m stone top with a .012m penetration tolerance. It still does not
+prove full cloth/body collision freedom or anatomical realism. The shortened
+attack recovery avoids the deepest sleeve deformation; revealed jaw surfaces use
+a warm, AO-shaded camera pigment instead of retaining the painted drawing hand.
+
+Apply the full floor constraint during death rather than blending it by fall
+progress: a partial constraint left an early-frame boot inside the stone. Keep
+the original contact tolerance and fix the motion when that audit fails.
+
+Round-2 CPU delivery: all 40 samples at 512px / Cycles CPU8, with 256px gallery
+copies; **178,220 bytes at Q80**, lossless 8-bit alpha and premultiplied bicubic
+reduction. Q85 was 201,936 bytes. Atlas reconstruction/alpha/hold validation,
+geometry/contact audit, Python/Bash syntax and working-tree hygiene pass. MP4:
+H.264/yuv420p, 1600x348, 240 frames/eight seconds. CPU evidence is archived in
+`round2-cpu`. Silhouette IoU improves from .7370 to .7934, but face/hand anatomy,
+base perspective and motion-revealed face/boot surfaces remain visibly different.
+No art PASS; the actual GPU512/64 host render and visual acceptance remain pending.

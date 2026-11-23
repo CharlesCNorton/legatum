@@ -7,6 +7,19 @@ R=Path(os.environ['ANIM_ROOT']);M=R/'masters/composite-archer';CLIPS={'idle':(8,
 def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
 def turn(rig,name,axis,angle):
  p=rig.pose.bones[name];mat=p.matrix.copy();pos=mat.translation.copy();mat=Matrix.Rotation(angle,4,axis) @ mat;mat.translation=pos;p.matrix=mat;bpy.context.view_layer.update()
+def ground_feet(rig):
+ boots=bpy.data.objects['GEO-soft leather boots'];base=bpy.data.objects['GEO-stationary cream base']
+ ev=boots.evaluated_get(bpy.context.evaluated_depsgraph_get());me=ev.to_mesh();minimum={}
+ for side in ['l','r']:
+  ids={g.index for g in boots.vertex_groups if g.name.endswith('_'+side) and g.name.startswith(('foot','toe','ball'))}
+  points=[ev.matrix_world @ v.co for v in me.vertices if sum(g.weight for g in v.groups if g.group in ids)>.5]
+  inside=[p.z for p in points if (p.x-base.location.x)**2+(p.y-base.location.y)**2<.54**2]
+  if inside:minimum[side]=min(inside)
+ ev.to_mesh_clear()
+ for side,z in minimum.items():
+  if z<.087:
+   p=rig.pose.bones['foot_'+side];mat=p.matrix.copy();mat.translation.z+=.087-z;p.matrix=mat
+ bpy.context.view_layer.update()
 def animate(clip):
  bpy.ops.wm.open_mainfile(filepath=str(M/'composite-archer.blend'));sc=bpy.context.scene;rig=bpy.data.objects['RIG-composite-archer'];g.rig=rig
  neutral=json.loads(rig['neutral_pose']);base=Vector(rig['neutral_location']);bow=bpy.data.objects['CTRL-bow'];bowrest=bow.matrix_basis.copy();arrow=bpy.data.objects['CTRL-arrow'];arrowrest=arrow.matrix_world.copy();string=bpy.data.objects['GEO-bowstring'];original=[v.co.copy() for v in string.data.vertices]
@@ -52,9 +65,9 @@ def animate(clip):
    g.limb('upperarm_l','lowerarm_l',(.59,-.18,1.40),(.40,-.28,1.35));g.limb('upperarm_r','lowerarm_r',(.10,-.30,1.40),(-.40,-.24,1.37));turn(rig,'spine_03','Z',.035*math.sin(phase))
   elif clip=='attack':
    # Archery follow-through: drawing hand recoils BACK from the cheek.
-   # It never travels forward with the string. Recovery reaches toward the quiver.
-   hx=[-.035,-.055,-.07,-.07,-.14,-.13,-.26,-.22,-.06,-.035][i]
-   hz=[1.60,1.60,1.60,1.60,1.59,1.50,1.18,1.30,1.50,1.60][i]
+   # It never travels forward with the string. Recovery settles the drawing hand beside the cheek.
+   hx=[-.035,-.055,-.07,-.07,-.14,-.16,-.15,-.12,-.06,-.035][i]
+   hz=[1.60,1.60,1.60,1.60,1.59,1.56,1.53,1.54,1.57,1.60][i]
    g.limb('upperarm_r','lowerarm_r',(hx,-.30,hz),(-.55,-.26,1.55));g.aim_bone('hand_r',(.10,0,0));turn(rig,'spine_03','Y',-.025*math.sin(t*math.pi))
    if 4<=i<=7:
     for child in arrow.children:child.hide_render=True
@@ -85,10 +98,11 @@ def animate(clip):
     if o.parent==arrow:continue
     if o.name.startswith(('GEO-MPFB anatomical','GEO-patterned trousers','GEO-soft leather boots','GEO-tunic')):
      ev=o.evaluated_get(bpy.context.evaluated_depsgraph_get());me=ev.to_mesh();zs.extend((ev.matrix_world @ v.co).z for v in me.vertices);ev.to_mesh_clear()
-   rig.location.z+=max(0,.094-min(zs))*death
+   if death>0:rig.location.z+=max(0,.094-min(zs))
   bpy.context.view_layer.update()
+  if clip!='death' or death==0:ground_feet(rig)
   # String middle follows the draw hand until release, then goes to bow center.
-  tip0,tip1=[bow.matrix_world @ p for p in localtips];nock=rig.matrix_world @ rig.pose.bones['hand_r'].head+Vector((.04,-.015,.026))
+  tip0,tip1=[bow.matrix_world @ p for p in localtips];nock=(rig.matrix_world @ rig.pose.bones['hand_r'].matrix) @ Vector(rig['draw_local']) if 'draw_local' in rig else rig.matrix_world @ rig.pose.bones['hand_r'].head+Vector((.04,-.015,.026))
   if clip=='death':nock=nock.lerp((tip0+tip1)*.5,death)
   if clip=='attack' and 4<=i<=8:
    nock=nock.lerp((tip0+tip1)*.5,1 if i<=7 else .3)

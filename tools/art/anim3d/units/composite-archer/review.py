@@ -12,6 +12,15 @@ def sheet(stage, images, labels=None):
   canvas.paste(im,(i*256,24),im);d.text((i*256+7,6),label,fill=(240,220,190));tiny=im.resize((64,64),Image.Resampling.LANCZOS);canvas.paste(tiny,(i*256+96,290),tiny)
  canvas.save(OUT/f'composite-archer-{stage}.png')
  return canvas
+def plain_views_review():
+ paths=[M/f'b-{name}.png' for name in ['plain','front','side']]
+ for i,path in enumerate(paths):
+  im=Image.open(path).convert('RGBA')
+  for size in [512,256]:
+   if size<=im.width:
+    folder=M/str(size)/'b-plain';folder.mkdir(parents=True,exist_ok=True)
+    im.resize((size,size),Image.Resampling.LANCZOS).save(folder/f'{i:02d}.png')
+ sheet('b-plain',paths,['Plain three-quarter','Plain front','Plain side'])
 if __name__=='__main__':
  import sys
  stage=sys.argv[1];sheet(stage,[M/f'{stage}.png'])

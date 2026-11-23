@@ -12,7 +12,7 @@ case "$stage" in
   c|c-details|detail) export STAGE=c; script=render ;;
   d) export STAGE=e-attack; script=render ;;
   e-idle|e-move|e-attack|e-hit|e-death) export STAGE="$stage"; script=render ;;
-  build|paint|animate|round|final|audit|refresh|plain_views) script="$stage" ;;
+  build|refine|paint|animate|round|final|audit|refresh|plain_views) script="$stage" ;;
   *) echo "Unknown composite archer stage: $stage" >&2; exit 2 ;;
 esac
 args=(-b --disable-autoexec --factory-startup --python-exit-code 1)

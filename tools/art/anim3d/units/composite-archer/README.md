@@ -1,4 +1,4 @@
-# Composite archer — 3D round 1 candidate
+# Composite archer — 3D round 2 candidate
 
 True MPFB anatomy and 53-bone rig, original fitted costume, recurved composite bow,
 hand-following string, arrow visibility and five clips. This is an art candidate;
@@ -30,6 +30,7 @@ Run at the repository root, one heavy process at a time:
 ```sh
 UNIT=composite-archer tools/art/anim3d/render.sh prepare
 UNIT=composite-archer tools/art/anim3d/render.sh build
+UNIT=composite-archer tools/art/anim3d/render.sh refine
 UNIT=composite-archer tools/art/anim3d/render.sh paint
 UNIT=composite-archer tools/art/anim3d/render.sh round
 UNIT=composite-archer tools/art/anim3d/render.sh audit
@@ -45,11 +46,11 @@ UNIT=composite-archer tools/art/anim3d/render.sh pack
 For the lead's GPU rerender of existing masters:
 
 ```sh
-UNIT=composite-archer RENDER_ENGINE=CYCLES CYCLES_DEVICE=GPU \
-  SAMPLES=64 RESOLUTION=512 tools/art/anim3d/render.sh final
+ROUND=2 tools/art/anim3d/units/composite-archer/gpu.sh
 ```
 
-`final` renders the rest pose first, refreshes all clips, audits geometry and repacks.
+`gpu.sh` rebuilds clip keys, renders plain views and rest, renders every clip,
+audits geometry, packs/validates, verifies GPU provenance and encodes the round MP4.
 It fails if Metal is unavailable. Plain `blender -b --disable-autoexec` on PATH is the
 only Blender launch; the shared gate owns concurrency and CPU limits.
 
@@ -100,3 +101,51 @@ Final working-tree hygiene line checks (21 text files) and public-claims checks
 passed using the existing gate functions on the actual files. Commit creation was
 blocked by sandbox access to `.git/worktrees/lane-9/index.lock`; the runner must
 commit these changes. The browser-dependent art gate remains outstanding.
+
+## Round 2 method and handoff
+
+The actual mesh is now fitted to source landmarks through inverse skin transforms;
+the painting is projected through one frozen camera without local UV warping.
+Rigid kit is finished before projection, and occluded/head surfaces are masked to
+avoid retaining the source drawing hand after release. Camera-only painted pigment
+preserves source illumination while backs and non-camera rays retain the existing
+physical materials and generated fills. The cream rim has a separate calibrated
+pigment contribution with physical contact shadows retained.
+
+`gpu.sh` is executable and accepts no arguments. It defaults to round 2, accepts the
+driver's ROUND, and retains a transcript under `ANIM_ROOT`. Its receipt requires
+GPU64/512 provenance, matching master/frame/grade hashes, valid trimmed delivery,
+and an eight-second H.264/yuv420p MP4 of all five decoded clips. Missing-input
+preflight and CPU-master rejection are checked locally; actual Metal rendering
+must run on the lead host. A technical receipt is never an art PASS marker.
+
+The trimmed anchor is now the exact scaled `(79.375, 138.125)`. The terminal death
+hold reuses a single rectangle, and validation compares decoded alpha byte-for-byte
+with source alpha at every offset. Native 256px previews cannot manufacture 512px
+masters. All 40 samples and the Q75/200,000-byte limits remain unchanged.
+
+## Round-2 verification and verdict
+
+CPU Cycles, eight samples: all 40 native 512px frames and 40 gallery 256px frames.
+The 160px trimmed atlas is **178,220 bytes at Q80**, with lossless 8-bit alpha and
+premultiplied bicubic reduction. Q85 was 201,936 bytes and exceeded the cap. Full
+atlas validation and the geometry/contact audit pass. Worst measured boot/stone
+penetration is 2.83mm within the unchanged 12mm tolerance. The MP4 is verified
+H.264/yuv420p, 1600x348, 240 frames/eight seconds, and decoded contact frames were
+visually inspected. CPU evidence is retained under `round2-cpu`.
+
+The sleeve silhouette, painted detail and cream pigment improve the rest image;
+alpha silhouette overlap increases from .7370 to .7934. At 256px the face, hand/bow
+contact, skirt and base perspective remain distinguishable from the painting.
+At 64px the correct red/gold archer identity reads more strongly, but does not
+match the source silhouette. Move/death expose simpler face/boot shapes and paint
+seams; the five clips are not artistically cleared. **No PASS marker.** The lead
+must run `gpu.sh` and inspect the GPU output before any final acceptance.
+
+Final local checks: 17 Python files parse, both shell scripts pass `bash -n`,
+21 text files pass working-tree hygiene, public-claims and `git diff --check` pass.
+The browser art-set check is blocked: shared Playwright resolves, but Chromium's
+MachPortRendezvous bootstrap is denied by the sandbox. Git add/commit is also
+blocked creating this worktree's `index.lock`; the runner must commit these files.
+No push or PR was attempted. The commit trailer is
+`Co-Authored-By: gpt-6-astra (Codex) <noreply@openai.com>`.

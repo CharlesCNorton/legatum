@@ -4,7 +4,7 @@ from pathlib import Path
 from mathutils import Vector
 from bpy_extras.object_utils import world_to_camera_view
 R=Path(os.environ['ANIM_ROOT']);M=R/'masters/composite-archer';A=R/'assets/composite-archer'
-bpy.ops.wm.open_mainfile(filepath=str(M/'plain.blend'));sc=bpy.context.scene
+bpy.ops.wm.open_mainfile(filepath=str(M/'registered.blend'));sc=bpy.context.scene
 # Original fill textures on unseen surfaces, supplemented by physical surface grain.
 fills={k:bpy.data.images.load(str(A/f'fill-{k}.png')) for k in ['red','trousers','leather','gold']}
 for mat in list(bpy.data.materials):
@@ -18,8 +18,22 @@ for mat in list(bpy.data.materials):
   tex=n.new('ShaderNodeTexImage');tex.image=fills[kind];tex.projection='BOX';tex.projection_blend=.35;l.new(texcoord.outputs['Generated'],tex.inputs['Vector']);l.new(tex.outputs['Color'],s.inputs['Base Color'])
  if kind in ('red','trousers'):s.inputs['Sheen Weight'].default_value=.25
  if 'limestone' in mat.name:
-  s.inputs['Base Color'].default_value=(.82,.61,.32,1);s.inputs['Emission Color'].default_value=(.82,.61,.32,1);s.inputs['Emission Strength'].default_value=.12
+  s.inputs['Base Color'].default_value=(.82,.61,.32,1)
+  # Calibrated cream pigment, with live physical contact shadows retained.
+  out=n.get('Material Output');geo=n.new('ShaderNodeNewGeometry');separate=n.new('ShaderNodeSeparateXYZ');l.new(geo.outputs['Normal'],separate.inputs[0])
+  ramp=n.new('ShaderNodeValToRGB');ramp.color_ramp.elements[0].color=(.92,.65,.32,1);ramp.color_ramp.elements[1].color=(.93,.78,.50,1);l.new(separate.outputs['Z'],ramp.inputs[0])
+  pigment=n.new('ShaderNodeEmission');l.new(ramp.outputs['Color'],pigment.inputs['Color'])
+  rays=n.new('ShaderNodeLightPath');factor=n.new('ShaderNodeMath');factor.operation='MULTIPLY';factor.inputs[1].default_value=.65;l.new(rays.outputs['Is Camera Ray'],factor.inputs[0])
+  shader=n.new('ShaderNodeMixShader');l.new(factor.outputs[0],shader.inputs[0]);l.new(s.outputs[0],shader.inputs[1]);l.new(pigment.outputs[0],shader.inputs[2]);l.new(shader.outputs[0],out.inputs['Surface'])
  if 'skin' in mat.name:s.inputs['Subsurface Weight'].default_value=.06
+ if 'skin' in mat.name or 'beard' in mat.name:
+  # Painted fill for the face revealed when the drawing hand leaves the cheek.
+  # Live AO retains recesses without turning the unprojected jaw into a dark block.
+  out=n.get('Material Output');ao=n.new('ShaderNodeAmbientOcclusion');ao.inputs['Distance'].default_value=.09
+  ao.inputs['Color'].default_value=(.48,.245,.105,1) if 'skin' in mat.name else (.085,.040,.018,1)
+  pigment=n.new('ShaderNodeEmission');l.new(ao.outputs['Color'],pigment.inputs['Color'])
+  rays=n.new('ShaderNodeLightPath');factor=n.new('ShaderNodeMath');factor.operation='MULTIPLY';factor.inputs[1].default_value=.65;l.new(rays.outputs['Is Camera Ray'],factor.inputs[0])
+  shader=n.new('ShaderNodeMixShader');l.new(factor.outputs[0],shader.inputs[0]);l.new(s.outputs[0],shader.inputs[1]);l.new(pigment.outputs[0],shader.inputs[2]);l.new(shader.outputs[0],out.inputs['Surface'])
 # Actual small UV bakes, with inner Solidify faces excluded to prevent UV contamination.
 textures=M/'textures';textures.mkdir(exist_ok=True)
 bakes=[]
@@ -49,30 +63,33 @@ for name in ['GEO-tunic fitted chest','GEO-patterned trousers','GEO-red embroide
  l.new(maps['ao'].outputs['Color'],mult.inputs[2]);l.new(mult.outputs[0],s.inputs['Base Color'])
  rough=n.new('ShaderNodeMapRange');rough.inputs['From Min'].default_value=.35;rough.inputs['From Max'].default_value=.65;rough.inputs['To Min'].default_value=.9;rough.inputs['To Max'].default_value=.64;l.new(maps['curvature'].outputs['Color'],rough.inputs['Value']);l.new(rough.outputs[0],s.inputs['Roughness'])
  bakes.append(name)
-# Per-region landmark registration avoids painting skin onto the tunic or quiver.
-# Coordinates are native 256 image pixels. Geometry remains untouched.
-landmarks=[((109,51),(100,50)),((112,69),(106,65)),((109,126),(105,125)),((74,88),(56,83)),((113,83),(105,76)),((190,74),(192,82)),((160,91),(159,87)),((145,163),(145,160)),((165,216),(170,205)),((77,200),(67,190)),((75,147),(78,144))]
-def warp(x,y):
- w=[1/(45+(x-a[0])**2+(y-a[1])**2)**2 for a,b in landmarks];s=sum(w)
- return x+sum(k*(b[0]-a[0]) for k,(a,b) in zip(w,landmarks))/s,y+sum(k*(b[1]-a[1]) for k,(a,b) in zip(w,landmarks))/s
+# One exact frozen camera projection; pose registration lives in refine.py.
 painting=bpy.data.images.load(str(A/'painting-aligned.png'));records=[]
 # Project visible clothing/anatomy, never alpha-cut geometry.
 for o in list(sc.objects):
- if o.type!='MESH' or any(t in o.name for t in ['base','arrow','feather','MPFB eyes','bowstring','belt mount','stitch']):continue
+ if o.type!='MESH' or any(t in o.name for t in ['base','arrow','feather','MPFB eyes','bowstring','belt mount','stitch','recurved','horn backing','sinew']):continue
  if len(o.data.vertices)<20:continue
  states=[(m,m.show_viewport) for m in o.modifiers]
  for mod,_ in states:
   if mod.type!='ARMATURE':mod.show_viewport=False
- bpy.context.view_layer.update();ev=o.evaluated_get(bpy.context.evaluated_depsgraph_get());me=ev.to_mesh()
+ bpy.context.view_layer.update();deps=bpy.context.evaluated_depsgraph_get();ev=o.evaluated_get(deps);me=ev.to_mesh()
  assert len(me.vertices)==len(o.data.vertices)
  uv=o.data.uv_layers.get('Painting projection') or o.data.uv_layers.new(name='Painting projection')
  attr=o.data.color_attributes.new(name='Painting confidence',type='FLOAT_COLOR',domain='CORNER')
  coords=[];weights=[]
- for v in me.vertices:
-  world=ev.matrix_world @ v.co;q=world_to_camera_view(sc,sc.camera,world);x,y=warp(q.x*256,(1-q.y)*256)
-  coords.append((x/256,1-y/256));normal=(ev.matrix_world.to_3x3().inverted().transposed() @ v.normal).normalized();direction=(sc.camera.location-world).normalized()
+ samples=[(v.index,v.co.copy(),v.normal.copy()) for v in me.vertices]
+ for vi,co,vnormal in samples:
+  world=ev.matrix_world @ co;q=world_to_camera_view(sc,sc.camera,world);x,y=q.x*256,(1-q.y)*256
+  coords.append((x/256,1-y/256));normal=(ev.matrix_world.to_3x3().inverted().transposed() @ vnormal).normalized();direction=(sc.camera.location-world).normalized()
   # Back-facing surfaces transition to generated PBR fill; this fixed mask deforms with mesh.
-  weights.append(max(0,min(1,(normal.dot(direction)-.05)/.55)))
+  confidence=max(0,min(1,(normal.dot(direction)-.05)/.55))
+  # Occluded surfaces must not retain the source hand when that hand moves away.
+  direction=sc.camera.matrix_world.to_quaternion() @ Vector((0,0,1))
+  hit=sc.ray_cast(deps,world+direction*.004,direction,distance=10)[0]
+  if hit:confidence=0
+  head_weight=sum(g.weight for g in o.data.vertices[vi].groups if o.vertex_groups[g.group].name in ('head','neck_01'))
+  if (head_weight>.5 or 'beard' in o.name) and 80<x<117 and 71<y<88:confidence=0
+  weights.append(confidence)
  for i,loop in enumerate(o.data.loops):uv.data[i].uv=coords[loop.vertex_index];attr.data[i].color=(weights[loop.vertex_index],)*3+(1,)
  ev.to_mesh_clear()
  for mod,state in states:mod.show_viewport=state
@@ -82,15 +99,19 @@ for o in list(sc.objects):
   if not s:continue
   tc=n.new('ShaderNodeUVMap');tc.uv_map=uv.name;t=n.new('ShaderNodeTexImage');t.image=painting;t.extension='CLIP';l.new(tc.outputs[0],t.inputs['Vector'])
   at=n.new('ShaderNodeVertexColor');at.layer_name=attr.name;factor=n.new('ShaderNodeMath');factor.operation='MULTIPLY';l.new(at.outputs[0],factor.inputs[0]);l.new(t.outputs['Alpha'],factor.inputs[1])
-  amount=n.new('ShaderNodeMath');amount.operation='MULTIPLY';amount.inputs[1].default_value=.90;l.new(factor.outputs[0],amount.inputs[0])
+  amount=n.new('ShaderNodeMath');amount.operation='MULTIPLY';amount.inputs[1].default_value=.98;l.new(factor.outputs[0],amount.inputs[0])
   mix=n.new('ShaderNodeMixRGB');base=s.inputs['Base Color'].links[0].from_socket if s.inputs['Base Color'].is_linked else None
   if base:l.new(base,mix.inputs[1])
   else:mix.inputs[1].default_value=s.inputs['Base Color'].default_value
   l.new(amount.outputs[0],mix.inputs[0]);l.new(t.outputs['Color'],mix.inputs[2]);l.new(mix.outputs[0],s.inputs['Base Color'])
-  # Retain original painted recesses without flattening geometry into an unlit card.
-  l.new(mix.outputs[0],s.inputs['Emission Color']);s.inputs['Emission Strength'].default_value=.22
+  # Preserve the source illumination only for camera rays; it is not a light source.
+  out=n.get('Material Output');physical=out.inputs['Surface'].links[0].from_socket
+  pigment=n.new('ShaderNodeEmission');l.new(t.outputs['Color'],pigment.inputs['Color'])
+  rays=n.new('ShaderNodeLightPath');camera=n.new('ShaderNodeMath');camera.operation='MULTIPLY'
+  l.new(rays.outputs['Is Camera Ray'],camera.inputs[0]);l.new(amount.outputs[0],camera.inputs[1])
+  shader=n.new('ShaderNodeMixShader');l.new(camera.outputs[0],shader.inputs[0]);l.new(physical,shader.inputs[1]);l.new(pigment.outputs[0],shader.inputs[2]);l.new(shader.outputs[0],out.inputs['Surface'])
  records.append({'mesh':o.name,'vertices':len(o.data.vertices)})
-sc['projection']='Frozen rest-camera UV with landmark correction; real MPFB/kit geometry, generated unseen fills'
+sc['projection']='Frozen rest-camera UV after physical geometry registration; real MPFB/kit geometry, generated unseen fills'
 sc['cream_target']='#E9CFA0';bpy.ops.file.pack_all();bpy.ops.wm.save_as_mainfile(filepath=str(M/'composite-archer.blend'))
-(M/'projection.json').write_text(json.dumps({'landmarks':landmarks,'projected_meshes':records,'bakes':bakes,'limitation':'Rest registration is approximate; lighting remains partially painted into colour.'},indent=2))
+(M/'projection.json').write_text(json.dumps({'registration':'registration.json','projected_meshes':records,'bakes':bakes,'limitation':'Rest registration is approximate; lighting remains partially painted into colour.'},indent=2))
 print('PAINT_READY')
