@@ -168,3 +168,7 @@
 - Posted e-attack review (CPU, 256 px).
 - Posted e-hit review (CPU, 256 px).
 - Posted e-death review (CPU, 256 px).
+- Finished-surface camera projection with camera-only pigment; generated hidden fills retained.
+- Posted c-textured-lit review (CPU, 256 px).
+- Retargeted CC0 and saved move action (8 output frames).
+- Posted e-move review (CPU, 256 px).
