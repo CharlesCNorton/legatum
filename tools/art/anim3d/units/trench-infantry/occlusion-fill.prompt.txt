@@ -1,0 +1,19 @@
+Built-in ImageGen precise-object-edit, 2026-11-23. Input: registered original
+trench-infantry projection.png. Output: occlusion-fill-source.png (external).
+
+Create a clean hidden-surface texture plate from this exact painted miniature.
+Keep the same square canvas, camera, proportions, framing, original face,
+helmet, uniform, pack and background transparency. Remove only the rifle and
+bayonet, both hands and forearms in front of the torso, and both boots/legs
+below the coat. Inpaint the occluded blue-grey greatcoat and leather shoulder
+straps beneath the hands/forearms, matching its rich warm grey woven painted
+fabric with shaded folds. Below the coat remove the legs completely, leaving
+transparent space. Restore the complete uninterrupted warm cream stone disc
+under the removed boots and rifle butt; no boot shadows or foot marks. Keep
+the original stone disc ellipse and position exactly, same edge and grain.
+This is a texture underlayer for articulated 3D meshes, not new character art.
+No text, no insignia.
+
+Only feathered occlusion regions supply garment pigment; the original painted
+figure remains the main source. The stone is independently registered and
+retains the original lower rim; neither output supplies geometry or alpha.

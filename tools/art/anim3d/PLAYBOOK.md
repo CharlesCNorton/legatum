@@ -109,6 +109,35 @@ Run each heavy stage sequentially. Other unit lanes share the same lock; if one 
 
 ## Infantry / trench infantry chapter
 
+Driver round 2 preserves incoming GPU evidence under
+`masters/trench-infantry/driver-r1-gpu/`. Full-depth contour fitting happens
+before projection: freeze visible topology, recalculate outward normals, then
+inverse-transform camera-plane offsets through the actual skin matrices.
+Continuous weighted sleeve rings eliminate disconnected elbow tubes. Fit both
+the visible garment and covered anatomy; otherwise skin protrudes during motion.
+The helmet's asymmetrical projected brim, rolled blanket seams, real buckles and
+boot widths are geometry, not a transparent silhouette mask.
+
+Orthographic projection visibility rays must be parallel to the camera axis;
+aiming them at the camera location incorrectly rejects visible edge vertices.
+Use a generated occlusion plate for the solid stone top and cloth beneath moving
+hands/rifles. Keep the original rim and unaffected pigment, register generated
+parts independently, and calculate fresh stone contact AO each frame. Never
+project the painting's boots onto the stationary disc. Generated coat brushwork
+also supplies the hidden surfaces, with live lighting and cavity shading.
+
+Reset sparse glTF source pose channels before every source sample. For a fall,
+calibrate limbs from anatomical reference and blend out of carrying stance;
+retaining the guard's bent knee/elbow offsets leaves raised terminal limbs.
+Do not rotate feet after retargeting. Audit hit recovery, full-cycle forward
+direction and planted intervals. A fixed-bayonet raise must tilt before lifting
+to avoid clipping the transition samples at the top of the atlas cell.
+
+The GPU script tees its internal log into the driver log, creates its output
+directory before redirecting, invalidates its current-round receipt, and checks
+current blend hashes and sample settings before issuing a completion receipt.
+Technical completion still does not write PASS or constitute art approval.
+
 `units/trench-infantry/` is an isolated true-3D MPFB pipeline. The grey-blue
 weighted greatcoat has real folds and thickness; helmet/brim/crest, leather
 webbing, cartridge pouches, backpack, rolled blanket, puttees, boots and upright

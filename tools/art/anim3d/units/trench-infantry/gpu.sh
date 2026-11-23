@@ -3,13 +3,16 @@
 set -euo pipefail
 cd "$(dirname "$0")/../../../../.."
 source tools/art/anim3d/env.sh
-export ROUND="${ROUND:-1}" CYCLES_DEVICE=GPU RESOLUTION=512 SAMPLES="${SAMPLES:-48}"
+export ROUND="${ROUND:-2}" CYCLES_DEVICE=GPU RESOLUTION=512 SAMPLES="${SAMPLES:-48}"
 unit=tools/art/anim3d/units/trench-infantry
 status="$REVIEW/trench-infantry-gpu-status.txt"
-exec >> "$ANIM_ROOT/masters/trench-infantry/gpu-round${ROUND}.log" 2>&1
+mkdir -p "$ANIM_ROOT/masters/trench-infantry"
+# Keep the overnight driver's log useful as well as the unit-local log.
+exec > >(tee -a "$ANIM_ROOT/masters/trench-infantry/gpu-round${ROUND}.log") 2>&1
 stage=preflight
 trap 'rc=$?; printf "failed round=%s stage=%s exit=%s\n" "$ROUND" "$stage" "$rc" > "$status"; exit "$rc"' ERR
 printf 'running round=%s\n' "$ROUND" > "$status"
+rm -f "$REVIEW/trench-infantry-gpu-round${ROUND}.json"
 git rev-parse HEAD
 git status --short
 command -v blender

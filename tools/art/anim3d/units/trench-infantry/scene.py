@@ -10,6 +10,7 @@ for p in (M,V,M/'clips',M/'renders'):p.mkdir(parents=True,exist_ok=True)
 HERE=Path(__file__).resolve().parent
 sys.path.insert(0,str(HERE))
 from retarget import prepare, apply_matrices
+import refine
 CLIPS={'idle':(8,4,True),'move':(8,6,True),'attack':(10,14,False),'hit':(4,8,False),'death':(10,5,False)}
 def log(s):
  with (V/'trench-infantry-log.md').open('a') as f:f.write('- '+s+'\n')
@@ -23,7 +24,14 @@ def mat(name,color,metal=0,rough=.65,fill=None):
  ramp=n.new('ShaderNodeValToRGB');ramp.color_ramp.elements[0].color=(rough*.7,)*3+(1,);ramp.color_ramp.elements[1].color=(min(1,rough*1.2),)*3+(1,);l.new(noise.outputs['Fac'],ramp.inputs[0]);l.new(ramp.outputs[0],p.inputs['Roughness'])
  if fill and (A/(fill+'-fill.png')).exists():
   t=n.new('ShaderNodeTexImage');t.image=bpy.data.images.load(str(A/(fill+'-fill.png')),check_existing=True);t.projection='BOX';t.projection_blend=.3;l.new(tc.outputs['Generated'],t.inputs[0]);l.new(t.outputs['Color'],p.inputs['Base Color'])
- if fill in ('red','linen'):p.inputs['Sheen Weight'].default_value=.25
+  # Hidden-surface pigments have their own brushwork; retain live product light
+  # and cavity shade without washing the generated colour to flat grey.
+  ao=n.new('ShaderNodeAmbientOcclusion');ao.inputs['Distance'].default_value=.05
+  shade=n.new('ShaderNodeMixRGB');shade.blend_type='MULTIPLY';shade.inputs[0].default_value=.3;l.new(t.outputs['Color'],shade.inputs[1]);l.new(ao.outputs['Color'],shade.inputs[2])
+  pigment=n.new('ShaderNodeEmission');l.new(shade.outputs[0],pigment.inputs[0])
+  ray=n.new('ShaderNodeLightPath');weight=n.new('ShaderNodeMath');weight.operation='MULTIPLY';weight.inputs[1].default_value=.65;l.new(ray.outputs['Is Camera Ray'],weight.inputs[0])
+  mix=n.new('ShaderNodeMixShader');l.new(weight.outputs[0],mix.inputs[0]);l.new(p.outputs[0],mix.inputs[1]);l.new(pigment.outputs[0],mix.inputs[2]);l.new(mix.outputs[0],n.get('Material Output').inputs[0])
+ if fill in ('wool','linen'):p.inputs['Sheen Weight'].default_value=.25
  return m
 
 def mesh(name,vs,fs,ma):
@@ -76,6 +84,35 @@ def tube(name,a,b,radii,ma,bone=None,striped=False):
  if bone:attach(o,bone)
  return o
 
+def sleeve(side):
+ # One continuous skinned sleeve, with shared elbow rings and real fold volume.
+ a=rig.matrix_world @ rig.pose.bones['upperarm_'+side].head
+ b=rig.matrix_world @ rig.pose.bones['lowerarm_'+side].head
+ c=rig.matrix_world @ rig.pose.bones['lowerarm_'+side].tail
+ vs=[];fs=[];rings=33;segments=48
+ for j in range(rings):
+  t=j/(rings-1)
+  if t<.5:center=a.lerp(b,t*2);axis=(b-a).normalized()
+  else:center=b.lerp(c,(t-.5)*2);axis=(c-b).normalized()
+  # Blend ring frames near elbow; overlapping primitives are not needed.
+  blend=max(0,min(1,(t-.36)/.28));axis=(b-a).normalized().lerp((c-b).normalized(),blend).normalized()
+  u=axis.cross(Vector((0,1,0))).normalized();v=axis.cross(u).normalized()
+  radius=.075+.012*sin(pi*t)-.007*t
+  for k in range(segments):
+   angle=2*pi*k/segments
+   fold=1+.07*cos(angle*7+t*9)+.05*cos(t*35+angle*2)*sin(pi*t)**2
+   vs.append(tuple(center+(u*cos(angle)+v*sin(angle))*radius*fold))
+ for j in range(rings-1):
+  for k in range(segments):i=j*segments+k;n=j*segments+(k+1)%segments;fs.append((i,n,n+segments,i+segments))
+ o=solid(mesh('continuous wool sleeve '+side,vs,fs,red),.006)
+ # Determine weights before inverse skinning, by known ring membership.
+ weights={}
+ for j in range(rings):
+  t=j/(rings-1);w=max(0,min(1,(t-.38)/.24));weights[j]={'upperarm_'+side:1-w,'lowerarm_'+side:w}
+ index=iter(range(len(vs)))
+ bind_weights(o,lambda v:weights[next(index)//segments])
+ return o
+
 def empty(name,loc):
  o=bpy.data.objects.new(name,None);bpy.context.collection.objects.link(o);o.location=loc;return o
 
@@ -107,7 +144,7 @@ def build():
  for p in body.data.polygons:p.use_smooth=True
  sub=body.modifiers.new('Anatomical smoothing','SUBSURF');sub.levels=sub.render_levels=1
  limb('thigh_r','calf_r',(-.17,-.025,.085),(-.22,-.4,.5));limb('thigh_l','calf_l',(.19,.015,.085),(.22,-.4,.5))
- limb('upperarm_r','lowerarm_r',(-.32,-.24,1.13),(-.46,-.03,1.05));limb('upperarm_l','lowerarm_l',(.20,-.26,1.36),(.45,-.03,1.11))
+ limb('upperarm_r','lowerarm_r',(-.30,-.24,1.13),(-.46,-.03,1.05));limb('upperarm_l','lowerarm_l',(.20,-.26,1.275),(.45,-.03,1.11))
  aim('hand_r',(0,0,.10));aim('hand_l',(-.03,0,.10))
  for side in ('r','l'):
   for digit in ('index','middle','ring','pinky'):
@@ -124,9 +161,7 @@ def build():
  # Bind garment to torso and thighs, preserving the authored rest shape.
  bind_weights(coat,lambda v:{'spine_03':max(0,min(1,(v.z-1.10)/.22)),'pelvis':max(0,1-abs(v.z-1.03)/.28),'thigh_l' if v.x>0 else 'thigh_r':max(0,min(.8,(1.03-v.z)/.5))})
  for side in ('r','l'):
-  for upper in ('upperarm','lowerarm'):
-   p=rig.pose.bones[upper+'_'+side];a=rig.matrix_world @ p.head;b=rig.matrix_world @ p.tail
-   tube('wool sleeve '+upper+' '+side,a,b,(.078,.075,.024),red,upper+'_'+side)
+  sleeve(side)
   p=rig.pose.bones['lowerarm_'+side];a=rig.matrix_world @ p.head;b=rig.matrix_world @ p.tail
   tube('turned wool cuff '+side,b.lerp(a,.22),b,(.087,.077,.005),red,'lowerarm_'+side)
   p=rig.pose.bones['thigh_'+side];a=rig.matrix_world @ p.head;b=rig.matrix_world @ p.tail
@@ -153,6 +188,15 @@ def build():
  roll=tube('blanket roll',(-.12,.21,1.64),(.28,.21,1.64),(.096,.096,0),linen);attach(roll,'spine_03')
  for x in (-.12,.28):attach(sphere('blanket rolled end',(x,.21,1.64),(.018,.094,.094),linen),'spine_03')
  for x in (-.08,.23):attach(curve('blanket binding',[(x,.21+.101*cos(a),1.64+.101*sin(a)) for a in [2*pi*k/40 for k in range(41)]],.009,leather),'spine_03')
+ # Visible rolled layers and stitched edges survive when projection turns away.
+ for x in (-.139,.299):
+  pts=[]
+  for k in range(145):
+   a=k*6*pi/144;rad=.012+.077*k/144;pts.append((x,.21+rad*cos(a),1.64+rad*sin(a)))
+  attach(curve('blanket spiral seam',pts,.0025,leather),'spine_03')
+ for sign in (-1,1):
+  pts=[(sign*.145,-.192,1.39),(sign*.18,-.192,1.39),(sign*.18,-.192,1.43),(sign*.145,-.192,1.43),(sign*.145,-.192,1.39)]
+  attach(curve('strap buckle',pts,.003,brass),'spine_03')
  attach(box('haversack',(.24,.08,1.02),(.17,.13,.23),linen,.025),'pelvis')
  # Adrian-style full-depth helmet with shallow brim, crest and rolled edge.
  head=rig.pose.bones['head'];hc=rig.matrix_world @ ((head.head+head.tail)*.5);cx,cy,cz=hc
@@ -210,6 +254,7 @@ def build():
    bpy.context.view_layer.objects.active=o
    for modifier in list(o.modifiers):
     if modifier.type in ('BEVEL','SOLIDIFY','SUBSURF'):bpy.ops.object.modifier_apply(modifier=modifier.name)
+ refine.finish(rig,body)
  sc['unit']='trench-infantry';sc['anatomy']='MPFB 2.0.18 CC0';sc['reference']='CC BY 4.0 trench-infantry-source.png'
  bpy.context.view_layer.update();rig['rest_pose']=json.dumps({p.name:[list(r) for r in p.matrix_basis] for p in rig.pose.bones});rig['rest_location']=list(rig.location);gun['rest_world']=[v for row in gun.matrix_world for v in row]
  bpy.ops.wm.save_as_mainfile(filepath=str(M/'plain.blend'));log('Built MPFB anatomical body, 53-bone rig, folded greatcoat, puttees, helmet, webbing and bayonet rifle; plain.blend saved.')
@@ -238,8 +283,11 @@ def bind_weights(o,weights):
 def project():
  """Freeze finished-surface UVs; camera-only pigment avoids double illumination."""
  sc=bpy.context.scene;cam=sc.camera;im=bpy.data.images.load(str(A/'projection.png'),check_existing=True);records=[]
+ cloth=bpy.data.images.load(str(A/'cloth-projection.png'),check_existing=True)
+ refine.stone(sc,bpy.data.images.load(str(A/'stone-projection.png'),check_existing=True))
+ view=cam.matrix_world.to_quaternion() @ Vector((0,0,1))
  for o in list(sc.objects):
-  if o.type!='MESH' or any(x in o.name for x in ('muzzle','eyes')):continue
+  if o.type!='MESH' or any(x in o.name for x in ('muzzle','eyes','stationary cream base')):continue
   mods=[m for m in o.modifiers if m.type!='ARMATURE' and m.show_viewport]
   for m in mods:m.show_viewport=False
   bpy.context.view_layer.update();ev=o.evaluated_get(bpy.context.evaluated_depsgraph_get());me=ev.to_mesh();assert len(me.vertices)==len(o.data.vertices)
@@ -253,7 +301,7 @@ def project():
   facing=[]
   deps=bpy.context.evaluated_depsgraph_get()
   for w,normal in vertices:
-   direction=(cam.location-w).normalized()
+   direction=view
    f=max(0,min(1,(normal.dot(direction)+.05)/.3))
    hit,loc,n,idx,obj,matr=sc.ray_cast(deps,w+direction*.002,direction,distance=(cam.location-w).length)
    if hit and (obj!=o or (loc-w).length>.015):f=0
@@ -265,13 +313,14 @@ def project():
    if not slot.material:continue
    ma=slot.material.copy();slot.material=ma;n=ma.node_tree.nodes;l=ma.node_tree.links;p=n.get('Principled BSDF');out=n.get('Material Output')
    if p is None:continue
-   tc=n.new('ShaderNodeUVMap');tc.uv_map='Painting';tex=n.new('ShaderNodeTexImage');tex.image=im;tex.extension='CLIP';l.new(tc.outputs[0],tex.inputs[0])
+   substrate=out.inputs['Surface'].links[0].from_socket
+   tc=n.new('ShaderNodeUVMap');tc.uv_map='Painting';tex=n.new('ShaderNodeTexImage');tex.image=cloth if 'greatcoat folded' in o.name or 'shoulder strap' in o.name else im;tex.extension='CLIP';l.new(tc.outputs[0],tex.inputs[0])
    attr=n.new('ShaderNodeVertexColor');attr.layer_name=col.name
    alpha=n.new('ShaderNodeMath');alpha.operation='MULTIPLY';l.new(attr.outputs[0],alpha.inputs[0]);l.new(tex.outputs['Alpha'],alpha.inputs[1])
    camera=n.new('ShaderNodeLightPath');weight=n.new('ShaderNodeMath');weight.operation='MULTIPLY';l.new(alpha.outputs[0],weight.inputs[0]);l.new(camera.outputs['Is Camera Ray'],weight.inputs[1])
    strength=n.new('ShaderNodeMath');strength.operation='MULTIPLY';strength.inputs[1].default_value=.98;l.new(weight.outputs[0],strength.inputs[0])
    pigment=n.new('ShaderNodeEmission');pigment.name='Camera painted illumination';l.new(tex.outputs['Color'],pigment.inputs['Color'])
-   mix=n.new('ShaderNodeMixShader');l.new(strength.outputs[0],mix.inputs[0]);l.new(p.outputs[0],mix.inputs[1]);l.new(pigment.outputs[0],mix.inputs[2]);l.new(mix.outputs[0],out.inputs['Surface'])
+   mix=n.new('ShaderNodeMixShader');l.new(strength.outputs[0],mix.inputs[0]);l.new(substrate,mix.inputs[1]);l.new(pigment.outputs[0],mix.inputs[2]);l.new(mix.outputs[0],out.inputs['Surface'])
   records.append(o.name)
  bpy.ops.file.pack_all();bpy.ops.wm.save_as_mainfile(filepath=str(M/'trench-infantry.blend'));(M/'projection.json').write_text(json.dumps({'objects':records,'method':'finished rest-camera UV, ray visibility/facing/source-alpha, camera-only painted illumination','weight':.98,'hidden_surfaces':'original generated painted fills'},indent=2));log('Finished-surface camera projection with camera-only pigment; generated hidden fills retained.')
 
@@ -301,23 +350,37 @@ def animate(clip):
   for p in rig.pose.bones:p.matrix_basis=rest[p.name].copy()
   rig.location=loc.copy();rig.rotation_euler=(0,0,0);gun.matrix_basis=gb.copy() if clip not in ('attack','death') else gw.copy();bpy.context.view_layer.update();t=idx/count if loop else idx/(count-1);s=sin(2*pi*t)
   if clip!='attack':
+   # Sample the complete impact and recovery instead of stopping in a crouch.
    sample=min(72,24+round(t*48))
    motion=motion_frames[sample];rig.location=loc+motion['root'];apply_matrices(rig,motion['matrices'])
+   if clip=='death':
+    # Blend from carrying stance into the source's anatomical fall. Keeping the
+    # painting's bent elbows/knees as offsets leaves a boot in the air at rest.
+    amount=min(1,t/.28)
+    for p in rig.pose.bones:
+     if p.name.startswith(('thigh_','calf_','foot_','ball_','clavicle_','upperarm_','lowerarm_','hand_')):
+      a=rest[p.name];b=p.matrix_basis.copy();p.matrix_basis=a.lerp(b,amount)
+   if clip=='hit' and idx==count-1:
+    for p in rig.pose.bones:p.matrix_basis=rest[p.name].copy()
+    rig.location=loc.copy()
    bpy.context.view_layer.update()
    if clip=='move':
     # Root height correction preserves captured foot rotations and virtual-ground stride.
     flags=motion_source['contact']['planted'].get(str(sample+1),{})
     support=next((side for side in ('l','r') if flags.get(side)),None)
     if support:
-     boot=bpy.data.objects['GEO-boot sole '+support];ev=boot.evaluated_get(bpy.context.evaluated_depsgraph_get());me=ev.to_mesh();lowest=min((ev.matrix_world@v.co).z for v in me.vertices);ev.to_mesh_clear();rig.location.z+=.086-lowest
+     boot=bpy.data.objects['GEO-boot sole '+support];ev=boot.evaluated_get(bpy.context.evaluated_depsgraph_get());me=ev.to_mesh();lowest=min((ev.matrix_world @ v.co).z for v in me.vertices);ev.to_mesh_clear();rig.location.z+=.086-lowest
   elif clip=='attack':
    # Weapon is a rigid body; hands solve to its trigger and fore-end.
    amount=[0,.28,.72,1,1,1,.92,.65,.27,0][idx]
-   direction=Vector((.48,-.87,.05)).normalized()
+   direction=Vector((.65,-.73,.18)).normalized()
    q=Vector((0,0,1)).rotation_difference(direction)
    from mathutils import Quaternion
    rot=Quaternion().slerp(q,amount).to_matrix().to_4x4()
-   target_butt=butt.lerp(Vector((-.33,.12,1.37)),amount)
+   target_butt=butt.lerp(Vector((-.30,.08,1.50)),amount)
+   # Tilt before lifting: simultaneous linear lift sends the fixed bayonet
+   # through the top of the cell in the two transition samples.
+   target_butt.z=butt.z+(1.50-butt.z)*amount*amount
    if idx==5:target_butt-=direction*.035
    transform=Matrix.Translation(target_butt) @ rot @ Matrix.Translation(-butt)
    gun.matrix_world=transform @ gw
@@ -397,6 +460,8 @@ elif mode=='b':
  render('b-plain',M/'plain.blend',[1])
 elif mode=='c':
  render('c-textured-lit',M/'trench-infantry.blend',[1])
+elif mode=='d':
+ render('d-rig-poses',M/'clips/attack.blend',[1,3,5,7])
 elif mode=='animate':
  for clip in CLIPS:animate(clip)
 elif mode.startswith('animate-'):

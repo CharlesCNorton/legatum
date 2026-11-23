@@ -121,6 +121,10 @@ def prepare(rig, root, clip, phases):
         strip.action_slot = idle.slots[0]
         strip.action_frame_start, strip.action_frame_end = idle.frame_range
         strip.frame_end = last
+    # glTF actions are sparse. Clear imported pose values for unkeyed channels
+    # before evaluation, including a copied idle arm layer.
+    for donor in [source]+([carry] if carry else []):
+        for bone in donor.pose.bones:bone.matrix_basis=Matrix.Identity(4)
     scene.frame_set(int(first))
     bpy.context.view_layer.update()
     reference = {n: source.pose.bones[n].matrix.copy() for n in MAP.values()}
@@ -134,7 +138,7 @@ def prepare(rig, root, clip, phases):
         # Upper body stays in its weapon-bearing guard, with the complete source
         # delta layered on it. Locomotion legs use anatomical rest, not the
         # painting's braced stance. Both mappings include complete bone rolls.
-        locomotion_leg = clip == 'move' and target.startswith(('thigh_', 'calf_', 'foot_', 'ball_'))
+        locomotion_leg = (clip == 'move' and target.startswith(('thigh_', 'calf_', 'foot_', 'ball_'))) or (clip == 'death' and target.startswith(('thigh_', 'calf_', 'foot_', 'ball_', 'clavicle_', 'upperarm_', 'lowerarm_', 'hand_')))
         source_ref = source.data.bones[origin].matrix_local if locomotion_leg else donor.pose.bones[origin].matrix.copy()
         target_ref = p.bone.matrix_local.copy() if locomotion_leg else neutral[target]
         if locomotion_leg:
@@ -166,6 +170,8 @@ def prepare(rig, root, clip, phases):
     scale = sum(rig.data.bones[n+'_l'].length for n in ['thigh', 'calf']) / sum(source.data.bones[n].length for n in ['DEF-thigh.L', 'DEF-shin.L'])
     frames = []
     for phase in phases:
+        for donor in [source]+([carry] if carry else []):
+            for bone in donor.pose.bones:bone.matrix_basis=Matrix.Identity(4)
         frame = first+(last-first)*max(0, min(1, phase))
         scene.frame_set(int(frame), subframe=frame-int(frame))
         bpy.context.view_layer.update()
