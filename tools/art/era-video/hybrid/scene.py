@@ -27,6 +27,7 @@ INPUTS = ('painting.png', 'background.png', 'depth-smooth16.png', 'relief.npz',
 SHIP_START, SHIP_END, SHIP_Y = 825., 400., 550.
 SHIP_SCALE, SHIP_Z = 3.65, 32.
 FLUID_RESOLUTION, FLUID_SIZE = 72, (24, 52, 16)
+FLUID_GRAVITY = (0., -9.81, 0.)  # +Y is picture-up; Z is camera depth.
 BANNERS = (
     ((1658, 445, 1710, 539), [(1664,450),(1687,464),(1700,460),(1702,529),(1666,535)]),
     ((1655, 539, 1710, 634), [(1662,548),(1701,542),(1703,619),(1695,626),
@@ -717,10 +718,15 @@ def fire(args, depth):
     ds.cache_frame_start=SIM_START; ds.cache_frame_end=FRAMES
     ds.cache_type='ALL'; ds.cache_directory=str(args.masters/'cache/fluid')
     ds.cache_data_format='UNI'; ds.cache_noise_format='UNI'
-    ds.use_noise=True; ds.noise_scale=2; ds.noise_strength=1.0
-    ds.use_adaptive_domain=False; ds.vorticity=2.5; ds.flame_vorticity=2.0
+    ds.gravity=FLUID_GRAVITY  # Keep the fallback consistent with scene gravity.
+    ds.use_noise=True; ds.noise_scale=2; ds.noise_strength=.5
+    # Confinement reinforces existing curl each step. The old 2.5/2.0 settings
+    # drove cached velocities above 1500 and flushed the noise plume through
+    # open boundaries. Use gentle curl; fuel pulses and wavelets supply detail.
+    ds.use_adaptive_domain=False; ds.vorticity=.15; ds.flame_vorticity=.1
     ds.alpha=2.0; ds.beta=3.0; ds.burning_rate=.85; ds.flame_smoke=2.2
-    ds.use_dissolve_smoke=True; ds.dissolve_speed=110; ds.timesteps_max=3
+    ds.use_dissolve_smoke=True; ds.dissolve_speed=110
+    ds.cfl_condition=2.; ds.timesteps_min=1; ds.timesteps_max=6
     # Animate inflow quantities, never domain or emitter transforms. Pulsing
     # density/fuel injects separated billows before the first delivery frame.
     for frame in range(SIM_START, FRAMES+1):
@@ -769,6 +775,8 @@ def fire(args, depth):
         light.keyframe_insert('energy',frame=frame)
     for ob in (domain,flow):
         assert min(ob.dimensions)>1 and all(abs(s-1)<1e-6 for s in ob.scale)
+        assert ob.parent is None and all(abs(r)<1e-6 for r in ob.rotation_euler), \
+            'Fluid local Y must remain world/picture up'
         if ob.animation_data and ob.animation_data.action:
             for layer in ob.animation_data.action.layers:
                 for strip in layer.strips:
@@ -881,7 +889,7 @@ def build(args):
     scene.eevee.volumetric_start=620; scene.eevee.volumetric_end=830
     scene.view_settings.view_transform='Standard'; scene.view_settings.look='None'
     scene.view_settings.exposure=0; scene.view_settings.gamma=1
-    scene.gravity=(0,-9.81,0)  # Picture up is +Y, depth is Z.
+    scene.use_gravity=True; scene.gravity=FLUID_GRAVITY
     scene.frame_start=1; scene.frame_end=FRAMES
     stats=base.relief(args.masters/'plates')
     relief=bpy.data.objects['Continuous painted relief']
@@ -901,6 +909,7 @@ def build(args):
                   'camera_dolly':DOLLY,'camera_drift':DRIFT,'relief':RELIEF,
                   'simulation_frames':[SIM_START,FRAMES],'fluid_resolution':FLUID_RESOLUTION,
                   'fluid_noise_scale':2,'fluid_dimensions':list(domain.dimensions),
+                  'fluid_setup':validate_fluid_axes(scene,domain),
                   'status':'built; not baked or rendered'})
     return scene,domain,stats
 
@@ -928,12 +937,43 @@ def cache_valid(args,stamp):
         return False
 
 
+def validate_fluid_axes(scene,domain):
+    """The grid, shader ceiling fade, inflow and buoyancy must share picture-up."""
+    ds=domain.modifiers[0].domain_settings
+    if not scene.use_gravity or not np.allclose(scene.gravity,FLUID_GRAVITY):
+        raise RuntimeError('Hybrid smoke requires scene gravity along -Y (picture down)')
+    if not np.allclose(np.asarray(domain.matrix_world)[:3,:3],np.eye(3)):
+        raise RuntimeError('Smoke height readback requires an unrotated, unit-scale domain')
+    if not np.allclose(domain.dimensions,FLUID_SIZE):
+        raise RuntimeError('Smoke domain dimensions differ from the authored grid bounds')
+    return {'scene_gravity':list(scene.gravity),'domain_gravity':list(ds.gravity),
+            'height_axis':'world Y / grid Y / picture up',
+            'vorticity':ds.vorticity,'flame_vorticity':ds.flame_vorticity,
+            'noise_strength':ds.noise_strength,'timesteps_max':ds.timesteps_max,
+            'preroll_frames':1-SIM_START}
+
+
+def smoke_spans(density,resolution,size):
+    """Occupied centre-to-centre spans in XYZ; Mantaflow X runs fastest."""
+    grid=np.asarray(density,dtype=np.float32).reshape(tuple(resolution[::-1]))
+    if not np.all(np.isfinite(grid)):
+        raise RuntimeError('Non-finite smoke density; inspect simulation stability')
+    spans=[]
+    for axis in range(3):
+        occupied=np.flatnonzero(np.max(grid,axis=tuple(a for a in range(3)
+                                                     if a!=2-axis))>.04)
+        spans.append(float((occupied[-1]-occupied[0])*size[axis]/resolution[axis])
+                     if occupied.size else 0.)
+    return spans
+
+
 def verify_smoke(scene):
     samples=[]
     for frame in (1,48,96,144):
         scene.frame_set(frame)
         dg=bpy.context.evaluated_depsgraph_get(); dg.update()
         domain=bpy.data.objects['GEO-brazier-Mantaflow-domain'].evaluated_get(dg)
+        validate_fluid_axes(scene,domain)
         ds=domain.modifiers[0].domain_settings
         density=np.asarray(ds.density_grid[:],dtype=np.float32)
         maximum=float(density.max()) if density.size else 0.
@@ -945,13 +985,14 @@ def verify_smoke(scene):
             resolution *= ds.noise_scale
         if density.size != int(np.prod(resolution)):
             raise RuntimeError(f'Unexpected density-grid dimensions: {resolution}, {density.size}')
-        grid=density.reshape(tuple(resolution[::-1]))  # Mantaflow X runs fastest.
-        occupied=np.flatnonzero(np.max(grid,axis=(0,2))>.04)
-        height=float((occupied[-1]-occupied[0])*FLUID_SIZE[1]/resolution[1]) if occupied.size else 0.
+        spans=smoke_spans(density,resolution,domain.dimensions)
+        height=spans[1]  # Y is anti-gravity, not Blender's default world Z.
         if height < (8 if frame==1 else 12):
-            raise RuntimeError(f'Smoke is only {height:.1f} units tall at frame {frame}; inspect buoyancy')
+            raise RuntimeError(f'Smoke is only {height:.1f} units tall at frame {frame}; '
+                               f'XYZ spans={spans}; inspect cached velocity and vorticity')
         samples.append({'frame':frame,'maximum_density':maximum,
-                        'plume_height_units':height,'density_grid_resolution':resolution.tolist()})
+                        'plume_height_units':height,'plume_spans_xyz':spans,
+                        'density_grid_resolution':resolution.tolist()})
     scene.frame_set(1)
     return samples
 
@@ -967,7 +1008,9 @@ def bake(args,scene,domain,stamp,report):
     bpy.ops.wm.save_as_mainfile(filepath=str(cache/'baked.blend'))
     active(domain)
     started=time.monotonic()
-    print('BAKE: 72 voxels + 2x noise, -47..144, six threads; target <480 seconds',flush=True)
+    validate_fluid_axes(scene,domain)
+    print(f'BAKE: {FLUID_RESOLUTION} voxels + 2x noise, {SIM_START}..{FRAMES}, '
+          'six threads, at most six substeps; target <480 seconds',flush=True)
     result=bpy.ops.fluid.bake_all()
     ds=domain.modifiers[0].domain_settings
     if 'FINISHED' not in result or not ds.has_cache_baked_data or not ds.has_cache_baked_noise:
