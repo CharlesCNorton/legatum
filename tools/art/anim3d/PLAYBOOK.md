@@ -183,3 +183,14 @@ The runner reassigned lane-5 to settler during this round. Tank work continues o
 `astra/unit-anim-3d-vehicles` in `.worktrees/tank-round3`; run its GPU script from
 that checkout. No supplied round-2 GPU receipt was found; prior review metadata
 was CPU256. Do not infer GPU success from CPU previews or from script syntax.
+
+Round-3 CPU delivery is **199,082 bytes at Q85**, 1384x564 pixels, all forty
+samples with exact reconstructed alpha and identical decoded death hold. The
+geometry/speed audit, three belt tests, syntax and video checks pass. Rest alpha
+IoU is .927420 (prior .926284); opaque-overlap RGB MAE is 7.605 (prior 12.336).
+These metrics do not establish art parity. Wheel finish, fender contours and
+painted illumination rotating with wheels remain review items; no PASS marker.
+Device discovery now uses a normal gated CPU startup because it does no GPU
+rendering; final renders retain the machine-wide GPU gate. The complete entry
+point was exercised in the sandbox and failed explicitly at Metal preflight,
+leaving CPU previews untouched. Fresh GPU512 output is still required.

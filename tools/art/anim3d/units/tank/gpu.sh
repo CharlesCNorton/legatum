@@ -23,7 +23,8 @@ for file in tank.blend tank-plain.blend clips/idle.blend clips/move.blend clips/
   test -s "$ANIM_ROOT/masters/tank/$file"
 done
 stage=metal-preflight
-blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python tools/art/anim3d/vehicles/gpu-preflight.py
+# Device discovery does no rendering; use a normal gated CPU startup.
+BLENDER_GPU=0 CYCLES_DEVICE=CPU blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python tools/art/anim3d/vehicles/gpu-preflight.py
 stage=audit
 tools/art/anim3d/render.sh vehicles-audit
 for stage in b c details d e-idle e-move e-attack e-hit e-death; do
