@@ -63,3 +63,5 @@
 - Pose review exposed an incorrect forward-following release hand; authored a cheek-side follow-through and independent string snap, pending final attack rerender.
 - Rendered e-attack: 512px CYCLES CPU, 12 samples.
 - Published e-attack native 256/64 comparison; render device CPU.
+- Rendered e-hit: 512px CYCLES CPU, 12 samples.
+- Published e-hit native 256/64 comparison; render device CPU.

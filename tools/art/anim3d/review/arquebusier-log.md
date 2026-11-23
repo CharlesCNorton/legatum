@@ -40,3 +40,6 @@
 - Posted d-rig-poses review (CPU, 256 px).
 - Posted e-idle review (CPU, 256 px).
 - Posted e-move review (CPU, 256 px).
+- Posted e-attack review (CPU, 256 px).
+- Posted e-hit review (CPU, 256 px).
+- Posted e-death review (CPU, 256 px).

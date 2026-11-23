@@ -14,3 +14,4 @@
 - Published b review from CPU render.
 - Published c review from CPU render.
 - Published c-details review from CPU render.
+- Published d review from CPU render.
