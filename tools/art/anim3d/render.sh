@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "$0")/../../.."
+# Unit entry points stay isolated; the PATH blender command owns CPU/GPU scheduling.
+if [[ "${UNIT:-}" == legionary ]]; then
+  exec bash tools/art/anim3d/units/legionary/run.sh "${1:-c}"
+fi
 source tools/art/anim3d/env.sh
 stage="${1:-c}"
 lock="$ANIM_ROOT/blender-heavy.lock"

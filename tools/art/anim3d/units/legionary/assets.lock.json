@@ -1,0 +1,12 @@
+{
+  "painting-source.png": {
+    "sha256": "d8c36a3524f5393084fceb01e3dba32d28b170763051560c5ceaf24d5833d237",
+    "url": "https://pub-fb5c281dd12d4ea4bbd38d657cdeb907.r2.dev/app/src/assets/units/legionary-source.png",
+    "licence": "CC BY 4.0 project art"
+  },
+  "painted-fills.png": {
+    "sha256": "dbea1fe305d14f2960d94e2e6829a5c0c72c2e92c5f5325bb2bfce43ff54c41c",
+    "source": "Built-in imagegen 01a2066e-ff83-7250-bec6-14c5f46f1f73/exec-d6de0de4-bc9d-4927-be04-fbc6b4bbe7e4",
+    "licence": "CC BY 4.0 project art"
+  }
+}

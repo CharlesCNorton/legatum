@@ -106,3 +106,120 @@ tools/art/anim3d/render.sh audit
 ```
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
+
+## Infantry: legionary, round 1
+
+The legionary lane lives entirely in `units/legionary/`. `UNIT=legionary` dispatches
+through the shared `render.sh` without changing the spearman entry points. Its
+external master directory is `~/LegatumRuns/anim-pilot/masters/legionary/`, inputs
+are in `assets/legionary/`, and reviews use the `legionary-` prefix. All Blender
+commands are plain `blender -b --disable-autoexec ...`; the executable on PATH
+owns CPU/GPU scheduling and the three-thread cap. Do not bypass it or add another
+Blender process. The six Blender skills informed geometry, materials, lighting,
+camera calibration, skeletal animation and render inspection.
+
+The model uses MPFB 2.0.18 CC0 anatomy (19,158 source vertices), CC0 system eyes and
+its 53-bone game-engine skeleton. Original equipment includes overlapping iron
+lorica plates, articulated shoulder lames, thick linen scarf, open bronze helmet
+with cheek and neck guards, folded red tunic, studded leather apron, sandals,
+curved thick scutum with metal rim and boss, and a pilum with an iron shank.
+No human anatomy is assembled from primitives. The generated four-material fill
+atlas and painting have pinned hashes in external `inputs.json`; the generation
+prompt is committed beside the scripts. Source/licence records are in the shared
+external `assets/SOURCES.md` and repository `app/src/assets/PROVENANCE.md`.
+
+### Painting-first finish and review standard
+
+Use these four quality levers together, following standing feedback 12–21:
+
+1. **Camera projection is the standard method.** Match the painting's rest pose,
+   orthographic camera, height and silhouette first. `prepare.py` aligns the full
+   painting to its committed token. `paint.py` freezes camera UVs onto actual
+   weighted meshes, blending by surface incidence and source alpha into original
+   generated cloth/leather/iron/bronze fills on unseen surfaces. UVs travel with
+   geometry; there are no billboards or screen-space animation warps. A skin mask
+   prevents the scutum from painting red onto the body. Registration is approximate
+   and painted lighting remains partly baked into the colour: motion needs review.
+2. **Finish geometry.** Real thickness, bevels, curved plates, rolled borders,
+   buckles/studs, anatomical subdivision and folded cloth matter at token size.
+   The shield's gilded motif gets shallow source-aligned relief. `paint.py` bakes
+   eight actual 512 px AO/curvature maps for helmet, shield, an iron band and skin;
+   these drive cavity shading and roughness. This is not a claim of a full-body
+   sculpt or a complete collision solver.
+3. **Product lighting.** Warm upper-left key, cool rim, soft fill, real contact
+   shadows, Cycles and denoising. CPU previews are explicitly labelled. GPU Cycles
+   requires a Metal device and fails rather than silently falling back. The base
+   is one stationary cream disc with fine grain. Common displayed target:
+   **sRGB #E9CFA0**, with a darker warm side; linear shader values must be calibrated
+   under lighting instead of treating sRGB values as linear inputs.
+4. **Measured grade.** The rest render and painting supply 17 foreground quantiles
+   per RGB channel. `review.py` blends a bounded 35% transfer into one monotonic LUT
+   and reuses that same grade for every frame, preserving raw images. A new rest
+   render changes the grade hash and requires a full clip refresh before packing.
+
+Every `c` render publishes native 256/64 px comparison, close-ups and
+`legionary-f-restpose-compare.png` (painting, render, half-split, 50% crossfade).
+The target remains near-indistinguishability at rest. Current round 1 is a review
+candidate: face, cylindrical torso, shoulder fit and motion-revealed projection
+seams still fall short of the painting. Technical validation is not art approval.
+
+### Rebuild and host GPU review
+
+```sh
+UNIT=legionary tools/art/anim3d/render.sh prepare
+# Serial build/plain review/paint/rest review/animation/pose review/all clips/audit.
+UNIT=legionary RENDER_ENGINE=CYCLES CYCLES_DEVICE=CPU SAMPLES=8 tools/art/anim3d/render.sh round
+UNIT=legionary tools/art/anim3d/render.sh pack
+UNIT=legionary tools/art/anim3d/render.sh validate
+```
+
+`STAGES=...` selects a comma-separated serial subset for `round`. Individual
+`build`, `b`, `paint`, `c`, `c-details`, `animate`, `d`, `e-idle`, `e-move`,
+`e-attack`, `e-hit`, `e-death`, `audit`, `pack`, and `validate` stages also work.
+`animate` creates all five actions (`CLIP=death` selects one for a correction). Idle breathes; move is an authored planted
+march; attack anticipates and drives a shield bash while retaining the pilum;
+hit recoils; death releases the pilum/scutum and folds the body onto the base.
+The tunic hem has authored shape-key follow-through, **not simulated cloth**.
+Death resolves evaluated worn geometry onto the stone while keeping released equipment in world space, then holds identical final geometry and final source pixels. Clips keep
+8/8/10/4/10 samples at 10/12/14/12/10 fps. Idle and move loop.
+
+The lead can rerender all saved masters under one GPU gate acquisition:
+
+```sh
+UNIT=legionary RENDER_ENGINE=CYCLES CYCLES_DEVICE=GPU RESOLUTION=512 SAMPLES=64 \
+  STAGES=c,d,e-idle,e-move,e-attack,e-hit,e-death,audit tools/art/anim3d/render.sh round
+UNIT=legionary tools/art/anim3d/render.sh pack
+UNIT=legionary tools/art/anim3d/render.sh validate
+```
+
+The lead must inspect GPU rest, details and motion again; CPU output is not GPU
+sign-off. Each stage publishes its review immediately. Every colour frame retains
+512 px raw and graded PNG masters plus graded 256 px images under
+`masters/legionary/renders/<stage>/`. The plain diagnostic defaults to 256 px.
+Hashes bind model, clip, raw frame, grade and atlas; stale stages refuse packing.
+
+### Trimmed 160 px atlas format
+
+This lane implements feedback 20, superseding the older 256 px grid for this unit.
+The delivery retains `{frame:{w,h,ax,ay},clips:{name:{row,frames,fps,loop}}}` and
+adds `format: "trimmed-rows-v1"`, `atlas:{w,h}`, and a `rects` array to each clip.
+The canonical frame is transparent **160 × 160**; anchor `(79.375,138.125)` is the
+existing `(127,221)` anchor scaled by 160/256. Clips occupy five packed rows in
+idle/move/attack/hit/death order. Each frame rectangle is:
+
+```json
+{"x":0,"y":0,"w":84,"h":147,"ox":38,"oy":8}
+```
+
+`x/y/w/h` describe its atlas crop. `ox/oy` place that crop in the original 160 px
+cell. To draw at an anchor, use destination `(ox - ax, oy - ay)`, multiplied by
+the display scale. Do not derive an atlas crop from `row * frame.h`: row height
+and frame width are trimmed. No runtime loader is changed by this candidate.
+
+Packing keeps all 40 frames and tries WebP quality 90, 85, 80, then 75. It refuses
+anything over **200,000 bytes** at quality 75; it never drops frames or lowers the
+quality floor. Validation reconstructs every cell, checks source margins, alpha,
+padding, motion, held death, and all source hashes. The geometry audit checks
+stationary base, nondegenerate scales, base penetration and pilum centreline
+intersections with rigid armour/helmet/shield. Skin/cloth intersections and grip
+appearance still require visual review.
