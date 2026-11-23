@@ -248,3 +248,4 @@ Published e-death review immediately; GPU preview, not art approval.
 Rendered all eight move feet from front and top; upper-body cutaway.
 Published g-feet review immediately; GPU preview, not art approval.
 Packed 40 frames at 160px, trimmed offsets, quality 85, 181276 bytes.
+Driver round3: opened GPU c/f/all five strips and round2 MP4 contact frames before edits. GPU round2 succeeded: Metal512/64,40 frames,Q85,181276 bytes,H264/yuv420p eight seconds. At256: flattened/fragmented grip fingers, short square left boot and pale right boot, sparse quiver, too smooth dark-shadowed base, coarse pelt edges; motion exposes patchy projection/undersides. At64 same wolf-pelt archer, visibly different boots/bow/upper outline. Not parity; no PASS. All PLAYBOOK chapters, all23 shared feedback items, full log and sources read; unit-specific FEEDBACK absent. All six Blender skills loaded. Preserved GPU evidence in driver-r2-gpu.
