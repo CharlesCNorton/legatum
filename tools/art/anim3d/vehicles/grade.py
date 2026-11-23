@@ -5,7 +5,7 @@ from pathlib import Path
 from PIL import Image
 import os,sys,json,shutil,hashlib
 R=Path(os.environ['ANIM_ROOT']);M=R/'masters/tank';stage=sys.argv[1];folder=M/'renders'/stage
-if stage=='b':raise SystemExit(0)
+if stage in ('b','g'):raise SystemExit(0)
 def samples(im):
     channels=[[],[],[]]
     for r,g,b,a in im.convert('RGBA').getdata():

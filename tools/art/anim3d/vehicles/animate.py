@@ -18,10 +18,9 @@ for clip,(count,fps,loop) in CLIPS.items():
     root=bpy.data.objects['Vehicle suspension root'];turret=bpy.data.objects['Turret traverse'];gun=bpy.data.objects['Gun recoil']
     bpy.context.view_layer.update()
     # Match the registered barrel muzzle, preserving local recoil/traverse motion.
-    camera_basis=sc.camera.rotation_euler.to_matrix()
-    gun_effect_shift=gun.matrix_world.inverted().to_3x3() @ (
-        camera_basis @ Vector((-3,10,0)) * sc.camera.data.ortho_scale/256
-    ) if sc.get('registered') else Vector((0,0,0))
+    muzzle=bpy.data.objects['Dark muzzle bore']
+    muzzle_center=sum((v.co for v in muzzle.data.vertices),Vector())/len(muzzle.data.vertices)
+    gun_effect_shift=gun.matrix_world.inverted() @ (muzzle.matrix_world @ muzzle_center)-Vector((1.355,0,0))
     wheels=[o for o in bpy.data.objects if 'wheel' in o];links=[o for o in bpy.data.objects if 'track_phase' in o];effects=[o for o in bpy.data.objects if 'effect' in o]
     movers=[root,turret,gun]+wheels+links+effects
     burns=[]

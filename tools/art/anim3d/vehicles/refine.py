@@ -21,16 +21,50 @@ sc = bpy.context.scene
 assert not sc.get('registered'), 'Rebuild before repeating geometry registration'
 bpy.context.view_layer.update()
 camera = sc.camera
+construction_camera = camera.copy()
+construction_camera.data = camera.data.copy()
+# The visible lower rim of the reference disc fits a 227 x 42 px ellipse.
+# Calibrate elevation from that round horizontal base, before fitting the kit.
+# This keeps the base circular in world space instead of flattening its mesh.
+target = Vector((0, 0, 1.14))
+camera.location = (5.6, -10, 3.32)
+camera.rotation_euler = (target-camera.location).to_track_quat('-Z', 'Y').to_euler()
+bpy.context.view_layer.update()
 right = camera.rotation_euler.to_matrix() @ Vector((1, 0, 0))
 up = camera.rotation_euler.to_matrix() @ Vector((0, 1, 0))
 units = camera.data.ortho_scale / 256
 records = []
+# Preserve the already fitted armour/equipment landmarks while changing camera
+# elevation. Running gear is solved below against its axles/contact circles;
+# the round stone remains untouched so it determines the physical viewpoint.
+for obj in bpy.data.objects:
+    if obj.type != 'MESH' or 'effect' in obj or obj.name.startswith('Stationary'):
+        continue
+    if obj.parent and ('wheel' in obj.parent or 'track_phase' in obj.parent):
+        continue
+    inverse = obj.matrix_world.inverted()
+    for vertex in obj.data.vertices:
+        world = obj.matrix_world @ vertex.co
+        previous = world_to_camera_view(sc, construction_camera, world)
+        current = world_to_camera_view(sc, camera, world)
+        vertex.co = inverse @ (world + up * (previous.y-current.y)*camera.data.ortho_scale)
+    obj.data.update()
+bpy.data.objects.remove(construction_camera)
 
 
-def fit(label, prefixes, center, scale=(1, 1), offset=(0, 0)):
+def fit(label, prefixes, center, scale=(1, 1), offset=(0, 0), target_bounds=None):
     objects = [o for o in bpy.data.objects
                if o.type == 'MESH' and o.name.startswith(prefixes)]
     assert objects, label
+    if target_bounds:
+        points = [world_to_camera_view(sc, camera, o.matrix_world @ v.co)
+                  for o in objects for v in o.data.vertices]
+        bounds = (min(p.x for p in points)*256, min(1-p.y for p in points)*256,
+                  max(p.x for p in points)*256, max(1-p.y for p in points)*256)
+        center = bounds[:2]
+        scale = tuple((target_bounds[i+2]-target_bounds[i])/(bounds[i+2]-bounds[i])
+                      for i in (0, 1))
+        offset = tuple(target_bounds[i]-bounds[i] for i in (0, 1))
     before, after = [], []
     for obj in objects:
         inverse = obj.matrix_world.inverted()
@@ -52,28 +86,45 @@ def fit(label, prefixes, center, scale=(1, 1), offset=(0, 0)):
 
 
 fit('Cast turret and seam', ('Rounded cast turret', 'Turret casting seam', 'Turret lifting eye'),
-    (171.5, 56), (1.14, .79), (0, 1))
+    (171.5, 56), target_bounds=(83,57,171.5,96))
 fit('Low commander cupola', ('Closed commander', 'Cupola', 'Closed hatch seam', 'Hatch handle'),
-    (126, 59), (.88, .80), (-12, -3))
+    (126, 59), target_bounds=(100,49.5,128,62))
 fit('Gun and mantlet', ('Rounded mantlet', 'Mantlet sleeve', 'Short 75', 'Worn muzzle', 'Dark muzzle'),
-    (165, 85), (1, 1), (-3, -10))
+    (165, 85), target_bounds=(150,57,225.5,95))
 fit('Mantlet casting width', ('Rounded mantlet',), (163, 79), (1.12, .90))
 fit('Rear stowage', ('Rear stowage box', 'Stowage box lid', 'Stowage latch'),
-    (64, 113), (1, .80), (-12, 4))
+    (64, 113), target_bounds=(24,86,99,115))
 fit('Short jerricans', ('Rear deck jerrican', 'Jerrican'),
-    (66, 91), (1, .64), (0, 1))
+    (66, 91), target_bounds=(54,71.5,81,91))
+# Place the real lamp housings at the painted fixtures, instead of relying on a
+# second painted lamp on the glacis. Their old positions were 8/23 px too far left.
+for suffix, dx, dy in (('',8,0),('.001',23,6)):
+    for prefix in ('Headlamp housing','Headlamp dusty glass'):
+        obj=bpy.data.objects[prefix+suffix];inverse=obj.matrix_world.inverted()
+        delta=units*(right*dx-up*dy)
+        for vertex in obj.data.vertices:
+            vertex.co=inverse@(obj.matrix_world@vertex.co+delta)
+        obj.data.update()
+# The source has a slim muzzle; keep a genuine open bore and round barrel.
+for name in ('Short 75 mm barrel','Worn muzzle rim','Dark muzzle bore'):
+    obj=bpy.data.objects[name]
+    center=sum((v.co for v in obj.data.vertices),Vector())/len(obj.data.vertices)
+    for vertex in obj.data.vertices:
+        vertex.co.y=center.y+(vertex.co.y-center.y)*.72
+        vertex.co.z=center.z+(vertex.co.z-center.z)*.72
+    obj.data.update()
 # Extend the bevelled rear armour shoulder under the newly registered stowage.
 # The previous box relocation overhung its supporting hull.
 hull = bpy.data.objects['Sloped upper hull']
 inverse = hull.matrix_world.inverted()
 for vertex in hull.data.vertices:
     influence = max(0, min(1, (-vertex.co.x - .95) / .40))
-    vertex.co = inverse @ (hull.matrix_world @ vertex.co - right * units * 12 * influence)
+    vertex.co = inverse @ (hull.matrix_world @ vertex.co - right * units * 20 * influence)
 hull.data.update()
 records.append(dict(part='Rear shoulder support', extension_px=12, meshes=1))
 # A restrained smoking wreck reads better than the old solid orange spikes.
 for obj in list(bpy.data.objects):
-    if obj.get('effect') == 'fire' or obj.name.startswith(('Wheel radial spoke','Wheel recessed aperture')):
+    if obj.get('effect') == 'fire' or obj.name.startswith(('Wheel radial spoke','Wheel recessed aperture','Sprocket recess')):
         bpy.data.objects.remove(obj, do_unlink=True)
 smoke = bpy.data.materials['Smoke • noise faded 3D shell']
 for node in smoke.node_tree.nodes:
@@ -130,6 +181,11 @@ for side in (-1,1):
         if 'track_phase' in obj and obj['track_side']==side:
             x,z,a=trackpoint(obj['track_phase'])
             obj.location=(x,side*.99,z);obj.rotation_euler.y=a
+            # Reduce the protruding shoe width, preserving pitch and real depth.
+            for child in obj.children:
+                child.location.y*=.85
+                for vertex in child.data.vertices:vertex.co.y*=.85
+                child.data.update()
 # Full-depth fenders clear each independently registered suspension side.
 for obj in bpy.data.objects:
     if obj.type!='MESH' or not obj.name.startswith(('Raised track fender','Fender folded edge','Front mudguard')):continue

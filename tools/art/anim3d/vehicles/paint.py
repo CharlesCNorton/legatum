@@ -28,7 +28,7 @@ for name in names:
     for loop in mesh.loops:
         v=mesh.vertices[loop.vertex_index];p=world_to_camera_view(sc,sc.camera,o.matrix_world @ v.co)
         uv.data[loop.index].uv=Vector((p.x,p.y))+shift
-        facing=max(0,min(1,((normalmatrix @ v.normal).normalized().dot(view)+.08)/.22))
+        facing=max(0,min(1,((normalmatrix @ v.normal).normalized().dot(view)+.08)/.08))
         weights.data[loop.index].color=(facing,facing,facing,1)
     original_material=o.data.materials[0]
     if original_material.name in materials:

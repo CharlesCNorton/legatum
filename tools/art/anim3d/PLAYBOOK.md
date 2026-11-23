@@ -179,18 +179,47 @@ success with visual review still pending. The master exporter now checks scene
 and grade hashes; the atlas validator checks exact reconstructed alpha and an
 identical decoded death hold. The scaled anchor preserves fractional pixels.
 
-The runner reassigned lane-5 to settler during this round. Tank work continues on
-`astra/unit-anim-3d-vehicles` in `.worktrees/tank-round3`; run its GPU script from
-that checkout. No supplied round-2 GPU receipt was found; prior review metadata
-was CPU256. Do not infer GPU success from CPU previews or from script syntax.
+### Round 3 after the lead GPU receipt
 
-Round-3 CPU delivery is **199,082 bytes at Q85**, 1384x564 pixels, all forty
-samples with exact reconstructed alpha and identical decoded death hold. The
-geometry/speed audit, three belt tests, syntax and video checks pass. Rest alpha
-IoU is .927420 (prior .926284); opaque-overlap RGB MAE is 7.605 (prior 12.336).
-These metrics do not establish art parity. Wheel finish, fender contours and
-painted illumination rotating with wheels remain review items; no PASS marker.
-Device discovery now uses a normal gated CPU startup because it does no GPU
-rendering; final renders retain the machine-wide GPU gate. The complete entry
-point was exercised in the sandbox and failed explicitly at Metal preflight,
-leaving CPU previews untouched. Fresh GPU512 output is still required.
+The lane is `astra/unit-anim-3d-vehicles` in `.worktrees/tank-round3`; run its
+GPU script from that checkout. The lead's `gpu-logs-tank-r2.log` and saved reports
+confirm Cycles GPU512 at 256 samples completed: 190,044 bytes at Q80 and an
+8-second H.264/yuv420p video. Earlier missing-GPU notes were historical. That
+receipt, the old rendered frames/clip masters and actual 512px exports are
+preserved under `masters/tank/round2-gpu-receipt/`.
+
+The round base's lower rim gives a better camera constraint than the hull alone:
+its approximately 227 x 42px projected ellipse implies a lower elevation. The
+saved camera is now `(5.6,-10,3.32)` looking at `(0,0,1.14)`, orthographic scale
+4.95. The base remains a real round horizontal cylinder. Armour vertices are
+registered in the camera plane, retaining depth; wheel pivots and track routes
+are fitted separately while preserving physical ground contact. The first
+camera trial exposed misplaced fixtures: keep real lamp housings at the source
+landmarks, rather than accepting painted duplicate fixtures on the glacis.
+Rear stowage is wider/lower, shoes are 15% narrower, the muzzle is slimmer and
+invented black sprocket plugs are removed. These are local painting fits, not
+proof of a unique physically recovered camera or a reusable multi-view model.
+
+`render.py` now retains the saved camera instead of resetting the construction
+camera after UV projection. The detail view is a parallel dolly and its reference
+crop has the same framing/magnification. Delivery checks exact clip/rest camera
+metadata, in addition to current scene and grade hashes. Flash/smoke origins are
+measured from the actual registered muzzle rather than a fixed pixel offset.
+
+`vehicles-g` renders all eight move samples from top and front with a neutral
+material override and produces `tank-g-feet-check.png`. The vehicle has no human
+or animal gait; this is its mechanical equivalent of the common feet review.
+Use the physical track-speed/contact audit alongside the sheet. GPU handoff
+includes these renders and archives them at 512/256. Unit-local provenance now
+lives in `units/tank/SOURCES.md` as well as the external source registry.
+
+Current CPU256/12-sample delivery: **180,602 bytes at Q80**, 40 frames, trimmed
+160px logical cells. All three belt tests, geometry/contact audit, atlas alpha /
+anchor / clip / camera / terminal-hold checks and the 240-frame, 8-second video
+probe pass. At256 alpha IoU changes from .927584 (previous GPU) to .949746 (new
+CPU); opaque RGB MAE changes from 6.595 to 7.489. These are different render
+settings and are descriptive, not an art threshold. At64 the identity survives,
+but the running gear and far fender remain distinguishable. Painted illumination
+still rotates with wheel texture; CPU smoke is grainy. **No tank-PASS marker.**
+The fresh GPU512 pass and visual review are still required for these changed
+masters. Run `ROUND=3 tools/art/anim3d/units/tank/gpu.sh`.

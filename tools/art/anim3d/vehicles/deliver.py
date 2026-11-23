@@ -62,6 +62,9 @@ def validate():
     assert report['atlas_sha256']==digest(OUT/'tank.webp')
     assert len({r['grade_sha256'] for r in report['renders'].values()})==1
     assert next(iter(report['renders'].values()))['grade_sha256']==digest(M/'grade.json')
+    rest_report=json.loads((M/'renders/c/render.json').read_text())
+    assert rest_report['blend_sha256']==digest(M/'tank.blend'), 'Stale rest master'
+    assert all(r['camera']==rest_report['camera'] for r in report['renders'].values()), 'Clip/rest camera mismatch'
     occupied=Image.new('L',atlas.size);motion={};restored={}
     for row,(clip,(count,fps,loop)) in enumerate(CLIPS.items()):
         c=meta['clips'][clip]

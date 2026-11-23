@@ -4,7 +4,7 @@ from pathlib import Path
 from mathutils import Vector
 ROOT=Path(os.environ['ANIM_ROOT']); M=ROOT/'masters/tank'
 stage=sys.argv[sys.argv.index('--')+1]
-clip=stage[2:] if stage.startswith('e-') else 'attack' if stage=='d' else None
+clip=stage[2:] if stage.startswith('e-') else 'attack' if stage=='d' else 'move' if stage=='g' else None
 path=M/'clips'/f'{clip}.blend' if clip else M/('tank-plain.blend' if stage=='b' else 'tank.blend')
 bpy.ops.wm.open_mainfile(filepath=str(path));sc=bpy.context.scene
 if sc.camera is None or sc.camera.type!='CAMERA':raise RuntimeError('Tank master has no assigned camera')
@@ -22,7 +22,23 @@ if sc.render.engine=='CYCLES':
 sc.render.resolution_x=sc.render.resolution_y=int(os.environ.get('RESOLUTION','256'))
 out=M/'renders'/stage;out.mkdir(parents=True,exist_ok=True)
 if stage=='b':bpy.data.objects['Vehicle suspension root'].location.z=-.11
-if clip:
+if stage=='g':
+    # Neutral geometry evidence for the mechanical-motion exception to feet checks.
+    clay=bpy.data.materials.new('Running gear review clay');clay.use_nodes=True
+    clay.node_tree.nodes['Principled BSDF'].inputs['Base Color'].default_value=(.34,.30,.23,1)
+    clay.node_tree.nodes['Principled BSDF'].inputs['Roughness'].default_value=.8
+    sc.view_layers[0].material_override=clay
+    for obj in bpy.data.objects:
+        if 'effect' in obj:obj.hide_render=True
+    for view,pos in [('top',(0,0,10)),('front',(9,0,2.2))]:
+        sc.camera.location=pos
+        sc.camera.rotation_euler=(Vector((0,0,1.02))-sc.camera.location).to_track_quat('-Z','Y').to_euler()
+        for i,frame in enumerate(json.loads(sc['sample_frames'])):
+            sc.frame_set(frame)
+            for obj in bpy.data.objects:
+                if 'effect' in obj:obj.hide_render=True
+            sc.render.filepath=str(out/f'{view}-{i:02}.png');bpy.ops.render.render(write_still=True)
+elif clip:
     frames=json.loads(sc['sample_frames'])
     if stage=='d':frames=[frames[i] for i in [0,3,4,9]]
     for i,frame in enumerate(frames):
@@ -31,11 +47,17 @@ if clip:
         if i>0 and frame==frames[i-1]:shutil.copyfile(out/f'{i-1:02}.png',dest);continue
         sc.frame_set(frame);sc.render.filepath=str(dest);bpy.ops.render.render(write_still=True)
 else:
-    views=[('three-quarter',(5.6,-10,4.2)),('front',(9,0,4.4)),('side',(0,-10,4.6))] if stage=='b' else [('three-quarter',(5.6,-10,4.2))]
+    # The saved camera is the calibrated painting viewpoint. Do not silently
+    # restore the original construction camera after freezing projection UVs.
+    views=[('three-quarter',None),('front',(9,0,4.4)),('side',(0,-10,4.6))] if stage=='b' else [('three-quarter',None)]
     for name,pos in views:
-        sc.camera.location=pos;target=Vector((0,0,1.02))
-        if stage=='details':target=Vector((.20,-.1,1.64));sc.camera.data.ortho_scale=2.8
-        sc.camera.rotation_euler=(target-sc.camera.location).to_track_quat('-Z','Y').to_euler()
+        if pos is not None:
+            sc.camera.location=pos
+            sc.camera.rotation_euler=(Vector((0,0,1.02))-sc.camera.location).to_track_quat('-Z','Y').to_euler()
+        if stage=='details':
+            # Dolly parallel to the image plane, retaining projection angle.
+            sc.camera.location += sc.camera.rotation_euler.to_matrix() @ Vector((.12,.48,0))
+            sc.camera.data.ortho_scale=2.8
         sc.render.filepath=str(out/f'{name}.png');bpy.ops.render.render(write_still=True)
-(out/'render.json').write_text(json.dumps({'engine':sc.render.engine,'device':sc.cycles.device if sc.render.engine=='CYCLES' else 'host Metal','resolution':sc.render.resolution_x,'samples':sc.cycles.samples if sc.render.engine=='CYCLES' else None,'blend_sha256':hashlib.sha256(path.read_bytes()).hexdigest(),'blender':bpy.app.version_string},indent=2))
+(out/'render.json').write_text(json.dumps({'engine':sc.render.engine,'device':sc.cycles.device if sc.render.engine=='CYCLES' else 'host Metal','resolution':sc.render.resolution_x,'samples':sc.cycles.samples if sc.render.engine=='CYCLES' else None,'blend_sha256':hashlib.sha256(path.read_bytes()).hexdigest(),'blender':bpy.app.version_string,'camera':{'location':list(sc.camera.location),'rotation':list(sc.camera.rotation_euler),'ortho_scale':sc.camera.data.ortho_scale}},indent=2))
 print('RENDER_READY',out)
