@@ -87,3 +87,7 @@ Round 2 projection: removed all independent source-box stretching; one fixed res
 Round 2 512px CPU rest review: materially richer face, arm and linen brushwork; the raised-knee pose reads at 64px. Still below painting at 256px: cowl seams/green islands, too broad hat, unnatural shading hand and raised sandal hovering above rear disc; staff and source contours still differ. No art PASS. All five revised clips now rendering for contact/framing/loop review.
 Rendered e-idle 512 px CYCLES/CPU
 Rendered e-move 512 px CYCLES/CPU
+Rendered e-attack 512 px CYCLES/CPU
+Rendered e-hit 512 px CYCLES/CPU
+Rendered e-death 512 px CYCLES/CPU
+Rendered b 512 px CYCLES/CPU

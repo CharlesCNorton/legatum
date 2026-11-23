@@ -29,3 +29,5 @@ Round 2 initial critique: opened latest rest comparison, native 64 px pair and d
 Loaded Legatum art plus all six Blender skills; applying finished-surface camera registration, bevel/cloth preservation, camera-only pigment with existing generated fur, product light calibration, frozen histogram grade, and clip review. Unit-specific FEEDBACK.md is absent; shared feedback 1–22 read. Prior images are CPU-labelled, not verified GPU evidence.
 Runner supplied lane-21 on crossbowman; branch switch blocked by index.lock permission. Preserved it unchanged and created Git-managed .worktrees/barbarian-scout-round2 on scout WIP c9464430 using the git-worktrees skill.
 Published c review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Published c review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Published c review: CPU 256 px, 8 samples; fixed rest-derived grade.

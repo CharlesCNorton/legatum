@@ -26,3 +26,31 @@
 - Started render c (CPU).
 - Completed render c (CPU).
 - c: 1 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- Started build  (CPU).
+- Completed build  (CPU).
+- Started render c (CPU).
+- Completed render c (CPU).
+- c: 1 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- Started bake  (CPU).
+- Round 2 geometry/material update: moved both IK elbow poles forward into the painted outline; kept the same poles in clip entry solves; applied solidify/bevel/subdivision on rigid kit before fixed camera UV sampling; camera-only 97% painted pigment avoids double lighting and emission spill. Standard/None intentionally preserves already-lit source colours, with physical unseen generated linen and 5:1 warm key/fill plus soft rim. Rest-preview sleeves/face/helmet now substantially closer.
+- Lowered real steel prod/string 105mm and stirrup 35mm to the painted shin height; broadened leather shoe shells; softened cream stone bevel and fine grain, lifted physical rim pigment with camera-only contribution. Second CPU256/8 rest comparison published immediately. Still NOT PASS: fingers/grip, shoe silhouette and depth/tone of the base remain different at 256; 64 reads the same class but does not match exactly.
+- GPU handoff now resolves its checkout, preserves a transcript and failing-stage status, checks Metal before rebuilding, requires actual current GPU512/64+ masters and derived256 for all eight stages, and verifies the decoded five-clip H.264/yuv420p MP4 with ffprobe. No automatic visual PASS. Trim packer now uses premultiplied bicubic with lossless alpha, exact duplicate reuse and independent source/hash/alpha/offset/decoded-death checks.
+- Completed bake  (CPU).
+- Started animate  (CPU).
+- Completed animate  (CPU).
+- Started audit  (CPU).
+- Completed audit  (CPU).
+- Started render b (CPU).
+- Completed render b (CPU).
+- b: genuine front, three-quarter and side geometry views.
+- Started render c (CPU).
+- Completed render c (CPU).
+- c: 1 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- Started render d (CPU).
+- Started preflight  (GPU).
+- Completed render d (CPU).
+- d: 4 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- Started render e-idle (CPU).
+- Completed render e-idle (CPU).
+- e-idle: 8 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- Started render e-move (CPU).

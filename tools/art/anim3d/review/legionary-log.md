@@ -54,3 +54,6 @@
 - Published e-attack: CYCLES/CPU, 512 px, 8 samples; visual review pending.
 - Published e-hit: CYCLES/CPU, 512 px, 8 samples; visual review pending.
 - Published e-death: CYCLES/CPU, 512 px, 8 samples; visual review pending.
+- Published b: CYCLES/CPU, 256 px, 8 samples; visual review pending.
+- Full 512/CPU8 pass and original geometry audit passed, but visual details exposed skin protruding through scutum. Camera ray queries identified anatomical left fingers at token pixels 153-159/99-107. Retracted shield-side wrist 8cm in rest and authored guards/attack/death while preserving shield world placement; added actual skin/scutum BVH overlap check before release. Rebuilding previews/audit before dependent delivery.
+- Published c: CYCLES/CPU, 256 px, 8 samples; visual review pending.

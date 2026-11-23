@@ -50,3 +50,4 @@ Round 2 GPU handoff: executable no-argument gpu.sh, sequential Cycles GPU512/64 
 Baked clip move
 Baked clip attack
 Baked clip hit
+Baked clip death

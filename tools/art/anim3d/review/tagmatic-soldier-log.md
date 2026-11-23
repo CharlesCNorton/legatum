@@ -26,3 +26,5 @@
 - Tuned the cream disc pigment, grain, bevel and footprint; folded the anatomical thumb, compacted the palm without shortening the spear, strengthened the overhand thrust, and reused neutral elbow/knee poles at clip entry.
 - Added complete rebuilding GPU handoff with Metal preflight, retained transcript/status/receipt, GPU512/48 provenance gate, exact master checks and ffprobe validation. Missing-input preflight rejects correctly without launching Blender.
 - Four delivery regression tests pass: forty-frame alpha reconstruction, wrong-offset rejection, stale rest-grade rejection and CPU-as-GPU rejection.
+- Rest comparison at CPU512/16: common-foreground mean RGB absolute error drops from approximately 27/24/24 to 8/8/8; silhouette IoU changes only .8800 to .8810. The surface improvement is real, but contours still need fitting. This metric does not establish art parity.
+- Inspected new clay/orbit, rest/detail, rig poses and idle strips as they appeared. Plain orbit confirms full body/kit depth. Base remains too shallow and uniformly shaded; left boot/calf contour, face and death cloth remain below the painting.

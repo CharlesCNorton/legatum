@@ -49,3 +49,6 @@
 - Saved e-attack review, raw 512 px and graded 512/256 sets; CYCLES CPU 8 samples.
 - Saved e-hit review, raw 512 px and graded 512/256 sets; CYCLES CPU 8 samples.
 - Saved e-death review, raw 512 px and graded 512/256 sets; CYCLES CPU 8 samples.
+- Visibility masking initially hit an invalid evaluated-vertex reference after a dependency-graph query. Fixed by caching the graph and copying coordinates/normals/indices before ray queries; repaint completed successfully.
+- Motion masks remove the source-hand ghost; revealed jaw remains simpler than the painting, so added warm AO-shaded camera pigment. Shortened attack recovery to avoid a conspicuous sleeve spike. Reduced skirt flare after reviewing the protruding unpainted edge. Low soles are seated along camera rays and animated foot bones correct penetration from actual evaluated sole minima; audit now checks boot/stone clearance independently.
+- GPU handoff failure preflights PASS: missing inputs retain a failure transcript and do not emit a receipt; CPU-labelled masters are rejected. Actual GPU execution cannot be verified in this no-Metal sandbox.
