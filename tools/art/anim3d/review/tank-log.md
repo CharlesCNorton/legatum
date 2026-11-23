@@ -148,3 +148,4 @@
 - Honest 256px critique: premium brushwork now survives but rear hull shoulder, front fender/track width, muzzle thickness and base ellipse still differ; near wheels retain regular circular shading. At64 the WWII identity is clear but the wider nose/base and wheel mass distinguish it. Move wheel lighting rotates with the paint; flash/smoke are clean but simplified. NOT PASS.
 - Loaded all six Sam Blender skills plus complete playbook/common feedback/tank feedback/art direction and provenance; this pass targets full-depth contour registration before rebaking/rest-camera projection, retaining generated hidden fill, bevels, thick straps/folded canvas, product lights and one frozen automatic histogram grade.
 - Emitted tank-c-textured-lit.png from actual c renders; visual review pending.
+- Emitted tank-c-textured-lit.png from actual c renders; visual review pending.
