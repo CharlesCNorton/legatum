@@ -40,3 +40,7 @@
 - Published e-hit: 4 actual rendered frames, 12 fps; CPU 512px 4 samples.
 - Published e-death: 10 actual rendered frames, 10 fps; CPU 512px 4 samples.
 - Completed all five clips and wheel contact audit; delivery pack may now run.
+- Final CPU512/4-sample generation completed: all five clip masters, 512/256 frames, every stage including three-view geometry, top/front wheel cycle and rest crossfade.
+- Validation PASS: model/pipeline/clip/grade/frame hashes, six wheel travel/radius and exact loop, all geometry above stone, all forty reconstructed alpha masks, held death. Atlas 1368x595 / 193574 bytes / quality 78. MP4 1600x348, H.264 yuv420p, 240 frames, 8.0 seconds; decoded frame inspected.
+- gpu.sh exercised: expected explicit Metal unavailable at preflight; CPU evidence preserved, no GPU receipt claimed. Python compile, shell syntax and whitespace checks pass. Git index.lock denied; runner must commit.
+- Art verdict: recognizable rocket truck at 64px; at 256px over-bright far wheels, tire proportions, tube rim registration, cab/fender fitting and plain stone remain below the painting. Attack pulse needs more visual force. Oblique geometry and moving projected illumination need refinement. No PASS marker.

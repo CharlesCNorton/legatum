@@ -42,3 +42,19 @@
 - Posted e-death review (CPU, 256 px).
 - Retargeted CC0 / weapon-layer and saved death action (10 output frames).
 - Posted e-death review (CPU, 256 px).
+- Built MPFB anatomical body, 53-bone rig, olive field jacket, netted helmet, webbing, rifle and raised grenade; plain.blend saved.
+- Posted b-plain review (CPU, 256 px).
+- Baked real 256px Cycles AO and Pointiness curvature for helmet and jacket; physical recess grime and edge roughness applied.
+- Finished-surface camera projection with camera-only pigment; generated hidden fills retained.
+- Posted c-textured-lit review (CPU, 256 px).
+- Retargeted CC0 / weapon-layer and saved idle action (8 output frames).
+- Retargeted CC0 / weapon-layer and saved move action (8 output frames).
+- Retargeted CC0 / weapon-layer and saved attack action (10 output frames).
+- Retargeted CC0 / weapon-layer and saved hit action (4 output frames).
+- Retargeted CC0 / weapon-layer and saved death action (10 output frames).
+- Posted d-rig-poses review (CPU, 256 px).
+- Posted e-idle review (CPU, 256 px).
+- Posted e-move review (CPU, 256 px).
+- Posted e-attack review (CPU, 256 px).
+- Posted e-hit review (CPU, 256 px).
+- Posted e-death review (CPU, 256 px).
