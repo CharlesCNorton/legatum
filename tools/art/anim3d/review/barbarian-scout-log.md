@@ -96,3 +96,9 @@ Published b-plain geometry checkpoint.
 Published c review: GPU 512 px, 64 samples; fixed rest-derived grade.
 Published d review: GPU 512 px, 64 samples; fixed rest-derived grade.
 Published e-idle review: GPU 512 px, 64 samples; fixed rest-derived grade.
+Published e-move review: GPU 512 px, 64 samples; fixed rest-derived grade.
+Published e-attack review: GPU 512 px, 64 samples; fixed rest-derived grade.
+Published e-hit review: GPU 512 px, 64 samples; fixed rest-derived grade.
+Published e-death review: GPU 512 px, 64 samples; fixed rest-derived grade.
+Packed 40 trimmed 160 px frames, WebP quality 80, 179574 bytes.
+Published five-clip, 2x, cream-background H.264 review: barbarian-scout-round1.mp4

@@ -177,3 +177,10 @@
 - Audit passed: five clips, source hashes, 53-bone rig, fixed base and positive object scales.
 - Driver round 2 surface pass: broadened cambered feather, warmed physical stone with fine pigment grain, inverse-skinned finished shirt/waistcoat across pelvis/spine without moving rest surfaces; added incidence-based hidden-fill transition while retaining frozen camera UVs, beveled straps, folds and product lighting. CPU256/3 and CPU512/4 previews inspected.
 - Driver round 2 death pass: source terminal arm directions now blend out of the aiming posture; full blend exceeded framing and was rejected, constrained blend retained. Torso follows spine, but exposed arms/cloth and terminal ground contact still need artistic work. No visual PASS.
+- Authored death skeletal action, 10 samples.
+- Delivery gate caught death frame 5 touching the right cell edge after wider source-arm blend; rejected that pack and reduced the arm transition while keeping camera/character scale, frame count and Q75 floor unchanged. Rendering attack and death through the new isolated-process path on CPU512/4. Recovery tests pass: 3 tests for checkpoint identity/corruption, interrupted resume and bounded SIGTRAP failure without publishing a manifest.
+- Authored death skeletal action, 10 samples.
+- Posted e-death review (CPU, 512 px).
+- Authored death skeletal action, 10 samples.
+- Final death contact refinement: two-segment IK lowers hands onto the disc while preserving source elbow poles and arm lengths; released musket world transform restored after the hand solve. CPU512 inspection removes the conspicuously raised terminal hands. Exposed sleeves/coat and face remain below the painting. Extended geometry audit to upper/lower arms. Running every final stage through isolated frame workers before final packing.
+- Audit passed: five clips, source hashes, 53-bone rig, fixed base and positive object scales.
