@@ -34,3 +34,28 @@
 - Posted e-death review (CPU, 256 px).
 - Posted g-feet-top review (CPU, 256 px).
 - Posted g-feet-front review (CPU, 256 px).
+- Saved death skeletal action, 10 samples; CC0 Quaternius.
+- Posted e-death review (CPU, 256 px).
+- Built standing MPFB human, buff coat, red breeches/sash, feather hat, bandolier, musket and bayonet.
+- Posted b-plain review (CPU, 512 px).
+- Finished-surface camera-only projection applied; physical stone excluded and generated fills retained.
+- Posted c-textured-lit review (CPU, 512 px).
+- Saved idle skeletal action, 8 samples; CC0 Quaternius.
+- Saved move skeletal action, 8 samples; CC0 Quaternius.
+- Saved attack skeletal action, 10 samples; authored musket recoil.
+- Saved hit skeletal action, 4 samples; CC0 Quaternius.
+- Saved death skeletal action, 10 samples; CC0 Quaternius.
+- Posted d-rig-poses review (CPU, 512 px).
+- Posted e-idle review (CPU, 512 px).
+- Posted e-move review (CPU, 512 px).
+- Posted e-attack review (CPU, 512 px).
+- Posted e-hit review (CPU, 512 px).
+- Posted e-death review (CPU, 512 px).
+- First b/c reviews posted immediately; viewed plain, textured, close details and rest crossfade at 256/64. Identity reads; hat/feather and base still differ.
+- Four captured clips use pinned CC0 Quaternius motion; authored musket recoil is the fifth. Move uses reference-space flat boot calibration, not per-frame foot yaw patches.
+- First preview exposed tall locomotion clipping and horizontal death cropping; pack validation rejected both. Corrected the rest mapping and diagonal whole-body fall heading, retaining source articulation.
+- First complete CPU256 atlas validated: 40 frames, 188414 bytes, quality 85; trim reconstruction, hashes, alpha, held death and H.264 movie pass. Not art approval.
+- Rendering final round-one CPU512/8-sample masters sequentially through the PATH gate. GPU handoff remains separate and requires actual Metal verification.
+- Posted g-feet-top review (CPU, 512 px).
+- Posted g-feet-front review (CPU, 512 px).
+- Audit passed: five clips, source hashes, 53-bone rig, fixed base and positive object scales.

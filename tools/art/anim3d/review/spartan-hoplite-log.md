@@ -93,3 +93,8 @@ Baked clip hit
 Baked clip death
 Review e-move: 256px CYCLES/CPU, 8 samples; 8 actual frames.
 Review e-death: 256px CYCLES/CPU, 8 samples; 10 actual frames.
+Review c: 256px CYCLES/CPU, 12 samples; 1 actual frames.
+Baked clip idle
+Baked clip move
+Baked clip attack
+Baked clip hit
