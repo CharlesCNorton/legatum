@@ -72,11 +72,6 @@
     "median_turns": 10,
     "measured_at": "2026-11-12T02:50:45Z"
   },
-  "lab": {
-    "question": "After the Aztecs' bought Riflemen beat back your first assault, can Athens still take Tenochtitlan?",
-    "blurb": "Turn 133 of a recorded game. Athens's first assault on Tenochtitlan stalled when the Aztecs bought two Riflemen.",
-    "era": 4
-  },
   "state": {
     "encoding": "gzip-base64",
     "hash": "14226442886428084001",

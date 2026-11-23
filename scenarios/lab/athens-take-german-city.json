@@ -65,12 +65,6 @@
     "win_percent": 0,
     "measured_at": "2026-11-15T19:17:14Z"
   },
-  "lab": {
-    "question": "Can Athens take a German city before the hold ends?",
-    "blurb": "Turn 160. Germany has begun its victory hold. Your army faces its forces; Cologne and Essen lie to the east.",
-    "era": 6,
-    "requires": "hard-supply-cap"
-  },
   "state": {
     "encoding": "gzip-base64",
     "hash": "14777226023492703726",

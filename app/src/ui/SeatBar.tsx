@@ -171,7 +171,6 @@ export function SeatBar({ phoneDetails = false, onOpenDetails, race }: { phoneDe
   const advisorWelcome = useAdvisor((s) => s.enabled && !s.seen.includes('welcome')) && views?.[seat]?.turn === 1;
   const returnOwned = alarmUp || advisorWelcome || (!!moment && moment.tier !== 'minor' && !momentDeferred);
   const report = useGame((s) => s.report);
-  const scenario = useGame((s) => s.scenario);
   const remote = useGame((s) => s.client?.kind === 'remote');
   const disconnected = remote && net?.conn !== 'open';
   // The host's seat list opens by itself only while a lost player's seat can be opened. Remove is rare
@@ -204,9 +203,7 @@ export function SeatBar({ phoneDetails = false, onOpenDetails, race }: { phoneDe
   const myErrors = errors[seat].filter((e) => e.index >= 0);
 
   let cta: { label: string; sub: string; onClick: () => void; kind: string; disabled?: boolean; act?: string };
-  if (scenario && scenario.status.outcome !== 'Playing') {
-    cta = { label: 'Scenario over', sub: 'See the result', onClick: () => useGame.getState().set({ scenario: { ...scenario, resultOpen: true } }), kind: 'todo' };
-  } else if (view.finished && view.history) {
+  if (view.finished && view.history) {
     cta = { label: 'Game over', sub: 'Game report', onClick: () => useGame.getState().openGameReport(), kind: 'todo' };
   } else if (view.finished) {
     cta = { label: 'Game finished', sub: 'View the final map', onClick: () => {}, kind: 'waiting', disabled: true };
@@ -268,8 +265,7 @@ export function SeatBar({ phoneDetails = false, onOpenDetails, race }: { phoneDe
     cta = { label: report?.events[seat]?.some((e) => e.type === 'ResearchQueueAdvanced' && e.player === view.me && e.next === null) ? 'Research queue finished: choose next' : 'Choose research', sub: 'Open technologies', onClick: goToPending, kind: 'todo' };
   } else {
     const solo = !remote && humans.length === 1;
-    const lastTurn = scenario?.status.turns_left === 1;
-    cta = { label: solo ? 'End turn' : 'Ready', sub: lastTurn ? 'Last turn of the scenario' : solo ? 'Resolve the turn' : 'End planning for this seat', onClick: readyAndPass, kind: 'ready' };
+    cta = { label: solo ? 'End turn' : 'Ready', sub: solo ? 'Resolve the turn' : 'End planning for this seat', onClick: readyAndPass, kind: 'ready' };
   }
 
   // Beside the race, a This Turn with nothing in it (no report link, order, seat or review) is only a heading over

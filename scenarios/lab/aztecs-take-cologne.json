@@ -71,11 +71,6 @@
     "win_percent": 0,
     "measured_at": "2026-11-15T17:35:31Z"
   },
-  "lab": {
-    "question": "Can you take Germany's unwalled capital before its 2,097 Gold turns into an army?",
-    "blurb": "Aztecs, turn 111: you have just declared War on Germany, the VP leader. Germany has 2 military units for 9 cities and 2,097 Gold.",
-    "era": 4
-  },
   "state": {
     "encoding": "gzip-base64",
     "hash": "18098375995910522321",

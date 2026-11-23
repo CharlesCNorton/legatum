@@ -1,7 +1,6 @@
-// Screen tour, title, lobby, hot seat and scenarios. One of the domain slices of the old e2e/screen-tour.spec.ts; run it alone with
+// Screen tour, title, lobby and hot seat. One of the domain slices of the old e2e/screen-tour.spec.ts; run it alone with
 // `npx playwright test e2e/tour/title-lobby`. Shots land in test-results/screen-tour/<size>/title-lobby/.
 import { test, expect } from '../fixtures';
-import { endPlanning } from '../turnActions';
 import { SIZES, shot } from './helpers';
 
 // Each test starts from its own save, so tests can run on separate workers.
@@ -113,91 +112,5 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await shot(page, size, '05d-six-empires-first-turn');
   });
 
-  test('scenarios: list, briefing, objective bar, result and feedback', async ({ page }) => {
-    await page.addInitScript(() => {
-      if (!location.protocol.startsWith('http')) return;
-      (globalThis as { legatumScenarioOverrides?: unknown }).legatumScenarioOverrides = { 'war-sparta-nicaea': { objective: { turns: 1 } } };
-      localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
-    });
-    await page.goto('/?client=wasm');
-    await page.getByRole('button', { name: 'Scenarios', exact: true }).click();
-    await expect(page.getByRole('heading', { name: 'Scenario Lab', exact: true })).toBeVisible();
-    await page.mouse.move(2, 2);
-    await shot(page, size, '32-scenarios');
-    for (const [slug, title] of [['celts-reserve', 'The Unwalled Reserve'], ['india-niter', 'An Army Without Niter']] as const) {
-      await page.goto('/?client=wasm');
-      await page.getByRole('button', { name: 'Scenarios', exact: true }).click();
-      await expect(page.getByRole('heading', { name: 'Scenario Lab', exact: true })).toBeVisible();
-      const option = page.getByRole('option', { name: new RegExp(title) });
-      await option.scrollIntoViewIfNeeded();
-      await page.mouse.move(2, 2);
-      await shot(page, size, `32b-scenario-card-${slug}`);
-      await option.click();
-      await expect(page.getByTestId('lab-briefing')).toBeVisible();
-      await page.mouse.move(2, 2);
-      await shot(page, size, `32c-scenario-briefing-${slug}`);
-    }
-    await page.goto('/?client=wasm');
-    await page.getByRole('button', { name: 'Scenarios', exact: true }).click();
-    await expect(page.getByRole('heading', { name: 'Scenario Lab', exact: true })).toBeVisible();
-    await page.getByRole('option', { name: /Nicaea Strike/ }).click();
-    await expect(page.getByTestId('lab-briefing')).toBeVisible();
-    await page.mouse.move(2, 2);
-    await shot(page, size, '33-scenario-briefing');
-    await page.getByRole('button', { name: /^Begin Sparta's Nicaea Strike/ }).click();
-    await expect(page.getByTestId('scenario-bar')).toBeVisible();
-    await expect(page.locator('.loading-screen')).toHaveCount(0);
-    await shot(page, size, '34-scenario-in-play');
-    // The objective's city is ringed on the map; Show on map centres on it.
-    await page.getByTestId('scenario-show-target').click();
-    await page.waitForTimeout(500);
-    await shot(page, size, '34b-scenario-target-on-map');
-    await page.getByTestId('scenario-bar').locator('.sb-main').click();
-    await expect(page.locator('#scenario-details')).toBeVisible();
-    await shot(page, size, '35-scenario-objective-details');
-    await page.getByTestId('scenario-bar').locator('.sb-main').click();
-    await endPlanning(page);
-    await expect(page.getByTestId('scenario-result')).toBeVisible();
-    await expect(page.getByTestId('scenario-saved')).not.toHaveText('Saving your run…');
-    await page.mouse.move(2, 2);
-    await shot(page, size, '36-scenario-result');
-    await page.getByTestId('scenario-feel').click();
-    await expect(page.getByTestId('scenario-feedback')).toBeVisible();
-    await page.mouse.move(2, 2);
-    await shot(page, size, '36b-scenario-feedback');
-    const feedback = page.getByTestId('scenario-feedback');
-    await feedback.getByRole('radiogroup', { name: 'Fun' }).getByRole('radio', { name: '4' }).click();
-    await feedback.getByRole('radiogroup', { name: 'Fair' }).getByRole('radio', { name: '3' }).click();
-    await feedback.getByRole('radio', { name: 'Too easy' }).click();
-    await feedback.locator('textarea').fill('Four Hoplites at the gate felt too easy.');
-    await page.mouse.move(2, 2);
-    await shot(page, size, '36c-scenario-feedback-filled');
-    await page.getByTestId('scenario-save-feedback').click();
-    await expect(page.getByRole('heading', { name: 'Thank you' })).toBeVisible();
-    await expect(page.getByTestId('scenario-saved')).not.toHaveText('Saving your run…');
-    await page.mouse.move(2, 2);
-    await shot(page, size, '36d-scenario-thanks');
-    // Back on the list the card shows your best result.
-    await page.getByRole('button', { name: /^Back to scenarios/ }).click();
-    await page.mouse.move(2, 2);
-    await shot(page, size, '36e-scenarios-after-play');
-  });
 
-  test('scenarios: the objective is marked on the map from turn 1, even in fog', async ({ page }) => {
-    await page.addInitScript(() => {
-      if (!location.protocol.startsWith('http')) return;
-      localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
-    });
-    await page.goto('/?client=wasm');
-    await page.getByRole('button', { name: 'Scenarios', exact: true }).click();
-    await page.getByRole('option', { name: /Nicaea Strike/ }).click();
-    await expect(page.getByTestId('scenario-briefing-target')).toContainText(/Take \w+: \d+ tiles? /);
-    await shot(page, size, '37-scenario-briefing-target');
-    await page.getByRole('button', { name: /^Begin Sparta's Nicaea Strike/ }).click();
-    await expect(page.locator('.loading-screen')).toHaveCount(0);
-    await expect(page.getByTestId('scenario-target')).toContainText('Take');
-    await page.getByTestId('scenario-show-target').click();
-    await page.waitForTimeout(500);
-    await shot(page, size, '38-scenario-target-in-fog');
-  });
 });

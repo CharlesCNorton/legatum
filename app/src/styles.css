@@ -711,8 +711,7 @@ dialog.settings-modal::backdrop {
 @media (max-height: 920px) {
   .title-actions .btn.big:not(.primary) { padding: 4px 16px 2px; }
 }
-/* Laptop heights up to 760px: the Scenarios entry added a row, so tighten the menu one step so
-   every entry fits inside the slip. */
+/* Keep the title menu inside the slip at laptop heights. */
 @media (max-height: 760px) {
   .title-menu { margin-top: 20px; }
   .title-settings { margin-top: 6px; padding-top: 6px; }

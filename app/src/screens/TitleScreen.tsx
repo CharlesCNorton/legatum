@@ -84,7 +84,6 @@ function ResumeButton() {
 function MainMenu({ onMultiplayer }: { onMultiplayer: () => void }) {
   const online = useGame((s) => s.online);
   const openSetup = useGame((s) => s.openSetup);
-  const goto = useGame((s) => s.goto);
   const loadSave = useGame((s) => s.loadSave);
   const set = useGame((s) => s.set);
   const error = useGame((s) => s.error);
@@ -187,9 +186,6 @@ function MainMenu({ onMultiplayer }: { onMultiplayer: () => void }) {
         </button>
         <button className="btn big quiet" onClick={() => pickSaveFile(askThenLoad, (m) => set({ error: m }))}>
           Load Game…
-        </button>
-        <button className="btn big quiet" onClick={() => { set({ error: null }); goto('scenarios'); }}>
-          Scenarios
         </button>
         <button className="btn big quiet" onClick={openGuide}>How to Play</button>
         <Settings />

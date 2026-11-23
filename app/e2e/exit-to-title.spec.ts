@@ -32,17 +32,6 @@ test('normal game: Exit to title returns to the title screen', async ({ page }) 
   await expect(page.getByRole('button', { name: /^Resume/ })).toBeVisible();
 });
 
-test('scenario: Exit to title returns to the title screen', async ({ page }) => {
-  await page.goto('/?client=wasm');
-  await page.getByRole('button', { name: 'Scenarios', exact: true }).click();
-  await page.getByRole('option', { name: /Nicaea Strike/ }).click();
-  await page.getByRole('button', { name: /^Begin Sparta's Nicaea Strike/ }).click();
-  await expect(page.getByTestId('scenario-bar')).toBeVisible();
-
-  await openGameMenuAndExit(page);
-  await expect(page.getByRole('heading', { name: 'Legatum', exact: true })).toBeVisible();
-});
-
 // Safari/WKWebView: pressing a <button> does not focus it. Mousedown blurs the focused element
 // (relatedTarget null, activeElement = body) and focus never lands on the button.
 async function behaveLikeSafari(page: import('@playwright/test').Page) {

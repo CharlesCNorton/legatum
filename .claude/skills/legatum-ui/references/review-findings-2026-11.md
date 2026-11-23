@@ -157,7 +157,6 @@ Moved verbatim from SKILL.md on 2026-11-22 (original order kept). The current ru
   - **Join-screen notices are shot with six seats at scroll 0,** and sit directly under the lede with `role="alert"`, never after the seats.
 
 ## From the open-source launch reviews (2026-11-21)
-- **Scenario text speaks to the player.** Cards and briefings say "you" for the human player and never name the designer, the user or "your X game". Scenario blurbs follow the card limits (30 words, two sentences); `copyRules.ts` refuses the owner-facing phrases.
 - **A disabled button never keeps `primary`**, and a sub-label promises only what this build can do: branch it on the same flag that disables its sibling (hosted website, no relay).
 - **Menu error states are shot with a game open** (Resume showing) at 1000x600, and the menu's bottom stays above the title footer.
 - **A faction that lacks a yield never shows a cost in that yield** (Egypt has no Production).

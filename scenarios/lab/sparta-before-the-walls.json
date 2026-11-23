@@ -71,12 +71,6 @@
     "win_percent": 0,
     "measured_at": "2026-11-08T02:13:54Z"
   },
-  "lab": {
-    "question": "Can you take Byzantium's capital with five Hoplites before its Walls go up?",
-    "blurb": "Turn 28. Byzantium's capital is empty and building Walls, nine tiles north of your army.",
-    "era": 1,
-    "order": 2
-  },
   "state": {
     "encoding": "gzip-base64",
     "hash": "13696915022281009500",

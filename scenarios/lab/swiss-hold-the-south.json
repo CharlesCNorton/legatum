@@ -58,11 +58,6 @@
     "win_percent": 0,
     "measured_at": "2026-11-08T22:26:20Z"
   },
-  "lab": {
-    "question": "Could Switzerland have held its cities against the leader's Field Cannons with the army it had?",
-    "blurb": "Turn 140. You declared war on the Aztecs ten turns ago beside the Celts. Their Field Cannons and Riflemen are now at your border; your army is Spearmen and Archers.",
-    "era": 4
-  },
   "state": {
     "encoding": "gzip-base64",
     "hash": "7946914051675888817",

@@ -157,7 +157,6 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
 
   const views = useGame((s) => s.views);
   const seat = useGame((s) => s.seat);
-  const scenarioTargets = useGame((s) => s.scenario?.status.targets);
   const cityAlarms = useCityAlarms();
   const siege = useMemo(() => alarmedCities(cityAlarms), [cityAlarms]);
   const selection = useGame((s) => s.selection);
@@ -627,10 +626,9 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
     reducedMotion,
     combatFx: { enabled: combatFx.enabled },
     celebration,
-    scenarioTargets,
     siege,
   });
-  const nextFrame = { anchoringPreview: !!activePreview, lens, lensTiles, overlays, yieldTiles: overlayTiles.yields, borderTiles: overlayTiles.borders, view, selUnit, selection, pathInfo, pathAttack, pendingLines, pendingMarks, cityFocuses, cityBuilds, rangedTiles, goalPreview, territoryOverlay, tileBuys, improveOverlay, placeOverlay, airOverlay, hover, hoverSelect: intent === 'select', pingArmed: pingMode, cues, arrow, pings: livePings, anim, seat, reducedMotion, combatFx: { enabled: combatFx.enabled }, celebration, scenarioTargets, siege };
+  const nextFrame = { anchoringPreview: !!activePreview, lens, lensTiles, overlays, yieldTiles: overlayTiles.yields, borderTiles: overlayTiles.borders, view, selUnit, selection, pathInfo, pathAttack, pendingLines, pendingMarks, cityFocuses, cityBuilds, rangedTiles, goalPreview, territoryOverlay, tileBuys, improveOverlay, placeOverlay, airOverlay, hover, hoverSelect: intent === 'select', pingArmed: pingMode, cues, arrow, pings: livePings, anim, seat, reducedMotion, combatFx: { enabled: combatFx.enabled }, celebration, siege };
   // Redraw only when something the map draws changed: a render for a card or a panel leaves the canvas alone.
   // A change of the tile under the pointer alone repaints only the hover mark and the route (hoverClipBoxes).
   if (hoverOnlyChange(frame.current, nextFrame)) hoverDirty.current = true;
@@ -970,7 +968,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
       // late-game map 20 to 30 times a second only for these kept the main thread busy and made hover and clicks lag.
       // The pointer reaching a new tile is the same kind of frame: the old and new hover marks and routes are a few boxes.
       const pulseOnly = (pulse || siegePulse || smoulderTick || idleTick || hoverMoved) && !dirty.current && !animating && !cueLive && !arrowLive && !pingLive && !celebrating
-        && !f.scenarioTargets?.length && (!pulse || !!lastRing) && (!(siegePulse || smoulderTick) || lastAmbient.length > 0);
+        && (!pulse || !!lastRing) && (!(siegePulse || smoulderTick) || lastAmbient.length > 0);
       const drawT = pulseOnly ? lastFullT : t;
       if (!pulseOnly) lastFullT = t;
       // Idle life keeps its own clock: it moves on a full frame or an idle tick, and holds through the other clipped frames.
@@ -1100,7 +1098,6 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
         ambientT: still ? null : t,
         idleT,
         seatColor: mapPlayerColor(f.view?.me),
-        scenarioTargets: f.scenarioTargets,
         siege: f.siege,
         reducedMotion: still,
       });

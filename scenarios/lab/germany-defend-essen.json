@@ -58,12 +58,6 @@
     "win_percent": 0,
     "measured_at": "2026-11-08T22:01:34Z"
   },
-  "lab": {
-    "question": "Can you hold Essen and your other cities when the Mongol riders arrive?",
-    "blurb": "Turn 134. Germany has 1,884 Gold and no defender in Essen, and Mongol riders are on their way.",
-    "era": 5,
-    "order": 20
-  },
   "state": {
     "encoding": "gzip-base64",
     "hash": "12419309276796793478",

@@ -58,12 +58,6 @@
     "win_percent": 0,
     "measured_at": "2026-11-08T22:01:34Z"
   },
-  "lab": {
-    "question": "Can you take Germany’s escorted Settler and found a second Celtic city?",
-    "blurb": "Turn 16. A German Settler and its Spearman are crossing near your Scout. Catch the Settler and it founds your second city.",
-    "era": 0,
-    "order": 19
-  },
   "state": {
     "encoding": "gzip-base64",
     "hash": "16501922822131299938",

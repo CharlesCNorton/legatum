@@ -80,11 +80,6 @@
     "win_percent": 0,
     "measured_at": "2026-11-11T14:11:27Z"
   },
-  "lab": {
-    "question": "Can you take Shangdu and Almaliq while the Mongol army is away fighting the Aztecs?",
-    "blurb": "Switzerland, turn 40. The Mongols are at War with the Aztecs and most of their army is in the south. Their two cities nearest you have no Walls.",
-    "era": 1
-  },
   "state": {
     "encoding": "gzip-base64",
     "hash": "17154878706897866980",
