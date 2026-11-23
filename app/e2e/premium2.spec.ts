@@ -58,7 +58,7 @@ for (const [width, height] of [[1000, 600], [1440, 900]] as const) {
     const bounds = await Promise.all([last.boundingBox(), body.boundingBox()]);
     expect(bounds[0]!.y + bounds[0]!.height).toBeLessThanOrEqual(bounds[1]!.y + bounds[1]!.height + 1);
     // Close is in view, and Escape gives the map back.
-    await expect(sheet.getByRole('button', { name: 'Close objectives' })).toBeInViewport();
+    await expect(sheet.getByRole('button', { name: 'Close score ledger' })).toBeInViewport();
     await page.keyboard.press('Escape');
     await expect(sheet).toHaveCount(0);
   });
