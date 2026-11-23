@@ -171,3 +171,174 @@ simulation or motion-capture retargeting is claimed for this unit. Review foot
 contact, feather intersections and projection stretching separately from those
 technical checks. A PASS file is written only after visual approval, not by the
 GPU or packing scripts.
+
+
+### Eagle warrior round 2: finished surfaces and verified delivery
+
+Start from the preserved unpainted/baked master. `refine.py` freezes the current
+MPFB macro shape on a working copy, retains all 19,158 vertices and original
+weights, fits the complete weapon fist through inverse skin transforms, and
+applies real Solidify/Bevel surfaces before projection. The original morphable
+checkpoint stays intact. The circular stone is narrower, with a deeper beveled
+rim and unchanged .20 m contact top; a broad elevated key softens its shadows.
+
+`paint.py` samples visibility on the finished faces through Blender's evaluated
+scene rays. The prior custom visibility tree missed visible finished surfaces;
+a diagnostic full-pigment render and independent scene rays exposed the error.
+Boundary-vertex normals alone also erase broad feather fronts. Polygon-centre
+visibility and a local support tolerance keep raised weaving/overlapping vane
+edges from cutting stripes in the underlying pigment. Source UVs remain frozen
+and move with the actual geometry. Source-painted illumination is camera-only;
+non-camera rays see physical materials. Unseen areas use the original generated
+feather fill and AO-modulated pigment with physical response. This remains a
+single-view reconstruction and must be checked during motion.
+
+The authored death folds both knees, turns the shield toward the stone and
+releases the entire club together. Its final PNG is copied and references the
+same atlas rectangle, preserving an exact decoded hold. The geometry audit now
+excludes the base from figure-ground measurements, checks the actual circular
+contact footprint, and rejects a high terminal head or out-of-frame geometry.
+It is not a full cloth/skin collision solver or visual approval.
+Native foot undersides are fitted inside the sandal soles through inverse skin
+transforms along the camera rays: raising only the rig would move the source
+pixels and leave anatomy protruding through the sole. Only foot-weighted
+vertices are fitted; MPFB hidden helper vertices are left alone.
+
+`gpu.sh` defaults to round 2, resolves its own checkout, regenerates the five
+clips, audits and renders every stage at GPU512/64. It keeps a round transcript,
+failed-stage status and success receipt. Missing inputs fail before Blender;
+CPU previews fail the independent GPU512 gate. The receipt requires all stage
+hashes, 512/256 masters, atlas validation and the decoded eight-second MP4.
+`ROUND` remains driver-controlled. No script writes the art PASS marker.
+
+Delivery preserves the same v2 offsets and anchor, all 40 playback samples,
+Q75 minimum and 200,000-byte cap. Premultiplied bicubic reduction avoids alpha
+ringing; there is no alpha quantization. Identical samples share a rectangle.
+Validation checks source/metadata hashes, timing, exact reconstructed alpha,
+transparent gutters, framing, motion and the decoded terminal hold. The rest
+comparison now includes native 64 px views; detail sheets label their actual
+source resolution. `test_delivery.py` checks grade monotonicity/alpha, trim
+reconstruction, transparent-colour isolation and missing GPU-stage rejection.
+
+Round-2 CPU preview: all forty samples at256/Cycles CPU8, **195,152 bytes at
+Q85**, 38 unique rectangles and lossless alpha. The complete geometry/contact
+audit, five delivery regression tests and atlas/video validation pass. The MP4
+is H.264/yuv420p, 1600x348, 240 frames/eight seconds. Prior and current evidence
+remain in `round1-cpu` and `round2-cpu`. Silhouette IoU improves from .8094 to
+.8250 at256 and .8139 to .8362 at64. Wing fringe, lower-leg/foot shapes and motion
+still differ; these technical results are **not art PASS**. Fresh GPU512/64
+masters and visual acceptance remain the lead-side handoff.
+
+## Infantry chapter: Gaesatae, round 1
+
+The Gaesatae unit lives exclusively in `units/gaesatae/`; it does not replace the
+spearman's master or shared scripts. Use all six Blender skills. Its CC0 MPFB
+anatomy and 53-bone skeleton support the painting's bare tattooed torso, swept
+hair and moustache, gold torc, folded trousers, leather boots, convex elongated
+wooden shield and overhead iron-tipped spear. The shield, clothing, spear and
+hair have real thickness. No image plane or alpha-cutout geometry is used.
+
+The four quality levers are the standard method: (1) calibrate the fixed camera
+and rest anatomy against the painting, register the original full-size source
+to token bounds, and freeze camera UVs on deforming surfaces with ray visibility
+and facing masks; unseen sides use recorded original generated painted fills;
+(2) finish geometry with subdivision, folds, thick bindings and beveled metal;
+(3) use warm upper-left area key, soft fill, cool rim and actual contact shadows;
+(4) fit a bounded RGB histogram correction from the rest image and freeze that
+same grade for all clips. Painted illumination is deliberately retained by the
+projection layer. It does not establish a match when silhouettes disagree.
+The shared cream stone recipe uses sRGB **#E9CFA0**, converted to linear inputs,
+with roughness 0.87 and fine grain. Every unit keeps one stationary low disc.
+
+Inspect `gaesatae-f-restpose-compare.png`: painting left, render middle, 50/50
+crossfade right. Compare native 256 and 64 pixels, plus face/torc, torso and
+shield details. Silhouette, equipment attachment and motion quality remain
+visual gates. A technically valid atlas is not a PASS. Never write the PASS file
+until rest and all five clips satisfy the art bar.
+
+From the repository root, with existing MPFB installation and painting assets:
+
+```sh
+source tools/art/anim3d/env.sh
+unit=tools/art/anim3d/units/gaesatae
+"$ANIM_ROOT/venv/bin/python" "$unit/prepare.py"
+blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python "$unit/build.py"
+blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python "$unit/project.py"
+blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python "$unit/animate.py"
+CYCLES_DEVICE=CPU RESOLUTION=256 SAMPLES=8 blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python "$unit/render.py" -- all
+"$ANIM_ROOT/venv/bin/python" "$unit/deliver.py" --movie
+```
+
+Every Blender invocation uses plain `blender` on PATH, the machine-wide gate.
+Never bypass it or start simultaneous heavy jobs. CPU renders are previews;
+`ROUND=1 tools/art/anim3d/units/gaesatae/gpu.sh` is the complete lead handoff.
+It requires a real Metal Cycles GPU, renders every stage at 512 pixels, retains
+512/256 sets under external `masters/gaesatae/masters/`, rebuilds review images,
+packs/validates the atlas and encodes `gaesatae-round${ROUND}.mp4`. The movie
+reconstructs trimmed frames, shows five clips side by side at 2x on cream, and
+is 8 seconds, H.264, yuv420p. It does not silently fall back to CPU.
+
+### Gaesatae trimmed atlas format (version 2)
+
+The logical frame is 160x160, anchor `(ax,ay)=(80,142)`. The atlas packs one
+horizontal variable-width row per clip in idle/move/attack/hit/death order.
+`clips[name]` retains `row`, numeric `frames`, `fps` and `loop`, and adds `rects`,
+one `{x,y,w,h,ox,oy}` per frame. `(x,y,w,h)` selects the atlas crop; `(ox,oy)`
+is its top-left in the original 160px transparent cell. Reconstruct before
+anchoring, or draw the crop at `screenAnchor + (ox-ax, oy-ay)`. Do not infer
+atlas coordinates from `row * frame.h`. No runtime consumer is changed here.
+
+Packing keeps 8/8/10/4/10 frames, quality 90 down to **75 minimum**, and refuses
+anything over **200,000 bytes**. It checks master/render hashes, transparent
+margins, rectangles, offsets, motion and identical lossless terminal death frames.
+The final death PNG is copied rather than rerendered. Raw, graded and derived
+masters remain outside Git. Render manifests name engine, device and samples;
+CPU preview masters are never labelled GPU output or upscaled to fake 512px.
+
+### Gaesatae resumed round 2: finished surfaces and planted feet
+
+Resume from the saved `plain.blend`; `project.py` starts from that checkpoint on
+every run. `refine.py` preserves the native rig, turns the feet independently of
+the braced calves, fits ankle depth and corrects the evaluated leather sole to
+`.103 m`. It freezes the current MPFB macro mix and applies surface modifiers
+before projection so paint is registered to the actual rendered surface. A
+zero-level subdivision modifier is removed instead of applied. Hair, clothes,
+shield and straps remain three-dimensional; this is not a cutout. The source
+pigment is camera-only, while physical shaders still receive shadows and light
+on the hidden surfaces. Existing original generated fills are reused.
+
+The base is still a round stationary disc; its radius, depth position and smaller
+bevel improve the footprint. Its camera elevation/ellipse and the hair/hand
+contours remain visible differences. The single automatic rest grade stays fixed
+for all clips. Do not call this an exact-viewpoint or art-quality pass.
+
+Move preserves registered ankle depth and foot orientation, with measured sole
+contact/lift for each sample. Attack keeps its neutral elbow pole at entry and
+uses a more horizontal extension. The audit reads saved clip poses back, checking
+all 53 bones, 40 samples, sole contact, loop closure, fixed base and safe scales.
+It is not a full collision or skin/cloth-quality solver.
+
+The packer uses bicubic 160px reduction, lossless alpha, two-pixel spacing and
+reuses identical death rectangles without dropping playback samples. JSON now
+includes explicit `atlas:{w,h}`. Validation reconstructs every logical frame and
+compares alpha against its source; decoded death frames must also match exactly.
+Three regression checks cover offsets/shared frames, grade/alpha preservation,
+and WebP alpha round-tripping. `check_delivery.py --gpu` requires GPU512
+provenance, both real 512/256 sets, all stage reviews and the eight-second MP4.
+CPU previews cannot satisfy that gate.
+
+`gpu.sh` remains executable and takes no arguments. It defaults to round 2,
+records its own transcript/status, preflights Metal before modifying masters,
+regenerates projection and all clips, audits, renders every stage at GPU512,
+packs/validates and writes the driver's ROUND-named MP4. It never writes PASS.
+Missing-input failure is tested without launching Blender. CPU checks do not
+prove Metal execution; the lead must run the script and inspect the fresh output.
+
+Round-two CPU result: **169,328 bytes at Q85**, all forty 256 px CPU8 samples,
+trimmed 160 px cells with exact decoded alpha and held death. The geometry audit,
+three delivery regression tests, complete preview/master/MP4 check, syntax and
+whitespace checks pass. The MP4 is 1600×348, H.264/yuv420p, 240 frames/eight seconds.
+Rest silhouette IoU improves from .8003 to .8115; this does not establish art quality.
+At 256 px the hair/face, grip, base ellipse and motion still differ; at 64 px identity reads
+but the candidate remains distinguishable. **No PASS marker.** GPU512 rendering
+and visual acceptance remain pending.

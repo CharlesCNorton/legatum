@@ -22,4 +22,5 @@ for stage in stages:
   else:sc.render.filepath=str(out/f'{i:02}.png');bpy.ops.render.render(write_still=True)
   if not clip:shutil.copyfile(out/f'{i:02}.png',V/f'eagle-warrior-{stage}.png')
  manifest={'stage':stage,'engine':sc.render.engine,'device':device,'samples':sc.cycles.samples,'resolution':resolution,'blend_sha256':hashlib.sha256(path.read_bytes()).hexdigest(),'frames':len(frames),'stationary_base':True,'nonzero_scales':True};(out/'render.json').write_text(json.dumps(manifest,indent=2));print('RENDER_OK',stage,flush=True)
- if (M/'renders'/str(resolution)/'c-textured-lit/render.json').exists():subprocess.run([str(R/'venv/bin/python'),'tools/art/anim3d/units/eagle-warrior/deliver.py','--resolution',str(resolution),'--review-only'],check=True)
+ rest_manifest=M/'renders'/str(resolution)/'c-textured-lit/render.json'
+ if rest_manifest.exists() and json.loads(rest_manifest.read_text())['blend_sha256']==hashlib.sha256((M/'eagle-warrior.blend').read_bytes()).hexdigest():subprocess.run([str(R/'venv/bin/python'),'tools/art/anim3d/units/eagle-warrior/deliver.py','--resolution',str(resolution),'--review-only'],check=True)

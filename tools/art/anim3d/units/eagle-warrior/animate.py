@@ -35,7 +35,17 @@ for clip,(count,fps,loop) in CLIPS.items():
   elif clip=='hit':
    recoil=[0,.18,-.07,0][frame-1];rotate('spine_01',recoil,'X');rotate('head',recoil*.7,'X');rotate('upperarm_l',recoil*.5,'Y')
   elif clip=='death':
-   fall=min(1,max(0,(t-.1)/.72));ease=fall*fall*(3-2*fall);rotate('thigh_r',-.65*ease,'Y');rotate('calf_r',.75*ease,'Y');rotate('thigh_l',.35*ease,'Y');rotate('calf_l',-.60*ease,'Y');rotate('upperarm_r',-.55*ease,'Y');rotate('upperarm_l',-.35*ease,'Y');pivot=P(132,139,0);rig.matrix_world=Matrix.Translation(Vector((-.04,0,-.51*ease)))@Matrix.Translation(pivot)@Matrix.Rotation(1.32*ease,4,'Y')@Matrix.Translation(-pivot)
+   fall=min(1,max(0,(t-.1)/.72));ease=fall*fall*(3-2*fall)
+   # Fold both knees in depth as the torso lies on its side. The old terminal
+   # pose kept one straight leg beneath the torso and balanced on that toe.
+   rotate('thigh_r',-.50*ease,'Y');rotate('thigh_r',-.60*ease,'X')
+   rotate('calf_r',.08*ease,'Y');rotate('calf_r',1.50*ease,'X')
+   rotate('thigh_l',.57*ease,'Y');rotate('thigh_l',.50*ease,'X')
+   rotate('calf_l',-.18*ease,'Y');rotate('calf_l',-1.30*ease,'X')
+   rotate('upperarm_r',-1.35*ease,'Y');rotate('lowerarm_r',-.75*ease,'Y')
+   rotate('upperarm_l',.45*ease,'Y');rotate('lowerarm_l',1.20*ease,'Y');rotate('hand_l',1.57*ease,'Z')
+   pivot=P(132,139,0)
+   rig.matrix_world=Matrix.Translation(Vector((-.12*ease,0,-.66*ease)))@Matrix.Translation(pivot)@Matrix.Rotation(1.57*ease,4,'Y')@Matrix.Translation(-pivot)
   bpy.context.view_layer.update()
   if clip=='death':
    # Ground the actual deformed figure, including rigid feather tips, on the
@@ -48,8 +58,8 @@ for clip,(count,fps,loop) in CLIPS.items():
     ev.to_mesh_clear()
    rig.location.z+=max(0,.205-low);bpy.context.view_layer.update()
   ctrl.matrix_world=rig.matrix_world@rig.pose.bones['hand_r'].matrix@hand_inv
-  if clip=='death' and t>.10:
-   u=min(1,(t-.10)/.50);u=u*u*(3-2*u);a=P(53,85,-.10);b=P(101,14,-.10);target_a=Vector((P(74,128).x,-.32,.235));target_b=Vector((P(166,128).x,-.32,.235));q=(b-a).rotation_difference(target_b-target_a);drop=Matrix.Translation(target_a)@q.to_matrix().to_4x4()@Matrix.Translation(-a);current=ctrl.matrix_world;loc=current.translation.lerp(drop.translation,u);rot=current.to_quaternion().slerp(drop.to_quaternion(),u);ctrl.matrix_world=Matrix.Translation(loc)@rot.to_matrix().to_4x4()
+  if clip=='death' and t>0:
+   u=min(1,t/.50);u=u*u*(3-2*u);a=P(53,85,-.10);b=P(101,14,-.10);target_a=Vector((P(74,128).x,-.32,.275));target_b=Vector((P(166,128).x,-.32,.275));q=(b-a).rotation_difference(target_b-target_a);drop=Matrix.Translation(target_a)@q.to_matrix().to_4x4()@Matrix.Translation(-a);current=Matrix.Identity(4);loc=current.translation.lerp(drop.translation,u);rot=current.to_quaternion().slerp(drop.to_quaternion(),u);ctrl.matrix_world=Matrix.Translation(loc)@rot.to_matrix().to_4x4()
   ctrl.keyframe_insert('location',frame=frame);ctrl.rotation_mode='QUATERNION';ctrl.keyframe_insert('rotation_quaternion',frame=frame);ctrl.keyframe_insert('scale',frame=frame)
   rig.rotation_mode='QUATERNION';rig.keyframe_insert('location',frame=frame);rig.keyframe_insert('rotation_quaternion',frame=frame)
   for p in rig.pose.bones:
