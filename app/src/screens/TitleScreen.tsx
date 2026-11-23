@@ -1,22 +1,18 @@
 import { CALENDAR_NOTE, calendarLabel, FACTION_INFO, factionName } from '../data';
 import type { Faction } from '../types';
-import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { currentCampaign, parseAutosave, useGame, type SaveFile } from '../store';
 import { listAutosaves, type AutosaveRecord } from '../platform/autosaveStore';
 import { ReplaceGameDialog } from '../ui/ReplaceGameDialog';
 import { pickSaveFile } from '../ui/GameMenu';
 import { Fan, Wordmark } from '../brand/ornaments';
 import { openGuide } from '../ui/guideState';
-import { AdvisorSettings } from '../ui/Advisor';
-import { HapticsSettings } from '../ui/HapticsSettings';
-import { SoundSettings } from '../ui/SoundSettings';
-import { CombatFxSettings } from '../ui/CombatFxSettings';
+import { SettingsDialog } from '../ui/SettingsDialog';
 import { cleanRoomName } from '../net/roomName';
 import { JOIN_CODE_MAX, joinCodeProblem, typedJoinCode } from '../net/joinCode';
 import { retryLine, retryWouldFail } from '../net/browserHost';
 import { DEFAULT_PLAYER_NAME, MAX_PLAYER_NAME, rememberPlayerName, savedPlayerName } from '../platform/online';
 import { TitleArt } from './TitleArt';
-import { usePerfOverlay } from '../ui/PerfOverlay';
 import { buildLabel } from '../buildLabel';
 import { buildTime } from '../buildTime';
 import { PRIVACY_URL, uploadsGames } from '../platform/gameUpload';
@@ -367,59 +363,5 @@ function Settings() {
       </button>
       {open && <SettingsDialog onClose={close} />}
     </div>
-  );
-}
-
-function SettingsDialog({ onClose }: { onClose: () => void }) {
-  const dialog = useRef<HTMLDialogElement>(null);
-  const closeButton = useRef<HTMLButtonElement>(null);
-  const titleId = useId();
-  const perfOn = usePerfOverlay((s) => s.on);
-  const setPerf = usePerfOverlay((s) => s.setOn);
-  useLayoutEffect(() => {
-    const el = dialog.current;
-    if (!el) return;
-    el.showModal();
-    closeButton.current?.focus({ preventScroll: true });
-    return () => el.close();
-  }, []);
-  return (
-    <dialog
-      ref={dialog}
-      className="modal settings-modal"
-      aria-labelledby={titleId}
-      onCancel={(e) => {
-        e.preventDefault();
-        onClose();
-      }}
-      // A click on the backdrop lands on the dialog element itself.
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-    >
-      <header className="settings-head">
-        <h2 id={titleId}>Settings</h2>
-        <button ref={closeButton} className="btn quiet" onClick={onClose} aria-label="Close settings">
-          Close <kbd>Esc</kbd>
-        </button>
-      </header>
-      <div className="settings-body">
-        <AdvisorSettings />
-        <HapticsSettings />
-        <SoundSettings />
-        <CombatFxSettings />
-        <div className="settings-row">
-          <span className="lbl">Frame rate</span>
-          <div className="seg small">
-            <button className={perfOn ? '' : 'on'} aria-pressed={!perfOn} onClick={() => setPerf(false)}>
-              Hidden
-            </button>
-            <button className={perfOn ? 'on' : ''} aria-pressed={perfOn} onClick={() => setPerf(true)}>
-              Shown
-            </button>
-          </div>
-        </div>
-      </div>
-    </dialog>
   );
 }
