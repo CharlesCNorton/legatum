@@ -219,3 +219,53 @@ frames or quality below 75. Per-stage master/grade/frame SHA256 checks reject st
 or interrupted renders. Validation checks rectangle bounds, offsets, alpha, all
 40 frames, visible motion and held death. The existing runtime is not modified to
 consume this candidate format in this branch.
+
+
+### Drone swarm round 2: finished projection and delivery evidence
+
+Apply static bevels **before** freezing camera UVs. Linear subdivisions across
+large hull/base faces preserve volume while sampling painted detail consistently.
+Cache the orthographic camera transform per vertex; verify it against Blender's
+projection. Recomputing camera data for every face corner made the first rebuild
+unnecessarily slow. Do not change the rest camera after projection.
+
+The painted color now uses Standard/None and a 96% pigment contribution only for
+camera rays. Non-camera rays retain physical materials, so painted illumination
+does not light the stone a second time. The warm key, soft fill and cool rim are
+reduced accordingly. Unseen bronze still uses the original generated fill, and
+six real AO/Pointiness maps are rebaked on the finished hulls. No clothing, skin,
+hair or straps exist on this mechanical unit. The stone remains a horizontal
+circular solid with a deeper rounded rim; source projection contains no planted
+feet to ghost onto it. Hull undersides, landing struts, each formation member and
+its rotor pods are fitted independently where the painting differs.
+
+The rest comparison includes painting, render, crossfade and split view at 256/64.
+Native 512 detail crops remain available. Rebuilding invalidates prior evidence;
+review selection rejects stale high-resolution renders instead of preferring
+them over a current preview. One rest histogram grade remains frozen for all clips.
+
+Motion standard for living units: use CMU free-use or Quaternius CC0 motion,
+retarget with matching rest poses/bone rolls, and check feet against the rig's
+travel axis; do not patch foot orientation after retargeting. Animals use an open
+animated quadruped. Record sources in the unit and external SOURCES.md files.
+Every round includes front/top move-cycle checks. This flying mechanical unit has
+no gait to retarget: `g` renders all eight move samples from the front and top as
+`drone-swarm-g-feet-check.png`, explicitly labelled as landing-strut/rotor review.
+Hover/gimbal loops close, move starts at rest, and death evaluates clearance after
+rotor transforms. Its held terminal image is copied instead of rerendered.
+
+Packing uses premultiplied bicubic reduction to 160 px with lossless alpha, no
+alpha threshold, all 40 samples and quality 95/90/85/80/75 until <=200,000 bytes.
+Identical frames share one rectangle, so decoded held death is identical too.
+Validation reconstructs every frame's alpha byte-for-byte at its recorded offset,
+checks source/master/grade hashes and consistent render settings, and rejects
+CPU frames as GPU completion. `test_delivery.py` exercises real output plus
+corrupted offset/atlas and CPU-to-GPU claims. FFprobe verifies the actual decoded
+atlas movie: H.264/yuv420p, 1600 x 348, 240 frames, eight seconds.
+
+`ROUND=2 tools/art/anim3d/units/drone-swarm/gpu.sh` remains the no-argument host
+handoff; it defaults to round 2 and writes its own transcript, failure status and
+success receipt. It renders every stage at GPU512, retains 256 masters, audits,
+checks GPU provenance, packs/validates and writes the round movie. It does not
+rebuild finished art or create PASS. No successful GPU run is inferred from a
+CPU-labelled gallery or absent receipt. The final art judgment remains visual.
