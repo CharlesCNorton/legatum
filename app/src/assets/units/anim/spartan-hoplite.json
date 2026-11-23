@@ -1,0 +1,1 @@
+{"frame":{"w":256,"h":256,"ax":125,"ay":223},"clips":{"idle":{"row":0,"frames":8,"fps":10.0,"loop":true},"move":{"row":1,"frames":8,"fps":12.0,"loop":true},"attack":{"row":2,"frames":10,"fps":14.0,"loop":false},"hit":{"row":3,"frames":4,"fps":12.0,"loop":false},"death":{"row":4,"frames":10,"fps":10.0,"loop":false}}}

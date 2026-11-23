@@ -1,0 +1,166 @@
+{
+  "pass": 2,
+  "deviceScaleFactor": 1,
+  "browser": "153.0.8010.12",
+  "atlases": [
+    {
+      "slug": "spearman",
+      "bytes": 179524,
+      "clips": {
+        "idle": {
+          "row": 0,
+          "frames": 8,
+          "fps": 10,
+          "loop": true
+        },
+        "move": {
+          "row": 1,
+          "frames": 8,
+          "fps": 12,
+          "loop": true
+        },
+        "attack": {
+          "row": 2,
+          "frames": 10,
+          "fps": 14,
+          "loop": false
+        },
+        "hit": {
+          "row": 3,
+          "frames": 4,
+          "fps": 12,
+          "loop": false
+        },
+        "death": {
+          "row": 4,
+          "frames": 10,
+          "fps": 10,
+          "loop": false
+        }
+      }
+    },
+    {
+      "slug": "horseman",
+      "bytes": 198592,
+      "clips": {
+        "idle": {
+          "row": 0,
+          "frames": 4,
+          "fps": 5,
+          "loop": true
+        },
+        "move": {
+          "row": 1,
+          "frames": 8,
+          "fps": 12,
+          "loop": true
+        },
+        "attack": {
+          "row": 2,
+          "frames": 10,
+          "fps": 14,
+          "loop": false
+        },
+        "hit": {
+          "row": 3,
+          "frames": 4,
+          "fps": 12,
+          "loop": false
+        },
+        "death": {
+          "row": 4,
+          "frames": 8,
+          "fps": 7.777777777777778,
+          "loop": false
+        }
+      }
+    },
+    {
+      "slug": "field-cannon",
+      "bytes": 190716,
+      "clips": {
+        "idle": {
+          "row": 0,
+          "frames": 4,
+          "fps": 5,
+          "loop": true
+        },
+        "move": {
+          "row": 1,
+          "frames": 8,
+          "fps": 12,
+          "loop": true
+        },
+        "attack": {
+          "row": 2,
+          "frames": 6,
+          "fps": 7.777777777777779,
+          "loop": false
+        },
+        "hit": {
+          "row": 3,
+          "frames": 3,
+          "fps": 8,
+          "loop": false
+        },
+        "death": {
+          "row": 4,
+          "frames": 6,
+          "fps": 5.555555555555555,
+          "loop": false
+        }
+      }
+    },
+    {
+      "slug": "spartan-hoplite",
+      "bytes": 199128,
+      "clips": {
+        "idle": {
+          "row": 0,
+          "frames": 8,
+          "fps": 10,
+          "loop": true
+        },
+        "move": {
+          "row": 1,
+          "frames": 8,
+          "fps": 12,
+          "loop": true
+        },
+        "attack": {
+          "row": 2,
+          "frames": 10,
+          "fps": 14,
+          "loop": false
+        },
+        "hit": {
+          "row": 3,
+          "frames": 4,
+          "fps": 12,
+          "loop": false
+        },
+        "death": {
+          "row": 4,
+          "frames": 10,
+          "fps": 10,
+          "loop": false
+        }
+      }
+    }
+  ],
+  "stress": [
+    {
+      "avg": 5.6738888891206845,
+      "p95": 7.300000011920929,
+      "samples": 180,
+      "tokens": 300
+    },
+    {
+      "avg": 15.584999999900658,
+      "p95": 19.299999982118607,
+      "samples": 180,
+      "tokens": 600
+    }
+  ],
+  "errors": []
+}
