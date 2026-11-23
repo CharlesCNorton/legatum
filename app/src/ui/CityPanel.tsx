@@ -1024,7 +1024,6 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
         </div> : renderUnavailable(r.unavailable))}{permanentLine(listUnavailable.filter((u) => u.item.kind === 'Unit'), listOptions.filter((o) => o.item.kind === 'Unit')) && <p className="prod-faction-rule" role="note">{permanentLine(listUnavailable.filter((u) => u.item.kind === 'Unit'), listOptions.filter((o) => o.item.kind === 'Unit'))}</p>}
       </div>
       {hire}
-      {d.options.some((o) => o.item.kind === 'Project' && !isGrow(o.item)) && <><div className="cp-sub">Projects</div><div className="prod-list">{d.options.filter((o) => o.item.kind === 'Project' && !isGrow(o.item)).map((o) => renderOption(o))}</div></>}
       <div className="cp-sub">Buildings</div>
       {idleNote}
       <div className={`prod-list ${producing ? '' : 'choosing'}`}>{renderBuildingPicker(listOptions.filter((o) => o.item.kind === 'Building'), listUnavailable.filter((u) => u.item.kind === 'Building'))}</div>
@@ -1042,6 +1041,8 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
         <Tip as="div" className="hint" content={greatWorkRules(owner?.faction)}>Wonders are built with Production only. Each is built once in the world: choose Build, then click a lit tile on the map.</Tip>
         <div className="prod-list">{wonderCards}</div>
       </section>
+      {/* Projects come last, as in Civ 6: the fallback when nothing else is worth building (Sam, 2026-11-22). */}
+      {d.options.some((o) => o.item.kind === 'Project' && !isGrow(o.item)) && <><div className="cp-sub">Projects</div><div className="prod-list">{d.options.filter((o) => o.item.kind === 'Project' && !isGrow(o.item)).map((o) => renderOption(o))}</div></>}
 
       </>}
 
