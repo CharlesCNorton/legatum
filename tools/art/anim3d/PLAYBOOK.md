@@ -106,3 +106,94 @@ tools/art/anim3d/render.sh audit
 ```
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
+
+## Infantry / phalangite: round 1
+
+This unit's entry points live in `tools/art/anim3d/units/phalangite/`. All masters,
+texture inputs and review output live under `~/LegatumRuns/anim-pilot/`; masters
+are never committed. `UNIT=phalangite tools/art/anim3d/render.sh <stage>` dispatches
+to this unit without changing the older spearman stages. Every unit Blender call
+uses plain `blender -b --disable-autoexec` and the PATH gate, with one heavy
+process at a time. It does not create another lock or set thread counts.
+
+```sh
+tools/art/anim3d/units/phalangite/run.sh build
+tools/art/anim3d/units/phalangite/run.sh b
+tools/art/anim3d/units/phalangite/run.sh finish
+tools/art/anim3d/units/phalangite/run.sh c
+tools/art/anim3d/units/phalangite/run.sh animate
+RESOLUTION=512 SAMPLES=8 tools/art/anim3d/units/phalangite/run.sh all
+RESOLUTION=512 ~/LegatumRuns/anim-pilot/venv/bin/python tools/art/anim3d/units/phalangite/deliver.py pack
+tools/art/anim3d/units/phalangite/run.sh audit
+```
+
+The MPFB male and its 53-bone game-engine rig retain real anatomy, skin weights,
+face and fingers. Unit-specific geometry includes the ivory layered linothorax,
+pleated red tunic and short sleeves, leather and linen pteruges with real hems
+and rivets, shoulder flaps, open bronze helmet and cheek pieces, low metal crest,
+greaves, strapped sandals, small convex forearm shield with straps/buckles, and
+one continuous sarissa with a small iron point. Bevels, thickness and anatomical
+subdivision follow the six Blender skills. Idle and marching loop; attack gathers,
+thrusts and recovers; hit recoils; death releases the shaft and holds its final
+pose. The two arm chains solve against the same weapon grip points. This is
+original authored animation, not a claim of new motion capture or cloth simulation.
+
+The four standing quality levers are the standard for this infantry unit:
+
+1. Calibrate the orthographic rest camera and silhouette to the token, align the
+   full master to its existing alpha bounds, and freeze camera-projected UVs on
+   real meshes. Projection is blended by source alpha and surface incidence;
+   mesh opacity never comes from the painting. Original generated linen/bronze
+   fill textures cover hidden sides. Correct alignment before increasing strength.
+2. Retain physical hems, bevels, buckles, rivets and folds. Six actual 256 px AO
+   and curvature bakes for chest, helmet and shield drive cavity shading and
+   metallic roughness. Colour projection carries painted lighting; it cannot
+   repair an incorrect silhouette or misplaced cheek guard.
+3. Warm upper-left area key, soft fill and cool rim light the miniature. Cycles
+   denoising is used for previews and final GPU frames. GPU mode explicitly selects
+   Metal and fails if it is unavailable; it never silently falls back to CPU.
+4. Measure opaque-foreground RGB quantiles from the rest render and painting,
+   freeze one bounded monotonic grade, and apply that identical grade to every
+   frame. Raw renders remain in `masters/phalangite/renders/`. Split-screen,
+   half-split and 50/50 crossfade are `phalangite-f-restpose-compare.png`.
+
+Use a single stationary cream stone disc with a darker rim and fine grain. The
+common displayed target is **#E9CFA0**, not a linear shader triplet. The phalangite
+uses warm linear pigment, a small warm emission fill and the frozen grade. Judge
+actual rendered pixels against the painting; a material label is not evidence
+of matching cream. Skin shading, face, shoulder fit and calf volume remain art
+review concerns; successful validation does not imply painting parity.
+
+### Phalangite atlas v2 and GPU handoff
+
+`gpu.sh` is executable, takes no arguments, and is run from the repository root:
+
+```sh
+tools/art/anim3d/units/phalangite/gpu.sh
+```
+
+It audits saved meshes/clips, renders every stage with Cycles Metal at 512 px,
+retains the 512 and 256 px PNG masters, produces all review sheets and animated
+WebPs, packs/validates the atlas, and writes `phalangite-round${ROUND}.mp4`: five
+clips side by side on cream for eight seconds, 2x scale, H.264/yuv420p. `ROUND`
+defaults to 1 and `SAMPLES` to 64. No rebuild or external upload occurs. Final GPU
+visual review is still required. Do not create a `phalangite-PASS` file while the
+rest pose remains distinguishable from the painting.
+
+The shipped `phalangite.webp` has ten 160 px slots across five rows, ordered idle,
+move, attack, hit, death. All 8/8/10/4/10 frames are preserved; quality is 90–75,
+never below 75, and encoding fails rather than exceeding 200,000 bytes. Empty
+margins are trimmed independently before each image is placed at its slot origin.
+The version-2 JSON extends the old `frame`/`clips` contract with each clip's
+`rects` array. A rectangle's `{x,y,w,h}` is its atlas source region; `{ox,oy}` is
+its placement in the original transparent 160×160 canvas. The shared anchor is
+`frame.ax/ay` in that original canvas: destination placement is
+`(anchorX - ax + ox, anchorY - ay + oy)`. Never treat `ox/oy` as atlas coordinates.
+Padding outside `w/h` is unused. This branch adds a candidate asset and documents
+the format; it does not replace the existing static unit or alter the renderer.
+
+Packing validates counts, alpha/margins, motion, terminal death, current source
+and clip hashes and the single grade hash. The saved-scene audit checks true MPFB
+geometry, projection UVs, bakes, stationary base and matching loop boundaries.
+It is not an exhaustive skin/equipment collision solver. Review 256 and 64 px
+alongside the painting and inspect all five motion strips before art approval.

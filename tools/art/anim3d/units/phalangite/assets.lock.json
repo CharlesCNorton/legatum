@@ -1,0 +1,17 @@
+{
+  "painting-source.png": {
+    "sha256": "761a40ceec831c7cb8cba83854eae0f05a6373d592f9e5abbd70991ee826c119",
+    "licence": "CC BY 4.0, original Legatum project artwork",
+    "url": "https://pub-fb5c281dd12d4ea4bbd38d657cdeb907.r2.dev/app/src/assets/units/phalangite-source.png"
+  },
+  "fill-linen.png": {
+    "sha256": "c71ed83e71404d76f318e2410e111c1ec6ecf00864d9730f13514f2f5c932da3",
+    "licence": "CC BY 4.0, original Legatum project artwork",
+    "reuse": "assets/horseman/fill-linen.png"
+  },
+  "fill-bronze.png": {
+    "sha256": "20233d35d680a1ee510719befd841db3899371d0e9f5821b99400162a8c39720",
+    "licence": "CC BY 4.0, original Legatum project artwork",
+    "reuse": "assets/horseman/fill-bronze.png"
+  }
+}
