@@ -2,6 +2,10 @@
 import bpy,os,json,hashlib,math
 from pathlib import Path
 from mathutils import Vector
+import sys
+sys.path.insert(0,str(Path(__file__).resolve().parent))
+from provenance import check
+check()
 R=Path(os.environ.get('ANIM_ROOT',Path.home()/'LegatumRuns/anim-pilot'));M=R/'masters/infantry';records={}
 master_hash=hashlib.sha256((M/'infantry.blend').read_bytes()).hexdigest()
 for clip,n in [('idle',8),('move',8),('attack',10),('hit',4),('death',10)]:
@@ -10,6 +14,12 @@ for clip,n in [('idle',8),('move',8),('attack',10),('hit',4),('death',10)]:
  bpy.ops.wm.open_mainfile(filepath=str(M/'clips'/f'{clip}.blend'));sc=bpy.context.scene
  rig=bpy.data.objects['RIG-Infantry MPFB'];assert len(rig.data.bones)==53
  assert len(bpy.data.objects['GEO-MPFB infantry anatomy'].data.vertices)>10000
+ for side in ('l','r'):
+  for part in ('sleeve','trousers'):
+   cloth=bpy.data.objects['GEO-continuous folded '+part+' '+side]
+   assert any(m.type=='ARMATURE' for m in cloth.modifiers)
+   assert any(m.type=='SOLIDIFY' and m.thickness>=.005 for m in cloth.modifiers)
+   assert len(cloth.vertex_groups)>=2
  base=bpy.data.objects['GEO-stationary cream base'];initial=base.matrix_world.copy();poses=[]
  for f in range(1,n+1):
   sc.frame_set(f);assert base.matrix_world==initial

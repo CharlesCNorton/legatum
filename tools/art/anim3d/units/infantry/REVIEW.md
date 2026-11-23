@@ -1,56 +1,54 @@
-# Infantry round 1 — CPU candidate, not art approved
+# Infantry driver round 2 — CPU candidate, not art approved
 
-Built MPFB anatomy and the 53-bone rig, full-depth infantry kit, frozen painting
-UVs, generated unseen-surface fills, actual helmet/jacket AO and curvature bakes,
-and five editable actions. Idle/walk/hit/death use Quaternius CC0; the grenade
-throw and equipment release are authored. All prescribed stage sheets, five
-animated WebPs, rest split-screen and front/top feet review exist under external
-`review/3d-v2/infantry-*`. Earlier clip sheets are retained in
-`infantry-round1-firstpass/`. Editable blends, maps and genuine 256 px output
-remain in `masters/infantry/`.
+The round-one GPU pass completed: 166,516 bytes at quality 90. Its review images,
+decoded movie frames and genuine 512px masters were inspected before editing and
+preserved in external `masters/infantry/driver-r1-gpu/`. The empty driver log was
+caused by the internal redirect; `gpu.sh` now tees output to both logs.
+
+Round two replaces separate elbow/knee tubes with continuous weighted folded
+cloth (.006m thickness), refits supporting arm/helmet/backpack/rifle/boot volumes,
+uses cloth beneath covered anatomy and generated painted skin on exposed parts,
+and corrects the bootlace fitting bug. Warm stone grain/live AO and feet-free
+lower-rim painting improve the base; reduced sheen/rim strength limits blue fabric.
+Hit returns to guard; death blends into the licensed source motion. The four open
+clips remain Quaternius CC0 with rest/roll compensation and untouched foot rotations.
 
 Observed checks, 2026-11-23:
 
-- CPU Cycles build, projection/bakes, all five animation builds, 44 clip/rig-pose
-  images, rest/plain renders and sixteen feet views: exit 0. Main renders are
-  256 px, 8 samples; feet are 160 px, 6 samples. No GPU pass is claimed.
-- Structural audit: 53 bones, anatomical mesh, current source hashes, stationary
-  base, nonzero object scales. Maximum sampled walk toe yaw: **12.39 degrees**
-  from forward. Four fully planted ankle intervals: maximum virtual-ground
-  drift **2.71e-7 m**; minimum walk sole height **0.086 m**, above the .085 m
-  contact plane. These are sampled ankle/contact checks, not a complete friction
-  or all-mesh collision solver.
-- Candidate atlas: **167,978 bytes**, quality **90**, **785×739** packed pixels,
-  160 px logical cells, all **40** frames. Independent decoded validation passes
-  trim offsets, lossless alpha, bounds, current hashes, motion in every clip and
-  exact held death. The initial pack rejected the walk's top-edge margin;
-  the camera was widened and every dependent stage rebuilt before delivery.
-- `infantry-round1.mp4`: **8 seconds**, **240 frames**, **1600×348**, H.264,
-  yuv420p, five decoded clips side by side at 2x on cream, CPU-labelled. ffprobe
-  checks pass; a decoded movie frame was visually inspected.
-- Python compile, shell syntax and `git diff --check`: pass. The GPU receipt
-  verifier was tested to reject CPU output. GPU execution remains untested here
-  because the sandbox has no Metal. The complete script must run on the host.
+- CPU Cycles build/projection/AO/Pointiness, five animation builds, 46 main-stage
+  frames (256px, 12 samples), and 16 feet views (160px, 12 samples): exit 0.
+- Structural audit passes: 53 bones, anatomical mesh, current input/master/clip
+  hashes, weighted thick sleeves/trousers, stationary base, nonzero object scales.
+  Walk toe angle max **12.39 degrees**; four planted ankle intervals have max
+  virtual-ground drift **2.70948e-7m**; minimum sampled sole Z **0.086m** above the
+  **0.085m** contact plane. These are sampled checks, not a full collision solver.
+- Candidate atlas: **163,336 bytes**, quality **90**, **789×740**, **40 frames**,
+  trimmed **160px** logical cells. Pack and independent decode validation pass
+  offsets, bounds, lossless alpha, current hashes, motion and exact held death.
+- `infantry-round2.mp4`: **8 seconds**, **240 frames**, **1600×348**, H.264/yuv420p,
+  all five decoded clips at 2x on cream. ffprobe passes; decoded frames inspected.
+- Python syntax, shell syntax and whitespace pass. Negative checks reject changed
+  build inputs and CPU output presented for a GPU completion receipt.
 
-Visual verdict: **not PASS**. At 64 px this reads as the same olive-uniform,
-raised-grenade infantry with an upright rifle. At 256 px the painting is richer
-and more natural: the cheek/helmet projection, supporting sleeve, jacket/pouch
-silhouette and lower legs need closer fitting; the rim is too dark; newly exposed
-surfaces and joints look less painted. The throw is stiff, hit recovery needs
-review, and the death deformation is still awkward despite fixing the floating
-stance and rifle pivot. Do not replace the game's static art or write a PASS
-marker on the strength of technical checks alone.
+Visual verdict: **not PASS**. At 64px this is recognizably the same grenade-raising
+olive infantry; source silhouette differences remain. At 256px the stone and
+joint continuity improve, but the shoulder/webbing/pouch contours, forward-facing
+right boot, thin rifle, and exposed unprojected material still miss the painting.
+The throw is stiff and the death pose remains awkward. Five clips are delivered
+for review; they are not certified clean or indistinguishable from the painting.
+No PASS marker was written. No runtime loader or game rules changed.
 
-The host must run, from the repository root:
+Lead GPU command, from repository root:
 
 ```sh
-ROUND=1 tools/art/anim3d/units/infantry/gpu.sh
+ROUND=2 tools/art/anim3d/units/infantry/gpu.sh
 ```
 
-That no-argument script verifies Cycles Metal GPU, rebuilds/bakes and renders all
-stages, creates genuine 512 and 256 masters, regenerates the atlas/JSON, audits,
-validates, renders feet views, writes the round MP4 and checks the GPU receipt.
-The 512px masters are pending that GPU run; no CPU preview was upscaled or
-mislabelled. Review its output before the next round. It never writes PASS.
+This rebuilds/bakes, renders every stage using verified Cycles Metal GPU, writes
+fresh genuine 512/256 masters, feet review and rest comparison, audits, packs,
+validates, and produces the round MP4. Source/script/master seals block stale
+certification. The new GPU result remains pending; CPU output is labelled preview.
 
-Git commit attempt was blocked by sandbox permission on `.git/worktrees/lane-18/index.lock`. Changes remain uncommitted for the runner. No push or PR was attempted. `origin/master` was already an ancestor of this branch; no fetch or merge was needed.
+Commit attempt was blocked by sandbox denial of `.git/worktrees/lane-18/index.lock`.
+Changes remain for the runner to commit with the requested co-author trailer.
+`origin/master` is already an ancestor; no merge was needed. No push or PR.

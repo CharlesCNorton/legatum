@@ -1,15 +1,15 @@
-# Infantry round 1
+# Infantry round 2
 
 Run from the repository root. Assets, previews and masters stay outside git in
 `~/LegatumRuns/anim-pilot/`; source pins and licence details are in `SOURCES.md`.
 
 ```sh
-RESOLUTION=256 SAMPLES=8 tools/art/anim3d/units/infantry/render.sh build
+RESOLUTION=256 SAMPLES=12 tools/art/anim3d/units/infantry/render.sh build
 tools/art/anim3d/units/infantry/render.sh animate
 tools/art/anim3d/units/infantry/render.sh preview
 tools/art/anim3d/units/infantry/render.sh feet
 tools/art/anim3d/units/infantry/render.sh pack
-ROUND=1 tools/art/anim3d/units/infantry/gpu.sh
+ROUND=2 tools/art/anim3d/units/infantry/gpu.sh
 ```
 
 `gpu.sh` is the single no-argument lead handoff: Cycles Metal GPU, all stages,
@@ -31,3 +31,8 @@ This candidate does not change the app renderer. A small atlas is not art approv
 
 See external `review/3d-v2/infantry-log.md` and the committed `REVIEW.md` for
 observed results, remaining defects and exact validation status.
+
+Round two adds connected weighted elbow/knee cloth, fitted solid kit, painted
+skin fills, a cream/grain stone finish, hit recovery, and a blended death entry.
+`provenance.py` rejects masters after build-source edits; rebuild before packing.
+Prior GPU evidence is preserved externally in `masters/infantry/driver-r1-gpu/`.

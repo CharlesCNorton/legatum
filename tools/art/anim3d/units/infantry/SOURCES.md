@@ -9,3 +9,13 @@ All raw assets and editable masters stay in `~/LegatumRuns/anim-pilot/`.
 - **Unseen surfaces:** existing original mounted-family imagegen linen/coat texture quadrants, 2026-11-22, project CC BY 4.0; no public URL. `assets/horseman/fill-linen.png` and `fill-coat.png`, recoloured olive/canvas/leather. Original prompt retained in `reused-fills.prompt.txt`. No new image generation or paid service.
 - **Code reuse:** MPFB helpers from the spearman lead; rest/reference retarget, render/review/pack scaffold copied from the trench-infantry lane into this unit's isolated directory. Family playbook inspected with `git show astra/unit-anim-3d-v2:tools/art/anim3d/PLAYBOOK.md`. Original MIT orchestration, infantry kit and grenade attack; rendered output CC BY 4.0.
 - Blender 5.3.0 GPL, Pillow 13.0.0 MIT-CMU, installed FFmpeg. No Mixamo, accounts, paid models or uploads.
+
+Round 2 reuses unchanged generated Medjay skin for hands/face undersides:
+`assets/medjay/fill-skin.png`, copied to `assets/infantry/skin-fill.png`.
+Original built-in ImageGen output (2026-11-22):
+`01a20671-5037-7490-a90a-decacb274446/exec-401b9b3e-9eef-48db-b965-0d53769ebddc.png`,
+project CC BY 4.0, no public URL. Original prompt: four hand-painted swatches
+of warm skin, linen, hide and wood for the Medjay miniature; no objects or text.
+The copied skin hash is pinned in `assets.lock.json`. No new image service or
+download. Continuous weighted sleeves, semantic under-uniform materials,
+full-volume fit and stone refinements are original MIT scripts; renders CC BY 4.0.

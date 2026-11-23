@@ -150,17 +150,17 @@ are saved beside each clip. `infantry-g-feet-check.png` shows all eight move
 samples from above and in front. Review travel-axis direction and stance sliding;
 a structural audit alone does not approve motion. No Mixamo or paid assets.
 
-### Round-1 commands and handoff
+### Round-2 commands and handoff
 
 ```sh
 # Short CPU review; every invocation uses the machine-wide PATH gate.
-RESOLUTION=256 SAMPLES=8 tools/art/anim3d/units/infantry/render.sh build
+RESOLUTION=256 SAMPLES=12 tools/art/anim3d/units/infantry/render.sh build
 tools/art/anim3d/units/infantry/render.sh animate
 tools/art/anim3d/units/infantry/render.sh preview
 tools/art/anim3d/units/infantry/render.sh feet
 tools/art/anim3d/units/infantry/render.sh pack
 # Complete host pass; no arguments, run from repo root. ROUND comes from driver.
-ROUND=1 tools/art/anim3d/units/infantry/gpu.sh
+ROUND=2 tools/art/anim3d/units/infantry/gpu.sh
 ```
 
 The GPU script builds/reprojects/bakes, rebuilds all five clips, renders every
@@ -180,3 +180,31 @@ terminal death samples may share a rectangle. Preserve lossless alpha and gutter
 never infer a fixed grid from `row`. This art candidate does not change the app's
 runtime loader. Source/master/render hashes prevent stale packs; no 512px master
 is manufactured by enlarging a CPU preview.
+
+### Driver round 2: inspected GPU evidence and joint continuity
+
+Round-1 GPU review, decoded movie frames and genuine 512px output are preserved
+in external `masters/infantry/driver-r1-gpu/`. The pass completed successfully;
+its empty driver log came from the old internal redirect. `gpu.sh` now tees to
+both logs and still refuses CPU fallback. Current code/assets/reference/master
+hashes are sealed after projection and checked before animation, packing and
+the GPU receipt. A stale master cannot be certified after a script edit.
+
+Continuous weighted sleeves and trousers replace separate rigid tubes across
+elbows/knees. Both retain .006m thickness and geometric folds. Covered MPFB
+regions have uniform material beneath them, while exposed skin reuses the pinned
+generated Medjay skin fill. Full-depth residual fitting narrows the supporting
+arm, helmet and backpack and corrects rifle/boot contours. Match complete object
+suffixes: `boot l` is also a substring of `boot lace r`, which displaced laces
+in the first revision. The corrected laces were inspected in the rendered output.
+
+The warm stone uses live AO and pigment grain; only the feet-free lower painting
+(y226–256, feathered through y228) contributes camera colour to the real disc.
+Source alpha blends pigment, never surface transparency. The top therefore has
+no stationary painted feet when the animated figure moves. The rim light and
+cloth sheen are reduced so exposed fabric does not read as blue plastic.
+
+Death enters through a blend from the guard to the licensed motion; hit returns
+to guard. No foot rotations are patched. Front/top foot review and the structural
+audit remain required. The round is not visually approved: shoulder/pouch/boot
+contours and exposed surfaces still need the lead's new GPU inspection.

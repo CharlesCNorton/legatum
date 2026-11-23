@@ -2,12 +2,16 @@
 import os,json,hashlib
 from pathlib import Path
 from PIL import Image
+from provenance import check
+check()
 R=Path(os.environ.get('ANIM_ROOT',Path.home()/'LegatumRuns/anim-pilot'));M=R/'masters/infantry';V=R/'review/3d-v2'
 stages={'b-plain':1,'c-textured-lit':1,'d-rig-poses':4,'e-idle':8,'e-move':8,'e-attack':10,'e-hit':4,'e-death':10}
 for stage,n in stages.items():
  manifest=json.loads((M/'renders'/stage/'render.json').read_text())
  assert manifest['device']=='GPU' and manifest['engine']=='CYCLES' and manifest['resolution']==512,(stage,manifest)
  assert manifest['frames']==n
+ blend=M/('plain.blend' if stage=='b-plain' else 'infantry.blend') if stage in ('b-plain','c-textured-lit') else M/'clips'/('attack.blend' if stage=='d-rig-poses' else stage[2:]+'.blend')
+ assert manifest['blend_sha256']==hashlib.sha256(blend.read_bytes()).hexdigest(),stage
  for size in (512,256):
   for i in range(n):assert Image.open(M/str(size)/stage/f'{i:02}.png').size==(size,size)
 validation=json.loads((V/'infantry-validation.json').read_text())

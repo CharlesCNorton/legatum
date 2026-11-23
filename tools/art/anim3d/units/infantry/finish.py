@@ -2,6 +2,7 @@
 import os,sys,json,hashlib,io,subprocess
 from pathlib import Path
 from PIL import Image,ImageDraw,ImageStat
+from provenance import check
 R=Path(os.environ.get('ANIM_ROOT',Path.home()/'LegatumRuns/anim-pilot'));M=R/'masters/infantry';V=R/'review/3d-v2';OUT=Path('app/src/assets/units/anim')
 CLIPS={'idle':(8,4,True),'move':(8,6,True),'attack':(10,14,False),'hit':(4,8,False),'death':(10,5,False)}
 CREAM=(233,207,160,255)
@@ -70,6 +71,7 @@ def review(stage):
  print('Review written:',stage,flush=True)
 
 def pack():
+ check()
  (V/'infantry-validation.json').unlink(missing_ok=True)
  entries=[];rowheights=[];rows=[];sources={};p=json.loads((M/'grade.json').read_text())
  assert p['master_sha256']==digest(M/'infantry.blend'),'Stale grade'
@@ -105,6 +107,7 @@ def pack():
  report={'quality':quality,'method':method,'bytes':len(data),'frames':40,'attempts':attempts,'sources':sources,'sha256':digest(OUT/'infantry.webp'),'preview':rest['device']!='GPU','alpha':'lossless 8-bit','resampler':'premultiplied bicubic','grade_sha256':digest(M/'grade.json')};(V/'infantry-pack.json').write_text(json.dumps(report,indent=2));validate(atlas);print('PACK',report['bytes'],'bytes, quality',quality,', 40 frames; preview:',report['preview'],flush=True)
 
 def validate(original=None):
+ check()
  ap=OUT/'infantry.webp';meta=json.loads(ap.with_suffix('.json').read_text());im=Image.open(ap).convert('RGBA');report=json.loads((V/'infantry-pack.json').read_text());assert ap.stat().st_size<=200000 and report['quality']>=75
  assert im.size==(meta['atlas']['w'],meta['atlas']['h']);assert meta['frame']['w']==meta['frame']['h']==160
  if original:assert im.getchannel('A').tobytes()==original.getchannel('A').tobytes(),'WebP alpha changed'
@@ -132,7 +135,7 @@ def validate(original=None):
    visible=frame.getchannel('A').point(lambda x:255 if x>8 else 0).getbbox()
    if visible and min(visible[0],visible[1],160-visible[2],160-visible[3])<1:clipping.append(f'{clip}/{j}')
   assert len(set(hashes))>1,clip+' is static'
- if clip=='death':assert hashes[-1]==hashes[-2],'Decoded death hold changed'
+  if clip=='death':assert hashes[-1]==hashes[-2],'Decoded death hold changed'
  # Raw held death must match exactly too.
  assert digest(M/'renders/e-death/08.png')==digest(M/'renders/e-death/09.png'),'Death not held'
  assert not clipping,('Frames touch cell edge',clipping)

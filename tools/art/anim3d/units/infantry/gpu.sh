@@ -3,17 +3,18 @@
 set -euo pipefail
 cd "$(dirname "$0")/../../../../.."
 source tools/art/anim3d/env.sh
-export ROUND="${ROUND:-1}" CYCLES_DEVICE=GPU RESOLUTION=512 SAMPLES="${SAMPLES:-48}"
+export ROUND="${ROUND:-2}" CYCLES_DEVICE=GPU RESOLUTION=512 SAMPLES="${SAMPLES:-48}"
 unit=tools/art/anim3d/units/infantry
 status="$REVIEW/infantry-gpu-status.txt"
 mkdir -p "$ANIM_ROOT/masters/infantry"
-exec >> "$ANIM_ROOT/masters/infantry/gpu-round${ROUND}.log" 2>&1
+exec > >(tee -a "$ANIM_ROOT/masters/infantry/gpu-round${ROUND}.log") 2>&1
 stage=preflight
 trap 'rc=$?; printf "failed round=%s stage=%s exit=%s\n" "$ROUND" "$stage" "$rc" > "$status"; exit "$rc"' ERR
 printf 'running round=%s\n' "$ROUND" > "$status"
 git rev-parse HEAD
 git status --short
 command -v blender
+rm -f "$REVIEW/infantry-gpu-round${ROUND}.json"
 stage=build
 "$unit/render.sh" build
 stage=animate
