@@ -110,3 +110,43 @@
 - Posted e-attack review (CPU, 256 px).
 - Posted e-hit review (CPU, 256 px).
 - Posted e-death review (CPU, 256 px).
+- Built MPFB anatomical body, 53-bone rig, blue coat, full-volume kepi, crossed leather belts, diagonal rifle and sling; plain.blend saved.
+- Posted b-plain review (CPU, 256 px).
+- Baked real 256px Cycles AO and Pointiness curvature for kepi and jacket; physical recess grime and edge roughness applied.
+- Finished-surface camera projection with camera-only pigment; generated hidden fills retained.
+- Posted c-textured-lit review (CPU, 256 px).
+- Retargeted CC0 / weapon-layer and saved idle action (8 output frames).
+- Retargeted CC0 / weapon-layer and saved move action (8 output frames).
+- Retargeted CC0 / weapon-layer and saved attack action (10 output frames).
+- Retargeted CC0 / weapon-layer and saved hit action (4 output frames).
+- Retargeted CC0 / weapon-layer and saved death action (10 output frames).
+- Posted d-rig-poses review (CPU, 256 px).
+- Posted e-idle review (CPU, 256 px).
+- Posted e-move review (CPU, 256 px).
+- Posted e-attack review (CPU, 256 px).
+- Posted e-hit review (CPU, 256 px).
+- Posted e-death review (CPU, 256 px).
+- Built MPFB anatomical body, 53-bone rig, blue coat, full-volume kepi, crossed leather belts, diagonal rifle and sling; plain.blend saved.
+- Posted b-plain review (CPU, 256 px).
+- Baked real 256px Cycles AO and Pointiness curvature for kepi and jacket; physical recess grime and edge roughness applied.
+- Finished-surface camera projection with camera-only pigment; generated hidden fills retained.
+- Posted c-textured-lit review (CPU, 256 px).
+- Retargeted CC0 / weapon-layer and saved idle action (8 output frames).
+- Retargeted CC0 / weapon-layer and saved move action (8 output frames).
+- Retargeted CC0 / weapon-layer and saved attack action (10 output frames).
+- Retargeted CC0 / weapon-layer and saved hit action (4 output frames).
+- Retargeted CC0 / weapon-layer and saved death action (10 output frames).
+- Posted d-rig-poses review (CPU, 256 px).
+- Posted e-idle review (CPU, 256 px).
+- Posted e-move review (CPU, 256 px).
+- Posted e-attack review (CPU, 256 px).
+- Posted e-hit review (CPU, 256 px).
+- Posted e-death review (CPU, 256 px).
+- Round 2 geometry: added actual full-depth coat/trouser/cap/pouch/boot and inverse-skinned hand fits; froze topology before projection and corrected inward stock normals. Painted stock now survives; thick straps, seams, folds, bevels and baked AO/Pointiness retained.
+- Generated and inspected clean stone and cloth occlusion plates via built-in ImageGen; only hand/rifle garment patches and the solid stone use them. Reused pinned generated skin. Added prompts/hashes and asset provenance; camera-only pigment plus aimed warm key/soft fill/reduced cool rim and frozen histogram grade retained.
+- CPU intermediate inspection caught exposed toes, unassigned semantic underlayers and a clipped move muzzle; fixed bone-group filtering, matched covered anatomy to boots, moved the rear ankle before tailoring, and lowered the carried barrel by 0.10 rad. Hit now recovers; death blends out of the guard. Packer refused the clipped intermediate frame; no rejected atlas was shipped.
+- Final CPU checks: Cycles 256px/8 samples, all b/c/details/d/e reviews and 40 raw clip frames regenerated; all strips, top/front feet, rest split/crossfade and eight MP4 time samples opened. Audit PASS: 63 finished projected meshes, 0px sampled UV mismatch, 53 bones, stable base/safe scale; max wrist error 0.000000784m; four planted ankle intervals max 0.000000249m, max foot heading 13.44deg. These do not establish complete collision/finger/toe contact.
+- Final pack/decoded revalidation PASS: 40 frames, 160px logical cells, trimmed atlas 1169x747, 165824 bytes, quality 90, lossless alpha, offsets/bounds/margins/source hashes/motion/death hold valid. Verified round2.mp4 H.264/yuv420p 1600x348, 240 frames at 30fps, 8s. All are explicitly CPU previews; fresh 512px output requires lead GPU pass. Original 512/256 GPU round1 masters preserved in driver-r1-gpu.
+- Verdict: closer boot/coat silhouette, restored wooden stock, warm detailed stone and reduced moving pigment ghosts; still NOT hard to tell from painting at 256px. Cap crown shape, support cuff/hand join, shoulder/stock contact and rigid fall need another visual iteration. At 64px clear same rifleman identity/scale, but coat/stance shapes still distinguish it. No PASS file written. Rechecked unit feedback: absent.
+- Final static checks: seven Python files parse; two shell entrypoints pass bash -n; 16 changed/untracked files pass hygiene with zero findings; git diff --check passed. No Rust/UI implementation changed. origin/master is an ancestor, no merge needed. GPU handoff updated with tee logs and fresh-round receipt invalidation: ROUND=2 tools/art/anim3d/units/rifleman/gpu.sh.
+- Commit attempted with required co-author footer; sandbox denied .git/worktrees/lane-11/index.lock for both add and commit. Left changes uncommitted for runner. No push/PR/merge; commit-based art gate remains for the lead.
