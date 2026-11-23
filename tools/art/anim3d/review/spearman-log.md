@@ -95,3 +95,5 @@
 - Final round7 master: rebuilt and CPU-rendered hit, 256px / 12 samples, frozen rest grade.
 - Round7 motion review found an entry/exit pop: attack used its raised elbow pole even at zero raise, and death used its fallen pole at the initial guard. Interpolate both arms from the same neutral guard poles before rebuilding attack/death and their dependent evidence; earlier strips/atlas for those clips are superseded.
 - Final round7 master: rebuilt and CPU-rendered death, 256px / 12 samples, frozen rest grade.
+- Additional clay-shield check: sampled actual scene ray visibility for all 12 relief rays after a suspicious low-resolution shadow; every ray is directly visible, none hidden beneath the shell. First-hit object counts saved in spearman-round7-relief-visibility.json. Existing positive face-clearance check remains unchanged.
+- Round7 guard transition correction: rebuilt and CPU-rendered attack; supersedes the earlier clip.
