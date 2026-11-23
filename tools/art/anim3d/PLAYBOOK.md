@@ -112,7 +112,9 @@ Run each heavy stage sequentially. Other unit lanes share the same lock; if one 
 This unit's code is isolated in `units/stealth-bomber/`. It follows the newer vehicle
 chapter and reuses the bomber lane's projection, grading, delivery and GPU receipt
 workflow, read through `git show`. The aircraft is a closed cambered flying wing,
-raised centre section, recessed intake wells and convex framed cockpit. It retains
+raised centre section, recessed intake wells and convex framed cockpit. Round 2
+recovers the broad, nearly horizontal wing planform along camera rays; a correct
+front silhouette alone had concealed an excessively steep round-one airframe. It retains
 the painting's flying composition, carved solid support and single cream disc.
 No image cards, alpha-cutout geometry, external vehicle model or human rig is used.
 
@@ -122,7 +124,9 @@ fill unseen surfaces with licensed generated brushwork; light with warm upper-le
 key, soft fill and cool rim, then apply a bounded histogram grade frozen from rest.
 AO and Pointiness maps are actual Cycles bakes, adding restrained cavity grime and
 edge wear. Cream stone uses sRGB **#E9CFA0**, converted to linear pigment, with a darker
-rim and fine grain. Its shadow is physical rather than permanently projected.
+rim and fine grain. Round 2 projects an ImageGen clean stone fill onto the real
+beveled disc, retains the original lower-rim pigment and adds live contact AO.
+The stand shadow is physical rather than permanently projected.
 Camera-only pigment preserves painted illumination without lighting other objects.
 Standard/None here preserves the already painted display colours. Large viewpoint
 changes expose approximate unseen paint and require review.
@@ -140,7 +144,7 @@ for stage in b c d g e-idle e-move e-attack e-hit e-death; do
   ~/LegatumRuns/anim-pilot/venv/bin/python tools/art/anim3d/units/stealth-bomber/deliver.py "$stage"
 done
 # Complete lead-side GPU pass, no positional arguments:
-ROUND=1 tools/art/anim3d/units/stealth-bomber/gpu.sh
+ROUND=2 tools/art/anim3d/units/stealth-bomber/gpu.sh
 ```
 
 GPU handoff renders all stages at 512 px using explicit Metal Cycles, keeps actual
@@ -148,9 +152,16 @@ GPU handoff renders all stages at 512 px using explicit Metal Cycles, keeps actu
 motion, and packs the 160 px delivery. Missing GPU fails rather than falling back.
 Rest review is `<slug>-f-restpose-compare.png`: painting, render and 50/50 crossfade
 at 256 and 64 px. The five clips are 8/8/10/4/10 frames; only idle/move loop. Attack
-is a banking bomb run; death descends into a deformed wreck touching the disc,
-with the terminal two samples held. Support disappears by keyed visibility on
-crash. The base remains stationary throughout.
+is a banking bomb run; death descends into a deformed wreck on the fallen stand,
+with the terminal two samples held. The solid stand tips backward continuously
+on impact instead of disappearing. The base remains stationary throughout.
+Triangle-interior samples check airframe/disc and stand/disc clearance in every
+death pose; an evaluated BVH checks stand/wing separation after the original
+first-frame mount insertion; checking terminal vertices alone had missed interior penetration.
+This is a bounded sampled collision check, not an exact general solver.
+Build-source hashes bind the editable master to geometry/material scripts and
+textures; render signatures bind all frames and clip blends to the motion code.
+The GPU script rejects a stale build before taking the machine-wide render slot.
 
 The version-2 atlas has `trimmed:true`, a logical `frame:{w:160,h:160,ax,ay}`, and
 `clips` in idle/move/attack/hit/death row order. Each clip has `row,frames,fps,loop`

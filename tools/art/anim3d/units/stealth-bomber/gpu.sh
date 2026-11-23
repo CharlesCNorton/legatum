@@ -5,7 +5,7 @@ cd "$(cd "$(dirname "$0")/../../../../.." && pwd)"
 source tools/art/anim3d/env.sh
 unit=tools/art/anim3d/units/stealth-bomber
 export RENDER_ENGINE=CYCLES CYCLES_DEVICE=GPU RESOLUTION=512
-export SAMPLES="${SAMPLES:-96}" ROUND="${ROUND:-1}"
+export SAMPLES="${SAMPLES:-96}" ROUND="${ROUND:-2}"
 log="$REVIEW/stealth-bomber-gpu-round${ROUND}.log"
 receipt="$REVIEW/stealth-bomber-gpu-round${ROUND}.json"
 status="$REVIEW/stealth-bomber-gpu-status.txt"
@@ -20,6 +20,7 @@ command -v blender
 for input in stealth-bomber.blend plain.blend textures/baked/manifest.json; do
   test -f "$ANIM_ROOT/masters/stealth-bomber/$input"
 done
+"$ANIM_ROOT/venv/bin/python" "$unit/provenance.py" check
 for stage in b c d g e-idle e-move e-attack e-hit e-death; do
   "$unit/render.sh" "$stage"
   "$ANIM_ROOT/venv/bin/python" "$unit/deliver.py" "$stage"

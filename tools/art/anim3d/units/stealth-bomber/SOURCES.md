@@ -7,3 +7,7 @@
 - No human or animal is present. CMU/Quaternius gait retargeting is inapplicable. Top/front flight-cycle views replace the feet check, with that limitation stated on the sheet.
 
 All downloads, source textures, editable Blender files, bakes and 512/256 masters stay under `~/LegatumRuns/anim-pilot/`. No account, paid asset, upload or external model.
+
+## Stealth bomber driver round 2, 2026-11-23
+- Clean stone occlusion fill: built-in ImageGen output `01a20a1f-8c22-7cd1-a144-066c5b87d915/exec-9a0bb113-82fc-401f-b2f7-483d6cd160bd.png`, original project CC BY 4.0, no public URL. Input is the registered original stealth-bomber painting. External `assets/stealth-bomber/stone-fill-source.png`; exact prompt in unit `stone-fill.prompt.txt`, SHA256 in `inputs.json`. Colour projected onto the real beveled disc, original lower rim retained, live contact AO.
+- Existing original aircraft painting and generated grey composite fill reused; no third-party download or motion. Full-depth falling stand, triangle-interior contact audit and provenance checks are original MIT scripts / CC BY 4.0 renders. Prior GPU masters and reviews preserved.

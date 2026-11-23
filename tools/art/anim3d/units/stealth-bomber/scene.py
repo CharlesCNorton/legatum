@@ -11,7 +11,11 @@ UP=Vector((0,.28,math.sqrt(1-.28**2)));FRONT=Vector((0,-UP.z,UP.y));RIGHT=Vector
 def p(x,y,d=0):
  u=(x-reg['box'][0])*reg['scale']+reg['offset'][0];v=(y-reg['box'][1])*reg['scale']+reg['offset'][1]
  return RIGHT*((u/1024-.5)*S)+UP*((.5-v/1024)*S)+FRONT*d
-def depth(x,y):return .0014*(x-650)+.0018*(y-450)
+def depth(x,y):
+ # Recover the aircraft planform behind the image: broad wings in a nearly
+ # horizontal flight plane, rather than a steep board facing the camera.
+ # At the support attachment (source y=649) the belly meets the carved tip.
+ return .012*(y-649)-.47
 bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
 sc=bpy.context.scene;sc.render.engine='CYCLES';sc.render.film_transparent=True
 sc.view_settings.view_transform='Standard';sc.view_settings.look='None'
@@ -81,7 +85,7 @@ for name,poly in [('near intake',[(703,507),(779,488),(846,550),(732,547)]),('fa
  bpy.data.objects.remove(cutter,do_unlink=True)
  vv=[p(x,y,depth(x,y)+d) for ring,d in [(poly,.47),(inner,.47),(inner,.075)] for x,y in ring]
  ff=[(i,(i+1)%4,(i+1)%4+4,i+4) for i in range(4)]+[(i+4,(i+1)%4+4,(i+1)%4+8,i+8) for i in range(4)]+[(8,9,10,11)]
- ob=mesh(name,vv,ff,paint);solid=ob.modifiers.new('Intake wall thickness','SOLIDIFY');solid.thickness=.025;be=ob.modifiers.new('Intake lip bevel','BEVEL');be.width=.012;be.segments=3
+ ob=mesh(name,vv,ff,paint);solid=ob.modifiers.new('Intake wall thickness','SOLIDIFY');solid.thickness=.025;be=ob.modifiers.new('Intake lip bevel','BEVEL');be.width=.007;be.segments=3
 # Canopy is a convex closed shell with real low-profile framing.
 canopy=shell('cockpit',[(935,520),(966,486),(995,466),(1042,480),(1098,521),(1121,561),(1088,566),(989,545)],glass,.03,.22)
 canopy.location+=FRONT*.27
@@ -99,7 +103,19 @@ for ob in objects:
  mat=ob.matrix_world.copy();ob.parent=root;ob.matrix_world=mat
 bpy.context.view_layer.update()
 for i in range(3):
- bpy.ops.mesh.primitive_uv_sphere_add(segments=16,ring_count=8,location=p(830+i*24,585,.4));ob=bpy.context.object;ob.name='GEO-bomb-'+str(i);ob.scale=(.042,.042,.115);bpy.ops.object.transform_apply(location=False,rotation=False,scale=True);ob.data.materials.append(black);ob.hide_render=True
+ bpy.ops.mesh.primitive_uv_sphere_add(segments=16,ring_count=8,location=p(830+i*24,585,depth(830+i*24,585)-.25));ob=bpy.context.object;ob.name='GEO-bomb-'+str(i);ob.scale=(.058,.058,.145);bpy.ops.object.transform_apply(location=False,rotation=False,scale=True);ob.data.materials.append(paint)
+ # Two solid tail fins join the projectile mesh; visibility keys affect all parts.
+ pieces=[ob]
+ for a in (0,math.pi/2):
+  bpy.ops.mesh.primitive_cube_add(size=1,location=ob.location+Vector((0,0,.10)))
+  fin=bpy.context.object;fin.name='GEO-projectile fin';fin.scale=(.17,.018,.075);fin.rotation_euler.z=a
+  bpy.ops.object.transform_apply(location=False,rotation=False,scale=True)
+  fin.data.materials.append(metal);pieces.append(fin)
+ bpy.ops.object.select_all(action='DESELECT')
+ for piece in pieces:piece.select_set(True)
+ bpy.context.view_layer.objects.active=ob;bpy.ops.object.join()
+ bevel=ob.modifiers.new('Projectile edge bevel','BEVEL');bevel.width=.003;bevel.segments=2
+ ob.hide_render=True
 sc['unit']='stealth-bomber';sc['projection_method']='frozen camera UV on closed cambered volumes';sc['base_hex']='#E9CFA0'
 bpy.ops.wm.save_as_mainfile(filepath=str(M/'plain.blend'))
 for ob in list(bpy.data.objects):

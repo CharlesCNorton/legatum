@@ -32,37 +32,9 @@ def apply_projection(scene, camera, assets, front):
         links.new(physical.outputs[0], mix_shader.inputs[1])
         links.new(pigment.outputs[0], mix_shader.inputs[2])
         links.new(mix_shader.outputs[0], output.inputs['Surface'])
-        if ob.name == 'GEO-stationary cream base':
-            # Physical limestone palette: no permanently painted support shadow.
-            # A restrained camera pigment contribution retains real contact shading.
-            strength.inputs[1].default_value = .72
-            geom = nodes.new('ShaderNodeNewGeometry')
-            xyz = nodes.new('ShaderNodeSeparateXYZ')
-            links.new(geom.outputs['Normal'], xyz.inputs[0])
-            ramp = nodes.new('ShaderNodeValToRGB')
-            ramp.color_ramp.elements[0].position = .05
-            ramp.color_ramp.elements[0].color = (.82, .60, .39, 1)
-            ramp.color_ramp.elements[1].position = .75
-            ramp.color_ramp.elements[1].color = (.98, .80, .60, 1)
-            links.new(xyz.outputs['Z'], ramp.inputs[0])
-            ao = nodes.new('ShaderNodeAmbientOcclusion')
-            ao.inputs['Distance'].default_value = .2
-            shade = nodes.new('ShaderNodeMixRGB')
-            shade.blend_type = 'MULTIPLY'
-            shade.inputs[0].default_value = .24
-            grain = nodes.new('ShaderNodeTexNoise')
-            grain.inputs['Scale'].default_value = 110
-            grain_mix = nodes.new('ShaderNodeMixRGB')
-            grain_mix.blend_type = 'MULTIPLY'
-            grain_mix.inputs[0].default_value = .06
-            links.new(ramp.outputs['Color'], grain_mix.inputs[1])
-            links.new(grain.outputs['Fac'], grain_mix.inputs[2])
-            links.new(grain_mix.outputs[0], shade.inputs[1])
-            links.new(ao.outputs['Color'], shade.inputs[2])
-            links.new(shade.outputs[0], physical.inputs['Base Color'])
-            links.new(shade.outputs[0], pigment.inputs['Color'])
-            ob['projection'] = 'none: physical stationary limestone'
-            continue
+        is_stone = ob.name == 'GEO-stationary cream base'
+        if is_stone or 'support' in ob.name:
+            strength.inputs[1].default_value = .985
         uv = ob.data.uv_layers.new(name='RestPainting')
         weights = ob.data.color_attributes.new(name='Facing', type='FLOAT_COLOR', domain='CORNER')
         normal = ob.matrix_world.to_3x3().inverted().transposed()
@@ -72,7 +44,7 @@ def apply_projection(scene, camera, assets, front):
             q = world_to_camera_view(scene, camera, world)
             uv.data[loop.index].uv = (q.x, q.y)
             weight = max(0, min(1, ((normal @ vert.normal).normalized().dot(front) - .001) / .06))
-            if weight:
+            if weight and not is_stone:
                 hit, loc, _, _, hit_ob, _ = scene.ray_cast(deps, world + front * 20, -front, distance=20.01)
                 if hit and hit_ob != ob and (loc - world).length > .015:
                     weight = 0
@@ -80,7 +52,7 @@ def apply_projection(scene, camera, assets, front):
         uvnode = nodes.new('ShaderNodeUVMap')
         uvnode.uv_map = 'RestPainting'
         image = nodes.new('ShaderNodeTexImage')
-        image.image = texture
+        image.image = bpy.data.images.load(str(assets / 'stone-projection.png')) if is_stone else texture
         image.extension = 'CLIP'
         links.new(uvnode.outputs[0], image.inputs[0])
         facing = nodes.new('ShaderNodeVertexColor')
@@ -108,6 +80,17 @@ def apply_projection(scene, camera, assets, front):
             links.new(coord.outputs['Generated'], tx.inputs[0])
             links.new(tx.outputs['Color'], mix.inputs[1])
         links.new(image.outputs['Color'], mix.inputs[2])
-        links.new(mix.outputs[0], physical.inputs['Base Color'])
-        links.new(mix.outputs[0], pigment.inputs['Color'])
+        color = mix.outputs[0]
+        if is_stone:
+            # Live local contact, with no painted ghost of the upright support.
+            ao = nodes.new('ShaderNodeAmbientOcclusion')
+            ao.inputs['Distance'].default_value = .16
+            shade = nodes.new('ShaderNodeMixRGB')
+            shade.blend_type = 'MULTIPLY'
+            shade.inputs[0].default_value = .22
+            links.new(color, shade.inputs[1])
+            links.new(ao.outputs['Color'], shade.inputs[2])
+            color = shade.outputs[0]
+        links.new(color, physical.inputs['Base Color'])
+        links.new(color, pigment.inputs['Color'])
         ob['projection'] = 'finished surface, frozen UV, facing and visibility masked'

@@ -50,6 +50,25 @@ class DeliveryChecks(unittest.TestCase):
             self.assertTrue((review/'stealth-bomber-gpu-roundpreflight.log').exists())
             self.assertFalse((review/'stealth-bomber-gpu-roundpreflight.json').exists())
 
+    def test_changed_build_input_is_rejected(self):
+        import provenance
+        with tempfile.TemporaryDirectory() as folder, patch.object(provenance, 'MASTER', Path(folder)):
+            proof = {'inputs': {'assets/paint.png':'old'}, 'masters': {}}
+            (Path(folder)/'build-source.json').write_text(json.dumps(proof))
+            with patch.object(provenance, 'inputs', return_value={'assets/paint.png':'new'}):
+                with self.assertRaisesRegex(AssertionError, 'Build sources changed'):
+                    provenance.check()
+
+    def test_old_motion_signature_is_rejected(self):
+        with tempfile.TemporaryDirectory() as folder, patch.object(delivery, 'M', Path(folder)), patch.dict(os.environ, {'RESOLUTION':'256'}):
+            master=Path(folder)
+            (master/'stealth-bomber.blend').write_bytes(b'current master')
+            raw=master/'raw/256/c';raw.mkdir(parents=True)
+            proof={'master_sha256':delivery.sha(master/'stealth-bomber.blend'), 'render_signature':'old motion'}
+            (raw/'render.json').write_text(json.dumps(proof))
+            with self.assertRaisesRegex(AssertionError, 'stale render code'):
+                delivery.review('c')
+
     def test_video_metadata_is_checked(self):
         invalid = {'streams':[{'codec_name':'h264','pix_fmt':'yuv420p','width':1600,'height':348,'nb_frames':'239'}], 'format':{'duration':'8'}}
         with patch.object(delivery.subprocess,'check_output',return_value=json.dumps(invalid).encode()):

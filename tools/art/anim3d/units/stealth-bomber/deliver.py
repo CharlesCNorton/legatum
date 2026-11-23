@@ -5,6 +5,8 @@ Place a sprite at world anchor - (ax,ay) + (ox,oy), with no per-frame rescaling.
 import os,json,hashlib,sys,subprocess
 from pathlib import Path
 from PIL import Image,ImageDraw,ImageChops
+sys.path.insert(0,str(Path(__file__).resolve().parent))
+from provenance import render_signature
 R=Path(os.environ.get('ANIM_ROOT',Path.home()/'LegatumRuns/anim-pilot'));M=R/'masters/stealth-bomber';V=R/'review/3d-v2';V.mkdir(parents=True,exist_ok=True)
 CLIPS={'idle':(8,10,True),'move':(8,12,True),'attack':(10,14,False),'hit':(4,12,False),'death':(10,10,False)}
 REF=Image.open('app/src/assets/units/stealth-bomber-256.png').convert('RGBA');CREAM=(233,207,160,255)
@@ -34,6 +36,7 @@ def review(stage):
     if not candidates:raise RuntimeError('Missing complete render '+stage)
     res=candidates[0];folder=M/'raw'/str(res)/stage;manifest=json.loads((folder/'render.json').read_text())
     assert manifest['master_sha256']==sha(M/'stealth-bomber.blend'),'stale render master'
+    assert manifest['render_signature']==render_signature(),'stale render code'
     assert len(manifest['frames'])==COUNTS[stage], 'wrong raw frame count'
     raw=[]
     for name,h in manifest['frames'].items():
@@ -57,7 +60,7 @@ def review(stage):
     for size in (512,256):
         dest=M/'frames'/str(size)/stage
         if size<=res:
-            (dest/'render.json').write_text(json.dumps({'raw_resolution':res,'engine':manifest['engine'],'device':manifest['device'],'samples':manifest['samples'],'raw_manifest_sha256':sha(folder/'render.json'),'master_sha256':manifest['master_sha256'],'grade_sha256':sha(M/'grade.json') if tables else None,'frames':{p.name:sha(p) for p in sorted(dest.glob('*.png'))}},indent=2))
+            (dest/'render.json').write_text(json.dumps({'render_signature':manifest['render_signature'],'raw_resolution':res,'engine':manifest['engine'],'device':manifest['device'],'samples':manifest['samples'],'raw_manifest_sha256':sha(folder/'render.json'),'master_sha256':manifest['master_sha256'],'grade_sha256':sha(M/'grade.json') if tables else None,'frames':{p.name:sha(p) for p in sorted(dest.glob('*.png'))}},indent=2))
     if stage=='g':
         sheet=Image.new('RGBA',(1024,310),CREAM);d=ImageDraw.Draw(sheet)
         d.text((8,5),'Aircraft move check: top / front. Feet and mocap N/A; inspect flight axis, bank and fixed support.',fill='black')
@@ -92,6 +95,7 @@ def pack():
     for row,(name,(n,fps,loop)) in enumerate(CLIPS.items()):
         images=[];sprites=[];x=0;maxh=0;folder=M/'frames/256'/('e-'+name)
         proof=json.loads((folder/'render.json').read_text());assert proof['master_sha256']==sha(M/'stealth-bomber.blend'),'stale derived frames';assert proof['grade_sha256']==sha(M/'grade.json'),'mixed grades';assert len(proof['frames'])==n
+        assert proof['render_signature']==render_signature(),'stale clip renderer'
         assert all(sha(folder/file)==digest for file,digest in proof['frames'].items()),'changed derived frames'
         for i in range(n):
             path=folder/f'{i:03}.png';hashes[str(path.relative_to(M))]=sha(path);im=Image.open(path).convert('RGBA').resize((160,160),Image.Resampling.LANCZOS)
@@ -107,12 +111,13 @@ def pack():
         if tmp.stat().st_size<=200000:break
     assert tmp.stat().st_size<=200000,'atlas too big at quality 75'
     metadata['atlas']={'w':width,'h':height,'quality':quality};(dest/'stealth-bomber.webp').write_bytes(tmp.read_bytes());(dest/'stealth-bomber.json').write_text(json.dumps(metadata,indent=2)+'\n')
-    (M/'pack.json').write_text(json.dumps({'metadata':sha(dest/'stealth-bomber.json'),'grade':sha(M/'grade.json'),'quality':quality,'bytes':tmp.stat().st_size,'master':sha(M/'stealth-bomber.blend'),'frames':hashes,'atlas':sha(dest/'stealth-bomber.webp')},indent=2))
+    (M/'pack.json').write_text(json.dumps({'render_signature':render_signature(),'metadata':sha(dest/'stealth-bomber.json'),'grade':sha(M/'grade.json'),'quality':quality,'bytes':tmp.stat().st_size,'master':sha(M/'stealth-bomber.blend'),'frames':hashes,'atlas':sha(dest/'stealth-bomber.webp')},indent=2))
 
 def validate():
     path=Path('app/src/assets/units/anim/stealth-bomber.webp');meta=json.loads(path.with_suffix('.json').read_text());atlas=Image.open(path).convert('RGBA');assert path.stat().st_size<=200000 and meta['atlas']['quality']>=75
     assert atlas.size==(meta['atlas']['w'],meta['atlas']['h']);frames={}
     proof=json.loads((M/'pack.json').read_text())
+    assert proof['render_signature']==render_signature(),'stale packed renderer'
     assert proof['master']==sha(M/'stealth-bomber.blend') and proof['grade']==sha(M/'grade.json'),'stale packed master/grade'
     assert proof['atlas']==sha(path) and proof['metadata']==sha(path.with_suffix('.json')),'changed atlas/metadata'
     assert proof['quality']==meta['atlas']['quality'] and proof['bytes']==path.stat().st_size
@@ -169,6 +174,7 @@ def gpu_check():
         raw=M/'raw/512'/stage
         manifest=json.loads((raw/'render.json').read_text())
         assert (manifest['engine'],manifest['device'],manifest['resolution'],manifest['samples'])==('CYCLES','GPU',512,int(os.environ.get('SAMPLES','96'))), 'not final GPU512: '+stage
+        assert manifest['render_signature']==render_signature(),'stale GPU renderer'
         assert manifest['master_sha256']==sha(M/'stealth-bomber.blend')
         source=M/('plain.blend' if stage=='b' else 'stealth-bomber.blend')
         assert manifest['input_sha256']==sha(source),'stale input blend'
