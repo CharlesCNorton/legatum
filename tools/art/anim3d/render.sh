@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "$0")/../../.."
+# Family entry points retain the established host GPU command.
+if [[ "${1:-}" == vehicles-* ]]; then
+  exec tools/art/anim3d/vehicles/render.sh "${1#vehicles-}"
+fi
 source tools/art/anim3d/env.sh
 stage="${1:-c}"
 lock="$ANIM_ROOT/blender-heavy.lock"
