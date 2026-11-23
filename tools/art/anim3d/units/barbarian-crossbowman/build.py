@@ -29,7 +29,7 @@ skin=material('Skin ochre painted',(.42,.24,.13),0,.73)
 linen=material('Quilted oatmeal linen',(.53,.40,.23),0,.86)
 wool=material('Umber hood wool',(.12,.073,.035),0,.9)
 olive=material('Olive wool trousers',(.12,.13,.055),0,.88)
-leather=material('Scuffed brown leather',(.10,.046,.019),0,.72)
+leather=material('Scuffed brown leather',(.22,.105,.047),0,.72)
 wood=material('Crossbow walnut',(.24,.10,.025),0,.62)
 steel=material('Worn bright steel',(.43,.47,.46),1,.34)
 brass=material('Brass buckle edges',(.64,.38,.12),1,.34)
@@ -55,7 +55,7 @@ def garment(name,pred,mat,inflate):
     ar=ob.modifiers.new('MPFB garment skin weights','ARMATURE');ar.object=rig
     solid(ob,.006);su=ob.modifiers.new('Tailored surface subdivision','SUBSURF');su.levels=1
     return ob
-trousers=garment('GEO-olive wool trousers',lambda v:.16<v.z<1.02,olive,.015)
+trousers=garment('GEO-olive wool trousers',lambda v:.16<v.z<1.02 and abs(v.x)<.34,olive,.015)
 boots=garment('GEO-leather boots',lambda v:v.z<.39,leather,.021)
 sleeves=garment('GEO-quilted sleeves',lambda v:.26<abs(v.x)<.58 and v.z>1.03,linen,.025)
 # Pose: upright rather than spearman guard. World points account for rig elevation.
@@ -100,27 +100,23 @@ cloth_rings('GEO-hood shoulder cape',[(1.43,.29,.20),(1.46,.30,.19),(1.55,.245,.
 # Hood: open front cowl, elliptical rings around the actual head.
 hp=rig.matrix_world@((rig.pose.bones['head'].head+rig.pose.bones['head'].tail)*.5)
 print('HEAD',list(hp))
-vs=[];fs=[];N=48;J=20
+# Continuous hood: the face aperture closes over the brow into the same crown mesh.
+vs=[];fs=[];N=64;J=32
 for j in range(J+1):
-    t=j/J;z=hp.z-.13+.29*t;rx=.13*(1-.65*max(0,(t-.7)/.3));ry=.145*(1-.45*max(0,(t-.7)/.3))
+    t=j/J; dome=max(0,(t-.65)/.35); radius=max(.035,math.sqrt(max(0,1-dome*dome)))
+    z=hp.z-.13+.305*t; rx=.13*radius;ry=.145*radius
+    opening=.67*(1-max(0,min(1,(t-.60)/.30)))
     for i in range(N+1):
-        a=.67+(2*pi-1.34)*i/N
-        vs.append((hp.x+rx*sin(a),hp.y-ry*cos(a),z+.027*sin(pi*t)))
+        a=opening+(2*pi-2*opening)*i/N
+        vs.append((hp.x+rx*sin(a),hp.y-ry*cos(a),z))
 for j in range(J):
-    for i in range(N):a=j*(N+1)+i;fs.append((a,a+1,a+N+2,a+N+1))
-hood=mesh('GEO-open wool hood',vs,fs,wool);solid(hood,.009);su=hood.modifiers.new('Soft hood folds','SUBSURF');su.levels=1;attach(hood,'head')
-for edge in [0,N]:attach(curve('GEO-hood stitched opening',[vs[j*(N+1)+edge] for j in range(J+1)],.003,wool),'head')
-# Close the cowl over the crown with an arched, thick cloth cap.
-capvs=[];capfs=[]
-for j in range(17):
-    t=j/16;angle=pi*t
-    for k in range(13):
-        y=hp.y-.10+k*.022
-        capvs.append((hp.x+.088*cos(angle),y,hp.z+.12+.045*sin(angle)-.055*(k/12)**2))
-for j in range(16):
-    for k in range(12):
-        a=j*13+k;capfs.append((a,a+1,a+14,a+13))
-cap=mesh('GEO-hood crown',capvs,capfs,wool);solid(cap,.009);attach(cap,'head')
+    for i in range(N):
+        a=j*(N+1)+i;fs.append((a,a+1,a+N+2,a+N+1))
+fs.append(tuple(J*(N+1)+i for i in range(N,-1,-1)))
+hood=mesh('GEO-open wool hood',vs,fs,wool);solid(hood,.009)
+su=hood.modifiers.new('Soft hood folds','SUBSURF');su.levels=1;attach(hood,'head')
+for edge in [0,N]:
+    attach(curve('GEO-hood stitched opening',[vs[j*(N+1)+edge] for j in range(29)],.003,wool),'head')
 # Modelled moustache/beard, not paint on a flat face.
 for sg in [-1,1]:
     attach(curve('GEO-moustache',[(hp.x+sg*.006,hp.y-.088,hp.z-.022),(hp.x+sg*.025,hp.y-.09,hp.z-.025),(hp.x+sg*.042,hp.y-.081,hp.z-.041)],.008,leather),'head')
@@ -132,8 +128,8 @@ def box(name,loc,scale,mat):
     bpy.ops.mesh.primitive_cube_add(size=1,location=loc);o=bpy.context.object;o.name=name;o.scale=scale;bpy.ops.object.transform_apply(location=False,rotation=False,scale=True);o.data.materials.append(mat);bevel(o,.006,3);return o
 weaponize(box('GEO-crossbow walnut tiller',(-.275,-.26,.67),(.057,.062,1.05),wood))
 weaponize(box('GEO-crossbow trigger mechanism',(-.275,-.30,1.21),(.068,.018,.10),steel))
-weaponize(curve('GEO-steel bow prod',[(-.61,-.28,.40),(-.53,-.25,.36),(-.41,-.245,.345),(-.275,-.24,.34),(-.14,-.245,.345),(-.02,-.25,.36),(.06,-.28,.40)],.013,steel))
-weaponize(curve('GEO-taut bowstring',[(-.61,-.28,.40),(-.275,-.305,.47),(.06,-.28,.40)],.0027,string))
+weaponize(curve('GEO-steel bow prod',[(-.61,-.28,.40),(-.53,-.25,.34),(-.41,-.245,.28),(-.275,-.24,.26),(-.14,-.245,.28),(-.02,-.25,.34),(.06,-.28,.40)],.013,steel))
+weaponize(curve('GEO-taut bowstring',[(-.61,-.28,.40),(-.275,-.305,.40),(.06,-.28,.40)],.0027,string))
 weaponize(curve('GEO-steel foot stirrup',[(-.31,-.26,.21),(-.325,-.26,.11),(-.225,-.26,.11),(-.24,-.26,.21)],.009,steel))
 weaponize(curve('GEO-loaded bolt',[(-.275,-.30,.97),(-.275,-.30,.39)],.004,wood))
 for z in [.3,.72,1.02]:weaponize(box('GEO-stock steel band',(-.275,-.26,z),(.063,.067,.021),steel))
@@ -162,7 +158,7 @@ runpy.run_path('tools/art/anim3d/units/barbarian-crossbowman/refine.py',init_glo
 bpy.ops.wm.save_as_mainfile(filepath=str(M/'plain.blend'))
 # Generated painted linen from the mounted family, tinted for unseen cloth.
 fill=bpy.data.images.load(str(A/'fill-linen.png'))
-for mat in [linen,wool,olive]:
+for mat in [linen,wool,olive,leather]:
     n=mat.node_tree.nodes;l=mat.node_tree.links;s=n.get('Principled BSDF');tc=n.new('ShaderNodeTexCoord');tex=n.new('ShaderNodeTexImage');tex.image=fill;tex.projection='BOX';tex.projection_blend=.35;l.new(tc.outputs['Generated'],tex.inputs[0]);mix=n.new('ShaderNodeMixRGB');mix.blend_type='MULTIPLY';mix.inputs[0].default_value=.45;mix.inputs[1].default_value=s.inputs['Base Color'].default_value;l.new(tex.outputs[0],mix.inputs[2]);l.new(mix.outputs[0],s.inputs['Base Color'])
 # Fine grain, weave, pointiness edge wear and AO cavities are physical shader detail.
 for mat in [skin,linen,wool,olive,leather,wood,steel,brass,stone]:

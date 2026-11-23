@@ -19,6 +19,8 @@ git status --short -- "$unit"
 CYCLES_DEVICE=CPU "$unit/render.sh" gpu-check
 "$ANIM_ROOT/venv/bin/python" "$unit/prepare.py"
 for stage in build bake animate audit; do "$unit/render.sh" "$stage"; done
+stage=feet
+"$unit/render.sh" feet
 for stage in b c d e-idle e-move e-attack e-hit e-death; do
   STAGE="$stage" "$unit/render.sh" render
   "$ANIM_ROOT/venv/bin/python" "$unit/post.py" review "$stage"

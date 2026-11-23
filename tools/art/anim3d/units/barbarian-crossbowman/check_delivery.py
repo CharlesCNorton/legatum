@@ -6,6 +6,13 @@ R=Path(os.environ.get('ANIM_ROOT',str(Path.home()/'LegatumRuns/anim-pilot')))
 M=R/'masters/barbarian-crossbowman'
 def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
 def gpu():
+    feet=json.loads((M/'feet/evidence.json').read_text())
+    assert feet['device']=='GPU' and feet['resolution']==512 and feet['samples']>=64
+    assert feet['clip_sha256']==sha(M/'clips/move.blend'), 'Stale feet check'
+    assert feet['contact']['max_support_yaw_deg']<20
+    assert feet['contact']['max_stance_error_m']<.025
+    for view in ['top','front']:
+        for i in range(8):assert Image.open(M/'feet'/f'{view}-{i:02}.png').size==(512,512)
     for stage,count in {'b':3,'c':1,'d':4,'e-idle':8,'e-move':8,'e-attack':10,'e-hit':4,'e-death':10}.items():
         source=M/('plain.blend' if stage=='b' else 'clips/attack.blend' if stage=='d' else 'clips/'+stage[2:]+'.blend' if stage.startswith('e-') else 'model.blend')
         for size in [256,512]:

@@ -26,8 +26,10 @@ for obj in list(sc.objects):
         facing=max(0,min(1,(normal.dot(view)-.03)*4))
         hit,_,_,distance=bvh.ray_cast(world+view*5,-view,5.1)
         visible=hit is not None and (hit-world).length<.025
+        if obj.name=='GEO-leather boots':facing=max(0,min(1,(normal.dot(view)-.35)*2.5))
         weight=facing if visible else 0
         x,y=q.x*256,(1-q.y)*256
+        if obj.name in {'GEO-leather boots','GEO-olive wool trousers'} and x<110 and y>110:weight=0
         # Cloth behind hands must not retain detached painted fingers during attack.
         if obj.name.startswith(('GEO-quilted gambeson','GEO-waist leather belt')) and (90<x<110 and 87<y<110 or 145<x<165 and 89<y<107):weight=0
         weights.append(weight)

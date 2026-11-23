@@ -235,6 +235,34 @@ independently. Quality remains at least 75 and size at most 200,000 bytes; no
 frame count is reduced. Two regression tests cover semitransparent trim offsets
 and stable monotonic grading with unchanged alpha. The runtime is still unwired.
 
+### Barbarian crossbowman driver round 2 after the GPU pass
+
+The lead's round-one GPU receipt is verified (GPU64/512, Q90 157272 bytes,
+H.264/yuv420p eight seconds); archive the actual images/masters before replacing
+previews. Driver round numbers differ from earlier local iteration headings.
+The continuous solidified hood closes the crown in the same mesh as the face
+opening; separately overlapping caps can open into black gaps when the head
+rotates. Garment extraction must exclude neutral-pose hands from trouser height
+bands. Boot/leg and leather case registration still uses inverse skin matrices
+before frozen camera projection, preserving the rig and full geometry depth.
+
+Standing feedback 23 is now the motion standard for this infantry chapter:
+retarget existing CC0 Quaternius Idle_Loop, Walk_Loop, Hit_Chest and Death01 with
+Blender world rotation constraints and reference/rest matrices including roll.
+Only the crossbow attack is authored. Source hashes and full attribution live in
+`retarget.py` and `SOURCES.md`. A carrying layer raises the crossbow; hit blends
+back into guard, and death releases it onto the stone. No cloth simulation is
+claimed. Preserve source foot rotation, use translation-only floor/contact
+adaptation, and review real top/front boot geometry over all eight walk samples.
+`render.sh feet` writes `barbarian-crossbowman-g-feet-check.png`, a source-hashed
+numeric receipt and all sixteen raw views. It measures toe stance against one
+virtual in-place ground speed; this is not a full heel/toe collision solver.
+
+The no-argument `gpu.sh` now rebuilds and includes that feet stage before the
+usual b/c/d/e render, master check, trimmed atlas and decoded-atlas MP4. The final
+GPU gate checks fresh 512/64-sample foot evidence as well. CPU previews, collision
+limits and technical encoding success never create the visual PASS marker.
+
 ## Infantry chapter: Tagmatic Soldier (round 1)
 
 The unit-owned implementation is `units/tagmatic-soldier/`; run from the repository

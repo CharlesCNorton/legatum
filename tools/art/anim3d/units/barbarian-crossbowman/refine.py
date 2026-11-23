@@ -40,20 +40,25 @@ for ob in [body,boots,trousers]:
     to_rig=rig.matrix_world.inverted()@ob.matrix_world
     from_rig=to_rig.inverted()
     for v in ob.data.vertices:
-        if v.co.z>.40:continue
+        if v.co.z>.90:continue
         sk=skin_matrix(ob,v);world=rig.matrix_world@sk@to_rig@v.co
         q=world_to_camera_view(sc,sc.camera,world);x=q.x*256;y=(1-q.y)*256
         blend=max(0,min(1,(y-186)/20));center=156 if x>136 else 117
-        dx=(x-center)*.32*blend+(2 if x>136 else 1)*blend
-        dy=(1 if x>136 else 4)*blend
+        dx=(x-center)*(.70 if x>136 else .38)*blend+(3 if x>136 else 1)*blend
+        dy=(4 if x>136 else 7)*blend
+        dx-= (4 if x>136 else 1)*max(0,min(1,(y-132)/15))*(1-blend)
         world+=right*(dx*sc.camera.data.ortho_scale/256)-up*(dy*sc.camera.data.ortho_scale/256)
         # Seat low boot surfaces on the stone along camera rays, retaining screen position.
         forward=sc.camera.matrix_world.to_quaternion()@Vector((0,0,-1))
         if y>204:
-            target_z=.082+(world.z-.10)*.72
+            target_z=.055+(world.z-.10)*.72
             world+=forward*((target_z-world.z)/forward.z)
         v.co=from_rig@sk.inverted()@rig.matrix_world.inverted()@world
     ob.data.update()
+# Slim the case to the painted bolt quiver; keep actual rounded leather volume.
+for ob in sc.objects:
+    if ob.type=='MESH' and ob.name.startswith('GEO-bolt leather case'):
+        for v in ob.data.vertices:v.co.x*=.68;v.co.y*=.76
 # Native body stays the original vertex count; smooth its actual skin at render time.
 su=body.modifiers.new('Anatomical subdivision','SUBSURF');su.levels=1;su.render_levels=1
 bpy.context.view_layer.update()
@@ -63,6 +68,7 @@ for name,power in [('Warm key',300),('Soft fill',60),('Cool rim',100)]:bpy.data.
 bpy.data.objects['Warm key'].data.color=(1,.96,.89)
 # The stone remains physical: no painted feet or shadows remain after a foot lifts.
 base.location.x=.018
+base.location.z-=.024
 stone.node_tree.nodes['Principled BSDF'].inputs['Base Color'].default_value=(.89,.64,.39,1)
 
 # Camera-only cream pigment, with live cavity/contact shading; never a figure projection.
@@ -74,3 +80,9 @@ shade=n.new('ShaderNodeMixRGB');shade.blend_type='MULTIPLY';shade.inputs[0].defa
 pigment=n.new('ShaderNodeBsdfPrincipled');pigment.name='Camera stone pigment';pigment.inputs['Base Color'].default_value=(0,0,0,1);pigment.inputs['Specular IOR Level'].default_value=0;pigment.inputs['Emission Strength'].default_value=1;l.new(shade.outputs[0],pigment.inputs['Emission Color'])
 ray=n.new('ShaderNodeLightPath');weight=n.new('ShaderNodeMath');weight.operation='MULTIPLY';weight.inputs[1].default_value=.85;l.new(ray.outputs['Is Camera Ray'],weight.inputs[0])
 blend=n.new('ShaderNodeMixShader');l.new(weight.outputs[0],blend.inputs[0]);l.new(s.outputs[0],blend.inputs[1]);l.new(pigment.outputs[0],blend.inputs[2]);l.new(blend.outputs[0],out.inputs['Surface'])
+
+# Fine stone pigment variation survives the camera-only painted illumination.
+noise=n.new('ShaderNodeTexNoise');noise.inputs['Scale'].default_value=95;noise.inputs['Detail'].default_value=3
+ramp=n.new('ShaderNodeMapRange');ramp.inputs['To Min'].default_value=.90;ramp.inputs['To Max'].default_value=1.035;l.new(noise.outputs['Fac'],ramp.inputs['Value'])
+grain=n.new('ShaderNodeMixRGB');grain.blend_type='MULTIPLY';grain.inputs[0].default_value=1
+l.new(shade.outputs[0],grain.inputs[1]);l.new(ramp.outputs[0],grain.inputs[2]);l.new(grain.outputs[0],pigment.inputs['Emission Color'])
