@@ -3,7 +3,7 @@
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/../../../../.."
 source tools/art/anim3d/env.sh
-export ROUND="${ROUND:-7}"
+export ROUND="${ROUND:-8}"
 [[ "$ROUND" =~ ^[0-9]+$ ]] || { echo 'ROUND must be an integer' >&2; exit 2; }
 # Keep the exact requested log even if the overnight driver's redirection changes.
 # Avoid a second writer when the driver already redirects to this exact file.
@@ -22,6 +22,8 @@ failed() {
 trap failed ERR
 printf 'round=%s status=running started=%s\n' "$ROUND" "$(date -u +%FT%TZ)" > "$status"
 printf 'Spearman GPU round %s | %s | checkout %s\n' "$ROUND" "$(date -u +%FT%TZ)" "$PWD"
+printf 'Revision %s | Blender gate %s\n' "$(git rev-parse HEAD)" "$(command -v blender)"
+git status --short -- tools/art/anim3d app/src/assets/units/anim/spearman.json app/src/assets/units/anim/spearman.webp
 printf '%s\n' "- GPU round $ROUND started: full Cycles GPU pass requested." >> "$REVIEW/spearman-log.md"
 export RENDER_ENGINE=CYCLES CYCLES_DEVICE=GPU CYCLES_BACKEND="${CYCLES_BACKEND:-METAL}"
 export RESOLUTION=512 SAMPLES="${SAMPLES:-64}" GRADE=1

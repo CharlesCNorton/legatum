@@ -1,80 +1,80 @@
-# Spearman review — round 7
+# Spearman review — round 8
 
-**Not PASS.** At 256 px the sleeve/upper arm is more continuous, the hand fuller,
-the rear neckline cleaner and the stone perspective closer. Crest and cheek
-outline, sandals, stance and base shading still differ from the painting.
-Raised-arm paint stretching and uneven pale fallen-pose surfaces remain. At
-64 px this clearly reads as the same spearman, but the base and stance are still
-distinguishable. No `spearman-PASS` was written. All results are CPU previews.
+**Not PASS.** At 256 px the hand and shoulder contour are slightly closer,
+the crest ends higher beside the cheek, and the cream stone is paler with a
+smoother bevel and softer shadows. Cheek shape, sandals, stance, shield edge
+and base shading still distinguish the render from the painting. At 64 px it
+reads as the same spearman, with a remaining difference in stance and base.
+All evidence from this iteration is explicitly labelled CPU preview.
 
-The requested round-6 GPU log and status receipt are both absent. Supplied
-images and movie were CPU-labelled; no GPU success or failure was inferred.
-They are preserved under `review/3d-v2/spearman-round6-preserved/`. All six Blender
-skills, all playbook chapters, complete shared/unit feedback, source licences
-and the running log were read before the revision.
+The requested round-7 GPU log is absent, and supplied images and movie are
+CPU-labelled. No GPU success or failure was inferred. The received evidence is
+preserved under `review/3d-v2/spearman-round7-preserved/`.
 
 ## Changes
 
-Depth-preserving inverse-skin fitting now covers the whole bent arm and taller
-knuckle stack. The near helmet cheek is wider; real folded collar and weighted
-cape vertices lower the squared rear neckline. Original anatomy, topology,
-weights, bevels, straps and simulated cloth remain.
+The frozen rest-camera projection, original MPFB body and skin weights, real
+beveled equipment, straps, cloth folds, and image-generated unseen fills remain.
+Inverse-skin fitting expands the actual knuckle stack and adjusts the shoulder;
+real crest volume now ends above the cheek and extends farther forward.
 
-The lower camera and repositioned round disc fit the shallower top ellipse;
-the stone has a taller edge, fine pigment grain and unchanged .105m contact top.
-The death calf solver now uses the actual base-local footprint. Existing generated
-unseen fills and tinted MPFB skin receive camera-only pigment, live AO and 35%
-physical response. Non-camera rays still see the original physical material.
-One automatic rest histogram grade remains fixed across all clips.
+The stone has a 22mm five-segment bevel, restrained scan bump and finer pigment
+variation. An elevated broad area key softens the previous diagonal shadows.
+A small linear pigment lift brings the rendered cream closer to source samples.
+Raw/graded pixel comparisons showed that the existing automatic grade improves
+the figure overall; that single rest-fitted grade remains fixed for all clips.
 
-Attack previously used a raised elbow pole at zero raise, causing a visible
-entry/exit pop despite matching hand targets. Attack and death now interpolate
-from the same guard poles as idle. The audit checks those transitions explicitly.
+The scene check verifies the new finish in addition to topology, original rig,
+camera-only pigment, contact plane and actual shield relief clearance. GPU
+handoff defaults to round 8 and logs the checkout revision, dirty input paths
+and resolved Blender gate, alongside its existing stage/failure receipts.
 
-## Verified outputs and checks
+## Verification
 
-- CPU Cycles rest and all 40 frames: 256 px, 12 samples; 512 px detail preview.
-  Clips retain 8/8/10/4/10 frames. Final GPU 512/256 master export is pending.
-- Trimmed 160 px atlas: **184,028 bytes at quality 80**.
-  SHA256 `d7408ecf78042c7770163a28461d1e3d570781ab066cb10605c452a2b02b2a5f`.
-- Decoded validation passes current hashes, timing, crop offsets, exact alpha,
-  gutters, bounds, visible motion, byte/quality caps and identical held-death PNGs.
-- Full saved-rig audit: **40 samples, zero findings**. Attack entry/exit arm
-  positions match idle exactly; death entry differs by less than 0.000001m.
-- Saved-scene checks pass: 314 camera-gated painting materials, 280 camera-only
-  unseen fills, original 19,158 body vertices / 53 bones, .155m stone thickness,
-  unchanged contact top and positive face clearance for all 12 shield rays.
-  Additional scene ray tests confirm all 12 rays are directly visible.
-- **2 regression tests pass**. Syntax: **26 Python, 3 Bash, 2 JSON**. Hygiene:
-  **34 text files, zero findings**. Diff whitespace passes.
-- Movie: five decoded clips simultaneously on cream, H.264 yuv420p,
-  **1600 × 352, 192 frames, 24 fps, exactly 8 seconds**.
-- Rest silhouette IoU **0.8839** versus round 6 **0.8767**; RGB union errors
-  **22.25 / 27.27 / 28.60** versus **24.90 / 29.49 / 30.44**. Diagnostics only.
-- Opened final clay, details, rest split/crossfade at 256/64, rig poses, every
-  strip, decoded atlas and freshly decoded round-7 movie contact frames.
+- CPU Cycles rest and all 40 frames: **256 px / 12 samples**. Detail inspection
+  render: **512 px / 12 samples**, still CPU. Final GPU masters remain pending.
+- Trimmed 160 px atlas: **181,968 bytes, quality 80**, all 8/8/10/4/10
+  frames retained. SHA256 `33742c6d2b0128c92207db9649bf90d6d41d27955b490f55ea703feaad256218`.
+- Independent decoded validation passes current hashes, clip timing, exact
+  reconstructed alpha, offsets, gutters, bounds, visible motion, byte/quality
+  limits and byte-identical held-death PNGs.
+- Full saved-rig audit: **40 samples, zero findings**, including guard arm
+  transitions, hand/shaft attachment, spear crossings, camera and floor bounds.
+- Saved-scene checks pass: **19,158 body vertices / 53 bones**, 314 camera-gated
+  painting materials, 280 unseen fills, all 12 raised shield rays clear.
+- **2 pipeline regression tests pass**. **26 Python / 3 Bash / 2 JSON syntax checks pass**; **34-file hygiene**
+  reports zero findings, and diff whitespace passes. Exact report:
+  `spearman-round8-checks.json`.
+- Movie verified: **H.264 yuv420p, 1600 × 352, 192 frames, 24 fps, 8 seconds**;
+  all five decoded clips run simultaneously on cream.
+- Rest diagnostic silhouette IoU: **0.8862**, versus round 7 **0.8839**;
+  RGB union errors: **21.61 / 26.82 / 27.92**, versus **22.25 / 27.27 / 28.60**.
+  These small improvements do not establish artistic equivalence.
+- Opened clay, rest split/crossfade, details, rig poses, all five strips, decoded
+  atlas and extracted round-8 movie frames. Motion remains readable, but raised
+  arm/lifted foot projection stretch and pale fallen-pose seams remain.
 
-No Rust, rules, WASM or UI runtime changed. The game still displays its painting.
+No `spearman-PASS` was written.
 
 ## GPU handoff
 
 From the repository root on the GPU host:
 
 ```sh
-ROUND=7 tools/art/anim3d/units/spearman/gpu.sh
+ROUND=8 tools/art/anim3d/units/spearman/gpu.sh
 ```
 
-The executable defaults to round 7, verifies Cycles GPU/Metal availability,
-rebuilds projection and every clip, runs scene/rig checks, renders all stages at
-512 px / 64 samples, exports genuine 512/256 masters to `masters/spearman/`,
-packs and validates the atlas, and writes `spearman-round7.mp4` plus all review
-images. It retains `gpu-logs-spearman-r7.log` and a stage/status receipt. It never
-writes PASS automatically. Final GPU rendering and visual review remain pending.
+This executable checks Cycles GPU/Metal, rebuilds the projection and all five
+clips, renders every stage and 40 frames at 512 px / 64 samples, fits one grade,
+exports genuine 512/256 masters, packs and independently validates the trimmed
+160 px atlas, and encodes all five decoded clips side by side for eight seconds.
+It writes `spearman-round8.mp4`, all review images including the rest comparison,
+`gpu-logs-spearman-r8.log` and a stage/status receipt. It never writes PASS.
+Final GPU rendering and visual review remain required.
 
-Running log and exact report: `review/3d-v2/spearman-log.md` and
-`spearman-final-report.json`. Masters remain outside git.
+Masters remain outside git. No Rust, rules, WASM or UI runtime changed; the
+game still displays its painting. No push, PR or master merge is part of this task.
 
-Git staging was blocked by `Operation not permitted` creating the worktree
-`index.lock`; changes remain for the runner to commit with the requested
-`Co-Authored-By: gpt-6-astra (Codex) <noreply@openai.com>` trailer. The branch
-already contains available `origin/master`; no fetch, push or PR was performed.
+Git staging failed because the sandbox denied the worktree `index.lock`.
+Seven files remain for the runner to commit with the requested gpt-6-astra
+co-author trailer. The branch already contains available `origin/master`.

@@ -319,6 +319,33 @@ images do not establish that a GPU render ran. The script retains its own round
 log and stage/status receipt; final 512/256 export and PASS still require actual
 GPU output and visual review. The CPU iteration report records measured results.
 
+### Round 8 stone and contour polish
+
+The unchanged rest camera still owns all projection UVs. `infantry/refine.py`
+fits the real knuckles and shoulder more closely and trims the crest's lower
+fan while extending its forward tip. The original MPFB body topology, weights,
+solid kit, folded cloth and generated unseen fills remain intact.
+
+Use a five-segment 22mm stone bevel and restrained 1mm-distance scan bump.
+The elevated 5m area key softens and shortens the broad diagonal base shadows;
+its energy compensates for the increased distance. The shared cream albedo
+stays recorded, while a small linear pigment lift makes the rendered stone
+paler. Compare actual pixels: the albedo field alone does not establish a
+painting match. Raw/graded region comparisons showed that the fixed global
+histogram grade helped the figure; retain it rather than correcting each frame.
+
+`check_scene.py` verifies the new stone finish as well as the original rig,
+camera-only pigment, finished rigid surfaces and shield clearances. Keep local
+contour targets separately named: reusing the shield ornament target in a
+crest loop made later objects depend on scene iteration order and was caught
+by the existing projection assertion.
+
+`ROUND=8 tools/art/anim3d/units/spearman/gpu.sh` is the complete host handoff;
+it defaults to round 8 and records checkout revision, dirty inputs and the
+resolved Blender gate in its retained log. The requested round-7 GPU log was
+absent and supplied evidence was CPU-labelled. This is an unverified GPU pass,
+not evidence of successful final rendering or a diagnosed GPU failure.
+
 ### Trimmed atlas v2 and checks
 
 `units/spearman/delivery.py` preserves 8/8/10/4/10 frames, real alpha, and the

@@ -55,7 +55,7 @@ def refine(sc, aim, screen_sculpt):
 
     def fitted_pixel(p):
         shoulder = math.exp(-((p.x-111)/8)**2-((p.y-108)/10)**2)
-        target = p+Vector((1.0, 2.0))*shoulder
+        target = p+Vector((.2, 1.1))*shoulder
         # Fit the whole bent arm, not just the shoulder cap. The previous
         # elbow sat too far toward the torso, leaving a gap where the painting
         # has a muscular upper arm. Preserve camera depth and skin weights.
@@ -64,7 +64,7 @@ def refine(sc, aim, screen_sculpt):
         # The actual closed hand was a horizontal sliver. Broaden its vertical
         # knuckle stack around the shaft without replacing fingers or the rig.
         fist = math.exp(-((p.x-97)/8)**4-((p.y-115)/9)**4)
-        target += Vector((-.18*(p.x-97), .60*(p.y-115)+.3))*fist
+        target += Vector((.08*(p.x-97), .82*(p.y-115)+.3))*fist
         if p.x < 122:
             # Seat the spear-side shin/foot under the painted greave rather
             # than leaving an exposed sliver beyond the painted toe silhouette.
@@ -204,7 +204,12 @@ def refine(sc, aim, screen_sculpt):
         if ob.name.startswith(('Horsehair crest tuft', 'Horsehair painted fibre', 'Crest bronze saddle')):
             for v in ob.data.vertices:
                 p = pixel(ob, v.co)
-                v.co = screen_sculpt(ob, v.co, Vector((131+(p.x-131)*.84, 91+(p.y-91)*.92)))
+                crest_target = Vector((131+(p.x-131)*.84, 91+(p.y-91)*.92))
+                # The painted fan ends above the cheek, and its forward tip
+                # extends slightly farther. Fit real tuft volume, not alpha.
+                crest_target.y -= 3*max(0, min(1, (crest_target.y-79)/12))
+                crest_target.x += 1.2*max(0, min(1, (crest_target.x-135)/9))
+                v.co = screen_sculpt(ob, v.co, crest_target)
             ob.data.update()
         if ob.name == 'Corinthian continuous faceplate':
             # Recover the broad near cheek and eye surround of the painting;
@@ -239,15 +244,29 @@ def refine(sc, aim, screen_sculpt):
             v.co.z -= .065
         v.co.x *= .99
         v.co.y *= .99
+    # Round the actual stone edge; the old three-segment bevel and coarse
+    # scanned bump left a sawtooth highlight at token size.
+    for mod in base_object.modifiers:
+        if mod.type == 'BEVEL':
+            mod.width = .022
+            mod.segments = 5
     # Fine limestone pigment grain; no painted feet or static contact shadows.
     for mat in base_object.data.materials:
         nodes, links = mat.node_tree.nodes, mat.node_tree.links
         bsdf = nodes.get('Principled BSDF')
+        for node in nodes:
+            if node.type == 'BUMP':
+                node.inputs['Strength'].default_value = .035
+                node.inputs['Distance'].default_value = .001
         grain = nodes.new('ShaderNodeTexNoise'); grain.inputs['Scale'].default_value = 450
         ramp = nodes.new('ShaderNodeValToRGB')
         base = tuple(bsdf.inputs['Base Color'].default_value)
-        for el, factor in zip(ramp.color_ramp.elements, (.90, 1.06)):
-            el.color = tuple(min(1, c*factor) for c in base[:3])+(1,)
+        # The shared cream inputs are albedo, not final display values. The
+        # source stone is paler than this physical material under Standard.
+        # Calibrate pigment in linear space while retaining live moving shade.
+        lift = (1, 1.05, 1.14) if 'rim' in mat.name else (1.03, 1.07, 1.14)
+        for el, factor in zip(ramp.color_ramp.elements, (.94, 1.04)):
+            el.color = tuple(min(1, c*factor*k) for c, k in zip(base[:3], lift))+(1,)
         links.new(grain.outputs['Fac'], ramp.inputs[0])
         links.new(ramp.outputs['Color'], bsdf.inputs['Base Color'])
         bsdf.inputs['Specular IOR Level'].default_value = .18
@@ -256,7 +275,7 @@ def refine(sc, aim, screen_sculpt):
         links.new(ramp.outputs['Color'], bsdf.inputs['Emission Color'])
         ray = nodes.new('ShaderNodeLightPath')
         pigment = nodes.new('ShaderNodeMath'); pigment.operation = 'MULTIPLY'
-        pigment.inputs[1].default_value = 1.12 if 'rim' in mat.name else .28
+        pigment.inputs[1].default_value = 1.30 if 'rim' in mat.name else .50
         links.new(ray.outputs['Is Camera Ray'], pigment.inputs[0])
         links.new(pigment.outputs[0], bsdf.inputs['Emission Strength'])
     # Painted illumination is already display-referred. AgX compressed it a
@@ -272,6 +291,13 @@ def refine(sc, aim, screen_sculpt):
     # reduce incident energy so the cream pigment is not clipped to white.
     for name in ['Warm upper-left key', 'Soft cool fill', 'Warm back rim']:
         bpy.data.objects[name].data.energy *= .55
+    # A broader elevated softbox gives short soft contact shadows, closer to
+    # the painted base. Compensate for its greater distance; retain cool fill.
+    key = bpy.data.objects['Warm upper-left key']
+    key.location = (-3, -4, 8)
+    key.rotation_euler = (Vector((0, 0, 1))-key.location).to_track_quat('-Z', 'Y').to_euler()
+    key.data.size = 5.0
+    key.data.energy *= 1.55
     # Freeze the finished rigid kit surfaces BEFORE projecting. UVs made on
     # the raw shell were then offset by Solidify and Bevel, visibly displacing
     # the painted sunburst from its own raised rays. Keep all actual thickness
@@ -285,5 +311,5 @@ def refine(sc, aim, screen_sculpt):
         for mod in list(ob.modifiers):
             if mod.type in {'SOLIDIFY', 'BEVEL', 'SUBSURF'}:
                 bpy.ops.object.modifier_apply(modifier=mod.name)
-    sc['infantry_refinement'] = 7
+    sc['infantry_refinement'] = 8
     bpy.context.view_layer.update()
