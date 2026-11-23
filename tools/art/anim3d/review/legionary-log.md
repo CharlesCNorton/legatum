@@ -83,3 +83,5 @@
 - Applying modeling/cameras to calibrated silhouette and grip; materials/lighting to source projection plus existing image-generated hidden fills and product lights; animation to CC0 rest/roll-compensated motion per feedback23; rendering to low-cost CPU previews and complete GPU handoff.
 - Published b: CYCLES/CPU, 256 px, 8 samples; visual review pending.
 - Published c: CYCLES/CPU, 256 px, 8 samples; visual review pending.
+- Published e-move: CYCLES/CPU, 256 px, 4 samples; visual review pending.
+- Published e-death: CYCLES/CPU, 256 px, 4 samples; visual review pending.
