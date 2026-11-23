@@ -76,3 +76,6 @@
 - Post-morph-bake death/rest audit: 10 samples, zero findings under the stricter disc-footprint test. The actual low foot skin moved after shape-key bake; no audit threshold weakening. Rest CPU IoU 0.8767, RGB union error 24.90/29.49/30.44; image remains recognizably different from painting. Rebuilding remaining four clips and all review/delivery outputs from this master.
 - Final round 6 after MPFB morph/contact fix: rebuilt and CPU-rendered idle, 256px / 12 samples.
 - Final round 6 after MPFB morph/contact fix: rebuilt and CPU-rendered move, 256px / 12 samples.
+- Final round 6 after MPFB morph/contact fix: rebuilt and CPU-rendered attack, 256px / 12 samples.
+- Final round 6 after MPFB morph/contact fix: rebuilt and CPU-rendered hit, 256px / 12 samples.
+- Final round 6 after MPFB morph/contact fix: death rebuilt, narrow audit zero findings, CPU-rendered 256px / 12 samples.
