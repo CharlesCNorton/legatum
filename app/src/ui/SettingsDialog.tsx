@@ -22,6 +22,7 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
     <dialog
       ref={dialog}
       className="modal settings-modal"
+      data-game-overlay=""
       aria-labelledby={titleId}
       onCancel={(e) => {
         e.preventDefault();
