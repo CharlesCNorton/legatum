@@ -163,3 +163,12 @@
 - Opened GPU c, f, all five e strips and decoded round1 MP4 frame before editing. GPU transcript completed: forty 512px/64-sample frames, 190436-byte Q90 atlas, valid eight-second H.264 movie. No operational GPU failure.
 - Honest critique: at 256px painted chest/skirt/helmet detail is close, but squared elbow, narrow shoulder drape, slightly displaced face/crest and featureless smooth stone remain conspicuous; lower bow silhouette also differs. Move has a rigid drawn-bow torso and unnatural feet; death reveals abrupt skin/cloth transitions. At 64px identity is strong but base, stance and crest still distinguish it from the painting. Not PASS.
 - Read full local PLAYBOOK, all shared feedback 1–23 and prior archer log; archer-FEEDBACK.md absent. Loaded all six Blender skills: modeling for rounded elbow/finished surfaces, materials for stone grain and hidden painted fills, cameras for fixed viewpoint registration, lighting for warm key/contact, animation for open motion/rest-roll mapping, rendering for sequential CPU checks and GPU masters. Prior generated fills and actual AO/curvature bakes are retained.
+- Finished static solid/bevel/subdivision geometry before projection; froze MPFB macro mix with native skin weights; fitted drawing-arm contour and complete recurved bow in the fixed rest camera.
+- Projected painting onto finished surfaces with occlusion/facing masks and camera-only pigment; original generated fills, real AO/curvature and physical lighting remain.
+- Rendered c: 256px CYCLES CPU, 8 samples.
+- Published c native 256/64 comparison; render device CPU.
+- Authored idle: 8 frames, 10 fps; real rig keys, bow flex and nock keys, stationary base.
+- Authored move: 8 frames, 12 fps; real rig keys, bow flex and nock keys, stationary base.
+- Authored attack: 10 frames, 14 fps; real rig keys, bow flex and nock keys, stationary base.
+- Authored hit: 4 frames, 12 fps; real rig keys, bow flex and nock keys, stationary base.
+- Authored death: 10 frames, 10 fps; real rig keys, bow flex and nock keys, stationary base.
