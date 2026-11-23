@@ -3,18 +3,22 @@
 The UVs are fixed in the bind pose and move with vertices. Never a billboard.
 Projection uses direct rest-camera UVs, with incidence and image-alpha masks.
 """
-import bpy,os,ast,math,json
+import bpy,os,ast,math,json,sys
 from pathlib import Path
 from mathutils import Vector,Matrix
 from bpy_extras.object_utils import world_to_camera_view
 R=Path(os.environ['ANIM_ROOT']);M=R/'masters/horseman-3d';A=R/'assets/horseman'
+sys.path.insert(0,str(Path('tools/art/anim3d/mounted').resolve()))
+from source_pose import reset_pose
 bpy.ops.wm.open_mainfile(filepath=str(M/'horseman-unpainted.blend'));sc=bpy.context.scene;hrig=bpy.data.objects['AnimalArmature'];rig=bpy.data.objects['Rider MPFB game_engine']
 for node in ast.parse(Path('tools/art/anim3d/scene.py').read_text()).body:
  if isinstance(node,ast.FunctionDef) and node.name in {'curve','mesh','solid','material','aim_bone','limb'}:exec(compile(ast.Module(body=[node],type_ignores=[]),'<shared geometry>','exec'))
 # Match the painting's raised near forehoof with a real pose from the source walk.
 for a in bpy.data.actions:a.use_fake_user=True
+reset_pose(hrig)
 hrig.animation_data.action=bpy.data.actions['AnimalArmature|Walk'];hrig.animation_data.action_slot=hrig.animation_data.action.slots[0];sc.frame_set(19)
 raised={p.name:p.matrix_basis.copy() for p in hrig.pose.bones if p.name.endswith('.R') and p.name.split('.')[0] in ['FrontShoulder','FrontUpperLeg','FrontLowerLeg','IKFrontLeg','FF','PoleTarget']}
+reset_pose(hrig)
 hrig.animation_data.action=bpy.data.actions['AnimalArmature|Idle'];hrig.animation_data.action_slot=hrig.animation_data.action.slots[0];sc.frame_set(0)
 rest={p.name:p.matrix_basis.copy() for p in hrig.pose.bones};rest.update(raised);obmat=hrig.matrix_basis.copy();hrig.animation_data_clear();hrig.animation_data_create();hrig.animation_data.action=bpy.data.actions.new('Horseman painted rest')
 hrig.matrix_basis=obmat
@@ -94,8 +98,6 @@ for v in shirt.data.vertices:
   v.co.y-=.004*math.sin(52*v.co.z+18*v.co.x)*math.sin(math.pi*max(0,min(1,(v.co.z-1.02)/.43)))
 shirt.data.update()
 # Register the full-depth horse, bridle and mane before projecting colour.
-import sys
-sys.path.insert(0,str(Path('tools/art/anim3d/mounted').resolve()))
 from register import Registration, LANDMARKS
 registration=Registration(sc)
 for ob in list(sc.objects):
@@ -115,6 +117,9 @@ bpy.context.view_layer.update()
 from surface import finish, pigment
 objects=[o for o in sc.objects if o.type=='MESH' and (o.name=='Horse' or o.name.startswith(('Rider MPFB CC0','Rider linen','Split riding tunic','Rider bronze helmet','Bronze cheekguard','Ivory woven saddle','Helmet dark crest fibre','Leather baldric')))]
 surface_records=finish(objects)
+from finish_fit import finish_fit, fit_bridle
+finish_fit(sc,horse)
+fit_bridle(sc,horse)
 # Relax the seat and exposed spear-side shoulder, retaining all camera depth.
 rider_fit=Registration(sc,[((112,77),(108,71)),((127,105),(126,102)),
  ((129,141),(122,140)),((128,171),(122,172)),((97,78),(97,78)),
@@ -140,6 +145,21 @@ for j,ob in enumerate(crests):
   point.co=(*(inv@w),1)
  ob.data.bevel_depth=.007
 surface_records.extend(finish(crests))
+# The painting has a trailing pale crest behind the helmet, not just a short fan.
+# These are round, solid strands parented to the head and projected like the bowl.
+plumes=[]
+anchor=rig.matrix_world@rig.pose.bones['head'].head
+q=world_to_camera_view(sc,sc.camera,anchor)
+for j in range(18):
+ t=j/17;points=[]
+ for x,y in [(113+3*t,43+4*t),(111+3*t,53+3*t),(105+4*t,64-2*t)]:
+  w=anchor+right*((x/256-q.x)*sc.camera.data.ortho_scale)+up*((1-y/256-q.y)*sc.camera.data.ortho_scale)
+  w+=sc.camera.matrix_world.to_3x3()@Vector((0,0,.12))
+  points.append(w)
+ ob=curve('Helmet dark crest fibre plume',points,.0055,bpy.data.materials['Black mane and tail'])
+ world=ob.matrix_world.copy();ob.parent=rig;ob.parent_type='BONE';ob.parent_bone='head'
+ bpy.context.view_layer.update();ob.matrix_world=world;plumes.append(ob)
+surface_records.extend(finish(plumes))
 from strap import fit_baldric
 surface_records.extend(finish([fit_baldric(sc,rig)]))
 
@@ -230,6 +250,18 @@ sc['tail_root_local']=json.dumps(list((hrig.matrix_world@hrig.pose.bones['Tail1'
 for j in range(48):
  ob=curve('Horseman flowing tail lock',[(0,0,.5)]*13,.009,hair)
  ob.data.bevel_resolution=3
+# Separate dark and warm-grey locks reveal the actual curved fibre volume.
+# Preserve the generated unseen hair texture; vary its pigment, not the light rig.
+tail_materials=[]
+for value in (.7,.9,1.15,1.45,1.8,2.1):
+ mat=hair.copy();mat.name=f'Tail painted fibre {value}'
+ n=mat.node_tree.nodes;l=mat.node_tree.links;s=n.get('Principled BSDF')
+ old=s.inputs['Base Color'].links[0].from_socket
+ tint=n.new('ShaderNodeHueSaturation');tint.inputs['Value'].default_value=value
+ l.new(old,tint.inputs['Color']);l.new(tint.outputs[0],s.inputs['Base Color'])
+ s.inputs['Roughness'].default_value=.66;tail_materials.append(mat)
+for j,ob in enumerate(sorted((o for o in sc.objects if o.name.startswith('Horseman flowing tail lock')),key=lambda o:o.name)):
+ ob.data.materials[0]=tail_materials[(j*7+j//6)%len(tail_materials)]
 from tail import update_tail
 update_tail()
 from reins import update_reins

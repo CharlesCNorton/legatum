@@ -227,6 +227,47 @@ the decoded eight-second H.264/yuv420p movie succeed. A receipt leaves art appro
 false; no script writes PASS. The comparison now includes native 64 px versions
 of the painting, rest, split and crossfade as well as 256 px versions.
 
+### Driver round 3: sparse-action correction and feet review
+
+The round-2 GPU pass completed, but its bent rear cannon was a real rig defect.
+Quaternius's glTF actions are sparse: Idle omits IK foot translations that Walk
+keys. Assigning Idle after Walk without clearing pose channels mixes incompatible
+leg and hoof poses. `source_pose.reset_pose()` now restores all bone bases before
+every action switch in paint/animation. The Blender regression reproduces the old
+contamination and verifies four preceding actions produce the same clean Idle.
+Do this before attempting corrective sculpture or patching foot rotations.
+
+Small weighted, full-depth limb offsets and poll fitting now follow the clean
+pose. `finish_fit.py` also fits solid bridle curves to the evaluated muzzle,
+replacing the floating triangular noseband. A trailing solid crest and varied
+generated-hair pigment add surface detail. Frozen painting UVs are captured only
+after these geometry changes; one automatic rest histogram LUT grades all clips.
+
+Standard walk review: render all eight samples from above and from the front,
+isolating actual lower-limb meshes so the body cannot hide the feet. Preserve the
+rig's forward axis and original source foot orientation. `feet.py` writes sixteen
+renders, contact centroids and the move-blend hash; `feet_review.py` immediately
+writes `horseman-g-feet-check.png`. Blue/green are front L/R, orange/purple rear L/R;
+the fixed grid is 25 cm. In-place motion has backward stance travel under the
+body, so a contact test alone cannot certify no sliding. Inspect direction,
+stance continuity, lateral skating and loop seams; never infer cleanliness from
+one grounded hoof. These diagnostic copies never alter production geometry.
+
+This review exposed all front feet hovering despite the former one-hoof support
+test. `contacts.py` measures the original unsculpted source soles at the same Walk
+samples. Positional retargeting transfers their x/y trajectories with constant
+rest offsets and preserves their source stance/swing heights; translations taper
+into the upper limbs. Source hoof rotations are unchanged (asserted within .001
+radian), and sole trajectories must transfer within 5 mm. The audit now checks
+all 32 hoof-height targets within 15 mm and requires every foot to support weight
+during the cycle. This is a source-derived positional adaptation, not a new gait
+or an exhaustive collision/no-slide proof. Review the actual silhouettes too.
+
+The no-argument GPU script now runs the sparse-action regression and the feet
+review, and binds the latter's current GPU result into the completion receipt.
+It continues to create nine GPU512 stages, both master sizes, all forty trimmed
+160px frames, and the decoded eight-second movie. Visual approval remains manual.
+
 ### Trimmed atlas format, version 2
 
 `mounted/pack.py` packs all 40 downsampled **160 px** frames in five clip rows,

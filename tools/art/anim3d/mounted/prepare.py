@@ -14,9 +14,13 @@ print('PREPARED painting projection and four generated surface fills')
 # Separate projection masks prevent cloth or skin from being painted onto the horse.
 from PIL import ImageDraw,ImageFilter
 coatmask=Image.new('L',(1024,1024));d=ImageDraw.Draw(coatmask)
-poly=[(82,133),(92,124),(141,118),(154,92),(169,83),(184,87),(194,122),(176,133),(170,180),(178,216),(166,219),(154,190),(145,173),(126,181),(128,211),(117,215),(110,179),(99,183),(101,214),(91,214),(89,181)]
+# Broad ownership plus the source alpha preserves every pale sock and raised
+# foreleg. The earlier narrow polygon cut out the raised foreleg's white hair.
+poly=[(60,127),(84,120),(114,118),(138,120),(147,90),(166,78),
+      (190,78),(199,122),(175,150),(187,224),(80,225),(55,195)]
 d.polygon([(x*4,y*4) for x,y in poly],fill=255)
-for poly in [[(91,127),(141,117),(139,149),(92,149)],[(116,114),(135,116),(130,147),(126,176),(115,174)]]:d.polygon([(x*4,y*4) for x,y in poly],fill=0)
+for poly in [[(91,127),(141,117),(139,149),(92,149)],[(116,114),(135,116),(130,147),(126,176),(115,174)],
+             [(166,159),(185,166),(188,176),(171,177)]]:d.polygon([(x*4,y*4) for x,y in poly],fill=0)
 skinmask=Image.new('L',(1024,1024));d=ImageDraw.Draw(skinmask)
 # Spatial skin ownership retains warm highlights and dark creases equally.
 # Hue thresholds incorrectly discarded the painting's palest skin pixels.

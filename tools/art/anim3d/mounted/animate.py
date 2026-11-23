@@ -6,8 +6,22 @@ from math import sin,cos,pi
 sys.path.insert(0,str(Path('tools/art/anim3d/mounted').resolve()))
 from reins import update_reins
 from tail import update_tail
+from source_pose import reset_pose
+from contacts import hooves, transfer_contacts
 R=Path(os.environ['ANIM_ROOT']);M=R/'masters/horseman-3d';(M/'clips').mkdir(exist_ok=True)
 CLIPS={'idle':(8,10,True,'Idle',80),'move':(8,12,True,'Walk',28),'attack':(10,14,False,'Gallop',14),'hit':(4,12,False,'Idle_HitReact_Left',16),'death':(10,10,False,'Death',24)}
+# Measure the original licensed mesh before anatomical fitting. This keeps the
+# source's four footfalls; whole-horse grounding alone lost all front contacts.
+bpy.ops.wm.open_mainfile(filepath=str(M/'horseman-unpainted.blend'))
+source_rig=bpy.data.objects['AnimalArmature'];source_horse=bpy.data.objects['Horse'];source_scene=bpy.context.scene
+reset_pose(source_rig)
+source_rig.animation_data.action=bpy.data.actions['AnimalArmature|Idle'];source_rig.animation_data.action_slot=source_rig.animation_data.action.slots[0]
+source_scene.frame_set(0);source_rest_contacts=hooves(source_horse)
+reset_pose(source_rig)
+source_rig.animation_data.action=bpy.data.actions['AnimalArmature|Walk'];source_rig.animation_data.action_slot=source_rig.animation_data.action.slots[0]
+source_walk_contacts=[]
+for i in range(9):
+ sample=i/8*28;source_scene.frame_set(int(sample),subframe=sample%1);source_walk_contacts.append(hooves(source_horse))
 for node in ast.parse(Path('tools/art/anim3d/scene.py').read_text()).body:
  if isinstance(node,ast.FunctionDef) and node.name in {'aim_bone','limb'}:exec(compile(ast.Module(body=[node],type_ignores=[]),'<shared joints>','exec'))
 # Normalize the task-owned shield before making independent clips.
@@ -21,7 +35,11 @@ for clip,(count,fps,loop,src,length) in CLIPS.items():
  if os.environ.get('CLIP') and clip not in os.environ['CLIP'].split(','):continue
  bpy.ops.wm.open_mainfile(filepath=str(M/'horseman.blend'));sc=bpy.context.scene;hrig=bpy.data.objects['AnimalArmature'];rig=bpy.data.objects['Rider MPFB game_engine'];root=bpy.data.objects['Horse world control']
  rest_pose={p.name:p.matrix_basis.copy() for p in hrig.pose.bones}
+ painted_rest_contacts=hooves(bpy.data.objects['Horse']);contact_offsets=[]
  raised={n:Matrix(m) for n,m in json.loads(hrig.get('raised_idle_foreleg','{}')).items()}
+ # glTF actions are sparse: Idle does not key IKBackLeg translations. Leaving
+ # a previous Walk pose in those channels tears the cannon away from the hoof.
+ reset_pose(hrig)
  act=bpy.data.actions['AnimalArmature|'+src];hrig.animation_data.action=act;hrig.animation_data.action_slot=act.slots[0]
  poses=[]
  for i in range(count+int(loop)):
@@ -79,7 +97,12 @@ for clip,(count,fps,loop,src,length) in CLIPS.items():
    fall=min(t/.5,1);center=Vector(((min(v.x for v in vs)+max(v.x for v in vs))/2,(min(v.y for v in vs)+max(v.y for v in vs))/2,0))
    root.location.x-=center.x*fall;root.location.y-=center.y*fall
    root.location.z+=.112-min(v.z for v in vs)
-  if clip!='death':
+  if clip=='move':
+   bpy.context.view_layer.update()
+   contact_offsets.append(transfer_contacts(hrig,bpy.data.objects['Horse'],source_walk_contacts[i],source_rest_contacts,painted_rest_contacts))
+   for p in hrig.pose.bones:
+    for prop in ['location','rotation_quaternion','scale']:p.keyframe_insert(prop,frame=f)
+  if clip not in ('death','move'):
    # Bind-space sculpt changes foot extents; ground actual rendered geometry.
    bpy.context.view_layer.update()
    horse=bpy.data.objects['Horse'];ev=horse.evaluated_get(bpy.context.evaluated_depsgraph_get());me=ev.to_mesh()
@@ -110,5 +133,6 @@ for clip,(count,fps,loop,src,length) in CLIPS.items():
    p.rotation_mode='QUATERNION'
    for prop in ['location','rotation_quaternion','scale']:p.keyframe_insert(prop,frame=f)
  sc.frame_start=1;sc.frame_end=count;sc.render.fps=fps;sc['sample_frames']=json.dumps(list(range(1,count)) + [count-1] if clip=='death' else list(range(1,count+1)));sc['horse_source_action']=act.name;sc['clip']=clip;sc['loop']=loop
+ if clip=='move':sc['source_contact_transfer']=json.dumps({'source':source_walk_contacts,'offsets':contact_offsets,'method':'licensed actual sole paths; constant x/y rest offset, tapered bone translations, unchanged foot rotations'})
  sc.frame_set(1);bpy.ops.wm.save_as_mainfile(filepath=str(M/'clips'/f'{clip}.blend'))
  print('MOUNTED_CLIP_READY',clip)

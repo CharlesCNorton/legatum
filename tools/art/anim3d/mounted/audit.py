@@ -46,6 +46,16 @@ for clip in ['idle','move','attack','hit','death']:
  if clip=='move':
   flight=sum(all(z>.135 for z in f['hoof_heights'].values()) for f in frames)
   if flight>0:errors.append(f'Walk has {flight}/8 unsupported samples; stance timing needs correction')
+  # One rear contact is insufficient: every hoof must retain its licensed
+  # source stance/swing trajectory after the painting-specific mesh fitting.
+  contacts=json.loads(sc['source_contact_transfer'])
+  for record,source in zip(frames,contacts['source']):
+   floor=min(v['z'] for v in source.values())
+   for name,z in record['hoof_heights'].items():
+    target=.112+source[name]['z']-floor
+    if abs(z-target)>.015:errors.append(f"Walk/{record['frame']}/{name}: sole {z:.4f}, source target {target:.4f}")
+  for name in frames[0]['hoof_heights']:
+   if not any(f['hoof_heights'][name]<.135 for f in frames):errors.append(f'Walk: {name} never supports weight')
  if clip=='death':
   if frames[-1]['horse_bounds'][2][0]>.17:errors.append('Death horse is not planted on base')
   if frames[-1]['horse_bounds'][2][1]>1.35:errors.append('Death horse remains too high')
