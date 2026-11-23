@@ -36,3 +36,6 @@
 - Emitted tank-e-attack-strip.png from actual e-attack renders; visual review pending.
 - Emitted tank-e-hit-strip.png from actual e-hit renders; visual review pending.
 - Emitted tank-e-death-strip.png from actual e-death renders; visual review pending.
+- Final contract PASS: 40 frames, 2560x1280 atlas, exact JSON, transparent padding/corners, 2px frame margins, motion in all clips, identical final death source samples. Best tested fit: WebP quality 54, 198692 bytes (quality 55 = 200758). Kept all PNG masters.
+- Geometry audit PASS: true meshes, 124 track links, 16 wheel pivots, recoil, six maps, stationary base and planted samples. Ten Python scripts parse; shell syntax and git diff whitespace checks pass.
+- Inspected decoded atlas beside painting and PNG. 64px identity reads correctly; 256px still below painting craft, with cast shape/registration differences, regular wheel detail, stylized fire/smoke and visible atlas compression. Host GPU/lead art approval remains outstanding.
