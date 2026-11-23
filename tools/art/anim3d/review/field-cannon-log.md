@@ -293,3 +293,14 @@
 - Posted field-cannon-d-rig-poses.png; actual CYCLES render, visual review pending.
 - Posted field-cannon-e-idle-strip.png; actual CYCLES render, visual review pending.
 - Posted field-cannon-e-move-strip.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-attack-strip.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-hit-strip.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-death-strip.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-c-textured-lit.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-b-plain.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-c-textured-lit.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-c-details.png; actual CYCLES render, visual review pending.
+- ROUND 8 CLIP REVIEW: First complete set rendered in about3m15s and exposed the overly plain hub after broad projection removal. Retained the deeper real hub but restored its frozen source paint; only spokes now use the clean scanned fill. Opened the revised rest comparison and rerendering every stage/clip from that same master. New audit explicitly verifies unchanged topology when replaying surface finishing. GPU receipt now includes the geometry audit and master SHA, and requires the replay check; default ROUND=8.
+- Posted field-cannon-d-rig-poses.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-idle-strip.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-move-strip.png; actual CYCLES render, visual review pending.
