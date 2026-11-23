@@ -11,7 +11,7 @@ const pass = process.argv[2] || '1';
 if (!/^\d+$/.test(pass)) throw Error('Pass must be a positive integer');
 const out = path.join(os.homedir(), 'LegatumRuns/anim-pilot/review', `pass-${pass}`);
 fs.mkdirSync(out, {recursive: true});
-const mime = {'.html':'text/html', '.png':'image/png', '.webp':'image/webp', '.json':'application/json'};
+const mime = {'.html':'text/html', '.png':'image/png', '.webp':'image/webp', '.json':'application/json', '.js':'text/javascript'};
 const server = http.createServer((req,res) => {
   const pathname = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
   let file = path.resolve(repo, '.' + pathname);
@@ -55,14 +55,15 @@ const server = http.createServer((req,res) => {
   assert.notEqual(await idle.locator('output').textContent(),before,'Step must advance the selected clip');
   await page.locator('#speed').evaluate(el=>{el.value='0.5';el.dispatchEvent(new Event('input',{bubbles:true}));});
   assert.equal(await page.locator('#speed-value').textContent(),'0.5×');
-  const stress=[];
+  const stress=[],originalStress=[];
   for(const count of [300,600]){
    await page.locator('#count').selectOption(String(count));
+   originalStress.push(await page.evaluate(count=>window.reviewAPI.benchmark(count,180,true),count));
    stress.push(await page.evaluate(count=>window.reviewAPI.benchmark(count),count));
    await page.locator('#stress').screenshot({path:path.join(out,`stress-${count}.png`)});
   }
-  await page.setViewportSize({width:1000,height:600});await page.screenshot({path:path.join(out,'gallery-1000.png')});
-  const result={pass:Number(pass),deviceScaleFactor:1,browser:browser.version(),atlases:sizes,stress,errors};
+  await page.setViewportSize({width:1000,height:600});await page.evaluate(()=>window.scrollTo(0,0));await page.screenshot({path:path.join(out,'gallery-1000.png')});
+  const result={pass:Number(pass),deviceScaleFactor:1,browser:browser.version(),atlases:sizes,stress,originalStress,errors};
   fs.writeFileSync(path.join(out,'metrics.json'),JSON.stringify(result,null,2)+'\n');
   assert.deepEqual(errors,[],'Browser console errors');
   assert(stress[0].avg<4,`300-token draw ${stress[0].avg.toFixed(3)} ms exceeds 4 ms`);

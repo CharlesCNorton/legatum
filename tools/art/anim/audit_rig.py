@@ -32,24 +32,30 @@ for obj in scene.objects:
   for x in range(1,256,2):
    if pixels[(y*256+x)*4+3]<.5:continue
    xx=x
-   if slug=='field-cannon' and name in ('wheel_l','wheel_r'):
-    ratio=.44 if name=='wheel_l' else .50;cx=bone.bone.head_local.x;xx=cx+(x-cx)/ratio
    points.append(Vector((xx,0,y)))
  samples[name]=(bone,points)
 report={'slug':slug,'engine':scene.render.engine,'threads':scene.render.threads,'poses':40,'base_stationary':True,'camera_depth_checked':True,'kit_pivots_attached':True,'rendered':False,'frames':[]}
 frame=1
 for clip,(count,_,_) in CLIPS.items():
  for index in range(count):
-  scene.frame_set(frame);bpy.context.view_layer.update();xs=[];ys=[]
+  scene.frame_set(frame);bpy.context.view_layer.update();xs=[];ys=[];parts={}
   for name in ('spear','shield'):
    if name in rig.pose.bones:
     assert rig.pose.bones[name].location.length < .0001,(clip,index,name,'detached grip')
-  for bone,points in samples.values():
+  for name,(bone,points) in samples.items():
+   pxs=[];pys=[]
    matrix=bone.matrix @ bone.bone.matrix_local.inverted()
    for point in points:
-    p=matrix@point;xs.append(p.x);ys.append(256-p.z)
+    p=matrix @ point;xs.append(p.x);ys.append(256-p.z);pxs.append(p.x);pys.append(256-p.z)
+   if pxs:parts[name]=[round(min(pxs),2),round(min(pys),2),round(max(pxs),2),round(max(pys),2)]
+  if slug=='horseman' and clip=='death':
+   assert abs(rig.pose.bones['root'].rotation_euler.z) < .2, (clip,index,'whole horse flip')
+   if index>=8:
+    assert 210 <= parts['body'][3] <= 236, ('horse torso must reach stone',parts['body'])
+    assert abs(rig.pose.bones['rider'].rotation_euler.z) > 1, 'rider must pitch separately'
+    assert rig.pose.bones['leg_r_lower'].rotation_euler.z < -1, 'foreleg must buckle'
   bounds=[round(min(xs),2),round(min(ys),2),round(max(xs),2),round(max(ys),2)]
-  report['frames'].append({'clip':clip,'frame':index,'opaque_sample_bounds':bounds})
+  report['frames'].append({'clip':clip,'frame':index,'opaque_sample_bounds':bounds,'parts':parts})
   frame+=1
 report['out_of_frame']=[f for f in report['frames'] if min(f['opaque_sample_bounds'][:2])<0 or max(f['opaque_sample_bounds'][2:])>256]
 (dest/'rig-audit.json').write_text(json.dumps(report,indent=2)+'\n')

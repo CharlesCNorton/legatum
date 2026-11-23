@@ -61,25 +61,53 @@ def main():
     figuremask=polygon([(0,0),(256,0),(256,y0-1),(0,y0-1)])
     for foot in cfg['feet']: figuremask=ImageChops.lighter(figuremask,polygon(foot))
     figure=src.copy(); figure.putalpha(ImageChops.multiply(src.getchannel('A'),figuremask))
+    part_images={}
     taken=Image.new('L',(256,256)); layers=[]
     # Explicit layer ownership: earlier masks own overlap (weapon before hand).
     for name,pivot,points,parent in cfg['parts']:
         mask=ImageChops.subtract(polygon(points),taken)
         mask=ImageChops.multiply(mask,figure.getchannel('A'))
-        layer=src.copy(); layer.putalpha(mask); layer.save(dest/f'{name}.png')
+        layer=src.copy(); layer.putalpha(mask); part_images[name]=layer
         taken=ImageChops.lighter(taken,polygon(points))
         layers.append(dict(name=name,pivot=pivot,parent=parent))
     remaining=ImageChops.subtract(figure.getchannel('A'),taken)
-    # Extend adjacent paint six pixels under articulated parts. This creates
-    # overlap at joints and under shield edges instead of a transparent seam.
-    # It cannot invent unseen anatomy; large reveals still need hand painting.
+    # Coarse polygons must not leave disembodied scraps on the torso. Outside
+    # its anatomical region, assign remaining source pixels to the nearest
+    # articulated part (multi-source flood of ownership, not paint dilation).
+    from collections import deque
+    owners={}; queue=deque()
+    for name,im in part_images.items():
+        alpha=im.getchannel('A')
+        for y in range(256):
+            for x in range(256):
+                if alpha.getpixel((x,y)) > 128:
+                    owners[x,y]=name; queue.append((x,y))
+    while queue:
+        x,y=queue.popleft()
+        for nx,ny in ((x-1,y),(x+1,y),(x,y-1),(x,y+1)):
+            if 0<=nx<256 and 0<=ny<256 and (nx,ny) not in owners:
+                owners[nx,ny]=owners[x,y];queue.append((nx,ny))
+    torso=polygon(cfg['body_region'])
+    for y in range(256):
+        for x in range(256):
+            alpha=remaining.getpixel((x,y))
+            if alpha and not torso.getpixel((x,y)):
+                part_images[owners[x,y]].putpixel((x,y),src.getpixel((x,y))[:3]+(alpha,))
+                remaining.putpixel((x,y),0)
+    for name,im in part_images.items(): im.save(dest/f'{name}.png')
+    # Only overlap at actual joints. The old global six-pixel paint dilation
+    # left detached strips of arms, spear and wheels on the stationary body.
     body=src.copy(); body.putalpha(remaining)
+    joints=Image.new('L',(256,256)); jd=ImageDraw.Draw(joints)
+    for name,(x,y),points,parent in cfg['parts']:
+        if parent == 'body' and name not in ('shield','tail','horse_head'):
+            jd.ellipse((x-5,y-5,x+5,y+5),fill=255)
     figure_alpha=figure.getchannel('A')
-    for _ in range(6):
+    for _ in range(3):
         old=body.copy(); alpha=old.getchannel('A')
         for y in range(1,255):
             for x in range(1,255):
-                if alpha.getpixel((x,y)) or not figuremask.getpixel((x,y)): continue
+                if alpha.getpixel((x,y)) or not joints.getpixel((x,y)): continue
                 if not figure_alpha.getpixel((x,y)): continue
                 neighbours=[old.getpixel((x+dx,y+dy)) for dx,dy in ((-1,0),(1,0),(0,-1),(0,1)) if alpha.getpixel((x+dx,y+dy))>128]
                 if neighbours:

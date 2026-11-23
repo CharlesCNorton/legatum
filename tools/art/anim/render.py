@@ -55,13 +55,6 @@ def bone(name,pivot,parent=None):
 bone('root',cfg['root']); bone('carriage',(126,176)); bone('body',cfg['root'],'carriage' if slug=='field-cannon' else 'root')
 for part in cfg['layers']: bone(part['name'],part['pivot'])
 for part in cfg['layers']: arm.edit_bones[part['name']].parent=arm.edit_bones[part['parent']]
-# Axle-space compression: rotate circular spoke geometry, then project it back
-# to the original wheel ellipse. An image-plane rotation would rock the tyre.
-wheel_ratios={'wheel_l':.44,'wheel_r':.50} if slug=='field-cannon' else {}
-for part in cfg['layers']:
-    if part['name'] in wheel_ratios:
-        axle=bone(part['name']+'_axle',part['pivot'],'carriage')
-        arm.edit_bones[part['name']].parent=axle
 bpy.ops.object.mode_set(mode='OBJECT')
 for p in rig.pose.bones: p.rotation_mode='XYZ'
 
@@ -73,9 +66,6 @@ def mesh_layer(name,bone_name,depth):
         for x in range(0,257,step):
             relief=-1.2*math.sin(math.pi*x/256)*math.sin(math.pi*y/256) if name!='base' else 0
             projected_x=x
-            if name in wheel_ratios:
-                cx=next(p['pivot'][0] for p in cfg['layers'] if p['name']==name)
-                projected_x=cx+(x-cx)/wheel_ratios[name]
             verts.append((projected_x,depth+relief,256-y))
     side=33
     for y in range(32):
@@ -92,7 +82,7 @@ def mesh_layer(name,bone_name,depth):
         group=obj.vertex_groups.new(name=bone_name); group.add(list(range(len(verts))),1,'REPLACE')
         mod=obj.modifiers.new('Armature','ARMATURE'); mod.object=rig
     return obj
-mesh_layer('base',None,15)
+base_object=mesh_layer('base',None,15)
 mesh_layer('body','body',1)
 # Same source pixel ownership means the layer order cannot duplicate outlines.
 for i,part in enumerate(reversed(cfg['layers'])): mesh_layer(part['name'],part['name'],-3-i*.35)
@@ -114,14 +104,15 @@ def pose(name,dx=0,dy=0,angle=0,sx=1,sy=1):
 def smooth(t): return t*t*(3-2*t)
 def animate(clip,i,n):
     for b in rig.pose.bones: b.location=(0,0,0); b.rotation_euler=(0,0,0); b.scale=(1,1,1)
-    for wheel,ratio in wheel_ratios.items(): pose(wheel+'_axle',sx=ratio)
     t=i/(n-1); cycle=math.tau*i/n; s=math.sin(cycle); c=math.cos(cycle)
     horse=slug=='horseman'; cannon=slug=='field-cannon'
     if clip=='idle':
         pose('body',dx=.65*s,dy=-1.4*s,angle=.6*s)
         pose('head',angle=.55*s); pose('rider',dy=-.5*s,angle=.5*s)
         pose('spear',angle=.65*s); pose('tail',angle=2*s)
-        if cannon: pose('crew',dy=-.6*s,angle=.3*s)
+        if cannon:
+            pose('body')
+            pose('crew',dy=-.6*s,angle=.3*s)
     elif clip=='move':
         pose('body',dy=-1.8*(1-math.cos(2*cycle)),angle=1.3*s)
         stride=13 if horse else 12
@@ -129,38 +120,57 @@ def animate(clip,i,n):
         pose('leg_r',angle=-stride*s,dy=-max(0,-s)*5)
         pose('leg_back',angle=-stride*s); pose('leg_front',angle=stride*s)
         pose('rider',dy=-1.5*(1-c),angle=-2*s); pose('horse_head',angle=2*s); pose('tail',angle=5*s)
-        pose('shield',angle=-1.8*s); pose('spear',angle=2.4*s)
+        pose('spear',angle=1.2*s)
         if cannon:
             pose('crew',dx=1.3*s,dy=-(1-c),angle=3)
             pose('carriage',dx=1.2*s,dy=-.5*(1-c))
-            pose('wheel_l',angle=360*i/n); pose('wheel_r',angle=360*i/n)
+            # Incomplete painted wheels cannot rotate without exposing holes.
+            # Keep the entire gun rigid; small carriage travel supplies motion.
+            pose('body')
     elif clip=='attack':
         # Anticipation -> fast strike -> weighted recovery; final pose is neutral.
         a=[0,-.12,-.2,.7,1,.94,.72,.35,.10,0][i]
         if cannon:
-            pose('barrel',dx=-6*max(0,a),dy=-1*max(0,a)); pose('carriage',dx=-1.8*max(0,a))
+            pose('carriage',dx=-3*max(0,a))
             pose('crew',angle=-4*max(0,a)); pose('ramrod',angle=-3*max(0,a))
         else:
             pose('body',dx=5*a,dy=2*a,angle=5*a)
-            pose('spear',angle=(38 if slug=='spartan-hoplite' else 48)*a)
-            pose('shield',angle=-7*a); pose('head',angle=-3*a)
+            pose('arm',angle=14*a)
+            pose('spear',angle=(24 if slug=='spartan-hoplite' else 34 if not horse else 48)*a)
+            pose('head',angle=-3*a)
             pose('leg_l',angle=-3*a); pose('leg_r',angle=4*a)
             if horse:
                 pose('rider',angle=9*a,dx=2*a); pose('horse_head',angle=6*a)
                 pose('leg_front',angle=-12*a); pose('leg_back',angle=8*a)
     elif clip=='hit':
-        a=[0,1,.45,0][i]; pose('body',dx=-3*a,angle=-5*a); pose('head',angle=-6*a); pose('shield',angle=5*a)
+        a=[0,1,.45,0][i]; pose('body',dx=0 if cannon else -3*a,angle=0 if cannon else -5*a); pose('head',angle=-6*a)
         if cannon: pose('crew',angle=-6*a)
     elif clip=='death':
         # Two-frame settle holds the exact final pose; stone has no animation.
         u=smooth(min(1,max(0,(t-.1)/.7)))
         if cannon:
             pose('root',dx=-10*u,dy=76*u,angle=-68*u,sx=1-.25*u,sy=1-.38*u)
+        elif horse:
+            # Knees give first; the torso descends without a whole-card flip.
+            # The rider pitches independently after the horse starts dropping.
+            buckle=smooth(min(1,max(0,(t-.05)/.35)))
+            drop=smooth(min(1,max(0,(t-.22)/.55)))
+            spill=smooth(min(1,max(0,(t-.32)/.46)))
+            pose('root',dy=43*drop,angle=8*drop)
+            pose('leg_r',angle=24*buckle)
+            pose('leg_r_lower',angle=78*buckle)
+            pose('leg_front',angle=30*buckle)
+            pose('leg_front_lower',angle=70*buckle)
+            pose('leg_l',angle=-65*drop)
+            pose('leg_back',angle=-60*drop)
+            pose('horse_head',angle=40*drop,dy=17*drop)
+            pose('tail',angle=-15*drop)
+            pose('rider',dx=-5*spill,dy=42*spill,angle=-78*spill,sx=1-.18*spill,sy=1-.18*spill)
+            pose('spear',angle=-10*spill)
         else:
-            pose('root',dx=-3*u,dy=(22 if horse else 44)*u,angle=-69*u,sx=1-.22*u,sy=1-.45*u)
-            pose('spear',angle=-18*u); pose('shield',angle=12*u); pose('head',angle=-10*u)
-            pose('leg_l',angle=18*u); pose('leg_r',angle=-12*u)
-            pose('rider',angle=-20*u); pose('horse_head',angle=-10*u)
+            pose('root',dx=-3*u,dy=44*u,angle=-69*u,sx=1-.22*u,sy=1-.45*u)
+            pose('spear',angle=-18*u); pose('head',angle=-10*u)
+            pose('leg_l',angle=-24*u); pose('leg_r',angle=-12*u)
     for j,ob in enumerate(smokes):
         q=(i-3)/6 if clip=='attack' and i>=3 else -1
         size=(2+j*.6+q*5) if 0<=q<.84 else .001
@@ -181,7 +191,10 @@ bpy.ops.wm.save_as_mainfile(filepath=str(DEST/f'{slug}.blend'))
 if MODEL_ONLY:
     print(f'MODEL ONLY {slug}: armature and {len(shots)} poses saved; no renders produced')
     sys.exit(0)
+# Render only foreground. The packer composites the exact immutable base and
+# retains foreground alpha as independent evidence for stone occlusion checks.
+base_object.hide_render=True
 for frame,clip,i in shots:
-    scene.frame_set(frame); out=DEST/'frames'/clip; out.mkdir(parents=True,exist_ok=True)
+    scene.frame_set(frame); out=DEST/'foreground'/clip; out.mkdir(parents=True,exist_ok=True)
     scene.render.filepath=str(out/f'{i:02}.png'); bpy.ops.render.render(write_still=True)
 print(f'FINISHED {slug}: {len(shots)} Eevee frames, pass {PASS}')

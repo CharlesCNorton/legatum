@@ -88,7 +88,7 @@ unchanged, and excluded from this commit. `pass.sh 2` will replace them.
   and `git diff --check`: **passed**.
 - `python3 tools/gates/check.py HEAD --base origin/master --checks-only --skip art`:
   **exit 1**. `public-claims: PASS`; hygiene flagged the pre-existing unspaced
-  Python matrix expression `bone.matrix@bone.bone.matrix_local` as an email.
+  Python matrix expression `bone.matrix @ bone.bone.matrix_local` as an email.
   Added spaces around `@` in the working file. Direct hygiene line checks over
   all 16 animation/skill text files then passed with **0 findings**. This is not
   a replacement for the full gate: `check.py` reads committed git objects.

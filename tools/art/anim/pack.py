@@ -2,6 +2,7 @@
 """Pack Eevee frames with a hard size/quality floor; retain reviewable provenance."""
 import argparse
 import io
+import hashlib
 import json
 from pathlib import Path
 from PIL import Image, ImageDraw
@@ -97,9 +98,12 @@ def main():
     ap.add_argument('--review-dir', type=Path, default=HOME / 'review')
     args = ap.parse_args()
     slug, output, review = args.slug, args.output_dir, args.review_dir
-    frames = {clip: [Image.open(HOME / 'masters' / slug / 'frames' / clip / f'{i:02}.png').convert('RGBA')
+    master = HOME / 'masters' / slug
+    foreground = {clip: [Image.open(master / 'foreground' / clip / f'{i:02}.png').convert('RGBA')
                      for i in range(n)] for clip, (n, _, _) in CLIPS.items()}
-    assert all(im.size == (256, 256) for ims in frames.values() for im in ims)
+    assert all(im.size == (256, 256) for ims in foreground.values() for im in ims)
+    base = Image.open(master / 'base.png').convert('RGBA')
+    frames = {clip: [Image.alpha_composite(base, im) for im in ims] for clip, ims in foreground.items()}
     data, profile, quality, attempts = fit_atlas(frames)
     meta = {'frame': dict(w=256, h=256, ax=UNITS[slug]['anchor'][0], ay=UNITS[slug]['anchor'][1]),
             'clips': {clip: clip_metadata(clip, indices, row) for row, (clip, indices) in enumerate(profile.items())}}
@@ -110,6 +114,16 @@ def main():
     tmp.write_bytes(data)
     tmp.replace(output / f'{slug}.webp')
     (output / f'{slug}.json').write_text(json.dumps(meta, separators=(',', ':')) + '\n')
+    # Independent foreground masks; never infer occlusion from colour errors.
+    masks = Image.new('L', (2560, 1280))
+    for row, (clip, indices) in enumerate(profile.items()):
+        for col, index in enumerate(indices):
+            masks.paste(foreground[clip][index].getchannel('A'), (col*256, row*256))
+    masks.save(master / 'packed-foreground.png')
+    evidence = dict(atlas_sha256=hashlib.sha256(data).hexdigest(),
+                    base_sha256=hashlib.sha256((master / 'base.png').read_bytes()).hexdigest(),
+                    mask_sha256=hashlib.sha256((master / 'packed-foreground.png').read_bytes()).hexdigest())
+    (master / 'packed-evidence.json').write_text(json.dumps(evidence) + '\n')
     original = Image.open(ROOT / f'app/src/assets/units/{slug}-256.png').convert('RGBA')
     write_review(slug, original, frames, profile, review)
     report = dict(slug=slug, bytes=len(data), quality=quality, alpha_levels=32,

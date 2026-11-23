@@ -2,6 +2,7 @@
 """Validate atlas contract plus the stationary painted stone and source framing."""
 import argparse
 import json
+import hashlib
 from pathlib import Path
 from PIL import Image, ImageChops, ImageFilter
 from units import CLIPS, UNITS
@@ -9,6 +10,17 @@ from pack import PROFILES, clip_metadata
 
 ROOT = Path(__file__).resolve().parents[3]
 HOME = Path.home() / 'LegatumRuns/anim-pilot'
+
+
+def check_stone(frame, base, rim, foreground, context):
+    # Conservative one-pixel edge around actual rendered alpha, not a colour
+    # classifier: a changed stone pixel must never classify itself as figure.
+    occupied = foreground.filter(ImageFilter.MaxFilter(3))
+    visible = [p for p in rim if occupied.getpixel(p) == 0]
+    assert len(visible) >= max(40, len(rim)//4), (*context, 'insufficient exposed stone')
+    assert all(frame.getpixel(p)[3] >= 247 for p in rim), (*context, 'missing/moving stone rim')
+    error = sum(abs(frame.getpixel(p)[c]-base.getpixel(p)[c]) for p in visible for c in range(3)) / (3*len(visible))
+    assert error < 12, (*context, 'stone pigment/position changed', error)
 
 
 def validate(slugs=None, assets_dir=None, masters_dir=None, contract_only=False):
@@ -28,7 +40,13 @@ def validate(slugs=None, assets_dir=None, masters_dir=None, contract_only=False)
         assert path.with_suffix('.webp').stat().st_size <= 200_000, slug
         rim = []
         if not contract_only:
-            base = Image.open(masters_dir / slug / 'base.png').convert('RGBA')
+            master = masters_dir / slug
+            evidence = json.loads((master / 'packed-evidence.json').read_text())
+            for key, file in [('atlas', path.with_suffix('.webp')), ('base', master / 'base.png'), ('mask', master / 'packed-foreground.png')]:
+                assert hashlib.sha256(file.read_bytes()).hexdigest() == evidence[key+'_sha256'], (slug, 'stale stone/occlusion evidence', key)
+            base = Image.open(master / 'base.png').convert('RGBA')
+            foreground = Image.open(master / 'packed-foreground.png').convert('L')
+            assert foreground.size == atlas.size, (slug, 'foreground evidence dimensions')
             # Exposed front rim; moving feet and fallen figures may cover the top.
             y0 = cfg['base'][3] - 7
             core = base.getchannel('A').filter(ImageFilter.MinFilter(5))
@@ -46,10 +64,8 @@ def validate(slugs=None, assets_dir=None, masters_dir=None, contract_only=False)
                 assert bounds and 0 < bounds[0] < bounds[2] < 256 and 0 < bounds[1] < bounds[3] < 256, (slug, clip, i, 'clipped silhouette')
                 assert alpha.getextrema() == (0, 255), (slug, clip, i, 'missing alpha')
                 if rim:
-                    assert all(frame.getpixel(p)[3] >= 247 for p in rim), (slug, clip, i, 'missing/moving stone rim')
-                    for reference in (base, first or base):
-                        error = sum(abs(frame.getpixel(p)[c] - reference.getpixel(p)[c]) for p in rim for c in range(3)) / (3 * len(rim))
-                        assert error < 12, (slug, clip, i, 'stone pigment/position changed', error)
+                    mask = foreground.crop((i*256, row*256, (i+1)*256, (row+1)*256))
+                    check_stone(frame, base, rim, mask, (slug, clip, i))
                 if first is None:
                     first = frame
                     if not contract_only:

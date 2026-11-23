@@ -10,6 +10,8 @@ mkdir -p "$out"
 for slug in spearman horseman field-cannon spartan-hoplite; do
   tools/art/anim/build.sh "$slug" "$pass"
   # Keep each completed unit's evidence even if a later unit fails.
+  mkdir -p "$out/masters/$slug"
+  cp "$HOME/LegatumRuns/anim-pilot/masters/$slug/"{base.png,packed-foreground.png,packed-evidence.json} "$out/masters/$slug/"
   cp "$review/$slug.png" "$review/$slug-"*.webp "$review/$slug-pack.json" "$out/"
 done
 "$HOME/LegatumRuns/anim-pilot/venv/bin/python" tools/art/anim/validate.py

@@ -10,6 +10,7 @@ from unittest.mock import patch
 from PIL import Image, ImageDraw
 import pack
 import validate
+import prepare
 from units import UNITS, CLIPS
 
 
@@ -28,15 +29,15 @@ class PackingTest(unittest.TestCase):
                     master.mkdir(parents=True)
                     base.save(master / 'base.png')
                     for row, (clip, (count, _, _)) in enumerate(CLIPS.items()):
-                        dest = master / 'frames' / clip
+                        dest = master / 'foreground' / clip
                         dest.mkdir(parents=True)
                         for frame in range(count):
-                            im = base.copy()
+                            im = Image.new('RGBA', (256, 256))
                             index = min(frame, 8) if clip == 'death' else frame
                             ImageDraw.Draw(im).rectangle((80+index, 60, 135+index, 180), fill=(40+row*35, 50+index*12, 90, 255))
                             im.save(dest / f'{frame:02}.png')
                             if clip == 'idle' and frame == 0:
-                                im.save(assets / f'{slug}-256.png')
+                                Image.alpha_composite(base, im).save(assets / f'{slug}-256.png')
                     with patch('sys.argv', ['pack.py', slug]), contextlib.redirect_stdout(io.StringIO()):
                         pack.main()
                     atlas = Image.open(assets / 'anim' / f'{slug}.webp').convert('RGBA')
@@ -56,6 +57,44 @@ class PackingTest(unittest.TestCase):
                 atlas.save(path, lossless=True)
                 with self.assertRaisesRegex(AssertionError, 'stone'):
                     validate.validate(['spearman'], masters_dir=home / 'masters')
+
+    def test_stone_occlusion_does_not_hide_movement_or_recolour(self):
+        base = Image.new('RGBA', (256, 256))
+        ImageDraw.Draw(base).rectangle((60, 230, 195, 242), fill='#eedcbc')
+        rim = [(x,y) for y in range(232,240) for x in range(64,192)]
+        figure = Image.new('RGBA', base.size)
+        ImageDraw.Draw(figure).rectangle((110,220,140,244), fill='#603020')
+        frame = Image.alpha_composite(base,figure)
+        validate.check_stone(frame, base, rim, figure.getchannel('A'), ('occlusion',))
+        for broken in (Image.new('RGBA', base.size), Image.new('RGBA', base.size, '#603020')):
+            with self.assertRaisesRegex(AssertionError, 'stone'):
+                validate.check_stone(broken, base, rim, figure.getchannel('A'), ('broken',))
+        from PIL import ImageChops
+        shifted = Image.alpha_composite(ImageChops.offset(base, 0, -5), figure)
+        with self.assertRaisesRegex(AssertionError, 'stone'):
+            validate.check_stone(shifted, base, rim, figure.getchannel('A'), ('shifted',))
+        with self.assertRaisesRegex(AssertionError, 'insufficient exposed stone'):
+            validate.check_stone(frame, base, rim, Image.new('L',base.size,255), ('mask',))
+
+    def test_prepared_layers_keep_source_coverage_and_own_loose_fragments(self):
+        from PIL import ImageChops
+        with tempfile.TemporaryDirectory() as tmp, patch.object(prepare, 'HOME', Path(tmp)):
+            for slug,cfg in UNITS.items():
+                with patch('sys.argv', ['prepare.py',slug]), contextlib.redirect_stdout(io.StringIO()):
+                    prepare.main()
+                master=Path(tmp)/'masters'/slug
+                source=Image.open(master/'painting.png').convert('RGBA')
+                allowed=prepare.polygon([(0,0),(256,0),(256,cfg['base'][1]-1),(0,cfg['base'][1]-1)])
+                for foot in cfg['feet']: allowed=ImageChops.lighter(allowed,prepare.polygon(foot))
+                expected=ImageChops.multiply(source.getchannel('A'),allowed)
+                coverage=Image.open(master/'body.png').getchannel('A')
+                for name,*_ in cfg['parts']:
+                    coverage=ImageChops.lighter(coverage,Image.open(master/(name+'.png')).getchannel('A'))
+                self.assertIsNone(ImageChops.subtract(expected,coverage).getbbox(),slug)
+                # No scraps of limbs/kit outside the torso region remain on body.
+                torso=prepare.polygon(cfg['body_region'])
+                loose=ImageChops.subtract(Image.open(master/'body.png').getchannel('A'),torso)
+                self.assertIsNone(loose.getbbox(),slug)
 
     def test_alpha_coverage_error_and_hidden_rgb(self):
         im = Image.new('RGBA', (256, 1))

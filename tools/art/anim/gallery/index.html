@@ -8,6 +8,7 @@
 <div class="controls"><button id="play">Pause all</button><button id="step">Step all</button><label>Speed <input id="speed" type="range" min="0.25" max="2" step="0.25" value="1"><output id="speed-value">1×</output></label><label><input type="checkbox" id="mirror">Mirror</label><label>Inspection ground <select id="backdrop"><option value="#888888">Mid-grey</option><option value="#f2ead8">Parchment</option><option value="#26332a">Dark green</option></select></label><label>Map ground <select id="terrain"><option value="grass">Grassland</option><option value="plains">Plains</option></select></label></div><p id="status" role="status">Loading paintings and atlases…</p></header>
 <main><div id="units"></div><section aria-labelledby="stress-title"><h2 id="stress-title">Army draw test</h2><p>One Canvas 2D surface; mixed clips, phases and mirrored facings. Timing covers terrain blit and every token draw, measured inside the draw function. It does not use rAF interval as a proxy.</p><div class="controls"><label>Tokens <select id="count"><option>300</option><option>600</option></select></label><button id="benchmark">Measure 180 draws</button><output id="perf">Warming up…</output></div><canvas id="stress" width="1200" height="720" aria-label="Animated army stress test"></canvas></section></main>
 <footer>Single-facing camera-projected relief study. The original painted lighting is baked into the articulated surfaces; these are not all-angle character models. The gallery repeats attacks, hits and deaths after a short hold for review; their atlas metadata correctly marks them non-looping. Grass/plains colours and tuft strokes follow <code>app/src/map/style.ts</code> and <code>terrain.ts</code>; edge hills are the shipped S2 terrain painting from <code>app/public/terrain/</code>. No app runtime files are changed.</footer>
+<script src="sprites.js"></script>
 <script>
 'use strict';
 const root='../../../../';
@@ -15,7 +16,7 @@ const names=['spearman','horseman','field-cannon','spartan-hoplite'];
 const titles=['Spearman','Horseman','Field cannon','Spartan hoplite'];
 const clips=['idle','move','attack','hit','death'];
 const assets=[]; const views=[]; let playing=true,speed=1,mirror=false,clock=0,background='#888888',terrain='grass';
-let terrainArt; let stressBackground; let liveTimes=[]; let lastReport=0;
+let benchmarking=false; let terrainArt; let stressBackground; let liveTimes=[]; let lastReport=0;
 const $=id=>document.getElementById(id);
 async function loadImage(url){const i=new Image();i.src=url;await i.decode();return i;}
 function hex(g,x,y,r){g.beginPath();for(let i=0;i<6;i++){const a=(i*60-30)*Math.PI/180;g.lineTo(x+Math.cos(a)*r,y+Math.sin(a)*r);}g.closePath();}
@@ -33,27 +34,39 @@ function ground(w,h,kind,scenery=true){
  if(scenery&&terrainArt){g.globalAlpha=.35;g.drawImage(terrainArt,-18,h-60,85,85);g.globalAlpha=1;}
  return c;
 }
-function token(g,a,clip,frame,x,y,size,flipped){
+function legacyToken(g,a,clip,frame,x,y,size,flipped){
  const m=a.meta;g.save();g.translate(x,y);if(flipped)g.scale(-1,1);
  g.drawImage(a.image,frame*256,m.clips[clip].row*256,256,256,-m.frame.ax*size/256,-m.frame.ay*size/256,size,size);g.restore();
 }
+const token=UnitSprites.draw;
 function frameAt(v){if(v.manual!==null)return v.manual;const d=v.a.meta.clips[v.clip],elapsed=v.time*d.fps;if(d.loop)return Math.floor(elapsed)%d.frames;return Math.min(d.frames-1,Math.floor(elapsed%(d.frames+d.fps*.85)));}
 function drawView(v){
- const frame=frameAt(v),g=v.large.getContext('2d');g.fillStyle=background;g.fillRect(0,0,256,256);token(g,v.a,v.clip,frame,v.a.meta.frame.ax,v.a.meta.frame.ay,256,mirror);
+ const frame=frameAt(v),key=`${frame}/${background}/${terrain}/${mirror}`;
+ if(v.lastDraw===key)return;v.lastDraw=key;
+ const g=v.large.getContext('2d');g.fillStyle=background;g.fillRect(0,0,256,256);token(g,v.a,v.clip,frame,v.a.meta.frame.ax,v.a.meta.frame.ay,256,mirror);
  const m=v.map.getContext('2d');m.drawImage(v.ground,0,0);token(m,v.a,v.clip,frame,74,100,80,mirror);v.output.textContent=`Frame ${frame+1} / ${v.a.meta.clips[v.clip].frames}`;
 }
-function drawStress(t,count=Number($('count').value)){
+function drawStress(t,count=Number($('count').value),legacy=false,profile=null){
  const start=performance.now(),g=$('stress').getContext('2d');g.drawImage(stressBackground,0,0);
+ const afterGround=performance.now(),draw=legacy?legacyToken:token;
  const cols=count===600?40:30,rows=count/cols,dx=1200/cols,dy=680/rows;
- for(let i=0;i<count;i++){const a=assets[i%4],clip=clips[Math.floor(i/4)%5],d=a.meta.clips[clip],f=Math.floor(t*d.fps+i*.71)%d.frames;token(g,a,clip,f,(i%cols+.5)*dx,35+Math.floor(i/cols)*dy,64,(i%3===0)!==mirror);}
- return performance.now()-start;
+ for(let i=0;i<count;i++){const a=assets[i%4],clip=clips[Math.floor(i/4)%5],d=a.meta.clips[clip],f=Math.floor(t*d.fps+i*.71)%d.frames;draw(g,a,clip,f,(i%cols+.5)*dx,35+Math.floor(i/cols)*dy,64,(i%3===0)!==mirror);}
+ const end=performance.now();
+ if(profile){profile.ground.push(afterGround-start);profile.tokens.push(end-afterGround);}
+ return end-start;
 }
 function stats(a){const sorted=[...a].sort((x,y)=>x-y);return {avg:a.reduce((x,y)=>x+y,0)/a.length,p95:sorted[Math.floor(sorted.length*.95)],samples:a.length};}
 function showPerf(s,count){$('perf').textContent=`${count} tokens · average ${s.avg.toFixed(2)} ms · p95 ${s.p95.toFixed(2)} ms (${s.samples} draws)`;}
-async function benchmark(count=300,n=180){
- for(let i=0;i<15;i++)drawStress(i/60,count);
- const times=[];for(let i=0;i<n;i++){times.push(drawStress(i/60,count));if(i%30===29)await new Promise(r=>setTimeout(r,0));}
- const s={...stats(times),tokens:count};showPerf(s,count);return s;
+async function benchmark(count=300,n=180,legacy=false){
+ if(benchmarking)throw Error('A benchmark is already running');
+ benchmarking=true;
+ try {
+  for(let i=0;i<15;i++)drawStress(i/60,count,legacy);
+  const times=[],profile={ground:[],tokens:[]};
+  for(let i=0;i<n;i++){times.push(drawStress(i/60,count,legacy,profile));if(i%30===29)await new Promise(r=>setTimeout(r,0));}
+  const s={...stats(times),tokens:count,mode:legacy?'original':'cached',ground:stats(profile.ground),sprites:stats(profile.tokens)};
+  showPerf(s,count);return s;
+ } finally {benchmarking=false;}
 }
 function rebuildGround(){for(const v of views)v.ground=ground(148,128,terrain);stressBackground=ground(1200,720,terrain,false);}
 async function init(){
@@ -75,7 +88,9 @@ async function init(){
    info.innerHTML=`<h2>${titles[i]}</h2><p>Original painting only. Animated atlas has not been rendered.</p>`;
    continue;
   }
-  const a={slug,meta,image,bytes:blob.size};assets.push(a);
+  const a={slug,meta,image,bytes:blob.size};
+  a.mips=UnitSprites.prepare(image,meta,[64,80,256],(w,h)=>{const c=document.createElement('canvas');c.width=w;c.height=h;return c;});
+  assets.push(a);
   info.innerHTML=`<h2>${titles[i]}</h2><p class="size">Atlas ${(blob.size/1000).toFixed(1)} KB · ${Object.values(meta.clips).reduce((n,c)=>n+c.frames,0)} frames · ${image.width} × ${image.height} px</p><p>Current static painting at left. At map size, judge the weapon, stance and stone base first.</p>`;
   const grid=document.createElement('div');grid.className='clips';section.append(grid);
   for(const clip of clips){
@@ -101,9 +116,9 @@ async function init(){
  $('mirror').onchange=e=>{mirror=e.target.checked;views.forEach(drawView);};
  $('backdrop').onchange=e=>{background=e.target.value;views.forEach(drawView);};
  $('terrain').onchange=e=>{terrain=e.target.value;rebuildGround();views.forEach(drawView);};
- $('count').onchange=()=>{liveTimes=[];};$('benchmark').onclick=()=>benchmark(+$('count').value);
+ $('count').onchange=()=>{liveTimes=[];drawStress(clock);};$('benchmark').onclick=()=>benchmark(+$('count').value);
  window.reviewAPI={assets:assets.map(a=>({slug:a.slug,bytes:a.bytes,clips:a.meta.clips})),benchmark,setFrame(slug,clip,index){const v=views.find(v=>v.a.slug===slug&&v.clip===clip);v.manual=Math.max(0,Math.min(v.a.meta.clips[clip].frames-1,index));drawView(v);},pause(){playing=false;$('play').textContent='Play all';},ready:true};
- let prev=performance.now();function tick(now){const dt=Math.min(.1,(now-prev)/1000);prev=now;if(playing)clock+=dt*speed;
+ let prev=performance.now();function tick(now){if(benchmarking){prev=now;requestAnimationFrame(tick);return;}const dt=Math.min(.1,(now-prev)/1000);prev=now;if(playing)clock+=dt*speed;
   for(const v of views){if(playing&&v.playing){v.manual=null;v.time+=dt*speed;}drawView(v);}
   liveTimes.push(drawStress(clock));if(liveTimes.length>180)liveTimes.shift();if(now-lastReport>750){showPerf(stats(liveTimes),+$('count').value);lastReport=now;}requestAnimationFrame(tick);
  }requestAnimationFrame(tick);
