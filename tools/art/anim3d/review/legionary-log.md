@@ -43,3 +43,5 @@
 - Read complete common feedback (1-22); no legionary-specific feedback file exists. Read current playbook plus advanced spearman/field-cannon chapters, external source register and six Blender skills. Applying modeling/materials to fitted shoulders and finished-surface projection; cameras to frozen rest calibration; lighting to restrained product softboxes; animation to grip/clip entry; rendering to CPU inspection and complete GPU delivery.
 - Published b: CYCLES/CPU, 256 px, 8 samples; visual review pending.
 - Published c: CYCLES/CPU, 256 px, 8 samples; visual review pending.
+- Published b: CYCLES/CPU, 256 px, 8 samples; visual review pending.
+- Published c: CYCLES/CPU, 256 px, 8 samples; visual review pending.

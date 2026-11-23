@@ -41,3 +41,7 @@
 - Round1 verdict: recognizable as peltast at64px, below painting at256px (face/cap, narrow torso, regular cloth folds, boot laces and abrupt rearm). No PASS marker. GPU Metal pass unrun; lead runs tools/art/anim3d/units/peltast/gpu.sh. Git commit/merge remain blocked for runner.
 - Round2 opening critique: inspected rest split, decoded160 comparison and five-clip MP4 contact sheet first. At256 the fox ears are exaggerated triangles, neck flap a straight bar, torso too narrow, cloak too regular and narrow, skin muddy, shield lacks painted weave, base too wide and shallow. At64 red/blue/pelta/javelin identity survives but head/cloak/base silhouette differs. No PASS. Prior manifests are CPU, not verified GPU output. Archived round1 evidence. No unit-specific FEEDBACK file exists.
 - Read all common feedback and both eight-round lead playbooks; applying all six Blender skills: finished-surface UVs, anatomical/cloth contour fit, fur and binding detail, product lights, frozen histogram grade and skeletal clip review. Reuse pinned original painting and generated fills; no new download.
+- Built MPFB anatomy, painted rest stance, red chiton, blue cloak, fox-skin cap, woven crescent pelta and three iron-tipped javelins; plain review pending.
+- Published b review immediately: CYCLES/CPU, 256 px, 2 frame(s).
+- Applied original-painting camera projection to full anatomy and physical clothing/equipment; unseen faces use painted fills and surface shaders. No billboard or relief image plane.
+- Published c review immediately: CYCLES/CPU, 256 px, 1 frame(s).

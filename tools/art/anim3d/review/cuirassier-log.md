@@ -21,3 +21,5 @@
 - Read all standing feedback; cuirassier-FEEDBACK.md does not currently exist. Read local playbook plus the eight-round spearman and field-cannon chapters. Loaded all six Blender skills: cameras/modeling for registration and finished surfaces; materials/lighting for camera-only painted illumination; animation/rendering for rebuilt clips and GPU provenance. Existing supplied images are CPU-labelled; no GPU success inferred.
 - Emitted c: 1 frames, 256 px CYCLES/CPU, 8 samples.
 - Emitted c-details: 1 frames, 256 px CYCLES/CPU, 8 samples.
+- Emitted c: 1 frames, 256 px CYCLES/CPU, 8 samples.
+- Emitted c-details: 1 frames, 256 px CYCLES/CPU, 8 samples.

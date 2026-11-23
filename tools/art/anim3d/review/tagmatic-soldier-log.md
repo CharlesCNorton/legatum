@@ -16,3 +16,9 @@
 - MP4 verified with ffprobe: H.264, yuv420p, 1600x348, 30 fps, 240 frames, 8.000 seconds. Inspected decoded frame from the trimmed-atlas video.
 - Python AST parsing, shell syntax, input hashes and git diff --check passed. Determinism build fell back locally because the box was unavailable; stopped with exit 130 after Git integration proved blocked. Pin test did not run. Runner must perform merged-state determinism/pin checks. No Rust or app runtime changed.
 - GPU handoff: from repo root, tools/art/anim3d/units/tagmatic-soldier/gpu.sh (no arguments; uses ROUND from driver). This performs geometry audit, all GPU stages, 512/256 masters, pack/validate and MP4. No PASS marker; next art round needed.
+
+# Tagmatic soldier — round 2
+- Opened latest rest comparison and attack strip before editing. At 256 px the base is too grey/olive and smooth, shield cross too bulging/glossy, face/armour softer than the painting; raised fingers look pale and detached from shaft. At 64 px the correct red kite shield/helmet/spear identity survives, but the base and narrow upper body distinguish it. Attack is mostly a shield sway; death remains stiff. Not PASS.
+- Read all standing feedback; tagmatic-soldier-FEEDBACK.md is absent. Latest renders are explicitly CPU512/8, not verified GPU output. Preserved previous masters/reviews in round1-cpu.
+- Loaded all six Blender skills and the complete spearman/siege eight-round playbooks. Applying finished-surface frozen UVs, camera-only painted pigment, physically shaded hidden fills, cream stone and stronger authored attack.
+- Runner checkout mismatch: lane-13 is astra/unit-anim-3d-barbarian-crossbowman, clean at start. Git switch to requested branch failed on index.lock (Operation not permitted). Restored only tagmatic unit scripts from its WIP branch; leave runner to place changes on tagmatic branch.

@@ -65,3 +65,5 @@
 - Read all common feedback (1-22); settler-specific feedback file is absent. Current manifests identify CPU8/512, not GPU evidence. Read own and advanced spearman/field-cannon playbooks and all six Blender skills. Apply modeling/cameras to fit actual surfaces, materials/lighting to separate painted illumination from physical response, animation/rendering to preserve and inspect five clips.
 - Built MPFB female, full folded robes, open hood, shawl/fringe, pack/spiral bedroll, staff, straps and sandals; plain master saved.
 - Published b-plain: CYCLES CPU, 256 px, 8 samples; not GPU approval.
+- Applied frozen-camera painting, generated unseen linen/olive/rust/leather, fine bump, warm product lights, physical AO and ten actual AO/curvature maps.
+- Published c-textured-lit: CYCLES CPU, 256 px, 8 samples; not GPU approval.

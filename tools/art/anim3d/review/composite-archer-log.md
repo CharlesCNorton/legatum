@@ -32,3 +32,9 @@
 # Composite archer round 2 (resumed)
 - Opened latest rest comparison and decoded atlas before edits. Honest 256px critique: source has a much broader drawing elbow and sleeve, more readable face, larger braced kneeling silhouette and a shallower base ellipse. Render has a pinched torso, a pale doubled face/hand area, swollen bow grip, floating rear knee and exposed projection seams; current rest is readily distinguishable. At64px red/gold archer identity survives but the source's confident width and grounded stance do not. No PASS.
 - Loaded Blender modeling/materials/lighting/cameras/animation/rendering skills; applying finished-surface projection, actual geometry registration, camera-only painted illumination, contact checks and decoded-atlas video verification. Existing image-generated fills are retained. No unit-specific feedback file exists at round start.
+- Saved c review, raw 256 px and graded 512/256 sets; CYCLES CPU 8 samples.
+- Saved c review, raw 512 px and graded 512/256 sets; CYCLES CPU 8 samples.
+- Saved e-idle review, raw 512 px and graded 512/256 sets; CYCLES CPU 8 samples.
+- Saved e-move review, raw 512 px and graded 512/256 sets; CYCLES CPU 8 samples.
+- Saved e-attack review, raw 512 px and graded 512/256 sets; CYCLES CPU 8 samples.
+- Saved e-hit review, raw 512 px and graded 512/256 sets; CYCLES CPU 8 samples.
