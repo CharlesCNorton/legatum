@@ -19,3 +19,8 @@
 - Revised projected clips and pose sheet posted. Audit: all five clips passed topology, saddle parent, immutable base, horse/rider contact and held terminal geometry.
 - Canter phase-only retime showed three unsupported samples out of eight. Replaced it with source-trajectory time warps that extend stance to .34 of the stride; final audit now explicitly caps unsupported samples at two.
 - Running a serial final refresh (canter, rest, close-up) under one Blender slot, retaining the shared colour LUT. Remaining primary art defects are low-poly horse anatomy, coarse rider drapery, and imperfect painting registration.
+- Pixel validation identified spear clipping in hit/death. Hit now tips the blade forward with safe raw margins; death releases the spear onto the stone. Geometry audit still passes.
+- Repeated terminal Cycles renders differed slightly; render.py now renders each unique sample once and reuses pixels for held frames.
+- Atlas compression required 16 alpha levels and WebP quality 58 in the preceding pass (198,986 bytes); all 40 256 px cells retained, no RGB posterization or spatial downscaling.
+- Corrected white pastern markings to all four legs as painted; final all-clip refresh queued behind the machine-wide Blender owner. This pass also refreshes every grade/hash together.
+- origin/master advanced to b93d4dd; requested merge failed because the sandbox denied ORIG_HEAD.lock in .git/worktrees/lane-4. Runner must merge and run post-merge determinism/pin checks.
