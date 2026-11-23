@@ -14,3 +14,8 @@
 - Published d: CYCLES/CPU, 512 px, 8 samples; visual review pending.
 - Published e-idle: CYCLES/CPU, 512 px, 8 samples; visual review pending.
 - Published e-move: CYCLES/CPU, 512 px, 8 samples; visual review pending.
+- Inspected textured rest, details and crossfade: duplicate scutum boss fixed, whole figure reframed, original shield wings project onto curved relief. 256 px face/shoulder finish remains below painting; 64 px Roman identity is clear. Base sample rendered RGB 226/201/174 versus common target 233/207/160 (still slightly cool/dim).
+- Inspected d poses and move strip: shield-bash anticipation/impact/recovery present; march alternates feet. Knee projection and ankle/shoe contact need audit; no approval claim. All clip source frames rendered at 512 px, with 256 gallery copies.
+- Published e-attack: CYCLES/CPU, 512 px, 8 samples; visual review pending.
+- Published e-hit: CYCLES/CPU, 512 px, 8 samples; visual review pending.
+- Published e-death: CYCLES/CPU, 512 px, 8 samples; visual review pending.

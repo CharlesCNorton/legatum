@@ -38,3 +38,5 @@
 - Authored and saved hit action (4 output frames).
 - Authored and saved death action (10 output frames).
 - Posted d-rig-poses review (CPU, 256 px).
+- Posted e-idle review (CPU, 256 px).
+- Posted e-move review (CPU, 256 px).

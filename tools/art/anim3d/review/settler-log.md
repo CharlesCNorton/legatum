@@ -20,3 +20,7 @@
 - Saved hit: 4 frames at 12 fps, editable MPFB rig, stationary base; authored keys.
 - Saved death: 10 frames at 10 fps, editable MPFB rig, stationary base; authored keys.
 - Published d-rig-poses: CYCLES CPU, 512 px, 8 samples; not GPU approval.
+- Published e-idle-strip: CYCLES CPU, 512 px, 8 samples; not GPU approval.
+- First textured review exposed face/hood registration, low belt, straight olive hem and washed-out sandals; adjusted garment geometry, skin/cloth masks, and excluded sandals/staff from global projection.
+- First rig sheet exposed rotation-mode drift between saved rest pose and first clip frame. Stopped cleanly after publishing idle (review subprocess exit 75), set quaternion mode before restoring neutral matrices, and added an audit assertion for rest matching. Previous clips are not accepted for packing.
+- Refined per-garment camera registration and hidden-fill blending to retain more cloth detail; starting corrected serial material/motion pass.

@@ -13,3 +13,6 @@
 - Published e-hit review from 256px CPU renders.
 - Published e-death review from 256px CPU renders.
 - Published c review from 256px CPU renders.
+- Published b review from 512px CPU renders.
+- Published c review from 512px CPU renders.
+- Published d review from 512px CPU renders.

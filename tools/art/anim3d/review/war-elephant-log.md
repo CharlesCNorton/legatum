@@ -1,0 +1,10 @@
+# War Elephant round 1
+- Read mounted playbook, standing feedback 12–22, project art/design/UI guidance and all six Blender skills.
+- Inspected 256/panel painting; two humans, cloth-armoured elephant and timber howdah. Mounted horse pack does not contain an elephant; built original elephant geometry.
+- Built continuous remeshed anatomy, separate articulated curled trunk, 20-bone skeleton, MPFB officer and mahout, equipment and stationary cream stone.
+- Generated original hidden-surface fills with built-in imagegen; preserved pinned external master and prompt.
+- First rendered comparison exposed low riders, overlong trunk, broad tower and high camera. Preserved initial comparison under war-elephant-round1-initial/.
+- Raised riders, shortened/raised trunk, narrowed and shifted howdah, reduced base radius and lowered camera elevation.
+- Fixed macOS Bash 3 empty-array handling in unit wrapper; fixed review crossfade dimensions for 256 px CPU previews.
+- b-plain: three actual 3D views emitted; c: projected painting colour with incidence blend and one rest-derived histogram grade.
+- Candidate remains clearly distinguishable from painting; do not create PASS marker.

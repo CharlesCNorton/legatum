@@ -49,3 +49,15 @@
 - Rendered c-details: 512px CYCLES CPU, 12 samples.
 - Published c-details native 256/64 comparison; render device CPU.
 - Geometry audit passed: anatomy, fixed base, nonzero scales, bow/nock contact and loop closure.
+- Rendered d: 512px CYCLES CPU, 12 samples.
+- Published d native 256/64 comparison; render device CPU.
+- Published c-details native 256/64 comparison; render device CPU.
+- Published d native 256/64 comparison; render device CPU.
+- Rendered e-idle: 512px CYCLES CPU, 12 samples.
+- Published e-idle native 256/64 comparison; render device CPU.
+- Rendered e-move: 512px CYCLES CPU, 12 samples.
+- Published e-move native 256/64 comparison; render device CPU.
+- Plain-review fixes: broadened anatomy, moved camera/anchor, widened base, fitted cuirass outside skin, splayed sandals, curved bow tips, added real bracer and flat crossed straps.
+- Rest review remains below painting parity. Measured alpha silhouette IoU 0.744; projection cannot fix the narrower drawing arm or simpler shoulder silhouette.
+- Death review exposed a floating torso and vertical released bow; lowered/folded the body and laid the bow flat, preserving the settled last two frames.
+- Pose review exposed an incorrect forward-following release hand; authored a cheek-side follow-through and independent string snap, pending final attack rerender.

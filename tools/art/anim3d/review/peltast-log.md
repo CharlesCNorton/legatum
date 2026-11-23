@@ -7,3 +7,8 @@
 - Built MPFB anatomy, painted rest stance, red chiton, blue cloak, fox-skin cap, woven crescent pelta and three iron-tipped javelins; plain review pending.
 - Published b review immediately: CYCLES/CPU, 256 px, 2 frame(s).
 - Applied original-painting camera projection to full anatomy and physical clothing/equipment; unseen faces use painted fills and surface shaders. No billboard or relief image plane.
+- Baked real 512 px AO and curvature on anatomy, red chiton and pelta; AO drives recesses and curvature drives surface roughness. Solidify disabled only during baking.
+- Published c review immediately: CYCLES/CPU, 512 px, 1 frame(s).
+- Authored idle/move/attack/hit/death on MPFB rig: 8/8/10/4/10 samples; looping breathing/steps, thrown-javelin visibility, hit recovery, independent equipment release and held death. Cloth uses authored secondary deformation, not a cloth simulation.
+- Published c review immediately: CYCLES/CPU, 512 px, 1 frame(s).
+- Published d review immediately: CYCLES/CPU, 256 px, 4 frame(s).
