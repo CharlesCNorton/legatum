@@ -65,3 +65,25 @@ Final verdict: genuine 3D and recognizable scout at 64px; below painting parity 
 Round 2 resumed: reviewed latest rest comparison, move/death strips before edits; source evidence is CPU, with no GPU script or scout-specific feedback file. At 256 px the model is visibly inferior: wrong upright stance and missing raised knee, low-detail orange face, oversized round hat, tube-like cowl, blotchy region-stretched cloth paint, straight staff fork and pink/plain base. At 64 px staff/cape/ochre tunic identify a scout, but the stance and silhouette do not match the painting. No PASS. Preserved round-one masters/reviews before changes.
 Round 2 skills: loaded all six blender-modeling/materials/lighting/cameras/animation/rendering skills; applying physical pose registration, finished-surface UVs, painted-light separation, solid straps/cloth and verified sequence/video output. Read all shared feedback and all chapters of local, spearman round-eight and field-cannon round-eight playbooks.
 Using six Blender skills: MPFB anatomy, solid folded clothing/bevels, textured Principled materials, warm key/cool rim, painting camera, authored keys/secondary cloth, denoised RGBA sequences.
+Rendered b 256 px CYCLES/CPU
+Using six Blender skills: MPFB anatomy, solid folded clothing/bevels, textured Principled materials, warm key/cool rim, painting camera, authored keys/secondary cloth, denoised RGBA sequences.
+Rendered b 256 px CYCLES/CPU
+Rendered c 256 px CYCLES/CPU
+Rendered c-details 256 px CYCLES/CPU
+Rendered b 256 px CYCLES/CPU
+Rendered c 256 px CYCLES/CPU
+Rendered c-details 256 px CYCLES/CPU
+Using six Blender skills: MPFB anatomy, solid folded clothing/bevels, textured Principled materials, warm key/cool rim, painting camera, authored keys/secondary cloth, denoised RGBA sequences.
+Rendered b 256 px CYCLES/CPU
+Rendered c 512 px CYCLES/CPU
+Rendered c-details 512 px CYCLES/CPU
+Rendered c 512 px CYCLES/CPU
+Rendered c-details 512 px CYCLES/CPU
+Rendered c 512 px CYCLES/CPU
+Rendered c-details 512 px CYCLES/CPU
+Rendered d 512 px CYCLES/CPU
+Round 2 registration: camera-ray/sphere solves fit knees, ankles, elbows and wrists at preserved skeletal lengths (arm segments +17% with inherited scale disabled); grounded the rig along the camera ray to retain projected landmarks. Tailored real skirt/cape/cowl vertices in the rest view while retaining depth, native weights, shell thickness and cloth shape keys. Removed oversized cowl tubes and shortened the staff fork; narrowed/turned the complete hat.
+Round 2 projection: removed all independent source-box stretching; one fixed rest-camera UV now drives visible surfaces. Fixed silent skin skip by freezing the actual MPFB macro mix and applying helper masks before projection. Applied rigid finishing modifiers before UVs; visibility/facing/material masks blend into the existing generated fills. Camera-only painted illumination avoids double AgX compression and indirect orange spill; physical materials/product lights and real AO/curvature remain. No new downloaded/generated asset.
+Round 2 512px CPU rest review: materially richer face, arm and linen brushwork; the raised-knee pose reads at 64px. Still below painting at 256px: cowl seams/green islands, too broad hat, unnatural shading hand and raised sandal hovering above rear disc; staff and source contours still differ. No art PASS. All five revised clips now rendering for contact/framing/loop review.
+Rendered e-idle 512 px CYCLES/CPU
+Rendered e-move 512 px CYCLES/CPU

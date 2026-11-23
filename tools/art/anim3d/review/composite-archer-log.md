@@ -42,3 +42,9 @@
 - Geometry registration now fits actual MPFB/kit vertices in camera space through inverse skin transforms, preserving depth, topology and weights. It freezes MPFB macro shape keys and finishes rigid modifiers before projection. Source UV landmark warping removed; existing generated fills, true AO/curvature bakes, folds, thick straps and bevels retained.
 - First revised CPU rest improved silhouette IoU from .7370 to .7934, with materially better sleeve width and painted face/tunic at256/64. Still distinguishable: base ellipse, skirt silhouette, bow grip and knee contact. Motion revealed source drawing-hand paint left on cheek; added visibility and head-region masking before another render. Stone camera pigment revised after sampling a too-dark rim.
 - Added executable no-argument gpu.sh with retained transcript, strict GPU512/64 readback, every stage, full atlas validation and decoded trimmed-atlas MP4. This script does not create PASS. Native256 previews no longer write upscaled512 files. Fractional anchors preserve the original127/221 position at160px, and identical terminal death frames share a rectangle.
+- Saved c review, raw 256 px and graded 512/256 sets; CYCLES CPU 8 samples.
+- Saved c review, raw 512 px and graded 512/256 sets; CYCLES CPU 8 samples.
+- Saved e-idle review, raw 512 px and graded 512/256 sets; CYCLES CPU 8 samples.
+- Saved e-move review, raw 512 px and graded 512/256 sets; CYCLES CPU 8 samples.
+- Saved e-attack review, raw 512 px and graded 512/256 sets; CYCLES CPU 8 samples.
+- Saved e-hit review, raw 512 px and graded 512/256 sets; CYCLES CPU 8 samples.

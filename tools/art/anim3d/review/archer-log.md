@@ -132,3 +132,10 @@
 - Geometry audit passed: anatomy, fixed base, nonzero scales, bow/nock contact and loop closure.
 - Rendered e-death: 256px CYCLES CPU, 12 samples.
 - Published e-death native 256/64 comparison; render device CPU.
+- CPU rest review: bow recurve, arm width, cloth/leather pigment and warm base improved; silhouette IoU .789867 versus prior .743802. At 256 px squared elbow, crest, face/gaze and shoulder drape still differ; at 64 px recognizable but distinguishable. No PASS.
+- Reviewed all five strips; corrected floating walking soles using evaluated footwear and death-entry limb-pole/foot-orientation discontinuity. Cloth remains modeled and drawn-bow gait remains stiff; motion reveals simplified hidden surfaces.
+- Full scene audit PASS including finished-surface UV max error 0.000000 token pixels, 53 bones, live skinning, fixed base, nonzero scales, bow/string/nock, sole contact, death-entry continuity and loop closure.
+- Current 40 CPU256/12 samples: trimmed160 atlas 894x753, 191284 bytes Q90, exact decoded alpha; full validation PASS. Original round-one512 masters archived intact; actual round-two512 detail render retained; all40 fresh GPU512 masters pending.
+- Required executable gpu.sh added: all GPU512/64 stages, gallery256, provenance checks, packing/validation and trimmed-atlas MP4. Missing-input preflight and CPU-master rejection PASS. Actual Metal execution is unavailable in sandbox.
+- MP4 PASS: H.264/yuv420p, 1600x348, 240 frames, 8 seconds; five clips at2x on cream. Python syntax15, Bash syntax3 and whitespace checks PASS. No unit-specific feedback file appeared.
+- Commit attempted and blocked: sandbox cannot create .git/worktrees/lane-10/index.lock. Changes left for runner to commit with requested co-author trailer. origin/master is already an ancestor of HEAD; no merge needed.

@@ -86,3 +86,5 @@
 - Inspected CPU256 rest/plain views. Face and woven coloration improved; torso penetration corrected with opaque-clothing body mask. Replaced an unsuccessful direct foot-mesh adjustment with ankle-bone posing, preserving foot orientation. A controlled review-boundary stop prevents rendering stale clips during these corrections.
 - Created executable no-argument gpu.sh with GPU-only provenance gate, all stages, 512/256 export, trim-aware packing/validation and an 8-second decoded-atlas MP4. Missing-input preflight and CPU-evidence rejection passed. No actual Metal run is claimed in this sandbox.
 - Published c-textured-lit: CYCLES CPU, 256 px, 8 samples; not GPU approval.
+- Built MPFB female, full folded robes, open hood, shawl/fringe, pack/spiral bedroll, staff, straps and sandals; plain master saved.
+- Published b-plain: CYCLES CPU, 256 px, 8 samples; not GPU approval.

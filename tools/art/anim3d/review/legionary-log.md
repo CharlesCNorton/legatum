@@ -47,3 +47,10 @@
 - Published c: CYCLES/CPU, 256 px, 8 samples; visual review pending.
 - Published b: CYCLES/CPU, 512 px, 8 samples; visual review pending.
 - Published c: CYCLES/CPU, 512 px, 8 samples; visual review pending.
+- Published d: CYCLES/CPU, 512 px, 8 samples; visual review pending.
+- Inspected revised CPU rest at 256/64: jagged shoulder crowns removed; preserved painted light gives much richer metal/skin/cloth. Silhouette IoU .713 -> .745; foreground RGB MAE drops from 33.8/30.1/30.7 to 14.6/13.2/11.4. Stone top 248.8/210.5/163.1 versus painting 250.6/211.4/163.6. Hand/arm pose, shield outline and face remain visibly different. Metrics do not establish art approval.
+- Published e-idle: CYCLES/CPU, 512 px, 8 samples; visual review pending.
+- Published e-move: CYCLES/CPU, 512 px, 8 samples; visual review pending.
+- Published e-attack: CYCLES/CPU, 512 px, 8 samples; visual review pending.
+- Published e-hit: CYCLES/CPU, 512 px, 8 samples; visual review pending.
+- Published e-death: CYCLES/CPU, 512 px, 8 samples; visual review pending.

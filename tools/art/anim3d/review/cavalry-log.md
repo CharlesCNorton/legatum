@@ -28,3 +28,4 @@ Round 2: runner switched lane-20 to peltast at 07:09; recovered WIP 84bb6e56 in 
 Round 2 fixes: frozen MPFB morph plus inverse-skin rest fitting; rejected oscillating hindquarter trial; bounded horse corrections, rigid sabre fit, jacket hand cut, camera-only painted pigment, retained generated fills/physical detail, warm stone, live rein endpoints. GPU handoff now regenerates paint and clips with preflight, transcript and failed-stage receipt. Missing-input rejection test passed.
 d: review emitted from CYCLES frames; no art-pass claim.
 e-idle: review emitted from CYCLES frames; no art-pass claim.
+e-move: review emitted from CYCLES frames; no art-pass claim.
