@@ -17,12 +17,25 @@ coatmask=Image.new('L',(1024,1024));d=ImageDraw.Draw(coatmask)
 poly=[(82,133),(92,124),(141,118),(154,92),(169,83),(184,87),(194,122),(176,133),(170,180),(178,216),(166,219),(154,190),(145,173),(126,181),(128,211),(117,215),(110,179),(99,183),(101,214),(91,214),(89,181)]
 d.polygon([(x*4,y*4) for x,y in poly],fill=255)
 for poly in [[(91,127),(141,117),(139,149),(92,149)],[(116,114),(135,116),(130,147),(126,176),(115,174)]]:d.polygon([(x*4,y*4) for x,y in poly],fill=0)
+skinmask=Image.new('L',(1024,1024));d=ImageDraw.Draw(skinmask)
+# Spatial skin ownership retains warm highlights and dark creases equally.
+# Hue thresholds incorrectly discarded the painting's palest skin pixels.
+for poly in [[(116,45),(129,44),(138,57),(132,69),(120,63)],
+             [(87,66),(99,64),(110,68),(114,81),(105,94),(99,88),(94,87),(89,79)],
+             [(138,69),(146,75),(147,93),(141,108),(133,107),(138,92)],
+             [(119,115),(133,118),(132,134),(127,151),(128,174),(119,176),(112,168),(115,146),(111,131)],
+             [(164,159),(180,162),(187,173),(178,177),(168,170)]]:
+ d.polygon([(x*4,y*4) for x,y in poly],fill=255)
+linenmask=Image.new('L',(1024,1024));d=ImageDraw.Draw(linenmask)
+for poly in [[(110,62),(122,65),(139,71),(140,96),(136,116),(128,119),(119,113),(109,128),(102,123),(107,97)],
+             [(90,132),(111,129),(112,147),(90,147)]]:
+ d.polygon([(x*4,y*4) for x,y in poly],fill=255)
 for kind in ['coat','linen','skin']:
  im=out.copy();pixels=list(im.get_flattened_data());mask=[]
  for i,(rr,gg,bb,aa) in enumerate(pixels):
   if kind=='coat':valid=coatmask.getpixel((i%1024,i//1024))/255
-  elif kind=='linen':valid=float((rr>95 and gg>80 and rr<gg*1.29 and gg<max(bb,1)*1.65) or (bb>rr and gg>rr*.9))
-  else:valid=float(rr>gg*1.24 and gg>max(bb,1)*1.26 and rr>70)
+  elif kind=='linen':valid=linenmask.getpixel((i%1024,i//1024))/255
+  else:valid=skinmask.getpixel((i%1024,i//1024))/255
   mask.append(round(aa*valid))
  alpha=Image.new('L',im.size);alpha.putdata(mask);alpha=alpha.filter(ImageFilter.GaussianBlur(1.5));im.putalpha(alpha);im.save(r/f'projection-{kind}.png')
 print('PREPARED separate coat, linen and skin projection masks')

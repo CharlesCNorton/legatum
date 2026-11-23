@@ -111,6 +111,38 @@ bpy.context.view_layer.update()
 rider_world=rig.matrix_world.copy();rider_world.translation.z-=ground_lift;rig.matrix_world=rider_world
 bpy.context.view_layer.update()
 
+# Finish rigid kit and clothing before projection; freeze static MPFB macros.
+from surface import finish, pigment
+objects=[o for o in sc.objects if o.type=='MESH' and (o.name=='Horse' or o.name.startswith(('Rider MPFB CC0','Rider linen','Split riding tunic','Rider bronze helmet','Bronze cheekguard','Ivory woven saddle','Helmet dark crest fibre','Leather baldric')))]
+surface_records=finish(objects)
+# Relax the seat and exposed spear-side shoulder, retaining all camera depth.
+rider_fit=Registration(sc,[((112,77),(108,71)),((127,105),(126,102)),
+ ((129,141),(122,140)),((128,171),(122,172)),((97,78),(97,78)),
+ ((129,52),(129,52)),((145,98),(144,99))],radius=19)
+for ob in list(sc.objects):
+ if ob in objects and ob!=horse and not ob.name.startswith('Ivory woven'):
+  rider_fit.object(ob)
+ elif ob.parent==rig and ob.type in {'MESH','CURVE'}:
+  rider_fit.object(ob)
+bpy.context.view_layer.update()
+
+# Fit the real fan fibres to the painting's swept crest, retaining depth.
+right=sc.camera.matrix_world.to_3x3()@Vector((1,0,0))
+up=sc.camera.matrix_world.to_3x3()@Vector((0,1,0))
+crests=sorted((o for o in sc.objects if o.name.startswith('Helmet dark crest fibre')),key=lambda o:o.name)
+for j,ob in enumerate(crests):
+ t=j/(len(crests)-1);inv=ob.matrix_world.inverted()
+ targets=[(114+18*t,49-9*t),(109+27*t,48-17*math.sin(t*math.pi/2))]
+ for point,(x,y) in zip(ob.data.splines[0].points,targets):
+  w=ob.matrix_world@point.co.xyz;q=world_to_camera_view(sc,sc.camera,w)
+  w+=right*((x/256-q.x)*sc.camera.data.ortho_scale)
+  w+=up*((1-y/256-q.y)*sc.camera.data.ortho_scale)
+  point.co=(*(inv@w),1)
+ ob.data.bevel_depth=.007
+surface_records.extend(finish(crests))
+from strap import fit_baldric
+surface_records.extend(finish([fit_baldric(sc,rig)]))
+
 # Freeze UVs in the native 256 px camera coordinates.
 # The source file is aligned to the committed token, not independently reframed.
 painting=bpy.data.images.load(str(A/'painting-aligned-1024.png'),check_existing=True)
@@ -129,7 +161,7 @@ for m in list(bpy.data.materials):
  else:mix.inputs[1].default_value=s.inputs['Base Color'].default_value
  l.new(tex.outputs[0],mix.inputs[2]);l.new(mix.outputs[0],s.inputs['Base Color'])
 # Project only surface meshes; props retain their own physical materials.
-objects=[o for o in sc.objects if o.type=='MESH' and (o.name=='Horse' or o.name.startswith(('Rider MPFB CC0','Rider linen','Split riding tunic','Rider bronze helmet','Bronze cheekguard','Ivory woven saddle')))]
+objects=[o for o in sc.objects if o.type=='MESH' and (o.name=='Horse' or o.name.startswith(('Rider MPFB CC0','Rider linen','Split riding tunic','Rider bronze helmet','Bronze cheekguard','Ivory woven saddle','Helmet dark crest fibre','Leather baldric')))]
 records=[]
 for obj in objects:
  states=[(m,m.show_viewport) for m in obj.modifiers]
@@ -137,11 +169,13 @@ for obj in objects:
   if m.type!='ARMATURE':m.show_viewport=False
  bpy.context.view_layer.update();ev=obj.evaluated_get(bpy.context.evaluated_depsgraph_get());me=ev.to_mesh()
  assert len(me.vertices)==len(obj.data.vertices),(obj.name,len(me.vertices),len(obj.data.vertices))
- coords=[];weights=[];view=(sc.camera.location-Vector((0,0,1.2))).normalized()
+ coords=[];weights=[];view=sc.camera.matrix_world.to_3x3()@Vector((0,0,1))
+ deps=bpy.context.evaluated_depsgraph_get()
  for v in me.vertices:
   world=ev.matrix_world@v.co;q=world_to_camera_view(sc,sc.camera,world);x,y=q.x*256,(1-q.y)*256
   coords.append((x/256,1-y/256))
-  normal=(ev.matrix_world.to_3x3().inverted().transposed()@v.normal).normalized();inc=max(0,min(1,(normal.dot(view)-.05)/.55))
+  normal=(ev.matrix_world.to_3x3().inverted().transposed()@v.normal).normalized();inc=max(0,min(1,(normal.dot(view)-.01)/.30))
+  if inc and sc.ray_cast(deps,world+view*.008,view,distance=20)[0]:inc=0.
   weights.append(inc)
  ev.to_mesh_clear()
  for mod,state in states:mod.show_viewport=state
@@ -157,14 +191,12 @@ for obj in objects:
   mat=oldmat.copy();mat.name=obj.name+' projected '+oldmat.name;obj.data.materials[idx]=mat
   n=mat.node_tree.nodes;l=mat.node_tree.links;s=n.get('Principled BSDF');tc=n.new('ShaderNodeUVMap');tc.uv_map='Painting projection';tex=n.new('ShaderNodeTexImage');tex.image=projections['coat'] if obj.name=='Horse' else projections['skin'] if obj.name=='Rider MPFB CC0 anatomy' else projections['linen'] if any(w in obj.name for w in ['linen','tunic','blanket']) else painting;tex.extension='CLIP';l.new(tc.outputs[0],tex.inputs['Vector'])
   att=n.new('ShaderNodeVertexColor');att.layer_name='Painting incidence';mult=n.new('ShaderNodeMath');mult.operation='MULTIPLY';l.new(att.outputs[0],mult.inputs[0]);l.new(tex.outputs['Alpha'],mult.inputs[1])
-  factor=n.new('ShaderNodeMath');factor.operation='MULTIPLY';factor.inputs[1].default_value=.94;l.new(mult.outputs[0],factor.inputs[0])
-  mix=n.new('ShaderNodeMixRGB');mix.blend_type='MIX';old=s.inputs['Base Color'].links[0].from_socket if s.inputs['Base Color'].is_linked else None
-  if old:l.new(old,mix.inputs[1])
-  else:mix.inputs[1].default_value=s.inputs['Base Color'].default_value
-  l.new(factor.outputs[0],mix.inputs[0]);l.new(tex.outputs['Color'],mix.inputs[2]);l.new(mix.outputs[0],s.inputs['Base Color'])
-  # Small emissive contribution retains painted recess colour under physical lighting.
-  l.new(mix.outputs[0],s.inputs['Emission Color']);s.inputs['Emission Strength'].default_value=.27
- records.append({'object':obj.name,'vertices':len(obj.data.vertices),'mapping':'exact rest-camera UV with incidence/alpha blend; geometry remains approximate'})
+  factor=n.new('ShaderNodeMath');factor.operation='MULTIPLY';factor.inputs[1].default_value=.97;l.new(mult.outputs[0],factor.inputs[0])
+  # The source already has illumination: do not shade its paint twice.
+  output=n.get('Material Output')
+  shaded=pigment(n,l,s.outputs[0],tex.outputs['Color'],factor.outputs[0])
+  l.new(shaded,output.inputs['Surface'])
+ records.append({'object':obj.name,'vertices':len(obj.data.vertices),'mapping':'frozen rest-camera UV with visibility/incidence/alpha blend; geometry remains approximate'})
 # The painting's blue border and Greek-key textile pattern on a real blanket.
 blue=material('Saddle cloth indigo paint',(.025,.09,.13),0,.85);linen=bpy.data.materials['Warm ivory linen'];gold=bpy.data.materials['Bronze • polished edges'];hair=bpy.data.materials['Black mane and tail']
 def attach_horse(o,bone):
@@ -178,9 +210,6 @@ for sg in [-1,1]:
   attach_horse(curve('Woven Greek key',pts,.005,blue),'Torso')
  for j in range(32):
   y=-.23+j*.024;attach_horse(curve('Blanket fringe',[(x,y,1.24),(x+sg*.006,y,1.19)],.005,linen),'Torso')
-# The painting's pale fan section interrupts the dark helmet crest.
-for i,o in enumerate(sorted([o for o in sc.objects if o.name.startswith('Helmet dark crest fibre')],key=lambda o:o.name)):
- if 9<=i<=27:o.data.materials.clear();o.data.materials.append(linen)
 # Small bronze shield slung behind the rider, visible chiefly as a shoulder rim.
 verts=[];faces=[];center=Vector((.24,.17,1.22))
 for ring in range(9):
@@ -198,7 +227,7 @@ for o in list(sc.objects):
 bpy.context.view_layer.update()
 root_world=registration.world(hrig.matrix_world@hrig.pose.bones['Tail1'].head)
 sc['tail_root_local']=json.dumps(list((hrig.matrix_world@hrig.pose.bones['Tail1'].matrix).inverted()@root_world))
-for j in range(24):
+for j in range(48):
  ob=curve('Horseman flowing tail lock',[(0,0,.5)]*13,.009,hair)
  ob.data.bevel_resolution=3
 from tail import update_tail
@@ -208,11 +237,20 @@ update_reins()
 # Shared cream target sampled from the painting's stone top: sRGB E9CFA0.
 stone=bpy.data.materials['Cream limestone'];n=stone.node_tree.nodes;l=stone.node_tree.links;s=n.get('Principled BSDF')
 for link in list(s.inputs['Base Color'].links):l.remove(link)
-s.inputs['Base Color'].default_value=(.68,.47,.23,1);s.inputs['Roughness'].default_value=.85
-sc.view_settings.look='AgX - Very High Contrast';sc.view_settings.exposure=.30
+s.inputs['Base Color'].default_value=(.81,.63,.40,1);s.inputs['Roughness'].default_value=.85
+# Camera-only limestone pigment keeps the cream bright without lighting the horse.
+geo=n.new('ShaderNodeNewGeometry');xyz=n.new('ShaderNodeSeparateXYZ');l.new(geo.outputs['Normal'],xyz.inputs[0])
+colour=n.new('ShaderNodeMixRGB');colour.inputs[1].default_value=(.78,.50,.25,1);colour.inputs[2].default_value=(1,.75,.48,1)
+l.new(xyz.outputs['Z'],colour.inputs[0])
+ao=n.new('ShaderNodeAmbientOcclusion');ao.inputs['Distance'].default_value=.07;ao.samples=8
+shade=n.new('ShaderNodeMixRGB');shade.blend_type='MULTIPLY';shade.inputs[0].default_value=.35
+l.new(colour.outputs[0],shade.inputs[1]);l.new(ao.outputs['Color'],shade.inputs[2])
+amount=n.new('ShaderNodeValue');amount.outputs[0].default_value=.65
+l.new(pigment(n,l,s.outputs[0],shade.outputs[0],amount.outputs[0]),n.get('Material Output').inputs['Surface'])
+sc.view_settings.view_transform='Standard';sc.view_settings.look='None';sc.view_settings.exposure=0
 # Warmer, less front-lit studio treatment; do not flatten painted cavities.
-bpy.data.objects['Cool fill'].data.energy=120;bpy.data.objects['Warm key'].data.energy=550
-bpy.data.objects['Warm rim'].data.energy=220;bpy.data.objects['Warm rim'].data.color=(.78,.86,1)
+bpy.data.objects['Cool fill'].data.energy=65;bpy.data.objects['Warm key'].data.energy=300
+bpy.data.objects['Warm rim'].data.energy=120;bpy.data.objects['Warm rim'].data.color=(.78,.86,1)
 sc['painting_projection']='Original CC BY 4.0 painting, fixed UV on skinned geometry, landmark calibrated; generated unseen-surface fills'
-(M/'projection.json').write_text(json.dumps({'meshes':records,'horse_geometry_landmarks':LANDMARKS,'cream_target_srgb':'#E9CFA0','limitation':'View-specific painted lighting; 3D bind-space landmark sculpture is approximate, not pixel parity.'},indent=2))
+(M/'projection.json').write_text(json.dumps({'meshes':records,'finished_surfaces':surface_records,'horse_geometry_landmarks':LANDMARKS,'cream_target_srgb':'#E9CFA0','limitation':'View-specific painted lighting; 3D bind-space landmark sculpture is approximate, not pixel parity.'},indent=2))
 bpy.ops.file.pack_all();bpy.ops.wm.save_as_mainfile(filepath=str(M/'horseman.blend'))

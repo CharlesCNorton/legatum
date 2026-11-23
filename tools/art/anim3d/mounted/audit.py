@@ -44,7 +44,7 @@ for clip in ['idle','move','attack','hit','death']:
   if hb[2][0]<.075:errors.append(f'{clip}/{f}: horse penetrates base: {hb[2][0]:.3f}')
   if rb[2][0]<.075:errors.append(f'{clip}/{f}: rider penetrates base: {rb[2][0]:.3f}')
  if clip=='move':
-  flight=sum(all(z>.25 for z in f['hoof_heights'].values()) for f in frames)
+  flight=sum(all(z>.135 for z in f['hoof_heights'].values()) for f in frames)
   if flight>0:errors.append(f'Walk has {flight}/8 unsupported samples; stance timing needs correction')
  if clip=='death':
   if frames[-1]['horse_bounds'][2][0]>.17:errors.append('Death horse is not planted on base')

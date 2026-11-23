@@ -84,7 +84,9 @@ for clip,(count,fps,loop,src,length) in CLIPS.items():
    bpy.context.view_layer.update()
    horse=bpy.data.objects['Horse'];ev=horse.evaluated_get(bpy.context.evaluated_depsgraph_get());me=ev.to_mesh()
    floor=min((ev.matrix_world@v.co).z for v in me.vertices);ev.to_mesh_clear()
-   root.location.z+=max(0,.112-floor)
+   # Walk/idle/hit have no flight phase: lower hovering soles as well as
+   # raising penetrating ones. Gallop attack retains intentional suspension.
+   root.location.z+=(.112-floor) if clip in ('idle','move','hit') else max(0,.112-floor)
   root.keyframe_insert('location',frame=f)
   if clip=='death':
    bpy.context.view_layer.update()

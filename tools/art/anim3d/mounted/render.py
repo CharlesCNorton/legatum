@@ -13,6 +13,7 @@ if sc.render.engine=='CYCLES':
   for d in prefs.devices:d.use=d.type=='METAL'
  sc.cycles.use_denoising=True
 sc.render.threads_mode='FIXED';sc.render.threads=3;sc.render.resolution_x=sc.render.resolution_y=int(os.environ.get('RESOLUTION','256'))
+sc.render.use_persistent_data=True
 out=master/'renders'/stage;out.mkdir(parents=True,exist_ok=True)
 if stage=='b':
  # Actual plain geometry evidence from the same registered model.

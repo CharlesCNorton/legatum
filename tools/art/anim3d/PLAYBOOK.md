@@ -177,7 +177,7 @@ Review outputs are immediately written to `review/3d-v2/horseman-*`.
 ### One-command GPU handoff
 
 ```sh
-ROUND=2 tools/art/anim3d/units/horseman/gpu.sh
+ROUND=3 tools/art/anim3d/units/horseman/gpu.sh
 ```
 
 This executable no-argument script runs from the repository root. It prepares
@@ -187,6 +187,45 @@ validates, and creates `horseman-round${ROUND}.mp4`. No GPU silently falls back 
 CPU. The movie reconstructs trimmed frames before placing all five clips side by
 side at 2x on cream; ffprobe checks 240 frames, 8 seconds, H.264 yuv420p. The script
 never writes PASS: fresh human/agent visual judgment is still required.
+
+### Round 3: finished geometry and painted illumination
+
+Read all later infantry/siege chapters before continuing. `surface.py` freezes
+static MPFB macro shapes (retaining native anatomy and skin weights), finishes
+horse subdivision and solid cloth/helmet surfaces before capturing frozen UVs.
+The exposed shoulder and seated leg receive a small inverse-skin rest-view fit;
+all original depth is retained. Real crest fibres are fitted to the painted fan,
+converted to solid meshes, then projected; they remain parented to the head.
+The moving tail remains curved volumetric locks, with wider clumping, taper and
+lateral flow. It is authored secondary motion, not simulated hair.
+
+Camera-ray-only painted illumination replaces the old full BSDF re-lighting of
+the source. Non-camera rays still see physical materials and cast real shadows.
+Standard/None is deliberate for this already-lit pigment; product light energies
+are reduced. Existing scanned materials, AO/curvature bakes, beveled equipment
+and generated coat/linen/bronze/hair fills are retained. Those bakes predate the
+new surface fitting and are not claimed as fresh bakes. Spatial ownership masks
+retain pale skin highlights and dark linen folds that the old hue thresholds
+rejected. A thin solid baldric is ray-fitted to the posed shirt instead of repeating the
+painted diagonal with a round rod. Projection rejects occluded surfaces. The
+stationary stone retains physical shading, live cavity/contact shading and a
+camera-only cream pigment lift; it has no projected feet.
+One automatically fitted rest histogram grade is reused across every clip.
+Walking/idle/hit ground correction lowers hovering soles as well as raising
+penetrating soles; the source walk has no flight phase. The audit now requires
+one actual hoof within 23mm of the .112m support plane in every walk sample.
+Attack retains its authored gallop suspension. The renderer reuses Cycles scene
+data between frames while still copying the identical terminal death sample.
+
+`ROUND=3 tools/art/anim3d/units/horseman/gpu.sh` remains the complete no-argument
+host entry point. It resolves this checkout, keeps a round transcript under
+`ANIM_ROOT`, records running/failure/completion status, checks Metal before
+rebuilding, and rejects samples below 64. `check_masters.py` requires all nine
+stages to be current-hash Cycles GPU512 output with actual 512/256 RGBA masters
+before packing. The round receipt is written only after atlas validation and
+the decoded eight-second H.264/yuv420p movie succeed. A receipt leaves art approval
+false; no script writes PASS. The comparison now includes native 64 px versions
+of the painting, rest, split and crossfade as well as 256 px versions.
 
 ### Trimmed atlas format, version 2
 

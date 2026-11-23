@@ -4,7 +4,7 @@ from PIL import Image, ImageDraw
 
 root = pathlib.Path(os.environ.get('ANIM_ROOT', str(pathlib.Path.home() / 'LegatumRuns/anim-pilot')))
 atlas_path = pathlib.Path('app/src/assets/units/anim/horseman.webp')
-out = str(root / 'review/3d-v2' / ('horseman-round' + os.environ.get('ROUND', '2') + '.mp4'))
+out = str(root / 'review/3d-v2' / ('horseman-round' + os.environ.get('ROUND', '3') + '.mp4'))
 meta = json.loads(atlas_path.with_suffix('.json').read_text())
 atlas = Image.open(atlas_path).convert('RGBA')
 w, h = meta['frame']['w'], meta['frame']['h']
@@ -34,7 +34,7 @@ with tempfile.TemporaryDirectory(prefix='movie-', dir=root/'masters/horseman') a
         canvas.convert('RGB').save(f'{tmp}/{t:04d}.png')
     subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-framerate', str(FPS), '-i', f'{tmp}/%04d.png',
                     '-vf', 'pad=ceil(iw/2)*2:ceil(ih/2)*2', '-c:v', 'libx264', '-pix_fmt', 'yuv420p',
-                    '-crf', '20', '-movflags', '+faststart', out], check=True)
+                    '-threads', '3', '-crf', '20', '-movflags', '+faststart', out], check=True)
 probe=json.loads(subprocess.check_output(['ffprobe','-v','error','-select_streams','v:0','-show_entries','stream=codec_name,pix_fmt,width,height,nb_frames,duration','-of','json',out]))
 stream=probe['streams'][0]
 assert stream['codec_name']=='h264' and stream['pix_fmt']=='yuv420p'

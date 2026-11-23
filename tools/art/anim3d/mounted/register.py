@@ -19,12 +19,13 @@ LANDMARKS = [
 ]
 
 class Registration:
-    def __init__(self, scene):
+    def __init__(self, scene, landmarks=LANDMARKS, radius=28):
         self.scene = scene
-        self.points = np.array([a for a,b in LANDMARKS], dtype=float)
-        delta = np.array([np.subtract(b,a) for a,b in LANDMARKS])
+        self.radius = radius
+        self.points = np.array([a for a,b in landmarks], dtype=float)
+        delta = np.array([np.subtract(b,a) for a,b in landmarks])
         distance = ((self.points[:,None,:]-self.points[None,:,:])**2).sum(axis=2)
-        self.weights = np.linalg.solve(np.exp(-distance/(2*28**2)) + np.eye(len(delta))*.035, delta)
+        self.weights = np.linalg.solve(np.exp(-distance/(2*radius**2)) + np.eye(len(delta))*.035, delta)
         self.right = scene.camera.matrix_world.to_3x3() @ Vector((1,0,0))
         self.up = scene.camera.matrix_world.to_3x3() @ Vector((0,1,0))
         self.scale = scene.camera.data.ortho_scale/256
@@ -32,7 +33,7 @@ class Registration:
     def world(self, world):
         q = world_to_camera_view(self.scene,self.scene.camera,world)
         point = np.array([q.x*256,(1-q.y)*256])
-        kernel = np.exp(-((self.points-point)**2).sum(axis=1)/(2*28**2))
+        kernel = np.exp(-((self.points-point)**2).sum(axis=1)/(2*self.radius**2))
         dx,dy = kernel @ self.weights
         return world + self.right*(float(dx)*self.scale) - self.up*(float(dy)*self.scale)
 

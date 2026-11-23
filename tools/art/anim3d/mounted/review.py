@@ -21,7 +21,7 @@ if stage.startswith('e-'):
 if stage=='c-details':
  # Three meaningful native-size surface comparisons, in addition to full-frame evidence.
  big=Image.open(renders/'00.png').convert('RGBA')
- ref=Image.open('app/src/assets/units/horseman-256.png').convert('RGBA').resize((512,512),Image.Resampling.LANCZOS)
+ ref=Image.open(root/'assets/horseman/painting-aligned-1024.png').convert('RGBA').resize((512,512),Image.Resampling.LANCZOS)
  big=big.resize((512,512),Image.Resampling.LANCZOS)
  sheet=Image.new('RGB',(960,450),(224,215,191));draw=ImageDraw.Draw(sheet)
  crops=[('Helmet / skin',(160,40,310,215),(185,65,320,215)),('Tunic / saddle',(160,135,315,330),(160,145,320,335)),('Horse / tack',(250,165,405,385),(270,175,425,395))]
@@ -36,7 +36,8 @@ if stage=='c':
  rendered=Image.open(renders/'00.png').convert('RGBA').resize((256,256),Image.Resampling.LANCZOS)
  bg=Image.new('RGBA',(256,256),(224,215,191,255));painted=Image.alpha_composite(bg,source);model=Image.alpha_composite(bg,rendered)
  cross=Image.blend(painted,model,.5);split=painted.copy();split.paste(model.crop((128,0,256,256)),(128,0))
- sheet=Image.new('RGB',(1088,320),(224,215,191));draw=ImageDraw.Draw(sheet)
+ sheet=Image.new('RGB',(1088,380),(224,215,191));draw=ImageDraw.Draw(sheet)
  for i,(label,im) in enumerate([('Painting',painted),('3D rest',model),('Split 50/50',split),('Crossfade 50%',cross)]):
   draw.text((i*272+8,10),label,fill=(40,34,27));sheet.paste(im.convert('RGB'),(i*272+8,36))
+  sheet.paste(im.convert('RGB').resize((64,64),Image.Resampling.LANCZOS),(i*272+104,302))
  sheet.save(review/'horseman-f-restpose-compare.png')
