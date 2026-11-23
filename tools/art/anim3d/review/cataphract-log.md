@@ -50,3 +50,15 @@ Rendered attack: 10 frames, 256px, 8 samples, CPU.
 Rendered hit: 4 frames, 256px, 8 samples, CPU.
 Rendered death: 10 frames, 256px, 8 samples, CPU.
 Packed and decoded 40 trimmed frames, quality 85, 191950 bytes; wrote cataphract-round2.mp4. Warnings: []
+Rendered b-plain: 256px CYCLES CPU, 8 samples.
+Rendered c-textured-lit: 256px CYCLES CPU, 8 samples.
+Rendered four keyed attack rig poses.
+Rendered idle: 8 frames, 256px, 8 samples, CPU.
+Rendered move: 8 frames, 256px, 8 samples, CPU.
+Driver round2: corrected neck/chest/hand registration and full lower-leg profiles; replaced torso-parented reins with closed thick leather meshes keyed to evaluated bridle/hand anchors. Original native horse actions retained, CC0 UAL seated/hit/death torso+head retarget added with reference/roll compensation and saddle constraints. All six Blender skills applied; no post-retarget foot yaw edit.
+Driver round2 foot diagnostics exposed floating front hooves and a penetrating rear hoof after sculpture. Added rest support fit and per-frame vertical mesh support correctives driven by native foot lift; horizontal source gait/rotations unchanged. Reused generated Medjay skin and Tagmatic steel/wool/leather for exposed surfaces; retained frozen projection, thick kit/cloth, warm product lights, actual helmet AO/Pointiness bake and shared automatic histogram grade.
+Rendered attack: 10 frames, 256px, 8 samples, CPU.
+Rendered hit: 4 frames, 256px, 8 samples, CPU.
+Rendered death: 10 frames, 256px, 8 samples, CPU.
+Packed and decoded 40 trimmed frames, quality 85, 193514 bytes; wrote cataphract-round2.mp4. Warnings: []
+Rendered death: 10 frames, 256px, 8 samples, CPU.
