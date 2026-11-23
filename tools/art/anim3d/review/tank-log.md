@@ -17,3 +17,4 @@
 - Read new Sam/coordinator quality feedback. Added frozen rest-camera projection of the full painting onto five actual 3D meshes, faded by facing/alpha into procedural hidden surfaces; no billboard. Kept bake UVs explicit.
 - Added bounded rest-pose RGB quantile grading (alpha preserved, raw renders retained), 50/50 rest-pose comparison, and explicit host Metal Cycles GPU + denoising support.
 - Emitted tank-d-rig-poses.png from actual d renders; visual review pending.
+- Emitted tank-e-idle-strip.png from actual e-idle renders; visual review pending.
