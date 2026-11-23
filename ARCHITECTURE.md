@@ -155,7 +155,7 @@ Scenario files are AI measurement positions with a checked start state, objectiv
 | Rust integration tests | `crates/*/tests/`: determinism and pins (`sim`), playtest saves and scenarios (`wasm`), the online host protocol (`wasm`), property and privacy tests (`core`), AI behaviour (`ai`) | `cargo test --workspace` |
 | TypeScript unit tests | `app/src/**/*.test.ts(x)` (Vitest, Node environment) | `cd app && npm test` |
 | WASM behavior tests | `app/src/**/*.wasm.test.ts`: core-backed fixtures and browser-facing engine APIs | `cd app && npm test` (needs `scripts/build-wasm.sh` first) |
-| Browser end-to-end | `app/e2e/*.spec.ts` (Playwright, Chromium) against the static production build and a local relay (`wrangler dev`) | `cd app && npm run e2e` |
+| Browser end-to-end | `app/e2e/*.spec.ts` (Playwright, Chromium) against the static production build and a local relay (`wrangler dev`); CI runs a smoke subset per pull request and the full suite nightly | `cd app && npm run e2e` |
 | Cross-target determinism | `scripts/wasm-tape-check.mjs`, `scripts/wasm-search-check.mjs` | see the headers of those scripts |
 
 `cargo fmt --all` and `cargo clippy --workspace --all-targets -- -D warnings` are the expected lint gates for Rust; `npm run build` type-checks the TypeScript, including the Playwright specs.
