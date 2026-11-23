@@ -20,3 +20,7 @@
 - Review image captions now identify CPU preview versus GPU directly from each render manifest, to prevent mistaking the supplied CPU evidence for a completed GPU pass.
 - Final round-4 master: rebuilt and CPU-rendered hit, 256 px / 12 samples.
 - Final round-4 master: rebuilt and CPU-rendered death, 256 px / 12 samples.
+- Final CPU checks: 40 saved-rig samples, zero findings; decoded trimmed atlas PASS, 198130 bytes at quality 85, 40 frames; source-held death PNGs byte-identical. Two regression tests, syntax 23 Python/3 Bash/2 JSON, 31-file hygiene scan and diff whitespace all pass.
+- Final movie verified by ffprobe: five simultaneous decoded clips, H.264 yuv420p, 1600x352, 192 frames at 24 fps, exactly 8 seconds. CPU/GPU status is explicit in review captions.
+- Final verdict: NOT PASS. At 256 px the shield is much cleaner and the crest/ankle closer, but sleeve/shoulder, foot shape, base shading and oblique paint stretching remain visible. At 64 px it reads as the same spearman, but the stance/base are not a one-for-one painting match. No spearman-PASS written. GPU rendering and 512/256 master export await the executable gpu.sh handoff; no GPU success claimed.
+- Non-obvious findings for the next round: lateral registration of raised ornament must also intersect the curved support surface or real relief gets buried; inspect plain clay as well as painted output. Preserve scale when rebuilding a released equipment transform from its quaternion.
