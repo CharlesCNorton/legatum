@@ -50,15 +50,22 @@ for ob in [body,boots,trousers]:
         world+=right*(dx*sc.camera.data.ortho_scale/256)-up*(dy*sc.camera.data.ortho_scale/256)
         # Seat low boot surfaces on the stone along camera rays, retaining screen position.
         forward=sc.camera.matrix_world.to_quaternion()@Vector((0,0,-1))
-        if y>204:
+        if y>200:
             target_z=.055+(world.z-.10)*.72
-            world+=forward*((target_z-world.z)/forward.z)
+            blend_depth=max(0,min(1,(y-200)/12));blend_depth=blend_depth*blend_depth*(3-2*blend_depth)
+            world+=forward*((target_z-world.z)/forward.z)*blend_depth
         v.co=from_rig@sk.inverted()@rig.matrix_world.inverted()@world
     ob.data.update()
 # Slim the case to the painted bolt quiver; keep actual rounded leather volume.
 for ob in sc.objects:
     if ob.type=='MESH' and ob.name.startswith('GEO-bolt leather case'):
-        for v in ob.data.vertices:v.co.x*=.68;v.co.y*=.76
+        if 'suspension' not in ob.name:
+            for v in ob.data.vertices:v.co.x*=.68;v.co.y*=.76
+        inv=ob.matrix_world.inverted()
+        for v in ob.data.vertices:
+            w=ob.matrix_world@v.co;q=world_to_camera_view(sc,sc.camera,w);y=(1-q.y)*256
+            dy=-.30*max(0,y-113)
+            v.co=inv@(w-right*(2*sc.camera.data.ortho_scale/256)-up*(dy*sc.camera.data.ortho_scale/256))
 # Native body stays the original vertex count; smooth its actual skin at render time.
 su=body.modifiers.new('Anatomical subdivision','SUBSURF');su.levels=1;su.render_levels=1
 bpy.context.view_layer.update()
@@ -66,23 +73,6 @@ bpy.context.view_layer.update()
 sc.view_settings.view_transform='Standard';sc.view_settings.look='None';sc.view_settings.exposure=0
 for name,power in [('Warm key',300),('Soft fill',60),('Cool rim',100)]:bpy.data.objects[name].data.energy=power
 bpy.data.objects['Warm key'].data.color=(1,.96,.89)
-# The stone remains physical: no painted feet or shadows remain after a foot lifts.
+# Keep the existing registered solid disc and apply its clean stone pigment later.
 base.location.x=.018
 base.location.z-=.024
-stone.node_tree.nodes['Principled BSDF'].inputs['Base Color'].default_value=(.89,.64,.39,1)
-
-# Camera-only cream pigment, with live cavity/contact shading; never a figure projection.
-n=stone.node_tree.nodes;l=stone.node_tree.links;s=n.get('Principled BSDF');out=n.get('Material Output')
-geo=n.new('ShaderNodeNewGeometry');sep=n.new('ShaderNodeSeparateXYZ');l.new(geo.outputs['Normal'],sep.inputs[0])
-mix=n.new('ShaderNodeMixRGB');mix.inputs[1].default_value=(.80,.45,.23,1);mix.inputs[2].default_value=(1.14,.81,.55,1);l.new(sep.outputs['Z'],mix.inputs[0])
-ao=n.new('ShaderNodeAmbientOcclusion');ao.inputs['Distance'].default_value=.07
-shade=n.new('ShaderNodeMixRGB');shade.blend_type='MULTIPLY';shade.inputs[0].default_value=.30;l.new(mix.outputs[0],shade.inputs[1]);l.new(ao.outputs['Color'],shade.inputs[2])
-pigment=n.new('ShaderNodeBsdfPrincipled');pigment.name='Camera stone pigment';pigment.inputs['Base Color'].default_value=(0,0,0,1);pigment.inputs['Specular IOR Level'].default_value=0;pigment.inputs['Emission Strength'].default_value=1;l.new(shade.outputs[0],pigment.inputs['Emission Color'])
-ray=n.new('ShaderNodeLightPath');weight=n.new('ShaderNodeMath');weight.operation='MULTIPLY';weight.inputs[1].default_value=.85;l.new(ray.outputs['Is Camera Ray'],weight.inputs[0])
-blend=n.new('ShaderNodeMixShader');l.new(weight.outputs[0],blend.inputs[0]);l.new(s.outputs[0],blend.inputs[1]);l.new(pigment.outputs[0],blend.inputs[2]);l.new(blend.outputs[0],out.inputs['Surface'])
-
-# Fine stone pigment variation survives the camera-only painted illumination.
-noise=n.new('ShaderNodeTexNoise');noise.inputs['Scale'].default_value=95;noise.inputs['Detail'].default_value=3
-ramp=n.new('ShaderNodeMapRange');ramp.inputs['To Min'].default_value=.90;ramp.inputs['To Max'].default_value=1.035;l.new(noise.outputs['Fac'],ramp.inputs['Value'])
-grain=n.new('ShaderNodeMixRGB');grain.blend_type='MULTIPLY';grain.inputs[0].default_value=1
-l.new(shade.outputs[0],grain.inputs[1]);l.new(ramp.outputs[0],grain.inputs[2]);l.new(grain.outputs[0],pigment.inputs['Emission Color'])

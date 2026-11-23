@@ -8,5 +8,20 @@
     "sha256": "c71ed83e71404d76f318e2410e111c1ec6ecf00864d9730f13514f2f5c932da3",
     "licence": "CC BY 4.0",
     "source": "Built-in imagegen, 2026-11-22, mounted family painted-fills.png linen quadrant; prompt copied to painted-fills.prompt.txt"
+  },
+  "stone-fill-source.png": {
+    "sha256": "8c0c028523ad26c2126da8caad7bbcbc5fc55f4168b69eba3bb50436ba97934e",
+    "licence": "CC BY 4.0",
+    "source": ".codex/generated_images/01a20aaa-73c6-7d22-84f5-8fbedf3f9882/exec-965badca-30c0-4167-a289-6efca7f1faf1.png"
+  },
+  "fill-skin.png": {
+    "sha256": "e9699dccd35965546bb5973ecb349cd695ab01bc7d06528b6aaee48b7070d9a9",
+    "licence": "CC BY 4.0",
+    "source": "LegatumRuns/anim-pilot/assets/medjay/fill-skin.png"
+  },
+  "fill-leather.png": {
+    "sha256": "8a14b97d8400525265acb111c194aad5e42491408e42ece3b9a85a756acfc62e",
+    "licence": "CC BY 4.0",
+    "source": "LegatumRuns/anim-pilot/assets/tagmatic-soldier/fill-leather.png"
   }
 }

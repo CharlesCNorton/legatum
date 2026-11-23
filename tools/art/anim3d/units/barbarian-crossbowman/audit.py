@@ -1,5 +1,5 @@
 """Structural source audit independent of image/atlas validation."""
-import bpy,json,os,hashlib
+import bpy,bmesh,json,os,hashlib
 from pathlib import Path
 from mathutils import Vector
 R=Path(os.environ['ANIM_ROOT']);M=R/'masters/barbarian-crossbowman';report={}
@@ -7,6 +7,13 @@ for clip,count in {'idle':8,'move':8,'attack':10,'hit':4,'death':10}.items():
     bpy.ops.wm.open_mainfile(filepath=str(M/'clips'/f'{clip}.blend'));sc=bpy.context.scene;rig=bpy.data.objects['RIG-barbarian-crossbowman'];base=bpy.data.objects['GEO-stationary cream stone'];bmat=base.matrix_world.copy();assert len(rig.data.bones)>=50;assert len(bpy.data.objects['GEO-MPFB anatomical brigand'].data.vertices)>10000
     body=bpy.data.objects['GEO-MPFB anatomical brigand'];assert not body.data.shape_keys,'Unfrozen macro anatomy'
     assert sc.view_settings.view_transform=='Standard'
+    shoes=bpy.data.objects['GEO-leather boots'];bm=bmesh.new();bm.from_mesh(shoes.data)
+    assert all(e.is_manifold for e in bm.edges),'Open anatomical shoe surface'
+    assert all(v.link_faces for v in bm.verts),'Loose shoe helper vertices'
+    bm.free()
+    assert base.data.uv_layers.get('Clean stone fixed UV')
+    assert any(n.type=='TEX_IMAGE' and n.image and n.image.name.startswith('stone-plate') for n in base.data.materials[0].node_tree.nodes)
+    assert any(m.get('painted_fill')=='fill-skin.png' for m in body.data.materials)
     for o in sc.objects:
         if o.type=='MESH' and o!=base and o.name!='GEO-CC0 anatomical eyes':
             assert o.data.uv_layers.get('Painting fixed UV'),o.name
@@ -35,5 +42,5 @@ for clip,count in {'idle':8,'move':8,'attack':10,'hit':4,'death':10}.items():
         closure=max(abs(a-b) for m,n in zip(first,last) for r,s in zip(m,n) for a,b in zip(r,s))
         assert closure<.001,(clip,'loop/recovery matrix discontinuity',closure)
     info=json.loads((M/'clips'/f'{clip}.json').read_text());assert info['model_sha256']==hashlib.sha256((M/'model.blend').read_bytes()).hexdigest()
-    report[clip]={'frames':count,'bones':len(rig.data.bones),'stationary_base':True,'nonzero_scales':True,'max_wrist_grip_error_m':max_grip,'finished_projection':True,'motion':motion['provider'],'closure_max_matrix_delta':closure}
+    report[clip]={'frames':count,'bones':len(rig.data.bones),'stationary_base':True,'closed_shoes':True,'generated_stone_and_skin':True,'nonzero_scales':True,'max_wrist_grip_error_m':max_grip,'finished_projection':True,'motion':motion['provider'],'closure_max_matrix_delta':closure}
 (M/'audit.json').write_text(json.dumps(report,indent=2));print('AUDIT_PASS',json.dumps(report))

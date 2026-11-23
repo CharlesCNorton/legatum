@@ -131,7 +131,7 @@ def validate():
     (M/'validation.json').write_text(json.dumps(report,indent=2));print(json.dumps(report))
 
 def video():
-    p=Path(f'app/src/assets/units/anim/{SLUG}.webp');meta=json.loads(p.with_suffix('.json').read_text());atlas=Image.open(p).convert('RGBA');frames={n:[restored(atlas,c,i).resize((320,320),Image.Resampling.LANCZOS) for i in range(c['frames'])] for n,c in meta['clips'].items()};out=V/f'{SLUG}-round{os.environ.get("ROUND","2")}.mp4'
+    p=Path(f'app/src/assets/units/anim/{SLUG}.webp');meta=json.loads(p.with_suffix('.json').read_text());atlas=Image.open(p).convert('RGBA');frames={n:[restored(atlas,c,i).resize((320,320),Image.Resampling.LANCZOS) for i in range(c['frames'])] for n,c in meta['clips'].items()};out=V/f'{SLUG}-round{os.environ.get("ROUND","3")}.mp4'
     with tempfile.TemporaryDirectory(dir=M) as temp:
         for t in range(240):
             canvas=Image.new('RGBA',(1600,348),CREAM);d=ImageDraw.Draw(canvas)

@@ -26,7 +26,6 @@ for obj in list(sc.objects):
         facing=max(0,min(1,(normal.dot(view)-.03)*4))
         hit,_,_,distance=bvh.ray_cast(world+view*5,-view,5.1)
         visible=hit is not None and (hit-world).length<.025
-        if obj.name=='GEO-leather boots':facing=max(0,min(1,(normal.dot(view)-.35)*2.5))
         weight=facing if visible else 0
         x,y=q.x*256,(1-q.y)*256
         if obj.name in {'GEO-leather boots','GEO-olive wool trousers'} and x<110 and y>110:weight=0
@@ -46,5 +45,13 @@ for obj in list(sc.objects):
         pigment=n.new('ShaderNodeBsdfPrincipled');pigment.name='Camera painted pigment';pigment.inputs['Base Color'].default_value=(0,0,0,1);pigment.inputs['Roughness'].default_value=1; pigment.inputs['Specular IOR Level'].default_value=0
         l.new(tex.outputs['Color'],pigment.inputs['Emission Color']);pigment.inputs['Emission Strength'].default_value=1
         camera=n.new('ShaderNodeLightPath');mask=n.new('ShaderNodeMath');mask.operation='MULTIPLY';l.new(factor.outputs[0],mask.inputs[0]);l.new(camera.outputs['Is Camera Ray'],mask.inputs[1])
-        blend=n.new('ShaderNodeMixShader');l.new(mask.outputs[0],blend.inputs[0]);l.new(s.outputs[0],blend.inputs[1]);l.new(pigment.outputs[0],blend.inputs[2]);l.new(blend.outputs[0],out.inputs['Surface'])
+        physical=s.outputs[0]
+        if old.get('painted_fill'):
+            # A modest camera pigment contribution keeps revealed surfaces in the
+            # painting's value range while retaining live form/contact shading.
+            fill=n.new('ShaderNodeBsdfPrincipled');fill.name='Revealed painted fill';fill.inputs['Base Color'].default_value=(0,0,0,1);fill.inputs['Specular IOR Level'].default_value=0;fill.inputs['Emission Strength'].default_value=1
+            l.new(s.inputs['Base Color'].links[0].from_socket,fill.inputs['Emission Color'])
+            fw=n.new('ShaderNodeMath');fw.operation='MULTIPLY';fw.inputs[1].default_value=.42;l.new(camera.outputs['Is Camera Ray'],fw.inputs[0])
+            fm=n.new('ShaderNodeMixShader');l.new(fw.outputs[0],fm.inputs[0]);l.new(s.outputs[0],fm.inputs[1]);l.new(fill.outputs[0],fm.inputs[2]);physical=fm.outputs[0]
+        blend=n.new('ShaderNodeMixShader');l.new(mask.outputs[0],blend.inputs[0]);l.new(physical,blend.inputs[1]);l.new(pigment.outputs[0],blend.inputs[2]);l.new(blend.outputs[0],out.inputs['Surface'])
     records.append({'name':obj.name,'vertices':len(obj.data.vertices),'visible_vertices':sum(w>0 for w in weights),'finished_surface':True})

@@ -263,6 +263,42 @@ usual b/c/d/e render, master check, trimmed atlas and decoded-atlas MP4. The fin
 GPU gate checks fresh 512/64-sample foot evidence as well. CPU previews, collision
 limits and technical encoding success never create the visual PASS marker.
 
+### Barbarian crossbowman driver round 3: closed shoes and revealed cloth
+
+Preserve the lead's completed round-two GPU images before rebuilding; its
+173282-byte Q90 atlas and eight-second MP4 passed technical checks. Source
+painting coverage still hid weak shoe/sleeve construction and bland stone.
+
+Build closed shoe hulls from **evaluated visible anatomy**, not every MPFB data
+vertex: hidden helper vertices otherwise enlarge the hull. Use rigid foot-bone
+weights for a leather shoe, mask covered anatomical feet to prevent toes escaping
+during rollover, and retain the source foot rotations. The structural audit
+requires closed manifold shoe surfaces without loose helper vertices. Continue
+the eight-frame top/front feet review; a toe-joint stance metric does not prove
+sole contact or collision freedom.
+
+Select sleeves by native upper/lower-arm weights rather than a clipped coordinate
+band. `tailoring.py` transfers evaluated MPFB spine/hip/thigh weights to the finished
+solid tunic and stitch channels through inverse blended skin matrices, preserving
+the exact rest surface before frozen projection. This is skinned folded cloth,
+not simulated cloth. Evaluated meshes can have fewer vertices after MPFB masks;
+read their own vertex weights rather than assuming original vertex indices.
+
+`fills.py` uses recorded image-generated skin, leather and linen on newly revealed
+surfaces. A generated clean stone plate, registered to the original base, colors
+the real beveled disc, preserving its original rim and fresh contact AO. Its alpha
+only blends pigment, never geometry. All input hashes are checked in `prepare.py`.
+Camera projection, bevels/thick straps, product lighting, real AO/curvature bakes
+and the single rest-derived histogram grade remain in the pipeline. Clear sparse
+glTF pose channels before selecting the source and carrying actions.
+
+The complete executable handoff defaults to round 3:
+`ROUND=3 tools/art/anim3d/units/barbarian-crossbowman/gpu.sh`. It rebuilds every
+scene, generates fresh GPU64/512 feet/b/c/d/e evidence and 256 derivatives, then
+checks and packs all 40 trimmed160 frames at Q75 or better under 200000 bytes and
+encodes/probes the eight-second decoded-atlas MP4. CPU checks remain previews;
+technical success never writes the visual PASS marker.
+
 ## Infantry chapter: Tagmatic Soldier (round 1)
 
 The unit-owned implementation is `units/tagmatic-soldier/`; run from the repository

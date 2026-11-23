@@ -25,7 +25,7 @@ def gpu():
             for i in range(count):assert Image.open(folder/f'{i:02d}.png').size==(size,size)
     print('GPU_MASTERS_OK all stages GPU64/512 and gallery256')
 def video():
-    p=R/'review/3d-v2'/f'barbarian-crossbowman-round{os.environ.get("ROUND","2")}.mp4'
+    p=R/'review/3d-v2'/f'barbarian-crossbowman-round{os.environ.get("ROUND","3")}.mp4'
     data=json.loads(subprocess.check_output(['ffprobe','-v','error','-select_streams','v:0','-show_entries','stream=codec_name,pix_fmt,width,height,nb_frames,duration','-of','json',str(p)]))['streams'][0]
     assert data['codec_name']=='h264' and data['pix_fmt']=='yuv420p'
     assert (data['width'],data['height'],int(data['nb_frames']))==(1600,348,240)

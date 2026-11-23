@@ -38,9 +38,10 @@ stone=material('Cream stone E9CFA0',(.815,.624,.352),0,.88)
 body.data.materials.clear();body.data.materials.append(skin)
 for poly in body.data.polygons:poly.use_smooth=True
 # Copy body-derived garments in neutral coordinates with genuine MPFB weights.
-def garment(name,pred,mat,inflate):
+def garment(name,pred,mat,inflate,bone_prefixes=None):
     ev=body.evaluated_get(bpy.context.evaluated_depsgraph_get());me=ev.to_mesh()
-    polys=[p for p in me.polygons if all(pred(me.vertices[i].co) for i in p.vertices)]
+    allowed={v.index for v in me.vertices if sum(g.weight for g in v.groups if body.vertex_groups[g.group].name.startswith(bone_prefixes))>.35} if bone_prefixes else None
+    polys=[p for p in me.polygons if all(pred(me.vertices[i].co) and (allowed is None or i in allowed) for i in p.vertices)]
     ids=sorted({i for p in polys for i in p.vertices});idx={v:i for i,v in enumerate(ids)}
     ob=mesh(name,[tuple(me.vertices[i].co+me.vertices[i].normal*inflate) for i in ids],[[idx[i] for i in p.vertices] for p in polys],mat)
     from mathutils.kdtree import KDTree
@@ -56,8 +57,34 @@ def garment(name,pred,mat,inflate):
     solid(ob,.006);su=ob.modifiers.new('Tailored surface subdivision','SUBSURF');su.levels=1
     return ob
 trousers=garment('GEO-olive wool trousers',lambda v:.16<v.z<1.02 and abs(v.x)<.34,olive,.015)
-boots=garment('GEO-leather boots',lambda v:v.z<.39,leather,.021)
-sleeves=garment('GEO-quilted sleeves',lambda v:.26<abs(v.x)<.58 and v.z>1.03,linen,.025)
+# Closed anatomical shoe hulls bridge toe clefts instead of exposing striped
+# copied toes. The existing source foot bones articulate these rigid shoes.
+import bmesh
+bm=bmesh.new()
+ev=body.evaluated_get(bpy.context.evaluated_depsgraph_get());boot_source=ev.to_mesh()
+visible_ids={i for p in boot_source.polygons for i in p.vertices}
+for sign in [-1,1]:
+    points=[boot_source.vertices[i] for i in visible_ids if boot_source.vertices[i].co.z<.20 and sign*boot_source.vertices[i].co.x>0]
+    chunk=[bm.verts.new(v.co+v.normal*.017) for v in points]
+    bmesh.ops.convex_hull(bm,input=chunk,use_existing_faces=False)
+    unused=[v for v in chunk if v.is_valid and not v.link_faces]
+    bmesh.ops.delete(bm,geom=unused,context='VERTS')
+ev.to_mesh_clear()
+bmesh.ops.triangulate(bm,faces=list(bm.faces))
+bmesh.ops.subdivide_edges(bm,edges=list(bm.edges),cuts=2,use_grid_fill=True)
+bmesh.ops.recalc_face_normals(bm,faces=list(bm.faces))
+me=bpy.data.meshes.new('Closed anatomical shoe surfaces');bm.to_mesh(me);bm.free()
+boots=bpy.data.objects.new('GEO-leather boots',me);bpy.context.collection.objects.link(boots);boots.data.materials.append(leather);boots.parent=rig
+# A leather shoe is rigid around the foot; calf weights from the anatomical
+# ankle must not stretch its toe box when the shin bends during the walk.
+for side in ['l','r']:boots.vertex_groups.new(name='foot_'+side)
+for v in boots.data.vertices:
+    boots.vertex_groups['foot_'+('l' if v.co.x>0 else 'r')].add([v.index],1,'REPLACE')
+for p in me.polygons:p.use_smooth=True
+ar=boots.modifiers.new('Anatomical shoe weights','ARMATURE');ar.object=rig
+bevel(boots,.004,3)
+# Select the complete arm by native skin weights, rather than a clipped X band.
+sleeves=garment('GEO-quilted sleeves',lambda v:True,linen,.027,('upperarm_','lowerarm_'))
 # Pose: upright rather than spearman guard. World points account for rig elevation.
 limb('upperarm_r','lowerarm_r',(-.31,-.20,1.18),(-.32,.40,1.22))
 limb('upperarm_l','lowerarm_l',(.175,-.23,1.17),(.30,-.04,1.08))
@@ -139,6 +166,10 @@ weapon.location.x+=.04
 # Side bolt case, leather straps, brass studs.
 case=cloth_rings('GEO-bolt leather case',[(.72,.063,.051),(1.01,.063,.051)],leather,'pelvis',.001)
 case.location.x+=.27
+for label,lo,hi in [('top band',.972,1.014),('bottom seam',.72,.737)]:
+    band=cloth_rings('GEO-bolt leather case '+label,[(lo,.068,.055),(hi,.068,.055)],leather,'pelvis',.001)
+    band.location.x+=.27
+strap=curve('GEO-bolt leather case suspension',[(.24,-.025,1.21),(.28,-.035,1.10),(.29,-.053,1.00)],.009,leather);attach(strap,'pelvis')
 for i in range(5):attach(curve('GEO-spare bolt',[(.25+i*.011,.02,.87),(.25+i*.011,.02,1.13)],.0035,wood),'pelvis')
 # Shift figure to the painting's right-biased silhouette.
 rig.location.x+=.065
@@ -155,11 +186,13 @@ for name,loc,power,size,col in [('Warm key',(-3,-4,6),550,3,(1,.89,.72)),('Soft 
 # Finish geometry before sampling frozen camera UVs.
 import runpy
 runpy.run_path('tools/art/anim3d/units/barbarian-crossbowman/refine.py',init_globals=globals())
+runpy.run_path('tools/art/anim3d/units/barbarian-crossbowman/tailoring.py',init_globals=globals())
+# Covered anatomy must not poke through the rigid leather shoe during rollover.
+covered=body.vertex_groups.new(name='Covered inside leather shoes')
+covered.add([v.index for v in body.data.vertices if v.co.z<.21],1,'REPLACE')
+mask=body.modifiers.new('Anatomical feet enclosed by shoes','MASK');mask.vertex_group=covered.name;mask.invert_vertex_group=True
 bpy.ops.wm.save_as_mainfile(filepath=str(M/'plain.blend'))
-# Generated painted linen from the mounted family, tinted for unseen cloth.
-fill=bpy.data.images.load(str(A/'fill-linen.png'))
-for mat in [linen,wool,olive,leather]:
-    n=mat.node_tree.nodes;l=mat.node_tree.links;s=n.get('Principled BSDF');tc=n.new('ShaderNodeTexCoord');tex=n.new('ShaderNodeTexImage');tex.image=fill;tex.projection='BOX';tex.projection_blend=.35;l.new(tc.outputs['Generated'],tex.inputs[0]);mix=n.new('ShaderNodeMixRGB');mix.blend_type='MULTIPLY';mix.inputs[0].default_value=.45;mix.inputs[1].default_value=s.inputs['Base Color'].default_value;l.new(tex.outputs[0],mix.inputs[2]);l.new(mix.outputs[0],s.inputs['Base Color'])
+runpy.run_path('tools/art/anim3d/units/barbarian-crossbowman/fills.py',init_globals=globals())
 # Fine grain, weave, pointiness edge wear and AO cavities are physical shader detail.
 for mat in [skin,linen,wool,olive,leather,wood,steel,brass,stone]:
     n=mat.node_tree.nodes;l=mat.node_tree.links;s=n.get('Principled BSDF')
@@ -176,5 +209,5 @@ records=runpy.run_path('tools/art/anim3d/units/barbarian-crossbowman/project.py'
 rig['neutral']=json.dumps({p.name:[list(row) for row in p.matrix_basis] for p in rig.pose.bones});rig['source']='CC0 MPFB 2.0.18 game_engine'
 sc['projection']='Fixed per-vertex camera UV, alpha/incidence blend, true 3D geometry';sc['cream_target']='#E9CFA0'
 bpy.ops.file.pack_all();bpy.ops.wm.save_as_mainfile(filepath=str(M/'model.blend'))
-(M/'model-info.json').write_text(json.dumps({'bones':len(rig.data.bones),'projection_meshes':records,'source':'MPFB 2.0.18 CC0','painting':'Project CC BY 4.0','limitations':'Unseen cloth uses tinted generated linen from the mounted family, blended with procedural pigments; view-specific projection needs review.'},indent=2))
+(M/'model-info.json').write_text(json.dumps({'bones':len(rig.data.bones),'projection_meshes':records,'source':'MPFB 2.0.18 CC0','painting':'Project CC BY 4.0','limitations':'Generated linen, leather and skin fill unseen surfaces; generated clean stone plate on solid disc with live contact AO. View-specific projection needs review.'},indent=2))
 print('BUILT',M/'model.blend')
