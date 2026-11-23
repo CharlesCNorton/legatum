@@ -189,7 +189,7 @@ for (const size of SIZES) test.describe(`era research ${size.width}x${size.heigh
     const research = await page.locator('.research-chip').boundingBox();
     expect(research!.x).toBeGreaterThanOrEqual(box.x + box.width - 1);
     await shot(page, size, '05-topbar');
-    await chip.click();
+    await page.locator('.topbar .research-chip').click();
     await expect(dialog(page)).toBeVisible();
   });
 
