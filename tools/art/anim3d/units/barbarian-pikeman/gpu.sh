@@ -20,11 +20,13 @@ export RENDER_ENGINE=CYCLES CYCLES_DEVICE=GPU RESOLUTION=512 SAMPLES="${SAMPLES:
 export STAGES=b-plain,c-textured-lit,c-details,d-rig-poses,e-idle,e-move,e-attack,e-hit,e-death
 UNIT_DIR=tools/art/anim3d/units/barbarian-pikeman
 test -s "$ANIM_ROOT/masters/barbarian-pikeman/barbarian-pikeman.blend"
-blender -b --disable-autoexec --python-exit-code 1 --python "$UNIT_DIR/check_scene.py"
+# Device discovery does not render. Use a CPU slot so an unavailable device is
+# reported before waiting for the host's serialized GPU rendering slot.
+CHECK_GPU=1 CYCLES_DEVICE=CPU blender -b --disable-autoexec --python-exit-code 1 --python "$UNIT_DIR/check_scene.py"
 stage=animation
-blender -b --disable-autoexec --python-exit-code 1 --python "$UNIT_DIR/animate.py"
+CYCLES_DEVICE=CPU blender -b --disable-autoexec --python-exit-code 1 --python "$UNIT_DIR/animate.py"
 stage=rig-audit
-blender -b --disable-autoexec --python-exit-code 1 --python "$UNIT_DIR/audit.py"
+CYCLES_DEVICE=CPU blender -b --disable-autoexec --python-exit-code 1 --python "$UNIT_DIR/audit.py"
 stage=render
 "$UNIT_DIR/render.sh"
 stage=pack

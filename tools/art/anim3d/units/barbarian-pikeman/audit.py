@@ -13,10 +13,10 @@ for clip,n in [('idle',8),('move',8),('attack',10),('hit',4),('death',10)]:
   for o in sc.objects:
    assert all(math.isfinite(v) for row in o.matrix_world for v in row),o.name
    assert min(abs(v) for v in o.scale)>.0001,o.name
-  inv=Matrix.Translation(Vector((-.24,-.26,1.06))).inverted();a=pike.matrix_world@(inv@Vector((-1.17,-.26,.20)));b=pike.matrix_world@(inv@Vector((1.17,-.26,2.34)));axis=(b-a).normalized()
+  inv=Matrix.Translation(Vector((-.24,-.26,1.06))).inverted();a=pike.matrix_world @ (inv @ Vector((-1.17,-.26,.20)));b=pike.matrix_world @ (inv @ Vector((1.17,-.26,2.34)));axis=(b-a).normalized()
   if clip!='death':
    for side in ['r','l']:
-    delta=rig.matrix_world@rig.pose.bones['hand_'+side].head-a;maxgrip=max(maxgrip,(delta-axis*delta.dot(axis)).length)
+    delta=rig.matrix_world @ rig.pose.bones['hand_'+side].head-a;maxgrip=max(maxgrip,(delta-axis*delta.dot(axis)).length)
   actions.append([list(r) for r in rig.matrix_world])
  assert maxgrip<.13,(clip,'wrist-to-shaft',maxgrip)
  if clip=='death':assert actions[-1]==actions[-2],'death root not held'

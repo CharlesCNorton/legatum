@@ -30,9 +30,9 @@ for stage in stages:
   assert all(min(abs(v) for v in o.scale)>.0001 for o in sc.objects),'Unsafe near-zero scale'
   if clip and clip!='death':
    from mathutils import Vector,Matrix
-   rig=bpy.data.objects['RIG-pikeman'];pike=bpy.data.objects['CTRL-pike'];inv=Matrix.Translation(Vector((-.24,-.26,1.06))).inverted();a=pike.matrix_world@(inv@Vector((-1.17,-.26,.20)));b=pike.matrix_world@(inv@Vector((1.17,-.26,2.34)));axis=(b-a).normalized();distances={}
+   rig=bpy.data.objects['RIG-pikeman'];pike=bpy.data.objects['CTRL-pike'];inv=Matrix.Translation(Vector((-.24,-.26,1.06))).inverted();a=pike.matrix_world @ (inv @ Vector((-1.17,-.26,.20)));b=pike.matrix_world @ (inv @ Vector((1.17,-.26,2.34)));axis=(b-a).normalized();distances={}
    for side in ['r','l']:
-    hand=rig.matrix_world@rig.pose.bones['hand_'+side].head;delta=hand-a;distance=(delta-axis*delta.dot(axis)).length;distances[side]=distance;assert distance<.13,(clip,frame,side,'hand too far from shaft',distance)
+    hand=rig.matrix_world @ rig.pose.bones['hand_'+side].head;delta=hand-a;distance=(delta-axis*delta.dot(axis)).length;distances[side]=distance;assert distance<.13,(clip,frame,side,'hand too far from shaft',distance)
    audit.append({'frame':frame,'wrist_to_shaft':distances})
   sc.render.filepath=str(out/f'{i:02}.png');bpy.ops.render.render(write_still=True)
   if not clip:
@@ -42,6 +42,6 @@ for stage in stages:
  (out/'render.json').write_text(json.dumps(manifest,indent=2));print('RENDER_OK',stage,flush=True)
 
  # Publish complete interim strips immediately after each stage; no Blender subprocess.
- if (M/'renders'/str(resolution)/'c-textured-lit/00.png').exists():
+ if (M/'renders'/str(resolution)/'c-textured-lit/render.json').exists():
   import subprocess
   subprocess.run([str(R/'venv/bin/python'),'tools/art/anim3d/units/barbarian-pikeman/deliver.py','--resolution',str(resolution),'--review-only'],check=True)

@@ -1,41 +1,63 @@
-# Barbarian pikeman, round 1
+# Barbarian pikeman, round 2
 
-Status: candidate, **not an art pass**. The saved model is true articulated MPFB
-anatomy with original kit; there are no image planes or relief substitutes.
+Status: **candidate, not an art pass**. No PASS marker. True articulated MPFB
+anatomy, original full-depth kit and frozen surface UVs; no billboard or relief
+substitute. Prior round evidence is preserved outside git in
+`masters/barbarian-pikeman/round1-preserved`.
 
-At 256 px, the long diagonal pike, figure height, braced silhouette, tan quilted
-coat, red arm tie and kettle helmet are recognizable beside the painting. Frozen
-camera UVs retain much of the painting's cloth detail. The render is still visibly
-weaker: the front elbow/hand is bulky, face/beard is soft, the coat surface loses
-quilt depth and the boot silhouettes do not match. The base top is warm cream but
-its side is too dark/rough. A fixed RGB foreground grade improves warmth without
-per-frame color shifts. A sample of the base top is #E3C8A6; the same patch in the
-painting is more golden, #F2C28D. The shared material target remains #E9CFA0.
+At 256 px, the coat brushwork is crisper, the forward elbow/fist are much closer
+to the reference, the oversized kettle brim is reduced, knees/boots fit better,
+and the pike is thin and continuously brown. Fitted garments now inherit exact
+anatomical vertex weights; this removes the sleeve spikes caused by copying
+hands into clothing and assigning nearby finger weights. Static modifiers and
+macro shapes are finished before camera projection. Camera-only painted pigment
+avoids double lighting and source illumination spilling onto other surfaces.
 
-At 64 px, the pike diagonal and tan/red costume read as the same unit class, with
-an overly broad forward arm and less defined footwear. The rest pose is not hard
-to distinguish from the painting, so no external PASS marker is written.
+The cream stone has a smooth bevel, low grain, live contact shading and no
+projected boot marks. It is still too uniformly shaded, with a darker/rounder
+front edge than the painting. The rear forearm/shoulder contour, face and boot
+shapes still differ. At 64 px the buff/red costume, wide stance and long pike
+read as the same unit; it is still distinguishable from the source token.
 
-The animation uses authored skeletal keys and a common two-hand pike control.
-Idle is small breathing/weight motion; move alternates steps; attack anticipates,
-thrusts in depth and recovers; hit recoils; death releases the pike, falls and holds.
-The torso remains stiff in move, and combat foot contact and the death landing need
-closer review at GPU quality. The arm ribbons are weighted, not cloth simulated.
-Unseen linen uses an existing generated painted fill; hidden skin, leather and
-metal use procedural materials and need richer paint in a subsequent round.
+All five clip strips were inspected. Idle is subtle, move remains stiff, attack
+is a short two-handed thrust, and hit recovers. Death releases the pike and holds
+its last two frames, but its raised leg and fall remain too posed. Revealed cloth
+and skin are simpler than the source-facing paint. The rig audit checks a
+stationary base, finite transforms, nonzero scales, 53 bones and wrist/shaft
+proximity; it is not a complete grip, cloth or floor collision solver.
 
-External evidence: `~/LegatumRuns/anim-pilot/review/3d-v2/barbarian-pikeman-*`.
-Editable sources, six AO/Pointiness bakes and raw/graded CPU 256 px frames are in
-`~/LegatumRuns/anim-pilot/masters/barbarian-pikeman/`.
+Current delivery is explicitly **Cycles CPU12 / 256px preview**:
 
-The host must run, from the repository root:
+- Forty samples: idle 8, move 8, attack 10, hit 4, death 10.
+- Trimmed 160px logical cells, **158,564 bytes at WebP quality 90**, lossless alpha.
+- Decoded alpha/offsets, bounds, motion, source hashes and held-death source/RGB
+  equality pass. Duplicate frames share a rectangle without dropping samples.
+- Six fresh 256px AO/Pointiness bakes and saved editable master/clip blends.
+- Round-2 MP4: H.264, yuv420p, 1600 × 348, 240 frames, eight seconds; all five
+  decoded clips side by side on cream, at 2x logical frame size.
+- Scene/rig checks, all 15 Python files, both shell scripts and whitespace checks pass.
+- The GPU receipt correctly rejects this CPU delivery; the missing-input test
+  records the failed preflight and leaves no success receipt.
+- The actual GPU entry point reaches device discovery and correctly fails with
+  `Metal GPU unavailable; no CPU fallback` in this sandbox. GPU rendering is
+  unverified here. Device discovery uses a CPU slot; actual renders use the GPU gate.
+- Repository hygiene and public-claims pass on the committed changes. Initial
+  hygiene false positives on matrix operators were fixed with spacing. The art
+  gate is blocked by Chromium `bootstrap_check_in ... Permission denied (1100)`
+  in the sandbox; no distinctness result or browser art approval is claimed.
+
+The runner reassigned lane-17 mid-round after WIP commit `57e4b781`. Continue on
+`astra/unit-anim-3d-barbarian-pikeman` in `.worktrees/barbarian-pikeman-round2`, not
+in the active artillery checkout. The single executable host handoff is:
 
 ```sh
-ROUND=1 tools/art/anim3d/units/barbarian-pikeman/gpu.sh
+ROUND=2 tools/art/anim3d/units/barbarian-pikeman/gpu.sh
 ```
 
-That performs the independent rig audit, every GPU render stage, real 512 px
-masters and their 256 px derivatives, trimmed 160 px atlas, decoded validation,
-review sheets/animated WebPs and an eight-second H.264/yuv420p MP4. The 512 px
-render and Metal execution are pending the host pass; CPU previews are not labeled
-as GPU results. A successful GPU script is still subject to the visual art bar.
+It checks the actual Metal device, regenerates all clips, audits, renders every
+stage at GPU64/512, retains 512px masters and 256px derivatives, packs/validates,
+and writes the round MP4. Its retained log and failed-stage status distinguish
+an interrupted run from a completed one. A fresh success receipt requires GPU
+provenance, matching master hashes, every 512/256 frame and a probed movie.
+Final GPU rendering and visual acceptance remain outstanding; CPU previews do
+not manufacture 512px masters or establish GPU success.

@@ -52,22 +52,31 @@ for v in body.data.vertices:kd.insert(v.co,v.index)
 kd.balance()
 def weights(v):
  _,i,_=kd.find(v);return {body.vertex_groups[g.group].name:g.weight for g in body.data.vertices[i].groups if body.vertex_groups[g.group].name in rig.data.bones}
-def shell(name,pred,material,inflation):
+def shell(name,pred,material,inflation,regions):
  # Original base topology, shape keys evaluated, no subdivision to corrupt weights.
  disabled=[]
  for md in body.modifiers:
   if md.type!='ARMATURE' and md.show_viewport:disabled.append(md);md.show_viewport=False
  bpy.context.view_layer.update();ev=body.evaluated_get(bpy.context.evaluated_depsgraph_get());me=ev.to_mesh()
  body_group=body.vertex_groups['body'].index
- real={v.index for v in body.data.vertices if any(g.group==body_group and g.weight>.5 for g in v.groups)}
+ real={v.index for v in body.data.vertices if any(g.group==body_group and g.weight>.5 for g in v.groups) and sum(g.weight for g in v.groups if body.vertex_groups[g.group].name in regions)>.55}
  fs=[p for p in me.polygons if all(i in real and pred(me.vertices[i].co) for i in p.vertices)];ids=sorted({i for p in fs for i in p.vertices});mp={v:i for i,v in enumerate(ids)}
  vs=[me.vertices[i].co+me.vertices[i].normal*(inflation+.004*math.sin(me.vertices[i].co.z*90)) for i in ids]
  o=mesh(name,vs,[[mp[i] for i in p.vertices] for p in fs],material);ev.to_mesh_clear()
  for md in disabled:md.show_viewport=True
- weighted(o,weights);finish(o);sub=o.modifiers.new('Tailored smoothing','SUBSURF');sub.levels=1;sub.render_levels=1;return o
-shell('padded-sleeves',lambda v:1.03<v.z<1.43 and abs(v.x)>.16,cloth,.026)
-shell('wrinkled-trousers',lambda v:.08<v.z<.98 and abs(v.x)<.30,pants,.028)
-shell('leather-boots',lambda v:v.z<.19,leather,.025)
+ weighted(o,weights)
+ # Exact inherited anatomy weights: nearest-point lookup after inflation can
+ # attach a sleeve vertex to an adjacent finger and stretch it into a spike.
+ o.vertex_groups.clear()
+ for dest,src in enumerate(ids):
+  for group in body.data.vertices[src].groups:
+   name=body.vertex_groups[group.group].name
+   if name in rig.data.bones:
+    vg=o.vertex_groups.get(name) or o.vertex_groups.new(name=name);vg.add([dest],group.weight,'REPLACE')
+ finish(o);sub=o.modifiers.new('Tailored smoothing','SUBSURF');sub.levels=1;sub.render_levels=1;return o
+shell('padded-sleeves',lambda v:1.03<v.z<1.43 and abs(v.x)>.16,cloth,.026,{n for n in rig.data.bones.keys() if n.startswith(('upperarm','lowerarm'))})
+shell('wrinkled-trousers',lambda v:.08<v.z<.98 and abs(v.x)<.30,pants,.028,{n for n in rig.data.bones.keys() if n.startswith(('pelvis','thigh','calf','foot','ball'))})
+shell('leather-boots',lambda v:v.z<.19,leather,.025,{n for n in rig.data.bones.keys() if n.startswith(('calf','foot','ball'))})
 # Fitted coat with real quilt displacement, open neckline and flared skirt.
 vs=[];fs=[];N=64;J=32
 for j in range(J+1):
@@ -129,21 +138,22 @@ for i in range(29):
 # Red tie and hanging ends on right upper arm, built in posed space below.
 # Rest pose: wide braced feet and two distinct grips on a single straight shaft.
 def aim(name,direction):
- p=rig.pose.bones[name];q=p.bone.matrix_local.to_quaternion();q=(q@Vector((0,1,0))).rotation_difference(Vector(direction).normalized())@q;m=q.to_matrix().to_4x4();m.translation=p.head;p.matrix=m;bpy.context.view_layer.update()
+ p=rig.pose.bones[name];q=p.bone.matrix_local.to_quaternion();q=(q @ Vector((0,1,0))).rotation_difference(Vector(direction).normalized()) @ q;m=q.to_matrix().to_4x4();m.translation=p.head;p.matrix=m;bpy.context.view_layer.update()
 def limb(up,lo,target,pole):
  a=rig.pose.bones[up].head.copy();t=Vector(target);axis=t-a;l1=rig.data.bones[up].length;l2=rig.data.bones[lo].length;d=min(axis.length,l1+l2-.0001);axis.normalize();along=(l1*l1-l2*l2+d*d)/(2*d);h=max(0,l1*l1-along*along)**.5;side=Vector(pole)-a;side=(side-axis*side.dot(axis)).normalized();elbow=a+axis*along+side*h;aim(up,elbow-a);aim(lo,t-elbow)
 rig.location=(-.17,0,.10)
 p=rig.pose.bones['pelvis'];m=p.matrix.copy();m.translation.z-=.14;p.matrix=m;bpy.context.view_layer.update()
 for side,x,y in [('r',-.36,-.01),('l',.35,.02)]:
- limb('thigh_'+side,'calf_'+side,(x,y,.08),((-.40 if side=='r' else .23),-.30,.48));aim('foot_'+side,((-.065 if side=='r' else .16),-.16,-.065))
-limb('upperarm_r','lowerarm_r',(-.34,-.22,.72),(-.48,-.16,1.05))
+ limb('thigh_'+side,'calf_'+side,(x,y,.08),((-.40 if side=='r' else .23),-.30,.48));aim('foot_'+side,((-.16 if side=='r' else .19),-.10,-.065))
+p=rig.pose.bones['clavicle_r'];m=p.matrix.copy();m.translation.x-=.04;m.translation.z-=.01;p.matrix=m;bpy.context.view_layer.update()
+limb('upperarm_r','lowerarm_r',(-.34,-.22,.72),(-.56,-.16,1.00))
 limb('upperarm_l','lowerarm_l',(.165,-.24,1.085),(.14,-.18,.85))
 for side in ['r','l']:
  aim('hand_'+side,(.06,-.01,.065))
  for finger in ['index','middle','ring','pinky']:
   for k in [1,2,3]:
    p=rig.pose.bones[f'{finger}_{k:02}_{side}'];p.rotation_mode='XYZ';p.rotation_euler.x=1.25
-p=rig.pose.bones['head'];m=p.matrix.copy();pos=p.head.copy();m=Matrix.Rotation(.65,4,'Z')@m;m.translation=pos;p.matrix=m;bpy.context.view_layer.update()
+p=rig.pose.bones['head'];m=p.matrix.copy();pos=p.head.copy();m=Matrix.Rotation(.65,4,'Z') @ m;m.translation=pos;p.matrix=m;bpy.context.view_layer.update()
 # Pike endpoints match painting in screen projection. It is a uniform 3D cylinder.
 start=Vector((-1.17,-.26,.20));end=Vector((1.17,-.26,2.34))
 grip=Vector((-.24,-.26,1.06))
@@ -152,7 +162,7 @@ shaft=curve('ash-pike-shaft',[start,end-(end-start).normalized()*.085],.0055,woo
 d=(end-start).normalized();a=end-d*.10;u=Vector((0,1,0))*.011;v=d.cross(Vector((0,1,0)))*.018
 head=mesh('iron-pike-point',[a+u,a+v,a-u,a-v,end],[(0,1,4),(1,2,4),(2,3,4),(3,0,4),(3,2,1,0)],steel,False);finish(head,0,.001);head.parent=pike;head.matrix_parent_inverse=pike.matrix_world.inverted()
 # Red arm tie at the visible upper sleeve, with substantial ribbon surfaces.
-center=rig.matrix_world@rig.pose.bones['upperarm_r'].head;center+=Vector((-.055,-.045,-.13))
+center=rig.matrix_world @ rig.pose.bones['upperarm_r'].head;center+=Vector((-.055,-.045,-.13))
 pts=[center+Vector((.077*math.cos(a),.065*math.sin(a),0)) for a in [i*2*math.pi/40 for i in range(41)]]
 attach(curve('red-arm-band',pts,.016,red),'upperarm_r')
 for off in [-.03,.02]:

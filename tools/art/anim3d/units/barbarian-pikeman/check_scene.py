@@ -27,7 +27,7 @@ for obj in scene.objects:
         assert obj.data.uv_layers.get('PaintingCamera'), obj.name
         assert all(slot.material.node_tree.nodes.get('Camera-only painted illumination')
                    for slot in obj.material_slots), obj.name
-if os.environ.get('CYCLES_DEVICE') == 'GPU':
+if os.environ.get('CHECK_GPU') == '1' or os.environ.get('CYCLES_DEVICE') == 'GPU':
     prefs = bpy.context.preferences.addons['cycles'].preferences
     prefs.compute_device_type = 'METAL'
     prefs.get_devices()

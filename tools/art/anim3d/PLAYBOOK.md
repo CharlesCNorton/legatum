@@ -191,3 +191,52 @@ held death and the byte/quality caps. Reviews include painting versus render at
 256 and 64, details, four attack poses, every clip strip, and a half split plus
 50/50 crossfade. No successful validation writes PASS; that requires a separate
 visual judgment that the rest pose is hard to distinguish from the painting.
+
+### Pikeman round 2: finished geometry, garment weights and handoff receipts
+
+Resume from `.worktrees/barbarian-pikeman-round2` on the pikeman branch. The
+runner reassigned lane-17 to artillery during this round after preserving WIP
+`57e4b781`; do not switch that active artillery checkout back. No shared family
+scripts were changed.
+
+`surface.py` freezes static MPFB macro shapes and applies geometry modifiers
+before `projection.py` records UVs, retaining the native armature and skin weights.
+Fitted sleeves/trousers/boots select original anatomical bone regions and inherit
+**exact source vertex weights**. Height-only shell selection copied hands into
+trousers, while nearest-point weights after inflation attached sleeve edges to
+finger bones and produced spikes. Correct source membership before adding detail.
+The forward elbow pole, wrists, knees, feet and rear clavicle now fit the source
+more closely; the animation solver uses those same rest targets. A small solid
+brim contour correction preserves camera depth and bone parenting.
+
+Projection uses finished geometry, a BVH visibility test, facing/source alpha,
+and frozen rest UVs. Camera rays receive 96% painted illumination; other rays
+retain physical materials so the source paint does not become a lamp. Standard/
+None preserves this painted illumination, instead of compressing it through AgX
+again. Existing generated linen fills, thick cloth, straps, buttons, beard,
+product lights and six real AO/Pointiness bakes remain. The slender pike shaft
+uses continuous ash pigment because a subpixel source-axis mismatch made its
+projected colour broken and pale. This exception is not an exact axis-match claim.
+
+The stone is a real stationary disc with a five-segment bevel, low bump and a
+normal-dependent cream/rim pigment, live AO and physical shading. It no longer
+projects the full figure painting; static boot marks must never remain on a base
+when animated feet leave it. The normal-dependent camera pigment opens the stone
+without illuminating the figure. Its front edge still needs visual refinement.
+
+The automatic 17-quantile grade remains fixed across all clips and now records
+rest/reference/master hashes. Final packing refuses mixed render settings and
+stale clip masters; interim review skips stale stages. The 160px reduction uses
+bicubic with lossless alpha, avoiding Lanczos perimeter ringing. Exact duplicate
+frames share a rectangle within their clip row without changing frame counts;
+the validator now requires identical decoded RGB as well as source pixels for
+the final death hold. The split/crossfade sheet includes native 256 and 64px views.
+
+The executable no-argument `units/barbarian-pikeman/gpu.sh` resolves its checkout,
+defaults to round 2 / Cycles Metal64 / 512px, verifies scene/device, rebuilds clips,
+audits, renders all stages, packs, validates and writes the trim-aware eight-second
+round MP4. A retained transcript, failed-stage status and fresh success receipt
+make interrupted passes distinguishable from completion. `check_delivery.py`
+requires actual GPU512 manifests, matching blend hashes, every 512/256 master and
+the probed H.264/yuv420p movie. CPU previews cannot produce that receipt. The host
+GPU pass remains required; technical success never writes the art PASS marker.

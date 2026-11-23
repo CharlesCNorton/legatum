@@ -1,5 +1,7 @@
 """Finish the full-depth geometry before projection, preserving skin weights."""
 import bpy
+from bpy_extras.object_utils import world_to_camera_view
+from mathutils import Vector
 
 
 def finish_surfaces():
@@ -28,3 +30,15 @@ def finish_surfaces():
             mod.show_viewport = visible
         obj['finished_surface'] = True
     bpy.context.view_layer.update()
+    # Fit the solid brim's overwide side while preserving its camera depth and
+    # complete volume. UVs are frozen only after this physical contour change.
+    scene = bpy.context.scene
+    right = scene.camera.matrix_world.to_quaternion() @ Vector((1, 0, 0))
+    for name in ['GEO-kettle-helmet-brim', 'GEO-helmet-rolled-rim']:
+        obj = bpy.data.objects[name]
+        inverse = obj.matrix_world.inverted()
+        for vertex in obj.data.vertices:
+            world = obj.matrix_world @ vertex.co
+            x = 256 * world_to_camera_view(scene, scene.camera, world).x
+            target = 117 + (x - 117) * .45 if x > 117 else 96 + (x - 96) * .8 if x < 96 else x
+            vertex.co = inverse @ (world + right * ((target - x) * scene.camera.data.ortho_scale / 256))
