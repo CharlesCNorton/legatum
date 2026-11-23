@@ -17,3 +17,4 @@ Published e-idle review: CPU 512 px, 8 samples; fixed rest-derived grade.
 Published e-move review: CPU 512 px, 8 samples; fixed rest-derived grade.
 Published e-attack review: CPU 512 px, 8 samples; fixed rest-derived grade.
 Published e-hit review: CPU 512 px, 8 samples; fixed rest-derived grade.
+Published e-death review: CPU 512 px, 8 samples; fixed rest-derived grade.

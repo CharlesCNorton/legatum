@@ -27,3 +27,5 @@
 - Saved e-death review immediately; 10 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/e-death/render.json.
 - Final trim validator correctly refused the atlas: crash wingtip touched the left border. Adjusted only death's lateral settle by +0.14 world units; rerendering only that clip and rerunning delivery. Other clips already satisfy bounds. No oversized or clipped atlas was shipped.
 - Saved e-death review immediately; 10 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/e-death/render.json.
+- Saved e-death review immediately; 10 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/e-death/render.json.
+- Upstream origin/master advanced by CI/browser-test commits 9902f014 and 27fa4cb0. Requested merge attempted, blocked by sandbox denial creating .git/worktrees/lane-19/ORIG_HEAD.lock; no merge occurred. Runner must merge. No Rust/rules changed.

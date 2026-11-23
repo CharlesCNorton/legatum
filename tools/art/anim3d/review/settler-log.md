@@ -36,3 +36,14 @@
 - Published e-idle-strip: CYCLES CPU, 512 px, 8 samples; not GPU approval.
 - Refined diagnosis: the attack's first-frame staff tilt also came from an unconditional IK solve with a different elbow pole at zero attack weight. Preserving the exact neutral arm at zero weight and blending the pole during the gesture fixes that discontinuity. Added first-frame assertion before saving and a targeted motion-attack rerender command.
 - Published e-move-strip: CYCLES CPU, 512 px, 8 samples; not GPU approval.
+- Saved attack: 10 frames at 14 fps, editable MPFB rig, stationary base; authored keys.
+- Saved 3D audit passed: source hashes, 53 bones, actual motion, exact loop closing keys and held death; ground/bounds recorded; collision limits explicit.
+- Published d-rig-poses: CYCLES CPU, 512 px, 8 samples; not GPU approval.
+- Saved move: 8 frames at 12 fps, editable MPFB rig, stationary base; authored keys.
+- Saved death: 10 frames at 10 fps, editable MPFB rig, stationary base; authored keys.
+- Non-destructive body mask hides upper legs fully covered by opaque linen; fixes thigh poke-through without removing anatomy or flattening the garment. Updated all saved masters; rerendering every clip.
+- Published c-textured-lit: CYCLES CPU, 512 px, 8 samples; not GPU approval.
+- Published c-details: CYCLES CPU, 512 px, 8 samples; not GPU approval.
+- Published d-rig-poses: CYCLES CPU, 512 px, 8 samples; not GPU approval.
+- Published e-idle-strip: CYCLES CPU, 512 px, 8 samples; not GPU approval.
+- Published e-move-strip: CYCLES CPU, 512 px, 8 samples; not GPU approval.

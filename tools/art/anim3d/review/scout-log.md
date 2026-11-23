@@ -53,3 +53,6 @@ Rendered e-hit 512 px CYCLES/CPU
 Framing recheck: idle/move/attack margins restored. The hit peak still lifts the staff to y=0, so reduce only the torso recoil amplitude and refresh the four hit frames after the serial render completes; head/arm recoil remains.
 Rendered e-death 512 px CYCLES/CPU
 Rendered e-hit 512 px CYCLES/CPU
+Rendered e-death 512 px CYCLES/CPU
+Post-framing body audit: every one of 40 sampled poses has body min Z=0.100. Hit recoil amplitude reduced to keep staff 10px below top boundary.
+Second atlas validation isolated cape penetration in death. Added per-sample actual-geometry contact shape keys for cloak and hem at Z=0.108, preserving real shell thickness; refreshing only death.

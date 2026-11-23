@@ -30,3 +30,8 @@ Shield contact probe confirmed finger penetration; moved all shield surfaces 75m
 Review e-idle: 512px CYCLES/CPU, 12 samples; 8 actual frames.
 Review e-move: 512px CYCLES/CPU, 12 samples; 8 actual frames.
 Review e-attack: 512px CYCLES/CPU, 12 samples; 10 actual frames.
+Review c: 512px CYCLES/CPU, 8 samples; 1 actual frames.
+Review d: 512px CYCLES/CPU, 8 samples; 4 actual frames.
+Final surface revision: outward mantle normals enable the frozen painting UV colour; projected helmet metals use Metallic=1. Final CPU master refresh running at 512px / 8 samples, deriving 256px frames as each stage completes; GPU approval remains outstanding.
+Review e-idle: 512px CYCLES/CPU, 8 samples; 8 actual frames.
+Review e-move: 512px CYCLES/CPU, 8 samples; 8 actual frames.

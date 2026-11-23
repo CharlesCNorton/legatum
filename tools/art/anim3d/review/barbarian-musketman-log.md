@@ -50,3 +50,11 @@
 - Posted e-hit review (CPU, 512 px).
 - Posted e-death review (CPU, 512 px).
 - Audit passed: five clips, source hashes, 53-bone rig, fixed base and positive object scales.
+- Authored move skeletal action, 8 samples.
+- Authored death skeletal action, 10 samples.
+- Posted e-move review (CPU, 512 px).
+- Posted e-death review (CPU, 512 px).
+- Audit passed: five clips, source hashes, 53-bone rig, fixed base and positive object scales.
+- Authored death skeletal action, 10 samples.
+- Posted e-death review (CPU, 512 px).
+- Audit passed: five clips, source hashes, 53-bone rig, fixed base and positive object scales.

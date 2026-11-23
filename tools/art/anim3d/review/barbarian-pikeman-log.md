@@ -12,3 +12,5 @@
 - Baked six real 256 px Cycles maps (AO and Pointiness for gambeson, helmet dome and brim); packed into master and saved external PNGs. Geometry helpers excluded, Solidify disabled during baking.
 - Rebuilt all five clips from final baked master; viewport subdivision disabled only during key authoring, reducing the full animation build from 149 s to 20 s without changing render subdivision.
 - Published rest, detail and attack-pose comparisons. Added painting projection to actual base geometry; warm top improved, rough side/rim remains an issue.
+- Death review caught a real defect: retained wide stance lifted the torso, and late frames cropped the head at the left edge. Correcting thigh collapse, fall angle and lateral placement before delivery; no pass based on process success.
+- Independent rig audit found attack wrist-to-shaft distance 18.1 cm: the depth thrust exceeded the rear arm's reach. Replacing it with a shorter diagonal thrust and holding feet fixed against root shifts; rerender affected clips before packing.

@@ -21,3 +21,8 @@
 - Saved e-death review, raw 512 px and graded 512/256 sets; CYCLES CPU 8 samples.
 - Saved e-death review, raw 512 px and graded 512/256 sets; CYCLES CPU 8 samples.
 - Saved e-death review, raw 512 px and graded 512/256 sets; CYCLES CPU 8 samples.
+- Final corrected death stays in frame, arms settle down, and its first pose matches neutral within 5.96e-8. Saved front/three-quarter/side plain proof; original early sheet retained in masters.
+- PASS final pack/validate: 40 frames, 180,418 bytes at quality 85; trimmed 160px format v2 with offsets; 40 PNGs at both 512 and 256. Decoded atlas inspected at 160/64.
+- PASS geometry audit: MPFB topology, 53 bones, stationary base, finite/nonzero transforms, current source hashes, terminal hold and neutral death start. This does not clear all collisions: anatomy minima .052–.057 vs disc top .085 expose remaining foot/boot intersection; knee contact also needs refinement.
+- Round-1 verdict: at 256px, still below the painting's craft; narrow torso/sleeve silhouette, hand/face registration and projection seams remain. At 64px the red/gold composite archer identity reads, but the painted kneeling silhouette is broader and stronger. CPU candidate only; GPU and lead art review pending.
+- No unit-specific FEEDBACK file was present at the final check. No uploads, PR, push or deployment.
