@@ -50,7 +50,7 @@ def attach(o,bone):
     return o
 
 def aim(name,d):
-    p=rig.pose.bones[name];q=p.bone.matrix_local.to_quaternion();v=q@Vector((0,1,0));rot=(v.rotation_difference(Vector(d).normalized())@q).to_matrix().to_4x4();rot.translation=p.head.copy();p.matrix=rot;bpy.context.view_layer.update()
+    p=rig.pose.bones[name];q=p.bone.matrix_local.to_quaternion();v=q @ Vector((0,1,0));rot=(v.rotation_difference(Vector(d).normalized()) @ q).to_matrix().to_4x4();rot.translation=p.head.copy();p.matrix=rot;bpy.context.view_layer.update()
 
 def limb(a,b,t,pole):
     h=rig.pose.bones[a].head.copy();t=Vector(t);axis=t-h;l1=rig.data.bones[a].length;l2=rig.data.bones[b].length;dist=min(axis.length,l1+l2-.0001);axis.normalize();along=(l1*l1-l2*l2+dist*dist)/(2*dist);v=Vector(pole)-h;v=(v-axis*v.dot(axis)).normalized();joint=h+axis*along+v*max(0,l1*l1-along*along)**.5
@@ -81,13 +81,19 @@ body.data.materials.clear();body.data.materials.append(skin);sub(body)
 for p in body.data.polygons:p.use_smooth=True
 # Natural walking rest pose: narrow civilian stance, staff grip and shoulder-strap grip.
 limb('thigh_r','calf_r',(-.12,-.10,.06),(-.15,-.35,.43));limb('thigh_l','calf_l',(.13,.055,.06),(.13,-.25,.43))
-limb('upperarm_r','lowerarm_r',(-.34,-.22,1.12),(-.34,-.04,1.10));limb('upperarm_l','lowerarm_l',(.18,-.25,1.37),(.38,-.02,1.12))
+# Move the actual ankle bones into a staggered planted stance, preserving foot orientation.
+for side,point in [('r',(-.065,.18,.06)),('l',(.105,.435,.06))]:
+    foot=rig.pose.bones['foot_'+side];rotation=foot.matrix.to_quaternion()
+    limb('thigh_'+side,'calf_'+side,point,(point[0],-.25,.43))
+    fixed=rotation.to_matrix().to_4x4();fixed.translation=foot.head.copy();foot.matrix=fixed
+    bpy.context.view_layer.update()
+limb('upperarm_r','lowerarm_r',(-.30,-.22,1.12),(-.34,-.04,1.10));limb('upperarm_l','lowerarm_l',(.18,-.25,1.37),(.38,-.02,1.12))
 for side in ('r','l'):
     aim('hand_'+side,(0,-.01,.09))
     for digit in ['index','middle','ring','pinky']:
         for k in range(1,4):
             p=rig.pose.bones[f'{digit}_{k:02d}_{side}'];p.rotation_mode='XYZ';p.rotation_euler.x=.95
-p=rig.pose.bones['head'];w=p.matrix.copy();v=p.head.copy();p.matrix=Matrix.Translation(v)@Matrix.Rotation(.32,4,'Z')@Matrix.Translation(-v)@w
+p=rig.pose.bones['head'];w=p.matrix.copy();v=p.head.copy();p.matrix=Matrix.Translation(v) @ Matrix.Rotation(.32,4,'Z') @ Matrix.Translation(-v) @ w
 bpy.context.view_layer.update()
 # Dress is a full closed-around garment, not a painted relief or image plane.
 rings=[]
@@ -207,7 +213,7 @@ attach(curve('blanket visible spiral',pts,.009,ivory),'spine_03')
 # Staff runs through the right palm; all its parts share the same bone attachment.
 grip=rig.pose.bones['hand_r'].head+rig.location+Vector((0,-.013,.045));staff=[]
 for i in range(65):
-    t=i/64;staff.append((grip.x-.025*(1-t)+.003*sin(t*22),grip.y+.005*sin(t*17),.09+1.38*t))
+    t=i/64;staff.append((grip.x-.025*(1-t)+.003*sin(t*22),grip.y+.32*(1-t/((grip.z-.09)/1.38))+.005*sin(t*17),.09+1.38*t))
 attach(curve('walking staff',staff,.013,wood),'hand_r')
 for k in range(7):attach(curve('staff carved grain',[(x+.012*cos(k),y+.012*sin(k),z) for x,y,z in staff],.0012,leather),'hand_r')
 # Sandals with soles and overlapping leather cross-straps on real anatomical feet.
@@ -231,6 +237,8 @@ rig['neutral_pose']=json.dumps({p.name:[list(r) for r in p.matrix_basis] for p i
 from cloth_mask import apply_mask
 apply_mask()
 sc['unit']='settler';sc['cloth_method']='Authored folds and hem follow-through; no cloth simulation claimed'
+from refine import finish_and_fit
+finish_and_fit(MASTER)
 bpy.ops.wm.save_as_mainfile(filepath=str(MASTER/'settler-plain.blend'))
 (MASTER/'model-info.json').write_text(json.dumps({'body_vertices':len(body.data.vertices),'bones':len(rig.data.bones),'objects':len(sc.objects),'source':'MPFB 2.0.18 female CC0','cloth':sc['cloth_method']},indent=2))
 log('Built MPFB female, full folded robes, open hood, shawl/fringe, pack/spiral bedroll, staff, straps and sandals; plain master saved.')

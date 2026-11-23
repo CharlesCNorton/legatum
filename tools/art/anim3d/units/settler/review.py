@@ -19,6 +19,8 @@ def make_lut(src,dst):
     return tables
 if stage=='c':
     data={'reference_quantiles':quantile(source),'render_quantiles':quantile(raw[0]),'method':'50% bounded monotonic rest transfer, max 24 channel levels; frozen for all clips'}
+    data['master_sha256']=hashlib.sha256((M/'settler.blend').read_bytes()).hexdigest()
+    data['source_sha256']=hashlib.sha256(Path('app/src/assets/units/settler-256.png').read_bytes()).hexdigest()
     data['lut']=make_lut(data['render_quantiles'],data['reference_quantiles'])
     # One fixed orthographic framing calibration; never resize individual poses to their bounds.
     sb=source.getchannel('A').point(lambda a:255 if a>128 else 0).getbbox()
@@ -56,6 +58,11 @@ if stage=='c-details':
     s.save(V/'settler-c-details.png')
 else:sheet([source]+images,V/f'settler-{name}.png',['Painting']+[p.stem+' '+manifest['device'] for p in sorted((out/'raw').glob('*.png'))])
 if stage=='c':
+    a=source.getchannel('A').point(lambda v:255 if v>128 else 0)
+    b=images[0].getchannel('A').point(lambda v:255 if v>128 else 0)
+    from PIL import ImageChops
+    intersection=sum(v>0 for v in ImageChops.multiply(a,b).getdata());union=sum(v>0 for v in ImageChops.lighter(a,b).getdata())
+    (M/'comparison-metrics.json').write_text(json.dumps({'silhouette_iou':intersection/union,'resolution':manifest['resolution'],'device':manifest['device'],'art_approved':False},indent=2))
     half=source.copy();half.paste(images[0].crop((128,0,256,256)),(128,0));blend=Image.blend(source,images[0],.5)
     sheet([source,images[0],half,blend],V/'settler-f-restpose-compare.png',['Painting','3D '+manifest['device'],'Half split','50/50 crossfade'])
 if stage.startswith('e-'):

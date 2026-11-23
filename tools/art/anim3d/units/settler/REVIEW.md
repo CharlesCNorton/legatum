@@ -1,49 +1,59 @@
-# Settler round 1
+# Settler resumed round 2
 
-This is a true 3D **review candidate**, not a claim of painting parity or runtime
-adoption. The static painting remains in the game. The lead owns GPU and final
-art review.
+Not art-approved; no PASS marker. The static painting remains in use.
 
-The female MPFB anatomy and 53-bone rig wear complete folded garments, an open
-hood, shawl/fringe, straps, a pack/spiral blanket and sandals, and hold a real staff.
-Materials combine painting projection on frozen rest-camera UVs, generated fills
-for unseen cloth/leather, fine bump, and ten actual AO/curvature bakes. The base
-is a single stationary cream disc. Garment folds/hem follow-through are authored;
-there is no claim of simulated cloth or captured motion. Covered upper-leg faces
-are masked non-destructively beneath the opaque robe to avoid stride poke-through.
+The actual full-depth hood, garments, hair, belt, pack and bedroll now fit recorded
+painting landmarks before one frozen camera projection. Independent per-garment
+UV stretching is removed. Finished rigid surfaces and frozen MPFB macro shapes
+retain original anatomy/weights and all 53 bones. Camera-only painted illumination,
+existing generated hidden fills, ten AO/curvature bakes, softer product lighting
+and one automatic rest grade preserve more of the painting's color. Ankle-bone
+posing staggers the feet; the staff leans in depth. Death retains robe coverage
+with shallower knee relaxation and less cloth compression.
 
-At **256 px**, the painting is still richer and more convincing. Remaining gaps:
-face/head direction and hood fit, rounded horizontal shawl folds, insufficiently
-organic diagonal robe drape, straighter/narrower posture, small equipment detail,
-and projection seams on moving/newly exposed surfaces. At **64 px**, the hood,
-staff, cream/olive/rust clothing and bedroll identify the settler, but the more
-upright stance is visibly different. The rest crossfade exposes that mismatch.
-Do not substitute a contract/audit pass for the art verdict.
+At **256 px**, face/hood registration and painted cloth detail improved, but the
+robe silhouette, sleeve contours, sandals/contact and base shading remain visibly
+different. At **64 px**, identity is clear and the silhouette is closer; it is
+still distinguishable. Measured on both graded 256px images with alpha >128,
+silhouette IoU rises from 0.775618 to 0.843796. This is not painting parity.
+Idle/attack/hit are restrained; walking contact still needs polish, and death
+remains too stiff. The separated calf visible in the first death trial is fixed.
 
-External evidence lives under `~/LegatumRuns/anim-pilot/`:
+## Evidence and checks
 
-- `review/3d-v2/settler-{b-plain,c-textured-lit,c-details,d-rig-poses}.png`
-- `review/3d-v2/settler-f-restpose-compare.png` (256/64, half split and crossfade)
-- `review/3d-v2/settler-e-{idle,move,attack,hit,death}-strip.png` and matching WebPs
-- `review/3d-v2/settler-atlas-decoded.png` and `settler-log.md`
-- `masters/settler/`: editable masters, ten bakes, source/render/grade/pack/audit
-  manifests, and 40 frames each at 512 and 256 px. Raw frames remain ungraded.
+- Current CPU Cycles8/256: all stages and 40 animation samples rendered and reviewed.
+- 160px trimmed atlas: **172,316 bytes, quality 90**, original 8/8/10/4/10 counts,
+  full 8-bit alpha, fractional anchor and exact decoded death hold. Pack and
+  independent validation pass, including source hashes, offsets and clipping.
+- Saved geometry audit passes: native body vertex count, 53 bones, frozen macro
+  keys, motion, loop closure, stationary base, held death and ten bake hashes.
+  Contact and camera bounds are recorded; this is not a full collision solver.
+- `settler-round2.mp4`: decoded atlas, five clips side by side, H.264/yuv420p,
+  1600 x 352, 192 frames/eight seconds. FFprobe verification passes.
+- Python syntax (13 files), Bash syntax (two scripts), whitespace and working-tree
+  hygiene line checks (20 files) pass. Public-claims gate passes. The revision-based
+  hygiene gate still reads the old WIP: Git index.lock writes are sandbox-blocked,
+  so the runner must commit these changes and rerun that gate.
+- Repository browser art gate is blocked by Chromium Mach-port bootstrap permission
+  denial in the sandbox; its visual distinctness check did not complete.
+- GPU missing-input preflight and CPU-master rejection pass. **No actual Metal
+  execution was possible in the sandbox.** Fresh GPU512/64 output is still owed.
 
-The attack is a restrained defensive staff check, not a warrior attack. Its zero
-weight pose preserves the original elbow pole/hand orientation. Move keeps the
-feet level and staff upright. Death folds sideways, releases the staff and holds
-the final geometry for two samples. Ground and camera bounds are audited; there
-is no exhaustive skin/cloth collision solver.
+Review images/WebPs, MP4 and running log are in `review/3d-v2/settler-*` under
+`~/LegatumRuns/anim-pilot/`. Current 256px PNGs, editable masters and manifests
+are under `masters/settler/`. Earlier 512px CPU evidence is retained in
+`round1-backup`; current CPU256 previews are not upscaled or labelled GPU masters.
 
-All Blender runs use the PATH gate. To rerender the saved masters on the host:
+## Complete GPU handoff
+
+From the repository root, with ROUND supplied by the driver:
 
 ```sh
-UNIT=settler RENDER_ENGINE=CYCLES CYCLES_DEVICE=GPU SAMPLES=64 tools/art/anim3d/render.sh final
-UNIT=settler tools/art/anim3d/render.sh pack
-UNIT=settler tools/art/anim3d/render.sh validate
+tools/art/anim3d/units/settler/gpu.sh
 ```
 
-The full method and the version-2 160 px trim-offset schema are documented in the
-settler chapter of `../../PLAYBOOK.md`. `rebuild` reconstructs the complete chain;
-`final` preserves the model and animations. Generated hidden-fill prompt and
-provenance are checked in; source assets and masters stay outside git.
+The executable, no-argument entry point renders plain/rest/details/poses and every
+clip on Cycles GPU64 at 512px, exports 256px copies, audits, checks GPU provenance,
+packs/validates the atlas and writes `settler-round${ROUND}.mp4`. It retains its
+transcript and failing stage; a completion receipt requires every stage. It never
+writes PASS. Review the actual GPU output before accepting the art.

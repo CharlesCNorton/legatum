@@ -107,7 +107,7 @@ tools/art/anim3d/render.sh audit
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
 
-## Settler: infantry/civilian round-1 lane
+## Settler: infantry/civilian lane
 
 The settler implementation is isolated in `units/settler/`. It reuses the spearman
 MPFB 2.0.18 installation, 53-bone game-engine anatomy/weights and `env.sh`, but
@@ -115,7 +115,7 @@ builds a female traveller and original civilian kit: linen hood and robes, olive
 wrap, rust shawl/fringe, strapped pack, spiral blanket roll, sandals and staff.
 There is no copied hoplite equipment, image plane, or displaced painting relief.
 The skirt has complete circumference and physical thickness. A non-destructive
-body mask culls upper legs fully covered by that opaque garment, preventing stride
+body mask culls torso and upper legs fully covered by opaque garments, preventing
 poke-through while retaining the source anatomy. Cloth folds and hem
 follow-through are authored; this lane does **not** claim a cloth simulation or
 motion-capture retarget. The five editable clips retain 8/8/10/4/10 samples.
@@ -145,11 +145,11 @@ use generated ivory/olive/rust/leather fills, blended beneath the projection.
 Ten actual 256 px AO/Pointiness curvature maps for skirt, olive wrap, hood, shawl
 and clasp are retained in `masters/settler/textures/baked/`; they drive cavity
 shade and roughness. Painted light is deliberately retained in the projected
-colour with a small Principled emission contribution, so this is fixed-view art,
+colour through a camera-only Principled pigment branch, so this is fixed-view art,
 not a neutral PBR asset suitable for arbitrary lighting without another review.
 
 The shared stone target is displayed sRGB **#E9CFA0**, with a darker rounded rim.
-The settler uses linear warm pigment `(.92,.66,.36)`, roughness `.87`, fine grain,
+The settler uses calibrated linear warm pigment, roughness `.87`, fine grain,
 and a small warm emission contribution. These shader values are not sRGB values;
 judge actual rendered pixels under the scene's lighting and AgX transform. The
 base is one stationary low disc, never an animated part of the rig.
@@ -180,13 +180,21 @@ Stage images publish immediately under `review/3d-v2/settler-*`. `build`,
 run separately. Rebuilding invalidates downstream hashes; regenerate all stages.
 Read `review/3d-v2/settler-FEEDBACK.md` if present before another iteration.
 
-For the lead's GPU rerender, preserve the saved geometry/material/animation work:
+The complete no-argument host entry point, from the repository root, is:
 
 ```sh
-UNIT=settler RENDER_ENGINE=CYCLES CYCLES_DEVICE=GPU SAMPLES=64 tools/art/anim3d/render.sh final
-UNIT=settler tools/art/anim3d/render.sh pack
-UNIT=settler tools/art/anim3d/render.sh validate
+ROUND=2 tools/art/anim3d/units/settler/gpu.sh
 ```
+
+The driver supplies `ROUND`. It renders plain/rest/details, regenerates all five
+clips from the saved master, renders poses and all forty frames with Cycles
+GPU64/512, audits, verifies GPU provenance, packs and validates the atlas, and
+writes `settler-round${ROUND}.mp4`. The movie reconstructs trimmed frames from
+the decoded WebP: all five clips side by side, 2x scale, cream, H.264/yuv420p,
+1600 x 352, 192 frames/eight seconds. The script retains a transcript and failure
+stage, and writes a round receipt only after every stage passes. It never writes
+PASS. Its missing-input preflight and CPU-evidence rejection can be tested without
+launching a GPU render.
 
 `final` renders rest first to establish the grade, then details, rig poses and all
 five clips, and audits. GPU Cycles explicitly selects Metal with denoising and
@@ -198,7 +206,7 @@ adopting the candidate. Successful packing does not mean art approval.
 ### 160 px atlas extension (version 2)
 
 The existing `frame:{w,h,ax,ay}` and `clips:{name:{row,frames,fps,loop}}` remain.
-For this unit the logical cell is 160×160, anchor `(79,138)`, grid 10 columns × 5
+For this unit the logical cell is 160×160, anchor `(79.375,138.125)`, grid 10 columns × 5
 rows. Each clip adds `trim`, one record per sample:
 
 ```json
@@ -207,17 +215,49 @@ rows. Each clip adds `trim`, one record per sample:
 
 `x,y,w,h` is the rectangle in the atlas. `dx,dy` restores its origin in the logical
 160 px cell. A renderer draws it at `(dx-ax,dy-ay)` relative to the token anchor.
-The crop is stored at its grid-cell top-left; the rest of the cell is transparent.
+Each unique crop is stored at its grid-cell top-left; the rest is transparent.
+Identical logical frames reuse an existing rectangle, preserving exact held death.
+Consumers must use the explicit coordinates instead of deriving them from row/index.
 This preserves row/clip indexing while requiring a trim-aware consumer. The lane
 adds **no runtime wiring**, so the existing static painting stays in use until
 art approval and atlas-consumer integration. The example values above illustrate
 the schema; actual offsets are measured from every frame's alpha.
 
-The packer keeps all 40 frames and searches WebP quality 90/85/80/75, with 16 alpha
-levels, refusing output over 200,000 bytes at quality 75. It records blend, grade,
+The packer keeps all 40 frames and searches WebP quality 90/85/80/75, with bicubic token reduction and unchanged 8-bit alpha, refusing output over 200,000 bytes at quality 75. It records blend, grade,
 raw-frame, 512/256-frame and delivery hashes. The validator checks clip lengths,
 trim bounds/restoration, transparent margins and padding, decoded motion, held
 death, size/quality and 40 masters at both sizes. The decoded-atlas sheet is also
 published for visual review. The 3D audit checks 53 bones, stationary base, actual
 motion, exact loop closure/terminal death and ten bakes; it records ground and
 camera bounds, but is not an exhaustive skin/cloth collision solver.
+
+
+### Settler resumed round 2: geometry before paint
+
+`refine.py` fits full-depth garments, hood, hair, belt, pack and roll to recorded
+rest-view bounds before projection. It retains camera depth and bone parenting;
+this is local mesh fitting, not a claim of an exact recovered camera. The camera
+is `(0.45, -7, 3.0)` aimed at `(0, 0, 0.88)`, orthographic scale 2.04. The stone
+moves 0.20 m away on the ground while retaining its contact top. Rigid bevels,
+solidification and subdivision are applied before freezing UVs; the skirt retains
+its authored hem shape key. Static MPFB macro keys are frozen, preserving native
+vertex counts, skin weights and 53 bones. Actual ankle-bone posing supplies the
+staggered feet. Standard clothing-body masking hides covered torso/upper legs
+beneath the complete opaque garments; the full source anatomy remains editable.
+
+Independent garment/face UV stretching was removed. One frozen camera projection
+now follows the fitted geometry. Camera rays receive 96% source-painted pigment
+where facing/material masks permit; other rays retain the physical BSDF, generated
+hidden fills and product lighting. Standard/None avoids compressing the source's
+painted light through AgX a second time. This exception is for painted-illumination
+textures, not general photographic rendering. Ten actual AO/curvature maps remain.
+One rest-fitted monotone histogram grade and framing transform apply to every clip.
+The grade is bound to the master hash. Inspect exposed fill and source seams in
+motion; fitting bounds and matching tone statistics cannot prove painting parity.
+
+CPU iteration uses `RESOLUTION=256 SAMPLES=8` and `PREVIEW=1` for `deliver.py`.
+Preview delivery does not claim or manufacture current 512px masters; prior 512px
+CPU evidence remains in `masters/settler/round1-backup`. The host gate requires
+actual GPU64/512 and matching 256px exports for every stage. The delivery validator
+checks exact decoded alpha after offset restoration and identical terminal death.
+No Rust, UI, rules or runtime wiring changes are part of this lane.

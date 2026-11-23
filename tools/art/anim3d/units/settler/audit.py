@@ -12,6 +12,9 @@ def matrices(sc):
 for clip,count in counts.items():
     path=M/'clips'/f'{clip}.blend';bpy.ops.wm.open_mainfile(filepath=str(path));sc=bpy.context.scene;rig=bpy.data.objects['RIG-Settler MPFB']
     assert len(rig.data.bones)==53
+    body=bpy.data.objects['GEO-MPFB female traveller']
+    assert len(body.data.vertices)==json.loads((M/'model-info.json').read_text())['body_vertices']
+    assert body.data.shape_keys is None,'Static macro keys must be frozen before projection'
     assert sc['source_sha256']==source,(clip,'stale master')
     frames=json.loads(sc['sample_frames']);assert len(frames)==count
     samples=[];ground=[];bounds=[];base=None;neutral=json.loads(rig['neutral_pose'])
@@ -29,7 +32,7 @@ for clip,count in counts.items():
             ev=o.evaluated_get(bpy.context.evaluated_depsgraph_get());me=ev.to_mesh()
             # Full geometry, not just object bounding boxes.
             for v in me.vertices:
-                w=ev.matrix_world@v.co;zs.append(w.z);p=cam_inv@w;pts.append((.5+p.x/ortho,.5+p.y/ortho))
+                w=ev.matrix_world @ v.co;zs.append(w.z);p=cam_inv @ w;pts.append((.5+p.x/ortho,.5+p.y/ortho))
             ev.to_mesh_clear()
         bounds.append([min(p[0] for p in pts),min(p[1] for p in pts),max(p[0] for p in pts),max(p[1] for p in pts)]);ground.append(min(zs))
         assert all(math.isfinite(v) for v in samples[-1]),(clip,'invalid matrix')

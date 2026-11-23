@@ -29,8 +29,9 @@ def render(stage):
     for i,(name,f) in enumerate(items):
         sc.frame_set(f);dest=out/(name+'.png')
         if stage=='b':
-            sc.camera.location={'rest':(.45,-7,2.47),'side':(7,0,2.47),'back':(0,7,2.47)}[name]
-            sc.camera.rotation_euler=(Vector((0,0,.88))-sc.camera.location).to_track_quat('-Z','Y').to_euler()
+            if name!='rest':
+                sc.camera.location={'side':(7,0,3.0),'back':(0,7,3.0)}[name]
+                sc.camera.rotation_euler=(Vector((0,0,.88))-sc.camera.location).to_track_quat('-Z','Y').to_euler()
         if clip=='death' and stage.startswith('e-') and i==len(items)-1:
             shutil.copyfile(out/(items[-2][0]+'.png'),dest);continue
         sc.render.filepath=str(dest);bpy.ops.render.render(write_still=True)
