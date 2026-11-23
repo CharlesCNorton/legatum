@@ -1,55 +1,75 @@
-# Knight round 1 — candidate, not PASS
+# Knight round 2 — candidate, not PASS
 
-Built the MPFB rider and Quaternius horse with knight-specific greathelm, mail,
-shield, lance, caparison and mantle. Frozen camera UVs carry the painting on real
-3D geometry; unseen sides retain physical materials and licensed/generated fills.
-All five clips and required review stages exist. The feet sheet isolates actual
-skinned lower legs so cloth cannot hide their orientation in the top view.
+Reviewed the incoming GPU c/f comparisons, all five clip strips and sampled
+round-one MP4 frames before changing the model. Prior evidence is preserved in
+external `masters/knight/driver-r1-gpu/`. The GPU pass failed at `Death must hold`:
+re-rendering the same terminal source sample produced different pixels. Repeated
+samples now copy one rendered PNG, then share one atlas rectangle. The exact
+hold check remains strict.
 
-## Evidence and exact checks
+## Changes
 
-- CPU Cycles previews: all nine stages at 512 px, 8 samples, denoised; separately
-  retained 256 px derivatives. Metal/GPU execution has not been tested here.
-- Source preflight: all 8 pinned external source hashes passed.
-- Scene audit: five licensed horse actions, clip lengths, stationary stone and
-  nonzero scales passed. Recorded foot targets/floors are in external `audit.json`.
-- Atlas: **197,194 bytes**, **quality 85**, **40 frames**, trimmed 160 px canvases.
-  Counts/timing, hashes, alpha reconstruction (max 5/255 quantization error),
-  rectangle bounds/non-overlap, margins, motion and exact held death passed.
-  The last two death entries share one rectangle to avoid WebP block variation.
-- Movie: **240 frames, 8 seconds, 1600x348, H.264, yuv420p** verified by ffprobe.
-- All 16 Python scripts parse; both shell entry points pass `bash -n`;
-  `git diff --check` passes.
-- Repository gate on the existing HEAD: hygiene/public-claims passed; art failed
-  while `render-sets.mjs` exited 1. It did not validate these uncommitted changes.
-  The wrapper returned no more specific cause. No Rust or runtime/UI logic changed.
-- Git staging failed with `index.lock: Operation not permitted`; the runner must
-  commit the working tree. No push or PR was attempted.
+- Closed tapered helmet crown; trim and other static curves now follow the same
+  fitting/projection pass as their surfaces. Removed misplaced inherited mane
+  geometry that made black wedges beside the glove.
+- Shorter folded caparison, continuous weighted lower-leg fitting, fitted glove,
+  projected full-depth tail attached to the native tail bone, shaded/grained
+  cream stone rim and pinned generated steel/leather fills on unseen surfaces.
+- Skin correctives retain source hoof lift and all source foot rotations; a
+  translation-only constraint keeps standing-clip soles within the disc.
+  Death hands settle onto the horse after release. This is contact adaptation of
+  licensed motion, not a cloth simulation or a proof of slide-free locomotion.
+- During move, a small rigid lance grip-slide preserves an 8px master margin
+  through the native saddle bob, with camera and base unchanged.
+- Current-master hashes guard clip rendering. GPU handoff invalidates stale
+  validation/movie receipts; plain review shows the finished sculpted geometry.
 
-## Visual verdict
+## Exact checks
 
-At 64 px the palette, lance and lion heraldry identify the knight. The lower
-silhouette is still too ragged and broad. At 256 px it is plainly distinguishable
-from the painting: caparison folds are slab-like, the rear mantle is incomplete,
-helmet shape is too cylindrical, the cream base lacks the painted rim's depth,
-and projection masks show on off-camera surfaces. The pale tail is improved,
-but still simpler than the painting.
+- Source preflight: **10 pinned source hashes passed**.
+- CPU Cycles: every required stage at **512 px, 8 samples**, plus retained graded
+  **256 px** masters. Forty clip frames; all sixteen front/top gait samples.
+- Scene audit: five source actions, frame counts, current-master hashes,
+  stationary base, nonzero scales, hoof penetration and standing-clip disc
+  footprint checks passed: **120/120 sampled soles inside the disc**, maximum
+  radius **0.7815 m** against the **0.8058 m** disc. Full sole coordinates are
+  recorded in audit.json. Death uses the whole-body plane solver.
+- Trimmed **160 px atlas: 199,272 bytes at quality 85**, all **40 frames**.
+  Hashes, timing/counts, bounds/non-overlap, trim reconstruction, transparency,
+  clipping margins, motion presence and exact decoded death hold passed.
+  Alpha quantization error is at most **5/255**.
+- Round-two movie: **240 frames, 8 seconds, 1600×348, H.264, yuv420p** verified.
+  Sampled movie frames, rest split/crossfade, clip strips and feet views inspected.
+- **18 Python scripts parse**; shell entry points pass `bash -n`; `git diff --check`
+  passes. Matrix-operator spacing preserves identical ASTs and resolves hygiene
+  false positives. Current unit files pass the hygiene line scanner (0 findings).
+- Repository checks on incoming HEAD: public-claims passed; hygiene flagged
+  matrix operators (fixed in working tree); art could not complete because
+  `render-sets.mjs` exited 1. This is not an art-gate pass. No Rust/UI logic changed.
 
-The isolated feet check exposes several hoof positions beyond the small stone
-footprint; contact/stride still needs correction. Source foot axes were retained,
-but this is **not** a no-slide sign-off. Cloth is bone-driven and not a collision
-simulation. Live AO/grain are present; fresh AO/curvature bakes remain outstanding.
-No PASS marker was written. Next round should solve full-depth horse/hoof/base
-registration and cloth shape before adding further texture detail.
+## Honest visual verdict
+
+At **256 px**, the closed helmet, glove, tail and exposed legs are clearer, but
+this is still readily distinguishable from the painting. The legs are too thin,
+the lower/rear cloth has gaps and incomplete volume, the base is too uniform,
+and the raised arm lacks the painting's rounded mail shading. Death still
+forms a rigid, tangled cloth pile. Attack and gait expose angular, stretched lower legs after the contact
+corrections. Bind-space silhouette changes must be matched by anatomical joint
+fitting, not treated as a finished retarget; a successful penetration check does not
+make those clips clean.
+
+At **64 px**, the lance, lion heraldry, shield and cream/blue palette identify the
+same knight. The lower silhouette and base still differ. **No PASS was written.**
+Live AO is present; fresh AO/curvature bakes and cloth/contact refinement remain.
+The new Metal pass has not run in this CPU-only sandbox.
 
 ## Lead command
 
 ```sh
-ROUND=1 tools/art/anim3d/units/knight/gpu.sh
+ROUND=2 tools/art/anim3d/units/knight/gpu.sh
 ```
 
-From the repository root, without arguments. It checks Metal and source hashes,
-rebuilds all scenes, renders every review stage with Cycles GPU at 512 px/64+
-samples, creates 512/256 masters, packs/validates the atlas, writes all review
-images (including the rest split/crossfade and feet), and writes the round MP4.
-It fails instead of silently falling back to CPU and never writes PASS.
+Run from the repository root with no arguments. This rebuilds the scenes,
+renders all stages with Cycles GPU at 512 px/64+ samples, retains 512/256 masters,
+creates the trimmed atlas, validates it, and writes all reviews and the round MP4.
+It refuses CPU fallback and never creates PASS automatically.

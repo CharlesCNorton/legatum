@@ -9,7 +9,7 @@ def update_reins(frame=None):
     bands=sorted((o for o in bpy.data.objects if o.name.startswith('Nose band')),key=lambda o:o.name)
     errors=[]
     for index,(rein,band) in enumerate(zip(reins,bands)):
-        bit=band.matrix_world@band.data.splines[0].points[0].co.xyz
+        bit=band.matrix_world @ band.data.splines[0].points[0].co.xyz
         end=hand+Vector(((-1 if index==0 else 1)*.018,0,0))
         rein.parent=None;rein.matrix_world=Matrix.Identity(4)
         spline=rein.data.splines[0]

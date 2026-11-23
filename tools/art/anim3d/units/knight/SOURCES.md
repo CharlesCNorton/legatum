@@ -1,4 +1,4 @@
-# Knight round 1 sources
+# Knight sources
 
 - Knight painting: https://pub-fb5c281dd12d4ea4bbd38d657cdeb907.r2.dev/app/src/assets/units/knight-source.png ; original project artwork, CC BY 4.0. Registered to the committed 256 token; frozen UV projection onto actual full-depth meshes. External copy: `assets/knight/knight-source.png`.
 - Quaternius Horse, Ultimate Animated Animal Pack, July 2021, CC0 1.0: https://quaternius.com/packs/ultimateanimatedanimals.html . Immutable GLB mirror: https://raw.githubusercontent.com/trebeljahr/quaternius-showcase/5b491b755c6d2aaa263aaaf8671b30b559a380a4/public/glb/animals_pack/Horse.glb . SHA256 `fbddb2c97179eca896ec69c985cd9cc74540484510776c400df64e088e9f2414`. Source skin, skeleton, Idle, Walk, Gallop, Idle_HitReact_Left and Death reused. Full-depth bind sculpture retains source weights. No hoof orientation correction.
@@ -8,3 +8,7 @@
 - Mounted-family MIT helpers imported from `astra/unit-anim-3d-mounted`: build scaffold, original horse sampling, joint helpers, reins, full-depth registration and finished-surface projection. Knight-specific geometry/materials/orchestration are MIT; rendered output CC BY 4.0.
 
 Exact external inputs are pinned in `sources.lock.json`; render manifests and pack receipts bind the outputs to the current blend and image hashes. No paid assets, Mixamo, account or upload.
+
+Round 2 reuses Tagmatic Soldier original generated steel and leather fills, built-in ImageGen 2026-11-22 output 01a20671-5064-7c72-a6fe-cf93cc86ea3d/exec-487c13de-dea1-48e2-adb2-76092f8dbbcd.png, project CC BY 4.0; no public URL. Copied unchanged assets/tagmatic-soldier/fill-{steel,leather}.png to assets/knight and pinned in sources.lock.json. Original prompt: four material quadrants of crimson woven wool, bright weathered steel, scuffed leather and worn brass, premium historical miniature brushwork. No new download or generation. Lower-leg fitting adapts inspected MIT cataphract refinement; retains full depth and skin weights.
+
+Round 2 also adapts inspected MIT cataphract contacts.py and the mounted hand-settle constraint. These are vertical mesh/hand contact correctives over the same licensed actions; no new motion asset or post-retarget foot rotation is introduced.

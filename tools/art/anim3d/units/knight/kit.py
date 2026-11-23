@@ -21,7 +21,7 @@ for p in hrig.pose.bones:p.matrix_basis=rest[p.name]
 hrig['raised_idle_foreleg']=json.dumps({n:[list(row) for row in v] for n,v in raised.items()})
 bpy.context.view_layer.update()
 cream=material('GEO cream linen',(.81,.70,.51),0,.84);blue=bpy.data.materials['Painted indigo cloth'];gold=bpy.data.materials['Bronze • polished edges'];steel=bpy.data.materials['Worn bright steel'];leather=bpy.data.materials['Oxide leather']
-right=sc.camera.matrix_world.to_3x3()@Vector((1,0,0));up=sc.camera.matrix_world.to_3x3()@Vector((0,1,0));view=sc.camera.matrix_world.to_3x3()@Vector((0,0,1))
+right=sc.camera.matrix_world.to_3x3() @ Vector((1,0,0));up=sc.camera.matrix_world.to_3x3() @ Vector((0,1,0));view=sc.camera.matrix_world.to_3x3() @ Vector((0,0,1))
 def horse_attach(o,bone):
  bpy.context.view_layer.update();world=o.matrix_world.copy();o.parent=hrig;o.parent_type='BONE';o.parent_bone=bone;bpy.context.view_layer.update();o.matrix_world=world;return o
 def pixel_world(x,y,reference):
@@ -31,23 +31,23 @@ def pixel_world(x,y,reference):
 w=rig.matrix_world.copy();w.translation.z-=.16;rig.matrix_world=w
 bpy.context.view_layer.update()
 # Arm IK moves actual joints to the lance grip and shield support.
-def target(bone,xy):return rig.matrix_world.inverted()@pixel_world(*xy,rig.matrix_world@rig.pose.bones[bone].head)
+def target(bone,xy):return rig.matrix_world.inverted() @ pixel_world(*xy,rig.matrix_world @ rig.pose.bones[bone].head)
 limb('upperarm_r','lowerarm_r',target('hand_r',(99,94)),target('lowerarm_r',(105,113)))
 limb('upperarm_l','lowerarm_l',target('hand_l',(144,114)),target('lowerarm_l',(143,101)))
-aim_bone('hand_r',rig.matrix_world.to_3x3().inverted()@up)
+aim_bone('hand_r',rig.matrix_world.to_3x3().inverted() @ up)
 bpy.context.view_layer.update()
 # Lance length/angle fits the painted upright, preserving a round tapered shaft.
 shaft=bpy.data.objects['Spear ash shaft'];blade=bpy.data.objects['Iron spear blade']
 for obj in (shaft,blade):
  inv=obj.matrix_world.inverted()
  if obj==shaft:
-  for p,xy in zip(obj.data.splines[0].points,[(100,132),(94,27)]):p.co=(*(inv@pixel_world(*xy,obj.matrix_world@p.co.xyz)),1)
+  for p,xy in zip(obj.data.splines[0].points,[(100,132),(94,27)]):p.co=(*(inv @ pixel_world(*xy,obj.matrix_world @ p.co.xyz)),1)
  else:
-  ws=[obj.matrix_world@v.co for v in obj.data.vertices];qs=[world_to_camera_view(sc,sc.camera,w) for w in ws];low=min(q.y for q in qs);high=max(q.y for q in qs)
+  ws=[obj.matrix_world @ v.co for v in obj.data.vertices];qs=[world_to_camera_view(sc,sc.camera,w) for w in ws];low=min(q.y for q in qs);high=max(q.y for q in qs)
   for v,q,w in zip(obj.data.vertices,qs,ws):
-   v.co=inv@pixel_world(94+(q.x-sum(t.x for t in qs)/len(qs))*256,27-(q.y-low)/(high-low)*15,w)
+   v.co=inv @ pixel_world(94+(q.x-sum(t.x for t in qs)/len(qs))*256,27-(q.y-low)/(high-low)*15,w)
 # Gold spiral follows the actual lance and is bone-parented with it.
-a=shaft.matrix_world@shaft.data.splines[0].points[0].co.xyz;b=shaft.matrix_world@shaft.data.splines[0].points[-1].co.xyz
+a=shaft.matrix_world @ shaft.data.splines[0].points[0].co.xyz;b=shaft.matrix_world @ shaft.data.splines[0].points[-1].co.xyz
 pts=[]
 for i in range(220):
  t=i/219;pts.append(tuple(a.lerp(b,t)+right*(.014*cos(t*28*pi))+view*(.014*sin(t*28*pi))))
@@ -55,7 +55,7 @@ stripe=curve('GEO lance gold spiral',pts,.0045,gold);attach(stripe,'hand_r')
 shaft.data.materials[0]=blue
 # Shield: curved, thick heater outline with rolled edge, attached to left forearm.
 outline=[(139,91),(147,89),(157,92),(162,98),(160,122),(154,146),(148,139),(141,119)]
-center=rig.matrix_world@rig.pose.bones['lowerarm_l'].head+view*.12
+center=rig.matrix_world @ rig.pose.bones['lowerarm_l'].head+view*.12
 vertices=[tuple(pixel_world(150,112,center)+view*.065)]
 vertices += [tuple(pixel_world(x,y,center)) for x,y in outline]
 shield=bevel(solid(mesh('GEO convex heater shield',vertices,[(0,i+1,(i+1)%len(outline)+1) for i in range(len(outline))],cream),.018),.004)
@@ -100,7 +100,7 @@ fs=[(j*(nu+1)+i,j*(nu+1)+i+1,(j+1)*(nu+1)+i+1,(j+1)*(nu+1)+i) for j in range(nv)
 attach(solid(mesh('GEO folded blue mantle',vs,fs,blue),.008),'spine_03')
 # Remove ancient blanket trim and sandal details; caparison covers saddle blanket.
 for ob in list(sc.objects):
- if ob.name.startswith(('Blanket bronze stitch','Sandal straps','Rider sandal','Mane painted fibre')):bpy.data.objects.remove(ob,do_unlink=True)
+ if ob.name.startswith(('Blanket bronze stitch','Sandal straps','Rider sandal','Mane painted fibre','Mane lock')):bpy.data.objects.remove(ob,do_unlink=True)
 # Replace the source's rigid dark tail with gravity-shaped pale locks.
 import bmesh
 bm=bmesh.new();bm.from_mesh(horse.data);layer=bm.verts.layers.deform.active
@@ -110,14 +110,17 @@ bm.to_mesh(horse.data);bm.free()
 for ob in list(sc.objects):
  if ob.name.startswith('Tail flowing fibre'):bpy.data.objects.remove(ob,do_unlink=True)
 pale=material('GEO pale tail fibre',(.65,.59,.47),0,.75)
-root=hrig.matrix_world@hrig.pose.bones['Tail1'].head
-sc['tail_root_local']=json.dumps(list((hrig.matrix_world@hrig.pose.bones['Tail1'].matrix).inverted()@root))
+root=pixel_world(171,142,hrig.matrix_world @ hrig.pose.bones['Tail1'].head)
+sc['tail_root_local']=json.dumps(list((hrig.matrix_world @ hrig.pose.bones['Tail1'].matrix).inverted() @ root))
 for j in range(32):curve('Knight flowing tail lock',[(0,0,.5)]*13,.009,pale)
 sys.path.insert(0,str(Path(__file__).parent))
 from tail import update_tail
 update_tail()
+for ob in sc.objects:
+ if ob.name.startswith('Knight flowing tail lock'):horse_attach(ob,'Tail1')
 # The painting's smaller one-step stone disc.
-base=bpy.data.objects['Stationary cream stone'];base.scale.x=base.scale.y=.71
+base=bpy.data.objects['Stationary cream stone'];base.scale.x=base.scale.y=.79
+base.location+=right*(-5.5*sc.camera.data.ortho_scale/256)
 rig['seated_pose']=json.dumps({p.name:[list(row) for row in p.matrix_basis] for p in rig.pose.bones})
 sc['sample_frames']='[0]';bpy.ops.wm.save_as_mainfile(filepath=str(M/'knight-plain.blend'))
 print('KNIGHT_KIT_READY')

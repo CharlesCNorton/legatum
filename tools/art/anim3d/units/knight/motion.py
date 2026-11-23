@@ -24,9 +24,9 @@ for clip,(name,count,loop) in clips.items():
   t=i/count if loop else min(i/(count-2 if clip=='death' else count-1),1)
   frame=start+t*(end-start);bpy.context.scene.frame_set(int(frame),subframe=frame%1);row={}
   for tn,sn in mapping.items():
-   alignment=target.data.bones[tn].matrix_local.to_quaternion().inverted()@source.data.bones[sn].matrix_local.to_quaternion()
-   delta=reference[sn].inverted()@source.pose.bones[sn].rotation_quaternion
-   row[tn]=list(alignment@delta@alignment.inverted())
+   alignment=target.data.bones[tn].matrix_local.to_quaternion().inverted() @ source.data.bones[sn].matrix_local.to_quaternion()
+   delta=reference[sn].inverted() @ source.pose.bones[sn].rotation_quaternion
+   row[tn]=list(alignment @ delta @ alignment.inverted())
   frames.append(row)
  result[clip]={'source':name,'frames':frames,'mapping':mapping,'reference_frame':start,'source_range':[start,end]}
 (M/'rider-motion.json').write_text(json.dumps(result,indent=2));print('KNIGHT_HUMAN_MOTION_READY')

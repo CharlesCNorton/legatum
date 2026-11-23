@@ -203,3 +203,46 @@ margins, actual motion, held final death and size/quality limits. It cannot
 certify cloth collision freedom or painted parity. Keep `knight-PASS` absent
 until the rest pose is hard to distinguish from the painting and all clips are
 clean at both review sizes.
+
+### Knight driver round 2
+
+Round-one GPU evidence is preserved externally in `masters/knight/driver-r1-gpu/`.
+It exposed two separate failures: visible geometry registration errors and a
+terminal-death validation failure. Repeated source frame numbers now reuse the
+same rendered PNG within each view, rather than invoking stochastic Cycles and
+denoising twice. The packer then aliases the identical death hold rectangle;
+validation still requires exact decoded equality. Never weaken the hold check.
+
+`refine.py` fits the actual curved cloth and weighted lower legs before freezing
+camera UVs. Static curve trim is finished and registered with its parent surface:
+otherwise a fitted helmet can still have a floating original rim, or a fitted
+horse can retain black mane wedges. The helmet now has a shallow closed crown;
+shorter folded caparison surfaces reveal the actual legs rather than carrying
+painted duplicates. Tail locks are full-depth meshes attached to the native tail
+bone and receive the same visibility-tested source pigment. Steel and leather
+fills reuse the pinned original Tagmatic Soldier generated materials. The stone
+has normal-driven top/rim colour, fine grain and live contact AO. No fresh
+AO/curvature bake is claimed.
+
+`contacts.py` adapts the inspected cataphract helper: vertical bind-space mesh
+correctives preserve native source hoof lift. A translation-only footprint
+constraint keeps the fitted soles within the stone disc; every source foot
+rotation remains unchanged. Corrections re-evaluate the deformed sole because
+a different vertex can become lowest after fitting. The reference's raised foreleg remains raised
+in idle. This addresses floating soles introduced by silhouette fitting; it is
+not a complete stride/foot-slide solver. Death uses the whole-body floor solver,
+with rider hands settling onto the evaluated horse after lance release. Cloth
+is still bone-driven, and the collapsed cloth silhouette still needs review.
+
+The plain stage now renders `knight-sculpted.blend` so it shows the same finished
+geometry as the painted stage. Each clip stores the painted-master hash, and
+rendering refuses a stale clip. GPU status invalidates older validation/movie
+receipts before starting. For the next full host pass run:
+
+```sh
+ROUND=2 tools/art/anim3d/units/knight/gpu.sh
+```
+
+The entry point rebuilds and renders all stages, including the sixteen front/top
+feet samples, then grades, packs, validates and encodes the eight-second movie.
+Current CPU previews remain review candidates, not a Metal or art sign-off.

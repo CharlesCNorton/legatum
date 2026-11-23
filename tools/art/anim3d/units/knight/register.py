@@ -44,9 +44,9 @@ class Registration:
         else:
             inv=obj.matrix_world.inverted()
             if obj.type=='MESH':
-                for v in obj.data.vertices: v.co=inv@self.world(obj.matrix_world@v.co)
+                for v in obj.data.vertices: v.co=inv @ self.world(obj.matrix_world @ v.co)
                 obj.data.update()
             elif obj.type=='CURVE':
                 for spline in obj.data.splines:
                     for p in spline.points:
-                        p.co=(*(inv@self.world(obj.matrix_world@p.co.xyz)),1)
+                        p.co=(*(inv @ self.world(obj.matrix_world @ p.co.xyz)),1)

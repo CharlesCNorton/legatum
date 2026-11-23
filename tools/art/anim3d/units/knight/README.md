@@ -1,9 +1,9 @@
-# Knight round 1
+# Knight round 2
 
 Run from the repository root. The complete lead-side command is:
 
 ```sh
-ROUND=1 tools/art/anim3d/units/knight/gpu.sh
+ROUND=2 tools/art/anim3d/units/knight/gpu.sh
 ```
 
 No arguments. Requires the already-installed isolated MPFB resources and pinned
@@ -19,7 +19,7 @@ format and CPU stage commands, and `SOURCES.md` for licences.
 
 External artifacts:
 
-- `~/LegatumRuns/anim-pilot/masters/knight/`: editable base/plain/painted blends,
+- `~/LegatumRuns/anim-pilot/masters/knight/`: editable base/plain/sculpted/painted blends,
   five clip blends, raw renders, 512/256 masters, source-motion samples and
   render/pack/validation/audit/movie receipts.
 - `~/LegatumRuns/anim-pilot/review/3d-v2/knight-*`: every interim stage, clip
@@ -27,7 +27,8 @@ External artifacts:
 
 This is a candidate. No runtime activation or PASS is implied. The current CPU
 images have 8 samples; the complete Metal pass must be run on the lead's host.
-The projection makes the heraldry read well, but the rear drape, hoof silhouettes
-and cloth collision behavior still fall short of the painting. Cloth is
+The fitted helmet, glove, shorter caparison, projected tail and stone rim improve
+the rest pose. Thin lower legs, rear-drape coverage and the rigid collapsed cloth
+still fall short of the painting. Cloth is
 bone-driven, not simulated. Gait targets and feet views are recorded; the audit
 does not claim to prove foot-slide freedom or full collision freedom.

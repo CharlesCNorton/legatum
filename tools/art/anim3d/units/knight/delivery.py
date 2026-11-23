@@ -53,7 +53,7 @@ def grade(resolution):
 def review():
  ref=load('app/src/assets/units/knight-256.png');rest=load(M/'256/c/hero-00.png')
  label_sheet([ref,load(M/'256/b/hero-00.png')],['Painting','Plain geometry']).save(V/'knight-b-plain.png')
- label_sheet([ref,rest],['Painting','Round 1 painted 3D']).save(V/'knight-c-textured-lit.png')
+ label_sheet([ref,rest],['Painting','Round '+os.environ.get('ROUND','2')+' painted 3D']).save(V/'knight-c-textured-lit.png')
  split=ref.copy();split.paste(rest.crop((128,0,256,256)),(128,0));blend=Image.blend(ref,rest,.5)
  big=label_sheet([ref,rest,split,blend],['Painting','3D rest','Split 50/50','Crossfade 50/50']);small=label_sheet([ref,rest,split,blend],['Art','3D','Split','Blend'],64)
  sheet=Image.new('RGBA',(1024,368),CREAM);sheet.alpha_composite(big,(0,0));sheet.alpha_composite(small,(0,280));sheet.save(V/'knight-f-restpose-compare.png')

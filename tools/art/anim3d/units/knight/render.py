@@ -1,5 +1,5 @@
 """Render knight stages, transparent source frames and gait inspection serially."""
-import bpy,os,json,hashlib,sys,subprocess
+import bpy,os,json,hashlib,sys,subprocess,shutil
 from pathlib import Path
 from mathutils import Vector
 R=Path(os.environ['ANIM_ROOT']);M=R/'masters/knight'
@@ -18,8 +18,10 @@ def setup(path):
  assert s.camera is not None
  return s
 for stage in stages:
- path=M/('knight-base.blend' if stage=='base' else 'knight-plain.blend' if stage=='b' else 'clips/attack.blend' if stage=='d' else 'clips/move.blend' if stage=='g' else f'clips/{stage[2:]}.blend' if stage.startswith('e-') else 'knight.blend')
- s=setup(path);out=M/'renders'/str(resolution)/stage;out.mkdir(parents=True,exist_ok=True)
+ path=M/('knight-base.blend' if stage=='base' else 'knight-sculpted.blend' if stage=='b' else 'clips/attack.blend' if stage=='d' else 'clips/move.blend' if stage=='g' else f'clips/{stage[2:]}.blend' if stage.startswith('e-') else 'knight.blend')
+ s=setup(path)
+ if stage=='d' or stage=='g' or stage.startswith('e-'):assert s['source_master_sha256']==sha(M/'knight.blend'),'Clip from stale master'
+ out=M/'renders'/str(resolution)/stage;out.mkdir(parents=True,exist_ok=True)
  manifest=out/'manifest.json';manifest.unlink(missing_ok=True)
  frames=json.loads(s.get('sample_frames','[0]')) if stage.startswith('e-') or stage=='g' else [1,4,7,10] if stage=='d' else [0]
  if stage=='g':
@@ -29,7 +31,7 @@ for stage in stages:
   s.frame_set(frames[0]);bpy.context.view_layer.update();horse=bpy.data.objects['Horse']
   ev=horse.evaluated_get(bpy.context.evaluated_depsgraph_get());me=ev.to_mesh()
   assert len(me.vertices)==len(horse.data.vertices)
-  remove={v.index for v in me.vertices if (ev.matrix_world@v.co).z>.85};ev.to_mesh_clear()
+  remove={v.index for v in me.vertices if (ev.matrix_world @ v.co).z>.85};ev.to_mesh_clear()
   horse.data=horse.data.copy();bm=bmesh.new();bm.from_mesh(horse.data);bm.verts.ensure_lookup_table();bmesh.ops.delete(bm,geom=[v for v in bm.verts if v.index in remove],context='VERTS');bm.to_mesh(horse.data);bm.free()
   for ob in s.objects:
    if ob.type in {'MESH','CURVE'} and ob not in {horse,bpy.data.objects['Stationary cream stone']}:ob.hide_render=True
@@ -40,8 +42,13 @@ for stage in stages:
   if view=='front':s.camera.location=(0,-8,.9);target=Vector((0,0,.4));s.camera.data.ortho_scale=2.2
   elif view=='top':s.camera.location=(0,0,8);target=Vector((0,0,0));s.camera.data.ortho_scale=2.7
   if view!='hero':s.camera.rotation_euler=(target-s.camera.location).to_track_quat('-Z','Y').to_euler();s.camera.data.shift_x=s.camera.data.shift_y=0
+  rendered={}
   for i,frame in enumerate(frames):
-   s.frame_set(frame);s.render.filepath=str(out/f'{view}-{i:02d}.png');bpy.ops.render.render(write_still=True)
+   s.frame_set(frame);s.render.filepath=str(out/f'{view}-{i:02d}.png')
+   # Repeated held samples must be byte-identical even with stochastic denoising.
+   if frame in rendered:shutil.copyfile(rendered[frame],s.render.filepath)
+   else:
+    bpy.ops.render.render(write_still=True);rendered[frame]=s.render.filepath
    records.append({'file':Path(s.render.filepath).name,'frame':frame,'sha256':sha(Path(s.render.filepath))})
  manifest.write_text(json.dumps({'stage':stage,'resolution':resolution,'device':device,'samples':samples,'blend':str(path),'blend_sha256':sha(path),'frames':records},indent=2))
  print('KNIGHT_RENDER_READY',stage,flush=True)

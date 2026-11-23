@@ -43,7 +43,6 @@ horse.data.materials.append(ivory)
 # Source local coordinates: -Y is up, -Z points toward the muzzle.
 for p in horse.data.polygons:
  c=p.center
- if False: p.material_index=1
  if p.material_index in (0,2,5) and abs(c.x)<.00042 and c.y<-.034 and c.z<-.027: p.material_index=8
  # Pale pastern markings on all four legs, retaining the dark horn hooves.
  if abs(c.x)>.002 and -.006<c.y<-.0028 and p.material_index!=4:p.material_index=8
@@ -80,7 +79,9 @@ for j in range(5):
 for j in range(4):
  for i in range(32):
   a=j*32+i;b=j*32+(i+1)%32;fs.append((a,b,b+32,a+32))
-fs.append(tuple(range(128,160)))
+# Closed shallow crown, with radial facets rather than a flat open-looking rim.
+vs.append((cx,cy,cz+.20))
+for i in range(32):fs.append((128+i,128+(i+1)%32,160))
 attach(bevel(solid(mesh('GEO enclosed greathelm',vs,fs,steel),.006),.003),'head')
 for z in [cz-.10,cz+.15]:
  attach(curve('GEO helmet rolled gold edge',[(cx+.118*sin(a),cy-.137*cos(a),z) for a in [i*2*pi/64 for i in range(65)]],.004,gold),'head')
