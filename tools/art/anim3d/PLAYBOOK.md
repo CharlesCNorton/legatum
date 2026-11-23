@@ -106,3 +106,66 @@ tools/art/anim3d/render.sh audit
 ```
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
+
+## Infantry / rifleman — round 1
+
+All rifleman code lives in `units/rifleman/`. Its editable MPFB human and 53-bone
+rig wear a thick folded blue coat, faded trousers, full-volume kepi, crossbelts,
+rounded brass fasteners, leather pouches, boots and a modeled wooden rifle with
+steel barrel, trigger guard, lock and hanging sling. The kit is specific to the
+rifleman painting. Assets and masters live under `ANIM_ROOT/{assets,masters}/rifleman`.
+
+Use the four quality levers together: freeze camera-projected painting UVs onto
+finished volumetric geometry, retain generated pigment fills on hidden surfaces,
+finish cloth folds/thickness and beveled hard edges, and use aimed warm upper-left
+key/cool rim/soft fill with real AO. Actual AO and Pointiness maps are baked for
+the coat and kepi. One bounded histogram grade is measured at rest and frozen
+across all clips. Camera-only projected pigment preserves the source's painted
+illumination without casting false colored light. Standard display transform is
+specific to these painted colors. The cream stone top is sRGB **#E9CFA0**, converted
+to linear RGB `(0.81485, 0.62396, 0.35153)`, with a darker rim and fine bump.
+
+Motion standard: use proven open motion, calibrating source/target reference poses
+and bone rolls before retargeting. This unit uses CC0 Quaternius Idle_Loop,
+Walk_Loop, Hit_Chest and Death01 with Blender world-space rotation constraints;
+only rifle aim/recoil is hand keyed. Carrying-arm and supporting-palm constraints
+keep the rifle coupled to both hands. Foot rotations are not corrected afterward.
+One virtual ground speed and a small root contact adjustment preserve planted
+feet while retaining source swing/roll. Every round must render top and front feet
+through the full walk to `<slug>-g-feet-check.png`, inspect forward direction and
+sliding, and retain quantitative planted-interval measurements. Structural checks
+alone do not establish a clean gait.
+
+```sh
+tools/art/anim3d/units/rifleman/render.sh build
+tools/art/anim3d/units/rifleman/render.sh animate
+tools/art/anim3d/units/rifleman/render.sh preview
+tools/art/anim3d/units/rifleman/render.sh feet
+tools/art/anim3d/units/rifleman/render.sh pack
+# Lead, from this repository root; the overnight driver sets ROUND:
+ROUND=1 tools/art/anim3d/units/rifleman/gpu.sh
+```
+
+Every Blender invocation is plain `blender -b --disable-autoexec` through PATH's
+shared gate. CPU previews use Cycles, three threads and low samples. `gpu.sh`
+selects Cycles Metal GPU explicitly and refuses CPU fallback, rebuilds every
+stage sequentially at 512px, exports genuine 512/256 masters, makes interim
+b/c/details/d/e review images, the painting/render/50%/split rest comparison,
+feet check, atlas validation and an eight-second H.264/yuv420p movie with five
+clips side by side at 2x on cream. It retains a round log and success/failure
+receipt. No zero-scale hiding or thin volume meshes are used.
+
+Delivery is version 2: 160px logical frames, rows idle/move/attack/hit/death,
+8/8/10/4/10 samples. `frame:{w,h,ax,ay}` records the logical anchor;
+`clips[name].rects` lists `{x,y,w,h,ox,oy}` for every frame. Crop from atlas
+`(x,y,w,h)` and draw at `anchor + (ox-ax,oy-ay)*scale`; row does not imply fixed
+cells. Identical held-death samples may share one crop. Preserve alpha and use
+WebP quality >=75 with a strict 200,000-byte cap. Source, blend, frame and grade
+hashes reject stale/mixed settings; decoded offsets/alpha, motion, held death,
+frame margins, size and movie codec/duration are checked. CPU atlases are labelled
+preview in their external report. Painting remains the runtime art pending review.
+
+The target remains a rest pose hard to distinguish from the painting, plus clean
+motion at 256 and readable identity at 64. Do not write `rifleman-PASS` until actual
+visual evidence supports that judgment. Syntax, atlas/rig validation and art-only
+repository gates suffice here; no Rust or UI implementation changes are involved.

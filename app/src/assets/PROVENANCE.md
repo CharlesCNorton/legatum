@@ -32,6 +32,10 @@ The date range is the range of dates the repository's own records give (prompt h
 | App icon and favicons | `app/public/favicon*`, `app/public/apple-touch-icon.png` | Composed by `tools/design/app-icon/build.mjs` from a code-drawn seal (`seal.svg`) over a parchment texture (`parchment.jpg`), which that script records as generated with Codex image generation | No prompt for the parchment texture | Not recorded |
 | Music and sound effects | `app/public/audio/` | Third-party recordings released under CC0 1.0 (Kenney, Breviceps, vitalezzz), trimmed and encoded by `tools/audio/build_audio.py` | Not applicable. Sources, authors and licences: `app/public/audio/CREDITS.md`, `manifest.json`, `licenses/` | See `CREDITS.md` |
 
+## Rifleman 3D animation candidate (2026-11-23)
+
+`units/anim/rifleman.webp` is a round-one Blender candidate, pending visual approval. MPFB 2.0.18 CC0 anatomy and rig, CC0 Quaternius Universal Animation Library motion, original volumetric rifleman kit, frozen projection of our CC BY 4.0 rifleman painting, and recolored original generated hidden-surface material artwork. Exact source URLs, versions, licences, prompt and input hashes are in `tools/art/anim3d/units/rifleman/SOURCES.md` and `assets.lock.json`. Masters stay outside git; the existing painting remains the runtime art.
+
 ## Gaps
 
 - No prompt is stored for the map improvements, the six original resource medallions, the aircraft plan sprites or the parchment texture.
