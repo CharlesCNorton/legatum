@@ -7,3 +7,5 @@
 - Fixed Blender/OpenVDB crash from almost-zero smoke object scales: inactive effects now use keyed render visibility and normal scale. Initial render was launched before build finished and failed cleanly; all later heavy steps wait for previous completion.
 - First actual 512px AO/curvature bake succeeded on hull, turret and lower hull; rebuilding geometry invalidates it, so all six maps will be rebaked.
 - Read incoming tank-FEEDBACK: machine-wide single Blender gate now applies; crash dialogs reached desktop. Removed even temporary near-zero effect scale assignments. Inactive smoke uses normal-size geometry and keyed hide_render only; every call is background via blender-slot.
+- Emitted tank-c-textured-lit.png from actual c renders; visual review pending.
+- Emitted tank-c-details.png from actual details renders; visual review pending.
