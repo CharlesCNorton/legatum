@@ -106,3 +106,64 @@ tools/art/anim3d/render.sh audit
 ```
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
+
+## Siege family — artillery (mechanical gun, round 1)
+
+This unit's painting has **no crew**. Its true 3D model is a shielded olive field gun with pneumatic
+tires, split trails, ground spades, hollow tapered bore, breech, recuperator cylinders, and wheel
+hardware. It uses an editable mechanical parent rig; do not add the field-cannon's Napoleonic gunner.
+All artillery scripts live in `tools/art/anim3d/units/artillery/`, to avoid family-lane collisions.
+The six Blender skills guide bevels and physical thickness, Principled materials, aimed product
+lighting, fixed camera calibration, mechanical keyframes, and actual rendered review.
+
+The standard quality method is the coordinator's four levers: (1) frozen rest-camera painting UVs
+on **real geometry**, with a facing/source-alpha mask blending into an original generated olive
+fill on unseen surfaces; (2) real edge bevels, recessed hubs, raised bolts, tire tread, hollow muzzle,
+and shaped thick shield; (3) warm upper-left key, weaker soft fill, cool rim and contact AO;
+(4) source-measured, bounded contrast/channel gains, held constant over all clips. Projection retains
+painted lighting and needs review in motion. It never supplies the geometry's alpha or replaces a
+mesh with a billboard. Shield and barrel also have actual 256px AO and Cycles Pointiness bakes.
+
+The one stationary stone disc targets a lit top around **sRGB #E9CFA0**, with a darker warm rim and
+fine grain. Its shader uses scene-calibrated linear `(1.0, 0.66, 0.26)` under AgX; the render, not the
+input triplet, is the colour evidence. The review background is exactly #E9CFA0.
+
+```sh
+# CPU previews, one gate-managed Blender process; never bypass the plain blender command.
+RESOLUTION=256 SAMPLES=8 tools/art/anim3d/units/artillery/render.sh stills
+RESOLUTION=256 SAMPLES=8 tools/art/anim3d/units/artillery/render.sh preview
+source tools/art/anim3d/env.sh
+"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/artillery/deliver.py
+
+# Complete host GPU pass, no arguments, from repository root:
+ROUND=1 tools/art/anim3d/units/artillery/gpu.sh
+```
+
+`gpu.sh` explicitly selects Cycles Metal GPU, fails if no Metal device exists, builds and rerenders
+plain/textured/detail/pose stages and all clips, retains `masters/artillery/512/` and `256/`, then
+packs, validates, and writes `artillery-round${ROUND}.mp4`. It respects the machine-wide `blender`
+gate and never launches two heavy processes. The MP4 is eight seconds, 30 fps, H.264 yuv420p, all five
+clips side by side at 2x logical scale on cream; it is reconstructed from the decoded trimmed atlas.
+No master enters git. Original input hashes, bakes, packed textures, editable `.blend` files, render
+hashes, and grade evidence remain under `masters/artillery/` or `assets/artillery/`.
+
+Every render stage publishes immediately to `review/3d-v2/artillery-*.png`/`.webp`. Rest review includes
+painting left, render right and a 50/50 crossfade at **256 and 64 px**, in
+`artillery-f-restpose-compare.png`. Idle is a small elevation adjustment; move rolls the wheels in
+place and lifts the trails (the runtime supplies travel); attack recoils the barrel and recovers;
+hit jolts the carriage; death slumps the gun and cants a damaged wheel, ending in two identical held
+samples. Effects use keyed visibility, never zero scale. The base stays fixed.
+
+### Artillery trimmed atlas v2
+
+The atlas preserves **8/8/10/4/10** frames and five clip rows in idle/move/attack/hit/death order.
+`frame: {w:160,h:160,ax:80,ay:124}` describes the untrimmed logical cell and its invariant anchor.
+Each clip keeps `row`, numeric `frames`, `fps`, `loop`, and adds `sprites`, one rectangle per frame:
+`{x,y,w,h,ox,oy}`. Read `(x,y,w,h)` from the atlas and place it at `(ox,oy)` inside the logical cell;
+the frame's cropped anchor is `(ax-ox, ay-oy)`. Rows have variable heights and packed widths; **never
+infer UVs by multiplying row/frame numbers by 160**. `version:2, layout:"trimmed-rows"` identifies the
+extension. This candidate does not change runtime rendering. WebP searches quality 90 down to 75,
+never lower, enforcing 200,000 bytes. All 40 alpha masks must reconstruct exactly from decoded trims;
+validation also checks margins, source hashes, motion, held death, video codec/duration/frame count.
+An atlas contract PASS is separate from art approval; only write `artillery-PASS` when the rest pose
+is hard to distinguish from the painting and all five clips are clean.
