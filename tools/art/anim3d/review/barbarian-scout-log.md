@@ -70,3 +70,4 @@ Published e-hit review: CPU 256 px, 8 samples; fixed rest-derived grade.
 Published e-death review: CPU 256 px, 8 samples; fixed rest-derived grade.
 Packed 40 trimmed 160 px frames, WebP quality 85, 197932 bytes.
 Published five-clip, 2x, cream-background H.264 review: barbarian-scout-round2.mp4
+Published c review: CPU 256 px, 8 samples; fixed rest-derived grade.
