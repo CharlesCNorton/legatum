@@ -325,7 +325,7 @@ bpy.ops.mesh.primitive_cylinder_add(vertices=128,radius=.60,depth=.09,location=(
 base=bpy.context.object;base.name='Stationary cream stone';base.data.materials.append(stone);bevel(base,.015,3)
 base.modifiers.new('Stone cloth collision','COLLISION')
 # Lighting and lens.
-sc=bpy.context.scene;sc.render.threads_mode='FIXED';sc.render.threads=4;sc.render.engine='CYCLES';sc.cycles.device='CPU';sc.cycles.samples=12;sc.cycles.use_denoising=True
+sc=bpy.context.scene;sc.render.threads_mode='FIXED';sc.render.threads=3;sc.render.engine='CYCLES';sc.cycles.device='CPU';sc.cycles.samples=12;sc.cycles.use_denoising=True
 sc.render.resolution_x=sc.render.resolution_y=256;sc.render.resolution_percentage=100
 sc.render.film_transparent=True;sc.render.image_settings.file_format='PNG';sc.render.image_settings.color_mode='RGBA'
 sc.world.color=(.13,.13,.13)

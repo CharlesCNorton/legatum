@@ -1,0 +1,7 @@
+Spearman round 3 unseen-surface material fills — 2026-11-22
+Built-in Codex imagegen. Original output: 1254 x 1254 PNG.
+Stored outside git: $ANIM_ROOT/masters/spearman-3d-v2/textures/generated/fills.png
+Derived quadrant crops: bronze.png, wool.png, linen.png, leather.png.
+Original project-generated asset, CC BY 4.0 under LICENSE-ART.
+
+Use case: stylized-concept. Asset: 3D material fill atlas for hidden/back/underside surfaces of an ancient Greek hoplite miniature. Create a square 2 by 2 grid of four equal material swatches, edge-to-edge no borders, no text. Top left: rich warm hammered golden bronze with hand-painted tiny wear scratches, restrained chased Greek floral engraving, dark brown patina flecks. Top right: deep cinnabar red woven wool with fine warm brushwork, subtle vertical fold shading. Bottom left: warm ochre ivory linen fine woven cloth, aged and warm, subtle fine creases. Bottom right: rich warm brown saddle leather with scuffing and tiny grain. All four areas evenly lit as albedo textures, no objects, no silhouettes, no hard cast shadows, no dramatic highlights, no vignette. Style: premium hand-painted historical miniature, oil-paint brushwork, high craft, rich warm pigments. Swatches fill their quadrants entirely, repeatable material patterns. No metal outside upper left, no straps buckles or symbols, no national cross coat of arms or flag.

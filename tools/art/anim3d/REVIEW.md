@@ -1,41 +1,119 @@
-# Spearman MPFB review — round 2
+# Spearman MPFB review — round 3
 
-This is an improved art candidate, **not production art approval**. The existing painting remains the standard and the app runtime still uses its existing art. Sam's direction remains: this is the right direction, but the textures need a more premium finish. All GPU c/d/e sheets and all five WebPs were opened before editing; the original 11 feedback items and the two later additions were read.
+This remains an **art candidate, not production art approval**. The app still uses
+its existing painting. All 19 shared feedback items, the previous running log,
+the spearman-specific feedback, and all six installed Blender skills were read.
+Sam's family-lead quality verdict is the bar; technical validity does not replace
+comparison against the painting.
 
 ## What changed
 
-Broader MPFB shoulders, a wider braced stance, a taller front-to-back horsehair crest above a bronze bowl, raised sunburst facets and a bright rim, a less edge-on shield, a warm cream base with darker sides, brighter bronze with stronger key/rim light, restored visible cuirass engraving, and a riveted leather belt. The original 19,158-vertex anatomical body and 53-bone rig remain intact. Iron spearhead and butt, white linen and red simulated wool are retained.
+The full source painting now supplies frozen rest-camera UVs on actual rigged
+surfaces, with ray-visibility and facing feather masks. Generated bronze, wool,
+linen and leather fills cover surfaces the painting never shows. Their original
+PNG and crops are saved under the external master's `textures/generated/`;
+`fills.prompt.txt` and `fills.lock.json` record the built-in imagegen prompt and
+five file hashes. The static base is exempt from projection so painted feet and
+shadows cannot remain on it during motion. It uses the shared #E9CFA0 cream top
+and #B68A51 rim, correctly converted from sRGB to linear, with physical contact
+shadows.
 
-The bake correction matters more than simply increasing saturation: inward shield winding and Solidify's shared inner/outer UVs had made the metal's AO misleadingly dark. The revised bake temporarily disables Solidify, bakes the authored outer surface, then restores thickness. AO now drives stronger cavity colour, and curvature drives brighter edge colour and lower roughness. Hammer-scale normal/roughness variation supplements the CC0 scans. The shield's original painted detail is blended at 18%, letting the raised geometry and current lighting carry the form.
+The camera now matches the painted base ellipse more closely. The guard uses a
+calibrated planted spear and a stored hand target; ankle spacing is wider, the
+cape has modeled folds and controlled flare, the leaf blade is larger and
+beveled, and the crest has the source's swept profile. Linen is subdivided,
+the baldric is a thick beveled leather ribbon, and the belt has a real buckle
+frame and tongue. MPFB's original 19,158-vertex body and 53-bone rig are retained.
 
-The ten-frame attack now raises an overhand grip beside the right shoulder, bends the front knee, lowers and shifts the torso forward, and extends above the shield. The spear slides through the grip during the raise to keep both ends inside the cell. Death now starts from the wide guard, opens the hand and releases the spear across the front edge of the base before the body collapses. The move contact height was raised by 15 mm after the audit found the soles just below tolerance. Geometry checks cover the shaft's centerline against shield, cuirass and helmet bowl, plus hand-to-shaft distance before release; they do not certify every possible cloth/skin contact.
+Lighting uses a warm upper-left key, softer fill and restrained cool rim.
+A single alpha-masked histogram grade is fitted at rest and reused across all
+clips; raw PNGs are retained. The projected painting includes painted lighting,
+so its illumination layer is blended with physical PBR instead of receiving a
+second full lighting pass. This is a deliberate reference-matching choice,
+not a general relightable albedo reconstruction.
+
+Every Blender invocation goes through `blender` on PATH, with `-b` and automatic
+Python execution disabled. The obsolete lane lock and four-thread overrides are
+removed. Cycles GPU/Metal selection and denoising are supported explicitly;
+unavailable GPU selection fails rather than silently falling back to CPU.
+Repeated animation samples are rendered once and copied byte-for-byte. Death's
+last two PNGs therefore cannot differ because of stochastic GPU noise.
 
 ## Visual verdict
 
-At **256 px**, the bronze, cream disc, crest and raised shield read more clearly than round 1. The painting still wins on deliberate wear, engraving, natural cloth folds, helmet silhouette and the modelling of hands/skin. Large armour surfaces still look smoother and more synthetic. This does not meet the painting's premium finish bar.
+At **256 px**, chest engraving, linen folds, shield wear, warm skin and the cream
+base are materially closer to the painting. The swept crest also matches better.
+The hand, helmet profile and foot orientation still differ visibly. Source paint
+stretches with the mesh in large motions, and transitions to physical/generated
+fills need a host GPU review. This is **not nearly indistinguishable** from the
+painting and does not meet the final premium-art bar yet.
 
-At **64 px**, the gold shield, red cloak/crest and white linen are stronger and the stance is broader. It reads as the same unit type more convincingly, but it is not a one-for-one match to the painted token's pose and visual hierarchy. The tall crest and highlights need a fresh Eevee comparison before approval.
+At **64 px**, the source's gold/red/cream hierarchy, sunburst, crest and braced
+silhouette are much more recognizable. Rest matching has improved substantially,
+but the grip and foot placement still prevent a one-for-one match. Motion reads
+as a genuine articulated 3D figure, not a moving cutout.
 
-`c-round2-comparison.png` puts painting, round-1 GPU output and round-2 CPU output together. `c-details.png` compares helmet, cuirass and aspis close-ups; c/d/e sheets include native 256 and 64 px cells. These are evidence for iteration, not sign-off. CPU/GPU rendering differences remain material.
+Evidence is under `ANIM_ROOT/review/3d-v2/`: `spearman-f-restpose-compare.png`
+(painting/render/crossfade/split, both sizes), `spearman-c-details.png`, all five
+`spearman-e-*-strip.png` / WebPs, and `spearman-round3.mp4`. Diagnostic silhouette
+IoU and RGB error live in `spearman-look-metrics.json`; those are not quality
+approval metrics. Earlier GPU evidence and the received atlas are preserved in
+`round2-gpu/`; the pre-projection editable master is preserved separately.
 
-## Reproducibility and ownership
+## Checks and handoff
 
-No new external art sources were introduced: MPFB/system assets, CC0 PBR maps, CMU motion and the project's original shield painting retain the provenance recorded in `PLAYBOOK.md`, `assets.lock.json` and the central art provenance table. No rules, Rust code or app runtime changed.
+The measured results below use CPU Cycles; no host GPU approval is implied. No Rust, rules, app runtime,
+WASM or public deployment changes are part of this work.
 
-At 21:12, the runner saved the work as WIP commit `5fc931b` and switched lane-2 to `astra/unit-anim-3d-siege` during a rebuild. That mixed rebuild was rejected. The spearman branch now continues in `legatum/.worktrees/spearman-round2/`; siege edits were preserved. The complete revised master and all clips were regenerated. Clip source hashes and render hashes now prevent packing stale or mixed generations. Temporary files stay in `ANIM_ROOT/tmp`; Blender calls retain `-t 4`, fixed four-thread scene settings, the shared heavy-process lock and the runner's additional machine-wide queue.
+The lead runs the exact **host GPU handoff** in `PLAYBOOK.md`: Cycles GPU/Metal,
+64 samples, c first to refit the grade, then detail/d/all five clips, pack,
+validate and audit. Eevee/Metal remains supported. Inspect the new GPU rest
+comparison and motion, then run the browser/art gate and Claude art review before
+integration. This branch is not pushed or merged by this task.
 
-## Lead handoff
+Non-obvious implementation findings: MPFB's masks remove helper vertices from
+evaluated geometry, so projection must recover original vertex indices without
+putting helpers into the visibility BVH. Camera-space silhouette edits under a
+rotated bone belong in local mesh data; object TRS decomposition can lose shear.
+The static base must not inherit the figure painting's feet or shadows. Grade
+once at rest and freeze the LUT across motion; never refit each frame.
 
-The exact GPU render, detail, repack and audit sequence is at the end of `PLAYBOOK.md`. Run it from the spearman checkout, using the existing masters under `~/LegatumRuns/anim-pilot/masters/spearman-3d-v2/`. Compare the new GPU c/d/e output with the painting at both sizes and inspect playback, including feet, grip, equipment clearance, cloth and held death. Run the project's browser/art gate and final Claude art review before integration. No PR, push or merge was performed here.
+## Final round-3 results
 
-## Final round-2 checks
+- Atlas: **195,870 bytes**, WebP **quality 70**, all **40 frames**, transparent
+  **2560 × 1280**, unchanged frame/clip JSON and `(127,221)` anchor. SHA256
+  `3ad42b11c8a76555a3a8cbdaa66f74d7d36fb8cd9ebe035e670536c5f39ed23e`.
+- Source renders: CPU Cycles, **384 px / 24 samples** for c/d/all five clips;
+  **512 px / 32 samples** for details. Every packed frame uses the same current
+  source master and histogram-grade hashes. Raw renders are preserved.
+- Saved-rig audit: **40 samples, zero findings**. Original body/rig, baked cloth,
+  fixed physical cream base, floor/camera bounds, held-weapon grip and spear
+  centerline clearance pass. This is not a full skin/cloth intersection solver.
+- Decoded validation: **PASS** dimensions, metadata, all frames, alpha, transparent
+  padding, motion, clipping margins, byte cap and held death. Terminal PNGs are
+  identical **bytes and pixels**, including after grading.
+- Regression tests: **2 PASS**. Syntax: **21 Python / 2 Bash / 2 JSON PASS**.
+  Working-tree hygiene: **30 text files, zero findings**. Diff whitespace passes.
+  The video encoder's final two-thread cap also passed syntax and real encoding.
+- Video: H.264, **544 × 380**, **240 frames**, **24 fps**, **10.000 seconds**, checked
+  with ffprobe. Native-size strips and decoded-atlas representative frames were
+  visually inspected; final host GPU playback/art approval remains with the lead.
+- Review data: `spearman-final-report.json`, `spearman-g-decoded-atlas.png`,
+  `spearman-f-restpose-compare.png`, `spearman-c-details.png`, per-clip strips and
+  `spearman-round3.mp4` under the external review directory.
 
-- CPU previews: c at 256 px / 40 Cycles samples, close-ups at 512 px / 40 samples; d and all 40 clip frames at 384 px / 32 samples, downsampled to 256 for delivery. All final c/d/e sheets and WebPs were opened, including 64 px cells.
-- Atlas: **185,868 bytes**, WebP quality **75**, **40 frames**, 2560 × 1280. Exact frame/clip JSON contract and `(127,221)` anchor retained. SHA256 `54ce14430b5d8e665de02b88abf3e749fff64dd468766273e96051a1831f6835`.
-- Saved-rig audit: **40 samples, zero findings**. Original MPFB topology/rig, persistent cloth, fixed base, camera bounds, floor tolerance, held-weapon grip and spear-versus-equipment centerlines pass. Released death frames intentionally do not require hand contact.
-- Decoded validation: **PASS** dimensions, metadata, all frames, alpha, transparent padding, motion, clipping margins, byte cap and identical last-two death source pixels.
-- Python AST: **16 files PASS**. Source-lock JSON and both Bash files parse; diff whitespace passes. Direct repository hygiene checks: **24 text files, zero findings**.
-- Stale-render rejection was exercised: packing refused an old death render after its blend changed. The final atlas uses matching clip/master/render hashes and CYCLES manifests throughout.
-- No Rust, rules or app runtime changes: Cargo, WASM and app build suites were not run. Fresh Eevee/Metal review, browser art gate and final Claude art approval remain for the lead.
+The base correction was material-only: it removed projection shaders and unused
+base UV/mask data from the saved master/clips, preserved and asserted existing
+cloth caches, and rebound clip source hashes. `project.py` makes the same
+exemption during a full rebuild. All dependent frames were rerendered afterward.
 
-The final death correction moves only the released weapon sideways during the drop. It was applied to the saved clip without changing the rig or cloth simulation, and the same arc is in `animate.py` for full rebuilds. The final saved-rig audit and rerender cover the patched clip.
+## Runner handoff limitations
+
+Git staging failed because the sandbox denied this worktree's `index.lock`;
+round 3 remains uncommitted. The runner must commit it with the requested
+co-author trailer, merge the two newer `origin/master` browser-test/CI commits,
+and run the post-merge determinism/pin checks. No fetch or push was attempted.
+The browser distinctness check reached Chromium using the main checkout's
+Playwright dependency, but launch failed with `bootstrap_check_in ... Permission
+denied (1100)`. It did not evaluate the images. Run the committed-tip gates and
+final art review on the host; source/atlas validation above is not art approval.

@@ -20,6 +20,7 @@ for row,(clip,(count,fps,loop)) in enumerate(expected.items()):
  if clip=='death' and ImageChops.difference(frames[-1].getchannel('A'),frames[-2].getchannel('A')).getbbox():findings.append('death terminal silhouettes are not held')
 root=Path(os.environ.get('ANIM_ROOT',str(Path.home()/'LegatumRuns/anim-pilot')))
 terminal=root/'masters/spearman-3d-v2/renders/e-death'
+assert (terminal/'08.png').read_bytes()==(terminal/'09.png').read_bytes(), 'Death terminal PNG bytes differ'
 assert Image.open(terminal/'08.png').convert('RGBA').tobytes()==Image.open(terminal/'09.png').convert('RGBA').tobytes(), 'Death terminal source pixels differ'
 (root/'review/3d-v2/validation.json').write_text(json.dumps({'contract':'PASS','bounds':boxes,'findings':findings},indent=2))
 print('PASS: dimensions, metadata, all 40 frames, alpha, transparent padding, motion, byte cap')

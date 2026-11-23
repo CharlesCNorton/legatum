@@ -7,10 +7,15 @@ M=ROOT/'masters/spearman-3d-v2';R=ROOT/'review/3d-v2'
 CLIPS={'idle':(8,10,True),'move':(8,12,True),'attack':(10,14,False),'hit':(4,12,False),'death':(10,10,False)}
 out=Path('app/src/assets/units/anim');out.mkdir(parents=True,exist_ok=True)
 atlas=Image.new('RGBA',(2560,1280));meta={'frame':{'w':256,'h':256,'ax':127,'ay':221},'clips':{}};hashes={};render_sources={}
+grade=M/'painting-grade.json'
+grade_info=json.loads(grade.read_text())
+assert grade_info['master_sha256']==hashlib.sha256((M/'spearman.blend').read_bytes()).hexdigest(), 'Stale painting grade'
+grade_sha=hashlib.sha256(grade.read_bytes()).hexdigest()
 for row,(clip,(n,fps,loop)) in enumerate(CLIPS.items()):
  meta['clips'][clip]={'row':row,'frames':n,'fps':fps,'loop':loop}
  render_dir=M/'renders'/('e-'+clip)
  rendered=json.loads((render_dir/'render.json').read_text())
+ assert rendered.get('grade_sha256')==grade_sha, f'{clip}: missing or stale painting grade; rerender after c'
  blend=M/'clips'/clip/(clip+'.blend')
  assert rendered['blend_sha256']==hashlib.sha256(blend.read_bytes()).hexdigest(),f'{clip}: render is stale'
  clip_info=json.loads((blend.parent/'clip.json').read_text())

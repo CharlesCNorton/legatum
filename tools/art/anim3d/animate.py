@@ -12,8 +12,9 @@ clip=sys.argv[sys.argv.index('--')+1] if '--' in sys.argv else 'idle'
 out=M/'clips'/clip;out.mkdir(parents=True,exist_ok=True)
 (out/'clip.json').unlink(missing_ok=True)
 bpy.ops.wm.open_mainfile(filepath=str(M/'spearman.blend'))
-sc=bpy.context.scene;sc.render.threads_mode='FIXED';sc.render.threads=4;rig=bpy.data.objects['Spearman • MPFB game_engine'];neutral=json.loads(rig['neutral_pose'])
+sc=bpy.context.scene;sc.render.threads_mode='FIXED';sc.render.threads=3;rig=bpy.data.objects['Spearman • MPFB game_engine'];neutral=json.loads(rig['neutral_pose'])
 base_loc=rig.location.copy()
+guard_hand=Vector(rig.get('guard_hand_target',(-.37,-.31,1.34)))
 spear_objects=[o for o in sc.objects if any(o.name.startswith(n) for n in ['Ash dory shaft','Spear bronze ferrule','Leaf spearhead','Iron spear butt'])]
 spear_neutral={o.name:o.matrix_basis.copy() for o in spear_objects}
 for o in spear_objects:o.rotation_mode='QUATERNION'
@@ -44,7 +45,7 @@ def hand_spear(direction):
  p=rig.pose.bones['hand_r'];reset_mat=p.matrix.copy();q=Vector((0,0,1)).rotation_difference(Vector(direction))
  rot=q.to_matrix().to_4x4();pos=reset_mat.translation.copy();mat=rot @ reset_mat;mat.translation=pos;p.matrix=mat;bpy.context.view_layer.update()
 def guard(t=0):
- limb('upperarm_r','lowerarm_r',(-.37,-.31,1.19+t),(-.55,-.04,1.15))
+ limb('upperarm_r','lowerarm_r',guard_hand+Vector((0,0,t)),(-.48,-.12,1.08))
  limb('upperarm_l','lowerarm_l',(.29,-.34,1.12+t),(.53,-.10,1.13))
  aim('hand_r',(0,-.03,.09));aim('hand_l',(0,-.03,.09))
 def pose(t):
@@ -76,9 +77,9 @@ def pose(t):
   rig.location=base_loc+Vector((.12*strength,-.16*strength,-.12*strength))
   turn('spine_03','X',.20*strength);turn('spine_03','Y',.15*strength)
   # Counter root travel in the ankle targets: soles remain on the disc.
-  limb('thigh_l','calf_l',(.32+.08*strength,.035-.18*strength,.082+.12*strength),(.42,-.50,.48))
-  limb('thigh_r','calf_r',(-.32-.12*strength,-.075+.16*strength,.082+.12*strength),(-.40,-.20,.48))
-  limb('upperarm_r','lowerarm_r',(-.37+.10*strength,-.31-.10*raised-.05*strength,1.19+.52*raised),(-.65,.05,1.48))
+  limb('thigh_l','calf_l',(.30+.10*strength,.035-.18*strength,.082+.12*strength),(.42,-.50,.48))
+  limb('thigh_r','calf_r',(-.39-.05*strength,-.075+.16*strength,.082+.12*strength),(-.40,-.20,.48))
+  limb('upperarm_r','lowerarm_r',(guard_hand.x+(-.27-guard_hand.x)*strength,guard_hand.y+(-.41-guard_hand.y)*raised-.05*strength,guard_hand.z+(1.71-guard_hand.z)*raised),(-.65,.05,1.48))
   limb('upperarm_l','lowerarm_l',(.29,-.34-.10*strength,1.12+.10*strength),(.55,-.12,1.20))
   aim('hand_r',(0,-.03,.09));hand_spear(Vector((.98,.17,.12))*raised+Vector((0,0,1))*(1-raised))
  elif clip=='hit':
@@ -92,10 +93,10 @@ def pose(t):
   turn('pelvis','Y',1.25*smooth);turn('spine_03','Y',.22*smooth);turn('head','X',.28*smooth)
   for side,sgn in [('l',1),('r',-1)]:
    # Begin in the same wide guard, then fold the ankles into the fall.
-   x=sgn*.32*(1-smooth)+(-.22+sgn*.12)*smooth
+   x=(.30 if side=='l' else -.39)*(1-smooth)+(-.22+sgn*.12)*smooth
    y=(.035 if side=='l' else -.075)*(1-smooth)+(.02+sgn*.12)*smooth
    limb('thigh_'+side,'calf_'+side,(x,y,.75*smooth+.082*(1-smooth)),(-.45,-.30,.55))
-  limb('upperarm_r','lowerarm_r',(-.37+.48*smooth,-.31+.10*smooth,1.19-.34*smooth),(-.35,-.32,.85))
+  limb('upperarm_r','lowerarm_r',guard_hand.lerp(Vector((.11,-.21,.85)),smooth),(-.35,-.32,.85))
   limb('upperarm_l','lowerarm_l',(.29+.14*smooth,-.34+.08*smooth,1.12-.30*smooth),(.4,-.15,.9))
   aim('hand_r',(0,-.03,.09));hand_spear(Vector((0,0,1)))
  bpy.context.view_layer.update()

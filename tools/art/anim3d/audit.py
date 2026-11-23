@@ -11,6 +11,11 @@ for clip in clips:
  sc=bpy.context.scene
  assert sc.get('source_master_sha256')==hashlib.sha256((M/'spearman.blend').read_bytes()).hexdigest(), f'{clip}: stale master; regenerate clip'
  base=bpy.data.objects['Stationary cream stone'];base_matrix=base.matrix_world.copy()
+ assert base.data.uv_layers.get('Painting camera rest') is None, 'Static base must not project painted feet/shadows'
+ assert [m.get('sRGB_base') for m in base.data.materials]==['#E9CFA0','#B68A51'], 'Shared cream base palette changed'
+ for mat in base.data.materials:
+  output=next(n for n in mat.node_tree.nodes if n.type=='OUTPUT_MATERIAL')
+  assert output.inputs['Surface'].links[0].from_node.type=='BSDF_PRINCIPLED', 'Base must retain physical contact shading'
  rig=bpy.data.objects['Spearman • MPFB game_engine'];body=bpy.data.objects['MPFB anatomical male • original topology']
  assert len(body.data.vertices)==19158 and len(rig.data.bones)==53
  cloth=bpy.data.objects['Cloak • simulated wool'].modifiers['Cloth per clip'];assert cloth.point_cache.is_baked

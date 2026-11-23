@@ -1,108 +1,216 @@
-# MPFB spearman pipeline
+# Painted 3D unit families
 
-This work is a spearman-only art candidate. The body is MPFB anatomy, with its face, hands, toes, topology and skin weights. No primitive body, painted relief planes or commercial character service is used. The armour and equipment are original code-built surfaces fitted around that body. Review status and measurements are recorded in `REVIEW.md`; a successful bake or small atlas does not establish art approval.
+The painting is the quality bar. Sam's verdict on the first family leads was that
+"the quality still looks like something a high school student would make."
+Finished meshes, a passing audit and a small atlas do not establish art approval.
+At rest, the target is a figure barely distinguishable from its painting at both
+256 and 64 px. Keep the existing painting in the game until the lead approves.
 
-## Isolated installation
+## Standard method for every family
 
-Blender 5.3.0 (build `02f0899d78e3`) was already installed. MPFB 2.0.18 is installed from the official GitHub release tag under `~/LegatumRuns/anim-pilot/blender-user/extensions/user_default/mpfb`. Its software licence is GPL-3.0-or-later; the body, morphs, weights and MakeHuman system asset pack are CC0. MPFB's standard `game_engine` rig has 53 bones. Rigify and Rokoko are unnecessary for this implementation.
+Load the installed `blender-modeling`, `blender-materials`, `blender-lighting`,
+`blender-cameras`, `blender-animation` and `blender-rendering` skills. Their recipes
+are starting points; inspect the installed Blender API and the actual output.
 
-All downloads go to `~/LegatumRuns/anim-pilot/assets/`; `SOURCES.md`, `materials-manifest.json` and `install-sha256.json` there record URLs, versions, licences and hashes. See also the repository's central art provenance table. Python/Pillow 13.0.0 lives in `~/LegatumRuns/anim-pilot/venv`, not the repository or system Python. Masters, bakes, texture maps and rendered frames live in `~/LegatumRuns/anim-pilot/masters/spearman-3d-v2/`. Nothing uploads them.
+1. **Camera projection.** Match the painting's viewpoint, base ellipse, figure
+   extent and landmarks before adding detail. Project the full-resolution source
+   onto the actual mesh in that rest pose. Freeze UVs before animation so paint
+   moves with the surface. Use visibility and facing masks to exclude occluded
+   backsides, and feather the seam into image-generated fills in the same style.
+   Check hidden areas during motion. A camera-facing cutout or relief plane is
+   not a replacement for the articulated model. Painted illumination must not
+   receive a second full lighting pass: separate its pigment/illumination layer
+   from the physical surface response and report that choice.
+2. **Geometry finish.** Bevel hard edges; retain real thickness on straps, cloth,
+   armour and shield rims; model buckles, stitched borders and rivets. Subdivide
+   organic anatomy and cloth, with actual folds and displacement where useful.
+   Match the MPFB face, hands and silhouette to the source. Keep original skin
+   weights. Surface noise cannot repair a wrong pose or contour.
+3. **Product lighting.** Warm upper-left area key, soft fill, restrained cool rim,
+   contact shadow and AO. Start near 5:1 key/fill and tune by the rendered image.
+   Use Cycles GPU with denoising for final frames if Eevee looks flat. Preserve
+   broad warm highlights and deep recesses without blowing out the base or skin.
+4. **Automatic grade.** Fit the painting's opaque-pixel RGB histograms at rest,
+   then use that same monotone grade for every clip. Never fit each frame
+   separately: it causes colour pumping. Preserve raw renders and alpha, and
+   record the calibration source and master hashes. Refit after camera, material,
+   light or engine changes, then rerender all dependent clips.
+
+Every iteration emits `<slug>-f-restpose-compare.png`: painting left, render
+right, 50/50 crossfade and a split-screen, each at 256 and 64 px. Review motion
+strips and playback too: fixed UVs can stretch or expose fill seams away from rest.
+A histogram match measures tone distribution, not geometric or artistic fidelity.
+
+### Shared cream base
+
+Every family uses one stationary round cream stone disc: **#E9CFA0 sRGB top**,
+**#B68A51 sRGB darker rim**, fine low-contrast grain, roughness about 0.86. Convert
+sRGB to linear before setting Blender shader values:
+
+```python
+def linear(c):
+    return c / 12.92 if c <= .04045 else ((c + .055) / 1.055) ** 2.4
+cream = tuple(linear(v / 255) for v in (233, 207, 160)) + (1,)
+rim = tuple(linear(v / 255) for v in (182, 138, 81)) + (1,)
+```
+
+Never project the full figure painting onto the static base: its painted feet
+and shadows would remain when the real feet move. Keep the shared physical
+material and render contact shadows.
+
+Lighting and the display transform change its appearance: verify the rendered
+base against the painting, not just its shader's colour field. Do not use grey
+scan albedo or add an era-metal ring.
+
+## Execution and ownership
+
+All Blender calls use **`blender` on PATH**, always `-b --disable-autoexec`.
+The machine-wide gate queues one Blender process, caps it at three threads and
+retries crashes. Do not call `/Applications/Blender.app`, pass `-t`, bypass or
+remove a live lock, or add a competing lane lock. Run dependent stages sequentially.
+Never hide effects with zero or near-zero object scale; use keyed visibility.
+
+`ANIM_ROOT` defaults to `~/LegatumRuns/anim-pilot`. `env.sh` isolates Blender's
+resources, config, scripts, data and caches. The installed Blender is 5.3.0
+(`02f0899d78e3`). External masters, textures, cloth caches, source paintings and
+rendered frames remain under `ANIM_ROOT`; no upload is part of this workflow.
+Pillow lives in `$ANIM_ROOT/venv`. The sandbox denies `nice` priority changes and
+some thumbnail writes; the PATH gate still controls concurrency and threads.
+
+Start with a short CPU Cycles preview in the sandbox. Host Eevee uses Metal via
+`--gpu-backend metal`. Cycles GPU is an explicit separate path:
+
+```sh
+RENDER_ENGINE=CYCLES CYCLES_DEVICE=GPU CYCLES_BACKEND=METAL SAMPLES=64 tools/art/anim3d/render.sh c
+```
+
+Use `CYCLES_BACKEND=OPTIX`, `CUDA` or `HIP` on an appropriate host. GPU selection
+is verified; an unavailable GPU raises an error instead of silently using CPU.
+`CYCLES_DEVICE=CPU SAMPLES=12` is an explicitly labelled preview. No Cycles GPU
+claim is made from a CPU render or an Eevee render.
+
+## Infantry chapter: spearman family lead
+
+The body is MPFB 2.0.18 anatomy: 19,158 base vertices, original face/hands/toes and
+skin weights, plus its 53-bone `game_engine` skeleton. No primitive body or
+commercial character service is used. Hoplite kit is original code-built 3D
+geometry. Software is GPL-3.0-or-later; MPFB/MakeHuman body and system assets are
+CC0. PBR scans are CC0 ambientCG Metal034/Fabric030/Travertine001 and Poly Haven
+brown_leather/fine_grained_wood. Downloads and licences are pinned in
+`assets.lock.json` and `ANIM_ROOT/assets/`. `setup.py` installs the isolated assets.
+
+`scene.py` builds the muscular hoplite, cuirass, open Corinthian helmet bowl,
+horsehair crest, convex sunburst aspis, iron leaf blade/butt, ash shaft, greaves,
+pteruges, sandals and cloth cape. `helmet.py` adds a curved faceplate with genuine
+eye/mouth apertures. `materials.py` applies PBR; `bake.py` bakes real 512 px AO and
+Pointiness curvature. Solidify must be disabled for those bakes because generated
+inside faces share UVs and otherwise overwrite the visible surface with darkness.
+Correct winding before baking. `paint.py` is the earlier shield detail pass;
+`finish.py` adds crest fibres and a riveted waist belt.
+
+Round 3's `project.py` applies camera/pose alignment, wider braced ankles, raised
+fist, broader leaf blade, head view, flared folded wool, subdivided linen and a
+thick beveled leather ribbon. It preserves `projection-input.blend` before edits
+and restarts there on repeat runs, so changes do not accumulate. It writes named
+rest-camera UVs and a ray-visibility/facing mask to genuine deforming surfaces.
+The painted illumination layer blends with physical PBR; backs and undersides
+use generated bronze, wool, linen and leather fills. Prompt and hashes are in
+`fills.prompt.txt` / `fills.lock.json`; the original grid and quadrant PNGs live
+in `masters/spearman-3d-v2/textures/generated/` and are packed into the master.
+The source's own painted illumination is intentionally retained, so oblique
+poses still require review. The projection is not a general inverse-rendering
+solution and does not make imperfect geometry equal to the source.
+
+### Build from sources
 
 ```sh
 python3 tools/art/anim3d/setup.py
-```
-
-The system pack is about 268 MiB and its official server can be slow. Interrupted downloads resume; ZIP validation precedes extraction. `env.sh` sets Blender resource/config/script/data/cache paths. Blender's thumbnail writer nevertheless tries `~/.thumbnails`; the sandbox denies that nonessential write. `nice -n 10` is always invoked; this sandbox denies its priority adjustment. The four-thread cap remains in force. Temporary files also use `ANIM_ROOT/tmp`. The runner may additionally queue Blender through its machine-wide `blender-slot` shim; do not bypass it. Every heavy entry point takes one shared atomic lock at `~/LegatumRuns/anim-pilot/blender-heavy.lock`; never delete a live lock.
-
-## Build and review
-
-Run these in order from the repository root. Rebuilding the model invalidates downstream material bakes and clip masters; regenerate them.
-
-```sh
 tools/art/anim3d/render.sh build
-RENDER_ENGINE=CYCLES SAMPLES=12 tools/art/anim3d/render.sh b
+RENDER_ENGINE=CYCLES CYCLES_DEVICE=CPU SAMPLES=12 GRADE=0 tools/art/anim3d/render.sh b
 tools/art/anim3d/render.sh materials
 tools/art/anim3d/render.sh bake
 tools/art/anim3d/render.sh paint
 tools/art/anim3d/render.sh finish
-RENDER_ENGINE=CYCLES SAMPLES=32 tools/art/anim3d/render.sh c
+tools/art/anim3d/render.sh project
+RENDER_ENGINE=CYCLES CYCLES_DEVICE=CPU SAMPLES=16 tools/art/anim3d/render.sh c
 ```
 
-`scene.py` creates a muscular male with MakeHuman macro and arm-muscle targets, fits the game-engine skeleton, models a forged muscle cuirass, Corinthian helmet (the build stage runs `helmet.py` for its curved faceplate and real eye/mouth apertures), horsehair crest, convex sunburst aspis, iron-tipped ash spear, greaves, linen pteruges and leather sandals. The base is one stationary cream stone disc. The red cape is a subdivided cloth mesh with shoulder pins, self-collision and character/base colliders.
+Full rebuilds need the external generated fills named above. Rebuilding the
+master invalidates all clips and grades. New review images use `spearman-`;
+previous round images are retained for comparison. The current round's status
+and exact measured results live in `REVIEW.md`, not in this method document.
 
-`materials.py` uses ambientCG Metal034, Fabric030 and Travertine001 plus Poly Haven brown_leather and fine_grained_wood, all CC0. Pigment grading, multiscale hammering and visible edge materials supplement the scans. `bake.py` unwraps code geometry and bakes 512 px ambient occlusion and Cycles Pointiness curvature for cuirass, helmet, shield and skin. These are actual scene bakes, not fabricated maps. AO darkens cavities with a power curve; curvature drives bright metal edge wear and lower roughness. Solidify is disabled only while baking: its generated inner faces share UVs with the outer surface and otherwise overwrite the visible AO with darkness. The restored master retains its physical thickness. Maps are packed into the master and saved separately in `textures/baked/`. `paint.py` adds our original painting's shield brushwork with a calibrated UV map on the convex 3D aspis, blended with the PBR material; it is ordinary texture mapping, not a relief plane. This texture retains some painted lighting, so multi-view reuse needs review. `finish.py` adds crest fibre highlights, a riveted leather waist belt and variation in bronze roughness. These stages are repeatable. The `paint-clips` and `finish-clips` helpers remain useful for diagnosis; regenerate all clips from the final master before delivery so the source hash remains valid.
+### Motion, cloth and review
 
-`b` emits front, three-quarter and side views beside the painting. `c` emits a three-quarter comparison at native 256 and 64 px. Review files are written immediately to `~/LegatumRuns/anim-pilot/review/3d-v2/`; inspect and critique them before more expensive renders. The first `b` sheet is deliberately retained as first-stage evidence.
+CMU 77_02 standing and 02_01 walking use Bruce Hahne's 2010 MotionBuilder BVH
+conversion (research/commercial use permitted). Data came from mocap.cs.cmu.edu;
+the database was funded by NSF EIA-0196217. `mocap.py` preserves channel order and
+computes forward kinematics; `animate.py` retargets standing torso deltas and
+walking legs with an authored shield-bearing guard. Attack, hit and death are
+keyed on that same rig. Attack raises outside the right shoulder and slides the
+grip on the shaft to retain framing. Death opens the fingers, releases the spear
+across the front of the base, folds the legs and settles the shield.
 
-## Motion and cloth
-
-CMU 77_02 is standing and 02_01 is walking. The BVHs are Bruce Hahne's 2010 MotionBuilder conversion, retrieved from the una-dinosauria mirror. The accompanying licence permits research and commercial use and adds no restrictions on the conversion. Raw motion stays outside git. The data used in this project was obtained from mocap.cs.cmu.edu; the database was created with funding from NSF EIA-0196217.
-
-`mocap.py` parses BVH channel order and computes forward kinematics, removes travel/yaw, and supplies real captured motion to `animate.py`. Idle uses standing torso deltas; march retargets sagittal leg motion and adds a shield-bearing guard. The weapon arm intentionally does not copy free-walking arm swing. Attack, hit and death are authored keys on the same MPFB rig. The attack raises an overhand grip outside the right shoulder, shifts weight over the bent front knee, and extends above the shield rim; the shaft slides through the grip during the raise to retain both ends inside the fixed cell. This is a reusable retargeting starting point, not a universal full-body motion solver.
+Each clip has one second of cloth pre-roll and a persistent simulation bake.
+Light edge pinning keeps the cloak's broad rest silhouette while its middle
+moves. Lengths are 8/8/10/4/10 frames at 10/12/14/12/10 fps. Idle and move loop.
+Death's terminal sample is rendered **once and copied**, including identical PNG
+bytes. Never weaken the pixel-equality check to hide stochastic render noise.
 
 ```sh
 for clip in idle move attack hit death; do
   tools/art/anim3d/render.sh "animate-$clip"
-  RENDER_ENGINE=CYCLES SAMPLES=16 tools/art/anim3d/render.sh "e-$clip"
 done
-RENDER_ENGINE=CYCLES tools/art/anim3d/render.sh d
 ```
 
-Each clip first checks the sampled spear path against the rigid equipment before baking. A failed rebuild invalidates its old clip metadata so it cannot be packed accidentally. Every clip has a one-second cloth pre-roll, followed by actual cloth simulation baked to its separate `.blend`. The five output lengths are 8/8/10/4/10 at 10/12/14/12/10 fps; idle and move loop. Death opens the right hand and releases the spear onto the front edge of the stone before the body rolls onto it; the shield settles farther back. Its last two output samples use the same settled frame. `d` shows four attack poses. Each `e-*` writes a PNG strip with native 256 px cells and 64 px versions, plus animated WebP. Review animations loop for inspection even when the runtime clip is non-looping.
+### Lead's host GPU handoff
 
-## Host GPU render
-
-The sandbox has no Metal or Chromium. CPU previews use Cycles at low samples. On the host, the default engine is Eevee, using Blender's macOS GPU backend. Eevee does not use the Cycles `compute_device_type` switch. The host path explicitly passes `--gpu-backend metal`. The script does not silently fall back if Eevee fails.
+After the saved master and clips are rebuilt, render c first to fit the grade.
+Use the same engine/device/resolution for the rest and all clip renders.
 
 ```sh
+export RENDER_ENGINE=CYCLES CYCLES_DEVICE=GPU CYCLES_BACKEND=METAL SAMPLES=64 RESOLUTION=384
 tools/art/anim3d/render.sh c
+tools/art/anim3d/render.sh detail
 tools/art/anim3d/render.sh d
 for clip in idle move attack hit death; do
   tools/art/anim3d/render.sh "e-$clip"
 done
-```
-
-Use the same `ANIM_ROOT` (default above), resources and saved masters. `RESOLUTION=512 RENDER_ENGINE=CYCLES tools/art/anim3d/render.sh detail` followed by `"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/details.py` produces a chest/helmet/shield comparison. `RESOLUTION=512` can produce a closer inspection render; review and pack scripts downsample to 256. GPU images need fresh visual review because Eevee and Cycles differ. Hunyuan3D mini was skipped because the sandbox cannot use Metal/MPS and a CPU generation does not fit the requested light local workload. TRELLIS was not installed.
-
-## Pack and verify
-
-```sh
 source tools/art/anim3d/env.sh
 "$ANIM_ROOT/venv/bin/python" tools/art/anim3d/pack.py
 "$ANIM_ROOT/venv/bin/python" tools/art/anim3d/validate.py
-tools/art/anim3d/render.sh audit
-```
-
-Packing preserves all 40 frames, creates a 2560 × 1280 transparent WebP grid, quantizes alpha to 32 levels, and selects quality 85–60 while enforcing **200,000 bytes**. It refuses to overwrite delivery with an oversized atlas. The JSON format is exactly `{frame:{w,h,ax,ay}, clips:{name:{row,frames,fps,loop}}}`, anchor `(127,221)`. `pack.json` binds the atlas to each raw frame by SHA256 and records the actual engine/resolution/sample manifest for each clip. Packing refuses stale renders or clips whose source master hash differs from the current master; an interrupted rebuild cannot silently reuse old clips. Rendering invalidates its old manifest before writing frames, so an interrupted rerender also blocks packing. `validate.py` checks decoded size, metadata, all clips, alpha, padding, clipping margins, actual motion and held death. `audit.py` checks saved geometry, cloth, source topology and stationary base across all samples, plus hand-to-shaft distance before an intentional death release and spear centerline intersections with cuirass, shield and helmet bowl. It is not a full skin/cloth collision solver. `AUDIT_CLIP=attack tools/art/anim3d/render.sh audit` checks only an iteration of the attack.
-
-The review bar is the original painting: equally rich at 256 px, same identity and scale at 64 px, convincing anatomy and equipment, no plastic, blurred or toy-like finish. Compare source and render side by side; inspect chest, helmet and shield close-ups. Check planted feet, grip, spear clipping, cloth intersections, terminal death and the loop seam in motion. No technical check substitutes for the lead's art verdict. Keep the existing painting in the game until that bar is met. No app runtime is changed by this pipeline.
-
-For the next unit, start new external master and review directories; calibrate the painting's camera, proportions and anchor first. Adjust the MPFB macro targets, fit new kit to the same skeletal segments, select and license suitable captured motion, then author the combat keys. Repeat the plain, textured, pose and per-clip reviews before packing. Reuse the download, bake, retarget and validation approach; do not treat a copied spearman mesh, texture or motion as finished art for another unit.
-
-## Round 2 findings and handoff
-
-The original GPU sheets are retained in `review/3d-v2/round1-gpu/`. Round 2 checks the actual c/d/e frames at 256 and 64 px; CPU output is labelled by its render manifest and is not a GPU sign-off.
-
-- Correct normals and bake topology before increasing AO. The aspis had inward winding, and Solidify's shared inside/outside UVs contaminated the original helmet/cuirass bakes. More contrast on that defect only produced black metal.
-- Small-form identity needs geometry. The sunburst now has raised facet keels and side walls, a bright turned rim, and a less edge-on pose. The tall red crest is a front-to-back fan above a bronze bowl. Neither is supplied by a flat detail texture.
-- A bright metal palette, cavity contrast, curvature polish, hammer-scale bump/roughness and stronger key/rim lights work together. Scanned roughness or fine grain alone disappears at 64 px. The painting still has richer authored engraving and cloth folds; a technically valid atlas is not art approval.
-- Projected spear length matters as well as physical clearance. The first non-intersecting overhand pose was foreshortened; the revised direction shows the tip, while grip sliding keeps the butt inside the frame. Measure equipment intersections in world space rather than judging overlaps in a single picture.
-- A runner checked lane-2 out to the siege branch during a rebuild. Its WIP commit preserved the work, but the mixed build used old geometry. Continue this branch from `legatum/.worktrees/spearman-round2/`; do not switch the active siege checkout. Model/clip/render hashes now guard packing. Finish a full rebuild before trusting any interim output after a checkout interruption.
-
-The saved masters already contain the revised geometry, materials, rig and cloth caches. From the spearman branch checkout, the lead should render the GPU review and then repack:
-
-```sh
-tools/art/anim3d/render.sh c
-RESOLUTION=512 tools/art/anim3d/render.sh detail
-source tools/art/anim3d/env.sh
+"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/test_pipeline.py
 "$ANIM_ROOT/venv/bin/python" tools/art/anim3d/details.py
-tools/art/anim3d/render.sh d
-for clip in idle move attack hit death; do
-  tools/art/anim3d/render.sh "e-$clip"
-done
-"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/pack.py
-"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/validate.py
+"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/movie.py
 tools/art/anim3d/render.sh audit
 ```
 
-Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
+The optional comparison movie requires `ffmpeg` on PATH and encodes with two
+threads. For Eevee use `export RENDER_ENGINE=BLENDER_EEVEE RESOLUTION=384` instead. Review
+both sizes and playback after each engine change. `grade.py` keeps raw PNGs in
+each render directory and binds one frozen RGB LUT to the source/master.
+
+### Delivery contract and checks
+
+`pack.py` preserves all 40 frames in a transparent 2560 × 1280 WebP, alpha
+quantized to 32 levels, quality selected from 85–60 with a strict **200,000-byte**
+cap. Oversize fails without overwriting delivery. JSON remains exactly
+`{frame:{w,h,ax,ay}, clips:{name:{row,frames,fps,loop}}}`, anchor `(127,221)`.
+Master, clip, render, grade and individual frame hashes prevent stale packaging.
+Interrupted stages invalidate their completion manifests.
+
+`validate.py` checks decoded dimensions, metadata, all clips, padding, alpha,
+bounds, actual motion and pixel-identical held death. `audit.py` checks all 40
+samples for original body/rig topology, persistent cloth, stationary base, floor
+and camera bounds, hand/shaft distance and spear centerline intersections against
+shield, cuirass and helmet. It is not a full cloth/skin collision solver.
+`AUDIT_CLIP=attack tools/art/anim3d/render.sh audit` narrows an iteration check.
+Run Python/Bash syntax, whitespace and repository hygiene at completion; no
+Rust/WASM/app tests are needed for art-only changes. The lead still runs the
+browser/art gate and Claude art review before integration.
+
+Non-obvious findings: preserve outward normals and the authored bake surface;
+read projected weapon length as well as world-space clearance; use one camera
+through calibration and clips; freeze the grade across animation; duplicate a
+held render rather than render the same simulation sample twice. Keep the
+spearman checkout on `astra/unit-anim-3d-v2`; the siege lane has a separate tree.
