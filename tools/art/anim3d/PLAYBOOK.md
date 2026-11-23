@@ -106,3 +106,68 @@ tools/art/anim3d/render.sh audit
 ```
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
+
+## Infantry / trench infantry chapter
+
+`units/trench-infantry/` is an isolated true-3D MPFB pipeline. The grey-blue
+weighted greatcoat has real folds and thickness; helmet/brim/crest, leather
+webbing, cartridge pouches, backpack, rolled blanket, puttees, boots and upright
+bolt-action rifle/bayonet are separate full-depth meshes. No relief card or
+per-frame projection substitutes for geometry.
+
+Use the four standing finish levers together: fit the rest camera/pose to the
+painting and freeze its projected UV pigment on the finished surfaces; finish
+hard edges with bevels and cloth/straps with thickness and folds; light with a
+warm upper-left product key, soft fill and cool rim; fit a bounded RGB-quantile
+grade at rest and freeze that grade for every clip. Painting colour is camera-ray
+pigment over physical materials, avoiding double illumination; unseen surfaces
+retain generated painted fills. Standard display is intentional for the authored
+pigment, not a photographic exposure preset. The cream stone albedo is sRGB
+**#E9CFA0**, converted to linear RGB `(0.815, 0.624, 0.352)` for Blender. Inspect
+actual rendered stone pixels as well as that setting.
+
+Rest judgment is painting/render/50% crossfade at native 256 and 64 px in
+`trench-infantry-f-restpose-compare.png`. The close-up sheet is diagnostic only;
+upscaling it does not demonstrate 512 px quality. Interim b/c/d/e sheets and
+animated WebPs are written immediately after their stages; the log is external.
+
+Open motion is the standard for all people on foot: CMU free-use or Quaternius
+CC0 idle/walk/hit/death, with matched reference/rest poses and bone rolls.
+Only weapon attacks are authored. This unit uses Quaternius through Blender
+constraints. Do not hand-correct foot rotations after retargeting. Calibrate the
+source/target forward axes instead. Each round must include top and front feet
+over a complete move cycle in `<slug>-g-feet-check.png`; check forward direction
+and contact against virtual ground travel, not an in-place sprite's stationary
+base. Root contact correction must not conceal an incorrect rest mapping.
+
+```sh
+RESOLUTION=256 SAMPLES=4 tools/art/anim3d/units/trench-infantry/render.sh build
+tools/art/anim3d/units/trench-infantry/render.sh animate
+RESOLUTION=256 SAMPLES=4 tools/art/anim3d/units/trench-infantry/render.sh preview
+tools/art/anim3d/units/trench-infantry/render.sh feet
+tools/art/anim3d/units/trench-infantry/render.sh pack
+# Entire lead-side GPU pass (no arguments):
+ROUND=1 tools/art/anim3d/units/trench-infantry/gpu.sh
+```
+
+Every Blender process uses plain `blender -b --disable-autoexec` on PATH, through
+the machine gate. CPU previews use Cycles. The GPU script explicitly requires
+Cycles Metal GPU, refuses fallback, rebuilds, renders every stage at 512, saves
+512/256 masters externally, renders feet, audits, packs, validates and writes
+`trench-infantry-round${ROUND}.mp4`. Its success receipt is technical evidence,
+not art approval; a PASS marker requires the painting and motion bar to be met.
+
+### Trench infantry trimmed atlas format
+
+All 40 frames remain: idle 8, move 8, attack 10, hit 4, death 10. `version:2`
+contains `atlas:{w,h}`, `frame:{w:160,h:160,ax:80,ay:140}`, and
+`clips:{name:{row,frames,fps,loop,rects:[{x,y,w,h,ox,oy},...]}}`.
+Logical rows are idle/move/attack/hit/death, but their packed height is variable.
+A rectangle is reconstructed at `(ox,oy)` in a transparent 160px frame, or drawn
+at `anchor + (ox-ax,oy-ay)*scale`. Never infer fixed source cells from `row`.
+Only exactly duplicated held frames share a rectangle. Quality is 90 down to 75;
+exceeding 200,000 bytes fails instead of dropping frames/quality. Validation
+checks source and master hashes, counts, alpha reconstruction, offsets, motion,
+held death, margins and cap. The MP4 decodes this atlas, restores offsets and
+shows all clips at 2x on cream, H.264/yuv420p, 240 frames over eight seconds.
+No runtime/UI integration or painting replacement is included.
