@@ -91,7 +91,7 @@ scripts/build-wasm.sh && cd app && npm ci && npx playwright install chromium && 
 `cargo test --workspace --release --lib --bins --tests` runs the same tests without building them.
 
 These are the commands CI runs (`.github/workflows/ci.yml`). Browser end-to-end tests (Playwright) are
-described in [app/README.md](app/README.md#browser-end-to-end-tests); CI does not run them.
+described in [app/README.md](app/README.md#browser-end-to-end-tests). CI runs a smoke subset on every pull request (the `e2e-smoke` job); the full suite runs nightly on `master`.
 
 Positions in `scenarios/` are AI measurement fixtures, including the stable `scenarios/lab/` cuts from
 recorded games. They are not a player menu. See [scenarios/README.md](scenarios/README.md) for cutting,
