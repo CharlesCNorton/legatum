@@ -106,3 +106,68 @@ tools/art/anim3d/render.sh audit
 ```
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
+
+## Infantry: eagle warrior — round 1
+
+The unit-local implementation is `units/eagle-warrior/`. It reuses the MPFB
+infantry anatomy/weights and the v2 infantry branch's frozen-camera projection
+method. Geometry and delivery helpers are unit-local snapshots adapted from the
+peltast and barbarian-pikeman lanes; it has no runtime dependency on their trees.
+The original painting, feather backfill, editable blends, real AO/Pointiness
+bakes and frames are external under `assets/eagle-warrior/` and
+`masters/eagle-warrior/`. `assets.lock.json` pins source inputs.
+
+All six installed Blender skills inform this chapter. The standard four quality
+levers are: match the painting's camera/pose and freeze its projection UVs onto
+real surfaces; finish geometry with curved feather vanes, physical thickness,
+folded cloth, a volumetric open hood and beveled equipment; use warm upper-left
+key, soft fill and cool rim; fit one foreground RGB histogram grade at rest and
+reuse it for every clip. The projection uses ray visibility and facing masks so
+unseen surfaces retain real material shading and generated feather fills. It is
+not a camera billboard or a relief-plane replacement for anatomy. Standard view
+transform is deliberate here to preserve the painting's sRGB pigments; these
+are painted miniature sprites, not photographic output.
+
+The shared stone pigment is **#E9CFA0**, converted from sRGB to linear shader
+values, with a darker warm vertical rim. It is one stationary disc, not stepped
+or parented to the rig. Camera/projection remain fixed through motion. Inspect
+`eagle-warrior-f-restpose-compare.png`: painting, rest render, half split and
+50/50 crossfade. Render success and file size never constitute art approval.
+
+```sh
+tools/art/anim3d/units/eagle-warrior/build.sh
+# CPU review only; every invocation uses the PATH blender gate, serially.
+STAGES=b-plain,c-textured-lit,c-details,d-rig-poses,e-idle,e-move,e-attack,e-hit,e-death \
+  RESOLUTION=256 SAMPLES=8 tools/art/anim3d/units/eagle-warrior/render.sh
+# Host-side final GPU pass; driver sets ROUND. No arguments.
+ROUND=1 tools/art/anim3d/units/eagle-warrior/gpu.sh
+```
+
+The GPU handoff audits geometry and current clip/master hashes, renders every
+review stage and all 40 frames with Cycles Metal at 512 px, keeps both 512/256
+masters, builds the trimmed 160 px atlas, validates it and encodes the eight-second
+five-clip MP4 (`eagle-warrior-round${ROUND}.mp4`, H.264/yuv420p, 1600×348).
+No engine fallback is silent. Local review uses Cycles CPU. No zero-scale hiding,
+volume effects, external accounts, uploads or paid services are used.
+
+### Eagle warrior trimmed atlas contract (version 2)
+
+`frame:{w:160,h:160,ax:83.75,ay:139.375}` defines the untrimmed logical frame and
+its ground anchor. `atlas:{w,h}` gives actual packed dimensions. `clips` retains
+idle/move/attack/hit/death row order and the frame counts 8/8/10/4/10, with `fps`
+and `loop`. Each clip adds `rects:[{x,y,w,h,ox,oy}, ...]`: crop `(x,y,w,h)` from
+the atlas and place it at `(ox,oy)` in a transparent 160×160 logical cell; to draw
+at a world anchor, position the crop at `(worldX-ax+ox, worldY-ay+oy)`. Packed rows
+have variable height, so multiplying row by 160 is invalid. Two-pixel gutters
+separate crops. This is an art candidate; the existing runtime is not changed.
+
+Packing tries quality 90, 85, 80, then 75 and fails above 200,000 bytes; no dropped
+frames, reduced quality floor or alpha quantization. Checks reconstruct every
+trimmed frame and compare alpha exactly against the masters, verify clip counts,
+transparent margins, real motion, source hashes and pixel-identical settled
+death. The last death sample is copied, not rerendered with stochastic noise.
+Five authored skeletal clips and rigid feather attachments are used; no cloth
+simulation or motion-capture retargeting is claimed for this unit. Review foot
+contact, feather intersections and projection stretching separately from those
+technical checks. A PASS file is written only after visual approval, not by the
+GPU or packing scripts.

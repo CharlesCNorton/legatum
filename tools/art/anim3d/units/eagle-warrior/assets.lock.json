@@ -1,0 +1,20 @@
+{
+  "source_bbox": [
+    222,
+    10,
+    1032,
+    1244
+  ],
+  "token_bbox": [
+    52,
+    12,
+    203,
+    244
+  ],
+  "method": "alpha bbox affine registration to original token; full source RGB retained",
+  "sha256": {
+    "painted-feathers.png": "7d0e3de72a097391d26a5283dbbb4b4af376d6074d02492bb1ea27dea3fe85f3",
+    "projection.png": "b768d909a61d0f2e0fcc5461ba84e3dbcfaaf87295b0a8c1073dc751e1f055c6",
+    "painting-source.png": "f63f6dd7e224676ae242fc1a09c2bf7db617ad616afc5081925a94466cec5b8f"
+  }
+}
