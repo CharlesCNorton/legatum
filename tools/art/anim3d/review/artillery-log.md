@@ -94,3 +94,11 @@
 - Published e-hit: 4 actual rendered frames, 12 fps; GPU 512px 64 samples.
 - Published e-death: 10 actual rendered frames, 10 fps; GPU 512px 64 samples.
 - Completed all five clips and geometry audit; delivery pack may now run.
+
+# Artillery round 3
+- Opened round-2 GPU c/f comparisons, all five e-strips and eight MP4 samples before edits. At 256px the base is flat/uniform, near trail too low/left, wheel pigment muddy, recuperator/barrel and central yoke misregistered. At 64px the same artillery reads, but silhouette/tonal structure remain distinguishable. Move shows bright tire streaks rotating from contaminated projected stone; hit lifts the chassis too far; death remains a modest slump. Not PASS.
+- Driver GPU log is empty because gpu.sh redirects to artillery-gpu-pass-r2.log; the latter completed successfully. Verified GPU512 receipt: atlas 180,322 bytes at Q80, art_approved=false. Preserved all prior GPU masters and reviews in round2-gpu directories.
+- Read every local PLAYBOOK chapter, all 23 shared feedback items, unit history and project art instructions. artillery-FEEDBACK.md is absent. Loaded all six Blender skills: finished bevel topology, painting-calibrated camera/volume, pigment/PBR separation, warm product lights, mechanical keys and actual frame review. Reusing the recorded image-generated olive fill; no crew, cloth or straps are present in this painting.
+- Published b-plain CPU/GPU geometry stage before texture work.
+- Baked 256px AO and curvature maps on GEO-Shield wing -1, GEO-Shield wing 1, GEO-Hollow tapered barrel
+- Published painted rest pose and 50/50 comparison; real AO shader, micrograin, edge geometry and hidden-surface fill.

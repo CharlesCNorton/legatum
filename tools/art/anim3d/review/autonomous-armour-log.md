@@ -219,3 +219,17 @@ Round 2 measured geometry: whole-image silhouette IoU .905581 -> .926168; above 
 Round 2 final CPU delivery PASS: all 40 clip samples at 256/Cycles CPU8; trimmed 160 atlas 198432 bytes, Q90, premultiplied bicubic reduction and exact 8-bit alpha reconstruction. Idle/move seam ratios 1.00283/.98190; held death exact. Round2 MP4 is 1600x348, H.264/yuv420p, 240 frames/eight seconds. GPU512 masters remain pending host gpu.sh.
 Round 2 handoff checks: executable gpu.sh, 8 Python syntax parses, 2 Bash syntax checks and diff whitespace pass; missing-input and interrupted-rebuild trials fail at preflight with transcripts and no success receipt; independent GPU provenance check rejects CPU stage b. Art verdict is separate from these technical passes.
 Round 2 closeout: archived exact reviewed masters, renders, atlas and review evidence in masters/autonomous-armour/round2-cpu before host replacement. No 512 directory exists yet. Git add/commit both failed because .git/worktrees/lane-2/index.lock creation is denied; changes are left for the runner to commit. origin/master is already an ancestor of HEAD; no fetch, push, PR or merge to master performed.
+Saved-scene audit PASS: current source hashes, 128 track links, 18 wheels, stationary base, nonzero scales, loop closure keys and held death.
+Rendered b: 3 PNGs, 512 px, CYCLES GPU, 96 samples.
+Rendered c: 1 PNGs, 512 px, CYCLES GPU, 96 samples.
+Published c review immediately; frozen grade ac388c7cfea2, 256 masters retained.
+Rendered details: 2 PNGs, 512 px, CYCLES GPU, 96 samples.
+Published details review immediately; frozen grade ac388c7cfea2, 256 masters retained.
+Rendered d: 4 PNGs, 512 px, CYCLES GPU, 96 samples.
+Published d review immediately; frozen grade ac388c7cfea2, 256 masters retained.
+Rendered g: 16 PNGs, 512 px, CYCLES GPU, 96 samples.
+Published g review immediately; frozen grade ac388c7cfea2, 256 masters retained.
+Rendered e-idle: 8 PNGs, 512 px, CYCLES GPU, 96 samples.
+Published e-idle review immediately; frozen grade ac388c7cfea2, 256 masters retained.
+Rendered e-move: 8 PNGs, 512 px, CYCLES GPU, 96 samples.
+Published e-move review immediately; frozen grade ac388c7cfea2, 256 masters retained.
