@@ -68,3 +68,23 @@
 - Round 1 remains below painting parity at 256; recognizable at 64. Head/feather/skirt contour, exposed-material transitions, cuffs and fall overhang remain. No PASS. Host GPU/512 pass pending; executable gpu.sh handles every stage and receipt.
 - Audit passed: five clips, source hashes, 53-bone rig, fixed base and positive object scales.
 - Final working-file hygiene: zero findings; Python/Bash syntax and whitespace checks pass. All 17 required review artifacts present, 40 CPU256 masters retained. Git staging denied at index.lock; runner must commit. No push, PR or PASS.
+- Built MPFB standing reislaufer, steel breastplate, slashed two-colour clothing, feathered beret and solid pike.
+- Posted b-plain review (GPU, 512 px).
+- Finished-surface camera-only projection applied; physical stone excluded and generated fills retained.
+- Posted c-textured-lit review (GPU, 512 px).
+- Saved idle skeletal action, 8 samples.
+- Saved move skeletal action, 8 samples.
+- Saved attack skeletal action, 10 samples.
+- Saved hit skeletal action, 4 samples.
+- Saved death skeletal action, 10 samples.
+- Posted b-plain review (GPU, 512 px).
+- Posted c-textured-lit review (GPU, 512 px).
+- Posted d-rig-poses review (GPU, 512 px).
+- Posted e-idle review (GPU, 512 px).
+- Posted e-move review (GPU, 512 px).
+- Posted e-attack review (GPU, 512 px).
+- Posted e-hit review (GPU, 512 px).
+- Posted e-death review (GPU, 512 px).
+- Posted g-feet-top review (GPU, 512 px).
+- Posted g-feet-front review (GPU, 512 px).
+- Audit passed: five clips, source hashes, 53-bone rig, fixed base and positive object scales.
