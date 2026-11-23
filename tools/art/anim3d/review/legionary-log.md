@@ -68,3 +68,11 @@
 - Published e-death: CYCLES/CPU, 512 px, 8 samples; visual review pending.
 - Final corrected CPU8/512 render set complete: 48 diagnostic/clip images at both native 512 and gallery256; provenance gate PASS. Stronger geometry audit PASS across 40 samples; remaining warning is terminal skin minimum .204m over dropped equipment. Packed 40 trimmed160 frames to 197,774 bytes at Q85 (1066x766), with full 8-bit alpha and identical-frame rectangle reuse. Decoded alpha/offset/hash/margin/motion/held-death validation PASS. MP4 ffprobe PASS: H.264/yuv420p, 1600x348, 240 frames/eight seconds.
 - Final visual readback: current rest comparison, decoded Q85 atlas and representative MP4 frames inspected. Richer paint and cleaner shoulders/cream stone; fingers no longer show through shield. Still below painting at256 (grip/arm proportions, face/helmet contour, shield outline, stiff death/newly exposed skin);64 clearly same identity but distinguishable pose. No PASS marker. Final syntax/executable/whitespace and working-file hygiene line checks PASS (14 changed/new files); baseline art gate Chromium render-sets.mjs exits1. Baseline false email flags on matrix @ expressions fixed with AST-identical whitespace. No new legionary-specific feedback. origin/master already contained. Git add/commit denied lane-7 index.lock: runner must commit; requested trailer is in tmp/legionary-round2-commit.txt. GPU host pass remains unverified and is exactly ROUND=2 tools/art/anim3d/units/legionary/gpu.sh.
+- Published b: CYCLES/GPU, 512 px, 64 samples; visual review pending.
+- Published c: CYCLES/GPU, 512 px, 64 samples; visual review pending.
+- Published d: CYCLES/GPU, 512 px, 64 samples; visual review pending.
+- Published e-idle: CYCLES/GPU, 512 px, 64 samples; visual review pending.
+- Published e-move: CYCLES/GPU, 512 px, 64 samples; visual review pending.
+- Published e-attack: CYCLES/GPU, 512 px, 64 samples; visual review pending.
+- Published e-hit: CYCLES/GPU, 512 px, 64 samples; visual review pending.
+- Published e-death: CYCLES/GPU, 512 px, 64 samples; visual review pending.
