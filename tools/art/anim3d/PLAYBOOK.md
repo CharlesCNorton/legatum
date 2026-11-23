@@ -106,3 +106,82 @@ tools/art/anim3d/render.sh audit
 ```
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
+
+## Vehicles / aircraft — stealth fighter
+
+Unit-local code is in `units/stealth-fighter/`; this chapter describes only that
+lane. Reuses the newer bomber branch's MIT projection, bake, delivery and movie
+helpers, and the vehicles family's version-2 trim contract. Build with
+`tools/art/anim3d/units/stealth-fighter/render.sh build`. All Blender commands are
+plain `blender -b --disable-autoexec` through the PATH gate; one heavy process at
+a time. No direct application path and no zero-scale hiding.
+
+The closed faceted fuselage, wedge wings, twin fins, engine spines, gold canopy,
+recessed intake throats and open exhaust shrouds have real depth and bevelled
+edges. The painting's flight angle and curved limestone support are preserved.
+Three plain views expose geometry for review; a rest-camera match alone is
+insufficient. Aircraft uses a rigid root and two control-surface pivots. Motion
+is mechanical: idle bank, forward-flight bank, attack run/missile release,
+hit recoil and descending crash with impact deformation and terminal hold.
+The stationary support disappears during the crash using keyed visibility.
+The wreck is settled against the actual base footprint, with a numerical
+contact check. The base itself remains stationary and visible.
+
+### Required quality methods
+
+1. Register the full source painting to the token's camera and silhouette,
+   finish actual surfaces, then freeze camera UVs. Facing/visibility confidence
+   blends projected pigment into a licensed generated painted-metal fill on
+   hidden surfaces. Do not project onto a flat image card or camera-facing mesh.
+2. Bevel hard edges and retain real material thickness, recessed apertures and
+   separate controls. Six actual 512px Cycles AO/Pointiness maps supply cavity
+   grime and restrained edge wear on the body and wings.
+3. Warm upper-left area key, soft fill, cool rim and contact occlusion. Painted
+   pigment is camera-only so it cannot illuminate adjacent geometry. Standard
+   view transform preserves already-lit source colours; physical components
+   still receive product lighting. This is specific to source-paint matching.
+4. Measure 10/50/90% RGB quantiles against the original and freeze one bounded
+   grade for every painted frame. Do not independently grade clips. Inspect
+   `<slug>-f-restpose-compare.png`: painting, render, 50/50 crossfade at 256/64.
+
+Shared stone target is warm cream **#E9CFA0** (sRGB; linear base pigment about
+`.815,.624,.352`), roughness .86 with fine procedural grain and darker rim.
+Judge the rendered pixels: lighting changes the pigment. The base uses physical
+stone, not a permanently projected stand shadow.
+
+### Delivery and host pass
+
+`ROUND=1 tools/art/anim3d/units/stealth-fighter/gpu.sh` is the executable,
+no-argument GPU entry point from repository root. It explicitly requires Metal
+Cycles, renders b/c/d/g and all five clips at 512px with denoising, produces
+256px masters, every review sheet and animated WebP, runs geometry/delivery
+checks, and writes an eight-second H.264/yuv420p five-clip movie on cream at 2x.
+The driver supplies ROUND. GPU receipts verify actual device, source hashes,
+render hashes, grade and master sizes. A CPU preview cannot pass this gate.
+All masters stay in `$ANIM_ROOT/masters/stealth-fighter/`; review assets in
+`review/3d-v2/` are published after each stage. GPU results need visual review;
+no script creates a PASS marker.
+
+Atlas v2 preserves 8/8/10/4/10 frames in idle/move/attack/hit/death order, with
+160x160 logical cells and frame anchor `ax=80, ay=132`. Each clip has `row`,
+`frames`, `fps`, `loop` and `sprites[]`. A sprite is `{x,y,w,h,ox,oy}`: atlas
+rectangle plus its trim offset inside the logical cell. Draw at
+`worldAnchor - (ax,ay) + (ox,oy)` using the same display scale throughout.
+Rows have variable height; `row` is ordering metadata, not a fixed-grid stride.
+Identical held cells reuse one rectangle for exact decoded stability.
+Full alpha is retained, margins trimmed, transparent gutters added; quality
+95/90/85/80/75 is tried in order, refusing output above 200,000 bytes at Q75.
+Validation reconstructs every cell and checks alpha/offsets, padding, source
+hashes, actual motion and held death. This candidate does not wire app runtime.
+
+### Open motion standard and aircraft exception
+
+For humans, default to CMU free-use or Quaternius CC0 idle/walk/hit/death,
+retargeted in Blender/Rokoko with rest-pose and bone-roll alignment; only the
+weapon-specific attack is authored. Animals use a licensed CC0 animated
+quadruped. Never repair foot orientation after retargeting. Each round renders
+top/front views across the whole move cycle to `<slug>-g-feet-check.png`,
+checking travel direction and foot sliding. This aircraft has no feet or gait;
+its corresponding sheet shows actual top/front flight and control movement,
+explicitly labelled N/A for feet/mocap. Source and licence records are both
+unit-local and in the external asset ledger.

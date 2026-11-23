@@ -1,0 +1,19 @@
+{
+  "box": [
+    7,
+    125,
+    1247,
+    1129
+  ],
+  "scale": 0.7483870967741936,
+  "offset": [
+    48,
+    136
+  ],
+  "sha256": {
+    "projection-mask.png": "92d103ae3b35360d5c817ca0287ddaf222ce4889a230003c99128f0c56eef900",
+    "stealth-fighter-source.png": "318d0a41906a797305ec7a0b53173896fc5a36dbc1dc0f077571a785e446686f",
+    "painted-fill.png": "1f21a9f2dba4580237d2b1c44abba62557bd2143cceabca47d1aeb004f5297ad",
+    "projection.png": "f95cacec2673a414996cb2c15bb300c988081695704ab318f19fc5faf9aa6794"
+  }
+}
