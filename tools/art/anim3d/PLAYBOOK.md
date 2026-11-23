@@ -106,3 +106,112 @@ tools/art/anim3d/render.sh audit
 ```
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
+
+## Infantry / peltast — round 1
+
+This chapter owns only `units/peltast/`. It follows the MPFB infantry method above,
+with an original throwing stance and kit fitted to the peltast painting, rather
+than a recoloured hoplite. All six installed Blender skills informed the build:
+anatomical subdivision and rounded/thick kit; layered cloth/skin/reed materials;
+warm upper-left product key, soft fill and cool rim; calibrated orthographic
+camera; joint keys and delayed cloak deformation; transparent Cycles previews,
+retained image sequences, and an explicit Metal GPU final pass.
+
+**The four quality levers are the standard method.** Match the painting's camera
+and rest pose, then freeze the original painting as UV base colour on genuine 3D
+surfaces. Blend by incidence and source alpha into generated painted fills on
+unseen faces. Finish actual geometry (cloth folds and thickness, boot laces,
+cap fur/ears, rawhide binding, dished wicker, beveled iron tips); use a product
+lighting setup; freeze a bounded histogram grade measured against the original.
+A reference projection cannot repair a mismatched silhouette or anatomy. Judge
+painting/render/50% crossfade at rest, at native 256 and 64 px; successful checks
+are not art approval. Do not write a PASS marker while the likeness falls short.
+
+The shared stone target is sRGB **#E9CFA0**: convert sRGB to scene-linear before
+setting Principled Base Color, keep a rough fine-grained surface and one low
+beveled disc, and check the *displayed* result. Peltast records a separate,
+reference-measured limestone colour correction so the figure histogram does not
+turn the base grey. That correction is frozen across clips, not independently
+fitted per frame.
+
+External dependencies reuse MPFB 2.0.18, MakeHuman eyes, Blender and Pillow from
+`env.sh`. `assets/peltast/painting-source.png` is our original CC BY 4.0 master;
+`painted-fills.png` is original generated red linen, blue wool, wicker and leather.
+The prompt and prepared-file SHA256 inventory are in the unit directory. Fetch
+only into `ANIM_ROOT/assets/peltast/`; all blend files, 512/256 images and baked
+maps stay under `ANIM_ROOT/masters/peltast/`. The repository contains only scripts,
+provenance and the small delivery atlas. Source downloads/licences are recorded
+in `ANIM_ROOT/assets/SOURCES.md`.
+
+From the repository root, rebuild sequentially:
+
+```sh
+source tools/art/anim3d/env.sh
+"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/peltast/prepare.py
+tools/art/anim3d/units/peltast/render.sh bootstrap
+tools/art/anim3d/units/peltast/render.sh build
+tools/art/anim3d/units/peltast/render.sh b
+tools/art/anim3d/units/peltast/render.sh paint
+tools/art/anim3d/units/peltast/render.sh bake
+RESOLUTION=512 tools/art/anim3d/units/peltast/render.sh c
+tools/art/anim3d/units/peltast/render.sh animate
+tools/art/anim3d/units/peltast/render.sh d
+for clip in idle move attack hit death; do
+  RESOLUTION=512 tools/art/anim3d/units/peltast/render.sh "e-$clip"
+done
+"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/peltast/pack.py
+"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/peltast/validate.py
+tools/art/anim3d/units/peltast/render.sh audit
+"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/peltast/mp4.py
+```
+
+Every invocation is plain `blender -b --disable-autoexec ...` through the PATH
+gate. No independent lock, executable bypass, thread override, or overlapping
+heavy processes. The unit defaults to Cycles CPU. GPU finals use Cycles/Metal
+with denoising, fail if Metal is missing, and never silently fall back:
+
+```sh
+tools/art/anim3d/units/peltast/gpu.sh
+```
+
+This no-argument entry point rerenders b/c/d and all five clips at 512 px,
+regenerates 256 px masters, all reviews (including `peltast-f-restpose-compare.png`),
+the trimmed atlas, validation and geometry/animation audit, and
+`peltast-round${ROUND:-1}.mp4`. The video is eight seconds, five clips side by side
+at 2x the shipped size on cream, H.264 yuv420p. Raw renders, manifests, prepared
+textures and packed blend images make the pass reproducible without new downloads.
+
+Animation uses the 53-bone MPFB rig with authored keys (no new mocap): idle
+breathing, a stepping guard move, overarm throw/recovery, a hit recoil and a fall
+with independent equipment release and a held final pose. Cloak follow-through
+is an authored shape key, **not a claimed cloth simulation**. Visibility keys hide
+the released javelin; no geometry is scaled to zero. Source/clip/render/grade
+hashes prevent packing stale or mixed passes. The audit checks mesh volume,
+transforms, base stability, loop closure and the terminal hold. It does not claim
+a complete skin/cloth/equipment collision solver.
+
+### Peltast atlas contract (trimmed version 2)
+
+Compatible with the siege family's `version:2` rectangle convention; the logical
+frame is 160×160. Five physical shelves preserve idle/move/attack/hit/death row
+order, with 8/8/10/4/10 entries. `frame:{w,h,ax,ay}` defines the untrimmed logical
+canvas and its ground anchor. `atlas:{w,h}` records encoded dimensions. Each
+`clips[name]` keeps `row`, numeric `frames`, `fps`, `loop` and ordered
+`rects:[{x,y,w,h,ox,oy}, ...]`. `x/y/w/h` selects the tightly cropped atlas region;
+`ox/oy` restores it in the logical frame. Draw at
+`(anchorX + ox - ax, anchorY + oy - ay)` with the desired scale. Atlas rectangles
+have a transparent one-pixel gutter. RGB quality remains 75. The packer tries
+256, 64, then 32 alpha levels (maximum opacity error 0, 2, or 4/255 as
+conservatively bounded in the report; actual quantizer errors are checked).
+WebP stores the chosen alpha losslessly. This follows the original infantry
+pipeline's bounded alpha quantization; full-alpha 512/256 masters are retained.
+The packer refuses >200,000 bytes at 32 levels rather than removing frames or
+lowering RGB quality. The measured report records the chosen alpha levels. Existing fixed-grid consumers must use the rects to display this
+candidate; this lane does not change runtime wiring.
+
+Peltast attachment finding: a posed/scaled bone can have shear. Parenting and
+then assigning `child.matrix_world = old_world` decomposes the inverse into TRS,
+which distorted the shield and shifted its UV registration. The unit helper first
+measures the bone parent's full world matrix with identity child transforms, then
+stores its inverse in `matrix_parent_inverse` and the original transform in
+`matrix_basis`. This retains the authored geometry without approximating shear.
