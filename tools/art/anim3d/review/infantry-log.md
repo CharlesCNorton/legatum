@@ -67,3 +67,15 @@
 - MP4 verified: 8 s, 240 frames, 1600x348 H.264 yuv420p, five decoded clips 2x on cream with CPU labels; decoded frame visually inspected. Python compile/shell syntax/whitespace pass. GPU receipt verifier correctly rejects CPU previews.
 - Honest round-1 verdict: same unit readable at 64px; face/helmet/sleeve/jacket fit, painted unseen surfaces, dark rim and death deformation remain below the painting at 256px. No PASS. Genuine 512px masters await host GPU script; nothing was upscaled and called a master.
 - Commit attempt blocked: sandbox denied .git/worktrees/lane-18/index.lock. All changes left for runner; no push/PR. origin/master already ancestor; no merge needed.
+- Built MPFB anatomical body, 53-bone rig, olive field jacket, netted helmet, webbing, rifle and raised grenade; plain.blend saved.
+- Posted b-plain review (GPU, 512 px).
+- Baked real 256px Cycles AO and Pointiness curvature for helmet and jacket; physical recess grime and edge roughness applied.
+- Finished-surface camera projection with camera-only pigment; generated hidden fills retained.
+- Posted c-textured-lit review (GPU, 512 px).
+- Retargeted CC0 / weapon-layer and saved idle action (8 output frames).
+- Retargeted CC0 / weapon-layer and saved move action (8 output frames).
+- Retargeted CC0 / weapon-layer and saved attack action (10 output frames).
+- Retargeted CC0 / weapon-layer and saved hit action (4 output frames).
+- Retargeted CC0 / weapon-layer and saved death action (10 output frames).
+- Posted d-rig-poses review (GPU, 512 px).
+- Posted e-idle review (GPU, 512 px).
