@@ -106,3 +106,92 @@ tools/art/anim3d/render.sh audit
 ```
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
+
+## Vehicles — landship / Early Tank (round 1)
+
+This unit's isolated implementation lives in `tools/art/anim3d/units/landship/`.
+It reuses the vehicles family's full-depth camera registration, painted projection,
+trimmed delivery and video methods, without changing its shared scripts. All six
+Blender skills informed modeling, materials, lighting, camera, mechanical animation
+and render inspection. There is no visible human crew in this painting.
+
+```sh
+tools/art/anim3d/units/landship/render.sh build
+tools/art/anim3d/units/landship/render.sh b
+tools/art/anim3d/units/landship/render.sh bake
+tools/art/anim3d/units/landship/render.sh animate
+SAMPLES=12 tools/art/anim3d/units/landship/render.sh c
+# Render d, e-idle, e-move, e-attack, e-hit, e-death and g in that order.
+# Complete lead-side pass, no arguments, from repository root:
+ROUND=1 tools/art/anim3d/units/landship/gpu.sh
+```
+
+Every invocation is plain `blender -b --disable-autoexec` through the PATH gate.
+Never bypass it or run two heavy processes in this lane. CPU previews use Cycles;
+`gpu.sh` explicitly discovers Metal devices and fails rather than silently falling
+back. It renders all stages and forty clip frames at 512px, retains actual 512px
+and downsampled 256px masters outside git, creates reviews immediately, packs and
+validates the atlas, audits geometry and writes `landship-round${ROUND}.mp4`.
+The video decodes the trimmed delivery, shows all five clips side by side at 2x
+on #E9CFA0, and verifies H.264/yuv420p, 1600x348, 240 frames and eight seconds.
+
+### Four quality levers and judging
+
+1. Match the painting camera and rest silhouette first. Freeze camera UVs on
+   **finished full-depth meshes**, not flat cutouts or a composited painting.
+   Landship projects the original CC BY 4.0 full-size source onto hull, cab,
+   sponson, base and track parts. Each shoe carries its own paint while moving.
+   Facing/alpha confidence blends hidden surfaces into the licensed generated
+   metal fill, graded ochre. Newly exposed surfaces remain approximate.
+2. Real geometry supplies beveled armour, riveted seams, deep sponsons, hollow
+   muzzle, roof hatch, track housings and 128 independent shoes/grousers. Actual
+   Cycles AO and Pointiness bakes for three armour parts supply cavity grime and
+   roughness wear on the physical fallback. Projected pigment already contains
+   the source's painted illumination; camera-only pigment avoids double lighting.
+3. Use a warm upper-left key, cool rim and soft fill/contact shadow. The common
+   base pigment is sRGB **#E9CFA0**, converted to linear for the physical shader;
+   projection preserves the painting's darker rim and warm top. Standard/None is
+   deliberate for already painted pigment, not a photographic render preset.
+4. Sample opaque rest-pose RGB 10/50/90 percentiles against the painting. Build
+   one bounded monotonic grade (18 levels/channel maximum), freeze it and apply
+   it to every painted pose and frame; preserve raw renders and alpha. Never
+   per-frame grade, because it flickers. Rerender c before all painted stages
+   whenever lighting/materials change.
+
+Judge painting/render/50% crossfade in `landship-f-restpose-compare.png`, plus
+native 64px in `landship-f-restpose-64.png`; details, three-view plain geometry,
+rig poses and each clip have their own immediate review. Never equate a valid
+atlas with painting parity. `landship-PASS` is written manually only after visual
+parity, clean clips and <=200KB delivery are established. No script grants PASS.
+
+### Motion and contact standard
+
+Humans use proven CMU free-use or Quaternius CC0 motion with native Blender or
+Rokoko retargeting, matched rest poses and bone rolls. Only weapon-specific attack
+is authored on top. Animals use an appropriately licensed animated quadruped base.
+Do not hand-correct foot orientation after retargeting: fix the coordinate map.
+Always render top/front move-cycle checks as `<slug>-g-feet-check.png`.
+
+Closed vehicles without visible crew use mechanical rigs: landship's 128 shoes
+move around physical closed rhomboid routes by arc length, with the lower run
+moving opposite +X travel. The sprite is an in-place loop (runtime supplies world
+travel); its g-feet-check is top/front running-gear inspection. Idle is restrained
+engine vibration, move cycles the tracks, attack recoils the sponson barrel, hit
+jolts the chassis, death opens the hatch and becomes a smoking disabled wreck.
+Idle/move loop; the final two death frames hold identically. Effects are real
+finite-thickness meshes with keyed visibility, never zero/near-zero scale.
+
+### Landship delivery contract
+
+The candidate uses the vehicles **version 2 trimmed** format. Logical frames are
+160x160; row order is idle/move/attack/hit/death, with 8/8/10/4/10 frames and
+10/12/14/12/10 fps. `frame.ax/ay` is the anchor in the untrimmed cell. Each clip's
+`rects[]` stores `x,y,w,h` in the atlas and `ox,oy` in that logical frame. Draw the
+crop at `(anchorX-ax+ox, anchorY-ay+oy)`, scaling all coordinates together. `row`
+is ordering metadata, not a fixed cell-height coordinate. Held duplicate frames
+share a rectangle. Transparent gutters surround every crop. Quality is the
+highest of 95/90/85/80/75 fitting **200,000 bytes**; failure never drops frames or
+quality below 75. Decode validation checks exact alpha reconstruction, crop
+bounds/gutters, source/scene/grade hashes, all clip counts, motion and held death.
+The existing static painting remains the runtime art until the lead approves the
+candidate; this lane does not change the runtime renderer.

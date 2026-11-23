@@ -1,0 +1,7 @@
+# Landship round 1 sources
+
+- Original project painting, CC BY 4.0 (`LICENSE-ART`), retrieved 2026-11-23: https://pub-fb5c281dd12d4ea4bbd38d657cdeb907.r2.dev/app/src/assets/units/landship-source.png . External `assets/landship/landship-source.png`; projection aligned to the existing 256px token. The on-screen unit name is Early Tank.
+- Hidden-surface painted olive metal: existing original project generated artwork, CC BY 4.0, built-in imagegen generation `01a20674-c612-7411-9c8a-075f46e56d4c/exec-bdc68bad-f161-45e0-b0ec-31203ac453e8.png` (2026-11-22; no public URL). Original prompt `tools/art/anim3d/units/artillery/fills.prompt.txt` on `astra/unit-anim-3d-artillery`; copy retained here as `reused-fill.prompt.txt`. Copied from `assets/artillery/painted-olive.png`, graded ochre in the shader. Blends into frozen camera projection on the real geometry.
+- Blender 5.3.0 (`02f0899d78e3`, GPL) and Pillow 13.0.0, existing shared installation. No new service, paid asset, account, model download or motion download.
+- Original full-depth rhomboid geometry, mechanical object rig and five clips: MIT scripts; rendered art CC BY 4.0. Adapted projection/packing/encoding methods from the project's vehicles family. This unmanned closed vehicle has no human/animal gait to retarget: mechanical links run by arc length. The g-feet-check review is top/front running-gear inspection.
+- `assets.lock.json` pins all input rasters by SHA256. Masters, renders and texture bakes stay under `~/LegatumRuns/anim-pilot/masters/landship/` outside git.

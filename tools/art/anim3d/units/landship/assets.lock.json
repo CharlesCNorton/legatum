@@ -1,0 +1,16 @@
+{
+  "files": [
+    {
+      "path": "assets/landship/landship-source.png",
+      "sha256": "9cf69b954d7b47efa01e4ec2e4f0fc7eacc039927e02f04faf57384185bbe789"
+    },
+    {
+      "path": "assets/landship/painted-olive.png",
+      "sha256": "6abccdcaf35f2288543ca2fcffec2c7b589fff873c332db056ffdf7345575a41"
+    },
+    {
+      "path": "masters/landship/textures/painting.png",
+      "sha256": "eb6e22721e7a0e2c8be45f0c37e9c880764e73ce49fde8fca35dbc2963f9d193"
+    }
+  ]
+}
