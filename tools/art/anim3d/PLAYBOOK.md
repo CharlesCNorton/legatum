@@ -163,45 +163,71 @@ for clip in idle move attack hit death; do
 done
 ```
 
-### Lead's host GPU handoff
+### Round 4 registration and lead GPU handoff
 
-After the saved master and clips are rebuilt, render c first to fit the grade.
-Use the same engine/device/resolution for the rest and all clip renders.
+`infantry/refine.py` runs before frozen UV calibration. It turns the actual feet
+outward, narrows the volumetric crest, registers the raised shield boss/rays to
+the painted ornament, and adds fine limestone pigment grain. Relief vertices are seated on the actual convex shell with ray intersections
+and explicit keel/boss depth; lateral camera registration alone can bury them.
+The old second shield-paint blend is disabled; it was competing with the camera projection.
+The visible shell under the relief receives continuous paint instead of PBR
+wedges caused by ray occlusion at individual vertices. Painted illumination is
+now 96% at fully covered vertices, with 4% physical response; hidden surfaces
+retain the existing generated fills. This is still an articulated 3D mesh. Death reduces lower-cape pin weights to
+15% while retaining shoulder pins; shield release preserves its original scale.
+
+The one complete **host-only** command, from the repository root, is:
 
 ```sh
-export RENDER_ENGINE=CYCLES CYCLES_DEVICE=GPU CYCLES_BACKEND=METAL SAMPLES=64 RESOLUTION=384
-tools/art/anim3d/render.sh c
-tools/art/anim3d/render.sh detail
-tools/art/anim3d/render.sh d
-for clip in idle move attack hit death; do
-  tools/art/anim3d/render.sh "e-$clip"
-done
-source tools/art/anim3d/env.sh
-"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/pack.py
-"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/validate.py
-"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/test_pipeline.py
-"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/details.py
-"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/movie.py
-tools/art/anim3d/render.sh audit
+ROUND=4 tools/art/anim3d/units/spearman/gpu.sh
 ```
 
-The optional comparison movie requires `ffmpeg` on PATH and encodes with two
-threads. For Eevee use `export RENDER_ENGINE=BLENDER_EEVEE RESOLUTION=384` instead. Review
-both sizes and playback after each engine change. `grade.py` keeps raw PNGs in
-each render directory and binds one frozen RGB LUT to the source/master.
+It regenerates all five saved clips and their cloth caches; runs Cycles GPU
+(default Metal, 64 samples) at 512 px for plain geometry, rest, details, rig
+poses and all 40 frames; fits one rest histogram grade; runs the rig audit and
+pipeline tests; exports 512/256 masters; packs and independently validates the
+trimmed atlas; and encodes all five decoded clips side by side for eight seconds.
+`ROUND` comes from the overnight driver. Unavailable GPU devices fail explicitly.
+All Blender calls still use the PATH gate. Final outputs go under
+`masters/spearman/{512,256}/` and `review/3d-v2/spearman-*`; editable source,
+raw renders, generated fills and cloth caches remain in `masters/spearman-3d-v2/`.
+The script never writes PASS: that requires visual review of the GPU output.
 
-### Delivery contract and checks
+For CPU iteration use `RENDER_ENGINE=CYCLES CYCLES_DEVICE=CPU RESOLUTION=256
+SAMPLES=12 tools/art/anim3d/render.sh <stage>`, then
+`units/spearman/delivery.py pack --preview` with the isolated Pillow Python.
+This marks the delivery report as a preview and does not manufacture 512px
+masters by upscaling. Rest and clips must share engine, device, resolution and
+sample settings. The old root `pack.py`/`validate.py` retain their fixed-grid
+contract for older callers; they are **not** the spearman delivery entry points.
 
-`pack.py` preserves all 40 frames in a transparent 2560 × 1280 WebP, alpha
-quantized to 32 levels, quality selected from 85–60 with a strict **200,000-byte**
-cap. Oversize fails without overwriting delivery. JSON remains exactly
-`{frame:{w,h,ax,ay}, clips:{name:{row,frames,fps,loop}}}`, anchor `(127,221)`.
-Master, clip, render, grade and individual frame hashes prevent stale packaging.
-Interrupted stages invalidate their completion manifests.
+### Trimmed atlas v2 and checks
 
-`validate.py` checks decoded dimensions, metadata, all clips, padding, alpha,
-bounds, actual motion and pixel-identical held death. `audit.py` checks all 40
-samples for original body/rig topology, persistent cloth, stationary base, floor
+`units/spearman/delivery.py` preserves 8/8/10/4/10 frames, real alpha, and the
+five logical rows idle/move/attack/hit/death. Every source frame is resampled to
+160 × 160, cropped to its nonzero-alpha rectangle, and placed in its clip row
+with two transparent pixels on each side. Width and row height are variable.
+Encoding tries quality 95, 90, 85, 80, then 75; exceeding **200,000 bytes** at 75
+fails without replacing delivery. No frame counts are reduced.
+
+JSON v2 has `version:2`, `atlas:{w,h}`, `frame:{w:160,h:160,ax:79.375,ay:138.125}`,
+unchanged `clips:{name:{row,frames,fps,loop}}`, and
+`frames:{name:[{x,y,w,h,ox,oy},...]}`. `x/y/w/h` is the source rectangle in the
+packed atlas; `ox/oy` is its offset in the untrimmed 160px frame. Draw the crop at
+`anchor + (ox-ax, oy-ay) * scale`. Consumers must use the explicit rectangles,
+not infer fixed-cell positions from `row`. The game still displays its painting;
+this task does not enable the animation renderer.
+
+Validation checks current master/clip/grade/frame hashes, 40 records, clip timing,
+packing bounds and gutters, exact decoded alpha reconstructed at each offset,
+transparent padding, camera margin, visible motion, byte cap, quality, and
+identical held-death source PNGs. `spearman-delivery.json` records the encoded
+quality and hashes, `spearman-validation.json` the result. Decoded atlas pixels
+feed both `spearman-g-decoded-atlas.png` and the movie; ffprobe checks H.264,
+yuv420p, 1600 × 352, 192 frames and 8 seconds. PNG strips and rest comparisons
+show the native 256 and 64 px views, not upscaled visual-quality evidence.
+
+`audit.py` checks all 40 samples for original body/rig topology, persistent cloth, stationary base, floor
 and camera bounds, hand/shaft distance and spear centerline intersections against
 shield, cuirass and helmet. It is not a full cloth/skin collision solver.
 `AUDIT_CLIP=attack tools/art/anim3d/render.sh audit` narrows an iteration check.

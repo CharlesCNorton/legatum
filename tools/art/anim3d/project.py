@@ -10,6 +10,7 @@ import json
 import math
 import os
 import shutil
+import sys
 from pathlib import Path
 from mathutils import Matrix, Vector
 from mathutils.bvhtree import BVHTree
@@ -74,7 +75,7 @@ pivot = head.head.copy()
 head.matrix = Matrix.Translation(pivot) @ Matrix.Rotation(1.5, 4, 'Z') @ Matrix.Diagonal((1.10, 1.10, 1.10, 1)) @ Matrix.Translation(-pivot) @ head.matrix
 bpy.context.view_layer.update()
 limb('thigh_r', 'calf_r', (-.39, -.075, .082), (-.43, -.40, .48))
-limb('thigh_l', 'calf_l', (.30, .035, .082), (.36, -.36, .48))
+limb('thigh_l', 'calf_l', (.21, .15, .082), (.36, -.36, .48))
 # Raised fist / bent elbow rather than a straight lowered forearm.
 limb('upperarm_r', 'lowerarm_r', (-.37, -.31, 1.34), (-.48, -.12, 1.08))
 aim('hand_r', (0, -.03, .09))
@@ -280,6 +281,12 @@ for ob in list(sc.objects):
         ob.select_set(True); bpy.context.view_layer.objects.active = ob
         bpy.ops.object.convert(target='MESH')
 
+# Family-local finishing runs before visibility and UV calibration.
+sys.path.insert(0, str(Path(__file__).parent/'infantry'))
+from refine import refine
+refine(sc, aim, screen_sculpt)
+rig['neutral_pose'] = json.dumps({p.name: [list(row) for row in p.matrix_basis] for p in rig.pose.bones})
+
 # Evaluate deformation with original vertex indexing. UVs are written to the
 # original mesh before subdivision; armature weights and topology stay intact.
 saved_modifiers = []
@@ -334,6 +341,10 @@ for ob in list(sc.objects):
     for p, normal in zip(points, normals):
         hit, _, _, distance = tree.ray_cast(p+view*10, -view, 10.02)
         visible = hit is not None and (hit-p).length < .018
+        # Relief can occlude adjacent shield vertices. The whole front shell
+        # carries the same paint beneath it; do not punch PBR wedges into it.
+        if ob.name.startswith(('Convex bronze aspis', 'Sunburst raised ray', 'Aspis central omphalos')):
+            visible = hit is not None and (hit-p).length < .14
         # Ray visibility rejects hidden backs. Absolute facing also supports
         # double-sided cloth and open armour shells without painting through them.
         facing = abs(normal.dot(view))
@@ -390,9 +401,9 @@ for ob in list(sc.objects):
         mul = nodes.new('ShaderNodeMath'); mul.operation = 'MULTIPLY'
         links.new(attr.outputs['Color'], mul.inputs[0]); links.new(tex.outputs['Alpha'], mul.inputs[1])
         strength = nodes.new('ShaderNodeMath'); strength.operation = 'MULTIPLY'
-        links.new(mul.outputs[0], strength.inputs[0]); strength.inputs[1].default_value = .88
+        links.new(mul.outputs[0], strength.inputs[0]); strength.inputs[1].default_value = .96
         # Brushwork contains painted illumination: preserve it with an emissive
-        # pigment layer, leaving 12% actual PBR to reveal moving surface relief.
+        # pigment layer, leaving 4% actual PBR to reveal moving surface relief.
         pigment = nodes.new('ShaderNodeBsdfPrincipled'); pigment.label = 'Painted illumination, fixed rest UV'
         pigment.inputs['Base Color'].default_value = (0, 0, 0, 1)
         pigment.inputs['Roughness'].default_value = 1

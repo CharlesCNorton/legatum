@@ -5,11 +5,14 @@ from PIL import Image,ImageDraw,ImageChops,ImageStat
 root=Path(os.environ.get('ANIM_ROOT',str(Path.home()/'LegatumRuns/anim-pilot')))
 master=root/'masters/spearman-3d-v2';review=root/'review/3d-v2'
 stage=sys.argv[1];renders=master/'renders'/stage
+manifest=json.loads((renders/'render.json').read_text()) if (renders/'render.json').exists() else {}
+device=manifest.get('device','unknown')
+render_label='CPU preview' if device=='CPU' else 'GPU' if device=='GPU' else 'render'
 source=Image.open('app/src/assets/units/spearman-256.png').convert('RGBA')
 if stage=='b':names=['front','three-quarter','side']
 elif stage=='d' or stage.startswith('e-'):names=[p.stem for p in sorted(renders.glob('*.png'))]
 else:names=['three-quarter']
-images=[('Painting',source)]+[(n,Image.open(renders/(n+'.png')).convert('RGBA').resize((256,256),Image.Resampling.LANCZOS)) for n in names]
+images=[('Painting',source)]+[(n+' | '+render_label,Image.open(renders/(n+'.png')).convert('RGBA').resize((256,256),Image.Resampling.LANCZOS)) for n in names]
 sheet=Image.new('RGB',(len(images)*272,380),(224,215,191));d=ImageDraw.Draw(sheet)
 for i,(name,im) in enumerate(images):
  x=8+i*272;d.text((x,10),name+' | 256 / 64 px',fill=(40,34,27));sheet.paste(im,(x,36),im)
@@ -30,7 +33,7 @@ if stage=='c':
  cross=Image.blend(left,right,.5)
  split=left.copy();split.paste(right.crop((128,0,256,256)),(128,0))
  compare=Image.new('RGB',(1088,380),(224,215,191));draw=ImageDraw.Draw(compare)
- for i,(label,im) in enumerate([('Painting',left),('3D rest',right),('50/50 crossfade',cross),('Split: painting | 3D',split)]):
+ for i,(label,im) in enumerate([('Painting',left),('3D rest | '+render_label,right),('50/50 crossfade',cross),('Split: painting | 3D',split)]):
   x=8+i*272;draw.text((x,10),label,fill=(40,34,27));compare.paste(im,(x,36));compare.paste(im.resize((64,64),Image.Resampling.LANCZOS),(x+96,302))
  compare.save(review/'spearman-f-restpose-compare.png')
 

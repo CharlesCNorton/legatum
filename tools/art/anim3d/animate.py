@@ -23,6 +23,14 @@ shield=bpy.data.objects.get('Aspis control');shield_neutral=shield.matrix_basis.
 if shield:shield.rotation_mode='QUATERNION'
 cloth=bpy.data.objects['Cloak • simulated wool'].modifiers['Cloth per clip']
 cloth.show_viewport=False
+if clip=='death':
+ # Release the lower cape's silhouette pins so it drapes during the collapse.
+ # Keep the shoulder attachment; no visibility or scale trick hides the cloth.
+ cloak=bpy.data.objects['Cloak • simulated wool'];pins=cloak.vertex_groups['Shoulder pins']
+ for v in cloak.data.vertices:
+  for g in v.groups:
+   if g.group==pins.index and g.weight<.99:pins.add([v.index],g.weight*.15,'REPLACE')
+ cloth.settings.bending_stiffness=.4
 for p in rig.pose.bones:p.rotation_mode='QUATERNION'
 def reset():
  rig.location=base_loc
@@ -77,7 +85,7 @@ def pose(t):
   rig.location=base_loc+Vector((.12*strength,-.16*strength,-.12*strength))
   turn('spine_03','X',.20*strength);turn('spine_03','Y',.15*strength)
   # Counter root travel in the ankle targets: soles remain on the disc.
-  limb('thigh_l','calf_l',(.30+.10*strength,.035-.18*strength,.082+.12*strength),(.42,-.50,.48))
+  limb('thigh_l','calf_l',(.21+.10*strength,.15-.18*strength,.082+.12*strength),(.42,-.50,.48))
   limb('thigh_r','calf_r',(-.39-.05*strength,-.075+.16*strength,.082+.12*strength),(-.40,-.20,.48))
   limb('upperarm_r','lowerarm_r',(guard_hand.x+(-.27-guard_hand.x)*strength,guard_hand.y+(-.41-guard_hand.y)*raised-.05*strength,guard_hand.z+(1.71-guard_hand.z)*raised),(-.65,.05,1.48))
   limb('upperarm_l','lowerarm_l',(.29,-.34-.10*strength,1.12+.10*strength),(.55,-.12,1.20))
@@ -93,8 +101,8 @@ def pose(t):
   turn('pelvis','Y',1.25*smooth);turn('spine_03','Y',.22*smooth);turn('head','X',.28*smooth)
   for side,sgn in [('l',1),('r',-1)]:
    # Begin in the same wide guard, then fold the ankles into the fall.
-   x=(.30 if side=='l' else -.39)*(1-smooth)+(-.22+sgn*.12)*smooth
-   y=(.035 if side=='l' else -.075)*(1-smooth)+(.02+sgn*.12)*smooth
+   x=(.21 if side=='l' else -.39)*(1-smooth)+(-.22+sgn*.12)*smooth
+   y=(.15 if side=='l' else -.075)*(1-smooth)+(.02+sgn*.12)*smooth
    limb('thigh_'+side,'calf_'+side,(x,y,.75*smooth+.082*(1-smooth)),(-.45,-.30,.55))
   limb('upperarm_r','lowerarm_r',guard_hand.lerp(Vector((.11,-.21,.85)),smooth),(-.35,-.32,.85))
   limb('upperarm_l','lowerarm_l',(.29+.14*smooth,-.34+.08*smooth,1.12-.30*smooth),(.4,-.15,.9))
@@ -102,7 +110,7 @@ def pose(t):
  bpy.context.view_layer.update()
  if clip in ['attack','death']:
   for side in ['l','r']:
-   aim('foot_'+side,(0,-.12,-.045));aim('ball_'+side,(0,-1,0))
+   aim('foot_'+side,(.075 if side=='l' else -.075,-.12,-.035));aim('ball_'+side,(.3 if side=='l' else -.3,-1,0))
  if clip=='attack':
   # Slide the grip down the shaft during extension; preserve a continuous grip
   # while keeping both ends of the long spear inside the fixed atlas cell.
@@ -139,7 +147,8 @@ def pose(t):
  if clip=='death' and shield:
   release=max(0,min(1,(t-.30)/.42));mat=shield.matrix_world.copy();q=mat.to_quaternion().slerp(Matrix.Rotation(-math.pi/2,4,'X').to_quaternion(),release)
   pos=mat.translation.lerp(Vector((.14,.02,.28)),release)
-  mat=q.to_matrix().to_4x4();mat.translation=pos;shield.matrix_world=mat
+  scale=mat.to_scale()
+  mat=q.to_matrix().to_4x4() @ Matrix.Diagonal((*scale,1));mat.translation=pos;shield.matrix_world=mat
   bpy.context.view_layer.update()
   # Contact correction for the released shield, using evaluated mesh geometry.
   dg=bpy.context.evaluated_depsgraph_get();lowest=10
@@ -154,6 +163,7 @@ count,fps=CLIPS[clip];samples=[25+round(i*24/fps) for i in range(count)]
 # Give cloth one second to settle before any output sample.
 end=samples[-1];sc.frame_start=1;sc.frame_end=end;sc.render.fps=24
 for f in range(1,end+1):
+ if f==1 or f%8==0:print('POSE',clip,f,'/',end,flush=True)
  sc.frame_set(f)
  t=max(0,min(1,(f-25)/max(1,end-25)))
  # Loop clips sample before the duplicate final phase.

@@ -28,6 +28,11 @@ if sc.render.engine=='CYCLES':
 sc.render.resolution_x=sc.render.resolution_y=int(os.environ.get('RESOLUTION','256'))
 sc.render.threads_mode='FIXED';sc.render.threads=3
 assert sc.camera is not None, 'A saved calibrated camera is required'
+if stage == 'b' and os.environ.get('SPEARMAN_PLAIN') == '1':
+ plain=bpy.data.materials.new('Spearman geometry review clay');plain.use_nodes=True
+ plain.node_tree.nodes['Principled BSDF'].inputs['Base Color'].default_value=(.42,.36,.26,1)
+ plain.node_tree.nodes['Principled BSDF'].inputs['Roughness'].default_value=.8
+ sc.view_layers[0].material_override=plain
 out=master/'renders'/stage;out.mkdir(parents=True,exist_ok=True)
 # A failed rerender must not leave a valid manifest beside a partial frame set.
 (out/'render.json').unlink(missing_ok=True)
@@ -39,8 +44,10 @@ if clip:
   sc.frame_set(frame);sc.render.filepath=str(destination);bpy.ops.render.render(write_still=True)
  render_samples(frames,out,render_sample)
 else:
- views=[('front',(0,-7,3.0)),('three-quarter',(2.5,-7,3.0)),('side',(7,-.3,3.0))] if stage=='b' else [('three-quarter',None)]
+ views=[('front',(0,-7,3.0)),('three-quarter',None),('side',(7,-.3,3.0))] if stage=='b' else [('three-quarter',None)]
+ camera_matrix=sc.camera.matrix_world.copy()
  for name,pos in views:
+  sc.camera.matrix_world=camera_matrix
   if pos is not None:
    sc.camera.location=pos;sc.camera.rotation_euler=(Vector((0,0,1.25))-sc.camera.location).to_track_quat('-Z','Y').to_euler()
   sc.render.filepath=str(out/(name+'.png'));bpy.ops.render.render(write_still=True)
