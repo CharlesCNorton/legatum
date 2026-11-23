@@ -111,3 +111,18 @@
 - c: 1 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
 - e-move: 8 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
 - e-death: 10 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- b: genuine front, three-quarter and side geometry views.
+- c: 1 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- d: 4 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- e-idle: 8 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- e-move: 8 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- Round3 final geometry/material preview: opened actual plain front/three-quarter/side, c/details/f and sixteen-foot-view sheet. Shoe toe clefts/protrusions are gone; source-facing leather tops regain painting coverage; case is shorter with real bands/suspension; stone has generated fine grain and fresh AO. All sleeves use evaluated bone membership, and the tunic/stitches preserve rest shape while following hips. At256 face/quilt/rest brushwork is close, but hood/cape side geometry, sleeve/collar transitions and motion underside detail remain weak. At64 same unit and scale; smaller boot/case differences remain. Alpha IoU .855023 priorGPU -> .864922 CPU (different settings, silhouette metric only).
+- Round3 all five structural audits pass: 53 bones, stationary stone, safe scales, finished projection, closed manifold shoes and pinned painted skin/stone; max wrist error .000362mm, exact idle/move closure, hit recovery <4e-18. Feet: support yaw2.64459deg and toe virtual-ground stance residual .000588mm over five intervals. This is not a full heel/sole contact or cloth collision guarantee. Unit-specific feedback remains absent; standing FEEDBACK still 23 items.
+- e-attack: 10 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- e-hit: 4 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- e-death: 10 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- Packed 40 frames, trimmed 160px cells, WebP quality 90, 162088 bytes.
+- Wrote 8 second five-clip H.264 yuv420p review barbarian-crossbowman-round3.mp4
+- Round3 final CPU delivery: all b/c/d/e stages rebuilt at Cycles CPU8/256; opened every final strip, actual top/front feet, rest/detail comparisons and decoded round3 MP4 contact frames. Trimmed160 Q90 atlas 162088 bytes, all40 samples; full hash/offset/alpha/bounds/motion/held-death validation passes. Video H.264/yuv420p1600x348,240frames,8.000s. Two regression tests,17 Python compiles,both shell syntax checks,diff whitespace and all five texture hashes pass.
+- Round3 verdict: closer rest at256/64; same unit identity. Still below painting parity: hood/cape side geometry and collar transitions crude, revealed-surface/sole detail weak, death landing stiff. No visual PASS. Independent GPU-master gate correctly rejects CPU evidence. Lead runs ROUND=3 tools/art/anim3d/units/barbarian-crossbowman/gpu.sh for all GPU64/512 masters,256 derivatives,atlas/validation/reviews/MP4.
+- Round3 git staging denied creating .git/worktrees/lane-15/index.lock; changes remain uncommitted for runner. Commit message with requested co-author trailer retained at /tmp/barbarian-crossbowman-r3-commit.txt. origin/master already contained; no fetch/merge/push/PR. Current CPU evidence archived under masters/barbarian-crossbowman/driver-r3-cpu. No PASS marker.
