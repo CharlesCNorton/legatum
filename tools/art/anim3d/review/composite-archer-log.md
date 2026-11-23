@@ -77,3 +77,15 @@
 - Re-loaded all six Blender skills: modeling for full-depth registration/bevels; materials for occlusion fills and smooth confidence; cameras for disc/view calibration; lighting for painted miniature contact; animation for open-source rest/roll retarget; rendering for sequential CPU previews and GPU provenance.
 - Built-in imagegen produced a cheek/beard/collar occlusion fill from original painting, generation01a20912-a0ec-7f03-9a78-d8a012419a85; saved face-fill-source.png. Original painting remains visible surface standard.
 - Saved c review, raw 256 px and graded sets at native resolution or smaller; CYCLES CPU 8 samples.
+- Saved e-move review, raw 256 px and graded sets at native resolution or smaller; CYCLES CPU 8 samples.
+- Saved e-death review, raw 256 px and graded sets at native resolution or smaller; CYCLES CPU 8 samples.
+- Saved e-idle review, raw 256 px and graded sets at native resolution or smaller; CYCLES CPU 8 samples.
+- Saved e-hit review, raw 256 px and graded sets at native resolution or smaller; CYCLES CPU 8 samples.
+- Saved e-attack review, raw 256 px and graded sets at native resolution or smaller; CYCLES CPU 8 samples.
+- Saved c review, raw 512 px and graded sets at native resolution or smaller; CYCLES CPU 8 samples.
+- Saved e-idle review, raw 512 px and graded sets at native resolution or smaller; CYCLES CPU 8 samples.
+- Saved e-move review, raw 512 px and graded sets at native resolution or smaller; CYCLES CPU 8 samples.
+- Saved e-attack review, raw 512 px and graded sets at native resolution or smaller; CYCLES CPU 8 samples.
+- Saved e-hit review, raw 512 px and graded sets at native resolution or smaller; CYCLES CPU 8 samples.
+- Saved e-death review, raw 512 px and graded sets at native resolution or smaller; CYCLES CPU 8 samples.
+- Saved c review, raw 256 px and graded sets at native resolution or smaller; CYCLES CPU 8 samples.
