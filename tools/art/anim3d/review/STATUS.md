@@ -1,6 +1,6 @@
 # Animated units status
 
-Updated 2026-11-23T04:14:56Z. Round = finished rounds (driver count). Pass = the lane declared the bar met (`<slug>-PASS`); the lead and Sam still review.
+Updated 2026-11-23T04:53:01Z. Round = finished rounds (driver count). Pass = the lane declared the bar met (`<slug>-PASS`); the lead and Sam still review.
 
 | Unit | Branch | State | Rounds done | Atlas KB | Pass | Latest note |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -24,10 +24,10 @@ Updated 2026-11-23T04:14:56Z. Round = finished rounds (driver count). Pass = the
 | cuirassier | `astra/unit-anim-3d-cuirassier` | idle | 0 | - | no | - Emitted c-details: 1 frames, 256 px CYCLES/CPU, 8 samples. |
 | drone-swarm | `astra/unit-anim-3d-drone-swarm` | idle | 0 | 187 | no | e-hit: 4 frames at 256/64 from 512px CYCLES/CPU, 12 samples. |
 | eagle-warrior | `astra/unit-anim-3d-eagle-warrior` | idle | 0 | - | no | - Authored idle, move, attack, hit and terminal death on the MPFB skeleton; no mocap or cloth simulation claimed. |
-| field-cannon | `astra/unit-anim-3d-siege` | queued | 1 | 180 | no | - FINAL GIT: committed code de7bec7 and delivery f79c7ef on astra/unit-anim-3d-siege in .worktrees/siege-round2. Working tree clean; origin/master already ances |
+| field-cannon | `astra/unit-anim-3d-siege` | queued | 3 | 188 | no | - Posted field-cannon-e-death-strip.png; actual CYCLES render, visual review pending. |
 | fighter | `astra/unit-anim-3d-fighter` | idle | 0 | 193 | no | - Rendered e-death: 512px, CYCLES; review published. |
 | gaesatae | `astra/unit-anim-3d-gaesatae` | idle | 0 | - | no | - Adjusted head width/position, grip, ankle stance and cloth fold frequency before clip authoring. No quality PASS claimed. |
-| horseman | `astra/unit-anim-3d-mounted` | idle | 1 | 194 | no | - Loaded all six Sam Blender skills: modeling (thickness/bevel/fold geometry), materials (painted colour plus generated fills and roughness), lighting (warm key |
+| horseman | `astra/unit-anim-3d-mounted` | running | 1 | 194 | no | - Replaced old fixed 256 atlas/quality-60 packer with 160 px alpha-trimmed rows, complete offsets/anchors, quality floor 75 and hard 200000-byte cap. GPU handof |
 | howitzer | `astra/unit-anim-3d-howitzer` | not started | 0 | - | no |  |
 | hunter-killer | `astra/unit-anim-3d-hunter-killer` | not started | 0 | - | no |  |
 | infantry | `astra/unit-anim-3d-infantry` | not started | 0 | - | no |  |
@@ -51,10 +51,10 @@ Updated 2026-11-23T04:14:56Z. Round = finished rounds (driver count). Pass = the
 | scout | `astra/unit-anim-3d-scout` | idle | 0 | 195 | no | Final verdict: genuine 3D and recognizable scout at 64px; below painting parity at 256px. Next pass should match raised-knee stance, larger expressive face/bear |
 | settler | `astra/unit-anim-3d-settler` | idle | 0 | - | no | - Saved 3D audit passed: source hashes, 53 bones, actual motion, exact loop closing keys and held death; ground/bounds recorded; collision limits explicit. |
 | spartan-hoplite | `astra/unit-anim-3d-spartan-hoplite` | idle | 0 | 169 | no | Commit attempt blocked: Git could not create .git/worktrees/lane-5/index.lock (Operation not permitted); changes left for the runner to commit with the requeste |
-| spearman | `astra/unit-anim-3d-v2` | queued | 1 | 191 | no | - Final handoff: git add/commit blocked by sandbox denial creating .git/worktrees/spearman-round2/index.lock (exit 128). Changes remain scoped and uncommitted.  |
+| spearman | `astra/unit-anim-3d-v2` | queued | 4 | 193 | no | - Final handoff: git add/commit blocked by sandbox denial creating .git/worktrees/spearman-round2/index.lock (exit 128). Changes remain scoped and uncommitted.  |
 | stealth-bomber | `astra/unit-anim-3d-stealth-bomber` | not started | 0 | - | no |  |
 | stealth-fighter | `astra/unit-anim-3d-stealth-fighter` | not started | 0 | - | no |  |
 | tagmatic-soldier | `astra/unit-anim-3d-tagmatic-soldier` | idle | 0 | 186 | no | - GPU handoff: from repo root, tools/art/anim3d/units/tagmatic-soldier/gpu.sh (no arguments; uses ROUND from driver). This performs geometry audit, all GPU stag |
-| tank | `astra/unit-anim-3d-vehicles` | idle | 1 | 194 | no | - Read the complete playbook and all common/tank feedback, art direction, asset sources and all six Blender skills. Applying modeling to cast joins/bevels/strap |
+| tank | `astra/unit-anim-3d-vehicles` | running | 1 | 194 | no | - Emitted tank-e-death-strip.png from actual e-death renders; visual review pending. |
 | trench-infantry | `astra/unit-anim-3d-trench-infantry` | not started | 0 | - | no |  |
-| war-elephant | `astra/unit-anim-3d-war-elephant` | idle | 0 | - | no | - Packing now reuses identical logical frames at one atlas rectangle, keeping held death identical after lossy WebP decoding. |
+| war-elephant | `astra/unit-anim-3d-war-elephant` | idle | 0 | 179 | no | - Final MP4 verified with ffprobe: H.264, yuv420p, 1600x348, 30 fps, 240 frames, 8.000 seconds. Decoded frame inspected for all five trimmed-atlas reconstructio |
