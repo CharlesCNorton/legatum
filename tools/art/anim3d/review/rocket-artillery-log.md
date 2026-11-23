@@ -16,3 +16,27 @@
 - Published painted rest pose and 50/50 comparison; real AO shader, micrograin, edge geometry and hidden-surface fill.
 - Published e-idle: 8 actual rendered frames, 10 fps; CPU 512px 12 samples.
 - Published e-move: 8 actual rendered frames, 12 fps; CPU 512px 12 samples.
+- Published e-attack: 10 actual rendered frames, 14 fps; CPU 512px 12 samples.
+- Published e-hit: 4 actual rendered frames, 12 fps; CPU 512px 12 samples.
+- Published e-death: 10 actual rendered frames, 10 fps; CPU 512px 12 samples.
+- Completed all five clips and wheel contact audit; delivery pack may now run.
+- Inspected initial 256px rest, all five strips, and top/front move views: corrected wheel-covering chassis, source fragments rotating with wheels, wrong death elevation direction, and depth registration of front fittings. Native 256 comparison still falls short at tube lips, tires and stone; no PASS.
+- Published b-plain CPU/GPU geometry stage before texture work.
+- Baked 256px AO and curvature maps on GEO-Cab full shell, GEO-Hood engine enclosure, GEO-Launcher near side panel
+- Published painted rest pose and 50/50 comparison; real AO shader, micrograin, edge geometry and hidden-surface fill.
+- Published e-idle: 8 actual rendered frames, 10 fps; CPU 512px 4 samples.
+- Published e-move: 8 actual rendered frames, 12 fps; CPU 512px 4 samples.
+- Published e-attack: 10 actual rendered frames, 14 fps; CPU 512px 4 samples.
+- Published e-hit: 4 actual rendered frames, 12 fps; CPU 512px 4 samples.
+- Published e-death: 10 actual rendered frames, 10 fps; CPU 512px 4 samples.
+- Completed all five clips and wheel contact audit; delivery pack may now run.
+- Validation caught Euler wrapping from assigning a contact-corrected wheel matrix. Replaced this with parent-space translation only, preserving continuous authored rotation; regenerating all masters and manifests before packing.
+- Published b-plain CPU/GPU geometry stage before texture work.
+- Baked 256px AO and curvature maps on GEO-Cab full shell, GEO-Hood engine enclosure, GEO-Launcher near side panel
+- Published painted rest pose and 50/50 comparison; real AO shader, micrograin, edge geometry and hidden-surface fill.
+- Published e-idle: 8 actual rendered frames, 10 fps; CPU 512px 4 samples.
+- Published e-move: 8 actual rendered frames, 12 fps; CPU 512px 4 samples.
+- Published e-attack: 10 actual rendered frames, 14 fps; CPU 512px 4 samples.
+- Published e-hit: 4 actual rendered frames, 12 fps; CPU 512px 4 samples.
+- Published e-death: 10 actual rendered frames, 10 fps; CPU 512px 4 samples.
+- Completed all five clips and wheel contact audit; delivery pack may now run.

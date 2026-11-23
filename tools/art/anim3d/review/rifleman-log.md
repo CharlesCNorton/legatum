@@ -1,0 +1,14 @@
+- Round 1: read project art instructions, full playbook and standing feedback 12–23; checked for unit feedback (none yet).
+- Loaded all six Blender skills: modeled thick/beveled kit, physical cloth/metal/skin materials, aimed product lights, fixed orthographic camera, editable action curves, low-cost Cycles CPU previews.
+- Reused the newer infantry Quaternius retarget/delivery implementation as a unit-local snapshot; replaced its kit, guard and grenade attack with rifleman-specific coat, kepi, crossed belts, rifle, sling and aim/recoil.
+- Downloaded full original painting into external assets/rifleman; pinned painting, motion and existing generated hidden-surface fills by SHA256.
+- Built MPFB anatomical body, 53-bone rig, blue coat, full-volume kepi, crossed leather belts, diagonal rifle and sling; plain.blend saved.
+- Posted b-plain review (CPU, 256 px).
+- Baked real 256px Cycles AO and Pointiness curvature for helmet and jacket; physical recess grime and edge roughness applied.
+- Finished-surface camera projection with camera-only pigment; generated hidden fills retained.
+- Posted c-textured-lit review (CPU, 256 px).
+- Built MPFB anatomical body, 53-bone rig, blue coat, full-volume kepi, crossed leather belts, diagonal rifle and sling; plain.blend saved.
+- Posted b-plain review (CPU, 256 px).
+- Baked real 256px Cycles AO and Pointiness curvature for helmet and jacket; physical recess grime and edge roughness applied.
+- Finished-surface camera projection with camera-only pigment; generated hidden fills retained.
+- Posted c-textured-lit review (CPU, 256 px).
