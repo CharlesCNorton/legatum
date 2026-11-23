@@ -126,3 +126,5 @@
 - Published e-attack review immediately: CYCLES/CPU, 512 px, 10 frame(s).
 - Published e-hit review immediately: CYCLES/CPU, 512 px, 4 frame(s).
 - Published e-death review immediately: CYCLES/CPU, 512 px, 10 frame(s).
+- Quaternius CC0 idle/walk/hit/death plus authored weapon-specific attack on MPFB rig: 8/8/10/4/10 samples; rest/roll-calibrated source motion, thrown-javelin visibility, hit recovery, independent equipment release and held death. Cloth uses authored secondary deformation, not a cloth simulation.
+- Published e-move review immediately: CYCLES/CPU, 512 px, 8 frame(s).
