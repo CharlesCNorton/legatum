@@ -106,3 +106,93 @@ tools/art/anim3d/render.sh audit
 ```
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
+
+## Infantry chapter: Tagmatic Soldier (round 1)
+
+The unit-owned implementation is `units/tagmatic-soldier/`; run from the repository
+root. It uses the installed MPFB 2.0.18 CC0 male anatomy and game_engine skeleton,
+with a conical spangenhelm, interlocked mail, fitted gathered sleeves, overlapping
+lamellae, leather boots, a genuinely convex thick kite shield and a forged spear.
+These are full 3D meshes. No billboard, depth-card animation or source-image warp
+is used. This chapter changes no other family's entry points.
+
+Four quality levers are the standard method for this infantry unit:
+
+1. Calibrate the orthographic camera and rest silhouette to the committed token;
+   align the original full source by alpha bounds, then freeze its camera-space
+   UVs on the actual meshes. UVs travel with the geometry. Ray visibility, facing and source-alpha
+   masks blend the painting into generated crimson wool, steel, leather and brass
+   fills on back/edge surfaces. The source has baked lighting; this remains a
+   view-specific texture and must be checked in motion.
+2. Model material thickness, bevel hard edges, retain real MPFB face/fingers,
+   gather sleeves and pleat the tunic, add raised shield decoration, armour
+   overlaps, mail rings, helmet ribs/rivets, boot seams and a belt buckle.
+   `bake.py` creates actual 256 px Cycles AO and Pointiness maps on shield, helmet
+   and lamellae. AO controls mild recess darkening and Pointiness controls edge
+   roughness. Generated fills supplement, rather than replace, this geometry.
+3. Use a warm upper-left area key, soft fill, cool rear rim, contact shadows and
+   denoised Cycles final frames. The cream stone is exactly sRGB **#E9CFA0**
+   converted to linear BSDF values `(0.81485, 0.62396, 0.35153)`; it is one low
+   beveled disc. Colour management and lighting still affect its rendered colour.
+4. Fit one foreground histogram grade from the rest comparison and use the same
+   17-quantile LUT for every frame. Never fit per-frame grades. Raw renders remain
+   alongside the LUT and graded masters. Review painting/render/50% crossfade at
+   256 and 64 px in `tagmatic-soldier-f-restpose-compare.png`.
+
+```sh
+source tools/art/anim3d/env.sh
+"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/tagmatic-soldier/prepare.py
+tools/art/anim3d/units/tagmatic-soldier/render.sh build
+tools/art/anim3d/units/tagmatic-soldier/render.sh b
+tools/art/anim3d/units/tagmatic-soldier/render.sh bake
+tools/art/anim3d/units/tagmatic-soldier/render.sh c
+tools/art/anim3d/units/tagmatic-soldier/render.sh animate
+tools/art/anim3d/units/tagmatic-soldier/render.sh d
+for clip in idle move attack hit death; do
+  tools/art/anim3d/units/tagmatic-soldier/render.sh "e-$clip"
+done
+"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/tagmatic-soldier/deliver.py pack
+"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/tagmatic-soldier/deliver.py validate
+"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/tagmatic-soldier/deliver.py video
+```
+
+Every Blender process goes through plain `blender -b --disable-autoexec` on PATH;
+that is the machine-wide slot gate. Do not use the old direct application path
+or add a second gate around the wrapper. No zero-scale hiding. CPU previews
+use 256 px / 8 Cycles samples. Only one heavy stage runs at a time.
+
+The complete lead-side command is executable `units/tagmatic-soldier/gpu.sh`
+(no arguments). It uses Cycles Metal, 512 px / 48 samples for **every** b/c/d/e
+stage, keeps 512 and 256 masters in `masters/tagmatic-soldier/`, packs and validates
+the 160 atlas, and writes all review PNGs, animated WebPs, the rest split-screen
+and `tagmatic-soldier-round${ROUND}.mp4`. It refuses a requested GPU pass if no
+Metal device is available. It consumes the baked model and clip masters; rebuild
+and rebake before handing off changed geometry. It never writes a PASS marker:
+visual approval requires an actual review.
+
+Five clips are authored on the MPFB skeleton: idle 8, move 8, attack 10, hit 4,
+death 10. Idle/move include a closure key beyond the sampled loop; death holds
+its last two samples. The raised hand keeps the spear's broad leaf visible;
+combat uses anticipation and recovery, and death releases both shield and spear.
+Round-1 cloth has modeled folds following bones and authored 3D contact shape keys
+for the death landing, not a simulated cloth cache. Occluded surfaces use painted
+fills so the hidden torso never inherits the shield cross.
+
+### Tagmatic trimmed atlas contract (version 2)
+
+The atlas is transparent WebP, quality **at least 75**, **at most 200,000 bytes**.
+`frame: {w:160,h:160,ax:74,ay:142}` describes the untrimmed cell and stationary
+stone anchor. `clips` retains `row`, numeric `frames`, `fps`, and `loop`. Its added
+`rects` array has one `{x,y,w,h,ox,oy}` object per frame: `x/y/w/h` is the source
+rectangle in the packed atlas; `ox/oy` is that rectangle's destination offset in
+its original 160-square cell. At an anchor `(X,Y)`, draw the cropped image at
+`(X-ax+ox, Y-ay+oy)`, with ordinary display scaling applied to all values.
+Rows remain idle/move/attack/hit/death, but have independently trimmed heights
+and variable-width frame rectangles. Consumers must use `rects`, not multiply
+frame indices by 160. No runtime consumer is enabled by this art candidate.
+
+Packing checks model/clip/render hashes, retains all 40 frames and full alpha,
+and refuses oversized output at quality 75. Validation reconstructs each cell,
+checks bounds, alpha, motion and the held death. The MP4 uses that same trim-aware
+reconstruction: five clips side by side, 2x on cream, 8 seconds, H.264 yuv420p.
+Technical validation does not establish painting parity or collision-free motion.
