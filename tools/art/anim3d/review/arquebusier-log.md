@@ -146,3 +146,4 @@
 - Posted c-textured-lit review (GPU, 512 px).
 - Posted d-rig-poses review (GPU, 512 px).
 - Posted e-idle review (GPU, 512 px).
+- Posted e-move review (GPU, 512 px).
