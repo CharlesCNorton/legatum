@@ -26,3 +26,7 @@ project MIT; original rendered art and paintings are project CC BY 4.0.
 
 Previous rounds used CMU 77_02 standing and 02_01 walk (permissive CMU motion),
 retained in the archived evidence. The current four open clips replace them.
+
+## Archer driver round 3, 2026-11-23
+- Original clean stone occlusion plate: built-in ImageGen output `01a20a76-db36-7203-9565-1c8a2664a72c/exec-f78ae9a8-de96-4fec-8ded-54c6fbaa98fd.png`, original project CC BY 4.0, no public URL. Input is the existing registered archer painting. External `assets/archer/stone-fill-source.png`; exact prompt and SHA256 in unit scripts. Color textures the real rounded disc, with fresh live AO; generated alpha never changes geometry.
+- Reuses pinned MPFB CC0 anatomy, Quaternius CC0 motion, generated mounted-family cloth/metal/leather fills. Full-depth shoulder cuffs, continuous closed crest and source-integrity checks are original MIT scripts / CC BY 4.0 renders. GPU round2 evidence preserved in masters/archer/driver-r2-gpu and review/3d-v2/archer-driver-r2-gpu.

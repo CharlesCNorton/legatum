@@ -35,7 +35,7 @@ def main():
         draw.text((k*160+5,8),label,fill='#3c3023');comparison.paste(frame,(k*160,30),frame)
         small=frame.resize((64,64),Image.Resampling.LANCZOS);comparison.paste(small,(k*160+48,200),small)
     comparison.save(REVIEW/'archer-g-atlas-check.png')
-    movie = REVIEW/f'archer-round{os.environ.get("ROUND","2")}.mp4'
+    movie = REVIEW/f'archer-round{os.environ.get("ROUND","3")}.mp4'
     proc = subprocess.Popen(['ffmpeg','-y','-loglevel','error','-f','rawvideo','-pix_fmt','rgb24',
         '-s','1600x348','-r','30','-i','-','-an','-c:v','libx264','-threads','3',
         '-pix_fmt','yuv420p','-crf','20','-movflags','+faststart',str(movie)],stdin=subprocess.PIPE)

@@ -41,7 +41,9 @@ for p in paths:
   if im.width>=size:
    dest=M/f'frames-{size}'/stage;dest.mkdir(parents=True,exist_ok=True);im.resize((size,size),Image.Resampling.LANCZOS).save(dest/p.name)
  frames.append(im.resize((256,256),Image.Resampling.LANCZOS))
-meta=json.loads((folder/'render.json').read_text());meta['grade_sha256']=hashlib.sha256((M/'grade.json').read_bytes()).hexdigest() if luts else None;(folder/'render.json').write_text(json.dumps(meta,indent=2))
+meta=json.loads((folder/'render.json').read_text());meta['grade_sha256']=hashlib.sha256((M/'grade.json').read_bytes()).hexdigest() if luts else None
+meta['master_frame_sha256']={str(size):{p.name:hashlib.sha256((M/f'frames-{size}'/stage/p.name).read_bytes()).hexdigest() for p in paths} for size in [256,512] if meta['resolution']>=size}
+(folder/'render.json').write_text(json.dumps(meta,indent=2))
 def panel(images,labels,name):
  w=len(images)*256;sheet=Image.new('RGB',(w,370),'#eee4d2');d=ImageDraw.Draw(sheet)
  for i,(im,label) in enumerate(zip(images,labels)):

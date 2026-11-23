@@ -1,10 +1,13 @@
 """One frozen painting camera on finished, articulated full-depth geometry."""
-import sys
+import sys,hashlib
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parent))
 from common import *
 from refine import refine
 from bpy_extras.object_utils import world_to_camera_view
+inputs=json.loads(Path(__file__).with_name('assets.lock.json').read_text())['inputs']
+for name,expected in inputs.items():
+ assert hashlib.sha256((ASSETS/name).read_bytes()).hexdigest()==expected,('changed texture input',name)
 bpy.ops.wm.open_mainfile(filepath=str(MASTER/'archer-unpainted.blend'))
 refine()
 sc=bpy.context.scene
@@ -20,7 +23,8 @@ for obj in list(sc.objects):
   world=ev.matrix_world@v.co;q=world_to_camera_view(sc,sc.camera,world);uvlist.append((q.x,q.y))
   normal=(ev.matrix_world.to_3x3().inverted().transposed()@v.normal).normalized()
   hit,loc,_,_,hitobj,_=sc.ray_cast(deps,world+view*4,-view,distance=4.01)
-  visible=hit and hitobj.original==obj and (loc-world).length<.012
+  tolerance=.035 if obj.name=='GEO-MPFB archer anatomy' else .012
+  visible=hit and hitobj.original==obj and (loc-world).length<tolerance
   weights.append(1.0 if obj.name.startswith('GEO-Pale horsehair crest') else max(0,min(1,(normal.dot(view)+.05)/.35)) if visible else 0)
  ev.to_mesh_clear()
  uv=obj.data.uv_layers.get('Painting projection') or obj.data.uv_layers.new(name='Painting projection')
@@ -43,4 +47,6 @@ for obj in list(sc.objects):
  records.append({'object':obj.name,'vertices':len(obj.data.vertices),'visible_vertices':sum(w>.1 for w in weights)})
 sc['projection']='Frozen finished-surface UVs with camera-ray pigment; real physical material on occluded/back surfaces and non-camera rays.'
 (MASTER/'projection.json').write_text(json.dumps({'objects':records,'strength':.96,'limitation':'Measured contour fitting preserves full depth and native weights; not exact pose or camera recovery.'},indent=2))
-save(MASTER/'archer.blend');log('- Projected painting onto finished surfaces with occlusion/facing masks and camera-only pigment; original generated fills, real AO/curvature and physical lighting remain.')
+save(MASTER/'archer.blend')
+(MASTER/'paint-inputs.json').write_text(json.dumps({'inputs':inputs,'scripts':{name:hashlib.sha256(Path(__file__).with_name(name).read_bytes()).hexdigest() for name in ['paint.py','refine.py','craft.py']},'master_sha256':hashlib.sha256((MASTER/'archer.blend').read_bytes()).hexdigest()},indent=2))
+log('- Projected painting onto finished surfaces with occlusion/facing masks and camera-only pigment; original generated fills, real AO/curvature and physical lighting remain.')

@@ -17,10 +17,12 @@ for stage,count in [('b',3),('c',1),('c-details',1),('d',4),('e-idle',8),('e-mov
     assert meta['source_sha256']==source,(stage,'stale source')
     for i in range(count):
         for size in (512,256):
-            assert Image.open(M/f'frames-{size}'/stage/f'{i:02}.png').size==(size,size)
+            frame=M/f'frames-{size}'/stage/f'{i:02}.png'
+            assert Image.open(frame).size==(size,size)
+            assert sha(frame)==meta['master_frame_sha256'][str(size)][frame.name],(stage,size,i,'stale gallery master')
 if '--receipt' in sys.argv:
     pack=json.loads((M/'pack.json').read_text()); validation=json.loads((REVIEW/'archer-validation.json').read_text());video=json.loads((REVIEW/'archer-video.json').read_text())
     assert validation['passed'] and not pack.get('preview',False)
-    assert Path(video['path']).name==f'archer-round{os.environ.get("ROUND","2")}.mp4'
-    (REVIEW/f'archer-gpu-round{os.environ.get("ROUND","2")}.json').write_text(json.dumps({'complete':True,'art_approved':False,'master_sha256':source,'pack':{k:v for k,v in pack.items() if k!='clips'},'video':video},indent=2))
+    assert Path(video['path']).name==f'archer-round{os.environ.get("ROUND","3")}.mp4'
+    (REVIEW/f'archer-gpu-round{os.environ.get("ROUND","3")}.json').write_text(json.dumps({'complete':True,'art_approved':False,'master_sha256':source,'pack':{k:v for k,v in pack.items() if k!='clips'},'video':video},indent=2))
 print('GPU_MASTERS_PASS')

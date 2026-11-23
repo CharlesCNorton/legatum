@@ -1,58 +1,61 @@
-# Archer — driver round 2
+# Archer — driver round 3
 
 Art candidate, not approved or connected to the runtime. No PASS marker.
-At 256 px the rounded drawing elbow, shallower warm stone ellipse and textured
-rim are closer to the painting. The face/gaze, shoulder drape and crest still
-differ. At 64 px the unit reads as the same archer but remains distinguishable.
-The rest silhouette overlap is approximately .808 (prior .790); this measures
-shape, not art quality.
+The round-two GPU pass succeeded: all forty 512/256 masters, 191,376-byte
+Q90 atlas and a valid eight-second movie. That evidence is preserved under
+`masters/archer/driver-r2-gpu/` and `review/3d-v2/archer-driver-r2-gpu/`.
 
-The existing fixed camera projects the original painting onto finished, real
-3D surfaces. Generated hidden-surface fills, actual AO/curvature, beveled straps,
-thick cloth folds, product lighting and one automatic rest histogram grade
-remain. The tunic and borders now deform with pelvis/thigh weights, inverse-bound
-in the painted pose so projection registration remains exact. Cloth is modeled,
-not simulated; shoulder and underside reveals still need refinement.
+Round three replaces the short shoulder patches with thick folded cuffs,
+corrects their winding and binds their seams to chest/upper-arm weights while
+preserving the exact rest surface. It replaces slatted crest tufts with a
+continuous curved closed fan, refits quiver shafts and places the far cheek
+plate behind the face. A newly generated clean stone plate textures the real
+rounded disc with live contact AO; its alpha never hides geometry. Generated
+linen underpaint softens exposed-fold transitions. Frozen camera projection,
+real straps/bevels/folds, AO/curvature bakes, product lights and one automatically
+fitted histogram grade remain.
 
-Feedback 23 replaces the previous partial CMU gait and authored hit/death with
-CC0 Quaternius Idle_Loop, Walk_Loop, Hit_Chest and Death01. Rest/roll-compensated
-Blender constraints transfer rotations; carrying arms layer open idle motion.
-Only the bow attack is hand-authored. There are no post-retarget foot rotation
-patches. Root corrections of at most 2.91 cm regularize sampled stance against
-virtual travel; the measured toe residual is below .002 mm. This is a sampled
-contact check, not a complete heel/toe or cloth collision solver. The front/top
-feet sheet exposes all eight samples.
+At 256 px the cream stone, shoulder coverage and continuous crest improve.
+Elbow pigment patches, face/gaze, calf lacing and quiver feathers still miss
+the painting. At 64 px it is clearly the same archer, but stance/proportions
+remain distinguishable. Rest alpha silhouette overlap is .818856, versus
+.807612 before this round; this is a diagnostic, not art approval.
+The full-depth plain views and 512 px detail master were inspected.
 
-The fall blends out of the painted guard, turns diagonally, stays framed and
-holds its final sample. Its quiver-supported landing and exposed shoulders
-remain less convincing than the painting; it is not a five-clean-clips sign-off.
+All five clips retain 8/8/10/4/10 frames. CC0 Quaternius idle/walk/hit/death and
+the original bow attack remain unchanged. There are no post-retarget foot
+rotation patches. Top/front feet diagnostics and all five strips were reviewed.
+The fall stays framed and held but still exposes simplified skin/cloth and
+unconvincing quiver contact; the drawn-bow gait remains stiff. This is not a
+five-clean-clips sign-off. Cloth is skinned modeled geometry, not simulation.
 
-The lead's preceding GPU pass succeeded: forty real 512/256 masters, 190,436-byte
-Q90 atlas, validated eight-second H.264 movie. That evidence is archived under
-`masters/archer/driver-r1-gpu/` and `review/3d-v2/archer-driver-r1-gpu/`.
-Current CPU previews supersede the gallery, not that historical GPU receipt.
-Current reports are `archer-audit.json`, `archer-foot-contact.json`,
-`archer-comparison.json`, `archer-validation.json` and `archer-video.json`.
+Final CPU checks:
 
-Current checks: all forty CPU256/24 frames plus a real CPU512/24 detail master;
-scene/projection/foot audit PASS; trimmed atlas **193,944 bytes, Q90,
-1217×750**, all forty 160 px samples; full decoded
-validation PASS; H.264/yuv420p 1600×348, 240 frames/eight seconds PASS.
-Python syntax (16 files), Bash syntax (3 scripts) and whitespace checks pass.
-GPU validation correctly rejects the current CPU preview.
+- All forty transparent Cycles 256 px/24-sample frames; real 512 px/24-sample
+  detail master; every interim stage, five animated WebPs and rest split/crossfade.
+- Scene/projection/foot audit PASS; finished UV error below .01 token pixels;
+  sampled stance residual 0.00000115 m with maximum 0.0291 m root correction.
+- Trimmed 160 px atlas: **197,360 bytes, Q90, 1222×750**, all forty frames.
+  Full validation PASS: source/clip/frame/grade hashes, exact decoded alpha,
+  offset reconstruction, gutters, margins, motion and held death.
+- Movie PASS: H.264/yuv420p, 1600×348, 240 frames/eight seconds. Decoded atlas
+  and sampled movie frames inspected. CPU preview is explicitly labeled.
+- Python AST18, Bash syntax3 and git whitespace PASS. Source-input check PASS;
+  missing-input GPU preflight, stale-craft rejection and CPU-master rejection PASS.
 
-Run the complete new host pass from the repository root:
+From the repository root, the lead runs:
 
 ```sh
-ROUND=2 tools/art/anim3d/units/archer/gpu.sh
+ROUND=3 tools/art/anim3d/units/archer/gpu.sh
 ```
 
-It audits, renders every stage plus feet at Cycles Metal 512/64, retains actual
-512/256 masters, validates provenance, packs the trimmed 160 px atlas at Q>=75
-and <=200,000 bytes, validates all forty frames and emits the decoded-atlas
-round movie. Success receipts never create an art PASS. The new GPU pass is
-pending; CPU checks cannot certify Metal or final art parity.
+The executable no-argument entry point audits and renders every stage plus feet
+at Cycles Metal 512/64; retains actual 512/256 masters; validates texture/craft
+inputs, source hashes and gallery frame hashes; packs/validates the atlas;
+and emits the round movie. It fails explicitly without Metal. Technical success
+never writes PASS. Current modified masters still require this GPU pass.
 
-Non-obvious findings: project after finishing geometry; inverse-bind cloth to
-retain the painted rest; include equipment and transitional fall frames in
-clipping review; inspect feet below the torso with the top camera's near clip.
+Non-obvious findings: opposite cuffs need opposite winding; inverse-bind the
+finished cuff before projection so its shoulder seam can deform; overlapping
+crest slats create comb artifacts even with correct pigment; a clean generated
+stone plate needs live contact AO and must never supply the mesh silhouette.

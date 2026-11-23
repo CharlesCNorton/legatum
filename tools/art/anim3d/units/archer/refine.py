@@ -4,9 +4,12 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import *
 from bpy_extras.object_utils import world_to_camera_view
+from craft import sleeves, stone, crest
 
 
 def refine():
+    sleeves()
+    crest()
     sc = bpy.context.scene
     rig = bpy.data.objects['Archer MPFB rig']
     cam = sc.camera
@@ -37,6 +40,20 @@ def refine():
             obj.shape_key_clear()
             for v, co in zip(obj.data.vertices, coords):
                 v.co = co
+        if obj.name.startswith(('GEO-Quiver arrow','GEO-Quiver feather','GEO-Leather quiver')):
+            inv=obj.matrix_world.inverted()
+            for v in obj.data.vertices:
+                world=obj.matrix_world@v.co;p=screen(world)
+                top=max(0,min(1,(82-p.y)/12))
+                target=Vector((p.x-11.5*top,p.y-2*top))
+                v.co=inv@move(world,target-p)
+        if obj.name == 'GEO-Bronze cheekpiece.001':
+            # The far cheek plate belongs behind the face, not as a protruding
+            # unpainted flap alongside the nose. Keep its full thickness.
+            inv=obj.matrix_world.inverted()
+            for v in obj.data.vertices:
+                world=obj.matrix_world@v.co
+                v.co=inv@move(world,Vector((-7,2)))
         # Fit the whole bent drawing arm, not only the sleeve cap. Inverse skinning
         # keeps the original MPFB weights and live armature on the modified body.
         if obj.name == 'GEO-MPFB archer anatomy':
@@ -65,23 +82,6 @@ def refine():
                 edge = max(0, min(1, (78-fitted.x)/13))
                 delta.x += edge * 3.4 * min(1, ((fitted.y-80)/8)**2)
                 v.co = skin.inverted() @ rig.matrix_world.inverted() @ move(world, delta)
-        # The crest is an actual thick fan. Fit both roots and tips of its tufts,
-        # retaining their camera depth and bone parenting, before solidification.
-        if obj.name.startswith('GEO-Pale horsehair crest'):
-            index = int(obj.name.rsplit('.',1)[1]) if '.' in obj.name else 0
-            t = index/50
-            outer = [(114,33),(105,32),(96,35),(88,43),(84,55),(84,66)]
-            inner = [(109,45),(105,44),(100,46),(95,50),(92,57),(91,64)]
-            def point(path):
-                u=t*(len(path)-1);j=min(int(u),len(path)-2)
-                return Vector(path[j]).lerp(Vector(path[j+1]),u-j)
-            inv = obj.matrix_world.inverted()
-            for v in obj.data.vertices:
-                target = point(inner if v.index<2 else outer)
-                world = obj.matrix_world@v.co
-                # Original front/back width is retained around the registered fan.
-                target.x += .8 if v.index in (1,2) else -.8
-                v.co = inv@move(world,target-screen(world))
         # Match the shallow painted stone ellipse while preserving a level top.
         if obj.name == 'GEO-Stationary cream base':
             obj.scale.x *= .98
@@ -104,6 +104,25 @@ def refine():
         for m in arms:
             m.show_viewport = m.show_render = True
         records.append({'object': obj.name, 'vertices': len(obj.data.vertices)})
+    # Shoulder seams follow the chest while the cuffs follow the upper arms.
+    # Inverse binding retains this exact rest surface before any projection.
+    for side,inner,outer in [('l',117,134),('r',93,80)]:
+        obj=bpy.data.objects['GEO-Ivory sleeve '+side]
+        positions=[obj.matrix_world@v.co for v in obj.data.vertices]
+        obj.parent=rig;obj.parent_type='OBJECT';obj.matrix_parent_inverse=Matrix.Identity(4)
+        obj.matrix_world=rig.matrix_world.copy()
+        transforms={name:rig.pose.bones[name].matrix@rig.data.bones[name].matrix_local.inverted()
+                    for name in ['spine_03','upperarm_'+side]}
+        groups={name:obj.vertex_groups.new(name=name) for name in transforms}
+        for v,world in zip(obj.data.vertices,positions):
+            t=max(0,min(1,(screen(world).x-inner)/(outer-inner)))
+            follow=.15+.85*t
+            weights={'spine_03':1-follow,'upperarm_'+side:follow}
+            skin=Matrix(((0,0,0,0),)*4)
+            for name,w in weights.items():
+                skin+=transforms[name]*w;groups[name].add([v.index],w,'REPLACE')
+            v.co=skin.inverted()@rig.matrix_world.inverted()@world
+        obj.modifiers.new('Sleeve sewn to chest and upper arm','ARMATURE').object=rig
     # Skin the finished tunic and its two borders to the pelvis and thighs.
     # Bind through the inverse current skin matrix so the painted rest silhouette
     # stays exact while lifted knees carry the hem rather than passing through it.
@@ -191,5 +210,6 @@ def refine():
         ray=n.new('ShaderNodeLightPath');weight=n.new('ShaderNodeMath');weight.operation='MULTIPLY'
         weight.inputs[1].default_value=.62;l.new(ray.outputs['Is Camera Ray'],weight.inputs[0])
         mix=n.new('ShaderNodeMixShader');l.new(weight.outputs[0],mix.inputs[0]);l.new(physical,mix.inputs[1]);l.new(pigment.outputs[0],mix.inputs[2]);l.new(mix.outputs[0],output.inputs['Surface'])
+    stone()
     (MASTER/'surface.json').write_text(json.dumps(records,indent=2))
     log('- Finished static solid/bevel/subdivision geometry before projection; froze MPFB macro mix with native skin weights; fitted drawing-arm contour and complete recurved bow in the fixed rest camera.')

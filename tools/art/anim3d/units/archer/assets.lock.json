@@ -7,7 +7,8 @@
     "fill-hair.png": "f472a44cdc7ee21159636cfb3ab6b7ceaacae420510632164307f0b67245041a",
     "fill-linen.png": "c71ed83e71404d76f318e2410e111c1ec6ecf00864d9730f13514f2f5c932da3",
     "painting-aligned.png": "3ee9fa00964ca787adcfe2c65554ed3915d164494017a9862f9166033fd161d2",
-    "painting-source.png": "f459f80268880a53ae5a0e787d1efa3e8fd054ab25761a21fb9b0eaedcbd9563"
+    "painting-source.png": "f459f80268880a53ae5a0e787d1efa3e8fd054ab25761a21fb9b0eaedcbd9563",
+    "stone-fill-source.png": "9f227031bc58a00020120d7105250d0f53a8b1d3a93d6da15345839d9c01fc03"
   },
   "shared_dependencies": "tools/art/anim3d/assets.lock.json; assets/SOURCES.md",
   "generated_fills": "Original mounted lane imagegen, prompt copied to reused-fills.prompt.txt from astra/unit-anim-3d-mounted"

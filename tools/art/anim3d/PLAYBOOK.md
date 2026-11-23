@@ -107,7 +107,7 @@ tools/art/anim3d/render.sh audit
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
 
-## Infantry: early-era archer, driver round 2
+## Infantry: early-era archer, driver round 3
 
 The archer lane lives entirely in `units/archer/`, with editable sources and
 renders in `$ANIM_ROOT/masters/archer/`. The saved round-one CPU evidence is
@@ -122,7 +122,7 @@ planes. All six installed Blender skills inform the implementation.
 sampling camera UVs. Static macro morphs are frozen; the drawing-arm contour is
 fitted through inverse skin transforms, retaining skin weights and live skeletal
 deformation. Static solidification, bevels and subdivision are applied before
-projection. The fitted thick horsehair fan retains its depth and head parenting.
+projection. The continuous closed horsehair fan has a curved 45 mm section, shallow fiber ridges and head parenting; it replaces overlapping slatted tufts.
 The complete bow centerline follows measured source landmarks with smooth
 interpolation; it remains a genuine swept curve with keyed physical flex.
 These are local full-depth geometry corrections, not exact camera recovery.
@@ -137,18 +137,27 @@ unchanged. Native skin UVs and bake UVs retain their own mappings.
 
 Standard/None avoids compressing already painted illumination a second time.
 Product lights retain warm upper-left key, soft fill and restrained cool rim.
-The round stone uses physical contact shadows and a camera-only cream pigment
-lift; no static foot or figure painting is projected onto it. A 17-quantile RGB
+The round stone uses a generated clean stone plate registered to the real
+rounded disc. Fresh live AO supplies contact; generated alpha does not cut
+geometry, and no static feet or figure shadows are projected onto it. A 17-quantile RGB
 histogram grade is fitted once at rest and held across every clip. Raw images
 are retained. Changing the master or grade invalidates the dependent clips.
 
-The lead's driver-round-one GPU pass succeeded: 190,436 bytes at Q90, all
-forty 512/256 masters, valid eight-second movie. It is archived under
-`masters/archer/driver-r1-gpu/`. Driver round two rounds the elbow and refits
-the shallow cream stone with an actual rounded rim and object-space grain.
-At 256 px the face/crest, shoulder drape and exposed moving surfaces still
-miss the painting; at 64 px identity is strong but distinguishable. No PASS.
-`archer-comparison.json` records current silhouette overlap as a diagnostic.
+The lead's driver-round-two GPU pass succeeded: 191,376 bytes at Q90, all
+forty 512/256 masters and a valid eight-second movie. It is preserved under
+`masters/archer/driver-r2-gpu/` and `review/3d-v2/archer-driver-r2-gpu/`.
+Round three adds thick folded shoulder cuffs with chest/arm skinning, fixes
+reversed cuff winding, brings the far cheek plate behind the face, refits the
+quiver shafts, replaces the slatted crest with a continuous volume and projects
+a clean generated stone plate. Generated linen underpaint softens exposed-fold
+lighting transitions. Original straps, bevels, bakes, product lights and the
+fixed automatic histogram grade remain.
+
+At 256 px the base, shoulder coverage and crest improve, but the face, elbow
+pigment and calf lacing remain distinguishable. At 64 px identity is strong;
+stance and proportions still differ. The open fall exposes simplified skin
+and equipment contact. These are art limitations, not failures of packing.
+No PASS. `archer-comparison.json` records silhouette overlap as a diagnostic.
 
 ### Build and review
 
@@ -192,15 +201,16 @@ near clip exposes the feet below the torso. GPU provenance covers this stage.
 Death releases the bow, uses keyed arrow visibility and holds its final sample.
 The finished tunic and its borders are inverse-bound to pelvis/thigh weights,
 preserving rest-camera registration while knees carry the hem. Cloth is modeled,
-not simulated; shoulder/skirt reveals and the quiver-supported
-fall still need visual review. These limitations prevent an art PASS.
+not simulated; skin/skirt reveals and the quiver-supported
+fall still need visual review. Shoulder cuffs now blend chest and upper-arm
+weights through inverse binding, preserving their finished rest surface. These limitations prevent an art PASS.
 
 ### Complete driver GPU pass
 
 From the repository root, the single executable no-argument entry point is:
 
 ```sh
-ROUND=2 tools/art/anim3d/units/archer/gpu.sh
+ROUND=3 tools/art/anim3d/units/archer/gpu.sh
 ```
 
 The driver supplies ROUND. The script audits saved clips; renders every plain,
@@ -209,7 +219,10 @@ actual 512 and 256 px masters; validates GPU provenance and current blend hashes
 packs and validates the atlas; and exports the decoded-atlas movie. GPU absence
 fails explicitly. `gpu-round.sh` delegates to this entry point for compatibility.
 The script keeps its own transcript, failure stage/status and round-specific
-success receipt. It never writes an art PASS. The previous GPU pass is verified; current modified masters require a new
+success receipt. `check_inputs.py` rejects modified texture inputs, a master
+that predates craft-source changes, or a stale master receipt before GPU work.
+Gallery frame hashes are checked as well as dimensions, preventing old 512 px
+files from masquerading as current output. It never writes an art PASS. The previous GPU pass is verified; current modified masters require a new
 host-side pass. CPU previews are not current GPU evidence.
 
 ### Trimmed atlas and verification
