@@ -54,3 +54,6 @@
 - Completed render e-idle (CPU).
 - e-idle: 8 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
 - Started render e-move (CPU).
+- Completed render e-move (CPU).
+- e-move: 8 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- Started render e-attack (CPU).

@@ -34,3 +34,5 @@
 - Emitted c: 1 frames, 256 px CYCLES/CPU, 8 samples.
 - Emitted c-details: 1 frames, 256 px CYCLES/CPU, 8 samples.
 - Emitted c: 1 frames, 256 px CYCLES/CPU, 8 samples.
+- Final rest preview: cream-composited foreground overlap improves from 0.58931 to 0.73666 (256 px, RGB distance >12 from cream; descriptive silhouette metric, not art approval). Armor is darker/richer, arm alignment and tail fullness improve, and the stone shifts six pixels upward on its ground plane. At 64 px the mounted-pistol identity is clearer, but head proportions, shoulder coverage and hind-leg stance remain visibly different. Three-view clay confirms real volume and also exposes remaining leg proportion/depth issues. No PASS.
+- Four delivery regression tests passed (17.820 s): decoded alpha and identical death, shifted-offset rejection, stale-grade rejection, mixed-settings rejection. Missing-input gpu.sh failure receipt, CPU-master GPU-receipt rejection and repeatable rest grading also passed.
