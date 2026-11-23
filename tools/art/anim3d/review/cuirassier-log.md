@@ -63,3 +63,5 @@
 - Emitted d: 4 frames, 512 px CYCLES/GPU, 64 samples.
 - Emitted e-idle: 8 frames, 512 px CYCLES/GPU, 64 samples.
 - Emitted e-move: 8 frames, 512 px CYCLES/GPU, 64 samples.
+- Emitted e-attack: 10 frames, 512 px CYCLES/GPU, 64 samples.
+- Emitted e-hit: 4 frames, 512 px CYCLES/GPU, 64 samples.

@@ -172,3 +172,43 @@
 - Started feet  (CPU).
 - Completed feet  (CPU).
 - Started audit  (CPU).
+- Started build  (CPU).
+- Completed build  (CPU).
+- Started bake  (CPU).
+- Completed bake  (CPU).
+- Started animate  (CPU).
+- Completed animate  (CPU).
+- Started audit  (CPU).
+- Completed audit  (CPU).
+- Started render b (CPU).
+- Completed render b (CPU).
+- b: genuine front, three-quarter and side geometry views.
+- Started render c (CPU).
+- Completed render c (CPU).
+- c: 1 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- Started render d (CPU).
+- Completed render d (CPU).
+- d: 4 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- Started render e-idle (CPU).
+- Foot diagnostic found neutral-height-only trouser selection included hand fragments; restricted it to |x|<0.30m and added no-hand/finger-weights garment audit. Independent stance audit originally measured 0.006805m/sample drift after key decomposition; translation-only root reconciliation now gives 1.49e-8m/sample against virtual ground. Maximum source-foot rotation decomposition residual 0.002448rad (0.140deg), within 0.005rad tolerance; no post-retarget foot orientation correction. Full audit passes five clips, exact loop endpoint transforms, stationary base, nonzero scales, wrist maximum 0.013525m and weapon clearance >=0.004m.
+- Completed render e-idle (CPU).
+- e-idle: 8 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- Started render e-move (CPU).
+- Completed render e-move (CPU).
+- e-move: 8 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- Started render e-attack (CPU).
+- Completed render e-attack (CPU).
+- e-attack: 10 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- Started render e-hit (CPU).
+- Completed render e-hit (CPU).
+- e-hit: 4 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- Started render e-death (CPU).
+- Completed render e-death (CPU).
+- e-death: 10 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- Started feet  (CPU).
+- Completed feet  (CPU).
+- Packed 40 frames, trimmed 160px cells, WebP quality 90, 197576 bytes.
+- Verified 8 second five-clip H.264 yuv420p review crossbowman-round2.mp4
+- Final driver-round2 CPU256/8: opened every refreshed strip and the front/top feet sheet, plus decoded MP4 contact frames. All 40 frames packed at Q90 / 197576 bytes with exact alpha/trim-offset reconstruction and held death; H.264/yuv420p, 1600x348, 240 frames / 8 seconds verified. Rest silhouette IoU 0.848221 at 256 and 0.846662 at 64 (not art acceptance). At 256 the hand shape, unprojected shoulder fill, shoe shading and raised fallen arm still look wrong; at 64 identity/height are consistent but silhouette/materials are not indistinguishable. NO PASS.
+- Checks: all-five structural audit and 16 foot diagnostic views complete; four synthetic delivery regressions passed in 6.902s; 13 Python files parse, two shell syntax checks and git diff --check pass; working-file hygiene 19 files / 0 findings. HEAD repository hygiene/public-claims pass; art distinctness could not run because Chromium bootstrap_check_in MachPortRendezvousServer was denied (1100). Final-master guard correctly rejects stale round1 GPU files, so no new GPU512 claim. No Rust/rules/UI changes; Rust/WASM builds not applicable.
+- Git add and commit attempted with required gpt-6-astra co-author footer; sandbox denied .git/worktrees/lane-21/index.lock for both. Changes remain uncommitted for the runner. origin/master is already an ancestor of HEAD; no merge needed, no push/PR. Executable lead handoff: ROUND=2 tools/art/anim3d/units/crossbowman/gpu.sh (rebuilds, GPU512/256, all stages, feet, atlas, validation, MP4).
