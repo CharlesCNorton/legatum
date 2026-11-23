@@ -106,3 +106,55 @@ tools/art/anim3d/render.sh audit
 ```
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
+
+## Infantry chapter: crossbowman round 1
+
+The unit-local pipeline is `units/crossbowman/`. Reuse the infantry lead's MPFB
+anatomy and two-bone pose helpers, with original quilted gambeson, articulated
+sleeves, red cowl, kettle helmet, crossbow and convex timber pavise. The pavise
+stands on the stone during idle, attack, hit and death; it is carried during move.
+The human retains MPFB topology and its 53-bone game-engine rig. All motion is
+explicit skeletal/weapon keyframes; no mocap or cloth simulation is claimed.
+
+This chapter follows feedback 12–22, superseding the older spearman packing
+parameters **for this unit only**. Use all six installed Blender skills. Calibrate
+camera and rest pose against the painting, freeze painting UVs on real meshes,
+feather facing/alpha into painted hidden-surface fills, bevel hard edges, retain
+thick folded cloth and modeled straps/rivets, and bake AO/curvature. Use a warm
+upper-left product key, restrained cool rim and soft fill. Apply one automatic
+rest-derived RGB histogram grade to every frame, preserving raw renders and alpha.
+Projection retains painted illumination: the shader uses a small emission
+contribution alongside surface lighting; its double-lighting risk still needs
+visual review. Existing image-generated horseman linen supplies unseen cloth,
+tinted per material. The source is CC BY 4.0; MPFB anatomy/rig is CC0.
+
+The stationary base is one disc: #E9CFA0 sRGB top, #B68A51 darker rim,
+converted to linear shader values, roughness .88 and fine grain. No figure
+projection goes onto the base. Verify the rendered colour rather than relying
+on the material parameter. Compare native 256 and 64 px outputs, including the
+painting/render/50% crossfade/split sheet `crossbowman-f-restpose-compare.png`.
+
+All Blender calls are plain `blender -b --disable-autoexec` through PATH's shared
+gate, sequentially. CPU previews explicitly use Cycles CPU. The no-argument GPU
+handoff from the repo root is:
+
+```sh
+ROUND=1 tools/art/anim3d/units/crossbowman/gpu.sh
+```
+
+It rebuilds model, real bakes and all five clips, requires Cycles Metal GPU (fails
+if unavailable), renders every review stage at 512, derives 256 masters, packs,
+validates, audits and writes `crossbowman-round${ROUND}.mp4`. This H.264 yuv420p
+video reconstructs trimmed frames at their offsets and displays all five clips
+side by side at 2× on cream for eight seconds. Masters are external under
+`$ANIM_ROOT/masters/crossbowman/`. No automatic visual PASS is written.
+
+Atlas JSON version 2 uses `layout: "trimmed-rows"`. `frame` is the untrimmed
+160×160 canvas and its common `ax/ay` anchor. Every clip retains `row`, `frames`,
+`fps`, `loop` and adds `rects`, one per frame: `{x,y,w,h,ox,oy}`. Read an atlas
+rectangle at x/y/w/h, then place it at ox/oy within a transparent 160 px canvas;
+place that canvas at the common anchor. Atlas rows have variable heights. Do not
+interpret the new atlas as the old fixed grid. Frame counts are 8/8/10/4/10,
+quality is selected only from 90/85/80/75 and delivery refuses files over 200,000
+bytes. Source and render hashes prevent packing stale clips. This is an art
+candidate; runtime integration and visual approval remain separate.

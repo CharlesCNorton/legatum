@@ -1,0 +1,12 @@
+{
+  "source.png": {
+    "sha256": "ac004a0720b138425ddac08fa05b31ad5ac88d6056fdbd355de9cc1e8c26b6e4",
+    "url": "https://pub-fb5c281dd12d4ea4bbd38d657cdeb907.r2.dev/app/src/assets/units/crossbowman-source.png",
+    "license": "CC BY 4.0"
+  },
+  "fill-linen.png": {
+    "sha256": "c71ed83e71404d76f318e2410e111c1ec6ecf00864d9730f13514f2f5c932da3",
+    "source": "Existing horseman imagegen painted linen",
+    "license": "CC BY 4.0"
+  }
+}
