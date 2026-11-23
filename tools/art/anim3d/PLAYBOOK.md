@@ -106,3 +106,95 @@ tools/art/anim3d/render.sh audit
 ```
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
+
+## Mounted family — Cavalry round 1
+
+Cavalry's isolated pipeline is `tools/art/anim3d/units/cavalry/`. It reuses the
+mounted branch's licensed Quaternius horse and MPFB 2.0.18 anatomical rider, with
+original navy uniform, kepi, curved steel sabre, crossbelts, boots and saddle gear.
+The horse's weighted skeleton and the rider's separate 53-bone rig remain editable;
+the rider follows the horse's torso. All silhouettes are real geometry. The
+painting is a colour texture on those surfaces, never a cutout or relief plane.
+
+The six Blender skills inform the geometry, materials, lights, camera, animation
+and render setup. The standing four quality levers are the standard here:
+
+1. Align the rest camera and anatomy before projecting the archived source with
+   fixed UVs. Surface incidence and conservative coat/cloth/skin masks blend into
+   generated painted fills on unseen surfaces. Cavalry reuses the mounted family's
+   CC BY 4.0 generated fill sheet; its original prompt is retained alongside the
+   unit scripts. The cloth fill is tinted navy in the shader. Projection cannot
+   repair silhouette or anatomical mismatches.
+2. Use physical strap and cloth thickness, bevelled hardware, fitted MPFB garments,
+   buttons, buckles, piping and horse subdivision. Bake real AO and Pointiness;
+   retain the native UV channel for bakes when adding the projection UV channel.
+3. Use a warm upper-left key, soft fill, cool rim, contact shading and denoising.
+   Metal is metallic=1; cloth, skin and leather are dielectric. The single fixed
+   cream stone base targets sRGB **#E9CFA0**, with fine grain and darker rim shading.
+4. Fit one monotonic RGB quantile grade to the rest painting and use the identical
+   LUT for every clip. Preserve raw renders. Never grade frames independently.
+
+Run from the repository root with the existing external installation:
+
+```sh
+source tools/art/anim3d/env.sh
+"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/cavalry/prepare.py
+for stage in build b materials bake paint c c-details animate d; do
+  RENDER_ENGINE=CYCLES CYCLES_DEVICE=CPU SAMPLES=8 \
+    tools/art/anim3d/units/cavalry/render.sh "$stage"
+done
+for clip in idle move attack hit death; do
+  RENDER_ENGINE=CYCLES CYCLES_DEVICE=CPU SAMPLES=4 \
+    tools/art/anim3d/units/cavalry/render.sh "e-$clip"
+done
+tools/art/anim3d/units/cavalry/render.sh audit
+"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/cavalry/pack.py
+"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/cavalry/validate.py
+ROUND=1 "$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/cavalry/mp4.py
+```
+
+Every Blender invocation is plain background `blender` on PATH, with automatic
+Python execution disabled. The machine gate owns slots/threads; do not bypass it
+or launch concurrent heavy work. No zero-scale hiding is used. No external master
+is committed. The unit uses `assets/cavalry/`, `masters/cavalry/` and the required
+`review/3d-v2/cavalry-*` names below `~/LegatumRuns/anim-pilot/`.
+
+Idle/move/attack/hit/death have 8/8/10/4/10 samples. Horse actions are sampled from
+the CC0 source; move retimes its gallop trajectories into a three-beat canter.
+Rider motion, sabre slash/recoil/release and death contact correction are authored.
+The last death image is reused exactly. Tack is bone-attached, not a leather
+simulation, and needs intersection review in extreme poses. Inspect at 256 and
+64 px, and inspect the strips/video for hoof contact, grip and loop seams.
+`cavalry-f-restpose-compare.png` shows painting, rest render, half split and 50/50
+crossfade. A successful structural audit is not visual approval.
+
+### Cavalry trimmed delivery and GPU handoff
+
+```sh
+ROUND=1 tools/art/anim3d/units/cavalry/gpu.sh
+```
+
+This no-argument script renders **all** b/c/details/d/e stages with Cycles Metal
+GPU (64 samples by default), or Eevee with `RENDER_ENGINE=BLENDER_EEVEE` and explicit
+`--gpu-backend metal`. It refuses a silent Cycles CPU fallback. It retains real
+512 px frames and downsampled 256 px masters, generates every review sheet and
+animated WebP, packs and validates the atlas, and writes the eight-second
+`cavalry-round${ROUND}.mp4`: all five clips at 2x on cream, H.264/yuv420p.
+
+The new atlas contract is version 2. `frame:{w:160,h:160,ax:87,ay:141}` describes
+the **logical untrimmed cell** and its shared ground anchor. `clips` retains named
+rows idle/move/attack/hit/death, `frames`, `fps`, and `loop`. Each clip adds
+`rects:[{x,y,w,h,ox,oy}, ...]`, in frame order. `(x,y,w,h)` is the packed source
+rectangle; `(ox,oy)` restores its top-left within the 160 px logical cell. To draw
+at a world anchor `(X,Y)`, place that crop at `(X-ax+ox,Y-ay+oy)`. Packed rows have
+variable heights and two transparent pixels between crops; never infer rectangle
+coordinates by multiplying row or frame number by 160.
+
+Packing keeps all 40 frames, alpha and offsets and chooses WebP quality 90/85/80/75
+under **200,000 bytes**. It fails rather than dropping frames or quality below 75.
+Source, blend, grade and delivery hashes reject stale inputs. Validation reconstructs
+all logical frames from the decoded WebP and checks clip counts, alpha, bounds,
+motion, byte budget and held source death. This is an isolated candidate; the
+runtime must understand version-2 rectangles before using it. The painting stays
+in the game. Write a `cavalry-PASS` only after visual parity and clean motion are
+actually established, not because the packer passes.

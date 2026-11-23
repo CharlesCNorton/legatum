@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "$0")/../../.."
+# Isolated unit dispatch precedes the legacy spearman lock and defaults.
+if [[ "${UNIT:-spearman}" == cavalry ]]; then
+  exec tools/art/anim3d/units/cavalry/render.sh "${1:-c}"
+fi
 source tools/art/anim3d/env.sh
 stage="${1:-c}"
 lock="$ANIM_ROOT/blender-heavy.lock"
