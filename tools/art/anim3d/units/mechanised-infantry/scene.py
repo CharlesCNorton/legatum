@@ -135,11 +135,13 @@ log('Baked 256px AO and curvature maps on '+', '.join(baked))
 # retain the generated fill and physical product-light response.
 from projection import project
 records=project(sc,cam,base,A,M)
+from finish import finish
+finish(sc,cam,base,A)
 save('mechanised-infantry.blend');render(M/'renders/c-textured-lit.png');review('c-textured-lit');log('Published painted rest pose and 50/50 comparison; real AO shader, micrograin, edge geometry and hidden-surface fill.')
 review('c-details')
 if MODE=='stills':sys.exit(0)
 # Mechanical object hierarchy is the editable rig; separate saved keyed clip masters.
-controls=[root,upper,turn,lift,*wheels]
+controls=[root,upper,turn,lift,*wheels,soldier['group']]
 neutral={o.name:(o.location.copy(),o.rotation_euler.copy()) for o in controls}
 # Brief muzzle flash uses keyed visibility and a full-depth mesh.
 flashmat=mat('Muzzle flash',(1,.36,.025),0,.7)
@@ -175,6 +177,9 @@ def pose(clip,i,n):
   upper.location.z=-.07*f;upper.rotation_euler.x=-.055*f
   lift.rotation_euler.y=-.45*f;turn.rotation_euler.z=-.11*f
   wheels[1].rotation_euler.x=.09*f;wheels[2].rotation_euler.x=.06*f
+  # Captured backward fall clears the ramp into the foreground. This is a
+  # whole-character placement correction; donor foot rotations remain intact.
+  soldier['group'].location+=(Vector((view.x,view.y,0)).normalized()*.80-right*.10)*f
  bpy.context.view_layer.update()
  # Real tire mesh minima seat all eight wheels on the base, including damaged suspension.
  floor=[]
@@ -205,7 +210,7 @@ def pose(clip,i,n):
  lows=[]
  for o in feet:
   ev=o.evaluated_get(deps);me=ev.to_mesh();lows.extend((ev.matrix_world@v.co).z for v in me.vertices);ev.to_mesh_clear()
- if lows:rig.location.z+=(.15-min(lows))/.65
+ if lows:rig.location.z+=(.15-min(lows))/soldier['group'].scale.z
  bpy.context.view_layer.update()
 
 manifest={'engine':'CYCLES','device':sc.cycles.device,'samples':SAMPLES,'resolution':RES,'clips':{},'source_sha256':hashlib.sha256((M/'mechanised-infantry.blend').read_bytes()).hexdigest(),'script_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),'pipeline_sha256':pipeline_hashes}
@@ -247,7 +252,8 @@ for clip,(count,fps,loop) in CLIPS.items():
   footcenter=soldier['group'].matrix_world.translation
   for o in sc.objects:
    if o.type in ('MESH','CURVE'):o.hide_render=not ('boot' in o.name)
-  for viewname,loc in [('top',footcenter+Vector((0,0,4))),('front',footcenter+Vector((0,-4,.5)))]:
+  front=soldier['group'].matrix_world.to_quaternion()@Vector((0,-4,.5))
+  for viewname,loc in [('top',footcenter+Vector((0,0,4))),('front',footcenter+front)]:
    cam.location=loc;cam.rotation_euler=(footcenter+Vector((0,0,.12))-cam.location).to_track_quat('-Z','Y').to_euler();cam.data.ortho_scale=.9
    for i in range(count):sc.frame_set(i+1);render(M/'renders'/'feet'/f'{viewname}-{i:02}.png')
   cam.matrix_world=savedcam;cam.data.ortho_scale=savedscale

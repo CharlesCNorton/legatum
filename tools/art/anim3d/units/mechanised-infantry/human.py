@@ -1,4 +1,4 @@
-import bpy, math, os, json
+import bpy, bmesh, math, os, json
 from pathlib import Path
 from mathutils import Vector, Matrix
 from math import sin, cos, pi
@@ -87,6 +87,27 @@ def bind_weights(o,weights):
  bpy.context.view_layer.objects.active=o
  bpy.ops.object.modifier_move_up(modifier=mod.name)
 
+def sleeve(side,cloth):
+ a=rig.pose.bones['upperarm_'+side].head.copy();b=rig.pose.bones['lowerarm_'+side].head.copy();c=rig.pose.bones['hand_'+side].head.copy()
+ vs=[];fs=[];weights={};count=32;around=32
+ for j in range(count+1):
+  t=j/count;center=a.lerp(b,t*2) if t<.5 else b.lerp(c,(t-.5)*2)
+  axis=(b-a).normalized().lerp((c-b).normalized(),max(0,min(1,(t-.35)/.3))).normalized()
+  u=axis.cross(Vector((0,1,0))).normalized();v=axis.cross(u).normalized()
+  radius=.077*(1-t)+.052*t+.014*sin(pi*t)
+  lower=max(0,min(1,(t-.37)/.26));lower=lower*lower*(3-2*lower)
+  for k in range(around):
+   angle=k*2*pi/around;fold=1+.075*sin(t*10*pi+2*cos(angle))*sin(pi*t)
+   vs.append(center+(u*cos(angle)+v*sin(angle))*radius*fold);weights[len(vs)-1]=lower
+ for j in range(count):
+  for k in range(around):i=j*around+k;z=j*around+(k+1)%around;fs.append((i,z,z+around,i+around))
+ o=solid(mesh('continuous folded sleeve '+side,vs,fs,cloth),.005)
+ # bind_weights receives coordinates, so use the closest sampled ring weight.
+ def ww(p):
+  i=min(range(len(vs)),key=lambda i:(Vector(vs[i])-p).length_squared);w=weights[i]
+  return {'upperarm_'+side:1-w,'lowerarm_'+side:w}
+ bind_weights(o,ww)
+
 def build(point,view):
  global rig,linen
  before=set(bpy.data.objects)
@@ -100,21 +121,38 @@ def build(point,view):
  rig=HumanService.add_builtin_rig(body,'game_engine');rig.name='RIG-Soldier MPFB'
  skin=mat('Painted warm skin',(.48,.29,.15));cloth=mat('Olive folded combat cloth',(.21,.23,.12),fill='wool');linen=mat('Tan combat webbing',(.37,.30,.17),fill='linen');rubber=mat('Black leather boots',(.06,.052,.035),fill='leather');metal=mat('Rifle gunmetal',(.12,.13,.11),1,.53)
  body.data.materials.clear();body.data.materials.append(skin)
+ body.data.materials.append(cloth)
+ exposed={g.index for g in body.vertex_groups if g.name.startswith(('head','neck','hand','thumb','index','middle','ring','pinky'))}
+ for face in body.data.polygons:
+  amount=sum(sum(g.weight for g in body.data.vertices[i].groups if g.group in exposed) for i in face.vertices)/len(face.vertices)
+  face.material_index=0 if amount>.55 else 1
  for face in body.data.polygons:face.use_smooth=True
  # Uniform surfaces have actual volume and sleeve/trouser folds.
- limb('thigh_r','calf_r',(-.15,-.08,.085),(-.2,-.4,.5));limb('thigh_l','calf_l',(.16,.04,.085),(.22,-.4,.5))
- limb('upperarm_r','lowerarm_r',(-.08,-.30,1.17),(-.37,-.20,1.30));limb('upperarm_l','lowerarm_l',(.23,-.34,1.09),(.36,-.19,1.2))
+ limb('thigh_r','calf_r',(-.36,.22,.23),(-.2,-.4,.6));limb('thigh_l','calf_l',(.14,-.12,.085),(.22,-.4,.5))
+ limb('upperarm_r','lowerarm_r',(.10,-.30,1.18),(-.37,-.20,1.30));limb('upperarm_l','lowerarm_l',(.40,-.34,1.06),(.36,-.19,1.2))
+ # Calibrate the guard's ankle orientation before creating footwear or sampling
+ # any donor action. Bent knees must not carry calf pitch into planted soles.
+ for side in ['l','r']:
+  foot=rig.pose.bones['foot_'+side];reference=foot.bone.matrix_local.copy();reference.translation=foot.head.copy();foot.matrix=reference
+  bpy.context.view_layer.update()
  for side in ['l','r']:
   for digit in ['index','middle','ring','pinky']:
    for j in range(1,4):p=rig.pose.bones[f'{digit}_{j:02d}_{side}'];p.rotation_mode='XYZ';p.rotation_euler.x=.85
-  for bone,r in [('upperarm',(.075,.062,.018)),('lowerarm',(.062,.052,.015)),('thigh',(.102,.08,.018)),('calf',(.08,.05,.014))]:
+  sleeve(side,cloth)
+  for bone,r in [('thigh',(.102,.08,.018)),('calf',(.08,.05,.014))]:
    p=rig.pose.bones[bone+'_'+side];tube('combat '+bone+' '+side,p.head,p.tail,r,cloth,bone+'_'+side)
-  fp=rig.pose.bones['foot_'+side].head
-  attach(sphere('combat boot '+side,(fp.x,fp.y-.05,.115),(.071,.135,.075),rubber),'foot_'+side)
-  attach(box('boot sole '+side,(fp.x,fp.y-.055,.048),(.14,.25,.033),rubber,.016),'foot_'+side)
+  # Footwear is built in anatomical rest, then transported by the foot's full
+  # rest-to-pose matrix. A level shoe built in a bent-leg guard carries a false
+  # pitch offset into the captured walk. No foot rotations are patched.
+  foot='foot_'+side;fp=rig.data.bones[foot].head_local
+  deform=rig.pose.bones[foot].matrix @ rig.data.bones[foot].matrix_local.inverted()
+  shoes=[sphere('combat boot '+side,(fp.x,fp.y-.05,fp.z+.03),(.071,.135,.075),rubber),box('boot sole '+side,(fp.x,fp.y-.055,fp.z-.037),(.14,.25,.033),rubber,.016)]
+  for shoe in shoes:
+   bpy.context.view_layer.update();shoe.matrix_world=deform @ shoe.matrix_world;attach(shoe,foot)
  torso=attach(box('body armour carrier',(0,-.015,1.29),(.43,.33,.43),cloth,.07),'spine_03')
  for s in [-1,1]:
   attach(box('armour shoulder strap',(s*.16,-.14,1.48),(.055,.035,.18),linen,.012),'spine_03')
+  attach(box('strap buckle',(s*.16,-.165,1.43),(.063,.019,.040),metal,.005),'spine_03')
   for j in range(2):attach(box('magazine pouch',(s*(.06+j*.09),-.198,1.23),(.075,.065,.17),linen,.012),'spine_03')
   attach(box('cargo trouser pocket',(s*.23,.005,.78),(.09,.16,.17),cloth,.018),'thigh_l' if s==1 else 'thigh_r')
  attach(box('combat belt',(0,-.01,1.06),(.40,.34,.052),linen,.012),'pelvis')
@@ -131,9 +169,24 @@ def build(point,view):
  attach(bevel(solid(mesh('ballistic helmet',vs,fs,cloth),.009),.003),'head')
  attach(curve('helmet rolled edge',vs[:48]+vs[:1],.006,linen),'head')
  gun=empty('RIG-soldier rifle',(-.05,-.33,1.16));attach(gun,'hand_r')
- start=Vector((-.22,-.35,1.25));end=Vector((.40,-.38,.97));axis=(end-start).normalized()
+ start=Vector((-.22,-.35,1.35));end=Vector((.62,-.38,.85));axis=(end-start).normalized()
  for name,a,b,r,ma in [('rifle receiver',start,start.lerp(end,.5),.023,metal),('rifle barrel',start.lerp(end,.5),end,.010,metal),('rifle stock',start-axis*.12,start,.033,rubber)]:parent(curve(name,[a,b],r,ma),gun)
  parent(box('rifle magazine',(.08,-.36,1.07),(.055,.032,.13),metal,.007),gun)
+ # Project finished surfaces, not the eight pre-bevel corners of the carrier.
+ # Apply geometry in bind space before skinning, preserving the MPFB weights.
+ for ob in list(set(bpy.data.objects)-before):
+  if ob.type not in {'MESH','CURVE'}:continue
+  bpy.ops.object.select_all(action='DESELECT');ob.select_set(True);bpy.context.view_layer.objects.active=ob
+  if ob.type=='CURVE':bpy.ops.object.convert(target='MESH')
+  for modifier in list(ob.modifiers):
+   if modifier.type in {'ARMATURE','MASK'}:continue
+   bpy.ops.object.modifier_move_to_index(modifier=modifier.name,index=0)
+   bpy.ops.object.modifier_apply(modifier=modifier.name)
+  bm=bmesh.new();bm.from_mesh(ob.data)
+  bmesh.ops.recalc_face_normals(bm,faces=list(bm.faces));bmesh.ops.triangulate(bm,faces=list(bm.faces))
+  edges=[e for e in bm.edges if e.calc_length()>.045]
+  if edges:bmesh.ops.subdivide_edges(bm,edges=edges,cuts=3,use_grid_fill=True)
+  bm.to_mesh(ob.data);bm.free()
  # Keep local rig coordinates while sampling reference-compensated open motions.
  from retarget import prepare,apply_matrices
  neutral={p.name:p.matrix.copy() for p in rig.pose.bones};motion={};sources={}
@@ -147,8 +200,8 @@ def build(point,view):
  group=empty('RIG-soldier placement',(0,0,0))
  for ob in objs:
   if ob.parent not in objs:parent(ob,group)
- group.scale=(.65,)*3
- loc=point(185,180,0);loc+=view*((.15-loc.z)/view.z);group.location=loc
+ group.scale=(.70,)*3;group.rotation_euler.z=.30
+ loc=point(186,178,0);loc+=view*((.15-loc.z)/view.z);group.location=loc
  # Front-facing donor -Y follows the ramp toward the viewer. No foot rotation edits.
  bpy.context.view_layer.update()
  return dict(rig=rig,group=group,motion=motion,sources=sources,neutral=neutral,objects=list(objs),gun=gun)

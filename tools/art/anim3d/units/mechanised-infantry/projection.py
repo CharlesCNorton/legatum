@@ -6,15 +6,18 @@ from bpy_extras.object_utils import world_to_camera_view
 
 
 def project(scene, camera, base, assets, folder):
-    image=bpy.data.images.load(str(assets/'projection.png'));image.pack()
+    image=bpy.data.images.load(str(assets/'soldier-projection.png'));image.pack()
     machine_image=bpy.data.images.load(str(assets/'machine-projection.png'));machine_image.pack()
     view=camera.rotation_euler.to_matrix() @ Vector((0,0,1))
     objects=[o for o in scene.objects if o.type=='MESH']
     verts=[];faces=[]
+    deps=bpy.context.evaluated_depsgraph_get()
     for o in objects:
+        ev=o.evaluated_get(deps);me=ev.to_mesh()
         start=len(verts)
-        verts.extend(o.matrix_world @ v.co for v in o.data.vertices)
-        faces.extend(tuple(start+i for i in p.vertices) for p in o.data.polygons)
+        verts.extend(ev.matrix_world @ v.co for v in me.vertices)
+        faces.extend(tuple(start+i for i in p.vertices) for p in me.polygons)
+        ev.to_mesh_clear()
     tree=BVHTree.FromPolygons(verts,faces)
     records=[]
     for o in objects:
@@ -38,8 +41,6 @@ def project(scene, camera, base, assets, folder):
             facing=max(0,min(1,((normal_matrix@v.normal).normalized().dot(view)-.01)/.25))
             hit,_,_,_=tree.ray_cast(point+view*5,-view,5.01)
             visible=hit is not None and (hit-point).length<.008
-            if o.get('soldier'):
-                visible=True
             weights[v.index]=facing if visible else 0
             if wheel:
                 # Every rotating wheel samples only the intact near-front wheel.

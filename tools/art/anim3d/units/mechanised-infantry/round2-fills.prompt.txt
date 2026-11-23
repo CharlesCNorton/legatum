@@ -1,0 +1,22 @@
+Built-in ImageGen, 2026-11-23. Reference: original painting-source.png.
+Original generated project artwork, CC BY 4.0. No public URL.
+
+Stone edit: Remove the entire vehicle, ramp, soldier and ALL their cast shadows.
+Preserve the exact camera, canvas, transparent background, warm cream circular
+limestone base silhouette/position and lower rim. Fill previously occluded stone
+seamlessly with fine painted grain, premium miniature brushwork. Only the empty
+stone disc remains; no equipment, dark marks, text or extra objects. Texture for
+a real Blender stone disc.
+
+Wheel fill: Square diffuse/albedo texture of the outside face of the APC's dusty
+wheel. Perfect front-facing orthographic circle, no perspective or ellipse.
+Olive ochre hub, central cap, eight worn lug nuts. Charcoal grey rubber annulus
+with dusty tan drybrushing, embossed fine rings and chunky tread. Premium painted
+miniature scratches. Uniform diffuse illumination, no directional shading or
+cast shadows. Fill corners with dark dusty rubber. No text, logos or scene.
+
+Generation directory: 01a209a4-dad6-7d60-a0a2-00c8f3ad45ae
+Stone: exec-d72133f0-7d1b-46dc-a696-a71be2ecfb2b.png
+Wheel: exec-b551797c-af78-4bb0-a1be-c8bd9d927e73.png
+Immutable copies: assets/mechanised-infantry/{stone,wheel}-fill-source.png
+SHA256 pins: assets.lock.json. Inputs retained under ANIM_ROOT, never in git.

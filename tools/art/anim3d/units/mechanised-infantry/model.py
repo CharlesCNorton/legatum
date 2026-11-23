@@ -6,7 +6,7 @@ from math import sin,cos,pi
 def build(g):
  globals().update(g)
  sc=bpy.context.scene
- bpy.ops.object.camera_add(location=(6,-10,3.1));cam=bpy.context.object;cam.name='CAM-painting';target=Vector((0,0,.81));cam.rotation_euler=(target-cam.location).to_track_quat('-Z','Y').to_euler();cam.data.type='ORTHO';cam.data.ortho_scale=4;sc.camera=cam
+ bpy.ops.object.camera_add(location=(9,-8,3.17));cam=bpy.context.object;cam.name='CAM-painting';target=Vector((0,0,.81));cam.rotation_euler=(target-cam.location).to_track_quat('-Z','Y').to_euler();cam.data.type='ORTHO';cam.data.ortho_scale=4;sc.camera=cam
  right=cam.rotation_euler.to_matrix()@Vector((1,0,0));up=cam.rotation_euler.to_matrix()@Vector((0,1,0));view=cam.rotation_euler.to_matrix()@Vector((0,0,1))
  def point(x,y,d=0):return target+right*((x-128)/64)-up*((y-128)/64)+view*d
  root=empty('chassis');upper=empty('body suspension',(0,0,0),root)
@@ -16,10 +16,11 @@ def build(g):
   v=[point(x,y,d(x)) for x,y in outline]+[point(x+shift[0],y+shift[1],d(x)-depth) for x,y in outline];f=[tuple(range(n-1,-1,-1)),tuple(range(n,n*2))]+[(i,(i+1)%n,n+(i+1)%n,n+i) for i in range(n)]
   return bevel(mesh(name,v,f,m or olive,p or upper),.009)
  # Single cream disc closely matches the painted support ellipse.
- bpy.ops.mesh.primitive_cylinder_add(vertices=128,radius=1.80,depth=.13,location=(0,0,.085));base=bpy.context.object;base.name='GEO-stationary cream disc';base.data.materials.append(stone);bevel(base,.018)
+ bpy.ops.mesh.primitive_cylinder_add(vertices=128,radius=1.80,depth=.10,location=(0,0,.10));base=bpy.context.object;base.name='GEO-stationary cream disc';base.data.materials.append(stone);bevel(base,.018)
  # Near side, glacis and top: closed sloped hull with substantial cross-section.
  solid('Armoured hull',[(18,105),(27,94),(152,95),(173,111),(161,123),(28,113)],(30,-14),.96,.25)
  solid('Lower hull',[(28,111),(158,119),(158,128),(30,120)],(30,-16),.91,.14)
+ solid('Rear suspension armour',[(149,116),(172,121),(170,148),(154,157),(149,146)],(4,-4),.32,.43)
  # Hollow rear opening: frame jambs and top rail surround a deep interior.
  solid('Rear opening shadow',[(170,99),(207,94),(207,143),(173,151)],(-7,-4),.12,.08,m=black)
  solid('Rear left jamb',[(165,98),(173,98),(177,149),(168,146)],(3,-3),.14,.48)
@@ -42,8 +43,13 @@ def build(g):
  for x,y in [(24,109),(155,112)]:solid('Protected headlight',[(x,y),(x+6,y),(x+6,y+5),(x,y+5)],(0,0),.03,.32,m=edge)
  wheels=[]
  # Four independent physical axles, eight full rubber tires with hub bolts/tread.
- for i,(px,py,side) in enumerate([(36,139,-1),(65,143,-1),(94,147,-1),(124,150,-1),(73,125,1),(102,129,1),(131,133,1),(160,136,1)]):
+ for i,(px,py,side) in enumerate([(42,139,-1),(69,143,-1),(98,147,-1),(130,150,-1),(79,125,1),(106,129,1),(135,133,1),(166,136,1)]):
   r=.318;center=point(px,py,0);center+=view*((.15+r+.008-center.z)/view.z)
+  if i>=4:
+   # Opposite wheels share the near-side wheelbase and the hull's real width.
+   # Independent screen landmarks previously put them outside the chassis in
+   # side views, despite hiding that mistake from the painting camera.
+   center=wheels[i-4].matrix_world.translation+Vector((-.32,1.05,0))
   w=empty('wheel '+str(i),center,root);w['radius']=r+.008;w['side']=side;wheels.append(w)
   profiles=[(-.12,.68*r),(-.14,.84*r),(-.11,.97*r),(-.075,r),(.075,r),(.11,.97*r),(.14,.84*r),(.12,.68*r)];v=[];f=[];N=48
   for yy,rr in profiles:

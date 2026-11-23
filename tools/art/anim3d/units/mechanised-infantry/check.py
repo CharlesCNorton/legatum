@@ -12,10 +12,15 @@ def check(require_gpu=False):
     assert man['source_sha256']==sha(M/'mechanised-infantry.blend'),'stale model'
     assert man['inputs_sha256']==sha(M/'inputs.json'),'changed input manifest'
     inputs=json.loads((M/'inputs.json').read_text())
+    assert inputs['assets_sha256']==json.loads((P/'assets.lock.json').read_text()),'changed source lock'
+    for name,value in inputs['assets_sha256'].items():
+        assert sha(R/'assets/mechanised-infantry'/name)==value,'changed asset: '+name
     assert inputs['source_sha256']==sha(R/'assets/mechanised-infantry/painting-source.png'),'changed painting'
     assert inputs['fill_sha256']==sha(R/'assets/mechanised-infantry/painted-olive.png'),'changed generated fill'
     for name,value in man['pipeline_sha256'].items():assert sha(P/name)==value,'changed pipeline: '+name
     assert man['grade_sha256']==sha(M/'grade.json'),'changed grade'
+    audit=json.loads((M/'geometry-audit.json').read_text())
+    assert audit['clip_blends']==man['clip_blends'],'missing or stale geometry audit'
     for name,value in man['gallery_sha256'].items():assert sha(M/'256'/name)==value,'changed gallery: '+name
     if require_gpu:
         assert (man['device'],man['resolution'])==('GPU',512),'final delivery requires actual GPU512 masters'

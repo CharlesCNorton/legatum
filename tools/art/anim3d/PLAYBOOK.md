@@ -146,7 +146,7 @@ all eight move samples from above and in front to
 The vehicle rolls wheels by travel/radius; only weapon-specific attack is authored.
 Licences and pinned source hashes are in the unit's SOURCES.md and assets.lock.json.
 
-`ROUND=1 tools/art/anim3d/units/mechanised-infantry/gpu.sh` is the no-argument
+`ROUND=2 tools/art/anim3d/units/mechanised-infantry/gpu.sh` is the no-argument
 lead handoff from repo root. It explicitly requires Metal, rebuilds all stages,
 renders actual Cycles GPU 512px frames, retains 512 and downsampled 256 masters,
 publishes every b/c/d/e/f/g review, packs/validates the atlas, and creates the
@@ -161,3 +161,25 @@ is an atlas crop, and ox/oy restores it into the original logical cell. Draw at
 Exact reconstructed alpha and held death are validated. Runtime wiring remains
 unchanged. Do not write a PASS marker until rest-pose parity and clean motion
 have actually passed visual review.
+
+Round 2: preserve incoming GPU frames and reviews in
+`masters/mechanised-infantry/driver-r1-gpu/` before replacing interim evidence.
+The camera azimuth must also fit the wheel ellipses, not only the projected hull
+outline. Rotating wheels use a generated orthographic, evenly lit circular
+albedo in axle coordinates; physical tire thickness, tread, rolled beads, hubs
+and fasteners supply relief. Never rotate the painting's elliptical silhouette
+or directional cast shadows with a wheel. Generated stone occlusion fill keeps
+the original full-master registration, not the shorter empty-disc alpha bounds;
+it textures the actual bevelled disc and receives fresh contact AO. Alpha is
+only pigment confidence, never mesh visibility. Finish human bevels, thickness
+and topology in bind space before computing projected UVs and visibility from
+evaluated meshes. Continuous folded sleeves retain upper/lower-arm weights.
+Fit footwear in anatomical rest and transport it with the complete foot
+rest-to-pose matrix; a level shoe attached in a bent guard carries an incorrect
+pitch into the walk. Calibrate the guard ankle before sampling donor actions,
+never by rotating retargeted feet afterward. Bind audit receipts to all five
+clip-blend hashes and require a fresh successful audit before packing.
+The source lock includes both new fills and is independently checked at delivery.
+GPU logging is tee'd to both the driver and unit log so a successful redirected
+pass cannot leave the driver's evidence empty. CPU evidence remains labelled;
+round-1's successful GPU receipt does not validate the revised model.

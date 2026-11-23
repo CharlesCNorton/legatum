@@ -1,7 +1,7 @@
 """Register the archived full master to the shipped painting's alpha bounds."""
 from pathlib import Path
 import os, json, hashlib
-from PIL import Image
+from PIL import Image, ImageChops
 ROOT=Path(os.environ.get('ANIM_ROOT',Path.home()/'LegatumRuns/anim-pilot'))
 A=ROOT/'assets/mechanised-infantry'; M=ROOT/'masters/mechanised-infantry'; M.mkdir(parents=True,exist_ok=True)
 lock=json.loads((Path(__file__).parent/'assets.lock.json').read_text())
@@ -20,5 +20,14 @@ mechanical=canvas.copy();mask=mechanical.getchannel('A')
 draw=ImageDraw.Draw(mask)
 draw.polygon([(x*4,y*4) for x,y in [(179,104),(190,102),(195,112),(200,123),(199,136),(193,146),(195,161),(192,180),(183,181),(181,164),(176,157),(173,144),(173,136),(165,130),(169,117)]],fill=0)
 mechanical.putalpha(mask);mechanical.save(A/'machine-projection.png')
+soldier=canvas.copy();soldier.putalpha(ImageChops.subtract(canvas.getchannel('A'),mask));soldier.save(A/'soldier-projection.png')
+# Generated occlusion fill uses the original master registration, never its new
+# alpha bounds (the empty disc's bounding box is necessarily much shorter).
+stone=Image.open(A/'stone-fill-source.png').convert('RGBA')
+if stone.size!=source.size:stone=stone.resize(source.size,Image.Resampling.LANCZOS)
+stone=stone.crop(source.getchannel('A').getbbox())
+out=Image.new('RGBA',(1024,1024));out.alpha_composite(stone.resize(((b[2]-b[0])*4,(b[3]-b[1])*4),Image.Resampling.LANCZOS),(b[0]*4,b[1]*4));out.save(A/'stone-projection.png')
 (M/'inputs.json').write_text(json.dumps({'source_sha256':hashlib.sha256((A/'painting-source.png').read_bytes()).hexdigest(),'painting_bounds_256':b,'projection':'full master fitted to shipped alpha bbox; no mesh replacement','fill_sha256':hashlib.sha256((A/'painted-olive.png').read_bytes()).hexdigest()},indent=2))
 print('Painting bounds',b)
+inputs=json.loads((M/'inputs.json').read_text());inputs['assets_sha256']=lock
+(M/'inputs.json').write_text(json.dumps(inputs,indent=2))

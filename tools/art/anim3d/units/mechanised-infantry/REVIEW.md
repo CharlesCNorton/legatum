@@ -1,56 +1,80 @@
-# Mechanised infantry — round 1
+# Mechanised infantry — driver round 2
 
-Round-1 candidate, not art approval. No PASS marker. The static painting remains
-the runtime asset. All unit-specific work is in this directory.
+Review candidate, not art approval. No PASS marker. The static painting remains
+in use; this branch does not change runtime wiring.
 
-## What exists
+## Changes after the supplied GPU review
 
-- Original eight-wheel APC with full-depth sloped armour, rear cabin frame,
-  lowered ramp, turret/autocannon, wheel hubs and separate rolling tread.
-- MPFB anatomical soldier, 53-bone rig, combat uniform/armour, helmet, pouches,
-  straps, boots and rifle. Quaternius CC0 idle/walk/hit/death with rest-pose and
-  bone-roll compensation; mechanical vehicle clips and authored attack.
-- Actual AO and curvature bakes on hull, ramp and turret; frozen source painting
-  UVs, hidden-surface painted fills, product lights and bounded source grade.
-- Five keyed clip blends and forty CPU256 frames, immediate b/c/d/e/f/g review
-  sheets, animated WebPs and decoded-atlas round-1 MP4 under external anim-pilot.
-- A version-2, trimmed 160px WebP atlas candidate, lossless alpha and offsets,
-  preserving 8/8/10/4/10 frames. Actual byte/quality receipts are in the external
-  `review/3d-v2/mechanised-infantry-validation.json`.
+The incoming GPU pass succeeded: 182,722 bytes at Q85, GPU512 masters and the
+round-1 review video. All incoming evidence is preserved externally under
+`masters/mechanised-infantry/driver-r1-gpu/`. The empty driver log was caused by
+redirection; gpu.sh now tees to both logs.
+
+- Refit camera azimuth and near-wheel placement; derive opposite wheels from
+  the near wheelbase and physical hull width. Added rear suspension armour.
+- Original generated circular wheel albedo maps in axle coordinates onto real
+  tires, hubs and tread. It rotates without rotating a painted ellipse or a
+  directional source shadow; product lights supply the highlights.
+- Original generated stone occlusion fill textures the real bevelled disc,
+  with fresh contact AO and an alpha-safe pigment fallback. Reduced rim depth
+  while retaining the support plane at z=.15.
+- Refit the soldier's step, hands and rifle. Added continuous weighted folded
+  sleeves, strap buckles and cloth on covered anatomical surfaces.
+- Apply bevel/thickness geometry in bind space before frozen projection; compute
+  visibility against evaluated meshes. Separate source pigment masks prevent a
+  second soldier on the ramp and restrict human projection to its source region.
+- Retain Quaternius idle/walk/hit/death and its foot rotations. A whole-character
+  foreground displacement during the captured fall improves terminal visibility.
+  Foot-angle checks now use the actual rig travel direction.
+- Correct footwear binding from anatomical rest, and calibrate guard ankles
+  before donor sampling. The first full audit caught an incorrect raised-boot
+  pitch; the corrected binding passed the same unchanged 35-degree direction
+  and 3mm contact gates. Audit receipts are bound to all five clip blends.
+- Check every pinned external source at delivery, including the two new fills.
+  Prompts, generation identities and licences are in this directory.
 
 ## Honest visual verdict
 
-At 256px the carrier's sand/olive brushwork and overall identity are much closer
-than the plain model, but the soldier's helmet/face/arms do not register tightly
-with the painting. His stance is too upright, the boots pick up light source
-pixels, the rifle grip needs closer inspection, and death can hide too much of
-him behind the ramp. The wheels lack the painting's convincing heavy rubber
-finish. The rear cabin's physical depth/joins and wheel spacing need further
-multi-view refinement; screen registration alone does not prove mechanical fit.
-The cream base is flatter and less nuanced than the painting.
+At 256px, wheels now have painted wear and the base has grain and contact tone;
+these are substantial improvements over the flat round-1 materials. The soldier
+is closer in size and stance. It remains distinguishable from the painting:
+wheel sidewalls/tread are coarse, the equal-size wheels miss the painting's
+perspective progression, and the soldier's face, supporting hand and clothing
+are less precise. The stone is too uniformly warm. Alternate views still expose
+awkward hull/cabin depth and attachment relationships; a fixed-camera pigment
+match does not certify a mechanically coherent model.
 
-At 64px this reads as the same eight-wheel carrier plus one dismount; the soldier
-is still a weaker, less distinct silhouette. This is not hard to distinguish
-from the painting. The atlas passing a size or alpha gate does not change that.
+At 64px, the APC-plus-one-dismount identity and silhouette are consistent with
+the painting, but the darker wheel band and less distinct soldier remain visible.
+No technical size, provenance or motion check is a visual approval.
 
-The eight-frame top/front feet sheet and saved-scene audit verify forward foot
-axes and lowest-sole contact. They do not certify absence of horizontal sliding,
-weapon/hand intersections or ramp contact. The soldier retains the captured gait;
-no post-retarget foot rotation patch is used. Rotating wheels retain physical rubber/painted-metal shaders rather than frozen
-view-dependent source shading, which visibly wobbled under rotation. The removed
-projection approach is not treated as finished wheel paint.
+Final CPU checks: 40 frames at 256px/eight samples; five clip blends; geometry
+audit passed (maximum move foot yaw 27.531 degrees, lowest-sole error below
+0.001mm). Trimmed 160px atlas is **186,040 bytes at Q85**, with exact reconstructed
+alpha/offsets and held last two death frames. MP4 validation passed: 240 frames,
+8.000 seconds, 1600x348, H.264/yuv420p; decoded .25s/.85s frames inspected.
+Python compilation, shell syntax and whitespace checks passed. gpu.sh was
+exercised here and correctly failed at Metal preflight with exit 1, leaving
+the verified CPU outputs intact. Its logging uses a regular pipe, since shell
+process substitution through /dev/fd is denied in this sandbox.
+
+All five strips and top/front foot samples must be inspected after the GPU pass.
+The foot audit checks direction and lowest-sole contact; it does not certify
+horizontal slip, rifle grip or body/ramp collisions. The death pose remains a
+priority for review. CPU256 at eight samples cannot certify GPU512 fine detail.
 
 ## Lead GPU pass
 
-From this checkout's repo root, run:
+From this checkout's repository root:
 
 ```sh
-ROUND=1 tools/art/anim3d/units/mechanised-infantry/gpu.sh
+ROUND=2 tools/art/anim3d/units/mechanised-infantry/gpu.sh
 ```
 
-This rebuilds and renders all stages sequentially on Metal Cycles at actual
-512px, retains 512/256 masters, runs the geometry/provenance/delivery checks and
-creates the required five-clip 8-second H.264/yuv420p MP4. The sandbox's CPU
-previews are not 512px masters or a GPU sign-off. Missing Metal fails before
-replacing those previews. Inspect all GPU sheets again, especially soldier
-projection, tire shading, grip, rear cabin joins, ramp collision and death.
+No arguments. It requires Metal, rebuilds/bakes every stage, renders Cycles GPU
+512px at 64 samples, retains 512/256 masters, publishes b/c/details/d/e/f/g,
+runs geometry/provenance checks, packs the trimmed 160px atlas at Q75 or above
+and at most 200,000 bytes, validates offsets/alpha/held death, and encodes all
+five clips side by side into an eight-second H.264/yuv420p round-2 MP4.
+Missing Metal fails at preflight before replacing CPU render evidence. GPU
+receipts explicitly retain `art_approved: false`.
