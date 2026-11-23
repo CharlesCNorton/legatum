@@ -57,7 +57,10 @@ export const testWithFailingRequests = base.extend<{}, { serverURL: string; rela
     const port = new URL(E2E_RELAY).port;
     // A fresh relay state per run: rooms a crashed earlier run left behind would show twice in the game list.
     const state = await mkdtemp(join(tmpdir(), 'legatum-relay-'));
-    const proc = spawn(join(dir, 'node_modules/.bin/wrangler'), ['dev', '--port', port, '--ip', '127.0.0.1', '--persist-to', state], {
+    // Every test hosts from 127.0.0.1 and the relay lives for the whole run, so rooms earlier tests left open
+    // would hit the per-address cap (2 live rooms) and refuse the next host. The cap's own wording is tested with
+    // mocked replies (tour/online.spec.ts).
+    const proc = spawn(join(dir, 'node_modules/.bin/wrangler'), ['dev', '--port', port, '--ip', '127.0.0.1', '--persist-to', state, '--var', 'MAX_ROOMS_PER_IP:50'], {
       cwd: dir,
       env: { ...process.env, WRANGLER_SEND_METRICS: 'false', CI: '1' },
       stdio: ['ignore', 'pipe', 'pipe'],
