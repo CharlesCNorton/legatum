@@ -11,3 +11,11 @@ Driver round 2 GPU follow-up reuses these unchanged painting, generated fill and
 Original inverse-skinned tailoring, contact adaptation, pigment/grain changes and frame-checkpoint
 render orchestration are MIT source; rendered art remains CC BY 4.0. Prior mixed GPU/CPU evidence
 is retained outside git under `masters/barbarian-musketman/driver-r1-gpu/`.
+
+## Driver round 3, 2026-11-23
+
+- Clean stone occlusion fill: built-in ImageGen `01a20ab4-8199-7490-8eff-da4ff8a7b69a/exec-792a2c3e-eef8-4902-a5ba-44523c95b73c.png`, original project CC BY 4.0, no public URL. Input: registered original musketman painting. External `assets/barbarian-musketman/stone-fill-source.png`; exact prompt in `stone-fill.prompt.txt`, SHA256 in `assets.lock.json`. Registered generated top with original lower rim on the actual beveled disc, live AO; image alpha never clips geometry.
+- Reuses Medjay generated skin, built-in ImageGen `01a20671-5037-7490-a90a-decacb274446/exec-401b9b3e-9eef-48db-b965-0d53769ebddc.png`, original project CC BY 4.0, no public URL. Original prompt: painted warm skin, linen, hide and wood texture quadrants for a premium miniature, no text or insignia. Unchanged external copy `skin-fill.png`, tried during iteration and superseded by the unit-specific flesh fill below. Existing MPFB CC0 anatomy and Quaternius CC0 motion unchanged.
+- Full-depth hooked feather, inverse-skinned sleeves, anatomical garment materials and view-dependent pigment fidelity: original MIT unit scripts / CC BY 4.0 renders. Incoming round2 GPU evidence retained in `masters/barbarian-musketman/driver-r2-gpu/`.
+
+- Unit-specific buff/ivory/flesh/charcoal fill atlas: built-in ImageGen `01a20ab4-8199-7490-8eff-da4ff8a7b69a/exec-42f0fb55-dcb5-45e3-b9b2-53b7033e06cd.png`, original project CC BY 4.0, no public URL. External painted-fills-source.png, prompt painted-fills.prompt.txt, SHA256 assets.lock.json. Replaces the inappropriate horse-coat fur on buff garments and orange skin in exposed regions.

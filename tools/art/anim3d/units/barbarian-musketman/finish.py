@@ -100,7 +100,7 @@ def pack():
   if len(output.getvalue())<=200000:break
  else:raise RuntimeError('Atlas exceeds 200000 bytes at quality 75; frame count and quality floor retained')
  out=Path('app/src/assets/units/anim');out.mkdir(exist_ok=True,parents=True);(out/f'{SLUG}.webp').write_bytes(output.getvalue());(out/f'{SLUG}.json').write_text(json.dumps(meta,separators=(',',':'))+'\n')
- report={'bytes':len(output.getvalue()),'quality':quality,'frames':40,'alpha_levels':32,'atlas_sha256':hashlib.sha256(output.getvalue()).hexdigest(),'source_sha256':hashes,'renders':renders,'grade':grade,'master_sha256':current,'rest_sha256':sha(M/'renders/c-textured-lit/00.png'),'metadata_sha256':sha(out/f'{SLUG}.json'),'approval':'round 2 candidate; no PASS'}
+ report={'bytes':len(output.getvalue()),'quality':quality,'frames':40,'alpha_levels':32,'atlas_sha256':hashlib.sha256(output.getvalue()).hexdigest(),'source_sha256':hashes,'renders':renders,'grade':grade,'master_sha256':current,'rest_sha256':sha(M/'renders/c-textured-lit/00.png'),'metadata_sha256':sha(out/f'{SLUG}.json'),'approval':'round 3 candidate; no PASS'}
  (M/'pack.json').write_text(json.dumps(report,indent=2));(V/f'{SLUG}-pack.json').write_text(json.dumps(report,indent=2));print('PACK',len(output.getvalue()),'bytes quality',quality)
  # Regenerate review images from the graded masters, preserving raw render outputs.
  for stage in ['b-plain','c-textured-lit','d-rig-poses','g-feet-top','g-feet-front']+['e-'+c for c in CLIPS]:review(stage,True)
@@ -148,7 +148,7 @@ def validate():
  (V/f'{SLUG}-validation.json').write_text(json.dumps(result,indent=2));print('VALIDATE',json.dumps(result))
 
 def video():
- meta,atlas,clips=decoded();frames={name:[tile(im,320).convert('RGB') for im in ims] for name,ims in clips.items()};out=V/f'{SLUG}-round{os.environ.get("ROUND","2")}.mp4'
+ meta,atlas,clips=decoded();frames={name:[tile(im,320).convert('RGB') for im in ims] for name,ims in clips.items()};out=V/f'{SLUG}-round{os.environ.get("ROUND","3")}.mp4'
  # Stream raw frames to avoid 240 temporary PNG files. Reconstruct trims first.
  process=subprocess.Popen(['ffmpeg','-y','-loglevel','error','-f','rawvideo','-pixel_format','rgb24','-video_size','1600x348','-framerate','30','-i','-','-c:v','libx264','-pix_fmt','yuv420p','-crf','20','-movflags','+faststart',str(out)],stdin=subprocess.PIPE)
  for tick in range(240):
@@ -159,6 +159,7 @@ def video():
  process.stdin.close();assert process.wait()==0
  probe=json.loads(subprocess.check_output(['ffprobe','-v','error','-show_entries','stream=codec_name,pix_fmt,width,height,nb_frames:format=duration','-of','json',str(out)]));assert (probe['streams'][0]['width'],probe['streams'][0]['height'])==(1600,348)
  assert probe['streams'][0]['codec_name']=='h264' and probe['streams'][0]['pix_fmt']=='yuv420p' and int(probe['streams'][0]['nb_frames'])==240 and abs(float(probe['format']['duration'])-8)<.05
+ subprocess.run(['ffmpeg','-y','-loglevel','error','-i',str(out),'-vf','fps=4,scale=800:-1,tile=2x4','-frames:v','1',str(V/f'{SLUG}-h-mp4-contact.png')],check=True)
  (V/f'{SLUG}-video.json').write_text(json.dumps(probe,indent=2));print('VIDEO',out)
 
 def gpu_receipt():
@@ -171,7 +172,7 @@ def gpu_receipt():
    files=list((M/str(size)/stage).glob('[0-9][0-9].png'));assert len(files)==data['frames']
    assert all(Image.open(f).size==(size,size) for f in files)
  validate()
- round_number=os.environ.get('ROUND','2')
+ round_number=os.environ.get('ROUND','3')
  movie=V/f'{SLUG}-round{round_number}.mp4';assert movie.exists()
  receipt={'round':round_number,'master_sha256':sha(M/f'{SLUG}.blend'),'atlas_sha256':sha(Path(f'app/src/assets/units/anim/{SLUG}.webp')),'movie_sha256':sha(movie),'stages':stages,'device':'GPU','resolution':512,'visual_approval':False}
  (V/f'{SLUG}-round{round_number}-gpu.json').write_text(json.dumps(receipt,indent=2))

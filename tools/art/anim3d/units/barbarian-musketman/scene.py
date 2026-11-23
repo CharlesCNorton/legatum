@@ -127,7 +127,7 @@ def build():
  rig=HumanService.add_builtin_rig(body,'game_engine');rig.name='RIG-Barbarian musketman MPFB'
  for bone in rig.data.bones:bone.inherit_scale='NONE'
  system=R/'blender-user/extensions/.user/user_default/mpfb/data';eyes=HumanService.add_mhclo_asset(str(system/'eyes/high-poly/high-poly.mhclo'),body,asset_type='Eyes',subdiv_levels=1,material_type='MAKESKIN');eyes.name='GEO-MPFB eyes'
- skin=mat('ochre skin',(.49,.265,.12));linen=mat('painted ivory linen',(.73,.60,.39),fill='linen');red=mat('faded vermilion sash',(.42,.065,.029));leather=mat('scuffed brown hide',(.20,.09,.03),fill='coat');steel=mat('worn gun steel',(.55,.57,.56),1,.38);brass=mat('warm polished brass',(.75,.48,.15),1,.32);wood=mat('walnut gunstock',(.25,.1,.025),fill='coat');dark=mat('hair and recesses',(.065,.035,.016),fill='hair');buff=mat('patched ochre coat',(.32,.23,.115),fill='coat');pants=mat('charcoal patched breeches',(.13,.12,.09));stone=mat('cream limestone E9CFA0',(.815,.624,.352),0,.88)
+ skin=mat('ochre skin',(.49,.265,.12),fill='flesh');linen=mat('painted ivory linen',(.73,.60,.39),fill='ivory');red=mat('faded vermilion sash',(.42,.065,.029));leather=mat('scuffed brown hide',(.20,.09,.03),fill='coat');steel=mat('worn gun steel',(.55,.57,.56),1,.38);brass=mat('warm polished brass',(.75,.48,.15),1,.32);wood=mat('walnut gunstock',(.25,.1,.025),fill='coat');dark=mat('hair and recesses',(.065,.035,.016),fill='hair');buff=mat('patched ochre coat',(.32,.23,.115),fill='buff');pants=mat('charcoal patched breeches',(.13,.12,.09),fill='charcoal');stone=mat('cream limestone E9CFA0',(.815,.624,.352),0,.88)
  body.data.materials.clear();body.data.materials.append(skin)
  sub=body.modifiers.new('Anatomical subdivision','SUBSURF');sub.levels=sub.render_levels=1
  for p in body.data.polygons:p.use_smooth=True
@@ -225,18 +225,23 @@ def build():
   for k in range(64):i=j*64+k;n=j*64+(k+1)%64;fs.append((i,n,n+64,i+64))
  fs.append(tuple(range(13*64,14*64)));attach(bevel(solid(mesh('pinched felt hat crown',vs,[tuple(reversed(f)) for f in fs],buff),.006),.002),'head')
  attach(curve('hat leather band',[hc+Vector((.106*sin(a),.09*cos(a),.027)) for a in [2*pi*k/96 for k in range(97)]],.012,leather),'head')
- feather=[P(59-36*t,34-7*sin(pi*t)+9*t**3,.06) for t in [k/32 for k in range(33)]];attach(curve('swept feather quill',feather,.003,linen),'head')
- # Real thin feather vanes, with camber and a scalloped margin under the barbs.
+ # Cambered, thick feather follows the painting's hooked ragged contour.
+ stations=[(59,33,.4),(51,31,1.4),(43,28,3.5),(35,27,4.7),(28,30,5.4),(24,36,3.6),(22,41,1.8),(21,47,.2)]
+ feather=[P(x,y,.06) for x,y,w in stations]
+ attach(curve('swept feather quill',feather,.002,linen),'head')
  fvs=[];ffs=[]
- for k,pnt in enumerate(feather):
-  t=k/32;width=.040*sin(pi*t)**.7
-  for side in (-1,0,1):fvs.append(pnt+Vector((-.010*abs(side),.012*abs(side)*sin(pi*t),side*width)))
- for k in range(32):
+ for k,(x,y,width) in enumerate(stations):
+  prev=Vector(stations[max(0,k-1)][:2]);nxt=Vector(stations[min(len(stations)-1,k+1)][:2]);tangent=(nxt-prev).normalized();side=Vector((-tangent.y,tangent.x))
+  for sg in (-1,0,1):fvs.append(P(x+side.x*width*sg,y+side.y*width*sg,.06+.009*abs(sg)))
+ for k in range(len(stations)-1):
   for j in range(2):i=k*3+j;ffs.append((i,i+1,i+4,i+3))
  attach(solid(mesh('cambered feather vanes',fvs,ffs,linen),.0015),'head')
- for k in range(1,31):
-  t=k/32;p=feather[k]
-  for sg in (-1,1):attach(curve('feather barb',[p,p+Vector((-.035,-.006,sg*.035*(sin(pi*t)**.5)))],.0025,linen),'head')
+ for k in range(len(stations)-1):
+  a,b=stations[k],stations[k+1]
+  for j in range(1,5):
+   t=j/5;x=a[0]*(1-t)+b[0]*t;y=a[1]*(1-t)+b[1]*t;width=a[2]*(1-t)+b[2]*t
+   tangent=Vector((b[0]-a[0],b[1]-a[1])).normalized();side=Vector((-tangent.y,tangent.x))
+   for sg in (-1,1):attach(curve('feather barb',[P(x,y,.055),P(x+side.x*width*sg-tangent.x*1.8,y+side.y*width*sg-tangent.y*1.8,.063)],.0014,linen),'head')
  # Wavy shoulder-length hair and short beard.
  for k in range(28):
   a=-1.4+k*2.8/27;c=P(61,58,.10);pts=[c+Vector((.105*sin(a)+.008*sin(j*1.3+k),.075*cos(a),-.012*j)) for j in range(13)];attach(curve('wavy hair strand',pts,.006,dark),'head')
@@ -280,8 +285,10 @@ def build():
  for o in list(sc.objects):
   if o.type=='CURVE':
    bpy.ops.object.select_all(action='DESELECT');o.select_set(True);bpy.context.view_layer.objects.active=o;bpy.ops.object.convert(target='MESH')
- from refine import finish_surfaces, bind_torso
- finish_surfaces();bind_torso(rig)
+ from refine import finish_surfaces, bind_torso, bind_sleeves, stone_projection
+ finish_surfaces();bind_torso(rig);bind_sleeves(rig);stone_projection(A)
+ from refine import underclothing
+ underclothing(body,rig,{'skin':skin,'linen':linen,'buff':buff,'pants':pants,'leather':leather})
  sc['unit']='barbarian-musketman';sc['anatomy']='MPFB 2.0.18 CC0';sc['cream_target']='#E9CFA0'
  bpy.context.view_layer.update();rig['rest_pose']=json.dumps({p.name:[list(r) for r in p.matrix_basis] for p in rig.pose.bones});rig['rest_location']=list(rig.location)
  (M/'bones.json').write_text(json.dumps({p.name:{'head':list(p.head),'tail':list(p.tail)} for p in rig.pose.bones},indent=2))
@@ -305,6 +312,7 @@ def project():
     # Reject paint from a different visible surface at this camera pixel.
     hit,loc,_,_,hitobj,_=sc.ray_cast(dg,world+direction*.001,direction,distance=8)
     if hit and (loc-world).length>.003:f=0
+
    facing.append(f)
   for loop in o.data.loops:
    i=loop.vertex_index;uv.data[loop.index].uv=(coords[i].x,coords[i].y);f=facing[i];col.data[loop.index].color=(f,f,f,1)
@@ -324,10 +332,15 @@ def project():
    tolerance=n.new('ShaderNodeMath');tolerance.operation='ADD';tolerance.inputs[1].default_value=.15;l.new(restangle.outputs[0],tolerance.inputs[0])
    divisor=n.new('ShaderNodeMath');divisor.operation='MAXIMUM';divisor.inputs[1].default_value=.05;l.new(dot.outputs['Value'],divisor.inputs[0])
    ratio=n.new('ShaderNodeMath');ratio.operation='DIVIDE';ratio.use_clamp=True;l.new(tolerance.outputs[0],ratio.inputs[0]);l.new(divisor.outputs[0],ratio.inputs[1])
-   coverage=n.new('ShaderNodeMath');coverage.operation='MULTIPLY';l.new(mul.outputs[0],coverage.inputs[0]);l.new(ratio.outputs[0],coverage.inputs[1])
-   weight=n.new('ShaderNodeMath');weight.operation='MULTIPLY';l.new(coverage.outputs[0],weight.inputs[0]);l.new(camera.outputs['Is Camera Ray'],weight.inputs[1])
+   coverage=n.new('ShaderNodeMath');coverage.operation='MULTIPLY';l.new(mul.outputs[0],coverage.inputs[0]);
+   transition=n.new('ShaderNodeMath');transition.operation='POWER';transition.inputs[1].default_value=4;l.new(ratio.outputs[0],transition.inputs[0]);l.new(transition.outputs[0],coverage.inputs[1])
+   fidelity=n.new('ShaderNodeValue');fidelity.name='Projection motion fidelity';fidelity.outputs[0].default_value=1
+   faithful=n.new('ShaderNodeMath');faithful.operation='MULTIPLY';l.new(coverage.outputs[0],faithful.inputs[0]);l.new(fidelity.outputs[0],faithful.inputs[1])
+   weight=n.new('ShaderNodeMath');weight.operation='MULTIPLY';l.new(faithful.outputs[0],weight.inputs[0]);l.new(camera.outputs['Is Camera Ray'],weight.inputs[1])
    paint=n.new('ShaderNodeEmission');paint.inputs['Strength'].default_value=1;l.new(tex.outputs['Color'],paint.inputs['Color'])
-   blend=n.new('ShaderNodeMixShader');l.new(weight.outputs[0],blend.inputs[0]);l.new(p.outputs[0],blend.inputs[1]);l.new(paint.outputs[0],blend.inputs[2]);l.new(blend.outputs[0],out.inputs['Surface'])
+   from refine import hidden_pigment
+   fallback=hidden_pigment(ma)
+   blend=n.new('ShaderNodeMixShader');l.new(weight.outputs[0],blend.inputs[0]);l.new(fallback,blend.inputs[1]);l.new(paint.outputs[0],blend.inputs[2]);l.new(blend.outputs[0],out.inputs['Surface'])
   records.append({'object':o.name,'vertices':len(o.data.vertices),'visible_vertices':sum(v>0 for v in facing)})
  bpy.ops.file.pack_all();bpy.ops.wm.save_as_mainfile(filepath=str(M/'barbarian-musketman.blend'))
  (M/'projection.json').write_text(json.dumps({'objects':records,'method':'finished surfaces, frozen UV, facing and ray visibility; camera-only pigment','stone':'physical only; no figure paint','hidden_surfaces':'original generated painted fills'},indent=2))
@@ -364,7 +377,9 @@ def animate(clip):
  count,fps,loop=CLIPS[clip];sc.render.fps=fps;sc.frame_start=1;sc.frame_end=count
  rest={p.name:p.matrix_basis.copy() for p in rig.pose.bones};restworld={p.name:p.matrix.copy() for p in rig.pose.bones};gunrest=gun.matrix_basis.copy();rigrest=rig.matrix_world.copy()
  grip=gun.matrix_world.inverted() @ rig.pose.bones['hand_l'].matrix
- cloth=[o for o in sc.objects if any(word in o.name for word in ('ragged coat tail','torn sash ribbon'))]
+ from refine import motion_fidelity
+ paint_reference={p.name:(rig.matrix_world @ p.matrix).to_quaternion() for p in rig.pose.bones}
+ cloth=[o for o in sc.objects if any(word in o.name for word in ('ragged coat tail','torn sash ribbon','feather'))]
  if clip=='death':
   for obj in cloth:obj.shape_key_add(name='Basis')
  for p in rig.pose.bones:p.rotation_mode='QUATERNION'
@@ -486,6 +501,7 @@ def animate(clip):
      floor=.087 if local.x*local.x+local.y*local.y<.505**2 else .012
      if world.z<floor:world.z=floor+(world.z-floor)*.03;vert.co=obj.matrix_world.inverted() @ world
     key.value=0;key.keyframe_insert('value',frame=max(0,frame-1));key.value=1;key.keyframe_insert('value',frame=frame);key.value=0;key.keyframe_insert('value',frame=frame+1)
+  motion_fidelity(rig,paint_reference,frame)
   for p in rig.pose.bones:
    for prop in ('location','rotation_quaternion','scale'):p.keyframe_insert(prop,frame=frame)
   for prop in ('location','rotation_euler','scale'):rig.keyframe_insert(prop,frame=frame)
@@ -508,6 +524,9 @@ def animate(clip):
     key.handle_left_type=key.handle_right_type='AUTO_CLAMPED'
  sc.frame_set(1);bpy.ops.file.pack_all();bpy.ops.wm.save_as_mainfile(filepath=str(M/'clips'/f'{clip}.blend'))
  (M/'clips'/f'{clip}.json').write_text(json.dumps({'frames':count,'fps':fps,'loop':loop,'source_sha256':hashlib.sha256((M/'barbarian-musketman.blend').read_bytes()).hexdigest(),'motion':motion.provenance(clip) if motion else {'method':'authored weapon-specific recoil'}}));log('Authored '+clip+' skeletal action, '+str(count)+' samples.')
+
+def cloth_contact_objects(scene):
+ return [o for o in scene.objects if o.type=='MESH' and 'feather' in o.name]
 
 def audit():
  reports=[];source=hashlib.sha256((M/'barbarian-musketman.blend').read_bytes()).hexdigest()
@@ -532,6 +551,14 @@ def audit():
     assert min(abs(v) for v in o.scale)>1e-5,(clip,frame,o.name,'unsafe scale')
     if o.type=='MESH' and not o.hide_render:
      ev=o.evaluated_get(bpy.context.evaluated_depsgraph_get());minz=min(minz,min((ev.matrix_world @ Vector(c)).z for c in ev.bound_box))
+   if clip=='death':
+    for obj in cloth_contact_objects(sc):
+     ev=obj.evaluated_get(bpy.context.evaluated_depsgraph_get());data=ev.to_mesh()
+     for vertex in data.vertices:
+      point=ev.matrix_world @ vertex.co
+      if (point.x-.007)**2+(point.y-.20)**2<.49**2:
+       assert point.z>.079,(clip,frame,obj.name,'flexible surface penetrates stone',point.z)
+     ev.to_mesh_clear()
    counts.append(sum(not o.hide_render for o in sc.objects if 'muzzle smoke' in o.name))
   assert len(set(poses))>1,(clip,'rig does not animate')
   if clip=='death':assert poses[-1]==poses[-2],'Death skeletal pose is not held'

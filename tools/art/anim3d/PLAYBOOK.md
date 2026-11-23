@@ -228,3 +228,39 @@ hands onto the stone; the released musket retains its independent world transfor
 audit checks arm lengths as well as legs. This contact correction is not a cloth collision solver.
 The automatic rest histogram grade remains fixed for every clip. These improvements alone do not
 establish the art bar; inspect rest, death contact, all five strips and front/top feet each round.
+
+### Barbarian musketman driver round 3: exposed material identity
+
+The complete driver-round2 GPU receipt verified the fresh-process crash mitigation, 40 frames and
+178,740 bytes at Q80. Preserve that evidence in external `driver-r2-gpu` before replacing outputs.
+Open actual MP4 frames as well as every strip: rest can be convincing while death exposes scrambled
+paint. At native 256px the remaining differences were feather contour, smooth stone, and projected
+face/cloth during the fall; at 64 px the kneeling identity already read correctly. No automatic PASS.
+
+Round3 keeps the frozen finished-surface camera UVs and original product lighting, six baked maps,
+physical straps/buckles and fixed automatic histogram grade. A clean generated stone plate supplies
+only pigment on the real beveled disc, retaining the original lower rim and live contact AO. Extend
+RGB outside the plate before use: transparent texels must never create black edges or erase geometry.
+The source image alpha never controls stone opacity. The feather is a hooked cambered vane with
+physical thickness, a quill and individual barbs, fitted in the original camera coordinates.
+
+Inspect every reused fill visually. The mounted family's `coat` was horse fur, inappropriate for a
+buff leather coat. The unit now has source-pinned, generated buff/ivory/flesh/charcoal material plates
+and retains their exact prompts. Body polygons use actual skeletal groups (exclude MPFB selection
+groups such as `Right`) to distinguish skin from covered garment regions. The finished sleeves are
+inverse-skinned across spine/upper-arm/elbow without changing the rest fit. Newly revealed surfaces
+use generated pigment with broad normal-dependent shading, live contact AO and physical specular.
+Projected pigment fades smoothly with view stretch and large anatomical rotation, preserving the
+original rest view. This improves exposure but does not make generic fills equal to authored paint.
+
+`ROUND=3 tools/art/anim3d/units/barbarian-musketman/gpu.sh` remains the one executable no-argument
+GPU handoff. It rebuilds and renders every stage with isolated gated Blender processes, keeps 512/256
+masters, packs all 40 trimmed 160 frames at Q75 or higher and <=200000 bytes, validates and writes the
+8-second H.264/yuv420p five-clip movie plus frames extracted from that encoded movie for inspection.
+Review the rest/detail comparisons, every clip, decoded atlas and top/front feet after each pass.
+The candidate remains unapproved until the painting parity and clean-motion bar are both satisfied.
+
+The enlarged feather also needs contact handling: round3 caught true vane/barb vertices beneath
+the stone during death, which a rig-only audit missed. Bend these flexible vertices with the
+existing cloth contact keys and audit actual evaluated feather vertices above the disc; do not
+raise the entire fallen body to accommodate a flexible feather.
