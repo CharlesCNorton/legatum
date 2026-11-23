@@ -41,9 +41,10 @@ else:
  name={'b':'b-plain','c':'c-textured-lit','c-details':'c-details'}[stage];sheet.save(V/f'scout-{name}.png')
  if stage=='c':sheet.save(V/'scout-f-restpose-compare.png')
  if stage=='c-details':
-  detail=Image.new('RGB',(1024,576),(39,35,31))
+  detail=Image.new('RGB',(1024,858),(39,35,31));source=Image.open(R/'assets/scout/projection.png').convert('RGBA');render=Image.open(out/'00.png').convert('RGBA')
   for i,(box,label) in enumerate([((105,15,225,110),'Face / shoulders'),((70,75,190,170),'Straps / tunic')]):
-   for j,im in enumerate([ref,frames[0]]):detail.paste(opaque(im.crop(box).resize((512,256))),(j*512,i*288+24))
-   ImageDraw.Draw(detail).text((8,i*288+4),label+' — painting left, render right',(240,220,180))
+   for j,im in enumerate([source,render]):
+    scale=im.width/256;crop=im.crop(tuple(round(v*scale) for v in box));detail.paste(opaque(crop.resize((512,405),Image.Resampling.LANCZOS)),(j*512,i*429+24))
+   ImageDraw.Draw(detail).text((8,i*429+4),label+' / full painting left, '+str(render.width)+' px render right',(240,220,180))
   detail.save(V/'scout-c-details.png')
 print('Published scout '+stage)

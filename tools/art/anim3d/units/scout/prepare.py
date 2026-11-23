@@ -21,10 +21,12 @@ print('Prepared scout projection and four generated fills')
 # Material masks prevent the camera projection from painting skin onto the cloak.
 for name in ['wool','linen','skin']:
  im=aligned.copy();pixels=[]
- for r,g,b,a in im.getdata():
-  if name=='wool':keep=r<165 and b>g*.58 and g>r*.53
+ for index,(r,g,b,a) in enumerate(im.getdata()):
+  if name=='wool':keep=r<g*1.35 and b>g*.55 and g>r*.60
   elif name=='linen':keep=b<g*.64 and g>r*.43
-  else:keep=b>g*.57 and g<r*.83 and r>80
+  else:
+   x=(index%im.width)/4;y=(index//im.width)/4
+   keep=(b>g*.57 and g<r*.83 and r>80) or (158<x<197 and 15<y<65)
   pixels.append((r,g,b,a if keep else 0))
  im.putdata(pixels);im.save(A/('projection-'+name+'.png'))
 

@@ -3,6 +3,15 @@ import bpy,os,json,hashlib
 from pathlib import Path
 from mathutils import Vector
 R=Path(os.environ['ANIM_ROOT']);M=R/'masters/scout';V=R/'review/3d-v2';source=hashlib.sha256((M/'scout.blend').read_bytes()).hexdigest();results={}
+projection=json.loads((M/'projection.json').read_text())
+assert any(p['object']=='GEO-Scout MPFB anatomy' for p in projection),'Skin projection was skipped'
+assert all(p['source_box_256'] is None for p in projection),'Per-region texture stretching returned'
+bpy.ops.wm.open_mainfile(filepath=str(M/'scout.blend'))
+for record in projection:
+ o=bpy.data.objects[record['object']]
+ assert o.data.uv_layers.get('PaintingUV') and o.data.attributes.get('PaintingFacing')
+ assert o.data.materials[0].node_tree.nodes.get('Camera-only pigment')
+assert bpy.data.objects['GEO-Scout MPFB anatomy'].data.shape_keys is None,'Macro mix not frozen'
 def matrices(sc):
  return {o.name:[v for row in o.matrix_world for v in row] for o in sc.objects} | {p.name:[v for row in p.matrix for v in row] for p in bpy.data.objects['Scout MPFB game_engine'].pose.bones}
 for clip in ['idle','move','attack','hit','death']:

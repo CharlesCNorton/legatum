@@ -9,6 +9,7 @@ clip_sources=json.loads((M/'clip-sources.json').read_text()) if (M/'clip-sources
 for clip,(n,fps,loop) in CLIPS.items():
  if os.environ.get('CLIP') and os.environ['CLIP']!=clip:continue
  bpy.ops.wm.open_mainfile(filepath=str(M/'scout.blend'));sc=bpy.context.scene;rig=bpy.data.objects['Scout MPFB game_engine'];neutral=json.loads(rig['neutral_pose']);base=rig.location.copy();cloak=bpy.data.objects['GEO-Wind folded olive cloak'];breeze=cloak.data.shape_keys.key_blocks['Breeze'];staff=[o for o in sc.objects if any(x in o.name for x in ['walking staff','Staff fork','Staff grain'])]
+ targets={k:Vector(v) for k,v in json.loads(rig['registered_targets']).items()}
  for p in rig.pose.bones:p.rotation_mode='QUATERNION'
  def reset():
   rig.location=base
@@ -17,9 +18,9 @@ for clip,(n,fps,loop) in CLIPS.items():
  def turn(name,axis,a):
   p=rig.pose.bones[name];mat=p.matrix.copy();pos=mat.translation.copy();mat=Matrix.Rotation(a,4,axis)@mat;mat.translation=pos;p.matrix=mat;bpy.context.view_layer.update()
  def aim(name,d):
-  p=rig.pose.bones[name];q=p.bone.matrix_local.to_quaternion();delta=(q@Vector((0,1,0))).rotation_difference(Vector(d).normalized());mat=(delta@q).to_matrix().to_4x4();mat.translation=p.head;p.matrix=mat;bpy.context.view_layer.update()
+  p=rig.pose.bones[name];q=p.bone.matrix_local.to_quaternion();delta=(q@Vector((0,1,0))).rotation_difference(Vector(d).normalized());mat=(delta@q).to_matrix().to_4x4();mat=mat@Matrix.Diagonal((1,1.17,1,1)) if 'arm_' in name else mat;mat.translation=p.head;p.matrix=mat;bpy.context.view_layer.update()
  def limb(u,l,target,pole):
-  a=rig.pose.bones[u].head.copy();v=Vector(target)-a;l1=rig.data.bones[u].length;l2=rig.data.bones[l].length;d=min(v.length,l1+l2-.0001);v.normalize();along=(l1*l1-l2*l2+d*d)/(2*d);side=Vector(pole)-a;side=(side-v*side.dot(v)).normalized();joint=a+along*v+max(0,l1*l1-along*along)**.5*side;aim(u,joint-a);aim(l,Vector(target)-joint)
+  a=rig.pose.bones[u].head.copy();v=Vector(target)-a;scale=1.17 if 'arm_' in u else 1;l1=rig.data.bones[u].length*scale;l2=rig.data.bones[l].length*scale;d=min(v.length,l1+l2-.0001);v.normalize();along=(l1*l1-l2*l2+d*d)/(2*d);side=Vector(pole)-a;side=(side-v*side.dot(v)).normalized();joint=a+along*v+max(0,l1*l1-along*along)**.5*side;aim(u,joint-a);aim(l,Vector(target)-joint)
  def pose(t):
   reset();breeze.value=.22+.15*sin(2*pi*t)
   if clip=='idle':
@@ -36,14 +37,14 @@ for clip,(n,fps,loop) in CLIPS.items():
    a=[0,-.10,-.22,-.12,.40,1,.65,.22,.04,0][min(9,round(t*9))]
    turn('spine_03','Z',-.18*a);turn('spine_03','X',.09*a)
    turn('upperarm_r','Y',-.30*a);turn('lowerarm_r','Z',.18*a);turn('hand_r','Y',.70*a)
-   brace=[0,.4,.8,1,1,1,1,.7,.3,0][min(9,round(t*9))];target=Vector((.42,-.18,1.71)).lerp(Vector((.37,-.25,1.34)),brace);pole=Vector((.61,-.08,1.50)).lerp(Vector((.51,-.04,1.42)),brace);limb('upperarm_l','lowerarm_l',target,pole);aim('hand_l',(-.095,-.035,.005));breeze.value=.3+.40*max(0,a)
+   brace=[0,.4,.8,1,1,1,1,.7,.3,0][min(9,round(t*9))];target=targets['hand_l'].lerp(Vector((.37,-.25,1.34)),brace);pole=targets['lowerarm_l'].lerp(Vector((.51,-.04,1.42)),brace);limb('upperarm_l','lowerarm_l',target,pole);aim('hand_l',(-.98,-.12,-.06));breeze.value=.3+.40*max(0,a)
   elif clip=='hit':
    a=[0,1,.45,0][min(3,round(t*3))];turn('spine_03','X',-.10*a);turn('head','Y',-.16*a);turn('upperarm_l','Z',-.20*a);breeze.value=.25+.45*a
   elif clip=='death':
    u=min(1,t/.78);a=u*u*(3-2*u);rig.location=base+Vector((-.03*a,.05*a,-.54*a));turn('pelvis','Y',-1.35*a);turn('spine_03','Y',-.16*a);turn('head','X',.22*a)
    for side,sg in [('l',1),('r',-1)]:
-    start=Vector((.43,.13,.16)) if sg==1 else Vector((-.26,-.18,.16));end=Vector((.30+sg*.10,-.09+sg*.12,.72));target=start.lerp(end,a);limb('thigh_'+side,'calf_'+side,target,(.3,-.4,.65))
-   limb('upperarm_l','lowerarm_l',Vector((.42,-.18,1.71)).lerp(Vector((-.35,-.16,.77)),a),(-.5,-.15,1.0));limb('upperarm_r','lowerarm_r',Vector((-.60,-.19,1.11)).lerp(Vector((-.10,-.29,.72)),a),(-.25,-.3,.9));turn('hand_r','Y',1.30*a);breeze.value=.25*(1-a)
+    start=targets['foot_'+side];end=Vector((.30+sg*.10,-.09+sg*.12,.72));target=start.lerp(end,a);limb('thigh_'+side,'calf_'+side,target,targets['calf_'+side].lerp(Vector((.3,-.4,.65)),a))
+   limb('upperarm_l','lowerarm_l',targets['hand_l'].lerp(Vector((-.35,-.16,.77)),a),targets['lowerarm_l'].lerp(Vector((-.5,-.15,1.0)),a));limb('upperarm_r','lowerarm_r',targets['hand_r'].lerp(Vector((-.10,-.29,.72)),a),targets['lowerarm_r'].lerp(Vector((-.25,-.3,.9)),a));turn('hand_r','Y',1.30*a);breeze.value=.25*(1-a)
   bpy.context.view_layer.update()
   # Ground each sample from evaluated anatomy; no near-zero scale or hidden geometry.
   body=bpy.data.objects['GEO-Scout MPFB anatomy'];ev=body.evaluated_get(bpy.context.evaluated_depsgraph_get());me=ev.to_mesh();floor=min((body.matrix_world@v.co).z for v in me.vertices);ev.to_mesh_clear();rig.location.z+=.100-floor;bpy.context.view_layer.update()

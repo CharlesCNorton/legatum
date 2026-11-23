@@ -107,7 +107,7 @@ tools/art/anim3d/render.sh audit
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
 
-## Infantry / scout — round 1
+## Infantry / scout
 
 The scout's isolated scripts are in `units/scout/`. Reuse the MPFB installation and
 `env.sh`; the scout adds no external model or motion dependency. Its MPFB body and
@@ -131,13 +131,13 @@ camera, project the painting as **fixed UV colour on that geometry**, finish its
 bevels/straps/folds, light it as a painted miniature, and apply a measured grade.
 Projection never provides mesh transparency or a billboard. Material-specific alpha
 masks suppress skin/cloth spill, and facing weights blend into generated painted
-linen/wool/leather/skin fills on unseen surfaces. Regional registration boxes are
-explicit in `paint.py` and recorded in the master directory. Some lighting remains
+linen/wool/leather/skin fills on unseen surfaces. The same frozen camera UVs cover every object; there are no independently stretched
+source regions. `register.py` fits the physical pose and cloth before projection. Some lighting remains
 baked into this colour; inspect motion-revealed seams. AO and curvature are actually
 baked from four meshes and drive cavity colour and roughness. They are 256 px maps.
 
 The base is one stationary cream disc, with the common displayed target **#E9CFA0**
-and a darker rim. Its linear shader pigment is `(0.86, 0.65, 0.37)` under AgX/product
+and a darker rim. Its linear shader pigment is `(0.86, 0.65, 0.37)` under the current product
 lighting; this is not a literal sRGB-to-shader conversion. `review.py` samples opaque
 RGB quantiles at rest, bounds the grade, and reuses the same LUT for all clips. It
 retains raw images. `scout-f-restpose-compare.png` shows painting, render and 50/50
@@ -207,3 +207,56 @@ Z 0.108 while retaining shell thickness. This prevents the long cape passing thr
 the base; it is authored contact deformation rather than a cloth-physics bake.
 A targeted motion refresh is `UNIT=scout CLIP=hit tools/art/anim3d/render.sh refresh`
 (or another clip name); it updates only that clip, its reviews and the full rig audit.
+
+
+### Scout round 2: physical registration and skin projection
+
+`build.py` saves the clean `scout-built.blend`; `register.py` always starts there,
+so repeat fitting does not accumulate. Camera-ray/sphere intersections fit actual
+knees, ankles, elbows and wrists. The arm segments are 17% longer; child bones
+have inherited scale disabled so it does not compound. Grounding translates the
+rig along the camera ray, preserving fitted pixel locations. The physical skirt
+is tailored through inverse blended skin matrices, retaining original weights.
+The full-depth cape and cowl receive a rest-view contour fit; both cape shape keys
+retain their authored motion. These are geometry edits, never image cutouts or
+per-frame reprojection. The larger cowl tubes were removed and the true hat turned.
+The registered hand/foot targets and elbow poles also initialize the combat keys.
+
+The previous projection silently skipped the body: MPFB's helper mask changed
+its evaluated vertex count. Freeze the active macro mix and apply those helper
+masks before computing skin UVs. The audit now requires the skin projection,
+frozen macros and camera-only pigment nodes. Rigid bevel/subdivision/thickness
+is applied before sampling final surface UVs. Deforming cloth keeps its modifiers.
+Original real AO/curvature bakes and generated linen/wool/leather/skin fills remain.
+
+Painting colour uses a camera-only illumination layer over the physical BSDF.
+Standard/None preserves that painted illumination; softer product lights avoid
+blown highlights. Non-camera rays retain the physical material, avoiding emission
+spill. One automatic rest histogram grade remains frozen across all five clips.
+Bright wool pixels must survive the wool source mask; an absolute brightness cap
+removed the source's painted fold highlights. Native 512px detail crops now compare
+against the full source painting and disclose the actual render resolution.
+
+The complete executable, no-argument host entry point is:
+
+```sh
+ROUND=2 tools/art/anim3d/units/scout/gpu.sh
+```
+
+It regenerates all five clips from the current finished master, renders b/c/details/d
+and every clip at Cycles Metal GPU64/512, derives 256px gallery copies, runs the rig
+and frozen-projection audit, verifies fresh GPU provenance, packs the trimmed atlas,
+validates reconstructed alpha/metadata/margins/motion, and encodes the decoded atlas
+as `scout-round${ROUND}.mp4`. The movie is 1600×348, 240 frames, eight seconds,
+H.264/yuv420p: five clips side by side at 2× on cream. Combat clips hold and replay.
+
+The script retains `scout-gpu-round${ROUND}.log` and writes a matching JSON receipt
+only after all stages pass. Missing-input and CPU-master rejection checks run without
+GPU access. A receipt explicitly says `art_approved:false`; the script never creates
+`scout-PASS`. GPU execution cannot be verified inside the Metal-less sandbox.
+
+Round-two CPU evidence and exact results live in the scout log and `units/scout/REVIEW.md`.
+Round one remains in `masters/scout/round1-preserved/`. At 256px face/cloth brushwork and
+pose are much closer, but cowl islands, hat/hand contours, raised sandal contact and
+motion remain below the painting. At 64px the scout reads more clearly, not identically.
+A passing technical check is not permission to write the art PASS marker.

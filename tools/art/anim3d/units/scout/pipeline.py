@@ -33,7 +33,7 @@ def render(stage):
  manifest.write_text(json.dumps({'engine':sc.render.engine,'device':sc.cycles.device,'samples':sc.cycles.samples,'resolution':size,'blend_sha256':hashlib.sha256(path.read_bytes()).hexdigest(),'frames':len(samples)},indent=2))
  review(stage);log('Rendered '+stage+' '+str(size)+' px '+sc.render.engine+'/'+sc.cycles.device)
 if stage in ['build','round','preview']:
- log('Using six Blender skills: MPFB anatomy, solid folded clothing/bevels, textured Principled materials, warm key/cool rim, painting camera, authored keys/secondary cloth, denoised RGBA sequences.');run('build');render('b')
+ log('Using six Blender skills: MPFB anatomy, solid folded clothing/bevels, textured Principled materials, warm key/cool rim, painting camera, authored keys/secondary cloth, denoised RGBA sequences.');run('build');run('register');render('b')
 if stage in ['paint','round']:run('paint');render('c');render('c-details')
 if stage in ['animate','round']:run('animate')
 if stage in ['round','final']:
@@ -49,3 +49,5 @@ if stage=='refresh':
  run('animate')
  if clip=='attack':render('d')
  render('e-'+clip);run('audit')
+
+if stage=='register':run('register');render('b')

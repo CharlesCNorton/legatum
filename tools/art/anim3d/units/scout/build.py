@@ -57,7 +57,7 @@ for j in range(J+1):
  if z>1.32:
   f=(z-1.32)/.10;rx=rx*(1-f)+.085*f;ry=ry*(1-f)+.075*f
  for i in range(N):
-  a=2*pi*i/N;fold=(.012+.009*(1-t))*sin(a*14+sin(t*8)*.35);vs.append(((rx+fold)*sin(a),-(ry+fold)*cos(a),z+.012*sin(a*5)*(1-t)))
+  a=2*pi*i/N;fold=(.006+.006*(1-t))*sin(a*14+sin(t*8)*.35);vs.append(((rx+fold)*sin(a),-(ry+fold)*cos(a),z+.012*sin(a*5)*(1-t)))
 for j in range(J):
  for i in range(N):a=j*N+i;b=j*N+(i+1)%N;fs.append((a,b,b+N,a+N))
 tunic=solid(mesh('Folded short tunic',vs,fs,linen));tunic.parent=rig
@@ -109,13 +109,11 @@ for i,v in enumerate(k.data):
  t=(i//(NX+1))/NY;v.co.y+=.09*t*t*sin(i%29*.27);v.co.x-=.05*t*t
 solid(cloak);sub=cloak.modifiers.new('Soft wool folds','SUBSURF');sub.levels=sub.render_levels=1
 attach(curve('Cloak worn hem',vs[-NX-1:],.004,thread),'spine_03')
-for j in range(4):
- pts=[(.21*sin(a),-.16*cos(a),1.64-.012*j-.12*max(0,cos(a))) for a in [-pi/2+i*pi/48 for i in range(49)]];attach(curve('Draped cowl fold',pts,.022,wool),'spine_03')
 vs=[];fs=[]
 for j in range(9):
  t=j/8
  for i in range(64):
-  a=2*pi*i/64;r=.10+.13*t
+  a=2*pi*i/64;r=.10+.10*t
   vs.append((r*sin(a),-r*.78*cos(a),1.66-.10*t-.065*max(0,cos(a))*t+.009*sin(4*a+t*6)))
 for j in range(8):
  for i in range(64):a=j*64+i;b=j*64+(i+1)%64;fs.append((a,b,b+64,a+64))
@@ -157,7 +155,7 @@ for digit in ['index','middle','ring','pinky']:
 bpy.context.view_layer.update()
 grip=rig.pose.bones['hand_r'].head+rig.location+Vector((0,-.015,.045));direction=Vector((-.36,0,.93)).normalized();points=[grip+direction*t for t in [-1.04,-.5,0,.5,.70]]
 staff=curve('Forked walking staff',[tuple(p) for p in points],.015,wood);attach(staff,'hand_r')
-attach(curve('Staff fork',[tuple(grip+direction*.48),tuple(grip+direction*.57+Vector((-.17,0,.03))),tuple(grip+direction*.64+Vector((-.24,.01,.04)))],.012,wood),'hand_r')
+attach(curve('Staff fork',[tuple(grip+direction*.48),tuple(grip+direction*.57+Vector((-.10,0,-.01))),tuple(grip+direction*.64+Vector((-.13,.01,-.025)))],.012,wood),'hand_r')
 for j in range(7):attach(curve('Staff grain ridge',[(p.x+.012*cos(j),p.y+.012*sin(j),p.z) for p in points],.0013,edge),'hand_r')
 bpy.ops.mesh.primitive_cylinder_add(vertices=128,radius=.58,depth=.095,location=(.03,0,.0475));base=bpy.context.object;base.name='GEO-Stationary cream stone';base.data.materials.append(stone);bevel(base,.012)
 sc=bpy.context.scene;sc.render.engine='CYCLES';sc.cycles.device='CPU';sc.cycles.samples=8;sc.cycles.use_denoising=True;sc.cycles.max_bounces=4;sc.render.threads_mode='FIXED';sc.render.threads=3;sc.render.film_transparent=True;sc.render.image_settings.file_format='PNG';sc.render.image_settings.color_mode='RGBA';sc.render.resolution_x=sc.render.resolution_y=256;sc.render.resolution_percentage=100;sc.render.fps=24
@@ -168,6 +166,6 @@ for name,loc,power,size,col in [('Warm upper left',(-3,-4,6),650,3,(1,.87,.67)),
 # Place anatomical feet just above the single stone disc.
 bpy.context.view_layer.update();ev=body.evaluated_get(bpy.context.evaluated_depsgraph_get());me=ev.to_mesh();floor=min((body.matrix_world@v.co).z for v in me.vertices);ev.to_mesh_clear();rig.location.z+=.100-floor;bpy.context.view_layer.update()
 rig['neutral_pose']=json.dumps({p.name:[list(row) for row in p.matrix_basis] for p in rig.pose.bones});sc['source']='MPFB 2.0.18 CC0 anatomy; original scout kit and authored poses'
-bpy.ops.wm.save_as_mainfile(filepath=str(M/'scout-unpainted.blend'))
+bpy.ops.wm.save_as_mainfile(filepath=str(M/'scout-built.blend'))
 (M/'model-info.json').write_text(json.dumps({'body_vertices':len(body.data.vertices),'bones':len(rig.data.bones),'objects':len(sc.objects)},indent=2))
 print('SCOUT_MODEL_READY',flush=True)
