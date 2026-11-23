@@ -89,3 +89,12 @@
 - Final visual verdict: clearly improved at 256, especially painted pigment/stance/registration, but shoulder/fur geometry, cloth drape, hidden-surface craft and death settling still differ. At 64 the identity and proportions are closer, not indistinguishable. No PASS file written.
 - Git add blocked by sandbox denial of .git/worktrees/lane-8/index.lock. Left changes uncommitted for runner; exact requested co-author commit message is in unit REVIEW.md. Local origin/master is already merged. No push, PR, master merge, or docs/learnings edit.
 - Runner reassigned lane 8 to fighter during final reporting, after saving WIP 50232c41 on astra/unit-anim-3d-barbarian-spearman. Verified saved atlas/JSON hashes exactly match the final 185118-byte Q80 validation, final six-iteration/65mm move correction is included, all saved scripts parse, and gpu.sh is mode 100755. Final post-switch notes preserved in barbarian-spearman-round2-final-review.md; removed only the accidental note file from the fighter checkout. Do not run this unit from reassigned lane 8; use its own branch/GPU checkout.
+- Published b review from GPU render.
+- Published c review from GPU render.
+- Published c-details review from GPU render.
+- Published d review from GPU render.
+- Published e-idle review from GPU render.
+- Published e-move review from GPU render.
+- Published e-attack review from GPU render.
+- Published e-hit review from GPU render.
+- Published e-death review from GPU render.
