@@ -49,3 +49,4 @@
 - Emitted main-battle-tank-e-move-strip.png from actual e-move renders; visual review pending.
 - Emitted main-battle-tank-e-attack-strip.png from actual e-attack renders; visual review pending.
 - Emitted main-battle-tank-e-hit-strip.png from actual e-hit renders; visual review pending.
+- Emitted main-battle-tank-e-death-strip.png from actual e-death renders; visual review pending.
