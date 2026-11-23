@@ -81,3 +81,5 @@
 - Posted e-attack review (GPU, 512 px).
 - Posted e-hit review (GPU, 512 px).
 - Posted e-death review (GPU, 512 px).
+- Round 2 initial critique after opening GPU c/f, all five e strips and eight movie samples: 256 px is NOT a painting match. Narrow angular coat/shoulders, undersized forward boots with pale toe edges, broad unpainted stock, overly bowed sling, extra right pouch and simple flat rim remain. Attack hands visibly float/open beside the gun despite near-zero wrist attachment metrics; hit has no recovery and death is stiff. At 64 px identity/scale are readable, but narrower stance/coat and rifle angle are obvious. GPU receipt complete; driver log empty because gpu.sh redirects to masters/rifleman/gpu-round1.log. No unit FEEDBACK file exists. Archived incoming evidence under masters/rifleman/driver-r1-gpu. No PASS.
+- Round 2 loaded all six Sam Blender skills plus Legatum art and all 171 playbook lines; applying full-depth fitted geometry with frozen finished-surface projection, beveled equipment, generated unseen fills, real cloth folds, aimed product lights, fixed automatic grade, and visual motion checks.
