@@ -25,3 +25,5 @@
 - Corrected white pastern markings to all four legs as painted; final all-clip refresh queued behind the machine-wide Blender owner. This pass also refreshes every grade/hash together.
 - origin/master advanced to b93d4dd; requested merge failed because the sandbox denied ORIG_HEAD.lock in .git/worktrees/lane-4. Runner must merge and run post-merge determinism/pin checks.
 - Git staging also failed: index.lock creation is denied under .git/worktrees/lane-4. Changes remain uncommitted for the runner; horseman-commit-message.txt includes the requested co-author footer.
+- Final CPU atlas: 198,252 bytes, WebP quality 60, 16 alpha levels. All 40 frames, margins, transparency, metadata, motion and held death pass validation. Five-clip geometry audit has no errors. Art remains below painting quality.
+- Applied newly supplied blender-rendering skill to final verification: decoded atlas comparison at 256/64, explicit CPU/GPU limits, and added --disable-autoexec to mounted/render.sh. Reference-look-calibration sibling is not installed; existing measured shared LUT and split/crossfade remain the comparison method.
