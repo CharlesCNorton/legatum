@@ -104,3 +104,25 @@ Rendered e-move 512 px CYCLES/GPU
 Rendered e-attack 512 px CYCLES/GPU
 Rendered e-hit 512 px CYCLES/GPU
 Rendered e-death 512 px CYCLES/GPU
+
+Driver round 2: opened GPU c/f, all five strips and round1 MP4 contact frames first. 256px critique: cowl has hard green/gold islands and repeated chest paint, hat too exposed/round, thin torso and straight fork, raised sandal floats, cream base too smooth. 64px: recognizable scout, but stance/hat/cape differ from painting; move stiff, hit weak, death crumples patterned cloth. No PASS. GPU receipt confirms 40 frames, quality80/199762 bytes, not art approval. Incoming evidence preserved in masters/scout/driver-r1-gpu. Scout-specific FEEDBACK absent; all shared feedback read including open motion and feet review. All six Blender skills loaded for geometry/material/camera/lighting/motion/render improvements.
+Rendered b 256 px CYCLES/CPU
+Rendered c 256 px CYCLES/CPU
+Rendered c-details 256 px CYCLES/CPU
+Rendered b 256 px CYCLES/CPU
+Rendered c 512 px CYCLES/CPU
+Rendered c-details 512 px CYCLES/CPU
+Rendered e-move 256 px CYCLES/CPU
+Rendered e-death 256 px CYCLES/CPU
+Rendered b 256 px CYCLES/CPU
+Rendered c 512 px CYCLES/CPU
+Rendered c-details 512 px CYCLES/CPU
+Rendered b 512 px CYCLES/CPU
+Rendered c 512 px CYCLES/CPU
+Rendered c-details 512 px CYCLES/CPU
+Rendered d 512 px CYCLES/CPU
+Rendered e-idle 512 px CYCLES/CPU
+Rendered e-move 512 px CYCLES/CPU
+Rendered e-attack 512 px CYCLES/CPU
+Rendered e-hit 512 px CYCLES/CPU
+Rendered e-death 512 px CYCLES/CPU
