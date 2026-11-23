@@ -118,13 +118,22 @@ for m in [olive,edge,rubber,stone]:
   tex=n.new('ShaderNodeTexImage');tex.image=fill;tex.projection='BOX';tex.projection_blend=.25;l.new(tc.outputs['Generated'],tex.inputs['Vector']);source=tex.outputs['Color']
  ao=n.new('ShaderNodeAmbientOcclusion');ao.inputs['Distance'].default_value=.09
  mix=n.new('ShaderNodeMixRGB');mix.blend_type='MULTIPLY';mix.inputs[0].default_value=.32;l.new(source,mix.inputs[1]);l.new(ao.outputs['Color'],mix.inputs[2]);l.new(mix.outputs[0],s.inputs['Base Color'])
-# Warm stone pigment is camera-only, so real product lights still cast contact shadows.
+# Clean painting swatches wrap the solid stone, without projecting wheel shadows.
 n=stone.node_tree.nodes;l=stone.node_tree.links;s=n.get('Principled BSDF')
 g=n.new('ShaderNodeNewGeometry');sep=n.new('ShaderNodeSeparateXYZ');l.new(g.outputs['Normal'],sep.inputs[0])
-ramp=n.new('ShaderNodeValToRGB');ramp.color_ramp.elements[0].position=.15;ramp.color_ramp.elements[0].color=(.81,.55,.31,1);ramp.color_ramp.elements[1].position=.8;ramp.color_ramp.elements[1].color=(.98,.78,.54,1);l.new(sep.outputs['Z'],ramp.inputs[0])
-pigment=n.new('ShaderNodeBsdfPrincipled');pigment.inputs['Base Color'].default_value=(0,0,0,1);pigment.inputs['Specular IOR Level'].default_value=0;ao=n.new('ShaderNodeAmbientOcclusion');ao.inputs['Distance'].default_value=.12
-contact=n.new('ShaderNodeMixRGB');contact.blend_type='MULTIPLY';contact.inputs[0].default_value=.32;l.new(ramp.outputs['Color'],contact.inputs[1]);l.new(ao.outputs['Color'],contact.inputs[2]);l.new(contact.outputs[0],pigment.inputs['Emission Color']);pigment.inputs['Emission Strength'].default_value=1
-ray=n.new('ShaderNodeLightPath');weight=n.new('ShaderNodeMath');weight.operation='MULTIPLY';weight.inputs[1].default_value=.72;l.new(ray.outputs['Is Camera Ray'],weight.inputs[0])
+tc=n.new('ShaderNodeTexCoord');mapping=n.new('ShaderNodeVectorMath');mapping.operation='MULTIPLY';mapping.inputs[1].default_value=(2,5,3);l.new(tc.outputs['Generated'],mapping.inputs[0])
+textures=[]
+for name in ['stone-rim.png','stone-top.png']:
+ texture=n.new('ShaderNodeTexImage');texture.image=bpy.data.images.load(str(A/name));texture.image.pack();texture.projection='BOX';texture.projection_blend=.2;l.new(mapping.outputs[0],texture.inputs['Vector']);textures.append(texture)
+color=n.new('ShaderNodeMixRGB');l.new(sep.outputs['Z'],color.inputs[0]);l.new(textures[0].outputs['Color'],color.inputs[1]);l.new(textures[1].outputs['Color'],color.inputs[2]);l.new(color.outputs[0],s.inputs['Base Color'])
+# A shallow directional wash preserves the painting's left-to-right rim lighting.
+dot=n.new('ShaderNodeVectorMath');dot.operation='DOT_PRODUCT';dot.inputs[1].default_value=(-.60,-.50,.62);l.new(g.outputs['Normal'],dot.inputs[0])
+shade=n.new('ShaderNodeMapRange');shade.inputs['From Min'].default_value=-1;shade.inputs['From Max'].default_value=1;shade.inputs['To Min'].default_value=.65;shade.inputs['To Max'].default_value=1.08;l.new(dot.outputs['Value'],shade.inputs['Value'])
+wash=n.new('ShaderNodeMixRGB');wash.blend_type='MULTIPLY';wash.inputs[0].default_value=1;l.new(color.outputs[0],wash.inputs[1]);l.new(shade.outputs[0],wash.inputs[2])
+ao=n.new('ShaderNodeAmbientOcclusion');ao.inputs['Distance'].default_value=.23
+contact=n.new('ShaderNodeMixRGB');contact.blend_type='MULTIPLY';contact.inputs[0].default_value=.60;l.new(wash.outputs[0],contact.inputs[1]);l.new(ao.outputs['Color'],contact.inputs[2])
+pigment=n.new('ShaderNodeBsdfPrincipled');pigment.inputs['Base Color'].default_value=(0,0,0,1);pigment.inputs['Specular IOR Level'].default_value=0;l.new(contact.outputs[0],pigment.inputs['Emission Color']);pigment.inputs['Emission Strength'].default_value=1
+ray=n.new('ShaderNodeLightPath');weight=n.new('ShaderNodeMath');weight.operation='MULTIPLY';weight.inputs[1].default_value=.94;l.new(ray.outputs['Is Camera Ray'],weight.inputs[0])
 mix=n.new('ShaderNodeMixShader');l.new(weight.outputs[0],mix.inputs[0]);l.new(s.outputs[0],mix.inputs[1]);l.new(pigment.outputs[0],mix.inputs[2]);l.new(mix.outputs[0],n.get('Material Output').inputs['Surface'])
 # Genuine surface bakes supplement shader contact AO and physical worn edges.
 sys.path.insert(0,str(HERE))
@@ -143,10 +152,10 @@ controls=[root,upper,turn,lift,*wheels]
 neutral={o.name:(o.location.copy(),o.rotation_euler.copy()) for o in controls}
 # Projectiles and luminous mesh exhaust use real thickness, keyed visibility, never zero scale.
 flashmat=mat('Rocket exhaust warm core',(1,.36,.025),0,.7)
-shader=flashmat.node_tree.nodes.get('Principled BSDF');shader.inputs['Emission Color'].default_value=(1,.28,.015,1);shader.inputs['Emission Strength'].default_value=2
+shader=flashmat.node_tree.nodes.get('Principled BSDF');shader.inputs['Emission Color'].default_value=(1,.28,.015,1);shader.inputs['Emission Strength'].default_value=3
 c,axis,u,v=mouths[24]
-rocket=rod('Departing rocket',c,c-axis*.20,.026,olive,lift,r2=.008,verts=24)
-flash=rod('Rocket motor flare',c+axis*.10,c,.045,flashmat,lift,r2=.014,verts=24)
+rocket=rod('Departing rocket',c,c-axis*.32,.032,olive,lift,r2=.008,verts=24)
+flash=rod('Rocket motor flare',c+axis*.24,c,.055,flashmat,lift,r2=.018,verts=24)
 rocket.hide_render=flash.hide_render=True
 effects=[rocket,flash];effectneutral={o.name:o.location.copy() for o in effects}
 controls+=effects
@@ -167,9 +176,9 @@ def pose(clip,i,n):
   lift.rotation_euler.y+=[0,-.012,-.025,-.028,-.018,-.010,-.004,0,0,0][i]
   upper.location.x+=[0,0,0,.012,.006,0,.008,.004,0,0][i]
   turn.rotation_euler.z=.012*sin(pi*t)
-  if i in [3,4,6]:
+  if i in [3,4,5,6,7]:
    for o in effects:o.hide_render=False
-   distance={3:.02,4:.26,6:.08}[i]
+   distance={3:.12,4:.50,5:.94,6:.18,7:.68}[i]
    local_axis=lift.matrix_world.to_3x3().inverted()@axis
    for o in effects:o.location=effectneutral[o.name]-local_axis*distance
  elif clip=='hit':
@@ -182,15 +191,19 @@ def pose(clip,i,n):
   wheels[1].rotation_euler.x=.09*f;wheels[2].rotation_euler.x=.06*f
  bpy.context.view_layer.update()
  # Real tire mesh minima seat all six wheels on the base, including damaged suspension.
- floor=[]
+ floor=[];contact_radii=[]
  for wheel in wheels:
   parts=[o for o in wheel.children_recursive if o.type=='MESH']
   bottom=min((o.matrix_world@v.co).z for o in parts for v in o.data.vertices)
   wheel.location+=wheel.parent.matrix_world.to_3x3().inverted()@Vector((0,0,.15-bottom))
-  bpy.context.view_layer.update();floor.append(min((o.matrix_world@v.co).z for o in parts for v in o.data.vertices))
+  bpy.context.view_layer.update()
+  world_points=[o.matrix_world@v.co for o in parts for v in o.data.vertices]
+  floor.append(min(p.z for p in world_points))
+  contact_radii.append(max(math.hypot(p.x,p.y) for p in world_points if p.z<.151))
  vehicle_min=min((o.matrix_world@v.co).z for o in sc.objects if o.type=='MESH' and o!=base and o not in effects for v in o.data.vertices)
+ assert max(contact_radii)<1.76,(clip,i,'wheel outside stone',contact_radii)
  assert vehicle_min>=.1498,(clip,i,'vehicle below stone',vehicle_min)
- ground_audit.append({'minimum_vehicle_z':vehicle_min,'clip':clip,'sample':i,'minimum_z':min(floor),'wheel_contact_z':floor,'travel':2*pi*wheels[0]['radius']*t if clip=='move' else 0,'wheel_angle':[w.rotation_euler.y for w in wheels]})
+ ground_audit.append({'minimum_vehicle_z':vehicle_min,'wheel_contact_radii':contact_radii,'clip':clip,'sample':i,'minimum_z':min(floor),'wheel_contact_z':floor,'travel':2*pi*wheels[0]['radius']*t if clip=='move' else 0,'wheel_angle':[w.rotation_euler.y for w in wheels]})
 
 manifest={'engine':'CYCLES','device':sc.cycles.device,'samples':SAMPLES,'resolution':RES,'clips':{},'source_sha256':hashlib.sha256((M/'rocket-artillery.blend').read_bytes()).hexdigest(),'script_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),'pipeline_sha256':pipeline_hashes}
 (M/'render-manifest.json').unlink(missing_ok=True)

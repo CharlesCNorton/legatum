@@ -34,14 +34,20 @@ def project(scene, camera, base, assets, folder):
             hit,_,_,_=tree.ray_cast(point+view*5,-view,5.01)
             visible=hit is not None and (hit-point).length<.008
             weights[v.index]=facing if visible else 0
-            if wheel:
-                # Every rotating wheel samples only the intact near-front wheel.
+            if wheel and wheel['side']==-1:
+                # Near rotating wheels sample only the intact near-front wheel.
                 # Bodywork and ground pixels must never rotate with tires.
                 px=(p.x-center_uv.x)*256+86
                 py=(center_uv.y-p.y)*256+165
                 coords[v.index]=(px/256,1-py/256)
                 tire_region=((px-86)/19)**2+((py-165)/22)**2<1 and py>=148
                 weights[v.index]=facing if tire_region else 0
+            elif wheel:
+                # Far-side rubber has no exposed hub in the painting. Use physical
+                # shadowed tire pigment instead of copying a bright near-side hub.
+                px=p.x*256;py=(1-p.y)*256
+                far_region=(((px-42)/16)**2+((py-158)/21)**2<1 and py>=150) or (((px-139)/15)**2+((py-151)/20)**2<1 and py>=154)
+                weights[v.index]=facing if far_region and visible else 0
         for loop in o.data.loops:
             uv.data[loop.index].uv=coords[loop.vertex_index]
             w=weights[loop.vertex_index];mask.data[loop.index].color=(w,w,w,1)

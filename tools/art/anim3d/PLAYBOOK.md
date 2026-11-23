@@ -122,7 +122,7 @@ the source painting on finished geometry, with facing and ray-visibility masks
 and generated olive brushwork on unseen surfaces; (2) bevel hard edges, model
 hollow bores, raised rails, tire tread, rims, rivets, straps and fittings; (3) use
 warm upper-left key, soft fill, cool rim and Cycles contact shadows; (4) measure
-rest subject RGB statistics against the source and freeze one bounded grade for
+native-256 subject RGB histogram quantiles against the source and freeze one bounded grade for
 all clips. AO and Pointiness curvature are genuinely baked on cab, hood and
 launcher panel and drive grime/roughness. The painting contains illumination, so
 camera-only painted pigment preserves it while other rays see physical materials.
@@ -131,6 +131,8 @@ preset. The unseen side remains an approximation requiring motion review.
 
 The base is one stationary cream disc, target sRGB **#E9CFA0** (linear pigment
 approximately `.815,.624,.352`), with darker rim, grain and contact shading.
+Round 2 wraps clean top/rim swatches from the painting onto the solid disc and
+uses a directional wash plus live AO, preserving grain without fixed wheel shadows.
 Never animate the base or project stationary tire shadows onto it. All six Blender
 skills are used; the optional reference-look-calibration skill is absent, so native
 256/64px comparisons, alpha bounds and measured grades provide the calibration.
@@ -141,7 +143,7 @@ Run from the repository root:
 RESOLUTION=256 SAMPLES=8 tools/art/anim3d/units/rocket-artillery/render.sh stills
 RESOLUTION=256 SAMPLES=8 tools/art/anim3d/units/rocket-artillery/render.sh preview
 # Complete lead-side GPU pass; no arguments; ROUND supplied by overnight driver:
-ROUND=1 tools/art/anim3d/units/rocket-artillery/gpu.sh
+ROUND=2 tools/art/anim3d/units/rocket-artillery/gpu.sh
 ```
 
 `gpu.sh` rebuilds, bakes and renders **every** stage in Metal Cycles at 512px,
@@ -180,3 +182,22 @@ Technical success is not art approval. A `rocket-artillery-PASS` marker must onl
 follow visual parity at rest and clean motion, plus the atlas contract. The
 pipeline never writes it automatically. Round-one findings belong in the unit's
 README and external running log; GPU output still needs the lead's visual review.
+
+
+### Rocket artillery round 2: occlusion and contact
+
+Inspect the actual GPU c/f/e sheets and decoded MP4 before changing geometry;
+keep those images in `review/3d-v2/rocket-artillery-round1-preserved/`. The first
+GPU pass completed, but its bright near-wheel texture copied onto the far wheels
+made a six-wheel truck read as a row of five wheels. Far wheels now retain their
+own shadowed pigment; the camera elevation and stone depth are registered again,
+with all six contact points checked against both the ground height **and disc
+radius**. Ground-plane contact alone can accept a wheel floating beyond the disc.
+The top/front wheel sheet remains mandatory.
+
+The grade uses RGB histogram quantiles (2/10/25/50/75/90/98 percentiles), bounded
+to twelve channel values and computed at the same 256px scale. It is frozen for
+all forty frames; alpha remains unchanged. Never fit a new grade per animation
+frame. The GPU entry point tees its log to the driver as well as its unit log,
+so a successful GPU run no longer leaves an empty driver log. No PASS marker is
+written by the pipeline; the lead must still judge the final GPU frames.

@@ -9,8 +9,8 @@ from bpy_extras.object_utils import world_to_camera_view
 def build(g):
  globals().update(g)
  sc=bpy.context.scene
- bpy.ops.object.camera_add(location=(-6,-10,4.4));cam=bpy.context.object;cam.name='CAM-painting'
- target=Vector((0,0,.95));cam.rotation_euler=(target-cam.location).to_track_quat('-Z','Y').to_euler();cam.data.type='ORTHO';cam.data.ortho_scale=4.0;sc.camera=cam
+ bpy.ops.object.camera_add(location=(-6,-10,3.10));cam=bpy.context.object;cam.name='CAM-painting'
+ target=Vector((0,0,1.05));cam.rotation_euler=(target-cam.location).to_track_quat('-Z','Y').to_euler();cam.data.type='ORTHO';cam.data.ortho_scale=4.0;sc.camera=cam
  right=cam.rotation_euler.to_matrix()@Vector((1,0,0));up=cam.rotation_euler.to_matrix()@Vector((0,1,0));view=cam.rotation_euler.to_matrix()@Vector((0,0,1))
  def point(px,py,depth=0):return target+right*((px-128)/64)-up*((py-128)/64)+view*depth
  def solid(name,outline,shift=(-27,-5),depth=.6,front=.25,m=olive,p=None):
@@ -36,7 +36,7 @@ def build(g):
   return rod(name,attached(a),attached(b),r,m,p or root)
  root=empty('chassis');upper=empty('suspension body',(0,0,0),root)
  # Base is a single stationary cream disc, not part of the animated hierarchy.
- bpy.ops.mesh.primitive_cylinder_add(vertices=128,radius=1.76,depth=.15,location=(0,0,.075));base=bpy.context.object;base.name='GEO-stationary cream disc';base.data.materials.append(stone);bevel(base,.02)
+ bpy.ops.mesh.primitive_cylinder_add(vertices=128,radius=1.76,depth=.20,location=(0,0,.05));base=bpy.context.object;base.name='GEO-stationary cream disc';base.data.materials.append(stone);bevel(base,.035)
  # Main rail and full cab volume. Separate raised panels retain thickness and joints.
  solid('Chassis box rails',[(52,145),(232,128),(233,133),(53,150)],(-24,-9),.42,-.32,p=root)
  solid('Cab full shell',[(101,96),(122,96),(125,145),(111,149),(99,146),(96,115)],(-31,-3),.72,.25,p=upper)
@@ -79,7 +79,7 @@ def build(g):
   spRod('Headlamp guard',(px-2,py,.98),(px+2,py,.98),.007,steel,upper)
  # Round rolling wheels. Near and far centers are fitted independently to the painting.
  wheels=[]
- for index,(px,py,r,side) in enumerate([(86,165,.315,-1),(180,157,.315,-1),(210,154,.315,-1),(43,162,.315,1),(140,161,.315,1),(170,150,.315,1)]):
+ for index,(px,py,r,side) in enumerate([(86,165,.315,-1),(180,157,.315,-1),(210,154,.315,-1),(42,159,.315,1),(139,152,.315,1),(170,151,.315,1)]):
   z=.15+r+.008
   center=point(px,py,0);center+=view*((z-center.z)/view.z)
   w=empty('wheel '+str(index),center,root);wheels.append(w);w['radius']=r+.008;w['side']=side
@@ -91,14 +91,14 @@ def build(g):
   for k in range(len(profiles)):
    for j in range(N):f.append((k*N+j,k*N+(j+1)%N,((k+1)%len(profiles))*N+(j+1)%N,((k+1)%len(profiles))*N+j))
   tire=mesh('Dusty tire '+str(index),v,f,rubber,w,True)
-  for j in range(32):
-   a=j*2*pi/32
+  for j in range(24):
+   a=j*2*pi/24
    for sy in [-1,1]:
-    o=cube('Chevron tire tread',center+Vector(((r+.003)*cos(a),sy*.055,(r+.003)*sin(a))),(.036,.105,.014),rubber,w);o.rotation_euler=(0,pi/2-a,sy*.32)
-  rod('Wheel pressed dish',center+Vector((0,-.112,0)),center+Vector((0,.112,0)),r*.69,olive,w)
+    o=cube('Chevron tire tread',center+Vector(((r+.003)*cos(a),sy*.055,(r+.003)*sin(a))),(.050,.105,.010),rubber,w);o.rotation_euler=(0,pi/2-a,sy*.32)
+  rod('Wheel pressed dish',center+Vector((0,-.112,0)),center+Vector((0,.112,0)),r*.69,rubber if side==1 else olive,w)
   for sy in [-1,1]:
    yy=center.y+sy*.123;ring('Wheel bright bead',(center.x,yy,center.z),r*.67,.008,edge,w)
-   rod('Wheel hub',(center.x,yy,center.z),(center.x,yy+sy*.025,center.z),r*.25,olive,w)
+   rod('Wheel hub',(center.x,yy,center.z),(center.x,yy+sy*.025,center.z),r*.25,rubber if side==1 else olive,w)
    for j in range(8):
     a=j*2*pi/8;xx=center.x+r*.39*cos(a);zz=center.z+r*.39*sin(a)
     rod('Hex hub nut',(xx,yy,zz),(xx,yy+sy*.015,zz),.009,steel,w,verts=6)
@@ -151,5 +151,5 @@ def build(g):
    if edges:bmesh.ops.subdivide_edges(bm,edges=edges,cuts=3,use_grid_fill=True)
   bm.to_mesh(o.data);bm.free();o.data.update()
  bpy.context.view_layer.update()
- (M/'registration.json').write_text(json.dumps({'method':'closed polyhedral bodywork registered from screen landmarks with retained depth; physically round six tires and forty deep hollow tubes','camera_scale':4,'wheel_centers':[[w.name,*list(w.matrix_world.translation)] for w in wheels]},indent=2))
+ (M/'registration.json').write_text(json.dumps({'method':'closed polyhedral bodywork registered from screen landmarks with retained depth; physically round six tires and forty deep hollow tubes','camera_scale':4,'target_height':1.05,'camera_position':list(cam.location),'wheel_centers':[[w.name,*list(w.matrix_world.translation)] for w in wheels]},indent=2))
  return dict(root=root,upper=upper,turn=turn,lift=lift,wheels=wheels,base=base,cam=cam,mouths=mouths,view=view,right=right,up=up)

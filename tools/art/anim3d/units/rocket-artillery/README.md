@@ -1,82 +1,82 @@
-# Rocket artillery — round 1 candidate
+# Rocket artillery — round 2 candidate
 
-Original full-depth six-wheel truck and forty-tube launcher, mechanically rigged in
-Blender. The painting is frozen onto finished 3D surfaces; unseen faces use the
-recorded generated olive fill. Tire projection uses an isolated wheel region so
-body fragments cannot rotate with wheels. Three real AO/curvature bake pairs,
-beveled bodywork and fittings, product lights, cream stone, and one measured grade
-are included. Scripts and the v2 candidate atlas live in git; editable masters,
-bakes, frames and review evidence live under `~/LegatumRuns/anim-pilot/`.
+Original full-depth six-wheel truck and forty-tube launcher, mechanically rigged
+in Blender. The painting supplies frozen camera UVs on finished surfaces; unseen
+faces use the recorded image-generated olive fill. Three actual AO/curvature bake
+pairs, beveled panels, solid straps/fittings, hollow bores, tire tread and product
+lighting are retained. Masters and review evidence remain outside git under
+`~/LegatumRuns/anim-pilot/`.
 
-From the repo root:
+Round 1's GPU pass succeeded (189,894 bytes at quality 75), but the bright wheel
+copies, exposed far wheels and broad stone silhouette failed the visual bar.
+Round 2 lowers the camera, registers the disc and far wheels again, separates
+near-wheel and far-wheel pigment, softens tread blocks and makes the rocket
+flight visible. Clean top/rim swatches from the painting wrap the actual stone;
+no wheel silhouettes or static contact shadows are copied onto it. The existing
+generated olive fill remains on unseen vehicle surfaces. RGB histogram quantiles
+are matched at native 256px, bounded to twelve channel values, and frozen across
+all clips. Alpha is unchanged.
+
+From the repository root:
 
 ```sh
 RESOLUTION=256 SAMPLES=8 tools/art/anim3d/units/rocket-artillery/render.sh stills
-RESOLUTION=512 SAMPLES=4 tools/art/anim3d/units/rocket-artillery/render.sh preview
+RESOLUTION=512 SAMPLES=8 tools/art/anim3d/units/rocket-artillery/render.sh preview
 source tools/art/anim3d/env.sh
 "$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/rocket-artillery/check.py
-"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/rocket-artillery/deliver.py
+ROUND=2 "$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/rocket-artillery/deliver.py
 ```
 
-Complete lead-side GPU run (no arguments):
+Complete no-argument lead-side GPU pass:
 
 ```sh
-ROUND=1 tools/art/anim3d/units/rocket-artillery/gpu.sh
+ROUND=2 tools/art/anim3d/units/rocket-artillery/gpu.sh
 ```
 
-The script first checks Metal without changing prior evidence. Then it rebuilds,
-bakes and renders all stages at GPU512/64 samples; creates 256 masters; packs and
-validates the trimmed 160px atlas; makes the eight-second five-clip MP4; and writes
-a receipt only after independent GPU/source/hash checks. Blender always runs via
-the PATH gate. The GPU log/status file identifies any failed stage. CPU frames
-remain explicitly labeled CPU, even when they are genuine 512px renders.
+The script checks Metal before changing evidence, then rebuilds, bakes and renders
+all stages at GPU512/64 samples. It creates 256px masters, packs and validates the
+trimmed 160px atlas, writes the eight-second five-clip MP4, and issues a receipt
+only after independent GPU/source/hash checks. It tees output to the driver and
+`rocket-artillery-gpu-pass-r${ROUND}.log`. Missing Metal fails explicitly. Every
+Blender call uses the plain PATH gate; CPU evidence is never labeled GPU.
 
-Review files are `review/3d-v2/rocket-artillery-{b-plain,c-textured-lit,c-details,
-d-rig-poses,e-<clip>-strip,f-restpose-compare,g-feet-check}.png`, five animated
-`e-<clip>.webp` files, and `rocket-artillery-round${ROUND}.mp4`. The plain sheet
-includes actual side and rear views. The feet sheet is an eight-sample top/front
-wheel inspection: no person/animal exists in this unit. The external log records
-observations; `round1-first/` preserves early CPU evidence.
+Review images are published immediately as `rocket-artillery-{b-plain,
+c-textured-lit,c-details,d-rig-poses,e-<clip>-strip,f-restpose-compare,
+g-feet-check}.png`, with five animated `e-<clip>.webp` files. The rest comparison
+shows painting/render/crossfade at native 256 and 64px. The plain sheet includes
+side/rear geometry; the top/front wheel sheet spans all eight move samples.
+Round 1's GPU images and movie are preserved in
+`review/3d-v2/rocket-artillery-round1-preserved/`.
 
-The five clips have 8/8/10/4/10 frames. All six wheel controls use the same nominal
-rolling radius, common travel/radius rotation and an exact one-revolution loop;
-all wheel bottoms are checked against the stone at every sample. The static token
-uses treadmill motion; the runtime would supply translation. Death lowers the
-launcher and suspension into a held disabled pose. Effects use keyed visibility
-with positive real geometry, never zero scale. Camera, base and world lighting
-remain fixed for the clip renders.
+Clips retain 8/8/10/4/10 frames for idle/move/attack/hit/death. All six wheels use
+common travel/radius rotation and a closing one-revolution key. Contact correction
+changes only parent-space translation, preserving continuous Euler rotation.
+The audit checks ground height, contact points inside the disc, stationary stone,
+positive mesh scales and whole-vehicle clearance at every sampled pose. Death
+holds its final two frames exactly. Effects use keyed visibility and solid meshes.
+There is no person or animal, so motion capture and feet retargeting do not apply.
 
-Atlas JSON has `version:2`, `trimmed:true`, logical frame 160x160, anchor
-`(80,121.25)` and ordered `clips` with `row/frames/fps/loop/rects`. A rect contains
-`x/y/w/h` in the atlas and `ox/oy` in the logical cell. Draw at
-`(anchorX-ax+ox,anchorY-ay+oy)`. No renderer integration is part of this candidate.
-The packer preserves all frames and quality >=75; exceeding 200,000 bytes fails.
-It checks exact decoded alpha reconstruction, motion and identical death holds.
-The manifest also binds the model, clip blends, scripts, source/fill, grade, raw
-frames and 256 gallery. Video validation checks H.264/yuv420p, 240 frames, eight
-seconds and 1600x348 dimensions.
+Atlas metadata is v2 `trimmed-rows`: logical 160px cells, anchor `(80,121.25)`,
+ordered idle/move/attack/hit/death clips, and per-frame rectangles with atlas
+`x/y/w/h` plus logical `ox/oy`. Draw at `(X-ax+ox,Y-ay+oy)`. All forty frames remain,
+WebP quality must be at least 75, and bytes must not exceed 200,000. Validation
+reconstructs every decoded alpha mask and checks the held death. The manifest
+binds source/fill, model, scripts, clip blends, grade, raw renders and 256px gallery.
+The movie reconstructs decoded trimmed frames, shows all five clips at 2x on
+cream, and verifies H.264/yuv420p, 1600x348, 240 frames and eight seconds.
 
-Art verdict: **not a PASS**. At 64px it reads as the same raised rocket truck. At
-256px the painted finish is much closer than plain procedural paint, but tube rim
-registration, over-bright far wheels, tire proportions, cab/fender fit, stone brushwork and oblique
-mechanical construction still need refinement. Projected lighting moves with the
-wheels and launcher; wider motion reveals less convincing hidden surfaces. The
-GPU pass and the lead's visual review are outstanding. No PASS marker is written
-by automation, and the existing painting remains the runtime asset.
+**Art verdict: not a PASS.** The three-axle silhouette is closer at 64px. At 256px,
+cab and launcher paint carry the reference detail, but tire volume/tread, launcher
+mouth registration and stone shading still reveal the reconstruction. Painted
+wheel illumination rotates with the tires; oblique construction and hidden
+surfaces remain weaker than the fixed view. Round 2 needs fresh GPU review. The
+pipeline never writes the PASS marker, and no app runtime wiring is changed.
 
-Non-obvious rig finding: moving a wheel through `matrix_world` can decompose a
-continuous turn into wrapped Euler angles. Contact correction now changes only
-parent-space location; the validator checks travel/radius at all nine move keys,
-including the closing key. This preserves continuous editable rolling curves.
-
-Round-one verification: CPU Cycles, actual 512px renders at four preview samples,
-40 graded 256px frames; atlas 1368x595, **193,574 bytes at quality 78**. The
-source/model/clip/grade/gallery hashes, six-wheel travel and contact, whole-vehicle
-ground clearance, all forty reconstructed alpha masks and exact death hold pass.
-The decoded-atlas movie passes FFprobe: H.264/yuv420p, 1600x348, 240 frames, 8.0s.
-A decoded video frame was visually inspected. Python compilation, shell syntax and
-`git diff --check` pass. The complete GPU entry point was exercised and stopped
-at Metal preflight as expected in this sandbox, preserving CPU evidence. GPU
-renders and visual approval remain pending. Git could not create the worktree's
-`index.lock`; changes are left uncommitted for the runner. No Rust/UI runtime code
-changed, and no full engine/browser test suite was run for this asset-only lane.
+Round-two CPU verification: Blender Cycles, actual 512px renders at eight samples,
+40 graded 256px frames; atlas **1368x603, 186,860 bytes at quality 75**. Pipeline,
+model, clip, grade and gallery hashes pass; all wheel travel/radius keys and ground
+contacts pass, with maximum contact radius 1.634 inside the 1.76 disc. All forty
+trimmed alpha masks reconstruct exactly; final death frames are identical.
+FFprobe confirms H.264/yuv420p, 1600x348, 240 frames, eight seconds. Decoded movie
+frames at 0.3/0.6/1.4 seconds were inspected. Python compilation, shell syntax,
+executable handoff and whitespace checks pass. No Rust or UI code changed.

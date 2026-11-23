@@ -3,12 +3,12 @@
 set -euo pipefail
 cd "$(dirname "$0")/../../../../.."
 source tools/art/anim3d/env.sh
-export ROUND="${ROUND:-1}" CYCLES_DEVICE=GPU RENDER_ENGINE=CYCLES RESOLUTION=512 SAMPLES="${SAMPLES:-64}"
+export ROUND="${ROUND:-2}" CYCLES_DEVICE=GPU RENDER_ENGINE=CYCLES RESOLUTION=512 SAMPLES="${SAMPLES:-64}"
 log="$ANIM_ROOT/rocket-artillery-gpu-pass-r${ROUND}.log"
 status="$ANIM_ROOT/review/3d-v2/rocket-artillery-gpu-status.txt"
 receipt="$ANIM_ROOT/review/3d-v2/rocket-artillery-gpu-receipt-r${ROUND}.json"
 rm -f "$receipt"
-exec > "$log" 2>&1
+exec > >(tee "$log") 2>&1
 stage=preflight
 trap 'code=$?; printf "failed: round %s, stage %s, exit %s; log %s\n" "$ROUND" "$stage" "$code" "$log" > "$status"; exit "$code"' ERR
 printf 'running: round %s\n' "$ROUND" > "$status"

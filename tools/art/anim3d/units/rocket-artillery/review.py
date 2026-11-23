@@ -1,7 +1,7 @@
 """Immediate review publishing; restrained source-measured grade, never edits alpha."""
 from pathlib import Path
 import os, sys, json
-from PIL import Image, ImageDraw, ImageEnhance, ImageStat
+from PIL import Image, ImageDraw, ImageStat
 R=Path(os.environ.get('ANIM_ROOT',Path.home()/'LegatumRuns/anim-pilot'));M=R/'masters/rocket-artillery';V=R/'review/3d-v2'
 stage=sys.argv[1];cream=(233,207,160,255)
 ref=Image.open('app/src/assets/units/rocket-artillery-256.png').convert('RGBA')
@@ -9,16 +9,42 @@ def rgba(path):return Image.open(path).convert('RGBA')
 def flat(im):
  out=Image.new('RGBA',im.size,cream);out.alpha_composite(im);return out
 
-def stats(im):
- # Subject only: avoid the base dominating the match.
- im=im.crop((0,0,im.width,int(im.height*.69)));mask=im.getchannel('A').point(lambda a:255 if a>220 else 0)
- s=ImageStat.Stat(im.convert('RGB'),mask);return s.mean,s.stddev
+def subject(im):
+ # Match at the same sampling scale; exclude cream stone and transparent pixels.
+ im=im.resize((256,256),Image.Resampling.LANCZOS).crop((0,0,256,177))
+ mask=im.getchannel('A').point(lambda a:255 if a>220 else 0)
+ return im.convert('RGB'),mask
+
+def histogram_grade(raw):
+ source,sm=subject(raw);target,tm=subject(ref)
+ quantiles=(.02,.10,.25,.50,.75,.90,.98)
+ def quantile(hist,q):
+  total=sum(hist);running=0
+  for i,n in enumerate(hist):
+   running+=n
+   if running>=q*total:return i
+  return 255
+ tables=[];knots=[]
+ for a,b in zip(source.split(),target.split()):
+  ah=a.histogram(sm);bh=b.histogram(tm);pairs={0:0,255:255}
+  for q in quantiles:
+   x=quantile(ah,q);y=quantile(bh,q)
+   pairs[x]=max(0,min(255,x+max(-12,min(12,y-x))))
+  points=sorted(pairs.items());table=[]
+  for x in range(256):
+   j=next((i for i in range(1,len(points)) if points[i][0]>=x),len(points)-1)
+   x0,y0=points[j-1];x1,y1=points[j]
+   table.append(round(y0+(y1-y0)*(x-x0)/max(1,x1-x0)))
+  tables.append(table);knots.append(points)
+ return {'method':'bounded RGB quantile histogram match at native 256; frozen across all frames',
+         'max_channel_delta':12,'quantiles':quantiles,'knots':knots,'luts':tables,'alpha':'unchanged'}
 
 def grade(im):
  p=M/'grade.json'
  if not p.exists():return im
- g=json.loads(p.read_text());a=im.getchannel('A');rgb=im.convert('RGB');channels=rgb.split();rgb=Image.merge('RGB',[ch.point(lambda x,k=k:int(max(0,min(255,(x-128)*g['contrast']+128))*g['gains'][k])) for k,ch in enumerate(channels)])
- rgb=ImageEnhance.Color(rgb).enhance(1.04);rgb.putalpha(a);return rgb
+ g=json.loads(p.read_text());alpha=im.getchannel('A')
+ rgb=Image.merge('RGB',[ch.point(lut) for ch,lut in zip(im.convert('RGB').split(),g['luts'])])
+ rgb.putalpha(alpha);return rgb
 
 def sheet(images,labels,path,sizes=(256,64)):
  width=max(sizes)*len(images);height=sum(sizes)+65;out=Image.new('RGBA',(width,height),cream);d=ImageDraw.Draw(out);y=25
@@ -34,9 +60,7 @@ def keep256(im,name):
 if stage in ['b-plain','c-textured-lit']:
  raw=rgba(M/'renders'/f'{stage}.png')
  if stage.startswith('c-'):
-  rm,rs=stats(raw);tm,ts=stats(ref)
-  gains=[max(.90,min(1.12,t/max(1,r))) for t,r in zip(tm,rm)];contrast=max(.96,min(1.12,sum(ts)/max(1,sum(rs))))
-  (M/'grade.json').write_text(json.dumps({'gains':gains,'contrast':contrast,'source_mean':tm,'render_mean':rm,'alpha':'unchanged'},indent=2));im=grade(raw)
+  (M/'grade.json').write_text(json.dumps(histogram_grade(raw),indent=2));im=grade(raw)
  else:im=raw
  keep256(im,stage+'.png');sheet([ref,im],['Painting',stage],V/f'rocket-artillery-{stage}.png')
  if stage.startswith('c-'):

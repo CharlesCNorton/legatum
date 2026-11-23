@@ -34,6 +34,7 @@ def check(require_gpu=False):
             assert Image.open(M/'256'/clip/f'{i:02}.png').size==(256,256)
             if require_gpu:assert sha(M/'512'/clip/f'{i:02}.png')==sha(p)
     assert len(man['ground_audit'])==42
+    assert all(max(a['wheel_contact_radii'])<1.76 for a in man['ground_audit']),'wheel contact outside stone'
     import math
     move=[r for r in man['ground_audit'] if r['clip']=='move']
     for r in move:
