@@ -266,3 +266,10 @@
 - Posted field-cannon-e-attack-strip.png; actual CYCLES render, visual review pending.
 - Posted field-cannon-e-hit-strip.png; actual CYCLES render, visual review pending.
 - Posted field-cannon-e-death-strip.png; actual CYCLES render, visual review pending.
+- ROUND 7 VISUAL REJECTION: Final death strip exposed pale trouser paint on the newly sampled spoke surfaces. The shared source shows the gunner through wheel openings; geometric visibility alone cannot identify that source object. Added a spatial/pigment exclusion for pale trouser pixels in the near-wheel opening. Regenerating all stages from a clean master, retaining actual wood/metal fills in excluded areas; no tolerance or clip requirement relaxed. Dished spokes now converge toward the full-depth outer hub.
+- Posted field-cannon-b-plain.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-c-textured-lit.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-c-details.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-d-rig-poses.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-idle-strip.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-move-strip.png; actual CYCLES render, visual review pending.
