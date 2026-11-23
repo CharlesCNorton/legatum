@@ -57,3 +57,12 @@
 - Completed render e-move (CPU).
 - e-move: 8 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
 - Started render e-attack (CPU).
+- Completed render e-attack (CPU).
+- e-attack: 10 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- Started render e-hit (CPU).
+- CPU rest measurements: opaque silhouette IoU 0.841633 at 256px, 0.838921 at 64px. Painting bounds (53,13)-(202,243); render (49,12)-(203,243). Similar frame height but wider bow/contour; this metric is not art acceptance. Native 256/64 idle and move strips inspected; attack pose sheet reveals segmented sleeve joints and simplified hand support when raised.
+- Four synthetic delivery regressions passed (23.524s); final-master gate rejects CPU evidence; missing-input GPU entrypoint exits nonzero before Blender and retains log/failing-stage status. A sandbox GPU probe was cancelled while queued, so no actual GPU pass is claimed. Structural audit passed all five clips: 53 bones, stationary base, nonzero scales, idle/move endpoint error <=6.2e-18; maximum attack wrist-target error 0.013525m.
+- Repository checks initially flagged compact Python matrix @ operators as email addresses; spacing corrected without behavior changes. Public claims passed. Art distinctness blocked by sandbox Chromium bootstrap_check_in MachPortRendezvousServer permission denied (1100), not a measured art failure; host art review remains required.
+- Completed render e-hit (CPU).
+- e-hit: 4 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- Started render e-death (CPU).

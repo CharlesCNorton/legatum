@@ -68,3 +68,15 @@
 - Published e-hit review from CPU render.
 - Published e-death review from CPU render.
 - Published e-move review from CPU render.
+- Published c review from CPU render.
+- Published c-details review from CPU render.
+- Published d review from CPU render.
+- Published e-idle review from CPU render.
+- Published e-move review from CPU render.
+- Measured native-256 silhouette overlap: round 1 .761907, round 2 .837361 (alpha >32). Render bounds improved from [22,13,243,252] to [22,13,235,245], reference [20,12,234,244]. This is registration evidence, not art approval.
+- Reviewed all intermediate poses; move initially floated after fitted footwear changed. Added three-step ankle/sole correction with flat foot orientation and explicit swing lift. New strip shows planted contact; scene audit now measures it.
+- Death arm tuck reduces the old propped-up pose, but revealed an unmasked painted shield on the rear cloak. Added finished-scene ray visibility before freezing source weights; regenerated the master and all clips. Cloth remains a rigid attached shell, not a cloth simulation.
+- Missing-input GPU preflight now exits 1 with a failed-stage status receipt. Explicit input exits plus EXIT trap avoid leaving a misleading running status on a failed shell conditional.
+- Published e-attack review from CPU render.
+- Published e-hit review from CPU render.
+- Published e-death review from CPU render.

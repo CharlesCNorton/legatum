@@ -88,3 +88,22 @@
 - Published c-textured-lit: CYCLES CPU, 256 px, 8 samples; not GPU approval.
 - Built MPFB female, full folded robes, open hood, shawl/fringe, pack/spiral bedroll, staff, straps and sandals; plain master saved.
 - Published b-plain: CYCLES CPU, 256 px, 8 samples; not GPU approval.
+- Applied frozen-camera painting, generated unseen linen/olive/rust/leather, fine bump, warm product lights, physical AO and ten actual AO/curvature maps.
+- Published c-textured-lit: CYCLES CPU, 256 px, 8 samples; not GPU approval.
+- Published c-details: CYCLES CPU, 256 px, 8 samples; not GPU approval.
+- Saved idle: 8 frames at 10 fps, editable MPFB rig, stationary base; authored keys.
+- Saved move: 8 frames at 12 fps, editable MPFB rig, stationary base; authored keys.
+- Saved attack: 10 frames at 14 fps, editable MPFB rig, stationary base; authored keys.
+- Saved hit: 4 frames at 12 fps, editable MPFB rig, stationary base; authored keys.
+- Saved death: 10 frames at 10 fps, editable MPFB rig, stationary base; authored keys.
+- Published d-rig-poses: CYCLES CPU, 256 px, 8 samples; not GPU approval.
+- Published e-idle-strip: CYCLES CPU, 256 px, 8 samples; not GPU approval.
+- Published e-move-strip: CYCLES CPU, 256 px, 8 samples; not GPU approval.
+- Published e-attack-strip: CYCLES CPU, 256 px, 8 samples; not GPU approval.
+- Published e-hit-strip: CYCLES CPU, 256 px, 8 samples; not GPU approval.
+- Published e-death-strip: CYCLES CPU, 256 px, 8 samples; not GPU approval.
+- Saved 3D audit passed: source hashes, 53 bones, actual motion, exact loop closing keys and held death; ground/bounds recorded; collision limits explicit.
+- Saved death: 10 frames at 10 fps, editable MPFB rig, stationary base; authored keys.
+- Published death-check-strip: CYCLES CPU, 256 px, 8 samples; not GPU approval.
+- Published e-death-strip: CYCLES CPU, 256 px, 8 samples; not GPU approval.
+- Saved 3D audit passed: source hashes, 53 bones, actual motion, exact loop closing keys and held death; ground/bounds recorded; collision limits explicit.

@@ -97,3 +97,78 @@ Final atlas validation passed: 40 frames (8/8/10/4/10), trimmed 160px cells with
 Strict held-death validation caught only a few one-level RGB differences between independently rendered identical settled poses; final output now reuses the settled frame explicitly, keeping all ten output samples.
 Final syntax checks passed: all unit Python modules compile, both shell entry points pass bash -n, git diff --check clean. Blender structural audit passed; no Metal render or art approval claimed.
 Visual review: recognizable Medjay at 64px, below painting parity at 256px. Improve head/headband/feather registration, facial geometry, body proportions and attack/death timing. No PASS marker written.
+
+Round 2 resume (2026-11-23): opened latest rest comparison, detail sheet and attack/death strips before editing. At 256 px the head is tilted and misregistered, with doubled neck/face pigment; headband/feather do not follow the painted outline, feet are pinched, linen has a brown waist band, and stone is too smooth/pale. At 64 px recognizable Medjay, but proportions and head silhouette differ. No PASS. Prior provenance is CPU512/6, not a verified GPU pass. Archived round1-cpu before changes.
+Read complete common feedback (1-22); medjay-FEEDBACK.md is absent. Read all three playbooks, including advanced spearman/cannon chapters. Loaded six Blender skills: modeling, materials, lighting, cameras, animation, rendering; applying finished-surface projection, anatomical pose fitting, physical band/feather and camera-only painted pigment, preserving generated hidden fills.
+Built MPFB Medjay anatomy, folded linen, convex hide shield, bronze spear, feather, camera and cream disc; saved plain master.
+Rendered b: 1 frames, 256px, CYCLES/CPU.
+Published b-plain review immediately; source CYCLES/CPU, 256px.
+Finished seven actual AO/curvature bake pairs and frozen-camera painting UVs with incidence blending into generated back-surface fills.
+Rendered c: 1 frames, 256px, CYCLES/CPU.
+Published c-textured-lit review immediately; source CYCLES/CPU, 256px.
+Rendered c-details: 1 frames, 256px, CYCLES/CPU.
+Published c-details review immediately; source CYCLES/CPU, 256px.
+Built MPFB Medjay anatomy, folded linen, convex hide shield, bronze spear, feather, camera and cream disc; saved plain master.
+Finished seven actual AO/curvature bake pairs and frozen-camera painting UVs with incidence blending into generated back-surface fills.
+Rendered c: 1 frames, 256px, CYCLES/CPU.
+Published c-textured-lit review immediately; source CYCLES/CPU, 256px.
+Built MPFB Medjay anatomy, folded linen, convex hide shield, bronze spear, feather, camera and cream disc; saved plain master.
+Finished seven actual AO/curvature bake pairs and frozen-camera painting UVs with incidence blending into generated back-surface fills.
+Authored idle: 8 frames at 10 fps; saved editable rig action and equipment attachments.
+Authored move: 8 frames at 12 fps; saved editable rig action and equipment attachments.
+Authored attack: 10 frames at 14 fps; saved editable rig action and equipment attachments.
+Authored hit: 4 frames at 12 fps; saved editable rig action and equipment attachments.
+Authored death: 10 frames at 10 fps; saved editable rig action and equipment attachments.
+Rendered b: 1 frames, 512px, CYCLES/CPU.
+Published b-plain review immediately; source CYCLES/CPU, 512px.
+Rendered c: 1 frames, 512px, CYCLES/CPU.
+Published c-textured-lit review immediately; source CYCLES/CPU, 512px.
+Rendered c-details: 1 frames, 512px, CYCLES/CPU.
+Published c-details review immediately; source CYCLES/CPU, 512px.
+Rendered d: 4 frames, 512px, CYCLES/CPU.
+Published d-rig-poses review immediately; source CYCLES/CPU, 512px.
+Rendered e-idle: 8 frames, 512px, CYCLES/CPU.
+Published e-idle-strip review immediately; source CYCLES/CPU, 512px.
+Rendered e-move: 8 frames, 512px, CYCLES/CPU.
+Published e-move-strip review immediately; source CYCLES/CPU, 512px.
+Rendered e-attack: 10 frames, 512px, CYCLES/CPU.
+Published e-attack-strip review immediately; source CYCLES/CPU, 512px.
+Rendered e-hit: 4 frames, 512px, CYCLES/CPU.
+Published e-hit-strip review immediately; source CYCLES/CPU, 512px.
+Rendered e-death: 10 frames, 512px, CYCLES/CPU.
+Published e-death-strip review immediately; source CYCLES/CPU, 512px.
+Round 2 geometry/materials: upright head, inverse-skinned cranial/calf/toe fitting, solid woven band, narrow feather, taller linen and coverage mask close the brown waist gap. Final surfaces are frozen before UVs, with seven real bake pairs and camera-only painted pigment; native skin weights are interpolated by smoothing. Generated hidden fills and product lighting retained. Thinner, slightly smaller cream disc keeps its contact top.
+Built MPFB Medjay anatomy, folded linen, convex hide shield, bronze spear, feather, camera and cream disc; saved plain master.
+Finished seven actual AO/curvature bake pairs and frozen-camera painting UVs with incidence blending into generated back-surface fills.
+Authored idle: 8 frames at 10 fps; saved editable rig action and equipment attachments.
+Authored move: 8 frames at 12 fps; saved editable rig action and equipment attachments.
+Authored attack: 10 frames at 14 fps; saved editable rig action and equipment attachments.
+Authored hit: 4 frames at 12 fps; saved editable rig action and equipment attachments.
+Authored death: 10 frames at 10 fps; saved editable rig action and equipment attachments.
+Structural audit passed: genuine weighted anatomy, 53 bones, fixed projection UVs, stationary base and sane scales across every clip sample.
+Rendered b: 1 frames, 512px, CYCLES/CPU.
+Published b-plain review immediately; source CYCLES/CPU, 512px.
+Rendered c: 1 frames, 512px, CYCLES/CPU.
+Published c-textured-lit review immediately; source CYCLES/CPU, 512px.
+Rendered c-details: 1 frames, 512px, CYCLES/CPU.
+Published c-details review immediately; source CYCLES/CPU, 512px.
+Rendered d: 4 frames, 512px, CYCLES/CPU.
+Published d-rig-poses review immediately; source CYCLES/CPU, 512px.
+Rendered e-idle: 8 frames, 512px, CYCLES/CPU.
+Published e-idle-strip review immediately; source CYCLES/CPU, 512px.
+Rendered e-move: 8 frames, 512px, CYCLES/CPU.
+Published e-move-strip review immediately; source CYCLES/CPU, 512px.
+Rendered e-attack: 10 frames, 512px, CYCLES/CPU.
+Published e-attack-strip review immediately; source CYCLES/CPU, 512px.
+Round 2 audit passed: 75,008 finished body vertices with interpolated MPFB weights, 53 bones, 0.0 px frozen-UV residual on finished geometry, exact combat clip-entry rest transforms, stationary base and sane scales in all 40 poses. This is structural verification only.
+Final detail inspection still finds a broad shoulder/neck outline and overfull angular calf contours; anatomical eye proxy appears below its intended socket. Investigating the proxy and skin-space fitting before accepting this round handoff.
+Rendered e-hit: 4 frames, 512px, CYCLES/CPU.
+Published e-hit-strip review immediately; source CYCLES/CPU, 512px.
+Rendered e-death: 10 frames, 512px, CYCLES/CPU.
+Published e-death-strip review immediately; source CYCLES/CPU, 512px.
+Built MPFB Medjay anatomy, folded linen, convex hide shield, bronze spear, feather, camera and cream disc; saved plain master.
+Finished seven actual AO/curvature bake pairs and frozen-camera painting UVs with incidence blending into generated back-surface fills.
+Rendered c: 1 frames, 512px, CYCLES/CPU.
+Published c-textured-lit review immediately; source CYCLES/CPU, 512px.
+Rendered c-details: 1 frames, 512px, CYCLES/CPU.
+Published c-details review immediately; source CYCLES/CPU, 512px.

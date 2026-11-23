@@ -59,3 +59,13 @@
 - Attack endpoint correction: saved guard at first/last samples. Audit passed both endpoint matrices, all53bones, stationary base, both loop errors0, held death and finished-rigid UV error0px. Full-body skin/cloth/equipment collision quality is still manual.
 - GPU entry now executable with round2 default, GPU512/64 requirement, regenerated clips, per-stage transcript/failure status, provenance gate and completion receipt; CPU-master rejection and missing-master error trap both tested successfully. No GPU execution claimed in sandbox.
 - Applied original-painting camera projection to full anatomy and physical clothing/equipment; unseen faces use painted fills and surface shaders. No billboard or relief image plane.
+- Built MPFB anatomy, painted rest stance, red chiton, blue cloak, fox-skin cap, woven crescent pelta and three iron-tipped javelins; plain review pending.
+- Applied original-painting camera projection to full anatomy and physical clothing/equipment; unseen faces use painted fills and surface shaders. No billboard or relief image plane.
+- Baked real 512 px AO and curvature on anatomy, red chiton and pelta; AO drives recesses and curvature drives surface roughness. Solidify disabled only during baking.
+- Published c review immediately: CYCLES/CPU, 512 px, 1 frame(s).
+- Rebuild caught invalid UV-layer RNA after smart-project edit-mode rebuild (UnicodeDecodeError while reading uv.name). Save the name before edit mode and reacquire the layer afterward; rerun completed all six actual AO/curvature bakes successfully. Added projected solid curls behind the ear and reduced beard coverage.
+- Delivery reduction now uses premultiplied bicubic sampling to avoid expensive Lanczos edge ringing, retaining the lossless-alpha-first attempt. Identical held frames share one rectangle while preserving all40 playback samples; validator now requires identical decoded death pixels as well as identical source hold.
+- Authored idle/move/attack/hit/death on MPFB rig: 8/8/10/4/10 samples; looping breathing/steps, thrown-javelin visibility, hit recovery, independent equipment release and held death. Cloth uses authored secondary deformation, not a cloth simulation.
+- Published b review immediately: CYCLES/CPU, 512 px, 2 frame(s).
+- Published d review immediately: CYCLES/CPU, 512 px, 4 frame(s).
+- Published e-idle review immediately: CYCLES/CPU, 512 px, 8 frame(s).

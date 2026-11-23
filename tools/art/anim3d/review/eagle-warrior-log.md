@@ -18,3 +18,7 @@
 - Finished actual solid/beveled surfaces before projection, compacted the weighted weapon fist, and calibrated the physical circular stone and broad product key; retained original MPFB weights and generated feather fill.
 - Froze painting camera UVs and ray-tested visibility, with generated feather backfill on unseen surfaces.
 - Authored idle, move, attack, hit and terminal death on the MPFB skeleton; no mocap or cloth simulation claimed.
+- First finished-surface preview exposed poor visibility sampling: boundary normals darkened the feather fronts and raised weaving punched stripes in the shield. Correcting with finished polygon-centre visibility, support-surface tolerance and camera-only AO-modulated unseen pigment; the failed preview is not accepted.
+- Delivery now uses premultiplied bicubic at 160 px, exact repeated-frame rectangle reuse, explicit offsets, lossless alpha checks and decoded-atlas review. Five delivery regression tests pass; GPU512 gate correctly rejects CPU256 previews. Missing-input gpu.sh preflight records its failure without starting Blender.
+- Froze painting camera UVs and ray-tested visibility, with generated feather backfill on unseen surfaces.
+- Authored idle, move, attack, hit and terminal death on the MPFB skeleton; no mocap or cloth simulation claimed.

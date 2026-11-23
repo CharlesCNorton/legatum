@@ -119,3 +119,11 @@
 - GPU handoff strengthened with input and Metal preflights, retained direct transcript, failed-stage status and current master/grade hash checks. Missing-input test exits 1 before Blender and records stage=inputs. Three belt tests pass (length/closure, contact/constant speed, shoe tangent). Trimmed delivery now keeps the exact scaled fractional anchor, lossless reconstructed alpha and one shared decoded terminal-death rectangle.
 - Emitted tank-e-death-strip.png from actual e-death renders; visual review pending.
 - Emitted tank-b-plain.png from actual b renders; visual review pending.
+- Emitted tank-c-textured-lit.png from actual c renders; visual review pending.
+- Emitted tank-c-details.png from actual details renders; visual review pending.
+- Emitted tank-d-rig-poses.png from actual d renders; visual review pending.
+- Emitted tank-e-idle-strip.png from actual e-idle renders; visual review pending.
+- Emitted tank-e-move-strip.png from actual e-move renders; visual review pending.
+- Emitted tank-e-attack-strip.png from actual e-attack renders; visual review pending.
+- Emitted tank-e-hit-strip.png from actual e-hit renders; visual review pending.
+- Emitted tank-e-death-strip.png from actual e-death renders; visual review pending.
