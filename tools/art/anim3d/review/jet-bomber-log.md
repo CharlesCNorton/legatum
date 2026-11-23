@@ -36,3 +36,8 @@ e-attack: 10 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
 e-hit: 4 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
 e-death: 10 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
 g: 16 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+Final CPU512/12-sample round-one pass complete: 40 actual 512 masters + 40 derived 256 masters; all interim sheets/WebPs and rest/pose/heading evidence saved. Atlas 178,572 bytes Q85, 160 logical pixels, all 40 frames; source hashes, exact alpha reconstruction, offsets/padding, clipping, motion and identical decoded death hold PASS.
+Geometry audit PASS (solid fuselage/wings/fin/intakes, 8 jets, 6 bakes, fixed base, five clips, closed idle/move and held death). Eight Python syntax files and two shell syntax checks PASS; unit whitespace and git diff --check PASS.
+MP4 decoded metadata PASS: H.264 yuv420p 1600x348, 240 frames, 8 seconds. round1.mp4 is the current CPU draft; round1-cpu.mp4 retained to distinguish it from the pending GPU overwrite.
+Honest visual verdict: same identity at 64; not painting parity at 256. Wings/pods/tailplane and stone shading differ; camouflage is less rich and camera-lit pigment is exposed during bank/crash. No PASS marker; lead GPU and further refinement required.
+Learning: use finished-vertex visibility for projected pigment; centroids of nonplanar wing quads can lie under tessellated surfaces and falsely mask the painting.

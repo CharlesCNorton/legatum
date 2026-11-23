@@ -1,1 +1,4 @@
 - Round 1: read project/art instructions, all six Blender skills, standing feedback, and newer vehicles/artillery family pipeline. Retrieved source painting; six-wheel truck, 40-tube raised launcher, no human/animal motion.
+- Published b-plain CPU/GPU geometry stage before texture work.
+- Baked 256px AO and curvature maps on GEO-Cab full shell, GEO-Hood engine enclosure, GEO-Launcher near side panel
+- Published painted rest pose and 50/50 comparison; real AO shader, micrograin, edge geometry and hidden-surface fill.

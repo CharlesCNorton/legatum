@@ -1,2 +1,5 @@
 - Round 1: read project instructions, painting prompts, standing feedback 1–23 and vehicles chapter. All six Blender skills applied: beveled closed meshes; worn pigment; key/fill/rim; orthographic registration; rigid mechanical curves; gated CPU/GPU rendering.
 - Emitted panzer-b-plain.png from actual b renders; visual review pending.
+- Emitted panzer-c-textured-lit.png from actual c renders; visual review pending.
+- First plain review saved immediately: three-quarter/front/side. Real hull/skirt/track depth established; turret and muzzle too low, skirts too deep versus painting. Raised turret/cupola, elevated gun, shortened skirt drop before projection.
+- Reused vehicle family arc-length track path, projection, actual AO/curvature bakes, grade and trimmed-atlas validation. Adapted all scripts under units/panzer; no shared pipeline mutation.

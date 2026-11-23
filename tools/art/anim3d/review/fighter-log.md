@@ -28,3 +28,4 @@
 - Read full standing feedback through 23; fighter-FEEDBACK.md absent. Read local playbook and current spearman/field-cannon branch chapters, source ledger and all six Blender skills. Applying finished-surface projection, camera-only pigment, physical cream stone, canopy/propeller fitting and retained crash support. Aircraft has no human/animal gait: mechanical flight motion applies; top/front move-cycle review will document no-feet exception.
 - Preserved prior editable masters, frames, grade, atlas receipts and reviews under masters/fighter/round1-preserved before rebuilding. Prior manifests are CPU, not verified GPU evidence.
 - Rendered b: 256px, CYCLES; review published.
+- Rendered c: 256px, CYCLES; review published.
