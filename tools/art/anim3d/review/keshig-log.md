@@ -55,3 +55,24 @@ Rendered c-textured-lit: 256px CYCLES CPU, 8 samples.
 Rendered move: 8 frames, 256px, 4 samples, CPU.
 Rendered death: 10 frames, 256px, 4 samples, CPU.
 Rendered move: 8 frames, 256px, 4 samples, CPU.
+Round 2 registration: fitted native anatomical joints at retained camera depth before projection; transported original CC0 action deltas into fitted local rest. First move test revealed static-channel leakage (fitted translation applied twice); resetting native local matrices before each source sample corrected it. Rejected preview retained in iteration logs, no PASS.
+Round 2 finish: broader head/cap, longer bow arm, smooth recurved bow, full-depth belly sculpture, closed weighted tail replacing narrow native tail, reins weighted to both head and saddle, stone grain/contact AO in camera pigment. Reused original generated unseen fills and baked helmet AO/Pointiness; current full CPU256/8-sample all-stage run started. GPU script now rebuilds from current scripts and tees transcript into driver log.
+Rendered b-plain: 256px CYCLES CPU, 8 samples.
+Rendered c-textured-lit: 256px CYCLES CPU, 8 samples.
+Rendered four keyed attack rig poses.
+Rendered idle: 8 frames, 256px, 8 samples, CPU.
+Rendered move: 8 frames, 256px, 8 samples, CPU.
+Rendered attack: 10 frames, 256px, 8 samples, CPU.
+Rendered hit: 4 frames, 256px, 8 samples, CPU.
+Rendered death: 10 frames, 256px, 8 samples, CPU.
+Rendered top/front views for all eight move samples; native -Y travel axis, no post-retarget foot rotation.
+Round 2 motion follow-up: native idle entry differed from gallop rest, causing a neck/tail snap. Rebase each action against its own entry pose; move remains gallop12. Increased closed tail lock thickness after seeing sparse wisps, and kept bowstring endpoints together with the curved limbs. Added numerical first-move reference-matrix regression to audit. Archived old main 512 directory under driver-r1-gpu so CPU256 does not imply fresh 512 renders.
+Rendered b-plain: 256px CYCLES CPU, 8 samples.
+Rendered c-textured-lit: 256px CYCLES CPU, 8 samples.
+Rendered four keyed attack rig poses.
+Rendered idle: 8 frames, 256px, 8 samples, CPU.
+Rendered move: 8 frames, 256px, 8 samples, CPU.
+Rendered attack: 10 frames, 256px, 8 samples, CPU.
+Rendered hit: 4 frames, 256px, 8 samples, CPU.
+Rendered death: 10 frames, 256px, 8 samples, CPU.
+Rendered top/front views for all eight move samples; native -Y travel axis, no post-retarget foot rotation.
