@@ -63,3 +63,4 @@
 - Posted e-move review (GPU, 512 px).
 - Posted e-attack review (GPU, 512 px).
 - Posted e-hit review (GPU, 512 px).
+- Posted e-death review (GPU, 512 px).
