@@ -193,3 +193,11 @@
 - Posted field-cannon-c-textured-lit.png; actual CYCLES render, visual review pending.
 - Posted field-cannon-c-textured-lit.png; actual CYCLES render, visual review pending.
 - ROUND 5 FIT AND SURFACES: Replaced toroidal oak rims with squared beveled felloes, tapered spokes and finer iron arris; increased physical wheel/rolling radius to .51m and adjusted yaw/track. Near-wheel centre residual now1.01px, far3.29px. Turned native anatomical head toward source gaze. Replaced straight X belts with thick camera-ray-fitted curved straps on the full-depth coat, layered crossing, stitched edges and brass plate. Expanded coat/sleeve fullness; body-specific projection preserves source piping/buttons while masking the separate rammer, hand and straps. Existing image-generated navy wool remains on revealed surfaces. The first tailoring preview exposed a stale transform when parenting the buckle (giant sphere); fixed and rerendered before clip generation. No Blender crash.
+- Posted field-cannon-c-textured-lit.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-b-plain.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-c-textured-lit.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-c-details.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-d-rig-poses.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-idle-strip.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-move-strip.png; actual CYCLES render, visual review pending.
+- ROUND 5 CPU PRECHECKS: 40-sample geometry audit passes, now also checking actual tyre geometry against .51m rolling metadata and full-depth coat-parented solid belts. Six existing regression tests PASS;18 Python files and both embedded GPU scripts parse;three shell entry points and git diff --check PASS. GPU master negative check correctly rejects current CPU256 files. GPU script default ROUND=5 writes its own transcript and a round-specific success receipt after all validation/video stages, with no automatic art PASS.
