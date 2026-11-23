@@ -137,3 +137,6 @@
 - Commit attempted; sandbox denied .git/worktrees/lane-22/index.lock. All changes remain uncommitted for the runner. Requested message: Refine artillery trails, projection and review checks for round three. Trailer: Co-Authored-By: gpt-6-astra (Codex) <noreply@openai.com>. No push, PR or merge.
 - Published b-plain CPU/GPU geometry stage before texture work.
 - Baked 256px AO and curvature maps on GEO-Shield wing -1, GEO-Shield wing 1, GEO-Hollow tapered barrel
+- Published painted rest pose and 50/50 comparison; real AO shader, micrograin, edge geometry and hidden-surface fill.
+- Published e-idle: 8 actual rendered frames, 10 fps; GPU 512px 64 samples.
+- Published e-move: 8 actual rendered frames, 12 fps; GPU 512px 64 samples.
