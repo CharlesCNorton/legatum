@@ -88,3 +88,10 @@
 - Posted g-feet-top review (GPU, 512 px).
 - Posted g-feet-front review (GPU, 512 px).
 - Audit passed: five clips, source hashes, 53-bone rig, fixed base and positive object scales.
+- Round 2: opened GPU c/f/detail sheets, all five e strips and eight MP4 sample frames before editing. GPU round 1 succeeded: 158652 bytes, quality 90, 40 frames, six regressions pass. Unit-specific FEEDBACK file absent. Preserved prior evidence in masters/reislaufer/driver-r1-gpu.
+- Honest GPU critique at 256 px: source brushwork and stance register well, but plume lacks the broad navy/gold sweep, head/neck outline has a tan wedge, base is a uniform peach cylinder without painted grain/contact richness. Attack exposes blank steel/skin under the projected surface; death floats in a rigid horizontal sprawl. At 64 px identity and red/yellow split read correctly, but the brighter base and narrower plume still differ, and attack is weakly legible. No PASS.
+- Round 2 loaded all six Blender skills: modeling for feather solids/cloth joins; materials for generated hidden steel/skin and stone grain; lighting for live AO; cameras for frozen exact rest projection; animation for source-based reaction/contact; rendering for CPU/GPU evidence separation.
+- Built MPFB standing reislaufer, steel breastplate, slashed two-colour clothing, feathered beret and solid pike.
+- Posted b-plain review (CPU, 256 px).
+- Finished-surface camera-only projection applied; physical stone excluded and generated fills retained.
+- Posted c-textured-lit review (CPU, 256 px).

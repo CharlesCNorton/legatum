@@ -105,3 +105,16 @@
 - Published e-attack review from 256px CPU renders.
 - Published e-hit review from 256px CPU renders.
 - Published e-death review from 256px CPU renders.
+- Published b review from 512px CPU renders.
+- Published c review from 512px CPU renders.
+- Published d review from 512px CPU renders.
+- Published e-idle review from 512px CPU renders.
+- Published e-move review from 512px CPU renders.
+- Published e-attack review from 512px CPU renders.
+- Published e-hit review from 512px CPU renders.
+- Published e-death review from 512px CPU renders.
+- Packed all 40 frames, WebP quality 90, 194762 bytes; validation passed.
+- Final CPU512/8 render complete: 48 masters at512 and matching256, all40 clip samples; 16 current front/top foot views. All strips and four decoded MP4 frames inspected. No PASS: reverse shield/kit still forms a broad stretched fan during death; face, fingers, greaves/footwear and base perspective remain distinguishable at256, same unit but not identical at64.
+- Final trimmed160 atlas194762 bytes atQ90, all8/8/10/4/10 frames; decoded alpha/offsets/padding, source/frame/grade hashes, motion/terminal hold passed. MP4 H264/yuv420p1600x360,192 frames,8s verified. Geometry/source-motion/foot-rotation audit and Python/Bash syntax/whitespace/input hashes passed. CPU512 correctly rejected as GPU evidence. Rest alpha128 IoU0.805602 is registration only.
+- Commit attempted with required co-author trailer; sandbox denied .git/worktrees/lane-11/index.lock. Changes remain uncommitted for runner; no push or PR. origin/master already ancestor of current HEAD, so no merge needed.
+- Repository HEAD gate: public-claims passed; hygiene flagged pre-existing unspaced Python matrix operators (corrected in working files; current unit Python/Bash line checks passed), and art failed in render-sets.mjs. Since commit is blocked, HEAD gate does not assess this new working tree. Unit artifact/scene checks passed. GPU64 render and visual acceptance remain outstanding.

@@ -65,3 +65,14 @@
 - Verified rifleman-round1.mp4: H.264/yuv420p, 1600x348, 240 frames at 30fps, 8 seconds. GPU script is ready, GPU pass not run. No PASS: narrower/angular silhouette, pale boot edges, stock/sling registration, shoulder-stock contact, hidden surfaces and stiff death still need work.
 - Final checks: Python AST syntax (6 files), Bash syntax (2 entrypoints), working-file hygiene (13 files, zero findings), git diff --check, atlas revalidation all passed. Hygiene initially mistook an unspaced matrix @ operator for an email; spacing fixed, check rerun cleanly. origin/master is already an ancestor; no merge required.
 - Git add/commit attempted with the requested co-author footer, but sandbox denied .git/worktrees/lane-17/index.lock. Changes remain uncommitted for the runner. Commit-based browser/art gates and final visual approval remain for the lead; no Rust/UI tests apply to this art-only change.
+- Built MPFB anatomical body, 53-bone rig, blue coat, full-volume kepi, crossed leather belts, diagonal rifle and sling; plain.blend saved.
+- Posted b-plain review (GPU, 512 px).
+- Baked real 256px Cycles AO and Pointiness curvature for kepi and jacket; physical recess grime and edge roughness applied.
+- Finished-surface camera projection with camera-only pigment; generated hidden fills retained.
+- Posted c-textured-lit review (GPU, 512 px).
+- Retargeted CC0 / weapon-layer and saved idle action (8 output frames).
+- Retargeted CC0 / weapon-layer and saved move action (8 output frames).
+- Retargeted CC0 / weapon-layer and saved attack action (10 output frames).
+- Retargeted CC0 / weapon-layer and saved hit action (4 output frames).
+- Retargeted CC0 / weapon-layer and saved death action (10 output frames).
+- Posted d-rig-poses review (GPU, 512 px).
