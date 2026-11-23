@@ -84,3 +84,8 @@
 - Saved e-hit review immediately; 4 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/e-hit/render.json.
 - Saved e-death review immediately; 10 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/e-death/render.json.
 - Packed/decoded/validated 40 trimmed 160 px frames: 191950 bytes, WebP q80; exact alpha offsets and held death. Encoded and ffprobe-verified 240-frame 8 s H.264 yuv420p MP4.
+
+# Driver round 2 after verified GPU pass — 2026-11-23
+- Opened GPU c/f, all five e strips and eight decoded round1.mp4 samples before edits. GPU receipt/log confirms Cycles GPU512/64, 191950 bytes Q80, 40 frames, 240-frame 8s H.264/yuv420p; no failed GPU stage. Preserved evidence in masters/biplane/driver-r1-gpu and review/3d-v2/biplane-driver-r1-gpu.
+- Honest critique: at 256, plain uniform peach stone lacks the painting's grain/highlight and support contact; struts are too slender, wheels too dark/metallic, cockpit opening/coaming differs, projected attachment marks remain on lower wing; attack flashes are buried in cowling, death support abruptly vanishes. At 64 it clearly reads as the same aircraft, but darker wheels/propeller and flat disc still distinguish it. No PASS.
+- Read all PLAYBOOK chapters and common feedback 1–23; biplane-FEEDBACK.md absent. Loaded all six Blender skills: finished thick geometry/bevels, painted material variation, warm key/cool rim, frozen source-camera projection, mechanical keys/visibility, low-cost CPU review and provenance-checked GPU delivery. Reuse recorded generated fills; no people/animal gait applies.
