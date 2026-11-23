@@ -32,7 +32,7 @@ const server = http.createServer((req,res) => {
   await page.goto(`http://127.0.0.1:${server.address().port}/tools/art/anim/gallery/`);
   await page.waitForFunction(()=>window.reviewAPI?.ready,{},{timeout:15000});
   await page.evaluate(()=>window.reviewAPI.pause());
-  const sizes=await page.evaluate(()=>window.reviewAPI.assets);
+  const {assets:sizes,firstUseMs}=await page.evaluate(()=>({assets:window.reviewAPI.assets,firstUseMs:window.reviewAPI.firstUseMs}));
   assert.equal(sizes.length,4,'All four rendered atlases must load');
   for(const a of sizes) assert(a.bytes<=200000,`${a.slug}: atlas exceeds 200 KB`);
   for(const a of sizes) for(const clip of ['idle','move','attack','hit','death']) {
@@ -63,10 +63,11 @@ const server = http.createServer((req,res) => {
    await page.locator('#stress').screenshot({path:path.join(out,`stress-${count}.png`)});
   }
   await page.setViewportSize({width:1000,height:600});await page.evaluate(()=>window.scrollTo(0,0));await page.screenshot({path:path.join(out,'gallery-1000.png')});
-  const result={pass:Number(pass),deviceScaleFactor:1,browser:browser.version(),atlases:sizes,stress,originalStress,errors};
+  const result={pass:Number(pass),deviceScaleFactor:1,browser:browser.version(),atlases:sizes,firstUseMs,stress,originalStress,errors};
   fs.writeFileSync(path.join(out,'metrics.json'),JSON.stringify(result,null,2)+'\n');
   assert.deepEqual(errors,[],'Browser console errors');
   assert(stress[0].avg<4,`300-token draw ${stress[0].avg.toFixed(3)} ms exceeds 4 ms`);
+  assert(stress[0].p95<4,`300-token p95 ${stress[0].p95.toFixed(3)} ms exceeds 4 ms`);
   console.log(JSON.stringify(result,null,2));
  } finally {if(browser)await browser.close();server.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

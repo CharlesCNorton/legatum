@@ -1,6 +1,6 @@
 # Animated miniature pilot
 
-**Status: pass 2 reviewed; art and performance fail, pass-3 fixes await host rendering.**
+**Status: pass 3 captured; cached p95 failed and needs a host recapture after these fixes.**
 See [the pass-2 critique](review/pass-2.md), [the pass-1 critique](review/pass-1.md) and [setup history](review/pass-0-setup.md). Do not wire this into the game until
 rendering, visual review and the size/performance gates actually pass.
 
@@ -84,8 +84,9 @@ foreground validation evidence under `pass-N/masters/<slug>/`.
 `validate.py` checks dimensions, metadata/timing, alpha, clipping, padding, held
 death, bytes, the exposed stationary stone rim and neutral source framing. It
 requires the prepared master base and matching packed foreground evidence. The
-rim excludes only pixels occupied by rendered foreground alpha (plus a one-pixel
-edge), requires at least 40 pixels / 25% of the reference rim to remain exposed,
+reference rim comes from the lower third of the opaque prepared base, independent
+of figure colours. It excludes pixels occupied by rendered foreground alpha
+(plus a one-pixel edge), requires at least 40 pixels / 25% to remain exposed,
 and retains the position/pigment and opacity checks. The spearman's pass-2 death
 failure was a leg obscuring the rim, not base movement. The new pipeline cannot
 validate old pass-2 atlases without their missing foreground evidence; rerender
@@ -142,23 +143,30 @@ background. The original expensive path scaled 256 px cells from each large atla
 and saved/restored/transformed the context for every token.
 
 `gallery/sprites.js` prepares each populated cell at 64 px (army) and 80 px (map)
-once, and prepares horizontally mirrored atlases once. Drawing is one `drawImage`
+once, and prepares horizontally mirrored atlases once. It then converts each
+canvas to an `ImageBitmap` and draws and reads every populated frame in both
+facings before timing. `metrics.json` reports this cache build, decode and warmup
+as `firstUseMs`, separate from draw timings. Drawing is one `drawImage`
 with equal source/destination dimensions and integer destination coordinates;
 mirror anchors use `size - ax`, and mirrored source columns reverse too. It reuses
 the original native atlas for 256 px inspection. No image scaling, save/restore,
 context transform, shadow or filter happens per token. Unchanged inspection
 frames are skipped. Ground is rebuilt only when the selected terrain changes.
 
-The lead's capture now benchmarks both original and cached drawing against the
+The lead's capture benchmarks both original and cached drawing against the
 same newly rendered atlases, with 15 warmups / 180 samples per count and separate
 terrain/sprite timing. `metrics.json` keeps `stress` for the cached gate and adds
-`originalStress` for the A/B comparison. Other gallery draws pause during each
-benchmark. **No post-fix speedup is measured yet.** Do not call this proven until
-pass 3 produces timings; both paths measure CPU Canvas command submission, not
+`originalStress` for the A/B comparison. The 300-token cached gate is under 4 ms
+for both average and p95. Other gallery draws pause during each benchmark.
+Pass 3 measured 1.10 ms average / 14.7 ms p95 before explicit decode and warmup;
+the new p95 needs a host capture. Both paths measure CPU Canvas command submission, not
 GPU completion. The 1000 px gallery capture now scrolls to the page top first.
 
-For the game, share this cache by asset and physical-pixel zoom tier; prepare
-outside the animation loop, rebuild for zoom/DPR changes, and evict unused tiers.
+For the game, share this cache by asset and physical-pixel zoom tier: load/decode
+the atlas, scale cells and mirror on offscreen canvases, convert cached canvases
+to `ImageBitmap`, then draw/read each frame once before starting the animation
+loop. Keep the bitmap and drawing context across frames; rebuild for zoom/DPR
+changes, and evict unused tiers.
 The 64/80 tiers for all four atlases, both facings, cost about 16 MiB of RGBA
 storage (before browser overhead); native inspection adds about 100 MiB for
 original and mirrored 256 px atlases and should not be retained in the map cache.

@@ -12,13 +12,25 @@ ROOT = Path(__file__).resolve().parents[3]
 HOME = Path.home() / 'LegatumRuns/anim-pilot'
 
 
+def reference_rim(base):
+    # Work from the prepared base layer, whose alpha identifies stone independently
+    # of the figure's colours. Use its lower third, including the painted front.
+    core = base.getchannel('A').filter(ImageFilter.MinFilter(5))
+    bounds = core.getbbox()
+    if not bounds:
+        return []
+    y0 = bounds[1] + (bounds[3] - bounds[1]) * 2 // 3
+    return [(x, y) for y in range(y0, bounds[3])
+            for x in range(bounds[0], bounds[2]) if core.getpixel((x, y)) == 255]
+
+
 def check_stone(frame, base, rim, foreground, context):
     # Conservative one-pixel edge around actual rendered alpha, not a colour
     # classifier: a changed stone pixel must never classify itself as figure.
     occupied = foreground.filter(ImageFilter.MaxFilter(3))
     visible = [p for p in rim if occupied.getpixel(p) == 0]
     assert len(visible) >= max(40, len(rim)//4), (*context, 'insufficient exposed stone')
-    assert all(frame.getpixel(p)[3] >= 247 for p in rim), (*context, 'missing/moving stone rim')
+    assert all(frame.getpixel(p)[3] >= 247 for p in visible), (*context, 'missing/moving stone rim')
     error = sum(abs(frame.getpixel(p)[c]-base.getpixel(p)[c]) for p in visible for c in range(3)) / (3*len(visible))
     assert error < 12, (*context, 'stone pigment/position changed', error)
 
@@ -47,10 +59,7 @@ def validate(slugs=None, assets_dir=None, masters_dir=None, contract_only=False)
             base = Image.open(master / 'base.png').convert('RGBA')
             foreground = Image.open(master / 'packed-foreground.png').convert('L')
             assert foreground.size == atlas.size, (slug, 'foreground evidence dimensions')
-            # Exposed front rim; moving feet and fallen figures may cover the top.
-            y0 = cfg['base'][3] - 7
-            core = base.getchannel('A').filter(ImageFilter.MinFilter(5))
-            rim = [(x, y) for y in range(y0, 256) for x in range(256) if core.getpixel((x, y)) == 255]
+            rim = reference_rim(base)
             assert len(rim) >= 80, (slug, 'missing reference stone')
         first = None
         for row, (clip, data) in enumerate(meta['clips'].items()):

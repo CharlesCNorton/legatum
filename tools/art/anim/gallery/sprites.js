@@ -24,6 +24,25 @@ const UnitSprites = {
     }
     return cache;
   },
+  async decodeAndWarm(asset, makeCanvas, makeBitmap) {
+    const meta = asset.meta;
+    const scratch = makeCanvas(256, 256);
+    const g = scratch.getContext('2d', {willReadFrequently: true});
+    for (const [size, mip] of asset.mips) {
+      // Canvas scaling/mirroring may remain lazy until the first sampled draw.
+      // Decode both facings before publishing the cache to the animation loop.
+      if (size !== meta.frame.w) mip.normal = await makeBitmap(mip.normal);
+      mip.flipped = await makeBitmap(mip.flipped);
+      for (const facing of [mip.normal, mip.flipped]) {
+        for (const clip of Object.values(meta.clips)) for (let i = 0; i < clip.frames; i++) {
+          g.clearRect(0, 0, size, size);
+          g.drawImage(facing, (facing === mip.flipped ? mip.cols - 1 - i : i) * size,
+            clip.row * size, size, size, 0, 0, size, size);
+          g.getImageData(0, 0, 1, 1); // Force raster work now, outside timing.
+        }
+      }
+    }
+  },
   draw(g, asset, clip, frame, x, y, size, flipped) {
     const mip = asset.mips.get(size);
     if (!mip) throw Error(`Sprite size ${size} has not been prepared`);

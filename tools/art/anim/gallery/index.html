@@ -17,6 +17,7 @@ const titles=['Spearman','Horseman','Field cannon','Spartan hoplite'];
 const clips=['idle','move','attack','hit','death'];
 const assets=[]; const views=[]; let playing=true,speed=1,mirror=false,clock=0,background='#888888',terrain='grass';
 let benchmarking=false; let terrainArt; let stressBackground; let liveTimes=[]; let lastReport=0;
+let stressContext; let firstUseMs=0;
 const $=id=>document.getElementById(id);
 async function loadImage(url){const i=new Image();i.src=url;await i.decode();return i;}
 function hex(g,x,y,r){g.beginPath();for(let i=0;i<6;i++){const a=(i*60-30)*Math.PI/180;g.lineTo(x+Math.cos(a)*r,y+Math.sin(a)*r);}g.closePath();}
@@ -47,7 +48,7 @@ function drawView(v){
  const m=v.map.getContext('2d');m.drawImage(v.ground,0,0);token(m,v.a,v.clip,frame,74,100,80,mirror);v.output.textContent=`Frame ${frame+1} / ${v.a.meta.clips[v.clip].frames}`;
 }
 function drawStress(t,count=Number($('count').value),legacy=false,profile=null){
- const start=performance.now(),g=$('stress').getContext('2d');g.drawImage(stressBackground,0,0);
+ const start=performance.now(),g=stressContext;g.drawImage(stressBackground,0,0);
  const afterGround=performance.now(),draw=legacy?legacyToken:token;
  const cols=count===600?40:30,rows=count/cols,dx=1200/cols,dy=680/rows;
  for(let i=0;i<count;i++){const a=assets[i%4],clip=clips[Math.floor(i/4)%5],d=a.meta.clips[clip],f=Math.floor(t*d.fps+i*.71)%d.frames;draw(g,a,clip,f,(i%cols+.5)*dx,35+Math.floor(i/cols)*dy,64,(i%3===0)!==mirror);}
@@ -70,6 +71,7 @@ async function benchmark(count=300,n=180,legacy=false){
 }
 function rebuildGround(){for(const v of views)v.ground=ground(148,128,terrain);stressBackground=ground(1200,720,terrain,false);}
 async function init(){
+ stressContext=$('stress').getContext('2d');
  terrainArt=await loadImage(root+'app/public/terrain/hills/128/downs-01.png');
  for(let i=0;i<names.length;i++){
   const slug=names[i],base=root+'app/src/assets/units/';
@@ -77,19 +79,22 @@ async function init(){
   const section=document.createElement('section');section.className='unit';section.id=slug;
   const intro=document.createElement('div');intro.className='unit-intro';source.className='source';source.alt=titles[i]+' original painting';intro.append(source);
   const info=document.createElement('div');intro.append(info);section.append(intro);$('units').append(section);
-  let meta,blob,image;
+  let meta,blob,image,firstUseStart;
   try {
    const response=await fetch(base+'anim/'+slug+'.webp');
    if(!response.ok)throw Error(`HTTP ${response.status}`);
    blob=await response.blob();
    const metadata=await fetch(base+'anim/'+slug+'.json');if(!metadata.ok)throw Error(`Metadata HTTP ${metadata.status}`);
-   meta=await metadata.json();image=await createImageBitmap(blob);
+   meta=await metadata.json();firstUseStart=performance.now();image=await createImageBitmap(blob);
   } catch(error) {
    info.innerHTML=`<h2>${titles[i]}</h2><p>Original painting only. Animated atlas has not been rendered.</p>`;
    continue;
   }
   const a={slug,meta,image,bytes:blob.size};
-  a.mips=UnitSprites.prepare(image,meta,[64,80,256],(w,h)=>{const c=document.createElement('canvas');c.width=w;c.height=h;return c;});
+  const makeCanvas=(w,h)=>{const c=document.createElement('canvas');c.width=w;c.height=h;return c;};
+  a.mips=UnitSprites.prepare(image,meta,[64,80,256],makeCanvas);
+  await UnitSprites.decodeAndWarm(a,makeCanvas,source=>createImageBitmap(source));
+  firstUseMs+=performance.now()-firstUseStart;
   assets.push(a);
   info.innerHTML=`<h2>${titles[i]}</h2><p class="size">Atlas ${(blob.size/1000).toFixed(1)} KB · ${Object.values(meta.clips).reduce((n,c)=>n+c.frames,0)} frames · ${image.width} × ${image.height} px</p><p>Current static painting at left. At map size, judge the weapon, stance and stone base first.</p>`;
   const grid=document.createElement('div');grid.className='clips';section.append(grid);
@@ -117,7 +122,7 @@ async function init(){
  $('backdrop').onchange=e=>{background=e.target.value;views.forEach(drawView);};
  $('terrain').onchange=e=>{terrain=e.target.value;rebuildGround();views.forEach(drawView);};
  $('count').onchange=()=>{liveTimes=[];drawStress(clock);};$('benchmark').onclick=()=>benchmark(+$('count').value);
- window.reviewAPI={assets:assets.map(a=>({slug:a.slug,bytes:a.bytes,clips:a.meta.clips})),benchmark,setFrame(slug,clip,index){const v=views.find(v=>v.a.slug===slug&&v.clip===clip);v.manual=Math.max(0,Math.min(v.a.meta.clips[clip].frames-1,index));drawView(v);},pause(){playing=false;$('play').textContent='Play all';},ready:true};
+ window.reviewAPI={assets:assets.map(a=>({slug:a.slug,bytes:a.bytes,clips:a.meta.clips})),firstUseMs,benchmark,setFrame(slug,clip,index){const v=views.find(v=>v.a.slug===slug&&v.clip===clip);v.manual=Math.max(0,Math.min(v.a.meta.clips[clip].frames-1,index));drawView(v);},pause(){playing=false;$('play').textContent='Play all';},ready:true};
  let prev=performance.now();function tick(now){if(benchmarking){prev=now;requestAnimationFrame(tick);return;}const dt=Math.min(.1,(now-prev)/1000);prev=now;if(playing)clock+=dt*speed;
   for(const v of views){if(playing&&v.playing){v.manual=null;v.time+=dt*speed;}drawView(v);}
   liveTimes.push(drawStress(clock));if(liveTimes.length>180)liveTimes.shift();if(now-lastReport>750){showPerf(stats(liveTimes),+$('count').value);lastReport=now;}requestAnimationFrame(tick);

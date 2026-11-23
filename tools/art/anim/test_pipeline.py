@@ -76,6 +76,22 @@ class PackingTest(unittest.TestCase):
         with self.assertRaisesRegex(AssertionError, 'insufficient exposed stone'):
             validate.check_stone(frame, base, rim, Image.new('L',base.size,255), ('mask',))
 
+    def test_reference_rim_uses_base_alpha_and_ignores_foreground_palette(self):
+        base = Image.new('RGBA', (256, 256))
+        ImageDraw.Draw(base).ellipse((72, 204, 178, 244), fill='#eedcbc')
+        rim = validate.reference_rim(base)
+        self.assertGreater(len(rim), 80)
+        # A dark fallen figure can cover part of the front rim without changing it.
+        figure = Image.new('RGBA', base.size)
+        ImageDraw.Draw(figure).rectangle((105, 219, 143, 245), fill='#5b322a')
+        frame = Image.alpha_composite(base, figure)
+        validate.check_stone(frame, base, rim, figure.getchannel('A'), ('dark figure',))
+        for p in rim:
+            if figure.getchannel('A').getpixel(p) == 0:
+                frame.putpixel(p, (30, 40, 50, 255))
+        with self.assertRaisesRegex(AssertionError, 'stone pigment/position changed'):
+            validate.check_stone(frame, base, rim, figure.getchannel('A'), ('changed base',))
+
     def test_prepared_layers_keep_source_coverage_and_own_loose_fragments(self):
         from PIL import ImageChops
         with tempfile.TemporaryDirectory() as tmp, patch.object(prepare, 'HOME', Path(tmp)):

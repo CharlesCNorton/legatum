@@ -5,7 +5,7 @@ const meta = {frame:{w:256,h:256,ax:127,ay:221},clips:{idle:{row:0,frames:8},dea
 const canvases=[];
 function canvas(width,height) {
   const calls=[];
-  const g={drawImage(...args){calls.push(['drawImage',...args]);},translate(...args){calls.push(['translate',...args]);},scale(...args){calls.push(['scale',...args]);}};
+  const g={drawImage(...args){calls.push(['drawImage',...args]);},translate(...args){calls.push(['translate',...args]);},scale(...args){calls.push(['scale',...args]);},clearRect(...args){calls.push(['clearRect',...args]);},getImageData(...args){calls.push(['getImageData',...args]);}};
   const c={width,height,calls,getContext(){return g;}};canvases.push(c);return c;
 }
 const image={width:2560,height:1280};
@@ -30,4 +30,17 @@ for(const size of [64,80,256]) {
   }
 }
 assert.throws(()=>sprites.draw({},asset,'idle',0,0,0,72,false),/not been prepared/);
-console.log('Sprite cache PASS: all cells, three sizes, two facings, anchor and 1:1 hot path');
+(async()=>{
+  const decoded=[];
+  await sprites.decodeAndWarm(asset,canvas,async source=>{
+    decoded.push(source);
+    return {width:source.width,height:source.height,decoded:true};
+  });
+  assert.equal(decoded.length,5,'Both facings at map sizes and the native mirror are decoded');
+  assert.equal(canvases.at(-1).calls.filter(c=>c[0]==='getImageData').length,14*3*2,
+    'Every populated frame and facing is rasterized before timing');
+  assert(canvases.at(-1).calls.filter(c=>c[0]==='getImageData').every(c=>c[3]===1&&c[4]===1));
+  assert.equal(asset.mips.get(256).normal,image,'Native atlas is already decoded');
+  assert(asset.mips.get(64).normal.decoded && asset.mips.get(64).flipped.decoded);
+  console.log('Sprite cache PASS: cells, facings, anchors, 1:1 draw and first-use warmup');
+})().catch(e=>{console.error(e);process.exitCode=1;});
