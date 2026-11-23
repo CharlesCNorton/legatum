@@ -100,7 +100,7 @@ def pack():
   if len(output.getvalue())<=200000:break
  else:raise RuntimeError('Atlas exceeds 200000 bytes at quality 75; frame count and quality floor retained')
  out=Path('app/src/assets/units/anim');out.mkdir(exist_ok=True,parents=True);(out/f'{SLUG}.webp').write_bytes(output.getvalue());(out/f'{SLUG}.json').write_text(json.dumps(meta,separators=(',',':'))+'\n')
- report={'bytes':len(output.getvalue()),'quality':quality,'frames':40,'alpha_levels':32,'atlas_sha256':hashlib.sha256(output.getvalue()).hexdigest(),'source_sha256':hashes,'renders':renders,'grade':grade,'master_sha256':current,'rest_sha256':sha(M/'renders/c-textured-lit/00.png'),'metadata_sha256':sha(out/f'{SLUG}.json'),'approval':'round 1 candidate; no PASS'}
+ report={'bytes':len(output.getvalue()),'quality':quality,'frames':40,'alpha_levels':32,'atlas_sha256':hashlib.sha256(output.getvalue()).hexdigest(),'source_sha256':hashes,'renders':renders,'grade':grade,'master_sha256':current,'rest_sha256':sha(M/'renders/c-textured-lit/00.png'),'metadata_sha256':sha(out/f'{SLUG}.json'),'approval':'round 2 candidate; no PASS'}
  (M/'pack.json').write_text(json.dumps(report,indent=2));(V/f'{SLUG}-pack.json').write_text(json.dumps(report,indent=2));print('PACK',len(output.getvalue()),'bytes quality',quality)
  # Regenerate review images from the graded masters, preserving raw render outputs.
  for stage in ['b-plain','c-textured-lit','d-rig-poses','g-feet-top','g-feet-front']+['e-'+c for c in CLIPS]:review(stage,True)
@@ -148,7 +148,7 @@ def validate():
  (V/f'{SLUG}-validation.json').write_text(json.dumps(result,indent=2));print('VALIDATE',json.dumps(result))
 
 def video():
- meta,atlas,clips=decoded();frames={name:[tile(im,320).convert('RGB') for im in ims] for name,ims in clips.items()};out=V/f'{SLUG}-round{os.environ.get("ROUND","1")}.mp4'
+ meta,atlas,clips=decoded();frames={name:[tile(im,320).convert('RGB') for im in ims] for name,ims in clips.items()};out=V/f'{SLUG}-round{os.environ.get("ROUND","2")}.mp4'
  # Stream raw frames to avoid 240 temporary PNG files. Reconstruct trims first.
  process=subprocess.Popen(['ffmpeg','-y','-loglevel','error','-f','rawvideo','-pixel_format','rgb24','-video_size','1600x348','-framerate','30','-i','-','-c:v','libx264','-pix_fmt','yuv420p','-crf','20','-movflags','+faststart',str(out)],stdin=subprocess.PIPE)
  for tick in range(240):

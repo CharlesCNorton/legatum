@@ -25,3 +25,15 @@ Original MPFB fitting, breastplate, slashed clothing, beret, feather, belts, swo
 and pike geometry: MIT scripts, CC BY 4.0 rendered art. Pipeline helpers adapted
 from the inspected infantry and barbarian-musketman family work. The painting is
 frozen onto finished 3D surfaces; it is never a billboard or silhouette mesh.
+
+## Driver round 2, 2026-11-23
+
+Reuses the generated Tagmatic Soldier steel fill (built-in ImageGen,
+`01a20671-5064-7c72-a6fe-cf93cc86ea3d/exec-487c13de-dea1-48e2-adb2-76092f8dbbcd.png`)
+and Medjay skin fill (`01a20671-5037-7490-a90a-decacb274446/exec-401b9b3e-9eef-48db-b965-0d53769ebddc.png`).
+Both are original project CC BY 4.0 artwork, generated 2026-11-22, with no public
+URL. Unchanged copies are `assets/reislaufer/{steel,skin}-fill.png`, SHA256 pinned
+in `inputs.lock.json`. The steel material desaturates the warm swatch in shader
+nodes. Original prompts remain with those units. No new download or service.
+Three closed feather lobes, inverse-skinned neck fitting, covered torso pigment
+and live stone grain are original MIT scripts / CC BY 4.0 rendered art.

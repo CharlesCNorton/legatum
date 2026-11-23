@@ -3,7 +3,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/../../../../.."
 source tools/art/anim3d/env.sh
-export ROUND="${ROUND:-1}" CYCLES_DEVICE=GPU RESOLUTION=512 SAMPLES="${SAMPLES:-48}"
+export ROUND="${ROUND:-2}" CYCLES_DEVICE=GPU RESOLUTION=512 SAMPLES="${SAMPLES:-48}"
 unit=tools/art/anim3d/units/reislaufer
 python="$ANIM_ROOT/venv/bin/python"
 status="$ANIM_ROOT/review/3d-v2/reislaufer-gpu-status.txt"

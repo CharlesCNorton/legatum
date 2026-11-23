@@ -1,63 +1,67 @@
-# Round 1 — candidate, not PASS
+# Round 2 — candidate, not PASS
 
-The round is built and reviewed with Cycles CPU at 256 px / 12 samples. No host
-GPU pass has been observed. The complete GPU handoff is executable and uses the
-same model/material/rig/clip build. The runtime painting remains unchanged.
+Opened the complete incoming GPU comparison, detail and clip strips, plus sampled
+round-1 MP4 frames before editing. That GPU pass succeeded: 40 frames, 158652 bytes
+at quality 90, with six delivery regressions passing. Its original 512/256 masters,
+raw frames, blends and reviews are preserved in `masters/reislaufer/driver-r1-gpu/`.
+No unit-specific feedback file was present at the start or final check.
 
-At 256 px the rest projection carries the painting's steel wear, red/yellow
-slashes, face and belts, but the head/neck, beret feather and hip/skirt contours
-still differ visibly. The base is cream now, although its rim and contact shade
-are flatter than the painting. Newly exposed shoulder/arm and rear cloth surfaces
-are less rich and reveal projection transitions. The pike thrust now reads,
-but the shoulder/cuff deformation and the terminal fall need another visual pass;
-the fallen body overhangs the small pedestal. This is not hard to distinguish
-from the painting at rest, so no `reislaufer-PASS` was written.
+Round 2 replaces the thin plume with three closed feather lobes, fits the neck
+through inverse skinning, uses garment pigment on covered body faces, adds pinned
+image-generated steel/skin fills, and puts grain in the camera-visible stone
+shader. Stone tone was calibrated against actual painting patches. Existing
+beveled straps, buckles, folded cloth, AO/curvature bakes, product lighting and
+frozen histogram grade remain. The source painting and runtime behavior are
+unchanged.
 
-At 64 px it reads as this unit: upright pike, feathered cap, steel chest and
-contrasting slashed legs. The painting is still fuller around the hips and hat.
+The captured death now settles both heels through positional IK without changing
+foot yaw. This exposed and fixed a coordinate bug: joint directions, as well as
+positions, must be converted to rig space when the character root has rotated.
+The audit now rejects a terminal heel more than 3 mm from its support level.
 
-Evidence in `~/LegatumRuns/anim-pilot/review/3d-v2/`:
-`reislaufer-b-plain.png`, `-c-textured-lit.png`, `-c-details.png`,
-`-d-rig-poses.png`, all five `-e-<clip>-strip.png` and `-e-<clip>.webp`,
-`-f-restpose-compare.png`, `-g-feet-check.png`, `-g-decoded-atlas.png`,
-`-round1.mp4`, `-audit.json`, `-validation.json`, `-pack.json`, `-video.json`.
-The honest running chronology is `reislaufer-log.md`.
+At **256 px**, the neck and plume silhouette are closer to the painting, and the
+base is warmer. The feather still lacks the original's intricate edges; the base
+rim is too uniform, the shoulder/cuff shapes differ, and the attack exposes a flat
+cloth patch below the breastplate. The fallen body is better grounded but still
+overhangs the small disc, with visible projection-to-fill transitions. At **64 px**,
+the unit's identity, split red/yellow clothing and pike read correctly; the hat and
+base remain distinguishable. This does not meet painting parity or five clean
+clips. **No PASS file was written.**
 
-Checks completed:
+Final CPU checks, Cycles 256 px / 12 samples:
 
-- Blender build, three real 512px AO/curvature bake pairs, frozen-camera projection,
-  53-bone rig and all five action builds succeeded.
-- Blender scene/clip audit passed: 190 finished projected meshes, zero sampled
-  UV projection error, stationary base, positive scales, unchanged leg lengths
-  within the stated tolerance, both motion and held death. Maximum checked
-  support-hand error was 0.000000248 m.
-- Top/front gait views reviewed. Contact IK removed the initially measured
-  0.02865 m drift; final sampled support-ankle planar drift in the virtual
-  travelling frame is 0.000000031 m, support-foot yaw 0.028 degrees. These are
-  sampled contact-window checks, not continuous collision or sliding proof.
-- Trimmed 160px atlas: **156902 bytes, WebP quality 90, 40 frames**, all required
-  8/8/10/4/10 samples. Validation passed source/render/grade/metadata hashes,
-  exact decoded alpha and offsets, bounds, motion and identical held death.
-- Six delivery regression tests passed, including corrupt frame/rest/atlas,
-  wrong trim offsets, and rejecting CPU output as a GPU receipt.
-- FFprobe verified H.264, yuv420p, 1600x348, 240 frames, 8 seconds. All five clips
-  play side by side from the decoded trimmed atlas at 2x on cream.
-- Seven Python files parse; both Bash entry points pass `bash -n`; whitespace
-  check passes; working-file hygiene reports zero findings. No Rust, WASM or app behavior changed.
+- Model build and three actual 512px AO/curvature bake pairs succeeded. All five
+  action builds and all review stages rendered, including front/top foot cycles.
+- Scene audit passed: 116 finished projected meshes, maximum sampled projection
+  error 0 px; 53-bone rig, fixed base, positive scales and held death. Maximum
+  checked support-hand error 0.000000248 m. Sampled moving-world stance drift
+  0.000000031 m and support-foot yaw 0.02798 degrees. Final heel heights
+  0.08499995–0.08499998 m against the 0.085 m support level. These are sampled
+  geometry checks, not a continuous collision or visual-quality guarantee.
+- Trimmed 160px atlas: **156182 bytes, quality 90, all 40 frames** (8/8/10/4/10).
+  Source/render/grade/metadata hashes, exact decoded alpha/offsets, frame bounds,
+  motion and held death validate. Six delivery regressions pass.
+- Round-2 movie decoded from that atlas: **H.264, yuv420p, 1600x348, 240 frames,
+  8 seconds**, all five clips side by side at 2x on cream; ffprobe verified.
+- Python/Bash syntax and whitespace checks pass. No Rust, WASM or app code changed.
 
-Editable blends, raw previews, bakes and real 256px masters are external under
-`masters/reislaufer/`. **512px animation masters are pending the host GPU pass**;
-CPU previews were not upscaled and mislabeled as 512. The host must run:
+The updated `b/c/d/e/f/g` images, five clip WebPs, decoded atlas review, audit,
+validation and movie are in `~/LegatumRuns/anim-pilot/review/3d-v2/reislaufer-*`.
+Current editable blends, bakes and 256px masters are in `masters/reislaufer/`.
+Round-2 512px masters require the GPU pass; the prior GPU masters remain archived.
+
+From the repository root, the lead must run:
 
 ```sh
-ROUND=1 tools/art/anim3d/units/reislaufer/gpu.sh
+ROUND=2 tools/art/anim3d/units/reislaufer/gpu.sh
 ```
 
-That rebuilds/renders all stages on Metal Cycles, retains 512/256 masters,
-recreates the atlas and reviews/movie, reruns validation/regressions, and writes
-a GPU receipt only after checking dimensions/device/hashes. Visual approval
-remains a separate judgment; the script never writes PASS automatically.
+This executable no-argument handoff requires Metal Cycles, rebuilds and renders
+all stages at 512, retains 512/256 masters, packs the 160px atlas, regenerates the
+rest comparison and movie, and runs validation/regressions before a GPU receipt.
+It never grants visual approval or writes PASS automatically.
 
-Git staging was attempted but the sandbox denied `.git/worktrees/lane-22/index.lock`.
-Changes remain uncommitted for the runner; no push or PR was made. The advertised
-branch is current with the available `origin/master` (zero missing commits).
+Git staging was attempted, but the sandbox denied
+`.git/worktrees/lane-23/index.lock`; the runner must commit the changes. No push or
+PR was made. The branch contains the currently available `origin/master`
+(zero missing commits; no fetch performed).

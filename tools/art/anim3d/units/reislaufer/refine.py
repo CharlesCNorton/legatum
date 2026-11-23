@@ -32,7 +32,6 @@ def finish_surfaces():
     # Register complete solid hat/feather assemblies, preserving depth.
     for names,box in [
         (('red beret brim','beret rolled rim','soft beret crown'),(109,42,157,61)),
-        (('feather quill','feather vane','feather barb'),(120,31,159,66)),
     ]:
         objects=[o for o in scene.objects if any(name in o.name for name in names)];entries=[]
         for obj in objects:
@@ -74,6 +73,31 @@ def finish_surfaces():
                     for c in range(4):skin[r][c]+=transform[r][c]*w/total
             vertex.co+=skin.to_3x3().inverted_safe() @ obj.matrix_world.to_3x3().inverted() @ delta
         obj.data.update()
+    bpy.context.view_layer.update()
+
+    # Neck/shoulder macro weights extend beyond the head-only fit. Register their
+    # full-depth envelope too; inverse skinning keeps all animation weights.
+    bpy.context.view_layer.update()
+    ev=body.evaluated_get(bpy.context.evaluated_depsgraph_get());me=ev.to_mesh()
+    coordinates=[v.co.copy() for v in me.vertices];ev.to_mesh_clear()
+    for vertex in body.data.vertices:
+        world=body.matrix_world @ coordinates[vertex.index]
+        co=world_to_camera_view(scene,camera,world);x,y=co.x*256,(1-co.y)*256
+        if not 66<y<89:continue
+        # The right neck contour curves into the shoulder at y89.
+        limit=139 if y<76 else 139+(y-76)*.62
+        if x<=limit:continue
+        weights={body.vertex_groups[g.group].name:g.weight for g in vertex.groups if body.vertex_groups[g.group].name in rig.data.bones}
+        total=sum(weights.values())
+        if not total:continue
+        skin=Matrix(((0,0,0,0),)*4)
+        for name,w in weights.items():
+            transform=rig.pose.bones[name].matrix @ rig.data.bones[name].matrix_local.inverted()
+            for r in range(4):
+                for c in range(4):skin[r][c]+=transform[r][c]*w/total
+        delta=right*(limit-x)*camera.data.ortho_scale/256
+        vertex.co+=skin.to_3x3().inverted_safe() @ body.matrix_world.to_3x3().inverted() @ delta
+    body.data.update()
     bpy.context.view_layer.update()
 
 

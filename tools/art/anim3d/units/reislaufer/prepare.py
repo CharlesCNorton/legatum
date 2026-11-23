@@ -10,6 +10,8 @@ b=ref.getchannel('A').point(lambda a:255 if a>96 else 0).getbbox();sb=src.getcha
 im=Image.new('RGBA',(1024,1024));im.paste(src.crop(sb).resize((box[2]-box[0],box[3]-box[1]),Image.Resampling.LANCZOS),box[:2]);im.save(A/'projection.png')
 for kind in ('linen','coat','hair','bronze'):
  if not (A/f'{kind}-fill.png').exists():shutil.copyfile(R/f'assets/horseman/fill-{kind}.png',A/f'{kind}-fill.png')
+for kind,source in [('steel','tagmatic-soldier/fill-steel.png'),('skin','medjay/fill-skin.png')]:
+ if not (A/f'{kind}-fill.png').exists():shutil.copyfile(R/'assets'/source,A/f'{kind}-fill.png')
 (A/'inputs.json').write_text(json.dumps({p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in A.glob('*.png')},indent=2))
 print('Prepared source',src.size,sb,'registered to',b)
 

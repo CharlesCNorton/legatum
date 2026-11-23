@@ -22,6 +22,8 @@ def mat(name,color,metal=0,rough=.65,fill=None):
  ramp=n.new('ShaderNodeValToRGB');ramp.color_ramp.elements[0].color=(rough*.7,)*3+(1,);ramp.color_ramp.elements[1].color=(min(1,rough*1.2),)*3+(1,);l.new(noise.outputs['Fac'],ramp.inputs[0]);l.new(ramp.outputs[0],p.inputs['Roughness'])
  if fill and (A/(fill+'-fill.png')).exists():
   t=n.new('ShaderNodeTexImage');t.image=bpy.data.images.load(str(A/(fill+'-fill.png')),check_existing=True);t.projection='BOX';t.projection_blend=.3;l.new(tc.outputs['Generated'],t.inputs[0]);l.new(t.outputs['Color'],p.inputs['Base Color'])
+ if fill=='steel':
+  grey=n.new('ShaderNodeRGBToBW');l.new(t.outputs['Color'],grey.inputs[0]);tone=n.new('ShaderNodeValToRGB');tone.color_ramp.elements[0].color=(.11,.135,.15,1);tone.color_ramp.elements[1].color=(.70,.73,.72,1);l.new(grey.outputs[0],tone.inputs[0]);l.new(tone.outputs[0],p.inputs['Base Color'])
  if fill in ('red','linen'):p.inputs['Sheen Weight'].default_value=.25
  return m
 
@@ -100,11 +102,11 @@ CENTER=Vector((0,0,1.025));SPAN=2.5
 def P(x,y,depth=0):return CENTER+Vector(((x-128)*SPAN/256,0,0))+UP*((128-y)*SPAN/256)-VIEW*depth
 
 def setbone(name,a,b,yaw=0):
- p=rig.pose.bones[name];a=Vector(a);b=Vector(b);direction=b-a
+ p=rig.pose.bones[name];inverse=rig.matrix_world.inverted();a=inverse @ Vector(a);b=inverse @ Vector(b);direction=b-a
  # Orient long axis exactly along target; preserve anatomical roll with rest matrix.
  q=p.bone.matrix_local.to_quaternion();r=(q @ Vector((0,1,0))).rotation_difference(direction.normalized()) @ q
  if yaw:r=__import__('mathutils').Quaternion(direction.normalized(),yaw) @ r
- m=r.to_matrix().to_4x4() @ Matrix.Diagonal((1,direction.length/p.bone.length,1,1));m.translation=rig.matrix_world.inverted() @ a;p.matrix=m;bpy.context.view_layer.update()
+ m=r.to_matrix().to_4x4() @ Matrix.Diagonal((1,direction.length/p.bone.length,1,1));m.translation=a;p.matrix=m;bpy.context.view_layer.update()
 
 def ribbon(name,points,width,ma,bone):
  vs=[]
@@ -126,10 +128,15 @@ def build():
  rig=HumanService.add_builtin_rig(body,'game_engine');rig.name='RIG-Reislaufer MPFB'
  for bone in rig.data.bones:bone.inherit_scale='NONE'
  system=R/'blender-user/extensions/.user/user_default/mpfb/data';eyes=HumanService.add_mhclo_asset(str(system/'eyes/high-poly/high-poly.mhclo'),body,asset_type='Eyes',subdiv_levels=1,material_type='MAKESKIN');eyes.name='GEO-MPFB eyes'
- skin=mat('painted ochre skin',(.49,.265,.12));linen=mat('slashed ivory lining',(.73,.60,.39),fill='linen');red=mat('vermilion wool',(.42,.045,.018));yellow=mat('ochre wool',(.66,.39,.035));leather=mat('scuffed brown leather',(.16,.07,.025),fill='coat');steel=mat('bright worn steel',(.55,.57,.56),1,.34);brass=mat('polished brass',(.75,.48,.15),1,.28);wood=mat('ash pike',(.35,.17,.045));dark=mat('chestnut hair',(.095,.045,.02),fill='hair');stone=mat('cream limestone E9CFA0',(.815,.624,.352),0,.88)
+ skin=mat('painted ochre skin',(.49,.265,.12),fill='skin');linen=mat('slashed ivory lining',(.73,.60,.39),fill='linen');red=mat('vermilion wool',(.42,.045,.018));yellow=mat('ochre wool',(.66,.39,.035));leather=mat('scuffed brown leather',(.16,.07,.025),fill='coat');steel=mat('bright worn steel',(.55,.57,.56),1,.34,fill='steel');brass=mat('polished brass',(.75,.48,.15),1,.28);wood=mat('ash pike',(.35,.17,.045));dark=mat('chestnut hair',(.095,.045,.02),fill='hair');stone=mat('cream limestone E9CFA0',(.815,.624,.352),0,.88)
  for material,tint in [(red,(.6,.08,.025,1)),(yellow,(.75,.47,.065,1))]:
   n=material.node_tree.nodes;l=material.node_tree.links;tex=n.new('ShaderNodeTexImage');tex.image=bpy.data.images.load(str(A/'linen-fill.png'),check_existing=True);tex.projection='BOX';tex.projection_blend=.3;tc=n.new('ShaderNodeTexCoord');l.new(tc.outputs['Generated'],tex.inputs[0]);mix=n.new('ShaderNodeMixRGB');mix.blend_type='MULTIPLY';mix.inputs[0].default_value=1;mix.inputs[2].default_value=tint;l.new(tex.outputs[0],mix.inputs[1]);l.new(mix.outputs[0],n.get('Principled BSDF').inputs['Base Color']);n.get('Principled BSDF').inputs['Sheen Weight'].default_value=.25
  body.data.materials.clear();body.data.materials.append(skin)
+ # Covered torso remains textile when motion exposes a gap between tailored pieces.
+ body.data.materials.append(red)
+ for poly in body.data.polygons:
+  weights=[sum(g.weight for g in body.data.vertices[i].groups if body.vertex_groups[g.group].name.startswith(('spine','pelvis'))) for i in poly.vertices]
+  if min(weights)>.45:poly.material_index=1
  sub=body.modifiers.new('Anatomical subdivision','SUBSURF');sub.levels=sub.render_levels=1
  for p in body.data.polygons:p.use_smooth=True
  for name,a,b in [('pelvis',P(128,137,.04),P(127,124,.04)),('spine_01',P(127,124,.04),P(127,111,.04)),('spine_02',P(127,111,.04),P(128,96,.04)),('spine_03',P(128,96,.04),P(128,78,.04)),('neck_01',P(128,78,.04),P(129,69,.04)),('head',P(129,69,.04),P(132,49,.04))]:setbone(name,a,b,.12)
@@ -204,16 +211,26 @@ def build():
   for k in range(96):i=j*96+k;n=j*96+(k+1)%96;fs.append((i,n,n+96,i+96))
  attach(bevel(solid(mesh('red beret brim',vs,fs,red),.008),.003),'head');attach(curve('beret rolled rim',vs[-96:]+[vs[-96]],.004,red),'head')
  attach(sphere('soft beret crown',hc+Vector((.02,0,.035)),(.14,.11,.065),red),'head')
- feather=[P(122+36*t,38-12*sin(pi*t)+17*t*t,.035) for t in [k/40 for k in range(41)]];attach(curve('feather quill',feather,.003,linen),'head');vs=[];fs=[]
- for k,p in enumerate(feather):
-  t=k/40;w=.045*sin(pi*t)**.5
-  for sg in (-1,0,1):vs.append(p+Vector((.003*sg,.010*abs(sg),sg*w)))
- for k in range(40):
-  for j in range(2):i=k*3+j;fs.append((i,i+1,i+4,i+3))
- attach(solid(mesh('feather vane',vs,fs,linen),.0015),'head')
- for k in range(1,40):
-  t=k/40;p=feather[k]
-  for sg in (-1,1):attach(curve('feather barb',[p,p+Vector((.014,.004,sg*.045*sin(pi*t)**.5))],.0017,linen),'head')
+ # Three closed, curved feather lobes retain the source's ivory/navy/ochre fan.
+ for label,points,widths,color in [
+  ('ivory',[(120,46),(125,39),(135,34),(145,37),(153,43)],[.5,2.5,2.4,2,.3],linen),
+  ('navy',[(123,47),(134,41),(145,40),(154,44),(159,53)],[.5,3,3.2,2.5,.3],dark),
+  ('gold',[(143,44),(151,47),(156,54),(158,60),(157,65)],[.5,2.5,2.4,1.6,.2],yellow),
+ ]:
+  vs=[];fs=[];centers=[];sections=49;sides=12
+  for j in range(sections):
+   t=j/(sections-1)*(len(points)-1);k=min(int(t),len(points)-2);f=t-k
+   x=points[k][0]*(1-f)+points[k+1][0]*f;y=points[k][1]*(1-f)+points[k+1][1]*f
+   tangent=Vector((points[k+1][0]-points[k][0],points[k+1][1]-points[k][1]));tangent.normalize();width=widths[k]*(1-f)+widths[k+1]*f
+   center=P(x,y,.025);centers.append(center)
+   for q in range(sides):
+    angle=q*2*pi/sides;ridge=1+.09*sin(j*2.2+q)
+    vs.append(P(x-tangent.y*width*cos(angle)*ridge,y+tangent.x*width*cos(angle)*ridge,.025+.012*sin(angle)))
+  for j in range(sections-1):
+   for q in range(sides):i=j*sides+q;z=j*sides+(q+1)%sides;fs.append((i,z,z+sides,i+sides))
+  fs.extend([tuple(reversed(range(sides))),tuple((sections-1)*sides+q for q in range(sides))])
+  attach(mesh('feather lobe '+label,vs,fs,color),'head')
+  attach(curve('feather quill '+label,centers,.0015,linen),'head')
  for k in range(24):
   ang=-1.5+3*k/23;c=P(130,57,.05);pts=[c+Vector((.10*sin(ang)+.006*sin(j*1.2+k),.08*cos(ang),-.012*j)) for j in range(10)];attach(curve('wavy hair',pts,.005,dark),'head')
  attach(curve('moustache',[P(124,64,-.11),P(129,63,-.13),P(135,65,-.12)],.004,dark),'head')
@@ -225,7 +242,7 @@ def build():
  fs=[(0,1,4),(1,2,4),(2,3,4),(3,0,4),(1,0,5),(2,1,5),(3,2,5),(0,3,5)];parent(bevel(mesh('faceted pike head',vs,fs,steel),.0007),pike)
  bpy.ops.mesh.primitive_cylinder_add(vertices=96,radius=.53,depth=.13,location=(0,.08,.0125));base=bpy.context.object;base.name='GEO-stationary cream base';base.data.materials.append(stone);bevel(base,.014)
  nodes=stone.node_tree.nodes;links=stone.node_tree.links;bs=nodes.get('Principled BSDF');output=nodes.get('Material Output');ao=nodes.new('ShaderNodeAmbientOcclusion');ao.inputs['Distance'].default_value=.06
- geometry=nodes.new('ShaderNodeNewGeometry');normal=nodes.new('ShaderNodeSeparateXYZ');links.new(geometry.outputs['Normal'],normal.inputs[0]);colors=nodes.new('ShaderNodeMixRGB');colors.inputs[1].default_value=(.82,.57,.32,1);colors.inputs[2].default_value=(.95,.77,.51,1);links.new(normal.outputs['Z'],colors.inputs[0]);links.new(colors.outputs[0],ao.inputs['Color'])
+ geometry=nodes.new('ShaderNodeNewGeometry');normal=nodes.new('ShaderNodeSeparateXYZ');links.new(geometry.outputs['Normal'],normal.inputs[0]);colors=nodes.new('ShaderNodeMixRGB');colors.inputs[1].default_value=(.94,.57,.265,1);colors.inputs[2].default_value=(1.11,.82,.56,1);links.new(normal.outputs['Z'],colors.inputs[0]);grain=nodes.new('ShaderNodeTexNoise');grain.inputs['Scale'].default_value=145;grain.inputs['Detail'].default_value=2;tc=nodes.new('ShaderNodeTexCoord');links.new(tc.outputs['Generated'],grain.inputs['Vector']);tones=nodes.new('ShaderNodeValToRGB');tones.color_ramp.elements[0].color=(.80,.76,.69,1);tones.color_ramp.elements[1].color=(1,1,1,1);links.new(grain.outputs['Fac'],tones.inputs[0]);grainmix=nodes.new('ShaderNodeMixRGB');grainmix.blend_type='MULTIPLY';grainmix.inputs[0].default_value=.16;links.new(colors.outputs[0],grainmix.inputs[1]);links.new(tones.outputs[0],grainmix.inputs[2]);links.new(grainmix.outputs[0],ao.inputs['Color'])
  pigment=nodes.new('ShaderNodeEmission');links.new(ao.outputs['Color'],pigment.inputs['Color']);camray=nodes.new('ShaderNodeLightPath');strength=nodes.new('ShaderNodeMath');strength.operation='MULTIPLY';strength.inputs[1].default_value=.80;links.new(camray.outputs['Is Camera Ray'],strength.inputs[0]);mix=nodes.new('ShaderNodeMixShader');links.new(strength.outputs[0],mix.inputs[0]);links.new(bs.outputs[0],mix.inputs[1]);links.new(pigment.outputs[0],mix.inputs[2]);links.new(mix.outputs[0],output.inputs['Surface'])
  sc=configure();sc.world.use_nodes=True;sc.world.node_tree.nodes.get('Background').inputs[0].default_value=(.65,.70,.8,1);sc.world.node_tree.nodes.get('Background').inputs[1].default_value=.3
  bpy.ops.object.camera_add(location=CENTER+VIEW*8);cam=bpy.context.object;cam.name='CAM-painting';cam.rotation_euler=(-VIEW).to_track_quat('-Z','Y').to_euler();cam.data.type='ORTHO';cam.data.ortho_scale=SPAN;sc.camera=cam
@@ -328,7 +345,7 @@ def animate(clip):
   for p in rig.pose.bones:p.matrix_basis=rest[p.name]
   bpy.context.view_layer.update()
   if motion:
-   phase=([0,.32,.65,1][i] if clip=='hit' else t);source=motion.sample(clip,phase)
+   phase=([0,.23,.50,1][i] if clip=='hit' else t);source=motion.sample(clip,phase)
    hipdelta=source['DEF-hips'].to_quaternion() @ source0['DEF-hips'].to_quaternion().inverted()
    for name,sn in MAP.items():
     if name=='pelvis' or name.startswith(('thigh','calf','foot','ball')):continue
@@ -388,9 +405,34 @@ def animate(clip):
     for ob in sc.objects:
      if ob.type!='MESH' or ob.name=='GEO-stationary cream base' or ob.parent==pike:continue
      ev=ob.evaluated_get(dg);me=ev.to_mesh();points=[ev.matrix_world @ v.co for v in me.vertices];xs.extend(p.x for p in points);ys.extend(p.y for p in points)
-     if any(word in ob.name for word in ('anatomical','breastplate','leather boot')):zs.extend(p.z for p in points)
+     if any(word in ob.name for word in ('breastplate','leather boot','puffed sleeve','hose')):zs.extend(p.z for p in points)
      ev.to_mesh_clear()
     rig.location.z+=.085-min(zs);settle=min(1,t/.55);rig.location.x-=((min(xs)+max(xs))/2)*settle;rig.location.y+=(.08-(min(ys)+max(ys))/2)*settle
+   # Settle the captured fall's heels with positional IK. Preserve captured foot
+   # orientation; shorten horizontal reach when necessary instead of stretching.
+   if t>.45:
+    amount=min(1,(t-.45)/.30);amount=amount*amount*(3-2*amount)
+    bpy.context.view_layer.update()
+    for side in ('r','l'):
+     boot=bpy.data.objects['GEO-leather boot '+side]
+     ev=boot.evaluated_get(bpy.context.evaluated_depsgraph_get());me=ev.to_mesh()
+     low=min((ev.matrix_world @ v.co).z for v in me.vertices);ev.to_mesh_clear()
+     foot=rig.pose.bones['foot_'+side];fm=foot.matrix.copy()
+     ankle=rig.matrix_world @ foot.head;ankle.z+=(.085-low)*amount
+     upper=rig.pose.bones['thigh_'+side];lower=rig.pose.bones['calf_'+side]
+     a=rig.matrix_world @ upper.head;pole=rig.matrix_world @ lower.head
+     l1=(upper.tail-upper.head).length;l2=(lower.tail-lower.head).length
+     horizontal=Vector((ankle.x-a.x,ankle.y-a.y,0))
+     maxreach=max(0,(l1+l2-.001)**2-(ankle.z-a.z)**2)**.5
+     if horizontal.length>maxreach:
+      horizontal.normalize();ankle.x=a.x+horizontal.x*maxreach;ankle.y=a.y+horizontal.y*maxreach
+     axis=ankle-a;distance=axis.length;axis.normalize()
+     along=(l1*l1-l2*l2+distance*distance)/(2*distance)
+     sideaxis=pole-a;sideaxis=(sideaxis-axis*sideaxis.dot(axis)).normalized()
+     knee=a+axis*along+sideaxis*max(0,l1*l1-along*along)**.5
+     setbone('thigh_'+side,a,knee);setbone('calf_'+side,knee,ankle)
+     fm.translation=rig.matrix_world.inverted() @ ankle;foot.matrix=fm
+     bpy.context.view_layer.update()
    # Release the rigid pike to the floor; its entire length stays real and visible.
    release=min(1,t/.6);release=release*release*(3-2*release)
    initial=pike.matrix_world.copy();final=Matrix.Rotation(math.pi/2,4,'Y');final.translation=Vector((.34,-.30,.11))
@@ -433,7 +475,7 @@ def audit():
  for clip,(n,fps,loop) in CLIPS.items():
   path=M/'clips'/f'{clip}.blend';meta=json.loads(path.with_suffix('.json').read_text());assert meta['source_sha256']==source
   bpy.ops.wm.open_mainfile(filepath=str(path));sc=bpy.context.scene;rig=bpy.data.objects['RIG-Reislaufer MPFB'];assert len(rig.data.bones)==53
-  base=bpy.data.objects['GEO-stationary cream base'];origin=base.matrix_world.copy();counts=[];minz=100;poses=[];feet=[];grips=[];forward=[]
+  base=bpy.data.objects['GEO-stationary cream base'];origin=base.matrix_world.copy();counts=[];minz=100;poses=[];feet=[];grips=[];forward=[];heel_contacts=[]
   sc.frame_set(1);bpy.context.view_layer.update();pike=bpy.data.objects['CTRL-pike'];grip=pike.matrix_world.inverted() @ rig.matrix_world @ rig.pose.bones['hand_l'].matrix
   for frame in range(1,n+1):
    sc.frame_set(frame);bpy.context.view_layer.update();assert base.matrix_world==origin
@@ -449,6 +491,11 @@ def audit():
     if o.type=='MESH' and not o.hide_render:
      ev=o.evaluated_get(bpy.context.evaluated_depsgraph_get());minz=min(minz,min((ev.matrix_world @ Vector(c)).z for c in ev.bound_box))
 
+   if clip=='death' and frame>=n-1:
+    for side in ('r','l'):
+     boot=bpy.data.objects['GEO-leather boot '+side];ev=boot.evaluated_get(bpy.context.evaluated_depsgraph_get());me=ev.to_mesh()
+     low=min((ev.matrix_world @ v.co).z for v in me.vertices);ev.to_mesh_clear()
+     heel_contacts.append(low);assert abs(low-.085)<.003,(clip,frame,side,'heel missed support',low)
   assert len(set(poses))>1,(clip,'rig does not animate')
   if clip=='death':assert poses[-1]==poses[-2],'Death skeletal pose is not held'
   gait=None
@@ -464,7 +511,7 @@ def audit():
    gait={'forward':'-Y','virtual_stride_m':stride,'support_ankle_planar_drift_m':max(drifts),'support_foot_yaw_degrees':max(angles),'scope':'sampled contact windows, not a continuous collision solver'}
    assert max(drifts)<.025,('support ankle sliding',gait)
    assert max(angles)<8,('feet not aligned to travel',gait)
-  reports.append({'gait':gait,'feet':feet,'maximum_grip_error':max(grips,default=0),'motion':meta.get('motion'),'distinct_skeletal_poses':len(set(poses)),'clip':clip,'frames':n,'bones':len(rig.data.bones),'stationary_base':True,'minimum_bbox_z':minz})
+  reports.append({'terminal_heel_heights_m':heel_contacts,'gait':gait,'feet':feet,'maximum_grip_error':max(grips,default=0),'motion':meta.get('motion'),'distinct_skeletal_poses':len(set(poses)),'clip':clip,'frames':n,'bones':len(rig.data.bones),'stationary_base':True,'minimum_bbox_z':minz})
  (V/'reislaufer-audit.json').write_text(json.dumps({'surface':surface,'checks':reports,'limits':'Bounds and rig checks do not establish hand contacts, cloth collision freedom or visual approval.'},indent=2));log('Audit passed: five clips, source hashes, 53-bone rig, fixed base and positive object scales.')
 
 mode=sys.argv[sys.argv.index('--')+1] if '--' in sys.argv else 'build'

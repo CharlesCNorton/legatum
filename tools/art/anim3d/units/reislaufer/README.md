@@ -1,4 +1,4 @@
-# Reislaufer — round 1 candidate
+# Reislaufer — round 2 candidate
 
 Run from the repository root. Every Blender call uses the `blender` PATH gate,
 background mode and disabled automatic script execution. Stages are serial.
@@ -23,7 +23,7 @@ are in `review/3d-v2/reislaufer-*`. All inputs are external in `assets/reislaufe
 The complete, no-argument GPU entry point is:
 
 ```sh
-ROUND=1 tools/art/anim3d/units/reislaufer/gpu.sh
+ROUND=2 tools/art/anim3d/units/reislaufer/gpu.sh
 ```
 
 It requires Metal Cycles, refuses CPU fallback, rebuilds the model/materials and

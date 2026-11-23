@@ -160,3 +160,33 @@ cream). It refuses CPU fallback and checks final master dimensions/device before
 issuing a technical receipt. Only an actual visual pass earns `reislaufer-PASS`.
 CPU previews must remain identified as CPU. Use plain `blender -b` through PATH;
 never bypass the gate, run concurrent heavy jobs, or hide meshes by zero scaling.
+
+### Reislaufer driver round 2
+
+The first GPU pass succeeded (158652 bytes at quality 90) but did not meet the
+visual bar. Preserve GPU frames/reviews before a CPU rebuild under the unit's
+`driver-r1-gpu/` master folder. A passed encoder is never a visual PASS.
+
+The plume now uses three closed curved lobes matching the ivory/navy/ochre fan,
+not a thin single vane expanded to a bounding box. Body macro fitting must include
+neck/shoulder weights: fitting head-weighted vertices alone leaves a wedge outside
+the painted contour. Apply the camera-space correction through the inverse skin
+matrix, preserving depth and weights before freezing projection UVs. Covered body
+faces need a garment material so animated gaps do not reveal bare skin. Unseen
+steel and skin now use existing licensed generated brushwork. Camera-visible
+stone pigment includes subtle grain and live AO; bump alone is lost when a
+camera-only pigment shader bypasses the physical BSDF. Keep the physical shader
+for shadow/secondary rays and never bake painted feet onto the stationary base.
+
+Use `ROUND=2 tools/art/anim3d/units/reislaufer/gpu.sh` for the next complete GPU
+pass. It retains all five clips, the 512/256 masters and the trimmed 160px atlas,
+then validates the atlas and eight-second MP4. Review the rest comparison and
+motion after that GPU pass; CPU evidence cannot grant a GPU approval.
+
+Reislaufer fall contact lesson: a helper receiving world-space joint endpoints
+must inverse-transform both endpoints before computing a pose-bone direction.
+Transforming only the translation works while the root is upright but breaks
+limbs during a rotated death. The terminal heel constraint preserves captured
+foot orientation, shortens horizontal reach to avoid stretching, and verifies
+actual evaluated boot geometry within 3 mm of the support plane. The sampled
+contact test does not establish cloth continuity or full collision freedom.
