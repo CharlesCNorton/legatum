@@ -200,3 +200,31 @@ renders all hero and foot-check stages at 512/GPU48 or higher, exports genuine 5
 packs/validates the 160 px atlas and writes the eight-second five-clip H.264/yuv420p MP4. The GPU
 receipt rejects CPU-labelled sources. It never writes PASS; current surface and motion quality
 still require visual review. A failed preflight or absent receipt must not be described as a GPU pass.
+
+### Barbarian musketman driver round 2: interrupted GPU recovery
+
+The host round-one log stopped after attack frame 9. The matching macOS crash report records
+SIGTRAP and allocator free-block corruption during mesh attribute copying/dependency-graph
+evaluation. This is not evidence of a zero-scale smoke failure. Preserve the mixed outputs in
+external `masters/barbarian-musketman/driver-r1-gpu/`; later strips and the old movie cannot prove
+completion of that GPU run.
+
+`gpu.sh` now builds without in-process previews, then runs `render_frames.py`: each final frame
+opens its blend in a fresh plain `blender` process through the shared gate. Persistent render data
+is disabled. A bounded retry handles SIGTRAP (133), which the shared gate does not retry. Per-frame
+checkpoints bind blend, unit Python code, render settings, frame index and PNG bytes; an incomplete
+stage has no render manifest. The last death frame also binds the held frame's hash. The runner
+can restart `render_frames.py` without rebuilding to reuse verified frames. No CPU fallback is
+allowed in the GPU pass. CPU execution verifies the orchestration; host GPU success still needs
+the final GPU receipt and visual inspection.
+
+This pass adds inverse-skinned spine weights to the finished shirt/waistcoat, retaining their
+exact posed geometry and frozen UVs. Rest-incidence weights fade formerly grazing painted surfaces
+toward the existing generated fills when they turn toward camera. The feather has broader cambered
+vanes; the physical stone has warmer pigment and fine shader grain without projected feet. Source
+death arm directions blend out of the aiming pose alongside the existing source-driven legs.
+Two-segment hand contact keeps source elbow poles and limb lengths while lowering the terminal
+hands onto the stone; the released musket retains its independent world transform. The geometry
+audit checks arm lengths as well as legs. This contact correction is not a cloth collision solver.
+The automatic rest histogram grade remains fixed for every clip. These improvements alone do not
+establish the art bar; inspect rest, death contact, all five strips and front/top feet each round.

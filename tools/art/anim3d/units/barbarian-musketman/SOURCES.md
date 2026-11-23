@@ -6,3 +6,8 @@
 - Quaternius Universal Animation Library, Standard glTF: https://quaternius.com/packs/universalanimationlibrary.html — CC0 1.0, also confirmed by its included LICENSE. Reused external assets/quaternius-ual/AnimationLibrary_Godot_Standard.gltf and .bin; exact bytes and licence pinned in motion.lock.json. Crouch_Idle_Loop, Crouch_Fwd_Loop, Hit_Chest and Death01 drive this unit's four non-attack clips. Source hierarchy/world rotations cancel bone rolls before Y-up conversion and forward alignment. Motion is constrained to a kneeling firing position, not presented as a standing walk. Only musket recoil/release are authored weapon motion.
 
 Code is MIT; rendered art is project CC BY 4.0. No new downloads, paid services, accounts or hosted uploads in round 2.
+
+Driver round 2 GPU follow-up reuses these unchanged painting, generated fill and motion assets.
+Original inverse-skinned tailoring, contact adaptation, pigment/grain changes and frame-checkpoint
+render orchestration are MIT source; rendered art remains CC BY 4.0. Prior mixed GPU/CPU evidence
+is retained outside git under `masters/barbarian-musketman/driver-r1-gpu/`.

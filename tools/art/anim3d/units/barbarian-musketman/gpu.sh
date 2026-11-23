@@ -23,11 +23,11 @@ command -v blender
 stage=prepare
 "$python" "$unit/prepare.py"
 stage=build
-"$unit/render.sh" build
+"$unit/render.sh" build-only
 stage=animate
 "$unit/render.sh" animate
 stage=render
-"$unit/render.sh" render
+"$python" "$unit/render_frames.py"
 stage=audit
 "$unit/render.sh" audit
 stage=pack
@@ -36,6 +36,7 @@ stage=validate
 "$python" "$unit/finish.py" validate
 stage=regressions
 "$python" "$unit/test_delivery.py"
+"$python" "$unit/test_render_frames.py"
 stage=gpu_receipt
 "$python" "$unit/finish.py" gpu-receipt
 printf 'complete round=%s; GPU512 and delivery verified; visual review pending\n' "$ROUND" > "$status"

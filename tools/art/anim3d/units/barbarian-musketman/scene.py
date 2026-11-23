@@ -83,11 +83,12 @@ def empty(name,loc):
  o=bpy.data.objects.new(name,None);bpy.context.collection.objects.link(o);o.location=loc;return o
 
 def configure():
- sc=bpy.context.scene;sc.render.engine='CYCLES';sc.cycles.device=os.environ.get('CYCLES_DEVICE','CPU');sc.cycles.samples=int(os.environ.get('SAMPLES','6'));sc.cycles.use_denoising=True;sc.cycles.max_bounces=4;sc.cycles.diffuse_bounces=2;sc.render.use_persistent_data=True
+ sc=bpy.context.scene;sc.render.engine='CYCLES';sc.cycles.device=os.environ.get('CYCLES_DEVICE','CPU');sc.cycles.samples=int(os.environ.get('SAMPLES','6'));sc.cycles.use_denoising=True;sc.cycles.max_bounces=4;sc.cycles.diffuse_bounces=2
  if sc.cycles.device=='GPU':
   prefs=bpy.context.preferences.addons['cycles'].preferences;prefs.compute_device_type='METAL';prefs.get_devices();found=False
   for d in prefs.devices:d.use=d.type=='METAL';found|=d.use
   if not found:raise RuntimeError('Metal GPU required; refusing CPU fallback')
+ sc.render.use_persistent_data=False
  sc.render.threads_mode='FIXED';sc.render.threads=3;sc.render.resolution_x=sc.render.resolution_y=int(os.environ.get('RESOLUTION','256'));sc.render.resolution_percentage=100;sc.render.film_transparent=True;sc.render.image_settings.file_format='PNG';sc.render.image_settings.color_mode='RGBA';sc.render.use_file_extension=True
  sc.view_settings.view_transform='Standard';sc.view_settings.look='None';sc.view_settings.exposure=0
  return sc
@@ -224,11 +225,11 @@ def build():
   for k in range(64):i=j*64+k;n=j*64+(k+1)%64;fs.append((i,n,n+64,i+64))
  fs.append(tuple(range(13*64,14*64)));attach(bevel(solid(mesh('pinched felt hat crown',vs,[tuple(reversed(f)) for f in fs],buff),.006),.002),'head')
  attach(curve('hat leather band',[hc+Vector((.106*sin(a),.09*cos(a),.027)) for a in [2*pi*k/96 for k in range(97)]],.012,leather),'head')
- feather=[P(59-34*t,33-9*sin(pi*t)+16*t**3,.06) for t in [k/32 for k in range(33)]];attach(curve('swept feather quill',feather,.003,linen),'head')
+ feather=[P(59-36*t,34-7*sin(pi*t)+9*t**3,.06) for t in [k/32 for k in range(33)]];attach(curve('swept feather quill',feather,.003,linen),'head')
  # Real thin feather vanes, with camber and a scalloped margin under the barbs.
  fvs=[];ffs=[]
  for k,pnt in enumerate(feather):
-  t=k/32;width=.031*sin(pi*t)**.7
+  t=k/32;width=.040*sin(pi*t)**.7
   for side in (-1,0,1):fvs.append(pnt+Vector((-.010*abs(side),.012*abs(side)*sin(pi*t),side*width)))
  for k in range(32):
   for j in range(2):i=k*3+j;ffs.append((i,i+1,i+4,i+3))
@@ -264,7 +265,10 @@ def build():
  nodes=stone.node_tree.nodes;links=stone.node_tree.links;bs=nodes.get('Principled BSDF');output=nodes.get('Material Output')
  ao=nodes.new('ShaderNodeAmbientOcclusion');ao.inputs['Distance'].default_value=.12
  geometry=nodes.new('ShaderNodeNewGeometry');normal=nodes.new('ShaderNodeSeparateXYZ');links.new(geometry.outputs['Normal'],normal.inputs[0])
- colors=nodes.new('ShaderNodeMixRGB');colors.inputs[1].default_value=(.69,.49,.28,1);colors.inputs[2].default_value=(.95,.77,.51,1);links.new(normal.outputs['Z'],colors.inputs[0]);links.new(colors.outputs[0],ao.inputs['Color'])
+ colors=nodes.new('ShaderNodeMixRGB');colors.inputs[1].default_value=(.75,.50,.29,1);colors.inputs[2].default_value=(1,.83,.63,1);links.new(normal.outputs['Z'],colors.inputs[0])
+ grain=nodes.new('ShaderNodeTexNoise');grain.inputs['Scale'].default_value=185;grain.inputs['Detail'].default_value=2;links.new(geometry.outputs['Position'],grain.inputs['Vector'])
+ grainrange=nodes.new('ShaderNodeMapRange');grainrange.inputs['To Min'].default_value=.94;grainrange.inputs['To Max'].default_value=1.0;links.new(grain.outputs['Fac'],grainrange.inputs['Value'])
+ stonecolor=nodes.new('ShaderNodeMixRGB');stonecolor.blend_type='MULTIPLY';stonecolor.inputs[0].default_value=1;links.new(colors.outputs[0],stonecolor.inputs[1]);links.new(grainrange.outputs[0],stonecolor.inputs[2]);links.new(stonecolor.outputs[0],ao.inputs['Color'])
  pigment=nodes.new('ShaderNodeEmission');links.new(ao.outputs['Color'],pigment.inputs['Color'])
  camray=nodes.new('ShaderNodeLightPath');strength=nodes.new('ShaderNodeMath');strength.operation='MULTIPLY';strength.inputs[1].default_value=.78;links.new(camray.outputs['Is Camera Ray'],strength.inputs[0])
  mix=nodes.new('ShaderNodeMixShader');links.new(strength.outputs[0],mix.inputs[0]);links.new(bs.outputs[0],mix.inputs[1]);links.new(pigment.outputs[0],mix.inputs[2]);links.new(mix.outputs[0],output.inputs['Surface'])
@@ -276,8 +280,8 @@ def build():
  for o in list(sc.objects):
   if o.type=='CURVE':
    bpy.ops.object.select_all(action='DESELECT');o.select_set(True);bpy.context.view_layer.objects.active=o;bpy.ops.object.convert(target='MESH')
- from refine import finish_surfaces
- finish_surfaces()
+ from refine import finish_surfaces, bind_torso
+ finish_surfaces();bind_torso(rig)
  sc['unit']='barbarian-musketman';sc['anatomy']='MPFB 2.0.18 CC0';sc['cream_target']='#E9CFA0'
  bpy.context.view_layer.update();rig['rest_pose']=json.dumps({p.name:[list(r) for r in p.matrix_basis] for p in rig.pose.bones});rig['rest_location']=list(rig.location)
  (M/'bones.json').write_text(json.dumps({p.name:{'head':list(p.head),'tail':list(p.tail)} for p in rig.pose.bones},indent=2))
@@ -291,6 +295,7 @@ def project():
   if o.type!='MESH' or any(x in o.name for x in ('muzzle','eyes','stationary cream base')):continue
   ev=o.evaluated_get(dg);me=ev.to_mesh();assert len(me.vertices)==len(o.data.vertices)
   uv=o.data.uv_layers.get('Painting') or o.data.uv_layers.new(name='Painting');col=o.data.color_attributes.new(name='Projection facing',type='FLOAT_COLOR',domain='CORNER')
+  incidence=o.data.color_attributes.new(name='Rest incidence',type='FLOAT_COLOR',domain='CORNER')
   coords=[world_to_camera_view(sc,cam,ev.matrix_world @ v.co) for v in me.vertices]
   normalmat=ev.matrix_world.to_3x3().inverted().transposed();facing=[]
   for vertex in me.vertices:
@@ -303,6 +308,7 @@ def project():
    facing.append(f)
   for loop in o.data.loops:
    i=loop.vertex_index;uv.data[loop.index].uv=(coords[i].x,coords[i].y);f=facing[i];col.data[loop.index].color=(f,f,f,1)
+   dot=max(.02,(normalmat @ me.vertices[i].normal).normalized().dot((cam.location-ev.matrix_world @ me.vertices[i].co).normalized()));incidence.data[loop.index].color=(dot,dot,dot,1)
   ev.to_mesh_clear()
   for slot in o.material_slots:
    if not slot.material:continue
@@ -311,7 +317,15 @@ def project():
    attr=n.new('ShaderNodeVertexColor');attr.layer_name=col.name
    mul=n.new('ShaderNodeMath');mul.operation='MULTIPLY';l.new(attr.outputs[0],mul.inputs[0]);l.new(tex.outputs['Alpha'],mul.inputs[1])
    camera=n.new('ShaderNodeLightPath');camera.name='Camera-only pigment'
-   weight=n.new('ShaderNodeMath');weight.operation='MULTIPLY';l.new(mul.outputs[0],weight.inputs[0]);l.new(camera.outputs['Is Camera Ray'],weight.inputs[1])
+   # Fade a formerly grazing projected surface into the generated fill when it
+   # turns toward camera; frozen UVs remain attached to the real deforming mesh.
+   geometry=n.new('ShaderNodeNewGeometry');dot=n.new('ShaderNodeVectorMath');dot.operation='DOT_PRODUCT';l.new(geometry.outputs['Normal'],dot.inputs[0]);l.new(geometry.outputs['Incoming'],dot.inputs[1])
+   restangle=n.new('ShaderNodeVertexColor');restangle.layer_name='Rest incidence'
+   tolerance=n.new('ShaderNodeMath');tolerance.operation='ADD';tolerance.inputs[1].default_value=.15;l.new(restangle.outputs[0],tolerance.inputs[0])
+   divisor=n.new('ShaderNodeMath');divisor.operation='MAXIMUM';divisor.inputs[1].default_value=.05;l.new(dot.outputs['Value'],divisor.inputs[0])
+   ratio=n.new('ShaderNodeMath');ratio.operation='DIVIDE';ratio.use_clamp=True;l.new(tolerance.outputs[0],ratio.inputs[0]);l.new(divisor.outputs[0],ratio.inputs[1])
+   coverage=n.new('ShaderNodeMath');coverage.operation='MULTIPLY';l.new(mul.outputs[0],coverage.inputs[0]);l.new(ratio.outputs[0],coverage.inputs[1])
+   weight=n.new('ShaderNodeMath');weight.operation='MULTIPLY';l.new(coverage.outputs[0],weight.inputs[0]);l.new(camera.outputs['Is Camera Ray'],weight.inputs[1])
    paint=n.new('ShaderNodeEmission');paint.inputs['Strength'].default_value=1;l.new(tex.outputs['Color'],paint.inputs['Color'])
    blend=n.new('ShaderNodeMixShader');l.new(weight.outputs[0],blend.inputs[0]);l.new(p.outputs[0],blend.inputs[1]);l.new(paint.outputs[0],blend.inputs[2]);l.new(blend.outputs[0],out.inputs['Surface'])
   records.append({'object':o.name,'vertices':len(o.data.vertices),'visible_vertices':sum(v>0 for v in facing)})
@@ -331,10 +345,12 @@ def render(stage,blend,frames):
  if stage=='b-plain':
   clay=mat('plain clay',(.45,.4,.32));sc.view_layers[0].material_override=clay
  for i,f in enumerate(frames):
+  if 'FRAME_INDEX' in os.environ and i!=int(os.environ['FRAME_INDEX']):continue
   sc.frame_set(f)
   if stage=='e-death' and i==len(frames)-1:
    import shutil;shutil.copyfile(out/f'{i-1:02}.png',out/f'{i:02}.png');continue
   sc.render.filepath=str(out/f'{i:02}.png');bpy.ops.render.render(write_still=True)
+ if 'FRAME_INDEX' in os.environ:return
  manifest.write_text(json.dumps({'stage':stage,'engine':sc.render.engine,'device':sc.cycles.device,'samples':sc.cycles.samples,'resolution':sc.render.resolution_x,'blend_sha256':hashlib.sha256(blend.read_bytes()).hexdigest(),'frames':len(frames)}))
  subprocess.run([str(R/'venv/bin/python'),str(HERE/'finish.py'),'review',stage],check=True);log('Posted '+stage+' review ('+sc.cycles.device+', '+str(sc.render.resolution_x)+' px).')
 
@@ -360,6 +376,23 @@ def animate(clip):
   setbone('upperarm_l',a,elbow);setbone('lowerarm_l',elbow,target);rig.pose.bones['hand_l'].matrix=target_matrix;bpy.context.view_layer.update()
  def turn(name,axis,angle):
   p=rig.pose.bones[name];m=p.matrix.copy();pos=m.translation.copy();m=Matrix.Rotation(angle,4,axis) @ m;m.translation=pos;p.matrix=m;bpy.context.view_layer.update()
+ def settle_hand(side,weight):
+  # Ground contact adapts the source fall, preserving limb lengths and elbow pole.
+  upper=rig.pose.bones['upperarm_'+side];lower=rig.pose.bones['lowerarm_'+side];hand=rig.pose.bones['hand_'+side]
+  handmatrix=hand.matrix.copy();world=rig.matrix_world @ hand.head;contact=world.copy()
+  center=Vector((.007,.20,0));radius=Vector((contact.x-center.x,contact.y-center.y,0))
+  if radius.length>.43:radius*=.43/radius.length
+  contact.x=center.x+radius.x;contact.y=center.y+radius.y;contact.z=.13
+  target=rig.matrix_world.inverted() @ world.lerp(contact,weight);a=upper.head.copy()
+  l1=(upper.tail-upper.head).length;l2=(lower.tail-lower.head).length
+  axis=target-a;distance=max(abs(l1-l2)+.0001,min(axis.length,l1+l2-.0001));axis.normalize();target=a+axis*distance
+  along=(l1*l1-l2*l2+distance*distance)/(2*distance);pole=lower.head-a;pole-=axis*pole.dot(axis)
+  if pole.length<.0001:pole=axis.cross(Vector((0,0,1)))
+  elbow=a+axis*along+pole.normalized()*max(0,l1*l1-along*along)**.5
+  for name,start,end,length in [('upperarm_'+side,a,elbow,l1),('lowerarm_'+side,elbow,target,l2)]:
+   p=rig.pose.bones[name];q=p.bone.matrix_local.to_quaternion();rotation=(q @ Vector((0,1,0))).rotation_difference((end-start).normalized()) @ q
+   p.matrix=Matrix.LocRotScale(start,rotation,Vector((1,length/p.bone.length,1)));bpy.context.view_layer.update()
+  handmatrix.translation=target;hand.matrix=handmatrix;bpy.context.view_layer.update()
  for i in range(count+(1 if loop else 0)):
   frame=i+1;t=i/count if loop else min(i/(count-2),1);wave=sin(2*pi*t)
   rig.matrix_world=rigrest;gun.matrix_basis=gunrest
@@ -412,10 +445,11 @@ def animate(clip):
    # leg directions. Keeping kneeling offsets at full fall left both boots airborne.
    blend=max(0,min(1,(t-.20)/.45))
    for side,suffix in (('l','.L'),('r','.R')):
-    for target_bone,source_a,source_b in [('thigh','thigh','shin'),('calf','shin','foot'),('foot','foot','toe')]:
+    for target_bone,source_a,source_b in [('thigh','thigh','shin'),('calf','shin','foot'),('foot','foot','toe'),('upperarm','upper_arm','forearm'),('lowerarm','forearm','hand')]:
      name=target_bone+'_'+side;p=rig.pose.bones[name];a=p.head.copy();current=(p.tail-p.head).normalized()
      direction=delta.inverted() @ (source['DEF-'+source_b+suffix].translation-source['DEF-'+source_a+suffix].translation).normalized()
-     desired=current.lerp(direction,blend).normalized();length=(restworld[name] @ Vector((0,p.bone.length,0))-restworld[name].translation).length
+     amount=blend*.25 if target_bone in ('upperarm','lowerarm') else blend
+     desired=current.lerp(direction,amount).normalized();length=(restworld[name] @ Vector((0,p.bone.length,0))-restworld[name].translation).length
      rest_rotation=p.bone.matrix_local.to_quaternion();orientation=(rest_rotation @ Vector((0,1,0))).rotation_difference(desired) @ rest_rotation
      p.matrix=Matrix.LocRotScale(a,orientation,Vector((1,length/p.bone.length,1)));bpy.context.view_layer.update()
    bpy.context.view_layer.update()
@@ -437,6 +471,9 @@ def animate(clip):
    # Rest gun axis remains horizontal. Release is keyed as an actual rigid transform.
    q=initial.to_quaternion().slerp(__import__('mathutils').Quaternion(),release)
    transform=q.to_matrix().to_4x4();transform.translation=initial.translation.lerp(final.translation,release);gun.matrix_world=transform
+   contact=max(0,min(1,(t-.40)/.35));contact=contact*contact*(3-2*contact)
+   for side in ('r','l'):settle_hand(side,contact)
+   gun.matrix_world=transform
   bpy.context.view_layer.update()
   if clip!='death':constrain_grip()
   if clip=='death':
@@ -486,7 +523,7 @@ def audit():
   for frame in range(1,n+1):
    sc.frame_set(frame);bpy.context.view_layer.update();assert base.matrix_world==origin
    for bone in rig.pose.bones:
-    if bone.name.startswith(('thigh','calf','foot')):assert .85<(bone.tail-bone.head).length/lengths[bone.name]<1.15,(clip,frame,bone.name,'retarget stretch')
+    if bone.name.startswith(('thigh','calf','foot','upperarm','lowerarm')):assert .85<(bone.tail-bone.head).length/lengths[bone.name]<1.15,(clip,frame,bone.name,'retarget stretch')
    feet.append({side:list((rig.matrix_world @ rig.pose.bones['foot_'+side].matrix).translation) for side in ('l','r')})
    if clip!='death':
     error=((gun.matrix_world @ grip).translation-(rig.matrix_world @ rig.pose.bones['hand_l'].matrix).translation).length;grips.append(error);assert error<.002,(clip,frame,'support hand left gun',error)
@@ -510,6 +547,13 @@ if mode=='preflight':
  configure();print('GPU preflight passed',flush=True)
 elif mode=='build':
  build();render('b-plain',M/'plain.blend',[1]);bpy.ops.wm.open_mainfile(filepath=str(M/'plain.blend'));configure();from bake import bake;bake();project();render('c-textured-lit',M/'barbarian-musketman.blend',[1])
+elif mode=='build-only':
+ build();configure();from bake import bake;bake();project()
+elif mode.startswith('frame-'):
+ stage=mode[6:]
+ blend=M/('plain.blend' if stage=='b-plain' else 'barbarian-musketman.blend' if stage=='c-textured-lit' else 'clips/move.blend' if stage.startswith('g-feet-') else 'clips/attack.blend' if stage=='d-rig-poses' else f'clips/{stage[2:]}.blend')
+ frames=[1] if stage in ('b-plain','c-textured-lit') else [1,3,5,7] if stage=='d-rig-poses' else list(range(1,9)) if stage.startswith('g-feet-') else list(range(1,CLIPS[stage[2:]][0]+1))
+ render(stage,blend,frames)
 elif mode=='rest':
  render('b-plain',M/'plain.blend',[1]);render('c-textured-lit',M/'barbarian-musketman.blend',[1])
 elif mode.startswith('animate-'):animate(mode[8:])

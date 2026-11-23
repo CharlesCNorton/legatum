@@ -1,6 +1,6 @@
 """Finish full-depth surfaces before freezing their rest-camera UV coordinates."""
 import bpy
-from mathutils import Vector
+from mathutils import Vector, Matrix
 from bpy_extras.object_utils import world_to_camera_view
 
 
@@ -53,6 +53,41 @@ def finish_surfaces():
             vertex.co = obj.matrix_world.inverted() @ world
         for obj in objects:
             obj.data.update()
+    bpy.context.view_layer.update()
+
+
+def bind_torso(rig):
+    """Inverse-skin finished tailored garments without changing their posed fit."""
+    scene = bpy.context.scene
+    bones = [('pelvis', 138), ('spine_01', 120), ('spine_02', 103), ('spine_03', 81)]
+    skin = {name: rig.pose.bones[name].matrix @ rig.data.bones[name].matrix_local.inverted()
+            for name, _ in bones}
+    for obj in list(scene.objects):
+        if not any(word in obj.name for word in ('ivory shirt', 'weathered buff waistcoat')):
+            continue
+        world = obj.matrix_world.copy()
+        points = [world @ vertex.co for vertex in obj.data.vertices]
+        obj.parent = rig
+        obj.parent_type = 'OBJECT'
+        obj.matrix_parent_inverse = Matrix.Identity(4)
+        obj.matrix_basis = Matrix.Identity(4)
+        groups = {name: obj.vertex_groups.new(name=name) for name, _ in bones}
+        for vertex, point in zip(obj.data.vertices, points):
+            y = (1-world_to_camera_view(scene, scene.camera, point).y)*256
+            weights = {name: max(0, 1-abs(y-center)/25) for name, center in bones}
+            total = sum(weights.values())
+            assert total > 0
+            transform = Matrix(((0,)*4,)*4)
+            for name, weight in weights.items():
+                if weight:
+                    weight /= total
+                    groups[name].add([vertex.index], weight, 'REPLACE')
+                    transform += skin[name]*weight
+            vertex.co = transform.inverted() @ rig.matrix_world.inverted() @ point
+        modifier = obj.modifiers.new('Tailored spine deformation', 'ARMATURE')
+        modifier.object = rig
+        obj['weighted_tailoring'] = True
+        obj.data.update()
     bpy.context.view_layer.update()
 
 

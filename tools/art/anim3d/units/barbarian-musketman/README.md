@@ -11,6 +11,8 @@ Metal Cycles, takes `ROUND` from the environment, and executes the complete buil
 - `finish.py`: review sheets, a fixed rest-derived grade, genuine 512/256 masters, trimmed 160 px atlas,
   hash/alpha/clip/size checks, and eight-second MP4 with reconstructed trim offsets.
 - `render.sh`: gated Blender entry point for individual CPU/GPU stages.
+- `render_frames.py`: fresh-process final frames with hash-bound resumable checkpoints and bounded
+  SIGTRAP retry; `test_render_frames.py` verifies interrupted and stale-frame recovery in isolation.
 
 The painting remains in the game. This is an art candidate, not a runtime renderer change or art
 approval. Masters and source assets are outside git. See the unit chapter in `../../PLAYBOOK.md`
