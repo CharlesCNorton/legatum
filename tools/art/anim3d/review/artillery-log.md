@@ -39,3 +39,34 @@
 - Published b-plain CPU/GPU geometry stage before texture work.
 - Baked 256px AO and curvature maps on GEO-Shield wing -1, GEO-Shield wing 1, GEO-Hollow tapered barrel
 - Published painted rest pose and 50/50 comparison; real AO shader, micrograin, edge geometry and hidden-surface fill.
+- Published b-plain CPU/GPU geometry stage before texture work.
+- Baked 256px AO and curvature maps on GEO-Shield wing -1, GEO-Shield wing 1, GEO-Hollow tapered barrel
+- Published painted rest pose and 50/50 comparison; real AO shader, micrograin, edge geometry and hidden-surface fill.
+- Published e-idle: 8 actual rendered frames, 10 fps; CPU 256px 12 samples.
+- Published e-move: 8 actual rendered frames, 12 fps; CPU 256px 12 samples.
+- Published e-attack: 10 actual rendered frames, 14 fps; CPU 256px 12 samples.
+- Published e-hit: 4 actual rendered frames, 12 fps; CPU 256px 12 samples.
+- Published e-death: 10 actual rendered frames, 10 fps; CPU 256px 12 samples.
+- Completed all five clips and geometry audit; delivery pack may now run.
+- Published b-plain CPU/GPU geometry stage before texture work.
+- Baked 256px AO and curvature maps on GEO-Shield wing -1, GEO-Shield wing 1, GEO-Hollow tapered barrel
+- Published painted rest pose and 50/50 comparison; real AO shader, micrograin, edge geometry and hidden-surface fill.
+- Published e-idle: 8 actual rendered frames, 10 fps; CPU 256px 12 samples.
+- Published e-move: 8 actual rendered frames, 12 fps; CPU 256px 12 samples.
+- Published e-attack: 10 actual rendered frames, 14 fps; CPU 256px 12 samples.
+- Published e-hit: 4 actual rendered frames, 12 fps; CPU 256px 12 samples.
+- Published e-death: 10 actual rendered frames, 10 fps; CPU 256px 12 samples.
+- Completed all five clips and geometry audit; delivery pack may now run.
+- Published b-plain CPU/GPU geometry stage before texture work.
+- Baked 256px AO and curvature maps on GEO-Shield wing -1, GEO-Shield wing 1, GEO-Hollow tapered barrel
+- Published painted rest pose and 50/50 comparison; real AO shader, micrograin, edge geometry and hidden-surface fill.
+- Published e-idle: 8 actual rendered frames, 10 fps; CPU 256px 12 samples.
+- Published e-move: 8 actual rendered frames, 12 fps; CPU 256px 12 samples.
+- Rebuilt complete circular wheels with measured centres (112,148)/(195,139), uniform scale and physical mounting yaw; fitted full-thickness shield on its transverse plane and applied all static bevel/curve topology before UV calibration. Kept the original orthographic camera; this is local registration, not a claim of exact camera recovery.
+- Replaced double-lit projected colour with a camera-only 96% pigment branch, finished-surface ray/facing masks, existing generated olive backs, and Standard/None display transform. Retained real AO/curvature and product softboxes; cream exclusion removes pale trail contamination.
+- Added warm stone top/rim pigment and live contact AO. Initial move/death strips exposed floating tires from trail hinge/global clearance correction; reversed the near-trail lift and now seat both tires at z=.13 per sample while refitting the animated axle.
+- GPU handoff now retains transcript, stage/failure status and success receipt after actual GPU512 provenance and atlas/movie validation. Missing-input preflight passed: rejected before Blender, retained failure log, no success receipt. No hardware GPU pass claimed.
+- Published e-attack: 10 actual rendered frames, 14 fps; CPU 256px 12 samples.
+- Published e-hit: 4 actual rendered frames, 12 fps; CPU 256px 12 samples.
+- Published e-death: 10 actual rendered frames, 10 fps; CPU 256px 12 samples.
+- Completed all five clips and geometry audit; delivery pack may now run.
