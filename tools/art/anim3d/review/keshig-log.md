@@ -89,3 +89,5 @@ Rendered death: 10 frames, 256px, 8 samples, CPU.
 Rendered top/front views for all eight move samples; native -Y travel axis, no post-retarget foot rotation.
 Rendered death: 10 frames, 256px, 8 samples, CPU.
 Packed and decoded 40 trimmed frames, quality 80, 196016 bytes; wrote keshig-round2.mp4. Warnings: []
+Round 2 final CPU checks PASS: Cycles256/8 all stages; 40 frames at 8/8/10/4/10; 16 feet views; geometry/source audit including first-move reference regression; decoded trimmed160 atlas 196016 bytes at Q80 with zero margin warnings, exact alpha and held death; H.264 yuv420p 1600x348, 240 frames, 8s round2 movie. 15 Python syntax checks, Bash syntax, diff whitespace and 23-file working-tree hygiene passed.
+Round 2 verdict: silhouette IoU 0.6960 at256 and 0.6997 at64 versus GPU r1 0.5695/0.5727 (includes base, not art approval). Better broad gallop, adult cap/head and curved bow; lower coat/seating, muzzle, natural tail form, projection seams and death equipment still wrong. Per-frame envelope fit reaches 0.88 on move and remains visible. No PASS. Fresh GPU512 remains pending: ROUND=2 tools/art/anim3d/units/keshig/gpu.sh.
