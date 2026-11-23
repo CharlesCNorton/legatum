@@ -1,6 +1,6 @@
 # Animated units status
 
-Updated 2026-11-23T05:53:13Z. Round = finished rounds (driver count). Pass = the lane declared the bar met (`<slug>-PASS`); the lead and Sam still review.
+Updated 2026-11-23T06:23:20Z. Round = finished rounds (driver count). Pass = the lane declared the bar met (`<slug>-PASS`); the lead and Sam still review.
 
 | Unit | Branch | State | Rounds done | Atlas KB | Pass | Latest note |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -24,7 +24,7 @@ Updated 2026-11-23T05:53:13Z. Round = finished rounds (driver count). Pass = the
 | cuirassier | `astra/unit-anim-3d-cuirassier` | idle | 0 | - | no | - Emitted c-details: 1 frames, 256 px CYCLES/CPU, 8 samples. |
 | drone-swarm | `astra/unit-anim-3d-drone-swarm` | idle | 0 | 187 | no | e-hit: 4 frames at 256/64 from 512px CYCLES/CPU, 12 samples. |
 | eagle-warrior | `astra/unit-anim-3d-eagle-warrior` | idle | 0 | - | no | - Authored idle, move, attack, hit and terminal death on the MPFB skeleton; no mocap or cloth simulation claimed. |
-| field-cannon | `astra/unit-anim-3d-siege` | running | 5 | 186 | no | - Posted field-cannon-e-death-strip.png; actual CYCLES render, visual review pending. |
+| field-cannon | `astra/unit-anim-3d-siege` | running | 6 | 178 | no | - Posted field-cannon-e-death-strip.png; actual CYCLES render, visual review pending. |
 | fighter | `astra/unit-anim-3d-fighter` | idle | 0 | 193 | no | - Rendered e-death: 512px, CYCLES; review published. |
 | gaesatae | `astra/unit-anim-3d-gaesatae` | idle | 0 | - | no | - Adjusted head width/position, grip, ankle stance and cloth fold frequency before clip authoring. No quality PASS claimed. |
 | horseman | `astra/unit-anim-3d-mounted` | idle | 1 | 195 | no | - Commit attempt failed: sandbox denied .git/worktrees/lane-6/index.lock. Changes remain uncommitted for the runner, with exact message and requested co-author  |
@@ -51,7 +51,7 @@ Updated 2026-11-23T05:53:13Z. Round = finished rounds (driver count). Pass = the
 | scout | `astra/unit-anim-3d-scout` | idle | 0 | 195 | no | Final verdict: genuine 3D and recognizable scout at 64px; below painting parity at 256px. Next pass should match raised-knee stance, larger expressive face/bear |
 | settler | `astra/unit-anim-3d-settler` | idle | 0 | - | no | - Saved 3D audit passed: source hashes, 53 bones, actual motion, exact loop closing keys and held death; ground/bounds recorded; collision limits explicit. |
 | spartan-hoplite | `astra/unit-anim-3d-spartan-hoplite` | idle | 0 | 169 | no | Commit attempt blocked: Git could not create .git/worktrees/lane-5/index.lock (Operation not permitted); changes left for the runner to commit with the requeste |
-| spearman | `astra/unit-anim-3d-v2` | running | 5 | 192 | no | - Final handoff: git add/commit blocked by sandbox denial creating .git/worktrees/spearman-round2/index.lock (exit 128). Changes remain scoped and uncommitted.  |
+| spearman | `astra/unit-anim-3d-v2` | queued | 7 | 180 | no | - Final handoff: git add/commit blocked by sandbox denial creating .git/worktrees/spearman-round2/index.lock (exit 128). Changes remain scoped and uncommitted.  |
 | stealth-bomber | `astra/unit-anim-3d-stealth-bomber` | not started | 0 | - | no |  |
 | stealth-fighter | `astra/unit-anim-3d-stealth-fighter` | not started | 0 | - | no |  |
 | tagmatic-soldier | `astra/unit-anim-3d-tagmatic-soldier` | idle | 0 | 186 | no | - GPU handoff: from repo root, tools/art/anim3d/units/tagmatic-soldier/gpu.sh (no arguments; uses ROUND from driver). This performs geometry audit, all GPU stag |
