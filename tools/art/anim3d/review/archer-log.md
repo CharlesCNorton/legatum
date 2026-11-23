@@ -77,3 +77,7 @@
 - All 40 real 512 px CPU clip frames and all 40 256 px derivatives retained; five strips/WebPs and rest/detail/pose comparisons published.
 - Packed trimmed 160 px atlas: 938×763, 188696 bytes, WebP quality 75, all 40 frames, exact alpha retained.
 - Pixel validation PASS (hashes, trim reconstruction, exact alpha, margins, motion, held death); scene audit PASS across all clips; Python/shell syntax and whitespace checks PASS.
+- Decoded shipping-atlas comparison saved as archer-g-atlas-check.png; all requested review artifacts exist. 160 px compression remains readable at 64 px; painting parity is not achieved.
+- Commit blocked by index.lock permission; merge of newly advanced origin/master 27fa4cb blocked by ORIG_HEAD.lock permission. Runner must merge/commit; no push or PR attempted.
+- Browser art check attempted twice: local Playwright missing, then reused main checkout installation; Chromium launch blocked by sandbox bootstrap_check_in permission (1100), SIGTRAP. Check remains pending on host/build box.
+- GPU handoff wrapper saved at tools/art/anim3d/units/archer/gpu-round.sh. No unit-specific feedback file was present at final check.

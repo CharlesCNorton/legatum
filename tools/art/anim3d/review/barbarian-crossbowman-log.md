@@ -11,3 +11,10 @@
 - Visual review: identity readable at 64px; 256px hood/face, boots, elbows and crossbow width remain below painting. Walk foot contact is weak. No quality PASS claimed.
 - Real 256px AO/curvature bakes completed for skin, gambeson, hood and tiller; all five actions rebuilt against the baked model.
 - e-death: 10 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- e-death: 10 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- b: genuine front, three-quarter and side geometry views.
+- Packed 40 frames, trimmed 160px cells, WebP quality 90, 167472 bytes.
+- Wrote 8 second five-clip H.264 yuv420p review barbarian-crossbowman-round1.mp4
+- Final CPU verification: 40 frames, 167472-byte quality-90 trimmed 160px atlas; source audit passed all five 53-bone clips; Python/shell syntax and diff whitespace passed; ffprobe confirms 1600x348 H.264 yuv420p, 240 frames, 8.000s. GPU/512 masters pending lead handoff.
+- Death crossbow now settles flat; terminal body still partly suspended. Rest hood/face and boots remain visibly below painting. No PASS marker.
+- Git add/commit blocked: sandbox denies .git/worktrees/lane-20/index.lock. Changes left uncommitted for runner; commit-based repository gates deferred. No push or PR.

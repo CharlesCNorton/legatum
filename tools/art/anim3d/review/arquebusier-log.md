@@ -47,3 +47,14 @@
 - Posted e-move review (CPU, 256 px).
 - Authored and saved death action (10 output frames).
 - Posted e-death review (CPU, 256 px).
+- Fixed swapped left/right march targets after inspecting the move strip; rerendered eight move frames.
+- Raster validation found clipped terminal death; translated the fall/settle inside the fixed camera and rerendered ten death frames. Rest/master geometry remains unchanged.
+- Atlas method 4 missed the cap by 1,954 bytes at q75; method 5 passed at 199,554 bytes, q75, all 40 frames, lossless 8-bit alpha, 160 px logical cells and per-frame offsets. No quality-floor or frame-count compromise.
+- Atlas validation PASS: source hashes, frame counts/timing, offsets, decoded alpha, visible margins, motion, exact raw terminal death hold and size/quality. Lanczos alpha 1-3 fringes are preserved; visible-coverage bounds use alpha >8.
+- MP4 PASS: 240 frames, 30 fps, 8 seconds, 1600x348, H.264 yuv420p; inspected a decoded five-clip video frame.
+- Art gate blocked: Chromium fails bootstrap_check_in MachPortRendezvousServer with Permission denied (1100), SIGTRAP. Hygiene and public-claims gates passed. No Rust/runtime changes.
+- Verdict: recognisable at 64 px, still clearly below the painting at 256 px. Face/morion shape, clothing registration/folds, attack shoulder/grip and death ground contact need further work. No PASS marker written.
+- Host must run ROUND=1 tools/art/anim3d/units/arquebusier/gpu.sh for native 512/256 masters and GPU rerender/pack/video. Current native frames are 256 px Cycles CPU previews, not GPU sign-off.
+- Final geometry audit PASS for all five clips: 53 bones, 19,158 anatomical vertices, finite/nondegenerate transforms, stationary base, nonstatic motion, exact idle/move loop endpoints and held death matrices.
+- Python AST checks (five files), shell syntax (both scripts), and git diff --check PASS.
+- Commit attempted with required Co-Authored-By trailer; sandbox denied .git/worktrees/lane-15/index.lock. Changes are uncommitted for the runner; nothing pushed. origin/master is already an ancestor of HEAD.

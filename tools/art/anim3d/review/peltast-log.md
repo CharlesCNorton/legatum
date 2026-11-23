@@ -17,3 +17,14 @@
 - Published e-idle review immediately: CYCLES/CPU, 512 px, 8 frame(s).
 - Loaded all six Sam Blender skills: modeling (real thick/beveled kit, anatomical subdivision), materials (paint projection, generated fills, AO/curvature), cameras (frozen orthographic landmarks), lighting (warm key/cool rim/soft fill), animation (skeletal keys, held death, secondary cloth), rendering (Cycles previews, retained masters, explicit GPU path).
 - First plain/textured reviews preserved before corrections; excluded MPFB helper geometry from boot shells, corrected shirt coverage and pelta normal direction, raised stone to meet boot soles, repaired attack weapon orientation after preview clipping.
+- Built MPFB anatomy, painted rest stance, red chiton, blue cloak, fox-skin cap, woven crescent pelta and three iron-tipped javelins; plain review pending.
+- Published b review immediately: CYCLES/CPU, 256 px, 2 frame(s).
+- Applied original-painting camera projection to full anatomy and physical clothing/equipment; unseen faces use painted fills and surface shaders. No billboard or relief image plane.
+- Found rigid kit drift caused by decomposing inherited nonuniform bone-scale shear into child transforms. Fixed attachment with a full parent inverse, then rebuilt model/projection/bakes/clips so the authored shield and weapon coordinates are preserved.
+- Baked real 512 px AO and curvature on anatomy, red chiton and pelta; AO drives recesses and curvature drives surface roughness. Solidify disabled only during baking.
+- Published c review immediately: CYCLES/CPU, 512 px, 1 frame(s).
+- Authored idle/move/attack/hit/death on MPFB rig: 8/8/10/4/10 samples; looping breathing/steps, thrown-javelin visibility, hit recovery, independent equipment release and held death. Cloth uses authored secondary deformation, not a cloth simulation.
+- Published d review immediately: CYCLES/CPU, 256 px, 4 frame(s).
+- Published e-idle review immediately: CYCLES/CPU, 512 px, 8 frame(s).
+- Git add/commit and merge origin/master denied by sandbox index.lock / ORIG_HEAD.lock; changes remain for runner. No push, PR, hosted bucket or runtime wiring.
+- Published e-move review immediately: CYCLES/CPU, 512 px, 8 frame(s).

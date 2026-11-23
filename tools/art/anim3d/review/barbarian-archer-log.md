@@ -42,3 +42,18 @@ Rest-pose refinement: widened front pelt coverage, lowered hood, raised ragged s
 Visual verdict before packing: same broad wolf-pelt archer identity at 64px, below painting parity at 256px. Face and bow-hand projection artifacts, coarse fur locks, flat garment patches and simplified boots remain visible. Bow curve and torso proportions still differ.
 Death preview inspected through the settled fall. Held terminal samples are checked by transforms and copied exactly to avoid denoiser rounding. Cloak motion is authored deformation, not a physical cloth simulation.
 Consolidated duplicate projected materials; retained independent baked materials. Full preview renders use genuine 512px Cycles CPU frames at 4 samples; GPU handoff uses Metal Cycles at 64 samples.
+Rendered e-idle: 512px, Cycles CPU, 4 samples; raw frames preserved.
+Published e-idle review immediately; CPU preview, not art approval.
+Rendered e-move: 512px, Cycles CPU, 4 samples; raw frames preserved.
+Published e-move review immediately; CPU preview, not art approval.
+Rendered e-attack: 512px, Cycles CPU, 4 samples; raw frames preserved.
+Inspected completed idle and move strips at native 256/64px. Idle is restrained; move alternates planted/swing feet but remains stiff, with inadequate weight transfer. Attack draws, releases the arrow with keyed visibility, relaxes the bow, then recovers. All 40 samples remain in the atlas contract.
+Rest framing measurement: painting alpha bounds (59,12)-(197,244); render (56,11)-(199,246) at 256px. This bounds match does not imply internal anatomical registration. Sampled base patch: painting RGB 250/220/179, render 235/217/191; the render is still less golden than the painting/common cream target.
+Published e-attack review immediately; CPU preview, not art approval.
+Rendered e-hit: 512px, Cycles CPU, 4 samples; raw frames preserved.
+Published e-hit review immediately; CPU preview, not art approval.
+Rendered e-death: 512px, Cycles CPU, 4 samples; raw frames preserved.
+Published e-death review immediately; CPU preview, not art approval.
+Packed 40 frames at 160px, trimmed offsets, quality 80, 189756 bytes.
+All stage/clip CPU previews published and inspected. Atlas validated: 40 frames, 160px trimmed cells, per-frame offsets, WebP quality 80, 189756 bytes. All 512/256 masters retained; eight actual bake maps, source/master hashes and grip/base audits passed. GPU render and lead art judgement remain pending. No painting parity claim.
+Commit attempt blocked by sandbox: cannot create .git/worktrees/lane-2/index.lock. Work left uncommitted for runner. origin/master advanced by two commits during rendering; integration requires the runner's writable Git metadata.

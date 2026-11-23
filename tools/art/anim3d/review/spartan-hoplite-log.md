@@ -29,3 +29,4 @@ Checks before final shield clearance: atlas 175738 bytes, quality 85, 40/40 fram
 Shield contact probe confirmed finger penetration; moved all shield surfaces 75mm forward and grounded the released shield. Follow-up probe hit only shield across all former fingertip pixels.
 Review e-idle: 512px CYCLES/CPU, 12 samples; 8 actual frames.
 Review e-move: 512px CYCLES/CPU, 12 samples; 8 actual frames.
+Review e-attack: 512px CYCLES/CPU, 12 samples; 10 actual frames.

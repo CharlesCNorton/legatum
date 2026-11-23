@@ -25,3 +25,8 @@
 - Enabled Cycles persistent render data for later stage batches to reuse scene compilation across frames; no visual settings or frame counts changed.
 - Published e-hit review from CPU render.
 - Published e-death review from CPU render.
+- First complete pack fit 183904 bytes at WebP quality 75, but validation FAILED death/5 bottom clipping (alpha bbox reached 512). Not accepted as finished delivery.
+- Corrected the released spear's rotation sign so it settles horizontally, raised shield settling clearance, and added evaluated anatomy/boot ground clearance during the fall. Attack and death rerendering; pack now refuses clipped inputs before replacing delivery.
+- Inspected hit strip: recoil and recovery read; no frame-bound clipping seen there.
+- Published d review from CPU render.
+- Published e-attack review from CPU render.
