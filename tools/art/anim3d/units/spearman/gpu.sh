@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Complete host pass. Run from repo root, no arguments; ROUND comes from driver.
 set -euo pipefail
+cd "$(dirname "${BASH_SOURCE[0]}")/../../../../.."
 source tools/art/anim3d/env.sh
-export ROUND="${ROUND:-5}"
+export ROUND="${ROUND:-6}"
 [[ "$ROUND" =~ ^[0-9]+$ ]] || { echo 'ROUND must be an integer' >&2; exit 2; }
 # Keep the exact requested log even if the overnight driver's redirection changes.
 # Avoid a second writer when the driver already redirects to this exact file.
@@ -11,7 +12,16 @@ if ! [[ /dev/fd/1 -ef "$log" ]]; then
   exec > >(tee -a "$log") 2>&1
 fi
 stage=preflight
-trap 'printf "%s\n" "- GPU round $ROUND failed at $stage; inspect gpu-logs-spearman-r${ROUND}.log before judging this pass." >> "$REVIEW/spearman-log.md"' ERR
+status="$REVIEW/spearman-gpu-status.txt"
+failed() {
+  result=$?
+  printf 'round=%s status=failed stage=%s exit=%s\n' "$ROUND" "$stage" "$result" > "$status"
+  printf '%s\n' "- GPU round $ROUND failed at $stage (exit $result); inspect gpu-logs-spearman-r${ROUND}.log before judging this pass." >> "$REVIEW/spearman-log.md"
+  exit "$result"
+}
+trap failed ERR
+printf 'round=%s status=running started=%s\n' "$ROUND" "$(date -u +%FT%TZ)" > "$status"
+printf 'Spearman GPU round %s | %s | checkout %s\n' "$ROUND" "$(date -u +%FT%TZ)" "$PWD"
 printf '%s\n' "- GPU round $ROUND started: full Cycles GPU pass requested." >> "$REVIEW/spearman-log.md"
 export RENDER_ENGINE=CYCLES CYCLES_DEVICE=GPU CYCLES_BACKEND="${CYCLES_BACKEND:-METAL}"
 export RESOLUTION=512 SAMPLES="${SAMPLES:-64}" GRADE=1
@@ -19,6 +29,8 @@ export RESOLUTION=512 SAMPLES="${SAMPLES:-64}" GRADE=1
 blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python tools/art/anim3d/units/spearman/preflight.py
 stage=project
 tools/art/anim3d/render.sh project
+stage=scene-checks
+blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python tools/art/anim3d/units/spearman/check_scene.py
 # Regenerate every clip from the current master before final renders/audit.
 for clip in idle move attack hit death; do
   stage="animate-$clip"
@@ -46,5 +58,6 @@ stage=delivery
 "$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/spearman/delivery.py validate
 "$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/spearman/delivery.py movie
 printf '%s\n' "- GPU round $ROUND finished: all stages, masters, atlas validation and movie complete; visual review pending." >> "$REVIEW/spearman-log.md"
+printf 'round=%s status=complete finished=%s visual_review=pending\n' "$ROUND" "$(date -u +%FT%TZ)" > "$status"
 # PASS is a visual judgment after reviewing these outputs; never write it here.
 printf '%s\n' "GPU handoff complete: spearman round $ROUND; visual review still required."

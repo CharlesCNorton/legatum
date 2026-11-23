@@ -63,9 +63,9 @@ def limb(u, l, target, pole):
     aim(l, Vector(target)-elbow)
 
 
-# A steeper view matches the painted disc ellipse. Keep this exact camera in
+# Match the painted disc ellipse. Keep this exact camera in
 # rest, clips and final renders; render.py must not reset it after UV calibration.
-sc.camera.location = (2.5, -7, 3.8)
+sc.camera.location = (2.5, -7, 3.25)
 sc.camera.rotation_euler = (Vector((0, 0, 1.20))-sc.camera.location).to_track_quat('-Z', 'Y').to_euler()
 sc.camera.data.ortho_scale = 2.90
 sc.camera.data.dof.use_dof = False
@@ -402,6 +402,13 @@ for ob in list(sc.objects):
         links.new(attr.outputs['Color'], mul.inputs[0]); links.new(tex.outputs['Alpha'], mul.inputs[1])
         strength = nodes.new('ShaderNodeMath'); strength.operation = 'MULTIPLY'
         links.new(mul.outputs[0], strength.inputs[0]); strength.inputs[1].default_value = .96
+        # Painted illumination is visible pigment, not a lamp. Sending this
+        # emission into diffuse bounces made the feet and base glow orange.
+        # Non-camera rays retain the actual physical material and live shadows.
+        ray = nodes.new('ShaderNodeLightPath')
+        camera_paint = nodes.new('ShaderNodeMath'); camera_paint.operation = 'MULTIPLY'
+        links.new(strength.outputs[0], camera_paint.inputs[0])
+        links.new(ray.outputs['Is Camera Ray'], camera_paint.inputs[1])
         # Brushwork contains painted illumination: preserve it with an emissive
         # pigment layer, leaving 4% actual PBR to reveal moving surface relief.
         pigment = nodes.new('ShaderNodeBsdfPrincipled'); pigment.label = 'Painted illumination, fixed rest UV'
@@ -411,7 +418,7 @@ for ob in list(sc.objects):
         links.new(tex.outputs['Color'], pigment.inputs['Emission Color'])
         pigment.inputs['Emission Strength'].default_value = 1
         blend = nodes.new('ShaderNodeMixShader')
-        links.new(strength.outputs[0], blend.inputs[0]); links.new(physical, blend.inputs[1]); links.new(pigment.outputs[0], blend.inputs[2]); links.new(blend.outputs[0], output.inputs['Surface'])
+        links.new(camera_paint.outputs[0], blend.inputs[0]); links.new(physical, blend.inputs[1]); links.new(pigment.outputs[0], blend.inputs[2]); links.new(blend.outputs[0], output.inputs['Surface'])
 for mod, enabled in saved_modifiers: mod.show_viewport = enabled
 cloth.show_viewport = True
 sc['projection_v3'] = True

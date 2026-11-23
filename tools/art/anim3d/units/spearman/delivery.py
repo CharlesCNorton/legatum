@@ -166,7 +166,7 @@ def movie():
     report = json.loads((REVIEW/'spearman-delivery.json').read_text())
     label = 'CPU preview' if report['preview'] else 'GPU'
     frames = {c: [decode(meta, atlas, c, i).resize((320, 320), Image.Resampling.NEAREST) for i in range(n)] for c, (n, _, _) in CLIPS.items()}
-    path = REVIEW/f'spearman-round{os.environ.get("ROUND", "4")}.mp4'
+    path = REVIEW/f'spearman-round{os.environ.get("ROUND", "6")}.mp4'
     command = ['ffmpeg', '-v', 'error', '-y', '-f', 'rawvideo', '-pixel_format', 'rgb24', '-video_size', '1600x352', '-framerate', '24', '-i', '-', '-an', '-c:v', 'libx264', '-threads', '2', '-pix_fmt', 'yuv420p', '-crf', '18', '-movflags', '+faststart', str(path)]
     process = subprocess.Popen(command, stdin=subprocess.PIPE)
     try:

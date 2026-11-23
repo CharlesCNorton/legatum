@@ -169,6 +169,36 @@ for f in range(1,end+1):
  # Loop clips sample before the duplicate final phase.
  if clip in ['idle','move']:t=max(0,(f-25))/(count*24/fps)
  pose(t)
+ # Resolve the actual finished sandal underside against the real stone top.
+ # Small foot-bone translations preserve the keyed action and live skinning;
+ # airborne feet are unchanged. The previous root heuristic allowed buried soles.
+ if sc.get('infantry_refinement',0)>=6:
+  base=bpy.data.objects['Stationary cream stone']
+  floor=max((base.matrix_world @ v.co).z for v in base.data.vertices)
+  if clip=='death':
+   # Folded greaves can reach the disc before the released shield settles.
+   # Correct the actual calf surface, then let the foot contact solve follow.
+   for side in ['l','r']:
+    for _ in range(2):
+     dg=bpy.context.evaluated_depsgraph_get();lowest=10
+     for ob in sc.objects:
+      if not ob.name.startswith(('Contoured greave '+side,'Greave chased spiral '+side)):continue
+      ev=ob.evaluated_get(dg);me=ev.to_mesh()
+      for v in me.vertices:
+       w=ob.matrix_world @ v.co
+       if w.x*w.x+w.y*w.y<.585**2:lowest=min(lowest,w.z)
+      ev.to_mesh_clear()
+     if lowest>=floor+.002:break
+     calf=rig.pose.bones['calf_'+side];mat=calf.matrix.copy()
+     mat.translation+=rig.matrix_world.to_3x3().inverted() @ Vector((0,0,floor+.002-lowest))
+     calf.matrix=mat;bpy.context.view_layer.update()
+  for side in ['l','r']:
+   sole=bpy.data.objects['Leather sandal sole '+side]
+   lowest=min((sole.matrix_world @ v.co).z for v in sole.data.vertices)
+   if lowest<floor+.001:
+    foot=rig.pose.bones['foot_'+side];mat=foot.matrix.copy()
+    mat.translation+=rig.matrix_world.to_3x3().inverted() @ Vector((0,0,floor+.001-lowest))
+    foot.matrix=mat;bpy.context.view_layer.update()
  rig.keyframe_insert(data_path='location',frame=f)
  for o in spear_objects:
   o.keyframe_insert(data_path='location',frame=f);o.keyframe_insert(data_path='rotation_quaternion',frame=f)

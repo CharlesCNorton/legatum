@@ -231,6 +231,60 @@ already redirects there, and logs the failed stage on error. No prior GPU pass
 is inferred from old review files. The round-4 files supplied for round 5 were
 CPU-labelled, and the requested round-4 GPU log was absent.
 
+### Round 6 finished-surface projection
+
+MPFB's active macro shape keys override direct `data.vertices` edits. Bake the
+current mixed morph on the working projection copy before inverse-skin fitting;
+otherwise body corrections can appear in the script without changing a single
+rendered foot vertex. Keep the original morphable human in the clean
+`projection-input.blend` checkpoint. This retains the 19,158-vertex topology,
+original weights and 53-bone rig, and the scene check rejects unfrozen shape keys.
+
+Apply static Solidify/Bevel/Subsurf modifiers on rigid kit **before** frozen UV
+calibration. The prior raw-mesh UVs moved when modifiers generated the rendered
+surface, visibly doubling the shield's painted rays despite correctly seated
+relief. The finished shell, rays, rim, helmet and straps keep their real volume
+and bone parenting. Deforming body and cloth keep their original topology and
+skin weights. The original AO/curvature and generated unseen-surface fills remain.
+
+Seating only the endpoints of the shield rays was insufficient: their long flat
+triangles cut through the convex support between endpoints. Subdivide the actual
+rays and intersect every vertex with the evaluated shell, interpolating the
+original keel height. Check the finished face centers for penetration as well
+as inspecting clay. Painted registration can conceal buried geometry.
+
+The camera now sits at `(2.5, -7, 3.25)`, looking at `(0, 0, 1.20)`, with the
+same orthographic scale of 2.90. The lower elevation better matches the source
+disc ellipse. The stationary round disc's top is at the `.105m` contact plane
+already used by the spear. Shoulder and spear-side toe fitting happens in the
+rest view before frozen UVs; no per-frame reprojection or alpha cutout is used.
+Foot geometry also moves along the camera ray onto the stone without changing
+its painted screen position. Animation uses the actual finished sole underside
+to apply small foot-bone contact corrections; airborne feet keep their pose.
+The floor audit now derives its threshold from the actual disc top (10mm
+penetration tolerance), replacing the old fixed `.07m` limit that missed buried
+soles. Check only the disc's actual flat footprint against its top; a released
+spearhead outside that footprint does not intersect the stone. The world-ground
+check still applies everywhere. Fit the anatomical foot underside inside the
+sandal, and correct the folded calf/greave contact in death before baking cloth.
+It still is not a full skin/cloth collision solver.
+
+Camera-only painted pigment avoids using the source's illumination as a physical
+lamp. Non-camera rays see the original physical material; this retains real
+shadows and avoids orange emission spill. Product lights retain their ratios at
+55% of the prior energy because Standard has no highlight rolloff. Cream stone
+retains physical shading and low-contrast grain, with camera-only pigment to
+open its top/rim. Refit one automatic rest histogram grade after these changes.
+Inspect the expanded detail sheet's sandals and base as well as head/chest/shield.
+
+`units/spearman/check_scene.py` checks the saved camera-only pigment wiring,
+finished rigid surfaces, contact plane, nonzero scales and original body/rig
+counts before clip rebuilds. `ROUND=6 units/spearman/gpu.sh` (with the full
+`tools/art/anim3d/` prefix) remains the complete GPU handoff. It resolves its own
+checkout, defaults ROUND to 6, and writes `spearman-gpu-status.txt` with running,
+failed-stage/exit, or complete/pending-visual-review status, alongside the round
+log. Missing logs and CPU-labelled images are not evidence of a GPU pass.
+
 ### Trimmed atlas v2 and checks
 
 `units/spearman/delivery.py` preserves 8/8/10/4/10 frames, real alpha, and the
