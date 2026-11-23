@@ -112,3 +112,4 @@
 - Round8 rest diagnostics: IoU0.8862 versus round7 0.8839; RGB union error21.61/26.82/27.92 versus22.25/27.27/28.60. Small improvement, NOT art approval. Compared raw/graded pixel regions: the automatic grade improves the figure overall, so retained the one fixed grade and calibrated the physical stone instead.
 - Round8 saved-scene checks pass: original19158 body vertices/53 bones,314 camera-only painting materials,280 unseen fills, all12 shield rays clear, .105m disc contact top/.155m thickness, five-segment bevel,1mm maximum stone bump distance and5m key. Opened new plain geometry and detail previews before motion rebuilds.
 - Round8 rebuilt and CPU-rendered idle, 256px /12 samples, one frozen rest grade.
+- Round8 rebuilt and CPU-rendered move, 256px /12 samples, one frozen rest grade.
