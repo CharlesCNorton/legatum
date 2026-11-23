@@ -82,3 +82,21 @@ e-hit: review emitted from CYCLES frames; no art-pass claim.
 Rejected continuous lower-leg profile trial after full move strip showed stretched hind legs. Final fitting excludes native leg/shoulder weights from image-plane deformation and retains source leg volumes; head/croup/tack/tail improvements stay. This accepts a remaining rest stance mismatch rather than misreporting a static-only improvement as clean animation. Rebuilding the final candidate; no PASS.
 e-death: review emitted from CYCLES frames; no art-pass claim.
 c: review emitted from CYCLES frames; no art-pass claim.
+b: review emitted from CYCLES frames; no art-pass claim.
+c-details: review emitted from CYCLES frames; no art-pass claim.
+d: review emitted from CYCLES frames; no art-pass claim.
+e-idle: review emitted from CYCLES frames; no art-pass claim.
+e-move: review emitted from CYCLES frames; no art-pass claim.
+e-attack: review emitted from CYCLES frames; no art-pass claim.
+e-hit: review emitted from CYCLES frames; no art-pass claim.
+e-death: review emitted from CYCLES frames; no art-pass claim.
+Final-cycle visual check caught detached added tail locks in death despite valid 187976-byte Q80 atlas. Root cause: copied skin weights/armature but missing native horse object parent hierarchy. Fixed parent/matrix inheritance in finish.py and added audit assertion; full rerender follows. Size/alpha/rig passes alone are explicitly insufficient for PASS.
+c: review emitted from CYCLES frames; no art-pass claim.
+b: review emitted from CYCLES frames; no art-pass claim.
+c-details: review emitted from CYCLES frames; no art-pass claim.
+d: review emitted from CYCLES frames; no art-pass claim.
+e-idle: review emitted from CYCLES frames; no art-pass claim.
+e-move: review emitted from CYCLES frames; no art-pass claim.
+e-attack: review emitted from CYCLES frames; no art-pass claim.
+e-hit: review emitted from CYCLES frames; no art-pass claim.
+e-death: review emitted from CYCLES frames; no art-pass claim.
