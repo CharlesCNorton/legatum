@@ -26,3 +26,15 @@
 - Posted e-move review (CPU, 256 px).
 - Posted e-attack review (CPU, 256 px).
 - Posted e-hit review (CPU, 256 px).
+- Posted e-death review (CPU, 256 px).
+- First clay/textured comparison posted immediately; rejected as final: edge-on comb, low face registration, pale base and source stone projected onto shoe toes.
+- Raised anatomical head and collar, exposed/shortened the morion comb, reduced lighting, and baked six real AO/curvature maps at 256 px.
+- First action previews exposed shoulder/grip mismatch; revised gun aim and slide, made all pose channels Euler before keying, removed painting spill on shoes, and warmed the base pigment.
+- Static project gates: hygiene PASS, public-claims PASS; art gate's Node renderer failed (environment/render dependency, requires follow-up). No rules, Rust or runtime changes.
+- Posted c-textured-lit review (CPU, 256 px).
+- Authored and saved idle action (8 output frames).
+- Authored and saved move action (8 output frames).
+- Authored and saved attack action (10 output frames).
+- Authored and saved hit action (4 output frames).
+- Authored and saved death action (10 output frames).
+- Posted d-rig-poses review (CPU, 256 px).

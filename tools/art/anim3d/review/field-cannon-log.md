@@ -90,3 +90,4 @@
 - Grade corrected to fit in application order: channel gains first, then luminance contrast, then saturation; the old always-increase saturation overshot the reference. One frozen rest grade still applies to every clip. Intermediate measured luma stddev was 65.45 vs painting 65.54, saturation 85.53 vs 84.66; final measurements refresh after the last geometry/material pass.
 - Static gate attempt at the runner's WIP HEAD: public-claims PASS; hygiene falsely recognized unspaced Python matrix @ operators as email addresses (spacing corrected); art rendering failed in local Chromium. Final committed HEAD and cloud retry pending.
 - Posted field-cannon-e-idle-strip.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-move-strip.png; actual CYCLES render, visual review pending.

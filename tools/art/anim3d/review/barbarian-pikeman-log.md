@@ -3,3 +3,9 @@
 - Loaded all six Blender skills: modeling (subdivision, thick cloth, beveled fittings), materials (metal/cloth/skin with wear), lighting (warm key/cool rim/fill), cameras (painting registration), animation (skeletal keys and loop endpoints), rendering (CPU previews and GPU handoff).
 - Retrieved original CC BY 4.0 painting; reusing installed MPFB CC0 anatomy and existing generated unseen linen fill. No new third-party models.
 - Started separate MPFB anatomy build through plain blender gate; no visual verdict yet.
+- Built 53-bone MPFB model and 68 fitted kit meshes; saved editable plain/projected masters and projection records.
+- Published first b/c CPU previews immediately; corrected copied MPFB fitting helpers and pike parent offset found in plain review.
+- Corrected inward helmet normals, lowered/contracted kettle brim to painting, added collar and thicker trouser/boot shells.
+- Rest review remains distinguishable: face, quilting, boots and warm stone need craft refinement; no PASS claim.
+- Authored five clips with common pike control/two-hand solve, loop closure keys, depth-directed fall and held death; CPU clip previews pending.
+- Added no-argument Cycles Metal GPU handoff, immutable per-run grade, trimmed 160 px atlas with lossless alpha, and trim-aware round MP4 encoder.
