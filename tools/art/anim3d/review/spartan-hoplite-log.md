@@ -38,3 +38,5 @@ Review e-move: 512px CYCLES/CPU, 8 samples; 8 actual frames.
 Review e-attack: 512px CYCLES/CPU, 8 samples; 10 actual frames.
 Review e-hit: 512px CYCLES/CPU, 8 samples; 4 actual frames.
 Review e-death: 512px CYCLES/CPU, 8 samples; 10 actual frames.
+FINAL round 1: 40 actual 512px RGBA frames + 40 256px derivatives verified; 172788-byte atlas at quality 85. Atlas/trim/motion/held-death validation PASS; full rig audit 0 findings; shield probe only shield. Art verdict: still below painting at 256px, recognizable at 64px; GPU review and broader art gate outstanding.
+Commit attempt blocked: Git could not create .git/worktrees/lane-5/index.lock (Operation not permitted); changes left for the runner to commit with the requested co-author line.

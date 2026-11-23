@@ -2,3 +2,6 @@
 - Reusing MPFB CC0 anatomy and helper routines from the infantry lead, and unit-local packaging/rendering from barbarian-crossbowman.
 - b: genuine front, three-quarter and side geometry views.
 - c: 1 frames reviewed at 256/64; CYCLES CPU, 6 samples, source 256px.
+- c: 1 frames reviewed at 256/64; CYCLES CPU, 6 samples, source 256px.
+- First b/c images published immediately. Review found low framing, misregistered helmet/face, long low crossbow and floating-looking shoes; shifted camera, adjusted bow/stirrup geometry, shield height and added leather shoe shells.
+- c: 1 frames reviewed at 256/64; CYCLES CPU, 6 samples, source 256px.

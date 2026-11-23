@@ -18,3 +18,9 @@ Published e-move review: CPU 512 px, 8 samples; fixed rest-derived grade.
 Published e-attack review: CPU 512 px, 8 samples; fixed rest-derived grade.
 Published e-hit review: CPU 512 px, 8 samples; fixed rest-derived grade.
 Published e-death review: CPU 512 px, 8 samples; fixed rest-derived grade.
+Published e-death review: CPU 512 px, 8 samples; fixed rest-derived grade.
+Packed 40 trimmed 160 px frames, WebP quality 80, 183202 bytes.
+Published five-clip, 2x, cream-background H.264 review: barbarian-scout-round1.mp4
+Final CPU atlas: 40 trimmed 160 px frames, quality 80, 183202 bytes; validation and stale-clip rejection passed.
+Final MP4 verified: H.264 yuv420p, 1600x348, 240 frames, 8.000 seconds.
+Visual verdict: recognizable at 64 px, below painting at 256 px; crouch/face/arm/waist registration, boot texture, axe grip, shuffle and stiff death need another round. No PASS marker.

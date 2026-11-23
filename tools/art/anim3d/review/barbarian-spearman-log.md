@@ -31,3 +31,13 @@
 - Published d review from CPU render.
 - Published e-attack review from CPU render.
 - Published e-death review from CPU render.
+- Second pack correctly refused attack frames 4/5: the improved jab reached the right edge. Reduced lateral travel while retaining forward reach and fixed grip orientation. Regenerating the attack before the final texture refresh.
+- Added a frozen-UV occluder mask for the original painted spear (measured line through source pixels). It removes the duplicate spear from non-weapon surfaces without altering mesh transparency or animation.
+- Published c review from CPU render.
+- Published c-details review from CPU render.
+- Published d review from CPU render.
+- Published e-idle review from CPU render.
+- Inspected final masked rest/details/attack poses: duplicate spear removed and jab direction corrected. Remaining visible defects: pale fill seam along the masked band, imperfect source-boss registration, narrow upright torso, pointed fur and approximate face. These are recorded as round-two work, not claimed solved.
+- Published e-move review from CPU render.
+- Published e-attack review from CPU render.
+- Published e-hit review from CPU render.

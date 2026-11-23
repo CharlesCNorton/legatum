@@ -58,3 +58,7 @@
 - Authored death skeletal action, 10 samples.
 - Posted e-death review (CPU, 512 px).
 - Audit passed: five clips, source hashes, 53-bone rig, fixed base and positive object scales.
+- Corrected move to retain a planted kneeling knee; death now folds both legs, releases the gun, settles evaluated anatomy and retains the feather inside the downsampled cell. Initial clipping/size pack failures were rejected, then fixed without dropping frames or WebP quality below 75.
+- Final visual review: below painting at 256 px; same kneeling musketman identity at 64 px, but head/hat silhouette, face visibility, cloth articulation and solid-looking smoke remain wrong. No PASS. CPU output uses 512 px / 2 samples; GPU handoff requires a fresh visual review.
+- Python compile, shell syntax and git diff whitespace checks passed. Confirmed 46 PNGs at each of 512/256 px and six genuine 512 px AO/curvature maps. Vitest suites could not execute: cloud box unavailable; local dependencies reused but generated WASM package missing.
+- Final pack passed: 194,550 bytes, quality 80, all 40 trimmed 160 px frames, alpha and source hashes verified. MP4 verified H.264/yuv420p, 1600x348, 240 frames, 8.000 seconds. All requested interim sheets and WebPs exist; no PASS marker.
