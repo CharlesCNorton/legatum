@@ -63,3 +63,13 @@
 - Published b-plain CPU/GPU geometry stage before texture work.
 - Baked 256px AO and curvature maps on GEO-Shield wing -1, GEO-Shield wing 1, GEO-Hollow tapered barrel
 - Published painted rest pose and 50/50 comparison; real AO shader, micrograin, edge geometry and hidden-surface fill.
+- Published b-plain CPU/GPU geometry stage before texture work.
+- Baked 256px AO and curvature maps on GEO-Shield wing -1, GEO-Shield wing 1, GEO-Hollow tapered barrel
+- Published painted rest pose and 50/50 comparison; real AO shader, micrograin, edge geometry and hidden-surface fill.
+- Published three sequential plain/textured CPU iterations immediately. Added deeper broad wheel rings, 96 real rim rivets, beveled rectangular spokes, source-landmark fitting of solid spoke endpoints in physical dish planes, selective frozen wheel projection and generated paint on unseen sides. Corrected hidden braces being included in projection occluders. Narrower spokes limit doubled edges; no alpha-cutout geometry or image cards.
+- Added masked warm source stone pigment and actual grain to the camera-visible stone shader; excludes gun and dark stationary source shadows. Shifted trail toward source footprint; softened/elongated solid flash. SHA256 pins now checked before build. GPU script tees its transcript into driver output (the round1 driver log was empty because all output was redirected) and retains strict Metal preflight.
+- CPU still verdict: much closer wheel silhouette and warm stone; source hub/spoke registration and lower carriage remain visibly different. NOT PASS. Starting full CPU512/12 set and independent saved-clip audit.
+- Published b-plain CPU/GPU geometry stage before texture work.
+- Baked 256px AO and curvature maps on GEO-Shield wing -1, GEO-Shield wing 1, GEO-Hollow tapered barrel
+- Published painted rest pose and 50/50 comparison; real AO shader, micrograin, edge geometry and hidden-surface fill.
+- Published e-idle: 8 actual rendered frames, 10 fps; CPU 512px 12 samples.
