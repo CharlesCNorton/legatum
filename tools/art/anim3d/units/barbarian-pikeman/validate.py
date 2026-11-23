@@ -3,6 +3,7 @@ import hashlib,json,os
 from pathlib import Path
 from PIL import Image,ImageChops
 R=Path(os.environ.get('ANIM_ROOT',str(Path.home()/'LegatumRuns/anim-pilot')));V=R/'review/3d-v2';M=R/'masters/barbarian-pikeman';slug='barbarian-pikeman';p=Path('app/src/assets/units/anim')/slug
+(V/f'{slug}-validation.json').unlink(missing_ok=True)
 meta=json.loads(p.with_suffix('.json').read_text());atlas=Image.open(p.with_suffix('.webp')).convert('RGBA');report=json.loads((V/f'{slug}-pack.json').read_text());assert p.with_suffix('.webp').stat().st_size<=200000;assert report['quality']>=75;assert hashlib.sha256(p.with_suffix('.webp').read_bytes()).hexdigest()==report['atlas_sha256'];assert atlas.size==(meta['atlas']['w'],meta['atlas']['h']);assert meta['frame']['w']==meta['frame']['h']==160
 assert hashlib.sha256((M/f'{slug}.blend').read_bytes()).hexdigest()==report['master_sha256'],'Stale master'
 assert hashlib.sha256((M/'grade.json').read_bytes()).hexdigest()==report['grade_sha256'],'Stale grade'

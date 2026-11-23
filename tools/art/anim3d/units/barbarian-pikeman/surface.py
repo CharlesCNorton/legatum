@@ -42,3 +42,32 @@ def finish_surfaces():
             x = 256 * world_to_camera_view(scene, scene.camera, world).x
             target = 117 + (x - 117) * .45 if x > 117 else 96 + (x - 96) * .8 if x < 96 else x
             vertex.co = inverse @ (world + right * ((target - x) * scene.camera.data.ortho_scale / 256))
+    # The coat's upper side extended beyond the painted shoulder as a bare
+    # triangular flap. Fit the volume in the actual guard pose, then inverse-skin
+    # that small camera-plane adjustment into the editable weighted mesh.
+    rig = bpy.data.objects['RIG-pikeman']
+    obj = bpy.data.objects['GEO-quilted-gambeson']
+    deps = bpy.context.evaluated_depsgraph_get()
+    evaluated = obj.evaluated_get(deps); mesh = evaluated.to_mesh()
+    from mathutils import Matrix
+    for vertex, posed in zip(obj.data.vertices, mesh.vertices):
+        world = evaluated.matrix_world @ posed.co
+        screen = world_to_camera_view(scene,scene.camera,world)
+        x,y = screen.x*256,(1-screen.y)*256
+        if 90 < y < 145:
+            limit = 124+max(0,y-108)*.12
+            excess = max(0,x-limit)
+            fade = min(1,(y-90)/8,(145-y)/8)
+            if excess > 0:
+                transform = Matrix(((0,0,0,0),)*4); total = 0
+                for group in vertex.groups:
+                    name = obj.vertex_groups[group.group].name
+                    if name in rig.pose.bones:
+                        transform += (rig.pose.bones[name].matrix @ rig.data.bones[name].matrix_local.inverted())*group.weight
+                        total += group.weight
+                if total:
+                    transform *= 1/total
+                    delta = rig.matrix_world.inverted().to_3x3() @ (-right*excess*.85*fade*scene.camera.data.ortho_scale/256)
+                    vertex.co += transform.to_3x3().inverted() @ delta
+    evaluated.to_mesh_clear()
+    bpy.context.view_layer.update()

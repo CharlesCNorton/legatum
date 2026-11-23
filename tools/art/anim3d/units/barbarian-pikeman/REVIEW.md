@@ -1,63 +1,61 @@
-# Barbarian pikeman, round 2
+# Barbarian pikeman — driver round 2
 
-Status: **candidate, not an art pass**. No PASS marker. True articulated MPFB
-anatomy, original full-depth kit and frozen surface UVs; no billboard or relief
-substitute. Prior round evidence is preserved outside git in
-`masters/barbarian-pikeman/round1-preserved`.
+Status: **candidate, not an art pass**. No PASS marker. The driver round-one
+GPU pass succeeded: Cycles Metal512, 175552 bytes at Q90, validated 512/256
+masters and H.264 review movie. Its evidence is preserved externally under
+`masters/barbarian-pikeman/driver-r1-gpu/`.
 
-At 256 px, the coat brushwork is crisper, the forward elbow/fist are much closer
-to the reference, the oversized kettle brim is reduced, knees/boots fit better,
-and the pike is thin and continuously brown. Fitted garments now inherit exact
-anatomical vertex weights; this removes the sleeve spikes caused by copying
-hands into clothing and assigning nearby finger weights. Static modifiers and
-macro shapes are finished before camera projection. Camera-only painted pigment
-avoids double lighting and source illumination spilling onto other surfaces.
+This revision retains true MPFB anatomy, original weighted full-depth kit,
+finished-geometry frozen camera UVs, product lighting and one automatic fixed
+histogram grade. It adds image-generated linen on hidden garment surfaces,
+raised diagonal quilting, an inverse-skinned coat-side fit, a shallower warm
+stone disc and clean front-rim source pigment. Projection is forbidden on the
+stone top and above token y225. Cream contamination on rolling boot edges is
+masked while leather highlights remain.
 
-The cream stone has a smooth bevel, low grain, live contact shading and no
-projected boot marks. It is still too uniformly shaded, with a darker/rounder
-front edge than the painting. The rear forearm/shoulder contour, face and boot
-shapes still differ. At 64 px the buff/red costume, wide stance and long pike
-read as the same unit; it is still distinguishable from the source token.
+Idle, move, hit and death now use CC0 Quaternius Universal Animation Library
+Standard actions, calibrated through Blender constraints including rest poses
+and bone roll. These are authored library animations, not mocap. The native
+foot rotations are retained. Root translation stabilizes sampled toe stance;
+vertical contact uses evaluated surfaces. Both hands solve to one pike control;
+its carrying height is limited by the fixed camera so the long tip stays inside
+the frame. The original short thrust remains. Hit recovers to guard, death
+releases the pike and holds its last two samples. No cloth simulation is claimed.
 
-All five clip strips were inspected. Idle is subtle, move remains stiff, attack
-is a short two-handed thrust, and hit recovers. Death releases the pike and holds
-its last two frames, but its raised leg and fall remain too posed. Revealed cloth
-and skin are simpler than the source-facing paint. The rig audit checks a
-stationary base, finite transforms, nonzero scales, 53 bones and wrist/shaft
-proximity; it is not a complete grip, cloth or floor collision solver.
+At **256 px**, the front paint and base are closer, but the shoulder/sleeve
+junction still has a plain patch, boots and face lose some painted detail, and
+revealed surfaces are less rich. The thrust remains restrained and the move's
+upright silhouette differs substantially from the braced guard. At **64 px**,
+the helmet, buff/red costume and long pike clearly read as the same unit, but
+rest is still distinguishable. All five strips and sampled decoded movie frames
+were inspected. This does not meet the hard-to-distinguish art bar yet.
 
-Current delivery is explicitly **Cycles CPU12 / 256px preview**:
+The numeric foot audit measures yaw with the lateral foot axis. An initial
+ankle-to-toe horizontal test falsely flagged steep toe-off as reversed travel;
+source and target rest axes were inspected and the measurement was corrected,
+without changing foot rotations. Maximum forward yaw is 1.73 degrees; sampled
+stance residual is 0.000001062 m. These measurements are not a complete
+heel/toe rollover or cloth collision proof.
 
-- Forty samples: idle 8, move 8, attack 10, hit 4, death 10.
-- Trimmed 160px logical cells, **158,564 bytes at WebP quality 90**, lossless alpha.
-- Decoded alpha/offsets, bounds, motion, source hashes and held-death source/RGB
-  equality pass. Duplicate frames share a rectangle without dropping samples.
-- Six fresh 256px AO/Pointiness bakes and saved editable master/clip blends.
-- Round-2 MP4: H.264, yuv420p, 1600 × 348, 240 frames, eight seconds; all five
-  decoded clips side by side on cream, at 2x logical frame size.
-- Scene/rig checks, all 15 Python files, both shell scripts and whitespace checks pass.
-- The GPU receipt correctly rejects this CPU delivery; the missing-input test
-  records the failed preflight and leaves no success receipt.
-- The actual GPU entry point reaches device discovery and correctly fails with
-  `Metal GPU unavailable; no CPU fallback` in this sandbox. GPU rendering is
-  unverified here. Device discovery uses a CPU slot; actual renders use the GPU gate.
-- Repository hygiene and public-claims pass on the committed changes. Initial
-  hygiene false positives on matrix operators were fixed with spacing. The art
-  gate is blocked by Chromium `bootstrap_check_in ... Permission denied (1100)`
-  in the sandbox; no distinctness result or browser art approval is claimed.
+Current delivery and checks are recorded in the external unit log and
+`barbarian-pikeman-validation.json`. CPU previews are Cycles CPU12/256, all
+40 samples, 160px trimmed logical cells, **172048 bytes at Q90**, and lossless alpha. The scene, source
+hashes and 40-frame rig audit pass; the rig's maximum wrist/shaft distance is
+6.94 cm (a wrist metric, not a palm-contact proof). Six AO/Pointiness maps were
+rebuilt. The front/top foot cycle is saved as `barbarian-pikeman-g-feet-check.png`.
+All 16 Python files and both shell scripts pass syntax checks; whitespace passes. The movie is verified H.264/yuv420p, 1600x348, 240 frames and exactly eight seconds. No Rust or runtime UI changed.
 
-The runner reassigned lane-17 mid-round after WIP commit `57e4b781`. Continue on
-`astra/unit-anim-3d-barbarian-pikeman` in `.worktrees/barbarian-pikeman-round2`, not
-in the active artillery checkout. The single executable host handoff is:
+The GPU receipt rejects CPU deliveries. Actual device preflight reports
+`Metal GPU unavailable; no CPU fallback` in this sandbox. The revised GPU pass
+must still run on the lead's host:
 
 ```sh
 ROUND=2 tools/art/anim3d/units/barbarian-pikeman/gpu.sh
 ```
 
-It checks the actual Metal device, regenerates all clips, audits, renders every
-stage at GPU64/512, retains 512px masters and 256px derivatives, packs/validates,
-and writes the round MP4. Its retained log and failed-stage status distinguish
-an interrupted run from a completed one. A fresh success receipt requires GPU
-provenance, matching master hashes, every 512/256 frame and a probed movie.
-Final GPU rendering and visual acceptance remain outstanding; CPU previews do
-not manufacture 512px masters or establish GPU success.
+The executable no-argument handoff validates inputs and device, rebuilds clips,
+audits, renders all ten stages (including sixteen foot views) on Cycles Metal
+at 512px, retains 512/256 masters, grades, trims, validates, writes the eight-second
+side-by-side MP4 and verifies its codec/pixel format/frame count. Logs, failure
+stage and a fresh receipt distinguish completion from an interrupted run.
+It does not write PASS; fresh GPU art and motion review is still required.

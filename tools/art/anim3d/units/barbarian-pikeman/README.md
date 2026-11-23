@@ -1,4 +1,4 @@
-# Barbarian pikeman — round 1 candidate
+# Barbarian pikeman — driver round 2 candidate
 
 Run from the repository root. The infantry/two-handed-pike chapter in
 `tools/art/anim3d/PLAYBOOK.md` documents rebuilding, external inputs and metadata.
@@ -6,12 +6,12 @@ Run from the repository root. The infantry/two-handed-pike chapter in
 The one-command host render is:
 
 ```sh
-ROUND=1 tools/art/anim3d/units/barbarian-pikeman/gpu.sh
+ROUND=2 tools/art/anim3d/units/barbarian-pikeman/gpu.sh
 ```
 
 It requires the saved unit masters under `~/LegatumRuns/anim-pilot/masters/barbarian-pikeman/`
 and the installed external Blender/Pillow environment. It uses Cycles Metal,
-keeps 512/256 masters, publishes every review stage and the split/crossfade,
+keeps 512/256 masters, publishes every review stage, front/top feet and the split/crossfade,
 packs/validates the 160 px trimmed atlas and makes the eight-second round MP4.
 No network, uploads, release or runtime changes occur.
 

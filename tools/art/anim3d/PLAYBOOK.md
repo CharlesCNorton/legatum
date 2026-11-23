@@ -240,3 +240,41 @@ make interrupted passes distinguishable from completion. `check_delivery.py`
 requires actual GPU512 manifests, matching blend hashes, every 512/256 master and
 the probed H.264/yuv420p movie. CPU previews cannot produce that receipt. The host
 GPU pass remains required; technical success never writes the art PASS marker.
+
+
+### Pikeman driver round 2 after the successful round-one GPU pass
+
+The actual round-one GPU pass succeeded (175552 bytes, Q90); preserved review
+images, receipt and movie are in `masters/barbarian-pikeman/driver-r1-gpu/`.
+The log distinguishes that driver round from the earlier CPU refinement rounds.
+
+The current standard for humans is open motion first: CC0 Quaternius Universal
+Animation Library Standard supplies Idle_Loop, Walk_Loop, Hit_Chest and Death01.
+These are authored library actions, not mocap. `retarget.py` calibrates native
+Blender rotation constraints in reference/rest space including bone roll. The
+weapon-specific thrust remains original; both wrists follow one rigid pike
+control. Move uses source leg rotations without post-retarget foot rotation
+patches, with small root translations to stabilize sampled toe stance. Death
+blends out of the painted guard, releases the pike and holds the last two frames.
+Source, licence and derived image hashes are pinned in `assets.lock.json` and
+verified before a GPU pass. Full attribution is in unit-local `SOURCES.md`.
+
+Always render the complete move cycle from front and top, saved as
+`barbarian-pikeman-g-feet-check.png`. The top view clips above the knees so the
+actual boots remain visible. Audit sampled forward foot direction and stance
+translation numerically; inspect heel/toe contact and loop seams visually too.
+This is the standard walking review, not a substitute for animation judgment.
+
+Hidden garment faces use the existing image-generated linen via blended box
+mapping, cavity pigment and raised diagonal quilting. Source-colored stone on
+boot edges is masked rather than carried onto the rolling toes. The cream disc
+is shallower, has a tighter bevel and brighter fine-grained rim. Only its clean
+front region below token y225 receives painting UV color, fading in over three
+pixels; all vertices above that cutoff or with upward normal z > .35 have zero projection mask, so the top
+retains live contact shading without fixed painted boots.
+
+The same fixed 17-quantile grade applies to every frame. GPU handoff now includes
+the front/top feet stage and requires its 512/256 masters in the receipt. All
+Blender invocations still run sequentially through plain `blender` on PATH.
+Technical success never creates PASS; rest and all five clips still require
+visual parity with the painting.

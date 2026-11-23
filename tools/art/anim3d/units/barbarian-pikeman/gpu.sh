@@ -17,7 +17,7 @@ git rev-parse HEAD
 git status --short
 command -v blender
 export RENDER_ENGINE=CYCLES CYCLES_DEVICE=GPU RESOLUTION=512 SAMPLES="${SAMPLES:-64}"
-export STAGES=b-plain,c-textured-lit,c-details,d-rig-poses,e-idle,e-move,e-attack,e-hit,e-death
+export STAGES=b-plain,c-textured-lit,c-details,d-rig-poses,e-idle,e-move,e-attack,e-hit,e-death,g-feet-check
 UNIT_DIR=tools/art/anim3d/units/barbarian-pikeman
 test -s "$ANIM_ROOT/masters/barbarian-pikeman/barbarian-pikeman.blend"
 # Device discovery does not render. Use a CPU slot so an unavailable device is

@@ -43,7 +43,7 @@ def main():
  for folder in sorted(raw.iterdir()):
   if not (folder/'render.json').exists():continue
   manifest=json.loads((folder/'render.json').read_text());stage=folder.name
-  source=M/'clips'/f'{stage[2:]}.blend' if stage.startswith('e-') else M/'clips/attack.blend' if stage=='d-rig-poses' else M/('plain.blend' if stage=='b-plain' else SLUG+'.blend')
+  source=M/'clips'/f'{stage[2:]}.blend' if stage.startswith('e-') else M/'clips/attack.blend' if stage=='d-rig-poses' else M/'clips/move.blend' if stage=='g-feet-check' else M/('plain.blend' if stage=='b-plain' else SLUG+'.blend')
   if args.review_only and manifest['blend_sha256']!=sha(source):continue
   if args.review_only and any(manifest[k]!=rest_manifest[k] for k in ['engine','device','samples','resolution']):continue
   if source.parent.name=='clips':
@@ -64,6 +64,9 @@ def main():
    top=panel(ims,[f'{clip} {i+1}' for i in range(n)]);sheet=Image.new('RGBA',(top.width,top.height+88),CREAM);sheet.alpha_composite(top)
    for i,im in enumerate(ims):sheet.alpha_composite(im.resize((64,64),Image.Resampling.LANCZOS),(i*256+96,top.height+12))
    sheet.save(V/f'{SLUG}-{stage}-strip.png');ims[0].save(V/f'{SLUG}-{stage}.webp',save_all=True,append_images=ims[1:],duration=round(1000/fps),loop=0,lossless=True)
+  elif stage=='g-feet-check':
+   front=panel(ims[:8],[f'front {i+1}' for i in range(8)],160);top=panel(ims[8:],[f'top {i+1}' for i in range(8)],160)
+   sheet=Image.new('RGBA',(front.width,front.height+top.height),CREAM);sheet.alpha_composite(front);sheet.alpha_composite(top,(0,front.height));sheet.save(V/f'{SLUG}-g-feet-check.png')
   elif stage=='d-rig-poses':panel(ims,['guard','anticipation','thrust','recover']).save(V/f'{SLUG}-{stage}.png')
   elif stage!='c-details':
    top=panel([ref,ims[0]],['painting','3D '+manifest['device']]);sheet=Image.new('RGBA',(512,370),CREAM);sheet.alpha_composite(top);sheet.alpha_composite(ref.resize((64,64)),(96,294));sheet.alpha_composite(ims[0].resize((64,64)),(352,294));sheet.save(V/f'{SLUG}-{stage}.png')

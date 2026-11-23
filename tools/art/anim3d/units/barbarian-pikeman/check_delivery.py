@@ -16,7 +16,7 @@ report = json.loads((review / f'{slug}-pack.json').read_text())
 validation = json.loads((review / f'{slug}-validation.json').read_text())
 assert report['source_resolution'] == 512 and validation['gpu'] and validation['ok']
 expected = {'b-plain': 1, 'c-textured-lit': 1, 'c-details': 1, 'd-rig-poses': 4,
-            'e-idle': 8, 'e-move': 8, 'e-attack': 10, 'e-hit': 4, 'e-death': 10}
+            'e-idle': 8, 'e-move': 8, 'e-attack': 10, 'e-hit': 4, 'e-death': 10, 'g-feet-check': 16}
 assert set(report['render_sources']) == set(expected)
 for stage, count in expected.items():
     manifest = report['render_sources'][stage]
@@ -24,6 +24,7 @@ for stage, count in expected.items():
     assert manifest['resolution'] == 512 and manifest['frames'] == count
     source = (master / 'clips' / (stage[2:] + '.blend') if stage.startswith('e-') else
               master / 'clips/attack.blend' if stage == 'd-rig-poses' else
+              master / 'clips/move.blend' if stage == 'g-feet-check' else
               master / ('plain.blend' if stage == 'b-plain' else slug + '.blend'))
     assert hashlib.sha256(source.read_bytes()).hexdigest() == manifest['blend_sha256']
     for size in [512, 256]:

@@ -17,7 +17,32 @@ def mat(name,color,metal=0,rough=.65):
  return m
 skin=mat('MAT-painted-skin',(.47,.235,.105));cloth=mat('MAT-quilted-buff',(.55,.35,.15));pants=mat('MAT-worn-brown-trousers',(.18,.115,.055));leather=mat('MAT-scuffed-leather',(.18,.07,.022));steel=mat('MAT-worn-bright-steel',(.48,.43,.32),1,.36);edge=mat('MAT-polished-steel-edge',(.64,.59,.46),1,.25);red=mat('MAT-cinnabar-armtie',(.40,.018,.008));wood=mat('MAT-ash-pike',(.32,.13,.035));hair=mat('MAT-beard',(.07,.032,.013));stone=mat('MAT-cream-E9CFA0',(.815,.624,.352),0,.85)
 # Generated linen fills supply brushwork on unseen cloth; source and prompt recorded in SOURCES.
-n=cloth.node_tree.nodes;l=cloth.node_tree.links;p=n.get('Principled BSDF');tex=n.new('ShaderNodeTexImage');tex.image=bpy.data.images.load(str(A/'fill-linen.png'));tc=n.new('ShaderNodeTexCoord');l.new(tc.outputs['Generated'],tex.inputs['Vector']);mix=n.new('ShaderNodeMixRGB');mix.blend_type='MULTIPLY';mix.inputs[0].default_value=.5;mix.inputs[1].default_value=(.55,.35,.15,1);l.new(tex.outputs['Color'],mix.inputs[2]);l.new(mix.outputs[0],p.inputs['Base Color']);p.inputs['Sheen Weight'].default_value=.25
+n=cloth.node_tree.nodes;l=cloth.node_tree.links;p=n.get('Principled BSDF');tex=n.new('ShaderNodeTexImage');tex.image=bpy.data.images.load(str(A/'fill-linen.png'));tex.projection='BOX';tex.projection_blend=.3;tc=n.new('ShaderNodeTexCoord');l.new(tc.outputs['Generated'],tex.inputs['Vector']);mix=n.new('ShaderNodeMixRGB');mix.blend_type='MULTIPLY';mix.inputs[0].default_value=.5;mix.inputs[1].default_value=(.55,.35,.15,1);l.new(tex.outputs['Color'],mix.inputs[2]);l.new(mix.outputs[0],p.inputs['Base Color']);p.inputs['Sheen Weight'].default_value=.25
+# Generated linen across all faces, with physical cavity shading and low sheen.
+for material in [cloth,pants,leather]:
+ n=material.node_tree.nodes;l=material.node_tree.links;p=n.get('Principled BSDF');out=n.get('Material Output')
+ image=n.new('ShaderNodeTexImage');image.image=tex.image;image.projection='BOX';image.projection_blend=.3
+ coord=n.new('ShaderNodeTexCoord');l.new(coord.outputs['Generated'],image.inputs['Vector'])
+ tint=n.new('ShaderNodeMixRGB');tint.blend_type='MULTIPLY';tint.inputs[0].default_value=.62;tint.inputs[1].default_value=material.diffuse_color;l.new(image.outputs['Color'],tint.inputs[2])
+ cavity=n.new('ShaderNodeAmbientOcclusion');cavity.inputs['Distance'].default_value=.06
+ shaded=n.new('ShaderNodeMixRGB');shaded.blend_type='MULTIPLY';shaded.inputs[0].default_value=.5;l.new(tint.outputs[0],shaded.inputs[1]);l.new(cavity.outputs['Color'],shaded.inputs[2])
+ l.new(shaded.outputs[0],p.inputs['Base Color'])
+ emission=n.new('ShaderNodeEmission');l.new(shaded.outputs[0],emission.inputs['Color'])
+ path=n.new('ShaderNodeLightPath');weight=n.new('ShaderNodeMath');weight.operation='MULTIPLY';weight.inputs[1].default_value=.40;l.new(path.outputs['Is Camera Ray'],weight.inputs[0])
+ mixed=n.new('ShaderNodeMixShader');l.new(weight.outputs[0],mixed.inputs[0]);l.new(p.outputs[0],mixed.inputs[1]);l.new(emission.outputs[0],mixed.inputs[2]);l.new(mixed.outputs[0],out.inputs['Surface'])
+# Raised diagonal quilting continues around unseen shoulders and back.
+n=cloth.node_tree.nodes;l=cloth.node_tree.links;p=n.get('Principled BSDF')
+coord=n.new('ShaderNodeTexCoord');seams=[]
+for angle in [.78,-.78]:
+ mapping=n.new('ShaderNodeMapping');mapping.inputs['Rotation'].default_value[1]=angle;l.new(coord.outputs['Generated'],mapping.inputs['Vector'])
+ wave=n.new('ShaderNodeTexWave');wave.wave_type='BANDS';wave.bands_direction='X';wave.inputs['Scale'].default_value=8;wave.inputs['Distortion'].default_value=.35;l.new(mapping.outputs['Vector'],wave.inputs['Vector'])
+ narrow=n.new('ShaderNodeMath');narrow.operation='GREATER_THAN';narrow.inputs[1].default_value=.94;l.new(wave.outputs['Fac'],narrow.inputs[0]);seams.append(narrow)
+combine=n.new('ShaderNodeMath');combine.operation='MAXIMUM';l.new(seams[0].outputs[0],combine.inputs[0]);l.new(seams[1].outputs[0],combine.inputs[1])
+old=p.inputs['Base Color'].links[0].from_socket
+shade=n.new('ShaderNodeMixRGB');shade.blend_type='MULTIPLY';shade.inputs[2].default_value=(.52,.44,.32,1);l.new(old,shade.inputs[1]);l.new(combine.outputs[0],shade.inputs[0]);l.new(shade.outputs[0],p.inputs['Base Color'])
+for node in n:
+ if node.type=='EMISSION':l.new(shade.outputs[0],node.inputs['Color'])
+bump=n.new('ShaderNodeBump');bump.invert=True;bump.inputs['Strength'].default_value=.3;bump.inputs['Distance'].default_value=.002;l.new(combine.outputs[0],bump.inputs['Height']);l.new(p.inputs['Normal'].links[0].from_socket,bump.inputs['Normal']);l.new(bump.outputs[0],p.inputs['Normal'])
 body.data.materials.clear();body.data.materials.append(skin)
 for f in body.data.polygons:f.use_smooth=True
 sub=body.modifiers.new('Anatomical subdivision','SUBSURF');sub.levels=1;sub.render_levels=1
@@ -172,7 +197,7 @@ for off in [-.03,.02]:
   for s in [-1,1]:vs.append(center+Vector((off+.013*s+.015*math.sin(t*8),-.08+.025*math.sin(t*5),-.23*t)))
  attach(finish(mesh('red-tie-tail',vs,[(2*i,2*i+1,2*i+3,2*i+2) for i in range(12)],red),.004,.001),'upperarm_r')
 # Stationary one-step warm cream base.
-bpy.ops.mesh.primitive_cylinder_add(vertices=96,radius=.59,depth=.075,location=(-.14,.20,.052));base=bpy.context.object;base.name='GEO-cream-stone-base';base.data.materials.append(stone);finish(base,0,.018)
+bpy.ops.mesh.primitive_cylinder_add(vertices=96,radius=.59,depth=.075,location=(-.14,.20,.052));base=bpy.context.object;base.name='GEO-cream-stone-base';base.data.materials.append(stone);base.scale.y=.88;base.location.z+=.012;finish(base,0,.012)
 for p in base.data.polygons:p.use_smooth=abs(p.normal.z)<.5
 base.modifiers['Rounded edges'].segments=5
 stone.node_tree.nodes.get('Bump').inputs['Distance'].default_value=.001
@@ -180,10 +205,13 @@ stone.node_tree.nodes.get('Bump').inputs['Strength'].default_value=.08
 # A camera-only cream pigment opens the stone without painted boot shadows.
 n=stone.node_tree.nodes;l=stone.node_tree.links;p=n.get('Principled BSDF');out=n.get('Material Output')
 g=n.new('ShaderNodeNewGeometry');xyz=n.new('ShaderNodeSeparateXYZ');l.new(g.outputs['Normal'],xyz.inputs[0])
-palette=n.new('ShaderNodeMixRGB');palette.inputs[1].default_value=(.47,.285,.12,1);palette.inputs[2].default_value=(.815,.624,.352,1);l.new(xyz.outputs['Z'],palette.inputs[0])
+palette=n.new('ShaderNodeMixRGB');palette.inputs[1].default_value=(.60,.375,.17,1);palette.inputs[2].default_value=(.815,.624,.352,1);l.new(xyz.outputs['Z'],palette.inputs[0])
 ao=n.new('ShaderNodeAmbientOcclusion');ao.inputs['Distance'].default_value=.06
 pigment=n.new('ShaderNodeMixRGB');pigment.blend_type='MULTIPLY';pigment.inputs[0].default_value=.45;l.new(palette.outputs[0],pigment.inputs[1]);l.new(ao.outputs['Color'],pigment.inputs[2])
-em=n.new('ShaderNodeEmission');l.new(pigment.outputs[0],em.inputs['Color'])
+grain=n.new('ShaderNodeTexNoise');grain.inputs['Scale'].default_value=115;grain.inputs['Detail'].default_value=2
+variation=n.new('ShaderNodeMapRange');variation.inputs['To Min'].default_value=.92;variation.inputs['To Max'].default_value=1.05;l.new(grain.outputs['Fac'],variation.inputs['Value'])
+paintgrain=n.new('ShaderNodeMixRGB');paintgrain.blend_type='MULTIPLY';paintgrain.inputs[0].default_value=1;l.new(pigment.outputs[0],paintgrain.inputs[1]);l.new(variation.outputs[0],paintgrain.inputs[2])
+em=n.new('ShaderNodeEmission');l.new(paintgrain.outputs[0],em.inputs['Color'])
 path=n.new('ShaderNodeLightPath');fac=n.new('ShaderNodeMath');fac.operation='MULTIPLY';fac.inputs[1].default_value=.70;l.new(path.outputs['Is Camera Ray'],fac.inputs[0])
 mix=n.new('ShaderNodeMixShader');l.new(fac.outputs[0],mix.inputs[0]);l.new(p.outputs[0],mix.inputs[1]);l.new(em.outputs[0],mix.inputs[2]);l.new(mix.outputs[0],out.inputs['Surface'])
 bpy.ops.object.camera_add(location=(0,-8,1.105+8*math.tan(.22)));cam=bpy.context.object;cam.name='CAM-painting';cam.rotation_euler=(Vector((0,0,1.105))-cam.location).to_track_quat('-Z','Y').to_euler();cam.data.type='ORTHO';cam.data.ortho_scale=2.6;sc.camera=cam

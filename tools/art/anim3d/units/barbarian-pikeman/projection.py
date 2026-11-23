@@ -14,6 +14,7 @@ def project():
     scene = bpy.context.scene
     camera = scene.camera
     painting = bpy.data.images.load(str(root / 'assets/barbarian-pikeman/painting-aligned.png'))
+    pixels = list(painting.pixels); image_w, image_h = painting.size
     view = camera.matrix_world.to_quaternion() @ Vector((0, 0, 1))
     deps = bpy.context.evaluated_depsgraph_get()
     vertices, faces = [], []
@@ -31,10 +32,7 @@ def project():
     for obj in scene.objects:
         if obj.type != 'MESH' or obj.hide_render:
             continue
-        # Stationary stone must never retain painted feet or cast shadows.
-        if obj.name == 'GEO-cream-stone-base':
-            records.append({'mesh': obj.name, 'projection': False, 'reason': 'physical stationary stone'})
-            continue
+        is_stone = obj.name == 'GEO-cream-stone-base'
         evaluated = obj.evaluated_get(deps)
         mesh = evaluated.to_mesh()
         assert len(mesh.vertices) == len(obj.data.vertices), obj.name
@@ -49,7 +47,18 @@ def project():
             hit, _, _, _ = visibility.ray_cast(world + view * 10, -view, 10.02)
             visible = hit is not None and (hit - world).length < .012
             coords.append((c.x, c.y))
-            weights.append(facing if visible else 0)
+            # Only the clean front rim below the lowest painted boot receives
+            # source pigment. The top remains physical stone with live contact.
+            safe_stone = max(0, min(1, ((1-c.y)*256-225)/3)) if is_stone else 1
+            weight = (facing if visible else 0)*safe_stone
+            if is_stone and normal.z > .35: weight = 0
+            if obj.name.startswith(('GEO-leather-boots', 'GEO-MPFB-anatomy')) and (1-c.y)*256 > 209:
+                x = max(0,min(image_w-1,int(c.x*image_w))); y = max(0,min(image_h-1,int(c.y*image_h)))
+                color = pixels[4*(y*image_w+x):4*(y*image_w+x)+3]
+                # Source stone must not become a painted white toe when a foot
+                # rolls into camera. Retain the full dark leather volume there.
+                if color[0] > .76 and color[1] > .62 and color[2] > .40: weight = 0
+            weights.append(weight)
         for loop in obj.data.loops:
             uv.data[loop.index].uv = coords[loop.vertex_index]
             weight = weights[loop.vertex_index]
@@ -80,7 +89,7 @@ def project():
             links.new(path.outputs['Is Camera Ray'], camera_weight.inputs[1])
             strength = nodes.new('ShaderNodeMath')
             strength.operation = 'MULTIPLY'
-            strength.inputs[1].default_value = .96
+            strength.inputs[1].default_value = .90 if is_stone else .96
             links.new(camera_weight.outputs[0], strength.inputs[0])
             pigment = nodes.new('ShaderNodeEmission')
             pigment.name = 'Camera-only painted illumination'
@@ -98,6 +107,6 @@ def project():
             links.new(pigment.outputs[0], mix.inputs[2])
             links.new(mix.outputs[0], output.inputs['Surface'])
         records.append({'mesh': obj.name, 'vertices': len(obj.data.vertices),
-                        'uv': uv.name, 'visible_vertices': sum(w > 0 for w in weights)})
+                        'uv': uv.name, 'safe_stone_cutoff_token_y': 225 if is_stone else None, 'visible_vertices': sum(w > 0 for w in weights)})
     (root / 'masters/barbarian-pikeman/projection.json').write_text(json.dumps(records, indent=2))
     print('PROJECTION_OK', len(records), flush=True)
