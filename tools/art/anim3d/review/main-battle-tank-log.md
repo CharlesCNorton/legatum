@@ -41,3 +41,9 @@
 - GPU handoff exercised: stopped explicitly at missing Metal device before changing render output. Actual 512px renders remain pending lead GPU pass. Command: ROUND=1 tools/art/anim3d/units/main-battle-tank/gpu.sh.
 - Verdict: same identity at 64px; still visibly different at 256px, especially cupola/MG, barrel sleeve, drum/track contours, rotating painted light and grainy preview smoke. No PASS marker. Rest alpha IoU .9091 and RGB MAE 10.02 are diagnostics only.
 - Commit attempted; sandbox denied .git/worktrees/lane-16/index.lock. Changes remain uncommitted for the runner, with the requested co-author trailer recorded in the handoff. No push or PR.
+- Emitted main-battle-tank-b-plain.png from actual b renders; visual review pending.
+- Emitted main-battle-tank-c-textured-lit.png from actual c renders; visual review pending.
+- Emitted main-battle-tank-c-details.png from actual details renders; visual review pending.
+- Emitted main-battle-tank-d-rig-poses.png from actual d renders; visual review pending.
+- Emitted main-battle-tank-e-idle-strip.png from actual e-idle renders; visual review pending.
+- Emitted main-battle-tank-e-move-strip.png from actual e-move renders; visual review pending.
