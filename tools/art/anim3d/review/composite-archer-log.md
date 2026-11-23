@@ -64,3 +64,8 @@
 - Final checks PASS:17 Python AST parses,2 Bash syntax checks,21-file working-tree hygiene, public-claims, git diff --check and full atlas validation. Art-set check BLOCKED: reused the existing shared Playwright via NODE_PATH, then Chromium failed MachPortRendezvous bootstrap with Permission denied(1100). Actual GPU pass remains unverified in this sandbox.
 - Commit BLOCKED: git add/commit cannot create .git/worktrees/lane-9/index.lock (Operation not permitted). All source/atlas edits and executable gpu.sh remain in the worktree for the runner. Suggested commit: Refine composite archer projection and complete GPU handoff. Required final trailer: Co-Authored-By: gpt-6-astra (Codex) <noreply@openai.com>. No push, PR or merge.
 - Final feedback check: no composite-archer-FEEDBACK.md exists. No composite-archer-PASS created. Lead command from repo root: tools/art/anim3d/units/composite-archer/gpu.sh (driver supplies ROUND). It renders every stage on GPU64/512, verifies native512/gallery256 masters, validates the trimmed atlas, writes the round MP4 and a success receipt only after all technical checks pass. Art acceptance stays separate.
+- Saved c review, raw 512 px and graded sets at native resolution or smaller; CYCLES GPU 64 samples.
+- Saved e-idle review, raw 512 px and graded sets at native resolution or smaller; CYCLES GPU 64 samples.
+- Saved e-move review, raw 512 px and graded sets at native resolution or smaller; CYCLES GPU 64 samples.
+- Saved e-attack review, raw 512 px and graded sets at native resolution or smaller; CYCLES GPU 64 samples.
+- Saved e-hit review, raw 512 px and graded sets at native resolution or smaller; CYCLES GPU 64 samples.

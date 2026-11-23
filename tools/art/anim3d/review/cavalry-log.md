@@ -59,3 +59,4 @@ c: review emitted from CYCLES frames; no art-pass claim.
 First CPU rest follow-up: bridle/stirrups and tail direction improved, but dark lower legs/head lost painted detail. Correction to opening critique: the full painting DOES have a narrow blaze and pale hind fetlocks; the defect was broad invented ivory regions plus a chroma mask excluding the source details. Replace that with semantic horse pigment projection, retain opacity/geometry, and lower the actual horse head toward the source landmarks.
 c: review emitted from CYCLES frames; no art-pass claim.
 c: review emitted from CYCLES frames; no art-pass claim.
+c: review emitted from CYCLES frames; no art-pass claim.
