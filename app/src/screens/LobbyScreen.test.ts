@@ -284,7 +284,7 @@ it.each([
   expect(container.querySelector<HTMLInputElement>('[aria-label="Map seed"]')?.value).toBe(seed);
   expect(container.querySelector<HTMLInputElement>('#turn-limit')?.value).toBe('333');
   expect(container.querySelector('[aria-label="Map size"] [aria-checked="true"]')?.textContent).toContain(size);
-  expect(container.querySelector<HTMLSelectElement>('[aria-label="Seat 4 AI level"]')?.value).toBe('Hard');
+  expect(container.querySelector('[aria-label="Seat 4 AI level"]')).toBeNull();
   expect(container.textContent).toContain('Alice');
   const start = container.querySelector<HTMLButtonElement>('.lobby-go')!;
   expect(start.textContent).toContain('Start game');

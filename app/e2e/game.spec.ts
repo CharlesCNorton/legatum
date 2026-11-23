@@ -10,10 +10,10 @@ async function configureLobby(page: Page, seed: string) {
   await small.click();
   await expect(small).toBeChecked();
   // Choosing Small trims to four empires, which keeps the real AI/WASM turns quick.
-  const hard = page.getByRole('radiogroup', { name: 'AI level (all AI empires)', exact: true }).getByRole('radio', { name: /^Hard Ruthless/ });
+  const hard = page.getByRole('radiogroup', { name: 'AI level', exact: true }).getByRole('radio', { name: /^Hard Ruthless/ });
   await hard.click();
   await expect(hard).toBeChecked();
-  for (const level of await page.getByRole('combobox', { name: /^Seat \d+ AI level$/ }).all()) await expect(level).toHaveValue('Hard');
+  await expect(page.getByRole('combobox', { name: /^Seat \d+ AI level$/ })).toHaveCount(0);
   await page.getByLabel('Map seed', { exact: true }).fill(seed);
 }
 
