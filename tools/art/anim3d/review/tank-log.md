@@ -69,3 +69,16 @@
 - Emitted tank-e-death-strip.png from actual e-death renders; visual review pending.
 - Emitted tank-c-textured-lit.png from actual c renders; visual review pending.
 - Emitted tank-e-move-strip.png from actual e-move renders; visual review pending.
+- Emitted tank-c-textured-lit.png from actual c renders; visual review pending.
+- Emitted tank-e-move-strip.png from actual e-move renders; visual review pending.
+- First complete trimmed CPU contract passed at 195418 bytes / quality 81, but visual move review failed: rest-camera fragments travelled around the belt and miscentred wheel faces tore. Did not write PASS. Registered wheel centres/radii and bogies, removed invented spoke rods/black plug detail, kept moving shoes on physical steel, and replaced the capsule with a continuous arc-length sampled raised-sprocket route. Constrained the unseen upper run beneath the actual fenders after its first review exposed it. Re-rendering all stages; prior contract is superseded pending fresh validation.
+- Removed the unconvincing solid orange death spikes; the authored death is now a soot-darkened smoking wreck. Lowered smoke opacity and lightened its diffuse colour. Registered flash/smoke origins follow the revised muzzle, and death soot leaves the stone unchanged.
+- Emitted tank-b-plain.png from actual b renders; visual review pending.
+- Emitted tank-c-textured-lit.png from actual c renders; visual review pending.
+- Emitted tank-c-details.png from actual details renders; visual review pending.
+- Emitted tank-d-rig-poses.png from actual d renders; visual review pending.
+- Emitted tank-e-idle-strip.png from actual e-idle renders; visual review pending.
+- Emitted tank-e-move-strip.png from actual e-move renders; visual review pending.
+- Emitted tank-e-attack-strip.png from actual e-attack renders; visual review pending.
+- Emitted tank-e-hit-strip.png from actual e-hit renders; visual review pending.
+- Emitted tank-e-death-strip.png from actual e-death renders; visual review pending.
