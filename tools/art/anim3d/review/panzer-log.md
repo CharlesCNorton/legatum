@@ -35,3 +35,7 @@
 - CPU 256px renders retained under masters/panzer/256. Actual 512px masters and GPU approval remain pending the executable no-argument units/panzer/gpu.sh. GPU script renders every stage and regenerates masters/atlas/validation/review/video; never marks PASS automatically.
 - Git staging failed: .git/worktrees/lane-24/index.lock Operation not permitted. Changes remain uncommitted for runner; intended message: Add panzer round-one 3D animation candidate, with Co-Authored-By: gpt-6-astra (Codex) <noreply@openai.com>. No pushes or PRs. No unit-specific feedback file was present at final check.
 - Repository art gate attempted on HEAD (not the uncommitted candidate): failed because node tools/art/render-sets.mjs exited 1. No repository-wide art-gate pass is claimed. Candidate-specific Blender, atlas and video checks above passed; host art review remains required before landing.
+- Emitted panzer-b-plain.png from actual b renders; visual review pending.
+- Emitted panzer-c-textured-lit.png from actual c renders; visual review pending.
+- Emitted panzer-c-details.png from actual details renders; visual review pending.
+- Emitted panzer-d-rig-poses.png from actual d renders; visual review pending.
