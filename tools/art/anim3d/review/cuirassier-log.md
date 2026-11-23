@@ -73,3 +73,5 @@
 - Read all local PLAYBOOK chapters, complete FEEDBACK and prior log; cuirassier-FEEDBACK.md absent. Loaded all six Sam Blender skills: full-depth modeling/camera fit, material projection and generated fills, product light/grade, sampled source motion and render-sequence verification. New feedback 23 also requires source-driven rider motion and front/top foot-cycle review.
 - Emitted c: 1 frames, 256 px CYCLES/CPU, 8 samples.
 - Emitted c-details: 1 frames, 256 px CYCLES/CPU, 8 samples.
+- Emitted e-death: 10 frames, 256 px CYCLES/CPU, 4 samples.
+- Emitted e-hit: 4 frames, 256 px CYCLES/CPU, 4 samples.
