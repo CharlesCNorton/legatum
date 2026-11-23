@@ -42,3 +42,10 @@
 - Posted e-attack review (CPU, 512 px).
 - Posted e-hit review (CPU, 512 px).
 - Posted e-death review (CPU, 512 px).
+- Rest calibration: raised composition 12px, reduced base diameter, fitted helmet height in camera plane while retaining depth, shifted actual rifle 4px, widened/lowered coat hem, applied rigid bevel/thickness before projection. Base uses E9CFA0 plus frozen painting pigment.
+- CPU round 1 complete: all b/c/d/e stages rendered at 512px with Cycles CPU / 4 samples, retained 512/256 masters; low-sample previews, not GPU approval.
+- Feet check: all eight samples point within 9.94 degrees of -Y; root contact correction max 0.020533m; planted interval max horizontal slip 7.076971962399527e-07m. No foot rotation corrections. Front/top sheet posted.
+- Delivery: 40 frames, trimmed 160px logical cells, 182822 bytes, quality 90; alpha/offset/hash/clip/margin/death checks passed. Decoded-atlas movie verified H.264 yuv420p 1600x348, 240 frames / 8 seconds.
+- Verdict: same unit at 64px; below the painting at 256px. Squared shoulder/pack shapes, narrow/stiff coat drape and projection/fill transitions during death remain. No PASS. Lead must run unit gpu.sh and inspect fresh GPU output.
+- Python and Bash syntax and git whitespace checks passed. Hygiene/public-claims passed. Repository art gate cannot launch Chromium: MachPortRendezvous bootstrap_check_in permission denied in sandbox. GPU completion deliberately remains unverified.
+- Delivery inventory passed: 17 review artifacts, 40 animation frames at each of 512/256, editable plain/final/five clip blends. Git add blocked by index.lock permission; changes left for runner commit. No push, no PR.

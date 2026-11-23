@@ -41,3 +41,4 @@
 - Rendered e-hit: 256px, CYCLES; review published.
 - Rendered e-death: 256px, CYCLES; review published.
 - Rendered g: 256px, CYCLES; review published.
+- Rendered e-death: 256px, CYCLES; review published.

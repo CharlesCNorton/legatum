@@ -1,0 +1,6 @@
+- Round 1: read project art rules, standing feedback 1–23 and all six Blender skills. Modeling: thickness/bevels/folds; materials: painted fills/wear; lighting: warm key/cool rim; cameras: orthographic painting fit; animation: CC0 Quaternius with rest-basis constraints; rendering: low-sample CPU previews and required GPU final handoff.
+- Reused family documentation via git show and copied trench-infantry lane helpers into this isolated unit namespace; new infantry kit and grenade throw.
+- Built MPFB anatomical body, 53-bone rig, olive field jacket, netted helmet, webbing, rifle and raised grenade; plain.blend saved.
+- Posted b-plain review (CPU, 256 px).
+- Finished-surface camera projection with camera-only pigment; generated hidden fills retained.
+- Posted c-textured-lit review (CPU, 256 px).

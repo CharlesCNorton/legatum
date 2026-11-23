@@ -1,3 +1,7 @@
 - Round 1 started. Read project instructions, art skill, infantry playbook and standing feedback 1–23.
 - Loaded all six Blender skills: modeling for full-depth tailored kit and bevels; materials for painted pigments and bakes; cameras for token registration; lighting for warm key/cool rim; animation for CC0 rest-matrix retarget; rendering for CPU previews and verified GPU handoff.
 - Reused inspected infantry and barbarian-musketman pipeline helpers in isolated unit namespace.
+- Built MPFB standing reislaufer, steel breastplate, slashed two-colour clothing, feathered beret and solid pike.
+- Posted b-plain review (CPU, 256 px).
+- Finished-surface camera-only projection applied; physical stone excluded and generated fills retained.
+- Posted c-textured-lit review (CPU, 256 px).
