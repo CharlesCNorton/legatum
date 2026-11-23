@@ -1,4 +1,4 @@
-# War Elephant — round 2 candidate
+# War Elephant — round 3 candidate
 
 This is an art candidate, not an approved replacement for the painting. No runtime
 loader or game rule changes. The elephant, articulated trunk, ears, tusks, harness,
@@ -44,7 +44,7 @@ RESOLUTION=256 "$unit/run.sh" d
 "$unit/run.sh" e-death
 "$ANIM_ROOT/venv/bin/python" "$unit/deliver.py" pack --preview
 "$ANIM_ROOT/venv/bin/python" "$unit/deliver.py" validate
-ROUND=2 "$ANIM_ROOT/venv/bin/python" "$unit/deliver.py" video
+ROUND=3 "$ANIM_ROOT/venv/bin/python" "$unit/deliver.py" video
 ```
 
 Every invocation is background Blender, disables autoexec, and goes through the
@@ -52,7 +52,7 @@ shared `blender` gate on PATH. CPU previews default to Cycles, four samples and
 512 px. No new dependency installs. Final host GPU rerender:
 
 ```sh
-ROUND=2 tools/art/anim3d/units/war-elephant/gpu.sh
+ROUND=3 tools/art/anim3d/units/war-elephant/gpu.sh
 ```
 
 That renders all clips at 512 px with Cycles Metal, 64 samples and denoising;
@@ -179,3 +179,32 @@ at GPU512, regenerates 512/256 masters, packs/validates the trimmed 160 px atlas
 and verifies the eight-second H.264 movie. No script automatically grants PASS.
 The rest pose and revealed death surfaces remain distinguishable from the
 painting; the candidate is not ready to replace it.
+
+## Driver round three
+
+Round-two GPU delivery completed: 185,694 bytes at quality 75, all 40 frames,
+verified H.264/yuv420p movie. Evidence was preserved in
+`masters/war-elephant/driver-r2-gpu-preserved/` before edits.
+
+The final sole fit now translates along the ground plane so contact correction
+does not undo the painting's stance. Lower limbs, officer forearm/grip and trunk
+were refitted on their actual weighted volumes. Camera elevation and the round
+stone's placement were calibrated together. A new pinned image-generated clean
+stone plate textures the beveled disc; live AO follows the moving feet. The
+prompt is in `stone-fill.prompt.txt`, and its external source and SHA256 are in
+`assets.lock.json`. Existing generated hidden-surface fills, physical straps,
+cloth folds, bevels, product lighting and automatic fixed histogram grade remain.
+
+`rider_motion.py`, adapted from the inspected cataphract helper, adds CC0
+Sitting_Idle_Loop, Hit_Chest and Death01 torso/head motion to both seated riders.
+It verifies the glTF, binary and license hashes, compensates reference/rest axes
+and bone rolls, resets sparse channels and explicitly closes loops. Seated limbs
+are constrained; the weapon attack is layered by hand. Both human rigs now
+participate in the audit's loop and held-death checks.
+
+Run `ROUND=3 tools/art/anim3d/units/war-elephant/gpu.sh` from the repository root.
+It regenerates the current master and clips, every GPU512 review stage, both
+master sizes, trimmed atlas, validation and eight-second round movie. Stage
+status is updated throughout. The interim CPU256 images and preview atlas are
+not GPU sign-off. The rest pose and revealed surfaces remain distinguishable
+from the painting; no PASS marker is warranted.

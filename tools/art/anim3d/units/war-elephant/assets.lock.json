@@ -7,5 +7,10 @@
   "painted-fills.png": {
     "sha256": "bec1ded82925678184d5d97092f1a014db4eee7903642ccede92aede43f4bfc5",
     "licence": "CC-BY-4.0"
+  },
+  "stone-fill-source.png": {
+    "sha256": "4b38d1e0eda7ec25ab14d40086f7e1fbb4f3752d35d4c1ea5e7b92ff731f5c1b",
+    "licence": "CC BY 4.0",
+    "source": "Built-in ImageGen 01a20a6f-2b18-7231-a7de-4754eb1e400b/exec-97d80b21-ad7c-4b1d-bd4b-f28dea770f0f.png"
   }
 }

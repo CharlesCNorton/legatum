@@ -10,6 +10,7 @@ from mathutils import Matrix, Quaternion, Vector
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from motion import sample, move_targets, ACTIONS, SHA
+from rider_motion import sample_rider
 
 ROOT = Path(os.environ['ANIM_ROOT'])
 M = ROOT/'masters/war-elephant'
@@ -40,6 +41,10 @@ for clip, (count, fps, loop) in CLIPS.items():
     sc.render.fps = fps
     rest = {p.name:p.matrix.copy() for p in rig.pose.bones}
     rest_location = rig.pose.bones['body'].location.copy()
+    riders = [bpy.data.objects[f'RIG-{role} MPFB'] for role in ['Officer', 'Mahout']]
+    rider_action, rider_samples = sample_rider(riders[0], clip, count, loop)
+    rider_rest = {r.name: {name: r.pose.bones[name].matrix_basis.to_quaternion()
+                          for name in rider_samples[0]} for r in riders}
     # Fitted knee/sole locations come from the actual mesh, not the pre-fit rig.
     anatomy = bpy.data.objects['GEO-Elephant continuous sculpt']
     evaluated = anatomy.evaluated_get(bpy.context.evaluated_depsgraph_get())
@@ -61,6 +66,11 @@ for clip, (count, fps, loop) in CLIPS.items():
             p.rotation_quaternion = Quaternion()
             p.location = (0,0,0)
         body = rig.pose.bones['body']
+        for rider_rig in riders:
+            for name, delta in rider_samples[i].items():
+                bone = rider_rig.pose.bones[name]
+                bone.rotation_mode = 'QUATERNION'
+                bone.rotation_quaternion = rider_rest[rider_rig.name][name] @ delta
         rise, surge, roll, pitch = 0., 0., 0., 0.
         if clip == 'idle':
             source_frames = source_motion['idle']
@@ -99,6 +109,13 @@ for clip, (count, fps, loop) in CLIPS.items():
                     leg=rig.pose.bones[name]
                     local=leg.bone.matrix_local.to_quaternion()
                     leg.rotation_quaternion @= local.inverted() @ Quaternion((1,0,0),.30*ease) @ local
+                elif name == 'back.far':
+                    # The fitted rear sole is farther into camera depth than
+                    # the original rig. Fold that thigh inward as the body
+                    # rolls, rather than leaving the calf hooked above it.
+                    leg=rig.pose.bones[name]
+                    local=leg.bone.matrix_local.to_quaternion()
+                    leg.rotation_quaternion @= local.inverted() @ Quaternion((1,0,0),-.80*ease) @ local
             rotate(rig.pose.bones['head'], (0,1,0), .18*ease)
         rotate(body, (1,0,0), roll)
         basis=body.bone.matrix_local.to_quaternion()
@@ -115,16 +132,14 @@ for clip, (count, fps, loop) in CLIPS.items():
         rotate(rig.pose.bones['tail'],(1,0,0),.06*math.sin(phase-.5))
         if clip == 'attack':
             rider = bpy.data.objects['RIG-Officer MPFB'].pose.bones['spine_02']
-            rider.rotation_mode = 'XYZ'
-            rider.rotation_euler.x = .45*math.sin(math.pi*t)
-            rider.keyframe_insert('rotation_euler', frame=i)
+            rider.rotation_quaternion @= Quaternion((1,0,0), .45*math.sin(math.pi*t))
         elif clip == 'death':
             for role in ['Officer','Mahout']:
                 rider=bpy.data.objects[f'RIG-{role} MPFB'].pose.bones['spine_02']
-                rider.rotation_mode='XYZ'
-                rider.rotation_euler.x=.42*ease
-                rider.rotation_euler.y=-.18*ease
-                rider.keyframe_insert('rotation_euler',frame=i)
+                rider.rotation_quaternion @= Quaternion((1,0,0), .20*ease)
+        for rider_rig in riders:
+            for name in rider_samples[i]:
+                rider_rig.pose.bones[name].keyframe_insert('rotation_quaternion', frame=i)
         bpy.context.view_layer.update()
         if clip == 'move':
             # Absolute lower-segment transforms preserve sole direction and
@@ -163,6 +178,7 @@ for clip, (count, fps, loop) in CLIPS.items():
     bpy.ops.wm.save_as_mainfile(filepath=str(out/(clip+'.blend')))
     (out/'clip.json').write_text(json.dumps({'clip':clip,'frames':count,'fps':fps,'loop':loop,
         'source_master_sha256':source_hash,'authored':clip=='attack',
+        'rider_action':rider_action,'rider_retarget':'reference/roll compensated torso and head; seated limbs constrained',
         'motion_source':ACTIONS.get(clip,'Original weapon attack'),
         'motion_source_sha256':SHA if clip!='attack' else None},indent=2)+'\n')
     print('ANIMATED',clip,count)

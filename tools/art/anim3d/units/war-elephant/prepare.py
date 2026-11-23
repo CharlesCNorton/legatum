@@ -25,4 +25,4 @@ out.save(A/'painting-aligned.png')
 im=Image.open(A/'painted-fills.png');w,h=im.size
 for name,box in [('skin',(0,0,w//2,h//2)),('red',(w//2,0,w,h//2)),('wood',(0,h//2,w//2,h)),('linen',(w//2,h//2,w,h))]:
     im.crop(box).save(A/f'fill-{name}.png')
-print('PREPARED verified painting and four painted fills')
+print('PREPARED verified painting, clean stone plate and four painted fills')

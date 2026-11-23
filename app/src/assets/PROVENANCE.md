@@ -39,13 +39,17 @@ The date range is the range of dates the repository's own records give (prompt h
 
 ### War Elephant 3D animation candidate
 
-`units/anim/war-elephant.{webp,json}` is an unapproved round-1 candidate, not wired
-into the runtime. Original elephant sculpture, skeleton, equipment and authored
-motion: `tools/art/anim3d/units/war-elephant/` (MIT scripts; CC BY 4.0 rendered art).
+`units/anim/war-elephant.{webp,json}` is an unapproved round-3 candidate, not wired
+into the runtime. Original elephant sculpture, skeleton, equipment and motion
+adaptation: `tools/art/anim3d/units/war-elephant/` (MIT scripts; CC BY 4.0 rendered art).
 Officer and mahout: MPFB 2.0.18 / MakeHuman CC0 anatomy and game-engine weights,
 using the existing installation described above. The original project War
 Elephant painting (CC BY 4.0) supplies frozen-camera surface colour. Hidden-surface
-fills are original built-in imagegen artwork (CC BY 4.0); exact prompt/output and
+fills and the clean stone plate are original built-in imagegen artwork (CC BY 4.0); exact prompt/output and
 SHA256 pins are beside the scripts. Raw paintings, generated fills, `.blend`
 masters and render sequences remain outside git. No third-party elephant mesh or
-motion capture is used.
+motion capture is used. Pinned CC0 Quaternius Ultimate Animated Animals horse
+actions supply adapted quadruped trajectories; Universal Animation Library
+Standard supplies seated/hit/death torso and head motion for the riders. These
+are partial retargets of authored source animation. Source URLs, licenses,
+versions and hashes are in the unit's `SOURCES.md` and motion helpers.

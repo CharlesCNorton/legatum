@@ -204,3 +204,36 @@ The no-argument GPU handoff includes the new `g` stage, 512/256 masters, trimmed
 160 px atlas at quality >=75 and <=200,000 bytes, validation, and the round MP4.
 CPU evidence is explicitly labelled and cannot pass the final GPU512 master
 gate. Painting parity is still a visual gate; no technical tool writes PASS.
+
+### War Elephant driver round 3: ground-plane fitting and seated motion
+
+The incoming round-two GPU pass succeeded (185,694 bytes at quality 75). Its
+complete master/render/review evidence is retained externally under
+`masters/war-elephant/driver-r2-gpu-preserved/`. The review still showed a wide
+stance, sideways officer forearm, tight trunk hook and overly deep base ellipse.
+
+Keep contact and camera registration coupled: after fitting a sole, a vertical
+ground correction changes its screen position. This round translates the final
+sole along the ground plane, retaining height and original weights. Knee/calf
+contours and the officer forearm/grip are fitted on full-depth skinned geometry.
+The lower camera elevation matches the stone ellipse; the base remains circular,
+beveled and stationary. A pinned image-generated clean stone plate supplies its
+painted grain with alpha used only to blend pigment and fresh AO for contact.
+Existing thick straps, folded cloth, timber bevels, generated hidden-surface
+fills, product lights and one frozen histogram grade remain in use.
+
+Both riders now use pinned CC0 Quaternius Universal Animation Library seated,
+hit and death torso/head deltas. `rider_motion.py` compensates reference/rest axes
+and bone rolls, resets sparse source channels and closes loops exactly. Their
+seated limbs remain constrained; the attack adds an authored brace. This is a
+partial upper-body retarget, not full-body mocap. The audit includes all three
+rigs in loop/held-death checks. Feet views and every clip still need visual review;
+ground clearance alone cannot prove clean rider/howdah intersections.
+Planted soles are also checked against the flat stone top's radius. An apparent
+rear-foot gap proved to be shading, not unsupported geometry. The fitted far
+rear thigh needs an inward death fold to avoid a calf hooking above the body.
+
+`ROUND=3 tools/art/anim3d/units/war-elephant/gpu.sh` performs the complete GPU512
+pass, 512/256 export, trimmed 160 px packing, validation and round movie. Its
+default round is now 3 and the stage status updates throughout rendering. CPU256
+previews remain explicitly labeled; they cannot pass final master validation.

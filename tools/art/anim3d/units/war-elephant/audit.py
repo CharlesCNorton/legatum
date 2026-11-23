@@ -43,6 +43,7 @@ for clip,count in [('idle',8),('move',8),('attack',10),('hit',4),('death',10)]:
     if clip!='attack':
         assert info['motion_source_sha256']==SHA
         assert info['motion_source']==ACTIONS[clip]
+    assert info['rider_action'] == {'hit':'Hit_Chest', 'death':'Death01'}.get(clip, 'Sitting_Idle_Loop')
     assert info['source_master_sha256']==hashlib.sha256((M/'war-elephant.blend').read_bytes()).hexdigest()
     bpy.ops.wm.open_mainfile(filepath=str(folder/(clip+'.blend')))
     sc=bpy.context.scene;rig=bpy.data.objects['RIG-Elephant']
@@ -55,15 +56,29 @@ for clip,count in [('idle',8),('move',8),('attack',10),('hit',4),('death',10)]:
         assert len(bpy.data.objects[f'RIG-{role} MPFB'].data.bones)==53
         assert any(m.type=='ARMATURE' for m in human.modifiers)
     assert len(json.loads(sc['projected_meshes']))>100
-    matrices=[];bounds=[];torso_low=None;feet={};sole_reference={};contact_error=0;kit_low=100
+    matrices=[];bounds=[];torso_low=None;feet={};sole_reference={};contact_error=0;kit_low=100;support_radius=0
     for frame in range(count+int(info['loop'])):
         sc.frame_set(frame);bpy.context.view_layer.update()
         assert base.matrix_world==base_matrix
         assert sc.camera.matrix_world==camera
         assert min(o.scale.length for o in sc.objects)>.01
-        matrices.append([tuple(v for row in p.matrix for v in row) for p in rig.pose.bones])
+        matrices.append([tuple(v for row in p.matrix for v in row)
+                         for r in [rig, bpy.data.objects['RIG-Officer MPFB'], bpy.data.objects['RIG-Mahout MPFB']]
+                         for p in r.pose.bones])
         body=bpy.data.objects['GEO-Elephant continuous sculpt'].evaluated_get(bpy.context.evaluated_depsgraph_get())
         me=body.to_mesh();low=min((body.matrix_world@v.co).z for v in me.vertices)
+        if clip != 'death':
+            # A horizontal ground test alone misses soles outside the disc.
+            # Test actual low sole vertices against the flat stone top radius.
+            original=bpy.data.objects['GEO-Elephant continuous sculpt']
+            lower={g.index for g in original.vertex_groups if g.name.endswith('.lower')}
+            for v in original.data.vertices:
+                if not any(g.group in lower and g.weight>.95 for g in v.groups):continue
+                point=body.matrix_world@me.vertices[v.index].co
+                if point.z < .16:
+                    radius=(point-base.matrix_world.translation).xy.length
+                    support_radius=max(support_radius,radius)
+                    assert radius<1.44,(clip,frame,'Planted sole outside flat stone top',radius)
         if clip=='move':
             original=bpy.data.objects['GEO-Elephant continuous sculpt']
             targets=move_targets(motion['samples']['move'],frame)
@@ -102,6 +117,7 @@ for clip,count in [('idle',8),('move',8),('attack',10),('hit',4),('death',10)]:
         assert torso_low<.30,('Death torso still hovering',torso_low)
     results[clip]={'frames':count,'min_body_z':min(bounds),'base_and_camera':'fixed','skeleton_bones':len(rig.data.bones),'clip_sha256':hashlib.sha256((folder/(clip+'.blend')).read_bytes()).hexdigest()}
     if clip=='move':results[clip]['max_sole_target_error']=contact_error
+    if clip!='death':results[clip]['max_planted_sole_radius']=support_radius
     if clip=='death':results[clip]['min_all_geometry_z']=kit_low
 report_path.write_text(json.dumps({'source_master_sha256':hashlib.sha256((M/'war-elephant.blend').read_bytes()).hexdigest(),
     'finished_surface_uv_error':uv_error,'death_torso_min_z':torso_low,'clips':results},indent=2)+'\n')

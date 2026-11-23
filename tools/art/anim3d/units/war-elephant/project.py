@@ -79,7 +79,7 @@ for ob in sc.objects:
     records[ob.name] = [(pixel(ob.matrix_world @ (skin_for(ob, v, transforms) @ v.co)),
                          skin_for(ob, v, transforms)) for v in ob.data.vertices]
 
-cam.location = (3, -10, 3.8)
+cam.location = (3, -10, 3.35)
 target = Vector((.19, 0, 1.65))
 cam.rotation_euler = (target - cam.location).to_track_quat('-Z', 'Y').to_euler()
 bpy.context.view_layer.update()
@@ -261,6 +261,51 @@ for ob in sc.objects:
     ob.data.update()
 print('FOOT CONTACT CORRECTIONS', foot_low)
 
+# Round-three registration is on finished, skinned volumes. Translate soles
+# along the ground plane, not vertically: a camera-space fit followed by a
+# vertical contact correction otherwise undoes the painting's foot placement.
+sole_fit = {'front.near.lower': (2, -8), 'back.near.lower': (0, -7),
+            'front.far.lower': (-2, -2), 'back.far.lower': (0, -6)}
+for ob in sc.objects:
+    if ob.type != 'MESH' or ob == base:
+        continue
+    transforms = skin_matrices(ob)
+    for v in ob.data.vertices:
+        skin = skin_for(ob, v, transforms)
+        world = ob.matrix_world @ (skin @ v.co)
+        p = pixel(world)
+        weights = {ob.vertex_groups[g.group].name: g.weight for g in v.groups}
+        if ob.parent_type == 'BONE':
+            weights = {ob.parent_bone: 1.0}
+        if ob == body or ob.name.startswith('GEO-Toenail'):
+            delta = sum((Vector(offset) * weights.get(bone, 0)
+                         for bone, offset in sole_fit.items()), Vector((0, 0)))
+            shift = (right * delta.x - up * delta.y) * cam.data.ortho_scale / 256
+            shift -= view * (shift.z / view.z)
+            world += shift
+            p = pixel(world)
+            knee = max(0, min(1, (210-p.y)/36))
+            dx = knee*(8*weights.get('front.near.lower', 0)
+                       +7*weights.get('front.far.lower', 0))
+            dx += (94-p.x)*.30*weights.get('back.far.lower', 0)
+            dx += (53-p.x)*.16*weights.get('back.near.lower', 0)
+            world += right*dx*cam.data.ortho_scale/256
+        if 'Officer' in ob.name and ob.vertex_groups:
+            fore = weights.get('lowerarm_r', 0)
+            hand = sum(weights.get(n, 0) for n in hand_family)
+            delta = Vector(((82 + (p.x-82)*.55-p.x)*fore + .8*hand,
+                            (42 + (p.y-37)*.9-p.y)*fore + 5*hand))
+            world += (right*delta.x-up*delta.y)*cam.data.ortho_scale/256
+        if ob == grip:
+            world -= up*5*cam.data.ortho_scale/256
+        if 'curled trunk' in ob.name:
+            # Open the hook into the painting's asymmetric S curve. Ring
+            # cross-sections retain camera-depth thickness and rig weights.
+            dx = -5*weights.get('trunk5', 0)-2*weights.get('trunk4', 0)
+            world += right*dx*cam.data.ortho_scale/256
+        v.co = skin.inverted_safe() @ ob.matrix_world.inverted() @ world
+    ob.data.update()
+
 # Keep the circular stone, with the painting's shallower ellipse and fine grain.
 def linear(c):
     c /= 255
@@ -268,9 +313,17 @@ def linear(c):
 
 
 stone = base.data.materials[0]
-base.location += Vector((-view.x,-view.y,0))*.40
 for v in base.data.vertices:
     v.co.z = .065-(.065-v.co.z)*1.35
+bpy.context.view_layer.update()
+base_pixels = [pixel(base.matrix_world@v.co) for v in base.data.vertices]
+base_center = Vector(((min(p.x for p in base_pixels)+max(p.x for p in base_pixels))/2,
+                      (min(p.y for p in base_pixels)+max(p.y for p in base_pixels))/2))
+delta = Vector((121.5,223.5))-base_center
+shift = (right*delta.x-up*delta.y)*cam.data.ortho_scale/256
+shift -= view*(shift.z/view.z)
+base.location += shift
+bpy.context.view_layer.update()
 s = stone.node_tree.nodes.get('Principled BSDF')
 s.inputs['Base Color'].default_value = tuple(linear(c) for c in (233,207,160)) + (1,)
 for node in stone.node_tree.nodes:
@@ -297,12 +350,35 @@ variation.inputs[0].default_value = .055
 links.new(palette.outputs[0], variation.inputs[1])
 links.new(grain.outputs['Fac'], variation.inputs[2])
 links.new(variation.outputs[0], ao.inputs['Color'])
+# Registered clean plate supplies the stone's painted grain, never old feet or
+# shadows. UVs map to the real beveled disc; live AO supplies current contact.
+stone_image = bpy.data.images.load(str(ROOT/'assets/war-elephant/stone-fill-source.png'))
+stone_image.pack()
+uv = base.data.uv_layers.new(name='Stone clean plate')
+points = [pixel(base.matrix_world@v.co) for v in base.data.vertices]
+box = (min(p.x for p in points), min(p.y for p in points),
+       max(p.x for p in points), max(p.y for p in points))
+# Generated plate has retained canvas framing. Use the measured opaque disc
+# extent, inset slightly to avoid the antialiased transparent outer boundary.
+for i, loop in enumerate(base.data.loops):
+    p = points[loop.vertex_index]
+    x = .100 + .725*(p.x-box[0])/(box[2]-box[0])
+    y = .785 + .155*(p.y-box[1])/(box[3]-box[1])
+    uv.data[i].uv = (x, 1-y)
+texture = nodes.new('ShaderNodeTexImage'); texture.image = stone_image
+uvnode = nodes.new('ShaderNodeUVMap'); uvnode.uv_map = uv.name
+links.new(uvnode.outputs[0], texture.inputs['Vector'])
+clean_color = nodes.new('ShaderNodeMixRGB')
+links.new(texture.outputs['Alpha'], clean_color.inputs[0])
+links.new(variation.outputs[0], clean_color.inputs[1])
+links.new(texture.outputs['Color'], clean_color.inputs[2])
+links.new(clean_color.outputs[0], ao.inputs['Color'])
 pigment = nodes.new('ShaderNodeEmission')
 links.new(ao.outputs['Color'], pigment.inputs['Color'])
 camera = nodes.new('ShaderNodeLightPath')
 weight = nodes.new('ShaderNodeMath')
 weight.operation = 'MULTIPLY'
-weight.inputs[1].default_value = .72
+weight.inputs[1].default_value = .90
 links.new(camera.outputs['Is Camera Ray'], weight.inputs[0])
 mix = nodes.new('ShaderNodeMixShader')
 links.new(weight.outputs[0], mix.inputs[0])
