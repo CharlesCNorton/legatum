@@ -4,7 +4,7 @@ from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parent))
 from common import *
 stage=sys.argv[sys.argv.index('--')+1];clip=stage[2:] if stage.startswith('e-') else 'attack' if stage=='d' else None
-path=MASTER/'clips'/f'{clip}.blend' if clip else MASTER/('archer-plain.blend' if stage=='b' else 'archer.blend')
+path=MASTER/'clips'/f'{clip}.blend' if clip else MASTER/'archer.blend'
 out=MASTER/'renders'/stage;out.mkdir(parents=True,exist_ok=True);(out/'render.json').unlink(missing_ok=True)
 bpy.ops.wm.open_mainfile(filepath=str(path));sc=bpy.context.scene;sc.render.engine=os.environ.get('RENDER_ENGINE','CYCLES');device=os.environ.get('CYCLES_DEVICE','CPU')
 if sc.render.engine=='BLENDER_EEVEE':device='GPU'
@@ -17,7 +17,8 @@ res=int(os.environ.get('RESOLUTION','256'));sc.render.resolution_x=sc.render.res
 frames=list(range(CLIPS[clip][0])) if clip else [0]
 if stage=='d':frames=[0,3,5,9]
 if stage=='b':frames=[0,1,2]
-if stage=='c-details':sc.camera.data.ortho_scale=1.25;sc.camera.location=(.05,-8,3.6);sc.camera.rotation_euler=(Vector((.05,0,1.37))-sc.camera.location).to_track_quat('-Z','Y').to_euler()
+if stage=='b':
+ clay=mat('MAT-review-clay',(.5,.43,.33),rough=.8);sc.view_layers[0].material_override=clay
 seen={}
 for i,f in enumerate(frames):
  sc.frame_set(f)

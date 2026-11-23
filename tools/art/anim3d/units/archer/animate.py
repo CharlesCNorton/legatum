@@ -41,8 +41,8 @@ for clip,(count,fps,loop) in CLIPS.items():
   elif clip=='death':
    a=min(1,t/.82);a=a*a*(3-2*a);rig.location=base+Vector((-.35*a,0,-.82*a));turn(rig,'pelvis','Y',1.57*a);turn(rig,'spine_03','Y',.04*a);turn(rig,'head','X',.20*a)
    for side,sg in [('l',1),('r',-1)]:
-    limb(rig,'thigh_'+side,'calf_'+side,(sg*.37*(1-a)+(-.12+sg*.12)*a,sg*.09*a,.04*(1-a)+.97*a),(-.40,-.25,.55));aim(rig,'foot_'+side,(0,-.12,-.035))
-   limb(rig,'upperarm_l','lowerarm_l',(.72*(1-a)+.22*a,-.15-.1*a,1.43-.52*a),(.5,-.2,.9));limb(rig,'upperarm_r','lowerarm_r',(-.005-.18*a,-.22,1.43-.55*a),(-.35,-.2,.9))
+    limb(rig,'thigh_'+side,'calf_'+side,(sg*.37*(1-a)+(-.12+sg*.12)*a,(.015 if side=='l' else -.04)*(1-a)+sg*.09*a,.04*(1-a)+.97*a),Vector((.38 if side=='l' else -.36,-.32 if side=='l' else -.35,.5)).lerp(Vector((-.40,-.25,.55)),a));aim(rig,'foot_'+side,Vector((sg*.075,-.13,-.035)).lerp(Vector((0,-.12,-.035)),a));aim(rig,'ball_'+side,Vector((sg*.075,-.13,0)).lerp(Vector((0,-.12,0)),a))
+   limb(rig,'upperarm_l','lowerarm_l',(.72*(1-a)+.22*a,-.15-.1*a,1.43-.52*a),Vector((.48,-.10,1.46)).lerp(Vector((.5,-.2,.9)),a));limb(rig,'upperarm_r','lowerarm_r',(-.005-.18*a,-.22,1.43-.55*a),Vector((-.55,-.08,1.52)).lerp(Vector((-.35,-.2,.9)),a))
    release=max(0,min(1,(t-.15)/.5));draw=1-release
    # Released bow settles horizontally at front edge, independent of the hand.
    bpy.context.view_layer.update();w=control.matrix_world.copy();target=Matrix.Translation(Vector((.05,0,.13)))@Matrix.Rotation(.65,4,'Z')@Matrix.Rotation(pi/2,4,'X');q=w.to_quaternion().slerp(target.to_quaternion(),release);loc=w.translation.lerp(target.translation,release);control.matrix_world=Matrix.Translation(loc)@q.to_matrix().to_4x4()
@@ -51,6 +51,12 @@ for clip,(count,fps,loop) in CLIPS.items():
    if low<.096:
     released_world=control.matrix_world.copy();rig.location.z+=.096-low;bpy.context.view_layer.update();control.matrix_world=released_world
   bpy.context.view_layer.update()
+  if clip=='move':
+   # Bone-head height is not sole contact. Ground the actual finished footwear.
+   deps=bpy.context.evaluated_depsgraph_get();sole_low=[]
+   for side in ['l','r']:
+    sole=bpy.data.objects['GEO-Sandal sole '+side];ev=sole.evaluated_get(deps);me=ev.to_mesh();sole_low.append(min((ev.matrix_world@v.co).z for v in me.vertices));ev.to_mesh_clear()
+   rig.location.z+=.092-min(sole_low);bpy.context.view_layer.update()
   # A small physical bend of the bow limbs accompanies release; endpoints remain real geometry.
   for o in [bow,bowedge]:
    points=o.data.splines[0].points

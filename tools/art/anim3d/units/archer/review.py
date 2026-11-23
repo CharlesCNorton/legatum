@@ -53,7 +53,11 @@ if stage.startswith('e-'):
 elif stage=='b':panel([painting]+frames,['painting','front - plain','three-quarter','side'],'archer-b-plain.png')
 elif stage=='d':panel(frames,['draw','full draw','release','guard'],'archer-d-rig-poses.png')
 elif stage=='c-details':
- crop=Image.open(R/'assets/archer/painting-aligned.png').convert('RGBA').crop((192,100,768,676)).resize((256,256),Image.Resampling.LANCZOS);panel([crop]+frames,['painting detail','3D detail'],'archer-c-details.png')
+ source=Image.open(R/'assets/archer/painting-aligned.png').convert('RGBA');render=Image.open(paths[0]).convert('RGBA');images=[];labels=[]
+ for name,box in [('head',(75,25,125,85)),('chest',(60,70,155,145)),('legs/base',(50,145,175,250))]:
+  for label,im in [('painting',source),('3D',render)]:
+   crop=im.crop(tuple(round(v*im.width/256) for v in box));scale=min(256/crop.width,256/crop.height);crop=crop.resize((round(crop.width*scale),round(crop.height*scale)),Image.Resampling.LANCZOS);tile=Image.new('RGBA',(256,256));tile.paste(crop,((256-crop.width)//2,(256-crop.height)//2));images.append(tile);labels.append(f'{name} {label} ({im.width}px source)')
+ panel(images,labels,'archer-c-details.png')
 else:
  panel([painting]+frames,['painting','3D CPU' if meta['device']=='CPU' else '3D GPU'],'archer-c-textured-lit.png')
  split=painting.copy();split.paste(frames[0].crop((128,0,256,256)),(128,0));fade=Image.blend(painting,frames[0],.5)
