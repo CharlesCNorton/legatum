@@ -106,3 +106,29 @@ tools/art/anim3d/render.sh audit
 ```
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
+
+## Vehicles / aircraft — jet fighter (`jet-fighter`)
+
+This unit's implementation lives entirely in `tools/art/anim3d/units/jet-fighter/`, an isolated snapshot of the newer jet-bomber delivery tools plus original jet fighter geometry and flight curves. It follows the vehicles family method: full-depth hard surfaces, no MPFB or character mocap for machines. The source painting shows a silver single-engine jet flying above a curved stone support; retain that composition, nose intake, swept silhouette and lack of national markings. The plain stage has three views to expose the real volume.
+
+All six Blender skills are applied: closed loft and beveled edge construction; metal roughness and actual AO/Pointiness bakes; warm upper-left key, soft fill and cool rim; rest-camera registration; quaternion bank/flight curves; denoised CPU previews and native GPU masters. Every Blender call is plain `blender -b --disable-autoexec` through the PATH gate, serial within this lane. Never use the application binary directly, scale effects to zero, or infer GPU success from a CPU preview.
+
+### Painting parity standard
+
+Use all four quality levers: (1) frozen camera UV projection of the full original painting onto finished three-dimensional surfaces, with visibility/facing confidence and generated same-style fills on unseen surfaces; (2) real geometry finish including closed airfoils, recessed intake, smooth canopy, relief seams and bevels; (3) miniature product lighting with contact shadows; (4) an automatically sampled, bounded RGB quantile grade frozen from the rest render and applied consistently to all clips. Painted pigment is camera-only so inherited lighting does not illuminate adjacent objects twice. Standard/None is intentional for projected display-referred art, not a photographic preset. Actual AO and Pointiness bakes drive cavity and edge response on fuselage and both main wings.
+
+The common base pigment is warm cream **#E9CFA0**, approximately linear RGB `(0.815,0.624,0.352)`, roughness `.86`, with fine grain and darker rim. The source projection preserves the specific painting's stone brushwork. Always inspect the resulting pixels after lighting/grade. A grey-white disc fails. Save painting / 3D / 50-50 crossfade at native 256 and 64 as `jet-fighter-f-restpose-compare.png`; render completion is not art approval.
+
+### Motion, review and host handoff
+
+Five clips are idle 8, move 8, attack 10, hit 4, death 10; idle/move loop. The fighter banks about its longitudinal axis, advances in the move cycle, dips into a cannon run, reacts to a hit, then crashes onto the stationary base while its support tips. Effects use keyed visibility and real thickness. Two terminal death samples are held. Motion and crash contact must still be visually reviewed; a bounded turn table is not flight realism.
+
+For human units the standard is open CMU or CC0 Quaternius idle/walk/hit/death, retargeted with rest-pose and bone-roll alignment; only weapon attacks are authored. For animals use an openly licensed animated quadruped. Never patch foot direction after retargeting. Render top and front feet through a move cycle every round. The jet has no feet: `jet-fighter-g-feet-check.png` instead shows actual top/front airframe poses over all eight move samples, explicitly labelled as an aircraft exception. No external motion licence is claimed.
+
+Run `ROUND=1 tools/art/anim3d/units/jet-fighter/gpu.sh` from repo root for the whole lead pass. It checks input/build hashes and Metal, then serially renders b/c/d, all five clips and the top/front review using Cycles GPU. It retains actual 512px masters plus 256 derivatives, all interim sheets, animated WebPs, rest-pose crossfade, geometry/clip audit, validated atlas and `jet-fighter-round${ROUND}.mp4`. Video uses the decoded trimmed atlas at 2x on cream, all five clips side by side for eight seconds, H.264/yuv420p; FFprobe verifies it. The lead must inspect the GPU output before writing PASS.
+
+### Trimmed atlas extension used by aircraft
+
+The old fixed 256px atlas description above is superseded for this unit. Schema version 2 stores `trimmed:true`, `frame:{w:160,h:160,ax,ay}` and clips in idle/move/attack/hit/death row order. Each clip retains `row,frames,fps,loop` and has `rects:[{x,y,w,h,ox,oy}, ...]`. Rectangle coordinates address the atlas; offsets restore the crop to its logical 160px frame. Draw at `(anchorX-ax+ox, anchorY-ay+oy)` with one uniform scale. Row is ordering metadata, not a fixed cell-height multiplier. Held identical frames may share a rectangle.
+
+Try quality 95/90/85/80/75 and fail if none meets 200,000 bytes; never drop frames or quality below 75. Alpha must reconstruct exactly, crops must not overlap, padding must stay transparent, all 40 samples must retain their anchors and the last two death frames must decode identically. Receipts bind the current scene, animation script, grade and frame hashes. The atlas is an art candidate with no runtime integration in this lane.
