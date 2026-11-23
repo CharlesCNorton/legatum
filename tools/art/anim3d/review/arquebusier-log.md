@@ -194,3 +194,26 @@
 - Posted e-attack review (CPU, 256 px).
 - Posted e-hit review (CPU, 256 px).
 - Posted e-death review (CPU, 256 px).
+- Finished-surface camera projection with camera-only pigment; generated hidden fills retained.
+- Posted c-textured-lit review (CPU, 256 px).
+- Retargeted CC0 and saved death action (10 output frames).
+- Posted e-death review (CPU, 256 px).
+- Retargeted CC0 and saved death action (10 output frames).
+- Posted e-death review (CPU, 256 px).
+- CPU packing correctly rejected a cropped death frame before replacing delivery. Fixed the new knee panels to inherit rig-object motion and centered death using all visible costume meshes rather than the torso-only masked anatomy. Ground settlement now uses the actual moved disc top/bottom for both actor and released gun.
+- Retargeted CC0 and saved death action (10 output frames).
+- Posted e-death review (CPU, 256 px).
+- Added explicit GPU512/256 foot masters, provenance/threshold checks in the GPU receipt gate, and isolated actual footwear in top view to avoid camera clipping through high swing toes. Front view retains full knee/ankle connections.
+- Posted b-plain review (CPU, 256 px).
+- Posted c-textured-lit review (CPU, 256 px).
+- Retargeted CC0 and saved idle action (8 output frames).
+- Retargeted CC0 and saved move action (8 output frames).
+- Authored and saved attack action (10 output frames).
+- Retargeted CC0 and saved hit action (4 output frames).
+- Retargeted CC0 and saved death action (10 output frames).
+- Posted d-rig-poses review (CPU, 256 px).
+- Posted e-idle review (CPU, 256 px).
+- Posted e-move review (CPU, 256 px).
+- Posted e-attack review (CPU, 256 px).
+- Posted e-hit review (CPU, 256 px).
+- Posted e-death review (CPU, 256 px).

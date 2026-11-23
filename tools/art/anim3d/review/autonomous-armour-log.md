@@ -245,3 +245,14 @@ Validation PASS: counts, RGBA, rect bounds, transparent margins, five moving cli
 Encoded and ffprobe-verified autonomous-armour-round1.mp4: 8 s, 240 frames, 1600x348 H.264 yuv420p; decoded trimmed atlas.
 Validation PASS: counts, RGBA, rect bounds, transparent margins, five moving clips, held death, quality and size. Art approval remains separate.
 Driver round 2 resumed after successful GPU r1 (96 samples/512; atlas 192900 bytes Q85; verified MP4). Opened c, f, all five e strips and round1 MP4 frame before edits; preserved GPU evidence in masters/autonomous-armour/driver-round1-gpu. No unit-specific FEEDBACK file exists; all common items 1-23 read. Honest critique: at 256 the near running gear is too long in screen space, with small uniform wheel dishes, shortened and displaced aerials, lower silhouette drift and orange even stone rim; projected upper armour is much closer. At 64 it is clearly the same unmanned vehicle but the long row of wheels and squat aerials remain distinguishable. No PASS. Applying all six Blender skills and reusing generated olive fill; no cloth/straps on this machine.
+Prepared full-source projection; read all six Blender skills, vehicle chapter, art skill and standing feedback 12–22.
+Built true 3D hard-surface geometry and rigid rig: 1115 objects; bevels, open muzzle, sensors, six wheels per side, 128 articulated tracks.
+Rendered b: 3 PNGs, 256 px, CYCLES CPU, 8 samples.
+Finished materials: three actual AO/curvature bake pairs, generated unseen paint, 956 genuine projected meshes; all textures packed.
+Authored idle: 8 output samples at 10 fps; 150 mechanical controls; loop=True.
+Authored move: 8 output samples at 12 fps; 150 mechanical controls; loop=True.
+Authored attack: 10 output samples at 14 fps; 150 mechanical controls; loop=False.
+Authored hit: 4 output samples at 12 fps; 150 mechanical controls; loop=False.
+Authored death: 10 output samples at 10 fps; 150 mechanical controls; loop=False.
+Rendered c: 1 PNGs, 256 px, CYCLES CPU, 8 samples.
+Published c review immediately; frozen grade 7aba41295809, 256 masters retained.
