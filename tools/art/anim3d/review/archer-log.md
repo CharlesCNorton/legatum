@@ -11,3 +11,12 @@
 - Projected source painting onto true meshes in rest pose, preserving physical back-surface fill and alpha.
 - Rendered c: 256px CYCLES CPU, 12 samples.
 - Published c native 256/64 comparison; render device CPU.
+- Authored idle: 8 frames, 10 fps; real rig keys, bow flex and nock keys, stationary base.
+- Authored move: 8 frames, 12 fps; real rig keys, bow flex and nock keys, stationary base.
+- Authored attack: 10 frames, 14 fps; real rig keys, bow flex and nock keys, stationary base.
+- Authored hit: 4 frames, 12 fps; real rig keys, bow flex and nock keys, stationary base.
+- Authored death: 10 frames, 10 fps; real rig keys, bow flex and nock keys, stationary base.
+- Rendered c-details: 512px CYCLES CPU, 12 samples.
+- Published c-details native 256/64 comparison; render device CPU.
+- Rendered e-death: 256px CYCLES CPU, 8 samples.
+- Published e-death native 256/64 comparison; render device CPU.

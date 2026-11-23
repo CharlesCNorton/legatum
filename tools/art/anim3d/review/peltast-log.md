@@ -1,0 +1,2 @@
+- Built MPFB anatomy, painted rest stance, red chiton, blue cloak, fox-skin cap, woven crescent pelta and three iron-tipped javelins; plain review pending.
+- Published b review immediately: CYCLES/CPU, 256 px, 2 frame(s).
