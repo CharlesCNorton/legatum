@@ -1,7 +1,7 @@
 """CC0 PBR with bright worn bronze, cavity contrast and pigment-grade cloth."""
 import bpy,os
 from pathlib import Path
-ROOT=Path(os.environ['ANIM_ROOT']);A=ROOT/'assets';M=ROOT/'masters/spearman-3d-v2'
+ROOT=Path(os.environ['ANIM_ROOT']);A=ROOT/'assets';M=Path(os.environ.get('ANIM_MASTER', str(ROOT/'masters/spearman-3d-v2')))
 bpy.ops.wm.open_mainfile(filepath=str(M/'spearman.blend'))
 def pbr(name, folder, maps, tint, roughrange, scale, bump=.1):
  m=bpy.data.materials[name];n=m.node_tree.nodes;l=m.node_tree.links;s=n.get('Principled BSDF')

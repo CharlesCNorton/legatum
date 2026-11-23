@@ -1,0 +1,26 @@
+{
+  "assets": [
+    {
+      "path": "assets/spartan-hoplite/painting-source.png",
+      "sha256": "7b6e3443b6bd90c2c2aacdde4a1c1533a42ac4a3a1daffddfe9fa08e6ce357fd",
+      "licence": "CC BY 4.0"
+    },
+    {
+      "path": "assets/horseman/fill-linen.png",
+      "sha256": "c71ed83e71404d76f318e2410e111c1ec6ecf00864d9730f13514f2f5c932da3",
+      "licence": "CC BY 4.0"
+    },
+    {
+      "path": "assets/cmu-02_01.bvh",
+      "sha256": "cf56db43157acc3d200b3d4215523f54d354a8926bea67e1f6c8031bd335ba7e",
+      "licence": "CMU permissive commercial/research"
+    },
+    {
+      "path": "assets/cmu-77_02.bvh",
+      "sha256": "d6eef8f4ab182bef1bb5db0c46cbec0261b81a63ce1720b8a19777b7e79887a9",
+      "licence": "CMU permissive commercial/research"
+    }
+  ],
+  "shared": "../../assets.lock.json",
+  "source_manifest": "assets/spartan-hoplite/sources.json"
+}

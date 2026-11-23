@@ -5,14 +5,14 @@ from mathutils import Vector,Matrix,Quaternion
 from mathutils.bvhtree import BVHTree
 sys.path.insert(0,str(Path(__file__).parent))
 from mocap import BVH
-root=Path(os.environ['ANIM_ROOT']);M=root/'masters/spearman-3d-v2';A=root/'assets'
+root=Path(os.environ['ANIM_ROOT']);M=Path(os.environ.get('ANIM_MASTER', str(root/'masters/spearman-3d-v2')));A=root/'assets'
 CLIPS={'idle':(8,10),'move':(8,12),'attack':(10,14),'hit':(4,12),'death':(10,10)}
 walk=BVH(A/'cmu-02_01.bvh');stand=BVH(A/'cmu-77_02.bvh')
 clip=sys.argv[sys.argv.index('--')+1] if '--' in sys.argv else 'idle'
 out=M/'clips'/clip;out.mkdir(parents=True,exist_ok=True)
 (out/'clip.json').unlink(missing_ok=True)
 bpy.ops.wm.open_mainfile(filepath=str(M/'spearman.blend'))
-sc=bpy.context.scene;sc.render.threads_mode='FIXED';sc.render.threads=4;rig=bpy.data.objects['Spearman • MPFB game_engine'];neutral=json.loads(rig['neutral_pose'])
+sc=bpy.context.scene;sc.render.threads_mode='FIXED';sc.render.threads=3;rig=bpy.data.objects['Spearman • MPFB game_engine'];neutral=json.loads(rig['neutral_pose'])
 base_loc=rig.location.copy()
 spear_objects=[o for o in sc.objects if any(o.name.startswith(n) for n in ['Ash dory shaft','Spear bronze ferrule','Leaf spearhead','Iron spear butt'])]
 spear_neutral={o.name:o.matrix_basis.copy() for o in spear_objects}
@@ -108,7 +108,7 @@ def pose(t):
   shaft=bpy.data.objects['Ash dory shaft'];pts=shaft.data.splines[0].points
   direction=(shaft.matrix_world @ Vector(pts[-1].co[:3])-shaft.matrix_world @ Vector(pts[0].co[:3])).normalized()
   for o in spear_objects:
-   mat=o.matrix_world.copy();mat.translation+=direction*.25*raised;o.matrix_world=mat
+   mat=o.matrix_world.copy();mat.translation+=direction*float(os.environ.get('ANIM_ATTACK_SLIDE','.25'))*raised;o.matrix_world=mat
   bpy.context.view_layer.update()
  if clip=='death':
   # Let go before the body rolls across the shaft. The rigid weapon lands across
@@ -145,7 +145,7 @@ def pose(t):
   for ob in shield.children:
    ev=ob.evaluated_get(dg);me=ev.to_mesh()
    lowest=min(lowest,min((ob.matrix_world @ v.co).z for v in me.vertices));ev.to_mesh_clear()
-  if lowest<.10:
+  if lowest<.10 or (os.environ.get('ANIM_SHIELD_SETTLE')=='1' and release>.8):
    parent_matrix=shield.matrix_world @ shield.matrix_basis.inverted()
    shield.location+=parent_matrix.to_3x3().inverted() @ Vector((0,0,.10-lowest))
    bpy.context.view_layer.update()
@@ -186,6 +186,7 @@ assert pc.is_baked, 'Cloth bake did not complete'
 if clip=='death':samples[-2]=samples[-1]
 sc['source_master_sha256']=hashlib.sha256((M/'spearman.blend').read_bytes()).hexdigest()
 sc['spear_release_start']=.04 if clip=='death' else -1
+sc['attack_slide']=float(os.environ.get('ANIM_ATTACK_SLIDE','.25'))
 sc['clip']=clip;sc['sample_frames']=json.dumps(samples);sc['cloth_baked']=True
 sc.frame_set(samples[0]);bpy.ops.wm.save_as_mainfile(filepath=str(out/(clip+'.blend')))
 (out/'clip.json').write_text(json.dumps({'source_master_sha256':sc['source_master_sha256'],'clip':clip,'frames':samples,'fps':fps,'cloth_baked':pc.is_baked,'mocap':{'idle':'CMU 77_02 standing, frames 80-320, torso deltas','move':'CMU 02_01 walk, frames 40-160, sagittal legs'}.get(clip,'hand keyed')},indent=2))

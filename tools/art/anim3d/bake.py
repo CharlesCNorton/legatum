@@ -1,9 +1,9 @@
 """Bake real geometry AO and Cycles curvature for metal and skin."""
 import bpy,os,json
 from pathlib import Path
-R=Path(os.environ['ANIM_ROOT']);M=R/'masters/spearman-3d-v2';out=M/'textures/baked';out.mkdir(parents=True,exist_ok=True)
+R=Path(os.environ['ANIM_ROOT']);M=Path(os.environ.get('ANIM_MASTER', str(R/'masters/spearman-3d-v2')));out=M/'textures/baked';out.mkdir(parents=True,exist_ok=True)
 bpy.ops.wm.open_mainfile(filepath=str(M/'spearman.blend'))
-sc=bpy.context.scene;sc.render.threads_mode='FIXED';sc.render.threads=4;sc.render.engine='CYCLES';sc.cycles.device='CPU';sc.cycles.samples=12
+sc=bpy.context.scene;sc.render.threads_mode='FIXED';sc.render.threads=3;sc.render.engine='CYCLES';sc.cycles.device='CPU';sc.cycles.samples=12
 sc.render.bake.margin=8;sc.render.bake.use_clear=True
 names=['Forged bronze muscle cuirass','Convex bronze aspis','Corinthian helmet crown','MPFB anatomical male • original topology']
 records=[]

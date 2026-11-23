@@ -4,7 +4,7 @@ from pathlib import Path
 from bpy_extras.object_utils import world_to_camera_view
 from mathutils import Vector
 from mathutils.bvhtree import BVHTree
-R=Path(os.environ['ANIM_ROOT']);M=R/'masters/spearman-3d-v2';report={};failures=[]
+R=Path(os.environ['ANIM_ROOT']);M=Path(os.environ.get('ANIM_MASTER',str(R/'masters/spearman-3d-v2')));report={};failures=[]
 clips=[os.environ['AUDIT_CLIP']] if os.environ.get('AUDIT_CLIP') else ['idle','move','attack','hit','death']
 for clip in clips:
  bpy.ops.wm.open_mainfile(filepath=str(M/'clips'/clip/(clip+'.blend')))
@@ -45,7 +45,7 @@ for clip in clips:
   if min(bounds[:2])<0 or max(bounds[2:])>1:failures.append(f'{clip}/{frame}: geometry outside camera')
   if minz<.07:failures.append(f'{clip}/{frame}: {lowest} intersects base, z={minz:.4f}')
  report[clip]=rows
-report['failures']=failures;(R/'review/3d-v2'/('rig-audit-'+clips[0]+'.json' if len(clips)==1 else 'rig-audit.json')).write_text(json.dumps(report,indent=2))
+report['failures']=failures;(R/'review/3d-v2'/(os.environ.get('ANIM_AUDIT_PREFIX','')+('rig-audit-'+clips[0]+'.json' if len(clips)==1 else 'rig-audit.json'))).write_text(json.dumps(report,indent=2))
 print('AUDIT',len(failures),'findings')
 for f in failures:print(f)
 raise SystemExit(bool(failures))

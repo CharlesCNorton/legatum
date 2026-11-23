@@ -2,6 +2,9 @@
 set -euo pipefail
 cd "$(dirname "$0")/../../.."
 source tools/art/anim3d/env.sh
+if [[ "${UNIT:-}" == spartan-hoplite ]]; then
+  exec tools/art/anim3d/units/spartan-hoplite/render.sh "${1:-c}"
+fi
 stage="${1:-c}"
 lock="$ANIM_ROOT/blender-heavy.lock"
 if ! mkdir "$lock" 2>/dev/null; then echo "Another Blender job owns $lock" >&2; exit 1; fi

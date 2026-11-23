@@ -106,3 +106,94 @@ tools/art/anim3d/render.sh audit
 ```
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
+
+## Infantry / Spartan hoplite round 1
+
+The unit entry point is `UNIT=spartan-hoplite tools/art/anim3d/render.sh STAGE`.
+Unit-specific code is in `units/spartan-hoplite/`. The shared MPFB builder,
+Corinthian helmet, scan materials, AO/curvature baking and animation accept an
+optional `ANIM_MASTER` directory; the spearman default is unchanged. This lane
+uses `masters/spartan-hoplite/round1-3d/`, preserving the earlier hoplite experiment.
+Its internal `spearman.blend` filename is the shared pipeline's working convention;
+the scene's `unit` property identifies the actual Spartan hoplite.
+
+The painting has linen armour, red-edged pteruges, a red shoulder mantle, bronze
+greaves, a Corinthian crest and an ivory-faced lambda aspis. The body is the real
+MPFB CC0 weighted human, with a 53-bone armature. Kit meshes have thickness,
+rounded edges, stitched bindings, buckles and layered cloth folds. The cape uses
+actual per-clip cloth caches. The plain sheet is retained as first-stage evidence.
+
+The standard finish follows all four standing quality levers: (1) frozen-camera
+projection of our original painting onto actual meshes, blended by surface
+incidence and pigment masks into scanned/generated fills; (2) physical bevels,
+cloth thickness/folds and small kit geometry; (3) warm upper-left product key,
+soft fill, cool rim and Cycles contact shadows; (4) one painting-derived monotonic
+RGB histogram grade, reused unchanged across clips. The projection records its
+per-part registration in external `projection.json`. It is approximate and carries
+painted lighting; it is not proof of rest-pose parity. Unseen linen uses the mounted
+lane's original generated fill, with CC0 scans on remaining unseen materials.
+
+Stone uses the common sRGB **#E9CFA0** target, converted to linear pigment before
+lighting, with a darker rim and low-contrast scanned grain. Judge its *rendered*
+colour against the painting. `spartan-hoplite-f-restpose-compare.png` contains the
+painting, render, half split and 50% crossfade, plus native 64 px views. Review the
+helmet, chest and shield crops in `spartan-hoplite-c-details.png`; no file existence
+or atlas size check constitutes art acceptance.
+
+```sh
+UNIT=spartan-hoplite tools/art/anim3d/render.sh prepare
+UNIT=spartan-hoplite tools/art/anim3d/render.sh build
+UNIT=spartan-hoplite SAMPLES=8 tools/art/anim3d/render.sh b
+UNIT=spartan-hoplite tools/art/anim3d/render.sh materials
+UNIT=spartan-hoplite tools/art/anim3d/render.sh c
+UNIT=spartan-hoplite tools/art/anim3d/render.sh all-clips
+UNIT=spartan-hoplite tools/art/anim3d/render.sh all-renders
+UNIT=spartan-hoplite tools/art/anim3d/render.sh pack
+UNIT=spartan-hoplite tools/art/anim3d/render.sh validate
+UNIT=spartan-hoplite tools/art/anim3d/render.sh audit
+```
+
+All Blender calls are plain `blender -b --disable-autoexec` through PATH's shared
+gate, with three render threads; this lane starts no concurrent heavy process.
+CPU Cycles is the sandbox default. The lead's GPU refresh is:
+
+```sh
+UNIT=spartan-hoplite RENDER_ENGINE=CYCLES CYCLES_DEVICE=GPU RESOLUTION=512 SAMPLES=64 tools/art/anim3d/render.sh all-renders
+UNIT=spartan-hoplite tools/art/anim3d/render.sh pack
+UNIT=spartan-hoplite tools/art/anim3d/render.sh validate
+UNIT=spartan-hoplite tools/art/anim3d/render.sh audit
+```
+
+GPU mode explicitly selects Metal and refuses silent fallback. Rendered 512 px
+masters and downsampled 256 px gallery frames are preserved externally. A 256 px
+CPU preview is never upscaled and labelled as a 512 px master. Rebuilding the
+model invalidates clips; regrading rest invalidates all rendered clip grades.
+The packer binds each clip/render/master and grade by SHA256 and refuses staleness.
+
+### Hoplite trimmed atlas extension
+
+The candidate ships 160×160 logical cells, 10 columns and five rows, all
+8/8/10/4/10 frames, WebP quality **at least 75**, at most **200,000 bytes**.
+The legacy `frame:{w,h,ax,ay}` and clip `row,frames,fps,loop` fields remain.
+`format:"trimmed-grid-v1"` adds `clips[clip].rects[i]`:
+`{x,y,w,h,ox,oy}`. `x,y,w,h` selects the cropped sprite in the atlas; `ox,oy`
+restores its position in the 160 px logical frame. Draw at
+`anchorX - frame.ax + ox, anchorY - frame.ay + oy`. Each crop is packed at the
+upper-left of its existing 160 px grid slot. Empty slot padding remains transparent.
+Consumers **must use rects and offsets**; treating this as the old full-cell atlas
+would jitter. This art candidate does not change or enable the runtime loader.
+An over-budget pack fails instead of dropping frames or quality. Alpha alone is
+quantized to 16 levels. Pack and validation reports remain outside git.
+
+Hoplite-specific corrections: the inherited aspis triangle fan and outer quad
+rings had opposite winding. `shield_normals.py` reverses the outer rings while
+preserving UVs; otherwise the incidence mask projects almost no painting onto
+the face and Solidify hides the emblem. The lambda is paint on the convex shield,
+not a second raised letter. `ANIM_ATTACK_SLIDE=.43` (spearman default remains .25)
+keeps the shorter hoplite spear's rear end inside the tighter fixed camera.
+
+The front mantle likewise needs outward winding for its painted colour mask.
+A targeted rest-camera probe caught fingertips protruding through the aspis;
+its surfaces now sit 75 mm farther forward. The hoplite-only
+`ANIM_SHIELD_SETTLE=1` grounds the fully released shield after that clearance
+change. These switches leave the spearman defaults unchanged.

@@ -1,7 +1,7 @@
 """Curved Corinthian faceplate with genuine eye and mouth openings."""
 import bpy,os,sys,math
 from pathlib import Path
-R=Path(os.environ['ANIM_ROOT']);M=R/'masters/spearman-3d-v2'
+R=Path(os.environ['ANIM_ROOT']);M=Path(os.environ.get('ANIM_MASTER', str(R/'masters/spearman-3d-v2')))
 paths=sorted((M/'clips').glob('*/*.blend')) if '--clips' in sys.argv else [M/'spearman.blend']
 for path in paths:
  bpy.ops.wm.open_mainfile(filepath=str(path));sc=bpy.context.scene
