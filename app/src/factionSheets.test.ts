@@ -44,13 +44,13 @@ describe('faction sheets', () => {
     expect(FACTION_SHEETS.Germany.pairs[1].strength).toBeUndefined();
     expect(FACTION_SHEETS.Germany.pairs[2].strength).toContain('strategic deposits supply twice as much');
     expect(FACTION_SHEETS.Germany.pairs).toHaveLength(5);
-    expect(FACTION_SHEETS.Germany.pairs[3].strength).toContain('Industry project instead of building: each turn it turns half of its Production into Gold, or a quarter into Science');
+    expect(FACTION_SHEETS.Germany.pairs[3].strength).toContain('Your Gold and Science projects turn 50% and 25% of a city’s Production into Gold and Science');
     // A drawback that only restates its ability is not one: the project row has no price.
     expect(FACTION_SHEETS.Germany.pairs[3].price).toBeUndefined();
     expect(FACTION_SHEETS.India.pairs[0].price).toContain('Production never falls below 3');
     expect(FACTION_SHEETS.India.pairs[1].price).toContain('half the Gold they make');
     expect(FACTION_SHEETS.India.pairs[2].strength).toContain('Imperial Diwan');
-    expect(FACTION_SHEETS.Mongols.pairs[0].price).toContain('raise no Walls, Castles or Star Forts');
+    expect(FACTION_SHEETS.Mongols.pairs[0].price).toContain('You never build Walls and buy no Siege before the Medieval era.');
     expect(FACTION_SHEETS.Mongols.pairs[0].price).toContain('buy no Siege before the Medieval era');
     expect(FACTION_SHEETS.Athens.lore).toBe('Classical Athens was known for civic debate and learning. In play, Athenian scholarship brings quick discoveries at a cost to its treasury.');
     expect(FACTION_SHEETS.Athens.lore).not.toContain('excluded many residents');

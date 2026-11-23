@@ -27,8 +27,12 @@ By changed path:
                                                instead the fast scenario check (rules version, baseline doc, state
                                                loads on master's engine, copy lint; seconds)
   UI                      legatum-ui-reviewer
+  what the advisor teaches  legatum-advisor-reviewer  (controls, turn flow, orders and the rules its advice and
+                                               reasons state: ADVISOR_IMPACT; or the advisor itself)
   art, or art-related code  legatum-art-reviewer  (art files, or the names/kinds/wiring that art depends on:
                                                ART_IMPACT)
+  public front door       legatum-docs-reviewer and legatum-art-reviewer  (README.md, docs/media/, the link-preview
+                                               card: FRONT; the copy and every image or clip a visitor sees first)
 Exit 1 when a check fails, or (with --pr-comments) a required review is missing or failed.
 """
 import argparse
@@ -49,6 +53,7 @@ REVIEWERS = {
     "plain": "legatum-plain-language-reviewer",
     "ui": "legatum-ui-reviewer",
     "art": "legatum-art-reviewer",
+    "advisor": "legatum-advisor-reviewer",
 }
 
 TESTS = re.compile(r"^crates/[^/]+/tests/|_tests\.rs$|/tests\.rs$|^app/e2e/|\.test\.tsx?$|^app/src/test/|/__snapshots__/")
@@ -69,6 +74,9 @@ SCENARIO_COPY = re.compile(r'^\s*"(title|briefing|tests|summary|question)"\s*:')
 ENGINE = re.compile(r"^crates/(core|ai)/(src/|Cargo\.toml$)")
 ART = re.compile(r"^app/src/assets/.*\.(png|svg|jpe?g|webp)$|^app/public/(wonders|terrain)/"
                  r"|^tools/art/(distinctness\.(py|json)|render-sets\.mjs)$")
+# The public front door: what a visitor sees first (user, 2026-11-22: a generic boxes-and-arrows README diagram merged
+# with no reviewer because README.md and docs/ count as docs). Its copy and its visuals both get a review.
+FRONT = re.compile(r"^README\.md$|^docs/media/|^app/public/og\.jpg$")
 # Code that can make existing art stale or missing: names and kinds of things that have pictures, and the art wiring.
 ART_IMPACT = re.compile(r"^crates/core/src/(data|eras|units|buildings|factions?)\.rs$"
                         r"|^app/src/(unitArt|unlockArt|resourceIcons|landmarks|portraits|siegeProps|icons|wonders)\.ts$"
@@ -81,12 +89,23 @@ def load(name):
     spec.loader.exec_module(mod)
     return mod
 
+# What the in-game advisor teaches (user, 2026-11-22: "if we change something that affects the tutorial ... we should
+# update it before we merge"): its own files, and the code behind the controls it names (click, right-click, keys,
+# panels it points at), the turn's decision order, the orders it recommends and the rules its reasons state.
+# The advisor reviewer checks each instruction and reason is still true, and that new basics are taught.
+ADVISOR_IMPACT = re.compile(r"^app/src/ui/(advisor|Advisor)\w*\.(ts|tsx|css)$|^app/src/ui/(tutorial|Tutorial)\w*\.(ts|tsx|css)$"
+                            r"|^app/src/(gameplayKeys|turnFlow|orders|orderDecoding|settlement|automation|store)\.ts$"
+                            r"|^app/src/map/(MapCanvas\.tsx|gestures\.ts|screenPos\.ts|settleAdvice\.ts)$"
+                            r"|^app/src/ui/(UnitPanel|UnitAction|CityPanel|TechPanel|TopBar|SeatBar|TurnReport|VpTrack)\.tsx$"
+                            r"|^crates/core/src/(orders|data|turn|game|view)\.rs$|^crates/core/src/rules/(cities|units|movement|battle)\.rs$"
+                            r"|^crates/wasm/src/lib\.rs$")
+
 
 def classify(repo, base, tip, files=None):
     """{'code','ui','copy','engine','art','artimpact','scenario': [paths]} for BASE..TIP. A branch whose only code is Lab scenario
     files is `scenario`: those files are not `code` or `copy` (the scenario check covers them instead)."""
     files = files if files is not None else [p for s, p in changed_files(repo, base, tip)]
-    out = {k: [] for k in ("code", "ui", "copy", "engine", "art", "artimpact", "scenario")}
+    out = {k: [] for k in ("code", "ui", "copy", "engine", "art", "artimpact", "advisor", "scenario", "front")}
     scen = [f for f in files if f.startswith("scenarios/") and f.endswith(".json")]
     lab_only = bool(scen) and all(LAB_SCENARIO.match(f) for f in files if not NON_CODE.search(f))
     if lab_only:
@@ -112,6 +131,10 @@ def classify(repo, base, tip, files=None):
             out["art"].append(f)
         if ART_IMPACT.search(f) and not test:
             out["artimpact"].append(f)
+        if ADVISOR_IMPACT.search(f) and not test:
+            out["advisor"].append(f)
+        if FRONT.search(f):
+            out["front"].append(f)
     return out
 
 
@@ -143,17 +166,24 @@ def run_checks(repo, base, tip, kinds, skip=()):
 def required_reviews(kinds):
     """[(kind, reviewer agent, why)] for the reviews the changed paths call for."""
     out = []
-    if kinds["code"]:
-        out.append(("docs", REVIEWERS["docs"], "code changed"))
+    front = kinds.get("front", [])
+    if kinds["code"] or front:
+        out.append(("docs", REVIEWERS["docs"], "code changed" if kinds["code"] else
+                    "public front door changed: " + ", ".join(front[:4])))
     if kinds["copy"]:
         # Player text (user, 2026-11-21): a card says the short rule, the Guide holds the detail, in plain words.
         out.append(("plain", REVIEWERS["plain"], "player text changed: " + ", ".join(kinds["copy"][:4])))
     if kinds["ui"]:
         out.append(("ui", REVIEWERS["ui"], "UI changed"))
-    if kinds["art"] or kinds.get("artimpact"):
-        # Art, and changes that may make art stale (user, 2026-11-22): the art reviewer judges both.
-        out.append(("art", REVIEWERS["art"], "art or art-related code changed: "
-                    + ", ".join((kinds["art"] + kinds.get("artimpact", []))[:4])))
+    if kinds["art"] or kinds.get("artimpact") or front:
+        # Art, changes that may make art stale, and the front door's images and clips (user, 2026-11-22): the art
+        # reviewer judges all three.
+        out.append(("art", REVIEWERS["art"], "art, art-related code or front-door media changed: "
+                    + ", ".join((kinds["art"] + kinds.get("artimpact", []) + front)[:4])))
+    if kinds.get("advisor"):
+        # The advisor teaches controls and rules: a change to them updates the advisor before merge (user, 2026-11-22).
+        out.append(("advisor", REVIEWERS["advisor"], "what the advisor teaches may have changed: "
+                    + ", ".join(kinds["advisor"][:4])))
     return out
 
 

@@ -35,7 +35,8 @@ import { useUnitCardLeads } from './turnLead';
 import { MAX_LEVEL, STRENGTH_PERCENT, strengthBonus } from '../promotion';
 import { attackableEnemies, unitEra } from '../map/unitEra';
 import { EraTab } from './EraTab';
-import { foundCityUnitBlocker, isFounderCandidate } from '../settlement';
+import { coloniaSiteKnown, foundCityUnitBlocker, isFounderCandidate, settlementSite } from '../settlement';
+import { COLONIA_FOUND_LABEL, COLONIA_REACH, COLONIA_SITE_LEAD, isColoniaFounder } from '../goalCities';
 import { UnitImprovements, upgradeCheck } from './UnitImprovements';
 import { pendingSpend, goldOnHand } from './productionPurchases';
 export { upgradeCheck, upgradeStepBreakdown } from './UnitImprovements';
@@ -51,6 +52,16 @@ import { isTopRank } from '../rankInsignia';
 import { RankMark } from './RankMark';
 
 export const siegeCityHint = (bonus: number) => `+${bonus} ranged strength against city HP. Hits land one at a time. The hit that empties the city's HP carries on to the garrison with the part of its damage the city did not absorb. Later hits strike the garrison in full. Ranged fire cannot capture.`;
+
+/** Whether this Roman veteran founds the Colonia Victrix where he stands (core `goals::known_colonia_site`, through the settle site), cached per view. */
+const coloniaCache = new WeakMap<PlayerView, Map<number, boolean>>();
+function coloniaSiteHere(view: PlayerView, unit: UnitView): boolean {
+  if (!isColoniaFounder(view, unit.id)) return false;
+  let byUnit = coloniaCache.get(view);
+  if (!byUnit) coloniaCache.set(view, byUnit = new Map());
+  if (!byUnit.has(unit.id)) byUnit.set(unit.id, !!settlementSite(view, unit, unit.pos, [])?.colonia);
+  return byUnit.get(unit.id)!;
+}
 
 export function UnitPanel({ unit, view, peek = false }: { unit: UnitView; view: PlayerView; peek?: boolean }) {
   const { scroll, overflow } = useScrollHint();
@@ -71,7 +82,7 @@ export function UnitPanel({ unit, view, peek = false }: { unit: UnitView; view: 
   const onlyBarbarianStrength = barbarianStrengthKey && strengthTargets.every((u) => isBarbarian(u.owner));
   const closed = mine && !canEnter(view, unit.kind, view.tiles[tileIndex(unit.pos, view.width, view.height)]?.owner ?? null);
   const owner = view.players.find((p) => p.id === unit.owner);
-  // Standing on a Courier Hall holder's land at Peace: the road is open now and closes if the Hall changes hands.
+  // Standing on a Yam Relay Station holder's land at Peace: the road is open now and closes if the Station changes hands.
   const roadOwner = mine ? view.tiles[tileIndex(unit.pos, view.width, view.height)]?.owner ?? null : null;
   const onRoad = roadOwner !== null && view.players.find((p) => p.id === roadOwner)?.team !== view.team && !!view.courier_halls?.some((h) => h.holder === roadOwner) && !atWar(view, roadOwner);
   // A unit that starts its turn on a road gets extra moves (+1, +2 with Railways): say so where the number is.
@@ -98,7 +109,7 @@ export function UnitPanel({ unit, view, peek = false }: { unit: UnitView; view: 
   const madeBy = unit.origin ?? owner?.faction;
   const fromLabel = itemName({ kind: 'Unit', unit: unit.kind }, madeBy);
   const col = playerInk(unit.owner);
-  // The Sparta's one-time unit action: a veteran (at RULES.spartaRetireLevel or higher) is offered retirement, valid only in a city with a War Shrine.
+  // The Sparta's one-time unit action: a veteran (at RULES.spartaRetireLevel or higher) is offered retirement, valid only in a city with an Agoge.
   const veteran = mine ? retireEntry(view, unit.id) : undefined;
   const retiring = !!pendingRetire(orders, unit.id);
   const locked = mine && unit.occupation_lock != null;
@@ -135,6 +146,9 @@ export function UnitPanel({ unit, view, peek = false }: { unit: UnitView; view: 
   // From the player's knowledge only: an order that is certain to fail is not offered.
   const canFound = mine && isFounderCandidate(view, unit);
   const foundBlocked = canFound ? foundCityUnitBlocker(view, unit) : null;
+  // Rome's Colonia Victrix: a level 3 melee veteran on a site that counts founds it, and the button says so.
+  const coloniaHere = canFound && !foundBlocked && coloniaSiteHere(view, unit);
+  const foundLabel = coloniaHere ? COLONIA_FOUND_LABEL : 'Found City';
   // Heal is offered to a damaged unit (or one already healing, to stop it); where nothing heals it says why, right under the row.
   const healBlocked = mine ? healBlocker(unit) : null;
   const healOffered = mine && (unit.hp < 100 || standing === 'Heal');
@@ -160,7 +174,7 @@ export function UnitPanel({ unit, view, peek = false }: { unit: UnitView; view: 
         aria-describedby={foundBlocked ? 'phone-found-blocked' : undefined}
         aria-pressed={canFound ? pending?.type === 'FoundCity' : standing === 'Sleep'}
         onClick={canFound ? foundCitySelected : sleepSelected}>
-        {canFound ? 'Found City' : unit.military && unit.kind !== 'Scout' ? 'Fortify' : 'Wait'}
+        {canFound ? foundLabel : unit.military && unit.kind !== 'Scout' ? 'Fortify' : 'Wait'}
         {/* The peek row has no room for a sentence: the short reason, in the button; the full one is in the sheet. */}
         {foundBlocked && <small className="phone-action-why" id="phone-found-blocked">{foundBlocked.split(':')[0].replace(/\.$/, '')}</small>}
       </button>
@@ -183,6 +197,7 @@ export function UnitPanel({ unit, view, peek = false }: { unit: UnitView; view: 
             {unit.military && <> · <Tip content={`${eraName(unitEra(unit.kind as UnitKind))} era. Every military miniature wears this numeral on its base, so a newer unit of the same class reads apart on the map.`} className="up-era"><EraTab era={unitEra(unit.kind as UnitKind)} /></Tip></>}
           </div>
           {unit.military && <PromotionLine unit={unit} faction={owner?.faction} />}
+          {mine && isColoniaFounder(view, unit.id) && <p className="up-colonia" data-testid="unit-colonia"><Icon name="goal-colonia" size={14} /> Can found your Colonia Victrix{coloniaHere ? ' here' : ''} (+{factionGoalVp('Rome')} VP){coloniaHere ? '' : coloniaSiteKnown(view) === false ? `. No site known yet: it must be within ${COLONIA_REACH} tiles of a rival's land.` : ': gilt rings on the Settle lens mark the sites'}</p>}
           {isCompany(unit) && <CompanyTag unit={unit} view={view} />}
         </div>
         {status && <div className={`up-status ${broken ? 'bad' : pending ? 'pending' : exploring || unit.goto || standing ? 'standing' : ''}`}><Amounts text={status} />{broken && ' · won’t resolve'}</div>}
@@ -238,11 +253,11 @@ export function UnitPanel({ unit, view, peek = false }: { unit: UnitView; view: 
         <div className="actions">
           {unit.kind === 'Scout' && exploreAction}
           {canFound && (
-            <Action label="Found City" hotkey="B" primary={leads} active={pending?.type === 'FoundCity'} onClick={foundCitySelected}
+            <Action label={foundLabel} hotkey="B" primary={coloniaHere || (leads && roleAction)} active={pending?.type === 'FoundCity'} onClick={foundCitySelected}
               disabled={!!foundBlocked} reason={foundBlocked ?? undefined}
-              tip={unit.kind === 'Settler' ? `Found a city here, on land you or nobody owns. Cities need ${minCityGap(owner?.faction ?? 'Athens')} tiles between them.` : `Found a city here and consume this level-${unit.level} veteran. Combat resolves first: if this unit is wounded or killed, the city does not appear, and a surviving unit stays. A Legionary starts the city at population 2.`} />
+              tip={coloniaHere ? `${COLONIA_SITE_LEAD} This veteran is used up.` : unit.kind === 'Settler' ? `Found a city here, on land you or nobody owns. Cities need ${minCityGap(owner?.faction ?? 'Athens')} tiles between them.` : `Found a city here and consume this level-${unit.level} veteran. Combat resolves first: if this unit is wounded or killed, the city does not appear, and a surviving unit stays. A Legionary starts the city at population 2.`} />
           )}
-          {movePrimary && !locked && <Action label={mode === 'move' ? 'Cancel targeting' : unit.military && attacksInMelee(unit.kind) ? 'Move or attack' : 'Move'} primary={leads}
+          {movePrimary && !locked && <Action label={mode === 'move' ? 'Cancel targeting' : unit.military && attacksInMelee(unit.kind) ? 'Move or attack' : 'Move'} primary={leads && !coloniaHere}
             onClick={toggleMoveSelected} active={mode === 'move'} hotkey={mode === 'move' ? 'Esc' : undefined} 
             tip="Choose a tile on the map. Your route and combat forecast appear before you click. Esc cancels targeting. You can also right-click a destination, or drag from the unit to plot a path." />}
           {unit.kind !== 'Scout' && exploreAction}
@@ -269,7 +284,7 @@ export function UnitPanel({ unit, view, peek = false }: { unit: UnitView; view: 
             </div>
             {healOffered && healBlocked && standing !== 'Heal' && <p className="act-reason" id={healReasonId} data-testid="heal-blocked">{healBlocked}</p>}
           </div>
-          <UnitImprovements unit={unit} view={view} check={upgrade} primary={leads ? improvePrimary : null} pending={pending?.type} gold={gold} siegeGold={siegeGold} siegeBlocker={siegeBlocked} />
+          <UnitImprovements unit={unit} view={view} check={upgrade} primary={leads && !coloniaHere ? improvePrimary : null} pending={pending?.type} gold={gold} siegeGold={siegeGold} siegeBlocker={siegeBlocked} />
           {veteran && <RetireAction unit={unit} view={view} retiring={retiring} blocker={veteran.blocker} />}
           <div className="unit-dismiss">
             {asking ? <HeirDisbandConfirm unit={unit} view={view} /> : locked ? null :
@@ -307,16 +322,16 @@ export function UnitPanel({ unit, view, peek = false }: { unit: UnitView; view: 
   );
 }
 
-/** Honour the Fallen: retire this veteran (at the retire level or higher). Offered only on a veteran; valid only in an own city with a War Shrine, which the map marks while he is selected. */
+/** Honour the Fallen: retire this veteran (at the retire level or higher). Offered only on a veteran; valid only in an own city with an Agoge, which the map marks while he is selected. */
 function RetireAction({ unit, view, retiring, blocker }: { unit: UnitView; view: PlayerView; retiring: boolean; blocker: string | null }) {
   const set = useGame((s) => s.set);
   const jumpTo = useGame((s) => s.jumpTo);
   const editOrders = useGame((s) => s.editOrders);
   const r = view.actions!.retire!;
   const goal = FACTION_GOAL.Sparta, vp = factionGoalVp('Sparta');
-  const shrine = view.cities.find((c) => r.shrines.includes(c.id));
-  const reason = blocker && (shrine
-    ? <>{blocker.split(':')[0]}. The map marks the cities where he can retire. <button className="link" onClick={() => jumpTo(shrine.pos)}>Show on map</button></>
+  const agoge = view.cities.find((c) => r.shrines.includes(c.id));
+  const reason = blocker && (agoge
+    ? <>{blocker.split(':')[0]}. The map marks the cities where he can retire. <button className="link" onClick={() => jumpTo(agoge.pos)}>Show on map</button></>
     : 'Build an Agoge first: veterans retire in a city that has one.');
   return <Action label={goal.unitAction ?? 'Retire this veteran'} active={retiring} disabled={!!blocker && !retiring} reason={retiring ? undefined : reason ?? undefined}
     onClick={() => (retiring ? editOrders((o) => clearRetire(o, unit.id)) : set({ goalDialog: 'RetireVeteran', goalDialogUnit: unit.id }))}

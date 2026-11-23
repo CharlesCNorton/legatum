@@ -1174,6 +1174,28 @@ mod tests {
     use serde_json::Value;
 
     #[test]
+    fn advisor_plans_turn_one_from_its_own_view() {
+        let setup = GameSetup::standard(7, [Faction::Athens, Faction::Byzantium]);
+        let game = Game::from_setup_json(&json::setup_to_value(&setup).to_string()).unwrap();
+        let view = game.view_json(0).unwrap();
+        let orders: Vec<Order> =
+            serde_json::from_str(&advisor_orders_json(&view).unwrap()).unwrap();
+        assert!(!orders.is_empty());
+        assert!(orders.iter().any(|o| matches!(
+            o,
+            Order::SetProduction { .. } | Order::SetProductionQueue { .. }
+        )));
+        assert!(orders.iter().any(|o| matches!(
+            o,
+            Order::SetResearch { .. } | Order::SetResearchQueue { .. }
+        )));
+        assert_eq!(
+            advisor_orders_json(&view).unwrap(),
+            advisor_orders_json(&view).unwrap()
+        );
+    }
+
+    #[test]
     fn view_json_exposes_a_locked_building_predecessor() {
         use legatum_core::TechId;
 
@@ -1216,7 +1238,7 @@ mod tests {
         let state_city = game.session.state.cities.get_mut(&city).unwrap();
         state_city.producing = None;
         state_city.production_queue.clear();
-        state_city.build_automation = Some(CityBuildFocus::Balanced);
+        state_city.build_automation = Some(CityBuildFocus::Economy);
         game.invalidate_view();
         let view = game.view_json(0).unwrap();
         let planned = city_automation_orders_json(&view, "[]").unwrap();
@@ -1320,7 +1342,7 @@ mod tests {
                 .as_ref()
                 .unwrap()
                 .build_automation,
-            Some(CityBuildFocus::Balanced)
+            Some(CityBuildFocus::Economy)
         );
         // A missing field in an older city record is off by default.
         let mut old = serde_json::to_value(&reloaded.session.state.cities[&saved_city]).unwrap();
@@ -1714,22 +1736,22 @@ mod tests {
         assert_eq!(armor["upgrade_from"], "Pikeman");
         assert_eq!(armor["upgrade_cost"], 116);
         assert_eq!(armor["unit_strength"], 44);
-        let college = unlocks
+        let university = unlocks
             .iter()
             .find(|u| u["item"]["building"] == "University")
             .unwrap();
-        assert_eq!(college["predecessor"], "Library");
-        assert_eq!(college["min_population"], 5);
-        assert_eq!(college["cost"], 240);
+        assert_eq!(university["predecessor"], "Library");
+        assert_eq!(university["min_population"], 5);
+        assert_eq!(university["cost"], 240);
         // The Military Engineer retired with the Siege upgrade: it is no unit unlock.
         assert!(
             unlocks
                 .iter()
                 .all(|u| u["item"]["unit"] != "MilitaryEngineer")
         );
-        let ranger_upgrade: Vec<Order> =
+        let archer_upgrade: Vec<Order> =
             serde_json::from_str(r#"[{"type":"UpgradeUnit","unit":1}]"#).unwrap();
-        assert!(matches!(ranger_upgrade[0], Order::UpgradeUnit { .. }));
+        assert!(matches!(archer_upgrade[0], Order::UpgradeUnit { .. }));
 
         // Saves from before charters were removed carry a "doctrine" field; it is ignored.
         let mut save: Value = serde_json::from_str(&g.save_json()).unwrap();
@@ -1800,7 +1822,7 @@ mod tests {
     }
 
     #[test]
-    fn wounded_ranger_forecasts_match_melee_and_ranged_resolution() {
+    fn wounded_archer_forecasts_match_melee_and_ranged_resolution() {
         use legatum_core::{
             BattleForecast, Event, TeamId, Terrain, UnitKind, combat, game::spawn_unit,
         };
@@ -2043,6 +2065,83 @@ pub fn scenario_targets_json(scenario_json: &str) -> Result<String, String> {
 #[wasm_bindgen]
 pub fn explore_step(view_json: &str, unit: u32) -> Result<String, JsError> {
     js(explore_step_json(view_json, unit))
+}
+
+/// The in-game advisor: what a Hard AI would order for this seat this turn, planned only from the
+/// seat's own fogged view (no hidden information, pillar 6). The client explains each order in
+/// plain words and never submits them itself.
+#[wasm_bindgen]
+pub fn advisor_orders(view_json: &str) -> Result<String, JsError> {
+    js(guard(|| advisor_orders_json(view_json)))
+}
+
+thread_local! {
+    /// One advisor brain per seat and faction, kept across turns so its plans (openings, campaigns)
+    /// carry on like a real Hard seat's, with this turn's answer kept so asking again is free.
+    /// A new game, an earlier turn or another seat starts a new brain.
+    static ADVISOR: RefCell<Option<AdvisorSeat>> = const { RefCell::new(None) };
+}
+
+struct AdvisorSeat {
+    me: PlayerId,
+    faction: Faction,
+    turn: u32,
+    input: String,
+    brain: Box<dyn legatum_ai::Brain>,
+    answer: String,
+}
+
+pub fn advisor_orders_json(view_json: &str) -> Result<String, String> {
+    let view: PlayerView =
+        serde_json::from_str(view_json).map_err(|e| format!("invalid view: {e}"))?;
+    let faction = view
+        .players
+        .iter()
+        .find(|p| p.id == view.me)
+        .map(|p| p.faction)
+        .ok_or("the view has no player for its seat")?;
+    ADVISOR.with(|cell| {
+        let mut slot = cell.borrow_mut();
+        let same_seat = slot
+            .as_ref()
+            .is_some_and(|a| a.me == view.me && a.faction == faction);
+        if same_seat
+            && let Some(a) = slot
+                .as_ref()
+                .filter(|a| a.turn == view.turn && a.input == view_json)
+        {
+            return Ok(a.answer.clone());
+        }
+        if !same_seat
+            || slot
+                .as_ref()
+                .is_some_and(|a| a.turn > view.turn || a.turn == view.turn && a.input != view_json)
+        {
+            let brain: Box<dyn legatum_ai::Brain> = if view.rule_experiments.hard_v2_ai {
+                legatum_ai::hard_v2::brain(faction, 0, view.me)
+            } else {
+                Box::new(legatum_ai::ScriptedBrain::with_difficulty(
+                    faction,
+                    0,
+                    view.me,
+                    legatum_core::AiDifficulty::Hard,
+                ))
+            };
+            *slot = Some(AdvisorSeat {
+                me: view.me,
+                faction,
+                turn: view.turn,
+                input: String::new(),
+                brain,
+                answer: String::new(),
+            });
+        }
+        let seat = slot.as_mut().expect("advisor seat");
+        seat.turn = view.turn;
+        seat.input = view_json.to_owned();
+        seat.answer = to_json(&seat.brain.orders(&view))?;
+        Ok(seat.answer.clone())
+    })
 }
 
 /// Filter a proposed event list with the core's privacy rules for one player view.

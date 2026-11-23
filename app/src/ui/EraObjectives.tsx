@@ -8,7 +8,7 @@ import { useEffect, useRef } from 'react';
 import { useCombatFx } from '../feel';
 import { useReducedMotion } from './useReducedMotion';
 import { motionStill } from './motion';
-import { ERA_COUNT } from '../data';
+import { ageName, ERA_COUNT } from '../data';
 import { Icon } from './bits';
 import { Tip } from './Tip';
 import { CrestMedallion } from '../brand/ornaments';
@@ -109,7 +109,7 @@ function HowYouWinLine({ win, open, toggle, scored }: { win: HowYouWin; open: bo
 /** The Age's heading for its card, from its state: a title and the short rule beside it. */
 function heading(era: EraObjectives, members: number): { title: string; rule: string } {
   const vp = members > 1 ? '1 VP each' : '1 VP';
-  return era.state === 'scored' ? { title: `${era.name} Age: 1 VP scored`, rule: 'kept for good' } : { title: `Score ${vp} in the ${era.name} Age`, rule: 'never expires' };
+  return era.state === 'scored' ? { title: `${ageName(era.name)}: 1 VP scored`, rule: 'kept for good' } : { title: `Score ${vp} in the ${ageName(era.name)}`, rule: 'never expires' };
 }
 
 /** A line under the card: when the first or next Age begins. */
@@ -215,7 +215,7 @@ export function EraObjectivesResearch({ view }: { view: PlayerView }) {
         <RingMedallion icon={`era-numeral:${eraNumeral(focus.era - 1)}`} tone={focus.state === 'scored' ? 'gilt' : 'hollow'} size={46} className={`eor-seal${stamp ? ' stamp' : ''}`} />
         <div className="eor-body">
           <header className="eor-head">
-            <h4>{focus.state === 'scored' ? <>{focus.name} Age: 1 VP scored</> : <>{focus.name} Age: score 1 VP</>}</h4>
+            <h4>{focus.state === 'scored' ? <>{ageName(focus.name)}: 1 VP scored</> : <>{ageName(focus.name)}: score 1 VP</>}</h4>
             {focus.era < ERA_COUNT && <p className="eo-sub eor-next" data-testid="research-objectives-next">The next Age begins when any empire enters the {eraName(focus.era)} era.</p>}
           </header>
           <ObjectiveRows lines={focus.lines} inline accounting view={view} era={focus.era} flash={flash} />

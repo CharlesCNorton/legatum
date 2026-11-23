@@ -1,5 +1,3 @@
-import { endPlanning } from './turnActions';
-import { chooseCapitalProduction } from './opening';
 import { FACTIONS } from '../src/data';
 import type { Page } from '@playwright/test';
 import { test, expect } from './fixtures';
@@ -27,7 +25,7 @@ test('guide chapters, focus loop and shortcuts preserve the current screen', asy
   }
   await chapters.filter({ hasText: 'The peoples' }).click();
   await expect(guide(page).getByRole('heading', { level: 3 })).toHaveCount(FACTIONS.length);
-  await expect(guide(page)).toContainText('Peoples with different ways to shape history.');
+  await expect(guide(page)).toContainText('Every faction is playable, with a rule it bends and a weakness that pays for it.');
   await expect(guide(page)).toContainText('Ruhr Foundry replaces Forge');
   for (let i = 0; i < 16; i++) {
     await page.keyboard.press('Tab');
@@ -63,46 +61,36 @@ test('guide chapters, focus loop and shortcuts preserve the current screen', asy
   await expect(seed).toHaveValue('4242');
 });
 
-test('in-game guide contains keys; hints dismiss, persist, disable and reset', async ({ page }) => {
+test('in-game guide contains keys; advisor moves on and its switch persists', async ({ page }) => {
   await openSolo(page);
-  const hint = page.getByTestId('first-game-hint');
-  await expect(hint).toContainText('Pick production');
+  const advisor = page.getByTestId('advisor');
+  await expect(advisor).toHaveAttribute('data-advisor-id', 'welcome');
   await page.getByRole('button', { name: 'Menu', exact: true }).click();
+  await expect(advisor).toHaveCount(0);
   await page.getByRole('button', { name: 'How to Play (?)', exact: true }).click();
   await guide(page).getByRole('region').focus();
   for (const key of ['Enter', 'b', 'f', 't', '1', 'Space']) await page.keyboard.press(key);
   await expect(page.getByTestId('turn-number')).toHaveText('1');
   await expect(page.locator('.sidebar-turn-more > summary')).toContainText('0 orders');
   await page.keyboard.press('Escape');
-  const dismiss = page.getByRole('button', { name: 'Dismiss hint: Pick production' });
-  await dismiss.focus();
+  await expect(advisor).toHaveAttribute('data-advisor-id', 'welcome');
   await page.keyboard.press('Enter');
-  await expect(hint).toContainText('Choose your first research');
+  await expect(advisor).not.toHaveAttribute('data-advisor-id', 'welcome');
+  const first = await advisor.getAttribute('data-advisor-id');
+  await advisor.getByRole('button', { name: 'Not now' }).click();
+  await expect(advisor).not.toHaveAttribute('data-advisor-id', first!);
   await expect(page.getByTestId('turn-number')).toHaveText('1');
-  await page.getByRole('button', { name: 'Dismiss hint: Choose your first research' }).click();
-  await expect(hint).not.toBeVisible();
-  await chooseCapitalProduction(page);
-  // Production alone leaves units and research pending; the ready hint must wait.
-  await expect(hint).not.toBeVisible();
-  await endPlanning(page);
-  await expect(page.getByTestId('turn-number')).toHaveText('2');
-  if (await page.getByRole('button', { name: 'Close report', exact: true }).isVisible()) await page.getByRole('button', { name: 'Close report', exact: true }).click();
-
-  await page.reload();
-  await page.getByRole('button', { name: /^Continue/ }).click();
-  await expect(page.getByTestId('turn-number')).toHaveText('2');
-  await expect(hint).not.toBeVisible();
   await page.getByRole('button', { name: 'Menu', exact: true }).click();
-  await page.getByRole('button', { name: 'Reset hints', exact: true }).click();
-  await expect(hint).toContainText('Choose your first research');
-  await page.getByLabel('First-game hints', { exact: true }).uncheck();
-  await expect(hint).not.toBeVisible();
+  await page.getByLabel('Show the advisor').uncheck();
+  await expect(advisor).toHaveCount(0);
   await page.reload();
-  await page.getByRole('button', { name: 'Settings', exact: true }).click();
-  await expect(page.getByLabel('First-game hints', { exact: true })).not.toBeChecked();
-  await page.getByRole('button', { name: 'Reset hints', exact: true }).click();
-  await expect(page.getByLabel('First-game hints', { exact: true })).toBeChecked();
-  await page.keyboard.press('Escape');
+  // The game in progress resumes; the switch stayed off across the reload.
   await page.getByRole('button', { name: /^Continue/ }).click();
-  await expect(hint).toContainText('Choose your first research');
+  await expect(page.getByTestId('turn-number')).toHaveText('1');
+  await expect(advisor).toHaveCount(0);
+  await page.getByRole('button', { name: 'Menu', exact: true }).click();
+  await expect(page.getByLabel('Show the advisor')).not.toBeChecked();
+  await page.getByLabel('Show the advisor').check();
+  await page.keyboard.press('Escape');
+  await expect(advisor).toBeVisible();
 });

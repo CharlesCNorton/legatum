@@ -20,9 +20,16 @@ export interface CopyRule {
 
 /** Mechanics-speak and code terms: describe what the player gets, not the integer maths behind it. */
 export const BANNED: CopyRule[] = [
+  { pattern: /\brace sidebar\b/i, reason: 'the panel is called the Victory race (master, 2026-11-22)', instead: '"Victory race"', source: true },
+  { pattern: /\bresolve[sd]? when the turn ends\b/i, reason: 'code-speak (plain-language review, 2026-11-22)', instead: '"it happens when the turn ends"', source: true },
+  { pattern: /\b(?:Gold|Science|Food|Production) (?:and (?:Gold|Science|Food|Production) )?go(?:es)? on\b/i, reason: 'vague (plain-language review, 2026-11-22)', instead: '"Gold and Science still come in."', source: true },
+  { pattern: /\bmelee veteran of level\b/i, reason: 'wordy (plain-language review, 2026-11-22)', instead: '"a level 3 melee veteran"', source: true },
+  { pattern: /\bqualif(?:y|ies|ied|ying)\b/i, reason: 'rulebook jargon (plain-language review, 2026-11-22: "a site qualifies")', instead: '"A site counts if it is within 2 tiles of a rival\'s land."', source: true },
+  { pattern: /\bAIs\b/, reason: 'say AI empires in player text (UI review, 2026-11-22)', instead: '"AI empires"', source: true },
   { pattern: /\bNearest you know\b/i, reason: 'reads oddly (plain-language review, 2026-11-22)', instead: '"Nearest known: Sarai (Mongols), 5 tiles from your city Ajmer."', source: true },
   { pattern: /\bPeace (?:ends|would end|ended) (?:all|every) (?:wars?|conflicts?)\b/i, reason: 'Peace ends only the war between its two named teams', instead: 'name that war and any wars that continue', source: true },
   { pattern: /\bPeace (?:covers|includes|binds) (?:their |your )?allies\b/i, reason: 'Alliances stay, but allies are not included in a Peace', instead: 'Peace is between the two named teams', source: true },
+  { pattern: /\bIndustry project/i, reason: 'every empire has projects since 2026-11-22; the items are the Gold project and the Science project', instead: 'Gold project / Science project', source: true },
   { pattern: /\bWar Shrine\b/i, reason: 'Sparta’s building is called the Agoge', instead: 'Agoge', source: true },
   { pattern: /\bin this family\b/i, reason: 'building refusal does not name what stands', instead: 'name the standing building or upgrade', source: true },
   { pattern: /\bNutrient Synthesis\b/i, reason: 'removed technology', instead: 'describe the growth cost without it', source: true },
@@ -71,7 +78,7 @@ export const BANNED: CopyRule[] = [
   { pattern: /\b1 (orders|alerts|issues)\b/i, reason: 'a count of one with a plural noun (8.9.14 UI review, 2026-10-28: "Turn details · 1 orders")', instead: 'the counted() helper in app/src/plural.ts: "1 order"', source: true },
   { pattern: /\b(?:you have|you hold|you own|spare)[:\s]+[−-]\d/i, reason: 'a negative amount of something the player has (8.9.16 UI review, 2026-10-29: "Iron supply: needs 1 spare, you have -2")', instead: '"you have none" for zero or less spare supply' },
   { pattern: /\bwithin \d+\s*(?:$|[.,;:)!?])/, reason: 'a distance with no unit (8.9.16 UI review, 2026-10-29: "or strikes within 5")', instead: '"strikes up to 5 tiles away", "within 5 tiles"' },
-  { pattern: /\b(Science|Gold|Military|Balanced) will choose\b/, reason: 'the automation focus named as the one who chooses (UI review, 2026-10-31: "Science will choose when it empties")', instead: '"When it empties, the city picks a Science build."', source: true },
+  { pattern: /\b(Science|Gold|Food|Military|Economy|Balanced) will choose\b/, reason: 'the automation focus named as the one who chooses (UI review, 2026-10-31: "Science will choose when it empties")', instead: '"When it empties, the city picks a Science build."', source: true },
   { pattern: /\bbest available choice\b/i, reason: 'a stock phrase that hides why automation picked an item (UI review, 2026-10-31: "Horseman: Science focus, best available choice")', instead: 'the actual focus or civilian build value', source: true },
   { pattern: /\bSiege: No Siege\b/, reason: 'a reason line that repeats its own label (UI review, 2026-10-31)', instead: 'show the era gate where the price would be: "Mongols can buy Siege from the Medieval era."' },
   { pattern: /\bHold it or rebase it\b/, reason: 'names two buttons that may be missing or disabled (UI review, 2026-11-05: Rebase was unavailable on the same card)', instead: 'name only the buttons on the card: "Wait for a target, or skip this turn."', source: true },
@@ -134,7 +141,7 @@ export const BANNED: CopyRule[] = [
   { pattern: /\bstays banked in [A-Z]/, reason: 'bookkeeping word order for what a city keeps (8.9.23 UI review: "Granary progress 12 stays banked in Astra")', instead: '"Astra keeps the 12 Production already put into the Granary."', source: true },
   { pattern: /\bwindows from your connection\b/i, reason: 'awkward, and the others may be other people on the same network (relay messages review)', instead: '"people on your internet connection"', source: true },
   { pattern: /\bsent too quickly\b|\btoo much (?:was )?sent\b/i, reason: 'passive network talk with no subject (relay messages review)', instead: '"You are sending too much, too fast."', source: true },
-  { pattern: /“Game” with a number/, reason: 'the default name is "Game" and four characters, not a number (relay messages review)', instead: '"The game list will show “Game” and four characters."', source: true },
+  { pattern: /“Game” with a number/, reason: 'the default name is "Game" and four characters, not a number (relay messages review)', instead: '"Listed as “Game” and four characters."', source: true },
 ];
 
 /**
