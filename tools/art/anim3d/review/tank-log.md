@@ -18,3 +18,8 @@
 - Added bounded rest-pose RGB quantile grading (alpha preserved, raw renders retained), 50/50 rest-pose comparison, and explicit host Metal Cycles GPU + denoising support.
 - Emitted tank-d-rig-poses.png from actual d renders; visual review pending.
 - Emitted tank-e-idle-strip.png from actual e-idle renders; visual review pending.
+- Rest-pose projection and crossfade emitted. Better brushwork but mantlet still high, base too orange, wheels too mechanically uniform. Final adjustment lowers/enlarges mantlet, adds source brushwork on real wheel/bogie surfaces with procedural fallbacks, reduces double-lighting of painted surfaces and cools the stone toward the measured cream.
+- CPU volume processing takes ~11 s/frame even at 12 samples. Replacing volumes with noise/facing-faded translucent 3D shells for the next build. These remain real meshes, not camera cards; no OpenVDB conversion is required.
+- Emitted tank-e-move-strip.png from actual e-move renders; visual review pending.
+- Emitted tank-e-attack-strip.png from actual e-attack renders; visual review pending.
+- Emitted tank-e-hit-strip.png from actual e-hit renders; visual review pending.

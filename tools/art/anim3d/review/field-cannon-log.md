@@ -16,3 +16,6 @@
 - Posted field-cannon-e-idle-strip.png; actual CYCLES render, visual review pending.
 - Posted field-cannon-e-move-strip.png; actual CYCLES render, visual review pending.
 - Projection rest-pose compare posted. Found duplicated painted belts under real straps; added navy-only / ivory-only source masks. Generated original painted wool for unseen surfaces; added stitch geometry and a real buckle. Latest final pass also corrects framing and broadens wheel-track presentation.
+- Move strip review caught the stowed rammer extending outside the frame. Corrected its carriage-local position for the final round; retained actual wheel-distance coupling.
+- Posted field-cannon-e-attack-strip.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-hit-strip.png; actual CYCLES render, visual review pending.
