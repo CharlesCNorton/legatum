@@ -123,7 +123,8 @@ Three plain views expose geometry for review; a rest-camera match alone is
 insufficient. Aircraft uses a rigid root and two control-surface pivots. Motion
 is mechanical: idle bank, forward-flight bank, attack run/missile release,
 hit recoil and descending crash with impact deformation and terminal hold.
-The stationary support disappears during the crash using keyed visibility.
+The solid support topples from a pivot at its foot during the crash, remains
+visible throughout, and holds with the settled wreck.
 The wreck is settled against the actual base footprint, with a numerical
 contact check. The base itself remains stationary and visible.
 
@@ -146,18 +147,23 @@ contact check. The base itself remains stationary and visible.
 
 Shared stone target is warm cream **#E9CFA0** (sRGB; linear base pigment about
 `.815,.624,.352`), roughness .86 with fine procedural grain and darker rim.
-Judge the rendered pixels: lighting changes the pigment. The base uses physical
-stone, not a permanently projected stand shadow.
+Judge the rendered pixels: lighting changes the pigment. The base uses the
+painting's lower rim and a clean generated limestone top fitted to the real
+cylinder, with live contact AO rather than a permanently projected stand shadow.
+Ignore near-transparent alpha specks when finding a generated fill's footprint;
+otherwise its actual disc can shrink into a sliver.
 
 ### Delivery and host pass
 
-`ROUND=1 tools/art/anim3d/units/stealth-fighter/gpu.sh` is the executable,
+`ROUND=2 tools/art/anim3d/units/stealth-fighter/gpu.sh` is the executable,
 no-argument GPU entry point from repository root. It explicitly requires Metal
 Cycles, renders b/c/d/g and all five clips at 512px with denoising, produces
 256px masters, every review sheet and animated WebP, runs geometry/delivery
 checks, and writes an eight-second H.264/yuv420p five-clip movie on cream at 2x.
 The driver supplies ROUND. GPU receipts verify actual device, source hashes,
 render hashes, grade and master sizes. A CPU preview cannot pass this gate.
+Build preflight also rejects changed model scripts, texture inputs or blends;
+rebuild rather than render a stale packed master.
 All masters stay in `$ANIM_ROOT/masters/stealth-fighter/`; review assets in
 `review/3d-v2/` are published after each stage. GPU results need visual review;
 no script creates a PASS marker.

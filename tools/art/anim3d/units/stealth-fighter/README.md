@@ -1,4 +1,4 @@
-# Stealth fighter — round 1 candidate
+# Stealth fighter — round 2 candidate
 
 Original true-3D, bevelled stealth aircraft with a gold canopy, twin fins,
 recessed intakes, separate exhausts and articulated stabilizers. The source
@@ -15,7 +15,7 @@ RESOLUTION=256 SAMPLES=8 tools/art/anim3d/units/stealth-fighter/render.sh c
 source tools/art/anim3d/env.sh
 RESOLUTION=256 "$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/stealth-fighter/deliver.py c
 # Complete final GPU pass on the host, including all reviews and video:
-ROUND=1 tools/art/anim3d/units/stealth-fighter/gpu.sh
+ROUND=2 tools/art/anim3d/units/stealth-fighter/gpu.sh
 ```
 
 GPU handoff explicitly selects Metal Cycles and never silently falls back to
@@ -35,13 +35,17 @@ trim offsets, motion, transparent gutters and exact decoded terminal hold.
 Identical frames share a rectangle, preventing lossy-compression flicker.
 `audit.py` checks closed manifold principal meshes, nonzero dimensions,
 finished projection surfaces, control-pivot placement, loop closure, stationary
-base and physical wreck contact. Five unittest checks exercise stale-source
+base and physical wreck contact. Seven unittest checks exercise stale-source
 rejection, the GPU boundary, grade bounds, failed preflight and movie metadata.
 
-At 64px the silhouette, flight attitude and colour identity match the painting
-well. At 256px the projection is close, but bevel/engine joins remain coarse in
-alternate views, fine stone grain is weaker and the projected lighting remains
-attached to moving surfaces. The small attack projectile is subdued; the crash
-reads as a controlled descent with a bent wing more than a violent impact.
-These are round-2 targets, not painting-parity approval. No PASS marker and no
-app runtime change.
+At 64px the silhouette, flight attitude and colour identity match the painting.
+At 256px the generated stone grain and original rim now replace the flat base,
+while live AO follows the falling support. The support topples as actual solid
+geometry instead of disappearing. The enlarged beveled missile travels farther
+and reads more clearly in the attack. Alternate-view engine joins and projected
+lighting remain limitations; GPU round 2 still needs visual review.
+
+`render.sh build` stamps model-script and texture hashes. The GPU entry point
+verifies these against the packed master before rendering; if source inputs
+changed, rebuild first. Round-1 GPU masters/reviews are preserved externally.
+No PASS marker and no app runtime change.

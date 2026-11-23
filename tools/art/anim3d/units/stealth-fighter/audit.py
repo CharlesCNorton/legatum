@@ -19,19 +19,24 @@ for clip,n in [('idle',8),('move',8),('attack',10),('hit',4),('death',10)]:
   assert surface.parent==hinge
   center=surface.matrix_world @ (sum((v.co for v in surface.data.vertices),Vector())/len(surface.data.vertices))
   assert (center-hinge.matrix_world.translation).length<.12,'control pivot misses surface'
- base=bpy.data.objects['GEO-stationary cream base'];root=bpy.data.objects['RIG-airframe'];poses=[];bases=[]
+ base=bpy.data.objects['GEO-stationary cream base'];root=bpy.data.objects['RIG-airframe'];poses=[];bases=[];stands=[]
+ support=bpy.data.objects['GEO-curved stationary stone support']
  assert 'RestPainting' not in base.data.uv_layers
+ assert 'StonePigment' in base.data.uv_layers
  for f in range(1,n+1):
   sc.frame_set(f);poses.append(tuple(v for row in root.matrix_world for v in row));bases.append(tuple(v for row in base.matrix_world for v in row))
+  assert not support.hide_render,'stone support disappears'
+  stands.append(tuple(v for row in support.matrix_world for v in row))
  assert len(set(bases))==1 and len(set(poses))>1
  if clip in ('idle','move'):
   sc.frame_set(n+1);end=tuple(v for row in root.matrix_world for v in row);assert max(abs(a-b) for a,b in zip(poses[0],end))<1e-6
  if clip=='death':
   assert poses[-1]==poses[-2]
+  assert len(set(stands))>1 and stands[-1]==stands[-2], 'support must topple then hold'
   top=max((base.matrix_world @ Vector(v)).z for v in base.bound_box);deps=bpy.context.evaluated_depsgraph_get();o=bpy.data.objects['GEO-fuselage'].evaluated_get(deps);me=o.to_mesh();points=[]
   for v in me.vertices:
    pt=o.matrix_world@v.co
    if (pt.xy-base.location.xy).length<1.02:points.append(pt.z)
   o.to_mesh_clear();assert points and abs(min(points)-top)<.001
- records[clip]={'frames':n,'meshes':len(meshes),'closed_airframe':True,'stationary_base':True,'real_motion':True}
+ records[clip]={'frames':n,'meshes':len(meshes),'closed_airframe':True,'stationary_base':True,'real_motion':True,'solid_support_visible':True}
 (M/'audit.json').write_text(json.dumps(records,indent=2));print('AUDIT PASS',json.dumps(records))

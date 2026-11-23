@@ -11,6 +11,23 @@ REF=Image.open('app/src/assets/units/stealth-fighter-256.png').convert('RGBA');C
 STAGES=('b','c','d','g',*['e-'+c for c in CLIPS])
 COUNTS={'b':3,'c':1,'d':4,'g':16,**{'e-'+c:v[0] for c,v in CLIPS.items()}}
 def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
+def build_inputs():
+    unit=Path(__file__).resolve().parent
+    inputs={str(unit/name):sha(unit/name) for name in ('scene.py','project.py','prepare.py','bake.py','inputs.json')}
+    for name,digest in json.loads((unit/'inputs.json').read_text())['sha256'].items():
+        path=R/'assets/stealth-fighter'/name
+        assert sha(path)==digest,'changed texture input: '+name
+        inputs[str(path)]=digest
+    return inputs
+
+def stamp_build():
+    (M/'build.json').write_text(json.dumps({'inputs':build_inputs(),'master':sha(M/'stealth-fighter.blend'),'plain':sha(M/'plain.blend')},indent=2))
+
+def preflight():
+    record=json.loads((M/'build.json').read_text())
+    assert record['inputs']==build_inputs(),'rebuild required: source scripts or textures changed'
+    assert record['master']==sha(M/'stealth-fighter.blend') and record['plain']==sha(M/'plain.blend'),'changed built geometry'
+    print('Build inputs and packed master verified')
 def composite(im):
     out=Image.new('RGBA',im.size,CREAM);out.alpha_composite(im);return out
 
@@ -206,7 +223,9 @@ def receipt():
 
 if __name__=='__main__':
     mode=sys.argv[1] if len(sys.argv)>1 else 'all'
-    if mode=='validate':validate()
+    if mode=='stamp-build':stamp_build()
+    elif mode=='preflight':preflight()
+    elif mode=='validate':validate()
     elif mode=='gpu-check':gpu_check()
     elif mode=='receipt':receipt()
     elif mode=='pack':pack();meta,frames=validate();video(meta,frames)

@@ -35,7 +35,7 @@ def apply_projection(scene, camera, assets, front):
         if ob.name == 'GEO-stationary cream base':
             # Physical limestone palette: no permanently painted support shadow.
             # A restrained camera pigment contribution retains real contact shading.
-            strength.inputs[1].default_value = .72
+            strength.inputs[1].default_value = .94
             geom = nodes.new('ShaderNodeNewGeometry')
             xyz = nodes.new('ShaderNodeSeparateXYZ')
             links.new(geom.outputs['Normal'], xyz.inputs[0])
@@ -49,7 +49,7 @@ def apply_projection(scene, camera, assets, front):
             ao.inputs['Distance'].default_value = .2
             shade = nodes.new('ShaderNodeMixRGB')
             shade.blend_type = 'MULTIPLY'
-            shade.inputs[0].default_value = .24
+            shade.inputs[0].default_value = .48
             grain = nodes.new('ShaderNodeTexNoise')
             grain.inputs['Scale'].default_value = 110
             grain_mix = nodes.new('ShaderNodeMixRGB')
@@ -58,10 +58,23 @@ def apply_projection(scene, camera, assets, front):
             links.new(ramp.outputs['Color'], grain_mix.inputs[1])
             links.new(grain.outputs['Fac'], grain_mix.inputs[2])
             links.new(grain_mix.outputs[0], shade.inputs[1])
+            uv = ob.data.uv_layers.new(name='StonePigment')
+            for loop in ob.data.loops:
+                q = world_to_camera_view(scene, camera, ob.matrix_world @ ob.data.vertices[loop.vertex_index].co)
+                uv.data[loop.index].uv = (q.x, q.y)
+            uvnode = nodes.new('ShaderNodeUVMap');uvnode.uv_map = 'StonePigment'
+            tx = nodes.new('ShaderNodeTexImage')
+            tx.image = bpy.data.images.load(str(assets / 'stone-pigment.png'))
+            links.new(uvnode.outputs[0], tx.inputs[0])
+            color = nodes.new('ShaderNodeMixRGB')
+            links.new(tx.outputs['Alpha'], color.inputs[0])
+            links.new(grain_mix.outputs[0], color.inputs[1])
+            links.new(tx.outputs['Color'], color.inputs[2])
+            links.new(color.outputs[0], shade.inputs[1])
             links.new(ao.outputs['Color'], shade.inputs[2])
             links.new(shade.outputs[0], physical.inputs['Base Color'])
             links.new(shade.outputs[0], pigment.inputs['Color'])
-            ob['projection'] = 'none: physical stationary limestone'
+            ob['projection'] = 'clean generated limestone on real disc; original rim; live contact AO'
             continue
         uv = ob.data.uv_layers.new(name='RestPainting')
         weights = ob.data.color_attributes.new(name='Facing', type='FLOAT_COLOR', domain='CORNER')

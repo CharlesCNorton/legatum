@@ -1,7 +1,7 @@
 """Sequential CPU/GPU stage rendering with authored rigid-action keys."""
 import bpy,sys,os,json,math,hashlib,shutil
 from pathlib import Path
-from mathutils import Vector
+from mathutils import Vector,Quaternion
 R=Path(os.environ['ANIM_ROOT']);M=R/'masters/stealth-fighter';stage=sys.argv[sys.argv.index('--')+1]
 CLIPS={'idle':(8,10,True),'move':(8,12,True),'attack':(10,14,False),'hit':(4,12,False),'death':(10,10,False)}
 res=int(os.environ.get('RESOLUTION','256'));samples=int(os.environ.get('SAMPLES','8'))
@@ -34,6 +34,7 @@ def animate(sc,clip):
     elevons=[bpy.data.objects['RIG-'+side+' elevon'] for side in ('near','far')]
     missile=bpy.data.objects['GEO-missile'];missile_rest=missile.location.copy()
     support=bpy.data.objects['GEO-curved stationary stone support']
+    support_rest=support.location.copy();support.rotation_mode='QUATERNION'
     damage=[]
     if clip=='death':
         for name in ('GEO-near wing','GEO-fuselage'):
@@ -62,9 +63,13 @@ def animate(sc,clip):
             o.rotation_euler=(0,0,0);o.rotation_euler.x=(1 if k==0 else -1)*(.035*math.sin(phase) if loop else .045*math.sin(math.pi*t))
             if clip=='death':o.rotation_euler.x=.12 if j>=6 else 0
             o.keyframe_insert('rotation_euler')
-        support.hide_render=clip=='death' and t>.25;support.keyframe_insert('hide_render')
+        support.hide_render=False;support.keyframe_insert('hide_render')
+        fall=[0,0,.06,.25,.62,1.12,1.38,1.36,1.36,1.36][j] if clip=='death' else 0
+        support.rotation_quaternion=Quaternion(FRONT,fall)
+        support.location=support_rest.copy()
+        support.keyframe_insert('rotation_quaternion');support.keyframe_insert('location')
         missile.hide_render=not(clip=='attack' and .33<=t<=.72);missile.location=missile_rest.copy()
-        if clip=='attack':missile.location+=(RIGHT*2.5+UP*1.0)*max(0,t-.33)-UP*.70+RIGHT*.25+FRONT*.90
+        if clip=='attack':missile.location+=(RIGHT*3.8+UP*1.7)*max(0,t-.33)-UP*.78+RIGHT*.25+FRONT*.90
         missile.keyframe_insert('hide_render');missile.keyframe_insert('location')
     for o in [root,*elevons,missile,support]:
         if o.animation_data:

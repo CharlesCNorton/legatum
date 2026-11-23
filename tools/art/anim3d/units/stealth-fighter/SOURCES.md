@@ -7,3 +7,15 @@
 - Existing Blender 5.3.0 (`02f0899d78e3`, GPL software), Pillow 13.0.0 (MIT-CMU) and FFmpeg. No third-party model, paid asset, account, upload or motion download.
 
 All assets, image derivatives, 512/256 masters and editable blends remain under `~/LegatumRuns/anim-pilot/`, outside git.
+
+## Driver round 2, 2026-11-23
+
+Reuses the stealth-bomber lane's original generated clean stone disc, built-in
+ImageGen `01a20a1f-8c22-7cd1-a144-066c5b87d915/exec-9a0bb113-82fc-401f-b2f7-483d6cd160bd.png`,
+project CC BY 4.0, no public URL. Copied unchanged to
+`assets/stealth-fighter/stone-fill-source.png`; SHA256 pinned in `inputs.json`.
+Original prompt retained in `stone-fill.prompt.txt`. The visible alpha footprint
+is registered to this unit's disc; its own original lower rim is retained.
+This is colour on the closed cylinder with live AO, not a billboard or shadow
+painted permanently under the support. Existing aircraft/generated metal inputs
+are unchanged. No new service, download or motion asset.

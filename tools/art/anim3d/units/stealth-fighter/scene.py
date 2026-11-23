@@ -73,7 +73,10 @@ for label,poly,d in [('far',[(262,582),(315,603),(273,667),(199,636)],.45),('nea
 # Physical base and sculpted stand. Keep one plain round disc.
 center=p(640,1027,-.50)
 bpy.ops.mesh.primitive_cylinder_add(vertices=128,radius=1.13,depth=.20,location=center);base=bpy.context.object;base.name='GEO-stationary cream base';base.data.materials.append(stone);b=base.modifiers.new('Rounded stone lip','BEVEL');b.width=.025;b.segments=4
-support=solid('curved stationary stone support',[(504,971),(531,887),(577,789),(636,696),(679,710),(659,765),(646,821),(654,879),(683,931),(732,985),(672,1011)],[-.30]*11,.25,stone,False,ridge=(609,894,-.12))
+support=solid('curved stationary stone support',[(504,971),(531,887),(577,789),(636,696),(670,530),(703,540),(679,710),(659,765),(646,821),(654,879),(683,931),(732,985),(672,1011)],[-.30,-.30,-.30,-.30,0,0,-.30,-.30,-.30,-.30,-.30,-.30,-.30],.25,stone,False,ridge=(609,894,-.12))
+# Pivot the actual solid stand at its foot, so death can topple it continuously.
+pivot=p(609,983,-.30)
+support.data.transform(Matrix.Translation(-pivot));support.location=pivot
 root=bpy.data.objects.new('RIG-airframe',None);bpy.context.collection.objects.link(root);root.location=p(665,450,.10)
 bpy.context.view_layer.update()
 for ob in objects:
@@ -82,7 +85,7 @@ for ob in objects:
 for side,name in [('near','GEO-near stabilizer'),('far','GEO-far stabilizer')]:
  ob=bpy.data.objects[name];pivot=bpy.data.objects.new('RIG-'+side+' elevon',None);bpy.context.collection.objects.link(pivot);pivot.location=ob.matrix_world @ sum((v.co for v in ob.data.vertices),Vector())/len(ob.data.vertices);bpy.context.view_layer.update();mat=pivot.matrix_world.copy();pivot.parent=root;pivot.matrix_world=mat;bpy.context.view_layer.update();mat=ob.matrix_world.copy();ob.parent=pivot;ob.matrix_world=mat
 # Small solid missile for one attack run, hidden by keyed visibility only.
-missile=solid('missile',[(794,421),(855,385),(860,388),(805,432)],.65,.045,silver,False);missile.hide_render=True
+missile=solid('missile',[(773,438),(847,391),(868,389),(856,407),(785,453)],.65,.065,silver,False);missile.hide_render=True
 sc['unit']='stealth-fighter';sc['projection_method']='frozen UV on finished closed aircraft';sc['base_hex']='#E9CFA0'
 bpy.context.view_layer.update();bpy.ops.wm.save_as_mainfile(filepath=str(M/'plain.blend'))
 for ob in list(bpy.data.objects):

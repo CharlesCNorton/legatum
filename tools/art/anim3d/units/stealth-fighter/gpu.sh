@@ -20,6 +20,7 @@ command -v blender
 for input in stealth-fighter.blend plain.blend textures/baked/manifest.json; do
   test -f "$ANIM_ROOT/masters/stealth-fighter/$input"
 done
+"$ANIM_ROOT/venv/bin/python" "$unit/deliver.py" preflight
 for stage in b c d g e-idle e-move e-attack e-hit e-death; do
   "$unit/render.sh" "$stage"
   "$ANIM_ROOT/venv/bin/python" "$unit/deliver.py" "$stage"

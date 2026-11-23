@@ -14,6 +14,21 @@ spec.loader.exec_module(delivery)
 
 
 class DeliveryChecks(unittest.TestCase):
+    def test_changed_build_inputs_require_rebuild(self):
+        with tempfile.TemporaryDirectory() as folder, patch.object(delivery, 'M', Path(folder)):
+            (Path(folder)/'build.json').write_text(json.dumps({'inputs':{'scene.py':'old'}}))
+            with patch.object(delivery,'build_inputs',return_value={'scene.py':'new'}):
+                with self.assertRaisesRegex(AssertionError,'rebuild required'):
+                    delivery.preflight()
+
+    def test_changed_built_geometry_is_rejected(self):
+        with tempfile.TemporaryDirectory() as folder, patch.object(delivery, 'M', Path(folder)):
+            (Path(folder)/'stealth-fighter.blend').write_bytes(b'changed')
+            (Path(folder)/'build.json').write_text(json.dumps({'inputs':{},'master':'old','plain':'old'}))
+            with patch.object(delivery,'build_inputs',return_value={}):
+                with self.assertRaisesRegex(AssertionError,'changed built geometry'):
+                    delivery.preflight()
+
     def test_grade_is_monotone_and_bounded(self):
         with tempfile.TemporaryDirectory() as folder, patch.object(delivery, 'M', Path(folder)):
             (Path(folder) / 'stealth-fighter.blend').write_bytes(b'fixture')
