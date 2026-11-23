@@ -47,3 +47,5 @@
 - Published d-rig-poses: CYCLES CPU, 512 px, 8 samples; not GPU approval.
 - Published e-idle-strip: CYCLES CPU, 512 px, 8 samples; not GPU approval.
 - Published e-move-strip: CYCLES CPU, 512 px, 8 samples; not GPU approval.
+- Published e-attack-strip: CYCLES CPU, 512 px, 8 samples; not GPU approval.
+- Published e-hit-strip: CYCLES CPU, 512 px, 8 samples; not GPU approval.

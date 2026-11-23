@@ -56,3 +56,8 @@ Rendered e-hit 512 px CYCLES/CPU
 Rendered e-death 512 px CYCLES/CPU
 Post-framing body audit: every one of 40 sampled poses has body min Z=0.100. Hit recoil amplitude reduced to keep staff 10px below top boundary.
 Second atlas validation isolated cape penetration in death. Added per-sample actual-geometry contact shape keys for cloak and hem at Z=0.108, preserving real shell thickness; refreshing only death.
+FINAL CPU pack and validation PASS: 40/40 frames, 40 trim rectangles, all frame margins, transparency, motion, exact held death, 512/256 masters, fresh blend/grade/source hashes. Atlas 1161x754, 199794 bytes, quality 80, alpha 32 levels.
+FINAL geometry audit PASS: 53 bones, fixed base, nondegenerate scales, body minimum Z exactly 0.100 for all samples, grip maximum 0.0426, exact loop endpoints and held terminal transforms. Art parity and full cloth/equipment collision freedom are not established.
+All 15 requested stage/strip/animation review files present. Python syntax (9 files), shell syntax (2 entry points), and whitespace checks pass.
+Commit attempt blocked by sandbox: cannot create legatum/.git/worktrees/lane-10/index.lock. Changes left uncommitted for runner as instructed; no push/merge/PR attempted. Commit-based repository gates require the runner's committed snapshot; no stale HEAD gate result is claimed.
+Final verdict: genuine 3D and recognizable scout at 64px; below painting parity at 256px. Next pass should match raised-knee stance, larger expressive face/beard, hat angle, tailored hem and natural cloth/terminal collapse. GPU rerender command and v2 loader requirement documented in units/scout/REVIEW.md and the scoped PLAYBOOK chapter.

@@ -10,3 +10,4 @@
 - Plain review now includes matched, 60-degree and 120-degree views to expose real equipment depth, anatomy and garment construction.
 - Rest verdict: clear same-unit identity at 64 px; not painting parity at 256 px. Face/armour brushwork remains weaker, shield highlights too glossy, cream base too dark after lighting/grade. Death is a readable collapse but still stiff. No PASS marker.
 - Non-obvious pipeline finding: MPFB system-eye import purges unused materials; create task materials after importing eyes. This is handled in build.py. No docs/learnings files edited.
+- Git integration blocked by sandbox: origin/master advanced to 27fa4cb0 (two CI/browser-test commits); `git merge --no-edit origin/master` could not create ORIG_HEAD.lock, and `git add` could not create index.lock. Runner must integrate/commit; required co-author commit message saved in masters/tagmatic-soldier/commit-message.txt. No push or PR attempted.

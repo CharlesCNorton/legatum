@@ -74,3 +74,4 @@ Final strip inspection: no obvious frame-edge clipping or ground movement; hit i
 Packed 40 trimmed 160 px frames: 196720 bytes, WebP quality 80.
 Validation PASS: counts, RGBA, rect bounds, transparent margins, five moving clips, held death, quality and size. Art approval remains separate.
 Encoded and ffprobe-verified autonomous-armour-round1.mp4: 8 s, 240 frames, 1600x348 H.264 yuv420p; decoded trimmed atlas.
+Round 1 final CPU checks PASS: 40 x 256 clip masters, 16 required review artifacts, current master hashes, geometry audit, trim/alpha reconstruction, motion/loops/death; atlas 196720 bytes quality 80; MP4 240 frames/8 seconds/H.264/yuv420p. 512 GPU masters pending gpu.sh. Python/Bash syntax and diff whitespace pass; commit blocked by index.lock permission.
