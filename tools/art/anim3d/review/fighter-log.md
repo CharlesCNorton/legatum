@@ -51,3 +51,8 @@
 - Rendered c: 512px, CYCLES; review published.
 - Rendered e-idle: 512px, CYCLES; review published.
 - Rendered e-move: 512px, CYCLES; review published.
+- Rendered e-attack: 512px, CYCLES; review published.
+- Rendered e-hit: 512px, CYCLES; review published.
+- Rendered e-death: 512px, CYCLES; review published.
+- Rendered g: 512px, CYCLES; review published.
+- GPU round 1: verified GPU512/256 masters, all stages, trimmed atlas, validation and MP4 complete; visual review still required.
