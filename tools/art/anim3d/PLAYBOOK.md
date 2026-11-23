@@ -106,3 +106,56 @@ tools/art/anim3d/render.sh audit
 ```
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
+
+## Infantry: Byzantine heir (round 1)
+
+The crowned heir uses the infantry MPFB anatomy/rig helpers with new lamellar kit,
+boots, folded purple mantle and banner. All unit-specific entry points are in
+`tools/art/anim3d/units/byzantine-heir/`; masters are outside Git under
+`$ANIM_ROOT/masters/byzantine-heir/`. Every Blender invocation is plain `blender -b`
+and obeys the shared gate. CPU previews use Cycles; the strict GPU path configures
+Metal Cycles and refuses to fall back silently.
+
+The standard quality method follows feedback 18–21: align the rest camera and
+silhouette to the committed painting, project the full source onto **real 3D
+surfaces** using frozen rest-pose UVs, and blend generated painted fills onto
+unseen surfaces through facing/alpha masks. Beveled lamellae, jewel bezels, crown,
+thick folded cloth, MPFB face/hands, skinning and boot volumes carry real form.
+AO and Pointiness curvature are baked on the torso, skirt, shoulder mantle and
+anatomy. Warm upper-left product lighting, soft fill and a cool rim preserve depth.
+The base uses linearized `#E9CFA0` (approximately `.815,.624,.352`), fine bump and
+one beveled stone disc. A bounded histogram grade is measured from the rest frame
+against the painting and applied unchanged to all clips; no per-frame pumping.
+
+```sh
+tools/art/anim3d/units/byzantine-heir/run.sh build
+source tools/art/anim3d/env.sh
+blender -b --disable-autoexec --python tools/art/anim3d/units/byzantine-heir/bake.py
+tools/art/anim3d/units/byzantine-heir/run.sh animate
+# CPU review: b, c, e-idle, e-move, e-attack, e-hit, e-death
+# Lead's entire final GPU pass, no arguments:
+ROUND=1 tools/art/anim3d/units/byzantine-heir/gpu.sh
+```
+
+`gpu.sh` produces all stages at 512 px, retained 512/256 masters, native 256/64
+comparisons, detail crops, four attack poses, five strips and animated WebPs,
+`byzantine-heir-f-restpose-compare.png` (painting/render/50% crossfade), the trimmed
+atlas, validation, and `byzantine-heir-round${ROUND}.mp4`. The MP4 reconstructs
+trimmed frames, shows all five clips side by side at 2x on cream for eight seconds,
+and uses H.264 yuv420p. Cloth follow-through is authored with deformation keys;
+it is not a claimed physics simulation. The final death pose holds. A clean
+pack/validation is not art approval; write no PASS marker until rest and motion
+actually meet the painting.
+
+### Heir trimmed atlas format, version 2
+
+The logical frame remains `frame: {w:160,h:160,ax:76,ay:144}`. Rows are idle,
+move, attack, hit, death with 8/8/10/4/10 frames. Each clip keeps `row`, `frames`,
+`fps`, `loop` and adds `rects`, one entry per sample:
+`{x,y,w,h,ox,oy}`. The first four fields locate the trimmed rectangle in the atlas;
+`ox,oy` locate it inside its original transparent 160 px cell. Reconstruct at
+`(ox,oy)`, then place the logical frame using `ax,ay`; never center each crop.
+Rows start at `row*160`, but columns have variable widths. Quality is selected
+from 90/85/80/75, never lower, with a strict 200,000 byte ceiling. No frame counts
+are reduced. Model/clip/render hashes reject stale output. This candidate is not
+wired into the game; a consumer needs trim-offset support before activation.

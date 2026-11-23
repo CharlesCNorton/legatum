@@ -1,0 +1,14 @@
+{
+  "source_url": "https://pub-fb5c281dd12d4ea4bbd38d657cdeb907.r2.dev/app/src/assets/units/byzantine-heir-source.png",
+  "art_license": "CC BY 4.0",
+  "anatomy": "MPFB 2.0.18 / MakeHuman CC0",
+  "files": {
+    "source.png": "51c290aaed056a9f2e709b6a0dd18d1e9f74014ded26c20f9d13a3fb9d61d671",
+    "painting-aligned.png": "ad4419dca01bb8611b9fe19b9f094e49e89e3f90dad9f97df147613e38a55f37",
+    "painted-fills.png": "020343338de9b544b43cd05968d3a0b0275d99900942310662ec4635b438bd51",
+    "fill-purple.png": "c6f50ab80da202d4d5656382c7babc59f7bd020340182a2677abef7f0ed9bc2c",
+    "fill-linen.png": "f5c63039d103ddf26d85a709ec181cd353a9f4539735487e672ab7594b2c6b3c",
+    "fill-leather.png": "5bac06b7fa90c3e0667d4e6b64783371fb51a67eed014ecd56d606926f6a92f3",
+    "fill-metal.png": "5b9388c3d85855f24591aac946977a819cc6da457c6099166daf8d6b50bac1be"
+  }
+}

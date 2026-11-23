@@ -36,3 +36,12 @@ The date range is the range of dates the repository's own records give (prompt h
 
 - No prompt is stored for the map improvements, the six original resource medallions, the aircraft plan sprites or the parchment texture.
 - Where a set was generated from one shared prompt (terrain, city sets, camps and ruins), there is one prompt for the set, not one per file.
+
+### Byzantine heir animated candidate
+
+`units/anim/byzantine-heir.webp` is an original Blender render using the project's
+CC BY 4.0 Byzantine heir painting, CC0 MPFB 2.0.18 anatomy/weights, original kit and
+keys, and original generated unseen-surface fills. Build scripts, exact fill prompt
+and delivery notes: `tools/art/anim3d/units/byzantine-heir/`. External source URLs,
+versions and licences are recorded in `~/LegatumRuns/anim-pilot/assets/SOURCES.md`.
+The static painting remains the in-game art until review; this atlas is a candidate.
