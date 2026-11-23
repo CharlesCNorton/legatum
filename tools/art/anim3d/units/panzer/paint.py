@@ -11,6 +11,7 @@ bpy.ops.wm.open_mainfile(filepath=str(M/'panzer.blend'));sc=bpy.context.scene;bp
 tex=bpy.data.images.load(str(M/'textures/painting-projection.png'),check_existing=True)
 view=sc.camera.rotation_euler.to_matrix() @ Vector((0,0,1))
 records=[]
+deps=bpy.context.evaluated_depsgraph_get()
 # Track shoes pass through many rest-screen positions. Their own physical steel
 # texture must travel with them; camera paint would carry whole wheel/bogie
 # fragments around the belt. Recesses/spokes also retain their physical finish.
@@ -31,10 +32,24 @@ for name in names:
     uv=mesh.uv_layers.new(name='PaintingProjection');weights=mesh.color_attributes.new(name='Paint confidence',type='FLOAT_COLOR',domain='CORNER')
     normalmatrix=o.matrix_world.to_3x3().inverted().transposed()
     shift=Vector((0,0))
+    # Rest-camera visibility rejects paint borrowed through another piece of armour.
+    visible={}
+    for poly in mesh.polygons:
+        center=o.matrix_world @ poly.center
+        # Reject only wholly hidden polygons. A large base/hull ngon can be
+        # partly visible even when its centre is behind the tank/turret.
+        samples=[center]+[o.matrix_world @ mesh.vertices[i].co for i in poly.vertices]
+        confidence=0.0
+        for sample in samples:
+            hit,location,normal,index,hit_object,matrix=sc.ray_cast(deps,sample+view*30,-view,distance=31)
+            if hit and (location-sample).length<.035:
+                confidence=1.0;break
+        for index in poly.loop_indices:visible[index]=confidence
     for loop in mesh.loops:
         v=mesh.vertices[loop.vertex_index];p=world_to_camera_view(sc,sc.camera,o.matrix_world @ v.co)
         uv.data[loop.index].uv=Vector((p.x,p.y))+shift
         facing=max(0,min(1,((normalmatrix @ v.normal).normalized().dot(view)+.08)/.22))
+        facing*=visible[loop.index]
         weights.data[loop.index].color=(facing,facing,facing,1)
     original_material=o.data.materials[0]
     if original_material.name in materials:

@@ -5,7 +5,7 @@ from runninggear import route
 
 class PanzerTrackTests(unittest.TestCase):
     def setUp(self):
-        self.length,self.point=route([(-1.5,.67,.33),(1.5,.67,.33),(-1.15,.51,.24),(1.132,.51,.24)])
+        self.length,self.point=route([(-1.71,.82,.30),(1.11,.82,.30),(-1.435,.51,.24),(.6188,.51,.24)])
 
     def test_closed_constant_speed_and_forward_tangent(self):
         self.assertEqual(self.point(0),self.point(1))
@@ -23,5 +23,10 @@ class PanzerTrackTests(unittest.TestCase):
         self.assertGreater(len(indices),100)
         for i in indices[1:-1]:
             self.assertLess(self.point((i+.1)/10000)[0],samples[i][0])
+
+
+class PanzerFarTrackTests(PanzerTrackTests):
+    def setUp(self):
+        self.length,self.point=route([(-1.5,.67,.30),(1.5,.67,.30),(-1.15,.51,.24),(1.132,.51,.24)])
 
 if __name__=='__main__':unittest.main()

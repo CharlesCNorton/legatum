@@ -11,6 +11,8 @@ if stage=='details':
     crop=source.crop((45,45,175,140)).resize((256,256),Image.Resampling.LANCZOS)
     images[-1]=(images[-1][0], images[-1][1].crop((45,45,175,140)).resize((256,256),Image.Resampling.LANCZOS))
     images.insert(1,('Painting detail',crop))
+    for label,im in [('Painting running gear',source),('3D running gear',Image.open(folder/'three-quarter.png').convert('RGBA').resize((256,256),Image.Resampling.LANCZOS))]:
+        images.append((label,im.crop((12,120,183,187)).resize((256,100),Image.Resampling.LANCZOS)))
 sheet=Image.new('RGB',(len(images)*272,380),(224,215,191));d=ImageDraw.Draw(sheet)
 for i,(name,im) in enumerate(images):
     x=8+i*272;d.text((x,10),name+' | 256 / 64 px',fill=(40,34,27));sheet.paste(im,(x,36),im)

@@ -2,10 +2,11 @@
 import json, os, subprocess
 from pathlib import Path
 from PIL import Image, ImageDraw
-from deliver import CLIPS, restore, OUT, REVIEW, R
+from deliver import CLIPS, restore, OUT, REVIEW, R, validate
+validate()  # Refuse a previous round's atlas after an interrupted/failed pack.
 meta=json.loads((OUT/'panzer.json').read_text());atlas=Image.open(OUT/'panzer.webp').convert('RGBA')
 frames={n:[restore(atlas,r).resize((320,320),Image.Resampling.LANCZOS) for r in c['rects']] for n,c in meta['clips'].items()}
-round_label=os.environ.get('ROUND','3-cpu')
+round_label=os.environ.get('ROUND','2-cpu')
 assert all(c.isalnum() or c in '-_' for c in round_label)
 out=REVIEW/f'panzer-round{round_label}.mp4'
 cmd=['ffmpeg','-y','-loglevel','error','-f','rawvideo','-pixel_format','rgb24','-video_size','1600x348','-framerate','30','-i','pipe:0','-an','-c:v','libx264','-threads','3','-pix_fmt','yuv420p','-crf','18','-movflags','+faststart',str(out)]

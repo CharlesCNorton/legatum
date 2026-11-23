@@ -15,6 +15,12 @@
     {
       "path": "assets/Travertine001/Travertine001_1K-JPG_Displacement.jpg",
       "sha256": "a16a74e5a74be3e7c9bf5eb091544f9bff9ebc063b3e5936af04db5f314425e0"
+    },
+    {
+      "path": "assets/panzer/painted-ochre.png",
+      "sha256": "c86ec35f1c9d5290c123c18cc3cc993b48bbdacf469d41d5a9a1dae12eb85d14",
+      "license": "Project CC BY 4.0",
+      "source": "Original built-in imagegen 01a209c2-b900-7271-a45d-dfab232382e9/exec-a8735ac0-0e2b-4222-bab4-e83217d33216.png"
     }
   ]
 }

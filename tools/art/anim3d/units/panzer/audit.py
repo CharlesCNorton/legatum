@@ -27,14 +27,18 @@ for clip,count in [('idle',8),('move',8),('attack',10),('hit',4),('death',10)]:
             for vertex in o.data.vertices:
                 q=world_to_camera_view(sc,sc.camera,o.matrix_world@vertex.co);bounds.append((q.x,q.y))
     lo=[min(v[i] for v in bounds) for i in (0,1)];hi=[max(v[i] for v in bounds) for i in (0,1)]
-    assert min(lo)>0 and max(hi)<1,(clip,'clips field',lo,hi)
+    assert min(lo)>.02 and max(hi)<.98,(clip,'clips field',lo,hi)
     records[clip]={'frames':count,'stationary_base':True,'bounds':[lo,hi]}
 # Physical route closure and contact velocity; rendered top/front sheets remain mandatory.
-root=bpy.data.objects['Vehicle suspension root'];length,point=route(json.loads(root['route_circles']))
-assert point(0)==point(1)
-points=[point(i/10000) for i in range(10000)];bottom=min(p[1] for p in points)
-assert abs(bottom-.27)<1e-5
-contacts=[(i,p) for i,p in enumerate(points) if p[1]<bottom+1e-6]
-assert all(point((i+1)/10000)[0]<p[0] for i,p in contacts[:-1])
-records['mechanics']={'belt_length':length,'contact_route_z':bottom,'base_top':.23,'shoe_half_thickness':.0225,'travel_axis':'+X','contact_velocity':'-v, matching token travel +v; anchored preview uses treadmill convention','wheel_speed':'v/r','human_or_animal_motion':'not applicable'}
+root=bpy.data.objects['Vehicle suspension root']
+mechanics={}
+for side,key in [('near','route_circles'),('far','route_circles_far')]:
+    length,point=route(json.loads(root[key]))
+    assert point(0)==point(1)
+    points=[point(i/10000) for i in range(10000)];bottom=min(p[1] for p in points)
+    assert abs(bottom-.27)<1e-5
+    contacts=[(i,p) for i,p in enumerate(points) if p[1]<bottom+1e-6]
+    assert all(point((i+1)/10000)[0]<p[0] for i,p in contacts[:-1])
+    mechanics[side]={'belt_length':length,'contact_route_z':bottom}
+records['mechanics']={'routes':mechanics,'base_top':.23,'shoe_half_thickness':.0225,'travel_axis':'+X','contact_velocity':'-v, matching token travel +v; anchored preview uses treadmill convention','wheel_speed':'v/r','human_or_animal_motion':'not applicable'}
 (r/'review/3d-v2/panzer-audit.json').write_text(json.dumps(records,indent=2));print('AUDIT PASS',records)

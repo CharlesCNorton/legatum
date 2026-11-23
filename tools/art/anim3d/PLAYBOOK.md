@@ -199,7 +199,7 @@ wheel loop seam. Both remain visual checks.
 ### Lead GPU handoff and masters
 
 ```sh
-ROUND=1 tools/art/anim3d/units/panzer/gpu.sh
+ROUND=2 tools/art/anim3d/units/panzer/gpu.sh
 ```
 
 This executable takes no arguments, runs from the repo root, and performs the
@@ -237,3 +237,34 @@ counts, rectangle overlap/padding, exact reconstructed alpha, motion and held
 death. Video is decoded with ffprobe/ffmpeg and must have 240 frames, 8 seconds,
 1600x348 pixels, H.264/yuv420p. `panzer-PASS` is written only after actual visual
 parity and clean clips; scripts never manufacture that verdict.
+
+### Panzer round 2: registration and wheel finish
+
+The driver's round-one GPU pass succeeded (188,914 bytes at quality 75); it was
+not painting parity. Preserve its evidence before replacing stage images. Match
+near-side road wheels and end sprockets separately: the original wheelbase was
+long and low, while the painting's end sprockets sit much higher than its road
+wheels. The near/far registered track envelopes have separate arc-length routes,
+but use the same travel distance and wheel angle = distance/radius. Do not shift
+the far track out from beneath the front glacis to correct the visible near row.
+
+Wheel faces now have full-depth dishes, raised chipped rings, hubs, six recessed
+apertures and eight bolts. A generated ochre material swatch follows the wheels;
+its exact prompt and source/hash are in this unit's files. Do not freeze painted
+screen lighting onto a rotating axle. Original olive fill remains on hidden hull
+surfaces. The extra wheel close-up in `c-details` exposes smooth, featureless or
+over-dark running gear that can hide in a turret-only comparison.
+
+Projection uses a conservative rest-camera visibility test. Reject a polygon
+only when both its centre and all its vertices are occluded; centre-only masking
+incorrectly erased the broad base top and the hull deck because their centres
+were hidden while their edges remained visible. This is a conservative mask,
+not a per-texel visibility bake; partially occluded faces remain a limitation.
+Never compensate for bad masking by grading up the whole frame.
+
+Keep cream stone fixed while the vehicle moves. Smoke uses irregular closed
+meshes, staggered centres, keyed visibility and normal/view alpha falloff to
+avoid the old hard oval outlines. These are surface-shell effects, not a fluid
+simulation. All dimensions/scales stay positive. The GPU script now audits the
+saved clips before rendering and verifies every stage actually used GPU/512px;
+it writes a round-specific technical report but never writes the visual PASS.

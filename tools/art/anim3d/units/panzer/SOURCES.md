@@ -7,3 +7,7 @@
 - Original closed panzer geometry and rigid mechanical keys; MIT scripts / CC BY 4.0 rendered art. Adapted from `astra/unit-anim-3d-vehicles` pipeline (project MIT). Mechanical track motion uses constant arc length and wheel angle = distance/radius. No people or animals appear, so CMU/Quaternius retargeting is inapplicable. No commercial motion, Mixamo or external model used.
 
 Every downloaded/reused input has a SHA256 in `assets.lock.json`. Assets, masters and reviews remain outside git. See the external `assets/SOURCES.md` for the shared asset provenance history.
+
+## Round 2
+
+- New painted ochre wheel-face fill, original built-in ImageGen, project CC BY 4.0, no public URL. Generation `01a209c2-b900-7271-a45d-dfab232382e9/exec-a8735ac0-0e2b-4222-bab4-e83217d33216.png`; copied to `assets/panzer/painted-ochre.png`, SHA256 in `assets.lock.json`, exact prompt in `painted-ochre.prompt.txt`. Mapped onto full-depth rotating wheels and chipped rims; no replacement silhouette or baked wheel lighting.
