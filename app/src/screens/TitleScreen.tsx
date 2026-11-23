@@ -1,6 +1,7 @@
-import { CALENDAR_NOTE, calendarLabel } from '../data';
+import { CALENDAR_NOTE, calendarLabel, FACTION_INFO, factionName } from '../data';
+import type { Faction } from '../types';
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
-import { parseAutosave, useGame, type SaveFile } from '../store';
+import { currentCampaign, parseAutosave, useGame, type SaveFile } from '../store';
 import { listAutosaves, type AutosaveRecord } from '../platform/autosaveStore';
 import { ReplaceGameDialog } from '../ui/ReplaceGameDialog';
 import { pickSaveFile } from '../ui/GameMenu';
@@ -69,14 +70,27 @@ function TitleNotice({ error }: { error: string | null }) {
   return <p className="title-notice" role="alert">{error}</p>;
 }
 
+/** The human players' peoples, e.g. "Rome & Egypt": what a game is called on the menu. Names are a fallback for
+ * older autosaves, which recorded no faction. */
+function peoplesLabel(faction: string | undefined, names: string[]): string {
+  const peoples = (faction ?? '').split(' & ').filter((f): f is Faction => f in FACTION_INFO);
+  return shortList(peoples.length ? peoples.map(factionName) : names);
+}
+
+/** At most two names, then "+N", so an eight-seat hot seat still fits the menu on one line. */
+function shortList(names: string[]): string {
+  return names.length > 2 ? `${names.slice(0, 2).join(', ')} +${names.length - 2}` : names.join(' & ');
+}
+
 function ResumeButton() {
   const goto = useGame((s) => s.goto);
   const views = useGame((s) => s.views);
   if (!views) return null;
+  const peoples = shortList([...new Set(views[0].players.filter((p) => p.is_human).map((p) => p.faction))].map(factionName));
   return (
     <button className="btn big primary title-resume" onClick={() => goto('game')}>
       Resume
-      <span className="btn-sub" title={CALENDAR_NOTE}>Turn {views[0].turn} · {calendarLabel(views[0].turn)}</span>
+      <span className="btn-sub" title={CALENDAR_NOTE}>{peoples ? `${peoples} · ` : ''}Turn {views[0].turn} · {calendarLabel(views[0].turn)}</span>
     </button>
   );
 }
@@ -111,6 +125,9 @@ function MainMenu({ onMultiplayer }: { onMultiplayer: () => void }) {
   const startSolo = () => (behind ? navigate(newestUrl({ menu: 'solo' })) : openSetup('solo'));
   const openMultiplayer = () => (behind ? navigate(newestUrl({ menu: 'multi' })) : onMultiplayer());
   const unreadableAuto = slots.length > 0 && !auto;
+  // While a game is open, Resume returns to it. Continue shows beside it only for a different saved game.
+  const client = useGame((s) => s.client);
+  const autoIsOpen = !!views && (!slots.length || client?.kind !== 'remote' && slots[0].record.campaign === currentCampaign());
   const continueAuto = async (record: AutosaveRecord, save: SaveFile) => {
     await continueAutosave(record, save);
     const failure = useGame.getState().error;
@@ -160,6 +177,17 @@ function MainMenu({ onMultiplayer }: { onMultiplayer: () => void }) {
   // While a message shows, starting a new game is the way forward, so it takes the primary slot.
   const newGamePrimary = !views && records !== null && (!auto || !!error || olderAuto || unreadableAuto);
   const continuePrimary = !views && !!auto && !error && !olderAuto && !unreadableAuto;
+  // Carrying on a game has one place: the top of the menu, as Resume or as the primary Continue.
+  const continueButton = autoIsOpen ? null : (
+    <button className={`btn big ${continuePrimary ? 'primary' : ''}`} disabled={!auto || !!busy || olderAuto || unreadableAuto} onClick={() => auto && usable[0] && continueAuto(usable[0].record, auto)}>
+      {olderAuto ? 'Saved game (older version)' : unreadableAuto ? 'Saved game (unreadable)' : 'Continue'}
+      <span className="btn-sub">
+        {olderAuto ? 'Cannot continue with these rules' : unreadableAuto ? "This save file is damaged"
+          : auto && elsewhere ? `${peoplesLabel(usable[0].record.faction, auto.names)} · Turn ${auto.turn} · opens in the version it started on`
+          : auto ? `${peoplesLabel(usable[0].record.faction, auto.names)} · Turn ${auto.turn} · ${calendarLabel(auto.turn)} · ${new Date(auto.savedAt).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}` : records === null ? 'Looking for your game…' : 'No autosave yet'}
+      </span>
+    </button>
+  );
   return (
     <>
       {chosen && <ReplaceGameDialog file saved={chosen.saved} onCancel={() => setChosen(null)}
@@ -167,6 +195,7 @@ function MainMenu({ onMultiplayer }: { onMultiplayer: () => void }) {
       <TitleNotice error={error ?? (olderAuto ? olderAutosaveMessage(auto?.playtest) : skipped !== null ? `Your latest save (turn ${skipped}) could not be opened. Continue opens turn ${auto?.turn} instead.` : null)} />
       <div className="title-actions">
         <ResumeButton />
+        {continuePrimary && continueButton}
         <button className={`btn big ${newGamePrimary ? 'primary' : ''}`} onClick={startSolo}>
           Single Player
           <span className="btn-sub">{behind ? 'New games start on the newest version' : `You against ${MIN_SEATS - 1} to ${MAX_PLAYERS - 1} AI empires`}</span>
@@ -176,14 +205,7 @@ function MainMenu({ onMultiplayer }: { onMultiplayer: () => void }) {
           <span className="btn-sub">{online?.relay ? 'Hot seat on this computer, or a game online' : 'Hot seat on this computer'}</span>
 
         </button>
-        <button className={`btn big ${continuePrimary ? 'primary' : ''}`} disabled={!auto || !!busy || olderAuto || unreadableAuto} onClick={() => auto && usable[0] && continueAuto(usable[0].record, auto)}>
-          {olderAuto ? 'Saved game (older version)' : unreadableAuto ? 'Saved game (unreadable)' : 'Continue'}
-          <span className="btn-sub">
-            {olderAuto ? 'Cannot continue with these rules' : unreadableAuto ? "This save file is damaged"
-              : auto && elsewhere ? `${auto.names.join(' & ')} · turn ${auto.turn} · opens in the version it started on`
-              : auto ? `${auto.names.join(' & ')} · turn ${auto.turn} · ${calendarLabel(auto.turn)} · ${new Date(auto.savedAt).toLocaleString()}` : records === null ? 'Looking for your game…' : 'No autosave yet'}
-          </span>
-        </button>
+        {!continuePrimary && continueButton}
         <button className="btn big quiet" onClick={() => pickSaveFile(askThenLoad, (m) => set({ error: m }))}>
           Load Game…
         </button>

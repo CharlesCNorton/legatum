@@ -96,7 +96,7 @@ it('a build with no relay offers hot seat only, and says so', async () => {
 });
 
 it('with a game open, Resume stays the only primary button when hosting fails', async () => {
-  act(() => useGame.setState({ views: [{ turn: 5 }] as never }));
+  act(() => useGame.setState({ views: [{ turn: 5, players: [{ id: 0, is_human: true, faction: 'Rome' }] }] as never }));
   hosting(async () => 'Could not open your game. Try again.');
   await act(async () => must(/^Host Game/).click());
   await flush();

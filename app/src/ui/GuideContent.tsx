@@ -16,7 +16,7 @@ import { WONDERS, WONDER_INFO, WONDER_PERCENT, wonderArt, wonderRewardText, wond
 import { slugUrl, improvementArtSlug, buildingArtSlug } from '../unlockArt';
 import type { ImprovementKind } from '../types';
 import { TILE_RELEASE_RULE } from './cityTerritoryText';
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 
 /** A row of painted unlock miniatures with their names (only the ones painted so far). */
 function GuideArtRow({ label, pieces }: { label: string; pieces: { slug: string; name: string; icon?: string }[] }) {
@@ -108,7 +108,7 @@ export function GuideContent({ section }: { section: GuideSection }) {
       <p>A Peace offer is between two teams. Both must agree. It ends only the war between them. Wars with their allies go on, and both Alliances stay. Making Peace on your own is not a betrayal.</p>
       <p>With a human teammate you can ping. Press Ping at the foot of the right-hand panel, then click a tile. A ring marks it on their map until the turn ends. Your next ping replaces your last. Your teammate gets a Go to ping button that jumps to it. On a touch screen, use Ping this tile on the tile card. Pings are not saved with the game.</p>
       <p><b>Mercenary Companies (Byzantium):</b> a Byzantine city can hire the special unit of any empire it has met and is not at War with. Each empire sells only its own special unit, and the Company is that empire’s version of it. It has that unit’s name, stats and own rules (the Hoplite’s phalanx, the Keshig’s bow), not the empire’s faction-wide rules. That empire must know the unit’s technology and, for a resource unit, own an improved deposit of its resource. Hiring needs no spare supply and uses no supply slot. The price is {company.hirePercent}% of that version’s Production cost, in Gold, and all of it goes to the seller. It uses the city’s one purchase for the turn. The Company appears next turn at level 1, serves {company.turns} turns, then goes home, and costs <Amount n={company.upkeep} unit="Gold" /> a turn while it stays. It fights and captures like any unit, cannot be upgraded and does not count against thin levies. If Byzantium cannot pay its upkeep, a Company turns on it as a barbarian. Every Company shows its seller and its contract countdown on the map, so everyone can see when it leaves.</p>
-      <p><b>Thin levies (Byzantium):</b> Byzantium fields at most one military unit per city, plus one more, not counting Scouts. Losing a city never disbands units. It only stops you training new ones until you are back under that limit. The top bar, the city panel and the diplomacy panel show the count.</p>
+      <p><b>Thin levies (Byzantium):</b> Byzantium fields at most one military unit per city, plus one more. Aircraft count; Scouts don't. Losing a city never disbands units. It only stops you training new ones until you are back under that limit. The top bar, the city panel and the diplomacy panel show the count.</p>
       <p>Before you commit, every diplomatic action shows its Gold cost, its upkeep, when it takes effect and whether it is a betrayal.</p>
       <p>The Relations tab in Diplomacy shows every met empire’s Peace, Alliance and War relationships in one table.</p>
       <h3>Coming from Civilization VI</h3>
@@ -317,7 +317,7 @@ export function GuideContent({ section }: { section: GuideSection }) {
             <div className="guide-heir-head"><FactionSeal faction={faction} size={44} /><h3>{info.name}</h3></div>
             <blockquote>“{info.motto}”</blockquote>
             <p>{FACTION_SHEETS[faction].lore}</p>
-            {FACTION_SHEETS[faction].pairs.map((pair, i) => <p key={i}>{pair.strength && <><b>Strength:</b> <Amounts text={pair.strength} /></>}{pair.price && <> <b>Price:</b> <Amounts text={pair.price} /></>}</p>)}
+            {FACTION_SHEETS[faction].pairs.map((pair, i) => <Fragment key={i}>{pair.strength && <p><b>Strength:</b> <Amounts text={pair.strengthDetail ?? pair.strength} /></p>}{pair.price && <p><b>Price:</b> <Amounts text={pair.priceDetail ?? pair.price} /></p>}</Fragment>)}
             {/* A sheet whose pair lines already carry the piece's numbers and its comparison (Germany's Foundry) says them once. */}
             {info.unique && <p><Amounts text={FACTION_SHEETS[faction].piecePairs ? uniquePieceBare(faction) : info.unique} /></p>}
             {!FACTION_SHEETS[faction].piecePairs && comparedItems(faction).map((item) => {
@@ -363,7 +363,7 @@ export function GuideContent({ section }: { section: GuideSection }) {
       </dl>
       <p>Gameplay shortcuts work from the map or page background. Enter and Space activate the control that has keyboard focus, and Escape returns focus to the map. Panning also works from plain buttons. Dialogs and menus pause gameplay shortcuts. The turn report does not, though the first Return or Escape closes it. Numbered roundels identify players 1–8 on units and cities. The separate city square or diamond shows population. Territory borders also use distinct line patterns.</p>
       <h3>Save and resume</h3>
-      <p>Local games autosave after every turn, and your browser keeps the last 10 turns. Continue on the main menu loads the newest one. If it will not open, Continue offers the turn before it. Orders you have entered this turn are kept too, and come back when you Continue. Resume returns to a game still open. Starting a new game, or opening a file with Load Game, asks first, and replaces the saved game. If the game keeps crashing on the same turn, the crash screen offers Reload on the previous turn, so Continue opens the turn before. If this browser cannot keep your saves, the game says so once. Use Menu → Save to file for a copy that lives on your computer, and Load Game to open one.</p>
+      <p>Local games autosave after every turn, and your browser keeps the last 10 turns. Continue on the main menu loads the newest one. If it will not open, Continue offers the turn before it. Orders you have entered this turn are kept too, and come back when you Continue. While a game is open, Resume returns to it. Starting a new game, or opening a file with Load Game, asks first, and replaces the saved game. If the game keeps crashing on the same turn, the crash screen offers Reload on the previous turn, so Continue opens the turn before. If this browser cannot keep your saves, the game says so once. Use Menu → Save to file for a copy that lives on your computer, and Load Game to open one.</p>
       <p>To undo a mistake, choose Menu → Load an earlier turn and pick a turn. The game opens at the start of that turn, and you lose the turns after it. Online games cannot go back.</p>
       <p>In an online game, the host’s tab keeps the game: a reload carries on, and closing the tab ends it unless the host saved it. To carry on later, the host chooses Save to file in the menu, then Host from a save on the Multiplayer screen. Players rejoin from the game list and take their old seats. The Guide keeps your screen and pending plans in place, but other players can still finish the turn while you read.</p>
       <h3>Help when you need it</h3>
