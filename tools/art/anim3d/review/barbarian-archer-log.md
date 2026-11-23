@@ -224,3 +224,27 @@ Final visual judgement: at256 the bow hand, upper-arm outline, left boot, coarse
 Rendered all eight move feet from front and top; upper-body cutaway.
 Published g-feet review immediately; CPU preview, not art approval.
 Final readback: inspected all updated strips/details/rest comparison, corrected feet cutaway (visibility keys had restored the arrow; cleared only excluded objects in unsaved review scene), and inspected sampled decoded round2 MP4 frames. Final check.py passes;14 Python files compile;both shell scripts pass bash -n;gpu.sh executable;git diff --check passes;0 incoming origin/master commits. Git add/commit blocked by Operation not permitted creating .git/worktrees/lane-3/index.lock. Runner must commit with gpt-6-astra Co-Authored-By trailer. No push, PR, merge or PASS.
+Built idle (Quaternius CC0): 8 frames at 10 fps; dynamic bow/string, grip and stationary base checked, loop closure keyed.
+Built move (Quaternius CC0): 8 frames at 12 fps; dynamic bow/string, grip and stationary base checked, loop closure keyed.
+Built attack (authored bow attack): 10 frames at 14 fps; dynamic bow/string, grip and stationary base checked, terminal keys retained.
+Built hit (Quaternius CC0): 4 frames at 12 fps; dynamic bow/string, grip and stationary base checked, terminal keys retained.
+Built death (Quaternius CC0): 10 frames at 10 fps; dynamic bow/string, grip and stationary base checked, terminal keys retained.
+Rendered b: 512px, Cycles GPU, 64 samples; raw frames preserved.
+Published b review immediately; GPU preview, not art approval.
+Rendered c: 512px, Cycles GPU, 64 samples; raw frames preserved.
+Published c review immediately; GPU preview, not art approval.
+Rendered d: 512px, Cycles GPU, 64 samples; raw frames preserved.
+Published d review immediately; GPU preview, not art approval.
+Rendered e-idle: 512px, Cycles GPU, 64 samples; raw frames preserved.
+Published e-idle review immediately; GPU preview, not art approval.
+Rendered e-move: 512px, Cycles GPU, 64 samples; raw frames preserved.
+Published e-move review immediately; GPU preview, not art approval.
+Rendered e-attack: 512px, Cycles GPU, 64 samples; raw frames preserved.
+Published e-attack review immediately; GPU preview, not art approval.
+Rendered e-hit: 512px, Cycles GPU, 64 samples; raw frames preserved.
+Published e-hit review immediately; GPU preview, not art approval.
+Rendered e-death: 512px, Cycles GPU, 64 samples; raw frames preserved.
+Published e-death review immediately; GPU preview, not art approval.
+Rendered all eight move feet from front and top; upper-body cutaway.
+Published g-feet review immediately; GPU preview, not art approval.
+Packed 40 frames at 160px, trimmed offsets, quality 85, 181276 bytes.
