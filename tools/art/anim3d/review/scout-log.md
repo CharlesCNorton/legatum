@@ -133,3 +133,15 @@ Driver round 2 motion: pinned/verified existing CC0 Quaternius Standard glTF/bin
 Driver round 2 full CPU pass first found move/0 staff clipping at y=0 despite fitting atlas budget (184920 bytes/Q75). Validator correctly rejected it. Lowered the staff-carrying arm reference before source sampling; rerendering only move, then feet/pack/validation.
 Move framing refinement: lowering the staff cleared its tip, but alpha bounds isolated remaining clipping to hat/hair in sample2 (x297..361 at y0). Added forward torso lean to the carrying reference before sampling the open walk; camera/base and source foot rotations remain fixed. Recheck all eight samples.
 Rendered e-move 512 px CYCLES/CPU
+Framing diagnostic isolated the last 11 clipped pixels to the hat (move sample2 x300..310), not the scalp or staff. Lowered the physical slung hat 0.06m in the rest master, also bringing its too-high rest silhouette closer to the painting. Full dependent projection/clip/render regeneration required; no relaxed validation threshold.
+Rendered b 512 px CYCLES/CPU
+Rendered c 512 px CYCLES/CPU
+Rendered c-details 512 px CYCLES/CPU
+Rendered c 512 px CYCLES/CPU
+Rendered c-details 512 px CYCLES/CPU
+Rendered d 512 px CYCLES/CPU
+Rendered e-idle 512 px CYCLES/CPU
+Rendered e-move 512 px CYCLES/CPU
+Rendered e-attack 512 px CYCLES/CPU
+Rendered e-hit 512 px CYCLES/CPU
+Rendered e-death 512 px CYCLES/CPU
