@@ -230,3 +230,37 @@ paint, bakes and clips, renders all stages at GPU512/64, grades/reviews, exports
 clips at 2x on cream, and verifies H.264/yuv420p, 1600x348, 240 frames/eight seconds.
 CPU previews cannot pass the final GPU provenance gate. Neither script writes
 an art PASS marker; that requires visual approval of the final GPU output.
+
+### Barbarian spearman driver round 2 after the GPU receipt
+
+The driver round-one GPU pass succeeded (191422 bytes, Q80); earlier log entries
+use development-round numbers. Preserve that actual GPU evidence separately
+before producing CPU previews. Never infer GPU failure from those older notes.
+
+Registration must fit the skeleton as well as the visible surface. A camera-ray
+foot fit moved the shoe behind its original ankle; during a fall the offset
+rotated below the body and propped it up. Freeze the fitted evaluated anatomy,
+move the 53 joints through the same fitting field, rebind with original weights,
+and restore bone-attached kit world matrices. This preserves the rest view while
+bringing articulation back inside the fitted volumes. No bone count or skin
+vertex count changes. Inspect both the standing view and all clips after rebinding.
+
+This pass adds a continuous thick pelt mantle underneath the individual locks,
+a slanted oval shield, narrower spear exclusion that preserves the gripping
+hand, generated fur/leather fills, and front-lip-only stone projection. Never
+project feet onto the base: they remain as ghosts when the real foot moves.
+Death contact folds are keyed geometric deformation, not a cloth simulation.
+
+The human motion standard is now CC0 Quaternius (or permissive CMU) idle, walk,
+hit and death. Only the weapon attack is authored. This unit uses Idle_Loop,
+Walk_Loop, Hit_Chest and Death01, full rest/roll-calibrated Blender constraints,
+and the idle arm layer for carrying spear/shield. Calibrate footwear soles in
+the reference pose; never patch foot rotations after retargeting. A 65mm hip-lowering knee solve fits the upright source walk inside the fixed
+painting canvas while keeping captured ankles. Translation contact corrections
+retain source foot rotations and a single virtual-ground stance speed. `audit.py` checks the planted sole and horizontal stance displacement.
+
+Every round renders **all eight move samples from both top and front**, including
+actual footwear, to `barbarian-spearman-g-feet-check.png`. `gpu.sh` includes this
+stage in the same sequential pass as b/c/details/d/e, 512/256 masters, trimmed
+Q75+ atlas validation and the decoded-atlas H.264 movie. `--preview` packing
+remains explicitly CPU256 evidence; it is never final GPU provenance or art PASS.

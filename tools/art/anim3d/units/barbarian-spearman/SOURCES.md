@@ -1,0 +1,11 @@
+# Barbarian spearman sources
+
+- Painting: https://pub-fb5c281dd12d4ea4bbd38d657cdeb907.r2.dev/app/src/assets/units/barbarian-spearman-source.png ; original project CC BY 4.0. Unchanged master and aligned projection pinned in assets.lock.json, external assets/barbarian-spearman/.
+- MPFB 2.0.18: https://github.com/makehumancommunity/mpfb2/releases/tag/v2.0.18 ; GPL software, CC0 anatomy/morphs/game_engine skeleton and weights. Existing isolated install; full 19,158-vertex body and 53 bones retained.
+- Quaternius Universal Animation Library Standard, 2025-06-10: https://quaternius.com/packs/universalanimationlibrary.html ; CC0-1.0. Immutable conversion https://raw.githubusercontent.com/J-Ponzo/gltf-universal-animation-library/e24c23cf2a1323488a3faa226ea7ea21f644b73e/glTF/AnimationLibrary_Godot_Standard.gltf and adjacent .bin. Existing external assets/quaternius-ual/LICENSE retained. Both files checked by SHA256 in retarget.py. Idle_Loop, Walk_Loop, Hit_Chest, Death01, rest/roll-calibrated Blender constraints. Original weapon-specific attack. No post-retarget foot rotation edits.
+- Existing original generated mounted-family linen/hair fills: assets/horseman/painted-fills.png, 2026-11-22, built-in imagegen, project CC BY 4.0; no public generation URL. Their existing copies are pinned in assets.lock.json.
+- Additional original generated fur/leather swatches reused unchanged from barbarian archer: imagegen 01a20670-76eb-7280-89dc-f54424a9d280/exec-a51d4d39-ffaa-4427-96fb-173d9ba6fdb2.png, 2026-11-22, project CC BY 4.0; no public URL. Full original prompt in reused-fills.prompt.txt; copies pinned in assets.lock.json.
+- Retarget helper adapted after inspection from the barbarian-crossbowman lane (MIT); geometry, spear attack, support-plane cloth folds and unit pipeline are original MIT code, rendered artwork CC BY 4.0. Contact folds are keyed geometry, not cloth physics.
+- Blender 5.3.0 https://www.blender.org/ (GPL software), Pillow 13.0.0 https://pypi.org/project/pillow/13.0.0/ (MIT-CMU), existing FFmpeg. Every Blender invocation is through PATH blender. No paid services, accounts or downloads this round.
+
+Masters and raw assets remain under ~/LegatumRuns/anim-pilot/. The runtime still uses the original painting; no art PASS is implied by successful technical checks.

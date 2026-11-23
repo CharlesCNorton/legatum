@@ -4,7 +4,7 @@ from pathlib import Path
 from mathutils import Vector
 R=Path(os.environ['ANIM_ROOT']);M=R/'masters/barbarian-spearman'
 stage=sys.argv[sys.argv.index('--')+1]
-clip=stage[2:] if stage.startswith('e-') else 'attack' if stage=='d' else None
+clip=stage[2:] if stage.startswith('e-') else 'attack' if stage=='d' else 'move' if stage=='g-feet' else None
 path=M/'clips'/f'{clip}.blend' if clip else M/('registered.blend' if stage=='b' else 'barbarian-spearman.blend')
 bpy.ops.wm.open_mainfile(filepath=str(path));sc=bpy.context.scene
 if clip:assert sc['source_sha256']==hashlib.sha256((M/'barbarian-spearman.blend').read_bytes()).hexdigest(),'Stale clip source'
@@ -20,7 +20,16 @@ out=M/'renders'/stage;out.mkdir(parents=True,exist_ok=True);(out/'render.json').
 if (out/'raw').exists():shutil.rmtree(out/'raw')
 assert sc.camera,'Missing camera'
 sc.render.use_persistent_data=True
-if clip:
+if stage=='g-feet':
+ # Diagnostic cutaway: actual footwear and calf wraps, all eight saved move samples.
+ for ob in sc.objects:
+  if ob.type=='MESH' and not any(key in ob.name for key in ['Lasted leather shoe','Leather boot','Shoe wrap','Crossed calf bindings','Stationary cream base']):ob.hide_render=True
+ sc.camera.data.ortho_scale=1.65
+ for row,(pos,target) in enumerate([((0,0,5),(0,0,0)),((0,-5,.32),(0,0,.32))]):
+  sc.camera.location=pos;sc.camera.rotation_euler=(Vector(target)-sc.camera.location).to_track_quat('-Z','Y').to_euler()
+  for i,frame in enumerate(json.loads(sc['sample_frames'])):
+   sc.frame_set(frame);sc.render.filepath=str(out/f'{row*8+i:02}.png');bpy.ops.render.render(write_still=True)
+elif clip:
  frames=json.loads(sc['sample_frames']);frames=[frames[i] for i in [0,2,4,9]] if stage=='d' else frames
  for i,frame in enumerate(frames):
   if i and frame==frames[i-1]:

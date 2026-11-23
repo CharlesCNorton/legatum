@@ -16,5 +16,8 @@ for name in ['linen','hair']:
   atlas=Image.open(R/'assets/horseman/painted-fills.png');w,h=atlas.size
   atlas.crop((w//2,0 if name=='linen' else h//2,w,h//2 if name=='linen' else h)).save(A/f'fill-{name}.png')
  else:Image.open(p).save(A/f'fill-{name}.png')
+# Existing original generated pelt and leather from the barbarian archer lane.
+for name in ['fur','leather']:
+ Image.open(R/f'assets/barbarian-archer/fill-{name}.png').save(A/f'fill-{name}.png')
 lock={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in A.glob('*.png')}
 Path(__file__).with_name('assets.lock.json').write_text(json.dumps(lock,indent=2)+'\n')

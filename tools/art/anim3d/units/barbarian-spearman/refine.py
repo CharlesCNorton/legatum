@@ -12,6 +12,23 @@ if body.data.shape_keys:
  bpy.context.view_layer.objects.active=body
  bpy.ops.object.shape_key_remove(all=True,apply_mix=True)
 assert len(body.data.vertices)==19158
+# A continuous thick shoulder pelt fills gaps between the original separate tufts.
+verts=[];faces=[];n=64
+for j in range(9):
+ t=j/8;rx=.105+.24*t;ry=.105+.10*t
+ for i in range(n):
+  a=2*math.pi*i/n;fold=.008*math.sin(a*17)*(t+.2)
+  z=1.69-.16*t-.10*t*max(0,math.cos(a))+.009*math.sin(a*13)*t
+  verts.append(((rx+fold)*math.sin(a),-(ry+fold)*math.cos(a),z))
+for j in range(8):
+ for i in range(n):a=j*n+i;b=j*n+(i+1)%n;faces.append((a,b,b+n,a+n))
+me=bpy.data.meshes.new('Continuous pelt mantle');me.from_pydata(verts,[],faces);me.update()
+ob=bpy.data.objects.new('Continuous pelt mantle',me);s.collection.objects.link(ob);me.materials.append(bpy.data.materials['Wolf brown fur'])
+for poly in me.polygons:poly.use_smooth=True
+mod=ob.modifiers.new('Pelt thickness','SOLIDIFY');mod.thickness=.018
+mod=ob.modifiers.new('Soft pelt edge','BEVEL');mod.width=.004;mod.segments=3
+world=ob.matrix_world.copy();ob.parent=rig;ob.parent_type='BONE';ob.parent_bone='spine_03';bpy.context.view_layer.update();ob.matrix_world=world
+
 # Freeze curves and static finish BEFORE calibrating projected UVs.
 for ob in list(s.objects):
  if ob.type=='CURVE':
@@ -27,8 +44,8 @@ def fitted(p):
  elbow=math.exp(-((x-80)/10)**2-((y-86)/14)**2)
  torso=math.exp(-((x-124)/28)**2-((y-99)/25)**2)
  skirt=math.exp(-((x-118)/40)**2-((y-139)/13)**2)
- dx=-11*shoulder-3*elbow+(.12*(x-126)-1.5)*torso
- dy=-7*shoulder-2*elbow+5*skirt
+ dx=-14*shoulder-3*elbow+(.12*(x-126)-1.5)*torso
+ dy=-9*shoulder-2*elbow+5*skirt
  # Broaden bent-knee silhouette and remove the forward-facing tiny shoes.
  leg=max(0,min(1,(y-150)/55))
  if x<128:
@@ -66,6 +83,7 @@ for ob in list(s.objects):
  for v in ob.data.vertices:
   w=ob.matrix_world@v.co;p=world_to_camera_view(s,cam,w);x,y=p.x*256,(1-p.y)*256
   tx=179+(x-181)*.93;ty=110+(y-115)*.98
+  tx+=.12*(ty-109)
   if ob.name=='Domed iron shield boss':
    tx=184+(x-181)*.82;ty=109+(y-115)*.82
   v.co=inv@(w+right*(tx-x)*px-up*(ty-y)*px)
@@ -88,7 +106,38 @@ for ob in list(s.objects):
  bpy.context.view_layer.objects.active=ob
  for mod in list(ob.modifiers):
   if mod.type in {'SOLIDIFY','BEVEL','SUBSURF'}:bpy.ops.object.modifier_apply(modifier=mod.name)
-s['registration']='Round 2: full-depth shoulder/torso/foot fit, shield and boss registration; no alpha cutout'
+# Rebind the fitted surface to fitted joints. Merely moving skin vertices along
+# camera rays left ankles in front of their shoes; that offset swung underneath
+# the body on death and falsely propped the torso above the stone.
+bpy.context.view_layer.update()
+attached={ob:ob.matrix_world.copy() for ob in s.objects if ob.parent==rig and ob.parent_type=='BONE'}
+saved_mods=[]
+for mod in body.modifiers:
+ if mod.type!='ARMATURE':saved_mods.append((mod,mod.show_viewport));mod.show_viewport=False
+bpy.context.view_layer.update();ev=body.evaluated_get(bpy.context.evaluated_depsgraph_get());surface=ev.to_mesh()
+posed=[v.co.copy() for v in surface.vertices];ev.to_mesh_clear()
+assert len(posed)==len(body.data.vertices)
+old={bone.name:(bone.head.copy(),bone.tail.copy(),bone.matrix.to_quaternion()@Vector((0,0,1))) for bone in rig.pose.bones}
+def fit_joint(point):
+ world=rig.matrix_world@point;uv=world_to_camera_view(s,cam,world);p=Vector((uv.x*256,(1-uv.y)*256));d=fitted(p)-p
+ moved=world+right*d.x*px-up*d.y*px
+ foot=max(0,min(1,(p.y-183)/15));moved+=ray*((world.z-moved.z)*foot/ray.z)
+ return rig.matrix_world.inverted()@moved
+bpy.ops.object.select_all(action='DESELECT');rig.select_set(True);bpy.context.view_layer.objects.active=rig
+bpy.ops.object.mode_set(mode='EDIT')
+for bone in rig.data.edit_bones:bone.use_connect=False
+for bone in rig.data.edit_bones:
+ head,tail,zaxis=old[bone.name];bone.head=fit_joint(head);bone.tail=fit_joint(tail);bone.align_roll(zaxis)
+bpy.ops.object.mode_set(mode='OBJECT')
+for bone in rig.pose.bones:bone.matrix_basis=Matrix.Identity(4)
+for v,co in zip(body.data.vertices,posed):v.co=co
+body.data.update();bpy.context.view_layer.update()
+for ob,world in attached.items():ob.matrix_world=world
+for mod,value in saved_mods:mod.show_viewport=value
+bpy.context.view_layer.update()
+rig['neutral_pose']=json.dumps({p.name:[list(row) for row in p.matrix_basis] for p in rig.pose.bones})
+
+s['registration']='Driver round 2: full-depth shoulder/torso/foot fit, shield and boss registration; no alpha cutout'
 (M/'registration.json').write_text(json.dumps({'meshes_fitted':changed,'body_vertices':len(body.data.vertices),'bones':len(rig.data.bones),'camera':list(cam.location),'scale':cam.data.ortho_scale,'method':s['registration']},indent=2))
 bpy.ops.wm.save_as_mainfile(filepath=str(M/'registered.blend'))
 print('REGISTERED',changed)

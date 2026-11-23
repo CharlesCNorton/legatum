@@ -24,7 +24,7 @@ if [[ ! -x "$PY" ]]; then echo "Missing Pillow Python"; exit 1; fi
 export RENDER_ENGINE=CYCLES CYCLES_DEVICE=GPU CYCLES_BACKEND="${CYCLES_BACKEND:-METAL}" RESOLUTION=512 SAMPLES=64
 blender -b --disable-autoexec --python-exit-code 1 --python "$TASK/gpu-check.py" || exit "$?"
 for stage in refine paint bake animate; do "$TASK/render.sh" "$stage" || exit "$?"; done
-for stage in b c c-details d e-idle e-move e-attack e-hit e-death; do
+for stage in b c c-details d e-idle e-move e-attack e-hit e-death g-feet; do
   "$TASK/render.sh" "$stage" || exit "$?"
   "$PY" "$TASK/grade.py" "$stage" || exit "$?"
   "$PY" "$TASK/review.py" "$stage" || exit "$?"

@@ -38,20 +38,13 @@ for ob in list(sc.objects):
  geom=n.new('ShaderNodeNewGeometry');ramp=n.new('ShaderNodeValToRGB');ramp.color_ramp.elements[0].position=.32;ramp.color_ramp.elements[0].color=(.55,.55,.55,1);ramp.color_ramp.elements[1].position=.62;ramp.color_ramp.elements[1].color=(.27,.27,.27,1)
  l.new(geom.outputs['Pointiness'],ramp.inputs[0])
  if bs.inputs['Metallic'].default_value==1:l.new(ramp.outputs[0],bs.inputs['Roughness'])
- if ob.name=='Stationary cream base':
-  l.new(grime.outputs[0],bs.inputs['Base Color'])
-  # Physical relief/contact plus restrained camera-only cream pigment.
-  pigment=n.new('ShaderNodeBsdfPrincipled');pigment.name='Stone camera pigment';pigment.inputs['Base Color'].default_value=(0,0,0,1);pigment.inputs['Specular IOR Level'].default_value=0
-  l.new(grime.outputs[0],pigment.inputs['Emission Color']);pigment.inputs['Emission Strength'].default_value=1.25
-  lp=n.new('ShaderNodeLightPath');fac=n.new('ShaderNodeMath');fac.operation='MULTIPLY';fac.inputs[1].default_value=.55;l.new(lp.outputs['Is Camera Ray'],fac.inputs[0])
-  shader=n.new('ShaderNodeMixShader');l.new(fac.outputs[0],shader.inputs[0]);l.new(bs.outputs[0],shader.inputs[1]);l.new(pigment.outputs[0],shader.inputs[2]);l.new(shader.outputs[0],n.get('Material Output').inputs['Surface']);continue
  # Generated linen/hair fill is used on unseen back faces, under AO and scan-scale bump.
- kind='linen' if 'linen' in mat.name.lower() or 'rawhide' in mat.name.lower() else 'hair' if any(x in mat.name.lower() for x in ['hair','fur']) else None
+ kind='linen' if 'linen' in mat.name.lower() or 'rawhide' in mat.name.lower() else 'fur' if 'fur' in mat.name.lower() else 'hair' if 'hair' in mat.name.lower() else 'leather' if 'leather' in mat.name.lower() else None
  fallback=grime.outputs[0]
  if kind:
   fill=n.new('ShaderNodeTexImage');fill.image=bpy.data.images.load(str(A/f'fill-{kind}.png'),check_existing=True);fill.image.pack();fill.projection='BOX';fill.projection_blend=.25
   tc=n.new('ShaderNodeTexCoord');l.new(tc.outputs['Generated'],fill.inputs['Vector'])
-  fm=n.new('ShaderNodeMixRGB');fm.inputs[0].default_value=.55;l.new(fallback,fm.inputs[1]);l.new(fill.outputs['Color'],fm.inputs[2]);fallback=fm.outputs[0]
+  fm=n.new('ShaderNodeMixRGB');fm.inputs[0].default_value=.80;l.new(fallback,fm.inputs[1]);l.new(fill.outputs['Color'],fm.inputs[2]);fallback=fm.outputs[0]
  # Topology-changing modifiers are disabled only to evaluate the weighted base mesh.
  saved=[]
  for mod in ob.modifiers:
@@ -65,6 +58,7 @@ for ob in list(sc.objects):
   v=me.vertices[loop.vertex_index];world=ob.matrix_world@v.co;p=world_to_camera_view(sc,sc.camera,world)
   uv.data[loop.index].uv=(p.x,p.y)
   normal=(ob.matrix_world.to_3x3()@v.normal).normalized();weight=max(0,min(1,(normal.dot(view)-.05)/.55))
+  if ob.name=='Stationary cream base':weight=1 if p.y<.25 else 0
   if p.x<0 or p.x>1 or p.y<0 or p.y>1:weight=0
   hit=visibility.ray_cast(world+view_ray*5,-view_ray,10)[0]
   if hit is not None and (hit-world).dot(view_ray)>.018:weight=0
@@ -75,6 +69,12 @@ for ob in list(sc.objects):
  weight=n.new('ShaderNodeVertexColor');weight.layer_name=attr.name
  mul=n.new('ShaderNodeMath');mul.operation='MULTIPLY';l.new(weight.outputs['Color'],mul.inputs[0]);l.new(tex.outputs['Alpha'],mul.inputs[1])
  strength=n.new('ShaderNodeMath');strength.operation='MULTIPLY';strength.inputs[1].default_value=.98;l.new(mul.outputs[0],strength.inputs[0])
+ if ob.name=='Stationary cream base':
+  # Only project the front stone lip below the figure. A colour mask can leave
+  # pale boot-shaped holes in its pigment even after the dark feet disappear.
+  sep=n.new('ShaderNodeSeparateXYZ');l.new(coord.outputs[0],sep.inputs[0])
+  lip=n.new('ShaderNodeMapRange');lip.clamp=True;lip.inputs['From Min'].default_value=.125;lip.inputs['From Max'].default_value=.145;lip.inputs['To Min'].default_value=1;lip.inputs['To Max'].default_value=0;l.new(sep.outputs['Y'],lip.inputs['Value'])
+  factor=n.new('ShaderNodeMath');factor.operation='MULTIPLY';l.new(mul.outputs[0],factor.inputs[0]);l.new(lip.outputs[0],factor.inputs[1]);l.new(factor.outputs[0],strength.inputs[0])
  l.new(fallback,bs.inputs['Base Color'])
  # Preserve the painting's existing illumination for camera rays only.
  pigment=n.new('ShaderNodeBsdfPrincipled');pigment.name='Camera painted pigment';pigment.inputs['Base Color'].default_value=(0,0,0,1);pigment.inputs['Specular IOR Level'].default_value=0

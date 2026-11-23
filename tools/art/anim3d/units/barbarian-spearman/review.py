@@ -10,7 +10,13 @@ assert frames,folder
 bg=(47,48,45)
 def paste(canvas,im,xy):canvas.paste(im,xy,im)
 def label(c,x,y,s):ImageDraw.Draw(c).text((x,y),s,fill=(235,219,190))
-if stage.startswith('e-'):
+if stage=='g-feet':
+ sheet=Image.new('RGB',(128*8,300),bg)
+ for i,im in enumerate(frames):
+  x=(i%8)*128;y=(i//8)*150
+  paste(sheet,im.resize((128,128),Image.Resampling.LANCZOS),(x,y+20));label(sheet,x+4,y+3,('top' if i<8 else 'front')+f' {i%8+1}')
+ sheet.save(O/'barbarian-spearman-g-feet-check.png')
+elif stage.startswith('e-'):
  clip=stage[2:];sheet=Image.new('RGB',(256*len(frames),354),bg)
  for i,im in enumerate(frames):paste(sheet,im,(256*i,24));paste(sheet,im.resize((64,64),Image.Resampling.LANCZOS),(256*i+96,286));label(sheet,256*i+8,5,f'{clip} {i+1}')
  sheet.save(O/f'barbarian-spearman-e-{clip}-strip.png')

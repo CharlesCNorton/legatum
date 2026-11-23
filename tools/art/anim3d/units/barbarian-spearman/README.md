@@ -1,7 +1,8 @@
 # Barbarian spearman — round 2
 
-True 3D MPFB body, original kit, 53-bone rig and authored idle/move/attack/hit/death
-clips. See the unit's infantry chapter in `../../PLAYBOOK.md` for build commands,
+True 3D MPFB body, original kit, 53-bone rig, CC0 Quaternius idle/move/hit/death and an original spear attack.
+Rest/roll calibration preserves source foot rotations; the top/front feet sheet
+checks the full move cycle. See the unit's infantry chapter in `../../PLAYBOOK.md` for build commands,
 quality method, external assets and the trimmed v2 atlas contract.
 
 Run `tools/art/anim3d/units/barbarian-spearman/gpu.sh` from the repo root for the
@@ -25,7 +26,8 @@ Source painting: project's CC BY 4.0 barbarian-spearman master at
 https://pub-fb5c281dd12d4ea4bbd38d657cdeb907.r2.dev/app/src/assets/units/barbarian-spearman-source.png .
 MPFB 2.0.18 anatomy/weights are CC0; MPFB software is GPL-3.0-or-later. The linen and
 hair back-surface textures reuse the project's CC BY 4.0 generated horseman fills.
-`assets.lock.json` pins all external PNG inputs; `assets/SOURCES.md` under the
+Additional fur/leather fills reuse original barbarian archer imagegen artwork.
+`SOURCES.md` records every source; `assets.lock.json` pins all external PNG inputs; `assets/SOURCES.md` under the
 external animation root records their provenance. No third-party paid asset.
 
 The animation atlas is an art candidate, not runtime integration or art approval.

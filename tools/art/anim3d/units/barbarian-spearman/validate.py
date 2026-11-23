@@ -12,7 +12,7 @@ assert meta['frame']=={'w':160,'h':160,'ax':80,'ay':137}
 assert report['source_sha256']==sha(M/'barbarian-spearman.blend') and report['grade_sha256']==sha(M/'grade.json')
 if os.environ.get('REQUIRE_GPU')=='1':
  assert not report['preview'],'CPU preview is not a final GPU delivery'
- for stage in ['b','c','c-details','d']+[f'e-{c}' for c in meta['clips']]:
+ for stage in ['b','c','c-details','d','g-feet']+[f'e-{c}' for c in meta['clips']]:
   settings=json.loads((M/'renders'/stage/'render.json').read_text())
   assert (settings['device'],settings['resolution'],settings['samples'])==('GPU',512,64),(stage,settings)
 checks=[];used=set();coverage=Image.new('L',atlas.size)
