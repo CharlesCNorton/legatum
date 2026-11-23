@@ -106,3 +106,80 @@ tools/art/anim3d/render.sh audit
 ```
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
+
+## Vehicles / autonomous armour — round 1
+
+This unit's scripts live in `tools/art/anim3d/units/autonomous-armour/`; they do not
+replace the tank lane's family scripts. The unmanned vehicle uses original closed
+hull and turret meshes, a genuinely open muzzle, separate optical housings, twin
+antennas, thick segmented skirts, seven road wheels per side, two sprockets per
+side and 128 individually articulated track links. A rigid parent hierarchy owns
+chassis, turret traverse, gun recoil, sensor yaw, antennas, wheels and links.
+No infantry anatomy or MPFB installation is needed for a machine.
+
+Standard finish follows feedback 18–21: first align the camera and true rest
+geometry to the painting, then freeze full-source camera UVs on those meshes.
+Camera-facing confidence blends to an original image-generated olive-painted
+steel fill on unseen faces. Rotating running gear uses a reduced 28% projection
+blend and 20% emission because full rest-camera projection distorted wheel
+features in motion; stationary armour uses 94% colour and 64% emission. Real bevels and three Cycles AO/Pointiness bake pairs
+supply recess dirt and edge wear. A warm upper-left area key, soft fill and cool
+rim light the miniature. A bounded RGB percentile grade is measured from the
+rest render and frozen for every clip, never fitted separately to moving frames.
+The painting/render/50-percent-crossfade sheet at 256 and 64 px is the art gate;
+passing file checks alone is not approval. Projection retains painted lighting,
+so broad changes of view and exposed UV seams still need visual review.
+
+The base uses a dielectric fine-grain material targeting sRGB **#E9CFA0**
+(linear approximately `.815, .624, .352`), with a modest warm emission component
+and beveled rim. Sample actual rendered pixels after the lighting/grade pass;
+shader numeric values alone do not prove a match to the painting.
+
+All six Blender skills informed this implementation: modeling (closed beveled
+plates and bore), materials (dielectric paint versus exposed metal, real AO and
+curvature bakes), lighting (aimed product lights), cameras (orthographic source
+registration), animation (authored mechanical keys and visibility toggles), and
+rendering (CPU draft inspection, explicit GPU final, PNG sequences then encoding).
+Every invocation is plain `blender -b --disable-autoexec` through the PATH gate;
+no direct application executable, nested slot lock or zero-scale hiding.
+
+```sh
+unit=tools/art/anim3d/units/autonomous-armour
+# Source and generated fill must exist under assets/autonomous-armour (SOURCES.md).
+"$unit/render.sh" build
+"$unit/render.sh" b
+"$unit/render.sh" finish
+"$unit/render.sh" c
+"$unit/render.sh" details
+"$unit/render.sh" d
+for clip in idle move attack hit death; do "$unit/render.sh" "e-$clip"; done
+"$unit/render.sh" audit
+"$unit/render.sh" pack
+"$unit/render.sh" validate
+"$unit/render.sh" movie
+# Complete host pass from repository root; no arguments:
+ROUND=1 tools/art/anim3d/units/autonomous-armour/gpu.sh
+```
+
+`gpu.sh` renders every stage sequentially with Cycles Metal GPU (96 samples by
+default), retains 512 and 256 PNG masters under `masters/autonomous-armour/`,
+packs and validates the atlas, and writes all review sheets and animated WebPs.
+It also decodes the shipped trimmed atlas to make
+`autonomous-armour-round${ROUND}.mp4`: five clips side by side, 2x scale on cream,
+8 seconds, H.264/yuv420p, verified using ffprobe. It fails rather than silently
+falling back to CPU. A rebuild invalidates downstream clips; source and render
+hashes prevent stale packing. CPU previews at 256 never masquerade as 512 masters.
+
+### Autonomous armour trimmed atlas extension
+
+The new candidate metadata uses `format: "trimmed-v1"`. `frame` is the untrimmed
+logical 160x160 canvas with anchor `ax:80, ay:139`. `atlas` records physical packed
+width/height. `clips` retains rows in idle/move/attack/hit/death order and exact
+8/8/10/4/10 frame counts, fps and loop flags. Each clip has `rects`, one per frame:
+`{x,y,w,h,ox,oy}`. Crop the physical atlas at `(x,y,w,h)`, then draw the crop at
+`(ox,oy)` on its logical 160 canvas; anchored drawing uses
+`(ox-ax, oy-ay)`. Identical held frames can share a rectangle within their clip without reducing
+the logical frame count. Each clip occupies one variable-height shelf, so `row` is an
+ordinal, not a fixed-cell multiplication. Preserve full alpha, all frames and
+quality >=75; reject delivery over 200,000 bytes. No runtime loader is changed
+by this art candidate, and fixed-grid consumers must not infer new crop positions.
