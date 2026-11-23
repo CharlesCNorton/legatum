@@ -65,3 +65,5 @@
 - Published e-attack native 256/64 comparison; render device CPU.
 - Rendered e-hit: 512px CYCLES CPU, 12 samples.
 - Published e-hit native 256/64 comparison; render device CPU.
+- Rendered e-death: 512px CYCLES CPU, 12 samples.
+- Published e-death native 256/64 comparison; render device CPU.

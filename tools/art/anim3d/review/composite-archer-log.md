@@ -11,3 +11,5 @@
 - Saved e-attack review, raw 512 px and graded 512/256 sets; CYCLES CPU 8 samples.
 - Saved e-hit review, raw 512 px and graded 512/256 sets; CYCLES CPU 8 samples.
 - Saved e-death review, raw 512 px and graded 512/256 sets; CYCLES CPU 8 samples.
+- Saved e-attack review, raw 512 px and graded 512/256 sets; CYCLES CPU 8 samples.
+- Saved e-hit review, raw 512 px and graded 512/256 sets; CYCLES CPU 8 samples.

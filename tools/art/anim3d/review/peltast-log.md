@@ -12,3 +12,5 @@
 - Authored idle/move/attack/hit/death on MPFB rig: 8/8/10/4/10 samples; looping breathing/steps, thrown-javelin visibility, hit recovery, independent equipment release and held death. Cloth uses authored secondary deformation, not a cloth simulation.
 - Published c review immediately: CYCLES/CPU, 512 px, 1 frame(s).
 - Published d review immediately: CYCLES/CPU, 256 px, 4 frame(s).
+- Authored idle/move/attack/hit/death on MPFB rig: 8/8/10/4/10 samples; looping breathing/steps, thrown-javelin visibility, hit recovery, independent equipment release and held death. Cloth uses authored secondary deformation, not a cloth simulation.
+- Published d review immediately: CYCLES/CPU, 256 px, 4 frame(s).

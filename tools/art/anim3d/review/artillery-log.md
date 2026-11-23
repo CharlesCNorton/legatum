@@ -12,3 +12,5 @@
 - Published painted rest pose and 50/50 comparison; real AO shader, micrograin, edge geometry and hidden-surface fill.
 - Published e-idle: 8 actual rendered frames, 10 fps; CPU 512px 8 samples.
 - Published e-move: 8 actual rendered frames, 12 fps; CPU 512px 8 samples.
+- Published e-attack: 10 actual rendered frames, 14 fps; CPU 512px 8 samples.
+- Published e-hit: 4 actual rendered frames, 12 fps; CPU 512px 8 samples.
