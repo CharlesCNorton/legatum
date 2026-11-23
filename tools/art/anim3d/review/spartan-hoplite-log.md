@@ -130,3 +130,4 @@ Review b: 512px CYCLES/GPU, 64 samples; 3 actual frames.
 Review c: 512px CYCLES/GPU, 64 samples; 1 actual frames.
 Review d: 512px CYCLES/GPU, 64 samples; 4 actual frames.
 Review e-idle: 512px CYCLES/GPU, 64 samples; 8 actual frames.
+Review e-move: 512px CYCLES/GPU, 64 samples; 8 actual frames.

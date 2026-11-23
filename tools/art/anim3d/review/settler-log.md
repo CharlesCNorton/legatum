@@ -168,3 +168,31 @@
 - Published e-hit-strip: CYCLES CPU, 256 px, 8 samples; not GPU approval.
 - Published e-death-strip: CYCLES CPU, 256 px, 8 samples; not GPU approval.
 - Saved 3D audit passed: source hashes, 53 bones, actual motion, exact loop closing keys and held death; ground/bounds recorded; collision limits explicit.
+- Built MPFB female, full folded robes, open hood, shawl/fringe, pack/spiral bedroll, staff, straps and sandals; plain master saved.
+- Published b-plain: CYCLES CPU, 256 px, 8 samples; not GPU approval.
+- Applied frozen-camera painting, generated unseen linen/olive/rust/leather, fine bump, warm product lights, physical AO and ten actual AO/curvature maps.
+- Published c-textured-lit: CYCLES CPU, 256 px, 8 samples; not GPU approval.
+- Published c-details: CYCLES CPU, 256 px, 8 samples; not GPU approval.
+- Saved idle: 8 frames at 10 fps, editable MPFB rig, stationary base; CC0 library motion or authored staff attack.
+- Saved move: 8 frames at 12 fps, editable MPFB rig, stationary base; CC0 library motion or authored staff attack.
+- Saved attack: 10 frames at 14 fps, editable MPFB rig, stationary base; CC0 library motion or authored staff attack.
+- Saved hit: 4 frames at 12 fps, editable MPFB rig, stationary base; CC0 library motion or authored staff attack.
+- Saved death: 10 frames at 10 fps, editable MPFB rig, stationary base; CC0 library motion or authored staff attack.
+- Published d-rig-poses: CYCLES CPU, 256 px, 8 samples; not GPU approval.
+- Published e-idle-strip: CYCLES CPU, 256 px, 8 samples; not GPU approval.
+- Published e-move-strip: CYCLES CPU, 256 px, 8 samples; not GPU approval.
+- Published e-attack-strip: CYCLES CPU, 256 px, 8 samples; not GPU approval.
+- Published e-hit-strip: CYCLES CPU, 256 px, 8 samples; not GPU approval.
+- Published e-death-strip: CYCLES CPU, 256 px, 8 samples; not GPU approval.
+- Saved 3D audit passed: source hashes, 53 bones, actual motion, exact loop closing keys and held death; ground/bounds recorded; collision limits explicit.
+- Replaced independent material-region masks with one frozen-camera painting and orthographic geometric visibility; face/hood and cloth/staff details improve. Generated hidden ivory/olive/rust/leather fills reused. Retained bevels, straps, ten real bakes, product lights and one automatic rest grade. Kept base physically shaded to avoid painted-foot ghost shadows in walking.
+- Imported hash-pinned Quaternius CC0 Idle_Loop, Walk_Loop, Hit_Chest, Death01; Blender full rest/roll calibrated COPY_ROTATION and idle carrying-arm NLA layer replace manual gait/fall. Staff check remains authored. Added unit SOURCES.md and shared source record.
+- Published and opened early walk/death tests. Rejected rigid hollow robe, floating cloth and an overlong stride on the disc. Bound complete robes to pelvis/thighs/calves, corrected missing rig-root inheritance, wrapped shawl across its front/back seam, refitted sandal silhouette and centered walk on base. No post-retarget foot rotation edits.
+- Rest-preservation assertion exposed fitted shape-key Basis versus stale Mesh.vertices and default Hem sway=1 in Blender5.3. Use Basis coordinates and explicitly set Hem sway=0 before projection. Added <0.01 mm rest binding assertion and evaluated first-frame geometry audit. Failed diagnostic builds did not overwrite the valid master.
+- Saved death: 10 frames at 10 fps, editable MPFB rig, stationary base; CC0 library motion or authored staff attack.
+- Published death-check-strip: CYCLES CPU, 256 px, 8 samples; not GPU approval.
+- Saved death: 10 frames at 10 fps, editable MPFB rig, stationary base; CC0 library motion or authored staff attack.
+- Published death-check-strip: CYCLES CPU, 256 px, 8 samples; not GPU approval.
+- Saved death: 10 frames at 10 fps, editable MPFB rig, stationary base; CC0 library motion or authored staff attack.
+- Published e-death-strip: CYCLES CPU, 256 px, 8 samples; not GPU approval.
+- Saved 3D audit passed: source hashes, 53 bones, actual motion, exact loop closing keys and held death; ground/bounds recorded; collision limits explicit.
