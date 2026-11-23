@@ -174,3 +174,4 @@
 - Emitted tank-c-details.png from actual details renders; visual review pending.
 - Emitted tank-d-rig-poses.png from actual d renders; visual review pending.
 - Emitted tank-e-idle-strip.png from actual e-idle renders; visual review pending.
+- Emitted tank-e-move-strip.png from actual e-move renders; visual review pending.
