@@ -29,3 +29,9 @@ Commit attempt blocked: git could not create .git/worktrees/lane-1/index.lock (O
 b: 3 frames at 256/64 from 512px CYCLES/GPU, 96 samples.
 c: 1 frames at 256/64 from 512px CYCLES/GPU, 96 samples.
 d: 4 frames at 256/64 from 512px CYCLES/GPU, 96 samples.
+e-idle: 8 frames at 256/64 from 512px CYCLES/GPU, 96 samples.
+e-move: 8 frames at 256/64 from 512px CYCLES/GPU, 96 samples.
+e-attack: 10 frames at 256/64 from 512px CYCLES/GPU, 96 samples.
+e-hit: 4 frames at 256/64 from 512px CYCLES/GPU, 96 samples.
+e-death: 10 frames at 256/64 from 512px CYCLES/GPU, 96 samples.
+GPU round 1: all stages GPU512, verified 256 copies, trimmed atlas, geometry/alpha/clip checks and decoded-atlas MP4; visual acceptance remains manual.
