@@ -261,3 +261,19 @@
 - Posted c-textured-lit review (CPU, 256 px).
 - Authored and saved attack action (10 output frames).
 - Posted e-attack review (CPU, 256 px).
+- Finished-surface camera projection with camera-only pigment; generated hidden fills retained.
+- Posted b-plain review (CPU, 256 px).
+- Posted c-textured-lit review (CPU, 256 px).
+- Retargeted CC0 and saved idle action (8 output frames).
+- Retargeted CC0 and saved move action (8 output frames).
+- Authored and saved attack action (10 output frames).
+- Retargeted CC0 and saved hit action (4 output frames).
+- Retargeted CC0 and saved death action (10 output frames).
+- Posted d-rig-poses review (CPU, 256 px).
+- Posted e-idle review (CPU, 256 px).
+- Posted e-move review (CPU, 256 px).
+- Initial CPU rest/attack preview inspected: generated stone adds mineral grain and moving contact, sleeve weighting/lining reduces open elbow seams. Measured brim-tip and stocking/shoe contour corrections applied in true mesh coordinates. Rest remains distinguishable, especially steel shading and shoe silhouette. No PASS.
+- Added SHA256 input validation for painting/generated fills/new stone plate and reset sparse glTF pose channels before assigning actions. Three delivery tests, 12 Python AST checks, both shell syntax checks and git diff --check pass.
+- Posted e-attack review (CPU, 256 px).
+- Posted e-hit review (CPU, 256 px).
+- Posted e-death review (CPU, 256 px).
