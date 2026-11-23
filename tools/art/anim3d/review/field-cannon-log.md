@@ -226,3 +226,14 @@
 - Posted field-cannon-e-attack-strip.png; actual CYCLES render, visual review pending.
 - Posted field-cannon-e-hit-strip.png; actual CYCLES render, visual review pending.
 - Posted field-cannon-e-death-strip.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-b-plain.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-c-textured-lit.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-c-details.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-d-rig-poses.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-idle-strip.png; actual CYCLES render, visual review pending.
+- ROUND 6 FIRST FULL SET: All40 CPU256/12 frames and review stages completed in about3min. Full geometry audit passes, including finished-surface UV residual <=0.000016px, both pushing palms, planted/lifted soles, closed straps and held grounded death. First pack183046bytes/Q85, all40 samples/31unique rectangles, full alpha/provenance/offsets/bounds/video validation PASS. Visual death review nevertheless caught dark neighbouring-object paint in the new trouser mask; added a feathered dark/chroma rejection and rerendering the complete set from the clean finished-surface master. Technical PASS was not treated as art approval.
+- Posted field-cannon-e-move-strip.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-attack-strip.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-hit-strip.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-death-strip.png; actual CYCLES render, visual review pending.
+- ROUND 6 GPU HANDOFF FIX: A real missing-input preflight exposed the old exec-to-process-substitution logger failing before Blender with /dev/fd/62: Operation not permitted. This does not establish what happened in the absent round5 driver log. Replaced it with direct transcript redirection, printed the canonical transcript path to the driver, and retained an ERR trap naming the failing command. Repeated missing-input preflight PASS; no Blender/GPU started. GPU master negative gate also correctly rejects CPU previews.
