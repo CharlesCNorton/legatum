@@ -19,3 +19,8 @@
 - Python/shell syntax and whitespace checks passed. Repository hygiene/public-claims passed; art browser renderer exited 1.
 - Visual verdict: recognizable at64, below painting craft at256; grip/shoulder/edge registration and revealed surfaces need another round. No PASS. GPU handoff ready; native512 output pending host execution.
 - Git staging denied: index.lock Operation not permitted. All changes left for runner; suggested commit message saved externally. No push, PR or PASS.
+
+# Pikeman round 2
+- Opened GPU c/f, all five e strips and the round1 MP4 frame before editing. GPU pass succeeded: 40 frames, 177646 bytes, quality 90; art_approved=false. Preserved original GPU review in pikeman-round1-gpu/.
+- Honest 256px critique: body brushwork is close, but the raised left grip is broken/overdark, right shoulder/helmet contour has projection seams, pike endpoints diverge by a few pixels, cream base is a smooth tan puck with an overly rounded rim. Death exposes broad dull gray regions, bare sole/ankle fragments and stretched plate pigment. Attack is readable but modest. At64 the diagonal pike, silver harness and broad guard match identity; base shape and grip gap still differ. Not PASS.
+- Read all 23 shared feedback items and prior log; pikeman-FEEDBACK.md absent. Loaded blender-modeling/materials/lighting/cameras/animation/rendering: retain volumetric frozen projection and captured locomotion, improve registration, physically finished hidden surfaces, stone material and temporal grade.
