@@ -216,3 +216,13 @@
 - ROUND 6 PROJECTION: Finished bevel/solidify/subdivision topology and converted real curve details before freezing UVs. Static MPFB macro shape keys are frozen while native skin weights and the 53-bone rig remain. Two pre-render exceptions (shape-key modifier application and zero-level eye subdivision) were fixed explicitly; no Blender crash. Camera-ray Principled pigment preserves painted illumination without lighting neighbouring geometry; existing PBR fills and product lights shade uncovered surfaces. Face/shako and coat paint improve in the first opened preview.
 - ROUND 6 CAMERA TRIAL: Tested an 80mm finite-distance camera and perspective-correct camera rays. It improved the near/far wheel relationship but enlarged and distorted the base and foot framing; rejected it and restored the orthographic viewpoint. Kept general ray/Jacobian support. Reduced regular sleeve/coat fold amplitude and added a silhouette mask for ivory trousers to retain dark painted creases. Push motion now has two intended barrel contacts and planted/swing boot phases; strengthening audits before acceptance.
 - Posted field-cannon-e-move-strip.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-b-plain.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-c-textured-lit.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-c-details.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-d-rig-poses.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-idle-strip.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-move-strip.png; actual CYCLES render, visual review pending.
+- ROUND 6 CONTACT AND CHECKS: The stricter move audit rejected the right palm at20.2cm,10.2cm and4.9cm error before the closer/crouched stance brought both palms under2mm. Boot sole heights pass the authored planted/lift targets. Thick crossbelts remain closed solids after modifier application. Six atlas/grade/video regression tests PASS;19 Python files and2 embedded GPU programs parse;3 shell entry points and whitespace checks PASS. Full CPU256/12 pass is rendering all stages sequentially; final surface-registration audit follows. No new feedback arrived.
+- Posted field-cannon-e-attack-strip.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-hit-strip.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-death-strip.png; actual CYCLES render, visual review pending.
