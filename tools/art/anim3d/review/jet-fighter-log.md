@@ -33,3 +33,11 @@ g: 16 frames at 256/64 from 256px CYCLES/CPU, 12 samples.
 Round 1 final CPU checks PASS: input/build hashes; geometry/clip audit; 40-frame 160px trimmed atlas 178178 bytes at q85; exact alpha and death hold; Python AST (8) and shell syntax; H.264/yuv420p 1600x348, 240 frames / 8 seconds. Native256/64 sheets inspected.
 Visual verdict: same unit at64, below painting at256; intake/canopy/wing root approximate, far-wing off-angle form/pigment and crash deformation need next round. No PASS. Native512 GPU masters pending lead gpu.sh, not claimed from CPU.
 Commit attempted with required gpt-6-astra co-author footer; sandbox denied .git/worktrees/lane-6/index.lock. Changes left for runner commit; no push. Already-fetched origin/master has zero commits ahead of HEAD. No unit feedback file was present at final check.
+b: 3 frames at 256/64 from 512px CYCLES/GPU, 96 samples.
+c: 1 frames at 256/64 from 512px CYCLES/GPU, 96 samples.
+d: 4 frames at 256/64 from 512px CYCLES/GPU, 96 samples.
+e-idle: 8 frames at 256/64 from 512px CYCLES/GPU, 96 samples.
+e-move: 8 frames at 256/64 from 512px CYCLES/GPU, 96 samples.
+e-attack: 10 frames at 256/64 from 512px CYCLES/GPU, 96 samples.
+e-hit: 4 frames at 256/64 from 512px CYCLES/GPU, 96 samples.
+e-death: 10 frames at 256/64 from 512px CYCLES/GPU, 96 samples.

@@ -107,3 +107,32 @@
 - Posted e-attack review (CPU, 256 px).
 - Posted e-hit review (CPU, 256 px).
 - Posted e-death review (CPU, 256 px).
+- Built MPFB anatomical body, 53-bone rig, olive field jacket, netted helmet, webbing, rifle and raised grenade; plain.blend saved.
+- Posted b-plain review (CPU, 256 px).
+- Baked real 256px Cycles AO and Pointiness curvature for helmet and jacket; physical recess grime and edge roughness applied.
+- Finished-surface camera projection with camera-only pigment; generated hidden fills retained.
+- Posted c-textured-lit review (CPU, 256 px).
+- Built MPFB anatomical body, 53-bone rig, olive field jacket, netted helmet, webbing, rifle and raised grenade; plain.blend saved.
+- Posted b-plain review (CPU, 256 px).
+- Baked real 256px Cycles AO and Pointiness curvature for helmet and jacket; physical recess grime and edge roughness applied.
+- Finished-surface camera projection with camera-only pigment; generated hidden fills retained.
+- Posted c-textured-lit review (CPU, 256 px).
+- Retargeted CC0 / weapon-layer and saved idle action (8 output frames).
+- Retargeted CC0 / weapon-layer and saved move action (8 output frames).
+- Retargeted CC0 / weapon-layer and saved attack action (10 output frames).
+- Retargeted CC0 / weapon-layer and saved hit action (4 output frames).
+- Retargeted CC0 / weapon-layer and saved death action (10 output frames).
+- Posted d-rig-poses review (CPU, 256 px).
+- Posted e-idle review (CPU, 256 px).
+- Round-2 modeling: replaced separate upper/lower sleeve tubes and trouser sections with connected thick folded meshes, inverse-bound to both joint bones; narrowed supporting arm/helmet/backpack and fitted rifle/boot volumes. Found and fixed a suffix-matching bug that displaced right-side bootlaces; checked ray/evaluated-mesh evidence, not just screenshot guesses.
+- Round-2 materials/camera/light: reused pinned generated Medjay skin for unseen face/hands; covered anatomy now has uniform pigment. Reduced cloth sheen and blue rim strength. Kept frozen painting UVs, source-alpha/ray visibility masks, real AO/Pointiness bakes and one bounded histogram grade. Grain/live AO colors the real stone; only the feet-free lower rim (below y226/256) receives source pigment, never painted feet or alpha-cut geometry.
+- Round-2 motion: retained licensed Quaternius rest/roll retarget and untouched foot rotations; blended death entry from the guard and restored hit to the guard at its final sample. Continuous knee/elbow cloth addresses previously open joints; remaining deformation must be reviewed in the new strips.
+- Round-2 handoff: gpu.sh now tees its full log to the driver as well as the external master log, defaults to ROUND=2, clears only its stale completion receipt, and checks current script/source/master hashes before animation/packing/GPU verification. Original genuine 512px GPU output preserved in driver-r1-gpu/512; new 512px output awaits the lead.
+- Posted e-move review (CPU, 256 px).
+- Posted e-attack review (CPU, 256 px).
+- Posted e-hit review (CPU, 256 px).
+- Posted e-death review (CPU, 256 px).
+- Final round-2 CPU checks passed: build/projection/AO/Pointiness, all five clips, 46 main-stage 256px/12-sample renders and sixteen 160px/12-sample feet views; structural audit includes continuous weighted .006m cloth. Walk toe angle max 12.39deg, four planted ankle intervals max virtual-ground drift 2.70948e-7m, minimum sole Z .086m above .085m contact plane.
+- Round-2 atlas pack and independent decode validation passed: 163336 bytes, quality90, 789x740 packed pixels, trimmed160px cells, all40 frames, lossless alpha/offsets/bounds/motion/current hashes/held death. CPU preview, not GPU approval. Eight-second 240-frame 1600x348 H.264/yuv420p round2 MP4 verified and decoded frames inspected. Python/shell syntax and whitespace pass; negative checks reject changed build input and CPU-as-GPU receipt.
+- Final honest round-2 verdict: identifiable as the same infantry at64px; at256px stone/joint continuity improved but supporting shoulder/webbing/pouch contours, forward-facing right boot, thin rifle, exposed unprojected material and awkward death remain short of the painting. All interim sheets and five animated WebPs updated immediately. No infantry-specific feedback file arrived. No PASS. Lead must run ROUND=2 tools/art/anim3d/units/infantry/gpu.sh for fresh GPU512/256 masters and review.
+- Final git check: origin/master is already an ancestor; no merge needed and no fetch performed. Commit attempted with required Co-Authored-By trailer, but sandbox denied .git/worktrees/lane-18/index.lock. Changes remain uncommitted for the runner. No push/PR/master merge. No docs/learnings edits.
