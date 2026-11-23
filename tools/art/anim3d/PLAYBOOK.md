@@ -232,3 +232,75 @@ For CPU delivery verification run `ROUND=2 "$ANIM_ROOT/venv/bin/python"
 cannot pass the GPU provenance gate. This remains an unwired art candidate.
 
 Round-two CPU evidence: all forty samples at Cycles CPU256/8, **188,488 bytes at Q85**, 1156x736 atlas, lossless alpha and exact decoded death hold. Geometry/finished-surface audit, independent delivery/video checks, syntax, missing-input logging and CPU-master GPU rejection pass. The movie is H.264/yuv420p,1600x348,240frames/eight seconds. Evidence remains in `masters/cataphract/round2-cpu`. At256 the far arm, reins, horse contours and underside finish still differ from the painting; at64 identity reads but silhouette is not equivalent. **No PASS marker; host GPU512/64 and visual acceptance remain outstanding.**
+
+### Cataphract driver round 2 follow-up
+
+The supplied r1 GPU transcript failed trying to open an absent lane-4 animation
+script. The supplied c/f/e images were CPU evidence. The no-argument `gpu.sh` now
+anchors to its own checkout, passes absolute script paths, records that checkout
+and branch, checks every helper before launching Blender, and validates the
+licensed input hashes before accepting Metal. Use it from this unit's current
+checkout; a switched branch with missing scripts fails explicitly.
+
+`legs.py` fits continuous lower-leg sections while preserving complete mesh depth
+and native skin weights. Local per-hoof warps had pinched the fetlocks. Foot
+diagnostics then revealed that visual fitting had changed support heights:
+`contacts.py` calibrates the rest soles and applies smooth vertical corrective
+shapes over the native source lift. Horizontal motion and foot rotations remain
+from the Quaternius rig. This is a support adaptation, not a claim that projected
+mesh fitting preserves physical motion automatically. The independent audit
+checks evaluated soles against the support plane; it does not certify no sliding.
+
+`reins.py` replaces the old torso-parented reins with closed leather tubes. Each
+end follows actual evaluated bridle/hand vertices, with slack between them. The
+absolute shape keys contain the real animated geometry; there are no handlers or
+asset scripts requiring auto-execution. The audit checks both endpoint gaps for
+every pose, alongside the existing stationary base/camera and loop checks.
+
+Open motion is the default: native CC0 Quaternius horse actions, plus CC0 Universal
+Animation Library Sitting_Idle_Loop, Hit_Chest and Death01 for rider torso/head
+(and arms during death),
+reference-pose and bone-roll compensated in `rider_motion.py`. The saddle constrains
+pelvis and legs; the lance attack remains authored. Source/licence hashes are
+checked before importing, with full attribution in unit `SOURCES.md`. Generated
+Medjay skin and Tagmatic Soldier steel, crimson wool and leather supplement the
+mounted-family fills on unseen surfaces. Prompts/hashes remain in this unit.
+Source-color camera projection, real bevels/folds/straps, product lighting and one
+shared rest-histogram grade still form the finish; the cream stone pigment now
+includes actual AO contact shading and fine grain.
+
+Every mounted round must inspect the whole move cycle in actual top and front
+views. `render.sh feet` produces an explicitly cut-away lower-leg diagnostic,
+`cataphract-g-feet-check.png`, and a manifest of evaluated sole samples. CPU
+defaults are 192px/4 samples; GPU handoff uses 512px/64 and verifies all sixteen
+images against the current move clip. Both views use the original foot axes;
+never fix foot direction after retargeting. Review contact, travel direction and
+sliding in addition to the five beauty strips/video. GPU verification includes
+the foot sheet and refuses CPU evidence. The GPU command remains:
+
+```sh
+ROUND=2 tools/art/anim3d/units/cataphract/gpu.sh
+```
+
+The script produces all b/c/d/e masters and reviews, the top/front foot review,
+trimmed 160px atlas, validation receipt and eight-second five-clip H.264 video.
+Only visual acceptance after that GPU pass can create `cataphract-PASS`.
+
+The lance thrust slides the rigid shaft through the grip so the point reaches
+beyond the muzzle. Released death fingers open, and a nearest-surface contact
+adaptation settles the source-driven arms onto the horse instead of leaving a
+raised empty fist. These are mounted equipment/contact adaptations, not a full
+cloth or collision simulation.
+
+Current driver-round CPU evidence: **193,924 bytes at Q85**, all forty trimmed
+160px frames, exact decoded terminal death hold and lossless alpha; all b/c/d/e
+renders at CPU256/8 and sixteen actual foot views at CPU192/4. The independent
+geometry audit checks all forty poses (lowest sole 0.108m above a 0.100m base top;
+rein endpoint gap below 0.000001m). Atlas/source hashes, gutters, offsets, motion,
+H.264/yuv420p1600x348/240frames/eight seconds, syntax and input hashes pass.
+Wrong-cwd/missing-master preflight and rejection of CPU evidence by GPU verification
+were exercised. Review/checkpoint: `masters/cataphract/driver-round2-cpu/`.
+At256 the arm/neck proportions, saddle/boots, base perspective and death undersides
+still miss the painting; at64 the identity reads but the silhouette is different.
+No complete sliding/intersection certification and no GPU512/64 result yet.
+**No PASS marker.**

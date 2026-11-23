@@ -5,6 +5,8 @@ unit=tools/art/anim3d/units/cataphract
 case "${1:-all}" in
  prepare) "$ANIM_ROOT/venv/bin/python" "$unit/prepare.py" ;;
  build|finish|bake|animate|audit) blender -b --disable-autoexec --python-exit-code 1 --python "$unit/$1.py" ;;
+ feet) blender -b --disable-autoexec --python-exit-code 1 --python "$unit/feet.py"
+       "$ANIM_ROOT/venv/bin/python" "$unit/feet_review.py" ;;
  pack) "$ANIM_ROOT/venv/bin/python" "$unit/deliver.py" ;;
  *) blender -b --disable-autoexec --python-exit-code 1 --python "$unit/render.py" -- "${1:-all}" ;;
 esac

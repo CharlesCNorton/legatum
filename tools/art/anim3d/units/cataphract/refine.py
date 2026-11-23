@@ -56,6 +56,14 @@ fit_objects(rider_objects,[((145,101),(138,101)),((131,93),(130,93)),((100,87),(
 # The crest of the neck is high and the throat is too hollow. These edits include
 # articulated scale panels, mane curves, tack and anatomy, preserving their depth.
 fit_objects(horse_objects,[((180,80),(182,88)),((159,105),(163,108)),((173,128),(175,131)),((190,106),(194,109))],12)
+# Second registration pass from the native-size split review. Preserve depth and
+# skin weights; fit the neck crest, chest and planted legs before freezing UVs.
+fit_objects(horse_objects,[((183,76),(182,82)),((177,91),(178,95)),((204,114),(197,114)),((168,131),(162,133))],9)
+fit_objects(rider_objects,[((103,92),(98,92)),((118,102),(111,101)),((140,109),(135,109)),((111,161),(115,165))],8)
+fit_objects(rider_objects,[((145,121),(138,115)),((90,133),(86,133)),((91,156),(87,156))],9)
+# Fit complete lower-leg volumes by their original anatomical weights. A tiny
+# local RBF around each hoof pinches the fetlock; use a continuous section field.
+exec(compile(Path(__file__).with_name('legs.py').read_text(), 'lower leg sculpture', 'exec'))
 # Base: preserve one circular horizontal disc, sharpen the small rim bevel and
 # move the footprint up to the reference. Contact height remains unchanged.
 base.scale.x*=.98;base.scale.y*=.98
@@ -76,3 +84,10 @@ ramp=n.new('ShaderNodeValToRGB');ramp.color_ramp.elements[0].position=.1;ramp.co
 em=n.new('ShaderNodeEmission');l.new(ramp.outputs[0],em.inputs['Color'])
 ray=n.new('ShaderNodeLightPath');fac=n.new('ShaderNodeMath');fac.operation='MULTIPLY';fac.inputs[1].default_value=.72;l.new(ray.outputs['Is Camera Ray'],fac.inputs[0])
 blend=n.new('ShaderNodeMixShader');l.new(fac.outputs[0],blend.inputs[0]);l.new(s.outputs[0],blend.inputs[1]);l.new(em.outputs[0],blend.inputs[2]);l.new(blend.outputs[0],n.get('Material Output').inputs['Surface'])
+# Stone pigment keeps live contact occlusion and fine low-amplitude grain even
+# on the camera branch, so the disc no longer looks like a flat cardboard oval.
+noise=n.new('ShaderNodeTexNoise');noise.inputs['Scale'].default_value=95;noise.inputs['Detail'].default_value=2
+grain=n.new('ShaderNodeMapRange');grain.inputs['To Min'].default_value=.93;grain.inputs['To Max'].default_value=1.02;l.new(noise.outputs['Fac'],grain.inputs['Value'])
+occlusion=n.new('ShaderNodeAmbientOcclusion');occlusion.inputs['Distance'].default_value=.17
+pigment=n.new('ShaderNodeMixRGB');pigment.blend_type='MULTIPLY';pigment.inputs[0].default_value=.7;l.new(ramp.outputs[0],pigment.inputs[1]);l.new(occlusion.outputs['Color'],pigment.inputs[2])
+grained=n.new('ShaderNodeMixRGB');grained.blend_type='MULTIPLY';grained.inputs[0].default_value=1;l.new(pigment.outputs[0],grained.inputs[1]);l.new(grain.outputs[0],grained.inputs[2]);l.new(grained.outputs[0],em.inputs['Color'])

@@ -23,6 +23,7 @@ world=rig.matrix_world.copy();world.translation+=right*(-.12)+up*.22;rig.matrix_
 bpy.context.view_layer.update()
 # Fit the long lance within the source painting's twelve-pixel headroom.
 shaft=bpy.data.objects['Spear ash shaft']
+shaft.data.splines[0].points[0].co.z-=.20
 shaft.data.splines[0].points[-1].co.z-=.22
 for v in bpy.data.objects['Iron spear blade'].data.vertices:v.co.z-=.22
 base=bpy.data.objects['Stationary cream stone'];base.scale.x=base.scale.y=.90;base.location-=right*.12
@@ -72,11 +73,18 @@ for o in horse_objects:
  o.data.update()
 bpy.context.view_layer.update()
 exec(compile(Path('tools/art/anim3d/units/cataphract/refine.py').read_text(), 'cataphract finished surfaces', 'exec'))
+sys.path.insert(0,str(Path(__file__).resolve().parent))
+from reins import build_reins
+from contacts import fit_rest_contacts
+fit_rest_contacts()
+build_reins()
 # Save true-geometry stage before projection, with neutral clay material override.
 bpy.ops.wm.save_as_mainfile(filepath=str(M/'plain.blend'))
 painting=bpy.data.images.load(str(A/'projection.png'),check_existing=True)
 paint_pixels=list(painting.pixels);paint_width=painting.size[0];paint_height=painting.size[1]
-fills={k:bpy.data.images.load(str(A/f'fill-{k}.png'),check_existing=True) for k in ['coat','linen','bronze','hair']}
+fills={k:bpy.data.images.load(str(A/f'fill-{k}.png'),check_existing=True) for k in ['coat','linen','bronze','hair','skin','steel','cloth','leather']}
+cloak=bpy.data.objects['GEO-heavy rust riding cloak']
+cloak.data.materials[0]=cloak.data.materials[0].copy();cloak.data.materials[0].name='Cataphract rust wool'
 # Add multiscale material finish, cavity AO and geometry-driven polished edges.
 for m in list(bpy.data.materials):
  if not m.use_nodes:continue
@@ -91,9 +99,13 @@ for m in list(bpy.data.materials):
  l.new(tex.outputs['Fac'],rough.inputs['Value']);l.new(rough.outputs[0],s.inputs['Roughness'])
  if 'stone' in m.name.lower():continue
  kind='bronze' if metal else 'hair' if any(k in m.name.lower() for k in ['hair','mane','dark','horn']) else 'linen' if 'linen' in m.name.lower() else 'coat'
+ if metal and any(k in m.name.lower() for k in ['hammered','iron']):kind='steel'
+ elif 'skin' in m.name.lower():kind='skin'
+ elif 'wool' in m.name.lower():kind='cloth';s.inputs['Sheen Weight'].default_value=.22
+ elif 'leather' in m.name.lower():kind='leather'
  fill=n.new('ShaderNodeTexImage');fill.image=fills[kind];fill.projection='BOX';fill.projection_blend=.3
  tc=n.new('ShaderNodeTexCoord');l.new(tc.outputs['Generated'],fill.inputs['Vector'])
- mix=n.new('ShaderNodeMixRGB');mix.inputs[0].default_value=.22;mix.inputs[1].default_value=s.inputs['Base Color'].default_value;l.new(fill.outputs['Color'],mix.inputs[2]);l.new(mix.outputs[0],s.inputs['Base Color'])
+ mix=n.new('ShaderNodeMixRGB');mix.inputs[0].default_value=.45 if kind in ['skin','steel','cloth','leather'] else .22;mix.inputs[1].default_value=s.inputs['Base Color'].default_value;l.new(fill.outputs['Color'],mix.inputs[2]);l.new(mix.outputs[0],s.inputs['Base Color'])
  ao=n.new('ShaderNodeAmbientOcclusion');ao.inputs['Distance'].default_value=.08;ao.inputs['Color'].default_value=(1,1,1,1)
  cavity=n.new('ShaderNodeMixRGB');cavity.blend_type='MULTIPLY';cavity.inputs[0].default_value=.25;l.new(mix.outputs[0],cavity.inputs[1]);l.new(ao.outputs['Color'],cavity.inputs[2]);l.new(cavity.outputs[0],s.inputs['Base Color'])
 # Project reference only where actual visible geometry faces this rest camera.
@@ -116,7 +128,7 @@ for o in list(sc.objects):
   px=max(0,min(paint_width-1,int(q.x*paint_width)));py=max(0,min(paint_height-1,int(q.y*paint_height)))
   color=paint_pixels[4*(py*paint_width+px):4*(py*paint_width+px)+3]
   if o.name=='Horse' and q.y<.19 and min(color)>.35:visible=False
-  weights.append(facing if visible else 0.)
+  weights.append(facing if visible and 'rein_anchors' not in o else 0.)
  ev.to_mesh_clear()
  for mod,state in mods:mod.show_viewport=state
  uv=o.data.uv_layers.new(name='Painting projection');att=o.data.color_attributes.new(name='Projection incidence',type='FLOAT_COLOR',domain='CORNER')

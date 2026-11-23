@@ -16,8 +16,15 @@
     "assets/cataphract/projection.png": "26f737d263cd6e5f24c3ee38f69d8c868b1061f4c4549e71487bfe67e49bbc39",
     "assets/horseman/Horse.glb": "fbddb2c97179eca896ec69c985cd9cc74540484510776c400df64e088e9f2414",
     "assets/cataphract/fill-hair.png": "f472a44cdc7ee21159636cfb3ab6b7ceaacae420510632164307f0b67245041a",
+    "assets/cataphract/fill-cloth.png": "7894f8bfc54ba17765bb42f9aa006d4c916af6c2eed8e308f55f15c6d37d721a",
     "assets/cataphract/fill-coat.png": "202834d89526e95d00881d507d254c8f597199ccf1ec56ef8722e21f3a438ede",
+    "assets/cataphract/fill-leather.png": "8a14b97d8400525265acb111c194aad5e42491408e42ece3b9a85a756acfc62e",
     "assets/cataphract/fill-linen.png": "c71ed83e71404d76f318e2410e111c1ec6ecf00864d9730f13514f2f5c932da3",
-    "assets/cataphract/fill-bronze.png": "20233d35d680a1ee510719befd841db3899371d0e9f5821b99400162a8c39720"
+    "assets/cataphract/fill-skin.png": "e9699dccd35965546bb5973ecb349cd695ab01bc7d06528b6aaee48b7070d9a9",
+    "assets/cataphract/fill-steel.png": "5124ace2b1e4be82ad201fa95937ecd1edff0e29f2965327293a927506208665",
+    "assets/cataphract/fill-bronze.png": "20233d35d680a1ee510719befd841db3899371d0e9f5821b99400162a8c39720",
+    "assets/quaternius-ual/AnimationLibrary_Godot_Standard.gltf": "0ff075c7ad6855c5c2c37a171592ee8f0d6ab2f58259e2be77a9b63dd8027765",
+    "assets/quaternius-ual/AnimationLibrary_Godot_Standard.bin": "6e65377d81558333c4093dbb144a48fd19019343d82b1a3a7992a98ec0e0543c",
+    "assets/quaternius-ual/LICENSE": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499"
   }
 }

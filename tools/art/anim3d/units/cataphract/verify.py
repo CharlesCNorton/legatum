@@ -12,7 +12,13 @@ assert report['atlas_sha256']==sha(out) and report['master_sha256']==sha(M/'cata
 assert report['grade_sha256']==sha(M/'grade.json')
 assert meta['frame']['w']==meta['frame']['h']==160 and meta['atlas']=={'w':atlas.width,'h':atlas.height}
 assert list(meta['clips'])==['idle','move','attack','hit','death']
+feet=json.loads((M/'feet/manifest.json').read_text())
+assert feet['clip_sha256']==sha(M/'clips/move.blend') and feet['frames']==8
+assert Image.open(Q/'cataphract-g-feet-check.png').size==(1536,440)
+for view in ['top','front']:
+ for i in range(8):assert Image.open(M/f'feet/{view}/{i:03}.png').size==(feet['resolution'],feet['resolution'])
 if '--gpu' in sys.argv:
+ assert (feet['engine'],feet['device'],feet['resolution'],feet['samples'])==('CYCLES','GPU',512,64),('feet','GPU512/64 required')
  for stage,file in [('b-plain',M/'plain.blend'),('c-textured-lit',M/'cataphract.blend'),('d-rig-poses',M/'clips/attack.blend')]+[(f'e-{n}',M/f'clips/{n}.blend') for n in meta['clips']]:
   s=json.loads((M/f'renders/{stage}/manifest.json').read_text())
   assert (s['engine'],s['device'],s['resolution'],s['samples'])==('CYCLES','GPU',512,64),(stage,'GPU512/64 required')
