@@ -48,3 +48,4 @@
 - Baked 256px AO and curvature maps on GEO-Cab full shell, GEO-Hood engine enclosure, GEO-Launcher near side panel
 - Published painted rest pose and 50/50 comparison; real AO shader, micrograin, edge geometry and hidden-surface fill.
 - Published e-idle: 8 actual rendered frames, 10 fps; GPU 512px 64 samples.
+- Published e-move: 8 actual rendered frames, 12 fps; GPU 512px 64 samples.
