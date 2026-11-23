@@ -4,3 +4,7 @@
 - Posted b-plain review (CPU, 256 px).
 - Finished-surface camera projection with camera-only pigment; generated hidden fills retained.
 - Posted c-textured-lit review (CPU, 256 px).
+- Built MPFB anatomical body, 53-bone rig, olive field jacket, netted helmet, webbing, rifle and raised grenade; plain.blend saved.
+- Posted b-plain review (CPU, 256 px).
+- Finished-surface camera projection with camera-only pigment; generated hidden fills retained.
+- Posted c-textured-lit review (CPU, 256 px).

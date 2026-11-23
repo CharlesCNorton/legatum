@@ -18,3 +18,15 @@
 - Emitted panzer-e-hit-strip.png from actual e-hit renders; visual review pending.
 - Emitted panzer-e-death-strip.png from actual e-death renders; visual review pending.
 - Emitted panzer-g-feet-check.png from actual g renders; visual review pending.
+- Emitted panzer-c-textured-lit.png from actual c renders; visual review pending.
+- Emitted panzer-c-details.png from actual details renders; visual review pending.
+- Emitted panzer-d-rig-poses.png from actual d renders; visual review pending.
+- Emitted panzer-e-idle-strip.png from actual e-idle renders; visual review pending.
+- Emitted panzer-e-move-strip.png from actual e-move renders; visual review pending.
+- Emitted panzer-e-attack-strip.png from actual e-attack renders; visual review pending.
+- Inspected all five CPU strips and actual decoded H.264 samples. Found visible wheel-paint smearing in move: source wheel centres did not match mesh axles. Excluded every rotating wheel descendant from source projection, retaining real hub/bolt/metal detail; rebuilding all dependent previews and delivery.
+- First death preview was too subtle; added keyed vehicle-only soot and a real translucent-shell plume. Base pigment stays clean; final two samples hold exactly. Smoke remains a rough low-sample preview, not final craft approval.
+- Top/front move strip uses an explicit clay override to inspect mechanics without projected pigment. First bounds audit incorrectly tested bounding-box corners outside a circular base; corrected it to test actual mesh vertices. All five clips then passed bounds/nonzero-scale/base/source checks.
+- Emitted panzer-e-hit-strip.png from actual e-hit renders; visual review pending.
+- Emitted panzer-e-death-strip.png from actual e-death renders; visual review pending.
+- Emitted panzer-g-feet-check.png from actual g renders; visual review pending.
