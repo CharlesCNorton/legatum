@@ -223,3 +223,67 @@ padding, motion, held death, and all source hashes. The geometry audit checks
 stationary base, nondegenerate scales, base penetration and pilum centreline
 intersections with rigid armour/helmet/shield. Skin/cloth intersections and grip
 appearance still require visual review.
+
+
+### Legionary round 2: shoulder fit, finished surfaces and complete handoff
+
+The old shoulder caps were attached to the upper-arm bones in the A-pose. Lowering
+those arms rotated the caps upright. They now hang from the cuirass/spine segment,
+with the crown lowered 11 cm; the body-derived upper cuirass stops below the neck.
+This is a rigid shoulder yoke, not a simulated articulated shoulder mechanism.
+
+Before freezing projection UVs, `paint.py` freezes MPFB macro shape keys on its
+working copy and applies static thickness/bevel/subdivision on rigid equipment.
+The original 19,158 anatomy vertices, weights and 53 bones remain; deforming skin
+and tunic retain their modifiers. Curved straps/rims become real closed meshes;
+the pilum remains a curve for the existing centreline collision audit. The clean
+morphable input remains `legionary-plain.blend`. Repaint always reloads that input.
+
+Camera-visible source pigment now preserves painted illumination, with 4% physical
+response at fully covered, front-facing samples. Non-camera rays and uncovered
+surfaces retain the original physical materials, generated fills and actual
+AO/curvature bakes. Standard/None avoids compressing source paint a second time;
+the three product lights retain their ratios at 55% energy. This display-transform
+choice is specific to painted illumination, not a photographic rendering preset.
+One automatic rest histogram LUT is still frozen for all clips. Geometry and
+source-object registration remain approximate; face/hand and motion seams need
+visual review. The camera is unchanged, not claimed to match the painting exactly.
+
+The stone uses camera-only top/rim pigment over physical shading and grain; no
+painted feet or static source shadows are projected onto it. Sampled 512/CPU8
+preview top is RGB 248.8/210.5/163.1 versus painting 250.6/211.4/163.6. Its rim
+is 235.2/183.8/128.3 versus 236.2/188.8/130.7. These local samples do not prove
+whole-image parity. Current silhouette overlap improved from .713 to .745.
+
+The required executable, no-argument host entry point is now:
+
+```sh
+ROUND=2 tools/art/anim3d/units/legionary/gpu.sh
+```
+
+It regenerates all clips from the finished saved master, renders b/c/d and all
+five clips with Cycles GPU at native 512 px (64 samples by default), publishes
+256 px gallery copies, details and rest crossfade, runs the geometry audit,
+rejects mixed/stale/CPU master provenance, packs and validates the trimmed atlas,
+and writes `legionary-round${ROUND}.mp4`. `ROUND` is supplied by the driver.
+The PATH Blender gate remains mandatory; a missing Metal device fails explicitly.
+The unit transcript is `gpu-logs-legionary-r${ROUND}.log`; the status file records
+running, failed command/exit, or technical completion pending visual acceptance.
+No script creates a PASS marker automatically.
+
+The five-row JSON contract is retained. Reduction now uses premultiplied bicubic
+RGBA, preserving all 8-bit alpha instead of thresholding weak pixels. Exact
+identical frames share a rectangle within their row without removing a playback
+sample. Validation compares every reconstructed alpha byte with the logical
+source cell and requires identical decoded held-death frames. The movie uses
+those actual decoded rectangles and offsets: five clips side by side at 2x on
+cream, 1600x348 H.264/yuv420p, 240 frames, eight seconds, verified by ffprobe.
+Prior round evidence is retained outside git in `masters/legionary/round1-cpu/`.
+
+The first richer projection exposed left fingers physically crossing the shield
+face. Camera-ray queries identified the anatomy rather than a texture blemish.
+The left wrist now sits 8 cm farther behind the shield, consistently in the rest
+pose and all authored guards; the scutum keeps its original rest world transform.
+The audit now checks actual skin/scutum triangle intersections in held poses as
+well as the existing pilum centreline/kit test. It does not claim a general
+skin/cloth solver, and the released shield/body contact in death still needs review.

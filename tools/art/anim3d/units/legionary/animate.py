@@ -22,15 +22,15 @@ for clip,(count,fps) in CLIPS.items():
         for o in controls:o.matrix_basis=control_basis[o.name]
         hem.value=0;bpy.context.view_layer.update()
     def aim(name,direction):
-        p=rig.pose.bones[name];q=p.bone.matrix_local.to_quaternion();delta=(q@Vector((0,1,0))).rotation_difference(Vector(direction).normalized());mat=(delta@q).to_matrix().to_4x4();mat.translation=p.head;p.matrix=mat;bpy.context.view_layer.update()
+        p=rig.pose.bones[name];q=p.bone.matrix_local.to_quaternion();delta=(q @ Vector((0,1,0))).rotation_difference(Vector(direction).normalized());mat=(delta @ q).to_matrix().to_4x4();mat.translation=p.head;p.matrix=mat;bpy.context.view_layer.update()
     def limb(u,l,target,pole):
         a=rig.pose.bones[u].head.copy();v=Vector(target)-a;d=min(v.length,rig.data.bones[u].length+rig.data.bones[l].length-.0001);v.normalize();l1=rig.data.bones[u].length;l2=rig.data.bones[l].length;along=(l1*l1-l2*l2+d*d)/(2*d)
         side=Vector(pole)-a;side=(side-v*side.dot(v)).normalized();elbow=a+along*v+max(0,l1*l1-along*along)**.5*side;aim(u,elbow-a);aim(l,Vector(target)-elbow)
     def turn(name,axis,angle):
-        p=rig.pose.bones[name];mat=p.matrix.copy();pos=mat.translation.copy();mat=Matrix.Rotation(angle,4,axis)@mat;mat.translation=pos;p.matrix=mat;bpy.context.view_layer.update()
+        p=rig.pose.bones[name];mat=p.matrix.copy();pos=mat.translation.copy();mat=Matrix.Rotation(angle,4,axis) @ mat;mat.translation=pos;p.matrix=mat;bpy.context.view_layer.update()
     def guard(dy=0,dz=0):
         limb('upperarm_r','lowerarm_r',(-.43,-.19+dy,1.28+dz),(-.38,-.12,1.02))
-        limb('upperarm_l','lowerarm_l',(.30,-.32+dy,1.10+dz),(.44,-.02,1.12))
+        limb('upperarm_l','lowerarm_l',(.30,-.24+dy,1.10+dz),(.44,-.02,1.12))
         for side in ['r','l']:aim('hand_'+side,(0,-.025,.09))
     def floor(o):
         dg=bpy.context.evaluated_depsgraph_get();low=100
@@ -38,7 +38,7 @@ for clip,(count,fps) in CLIPS.items():
         for child in children:
             if child.type not in ['MESH','CURVE']:continue
             ev=child.evaluated_get(dg);mesh=ev.to_mesh()
-            low=min(low,min((ev.matrix_world@v.co).z for v in mesh.vertices));ev.to_mesh_clear()
+            low=min(low,min((ev.matrix_world @ v.co).z for v in mesh.vertices));ev.to_mesh_clear()
         return low
     def pose(t):
         reset();phase=2*math.pi*t
@@ -57,7 +57,7 @@ for clip,(count,fps) in CLIPS.items():
             for side,sg in [('l',1),('r',-1)]:
                 limb('thigh_'+side,'calf_'+side,(sg*.17,(-.06 if side=='r' else .035)+.075*strength,.082+.035*max(0,strength)),(sg*.25,-.37,.48))
             guard(-.075*strength,.018*strength)
-            limb('upperarm_l','lowerarm_l',(.30,-.32-.12*strength,1.10+.035*strength),(.44,-.06,1.12));aim('hand_l',(0,-.025,.09));hem.value=max(0,strength)*.8
+            limb('upperarm_l','lowerarm_l',(.30,-.24-.12*strength,1.10+.035*strength),(.44,-.06,1.12));aim('hand_l',(0,-.025+.085*max(0,strength),.09));hem.value=max(0,strength)*.8
         elif clip=='hit':
             a=[0,1,.45,0][min(3,round(t*3))];turn('spine_03','X',-.17*a);turn('head','X',-.12*a);rig.location.y=.025*a;guard(.045*a,.015*a);hem.value=.65*a
         elif clip=='death':
@@ -66,7 +66,7 @@ for clip,(count,fps) in CLIPS.items():
                 x=sg*.17*(1-s)+(-.10+sg*.06)*s;y=(.035 if side=='l' else -.06)*(1-s)+sg*.10*s
                 limb('thigh_'+side,'calf_'+side,(x,y,.082*(1-s)+.88*s),(-.4,-.3,.55+.55*s))
             limb('upperarm_r','lowerarm_r',(-.43+.46*s,-.19+.08*s,1.28-.40*s),(-.35,-.25,.85))
-            limb('upperarm_l','lowerarm_l',(.30+.06*s,-.32+.05*s,1.10-.30*s),(.4,-.15,.9))
+            limb('upperarm_l','lowerarm_l',(.30+.06*s,-.24+.05*s,1.10-.30*s),(.4,-.15,.9))
             for side in ['r','l']:aim('hand_'+side,(0,-.025,.09))
             # Release before the collapse: a physical weapon falls beside the stone.
             release=max(0,min(1,(t-.04)/.50));release=release*release*(3-2*release)

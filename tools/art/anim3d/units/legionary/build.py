@@ -155,7 +155,7 @@ for j in range(7):
     for x in [-.045,.045]:
         attach(sphere('GEO-lorica brass fastener',(x,-ry-.010,z+.024),(.008,.005,.008),gold),'spine_03')
         attach(curve('GEO-lorica leather hinge',[(x,-ry-.005,z+.012),(x,-ry-.005,z+.040)],.010,leather),'spine_03')
-fitted_shell('GEO-lorica upper cuirass',lambda v: 1.37<v.z<1.60 and abs(v.x)<.255,iron,.018)
+fitted_shell('GEO-lorica upper cuirass',lambda v: 1.32<v.z<1.46 and abs(v.x)<.255,iron,.018)
 fitted_shell('GEO-red tunic sleeves',lambda v: 1.32<v.z<1.61 and .18<abs(v.x)<.38,red,.012)
 # Layered shoulder lames: thick curved plates, rolled edges, distinct overlaps.
 for sg,side in [(-1,'r'),(1,'l')]:
@@ -163,10 +163,12 @@ for sg,side in [(-1,'r'),(1,'l')]:
         x=sg*(.18+.035*j);vs=[]
         for k in range(3):
             for i in range(17):
-                a=-1.25+2.5*i/16;vs.append((x+sg*k*.017,-.155*sin(a),1.56+.100*cos(a)-j*.023))
+                a=-1.25+2.5*i/16;vs.append((x+sg*k*.017,-.155*sin(a),1.45+.100*cos(a)-j*.023))
         fs=[(k*17+i,k*17+i+1,(k+1)*17+i+1,(k+1)*17+i) for k in range(2) for i in range(16)]
-        o=solid(mesh('GEO-shoulder articulated lame '+side,vs,fs,iron),.007);bevel(o,.003);attach(o,'upperarm_'+side)
-        attach(curve('GEO-shoulder rolled edge '+side,vs[-17:],.003,iron),'upperarm_'+side)
+        # The shoulder yoke hangs from the cuirass, not the rotating humerus.
+        # Binding this rest-space cap to the A-pose upper arm flipped it upright.
+        o=solid(mesh('GEO-shoulder articulated lame '+side,vs,fs,iron),.007);bevel(o,.003);attach(o,'spine_03')
+        attach(curve('GEO-shoulder rolled edge '+side,vs[-17:],.003,iron),'spine_03')
 # Folded red tunic skirt, continuous volume with thickness and flared hem.
 vs=[];fs=[]; n=80
 for j in range(9):
@@ -231,14 +233,15 @@ rig.location.z=.085
 limb('thigh_r','calf_r',(-.16,-.06,.082),(-.22,-.31,.48))
 limb('thigh_l','calf_l',(.18,.035,.082),(.23,-.28,.48))
 limb('upperarm_r','lowerarm_r',(-.43,-.19,1.28),(-.38,-.12,1.02))
-limb('upperarm_l','lowerarm_l',(.30,-.32,1.10),(.44,-.02,1.12))
+# The fingers need clearance behind the convex shell, not only a wrist behind it.
+limb('upperarm_l','lowerarm_l',(.30,-.24,1.10),(.44,-.02,1.12))
 for side in ['r','l']:
     aim_bone('hand_'+side,(0,-.025,.09))
     for digit in ['index','middle','ring','pinky']:
         for k in range(1,4):
             p=rig.pose.bones[f'{digit}_{k:02d}_{side}'];p.rotation_mode='XYZ';p.rotation_euler.x=1.05
 bpy.context.view_layer.update()
-grip=rig.matrix_world@rig.pose.bones['hand_r'].head+Vector((0,-.014,.048))
+grip=rig.matrix_world @ rig.pose.bones['hand_r'].head+Vector((0,-.014,.048))
 def control(name,loc,bone):
     o=bpy.data.objects.new(name,None);bpy.context.collection.objects.link(o);o.location=loc;attach(o,bone);return o
 def parent_world(o,parent):

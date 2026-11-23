@@ -9,6 +9,27 @@ sc.render.engine='CYCLES';sc.cycles.device='CPU';sc.cycles.samples=4;sc.render.b
 painting=bpy.data.images.load(str(A/'painting-aligned.png'),check_existing=True)
 skinpainting=bpy.data.images.load(str(A/'projection-skin.png'),check_existing=True)
 fills={k:bpy.data.images.load(str(A/f'fill-{k}.png'),check_existing=True) for k in ['cloth','leather','iron','bronze']}
+# Freeze macro morphs on this working copy, retaining original skin topology/weights.
+# Finish rigid surfaces before UV calibration: generated bevel vertices otherwise
+# move the visible pigment away from its reference-camera sample.
+for ob in list(sc.objects):
+    if ob.type not in {'MESH','CURVE'} or ob.name.startswith('GEO-pilum'):
+        continue
+    bpy.ops.object.select_all(action='DESELECT');ob.select_set(True);bpy.context.view_layer.objects.active=ob
+    if ob.type=='CURVE':
+        bpy.ops.object.convert(target='MESH');ob=bpy.context.object
+    if ob.data.shape_keys:
+        ob.shape_key_add(name='Frozen macro mix',from_mix=True)
+        ob.active_shape_key_index=len(ob.data.shape_keys.key_blocks)-1
+        bpy.ops.object.shape_key_remove(all=True,apply_mix=True)
+    if not any(m.type=='ARMATURE' for m in ob.modifiers) and ob.name!='GEO-folded red wool tunic':
+        for mod in list(ob.modifiers):
+            if mod.type in {'SOLIDIFY','BEVEL','SUBSURF'}:
+                bpy.ops.object.modifier_apply(modifier=mod.name)
+        ob['finished_before_projection']=True
+sc.view_settings.view_transform='Standard';sc.view_settings.look='None'
+for ob in sc.objects:
+    if ob.type=='LIGHT':ob.data.energy*=.55
 # Original painted fills extend around backs and undersides; scans are not mistaken for brushwork.
 for mat in list(bpy.data.materials):
     if not mat.use_nodes:continue
@@ -27,13 +48,18 @@ for mat in list(bpy.data.materials):
     if mat.name=='Cream limestone':
         s.inputs['Base Color'].default_value=(.89,.65,.27,1);s.inputs['Roughness'].default_value=.85
         noise=n.new('ShaderNodeTexNoise');noise.inputs['Scale'].default_value=170;bump=n.new('ShaderNodeBump');bump.inputs['Strength'].default_value=.13;bump.inputs['Distance'].default_value=.001;l.new(noise.outputs['Fac'],bump.inputs['Height']);l.new(bump.outputs[0],s.inputs['Normal'])
+        geom=n.new('ShaderNodeNewGeometry');normal=n.new('ShaderNodeSeparateXYZ');l.new(geom.outputs['Normal'],normal.inputs[0])
+        stone=n.new('ShaderNodeMixRGB');stone.inputs[1].default_value=(.99,.52,.24,1);stone.inputs[2].default_value=(.99,.68,.41,1);l.new(normal.outputs['Z'],stone.inputs[0])
+        pigment=n.new('ShaderNodeEmission');l.new(stone.outputs[0],pigment.inputs['Color'])
+        lightpath=n.new('ShaderNodeLightPath');camera=n.new('ShaderNodeMath');camera.operation='MULTIPLY';camera.inputs[1].default_value=.70;l.new(lightpath.outputs['Is Camera Ray'],camera.inputs[0])
+        mix=n.new('ShaderNodeMixShader');l.new(camera.outputs[0],mix.inputs[0]);l.new(s.outputs[0],mix.inputs[1]);l.new(pigment.outputs[0],mix.inputs[2]);l.new(mix.outputs[0],n.get('Material Output').inputs['Surface'])
 # The scutum gold motif has shallow actual relief aligned with the source pigment.
 from array import array
 pixels=array('f',[0])*len(painting.pixels);painting.pixels.foreach_get(pixels);w,h=painting.size
 ob=bpy.data.objects['GEO-scutum painted convex wood']
 bpy.context.view_layer.update()
 for v in ob.data.vertices:
-    q=world_to_camera_view(sc,sc.camera,ob.matrix_world@v.co);x=max(0,min(w-1,int(q.x*w)));y=max(0,min(h-1,int(q.y*h)));i=4*(y*w+x);r,g,b,a=pixels[i:i+4]
+    q=world_to_camera_view(sc,sc.camera,ob.matrix_world @ v.co);x=max(0,min(w-1,int(q.x*w)));y=max(0,min(h-1,int(q.y*h)));i=4*(y*w+x);r,g,b,a=pixels[i:i+4]
     if a>.5 and r>.25 and g>.10 and r>g*1.1 and g>b*2:v.co.y-=.0025
 ob.data.update()
 
@@ -77,9 +103,9 @@ for ob in objects:
     assert len(me.vertices)==len(ob.data.vertices),ob.name
     coords=[];weights=[]
     for v in me.vertices:
-        world=ev.matrix_world@v.co;q=world_to_camera_view(sc,sc.camera,world)
-        normal=(ev.matrix_world.to_3x3().inverted().transposed()@v.normal).normalized()
-        coords.append((q.x,q.y));weights.append(max(0,min(1,(normal.dot(view)-.05)/.55)))
+        world=ev.matrix_world @ v.co;q=world_to_camera_view(sc,sc.camera,world)
+        normal=(ev.matrix_world.to_3x3().inverted().transposed() @ v.normal).normalized()
+        coords.append((q.x,q.y));weights.append(max(0,min(1,(normal.dot(view)-.02)/.25)))
     ev.to_mesh_clear()
     for mod,state in states:mod.show_viewport=state
     uv=ob.data.uv_layers.new(name='Painting rest projection');att=ob.data.color_attributes.new(name='Painting facing',type='FLOAT_COLOR',domain='CORNER')
@@ -89,12 +115,15 @@ for ob in objects:
         if not s:continue
         tc=n.new('ShaderNodeUVMap');tc.uv_map=uv.name;tex=n.new('ShaderNodeTexImage');tex.image=skinpainting if ob.name.startswith('MPFB anatomical') else painting;tex.extension='CLIP';l.new(tc.outputs[0],tex.inputs[0]);col=n.new('ShaderNodeVertexColor');col.layer_name=att.name
         factor=n.new('ShaderNodeMath');factor.operation='MULTIPLY';l.new(col.outputs[0],factor.inputs[0]);l.new(tex.outputs['Alpha'],factor.inputs[1])
-        amount=n.new('ShaderNodeMath');amount.operation='MULTIPLY';amount.inputs[1].default_value=.55 if ob.name.startswith('MPFB anatomical') else .80;l.new(factor.outputs[0],amount.inputs[0])
-        mix=n.new('ShaderNodeMixRGB');old=s.inputs['Base Color'].links[0].from_socket if s.inputs['Base Color'].is_linked else None
-        if old:l.new(old,mix.inputs[1])
-        else:mix.inputs[1].default_value=s.inputs['Base Color'].default_value
-        l.new(amount.outputs[0],mix.inputs[0]);l.new(tex.outputs['Color'],mix.inputs[2]);l.new(mix.outputs[0],s.inputs['Base Color'])
-        l.new(mix.outputs[0],s.inputs['Emission Color']);s.inputs['Emission Strength'].default_value=.16
+        amount=n.new('ShaderNodeMath');amount.operation='MULTIPLY';amount.inputs[1].default_value=.96;l.new(factor.outputs[0],amount.inputs[0])
+        # Source pigment already includes its painted light. Camera rays retain
+        # that illumination; shadow/reflection rays keep physical materials.
+        pigment=n.new('ShaderNodeEmission');pigment.name='Camera-only painted pigment'
+        l.new(tex.outputs['Color'],pigment.inputs['Color'])
+        camera=n.new('ShaderNodeLightPath');gate=n.new('ShaderNodeMath');gate.operation='MULTIPLY'
+        l.new(camera.outputs['Is Camera Ray'],gate.inputs[0]);l.new(amount.outputs[0],gate.inputs[1])
+        mix=n.new('ShaderNodeMixShader');l.new(gate.outputs[0],mix.inputs[0]);l.new(s.outputs[0],mix.inputs[1]);l.new(pigment.outputs[0],mix.inputs[2])
+        l.new(mix.outputs[0],n.get('Material Output').inputs['Surface'])
     records.append({'object':ob.name,'vertices':len(ob.data.vertices),'mapping':'frozen rest camera UV; facing and painting alpha blend'})
 sc['painting_projection']='CC BY 4.0 painting onto real weighted meshes; generated fills on unseen surfaces'
 sc['cream_target_srgb']='#E9CFA0'

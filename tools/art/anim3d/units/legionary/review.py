@@ -47,7 +47,7 @@ def sheet(ims,labels,path):
     canvas.save(path)
 if stage=='b':
     ordered=[Image.open(folder/'256'/f'{n}.png').convert('RGBA') for n in ['rest','front','side']]
-    sheet([ref]+ordered,['Painting','3D rest / CPU','3D front','3D side'],V/'legionary-b-plain.png')
+    sheet([ref]+ordered,['Painting','3D rest / '+meta['device'],'3D front','3D side'],V/'legionary-b-plain.png')
 elif stage in ['c','c-details']:
     im=images[0];sheet([ref,im],['Painting','3D '+meta['engine']+' '+meta['device']],V/'legionary-c-textured-lit.png')
     half=ref.copy();half.paste(im.crop((128,0,256,256)),(128,0));cross=Image.blend(ref,im,.5)
