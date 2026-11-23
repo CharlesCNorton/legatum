@@ -39,3 +39,10 @@
 - Round 5 rebuilt and CPU-rendered move: 256px / 12 samples, frozen rest grade.
 - Round 5 rebuilt and CPU-rendered attack: 256px / 12 samples, frozen rest grade.
 - Round 5 rebuilt and CPU-rendered hit: 256px / 12 samples, frozen rest grade.
+- Round 5 rebuilt and CPU-rendered death: 256px / 12 samples, frozen rest grade.
+- Round 5 intermediate full check passed: 40 rig samples/zero findings and 197224-byte quality-85 CPU atlas. Plain-clay inspection then found multiple raised shield rays partly buried (also present in the preserved round-4 clay). Those renders are superseded: relief must intersect the evaluated shell including Solidify, not its raw mesh. Rebuilding all dependent evidence after this fix.
+- Final round 5 master after evaluated-relief fix: rebuilt and CPU-rendered idle at 256px / 12 samples.
+- Evaluated-shell correction is visible in the new plain-clay sheet: raised rays now clear the Solidify surface. Final rest IoU remains 0.8644; union RGB error 30.30/35.57/35.50. Reopened b and f after correction; regenerated grade and invalidated every earlier clip/atlas.
+- Final round 5 master after evaluated-relief fix: rebuilt and CPU-rendered move at 256px / 12 samples.
+- Final round 5 master after evaluated-relief fix: rebuilt and CPU-rendered attack at 256px / 12 samples.
+- Final round 5 master after evaluated-relief fix: rebuilt and CPU-rendered hit at 256px / 12 samples.
