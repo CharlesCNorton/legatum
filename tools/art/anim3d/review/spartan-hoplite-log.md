@@ -149,3 +149,6 @@ Round3 full audit caught43 findings: projected spear fit lost depth grip(0.134m)
 Baked clip idle
 Round3 actual-sandal test correctly failed: maxvirtualground drift0.037696m despite bone drift0.00000072m; sole yaw4.79deg passed. Updated source-action contact adapter to stabilize evaluated sandal centers by root translation without editing rotations; bone displacement is now diagnostic and actual sole25mm gate remains unchanged. Source scene recheckPASS, rest grip0.03751m, cape projection mean0.21505; final rebuild underway.
 Baked animate-move with Quaternius source motion or the weapon-specific attack, and real cloth simulation.
+Baked animate-attack with Quaternius source motion or the weapon-specific attack, and real cloth simulation.
+Baked animate-hit with Quaternius source motion or the weapon-specific attack, and real cloth simulation.
+Baked animate-death with Quaternius source motion or the weapon-specific attack, and real cloth simulation.
