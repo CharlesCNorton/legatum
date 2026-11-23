@@ -125,7 +125,7 @@ Never hide effects by setting scale to zero or nearly zero. Key `hide_render` an
 The executable, no-argument driver entry point is:
 
 ```sh
-ROUND=3 tools/art/anim3d/units/tank/gpu.sh
+ROUND=4 tools/art/anim3d/units/tank/gpu.sh
 ```
 
 It renders every review stage and all 40 clip frames serially in Metal Cycles at 512px, 256 samples with denoising (override `SAMPLES` explicitly if needed). It uses the saved built/baked/projected/animated masters and never rebuilds them. It creates the actual 512px and downsampled 256px master sets, packs and validates the 160px trimmed atlas, audits saved geometry, and makes the eight-second H.264/yuv420p `tank-round${ROUND}.mp4`. All five clips appear side by side at 2x on cream; one-shot clips replay every two seconds with a terminal hold. FFprobe verifies 240 frames, eight seconds and 1600x348 dimensions; representative video frames are decoded for inspection. Missing Metal devices fail explicitly; sandbox CPU previews do not establish GPU success.
@@ -223,3 +223,41 @@ but the running gear and far fender remain distinguishable. Painted illumination
 still rotates with wheel texture; CPU smoke is grainy. **No tank-PASS marker.**
 The fresh GPU512 pass and visual review are still required for these changed
 masters. Run `ROUND=3 tools/art/anim3d/units/tank/gpu.sh`.
+
+
+### Round 4 after the lead GPU receipt
+
+The round-3 GPU pass succeeded: 40 frames, **197,260 bytes at Q80**, actual
+512/256 masters and a verified eight-second H.264/yuv420p video. Its immutable
+review copy is under `masters/tank/round3-gpu-receipt/`. Current host entry point
+now defaults to ROUND=4; run `ROUND=4 tools/art/anim3d/units/tank/gpu.sh` from this
+checkout. No GPU failure needed repair in this round.
+
+Converted fender curves have zero-valued object origins. Side selection now uses
+the actual mesh centroid in suspension space, so the near rolled edge follows
+the near suspension. The far rolled edge is seated below the lamp, forward
+mudguard tips taper, shoes narrow from .85 to .78 of construction width, and
+the rear shoulder is raised and shortened. All edits retain closed geometry;
+the six AO/curvature maps and rest-camera UVs are regenerated afterwards.
+
+`prepare-paint.py` derives a 16px-radius low-pass field from the 1024px painting.
+Wheel materials divide rotating pigment by its rotating broad-light estimate
+and multiply by a nonspinning broad-light field, clamping the ratio to .6–1.65.
+The illumination frame follows hull suspension, not the axles. At rest its
+coordinates agree with the saved camera projection. This is approximate
+frequency separation, not a claim of recovered albedo: small painted aperture
+shadows can still rotate. The existing generated olive hidden fill, hard-edge
+bevels, thick straps, folded canvas, product lights and frozen histogram grade
+remain. `audit.py` checks rest-coordinate agreement and all-frame nonspinning
+lighting in addition to the mechanical/contact checks. Matrix comparison uses
+1e-5 tolerance: Blender evaluation showed harmless 4.8e-7 matrix roundoff.
+
+Current CPU256/12-sample delivery: **181,292 bytes at Q80**, 40 frames, 1381x556
+trimmed atlas, 160px logical cells. All three route tests, geometry/contact and
+wheel-light audit, exact alpha/offset/camera/grade/held-death checks pass. All
+review sheets and actual 256px masters are refreshed; `tank-round4-cpu.mp4` is
+H.264/yuv420p, 1600x348, 240 frames/eight seconds, with decoded frames inspected.
+Previous 512px masters remain with the GPU receipt; fresh round-4 GPU512 output
+is still required. At256 the fender/shoulder outline is closer, but the tread
+finish, wheel detail and simplified effects remain distinguishable. At64 the
+identity is correct but the heavier front running gear still differs. **No PASS.**

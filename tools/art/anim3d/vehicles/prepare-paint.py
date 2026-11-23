@@ -1,7 +1,7 @@
 """Fit the full-resolution alpha master to the exact token camera field (no warping)."""
 from pathlib import Path
 import os,hashlib,json
-from PIL import Image
+from PIL import Image,ImageFilter
 R=Path(os.environ['ANIM_ROOT']);M=R/'masters/tank';source=M/'tank-source.png'
 lock=json.loads(Path('tools/art/anim3d/units/tank/assets.lock.json').read_text())
 for entry in lock['files']:
@@ -11,4 +11,7 @@ for entry in lock['files']:
 im=Image.open(source).convert('RGBA');fig=im.crop(im.getchannel('A').getbbox())
 k=min(928/fig.width,928/fig.height);fig=fig.resize((round(fig.width*k),round(fig.height*k)),Image.Resampling.LANCZOS)
 out=Image.new('RGBA',(1024,1024));out.alpha_composite(fig,((1024-fig.width)//2,(1024-fig.height)//2));out.save(M/'textures/painting-projection.png')
+# A low-frequency illumination estimate, not an albedo claim. Wheel detail uses
+# the original pigment; this smooth field separates its broad painted light.
+out.convert('RGB').filter(ImageFilter.GaussianBlur(16)).save(M/'textures/painting-light.png')
 (M/'textures/painting-projection.json').write_text(json.dumps({'source_sha256':hashlib.sha256(source.read_bytes()).hexdigest(),'fit':'same alpha-bbox fit as unit-art.py: 232/256 field, 4x resolution','size':1024},indent=2))

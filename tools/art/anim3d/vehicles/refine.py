@@ -183,14 +183,17 @@ for side in (-1,1):
             obj.location=(x,side*.99,z);obj.rotation_euler.y=a
             # Reduce the protruding shoe width, preserving pitch and real depth.
             for child in obj.children:
-                child.location.y*=.85
-                for vertex in child.data.vertices:vertex.co.y*=.85
+                child.location.y*=.78
+                for vertex in child.data.vertices:vertex.co.y*=.78
                 child.data.update()
 # Full-depth fenders clear each independently registered suspension side.
 for obj in bpy.data.objects:
     if obj.type!='MESH' or not obj.name.startswith(('Raised track fender','Fender folded edge','Front mudguard')):continue
     inverse=obj.matrix_world.inverted();root=bpy.data.objects['Vehicle suspension root']
-    ends=endsets[-1 if obj.location.y<0 else 1]
+    # Converted curves have an origin at zero: classify their actual vertices.
+    center=sum((root.matrix_world.inverted()@(obj.matrix_world@v.co)
+                for v in obj.data.vertices),Vector())/len(obj.data.vertices)
+    ends=endsets[-1 if center.y<0 else 1]
     for vertex in obj.data.vertices:
         world=obj.matrix_world@vertex.co
         local=root.matrix_world.inverted()@world
@@ -199,6 +202,9 @@ for obj in bpy.data.objects:
         local.z+=top-1.19
         vertex.co=inverse@(root.matrix_world@local)
     obj.data.update()
+# Seat the far rolled edge on the fender: the old converted curve protruded
+# behind the headlamp as a free horizontal rod.
+fit('Far rolled fender edge', ('Fender folded edge.001',), (0,0), offset=(0,6))
 # The transmission casting must meet the newly registered drive axle. Extend
 # its real forward volume and adjoining glacis rather than leaving a hollow
 # track loop beyond the short old nose.
@@ -220,6 +226,26 @@ for vertex in hull.data.vertices:
     w=max(0,min(1,(60-x)/25))*max(0,min(1,(y-95)/20))
     vertex.co=inverse@(world-right*units*8*w)
 hull.data.update()
+# Round-4 rear shoulder: the former extra extension made a low angular prow
+# behind the box. Move the closed surface back into the painted shoulder.
+for vertex in hull.data.vertices:
+    world=hull.matrix_world@vertex.co;p=world_to_camera_view(sc,camera,world)
+    x,y=p.x*256,(1-p.y)*256
+    w=max(0,min(1,(55-x)/35))*max(0,min(1,(y-98)/20))
+    vertex.co=inverse@(world+units*(right*4+up*7)*w)
+hull.data.update()
+# Keep the forward mudguards over the belt instead of the old straight blades.
+for obj in bpy.data.objects:
+    if obj.type!='MESH' or not obj.name.startswith('Front mudguard'):continue
+    inverse=obj.matrix_world.inverted()
+    near=obj.location.y<0
+    for vertex in obj.data.vertices:
+        world=obj.matrix_world@vertex.co;p=world_to_camera_view(sc,camera,world)
+        x,y=p.x*256,(1-p.y)*256
+        # Taper the forward tip while retaining the original thickness/depth.
+        w=max(0,min(1,(x-(175 if near else 225))/17))
+        vertex.co=inverse@(world+units*(-right*3+up*.8)*w)
+    obj.data.update()
 # Camera-only source pigment retains the painting's display colour. Physical
 # lights remain responsible for shadows, bevel response and unseen surfaces.
 sc.view_settings.view_transform='Standard';sc.view_settings.look='None';sc.view_settings.exposure=0

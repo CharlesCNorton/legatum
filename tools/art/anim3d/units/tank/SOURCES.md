@@ -6,3 +6,5 @@
 - Existing Blender 5.3.0 (https://www.blender.org/, GPL software), Pillow 13.0.0 (https://pypi.org/project/pillow/13.0.0/, MIT-CMU), FFmpeg. Original geometry, mechanical rig and scripts: MIT; rendered artwork: CC BY 4.0.
 
 This unit contains no human or animal gait. Its motion is mechanical: arc-length track travel, wheel travel/radius, turret traversal, recoil and suspension. `tank-g-feet-check.png` provides actual top/front geometry views over all eight move samples. No mocap is used or claimed. Assets, bakes and masters stay under `~/LegatumRuns/anim-pilot/`.
+
+Round 4 derives `painting-light.png` by low-pass filtering the same pinned painting for a bounded wheel-light decomposition; same project CC BY 4.0. No new third-party asset, download or generation. Existing generated olive fill is retained.

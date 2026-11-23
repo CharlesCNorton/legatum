@@ -4,7 +4,7 @@ set -euo pipefail
 cd "$(dirname "$0")/../../../../.."
 source tools/art/anim3d/env.sh
 export RENDER_ENGINE=CYCLES CYCLES_DEVICE=GPU RESOLUTION=512
-export SAMPLES="${SAMPLES:-256}" ROUND="${ROUND:-3}"
+export SAMPLES="${SAMPLES:-256}" ROUND="${ROUND:-4}"
 [[ "$ROUND" =~ ^[a-zA-Z0-9_-]+$ ]] || { echo 'Invalid ROUND' >&2; exit 2; }
 review="$ANIM_ROOT/review/3d-v2"
 mkdir -p "$review"
