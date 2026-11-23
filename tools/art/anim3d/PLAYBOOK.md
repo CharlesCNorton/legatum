@@ -106,3 +106,57 @@ tools/art/anim3d/render.sh audit
 ```
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
+
+
+## Infantry: reislaufer round 1
+
+The isolated implementation is `units/reislaufer/`; its no-argument host entry
+point is `ROUND=1 tools/art/anim3d/units/reislaufer/gpu.sh`. It uses the six Blender
+skills, MPFB 2.0.18 anatomy/53-bone rig, original full-depth steel and slashed-cloth
+kit, and the existing licensed painted fills. Masters are external in
+`~/LegatumRuns/anim-pilot/masters/reislaufer/`; no masters enter git.
+
+Standing quality method for this infantry chapter:
+
+1. Register the archived painting to the shipped token; match camera, physical
+   rest silhouette and anatomy before freezing camera-projected UVs on finished
+   surfaces. Ray visibility and facing reject paint from other objects. The
+   camera-only pigment retains the original brushwork; physical BSDFs remain for
+   lighting, shadows and unseen sides. Generated linen/hair/coat fills blend on
+   unpainted surfaces. Never reproject per animation frame or use a cutout plane.
+2. Finish geometry before projection: real breastplate and belt thickness,
+   rounded edges, buckles/rivets, subdivided MPFB face/hands, folded slashed cloth,
+   true feather vanes and a solid faceted pike point. Bake actual Cycles AO and
+   Pointiness to separate UV maps; use them for cavity shading and roughness.
+3. Use a warm upper-left area key, softer fill, cool rim and contact AO. The stone
+   target is warm cream **#E9CFA0** (linear albedo approximately .815/.624/.352),
+   with a darker rim. Judge rendered pixels, not an albedo label. Keep stone free
+   of projected painted feet. GPU finals use Cycles/Metal with denoising.
+4. Freeze one bounded histogram grade from the opaque rest figure across all
+   frames. Inspect painting/render/50%-crossfade at native 256 and 64 in
+   `reislaufer-f-restpose-compare.png`; technical success never establishes PASS.
+
+Open motion is the infantry default: CMU free-use or Quaternius CC0, never Mixamo.
+This unit uses UAL Idle_Loop, Walk_Loop, Hit_Chest and Death01 with A_TPose reference
+matrices and bone-roll compensation. Convert source coordinates and forward axes
+before retargeting; do not patch foot yaw afterward. Constrain carrying hands to
+weapon grips; only the pike attack is authored. Every round renders one complete
+move cycle from top and front as `reislaufer-g-feet-check.png`. Its audit checks
+support ankle drift after restoring virtual travel for the in-place loop, and
+support foot yaw against -Y. These sampled checks do not replace viewing the gait.
+
+GPU delivery retains real 512 and 256 PNG masters, all 8/8/10/4/10 samples and the
+five logical rows. The shipped **160px atlas v2** trims each frame separately:
+`frame:{w:160,h:160,ax:80,ay:145}`, `atlas:{w,h}`, and
+`clips[name]:{row,frames,fps,loop,rects:[{x,y,w,h,ox,oy}]}`. Draw each source crop at
+`anchor + (ox-ax,oy-ay)*scale`; rows are logical metadata, not fixed-cell offsets.
+Encoding never drops below quality 75 or exceeds 200000 bytes. Current manifests,
+source/clip hashes, reconstructed alpha/offsets and held death are validated.
+
+The same `gpu.sh` rebuilds and renders every stage sequentially, generates the
+rest comparison, details, rig poses, clip strips/WebPs, foot views and a decoded
+atlas H.264 yuv420p `reislaufer-round${ROUND}.mp4` (8 seconds, all five clips, 2x on
+cream). It refuses CPU fallback and checks final master dimensions/device before
+issuing a technical receipt. Only an actual visual pass earns `reislaufer-PASS`.
+CPU previews must remain identified as CPU. Use plain `blender -b` through PATH;
+never bypass the gate, run concurrent heavy jobs, or hide meshes by zero scaling.
