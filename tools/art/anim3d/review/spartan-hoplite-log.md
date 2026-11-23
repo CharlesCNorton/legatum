@@ -152,3 +152,6 @@ Baked animate-move with Quaternius source motion or the weapon-specific attack, 
 Baked animate-attack with Quaternius source motion or the weapon-specific attack, and real cloth simulation.
 Baked animate-hit with Quaternius source motion or the weapon-specific attack, and real cloth simulation.
 Baked animate-death with Quaternius source motion or the weapon-specific attack, and real cloth simulation.
+Baked clip idle
+Round3 follow-up full audit reduced43 findings to2 walking anatomical-toe/base intersections. Sandals were rigidly foot-parented while MPFB toes use the ball bones. Transferred nearest anatomical foot/ball weights to complete finished soles/straps through inverse neutral skin matrices, preserving rest geometry and source rotations. Rebuild required. Evaluated-sole solver correction0.05952m is below measured quarter-sole limit0.06974m; independent25mm slip and20deg yaw delivery gates remain strict.
+Baked clip move
