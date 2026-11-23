@@ -13,3 +13,6 @@
 - Added fixed projected UVs on weighted surfaces, incidence/alpha seams, geometry Greek-key blanket/fringe, skinned tail strands, and one rest-calibrated colour LUT for all frames.
 - Source gait inspection found four separate source footfalls. Retiming both forelimb trajectories creates a three-beat canter adaptation; source paths retained and provenance explicit.
 - Investigated alternate CC0 source `Horse Rigged All Gaits` by fdoss001 (BlendSwap 28627). The listing search identifies CC0/all gaits, but opening the source returned HTTP 403; no asset acquired and no account created. Keeping the licensed Quaternius base and documenting its anatomical limits.
+- First projected comparison posted immediately. Warmth and detail improve, but crossfade shows substantial registration/silhouette differences; broad projection leaked linen onto horse. Added separate coat/linen/skin masks and corrected tail inverse-skin bind coordinates.
+- Near forehoof now uses a real source Walk pose for the idle/rest silhouette; added pale crest section, deeper neck/shoulder form and a small slung bronze shield.
+- Final render batch is waiting on the machine-wide gate. No lock removed, no direct Blender invocation, no extra own heavy process launched.

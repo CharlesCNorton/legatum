@@ -26,3 +26,7 @@
 - Emitted tank-e-death-strip.png from actual e-death renders; visual review pending.
 - First complete 40-frame pass emitted, including a settled darkened burning wreck; death terminal sample held. Hit sparks were too thick and exhaust hidden: final pass shortens/orients sparks, shifts exhaust to the visible rear and reduces flame whitening.
 - Final rebuild/bake/paint/animate/render pass started serially through the shared gate. Pixel contract and geometry audit will run after all outputs complete.
+- Emitted tank-c-textured-lit.png from actual c renders; visual review pending.
+- Emitted tank-c-details.png from actual details renders; visual review pending.
+- Emitted tank-d-rig-poses.png from actual d renders; visual review pending.
+- Emitted tank-e-idle-strip.png from actual e-idle renders; visual review pending.
