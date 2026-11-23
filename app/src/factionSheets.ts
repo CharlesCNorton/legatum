@@ -187,11 +187,11 @@ export const FACTION_SHEETS: Record<Faction, FactionSheet> = {
     lore: 'Mongol horse archers shot at full gallop; the yam relay network linked an empire.',
     ratings: { aggression: 4, economy: 2, complexity: 2 },
     pairs: [
-      { strength: 'Your military units, Scouts too, get +1 move.', price: 'Your units get no terrain defence. You raise no Walls, Castles or Star Forts and buy no Siege before the Medieval era.', strengthIcon: 'mark-move', priceIcon: 'fortify' },
+      { strength: 'Your military units, Scouts too, get +1 move.', price: 'Your units get no terrain defence. You never build Walls and buy no Siege before the Medieval era.', strengthIcon: 'mark-move', priceIcon: 'fortify' },
       { strength: `Iron Working unlocks it. A Cataphract that can shoot, ${keshig.ranged} ranged strength, ${keshig.range} tiles.`, price: `A Keshig costs ${keshig.cost} Production, ${keshig.cost - cataphractCost} more than a Cataphract.`, strengthIcon: 'unit-keshig', priceIcon: 'yield-production', onCard: true },
       { strength: 'A city with a Market at least 8 tiles from your capital earns +2 Gold more.', strengthIcon: 'building-market' },
     ],
-    counteredBy: 'Build Walls early and defend your cities: before the Medieval era Mongols buy no Siege, so Walls halve everything they throw at you.',
+    counteredBy: 'Mongol cities never have Walls and never fire back, so attack them. Build your own Walls early: before the Medieval era Mongols buy no Siege, so Walls halve everything they throw at you.',
   },
   Sparta: {
     identity: 'Raised for war',

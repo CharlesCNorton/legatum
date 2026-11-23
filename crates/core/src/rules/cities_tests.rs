@@ -282,7 +282,7 @@ fn walls_line_cannot_be_bought_but_finishes_with_production() {
 }
 
 #[test]
-fn mongols_cannot_produce_engineers_walls_castles_or_star_forts_before_the_medieval_era() {
+fn mongols_cannot_produce_walls_castles_or_star_forts() {
     let mut s = test_game(&[(Faction::Mongols, 0), (Faction::India, 1)]);
     let city = found(&mut s, P0, at(5, 5));
     s.player_mut(P0).techs.extend([
@@ -297,7 +297,7 @@ fn mongols_cannot_produce_engineers_walls_castles_or_star_forts_before_the_medie
         building(BuildingKind::Castle),
         building(BuildingKind::StarFort),
     ] {
-        assert!(data::available_to_faction(Faction::Mongols, item));
+        assert!(!data::available_to_faction(Faction::Mongols, item));
         assert!(!data::available_to_player(
             Faction::Mongols,
             s.era_of(P0),

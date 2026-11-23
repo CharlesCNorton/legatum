@@ -441,7 +441,7 @@ fn ui_rules_match_core() {
             "builtInNote": data::BUILT_IN_SIEGE_NOTE,
         },
         "mountedMoves": data::MOUNTED_MOVES,
-        "mongolWallsEra": data::MONGOL_WALLS_ERA,
+        "mongolSiegeEra": data::MONGOL_SIEGE_ERA,
         "mongolWallsReason": data::MONGOL_WALLS_REASON,
         "mongolSiegeReason": data::MONGOL_SIEGE_REASON,
         "tankMoves": data::TANK_MOVES,
