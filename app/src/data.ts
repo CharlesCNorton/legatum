@@ -165,7 +165,7 @@ export const SIEGE_USES_IRON: boolean = RULES.siege.usesIron;
 /** Core `data::MONGOL_SIEGE_REASON`. */
 export const MONGOL_SIEGE_REASON: string = RULES.mongolSiegeReason;
 /** Core `data::siege_available`: the Mongols buy Siege only from the Medieval era. */
-export const siegeAvailable = (faction: Faction, era: number): boolean => faction !== 'Mongols' || era >= MONGOL_WALLS_ERA;
+export const siegeAvailable = (faction: Faction, era: number): boolean => faction !== 'Mongols' || era >= MONGOL_SIEGE_ERA;
 /** Core `data::BUILT_IN_SIEGE_ERA`: from this era (0-based unit era) land military units have Siege built in: Industrial. */
 export const BUILT_IN_SIEGE_ERA: number = RULES.siege.builtInEra;
 /** Core `data::BUILT_IN_SIEGE_NOTE`: what built-in Siege does, after the unit's name. */
@@ -708,7 +708,7 @@ export const FACTION_INFO: Record<Faction, FactionInfo> = {
   Byzantium: factionInfo("byzantium", "Byzantium", "Hold Constantinople. Hire the swords.", companyRule(), BYZANTIUM_LEGIONARY, goalLine('Byzantium'), THIN_LEVIES),
   Germany: factionInfo("germany", "Germany", "Coal, steel, and skilled hands.", `Your strategic deposits supply twice as much. Your Gold and Science projects pay more: ${RULES.germanyProjectGoldPercent}% and ${RULES.germanyProjectSciencePercent}% of a city’s Production. Other empires get ${RULES.projectGoldPercent}% and ${RULES.projectSciencePercent}%.`, uniquePieceText(UNIQUE_PIECE.Germany), goalLine('Germany'), 'Each Production building in a German city costs 1 Food.'),
   Celts: factionInfo("celts", "Celts", "Raid, burn and move on.", `A sack takes ${RULES.celtsSackGoldPerPopulation} Gold per population and raises a warband camp. A sacked rival capital scores 1 VP for good. Barbarians don't attack the Celts.`, '', goalLine('Celts'), "Celts can't keep cities they capture: they sack and burn them. A city you founded comes home intact when you retake it."),
-  Mongols: factionInfo("mongols", "Mongols", "Across the steppe, news travels.", "Military units, Scouts too, get +1 move. Settlers keep 2 moves. A city with a Market at least 8 tiles from your capital earns +2 Gold.", uniquePieceText(UNIQUE_PIECE.Mongols), goalLine('Mongols'), "Mongol military units get no defence bonus from terrain, though fortifying still works. Mongol cities raise no Walls, Castles or Star Forts and buy no Siege before the Medieval era. Walls in a city they capture still defend it."),
+  Mongols: factionInfo("mongols", "Mongols", "Across the steppe, news travels.", "Military units, Scouts too, get +1 move. Settlers keep 2 moves. A city with a Market at least 8 tiles from your capital earns +2 Gold.", uniquePieceText(UNIQUE_PIECE.Mongols), goalLine('Mongols'), "Mongol military units get no defence bonus from terrain, though fortifying still works. The Mongols never build Walls and buy no Siege before the Medieval era."),
   Sparta: factionInfo("sparta", "Sparta", "Train in the agoge. Hold the line.", `Spartan military units start at level 1, gain XP 50% faster, and alone can reach level 6, Spartan Veteran. Each level adds ${RULES.promotion.strengthPercent}% to a unit's strength. Hoplites gain +${HOPLITE_PHALANX_STRENGTH} strength next to another Hoplite. The melee line fights at full strength when wounded. Destroying an enemy military unit restores up to 100 HP, shared among the Spartan units that hit it that turn and survived. Capturing a city fully heals Spartan military units within 2 tiles.`, uniquePieceText(UNIQUE_PIECE.Sparta), goalLine('Sparta'), `Settlers and non-military buildings cost 50% more Production, except Walls, Castles, Star Forts and the Agoge.`),
   Athens: factionInfo("athens", "Athens", "Debate in the agora. Study at the Lyceum.", "Every ruin also gives you 20 Science.", uniquePieceText(UNIQUE_PIECE.Athens), goalLine('Athens'), `Markets yield only +1 Gold instead of +3, at the normal ${RULES.buildingStats.Market.cost} Production cost. A rival that captures one of your cities gets one free technology (once per city for each rival).`),
   Rome: factionInfo('rome', 'Rome', 'Serve the legion. Earn the land.', 'A full-health melee veteran (level 1 or higher) can found a city; the unit is consumed.', 'Legionary replaces the Phalangite: a city it founds starts at population 2. ' + uniquePieceText(UNIQUE_PIECE.Rome), goalLine('Rome'), 'Rome cannot train or buy Settlers.'),
@@ -746,16 +746,16 @@ export const FIRST_SETTLER_PERCENT = RULES.firstSettlerPercent;
 
 /** Core `data::faction_unavailable_reason`: why `availableToFaction` rejects `item` (validation
  *  errors and greyed-out text). Such items are left out of production choices. */
-export function factionUnavailableReason(item: ProductionItem, faction: Faction, era = MONGOL_WALLS_ERA): string | null {
+export function factionUnavailableReason(item: ProductionItem, faction: Faction): string | null {
   if (faction === 'Rome' && item.kind === 'Unit' && item.unit === 'Settler') return 'Rome cannot train or buy Settlers; full-health melee veterans can found cities';
-  if (availableToPlayer(faction, item, era)) return null;
+  if (availableToPlayer(faction, item)) return null;
   if (faction === 'Aztecs' && item.kind === 'Unit' && HORSE_MOUNTED.includes(item.unit)) return AZTEC_NO_HORSES;
   if (item.kind === 'Project' && item.project === 'Grow') return 'Only Egyptian cities can choose Grow';
   if (item.kind === 'Project' && item.project === 'Food') return 'Egyptian cities use Grow instead';
   if (faction === 'Egypt' && item.kind === 'Building' && isWorkshopLine(item.building)) return 'Workshops, Forges and Factories do nothing for Egypt, which has no Production';
   if (item.kind === 'Building' && item.building === 'RiceStorehouse') return 'No people can build the Rice Storehouse yet';
   if ((item.kind === 'Building' || item.kind === 'Wonder') && item.building === 'YamRelayStation') return 'Only Mongols can build the Yam Relay Station';
-  if (faction === 'Mongols' && item.kind === 'Building' && (item.building === 'Walls' || item.building === 'Castle' || item.building === 'StarFort')) return MONGOL_WALLS_REASON;
+  if (faction === 'Mongols' && item.kind === 'Building' && isWallsLine(item.building)) return MONGOL_WALLS_REASON;
   if (item.kind === 'Unit' && item.unit === 'HeirToTheThrone') return 'Only Byzantium can train a Heir to the Throne';
   return `Does nothing for ${factionName(faction)}`;
 }
@@ -798,18 +798,24 @@ export const FACTION_ADJECTIVE: Record<Faction, string> = {
 const FACTION_NAMES = RULES.factionNames as Record<Faction, Partial<Record<BuildingKind | UnitKind, string>>>;
 export const factionItemName = (faction: Faction, kind: BuildingKind | UnitKind): string | undefined => FACTION_NAMES[faction]?.[kind];
 
-/** Core `data::MONGOL_WALLS_ERA`: the era from which the Mongols raise Walls, Castles and Star Forts and buy Siege (core `siege_available`). */
-export const MONGOL_WALLS_ERA: number = RULES.mongolWallsEra;
+/** Core `data::MONGOL_SIEGE_ERA`: the era from which the Mongols buy Siege (core `siege_available`). */
+export const MONGOL_SIEGE_ERA: number = RULES.mongolSiegeEra;
 /** Core `data::MONGOL_WALLS_REASON`. */
 const MONGOL_WALLS_REASON: string = RULES.mongolWallsReason;
 
-/** Mirrors core `data::faction_excluded_building_at`: the Mongols' Walls line opens in the Medieval era (`era` defaults to it). */
-export function factionExcludedBuilding(faction: Faction, building: BuildingKind, era = MONGOL_WALLS_ERA): string | null {
+/** Core `data::is_walls_line`: Walls and every later wall level (the Walls family). */
+export function isWallsLine(building: BuildingKind): boolean {
+  for (let b: BuildingKind | undefined = building; b; b = BUILDING_STATS[b].predecessor) if (b === 'Walls') return true;
+  return false;
+}
+
+/** Mirrors core `data::faction_excluded_building_at`: the Mongols never have the Walls line (rules 57). */
+export function factionExcludedBuilding(faction: Faction, building: BuildingKind): string | null {
   if (faction !== 'Sparta' && building === 'Agoge') return 'Only Sparta can build an Agoge';
   if (building === 'RiceStorehouse') return 'No people can build the Rice Storehouse yet';
   if (faction !== 'India' && building === 'ImperialDiwan') return 'Only India can build the Imperial Diwan';
   if (faction !== 'Mongols' && building === 'YamRelayStation') return 'Only Mongols can build the Yam Relay Station';
-  if (faction === 'Mongols' && era < MONGOL_WALLS_ERA && (building === 'Walls' || building === 'Castle' || building === 'StarFort')) return MONGOL_WALLS_REASON;
+  if (faction === 'Mongols' && isWallsLine(building)) return MONGOL_WALLS_REASON;
   return null;
 }
 
@@ -834,11 +840,9 @@ export function availableToFaction(faction: Faction, item: ProductionItem): bool
     || Object.values(buildingStatsFor(faction, b).yields).some((n) => !!n);
 }
 
-/** State-aware counterpart to core `data::available_to_player`. */
-export function availableToPlayer(faction: Faction, item: ProductionItem, era = MONGOL_WALLS_ERA): boolean {
-  if (!availableToFaction(faction, item)) return false;
-  if (faction !== 'Mongols' || era >= MONGOL_WALLS_ERA) return true;
-  return !(item.kind === 'Building' && (item.building === 'Walls' || item.building === 'Castle' || item.building === 'StarFort'));
+/** Core `data::available_to_player`: no rule reads the era since the Mongols' Walls stopped opening in the Medieval era (rules 57). */
+export function availableToPlayer(faction: Faction, item: ProductionItem): boolean {
+  return availableToFaction(faction, item);
 }
 
 /** The building families named in effect lines. Only the Workshop family changes with the faction: Germany's Forge is the Ruhr Foundry. */

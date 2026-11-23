@@ -1515,6 +1515,11 @@ pub fn capture_city(
             .setup
             .rule_experiments
             .rule_off(FactionRule::SpartaKillHeal);
+    // The Mongols never have Walls (rules 57): a city they take loses its whole Walls line.
+    let slight_walls = data::never_walls(
+        state.setup.rule_experiments.faction_rules_off,
+        state.player(captor).faction,
+    );
     // The captor takes the city, not its aircraft: they are lost with it.
     super::air::lose_city_aircraft(state, city, events);
     // Occupation lock: the new record is the civ just taken from; none for a city its captor's
@@ -1547,6 +1552,9 @@ pub fn capture_city(
     // cannot mint another payout without rebuilding the market.
     for (building, _) in &plundered {
         c.buildings.remove(building);
+    }
+    if slight_walls {
+        c.buildings.retain(|b| !data::is_walls_line(*b));
     }
     c.occupied_from = occupied_from;
     c.owner = captor;
@@ -2024,6 +2032,37 @@ mod tests {
     }
 
     #[test]
+    fn mongols_slight_the_walls_of_a_city_they_capture_and_others_keep_them() {
+        use BuildingKind::{Castle, Market, StarFort, Walls};
+        for (captor, keeps) in [(Faction::Mongols, false), (Faction::India, true)] {
+            let mut s = game(&[0, 1]);
+            s.player_mut(PlayerId(0)).faction = captor;
+            let city_id = city(&mut s, 1, hex(5, 3), 2);
+            s.cities.get_mut(&city_id).unwrap().buildings =
+                [Walls, Castle, StarFort, Market].into();
+            let mut events = Vec::new();
+            capture_city(&mut s, city_id, PlayerId(0), &mut events);
+            let b = &s.cities[&city_id].buildings;
+            assert_eq!(s.cities[&city_id].owner, PlayerId(0));
+            assert!(b.contains(&Market), "{captor:?}");
+            for wall in [Walls, Castle, StarFort] {
+                assert_eq!(b.contains(&wall), keeps, "{captor:?} {wall:?}");
+            }
+        }
+        // The ablation switch turns the rule off: Mongol captors keep the walls too.
+        let mut s = game(&[0, 1]);
+        s.player_mut(PlayerId(0)).faction = Faction::Mongols;
+        s.setup
+            .rule_experiments
+            .faction_rules_off
+            .insert(crate::experiments::FactionRule::MongolsNoWalls);
+        let city_id = city(&mut s, 1, hex(5, 3), 2);
+        s.cities.get_mut(&city_id).unwrap().buildings.insert(Walls);
+        capture_city(&mut s, city_id, PlayerId(0), &mut Vec::new());
+        assert!(s.cities[&city_id].buildings.contains(&Walls));
+    }
+
+    #[test]
     fn mongols_cannot_buy_siege_before_medieval_even_after_a_workshop_capture() {
         let mut s = game(&[0, 1]);
         s.player_mut(PlayerId(0)).faction = Faction::Mongols;
@@ -2041,7 +2080,7 @@ mod tests {
         assert!(!data::siege_available(Faction::Mongols, 0));
         assert!(data::siege_available(
             Faction::Mongols,
-            data::MONGOL_WALLS_ERA
+            data::MONGOL_SIEGE_ERA
         ));
         assert!(
             events
