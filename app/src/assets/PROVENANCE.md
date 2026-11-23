@@ -36,3 +36,7 @@ The date range is the range of dates the repository's own records give (prompt h
 
 - No prompt is stored for the map improvements, the six original resource medallions, the aircraft plan sprites or the parchment texture.
 - Where a set was generated from one shared prompt (terrain, city sets, camps and ruins), there is one prompt for the set, not one per file.
+
+## Hunter-killer animation candidate (2026-11-23)
+
+`units/anim/hunter-killer.webp` and `.json`: true 3D Blender render of original closed mechanical geometry, using the original CC BY 4.0 hunter-killer painting as frozen rest-camera UV colour. Original generated artillery/tank olive brushwork fills hidden surfaces. Sources, licences, prompt, input hashes and mechanical-motion attribution: `tools/art/anim3d/units/hunter-killer/SOURCES.md`. Unit scripts MIT; renders CC BY 4.0. CPU round-1 candidate; GPU and art approval remain separate. No runtime replacement of the painting.

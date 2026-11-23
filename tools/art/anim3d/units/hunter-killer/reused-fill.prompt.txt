@@ -1,0 +1,4 @@
+Built-in imagegen, 2026-11-22. Original unseen-surface fill, not replacement geometry.
+Create a seamless square albedo texture only for the unseen back surfaces of a premium hand-painted WWII artillery miniature: muted warm olive drab paint, delicate ochre edgewear and sparse tiny dark chips, subtle brushed pigment variation and fine cast-steel grain. Flat uniform diffuse light, no shadows, no objects, no panels, no borders, no text, no national insignia. Fine restrained detail, not noisy camouflage. Entire image is one continuous tileable olive painted metal surface.
+Output: 01a20674-c612-7411-9c8a-075f46e56d4c/exec-bdc68bad-f161-45e0-b0ec-31203ac453e8.png
+Saved to assets/artillery/painted-olive.png under ANIM_ROOT. Project CC BY 4.0.

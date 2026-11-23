@@ -1,0 +1,9 @@
+# Hunter-killer round 1 sources
+
+- Original project painting, CC BY 4.0: https://pub-fb5c281dd12d4ea4bbd38d657cdeb907.r2.dev/app/src/assets/units/hunter-killer-source.png . Downloaded 2026-11-23 to `assets/hunter-killer/painting-source.png`. Original prompt remains in `app/src/assets/units/prompts/hunter-killer.prompt.txt`. Camera projection uses the full source alpha-bbox fitted uniformly to the token field; no replacement painting or flat subject card.
+- Unseen-surface painted olive fill: original project CC BY 4.0 built-in imagegen artwork, generation `01a20674-c612-7411-9c8a-075f46e56d4c/exec-bdc68bad-f161-45e0-b0ec-31203ac453e8.png`, no public URL. Reuses `assets/tank/painted-olive.png`, originally `assets/artillery/painted-olive.png`; original prompt copied to `reused-fill.prompt.txt`. No new service call or paid asset.
+- Original closed hard-surface walker, rigid mechanical rig, two-link IK and five clips: these unit scripts, MIT code; rendered art CC BY 4.0. This is a walking **machine**, not an animal; human/animal mocap is inapplicable. Its deliberate slow sequential stepping is authored mechanical motion, with three fixed contacts and a swinging fourth foot. It does not use or claim CMU/Quaternius motion.
+- Blender 5.3.0: https://www.blender.org/ (GPL software); existing Pillow 13.0.0: https://pypi.org/project/pillow/13.0.0/ (MIT-CMU); existing FFmpeg: https://ffmpeg.org/ . No extra install.
+- Vehicle chapter and paint/bake methods read with `git show astra/unit-anim-3d-vehicles` at `0b2616f595e964a79641689ec26d31d2ed56cd28`. Delivery/render helpers adapted as isolated unit-local copies from `astra/unit-anim-3d-autonomous-armour` at `8a0f4f8c733974fea55a3f51025f3bb803bd4ccf` (same repository MIT code).
+
+`assets.lock.json` pins the painting, shipped reference and generated fill. All downloaded assets, Blender masters, bakes and uncompressed renders remain under `~/LegatumRuns/anim-pilot/` outside git.

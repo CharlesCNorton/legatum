@@ -106,3 +106,45 @@ tools/art/anim3d/render.sh audit
 ```
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
+
+## Vehicles — hunter-killer mechanical walker
+
+`units/hunter-killer/` is an isolated vehicle-family lane. The painting shows a planted four-legged armoured **machine**, not an aircraft or robot dog. Match the low broad hull, short autocannon, small turret with paired sensors, thick near leg and broad flat feet. All six Blender skills are applied. No changes to game rules or runtime are required.
+
+Build and review from the repo root:
+
+```sh
+tools/art/anim3d/units/hunter-killer/render.sh build
+SAMPLES=4 tools/art/anim3d/units/hunter-killer/render.sh b
+tools/art/anim3d/units/hunter-killer/render.sh finish
+SAMPLES=8 tools/art/anim3d/units/hunter-killer/render.sh final
+```
+
+The scripts reuse `env.sh`, plain gated `blender -b --disable-autoexec`, and existing Pillow/FFmpeg. One heavy process runs at a time. `model.blend`, `plain.blend`, `finished.blend`, five keyed clip scenes and six actual AO/Pointiness bakes live under `$ANIM_ROOT/masters/hunter-killer/`. Never hide a mesh by shrinking it: the finite muzzle flash uses visibility keys. The six-face hull and full-depth leg armour are closed geometry, with machined bevels and surface-fitted deck fittings; plain side/front images reveal the volume. Camera-space landmark construction is an approximate registration, not a reconstructed physical camera solution.
+
+### Four quality levers and judgement
+
+1. Standard method: uniformly register the original full painting to the token field and freeze camera UVs on the real rest mesh. Blend by facing/alpha confidence into the existing generated olive brushwork on hidden surfaces. Projection never cuts the mesh's alpha. The static stone is independent, so moving legs leave no painted feet behind.
+2. Finish physical geometry: bevel edges, closed armour thickness, separate joint caps, hydraulic rods, broad feet, fitted hatches, recessed optical lenses and barrel. Six real AO/Pointiness maps drive cavity grime and edge wear; grain modulates normals. No mesh is merely a painting card.
+3. Warm upper-left key, cool rim, soft fill and contact AO. Final Cycles/Metal output is denoised. Camera-only pigment avoids double-lighting the source; Standard/None is intentional for painted colour, not a photographic preset. Base fallback pigment is sRGB **#E9CFA0**, converted to linear, with physical contact shadow and warm camera pigment so the rim does not go grey.
+4. One bounded monotonic RGB grade comes from rest-pose opaque 10/50/90 percentiles and is frozen across the entire set. The painting/render/50-50 crossfade at native 256 and 64 px is `hunter-killer-f-restpose-compare.png`. A favourable metric is not art approval.
+
+Publish every stage immediately: `b-plain`, `c-textured-lit`, `c-details`, `d-rig-poses`, each `e-<clip>-strip` and animated WebP; maintain the unit log and check arriving unit feedback. The per-clip images are CPU previews until an explicit GPU receipt says otherwise.
+
+### Motion and planted-foot check
+
+For people the standing standard is CMU free-use or Quaternius CC0 captured motion retargeted in matching rest pose and bone roll, with only the weapon-specific attack authored. For horses/elephants use an open animated quadruped; never repair foot direction by rotating feet after retargeting. Record licences in both unit and external source ledgers. This machine instead uses the vehicle family's authored mechanical motion: a rigid chassis/turret/recoil rig and four analytic two-link limbs. Each quarter-cycle raises one foot; its ground position and forward orientation stay fixed while planted. Move is a deliberate on-the-spot stepping cycle, not locomotion with simulated world displacement. Idle scans, attack aims/recoils, hit jolts, and death collapses the chassis into folded legs and holds its final two samples. No squashed segment lengths or zero scale.
+
+Every round renders all eight move samples from top and front to `hunter-killer-g-feet-check.png`. The audit independently reads saved foot transforms and records planted-position error, segment-length error, stationary base, closed mesh topology, nonzero scales and terminal hold. Visual review must still catch silhouette faults, collisions and timing.
+
+### Trimmed 160 px contract and GPU handoff
+
+All 40 frames remain: idle 8, move 8, attack 10, hit 4, death 10. Actual final renders are 512 px; 256 px gallery masters are downsampled and retained alongside them. CPU256 previews are never upscaled into 512 masters. Delivery uses premultiplied reduction to a logical 160x160 cell, transparent-margin trimming, lossless full alpha and WebP quality 95/90/85/80/75, stopping at the highest quality below **200,000 bytes**. Failure at Q75 stops rather than reducing frames/quality.
+
+JSON has `version:2`, `trimmed:true`, `frame:{w:160,h:160,ax:80,ay:139}`, `atlas:{w,h}` and `clips`. Each clip has ordered `row`, `frames`, `fps`, `loop`, and one `rects` record per frame: `{x,y,w,h,ox,oy}`. Draw the atlas crop at `(anchorX-ax+ox, anchorY-ay+oy)`, scaling all coordinates equally. `row` is clip ordering, not a fixed atlas grid. Identical held frames reuse one rectangle. No runtime consumer is changed here.
+
+```sh
+ROUND=1 tools/art/anim3d/units/hunter-killer/gpu.sh
+```
+
+The no-argument executable renders every stage and every clip serially in Cycles GPU512 (96 samples default), publishes 512/256 masters, packs and validates the trimmed atlas, writes the geometry audit, and creates `hunter-killer-round${ROUND}.mp4`: all five decoded clips side by side at 2x on cream, exactly 8 seconds/240 frames, H.264 yuv420p. Missing Metal fails explicitly. Final independent verification checks scene/render/grade/atlas hashes, GPU device, resolution, complete frame sets, video format and duration. Progress/failure lives in `hunter-killer-gpu-status.txt`; transcript is `gpu-logs-hunter-killer-r${ROUND}.log`. Only a manual painting-parity judgement plus clean clips and a passing size contract may create `hunter-killer-PASS`; the scripts never write it automatically.
