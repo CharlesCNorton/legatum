@@ -5,7 +5,16 @@ from mathutils import Vector
 R=Path(os.environ['ANIM_ROOT']);M=R/'masters/field-cannon';records={}
 for clip,count in [('idle',8),('move',8),('attack',10),('hit',4),('death',10)]:
  bpy.ops.wm.open_mainfile(filepath=str(M/'clips'/f'{clip}.blend'));sc=bpy.context.scene;rig=bpy.data.objects['Gunner MPFB game_engine'];gun=bpy.data.objects['Gun travel and recoil'];base=bpy.data.objects['Stationary cream base'];body=bpy.data.objects['MPFB artillery gunner anatomy']
- assert abs(sc['wheel_radius']-.48)<1e-6 and abs(gun['wheel_radius']-.48)<1e-6,'Wheel radius metadata drifted from geometry'
+ assert abs(sc['wheel_radius']-.51)<1e-6 and abs(gun['wheel_radius']-.51)<1e-6,'Wheel radius metadata drifted from geometry'
+ for wheel_name in ['Wheel -1','Wheel 1']:
+  wheel=bpy.data.objects[wheel_name]
+  tyre=next(o for o in wheel.children if o.name.startswith('Flat wrought iron tyre'))
+  local=wheel.matrix_world.inverted() @ tyre.matrix_world
+  radius=max(((local @ v.co).x**2+(local @ v.co).z**2)**.5 for v in tyre.data.vertices)
+  assert abs(radius-sc['wheel_radius'])<1e-5,('Rolling radius differs from real tyre geometry',wheel_name,radius)
+ for belt in [o for o in sc.objects if o.name.startswith('Ivory cross belt')]:
+  assert belt.parent.name=='Tailored blue coat body','Crossbelt detached from coat'
+  assert any(m.type=='SOLIDIFY' and m.thickness>=.005 for m in belt.modifiers),'Crossbelt lacks physical thickness'
  assert len(body.data.vertices)>10000 and len(rig.data.bones)==53,'MPFB topology/rig missing'
  assert json.loads(sc['sample_frames'])==list(range(1,count+1));base_matrix=base.matrix_world.copy();samples=[];held_values=None
  for i in range(count):
@@ -17,9 +26,9 @@ for clip,count in [('idle',8),('move',8),('attack',10),('hit',4),('death',10)]:
    target=bpy.data.objects['Barrel elevation'].matrix_world @ Vector(rig['barrel_contact_local'])
    assert (actual-target).length<.002,('Resting palm lost barrel contact',(actual-target).length)
   if clip in ['move','attack','hit']:
-   travel=.48*(2*math.pi/12)*(i/count) if clip=='move' else 0
+   travel=.51*(2*math.pi/12)*(i/count) if clip=='move' else 0
    rest=gun['rest_location'];yaw=gun['rest_yaw'];localtravel=(gun.location.x-rest[0])*math.cos(yaw)+(gun.location.y-rest[1])*math.sin(yaw)
-   expected=(travel+localtravel)/.48
+   expected=(travel+localtravel)/.51
    for name in ['Wheel -1','Wheel 1']:assert abs(bpy.data.objects[name].rotation_euler.y-expected)<1e-5,'Wheel slip'
   if clip=='death' and i>=count-2:
    values=[v for o in sc.objects for row in o.matrix_world for v in row]

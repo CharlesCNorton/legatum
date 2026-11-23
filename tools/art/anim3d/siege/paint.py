@@ -14,6 +14,7 @@ leather=bpy.data.images.load(str(R/'assets/field-cannon/projection-leather.png')
 ivory=bpy.data.images.load(str(R/'assets/field-cannon/projection-ivory.png'),check_existing=True)
 machine=bpy.data.images.load(str(R/'assets/field-cannon/projection-machine.png'),check_existing=True)
 base=bpy.data.images.load(str(R/'assets/field-cannon/projection-base.png'),check_existing=True)
+coat=bpy.data.images.load(str(R/'assets/field-cannon/projection-coat.png'),check_existing=True)
 gun_meshes=set(bpy.data.objects['Gun travel and recoil'].children_recursive)
 # Alpha-bounds registration of the original 1254px master to the 256px token.
 registration={'source_bbox':[81,7,1172,1247],'reference_bbox':[26,12,230,244]}
@@ -54,7 +55,7 @@ for obj in list(sc.objects):
   if not old:
    rgb=n.new('ShaderNodeRGB');rgb.outputs[0].default_value=p.inputs['Base Color'].default_value;old=rgb.outputs[0]
   tc=n.new('ShaderNodeUVMap');tc.uv_map=uv.name
-  tex=n.new('ShaderNodeTexImage');tex.image=navy if mat.name.startswith('Siege indigo wool') else ivory if mat.name.startswith('Siege ivory linen') else leather if mat.name.startswith('Siege black boot leather') and not obj.name.startswith(('Black felt shako','Black shako visor')) else machine if obj in gun_meshes else base if obj.name=='Stationary cream base' else image;tex.extension='CLIP';links.new(tc.outputs[0],tex.inputs[0])
+  tex=n.new('ShaderNodeTexImage');tex.image=coat if obj.name=='Tailored blue coat body' else navy if mat.name.startswith('Siege indigo wool') else ivory if mat.name.startswith('Siege ivory linen') else leather if mat.name.startswith('Siege black boot leather') and not obj.name.startswith(('Black felt shako','Black shako visor')) else machine if obj in gun_meshes else base if obj.name=='Stationary cream base' else image;tex.extension='CLIP';links.new(tc.outputs[0],tex.inputs[0])
   attr=n.new('ShaderNodeVertexColor');attr.layer_name=mask.name
   mult=n.new('ShaderNodeMath');mult.operation='MULTIPLY';links.new(attr.outputs['Color'],mult.inputs[0]);links.new(tex.outputs['Alpha'],mult.inputs[1])
   weight=n.new('ShaderNodeMath');weight.operation='MULTIPLY';weight.inputs[1].default_value=.96;links.new(mult.outputs[0],weight.inputs[0])
@@ -64,7 +65,7 @@ for obj in list(sc.objects):
   if obj.name=='Stationary cream base':
    # AgX and the common rest grade otherwise turn the warm cream stone pink-grey.
    # Keep the shared source/palette; compensate its lit material before the frozen grade.
-   pigment=n.new('ShaderNodeMixRGB');pigment.name='Cream pigment pre-AgX compensation';pigment.blend_type='MULTIPLY';pigment.inputs[0].default_value=1; pigment.inputs[2].default_value=(1.02,.98,.72,1)
+   pigment=n.new('ShaderNodeMixRGB');pigment.name='Cream pigment pre-AgX compensation';pigment.blend_type='MULTIPLY';pigment.inputs[0].default_value=1; pigment.inputs[2].default_value=(1.02,1.10,.61,1)
    links.new(mix.outputs[0],pigment.inputs[1]);links.new(pigment.outputs[0],p.inputs['Base Color']);links.new(pigment.outputs[0],p.inputs['Emission Color'])
  records.append({'object':obj.name,'visible_vertices':sum(w>0 for w in weights),'vertices':len(weights)})
 sc['painted_projection']='One frozen camera UV projection; native geometry and filled occluded/back surfaces. Registration residuals are in registration.json.'

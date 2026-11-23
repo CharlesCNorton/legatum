@@ -179,7 +179,7 @@ append findings to `field-cannon-log.md` between rounds.
 
 Clips retain **8/8/10/4/10 frames** at **10/12/14/12/10 fps**; only idle and move loop. Idle solves the
 resting palm after shoulder motion, subtracting the hand length to obtain a reachable wrist target. Move is an in-place push with the rammer stowed; runtime supplies
-map travel. Wheel angle is exactly `(virtual travel + local recoil) / 0.48`; twelve-spoke symmetry
+map travel. Wheel angle is exactly `(virtual travel + local recoil) / 0.51`; twelve-spoke symmetry
 closes the move loop. Attack has recoil, brief solid muzzle flash and bounded volumetric smoke lobes with radial density
 falloff. The smoke has no opaque surface shader. Effects
 use keyed `hide_render`, never near-zero scales (the old approach crashed Cycles/OpenVDB). Death
@@ -188,7 +188,7 @@ The carriage stays close to wheel-supported height rather than levering the whol
 source PNGs are identical; the second terminal PNG is reused after asserting all transforms match.
 
 Lead's final host GPU pass, from this branch's checkout: run
-`ROUND=4 tools/art/anim3d/units/field-cannon/gpu.sh`. It audits geometry, renders every stage
+`ROUND=5 tools/art/anim3d/units/field-cannon/gpu.sh`. It audits geometry, renders every stage
 (including plain views) at 512 px / 64 samples, writes 256 px gallery copies, packs and validates the
 saved external master, and encodes the decoded atlas as the driver-requested round MP4. The old
 `siege/gpu-final.sh` delegates to this entry point. The equivalent individual stages are:
@@ -335,6 +335,42 @@ The barrel axis and shoulder/elbow landmarks fit more closely, but face/gaze, ta
 perspective remain visibly different. At 64 px the identity survives; it is not the same token silhouette.
 Projection masks must distinguish objects as well as shared materials: boots and shako share black
 leather, but the hat must retain its painted brass ornament. GPU64/512 review remains pending.
+
+### Round-five tailoring and wheel construction
+
+Round-four GPU execution could not be confirmed: its named driver log was absent and the current
+render provenance said CPU/256/8. Inspect actual provenance before calling a prior image GPU output.
+Round-four CPU evidence remains in `masters/field-cannon/round4-cpu`; older GPU512 evidence remains
+in `round3-gpu`. The single GPU entry point now defaults to round 5, retains its own transcript and
+writes a round-specific receipt only after GPU512/gallery256, atlas, validation and MP4 succeed.
+The receipt explicitly leaves visual art approval false. Its master check also verifies the rendered
+blend hashes, not only resolution/device labels.
+
+The wheel radius is now .51 m in physical geometry and rolling calculations. Squared, beveled wooden
+felloes replace the rounded torus construction; spokes taper and the iron arris is finer. Adjusted
+heading/track improve the near-wheel centre, with recorded residuals about 1.01 px near / 3.29 px far.
+The geometry audit checks the actual tyre radius against metadata, as well as wheel travel.
+
+`tailoring.py`, called during registration, fits the two measured crossbelt paths by ray-casting onto
+the full-depth posed coat. Real thick ribbons, overlapping layers, stitched edges and a brass plate
+follow that coat's skeletal transform. Short overhanging strap ends retain the nearest actual coat
+depth; they do not flatten the figure or warp its texture. The native head turns toward the source
+gaze; fuller coat/sleeves, an exposed red cuff and raised collar facing improve the uniform. The
+coat-specific source mask retains red piping/brass buttons while excluding the separate hand,
+rammer and ivory belts; hidden/revealed cloth still uses the existing generated navy-wool fill.
+
+The first buckle preview caught a parenting update-order error: assigning scale before reading an
+unevaluated world matrix discarded its small size. Update the view layer, then assign the local
+matrix through the parent's inverse. The corrected preview precedes all clip generation. Continue
+using one frozen camera projection, real AO/curvature, product lighting and the automatic rest grade.
+Cream pigment compensation is evaluated on the lit pixels, not just the nominal material swatch.
+Round-five CPU delivery retains all 40 samples: **190,966 bytes at Q80**, 793 × 975 atlas,
+38 unique rectangles, lossless alpha and 160 px logical cells. Q85 exceeded the cap (best 214,840
+bytes). Full atlas/video validation, the geometry audit, six regression tests, syntax and whitespace
+checks pass. The 8-second MP4 is H.264/yuv420p, 1600 × 348, 240 frames. CPU evidence is archived
+in `round5-cpu`. Silhouette IoU is .840; the figure and far wheel still differ, and the face/tailoring
+remain below the painting at 256 px. At 64 px the unit is recognizable, not indistinguishable.
+**No PASS marker; fresh GPU512 rendering and visual acceptance remain outstanding.**
 
 ### Trimmed JSON format, version 2
 

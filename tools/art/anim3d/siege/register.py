@@ -1,7 +1,7 @@
 """Register physical parts and pose to measured token landmarks before UV projection.
 All corrections are 3D transforms/IK; no image warp or depth-flattened geometry.
 """
-import bpy,json,os
+import bpy,json,os,runpy
 from pathlib import Path
 from mathutils import Vector,Matrix
 from bpy_extras.object_utils import world_to_camera_view
@@ -11,14 +11,14 @@ s=bpy.context.scene;c=s.camera;r=bpy.data.objects['Gunner MPFB game_engine'];g=b
 # Lower the view elevation and bring the wheel track into the source's negative space.
 c.location=(3,-7,2.72);c.rotation_euler=(Vector((0,0,1.01))-c.location).to_track_quat('-Z','Y').to_euler()
 c.data.ortho_scale=2.70
-g.rotation_euler.z=-.70;g.location.x=.215;g.location.y=.14;g['rest_location']=list(g.location);g['rest_yaw']=g.rotation_euler.z
+g.rotation_euler.z=-.62;g.location.x=.215;g.location.y=.14;g['rest_location']=list(g.location);g['rest_yaw']=g.rotation_euler.z
 barrel.scale.x=1.65;barrel.rotation_euler.y=-.035
 barrel.location.x-=.05;barrel.location.z+=.075;barrel.scale.y=barrel.scale.z=1.07
 r.scale.z=1.05
 # Narrower axle track with wheels still perpendicular to the barrel.
 for side in [-1,1]:
- wheel=bpy.data.objects['Wheel '+str(side)];wheel.location.y=-.50 if side<0 else .47
-axle=bpy.data.objects['Iron axle'];axle.scale.z=1.02/1.22
+ wheel=bpy.data.objects['Wheel '+str(side)];wheel.location.y=-.52 if side<0 else .49
+axle=bpy.data.objects['Iron axle'];axle.scale.z=1.06/1.22
 bpy.context.view_layer.update()
 def pixel(v):
  q=world_to_camera_view(s,c,v);return Vector((q.x*256,(1-q.y)*256))
@@ -32,8 +32,11 @@ def aim(name,d):
 def limb(up,low,t,pole):
  a=r.pose.bones[up].head.copy();delta=Vector(t)-a;factor=r.get('arm_length_factor',1) if up.startswith('upperarm_') else 1;l1=r.data.bones[up].length*factor;l2=r.data.bones[low].length*factor;d=min(delta.length,l1+l2-.0001);delta.normalize();along=(l1*l1-l2*l2+d*d)/(2*d);h=max(0,l1*l1-along*along)**.5
  side=Vector(pole)-a;side=(side-delta*side.dot(delta)).normalized();el=a+delta*along+side*h;aim(up,el-a);aim(low,Vector(t)-el)
-# Preserve the prior shako registration; the face/gaze still needs a closer fit.
+# Turn the full anatomical head left, retaining its real depth and attached shako.
 p=r.pose.bones['head'];p.matrix_basis=p.matrix_basis @ Matrix.Rotation(-.13,4,'X')
+bpy.context.view_layer.update()
+pivot=p.head.copy();p.matrix=Matrix.Translation(pivot) @ Matrix.Rotation(-.30,4,'Z') @ Matrix.Translation(-pivot) @ p.matrix
+bpy.context.view_layer.update()
 # The painted adult's arms are ten percent longer than the default MPFB macro.
 # Scale actual bone segments (including weighted anatomy and sleeves), never detached hands.
 r['arm_length_factor']=1.10
@@ -111,6 +114,7 @@ bpy.context.view_layer.update();contact=barrel.matrix_world @ Vector((-.20,-.025
 direction=Vector((.11,-.015,-.03)).normalized();target=r.matrix_world.inverted() @ contact-direction*r.data.bones['hand_l'].length
 limb('upperarm_l','lowerarm_l',target,(.56,-.24,1.14));aim('hand_l',direction)
 r['barrel_contact_local']=[-.20,-.025,.171]
+runpy.run_path(str(Path(__file__).with_name('tailoring.py')))['fit_crossbelts']()
 r['neutral_pose']=json.dumps({p.name:[list(row) for row in p.matrix_basis] for p in r.pose.bones})
 records={}
 for name,xy in [('hand_r',(57,87)),('foot_r',(46,201)),('head',(90,57)),('upperarm_r',(68,65)),('upperarm_l',(105,70)),('lowerarm_r',(49,85))]:

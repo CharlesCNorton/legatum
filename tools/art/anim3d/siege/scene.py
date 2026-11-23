@@ -89,20 +89,21 @@ skin=mat('Siege painted warm skin',(.52,.30,.16),0,.66)
 stone=mat('Siege cream limestone',(.82,.70,.49),0,.86)
 dark=mat('Siege bore soot',(.045,.028,.014),0,.95)
 # Physical gun, forward along +X; axle along Y. Radius is the rolling radius.
-gun=empty('Gun travel and recoil');gun['wheel_radius']=.48
-ax=.08;wz=.585;radius=.48
+gun=empty('Gun travel and recoil');gun['wheel_radius']=.51
+ax=.08;wz=.615;radius=.51
 rod('Iron axle',(ax,-.61,wz),(ax,.61,wz),.052,iron,gun)
 for sy in [-1,1]:
  y=sy*.61;wheel=empty('Wheel '+str(sy),(ax,y,wz));parent(wheel,gun)
  # Broad wooden felloe and iron tyre, with genuine spoke openings.
- for off in [-.037,.037]:
-  ring('Oak felloe',(ax,y+off,wz),radius-.035,.029,wood,p=wheel)
+ hoop('Squared oak felloe',(ax,y,wz),radius-.014,.078,.052,wood,wheel)
  hoop('Flat wrought iron tyre',(ax,y,wz),radius,.105,.014,iron,wheel)
- for off in [-.034,.034]:ring('Tyre polished edge',(ax,y+off,wz),radius-.006,.005,brightiron,p=wheel)
+ for off in [-.052,.052]:ring('Tyre polished edge',(ax,y+off,wz),radius-.003,.0025,brightiron,p=wheel)
  for i in range(12):
   a=2*pi*i/12;end=Vector((ax+(radius-.054)*cos(a),y,wz+(radius-.054)*sin(a)))
   start=Vector((ax+.072*cos(a),y,wz+.072*sin(a)))
-  o=cube('Tapered oak spoke',(start+end)*.5,(.046,.052,(end-start).length),wood,wheel);o.rotation_euler=(end-start).to_track_quat('Z','Y').to_euler()
+  o=cube('Tapered oak spoke',(start+end)*.5,(.041,.047,(end-start).length),wood,wheel);o.rotation_euler=(end-start).to_track_quat('Z','Y').to_euler()
+  for vertex in o.data.vertices:
+   vertex.co.x*=1-.22*vertex.co.z/((end-start).length*.5)
   ball('Felloe nail',tuple(end+Vector((0,sy*.035,0))),(.009,.005,.009),brightiron,wheel)
  rod('Turned wheel hub',(ax,y-.09,wz),(ax,y+.09,wz),.081,rawwood,wheel,r2=.069)
  for off in [-.073,.073]:ring('Hub iron binding',(ax,y+off,wz),.077,.010,iron,p=wheel)
@@ -210,7 +211,7 @@ def attach(o,bone):
 # Tailored torso, closed fitted coat, central ivory waistcoat and sculpted folds.
 vs=[];fs=[]
 for j in range(21):
- t=j/20;z=1.005+t*.475;rx=.158+.067*sin(t*pi*.68);ry=.150+.025*sin(t*pi)
+ t=j/20;z=1.005+t*.475;rx=.185+.040*sin(t*pi*.68);ry=.150+.025*sin(t*pi)
  for i in range(64):
   a=i*2*pi/64
   # Compression folds radiate from the belt and loaded shoulder, rather than regular ribs.
@@ -233,11 +234,13 @@ for sg in [-1,1]:
  attach(curve('Coat tail red piping',[vs[j*9+8] for j in range(11)],.004,red),'pelvis')
 # Sewn sleeves have deliberate broad folds visible at token resolution.
 for side in ['l','r']:
- for segment,r0,r1 in [('upperarm',.078,.060),('lowerarm',.062,.044)]:
+ for segment,r0,r1 in [('upperarm',.087,.065),('lowerarm',.067,.044)]:
   bone=rig.data.bones[segment+'_'+side];a=bone.head_local;b=bone.tail_local;axis=(b-a).normalized()
   u=axis.cross(Vector((0,1,0))).normalized();v=axis.cross(u).normalized();vs=[];fs=[]
   for j in range(25):
-   t=j/24;center=a.lerp(b,t)
+   t=j/24
+   sleeve_end=1-.080/(b-a).length if segment=='lowerarm' else 1
+   center=a.lerp(b,t*sleeve_end)
    for k in range(40):
     angle=2*pi*k/40;wrinkle=(.006*sin(t*22+2.2*sin(angle*2))+.002*sin(t*43-angle*3))*sin(pi*t)**.6
     sleeve_radius=r0*(1-t)+r1*t+wrinkle;vs.append(tuple(center+sleeve_radius*(u*cos(angle)+v*sin(angle))))
@@ -252,7 +255,7 @@ for side in ['l','r']:
  for t in [.025,.066]:
   pos=tip-v*t+Vector((0,-.047,0));attach(ball('Cuff brass button',pos,(.007,.005,.007),edge),'lowerarm_'+side)
 def coat_front(x,z):
- t=max(0,min(1,(z-1.005)/.475));rx=.158+.067*sin(t*pi*.68);ry=.150+.025*sin(t*pi)
+ t=max(0,min(1,(z-1.005)/.475));rx=.185+.040*sin(t*pi*.68);ry=.150+.025*sin(t*pi)
  a=math.asin(max(-.99,min(.99,x/rx)))
  fold=(.009*sin(a*9+t*19)+.005*sin(a*17-t*11))*sin(t*pi)
  fold+=.008*sin(t*37+a*3)*max(0,cos(a))*(1-t)

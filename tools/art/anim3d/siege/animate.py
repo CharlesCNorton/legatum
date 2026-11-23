@@ -74,7 +74,7 @@ for clip,(count,fps,loop) in CLIPS.items():
   elif clip=='move':
    # Ground travel is removed from sprite root by the map; 12-fold wheel symmetry
    # gives an exact cyclic seam after one spoke pitch. theta = distance / radius.
-   distance=.48*(2*pi/12)*t;localtravel=.018*sin(phase);theta=(distance+localtravel)/.48
+   distance=.51*(2*pi/12)*t;localtravel=.018*sin(phase);theta=(distance+localtravel)/.51
    for w in wheels:w.rotation_euler.y=theta
    gun.location=neutralgun+Vector((localtravel*cos(gunangle.z),localtravel*sin(gunangle.z),0))
    rig.location.x+=.018*sin(phase);rotate(rig,'spine_01','X',.13);rotate(rig,'spine_02','Y',.12)
@@ -87,7 +87,7 @@ for clip,(count,fps,loop) in CLIPS.items():
    limb(rig,'upperarm_l','lowerarm_l',target,(.56,-.24,1.14));aim(rig,'hand_l',(.11,-.015,-.03))
   elif clip=='attack':
    recoil=[0,0,-.105,-.13,-.085,-.04,-.014,0,0,0][i];gun.location=neutralgun+Vector((recoil*cos(gunangle.z),recoil*sin(gunangle.z),0));bpy.context.view_layer.update()
-   for w in wheels:w.rotation_euler.y=recoil/.48
+   for w in wheels:w.rotation_euler.y=recoil/.51
    react=[0,-.025,.16,.23,.16,.09,.03,0,0,0][i];rotate(rig,'spine_01','Y',-react);rotate(rig,'head','X',react*.6);rotate(rig,'upperarm_l','Z',react)
    visible=1 if i==2 else 0;muzzle=barrel.matrix_world @ Vector((.76,0,.02));forward=(barrel.matrix_world.to_3x3() @ Vector((1,0,0))).normalized();flash.location=muzzle+forward*.10;flash.rotation_euler=barrel.matrix_world.to_euler();flash.scale=(.20,.065,.055);flash.hide_render=not visible;flash.keyframe_insert(data_path='hide_render',frame=frame)
    flash.keyframe_insert(data_path='scale',frame=frame);flash.keyframe_insert(data_path='location',frame=frame)
@@ -96,7 +96,7 @@ for clip,(count,fps,loop) in CLIPS.items():
     o.location=muzzle+forward*(.06+.07*age)+Vector((.025*cos(j*2.4),.035*sin(j*2.4),.03+.21*age+.045*sin(j*1.3)));o.hide_render=size<.01;o.keyframe_insert(data_path='hide_render',frame=frame);size=max(.02,size);o.scale=(size*1.2,size,size*.9);o.keyframe_insert(data_path='location',frame=frame);o.keyframe_insert(data_path='scale',frame=frame)
   elif clip=='hit':
    a=[0,.17,-.065,0][i];localtravel=-a*.23;gun.rotation_euler.z=gunangle.z+a*.1
-   for w in wheels:w.rotation_euler.y=localtravel/.48
+   for w in wheels:w.rotation_euler.y=localtravel/.51
    gun.location=neutralgun+Vector((localtravel*cos(gunangle.z),localtravel*sin(gunangle.z),0))
    rotate(rig,'spine_02','Y',-a);rotate(rig,'head','X',-a*.7);rotate(rig,'upperarm_r','Z',a)
   else:
@@ -119,7 +119,7 @@ for clip,(count,fps,loop) in CLIPS.items():
    o.keyframe_insert(data_path='location',frame=frame);o.keyframe_insert(data_path='rotation_euler',frame=frame)
   for p in rig.pose.bones:
    p.rotation_mode='QUATERNION';p.keyframe_insert(data_path='location',frame=frame);p.keyframe_insert(data_path='rotation_quaternion',frame=frame);p.keyframe_insert(data_path='scale',frame=frame)
- sc['clip']=clip;sc['sample_frames']=json.dumps(frames);sc['loop']=loop;sc['wheel_motion']='theta = (virtual ground travel + local recoil/travel) / 0.48; 12-spoke cyclic symmetry';sc.frame_set(1)
+ sc['clip']=clip;sc['sample_frames']=json.dumps(frames);sc['loop']=loop;sc['wheel_motion']='theta = (virtual ground travel + local recoil/travel) / 0.51; 12-spoke cyclic symmetry';sc.frame_set(1)
  bpy.ops.wm.save_as_mainfile(filepath=str(M/'clips'/f'{clip}.blend'))
  (M/'clips'/f'{clip}.json').write_text(json.dumps({'source_master_sha256':hashlib.sha256((M/'field-cannon.blend').read_bytes()).hexdigest(),'frames':count,'fps':fps,'loop':loop},indent=2))
  print('CLIP_READY',clip,count)
