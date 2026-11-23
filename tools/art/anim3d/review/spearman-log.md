@@ -37,3 +37,5 @@
 - GPU handoff now fails early on missing requested GPU, rebuilds projection before all five clips, and retains the requested round log with failed-stage reporting. Missing prior GPU log cannot be diagnosed as a successful or failed render.
 - Round 5 rebuilt and CPU-rendered idle: 256px / 12 samples, frozen rest grade.
 - Round 5 rebuilt and CPU-rendered move: 256px / 12 samples, frozen rest grade.
+- Round 5 rebuilt and CPU-rendered attack: 256px / 12 samples, frozen rest grade.
+- Round 5 rebuilt and CPU-rendered hit: 256px / 12 samples, frozen rest grade.
