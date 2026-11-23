@@ -78,3 +78,7 @@
 - Final audit PASS: 53bones, finished rigid UV error0px, attack guard endpoints, stationary base, finite/nonzero scales, loops0.0 and held death. Video verified H264/yuv420p1600x348,240frames,8.000s.15Python/2shell syntax, GPU executable/failure preflight/CPU rejection and whitespace checks passed.
 - Round2 verdict: closer red linen/wicker/cloak at256 and same recognizable peltast at64, but cap/face/boots, smooth peach stone, abrupt rearm and stiff step/death remain below painting quality. No PASS marker. Lead must run tools/art/anim3d/units/peltast/gpu.sh for actual GPU64/512 and fresh atlas/video validation.
 - Git staging/commit attempted after verifying origin/master is already an ancestor; blocked by .git/worktrees/lane-20/index.lock Operation not permitted. Changes remain uncommitted for runner. No push, PR or merge.
+- Authored idle/move/attack/hit/death on MPFB rig: 8/8/10/4/10 samples; looping breathing/steps, thrown-javelin visibility, hit recovery, independent equipment release and held death. Cloth uses authored secondary deformation, not a cloth simulation.
+- Published b review immediately: CYCLES/GPU, 512 px, 2 frame(s).
+- Published c review immediately: CYCLES/GPU, 512 px, 1 frame(s).
+- Published d review immediately: CYCLES/GPU, 512 px, 4 frame(s).
