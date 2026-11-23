@@ -317,3 +317,4 @@
 - Posted field-cannon-c-details.png; actual CYCLES render, visual review pending.
 - Posted field-cannon-d-rig-poses.png; actual CYCLES render, visual review pending.
 - Posted field-cannon-e-idle-strip.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-move-strip.png; actual CYCLES render, visual review pending.

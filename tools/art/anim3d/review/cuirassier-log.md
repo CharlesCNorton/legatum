@@ -39,3 +39,12 @@
 - Emitted d: 4 frames, 256 px CYCLES/CPU, 8 samples.
 - Audit checked all 40 samples, native 19,158-vertex/53-bone rider, 23,525-vertex refined horse, frozen morphs, mesh pistol attachment, projection UVs and stationary camera/base. It measured a 0.0706 m move minimum against the 0.100 m stone top; adding an explicit penetration assertion and a mount-root correction while preserving canter flight. Revised move will be rebuilt and re-rendered before packing.
 - Emitted e-idle: 8 frames, 256 px CYCLES/CPU, 8 samples.
+- Emitted e-move: 8 frames, 256 px CYCLES/CPU, 8 samples.
+- Emitted e-attack: 10 frames, 256 px CYCLES/CPU, 8 samples.
+- Emitted e-hit: 4 frames, 256 px CYCLES/CPU, 8 samples.
+- Emitted e-death: 10 frames, 256 px CYCLES/CPU, 8 samples.
+- Full motion strips exposed oversized source tail swings and an exaggerated canter on the fitted horse. Damped idle/attack/hit tail motion to 22%, move to 45%, and replaced the retimed gallop with the existing licensed four-beat Walk action. Kept all 8/8/10/4/10 samples and clip timing; source motion is authored, not mocap.
+- Death review caught a pistol muzzle crossing the top of the fixed frame. Interpolated the death elbow pole from the same guard pose and lowered the held pistol with the fall. Terminal horse/rider grounding and some paint reveals still need visual refinement; technical floor/bounds checks alone do not establish clean finished motion.
+- Emitted d: 4 frames, 256 px CYCLES/CPU, 8 samples.
+- Emitted e-idle: 8 frames, 256 px CYCLES/CPU, 8 samples.
+- Emitted e-move: 8 frames, 256 px CYCLES/CPU, 8 samples.

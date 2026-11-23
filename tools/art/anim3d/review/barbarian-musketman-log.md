@@ -69,3 +69,26 @@
 - Posted b-plain review (CPU, 256 px).
 - Finished-surface camera-only projection applied; physical stone excluded and generated fills retained.
 - Posted c-textured-lit review (CPU, 256 px).
+- Built kneeling MPFB human, tailored ragged kit, feather hat, bandolier and solid horizontal musket.
+- Posted b-plain review (CPU, 256 px).
+- Finished-surface camera-only projection applied; physical stone excluded and generated fills retained.
+- Posted c-textured-lit review (CPU, 256 px).
+- Posted b-plain review (CPU, 512 px).
+- Posted c-textured-lit review (CPU, 512 px).
+- Built kneeling MPFB human, tailored ragged kit, feather hat, bandolier and solid horizontal musket.
+- Posted b-plain review (CPU, 512 px).
+- Finished-surface camera-only projection applied; physical stone excluded and generated fills retained.
+- Posted c-textured-lit review (CPU, 512 px).
+- Round 2 geometry/material pass: finished static bevel/solidify/subdivision before UV calibration, froze MPFB macro morphs without removing skeletal weights, fitted full-depth brim/crown, added cambered feather vanes, deepened kneeling knee and moved rear boot inward. Replaced double-lit projected pigment with camera-only paint and ray visibility. Retained generated hidden fills, six AO/curvature maps, thick seams/straps and real hair. Camera remains fixed to the registered painting coordinates; exact silhouette parity is not claimed.
+- Round 2 lighting/base pass: reduced warm-key/cool-rim energies for Standard pigment display; moved the physical circular stone away from camera to fit its ellipse. Static stone receives no source image; camera-only cream/rim pigment plus live AO retains moving contact shadows. Replaced opaque smoke spheres with finite-density volume lobes and keyed visibility.
+- Authored idle skeletal action, 8 samples.
+- Authored move skeletal action, 8 samples.
+- Authored attack skeletal action, 10 samples.
+- Authored hit skeletal action, 4 samples.
+- Authored death skeletal action, 10 samples.
+- Posted d-rig-poses review (CPU, 512 px).
+- Posted e-idle review (CPU, 512 px).
+- Posted e-move review (CPU, 512 px).
+- Posted e-attack review (CPU, 512 px).
+- Posted e-hit review (CPU, 512 px).
+- Posted e-death review (CPU, 512 px).

@@ -74,3 +74,7 @@
 - Published e-hit review immediately: CYCLES/CPU, 512 px, 4 frame(s).
 - Inspected current512 rest, clay side, details, attack pose sheet, idle/move/attack strips at256/64. Tunic/wicker likeness improved; cap/face/boots and base remain distinguishable. Whole silhouette IoU .77181 -> .82345, figure .77943 -> .80778 (alpha>32). Movement still stiff; throw rearm abrupt. No PASS.
 - Published e-death review immediately: CYCLES/CPU, 512 px, 10 frame(s).
+- Final CPU512/12 delivery: 40 frames, matching256 copies, 195990-byte160px atlas atQ80 with lossless8-bit alpha (0 error),39 unique rectangles. Q85=220268 and Q90=257172 exceeded cap. Full validation PASS; allfive strips, decoded160/64 comparison and six MP4 frames inspected.
+- Final audit PASS: 53bones, finished rigid UV error0px, attack guard endpoints, stationary base, finite/nonzero scales, loops0.0 and held death. Video verified H264/yuv420p1600x348,240frames,8.000s.15Python/2shell syntax, GPU executable/failure preflight/CPU rejection and whitespace checks passed.
+- Round2 verdict: closer red linen/wicker/cloak at256 and same recognizable peltast at64, but cap/face/boots, smooth peach stone, abrupt rearm and stiff step/death remain below painting quality. No PASS marker. Lead must run tools/art/anim3d/units/peltast/gpu.sh for actual GPU64/512 and fresh atlas/video validation.
+- Git staging/commit attempted after verifying origin/master is already an ancestor; blocked by .git/worktrees/lane-20/index.lock Operation not permitted. Changes remain uncommitted for runner. No push, PR or merge.

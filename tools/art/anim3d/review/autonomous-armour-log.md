@@ -78,3 +78,14 @@ Round 1 final CPU checks PASS: 40 x 256 clip masters, 16 required review artifac
 Round 2 resumption, 2026-11-23: opened latest rest comparison, move/death and attack/hit strips before edits; all available render manifests are CPU256/8, with no 512 directory, so no prior GPU success is claimed. No unit-specific FEEDBACK file exists; read all 23 common feedback items and both advanced family playbooks through round 8.
 Round 2 honest initial critique: at 256 the near track/front fender sits too far right and low, road wheels are small/dark/muddy, hull and turret paint have double-lit warm patches, and the stone has an unnaturally hard broad shadow and thin edge. The painting has clearer panel edges, larger clean wheel dishes, a shallower base ellipse and brighter bevel. At 64 the identity survives but the chassis proportions and running gear remain distinguishable. Death only droops the barrel and barely reads as disabled. No PASS.
 Round 2 skills: read blender-modeling/materials/lighting/cameras/animation/rendering; apply complete solid surface registration, camera-only projected pigment, clean rotating gear, physical stone calibration and more legible held damage. Existing generated olive fill and actual AO/curvature bakes remain the unseen-surface method; cloth/hair and human mocap do not apply to this unmanned vehicle.
+Prepared full-source projection; read all six Blender skills, vehicle chapter, art skill and standing feedback 12–22.
+Built true 3D hard-surface geometry and rigid rig: 1067 objects; bevels, open muzzle, sensors, seven wheels per side, 128 articulated tracks.
+Rendered b: 3 PNGs, 256 px, CYCLES CPU, 8 samples.
+Finished materials: three actual AO/curvature bake pairs, generated unseen paint, 906 genuine projected meshes; all textures packed.
+Authored idle: 8 output samples at 10 fps; 152 mechanical controls; loop=True.
+Authored move: 8 output samples at 12 fps; 152 mechanical controls; loop=True.
+Authored attack: 10 output samples at 14 fps; 152 mechanical controls; loop=False.
+Authored hit: 4 output samples at 12 fps; 152 mechanical controls; loop=False.
+Authored death: 10 output samples at 10 fps; 152 mechanical controls; loop=False.
+Rendered c: 1 PNGs, 256 px, CYCLES CPU, 8 samples.
+Published c review immediately; frozen grade 0722464566eb, 256 masters retained.

@@ -172,3 +172,38 @@ Rendered c: 1 frames, 512px, CYCLES/CPU.
 Published c-textured-lit review immediately; source CYCLES/CPU, 512px.
 Rendered c-details: 1 frames, 512px, CYCLES/CPU.
 Published c-details review immediately; source CYCLES/CPU, 512px.
+Finished eight actual AO/curvature bake pairs and frozen-camera painting UVs with incidence blending into generated back-surface fills.
+Rendered c: 1 frames, 512px, CYCLES/CPU.
+Published c-textured-lit review immediately; source CYCLES/CPU, 512px.
+Rendered c-details: 1 frames, 512px, CYCLES/CPU.
+Published c-details review immediately; source CYCLES/CPU, 512px.
+Authored idle: 8 frames at 10 fps; saved editable rig action and equipment attachments.
+Authored move: 8 frames at 12 fps; saved editable rig action and equipment attachments.
+Authored attack: 10 frames at 14 fps; saved editable rig action and equipment attachments.
+Authored hit: 4 frames at 12 fps; saved editable rig action and equipment attachments.
+Authored death: 10 frames at 10 fps; saved editable rig action and equipment attachments.
+Structural audit passed: genuine weighted anatomy, 53 bones, fixed projection UVs, stationary base and sane scales across every clip sample.
+Rendered b: 1 frames, 512px, CYCLES/CPU.
+Published b-plain review immediately; source CYCLES/CPU, 512px.
+Rendered d: 4 frames, 512px, CYCLES/CPU.
+Published d-rig-poses review immediately; source CYCLES/CPU, 512px.
+Final rest inspection: eye proxy repositioned and given source-painted brown-eye material (no blue flecks); unseen fills get camera-only painted colour with 45% physical response. Eight actual bake pairs now include the eye proxy. Source camera, solid surfaces, generated fills and frozen histogram grade retained.
+Silhouette-only alpha IoU at 256 px: 0.776736 prior -> 0.802003 current. This metric is not art acceptance. Head/band/waist are improved; broad shoulder/neck silhouette, calf forms, face/gaze and base finish remain visibly different. At 64 px Medjay reads, but not identical. No PASS.
+Rendered e-idle: 8 frames, 512px, CYCLES/CPU.
+Published e-idle-strip review immediately; source CYCLES/CPU, 512px.
+Rendered e-move: 8 frames, 512px, CYCLES/CPU.
+Published e-move-strip review immediately; source CYCLES/CPU, 512px.
+Rendered e-attack: 10 frames, 512px, CYCLES/CPU.
+Published e-attack-strip review immediately; source CYCLES/CPU, 512px.
+Rendered e-hit: 4 frames, 512px, CYCLES/CPU.
+Published e-hit-strip review immediately; source CYCLES/CPU, 512px.
+Rendered e-death: 10 frames, 512px, CYCLES/CPU.
+Published e-death-strip review immediately; source CYCLES/CPU, 512px.
+Packed 40 trimmed 160px frames at quality 90: 157968 bytes.
+Validation passed: 40 frames, motion in five clips, held death, transparent trimmed geometry, >=75 quality and <=200 KB. Art parity remains a visual judgment.
+Encoded medjay-round2.mp4: all five clips, 1600x348, H.264 yuv420p, 240 frames / 8 seconds.
+Final round-2 CPU delivery: 40 frames at 512/256, Cycles CPU8, 157,968 bytes at Q90; lossless alpha verified against reconstructed source frames, identical decoded terminal death, unchanged 8/8/10/4/10 counts and fps. Pack/validation and final structural/finished-UV/combat-entry audit passed.
+Opened final rest/details/plain/rig review and all five strips, plus decoded-MP4 contact frames. Video: H.264 yuv420p, 1600x348, 30fps, 240 frames, duration 8.000000 seconds. Attack remains a modest lateral jab and death settlement is stylized; these are not five visually approved clips.
+GPU handoff is executable; missing-input failure produces log/status and no success receipt, and CPU-labelled masters are rejected. Full Metal execution is unavailable in this sandbox and remains for the lead: ROUND=2 tools/art/anim3d/units/medjay/gpu.sh. No PASS marker. No engine/rules/runtime changes; Rust/WASM/app suites are not relevant.
+Final syntax: 11 Python modules compile; both Bash entry points pass bash -n; git diff --check passes. origin/master is already an ancestor of HEAD. No new feedback file; common feedback still ends at item 22.
+Commit attempt blocked by sandbox: cannot create .git/worktrees/lane-18/index.lock (Operation not permitted). All changes remain uncommitted for the runner; medjay-commit-message.txt has the required co-author trailer. No push, PR or master merge. Browser art gate/reviewer and full Metal pass remain for the lead; technical CPU validation is not art approval.
