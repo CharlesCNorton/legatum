@@ -1,5 +1,5 @@
 // Screen tour, Rome's Colonia Victrix and Egypt's Royal Tomb: the goal row in each state, the level 3 announcement,
-// the Settle lens's gilt rings, a rival's view of each goal city, the tomb's work, the faction sheets and the Guide.
+// the Settle lens's gilt rings, a rival's view of each goal city, the tomb's work, the faction sheets and How to Play.
 // Run alone with `npx playwright test e2e/tour/rome-egypt-goals`. Shots land in test-results/screen-tour/<size>/rome-egypt-goals/.
 import { test, expect } from '../fixtures';
 import { coreFixture } from '../../src/test/coreFixture';
@@ -266,7 +266,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     });
   });
 
-  test('the faction sheets and the Guide entries', async ({ page }) => {
+  test('the faction sheets and How to Play entries', async ({ page }) => {
     await page.goto('/?client=wasm');
     await page.getByRole('button', { name: /^Single Player/ }).click();
     await page.getByRole('button', { name: /^Seat 1 faction:/ }).click();

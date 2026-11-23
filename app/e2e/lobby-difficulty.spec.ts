@@ -11,10 +11,8 @@ test('an 8.9.11 Hard profile starts a game with every AI on Hard', async ({ page
   await page.goto('/?client=wasm');
   await page.getByRole('button', { name: /^Single Player/ }).click();
   await page.getByRole('radiogroup', { name: 'Map size', exact: true }).getByRole('radio', { name: /^Small/ }).click();
-  await expect(page.getByRole('radiogroup', { name: 'AI level (all AI empires)', exact: true }).getByRole('radio', { name: /^Hard\s+Ruthless/ })).toBeChecked();
-  const seats = page.getByRole('combobox', { name: /^Seat \d+ AI level$/ });
-  await expect(seats).toHaveCount(3);
-  for (const seat of await seats.all()) await expect(seat).toHaveValue('Hard');
+  await expect(page.getByRole('radiogroup', { name: 'AI level', exact: true }).getByRole('radio', { name: /^Hard\s+Ruthless/ })).toBeChecked();
+  await expect(page.getByRole('combobox', { name: /^Seat \d+ AI level$/ })).toHaveCount(0);
 
   await page.getByRole('button', { name: /^Start game/ }).click();
   // The old save that carried the Hard profile is still on disk, so the lobby asks before replacing it.
