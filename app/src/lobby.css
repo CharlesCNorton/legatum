@@ -58,7 +58,7 @@
 }
 .seat-row {
   display: grid;
-  grid-template-columns: 4px 150px minmax(120px, 1fr) 196px 108px 134px 28px;
+  grid-template-columns: 4px 150px minmax(120px, 1fr) 196px 108px 28px;
   gap: 12px;
   align-items: center;
   min-height: 56px;
@@ -383,7 +383,7 @@ select.lobby-select option {
   .seat-row > :nth-child(4) {
     grid-column: 2 / -1;
   }
-  .seat-row > :nth-child(7) {
+  .seat-row > :nth-child(6) {
     grid-column: 4;
     grid-row: 1;
   }

@@ -181,6 +181,10 @@ CI about 15 minutes on 4 cores (after PR #14).
   cities while map draw time stayed flat. Plot long tasks first, not frame p95. The cause was terrain cache work
   (a whole-map field rebuild each turn, chunk rendering on zoom), found only by replaying the turn with a CPU
   profile on a real GPU.
+- 2026-11-23: a +25% median AI turn pinned on an AI change was the benchmark game running 32 turns longer, not
+  slower code. When a timing moves on a range where the hash or digest moved, compare by turn range (the nightly
+  now uses the turns both sides played and prints `ai_turns_played`) and time the suspect directly before
+  reporting it. Sim cpu-s per game has the same weakness.
 - 2026-11-22 (user): this agent always runs on Fable.
 - 2026-11-21: performance used to be sections of the ops supervisor and lapsed after late October
   (last sim baseline 10-31, AI turn budget 10-27, app size 10-23) because the run grew into fleet

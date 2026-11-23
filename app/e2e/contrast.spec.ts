@@ -178,8 +178,7 @@ test(`${look}: game screen controls keep AA label contrast in every state`, asyn
   await chooseCapitalProduction(page);
   await endPlanning(page);
   await expect(page.getByTestId('turn-number')).toHaveText('2');
-  await page.getByRole('button', { name: 'Menu', exact: true }).click();
-  await page.getByRole('button', { name: 'Turn report (L)', exact: true }).click();
+  await page.locator('button.last-turn').first().click();
   await expect(page.getByRole('complementary', { name: 'Turn report' })).toBeVisible();
   readings.push(...await auditContrast(page, 'turn report'));
   await page.getByRole('button', { name: 'Close report', exact: true }).click();
