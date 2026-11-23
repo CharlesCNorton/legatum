@@ -146,3 +146,34 @@
 - Posted d-rig-poses review (GPU, 512 px).
 - Posted e-idle review (GPU, 512 px).
 - Posted e-move review (GPU, 512 px).
+- Driver round 2 opening review (2026-11-23): opened c-textured-lit, f-restpose-compare, ALL five e-strips and extracted actual round1.mp4 frames before edits. GPU log stopped after attack frame 9; later strips and round1 movie are older evidence, not completed GPU delivery. At 256px current rest pigment and hat approach painting, but feather is thin/upright, base smooth/darker and too round at top, face edge imperfect; death has stretched paint, rigid torso, raised hand and poor contact. At 64px identity matches, but base/feather and death silhouette differ. No PASS. Archived mixed evidence in masters/barbarian-musketman/driver-r1-gpu.
+- Read complete PLAYBOOK, shared FEEDBACK 1-23, prior log and asset provenance; unit-specific FEEDBACK absent. Loaded all six Blender skills: surface finishing, generated-fill blending, product lights, fixed camera, skeletal/contact animation, image-sequence rendering. Existing licensed generated fills retained.
+- Crash evidence: Blender-2026-11-23-092827.ips reports SIGTRAP / libmalloc free-block memory corruption while copying mesh attributes in dependency-graph evaluation. No zero-scale volume evidence. Mitigation planned: fresh gated Blender process per final frame, disable persistent render data, hash-bound checkpoints and bounded SIGTRAP retries; GPU fix remains unverified until host rerun.
+- Built kneeling MPFB human, tailored ragged kit, feather hat, bandolier and solid horizontal musket.
+- Posted b-plain review (CPU, 256 px).
+- Finished-surface camera-only projection applied; physical stone excluded and generated fills retained.
+- Posted c-textured-lit review (CPU, 256 px).
+- Authored death skeletal action, 10 samples.
+- Posted e-death review (CPU, 256 px).
+- Built kneeling MPFB human, tailored ragged kit, feather hat, bandolier and solid horizontal musket.
+- Posted b-plain review (CPU, 512 px).
+- Finished-surface camera-only projection applied; physical stone excluded and generated fills retained.
+- Posted c-textured-lit review (CPU, 512 px).
+- Authored death skeletal action, 10 samples.
+- Posted e-death review (CPU, 512 px).
+- Authored idle skeletal action, 8 samples.
+- Authored move skeletal action, 8 samples.
+- Authored attack skeletal action, 10 samples.
+- Authored hit skeletal action, 4 samples.
+- Authored death skeletal action, 10 samples.
+- Posted d-rig-poses review (CPU, 512 px).
+- Posted e-idle review (CPU, 512 px).
+- Posted e-move review (CPU, 512 px).
+- Posted e-attack review (CPU, 512 px).
+- Posted e-hit review (CPU, 512 px).
+- Posted e-death review (CPU, 512 px).
+- Posted g-feet-top review (CPU, 512 px).
+- Posted g-feet-front review (CPU, 512 px).
+- Audit passed: five clips, source hashes, 53-bone rig, fixed base and positive object scales.
+- Driver round 2 surface pass: broadened cambered feather, warmed physical stone with fine pigment grain, inverse-skinned finished shirt/waistcoat across pelvis/spine without moving rest surfaces; added incidence-based hidden-fill transition while retaining frozen camera UVs, beveled straps, folds and product lighting. CPU256/3 and CPU512/4 previews inspected.
+- Driver round 2 death pass: source terminal arm directions now blend out of the aiming posture; full blend exceeded framing and was rejected, constrained blend retained. Torso follows spine, but exposed arms/cloth and terminal ground contact still need artistic work. No visual PASS.
