@@ -58,3 +58,12 @@
 - Posted e-attack review (CPU, 256 px).
 - Posted e-hit review (CPU, 256 px).
 - Posted e-death review (CPU, 256 px).
+- Fitted full-depth surfaces in the rest camera, froze MPFB mixed morphs and preserved skin weights; corrected raised-arm extent, stance, supporting palm and rifle length. Earlier finished clip sheets retained in infantry-round1-firstpass/.
+- Replaced helmet grey steel with painted olive and assigned the cream disc its #B68A51 darker physical rim. Rendered rim still reads too dark relative to the painting.
+- Fixed death mapping to anatomical source rest for limbs, preserved initial guard, corrected actual rifle-center release pivot and held the final two output PNGs exactly.
+- First pack correctly rejected top-edge clipping in move frame 0. Widened the shared orthographic camera to 2.56, rebuilt all dependent stages and retained all 40 frames and the quality floor.
+- Final CPU audit: 53 bones, anatomical body, stationary base/nonzero scales/current hashes pass; max forward toe angle 12.39 degrees, four planted ankle intervals max virtual-ground drift 2.71e-7 m, lowest walk sole .086 m above .085 m disc contact.
+- CPU candidate delivery validated: 167978 bytes, quality 90, 785x739 packed atlas, trimmed 160px cells, 40 frames, exact decoded alpha/offsets/bounds/motion/death hold pass.
+- MP4 verified: 8 s, 240 frames, 1600x348 H.264 yuv420p, five decoded clips 2x on cream with CPU labels; decoded frame visually inspected. Python compile/shell syntax/whitespace pass. GPU receipt verifier correctly rejects CPU previews.
+- Honest round-1 verdict: same unit readable at 64px; face/helmet/sleeve/jacket fit, painted unseen surfaces, dark rim and death deformation remain below the painting at 256px. No PASS. Genuine 512px masters await host GPU script; nothing was upscaled and called a master.
+- Commit attempt blocked: sandbox denied .git/worktrees/lane-18/index.lock. All changes left for runner; no push/PR. origin/master already ancestor; no merge needed.
