@@ -285,3 +285,11 @@
 - Posted field-cannon-c-textured-lit.png; actual CYCLES render, visual review pending.
 - Posted field-cannon-c-textured-lit.png; actual CYCLES render, visual review pending.
 - Posted field-cannon-c-textured-lit.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-c-textured-lit.png; actual CYCLES render, visual review pending.
+- ROUND 8 REFINEMENT: Opened CPU512 baseline and two CPU256 rest comparisons. Near-wheel source spokes do not register with the modeled radial spokes; projecting them caused doubled edges. Kept frozen source projection on rims/carriage/figure but used existing scanned wood, actual cavity shading and bevels on spoke/hub geometry; cooled the wood and extended the real iron-clad hub/dished-spoke depth. Reduced the circular horizontal base 1.5%, shifted it 2.4px left and lowered red in its projected pigment before the frozen grade. Face/tailoring still visibly differ. Added a persistent surface-sampling marker so reprojecting a finished master does not compound subdivisions. Full geometry/contact/UV audit passed both rebuilds. All six skills informed geometry/material/camera decisions and sequential preview review; original generated wool and product lights retained.
+- Posted field-cannon-b-plain.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-c-textured-lit.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-c-details.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-d-rig-poses.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-idle-strip.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-move-strip.png; actual CYCLES render, visual review pending.
