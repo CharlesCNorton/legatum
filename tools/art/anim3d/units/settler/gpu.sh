@@ -10,7 +10,7 @@ review="$ANIM_ROOT/review/3d-v2"
 status="$review/settler-gpu-status.txt"
 receipt="$review/settler-gpu-round${ROUND}.json"
 rm -f "$receipt"
-exec > "$ANIM_ROOT/settler-gpu-round${ROUND}.log" 2>&1
+exec > >(tee "$ANIM_ROOT/settler-gpu-round${ROUND}.log") 2>&1
 stage=preflight
 git rev-parse HEAD
 git status --short
@@ -22,7 +22,7 @@ command -v blender
 command -v ffmpeg
 command -v ffprobe
 # render.py verifies a real Metal device and refuses CPU fallback.
-for stage in b c c-details animate d e-idle e-move e-attack e-hit e-death audit; do
+for stage in b c c-details animate d e-idle e-move e-attack e-hit e-death g audit; do
   tools/art/anim3d/units/settler/render.sh "$stage"
 done
 stage=master-gate

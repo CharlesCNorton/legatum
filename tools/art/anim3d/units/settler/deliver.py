@@ -3,7 +3,7 @@ from pathlib import Path
 import os,sys,json,hashlib,io
 from PIL import Image
 R=Path(os.environ.get('ANIM_ROOT',str(Path.home()/'LegatumRuns/anim-pilot')));M=R/'masters/settler';OUT=Path('app/src/assets/units/anim');OUT.mkdir(parents=True,exist_ok=True)
-CLIPS={'idle':(8,10,True),'move':(8,12,True),'attack':(10,14,False),'hit':(4,12,False),'death':(10,10,False)}
+CLIPS={'idle':(8,10,True),'move':(8,6,True),'attack':(10,14,False),'hit':(4,12,False),'death':(10,10,False)}
 CELL=160
 
 def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
@@ -13,12 +13,16 @@ def inputs():
     for clip,(count,fps,loop) in CLIPS.items():
         manifest=json.loads((M/'renders'/('e-'+clip)/'render.json').read_text());meta=json.loads((M/'clips'/f'{clip}.json').read_text())
         assert manifest['master_sha256']==meta['source_sha256']==master,(clip,'stale master')
+        assert (meta['frames'],meta['fps'],meta['loop'])==(count,fps,loop),(clip,'clip timing differs from contract')
         assert manifest['blend_sha256']==sha(M/'clips'/f'{clip}.blend'),(clip,'stale clip')
         assert manifest['grade_sha256']==grade,(clip,'stale grade')
         assert manifest['resolution']>= (256 if os.environ.get('PREVIEW')=='1' else 512),(clip,'512 master required')
         paths=sorted((M/'frames-256'/('e-'+clip)).glob('*.png'));masters=sorted((M/'frames-512'/('e-'+clip)).glob('*.png'));assert len(paths)==count
         if os.environ.get('PREVIEW')!='1':assert len(masters)==count
-        for i,path in enumerate(sorted((M/'renders'/('e-'+clip)/'raw').glob('*.png'))):assert sha(path)==manifest['frames'][f'{i:02}'],(clip,'changed raw frame')
+        for i,path in enumerate(sorted((M/'renders'/('e-'+clip)/'raw').glob('*.png'))):
+            assert sha(path)==manifest['frames'][f'{i:02}'],(clip,'changed raw frame')
+            raw=Image.open(path).convert('RGBA');box=raw.getchannel('A').point(lambda a:255 if a>8 else 0).getbbox()
+            assert box and box[0]>0 and box[1]>0 and box[2]<raw.width and box[3]<raw.height,(clip,i,'raw render clipped',box)
         records[clip]={'manifest':manifest,'frames_256':{p.name:sha(p) for p in paths},'frames_512':{} if os.environ.get('PREVIEW')=='1' else {p.name:sha(p) for p in masters}}
     return records
 

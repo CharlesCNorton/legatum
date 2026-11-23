@@ -63,6 +63,8 @@ def finish_and_fit(master):
     fit_group(['folded sleeve lowerarm r'],(92,81,110,104))
     fit_group(['folded sleeve upperarm l'],(149,65,170,94))
     fit_group(['folded sleeve lowerarm l'],(145,73,168,97))
+    # Sandals retain their physical sole height; screen-plane fitting lowers
+    # their soles and forces contact retargeting to lift the entire character.
     # Fit the weighted head via the inverse blended bone transform. Body remains 3D.
     body=bpy.data.objects['GEO-MPFB female traveller'];rig=bpy.data.objects['RIG-Settler MPFB']
     transforms={g.index:rig.matrix_world @ rig.pose.bones[g.name].matrix @ rig.data.bones[g.name].matrix_local.inverted() @ rig.matrix_world.inverted() @ body.matrix_world for g in body.vertex_groups if g.name in rig.pose.bones}
@@ -80,6 +82,18 @@ def finish_and_fit(master):
         xx=124+(x-box[0])/(box[2]-box[0])*25;yy=18+(y-box[1])/(box[3]-box[1])*37
         v.co=mat.inverted() @ (pos+right*((xx-x)*unit)+up*((y-yy)*unit))
     body.data.update()
+    # The hood is a sloped cloth arch, not a symmetric helmet.
+    for ob in sc.objects:
+        if ob.type!='MESH' or not any(k in ob.name for k in ['open linen hood crown','hood rolled face border','hood side drape']):continue
+        inv=ob.matrix_world.inverted().to_3x3()
+        for vertex,c in zip(ob.data.vertices,coords(ob)):
+            x=c.x*256;y=(1-c.y)*256
+            weight=max(0,min(1,(52-y)/25))
+            # Lift the right crown and slope the left cloth toward the temple.
+            dy=-3.0*weight*max(0,min(1,(x-120)/25))
+            dx=3.5*weight*max(0,min(1,(133-x)/22))
+            vertex.co+=inv @ (right*(dx*unit)-up*(dy*unit))
+        ob.data.update()
     base=bpy.data.objects['GEO-stationary cream base'];base.location.y+=.20
     # Standard clothing-body culling: retain the full editable body and weights.
     # Torso and upper legs are enclosed by complete opaque bodice/skirt meshes.
@@ -94,4 +108,6 @@ def finish_and_fit(master):
     sc.view_settings.view_transform='Standard';sc.view_settings.look='None'
     for ob in sc.objects:
         if ob.type=='LIGHT':ob.data.energy*=.55
+    from bind_cloth import bind_robes
+    bind_robes(rig)
     (master/'registration.json').write_text(json.dumps(records,indent=2))

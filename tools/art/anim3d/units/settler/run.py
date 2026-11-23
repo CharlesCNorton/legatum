@@ -32,7 +32,14 @@ elif stage=='motion':
     render('d')
     for clip in ['idle','move','attack','hit','death']:render('e-'+clip)
     runpy.run_path(str(HERE/'audit.py'),run_name='__main__')
+elif stage=='g':runpy.run_path(str(HERE/'feet.py'),run_name='__main__')
 elif stage=='audit':runpy.run_path(str(HERE/'audit.py'),run_name='__main__')
+elif stage=='rest':
+    runpy.run_path(str(HERE/'scene.py'),run_name='__main__')
+    from render import render
+    render('b')
+    runpy.run_path(str(HERE/'materials.py'),run_name='__main__')
+    render('c');render('c-details')
 elif stage in ('round','rebuild'):
     if stage=='rebuild':
         runpy.run_path(str(HERE/'scene.py'),run_name='__main__')

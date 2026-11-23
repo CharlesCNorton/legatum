@@ -1,10 +1,11 @@
-"""Five authored traveller actions, editable 53-bone rig, fixed base and held death."""
+"""CC0 retargeted traveller actions, authored staff check, fixed base and held death."""
 import bpy,os,json,math,hashlib
 from pathlib import Path
 from mathutils import Vector,Matrix,Quaternion
 from math import sin,cos,pi
+from retarget import prepare,apply_matrices
 R=Path(os.environ['ANIM_ROOT']);M=R/'masters/settler';V=R/'review/3d-v2';(M/'clips').mkdir(exist_ok=True)
-CLIPS={'idle':(8,10,True),'move':(8,12,True),'attack':(10,14,False),'hit':(4,12,False),'death':(10,10,False)}
+CLIPS={'idle':(8,10,True),'move':(8,6,True),'attack':(10,14,False),'hit':(4,12,False),'death':(10,10,False)}
 
 def aim(rig,name,d):
     p=rig.pose.bones[name];q=p.bone.matrix_local.to_quaternion();v=q @ Vector((0,1,0));rot=(v.rotation_difference(Vector(d).normalized()) @ q).to_matrix().to_4x4();rot.translation=p.head.copy();p.matrix=rot;bpy.context.view_layer.update()
@@ -13,6 +14,27 @@ def limb(rig,a,b,t,pole):
     aim(rig,a,joint-h);aim(rig,b,t-joint)
 def rotate(rig,name,angle,axis='X'):
     p=rig.pose.bones[name];p.matrix_basis=p.matrix_basis @ Matrix.Rotation(angle,4,axis);bpy.context.view_layer.update()
+def loaded_stride(rig, drop=.12):
+    """Native IK lowers a pack carrier while retaining captured ankle paths/rotations."""
+    bpy.context.view_layer.update();helpers=[];constraints=[]
+    for side in ['l','r']:
+        foot=rig.pose.bones['foot_'+side]
+        target=bpy.data.objects.new('CTRL-captured ankle '+side,None)
+        bpy.context.scene.collection.objects.link(target)
+        target.matrix_world=rig.matrix_world @ foot.matrix
+        helpers.append(target)
+        ik=rig.pose.bones['calf_'+side].constraints.new('IK')
+        ik.target=target;ik.chain_count=2;ik.use_stretch=False
+        constraints.append((rig.pose.bones['calf_'+side],ik))
+        orientation=foot.constraints.new('COPY_ROTATION');orientation.target=target
+        orientation.owner_space=orientation.target_space='WORLD'
+        constraints.append((foot,orientation))
+    rig.location.z-=drop;bpy.context.view_layer.update()
+    matrices={p.name:p.matrix.copy() for p in rig.pose.bones}
+    for bone,constraint in constraints:bone.constraints.remove(constraint)
+    for ob in helpers:bpy.data.objects.remove(ob,do_unlink=True)
+    apply_matrices(rig,matrices)
+
 def curves(action):
     if hasattr(action,'fcurves'):return list(action.fcurves)
     return [f for layer in action.layers for strip in layer.strips for bag in strip.channelbags for f in bag.fcurves]
@@ -26,68 +48,53 @@ for clip,(count,fps,loop) in CLIPS.items():
     if clip=='death':
         for o in staff:w=o.matrix_world.copy();o.parent=None;o.matrix_world=w
     skirt=bpy.data.objects['GEO-full length linen skirt'];sway=skirt.data.shape_keys.key_blocks['Hem sway']
-    collapse_keys=[]
-    if clip=='death':
-        for ob in sc.objects:
-            if ob.type!='MESH':continue
-            is_pack=any(n in ob.name for n in ['ochre traveller pack','pack woven rib','rolled wool blanket','blanket visible spiral'])
-            is_cloth=any(n in ob.name for n in ['full length linen skirt','olive diagonal overdrape','rust shawl long fringed tail','shawl fringe'])
-            if not (is_pack or is_cloth):continue
-            if ob.data.shape_keys is None:ob.shape_key_add(name='Basis')
-            key=ob.shape_key_add(name='Authored fall compression')
-            for v in key.data:
-                if is_pack:v.co.x-=.25
-                else:
-                    weight=0 if any(n in ob.name for n in ['linen skirt','overdrape']) else 1
-                    v.co.x*=1-.42*weight
-            collapse_keys.append(key)
     frames=count+1 if loop else count
     for name,rows in neutral.items():rig.pose.bones[name].matrix_basis=Matrix(rows)
     bpy.context.view_layer.update()
-    neutral_rot={name:rig.pose.bones[name].matrix.to_quaternion() for name in ['foot_r','foot_l','hand_r']}
+    phases=[i/count if loop else min(i,count-2)/(count-2) if clip=='death' else i/(count-1) for i in range(frames)]
+    captured=motion=None
+    if clip!='attack':
+        captured,motion=prepare(rig,R,clip,phases)
+        (M/f'motion-{clip}.json').write_text(json.dumps(motion,indent=2))
     for i in range(frames):
         sc.frame_set(i+1);t=i/count if loop else min(i,count-2)/(count-2) if clip=='death' else i/(count-1)
         for name,rows in neutral.items():rig.pose.bones[name].matrix_basis=Matrix(rows)
         rig.location=base_loc;rig.rotation_euler=(0,0,0);sway.value=0;bpy.context.view_layer.update()
-        if clip=='idle':
-            rotate(rig,'spine_03',.014*sin(2*pi*t),'Y');rotate(rig,'head',.025*sin(2*pi*t),'Z');sway.value=.2*sin(2*pi*t)
-        elif clip=='move':
-            phase=2*pi*t
-            for side,offset,x in [('r',0,-.065),('l',pi,.105)]:
-                p=phase+offset;y=.30+.13*cos(p);z=.06+.055*max(0,sin(p));limb(rig,'thigh_'+side,'calf_'+side,(x,y,z),(x,-.40,.40))
-                foot=rig.pose.bones['foot_'+side];fixed=neutral_rot[foot.name].to_matrix().to_4x4();fixed.translation=foot.head.copy();foot.matrix=fixed;bpy.context.view_layer.update()
-            rotate(rig,'spine_03',.024*sin(phase),'Y');rotate(rig,'spine_01',.02*sin(phase),'Z');sway.value=.75*sin(phase-.5)
-            # Staff advances with the hand; no false fixed-foot claim for in-place walk.
-            limb(rig,'upperarm_r','lowerarm_r',(-.30,-.22+.045*cos(phase),1.12+.018*max(0,sin(phase))),(-.35,-.04,1.1))
-            hand=rig.pose.bones['hand_r'];fixed=neutral_rot['hand_r'].to_matrix().to_4x4();fixed.translation=hand.head.copy();hand.matrix=fixed;bpy.context.view_layer.update()
-        elif clip=='attack':
+        if captured:
+            apply_matrices(rig,captured[i]['matrices'])
+            rig.location=base_loc+captured[i]['root']
+            sway.value=(.55 if clip=='move' else .15)*sin(2*pi*t)
+        if clip=='move':
+            rig.location.y+=.20
+            # Translate the root to the supporting sole; captured rotations stay intact.
+            side='l' if 1<=i<=4 else 'r'
+            ob=bpy.data.objects['GEO-sandal sole '+side]
+            bpy.context.view_layer.update()
+            ev=ob.evaluated_get(bpy.context.evaluated_depsgraph_get());me=ev.to_mesh()
+            low=min((ev.matrix_world @ v.co).z for v in me.vertices);ev.to_mesh_clear()
+            rig.location.z+=.079-low
+            loaded_stride(rig)
+        if clip=='attack':
             # Brief backward anticipation, forward staff check, recovery; no violent civilian lunge.
             envelope=sin(pi*t)**2;advance=sin(pi*max(0,min(1,(t-.16)/.70)))**2
             rotate(rig,'spine_03',-.08*envelope,'X');rotate(rig,'spine_01',-.05*envelope,'Z')
             if advance>1e-8:
                 limb(rig,'upperarm_r','lowerarm_r',(-.30-.12*advance,-.22-.18*advance,1.12+.06*envelope),(-.34-.11*advance,-.04-.06*advance,1.10+.03*advance))
             rotate(rig,'hand_r',-.25*advance,'X');sway.value=.4*sin(pi*t)
-        elif clip=='hit':
-            amount=[0,1,.45,0][i];rotate(rig,'spine_01',.10*amount,'X');rotate(rig,'spine_03',.13*amount,'Y');rotate(rig,'head',-.12*amount,'Z');sway.value=-.5*amount
         elif clip=='death':
-            # Shallow knee relaxation within the complete robe, side collapse, exact terminal hold.
-            fall=t*t*(3-2*t)
-            for key in collapse_keys:key.value=fall;key.keyframe_insert('value')
-            rig.rotation_euler.y=1.53*fall;rig.location.x=-.86*fall
-            if fall>1e-8:
-                limb(rig,'upperarm_l','lowerarm_l',(.18-.13*fall,-.25+.01*fall,1.37-.21*fall),(.38-.24*fall,-.02-.03*fall,1.12+.06*fall))
-                limb(rig,'upperarm_r','lowerarm_r',(-.30+.35*fall,-.22,1.12+.06*fall),(-.34+.29*fall,-.04-.06*fall,1.10+.15*fall))
-                for digit in ['index','middle','ring','pinky']:
-                    for segment in range(1,4):rotate(rig,f'{digit}_{segment:02d}_r',-.8*fall,'X')
-            rotate(rig,'thigh_l',.10*fall,'X');rotate(rig,'calf_l',-.15*fall,'X');rotate(rig,'thigh_r',.08*fall,'X');rotate(rig,'calf_r',-.12*fall,'X');rotate(rig,'spine_01',-.24*fall,'X');rotate(rig,'head',.18*fall,'Z');sway.value=.45*fall
+            # Complete library fall: pelvis/spine/limbs retain captured rotations.
+            # Only root translation supplies support contact, never a foot rotation fix.
+            center=max(0,min(1,(t-.15)/.55));center=center*center*(3-2*center)
+            rig.location.x-=.42*center
             bpy.context.view_layer.update()
-            # Ground the collapsed actual evaluated geometry, including robe/pack; never scale to hide.
             if t>.12:
                 lowest=10
                 for o in sc.objects:
                     if o.type!='MESH' or o in staff or 'stationary' in o.name:continue
-                    ev=o.evaluated_get(bpy.context.evaluated_depsgraph_get());me=ev.to_mesh();lowest=min(lowest,min((ev.matrix_world @ v.co).z for v in me.vertices));ev.to_mesh_clear()
-                rig.location.z+=max(0,.085-lowest)
+                    ev=o.evaluated_get(bpy.context.evaluated_depsgraph_get());me=ev.to_mesh()
+                    if me.vertices:lowest=min(lowest,min((ev.matrix_world @ v.co).z for v in me.vertices))
+                    ev.to_mesh_clear()
+                rig.location.z+=.085-lowest
             bpy.context.view_layer.update();hw=rig.matrix_world @ rig.pose.bones['hand_r'].matrix
             release=max(0,min(1,(t-.30)/.40));release=release*release*(3-2*release)
             for o in staff:
@@ -109,5 +116,5 @@ for clip,(count,fps,loop) in CLIPS.items():
         error=max(abs(p.matrix_basis[r][c]-neutral[p.name][r][c]) for p in rig.pose.bones for r in range(4) for c in range(4))
         assert error<1e-5,(clip,'first-frame rest mismatch',error)
     bpy.ops.wm.save_as_mainfile(filepath=str(M/'clips'/f'{clip}.blend'))
-    (M/'clips'/f'{clip}.json').write_text(json.dumps({'frames':count,'fps':fps,'loop':loop,'source_sha256':sc['source_sha256'],'motion':'Authored MPFB rig keys; folded garment geometry and keyed hem; no mocap or cloth sim claim'},indent=2))
-    with (V/'settler-log.md').open('a') as f:f.write(f'- Saved {clip}: {count} frames at {fps} fps, editable MPFB rig, stationary base; authored keys.\n')
+    (M/'clips'/f'{clip}.json').write_text(json.dumps({'frames':count,'fps':fps,'loop':loop,'source_sha256':sc['source_sha256'],'motion':motion or {'method':'Authored civilian staff-check attack'},'cloth':'Authored folded garment with hem follow-through; no cloth simulation'},indent=2))
+    with (V/'settler-log.md').open('a') as f:f.write(f'- Saved {clip}: {count} frames at {fps} fps, editable MPFB rig, stationary base; CC0 library motion or authored staff attack.\n')

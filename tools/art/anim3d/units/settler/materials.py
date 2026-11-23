@@ -5,7 +5,7 @@ from mathutils import Vector
 from bpy_extras.object_utils import world_to_camera_view
 R=Path(os.environ['ANIM_ROOT']);M=R/'masters/settler';A=R/'assets/settler';V=R/'review/3d-v2'
 bpy.ops.wm.open_mainfile(filepath=str(M/'settler-plain.blend'));sc=bpy.context.scene;cam=sc.camera
-images={n:bpy.data.images.load(str(A/f'{n}.png'),check_existing=True) for n in ['projection','projection-ivory','projection-olive','projection-rust','projection-hood','projection-skin','fill-ivory','fill-olive','fill-rust','fill-leather']}
+images={n:bpy.data.images.load(str(A/f'{n}.png'),check_existing=True) for n in ['projection','fill-ivory','fill-olive','fill-rust','fill-leather']}
 # Task-owned Principled materials, with tileable generated fills on hidden sides.
 for mat in list(bpy.data.materials):
     if not mat.name.startswith('MAT-'):continue
@@ -20,7 +20,7 @@ for mat in list(bpy.data.materials):
         p.inputs['Sheen Weight'].default_value=.22 if kind!='leather' else 0
     if 'skin' in name:p.inputs['Subsurface Weight'].default_value=.06;p.inputs['Subsurface Radius'].default_value=(.8,.3,.15)
     if 'cream stone' in name:
-        p.inputs['Base Color'].default_value=(.815,.55,.32,1);p.inputs['Emission Color'].default_value=(.815,.624,.352,1);p.inputs['Emission Strength'].default_value=.10
+        p.inputs['Base Color'].default_value=(.92,.71,.44,1);p.inputs['Emission Color'].default_value=(.815,.624,.352,1);p.inputs['Emission Strength'].default_value=.32
     # Physical AO and Pointiness add recessed shade and exposed edge wear before projection.
     old=p.inputs['Base Color'].links[0].from_socket if p.inputs['Base Color'].is_linked else None
     if old is None:
@@ -35,17 +35,23 @@ for o in list(sc.objects):
         bpy.ops.object.select_all(action='DESELECT');o.select_set(True);bpy.context.view_layer.objects.active=o;bpy.ops.object.convert(target='MESH')
 records=[]
 for ob in list(sc.objects):
-    if ob.type!='MESH' or any(k in ob.name for k in ['stationary','eyes','sandal','staff','strap saddle','pack woven']):continue
+    if ob.type!='MESH' or any(k in ob.name for k in ['eyes','stationary']):continue
     disabled=[]
     for mod in ob.modifiers:
         if mod.type!='ARMATURE' and mod.show_viewport:disabled.append(mod);mod.show_viewport=False
     bpy.context.view_layer.update();ev=ob.evaluated_get(bpy.context.evaluated_depsgraph_get());me=ev.to_mesh();assert len(me.vertices)==len(ob.data.vertices)
     coords=[world_to_camera_view(sc,cam,ev.matrix_world @ v.co) for v in me.vertices]
-    facing=[max(0,min(1,((ev.matrix_world.to_3x3() @ v.normal).normalized().dot((cam.location-ev.matrix_world @ v.co).normalized())-.05)/.40)) for v in me.vertices]
+    facing=[max(0,min(1,(abs((ev.matrix_world.to_3x3() @ v.normal).normalized().dot((cam.location-ev.matrix_world @ v.co).normalized()))+.10)/.20)) for v in me.vertices]
     # One camera projection on the fitted geometry: no per-garment UV stretching.
-    if 'MPFB female' in ob.name:
-        for v in me.vertices:
-            if (ev.matrix_world @ v.co).z<.5:facing[v.index]=0
+    # Visibility is geometric, not the mesh normal sign (thin cloth can face inward).
+    # Offset the ray origin toward camera to avoid self intersections at its endpoint.
+    for v in me.vertices:
+        point=ev.matrix_world @ v.co;direction=cam.matrix_world.to_quaternion() @ Vector((0,0,1))
+        hit,loc,normal,index,hit_ob,matrix=sc.ray_cast(bpy.context.evaluated_depsgraph_get(),point+direction*.012,direction,distance=20)
+        if hit and (hit_ob.original!=ob.original or (loc-point).length>.04):facing[v.index]=0
+        if 'MPFB female' in ob.name:
+            dot=(ev.matrix_world.to_3x3() @ v.normal).normalized().dot(direction)
+            facing[v.index]*=max(0,min(1,(dot+.05)/.20))
     ev.to_mesh_clear()
     for mod in disabled:mod.show_viewport=True
     uv=ob.data.uv_layers.get('Rest painting') or ob.data.uv_layers.new(name='Rest painting');mask=ob.data.color_attributes.new(name='Paint visibility',type='FLOAT_COLOR',domain='CORNER')
@@ -54,14 +60,9 @@ for ob in list(sc.objects):
     for slot in ob.material_slots:
         mat=slot.material.copy();slot.material=mat;n=mat.node_tree.nodes;l=mat.node_tree.links;p=n.get('Principled BSDF')
         if not p:continue
-        kind='projection'
-        if 'ivory' in mat.name:kind='projection-hood' if 'hood' in ob.name else 'projection-ivory'
-        elif 'olive' in mat.name:kind='projection-olive' if 'overdrape' in ob.name else 'projection'
-        elif 'terracotta' in mat.name:kind='projection-rust'
-        elif 'skin' in mat.name:kind='projection-skin'
-        if 'hair' in mat.name:strength=.50
-        elif 'staff' in ob.name:strength=.40
-        else:strength=.96
+        # One image, one fixed camera; material masks were erasing the face/folds.
+        # Existing generated fills remain under the alpha and on unseen sides.
+        kind='projection';strength=.985
         tc=n.new('ShaderNodeUVMap');tc.uv_map='Rest painting';tex=n.new('ShaderNodeTexImage');tex.image=images[kind];tex.extension='CLIP';l.new(tc.outputs[0],tex.inputs['Vector'])
         attr=n.new('ShaderNodeVertexColor');attr.layer_name='Paint visibility';mult=n.new('ShaderNodeMath');mult.operation='MULTIPLY';l.new(attr.outputs['Color'],mult.inputs[0]);l.new(tex.outputs['Alpha'],mult.inputs[1]);weight=n.new('ShaderNodeMath');weight.operation='MULTIPLY';weight.inputs[1].default_value=strength;l.new(mult.outputs[0],weight.inputs[0])
         # Camera-only painted illumination; real BSDF retains shadows and hidden fill.

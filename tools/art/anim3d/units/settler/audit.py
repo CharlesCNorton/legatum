@@ -1,6 +1,7 @@
 """Audit saved 3D masters and animation contracts; does not claim visual approval."""
 import bpy,os,json,hashlib,math
 from pathlib import Path
+from mathutils import Quaternion
 R=Path(os.environ['ANIM_ROOT']);M=R/'masters/settler';counts={'idle':8,'move':8,'attack':10,'hit':4,'death':10};source=hashlib.sha256((M/'settler.blend').read_bytes()).hexdigest();report={}
 def matrices(sc):
     out=[]
@@ -9,6 +10,17 @@ def matrices(sc):
         if o.type=='ARMATURE':
             for b in o.pose.bones:out.extend(x for row in b.matrix for x in row)
     return out
+def visible_geometry():
+    values={};deps=bpy.context.evaluated_depsgraph_get()
+    for ob in bpy.context.scene.objects:
+        if ob.type!='MESH':continue
+        ev=ob.evaluated_get(deps);mesh=ev.to_mesh()
+        values[ob.name]=[ev.matrix_world @ v.co for v in mesh.vertices]
+        ev.to_mesh_clear()
+    return values
+bpy.ops.wm.open_mainfile(filepath=str(M/'settler.blend'))
+assert bpy.data.objects['GEO-full length linen skirt'].data.shape_keys.key_blocks['Hem sway'].value==0
+rest_geometry=visible_geometry()
 for clip,count in counts.items():
     path=M/'clips'/f'{clip}.blend';bpy.ops.wm.open_mainfile(filepath=str(path));sc=bpy.context.scene;rig=bpy.data.objects['RIG-Settler MPFB']
     assert len(rig.data.bones)==53
@@ -21,7 +33,18 @@ for clip,count in counts.items():
     for frame in frames:
         sc.frame_set(frame);bpy.context.view_layer.update();samples.append(matrices(sc))
         if frame==1 and clip in ['idle','attack','hit']:
+            geometry=visible_geometry()
+            assert geometry.keys()==rest_geometry.keys()
+            assert all(len(points)==len(rest_geometry[name]) for name,points in geometry.items())
+            error=max((a-b).length for name,points in geometry.items() for a,b in zip(points,rest_geometry[name]))
+            assert error<1e-5,(clip,'first-frame geometry differs from painted rest',error)
             assert max(abs(p.matrix_basis[r][c]-neutral[p.name][r][c]) for p in rig.pose.bones for r in range(4) for c in range(4))<1e-5,(clip,'rest-pose orientation drift')
+        if clip=='move':
+            motion=json.loads((M/'motion-move.json').read_text())
+            for side in ['l','r']:
+                expected=Quaternion(motion['target_foot_rotations'][frame-1][side])
+                actual=rig.pose.bones['foot_'+side].matrix.to_quaternion()
+                assert abs(actual.dot(expected))>1-1e-6,('foot rotation changed after retarget',frame,side)
         b=[x for row in bpy.data.objects['GEO-stationary cream base'].matrix_world for x in row]
         if base is None:base=b
         assert max(abs(x-y) for x,y in zip(base,b))<1e-8,(clip,'moving base')

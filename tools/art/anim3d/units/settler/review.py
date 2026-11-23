@@ -66,7 +66,7 @@ if stage=='c':
     half=source.copy();half.paste(images[0].crop((128,0,256,256)),(128,0));blend=Image.blend(source,images[0],.5)
     sheet([source,images[0],half,blend],V/'settler-f-restpose-compare.png',['Painting','3D '+manifest['device'],'Half split','50/50 crossfade'])
 if stage.startswith('e-'):
-    fps={'idle':10,'move':12,'attack':14,'hit':12,'death':10}[stage[2:]]
+    fps={'idle':10,'move':6,'attack':14,'hit':12,'death':10}[stage[2:]]
     images[0].save(V/f'settler-{stage}.webp',save_all=True,append_images=images[1:],duration=round(1000/fps),loop=0,quality=85,method=4)
 with (V/'settler-log.md').open('a') as f:f.write(f'- Published {name}: {manifest["engine"]} {manifest["device"]}, {manifest["resolution"]} px, {manifest["samples"]} samples; not GPU approval.\n')
 print('REVIEW_READY',V/f'settler-{name}.png')

@@ -1,59 +1,67 @@
-# Settler resumed round 2
+# Settler driver round 2
 
-Not art-approved; no PASS marker. The static painting remains in use.
+**Not art-approved. No PASS marker.** The static painting remains in use.
 
-The actual full-depth hood, garments, hair, belt, pack and bedroll now fit recorded
-painting landmarks before one frozen camera projection. Independent per-garment
-UV stretching is removed. Finished rigid surfaces and frozen MPFB macro shapes
-retain original anatomy/weights and all 53 bones. Camera-only painted illumination,
-existing generated hidden fills, ten AO/curvature bakes, softer product lighting
-and one automatic rest grade preserve more of the painting's color. Ankle-bone
-posing staggers the feet; the staff leans in depth. Death retains robe coverage
-with shallower knee relaxation and less cloth compression.
+The round-one host GPU pass succeeded: 175,038 bytes at Q85, forty actual
+512/256 masters and an eight-second movie. Its evidence is preserved under
+`masters/settler/driver-r1-gpu/` and `review/3d-v2/settler-driver-r1-gpu/`.
 
-At **256 px**, face/hood registration and painted cloth detail improved, but the
-robe silhouette, sleeve contours, sandals/contact and base shading remain visibly
-different. At **64 px**, identity is clear and the silhouette is closer; it is
-still distinguishable. Measured on both graded 256px images with alpha >128,
-silhouette IoU rises from 0.775618 to 0.843796. This is not painting parity.
-Idle/attack/hit are restrained; walking contact still needs polish, and death
-remains too stiff. The separated calf visible in the first death trial is fixed.
+## Changes and visual verdict
 
-## Evidence and checks
+A single frozen camera projection, orthographic visibility rays and tolerance for
+short self-intersections recover the face, cloth pattern and staff grain previously
+lost to material masks. Generated hidden fills, real thickness/bevels/straps, ten
+AO/curvature bakes, product lights and automatic rest histogram grade remain.
+The hood crown slopes toward the reference and the shawl joins front to back.
+The stone is physically shaded so walking leaves no painted-foot ghost shadow.
 
-- Current CPU Cycles8/256: all stages and 40 animation samples rendered and reviewed.
-- 160px trimmed atlas: **172,316 bytes, quality 90**, original 8/8/10/4/10 counts,
-  full 8-bit alpha, fractional anchor and exact decoded death hold. Pack and
-  independent validation pass, including source hashes, offsets and clipping.
-- Saved geometry audit passes: native body vertex count, 53 bones, frozen macro
-  keys, motion, loop closure, stationary base, held death and ten bake hashes.
-  Contact and camera bounds are recorded; this is not a full collision solver.
-- `settler-round2.mp4`: decoded atlas, five clips side by side, H.264/yuv420p,
-  1600 x 352, 192 frames/eight seconds. FFprobe verification passes.
-- Python syntax (13 files), Bash syntax (two scripts), whitespace and working-tree
-  hygiene line checks (20 files) pass. Public-claims gate passes. The revision-based
-  hygiene gate still reads the old WIP: Git index.lock writes are sandbox-blocked,
-  so the runner must commit these changes and rerun that gate.
-- Repository browser art gate is blocked by Chromium Mach-port bootstrap permission
-  denial in the sandbox; its visual distinctness check did not complete.
-- GPU missing-input preflight and CPU-master rejection pass. **No actual Metal
-  execution was possible in the sandbox.** Fresh GPU512/64 output is still owed.
+Quaternius CC0 idle/walk/hit/death replace manual motion. Rest/roll calibration
+preserves full rotations. The walk uses source timing (eight samples, 6 fps),
+translation-only stance stabilization and native knee IK for the loaded carrier;
+COPY_ROTATION retains the captured feet, checked by the audit. Complete linen
+and olive robes follow pelvis/thigh/calf weights. Death is calibrated sideways,
+includes library finger motion, releases the staff and holds its terminal sample.
 
-Review images/WebPs, MP4 and running log are in `review/3d-v2/settler-*` under
-`~/LegatumRuns/anim-pilot/`. Current 256px PNGs, editable masters and manifests
-are under `masters/settler/`. Earlier 512px CPU evidence is retained in
-`round1-backup`; current CPU256 previews are not upscaled or labelled GPU masters.
+At **256 px**, the face and painted surfaces are much closer, but the hood opening,
+robe hem, sleeve shapes, small sandals and simpler base still differ visibly.
+The current CPU silhouette IoU is 0.852668; this does not establish painting parity.
+At **64 px**, staff, pack, hood and rust/olive/ivory identity read clearly; stance
+and garment mass remain distinguishable. All five clips were inspected, including
+the actual decoded movie. The fall is articulated instead of a rigid plank, but
+raised arms and cloth settling remain awkward. Feet, sleeve joins and exposed
+undersides still need art refinement. **Five clean clips and rest parity are not
+claimed.** GPU64/512 review of this revision remains pending.
 
-## Complete GPU handoff
+## Checks
 
-From the repository root, with ROUND supplied by the driver:
+- Cycles CPU8/256: plain/rest/details/poses, all 40 frames and front/top feet.
+- Geometry audit: PASS, including 53 bones, body topology, zero rest hem key,
+  evaluated first-frame geometry, native foot rotations, fixed base, exact loops,
+  held death and ten bake hashes. Binding preserves rest vertices within 0.01 mm.
+- Foot diagnostic: PASS; maximum stance residual 0.000007862 m relative to one
+  virtual ground speed; maximum lateral ankle-to-toe offset 0.005097 m.
+  This is an in-place walk, not a claim of stationary feet on a stationary disc.
+- Preview pack plus independent validation: PASS, **182,384 bytes at Q85**,
+  160px logical cells, all 8/8/10/4/10 samples, exact alpha restoration, trim offsets,
+  transparent raw/export margins and identical decoded terminal death.
+- Movie: PASS, H.264/yuv420p, 1600 x 352, 192 frames, eight seconds, five decoded
+  atlas clips at 2x on cream. Representative decoded frames visually inspected.
+- Python syntax: 17 files PASS. Bash syntax: two entry points PASS. Whitespace PASS.
+- Working-tree hygiene: 19 changed text files, zero findings. Git commit was
+  blocked by the sandbox index.lock permission; the runner must commit.
+- GPU provenance gate rejects current CPU evidence as expected. New 512px GPU
+  masters are not claimed; the previous actual GPU masters are preserved.
+
+## GPU handoff
+
+From the repository root, no arguments (ROUND supplied by the driver):
 
 ```sh
 tools/art/anim3d/units/settler/gpu.sh
 ```
 
-The executable, no-argument entry point renders plain/rest/details/poses and every
-clip on Cycles GPU64 at 512px, exports 256px copies, audits, checks GPU provenance,
-packs/validates the atlas and writes `settler-round${ROUND}.mp4`. It retains its
-transcript and failing stage; a completion receipt requires every stage. It never
-writes PASS. Review the actual GPU output before accepting the art.
+This renders every stage, regenerates clips, writes GPU512/64 masters and 256px
+exports, renders front/top feet, audits, packs/validates the trimmed atlas and
+writes `settler-round${ROUND}.mp4`. The transcript is now also teed to the driver's
+log. A receipt requires current GPU evidence, including the feet diagnostic.
+Review the GPU pixels before accepting the candidate. The script never writes PASS.

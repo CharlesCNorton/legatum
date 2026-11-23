@@ -16,6 +16,10 @@ for stage,count in {'b':3,'c':1,'c-details':1,'d':4,'e-idle':8,'e-move':8,'e-att
     for size in (512,256):
         files=list((M/f'frames-{size}'/stage).glob('*.png'));assert len(files)==count,(stage,size,'missing frames')
         for p in files:assert Image.open(p).size==(size,size)
+feet=json.loads((M/'feet.json').read_text())
+assert feet['source_sha256']==sha(M/'clips/move.blend'),'stale feet diagnostic'
+assert feet['device']=='GPU','GPU feet diagnostic required'
+for frame in feet['files']:assert sha(M/frame['path'])==frame['sha256'],'changed feet render'
 if '--receipt' in sys.argv:
     validation=json.loads((M/'validation.json').read_text());video=json.loads((M/'video.json').read_text())
     assert video['atlas_sha256']==sha(Path('app/src/assets/units/anim/settler.webp'))

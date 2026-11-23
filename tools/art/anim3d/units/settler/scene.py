@@ -101,7 +101,7 @@ for j in range(25):
     t=j/24;rings.append((.31+.98*t,.285-.100*t,.195-.045*t,-.025*(1-t),.01))
 skirt=cloth_tube('full length linen skirt',rings,ivory,'pelvis')
 # Shape-key hem follow-through is authored geometry, not a simulation claim.
-skirt.shape_key_add(name='Basis');key=skirt.shape_key_add(name='Hem sway');key.slider_min=-1
+skirt.shape_key_add(name='Basis');key=skirt.shape_key_add(name='Hem sway');key.slider_min=-1;key.value=0
 for v,base in zip(key.data,skirt.data.vertices):
     w=max(0,min(1,(1.28-base.co.z)/.9));v.co.x+=.035*w*sin(base.co.z*7);v.co.y+=.025*w*cos(base.co.x*13)
 cloth_tube('gathered linen bodice',[(1.25,.195,.16,0,-.01),(1.31,.215,.18,0,-.01),(1.40,.245,.18,0,-.005),(1.49,.23,.15,0,0),(1.56,.115,.10,0,0)],ivory,'spine_03')
@@ -176,7 +176,7 @@ vs=[];fs=[];nx=20;ny=40
 for j in range(ny+1):
     t=j/ny
     for i in range(nx+1):
-        u=i/nx;x=.18+.20*u+.08*sin(t*pi);y=.10+.09*sin(u*pi)+.025*sin(t*8+u*12);z=1.49-.98*t-.12*u
+        u=i/nx;x=.18+.20*u+.08*sin(t*pi);y=-.14+.28*u+.09*sin(u*pi)+.025*sin(t*8+u*12);z=1.49-.98*t-.12*u
         vs.append((x,y,z))
 for j in range(ny):
     for i in range(nx):a=j*(nx+1)+i;fs.append((a,a+1,a+nx+2,a+nx+1))

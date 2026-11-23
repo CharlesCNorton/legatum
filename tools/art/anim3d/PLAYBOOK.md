@@ -117,8 +117,9 @@ There is no copied hoplite equipment, image plane, or displaced painting relief.
 The skirt has complete circumference and physical thickness. A non-destructive
 body mask culls torso and upper legs fully covered by opaque garments, preventing
 poke-through while retaining the source anatomy. Cloth folds and hem
-follow-through are authored; this lane does **not** claim a cloth simulation or
-motion-capture retarget. The five editable clips retain 8/8/10/4/10 samples.
+follow-through are authored; this lane does **not** claim a cloth simulation.
+Idle, move, hit and death use the CC0 Quaternius library through Blender rest/roll
+calibrated constraints. The staff check is authored. Five clips retain 8/8/10/4/10 samples.
 
 All six installed Blender skills informed modeling, materials, cameras, lighting,
 animation and rendering. In particular: bevels and real strap thickness; fully
@@ -133,7 +134,7 @@ near-zero-scaled hidden effect. One owned process runs a complete serial round.
 
 Follow feedback 18's four levers: (1) align geometry to the painting and project
 its brushwork through frozen evaluated-rest-camera UVs onto the real deforming
-mesh, with facing and material-region masks; (2) finish the geometry with thick
+mesh, with orthographic surface-visibility masks; (2) finish the geometry with thick
 folded textiles, rounded straps, stitches, fringe, a relief clasp and real blanket
 spiral; (3) light as a painted miniature with contact shade and AO; (4) derive a
 bounded monotonic RGB transfer from the rest render and reuse the **same** grade
@@ -188,7 +189,7 @@ ROUND=2 tools/art/anim3d/units/settler/gpu.sh
 
 The driver supplies `ROUND`. It renders plain/rest/details, regenerates all five
 clips from the saved master, renders poses and all forty frames with Cycles
-GPU64/512, audits, verifies GPU provenance, packs and validates the atlas, and
+GPU64/512, renders front/top feet, audits, verifies GPU provenance, packs and validates the atlas, and
 writes `settler-round${ROUND}.mp4`. The movie reconstructs trimmed frames from
 the decoded WebP: all five clips side by side, 2x scale, cream, H.264/yuv420p,
 1600 x 352, 192 frames/eight seconds. The script retains a transcript and failure
@@ -261,3 +262,54 @@ CPU evidence remains in `masters/settler/round1-backup`. The host gate requires
 actual GPU64/512 and matching 256px exports for every stage. The delivery validator
 checks exact decoded alpha after offset restoration and identical terminal death.
 No Rust, UI, rules or runtime wiring changes are part of this lane.
+
+### Settler driver round 2: surface visibility and open motion
+
+Review the preserved `settler-driver-r1-gpu/` images and
+`masters/settler/driver-r1-gpu/` evidence before judging the new CPU previews.
+The first driver GPU pass succeeded (175038 bytes at Q85); its stdout went only
+to the internal transcript. `gpu.sh` now tees that transcript to driver stdout.
+
+One frozen painting replaces the separate material-region masks, which erased
+face and cloth detail. Visibility rays are parallel to the orthographic camera;
+short same-surface hits are tolerated so a coarse control cage does not erase
+its own subdivided front. Long self-occlusions and other surfaces retain generated
+fills. The base remains physical stone: projecting painted feet onto it left
+stationary ghost shadows during walking. Its warm pigment and emission are
+calibrated under the product lights and the same automatic rest histogram grade.
+Hood geometry slopes toward the painting's crown; sandals keep their physical sole height;
+the shawl wraps from the chest around the side with thickness rather than leaving
+a gap between front and rear panels.
+
+`bind_cloth.py` binds complete linen/olive garments to the pelvis, thighs and
+calves with blended weights and inverse rest-pose transforms. The mesh is also
+parented to the rig so it inherits root travel. It asserts rest-vertex preservation
+within 0.01 mm. Shape-key Basis coordinates are the source of truth for fitted
+meshes; `Mesh.vertices` can still hold the old cage. Explicitly set `Hem sway`
+to zero before projecting: this Blender build initializes added keys to one.
+The audit compares the evaluated first-frame geometry of idle/attack/hit with
+the projected rest geometry, not just bone matrices.
+
+Feedback 23's motion standard applies to this civilian: Quaternius Idle_Loop,
+Walk_Loop, Hit_Chest and Death01, with the CC0 library/hash provenance in
+`units/settler/SOURCES.md`. `retarget.py` uses full rest/reference rotations,
+including bone roll, and a Blender NLA idle-arm layer for carrying the staff and
+pack. Foot rotations are never corrected after retargeting. Translation-only
+root stabilization follows one virtual-ground speed; the root's height is set
+from the supporting sandal sole. The in-place stride is centered on the stone. Native two-bone IK lowers the
+loaded traveller by 12 cm while preserving the captured world ankle targets and
+foot rotations through COPY_ROTATION constraints. The audit checks those rotations.
+Eight walk samples play at 6 fps, preserving the source Walk_Loop duration of
+1.333 seconds instead of accelerating it twofold.
+The source fall is calibrated sideways to the fixed camera, bends the
+pelvis/spine/limbs, includes library finger motion and releases the staff; the final
+sample is held exactly. Inspect the cloth and limb coverage in the rendered fall.
+
+`UNIT=settler tools/art/anim3d/render.sh g` writes
+`settler-g-feet-check.png`: front and top views over all eight move samples,
+with actual sandals and a cutaway of the weighted lower legs. `feet.json` binds
+the diagnostic to its move master, records toe direction and virtual-ground
+stance residuals, and the GPU receipt refuses a stale or CPU-only diagnostic.
+A numeric contact pass does not replace visual review. The host script still
+renders actual 512px masters plus 256px exports and the decoded 160px atlas/movie;
+CPU previews are labelled as such and never upscaled to claim new 512px masters.

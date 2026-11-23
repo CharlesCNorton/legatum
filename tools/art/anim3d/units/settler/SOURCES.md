@@ -1,0 +1,7 @@
+# Settler sources
+
+- Painting: [Legatum settler master](https://pub-fb5c281dd12d4ea4bbd38d657cdeb907.r2.dev/app/src/assets/units/settler-source.png), project CC BY 4.0. Local `assets/settler/painting-source.png`.
+- MPFB 2.0.18: https://github.com/makehumancommunity/mpfb2/releases/tag/v2.0.18 ; GPL software, CC0 MakeHuman anatomy, weights, rig and system assets.
+- Generated hidden cloth/leather fills: original project CC BY 4.0, built-in imagegen output `01a2066f-0093-7841-a8c7-6f855f481de8/exec-b3b147d3-6440-488f-ab5b-190d0f4c1011.png`; prompt `fills.prompt.txt`, local `assets/settler/painted-fills.png`.
+- Quaternius Universal Animation Library Standard (2025-06-10), CC0-1.0: https://quaternius.com/packs/universalanimationlibrary.html . Existing immutable glTF mirror: https://raw.githubusercontent.com/J-Ponzo/gltf-universal-animation-library/e24c23cf2a1323488a3faa226ea7ea21f644b73e/glTF/AnimationLibrary_Godot_Standard.gltf and adjacent `.bin`. Local `assets/quaternius-ual/`, including CC0 licence. Idle_Loop, Walk_Loop, Hit_Chest, Death01; `retarget.py` validates all three hashes before import. Blender reference/rest-space constraints include full rotations and bone rolls; no post-retarget foot rotation correction.
+- Original scripts MIT, renders CC BY 4.0. Rest-calibrated retarget helper adapted from the project's scout lane (MIT). Blender 5.3.0 (GPL), Pillow 13.0.0 (MIT-CMU), installed FFmpeg. No new download, account or paid service.
