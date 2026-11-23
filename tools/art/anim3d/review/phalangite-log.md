@@ -74,3 +74,7 @@
 - Packed all 40 frames, WebP quality 90, 181278 bytes; validation passed.
 - Final round-2 CPU512/8 set complete: 48 masters at512 and48 at256, all40 clip samples; atlas181278 bytes atQ90. Decoded alpha/offsets/padding, hashes, clips and identical terminal RGB validated. Geometry audit including finished UVs and root loop/hold passed. Eight Python files, two Bash scripts, pinned source hashes and whitespace passed. MP4 verified H264/yuv420p1600x360,192 frames,8 seconds; decoded contact frames and all strips visually checked. No PASS; GPU64 and art acceptance remain pending.
 - Commit attempted with required co-author trailer; sandbox denied .git/worktrees/lane-14/index.lock. All changes remain uncommitted for the runner. No push, PR, master merge or PASS marker.
+- Published b review from 512px GPU renders.
+- Published c review from 512px GPU renders.
+- Published d review from 512px GPU renders.
+- Published e-idle review from 512px GPU renders.
