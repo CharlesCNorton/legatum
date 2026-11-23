@@ -37,5 +37,10 @@ for row,(clip,n) in enumerate(counts.items()):
  report[clip]={'frames':n,'distinct_decoded_frames':len(hashes),'trim_alpha':'exact after bounded quantization','clipping':'clear'}
 for i,a in enumerate(allrects):
  for b in allrects[i+1:]:assert a==b or a[2]<=b[0] or b[2]<=a[0] or a[3]<=b[1] or b[3]<=a[1],'Overlapping rects'
-for name in ['b-plain','c-textured-lit','c-details','d-rig-poses','f-restpose-compare']+[f'e-{c}-strip' for c in counts]:assert (V/f'peltast-{name}.png').exists(),name
+feet=json.loads((M/'feet.json').read_text());assert feet['source_sha256']==sha(M/'clips/move.blend'),'Stale feet review'
+assert len(feet['files'])==16 and feet['device']==json.loads((M/'raw/e-move/delivery.json').read_text())['device']
+for item in feet['files']:assert sha(M/item['path'])==item['sha256'],'Changed feet review'
+audit=json.loads((V/'peltast-audit.json').read_text());assert audit['passed'] and audit['source_sha256']==sha(M/'peltast.blend'),'Stale audit'
+for clip in counts:assert audit['clip_sha256'][clip]==sha(M/'clips'/f'{clip}.blend'),'Changed clip after audit'
+for name in ['g-feet-check','b-plain','c-textured-lit','c-details','d-rig-poses','f-restpose-compare']+[f'e-{c}-strip' for c in counts]:assert (V/f'peltast-{name}.png').exists(),name
 result={'checks':'passed','preview':preview,'bytes':p.stat().st_size,'quality':pack['quality'],'alpha_levels':pack['alpha_levels'],'alpha_max_error':pack['alpha_max_error'],'clips':report,'limitations':'Technical contract only; no visual quality approval or runtime integration.'};(V/'peltast-validation.json').write_text(json.dumps(result,indent=2));print(json.dumps(result,indent=2))

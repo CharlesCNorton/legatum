@@ -27,6 +27,8 @@ stage=audit
 for stage in b c d e-idle e-move e-attack e-hit e-death; do
   "$unit/render.sh" "$stage"
 done
+stage=feet
+"$unit/render.sh" feet
 stage=verify-gpu-masters
 "$ANIM_ROOT/venv/bin/python" "$unit/check_gpu.py"
 stage=pack

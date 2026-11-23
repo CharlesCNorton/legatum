@@ -276,3 +276,54 @@ Bake API finding: smart-project's edit-mode rebuild can invalidate an existing
 UV-layer RNA reference. Save its name before entering edit mode and reacquire
 the layer afterward; using the stale reference intermittently raised a
 `UnicodeDecodeError`. The corrected bake was rerun, not skipped.
+
+### Peltast driver round 2: GPU evidence, clean stone and open motion
+
+The incoming GPU round1 completed at 512/64, with a 196,858-byte Q80 atlas.
+That technical success did not meet the art bar: stone was flat peach, the step
+was a spread-leg shuffle, and the fall exposed stretched cloth. Incoming GPU
+masters, reviews and the video are preserved in `masters/peltast/driver-r1-gpu/`.
+The driver round number is independent of earlier local iteration headings.
+
+Rebuild now runs `build`, **`refine`**, `paint`, `bake`, `c`, then `animate`.
+`refine.py` adds full-depth inverse-skinned thigh volume, a higher rear fox-crown
+apex, shorter beard shell, narrower iron leaves and a tapered/beveled stone. A pinned original ImageGen occlusion fill supplies
+clean limestone pigment; its bbox is registered to actual disc geometry before
+UV assignment. It does not supply alpha or geometry. Live AO supplies moving
+contact, and the rest histogram grade remains frozen across clips. Existing
+physical folds, thick cloth, straps, buckle, generated unseen fills and product
+lights remain. Never apply refinement twice to the same unpainted master.
+
+**Open motion is the default for human lanes.** Peltast now uses the CC0
+Quaternius Standard Idle_Loop, Walk_Loop, Hit_Chest and Death01 actions. The
+unit-local `retarget.py` verifies all source/licence hashes and uses Blender
+constraints calibrated for reference pose and complete bone roll. Walk legs use
+anatomical rest calibration and equal native foot sizes (the painting stance had
+shortened one toe bone); the carrying arms layer the source idle via NLA.
+Only the weapon attack and equipment release are authored. No foot rotations
+are patched after retargeting. Translation preserves virtual-ground stance
+speed, with a second small translation correction measured on the baked rig; the
+audit checks planted-foot travel direction, saved retarget rotations and toe
+slip. A lifted toe may point past vertical during the original source swing;
+that is not a reversed planted foot. Quaternion signs are equivalent, and the
+audit compares the evaluated TRS bake, retaining the original constraint sample
+rotations separately for provenance. Apply root contact translation to detached
+equipment controls too; the audit checks hand-to-equipment registration and
+equipment loop closure, not just the skeleton. Audit/feet reports are tied to
+current master and clip hashes so a stale review cannot validate a new pack.
+A root-height correction grounds the lower boot during walk and full anatomy
+during death. A sample-keyed cloth contact correction prevents the skirt/cloak
+passing through the stone; this is a geometric correction, not cloth simulation.
+
+Every round renders all eight move samples from front and top using `render.sh
+feet`, producing `peltast-g-feet-check.png`. The unsaved diagnostic scene removes unrelated equipment meshes because
+render-time animation evaluation otherwise unhides weapons even after a
+per-frame visibility override. The saved source master remains intact. Judge visible boot orientation and contacts alongside
+the numerical audit. Virtual-ground checks do not certify a complete collision
+solver. The GPU handoff now includes these actual views and their source hashes.
+
+`gpu.sh` still performs the complete sequential no-argument Cycles/Metal pass,
+512/256 masters, all reviews, the trimmed 160px atlas at Q>=75 / <=200000 bytes,
+validation and the eight-second `peltast-round${ROUND}.mp4`. It never creates a
+PASS marker. Record final evidence and remaining defects in the running log and
+unit REVIEW.md; the actual GPU output still requires visual review.

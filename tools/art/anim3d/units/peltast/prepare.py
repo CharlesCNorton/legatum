@@ -12,5 +12,6 @@ out=Image.new('RGBA',(1024,1024));out.paste(patch,(box[0]*4,box[1]*4));out.save(
 fills=Image.open(A/'painted-fills.png').convert('RGB');w,h=fills.size
 for name,rect in [('red',(0,0,w//2,h//2)),('blue',(w//2,0,w,h//2)),('wicker',(0,h//2,w//2,h)),('leather',(w//2,h//2,w,h))]:fills.crop(rect).save(A/f'fill-{name}.png')
 lock={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(A.glob('*.png'))}
+if (A/'stone-fill.json').exists():lock['stone-fill.json']=hashlib.sha256((A/'stone-fill.json').read_bytes()).hexdigest()
 Path(__file__).with_name('assets.lock.json').write_text(json.dumps(lock,indent=2)+'\n')
 print('PREPARED',box,source.size)

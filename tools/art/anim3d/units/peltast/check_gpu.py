@@ -33,6 +33,12 @@ for stage in ['b', 'c', 'd', 'e-idle', 'e-move', 'e-attack', 'e-hit', 'e-death']
                 assert image.size == (size, size), f'{stage}/{name}: wrong master size'
     records[stage] = manifest
 
+feet=json.loads((master/'feet.json').read_text())
+assert feet['device']=='GPU' and feet['source_sha256']==sha(master/'clips/move.blend'), 'Stale/CPU feet review'
+for item in feet['files']:
+    assert sha(master/item['path'])==item['sha256'], 'Changed feet frame'
+assert (review/'peltast-g-feet-check.png').is_file()
+
 if '--receipt' in sys.argv:
     validation = json.loads((review / 'peltast-validation.json').read_text())
     assert validation['checks'] == 'passed' and not validation['preview']
