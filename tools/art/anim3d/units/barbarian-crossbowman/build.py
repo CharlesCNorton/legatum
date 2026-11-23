@@ -21,6 +21,10 @@ body.scale=(1.78/height*.88,1.78/height,1.78/height);bpy.context.view_layer.obje
 rig=HumanService.add_builtin_rig(body,'game_engine');rig.name='RIG-barbarian-crossbowman';rig.location.z=.10
 eyes_path=ROOT/'blender-user/extensions/.user/user_default/mpfb/data/eyes/high-poly/high-poly.mhclo'
 eyes=HumanService.add_mhclo_asset(str(eyes_path),body,asset_type='Eyes',subdiv_levels=1,material_type='MAKESKIN');eyes.name='GEO-CC0 anatomical eyes'
+# Freeze the evaluated MPFB macro mix before fitting garments; keep native topology/weights.
+body.shape_key_add(name='Frozen macro anatomy',from_mix=True)
+for key in list(body.data.shape_keys.key_blocks)[:-1]:body.shape_key_remove(key)
+body.shape_key_remove(body.data.shape_keys.key_blocks[0])
 skin=material('Skin ochre painted',(.42,.24,.13),0,.73)
 linen=material('Quilted oatmeal linen',(.53,.40,.23),0,.86)
 wool=material('Umber hood wool',(.12,.073,.035),0,.9)
@@ -55,8 +59,8 @@ trousers=garment('GEO-olive wool trousers',lambda v:.16<v.z<1.02,olive,.015)
 boots=garment('GEO-leather boots',lambda v:v.z<.39,leather,.021)
 sleeves=garment('GEO-quilted sleeves',lambda v:.26<abs(v.x)<.58 and v.z>1.03,linen,.025)
 # Pose: upright rather than spearman guard. World points account for rig elevation.
-limb('upperarm_r','lowerarm_r',(-.235,-.20,1.24),(-.32,-.05,1.29))
-limb('upperarm_l','lowerarm_l',(.205,-.23,1.22),(.34,-.03,1.30))
+limb('upperarm_r','lowerarm_r',(-.31,-.20,1.18),(-.32,.40,1.22))
+limb('upperarm_l','lowerarm_l',(.175,-.23,1.17),(.30,-.04,1.08))
 aim_bone('hand_r',(0,0,-1));aim_bone('hand_l',(-.5,-.1,-.4))
 for side in ['r','l']:
     for digit in ['index','middle','ring','pinky']:
@@ -105,7 +109,7 @@ for j in range(J+1):
 for j in range(J):
     for i in range(N):a=j*(N+1)+i;fs.append((a,a+1,a+N+2,a+N+1))
 hood=mesh('GEO-open wool hood',vs,fs,wool);solid(hood,.009);su=hood.modifiers.new('Soft hood folds','SUBSURF');su.levels=1;attach(hood,'head')
-for edge in [0,N]:attach(curve('GEO-hood stitched opening',[vs[j*(N+1)+edge] for j in range(J+1)],.004,string),'head')
+for edge in [0,N]:attach(curve('GEO-hood stitched opening',[vs[j*(N+1)+edge] for j in range(J+1)],.003,wool),'head')
 # Close the cowl over the crown with an arched, thick cloth cap.
 capvs=[];capfs=[]
 for j in range(17):
@@ -129,7 +133,7 @@ def box(name,loc,scale,mat):
 weaponize(box('GEO-crossbow walnut tiller',(-.275,-.26,.67),(.057,.062,1.05),wood))
 weaponize(box('GEO-crossbow trigger mechanism',(-.275,-.30,1.21),(.068,.018,.10),steel))
 weaponize(curve('GEO-steel bow prod',[(-.61,-.28,.40),(-.53,-.25,.36),(-.41,-.245,.345),(-.275,-.24,.34),(-.14,-.245,.345),(-.02,-.25,.36),(.06,-.28,.40)],.013,steel))
-weaponize(curve('GEO-taut bowstring',[(-.61,-.28,.40),(-.275,-.305,.62),(.06,-.28,.40)],.0027,string))
+weaponize(curve('GEO-taut bowstring',[(-.61,-.28,.40),(-.275,-.305,.47),(.06,-.28,.40)],.0027,string))
 weaponize(curve('GEO-steel foot stirrup',[(-.31,-.26,.21),(-.325,-.26,.11),(-.225,-.26,.11),(-.24,-.26,.21)],.009,steel))
 weaponize(curve('GEO-loaded bolt',[(-.275,-.30,.97),(-.275,-.30,.39)],.004,wood))
 for z in [.3,.72,1.02]:weaponize(box('GEO-stock steel band',(-.275,-.26,z),(.063,.067,.021),steel))
@@ -142,16 +146,19 @@ case.location.x+=.27
 for i in range(5):attach(curve('GEO-spare bolt',[(.25+i*.011,.02,.87),(.25+i*.011,.02,1.13)],.0035,wood),'pelvis')
 # Shift figure to the painting's right-biased silhouette.
 rig.location.x+=.065
-weapon.location.x+=.065
+weapon.location.x+=.005
+weapon.scale.z=1.10
 # Cream base is stationary for all poses.
 bpy.ops.mesh.primitive_cylinder_add(vertices=96,radius=.52,depth=.075,location=(0,0,.0375));base=bpy.context.object;base.name='GEO-stationary cream stone';base.data.materials.append(stone);bevel(base,.012,3)
 sc=bpy.context.scene;sc.render.engine='CYCLES';sc.cycles.device='CPU';sc.cycles.samples=8;sc.cycles.use_denoising=True
 sc.render.resolution_x=sc.render.resolution_y=256;sc.render.resolution_percentage=100;sc.render.film_transparent=True;sc.render.image_settings.file_format='PNG';sc.render.image_settings.color_mode='RGBA'
 sc.world.color=(.15,.15,.15);sc.view_settings.view_transform='AgX';sc.view_settings.look='AgX - Medium High Contrast';sc.view_settings.exposure=.25
-bpy.ops.object.camera_add(location=(0,-7,3.15));sc.camera=bpy.context.object;sc.camera.name='CAM-painting';sc.camera.data.type='ORTHO';sc.camera.data.ortho_scale=2.28;sc.camera.rotation_euler=(Vector((0,0,.90))-sc.camera.location).to_track_quat('-Z','Y').to_euler()
+bpy.ops.object.camera_add(location=(0,-7,2.95));sc.camera=bpy.context.object;sc.camera.name='CAM-painting';sc.camera.data.type='ORTHO';sc.camera.data.ortho_scale=2.28;sc.camera.rotation_euler=(Vector((0,0,.90))-sc.camera.location).to_track_quat('-Z','Y').to_euler()
 for name,loc,power,size,col in [('Warm key',(-3,-4,6),550,3,(1,.89,.72)),('Soft fill',(3,-3,3),140,4,(.85,.91,1)),('Cool rim',(2,3,4),360,2,(.73,.85,1))]:
     bpy.ops.object.light_add(type='AREA',location=loc);o=bpy.context.object;o.name=name;o.data.energy=power;o.data.size=size;o.data.color=col;o.rotation_euler=(Vector((0,0,1))-o.location).to_track_quat('-Z','Y').to_euler()
-# Save genuine untextured geometry for the first review.
+# Finish geometry before sampling frozen camera UVs.
+import runpy
+runpy.run_path('tools/art/anim3d/units/barbarian-crossbowman/refine.py',init_globals=globals())
 bpy.ops.wm.save_as_mainfile(filepath=str(M/'plain.blend'))
 # Generated painted linen from the mounted family, tinted for unseen cloth.
 fill=bpy.data.images.load(str(A/'fill-linen.png'))
@@ -168,30 +175,8 @@ for mat in [skin,linen,wool,olive,leather,wood,steel,brass,stone]:
     l.new(ao.outputs['Color'],mix.inputs[2]);l.new(mix.outputs[0],s.inputs['Base Color'])
     if mat in [steel,brass]:
         geo=n.new('ShaderNodeNewGeometry');r=n.new('ShaderNodeMapRange');r.inputs['From Min'].default_value=.35;r.inputs['From Max'].default_value=.6;r.inputs['To Min'].default_value=.65;r.inputs['To Max'].default_value=.23;l.new(geo.outputs['Pointiness'],r.inputs['Value']);l.new(r.outputs[0],s.inputs['Roughness'])
-# Fix painting UVs in the posed mesh, disabling topology-changing modifiers for registration.
-painting=bpy.data.images.load(str(A/'painting-aligned.png'));view=(sc.camera.location-Vector((0,0,1))).normalized();records=[]
-for obj in list(sc.objects):
-    if obj.type=='CURVE':
-        bpy.ops.object.select_all(action='DESELECT');obj.select_set(True);bpy.context.view_layer.objects.active=obj;bpy.ops.object.convert(target='MESH');obj=bpy.context.object
-    if obj.type!='MESH' or obj==base or obj==eyes:continue
-    states=[(m,m.show_viewport) for m in obj.modifiers]
-    for m,_ in states:
-        if m.type!='ARMATURE':m.show_viewport=False
-    bpy.context.view_layer.update();ev=obj.evaluated_get(bpy.context.evaluated_depsgraph_get());me=ev.to_mesh()
-    uv=obj.data.uv_layers.new(name='Painting fixed UV');att=obj.data.color_attributes.new(name='Painting incidence',type='FLOAT_COLOR',domain='CORNER');coords=[];weights=[]
-    for v in me.vertices:
-        q=world_to_camera_view(sc,sc.camera,ev.matrix_world@v.co);coords.append((q.x,q.y));normal=(ev.matrix_world.to_3x3().inverted().transposed()@v.normal).normalized();weights.append(max(0,min(1,normal.dot(view)*2.5)))
-    assert len(me.vertices)==len(obj.data.vertices),obj.name
-    for i,loop in enumerate(obj.data.loops):uv.data[i].uv=coords[loop.vertex_index];att.data[i].color=(weights[loop.vertex_index],)*3+(1,)
-    ev.to_mesh_clear()
-    for m,on in states:m.show_viewport=on
-    for i,old in enumerate(list(obj.data.materials)):
-        mat=old.copy();obj.data.materials[i]=mat;n=mat.node_tree.nodes;l=mat.node_tree.links;s=n.get('Principled BSDF');tex=n.new('ShaderNodeTexImage');tex.image=painting;tex.extension='CLIP';u=n.new('ShaderNodeUVMap');u.uv_map=uv.name;l.new(u.outputs[0],tex.inputs[0]);attr=n.new('ShaderNodeVertexColor');attr.layer_name=att.name
-        mult=n.new('ShaderNodeMath');mult.operation='MULTIPLY';l.new(attr.outputs[0],mult.inputs[0]);l.new(tex.outputs['Alpha'],mult.inputs[1]);factor=n.new('ShaderNodeMath');factor.operation='MULTIPLY';factor.inputs[1].default_value=.88;l.new(mult.outputs[0],factor.inputs[0]);mix=n.new('ShaderNodeMixRGB');mix.inputs[1].default_value=s.inputs['Base Color'].default_value;
-        if s.inputs['Base Color'].is_linked:l.new(s.inputs['Base Color'].links[0].from_socket,mix.inputs[1])
-        l.new(tex.outputs['Color'],mix.inputs[2]);l.new(factor.outputs[0],mix.inputs[0]);l.new(mix.outputs[0],s.inputs['Base Color']);l.new(mix.outputs[0],s.inputs['Emission Color']);s.inputs['Emission Strength'].default_value=.18
-    records.append({'name':obj.name,'vertices':len(obj.data.vertices)})
-sub=body.modifiers.new('Anatomical subdivision','SUBSURF');sub.levels=1
+# Calibrate projection on the finished surfaces, never the unfinished cage.
+records=runpy.run_path('tools/art/anim3d/units/barbarian-crossbowman/project.py',init_globals=globals())['records']
 rig['neutral']=json.dumps({p.name:[list(row) for row in p.matrix_basis] for p in rig.pose.bones});rig['source']='CC0 MPFB 2.0.18 game_engine'
 sc['projection']='Fixed per-vertex camera UV, alpha/incidence blend, true 3D geometry';sc['cream_target']='#E9CFA0'
 bpy.ops.file.pack_all();bpy.ops.wm.save_as_mainfile(filepath=str(M/'model.blend'))

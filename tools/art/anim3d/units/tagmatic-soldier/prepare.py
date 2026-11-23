@@ -1,0 +1,20 @@
+"""External painting/fill inputs; keep archive masters out of Git."""
+from pathlib import Path
+from PIL import Image
+import json, hashlib, os
+ROOT=Path(os.environ.get('ANIM_ROOT',str(Path.home()/'LegatumRuns/anim-pilot')))
+A=ROOT/'assets/tagmatic-soldier'; A.mkdir(parents=True,exist_ok=True)
+lock=json.loads(Path(__file__).with_name('assets.lock.json').read_text())
+for key in ['painting','painted_fills']:
+ entry=lock[key];path=A/entry['file']
+ assert hashlib.sha256(path.read_bytes()).hexdigest()==entry['sha256'],f'Changed input: {path}'
+src=Image.open(A/'painting-source.png').convert('RGBA')
+ref=Image.open('app/src/assets/units/tagmatic-soldier-256.png').convert('RGBA')
+b=ref.getchannel('A').getbbox(); p=src.crop(src.getchannel('A').getbbox())
+p=p.resize(((b[2]-b[0])*4,(b[3]-b[1])*4),Image.Resampling.LANCZOS)
+out=Image.new('RGBA',(1024,1024));out.paste(p,(b[0]*4,b[1]*4));out.save(A/'painting-aligned.png')
+im=Image.open(A/'painted-fills.png').convert('RGB');w,h=im.size
+for name,box in zip(['cloth','steel','leather','gold'],[(0,0,w//2,h//2),(w//2,0,w,h//2),(0,h//2,w//2,h),(w//2,h//2,w,h)]):
+ im.crop(box).resize((512,512),Image.Resampling.LANCZOS).save(A/f'fill-{name}.png')
+(A/'inputs.json').write_text(json.dumps({p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in A.glob('*.png')},indent=2))
+print('Prepared source-aligned painting and painted material fills',b)

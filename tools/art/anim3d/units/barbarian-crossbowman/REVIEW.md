@@ -1,53 +1,67 @@
-# Barbarian crossbowman — round 1
+# Barbarian crossbowman — round 2
 
-This is a review candidate, not a visual pass and not enabled in the game.
+Review candidate only; no art PASS and no runtime activation.
 
-The editable model uses MPFB anatomy and its 53-bone rig, original thick cloth
-and weapon geometry, fixed painting projection, generated unseen cloth fill,
-AO/curvature bakes and five authored skeletal actions. Full-size painting and
-all Blender files, bakes and raw frames live outside git under
-`~/LegatumRuns/anim-pilot/{assets,masters}/barbarian-crossbowman/`.
+The rest pose is closer to the painting at 256 px: the hands and elbows are
+registered more naturally, the boots have more volume, the vertical stock and
+bowstring better match the source, and the face/cloth retain much more painted
+detail. The stone is warm cream. At 64 px the same hooded crossbowman identity
+reads, but the silhouette is still distinguishable. Alpha-mask IoU increased
+from **0.7300 to 0.8099** (threshold 128); that is not a visual-quality pass.
+The hood contour, sleeve tailoring, foot shapes and bolt case remain simpler
+than the source. The plain side views expose the unfinished garment construction.
 
-The CPU comparison shows the correct hooded brigand, cream quilted tunic, olive
-trousers and vertical crossbow identity at 64px. At 256px it is visibly below the
-painting: the hood opening is too narrow, facial shading has projection seams,
-the boots lack the painting's weight, and the elbows/weapon proportions differ.
-The base patch measures RGB (225, 200, 172) in the CPU review versus (252, 218, 180) in the painting; it remains darker. The walk has weak foot contact and needs a better grounded gait. These are
-geometry/pose problems; more texture strength or GPU samples will not fix them.
+All five actions were rebuilt and inspected as strips, plus contact frames from
+the decoded atlas MP4. Attack now starts at the saved rest arm pose and keeps
+its stock grip through recoil. The walk is still restrained and stiff. Death
+moves the hanging bolt case aside and settles against the actual support
+footprint, but the rigid cape/clothing and leg pose still look partly suspended.
+It needs a more natural collapse and cloth contact before approval. No cloth
+simulation or full body/garment collision guarantee is claimed.
 
-The attack raises the crossbow, supports the forestock with the second hand,
-fires with a keyed disappearing bolt, and recovers. The death action folds the
-legs and rolls to the side while the crossbow settles separately. The terminal body still looks partly suspended rather than convincingly resting. Review the
-complete strips for intersections and contact; the structural audit is not a
-full collision solver. Cloth follows its body segment; it is not simulated.
+The model retains native MPFB anatomy, weights and 53 bones. Macro shape keys
+are frozen before fitting; thick/beveled/subdivided kit surfaces are finished
+before recording camera UVs. Ray visibility, facing, source alpha and hand
+exclusions blend into the existing image-generated linen/physical unseen fills.
+Camera-only painted pigment avoids lighting the source a second time; other
+rays retain physical materials. Stone never receives projected feet/shadows.
+Real AO/curvature bakes and one frozen automatic rest histogram grade remain.
 
-All review sheets, clip WebPs and the driver MP4 are in
-`~/LegatumRuns/anim-pilot/review/3d-v2/`, prefixed `barbarian-crossbowman-`.
-The rest comparison contains the painting, the render, a 50% crossfade and native
-64px versions. The first plain geometry sheet is preserved as `b-first.png`.
-There is deliberately no `barbarian-crossbowman-PASS` marker.
+Verified CPU delivery:
 
-GPU handoff, from the repository root:
+- All 40 frames: idle 8, move 8, attack 10, hit 4, death 10; Cycles CPU8, native
+  256 px. Earlier evidence is in `round1-cpu`, current evidence in `round2-cpu`.
+- Trimmed 160 px atlas: **138,532 bytes, WebP Q90**, full alpha, per-frame offsets.
+  Source/model/frame/grade/atlas/JSON hashes, exact decoded alpha reconstruction,
+  bounds, motion, and pixel-identical decoded death hold pass.
+- All five source audits pass: 53 bones, stationary stone, safe nonzero scales,
+  finished projection and camera-only pigment. Maximum right-wrist/stock error:
+  idle **0.298 mm**, move **0.000373 mm**, attack **0.000362 mm** (2 mm limit).
+- Two delivery regression tests pass; 12 Python files compile, both shell files
+  pass `bash -n`, and whitespace checks pass.
+- MP4 probe: **H.264/yuv420p, 1600x348, 240 frames, 8.000 seconds**. Every clip
+  is reconstructed from trimmed atlas rectangles at 2x on cream.
+- The independent final-master gate rejects the actual CPU preview manifests.
+  Running the executable GPU handoff's preflight in this sandbox fails explicitly
+  with `Metal GPU required; refusing CPU fallback`, exit 1, and records the
+  failed stage in its status file. A queued earlier preflight was interrupted;
+  device discovery now uses a CPU slot because it does not render.
+
+GPU64/512 final masters and their 256 derivatives remain pending. From this
+checkout's repository root, the lead runs the complete no-argument handoff:
 
 ```sh
-ROUND=1 tools/art/anim3d/units/barbarian-crossbowman/gpu.sh
+ROUND=2 tools/art/anim3d/units/barbarian-crossbowman/gpu.sh
 ```
 
-That no-argument script prepares locked inputs, rebuilds and bakes the model,
-regenerates the five actions, renders every stage at 512px on Metal Cycles,
-retains 512/256 masters, builds the trimmed 160px candidate at quality >=75 and
-<=200,000 bytes, validates it, audits the source, and writes the eight-second
-H.264 yuv420p video. The sandbox has no Metal, so this GPU path requires the lead.
-The unit's PLAYBOOK chapter documents the extended rectangle/offset JSON format.
+It checks Metal, rebuilds/bakes/animates/audits, renders every b/c/d/e stage,
+checks final-master provenance, packs/validates and writes the eight-second
+round MP4. It retains its transcript and stage/status receipt. Technical success
+never creates PASS. Masters, bakes, raw frames and reviews stay under
+`~/LegatumRuns/anim-pilot/`; no new downloads, services or uploads were used.
 
-Round-one CPU verification: all seven Python scripts compile; both shell scripts
-pass `bash -n`; `git diff --check` passes. The source audit passes all five clips
-(53 bones, stationary base, nonzero scales). Atlas validation passes all 40
-frames and trim offsets, transparency, motion, clipping margins, stale-input
-hash checks and held terminal death. The candidate is **167,472 bytes at WebP
-quality 90**. `ffprobe` confirms the review MP4 is **H.264/yuv420p, 1600×348,
-240 frames, 8.000 seconds**. CPU frames are native 256px at 8 Cycles samples;
-512px final masters are generated by the lead's GPU handoff and are still pending.
-
-Git staging/commit was blocked by the sandbox denying `index.lock`; the runner
-must commit these changes before commit-based repository gates can cover them.
+Git staging was blocked by the sandbox denying
+`.git/worktrees/lane-13/index.lock`; the runner must commit the round. No push or
+PR was attempted. `origin/master` is already an ancestor of HEAD. Pre-existing
+Tagmatic files and its uncommitted playbook chapter were preserved. Commit-based
+repository gates remain deferred; the unit-local checks above cover this round.
