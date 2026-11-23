@@ -106,3 +106,71 @@ tools/art/anim3d/render.sh audit
 ```
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
+
+## Vehicles / aircraft — stealth bomber
+
+This unit's code is isolated in `units/stealth-bomber/`. It follows the newer vehicle
+chapter and reuses the bomber lane's projection, grading, delivery and GPU receipt
+workflow, read through `git show`. The aircraft is a closed cambered flying wing,
+raised centre section, recessed intake wells and convex framed cockpit. It retains
+the painting's flying composition, carved solid support and single cream disc.
+No image cards, alpha-cutout geometry, external vehicle model or human rig is used.
+
+The four quality levers are the standard: register full-depth geometry to the
+painting; freeze camera-projected source colour on the finished beveled surfaces;
+fill unseen surfaces with licensed generated brushwork; light with warm upper-left
+key, soft fill and cool rim, then apply a bounded histogram grade frozen from rest.
+AO and Pointiness maps are actual Cycles bakes, adding restrained cavity grime and
+edge wear. Cream stone uses sRGB **#E9CFA0**, converted to linear pigment, with a darker
+rim and fine grain. Its shadow is physical rather than permanently projected.
+Camera-only pigment preserves painted illumination without lighting other objects.
+Standard/None here preserves the already painted display colours. Large viewpoint
+changes expose approximate unseen paint and require review.
+
+All six Blender skills were read: modeling (closed camber and bevels), materials
+(paint/wear), camera registration, product lighting, rigid keyframe animation and
+rendering. Every invocation is plain `blender -b --disable-autoexec` through the
+PATH gate; only one heavy process per lane. No zero-scale hiding or volume meshes.
+
+```sh
+tools/art/anim3d/units/stealth-bomber/render.sh build
+# CPU previews, each stage publishes its review immediately:
+for stage in b c d g e-idle e-move e-attack e-hit e-death; do
+  RESOLUTION=256 SAMPLES=8 tools/art/anim3d/units/stealth-bomber/render.sh "$stage"
+  ~/LegatumRuns/anim-pilot/venv/bin/python tools/art/anim3d/units/stealth-bomber/deliver.py "$stage"
+done
+# Complete lead-side GPU pass, no positional arguments:
+ROUND=1 tools/art/anim3d/units/stealth-bomber/gpu.sh
+```
+
+GPU handoff renders all stages at 512 px using explicit Metal Cycles, keeps actual
+512 and downsampled 256 masters, validates provenance, audits editable geometry and
+motion, and packs the 160 px delivery. Missing GPU fails rather than falling back.
+Rest review is `<slug>-f-restpose-compare.png`: painting, render and 50/50 crossfade
+at 256 and 64 px. The five clips are 8/8/10/4/10 frames; only idle/move loop. Attack
+is a banking bomb run; death descends into a deformed wreck touching the disc,
+with the terminal two samples held. Support disappears by keyed visibility on
+crash. The base remains stationary throughout.
+
+The version-2 atlas has `trimmed:true`, a logical `frame:{w:160,h:160,ax,ay}`, and
+`clips` in idle/move/attack/hit/death row order. Each clip has `row,frames,fps,loop`
+and `sprites:[{x,y,w,h,ox,oy},...]`. Source rectangles use atlas pixels; `ox/oy`
+restore each crop into its logical cell. Draw at `(X-ax+ox,Y-ay+oy)` using one
+consistent display scale. `row` is ordering, not a fixed grid coordinate. WebP
+chooses Q95/90/85/80/75 and refuses sizes above 200,000 bytes. Alpha/offset
+reconstruction, source hashes, counts, motion, gutters and terminal hold are
+validated. This is a candidate format; no runtime integration or art approval is
+implied. The MP4 reconstructs those trimmed frames, all five clips side by side on
+cream at 2x, 240 frames/eight seconds, H.264/yuv420p; FFprobe verifies it.
+
+Motion standard across families: human idle/walk/hit/death use CMU permissive or
+Quaternius CC0 motion with matched rest pose and bone rolls; only weapon attacks
+are authored. Animals use CC0 animated quadrupeds. Never correct foot orientation
+after retargeting. Record licences in both source ledgers and render top/front
+feet over a full move cycle as `<slug>-g-feet-check.png` every round. Aircraft have
+no feet: that sheet instead explicitly labels the top/front flight-axis review.
+Rigid aircraft flight is authored mechanical motion, not claimed as mocap.
+
+Scripts never write PASS automatically. Painting parity at rest, clean five clips
+and the <=200 KB contract must all be visually confirmed first. CPU previews,
+512 storage, byte budgets and successful process exits do not establish that bar.
