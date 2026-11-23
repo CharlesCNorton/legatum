@@ -23,3 +23,10 @@
 - Emitted c-details: 1 frames, 256 px CYCLES/CPU, 8 samples.
 - Emitted c: 1 frames, 256 px CYCLES/CPU, 8 samples.
 - Emitted c-details: 1 frames, 256 px CYCLES/CPU, 8 samples.
+- Round-2 surface pass: freeze MPFB morphs, apply rigid bevels/thickness and horse bind subdivision before projection, convert curve kit to full meshes, inverse-skin a smooth anatomical fitting field, and preserve both live rigs. First compact radial fit over-bent a hind leg; rejected and replaced with a smoother constrained fit.
+- Painted illumination now uses a 96% camera-only source branch; real PBR/generated fills remain for hidden surfaces and non-camera rays. Rest camera is unchanged; this is approximate single-view fitting, not exact camera recovery. Existing AO/Pointiness bakes and reused image-generated hair/metal/linen fills remain.
+- Added fuller weighted tail locks, removed the source's white forehead marking, and refitted actual bridle/rein geometry to the raised horse head and rein hand. Retained cream stone with camera-only pigment support and product key/fill/rim at 5:1:1.5.
+- Delivery now uses premultiplied bicubic reduction, unquantized alpha, shared identical rectangles for terminal holds, current source/grade/settings checks, and ffprobe verification. GPU handoff rebuilds dependent clips and records its own transcript, failure stage and GPU-only completion receipt.
+- Emitted b: 3 frames, 256 px CYCLES/CPU, 8 samples.
+- Emitted c: 1 frames, 256 px CYCLES/CPU, 8 samples.
+- Emitted c-details: 1 frames, 256 px CYCLES/CPU, 8 samples.

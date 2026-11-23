@@ -8,3 +8,7 @@
 - Saved five editable clips and rendered all 40 initial CPU frames; published strips/WebPs immediately. First pack rejected death frame 5 at the left border (no atlas shipped from that pass).
 - Increased attack articulation, moved the collapse inward, connected boot ankles and added a sculpted hair cap. Rebuilding all outputs at 512 px / 8 CPU samples; these are drafts for the 48-sample Metal GPU pass.
 - Rebuild exposed a Blender UV-layer handle invalidated by edit-mode unwrap; bake stopped before saving. Fixed by retaining the UV name as a string, added nonzero Python exit codes and a bake-required guard so incomplete rebuilds cannot render/pack as valid.
+
+# Resumed round 2 — 2026-11-23
+- Opened latest rest comparison and move strip before edits. At 256 px the face/circlet is distorted, cloak/train is too narrow and angular, toes are pale rounded blobs and stone looks smooth/molded; projection and geometry do not yet register. At 64 px the crowned purple banner-bearer reads, but the narrow stance/train and bright toes differ. Not PASS.
+- Read all common feedback (1–22); no unit-specific feedback file currently exists. Loaded all six Blender skills; read current and advanced spearman/siege playbooks. Applying finished-surface frozen projection, camera-only pigment, boot/source separation and product lighting while retaining existing generated fills and real bakes.

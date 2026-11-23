@@ -10,3 +10,8 @@
 - Authored idle, move, attack, hit and terminal death on the MPFB skeleton; no mocap or cloth simulation claimed.
 - Froze painting camera UVs and ray-tested visibility, with generated feather backfill on unseen surfaces.
 - Authored idle, move, attack, hit and terminal death on the MPFB skeleton; no mocap or cloth simulation claimed.
+
+# Eagle warrior round 2, resumed 2026-11-23
+- Opened previous rest comparison, details, attack/move/death strips first. At 256: hood/feather paint is recognizable but doubled on coarse underlying surfaces; weapon fist is open and displaced, feather tips are bulky, toes/sandals malformed, base too broad/dark and shallow. At 64: same unit identity, but swollen feather silhouette and dark base remain distinct. Death ends visibly suspended on one toe; no PASS.
+- Prior manifests identify Cycles CPU256/8, not a verified GPU delivery. Preserved prior masters/clips/reviews in round1-cpu. Read all standing feedback; no eagle-warrior-FEEDBACK.md exists.
+- Read current playbook and complete advanced spearman/field-cannon chapters through round 8. Loaded modeling, materials, lighting, cameras, animation and rendering skills: finish geometry before projection, camera-only pigment, real cream-disc calibration, held ground-supported death and decoded delivery review.
