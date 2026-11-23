@@ -172,3 +172,10 @@
 - Authored attack: 10 frames, 14 fps; real rig keys, bow flex and nock keys, stationary base.
 - Authored hit: 4 frames, 12 fps; real rig keys, bow flex and nock keys, stationary base.
 - Authored death: 10 frames, 10 fps; real rig keys, bow flex and nock keys, stationary base.
+- Geometry audit passed: anatomy, fixed base, nonzero scales, bow/nock contact and loop closure.
+- Rendered e-move: 256px CYCLES CPU, 16 samples.
+- Published e-move native 256/64 comparison; render device CPU.
+- Rendered e-death: 256px CYCLES CPU, 16 samples.
+- Published e-death native 256/64 comparison; render device CPU.
+- Rendered g-feet-check: 256px CYCLES CPU, 16 samples.
+- Published g-feet-check native 256/64 comparison; render device CPU.
