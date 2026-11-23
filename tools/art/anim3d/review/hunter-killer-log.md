@@ -80,3 +80,11 @@ Final CPU candidate: 182178 bytes at WebP Q90; 40 trimmed 160px frames, atlas/al
 GPU entry point exercised: input hashes and geometry audit pass, expected sandbox failure No Metal device; refusing CPU fallback. Actual GPU512/256 pass remains for lead; CPU previews preserved. No unit-specific feedback file arrived during this run.
 Published details review immediately; frozen grade 294477b9d7a5, 256 masters retained.
 Git staging/commit attempted; sandbox refused index.lock. Runner must commit. origin/master already ancestor of starting HEAD. Python AST, shell syntax, whitespace checks passed; no Rust/UI changes or full application builds.
+Geometry/contact audit PASS: closed volumes, four IK legs, fixed planted feet, constant segments, stationary disc, six bakes, no zero scales.
+Rendered b: 3 PNGs, 512 px, CYCLES GPU, 96 samples.
+Rendered c: 1 PNGs, 512 px, CYCLES GPU, 96 samples.
+Published c review immediately; frozen grade de8547548b11, 256 masters retained.
+Rendered details: 2 PNGs, 512 px, CYCLES GPU, 96 samples.
+Published details review immediately; frozen grade de8547548b11, 256 masters retained.
+Rendered d: 4 PNGs, 512 px, CYCLES GPU, 96 samples.
+Published d review immediately; frozen grade de8547548b11, 256 masters retained.

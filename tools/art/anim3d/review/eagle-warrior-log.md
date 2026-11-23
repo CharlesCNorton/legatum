@@ -63,3 +63,6 @@
 - Quantitative rest check found blanket wing extension added 109 extra silhouette pixels while recovering 58 missing pixels; full IoU fell .82541 -> .81885 at256 (64px .83624 -> .83650). Replaced blanket extension with individually fitted tapered tips, and moved the left sandal 4px inward before the native foot fit. Re-running affected model/animation/delivery checks.
 - Froze painting camera UVs and ray-tested visibility, with generated feather backfill on unseen surfaces.
 - Retargeted CC0 Quaternius idle/walk/hit/death with calibrated bone rolls; retained authored macuahuitl attack and rigid club release. No cloth simulation claimed.
+- Finished actual solid/beveled surfaces before projection, compacted the weighted weapon fist, and calibrated the physical circular stone and broad product key; retained original MPFB weights and generated feather fill.
+- Froze painting camera UVs and ray-tested visibility, with generated feather backfill on unseen surfaces.
+- Retargeted CC0 Quaternius idle/walk/hit/death with calibrated bone rolls; retained authored macuahuitl attack and rigid club release. No cloth simulation claimed.
