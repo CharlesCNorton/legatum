@@ -13,3 +13,5 @@ Baked clip idle
 Baked clip move
 Baked clip attack
 Baked clip hit
+Baked clip death
+Review c: 256px CYCLES/CPU, 16 samples; 1 actual frames.

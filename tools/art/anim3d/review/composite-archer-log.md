@@ -5,3 +5,8 @@
 - Generated four original unseen-surface fills with built-in imagegen; source painting remains projected colour standard.
 - Built isolated scripts for MPFB anatomy, kneeling pose, patterned tunic/trousers, quiver, and recurved composite bow; first build queued behind shared Blender gate.
 - Saved c review, raw 512 px and graded 512/256 sets; CYCLES CPU 8 samples.
+- Saved c review, raw 512 px and graded 512/256 sets; CYCLES CPU 8 samples.
+- Saved e-idle review, raw 512 px and graded 512/256 sets; CYCLES CPU 8 samples.
+- Saved e-move review, raw 512 px and graded 512/256 sets; CYCLES CPU 8 samples.
+- Saved e-attack review, raw 512 px and graded 512/256 sets; CYCLES CPU 8 samples.
+- Saved e-hit review, raw 512 px and graded 512/256 sets; CYCLES CPU 8 samples.

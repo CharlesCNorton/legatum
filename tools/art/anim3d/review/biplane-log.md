@@ -4,3 +4,4 @@
 - Downloaded the CC BY 4.0 full biplane painting; generated four painted material fills and registered source projection. No external model/service/account.
 - Saved b review immediately; 1 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/b/render.json.
 - Saved c review immediately; 1 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/c/render.json.
+- Saved c review immediately; 1 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/c/render.json.

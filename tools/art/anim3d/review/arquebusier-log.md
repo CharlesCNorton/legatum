@@ -11,3 +11,18 @@
 - Posted b-plain review (CPU, 256 px).
 - Camera projection applied to real meshes; hidden surfaces retain generated painted fills.
 - Posted c-textured-lit review (CPU, 256 px).
+- Built MPFB anatomical body, 53-bone rig and original arquebusier kit; plain.blend saved.
+- Posted b-plain review (CPU, 256 px).
+- Camera projection applied to real meshes; hidden surfaces retain generated painted fills.
+- Posted c-textured-lit review (CPU, 256 px).
+- Posted c-textured-lit review (CPU, 256 px).
+- Authored and saved idle action (8 output frames).
+- Authored and saved move action (8 output frames).
+- Authored and saved attack action (10 output frames).
+- Authored and saved hit action (4 output frames).
+- Authored and saved death action (10 output frames).
+- Posted d-rig-poses review (CPU, 256 px).
+- Posted e-idle review (CPU, 256 px).
+- Posted e-move review (CPU, 256 px).
+- Posted e-attack review (CPU, 256 px).
+- Posted e-hit review (CPU, 256 px).

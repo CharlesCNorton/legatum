@@ -11,3 +11,6 @@
 - Published c: CYCLES/CPU, 512 px, 8 samples; visual review pending.
 - Published b: CYCLES/CPU, 256 px, 8 samples; visual review pending.
 - Published c: CYCLES/CPU, 512 px, 8 samples; visual review pending.
+- Published d: CYCLES/CPU, 512 px, 8 samples; visual review pending.
+- Published e-idle: CYCLES/CPU, 512 px, 8 samples; visual review pending.
+- Published e-move: CYCLES/CPU, 512 px, 8 samples; visual review pending.

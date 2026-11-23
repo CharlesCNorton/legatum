@@ -5,3 +5,9 @@
 - Published b review from CPU render.
 - Published c review from CPU render.
 - Published c review from CPU render.
+- Plain review found tunic/fur too low, narrow stance and sparse hair; raised and widened fitted kit, broadened stance, added scalp shell and more solid hair locks.
+- Textured review found inward shield/hair normals and projection spill onto boots; corrected winding, limited foot projection and retained generated unseen-surface fills.
+- Baked eight actual 256px maps (AO + Cycles Pointiness for skin, tunic, shield and iron boss). Fixed stale Blender UV-layer reference after Edit Mode; no fabricated bake maps.
+- Authored five skeletal clips with 8/8/10/4/10 samples, hand-mounted spear, a death release and repeated settled death frame; CPU death preview underway.
+- Quality remains below painting: face/hair registration, fur silhouette and cloth drape need further sculpting. GPU review is pending, not approved.
+- Published e-death review from CPU render.

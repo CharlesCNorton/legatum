@@ -83,3 +83,10 @@
 - Posted field-cannon-e-hit-strip.png; actual CYCLES render, visual review pending.
 - Posted field-cannon-c-textured-lit.png; actual CYCLES render, visual review pending.
 - Posted field-cannon-e-death-strip.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-c-textured-lit.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-c-details.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-d-rig-poses.png; actual CYCLES render, visual review pending.
+- CPU512 review exposed the intended wrist target 3.25 cm beyond the native arm reach. Fixed the contact definition instead of relaxing the audit: barrel contact is at the hand-bone tail/palm, and the wrist target subtracts the hand length. Moved the contact slightly toward the breech and explicitly aims the hand after the arm solve. All 8 idle samples now pass the <2 mm palm-contact gate. The geometry audit runs BEFORE expensive renders. Also broadened tyre bands and gave them neutral scuffed iron and variable roughness so they no longer share the olive impression of the wood.
+- Grade corrected to fit in application order: channel gains first, then luminance contrast, then saturation; the old always-increase saturation overshot the reference. One frozen rest grade still applies to every clip. Intermediate measured luma stddev was 65.45 vs painting 65.54, saturation 85.53 vs 84.66; final measurements refresh after the last geometry/material pass.
+- Static gate attempt at the runner's WIP HEAD: public-claims PASS; hygiene falsely recognized unspaced Python matrix @ operators as email addresses (spacing corrected); art rendering failed in local Chromium. Final committed HEAD and cloud retry pending.
+- Posted field-cannon-e-idle-strip.png; actual CYCLES render, visual review pending.
