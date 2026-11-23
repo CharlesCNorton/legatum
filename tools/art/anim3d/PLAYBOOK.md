@@ -106,3 +106,121 @@ tools/art/anim3d/render.sh audit
 ```
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
+
+## Vehicles / aircraft — Jet bomber (`jet-bomber`)
+
+Unit-local code lives in `tools/art/anim3d/units/jet-bomber/`. This chapter adds
+one aircraft to the vehicles family without changing infantry or tank tooling.
+The reference is the existing eight-jet camouflage painting: four paired pods,
+a swept wing, a tall single fin, and a curved cream support above one stone disc.
+No manufacturer or national insignia is added. The aircraft uses closed lofted
+volumes, solid airfoils, tubular intake rims, recessed compressors and finished
+bevels. Three plain views make depth inspectable; no silhouette card or image
+opacity is used to hide missing geometry. `RIG-airframe` is a rigid mechanical
+hierarchy; three released bombs have independent keys.
+
+### Round method and skills
+
+Load all six Sam Blender skills before working: modeling, materials, cameras,
+lighting, animation and rendering. They inform finished solid geometry, paint
+and roughness, registered orthographic camera, warm upper-left product key with
+cool rim/soft fill, layered-action mechanical keys, and low-sample CPU previews.
+Every Blender call is plain `blender -b --disable-autoexec` through the PATH
+slot gate. Do not pass a thread override, bypass the gate, or start another
+heavy job while one runs. Effects use keyed visibility, never zero scale.
+
+Apply the four standing quality levers together:
+
+1. Register full-depth geometry to the painting, finish modifiers, then freeze
+   camera UVs on the actual surface. Sample source alpha only as pigment
+   confidence, never as geometry opacity. Per-vertex rest-ray visibility and
+   normals gate projection; generated olive fill covers unseen surfaces. This
+   fill is reused licensed project imagegen artwork, pinned in `inputs.json`.
+2. Bevel hard edges, retain real wall thickness and intake interiors. Six actual
+   512px AO/Pointiness maps add restrained cavity grime and edge wear on the
+   fuselage and wings. Never substitute procedural noise for the painting's
+   large-scale camouflage and panel brushwork.
+3. Use product lights and contact shadows. Camera-only painted pigment avoids
+   double-lighting the source; other rays use physical materials. Standard/None
+   is deliberate for this prelit painting, not a photographic lighting preset.
+   The shared cream pigment is **#E9CFA0**, sRGB converted to linear roughly
+   `(0.815, 0.624, 0.352)`; the rim is darker, with fine stone grain. Review actual
+   lit pixels because shader values alone cannot establish the colour match.
+4. Measure opaque RGB 10/50/90 percentiles against the source, freeze a bounded
+   grade (at most 24 levels/channel), and apply it to every painted stage/frame.
+   Keep ungraded raw renders. Histogram matching is not painting parity.
+
+After every round inspect `jet-bomber-f-restpose-compare.png`: painting, render
+and 50/50 crossfade at 256 and 64. The target is a rest pose hard to distinguish
+from the painting. CPU preview success and atlas size are not art approval.
+
+### Rebuild, preview and complete GPU pass
+
+Run from the repository root:
+
+```sh
+tools/art/anim3d/units/jet-bomber/render.sh build
+for stage in b c d e-idle e-move e-attack e-hit e-death g; do
+  RESOLUTION=256 SAMPLES=8 tools/art/anim3d/units/jet-bomber/render.sh "$stage"
+  RESOLUTION=256 "$HOME/LegatumRuns/anim-pilot/venv/bin/python" tools/art/anim3d/units/jet-bomber/deliver.py "$stage"
+done
+```
+
+The complete no-argument lead entry point is:
+
+```sh
+ROUND=1 tools/art/anim3d/units/jet-bomber/gpu.sh
+```
+
+It verifies build/source hashes, renders **every** stage using Metal Cycles at
+512px (96 denoised samples by default), exports actual 512/256 masters, writes
+all interim PNG/WebP reviews, audits geometry/keys, packs and validates the
+160px atlas, and encodes `jet-bomber-round${ROUND}.mp4`. The movie reconstructs
+trimmed cells and shows five clips at 2x on #E9CFA0 for eight seconds; FFprobe
+checks H.264, yuv420p, 1600x348, 240 frames and duration. Missing Metal fails
+explicitly. GPU output must be visually reviewed. The script never writes PASS.
+
+Masters stay outside git under `$ANIM_ROOT/masters/jet-bomber/`; source images
+under `assets/jet-bomber/`; review evidence/logs under `review/3d-v2/`.
+`build.json`, per-stage render receipts and `pack.json` guard against stale
+geometry, mixed grades and modified frames. Rebuilding invalidates downstream
+outputs. Read the unit feedback file if present before each iteration.
+
+### Flight and motion checks
+
+Clips are idle 8, move 8, attack 10, hit 4 and death 10. Idle and move close on
+an unexported endpoint; attack performs a shallow bombing pass; hit rocks and
+recovers; death descends, deforms the near wing/nose and holds a wreck for the
+last two samples. The base stays fixed. The rigid aircraft is the mechanical
+exception to the open-motion standard: there are no people, animals or feet.
+`jet-bomber-g-feet-check.png` explicitly records that exception and shows top
+and nose views of the entire move cycle for heading and clearance review.
+
+The standard for units that **do** have feet remains proven open motion:
+humans use CMU free-use or Quaternius CC0 idle/walk/hit/death, retargeted through
+Blender/Rokoko with matched rest poses and bone rolls; only weapon attack is
+hand-authored. Animals use a CC0 animated quadruped. Check top and front feet
+for a full move cycle every round, aligned to travel without sliding; never
+hand-correct foot direction after retargeting. Record source URL, version,
+licence and hash locally and in `assets/SOURCES.md`; no Mixamo or paid assets.
+
+### Trimmed atlas version 2
+
+The candidate atlas uses logical **160x160** cells, exact alpha at WebP quality
+95/90/85/80/75 (highest fitting), and refuses delivery over **200,000 bytes**.
+Every clip remains in idle/move/attack/hit/death row order. Metadata:
+
+```json
+{"version":2,"trimmed":true,"frame":{"w":160,"h":160,"ax":82,"ay":132},
+ "clips":{"idle":{"row":0,"frames":8,"fps":10,"loop":true,
+ "rects":[{"x":2,"y":2,"w":145,"h":110,"ox":8,"oy":24}]}}}
+```
+
+The example has one illustrative rectangle; actual JSON contains all 40.
+`x/y/w/h` address the crop in the atlas; `ox/oy` restore its original logical
+cell. Draw at `(anchorX-ax+ox, anchorY-ay+oy)` and scale every coordinate equally.
+`row` specifies ordering, not a fixed-height grid. Identical terminal frames
+reuse their rectangle so lossy RGB is identical too. Validation checks exact
+alpha reconstruction, transparent gutters, clipping, motion, grade/source
+hashes and held death. This lane does not wire the new format into the UI;
+keep the existing static painting until art approval and runtime integration.
