@@ -103,3 +103,4 @@
 - ROUND 3 FIRST REVIEW: Opened c-textured-lit, f-restpose-compare and all five e strips before edits. The named round2.mp4 and gpu-logs-field-cannon-r2.log are absent; inspected a frame from the available round1 MP4 instead, not claimed as round2 GPU evidence. At256 the body is narrow/angular, face points down, right arm reaches sideways instead of holding the rammer near the chest, wheel/barrel landmarks disagree and base shadows are too strong. At64 cannon identity survives but pose/negative-space silhouette does not match. Death still lifts the cannon unnaturally; smoke resembles solid pellets. No PASS. Loaded all six Blender skills; prioritize registration and real geometry before more surface noise.
 - Posted field-cannon-c-textured-lit.png; actual CYCLES render, visual review pending.
 - Posted field-cannon-c-textured-lit.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-c-textured-lit.png; actual CYCLES render, visual review pending.
