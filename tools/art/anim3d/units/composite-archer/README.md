@@ -149,3 +149,45 @@ MachPortRendezvous bootstrap is denied by the sandbox. Git add/commit is also
 blocked creating this worktree's `index.lock`; the runner must commit these files.
 No push or PR was attempted. The commit trailer is
 `Co-Authored-By: gpt-6-astra (Codex) <noreply@openai.com>`.
+
+## Driver round 2 after GPU round 1
+
+The supplied GPU job succeeded: 177,986 bytes at Q80, all native512/64 samples and
+valid eight-second MP4. That evidence is archived under `driver-round2-before`.
+This revision calibrates the circular-disc camera to16 degrees, preserves the
+figure's screen registration through inverse skinning, projects real bow/binding
+surfaces, and adds an image-generated cheek/beard/collar fill for the face revealed
+by the drawing hand. Source prompt and full attribution are in `SOURCES.md` and
+`face-fill.prompt.txt`; the generated asset is external `assets/composite-archer/face-fill-source.png`.
+
+Idle/move/hit now derive from the local CC0 Quaternius library. Its crouch reference
+is mapped onto the kneeling pose with complete rest/roll matrices, carrying-arm
+layer and reduced stride. Death combines its torso/head reaction with floor support
+and bow release. The unrestricted retarget was rejected after visual review; this
+is constrained adaptation, not unmodified full-body capture. Foot rotations are
+never manually patched. Full boot-shell support fixes penetration and keeps a
+support foot down throughout the kneeling shuffle. `feet` renders actual front/top
+move samples with only boots, trousers and stone visible, so the torso cannot hide
+foot direction. The top/front images and measured ankle/toe positions remain
+review evidence, not a claim of no sliding.
+
+`gpu.sh` includes this diagnostic and rejects stale or CPU-labelled foot renders.
+Packing now verifies every original painting/fill hash, including the new face
+fill. The final quality verdict and current checks are in the external running log.
+No PASS marker is written by any script.
+
+Current driver-round2 CPU verification: **198,456 bytes at Q79**, all40 native512
+and gallery256 clip frames. Source/grade/trim/alpha/hold validation and the saved
+geometry audit pass; move boot clearance is2mm across all eight samples. Source
+crouch influence was reduced to8% after the larger transfer hopped. The diagnostic
+still does not prove natural knee support or no sliding. Video is H.264/yuv420p,
+1600x348,240 frames/eight seconds, explicitly labelled CPU8. Python AST20 files,
+Bash syntax and working-tree hygiene27 text files pass. CPU provenance is correctly
+rejected by the GPU receipt checker. Rest silhouette overlap improves.793→.823;
+face/hand alignment, stone shading and cramped fall remain below the painting.
+No art PASS. Lead command remains `ROUND=2 tools/art/anim3d/units/composite-archer/gpu.sh`.
+
+Final delivery limits: the working-tree browser art gate was attempted and blocked
+by Chromium MachPortRendezvous bootstrap permission denial. Public-claims passes.
+Git add/commit is denied at this worktree's index.lock; the runner must commit the
+changes with the requested coauthor trailer. No push, PR or merge was attempted.

@@ -25,6 +25,12 @@ assert plain['blend_sha256'] == sha(master / 'registered.blend')
 assert (plain['device'], plain['resolution'], plain['samples']) == ('GPU', 512, 64)
 for record in plain['files']:
     assert sha(master / record['path']) == record['sha256']
+feet = json.loads((master / 'feet.json').read_text())
+assert feet['blend_sha256'] == sha(master / 'clips/move.blend')
+assert (feet['device'], feet['resolution'], feet['samples']) == ('GPU', 512, 64)
+assert len(feet['files']) == 16
+for record in feet['files']:
+    assert sha(master / record['path']) == record['sha256']
 print('PASS GPU provenance: plain, rest and all 40 clip frames at GPU512/64')
 if '--receipt' in sys.argv:
     from deliver import validate

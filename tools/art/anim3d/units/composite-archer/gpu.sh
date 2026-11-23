@@ -19,6 +19,7 @@ test -s "$master/registered.blend"
 tools/art/anim3d/render.sh animate
 tools/art/anim3d/render.sh plain_views
 tools/art/anim3d/render.sh final
+tools/art/anim3d/render.sh feet
 "$ANIM_ROOT/venv/bin/python" "$unit_dir/gpu_check.py"
 "$ANIM_ROOT/venv/bin/python" "$unit_dir/movie.py"
 "$ANIM_ROOT/venv/bin/python" "$unit_dir/gpu_check.py" --receipt

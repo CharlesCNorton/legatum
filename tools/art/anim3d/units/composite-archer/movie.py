@@ -12,7 +12,10 @@ path = Path('app/src/assets/units/anim/composite-archer.webp')
 meta = json.loads(path.with_suffix('.json').read_text())
 atlas = Image.open(path).convert('RGBA')
 frames = {}
+labels = {}
 for name, rects in meta['frames'].items():
+    provenance = json.loads((ROOT / f'masters/composite-archer/renders/e-{name}/manifest.json').read_text())
+    labels[name] = f"{name}  {provenance['device']} {provenance['samples']} samples"
     frames[name] = []
     for r in rects:
         cell = Image.new('RGBA', (160, 160))
@@ -26,7 +29,7 @@ with tempfile.TemporaryDirectory(dir=ROOT / 'tmp', prefix='composite-archer-movi
         for col, (name, clip) in enumerate(meta['clips'].items()):
             index = int(tick / 30 * clip['fps']) % clip['frames'] if clip['loop'] else min(int((tick % 60) / 30 * clip['fps']), clip['frames'] - 1)
             canvas.alpha_composite(frames[name][index], (col * 320, 28))
-            draw.text((col * 320 + 8, 6), name, fill=(60, 50, 40, 255))
+            draw.text((col * 320 + 8, 6), labels[name], fill=(60, 50, 40, 255))
         canvas.convert('RGB').save(Path(tmp) / f'{tick:04d}.png')
     subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-framerate', '30', '-i', f'{tmp}/%04d.png', '-c:v', 'libx264', '-threads', '3', '-pix_fmt', 'yuv420p', '-crf', '20', '-movflags', '+faststart', str(target)], check=True)
 probe = json.loads(subprocess.check_output(['ffprobe', '-v', 'error', '-show_streams', '-of', 'json', str(target)]))['streams'][0]

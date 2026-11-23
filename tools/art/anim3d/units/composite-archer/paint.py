@@ -65,9 +65,10 @@ for name in ['GEO-tunic fitted chest','GEO-patterned trousers','GEO-red embroide
  bakes.append(name)
 # One exact frozen camera projection; pose registration lives in refine.py.
 painting=bpy.data.images.load(str(A/'painting-aligned.png'));records=[]
+face_fill=bpy.data.images.load(str(A/'face-fill-source.png'))
 # Project visible clothing/anatomy, never alpha-cut geometry.
 for o in list(sc.objects):
- if o.type!='MESH' or any(t in o.name for t in ['base','arrow','feather','MPFB eyes','bowstring','belt mount','stitch','recurved','horn backing','sinew']):continue
+ if o.type!='MESH' or any(t in o.name for t in ['arrow','feather','MPFB eyes','bowstring','belt mount','stitch']):continue
  if len(o.data.vertices)<20:continue
  states=[(m,m.show_viewport) for m in o.modifiers]
  for mod,_ in states:
@@ -76,7 +77,8 @@ for o in list(sc.objects):
  assert len(me.vertices)==len(o.data.vertices)
  uv=o.data.uv_layers.get('Painting projection') or o.data.uv_layers.new(name='Painting projection')
  attr=o.data.color_attributes.new(name='Painting confidence',type='FLOAT_COLOR',domain='CORNER')
- coords=[];weights=[]
+ head_attr=o.data.color_attributes.new(name='Head fill',type='FLOAT_COLOR',domain='CORNER')
+ coords=[];weights=[];head_weights=[]
  samples=[(v.index,v.co.copy(),v.normal.copy()) for v in me.vertices]
  for vi,co,vnormal in samples:
   world=ev.matrix_world @ co;q=world_to_camera_view(sc,sc.camera,world);x,y=q.x*256,(1-q.y)*256
@@ -88,9 +90,16 @@ for o in list(sc.objects):
   hit=sc.ray_cast(deps,world+direction*.004,direction,distance=10)[0]
   if hit:confidence=0
   head_weight=sum(g.weight for g in o.data.vertices[vi].groups if o.vertex_groups[g.group].name in ('head','neck_01'))
-  if (head_weight>.5 or 'beard' in o.name) and 80<x<117 and 71<y<88:confidence=0
+  head_fill=(head_weight>.5 or 'beard' in o.name) and 78<x<121 and 55<y<96
+  if head_fill:confidence=max(0,min(1,(normal.dot(direction)+.15)/.25))
+  if 'base' in o.name:
+   # Lower stone only: never project the painted feet onto the real disc.
+   confidence=max(0,min(1,(y-226)/5)) if normal.z<.6 else 0
+  head_weights.append(1. if head_fill else 0.)
   weights.append(confidence)
- for i,loop in enumerate(o.data.loops):uv.data[i].uv=coords[loop.vertex_index];attr.data[i].color=(weights[loop.vertex_index],)*3+(1,)
+ for i,loop in enumerate(o.data.loops):
+  uv.data[i].uv=coords[loop.vertex_index];attr.data[i].color=(weights[loop.vertex_index],)*3+(1,)
+  head_attr.data[i].color=(head_weights[loop.vertex_index],)*3+(1,)
  ev.to_mesh_clear()
  for mod,state in states:mod.show_viewport=state
  for idx,oldmat in enumerate(list(o.data.materials)):
@@ -98,15 +107,18 @@ for o in list(sc.objects):
   mat=oldmat.copy();mat.name=o.name+' projected';o.data.materials[idx]=mat;n=mat.node_tree.nodes;l=mat.node_tree.links;s=n.get('Principled BSDF')
   if not s:continue
   tc=n.new('ShaderNodeUVMap');tc.uv_map=uv.name;t=n.new('ShaderNodeTexImage');t.image=painting;t.extension='CLIP';l.new(tc.outputs[0],t.inputs['Vector'])
+  fill=n.new('ShaderNodeTexImage');fill.image=face_fill;fill.extension='EXTEND';l.new(tc.outputs[0],fill.inputs['Vector'])
+  mask=n.new('ShaderNodeVertexColor');mask.layer_name=head_attr.name
+  colour=n.new('ShaderNodeMixRGB');l.new(mask.outputs[0],colour.inputs[0]);l.new(t.outputs['Color'],colour.inputs[1]);l.new(fill.outputs['Color'],colour.inputs[2])
   at=n.new('ShaderNodeVertexColor');at.layer_name=attr.name;factor=n.new('ShaderNodeMath');factor.operation='MULTIPLY';l.new(at.outputs[0],factor.inputs[0]);l.new(t.outputs['Alpha'],factor.inputs[1])
   amount=n.new('ShaderNodeMath');amount.operation='MULTIPLY';amount.inputs[1].default_value=.98;l.new(factor.outputs[0],amount.inputs[0])
   mix=n.new('ShaderNodeMixRGB');base=s.inputs['Base Color'].links[0].from_socket if s.inputs['Base Color'].is_linked else None
   if base:l.new(base,mix.inputs[1])
   else:mix.inputs[1].default_value=s.inputs['Base Color'].default_value
-  l.new(amount.outputs[0],mix.inputs[0]);l.new(t.outputs['Color'],mix.inputs[2]);l.new(mix.outputs[0],s.inputs['Base Color'])
+  l.new(amount.outputs[0],mix.inputs[0]);l.new(colour.outputs[0],mix.inputs[2]);l.new(mix.outputs[0],s.inputs['Base Color'])
   # Preserve the source illumination only for camera rays; it is not a light source.
   out=n.get('Material Output');physical=out.inputs['Surface'].links[0].from_socket
-  pigment=n.new('ShaderNodeEmission');l.new(t.outputs['Color'],pigment.inputs['Color'])
+  pigment=n.new('ShaderNodeEmission');l.new(colour.outputs[0],pigment.inputs['Color'])
   rays=n.new('ShaderNodeLightPath');camera=n.new('ShaderNodeMath');camera.operation='MULTIPLY'
   l.new(rays.outputs['Is Camera Ray'],camera.inputs[0]);l.new(amount.outputs[0],camera.inputs[1])
   shader=n.new('ShaderNodeMixShader');l.new(camera.outputs[0],shader.inputs[0]);l.new(physical,shader.inputs[1]);l.new(pigment.outputs[0],shader.inputs[2]);l.new(shader.outputs[0],out.inputs['Surface'])

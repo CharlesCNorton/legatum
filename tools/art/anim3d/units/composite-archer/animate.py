@@ -3,11 +3,12 @@ import bpy,os,sys,json,math,hashlib
 from pathlib import Path
 from mathutils import Vector,Matrix,Quaternion
 sys.path.insert(0,str(Path(__file__).parent));import geometry as g
+import retarget
 R=Path(os.environ['ANIM_ROOT']);M=R/'masters/composite-archer';CLIPS={'idle':(8,10),'move':(8,12),'attack':(10,14),'hit':(4,12),'death':(10,10)}
 def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
 def turn(rig,name,axis,angle):
  p=rig.pose.bones[name];mat=p.matrix.copy();pos=mat.translation.copy();mat=Matrix.Rotation(angle,4,axis) @ mat;mat.translation=pos;p.matrix=mat;bpy.context.view_layer.update()
-def ground_feet(rig):
+def ground_feet(rig, planted=False):
  boots=bpy.data.objects['GEO-soft leather boots'];base=bpy.data.objects['GEO-stationary cream base']
  ev=boots.evaluated_get(bpy.context.evaluated_depsgraph_get());me=ev.to_mesh();minimum={}
  for side in ['l','r']:
@@ -19,6 +20,16 @@ def ground_feet(rig):
  for side,z in minimum.items():
   if z<.087:
    p=rig.pose.bones['foot_'+side];mat=p.matrix.copy();mat.translation.z+=.087-z;p.matrix=mat
+ bpy.context.view_layer.update()
+ # Thick boot shells include calf-weighted sole vertices. A foot-bone correction
+ # cannot move those vertices fully; translate the root to support the complete
+ # evaluated shell without editing the retargeted foot orientation.
+ ev=boots.evaluated_get(bpy.context.evaluated_depsgraph_get());me=ev.to_mesh()
+ points=[ev.matrix_world @ v.co for v in me.vertices];ev.to_mesh_clear()
+ inside=[p.z for p in points if (p.x-base.location.x)**2+(p.y-base.location.y)**2<.54**2]
+ if inside:
+  correction=.087-min(inside)
+  rig.location.z+=correction if planted else max(0,correction)
  bpy.context.view_layer.update()
 def animate(clip):
  bpy.ops.wm.open_mainfile(filepath=str(M/'composite-archer.blend'));sc=bpy.context.scene;rig=bpy.data.objects['RIG-composite-archer'];g.rig=rig
@@ -41,6 +52,11 @@ def animate(clip):
  foothomes={side:rig.matrix_world @ rig.pose.bones['foot_'+side].head for side in ['l','r']}
  kneehomes={side:rig.matrix_world @ rig.pose.bones['calf_'+side].head for side in ['l','r']}
  elbowhomes={side:rig.matrix_world @ rig.pose.bones['lowerarm_'+side].head for side in ['l','r']}
+ motion=None;motion_info={'provider':'Original weapon-specific archery keys'}
+ if clip!='attack':
+  phases=[i/count if clip in ['idle','move'] else min(1,(i/(count-1))/.78) if clip=='death' else i/(count-1) for i in range(count+(1 if clip in ['idle','move'] else 0))]
+  if clip=='hit':phases=[0.,.3,.65,0.]
+  motion,motion_info=retarget.prepare(rig,R,clip,phases)
  snapshots=[]
  for i in range(count+(1 if clip in ['idle','move'] else 0)):
   frame=i+1;t=i/count if clip in ['idle','move'] else min(i,count-1)/(count-1);sc.frame_set(frame)
@@ -51,19 +67,11 @@ def animate(clip):
   arrow.matrix_world=arrowrest;arrow.hide_render=False
   for child in arrow.children:child.hide_render=False
   bpy.context.view_layer.update()
-  release=0;death=0
-  if clip=='idle':
-   breath=math.sin(t*2*math.pi);turn(rig,'spine_03','Y',.012*breath);turn(rig,'head','Z',.014*breath)
-  elif clip=='move':
-   # A low, guarded in-place advance; a kneeling unit does not pop upright off-frame.
-   phase=2*math.pi*t;rig.location.z=base.z+.035+.018*math.cos(phase*2)
-   for side,sg in [('l',1),('r',-1)]:
-    step=math.sin(phase+(0 if sg==1 else math.pi));lift=.09*max(0,math.cos(phase+(0 if sg==1 else math.pi)))
-    ankle=Vector((sg*.23+.14*step,-.05+sg*.08,.125+lift))-rig.location
-    pole=Vector((sg*.32,-.35,.46))-rig.location
-    g.limb('thigh_'+side,'calf_'+side,ankle,pole);g.aim_bone('foot_'+side,(.17,-.05,-.03))
-   g.limb('upperarm_l','lowerarm_l',(.59,-.18,1.40),(.40,-.28,1.35));g.limb('upperarm_r','lowerarm_r',(.10,-.30,1.40),(-.40,-.24,1.37));turn(rig,'spine_03','Z',.035*math.sin(phase))
-  elif clip=='attack':
+  death=0
+  if motion:
+   retarget.apply_matrices(rig,motion[i]['matrices'])
+   rig.location=base+motion[i]['root']*(.08 if clip=='move' else 1.)
+  if clip=='attack':
    # Archery follow-through: drawing hand recoils BACK from the cheek.
    # It never travels forward with the string. Recovery settles the drawing hand beside the cheek.
    hx=[-.035,-.055,-.07,-.07,-.14,-.16,-.15,-.12,-.06,-.035][i]
@@ -71,8 +79,6 @@ def animate(clip):
    g.limb('upperarm_r','lowerarm_r',(hx,-.30,hz),(-.55,-.26,1.55));g.aim_bone('hand_r',(.10,0,0));turn(rig,'spine_03','Y',-.025*math.sin(t*math.pi))
    if 4<=i<=7:
     for child in arrow.children:child.hide_render=True
-  elif clip=='hit':
-   strength=[0,1,.45,0][i];turn(rig,'spine_03','Y',-.09*strength);turn(rig,'head','Y',-.06*strength)
   elif clip=='death':
    a=min(1,t/.78);death=a*a*(3-2*a);rig.location=base+Vector((.10*death,.03*death,-.26*death));turn(rig,'pelvis','Y',-1.35*death);turn(rig,'spine_03','Y',-.20*death)
    # Fold legs toward the torso instead of a straight rigid body fall.
@@ -100,7 +106,7 @@ def animate(clip):
      ev=o.evaluated_get(bpy.context.evaluated_depsgraph_get());me=ev.to_mesh();zs.extend((ev.matrix_world @ v.co).z for v in me.vertices);ev.to_mesh_clear()
    if death>0:rig.location.z+=max(0,.094-min(zs))
   bpy.context.view_layer.update()
-  if clip!='death' or death==0:ground_feet(rig)
+  if clip!='death' or death==0:ground_feet(rig,planted=clip=='move')
   # String middle follows the draw hand until release, then goes to bow center.
   tip0,tip1=[bow.matrix_world @ p for p in localtips];nock=(rig.matrix_world @ rig.pose.bones['hand_r'].matrix) @ Vector(rig['draw_local']) if 'draw_local' in rig else rig.matrix_world @ rig.pose.bones['hand_r'].head+Vector((.04,-.015,.026))
   if clip=='death':nock=nock.lerp((tip0+tip1)*.5,death)
@@ -129,6 +135,6 @@ def animate(clip):
       for kp in fc.keyframe_points:
        kp.interpolation='LINEAR' if 'key_blocks' in fc.data_path else 'BEZIER';kp.handle_left_type=kp.handle_right_type='AUTO_CLAMPED'
  sc.frame_set(1);bpy.ops.wm.save_as_mainfile(filepath=str(out/f'{clip}.blend'))
- (out/f'{clip}.json').write_text(json.dumps({'frames':count,'fps':fps,'loop':clip in ['idle','move'],'source_sha256':sha(M/'composite-archer.blend'),'samples':snapshots},indent=2));print('CLIP_READY',clip,flush=True)
+ (out/f'{clip}.json').write_text(json.dumps({'frames':count,'fps':fps,'loop':clip in ['idle','move'],'source_sha256':sha(M/'composite-archer.blend'),'samples':snapshots,'motion':motion_info},indent=2));print('CLIP_READY',clip,flush=True)
 if __name__=='__main__':
  for clip in ([os.environ['CLIP']] if os.environ.get('CLIP') else CLIPS):animate(clip)

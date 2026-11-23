@@ -10,6 +10,22 @@ bpy.ops.wm.open_mainfile(filepath=str(M / 'plain.blend'))
 sc = bpy.context.scene
 cam = sc.camera
 rig = bpy.data.objects['RIG-composite-archer']
+reference_cam = cam.copy()
+reference_cam.data = cam.data.copy()
+sc.collection.objects.link(reference_cam)
+# The source disc is viewed from about 16 degrees above its horizontal plane.
+# Recalibrate the camera around the real circular stone, then register the figure
+# from the previous view through a rigid camera-basis transform before skinning.
+base_center = bpy.data.objects['GEO-stationary cream base'].location.copy()
+back = Vector((1.48, -7., 0)).normalized()
+back = back * math.cos(math.radians(16)) + Vector((0, 0, math.sin(math.radians(16))))
+cam.rotation_euler = (-back).to_track_quat('-Z', 'Y').to_euler()
+bpy.context.view_layer.update()
+new_right = cam.matrix_world.to_quaternion() @ Vector((1, 0, 0))
+new_up = cam.matrix_world.to_quaternion() @ Vector((0, 1, 0))
+cam.location = base_center + back * 8 - new_right * ((114.5 / 256 - .5) * cam.data.ortho_scale) - new_up * ((1 - 219 / 256 - .5) * cam.data.ortho_scale)
+bpy.context.view_layer.update()
+view_transform = cam.matrix_world @ reference_cam.matrix_world.inverted()
 # Source/destination landmarks in the unchanged 256px orthographic camera.
 # The fitted field changes mesh coordinates, never texture coordinates or alpha.
 landmarks = [
@@ -30,12 +46,12 @@ coeff = np.linalg.solve(kernel + np.eye(len(landmarks)) * .015, delta)
 right = cam.matrix_world.to_quaternion() @ Vector((1, 0, 0))
 up = cam.matrix_world.to_quaternion() @ Vector((0, 1, 0))
 def fit(world, name=''):
-    q = world_to_camera_view(sc, cam, world)
+    q = world_to_camera_view(sc, reference_cam, world)
     xy = np.array((q.x * 256, (1 - q.y) * 256))
     displacement = np.exp(-np.sum((centres - xy) ** 2, axis=1) / (2 * sigma ** 2)) @ coeff
     if 'tunic skirt' in name or 'skirt stitched' in name:
         displacement[0] -= 7 * math.exp(-((xy[0] - 75) / 22) ** 2 - ((xy[1] - 164) / 25) ** 2)
-    result = world + (right * float(displacement[0]) - up * float(displacement[1])) * (cam.data.ortho_scale / 256)
+    result = view_transform @ world + (right * float(displacement[0]) - up * float(displacement[1])) * (cam.data.ortho_scale / 256)
     if name.startswith(('GEO-MPFB anatomical', 'GEO-soft leather boots', 'GEO-patterned trousers')) and result.z < .09:
         # Seat low foot/sole vertices on the stone along their camera rays.
         # This changes depth while retaining their fitted screen coordinates.
@@ -116,6 +132,7 @@ for o in sc.objects:
         o.data.energy *= .55
 sc['round'] = 2
 sc['geometry_registration'] = 'Smooth rest-view fit with inverse skin transforms; camera depth preserved'
+bpy.data.objects.remove(reference_cam, do_unlink=True)
 bpy.ops.wm.save_as_mainfile(filepath=str(M / 'registered.blend'))
 (M / 'registration.json').write_text(json.dumps({'landmarks': landmarks, 'method': sc['geometry_registration']}, indent=2))
 print('REGISTERED_READY')

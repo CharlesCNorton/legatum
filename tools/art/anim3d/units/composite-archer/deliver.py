@@ -5,7 +5,13 @@ from PIL import Image,ImageDraw
 R=Path(os.environ.get('ANIM_ROOT',Path.home()/'LegatumRuns/anim-pilot'));M=R/'masters/composite-archer';OUT=Path('app/src/assets/units/anim');OUT.mkdir(parents=True,exist_ok=True)
 CLIPS={'idle':(8,10,True),'move':(8,12,True),'attack':(10,14,False),'hit':(4,12,False),'death':(10,10,False)}
 def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
+def validate_inputs():
+ inputs=json.loads((M/'inputs.json').read_text())['sha256']
+ assert 'face-fill-source.png' in inputs,'Missing face-fill provenance; run prepare'
+ for name,digest in inputs.items():
+  assert sha(R/'assets/composite-archer'/name)==digest,('changed painting/fill input',name)
 def pack():
+ validate_inputs()
  records={};thumbs={};rowheights=[];rowwidths=[];checks=[];provenance={}
  for clip,(count,fps,loop) in CLIPS.items():
   manifest=json.loads((M/f'renders/e-{clip}/manifest.json').read_text());meta=json.loads((M/f'clips/{clip}.json').read_text())
@@ -39,7 +45,7 @@ def pack():
   for im,rec in zip(thumbs[clip],records[clip]):rec['y']=y+2;atlas.paste(im,(rec['x'],rec['y']))
   clips[clip]={'row':row,'frames':count,'fps':fps,'loop':loop};y+=rowheights[row]
  attempts=[];payload=None
- for quality in [90,85,80,75]:
+ for quality in [90,85,80,79,78,77,76,75]:
   buffer=io.BytesIO();atlas.save(buffer,format='WEBP',quality=quality,method=6);data=buffer.getvalue();attempts.append({'quality':quality,'bytes':len(data)})
   if len(data)<=200000:payload=data;break
  if payload is None:raise RuntimeError(f'Cannot fit quality >=75 without discarding detail: {attempts}')
@@ -48,6 +54,7 @@ def pack():
  report={'resampling':'premultiplied bicubic','alpha':'lossless 8-bit','bytes':len(payload),'quality':quality,'attempts':attempts,'atlas_sha256':sha(OUT/'composite-archer.webp'),'source':provenance,'checks':['40 frames','512/256 masters','input hashes','grade consistency','2px native margin','motion each clip','held death','quality >=75','size <=200000','160px trim offsets']}
  (M/'pack.json').write_text(json.dumps(report,indent=2));validate();decoded_review();print(json.dumps({k:report[k] for k in ['bytes','quality','attempts','checks']},indent=2))
 def validate():
+ validate_inputs()
  data=json.loads((OUT/'composite-archer.json').read_text());atlas=Image.open(OUT/'composite-archer.webp').convert('RGBA');assert atlas.size==(data['atlas']['w'],data['atlas']['h']);assert (OUT/'composite-archer.webp').stat().st_size<=200000
  assert data['frame']=={'w':160,'h':160,'ax':79.375,'ay':138.125};assert atlas.getchannel('A').getextrema()==(0,255)
  count=0

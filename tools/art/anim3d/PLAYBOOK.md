@@ -203,7 +203,7 @@ fixed grid. Runtime support is a separate integration task, not silently supplie
 by this art-only candidate.
 
 All 40 frames remain. Alpha remains lossless 8-bit after premultiplied bicubic reduction. WebP quality searches
-90/85/80/75 and must stay at least 75 and at most 200,000 bytes; failure is reported,
+90/85/80, then one-point steps through 75, and must stay at least 75 and at most 200,000 bytes; failure is reported,
 never hidden by dropping frames or lowering quality. The pack report binds raw
 frames, clip/master and grade hashes. Validation checks transparent bounds, original
 512/256 sets, native margins, actual motion, held death and trim reconstruction.
@@ -268,3 +268,44 @@ H.264/yuv420p, 1600x348, 240 frames/eight seconds. CPU evidence is archived in
 `round2-cpu`. Silhouette IoU improves from .7370 to .7934, but face/hand anatomy,
 base perspective and motion-revealed face/boot surfaces remain visibly different.
 No art PASS; the actual GPU512/64 host render and visual acceptance remain pending.
+
+### Driver round 2 after the round-1 GPU pass
+
+The supplied GPU pass succeeded (177,986 bytes at Q80); this continuation is a
+further visual revision, not a repair of a failed host render. Evidence is retained
+outside git in `masters/composite-archer/driver-round2-before/`.
+
+The camera is now calibrated against the circular disc at 16 degrees elevation.
+`refine.py` transforms figure registration from the old camera basis into the new
+basis before inverse skinning, preserving the painted silhouette and full depth.
+The disc remains circular and stationary. The generated cheek/beard/collar fill
+(`face-fill.prompt.txt`) replaces only head-region pigment hidden behind the hand;
+it is not new geometry. Original painted colour now also covers the real horn bow,
+bindings and lower stone rim. Do not project the stone's top: source boots otherwise
+remain on it when the real feet move. Existing thick straps, buckles, folds, bevels,
+AO/curvature bakes, product lights and the frozen automatic histogram grade remain.
+
+Open motion is the default for the family, following common feedback item 23.
+`retarget.py` verifies the existing CC0 Quaternius Universal Animation Library
+files and licence, then samples Blender world-rotation constraints with complete
+source-reference/target-reference compensation, including bone roll. Idle uses
+Crouch_Idle_Loop; move uses Crouch_Fwd_Loop with an idle carrying-arm layer; hit uses
+Hit_Chest and returns to its first pose; Death01 supplies torso/head reaction.
+The painting's low kneel cannot directly take an upright fall or full crouch stride:
+the rejected unrestricted test splayed the legs. Move deltas are reduced to 8%;
+death uses 30% captured torso motion plus explicit knee/hand floor supports and the
+existing bow release. This is constrained adaptation, not full-body captured motion.
+Only the archery attack is entirely original keys. `SOURCES.md` records assets.
+
+Retargeted foot rotations are never manually patched. Thick calf-weighted boot
+vertices can escape a foot-bone translation: evaluate the complete boot shell and
+apply a final root translation to maintain the unchanged stone-contact tolerance.
+This contact check is not a proof of no sliding or full collision freedom. Render
+actual front and top views of all eight move samples every round via `feet`; review
+`composite-archer-g-feet-check.png` for travel direction, lift and sliding. The saved
+`feet.json` binds those views to the move master and records ankle/toe positions.
+
+The no-argument `gpu.sh` now includes the foot review, verifies its GPU512/64 hashes,
+and requires original painting/fill hashes during packing. It still produces all
+512/256 masters, all five strips/WebPs, rest split/crossfade, trimmed160 atlas,
+geometry audit and eight-second H.264/yuv420p movie. It never emits art PASS.
