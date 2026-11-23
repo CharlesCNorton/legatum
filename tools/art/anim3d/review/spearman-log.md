@@ -97,3 +97,4 @@
 - Final round7 master: rebuilt and CPU-rendered death, 256px / 12 samples, frozen rest grade.
 - Additional clay-shield check: sampled actual scene ray visibility for all 12 relief rays after a suspicious low-resolution shadow; every ray is directly visible, none hidden beneath the shell. First-hit object counts saved in spearman-round7-relief-visibility.json. Existing positive face-clearance check remains unchanged.
 - Round7 guard transition correction: rebuilt and CPU-rendered attack; supersedes the earlier clip.
+- Round7 guard transition correction: rebuilt and CPU-rendered death; supersedes the earlier clip.
