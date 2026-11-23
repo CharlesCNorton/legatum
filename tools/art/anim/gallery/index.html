@@ -7,6 +7,12 @@
 <header><h1>Animated miniatures</h1><p>Four paintings, articulated in Blender and rendered to transparent sprite atlases. Compare their silhouettes and weight at map size and at 256 px.</p>
 <div class="controls"><button id="play">Pause all</button><button id="step">Step all</button><label>Speed <input id="speed" type="range" min="0.25" max="2" step="0.25" value="1"><output id="speed-value">1×</output></label><label><input type="checkbox" id="mirror">Mirror</label><label>Inspection ground <select id="backdrop"><option value="#888888">Mid-grey</option><option value="#f2ead8">Parchment</option><option value="#26332a">Dark green</option></select></label><label>Map ground <select id="terrain"><option value="grass">Grassland</option><option value="plains">Plains</option></select></label></div><p id="status" role="status">Loading paintings and atlases…</p></header>
 <main><div id="units"></div><section aria-labelledby="stress-title"><h2 id="stress-title">Army draw test</h2><p>One Canvas 2D surface; mixed clips, phases and mirrored facings. Timing covers terrain blit and every token draw, measured inside the draw function. It does not use rAF interval as a proxy.</p><div class="controls"><label>Tokens <select id="count"><option>300</option><option>600</option></select></label><button id="benchmark">Measure 180 draws</button><output id="perf">Warming up…</output></div><canvas id="stress" width="1200" height="720" aria-label="Animated army stress test"></canvas></section></main>
+<section aria-labelledby="relief-3d-title" style="max-width:1500px;margin:24px auto;padding:24px;border-top:1px solid var(--rule)">
+<h2 id="relief-3d-title">Relief vs 3D</h2>
+<p>The same spearman kit, rebuilt as a solid mesh. Compare each clip with the painting at 256 px, map token size and 64 px.</p>
+<relief-3d-comparison></relief-3d-comparison>
+<script type="module" src="../../anim3d/compare.js"></script>
+</section>
 <footer>Single-facing camera-projected relief study. The original painted lighting is baked into the articulated surfaces; these are not all-angle character models. The gallery repeats attacks, hits and deaths after a short hold for review; their atlas metadata correctly marks them non-looping. Grass/plains colours and tuft strokes follow <code>app/src/map/style.ts</code> and <code>terrain.ts</code>; edge hills are the shipped S2 terrain painting from <code>app/public/terrain/</code>. No app runtime files are changed.</footer>
 <script>
 'use strict';
