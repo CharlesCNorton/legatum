@@ -30,6 +30,7 @@ export function targetElement(target: Exclude<NonNullable<AdvisorTarget>, { kind
     case 'ranged': return action(/^Ranged attack/i);
     case 'build': return [...document.querySelectorAll<HTMLElement>('.city-panel .production-choice')]
       .find((e) => e.dataset.item === target.value)?.querySelector<HTMLElement>('button.prod') ?? null;
+    case 'closeResearch': return first('dialog.tech-modal[open] button[aria-label="Close research"]');
     case 'tech': return [...document.querySelectorAll<HTMLElement>('dialog.tech-modal .era-card')]
       .find((e) => e.dataset.tech === target.value)?.querySelector<HTMLElement>('button[data-testid="research-now"]') ?? null;
   }
@@ -189,7 +190,8 @@ export function Advisor() {
   // The player's own seal names the speaker; no eyebrow word.
   const seal = view && <span className="advisor-seal" aria-hidden="true"><FactionMark faction={view.players.find((p) => p.id === view.me)?.faction ?? 'Switzerland'} size={20} /></span>;
   const content = <>
-    <AdvisorRing target={step?.target ?? null} still={!animationsOn} />
+    {/* Inside a dialog, only ring a control in that dialog: anything behind it can't be clicked. */}
+    <AdvisorRing target={modal && !(step?.target?.kind === 'control' && modal.contains(targetElement(step.target))) ? null : step?.target ?? null} still={!animationsOn} />
     <aside ref={card} className={`advisor-card${welcome ? ' welcome' : ''}${modal ? ' in-dialog' : ''}`}
       style={modal && dialogRect ? { left: dialogRect.left, bottom: innerHeight - dialogRect.bottom, width: dialogRect.width } : cardTop !== null ? { top: cardTop, bottom: 'auto' } : undefined}
       data-overlay-slot="story-hint" data-testid="advisor" data-advisor-id={suggestion.id} aria-label="Advisor" onKeyDown={(e) => e.stopPropagation()}>

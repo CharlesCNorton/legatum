@@ -44,6 +44,14 @@ describe('one decision at a time', () => {
     expect(advisorSuggestion(ctx([], { kind: 'city', id: city.id }), ['welcome'], [])?.id).toBe(`city:${city.id}`);
   });
 
+  it('asks to close Research once research is chosen, before anything behind the panel', async () => {
+    const { view, ctx } = await opening();
+    const tech = view.research.available[0].tech;
+    const s = advisorSuggestion({ ...ctx([{ type: 'SetResearch', tech }]), techOpen: true }, ['welcome'], []);
+    expect(s).toMatchObject({ id: 'closeResearch', steps: [{ key: 'Esc', target: { kind: 'control', name: 'closeResearch' } }] });
+    expect(advisorSuggestion(ctx([{ type: 'SetResearch', tech }]), ['welcome'], [])?.id).not.toBe('closeResearch');
+  });
+
   it('accepts a different build and research choice as that decision made', async () => {
     const { city, view, ctx } = await opening();
     const chosen = city.detail!.options.at(-1)!.item;
