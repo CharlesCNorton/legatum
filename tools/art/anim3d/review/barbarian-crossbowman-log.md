@@ -98,3 +98,6 @@
 - e-death: 10 frames reviewed at 256/64; CYCLES GPU, 64 samples, source 512px.
 - Packed 40 frames, trimmed 160px cells, WebP quality 90, 173282 bytes.
 - Wrote 8 second five-clip H.264 yuv420p review barbarian-crossbowman-round2.mp4
+
+- Driver round3 opening GPU critique: opened c/f comparisons, all five e strips and decoded round2 MP4 contact frames before editing. GPU log confirms GPU64/512, 40 frames, Q90 173282 bytes, H.264 yuv420p eight seconds; no failed pass. At256 face and quilt brushwork are close, but smooth uniform stone, misshapen shiny boots, long dark bolt case, rigid quilt and flat/dull exposed arms in death still differ. At64 identity and height match; feet, case and base remain distinguishable. No PASS. Preserved GPU evidence under masters/barbarian-crossbowman/driver-r2-gpu.
+- Round3 reads: complete PLAYBOOK, standing FEEDBACK and running log; unit-specific FEEDBACK absent. Loaded all six Sam Blender skills and Legatum art. Modeling: improve continuous sleeves, case straps/boot fitting; materials: semantic painted fills and stone; cameras: preserve registered exact viewpoint; lighting: retain warm-key/fill/rim and live AO; animation: preserve CC0 rest/roll retarget and reset sparse source channels; rendering: serial CPU previews, fixed histogram grade, GPU handoff.
