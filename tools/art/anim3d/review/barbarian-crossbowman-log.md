@@ -34,3 +34,5 @@
 - Packed 40 frames, trimmed 160px cells, WebP quality 90, 139320 bytes.
 - Wrote 8 second five-clip H.264 yuv420p review barbarian-crossbowman-round2.mp4
 - e-death: 10 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- Packed 40 frames, trimmed 160px cells, WebP quality 90, 138532 bytes.
+- Wrote 8 second five-clip H.264 yuv420p review barbarian-crossbowman-round2.mp4

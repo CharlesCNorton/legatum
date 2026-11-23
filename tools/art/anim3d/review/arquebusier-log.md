@@ -65,3 +65,18 @@
 - Posted b-plain review (CPU, 256 px).
 - Finished-surface camera projection with camera-only pigment; generated hidden fills retained.
 - Posted c-textured-lit review (CPU, 256 px).
+- Finished-surface camera projection with camera-only pigment; generated hidden fills retained.
+- Finished-surface camera projection with camera-only pigment; generated hidden fills retained.
+- Posted b-plain review (CPU, 256 px).
+- Posted c-textured-lit review (CPU, 256 px).
+- Authored and saved idle action (8 output frames).
+- Authored and saved move action (8 output frames).
+- Authored and saved attack action (10 output frames).
+- Authored and saved hit action (4 output frames).
+- Authored and saved death action (10 output frames).
+- Posted d-rig-poses review (CPU, 256 px).
+- Posted e-idle review (CPU, 256 px).
+- Posted e-move review (CPU, 256 px).
+- Posted e-attack review (CPU, 256 px).
+- Posted e-hit review (CPU, 256 px).
+- Posted e-death review (CPU, 256 px).

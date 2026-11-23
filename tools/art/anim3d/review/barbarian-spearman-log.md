@@ -80,3 +80,6 @@
 - Published e-attack review from CPU render.
 - Published e-hit review from CPU render.
 - Published e-death review from CPU render.
+- Saved-scene audit initially caught 23.89mm then 7.58mm move sole errors (unreachable straight-leg targets), despite plausible strips. Lowered walking hips 65mm and iterated ankle contact six times; final audit PASSED all 40 samples, maximum move sole error 1.69mm, maximum pre-release bone-to-shaft distance 23.4mm. No tolerance was weakened.
+- Inspected the corrected death strip: the erroneous painted shield stripe on the rear cloak is removed. Remaining defects are physical cloth stiffness, simplified hidden shoulder/fur finish, and an elevated/stiff terminal silhouette. This is not animation or art PASS.
+- Published e-move review from CPU render.

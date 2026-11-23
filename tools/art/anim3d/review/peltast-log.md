@@ -70,3 +70,7 @@
 - Published d review immediately: CYCLES/CPU, 512 px, 4 frame(s).
 - Published e-idle review immediately: CYCLES/CPU, 512 px, 8 frame(s).
 - Published e-move review immediately: CYCLES/CPU, 512 px, 8 frame(s).
+- Published e-attack review immediately: CYCLES/CPU, 512 px, 10 frame(s).
+- Published e-hit review immediately: CYCLES/CPU, 512 px, 4 frame(s).
+- Inspected current512 rest, clay side, details, attack pose sheet, idle/move/attack strips at256/64. Tunic/wicker likeness improved; cap/face/boots and base remain distinguishable. Whole silhouette IoU .77181 -> .82345, figure .77943 -> .80778 (alpha>32). Movement still stiff; throw rearm abrupt. No PASS.
+- Published e-death review immediately: CYCLES/CPU, 512 px, 10 frame(s).
