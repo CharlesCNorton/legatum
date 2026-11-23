@@ -36,3 +36,14 @@ The date range is the range of dates the repository's own records give (prompt h
 
 - No prompt is stored for the map improvements, the six original resource medallions, the aircraft plan sprites or the parchment texture.
 - Where a set was generated from one shared prompt (terrain, city sets, camps and ruins), there is one prompt for the set, not one per file.
+
+### Barbarian musketman animation candidate (round 1)
+
+`units/anim/barbarian-musketman.webp` and its JSON are rendered from original true 3D kit on
+MPFB 2.0.18 / MakeHuman CC0 anatomy, eyes and game_engine rig. Original project painting
+`units/barbarian-musketman-source.png` supplies frozen-camera UV colour (CC BY 4.0); existing
+original generated horseman material fills cover unseen surfaces (CC BY 4.0). No motion capture
+or third-party unit model is used. Unit scripts: `tools/art/anim3d/units/barbarian-musketman/`.
+Editable scene, source hashes, six baked maps, frames and full licence/source records are external
+under `~/LegatumRuns/anim-pilot/masters/barbarian-musketman/` and `assets/SOURCES.md`.
+Candidate only, pending art approval; the existing unit painting remains the runtime asset.

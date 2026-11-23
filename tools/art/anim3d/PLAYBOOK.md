@@ -106,3 +106,54 @@ tools/art/anim3d/render.sh audit
 ```
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
+
+## Infantry: barbarian musketman, round 1
+
+This unit's implementation is isolated in `units/barbarian-musketman/`. Its source is a kneeling,
+right-facing marksman, not the upright spearman. MPFB 2.0.18 provides the actual anatomical mesh,
+face, hands, skin weights and 53-bone rig. Authored 3D clothing includes folded sleeves, ragged coat
+and sash, a feathered felt hat, stitched straps, powder flasks, buckles and patches. A solid walnut
+stock, steel barrel, ramrod, lock and trigger guard form one rigid musket assembly. Five editable
+skeletal clips have 8/8/10/4/10 samples. The move is a low tactical shuffle; death releases the gun.
+Smoke is finite solid geometry with keyed visibility, never a zero-scaled volume.
+
+The standard quality method follows feedback 18–21: calibrate the camera and anatomical rest pose
+in painting coordinates, freeze projected UVs on actual mesh surfaces, blend the original painting
+with licensed generated fills on hidden faces, finish real geometry (bevels, cloth thickness, folds,
+stitches and buckles), use a warm upper-left key/cool rim/soft fill, and apply one bounded histogram
+grade derived from the rest pose across all frames. Real 512-pixel Cycles AO and Pointiness maps
+are baked on coat, hat and gunstock, with separate bake UVs and Solidify disabled for baking.
+The shared stone target is sRGB **#E9CFA0**, linear RGB approximately `(0.815, 0.624, 0.352)`;
+paint projection and the frozen grade preserve its warm top and darker rim. The neutral stone
+shader in this unit compensates its studio lights before that grade. Judge the result against the
+painting at native 256 and 64 pixels, including the three-panel rest comparison and 50/50 crossfade.
+A small atlas or a successful render never implies visual approval.
+
+```sh
+source tools/art/anim3d/env.sh
+"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/barbarian-musketman/prepare.py
+SAMPLES=8 RESOLUTION=256 tools/art/anim3d/units/barbarian-musketman/render.sh build
+tools/art/anim3d/units/barbarian-musketman/render.sh animate
+SAMPLES=8 RESOLUTION=256 tools/art/anim3d/units/barbarian-musketman/render.sh preview
+# Complete lead-side Metal Cycles pass; ROUND is supplied by the overnight driver:
+ROUND=1 tools/art/anim3d/units/barbarian-musketman/gpu.sh
+```
+
+Every Blender call uses plain `blender -b --disable-autoexec` through the PATH gate. The GPU script
+requires an actual Metal device and refuses CPU fallback. It rebuilds the scene and bakes, renders
+all stages and 40 frames at 512, keeps genuine 512 and downsampled 256 masters outside git, writes
+reviews immediately, grades and packs the atlas, validates it, and produces the eight-second,
+five-clip, 2x-scale H.264/yuv420p `barbarian-musketman-round${ROUND}.mp4`. Raw frames, packed blend
+files, bakes and provenance hashes remain in `~/LegatumRuns/anim-pilot/masters/barbarian-musketman/`.
+
+This unit uses atlas format version 2. `frame:{w:160,h:160,ax:54,ay:134}` describes the untrimmed
+logical cell and shared base anchor. Each clip retains `row`, `frames`, `fps`, and `loop` and adds
+`rects:[{x,y,w,h,ox,oy}, ...]`. Rectangles are packed left-to-right on one atlas row per clip;
+`x/y/w/h` select the cropped atlas pixels, `ox/oy` place them back into the logical 160-pixel cell.
+To draw at an anchor, use destination `(anchorX-ax+ox, anchorY-ay+oy)`. Rows have variable physical
+height; never use `row*160` or `frameIndex*160` to sample this format. The packer clears invisible RGB and quantizes alpha to 32 levels. Packing tries quality
+90/85/80/75, retaining all 40 frames and enforcing 200,000 bytes. It refuses stale blend/render
+hashes, mixed render settings, clipped frames or oversized output. This branch supplies an art
+candidate only; it does not modify the runtime atlas reader or replace the painting.
+
+Round 1 remains subject to visual review. The pipeline never creates a PASS marker automatically.
