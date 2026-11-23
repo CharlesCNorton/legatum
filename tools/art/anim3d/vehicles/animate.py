@@ -98,6 +98,14 @@ for clip,(count,fps,loop) in CLIPS.items():
             o.keyframe_insert(data_path='hide_render',frame=i+1)
         for o in movers:
             for prop in ['location','rotation_euler','scale']:o.keyframe_insert(data_path=prop,frame=i+1)
+    # Blender 5 layered actions: mechanical travel is linear, visibility is stepped.
+    for o in movers:
+        action=o.animation_data.action
+        curves=[fc for layer in action.layers for strip in layer.strips
+                if hasattr(strip,'channelbags') for bag in strip.channelbags for fc in bag.fcurves]
+        for fc in curves:
+            for key in fc.keyframe_points:
+                key.interpolation='CONSTANT' if fc.data_path=='hide_render' else 'LINEAR'
     samples=list(range(1,count+1))
     if clip=='death':samples[-1]=samples[-2]
     sc['sample_frames']=json.dumps(samples);sc['clip']=clip;sc['loop']=loop

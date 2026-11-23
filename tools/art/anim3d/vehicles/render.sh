@@ -22,7 +22,7 @@ case "$stage" in
   *) script=render.py
      if [[ "$RENDER_ENGINE" == BLENDER_EEVEE || "${CYCLES_DEVICE:-CPU}" == GPU ]]; then args+=(--gpu-backend metal); fi ;;
 esac
-"$ANIM_ROOT/bin/blender-slot" "${args[@]}" --python "tools/art/anim3d/vehicles/$script" -- "$stage"
+blender "${args[@]}" --python "tools/art/anim3d/vehicles/$script" -- "$stage"
 case "$stage" in
   b|c|details|d|e-*)
     "$ANIM_ROOT/venv/bin/python" tools/art/anim3d/vehicles/grade.py "$stage"

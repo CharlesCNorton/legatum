@@ -23,7 +23,7 @@ def material(name, dark, light, metal=0.0, rough=.72, scale=22, bump=.02):
     b=n.new('ShaderNodeBump'); b.inputs['Strength'].default_value=.26; b.inputs['Distance'].default_value=bump
     l.new(grain.outputs['Fac'],b.inputs['Height']); l.new(b.outputs[0],s.inputs['Normal'])
     return m
-paint=material('Olive drab • mottled cast and rolled steel',(.046,.054,.017),(.128,.142,.046),.38,.68,32,.004)
+paint=material('Olive drab • mottled cast and rolled steel',(.046,.054,.017),(.128,.142,.046),0,.78,32,.004)
 edge=material('Dusty rubbed edges',(.15,.105,.035),(.43,.30,.11),.4,.57,37,.005)
 steel=material('Track steel • worn and earth packed',(.065,.057,.035),(.23,.20,.12),.65,.66,19,.013)
 rubber=material('Dust embedded in rubber',(.028,.025,.018),(.095,.077,.046),0,.92,22,.014)
@@ -35,6 +35,11 @@ stone=material('Warm cream limestone',(.88,.65,.40),(1.0,.84,.60),0,.86,110,.006
 stone_shader=stone.node_tree.nodes.get('Principled BSDF')
 stone_shader.inputs['Emission Color'].default_value=(.9,.64,.40,1)
 stone_shader.inputs['Emission Strength'].default_value=.20
+# Original generated painted fill, reused from the artillery lane (CC BY 4.0).
+n=paint.node_tree.nodes; l=paint.node_tree.links; s=n.get('Principled BSDF')
+t=n.new('ShaderNodeTexImage'); t.image=bpy.data.images.load(str(ROOT/'assets/tank/painted-olive.png')); t.projection='BOX'; t.projection_blend=.3
+coord=n.new('ShaderNodeTexCoord'); l.new(coord.outputs['Generated'],t.inputs['Vector'])
+l.new(t.outputs['Color'],s.inputs['Base Color'])
 # Reuse the actual scanned steel microstructure; colour is our painted olive pigment.
 n=paint.node_tree.nodes;l=paint.node_tree.links;s= n.get('Principled BSDF')
 t=n.new('ShaderNodeTexImage');t.image=bpy.data.images.load(str(ROOT/'assets/Metal034/Metal034_1K-JPG_Displacement.jpg'));t.image.colorspace_settings.name='Non-Color';t.projection='BOX';t.projection_blend=.35
@@ -106,7 +111,7 @@ def ringmesh(name,rings,mat=paint,parent=root,n=64):
     o=bpy.data.objects.new(name,mesh); bpy.context.collection.objects.link(o)
     return finish(o,name,mat,parent,0,True)
 
-base=cyl('Stationary cream stone base',(0,0,.12),2.12,.24,stone,None,verts=128)
+base=cyl('Stationary cream stone base',(0,0,.12),2.20,.22,stone,None,verts=128)
 cube('Lower hull',(-.05,0,.94),(2.85,1.64,.58),paint)
 # Sloped glacis and shoulders, with deliberate steel thickness.
 vs=[(-1.57,-.87,1.13),(1.56,-.87,1.13),(1.56,.87,1.13),(-1.57,.87,1.13),
@@ -125,15 +130,15 @@ rod('Rear shovel wooden handle',(-1.37,-.91,1.38),(-.61,-.91,1.38),.018,edge)
 o=cube('Rear shovel blade',(-.52,-.91,1.38),(.21,.026,.16),steel,bevel=.03)
 for x in [-1.18,-.73]:cube('Tool retaining strap',(x,-.927,1.38),(.035,.025,.10),edge,bevel=.006)
 cyl('Turret bearing',(.2,0,1.73),.70,.12,steel)
-cast=ringmesh('Rounded cast turret',[(-.07,0,.02,.69,.60),(-.07,0,.10,.74,.64),(-.1,0,.42,.67,.57),(-.13,0,.60,.50,.45),(-.15,0,.65,.39,.37)],paint,turret)
+cast=ringmesh('Rounded cast turret',[(-.07,0,.02,.69,.60),(-.07,0,.10,.74,.64),(-.1,0,.46,.75,.61),(-.13,0,.67,.61,.49),(-.15,0,.73,.49,.40)],paint,turret)
 # Casting seam catches a thin dusty highlight; no invented insignia (painting has none).
 tube('Turret casting seam',[( -.07+.696*cos(i*2*pi/64),.607*sin(i*2*pi/64),.105) for i in range(64)],.009,edge,turret,True)
-cyl('Closed commander cupola',(-.22,0,.69),.30,.12,paint,turret)
-cyl('Cupola top bevel',(-.22,0,.76),.25,.045,edge,turret)
+cyl('Closed commander cupola',(-.22,0,.77),.30,.12,paint,turret)
+cyl('Cupola top bevel',(-.22,0,.84),.25,.045,edge,turret)
 for a in range(0,360,60):
-    q=math.radians(a); o=cube('Cupola periscope',(-.22+.28*cos(q),.28*sin(q),.705),(.11,.045,.052),black,turret,.005);o.rotation_euler[2]=q+pi/2
-cube('Closed hatch seam',(-.22,0,.786),(.39,.015,.008),black,turret,.002)
-tube('Hatch handle',[(-.32,-.10,.79),(-.32,-.10,.83),(-.18,-.10,.83),(-.18,-.10,.79)],.012,edge,turret)
+    q=math.radians(a); o=cube('Cupola periscope',(-.22+.28*cos(q),.28*sin(q),.785),(.11,.045,.052),black,turret,.005);o.rotation_euler[2]=q+pi/2
+cube('Closed hatch seam',(-.22,0,.866),(.39,.015,.008),black,turret,.002)
+tube('Hatch handle',[(-.32,-.10,.87),(-.32,-.10,.91),(-.18,-.10,.91),(-.18,-.10,.87)],.012,edge,turret)
 sphere('Rounded mantlet',(.035,0,0),(.24,.36,.29),paint,gun)
 cyl('Mantlet sleeve',(.18,0,0),.125,.28,paint,gun,'X')
 cyl('Short 75 mm barrel',(.77,0,0),.057,1.10,paint,gun,'X')
@@ -201,9 +206,26 @@ for side in [-1,1]:
 cube('Rear engine grille',(-1.03,0,1.725),(.60,.75,.025),black)
 for i in range(10):cube('Engine cooling louvre',(-1.28+i*.055,0,1.746),(.028,.72,.021),paint,bevel=.003)
 for side in [-1,1]:
-    cube('Rear stowage box',(-1.05,side*.67,1.73),(.63,.38,.28),paint)
-    cube('Stowage box lid',(-1.05,side*.67,1.88),(.66,.40,.04),edge)
+    cube('Rear stowage box',(-1.05,side*.67,1.67),(.66,.41,.22),paint)
+    cube('Stowage box lid',(-1.05,side*.67,1.79),(.68,.43,.035),edge)
     for xx in [-1.26,-.86]:cube('Stowage latch',(xx,side*.872,1.73),(.045,.024,.11),edge,bevel=.006)
+canvas=material('Olive canvas stowage',(.06,.064,.025),(.19,.18,.08),0,.93,90,.006)
+vs=[]; fs=[]
+for j in range(13):
+    for i in range(21):
+        x=-1.30+i*.030; y=-.35+j*.025
+        z=1.79+.026*sin(i*.9)+.014*cos(j*1.7+i*.4)
+        vs.append((x,y,z))
+for j in range(12):
+    for i in range(20):
+        a=j*21+i;fs.append((a,a+1,a+22,a+21))
+me=bpy.data.meshes.new('Folded canvas');me.from_pydata(vs,[],fs);me.update()
+o=bpy.data.objects.new('Folded deck blanket',me);bpy.context.collection.objects.link(o);finish(o,o.name,canvas,root,0,True)
+mod=o.modifiers.new('Real canvas thickness','SOLIDIFY');mod.thickness=.035
+bpy.context.view_layer.objects.active=o;bpy.ops.object.modifier_apply(modifier=mod.name)
+for x in [-1.20,-.83]:
+    cube('Canvas retaining strap',(x,-.20,1.825),(.035,.34,.018),edge,bevel=.005)
+    tube('Strap buckle',[(x-.026,-.27,1.84),(x+.026,-.27,1.84),(x+.026,-.20,1.84),(x-.026,-.20,1.84)],.006,steel,closed=True)
 for y in [-.28,0,.28]:
     cube('Rear deck jerrican',(-1.34,y,1.96),(.18,.22,.37),paint)
     tube('Jerrican handle',[(-1.39,y-.06,2.15),(-1.39,y-.06,2.20),(-1.30,y-.06,2.20),(-1.30,y-.06,2.15)],.015,edge)
@@ -272,9 +294,12 @@ sc.render.resolution_x=sc.render.resolution_y=256;sc.render.resolution_percentag
 sc.render.image_settings.file_format='PNG';sc.render.image_settings.color_mode='RGBA'
 sc.world.color=(.20,.20,.20)
 sc.view_settings.view_transform='AgX';sc.view_settings.look='AgX - Medium High Contrast';sc.view_settings.exposure=.25
-bpy.ops.object.camera_add(location=(6,-10,4.1));cam=bpy.context.object;cam.name='Painting camera';cam.rotation_euler=(Vector((0,0,.94))-cam.location).to_track_quat('-Z','Y').to_euler();cam.data.type='ORTHO';cam.data.ortho_scale=4.95;sc.camera=cam
-for name,loc,power,size,col in [('Warm upper left',(-3,-4,7),650,4.0,(1,.83,.65)),('Soft cool fill',(5,1,5),380,4,(.82,.9,1)),('Rear rim',(-2,4,5),480,3,(1,.86,.65)),('Front bounce',(4,-6,2.5),70,4,(1,.86,.67))]:
+bpy.ops.object.camera_add(location=(5.6,-10,4.2));cam=bpy.context.object;cam.name='Painting camera';cam.rotation_euler=(Vector((0,0,1.02))-cam.location).to_track_quat('-Z','Y').to_euler();cam.data.type='ORTHO';cam.data.ortho_scale=4.95;sc.camera=cam
+for name,loc,power,size,col in [('Warm upper left',(-3,-4,7),650,4.0,(1,.83,.65)),('Soft cool fill',(5,1,5),210,4,(.88,.93,1)),('Rear rim',(-2,4,5),280,3,(.80,.89,1)),('Front bounce',(4,-6,2.5),70,4,(1,.86,.67))]:
     bpy.ops.object.light_add(type='AREA',location=loc);o=bpy.context.object;o.name=name;o.data.energy=power;o.data.shape='DISK';o.data.size=size;o.data.color=col;o.rotation_euler=(-o.location).to_track_quat('-Z','Y').to_euler()
+for o in list(bpy.data.objects):
+    if o.type=='CURVE':
+        bpy.ops.object.select_all(action='DESELECT');o.select_set(True);bpy.context.view_layer.objects.active=o;bpy.ops.object.convert(target='MESH')
 sc['asset']='tank';sc['source']='Original geometry matched to Legatum tank painting; no national markings in reference.'
 sc['track_length']=LENGTH
 bpy.ops.file.pack_all();bpy.ops.wm.save_as_mainfile(filepath=str(MASTER/'tank-plain.blend'))

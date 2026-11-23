@@ -31,9 +31,9 @@ if clip:
         if i>0 and frame==frames[i-1]:shutil.copyfile(out/f'{i-1:02}.png',dest);continue
         sc.frame_set(frame);sc.render.filepath=str(dest);bpy.ops.render.render(write_still=True)
 else:
-    views=[('three-quarter',(6,-10,4.1)),('front',(9,0,4.4)),('side',(0,-10,4.6))] if stage=='b' else [('three-quarter',(6,-10,4.1))]
+    views=[('three-quarter',(5.6,-10,4.2)),('front',(9,0,4.4)),('side',(0,-10,4.6))] if stage=='b' else [('three-quarter',(5.6,-10,4.2))]
     for name,pos in views:
-        sc.camera.location=pos;target=Vector((0,0,.94))
+        sc.camera.location=pos;target=Vector((0,0,1.02))
         if stage=='details':target=Vector((.20,-.1,1.64));sc.camera.data.ortho_scale=2.8
         sc.camera.rotation_euler=(target-sc.camera.location).to_track_quat('-Z','Y').to_euler()
         sc.render.filepath=str(out/f'{name}.png');bpy.ops.render.render(write_still=True)

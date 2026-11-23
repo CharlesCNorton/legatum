@@ -13,7 +13,8 @@ view=sc.camera.rotation_euler.to_matrix() @ Vector((0,0,1))
 records=[]
 major=['Sloped upper hull','Rounded cast turret','Rounded transmission nose','Rounded mantlet','Lower hull']
 wheel_prefixes=('Cast wheel dished face','Wheel hub','Drive wheel face','Drive hub','VVSS bogie block','Spring cover')
-names=major+[o.name for o in bpy.data.objects if o.type=='MESH' and o.name.startswith(wheel_prefixes)]
+names=[o.name for o in bpy.data.objects if o.type=='MESH' and 'effect' not in o]
+materials={}
 for name in names:
     o=bpy.data.objects[name];mesh=o.data;old=mesh.uv_layers.active.name if mesh.uv_layers.active else None
     if 'PaintingProjection' in mesh.uv_layers:raise RuntimeError('Projection already applied; bake again before paint')
@@ -22,9 +23,14 @@ for name in names:
     for loop in mesh.loops:
         v=mesh.vertices[loop.vertex_index];p=world_to_camera_view(sc,sc.camera,o.matrix_world @ v.co)
         uv.data[loop.index].uv=(p.x,p.y)
-        facing=max(0,min(1,((normalmatrix @ v.normal).normalized().dot(view)-.05)/.40))
+        facing=max(0,min(1,((normalmatrix @ v.normal).normalized().dot(view)+.08)/.22))
         weights.data[loop.index].color=(facing,facing,facing,1)
-    mat=o.data.materials[0].copy();mat.name=name+' • painted projection';o.data.materials.clear();o.data.materials.append(mat)
+    original_material=o.data.materials[0]
+    if original_material.name in materials:
+        o.data.materials.clear();o.data.materials.append(materials[original_material.name]);continue
+    mat=original_material.copy();mat.name=original_material.name+' • painted projection'
+    materials[original_material.name]=mat
+    o.data.materials.clear();o.data.materials.append(mat)
     n=mat.node_tree.nodes;l=mat.node_tree.links;s=n.get('Principled BSDF')
     if old:
         bakeuv=n.new('ShaderNodeUVMap');bakeuv.uv_map=old
@@ -35,15 +41,15 @@ for name in names:
     image=n.new('ShaderNodeTexImage');image.image=tex;image.extension='CLIP';l.new(coord.outputs[0],image.inputs['Vector'])
     confidence=n.new('ShaderNodeVertexColor');confidence.layer_name='Paint confidence'
     mask=n.new('ShaderNodeMath');mask.operation='MULTIPLY';l.new(confidence.outputs['Color'],mask.inputs[0]);l.new(image.outputs['Alpha'],mask.inputs[1])
-    strength=n.new('ShaderNodeMath');strength.operation='MULTIPLY';strength.inputs[1].default_value=.90 if name in major else .55;l.new(mask.outputs[0],strength.inputs[0])
+    strength=n.new('ShaderNodeMath');strength.operation='MULTIPLY';strength.inputs[1].default_value=.98;l.new(mask.outputs[0],strength.inputs[0])
     blend=n.new('ShaderNodeMixRGB');l.new(strength.outputs[0],blend.inputs[0]);l.new(original,blend.inputs[1]);l.new(image.outputs['Color'],blend.inputs[2]);l.new(blend.outputs[0],s.inputs['Base Color'])
-    s.inputs['Roughness'].default_value=.78;s.inputs['Metallic'].default_value=.18
+    s.inputs['Roughness'].default_value=.78;s.inputs['Metallic'].default_value=0
     # The painting already contains hand-painted light. A partial emission mix retains
     # that brushwork while the physical BSDF still supplies grain, edge glints and relief.
     output=next(node for node in n if node.type=='OUTPUT_MATERIAL')
     emission=n.new('ShaderNodeEmission');l.new(blend.outputs[0],emission.inputs['Color'])
-    keep=n.new('ShaderNodeMath');keep.operation='MULTIPLY';keep.inputs[1].default_value=.45;l.new(mask.outputs[0],keep.inputs[0])
+    keep=n.new('ShaderNodeMath');keep.operation='MULTIPLY';keep.inputs[1].default_value=.88;l.new(mask.outputs[0],keep.inputs[0])
     surface=n.new('ShaderNodeMixShader');l.new(keep.outputs[0],surface.inputs[0]);l.new(s.outputs[0],surface.inputs[1]);l.new(emission.outputs[0],surface.inputs[2]);l.new(surface.outputs[0],output.inputs['Surface'])
-    records.append({'mesh':name,'uv':'PaintingProjection','hidden_fill':'original procedural olive + scanned steel','strength':strength.inputs[1].default_value})
+    records.append({'mesh':name,'uv':'PaintingProjection','hidden_fill':'generated olive brushwork + scanned steel; procedural stone and rubber','strength':strength.inputs[1].default_value})
 bpy.ops.file.pack_all();bpy.ops.wm.save_as_mainfile(filepath=str(M/'tank.blend'))
-(M/'textures/paint-manifest.json').write_text(json.dumps(records,indent=2));print('PROJECTED',len(records),'real meshes, with hidden-surface fallback')
+(M/'textures/paint-manifest.json').write_text(json.dumps(records,indent=2));print('PROJECTED',len(names),'real meshes, with hidden-surface fallback')
