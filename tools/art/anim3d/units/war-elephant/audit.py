@@ -2,15 +2,22 @@
 import hashlib
 import json
 import os
+import sys
 from pathlib import Path
 
 import bpy
 from bpy_extras.object_utils import world_to_camera_view
+from mathutils import Vector
+sys.path.insert(0,str(Path(__file__).resolve().parent))
+from motion import SHA, ACTIONS, move_targets
 
 ROOT=Path(os.environ['ANIM_ROOT']);M=ROOT/'masters/war-elephant'
 report_path=ROOT/'review/3d-v2/war-elephant-audit.json'
 report_path.unlink(missing_ok=True)
 results={}
+assert hashlib.sha256((ROOT/'assets/horseman/Horse.glb').read_bytes()).hexdigest()==SHA
+motion=json.loads((M/'source-motion.json').read_text())
+assert motion['source_sha256']==SHA
 bpy.ops.wm.open_mainfile(filepath=str(M/'war-elephant.blend'))
 scene=bpy.context.scene
 assert scene['projection_method']=='finished surfaces; visibility and facing; camera-only pigment'
@@ -33,6 +40,9 @@ assert uv_error<1e-5,('Finished-surface UV drift',uv_error)
 for clip,count in [('idle',8),('move',8),('attack',10),('hit',4),('death',10)]:
     folder=M/'clips'/clip
     info=json.loads((folder/'clip.json').read_text())
+    if clip!='attack':
+        assert info['motion_source_sha256']==SHA
+        assert info['motion_source']==ACTIONS[clip]
     assert info['source_master_sha256']==hashlib.sha256((M/'war-elephant.blend').read_bytes()).hexdigest()
     bpy.ops.wm.open_mainfile(filepath=str(folder/(clip+'.blend')))
     sc=bpy.context.scene;rig=bpy.data.objects['RIG-Elephant']
@@ -45,7 +55,7 @@ for clip,count in [('idle',8),('move',8),('attack',10),('hit',4),('death',10)]:
         assert len(bpy.data.objects[f'RIG-{role} MPFB'].data.bones)==53
         assert any(m.type=='ARMATURE' for m in human.modifiers)
     assert len(json.loads(sc['projected_meshes']))>100
-    matrices=[];bounds=[];torso_low=None
+    matrices=[];bounds=[];torso_low=None;feet={};sole_reference={};contact_error=0;kit_low=100
     for frame in range(count+int(info['loop'])):
         sc.frame_set(frame);bpy.context.view_layer.update()
         assert base.matrix_world==base_matrix
@@ -54,19 +64,45 @@ for clip,count in [('idle',8),('move',8),('attack',10),('hit',4),('death',10)]:
         matrices.append([tuple(v for row in p.matrix for v in row) for p in rig.pose.bones])
         body=bpy.data.objects['GEO-Elephant continuous sculpt'].evaluated_get(bpy.context.evaluated_depsgraph_get())
         me=body.to_mesh();low=min((body.matrix_world@v.co).z for v in me.vertices)
+        if clip=='move':
+            original=bpy.data.objects['GEO-Elephant continuous sculpt']
+            targets=move_targets(motion['samples']['move'],frame)
+            for leg,delta in targets.items():
+                if leg not in feet:
+                    group=original.vertex_groups[leg+'.lower'].index
+                    feet[leg]=[v.index for v in original.data.vertices
+                               if any(g.group==group and g.weight>.999 for g in v.groups)
+                               and (body.matrix_world@me.vertices[v.index].co).z<.24+delta.z]
+                    assert len(feet[leg])>3,leg
+                    sole_reference[leg]=[body.matrix_world@me.vertices[j].co-delta for j in feet[leg]]
+                for j,reference in zip(feet[leg],sole_reference[leg]):
+                    actual=body.matrix_world@me.vertices[j].co
+                    contact_error=max(contact_error,(actual-reference-delta).length)
         if clip=='death' and frame==count-1:
             original=bpy.data.objects['GEO-Elephant continuous sculpt']
             torso=original.vertex_groups['body'].index
             torso_low=min((body.matrix_world@me.vertices[v.index].co).z for v in original.data.vertices
                           if any(g.group==torso and g.weight>.95 for g in v.groups))
         body.to_mesh_clear()
+        if clip=='death':
+            for ob in sc.objects:
+                if ob.type!='MESH' or ob==base:continue
+                ev=ob.evaluated_get(bpy.context.evaluated_depsgraph_get());mesh=ev.to_mesh()
+                minimum=min((ev.matrix_world@v.co).z for v in mesh.vertices)
+                ev.to_mesh_clear()
+                assert minimum>=.125,(clip,frame,ob.name,'Stone intersection',minimum)
+                kit_low=min(kit_low,minimum)
         assert low>=.125,(clip,frame,low)
         bounds.append(round(low,4))
     if info['loop']:assert max(abs(a-b) for left,right in zip(matrices[0],matrices[-1]) for a,b in zip(left,right))<1e-6,clip+' loop does not close'
+    if clip=='move':
+        assert contact_error<1e-5,('Retargeted sole drift',contact_error)
     if clip=='death':
         assert matrices[-2]==matrices[-1],'Death must hold'
         assert torso_low<.30,('Death torso still hovering',torso_low)
     results[clip]={'frames':count,'min_body_z':min(bounds),'base_and_camera':'fixed','skeleton_bones':len(rig.data.bones),'clip_sha256':hashlib.sha256((folder/(clip+'.blend')).read_bytes()).hexdigest()}
+    if clip=='move':results[clip]['max_sole_target_error']=contact_error
+    if clip=='death':results[clip]['min_all_geometry_z']=kit_low
 report_path.write_text(json.dumps({'source_master_sha256':hashlib.sha256((M/'war-elephant.blend').read_bytes()).hexdigest(),
     'finished_surface_uv_error':uv_error,'death_torso_min_z':torso_low,'clips':results},indent=2)+'\n')
 print('AUDIT',json.dumps(results))

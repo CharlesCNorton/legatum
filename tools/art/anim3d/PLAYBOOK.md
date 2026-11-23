@@ -169,3 +169,38 @@ on PATH. CPU previews use `deliver.py pack --preview` and are labelled; the
 final master gate rejects them. Bicubic token reduction preserves full 8-bit
 alpha, independently checked against each decoded trimmed frame. No technical
 stage writes an art PASS marker.
+
+
+### War Elephant driver round 2 follow-up: sourced motion and foot evidence
+
+The original GPU pass succeeded; its frames/master are preserved externally in
+`masters/war-elephant/driver-r2-before/`. Updated fitting separates the actual ear
+from the shoulder, opens the trunk tip, brings far soles into the painting's
+stance, and corrects the officer's grip through native skin weights. Never move
+only the texture to cover incorrect anatomy. The hand grip has closed bevelled
+geometry; stone grain varies pigment as well as normals.
+
+The common motion standard is proven open motion by default: humans use CC0
+Quaternius or free-use CMU; animals use a licensed animated quadruped. This unit
+reuses the pinned CC0 Quaternius Horse.glb for Idle/Walk/Hit/Death motion samples,
+not its geometry. `motion.py` clears unkeyed channels between actions, handles
+Blender action slots and records samples/hash. Its forward -Y maps to elephant
++X. Contact adaptation keeps planted soles stationary while shortening source
+swing arcs. Idle/hit displacement and death collapse timing are source-derived;
+elephant folding, trunk/ears/tail and riders remain authored. This is explicitly
+a partial retarget, not an elephant capture or a full skeletal transfer.
+
+Every move cycle needs top/front foot evidence and contact measurements, not
+only the flattering three-quarter camera. Stage `g` produces
+`war-elephant-g-feet-check.png` using the actual evaluated lower limbs cut away
+above the knees. The audit rejects drift of fully weighted sole vertices from
+the contact/swing target above 1e-5 scene units, and checks fixed camera/base,
+loop closure and held death. Death ground clearance checks every visible mesh,
+including the ear, fringe and straps; a body-only check missed their stone
+intersections. Fold the near ear inward before settling. This is not a full
+mesh collision solver.
+
+The no-argument GPU handoff includes the new `g` stage, 512/256 masters, trimmed
+160 px atlas at quality >=75 and <=200,000 bytes, validation, and the round MP4.
+CPU evidence is explicitly labelled and cannot pass the final GPU512 master
+gate. Painting parity is still a visual gate; no technical tool writes PASS.

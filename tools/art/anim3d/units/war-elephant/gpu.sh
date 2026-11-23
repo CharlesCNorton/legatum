@@ -26,7 +26,7 @@ if [[ "$RENDER_ENGINE" == CYCLES ]]; then
   # reported without waiting behind an unrelated long GPU render.
   CYCLES_DEVICE=CPU blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python "$unit/check_gpu.py"
 fi
-for stage in project animate audit b c d e-idle e-move e-attack e-hit e-death; do "$unit/run.sh" "$stage"; done
+for stage in project animate audit b c d g e-idle e-move e-attack e-hit e-death; do "$unit/run.sh" "$stage"; done
 stage=masters
 "$ANIM_ROOT/venv/bin/python" "$unit/deliver.py" masters
 stage=pack

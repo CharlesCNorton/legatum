@@ -89,6 +89,14 @@ def review(stage):
               ['Painting',label,'Half split','50% crossfade'],R/f'{SLUG}-f-restpose-compare.png')
         sheet([ref,images[0]],['Painting','3D'],R/f'{SLUG}-64-compare.png',64)
     elif stage=='d':sheet(images,['Anticipation','Brace','Strike','Recover'],R/f'{SLUG}-d-rig-poses.png')
+    elif stage=='g':
+        # Two complete views of the same move cycle, not proxy foot markers.
+        canvas=Image.new('RGB',(8*256,2*284),CREAM[:3])
+        for row,label in enumerate(['Top cutaway; travel right','Front cutaway; travel toward viewer']):
+            path=folder/f'view-{row}.png'
+            sheet(images[row*8:(row+1)*8],[f'{label} / {i}' for i in range(8)],path)
+            canvas.paste(Image.open(path),(0,row*284))
+        canvas.save(R/f'{SLUG}-g-feet-check.png')
     else:
         sheet(images,[str(i) for i in range(len(images))],R/f'{SLUG}-{stage}-strip.png')
         clip=stage[2:];count,fps,loop=CLIPS[clip]
@@ -107,13 +115,14 @@ def token(raw):
 
 def masters():
     """Require real GPU512 evidence; never upscale a preview into a master."""
-    for stage in ['b','c','d']+['e-'+c for c in CLIPS]:
+    for stage in ['b','c','d','g']+['e-'+c for c in CLIPS]:
         folder=M/'renders'/stage
         report=json.loads((folder/'review.json').read_text())
         assert report['resolution']==512 and report['device']=='GPU',(stage,'Not a GPU512 master')
         assert report['engine'] in ['CYCLES','BLENDER_EEVEE']
         blend=M/('plain.blend' if stage=='b' else 'war-elephant.blend')
         if stage=='d':blend=M/'clips/attack/attack.blend'
+        if stage=='g':blend=M/'clips/move/move.blend'
         if stage.startswith('e-'):blend=M/'clips'/stage[2:]/(stage[2:]+'.blend')
         assert report['blend_sha256']==sha(blend),(stage,'Stale blend')
         if stage!='b':assert report['grade_sha256']==sha(M/'grade.json')

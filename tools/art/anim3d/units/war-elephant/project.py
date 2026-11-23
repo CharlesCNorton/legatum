@@ -118,8 +118,8 @@ targets = {
     'blanket': (49, 87, 132, 168),
     'cap': (145, 79, 199, 114),
     'trunk': (180, 96, 226, 143),
-    'tusk-near': (181, 137, 212, 166),
-    'tusk-far': (185, 134, 225, 160),
+    'tusk-near': (181, 134, 211, 160),
+    'tusk-far': (185, 134, 224, 156),
     'ear-near': (121, 95, 164, 145),
     'ear-far': (149, 85, 173, 125),
 }
@@ -167,12 +167,72 @@ for name, values in records.items():
         world = ob.matrix_world @ (skin @ vertex.co)
         current = pixel(world)
         world += (right * (dest.x-current.x) - up * (dest.y-current.y)) * cam.data.ortho_scale / 256
+        if kind == 'ear-near':
+            # Separate the dished ear from the shoulder in depth without
+            # changing its registered outline or flattening its volume.
+            world += view*.24
+        if kind == 'trunk':
+            influences = {ob.vertex_groups[g.group].name:g.weight for g in vertex.groups}
+            dx = 5*influences.get('trunk6',0)+2*influences.get('trunk5',0)
+            world += right*dx*cam.data.ortho_scale/256
+        if kind == 'body':
+            influences = [(ob.vertex_groups[g.group].name,g.weight) for g in vertex.groups]
+            if ob.parent_type == 'BONE':influences=[(ob.parent_bone,1)]
+            dx = sum(w*(9 if n=='back.far.lower' else 6 if n=='front.far.lower' else 0)
+                     for n,w in influences)
+            world += right*dx*cam.data.ortho_scale/256
         # Sole fitting can alter vertical contact. Move its underside along the
         # camera ray, preserving the target pixel but keeping real stone contact.
         if 'continuous sculpt' in name and p.y > 190:
             world.z = max(.132, world.z)
         vertex.co = skin.inverted_safe() @ ob.matrix_world.inverted() @ world
     ob.data.update()
+
+# Correct the officer's seated grip through native skin weights. The original
+# fitted pose put both hands on the right; the painting's near hand is at the
+# left rail. Fingers inherit their hand correction, without changing topology.
+officer = bpy.data.objects['RIG-Officer MPFB']
+hand_family = {'hand_r'} | {b.name for b in officer.data.bones['hand_r'].children_recursive}
+for ob in sc.objects:
+    if ob.type != 'MESH' or 'Officer' not in ob.name or not ob.vertex_groups:
+        continue
+    transforms = skin_matrices(ob)
+    for v in ob.data.vertices:
+        delta = Vector((0,0))
+        for g in v.groups:
+            name = ob.vertex_groups[g.group].name
+            offset = (-40,-16) if name in hand_family else (-27,-10) if name=='lowerarm_r' else (-1,-2) if name=='upperarm_r' else (0,0)
+            delta += Vector(offset)*g.weight
+        skin = skin_for(ob,v,transforms)
+        world = ob.matrix_world@(skin@v.co)
+        world += (right*delta.x-up*delta.y)*cam.data.ortho_scale/256
+        hand_weight = sum(g.weight for g in v.groups if ob.vertex_groups[g.group].name in hand_family)
+        if hand_weight:
+            p = pixel(world)
+            relative = p-Vector((80,37))
+            angle = math.radians(70)
+            turned = Vector((math.cos(angle)*relative.x-math.sin(angle)*relative.y,
+                             math.sin(angle)*relative.x+math.cos(angle)*relative.y))*.70
+            d = (turned-relative)*hand_weight
+            world += (right*d.x-up*d.y)*cam.data.ortho_scale/256
+        v.co = skin.inverted_safe()@ob.matrix_world.inverted()@world
+    ob.data.update()
+
+# A closed, bevelled wooden grip beneath that hand, following its actual rig.
+hand_world = officer.matrix_world@officer.pose.bones['hand_r'].head
+def grip_point(x,y):
+    p = pixel(hand_world)
+    return hand_world+(right*(x-p.x)-up*(y-p.y))*cam.data.ortho_scale/256
+a,b = grip_point(79.6,33),grip_point(81.8,51)
+bpy.ops.mesh.primitive_cylinder_add(vertices=16,radius=.010,depth=(b-a).length,location=(a+b)/2)
+grip=bpy.context.object;grip.name='GEO-Officer wooden hand grip'
+grip.rotation_euler=(b-a).to_track_quat('Z','Y').to_euler()
+grip.data.materials.append(bpy.data.materials['Howdah aged honey timber'])
+bevel=grip.modifiers.new('Worn grip edges','BEVEL');bevel.width=.003;bevel.segments=2
+bpy.ops.object.modifier_apply(modifier=bevel.name)
+bpy.context.view_layer.update();world=grip.matrix_world.copy()
+grip.parent=officer;grip.parent_type='BONE';grip.parent_bone='hand_r'
+bpy.context.view_layer.update();grip.matrix_world=world
 
 # Register soles to the real contact plane. An outline fit alone can leave the
 # far foot in midair. Lower-bone weights taper this correction into the knees;
@@ -228,7 +288,15 @@ palette = nodes.new('ShaderNodeMixRGB')
 links.new(separate.outputs['Z'], palette.inputs[0])
 palette.inputs[1].default_value = tuple(linear(c) for c in (213,176,125))+(1,)
 palette.inputs[2].default_value = tuple(linear(c) for c in (246,224,188))+(1,)
-links.new(palette.outputs[0], ao.inputs['Color'])
+grain = nodes.new('ShaderNodeTexNoise')
+grain.inputs['Scale'].default_value = 145
+grain.inputs['Detail'].default_value = 2
+variation = nodes.new('ShaderNodeMixRGB')
+variation.blend_type = 'MULTIPLY'
+variation.inputs[0].default_value = .055
+links.new(palette.outputs[0], variation.inputs[1])
+links.new(grain.outputs['Fac'], variation.inputs[2])
+links.new(variation.outputs[0], ao.inputs['Color'])
 pigment = nodes.new('ShaderNodeEmission')
 links.new(ao.outputs['Color'], pigment.inputs['Color'])
 camera = nodes.new('ShaderNodeLightPath')

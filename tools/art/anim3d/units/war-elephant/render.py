@@ -11,8 +11,8 @@ from mathutils import Vector
 
 R=Path(os.environ['ANIM_ROOT']); M=R/'masters/war-elephant'
 stage=sys.argv[sys.argv.index('--')+1]
-if stage.startswith('e-') or stage=='d':
-    clip=stage[2:] if stage.startswith('e-') else 'attack'
+if stage.startswith('e-') or stage in ('d','g'):
+    clip=stage[2:] if stage.startswith('e-') else 'move' if stage=='g' else 'attack'
     blend=M/'clips'/clip/(clip+'.blend')
 else:
     blend=M/('plain.blend' if stage=='b' else 'war-elephant.blend')
@@ -43,10 +43,35 @@ if stage.startswith('e-'):
     assert info['source_master_sha256']==expected,'Stale animation master'
     samples=list(range(info['frames']))
 elif stage=='d':samples=[0,2,5,8]
+elif stage=='g':samples=list(range(8))*2
 elif stage=='b':samples=[0,0,0]
 else:samples=[0]
 for i,frame in enumerate(samples):
     sc.frame_set(frame)
+    if stage=='g':
+        # Actual evaluated lower limbs, cut away above the knee so the saddle
+        # cannot obscure the top view. Never alter the saved animated master.
+        body=bpy.data.objects['GEO-Elephant continuous sculpt']
+        for ob in sc.objects:
+            if ob.type=='MESH':ob.hide_render=True
+        ev=body.evaluated_get(bpy.context.evaluated_depsgraph_get())
+        mesh=bpy.data.meshes.new_from_object(ev)
+        import bmesh
+        bm=bmesh.new();bm.from_mesh(mesh)
+        leg_groups={g.index for g in body.vertex_groups if g.name.startswith(('front.','back.'))}
+        leg_vertices={v.index for v in body.data.vertices if sum(g.weight for g in v.groups if g.group in leg_groups)>.98}
+        bmesh.ops.delete(bm,geom=[v for v in bm.verts if v.index not in leg_vertices or (body.matrix_world@v.co).z>1.05],context='VERTS')
+        bm.to_mesh(mesh);bm.free()
+        cut=bpy.data.objects.new('GEO-Feet diagnostic cutaway',mesh)
+        sc.collection.objects.link(cut);cut.matrix_world=body.matrix_world.copy()
+        if i<8:
+            sc.camera.location=(.05,0,9)
+            aim=Vector((.05,0,0))
+        else:
+            sc.camera.location=(9,0,.65)
+            aim=Vector((0,0,.65))
+        sc.camera.rotation_euler=(aim-sc.camera.location).to_track_quat('-Z','Y').to_euler()
+        sc.camera.data.ortho_scale=3.5
     if stage=='b':
         if i:
             sc.camera.location=[(0,-11,4.0),(10,0,4.1)][i-1]
@@ -59,6 +84,9 @@ for i,frame in enumerate(samples):
         sc.render.filepath=str(target)
         assert sc.camera is not None
         bpy.ops.render.render(write_still=True)
+    if stage=='g':
+        bpy.data.objects.remove(cut,do_unlink=True)
+        bpy.data.meshes.remove(mesh)
     frames.append({'path':target.name,'sha256':hashlib.sha256(target.read_bytes()).hexdigest()})
 report={'stage':stage,'blend_sha256':hashlib.sha256(blend.read_bytes()).hexdigest(),
         'engine':sc.render.engine,'device':device,'resolution':resolution,

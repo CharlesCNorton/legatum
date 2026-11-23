@@ -68,11 +68,12 @@ manifest. Packing verifies master/clip/render/grade hashes to reject stale outpu
 ## Motion and delivery
 
 The clips are idle 8, move 8, attack 10, hit 4, death 10 at 10/12/14/12/10 fps.
-Idle has breathing, ear, trunk and tail motion; move is an authored four-beat
-walking cycle. Attack braces and drives the head/tusks forward while the officer leans through his spine rig, then recovers.
+Idle uses sampled CC0 body/head movement with elephant ear, trunk and tail motion;
+move adapts the pinned Quaternius Walk foot trajectories to the fitted elephant.
+Contact soles stay fixed; source swing timing drives the lifted feet. Attack braces and drives the head/tusks forward while the officer leans through his spine rig, then recovers.
 Hit recoils through the head and trunk. Death folds the legs, rolls onto a side and holds its last two frames.
-The howdah and riders follow the body. No motion capture or cloth physics is
-claimed. Ground correction across all clips is authored geometry contact, not rigid-body
+The howdah and riders follow the body. These are authored CC0 quadruped source
+actions, not motion capture; no cloth physics is claimed. Ground correction across all clips is authored geometry contact, not rigid-body
 simulation. Inspect the gait, attachments and collapsed rider/howdah intersections.
 
 The v2 atlas keeps a logical 160×160 canvas and anchor `(79,138)`. All 40 frames
@@ -137,3 +138,44 @@ output; ordinary `pack` and `masters` require GPU512 provenance. The host script
 writes `gpu-logs-war-elephant-r${ROUND}.log` and `war-elephant-gpu-status.txt`;
 absence of a completed receipt does not establish a GPU pass. `video` probes the
 actual encoded file: H.264/yuv420p, 1600x348, 240 frames, eight seconds.
+
+## Driver round-two follow-up
+
+The lead's round-one GPU log completed successfully (180,552 bytes at quality
+75, all 40 frames and verified MP4). Before changing this candidate, the GPU
+comparison, all five strips, native 64 px image and decoded movie were inspected.
+The previous GPU frames and master are preserved in `driver-r2-before/`.
+
+Rest changes separate the ear from the shoulder in depth, open the trunk tip,
+shorten the tusks, reposition the far feet, and align the officer's near arm and
+fingers through their native weights. A closed bevelled wooden grip follows his
+hand. Stone grain now modulates pigment as well as the physical normal. Existing
+thick cloth, straps, bevels, generated hidden-surface fills, three-area lighting
+and frozen histogram grade remain part of the pipeline.
+
+`motion.py` verifies the existing CC0 Horse.glb hash and samples Idle, Walk,
+Idle_HitReact_Left and Death with explicit action slots and cleared unkeyed
+channels. Only motion samples survive the import, never horse geometry. Walk
+maps the source forward axis and swing trajectories to short elephant steps;
+absolute lower-segment transforms preserve sole direction and stationary
+contacts. Idle/hit use body/head displacement. Death uses the source's collapse
+height progression to drive the authored elephant fold and roll. This is a
+partial retarget, not a full skeletal transfer or elephant motion capture.
+Trunk, ears, tail, seated rider adjustments and the weapon attack are authored.
+Source details and licences are in `SOURCES.md`.
+
+The `g` stage renders every move frame from top and front, cutting the actual
+evaluated mesh above the knees to expose the feet. It writes
+`war-elephant-g-feet-check.png`; the host GPU script includes that stage and
+exports its 512/256 masters. The audit compares fully weighted sole vertices to
+the expected source-derived target displacement and rejects drift above 1e-5
+scene units. Death also checks every mesh against the stone, including ear, fringe and straps.
+The near ear folds inward during collapse. This still does not establish
+collision-free upper legs, riders or kit against one another.
+
+CPU previews use `RESOLUTION=256 SAMPLES=8` for all stages. The host command is
+still `ROUND=2 tools/art/anim3d/units/war-elephant/gpu.sh`, which renders all stages
+at GPU512, regenerates 512/256 masters, packs/validates the trimmed 160 px atlas,
+and verifies the eight-second H.264 movie. No script automatically grants PASS.
+The rest pose and revealed death surfaces remain distinguishable from the
+painting; the candidate is not ready to replace it.
