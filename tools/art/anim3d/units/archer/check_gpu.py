@@ -9,10 +9,10 @@ R=Path(os.environ.get('ANIM_ROOT',str(Path.home()/'LegatumRuns/anim-pilot')))
 M=R/'masters/archer'; REVIEW=R/'review/3d-v2'
 def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
 source=sha(M/'archer.blend')
-for stage,count in [('b',3),('c',1),('c-details',1),('d',4),('e-idle',8),('e-move',8),('e-attack',10),('e-hit',4),('e-death',10)]:
+for stage,count in [('b',3),('c',1),('c-details',1),('d',4),('e-idle',8),('e-move',8),('e-attack',10),('e-hit',4),('e-death',10),('g-feet-check',16)]:
     meta=json.loads((M/'renders'/stage/'render.json').read_text())
     assert (meta['engine'],meta['device'],meta['resolution'],meta['samples'])==('CYCLES','GPU',512,64),(stage,'not GPU512/64')
-    blend=M/'clips'/f'{stage[2:]}.blend' if stage.startswith('e-') else M/'clips/attack.blend' if stage=='d' else M/'archer.blend'
+    blend=M/'clips'/f'{stage[2:]}.blend' if stage.startswith('e-') else M/'clips/attack.blend' if stage=='d' else M/'clips/move.blend' if stage=='g-feet-check' else M/'archer.blend'
     assert meta['blend_sha256']==sha(blend),(stage,'stale blend')
     assert meta['source_sha256']==source,(stage,'stale source')
     for i in range(count):

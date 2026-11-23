@@ -24,7 +24,7 @@ for clip in idle move attack hit death; do
 done
 stage=audit
 tools/art/anim3d/render.sh audit
-for stage in b c c-details d e-idle e-move e-attack e-hit e-death; do
+for stage in b c c-details d e-idle e-move e-attack e-hit e-death g-feet-check; do
   tools/art/anim3d/render.sh "$stage"
 done
 stage=master-validation

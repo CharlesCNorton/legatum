@@ -107,12 +107,12 @@ tools/art/anim3d/render.sh audit
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
 
-## Infantry: early-era archer, round 2
+## Infantry: early-era archer, driver round 2
 
 The archer lane lives entirely in `units/archer/`, with editable sources and
 renders in `$ANIM_ROOT/masters/archer/`. The saved round-one CPU evidence is
 preserved in `round1-cpu/`. Reuses MPFB 2.0.18 CC0 anatomy and its 53-bone rig,
-licensed CMU idle/walk motion, original thick folded tunic, leather straps,
+CC0 Quaternius idle/walk/hit/death motion, original thick folded tunic, leather straps,
 bronze helmet, horsehair crest, sandals, quiver and bow. No billboards or image
 planes. All six installed Blender skills inform the implementation.
 
@@ -142,10 +142,13 @@ lift; no static foot or figure painting is projected onto it. A 17-quantile RGB
 histogram grade is fitted once at rest and held across every clip. Raw images
 are retained. Changing the master or grade invalidates the dependent clips.
 
-At 256 px the bow, arm width, cloth and leather are closer; the squared drawing
-elbow, face, crest and shoulder drape still miss the painting. At 64 px the unit
-is recognizable but distinguishable. Silhouette overlap is approximately .790,
-compared with .744 in round one; this is not an art-approval score. No PASS.
+The lead's driver-round-one GPU pass succeeded: 190,436 bytes at Q90, all
+forty 512/256 masters, valid eight-second movie. It is archived under
+`masters/archer/driver-r1-gpu/`. Driver round two rounds the elbow and refits
+the shallow cream stone with an actual rounded rim and object-space grain.
+At 256 px the face/crest, shoulder drape and exposed moving surfaces still
+miss the painting; at 64 px identity is strong but distinguishable. No PASS.
+`archer-comparison.json` records current silhouette overlap as a diagnostic.
 
 ### Build and review
 
@@ -172,11 +175,25 @@ labelled by actual source resolution. Review images are published immediately.
 A 512 px detail render is retained separately; previews never fabricate 512 px
 masters by upscaling. The five 8/8/10/4/10-frame clips retain their original FPS.
 
-Move grounds the actual finished sandal sole rather than its foot-bone origin.
-Death interpolates arm/leg poles from the rest pose to avoid an entry jump; bow
-and arrow use keyed geometry/visibility, and the final death frame is copied
-exactly. Cloth is modeled, not simulated. The drawn-bow gait remains stiff and
-large reveals still need art review; the audit is not a full collision solver.
+Open motion is now the standard for this lane: existing CC0 Quaternius
+Idle_Loop, Walk_Loop, Hit_Chest and Death01, with rest/roll-compensated Blender
+COPY_ROTATION constraints. Inputs are pinned in `retarget.py`; provenance is in
+`SOURCES.md`. The bow attack remains original. Carrying arms use the open idle
+layer, and the fall blends out of the painted guard. Global fall orientation
+and translation keep the captured motion inside the miniature's camera.
+
+Never patch foot rotations after retargeting. Move grounds evaluated sandal
+soles; small root translations regularize toe stance against virtual forward
+travel. Audit checks direction, contact and sampled stance residual. This does
+not prove every heel/toe rollover or cloth collision. Every round renders
+`g-feet-check`: front and top views of all eight move samples. The top camera's
+near clip exposes the feet below the torso. GPU provenance covers this stage.
+
+Death releases the bow, uses keyed arrow visibility and holds its final sample.
+The finished tunic and its borders are inverse-bound to pelvis/thigh weights,
+preserving rest-camera registration while knees carry the hem. Cloth is modeled,
+not simulated; shoulder/skirt reveals and the quiver-supported
+fall still need visual review. These limitations prevent an art PASS.
 
 ### Complete driver GPU pass
 
@@ -187,13 +204,13 @@ ROUND=2 tools/art/anim3d/units/archer/gpu.sh
 ```
 
 The driver supplies ROUND. The script audits saved clips; renders every plain,
-rest, detail, pose and clip stage at Cycles GPU/Metal, 512 px, 64 samples; writes
+rest, detail, pose, feet and clip stage at Cycles GPU/Metal, 512 px, 64 samples; writes
 actual 512 and 256 px masters; validates GPU provenance and current blend hashes;
 packs and validates the atlas; and exports the decoded-atlas movie. GPU absence
 fails explicitly. `gpu-round.sh` delegates to this entry point for compatibility.
 The script keeps its own transcript, failure stage/status and round-specific
-success receipt. It never writes an art PASS. Actual GPU execution remains a
-host-side check; CPU previews and missing driver logs are not GPU evidence.
+success receipt. It never writes an art PASS. The previous GPU pass is verified; current modified masters require a new
+host-side pass. CPU previews are not current GPU evidence.
 
 ### Trimmed atlas and verification
 
@@ -214,7 +231,8 @@ checks current master/clip/grade/frame hashes, dimensions, all forty samples,
 FPS/loop flags, exact reconstructed alpha, gutters, bounds, motion, held death,
 compression error, quality and bytes. The scene audit checks finished-surface
 UV registration, frozen morphs, the 53-bone rig, stationary base, nonzero scales,
-string/nock contact, walking sole contact, death-entry pose and loop closure.
+string/nock contact, walking sole contact/direction/stance speed, death-entry
+pose and loop closure.
 
 `video.py` reconstructs trimmed offsets and streams five clips side by side at
 2x on cream. FFprobe must confirm H.264/yuv420p, 1600x348, 240 frames/eight

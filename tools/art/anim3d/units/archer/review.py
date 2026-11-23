@@ -1,7 +1,7 @@
 """Native-size comparisons, fixed histogram grade and transparent clip previews."""
 import os,sys,json,hashlib
 from pathlib import Path
-from PIL import Image,ImageDraw
+from PIL import Image,ImageDraw,ImageChops
 R=Path(os.environ.get('ANIM_ROOT',str(Path.home()/'LegatumRuns/anim-pilot')));M=R/'masters/archer';review=R/'review/3d-v2';stage=sys.argv[1];folder=M/'renders'/stage
 painting=Image.open('app/src/assets/units/archer-256.png').convert('RGBA')
 def quantiles(im,c):
@@ -50,6 +50,12 @@ def panel(images,labels,name):
 if stage.startswith('e-'):
  clip=stage[2:];panel(frames,[f'{clip} {i+1}' for i in range(len(frames))],f'archer-{stage}-strip.png')
  fps={'idle':10,'move':12,'attack':14,'hit':12,'death':10}[clip];frames[0].save(review/f'archer-{stage}.webp',save_all=True,append_images=frames[1:],duration=round(1000/fps),loop=0,lossless=True)
+elif stage=='g-feet-check':
+ sheet=Image.new('RGB',(8*256,2*286),'#eee4d2');d=ImageDraw.Draw(sheet)
+ for i,im in enumerate(frames):
+  x=(i%8)*256;y=(i//8)*286
+  d.text((x+8,y+8),f'{"front" if i<8 else "top"} move {i%8+1}',fill='#3c3023');sheet.paste(im,(x,y+30),im)
+ sheet.save(review/'archer-g-feet-check.png')
 elif stage=='b':panel([painting]+frames,['painting','front - plain','three-quarter','side'],'archer-b-plain.png')
 elif stage=='d':panel(frames,['draw','full draw','release','guard'],'archer-d-rig-poses.png')
 elif stage=='c-details':
@@ -62,4 +68,8 @@ else:
  panel([painting]+frames,['painting','3D CPU' if meta['device']=='CPU' else '3D GPU'],'archer-c-textured-lit.png')
  split=painting.copy();split.paste(frames[0].crop((128,0,256,256)),(128,0));fade=Image.blend(painting,frames[0],.5)
  panel([painting,frames[0],split,fade],['painting','3D rest','half split','50 percent crossfade'],'archer-f-restpose-compare.png')
+ a=painting.getchannel('A').point(lambda x:255 if x>128 else 0)
+ b=frames[0].getchannel('A').point(lambda x:255 if x>128 else 0)
+ intersection=sum(ImageChops.multiply(a,b).histogram()[1:]);union=sum(ImageChops.lighter(a,b).histogram()[1:])
+ (review/'archer-comparison.json').write_text(json.dumps({'alpha_silhouette_iou':intersection/union,'render':meta,'limitation':'Silhouette overlap is a diagnostic, not art approval.'},indent=2))
 with (review/'archer-log.md').open('a') as f:f.write(f'- Published {stage} native 256/64 comparison; render device {meta["device"]}.\n')

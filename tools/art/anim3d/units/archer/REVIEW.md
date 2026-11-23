@@ -1,67 +1,58 @@
-# Archer — round 2
+# Archer — driver round 2
 
-Improved art candidate, not approved or connected to the game runtime. No PASS
-marker. At 256 px the recurved bow, broader drawing arm, painted cloth/leather
-and warm stone are closer to the painting. The squared elbow, face/gaze, crest
-and shoulder drape still differ; motion reveals simpler unpainted surfaces.
-At 64 px the unit is recognizable as the same archer but remains distinguishable.
-Rest alpha silhouette overlap improved from approximately .744 to .790.
+Art candidate, not approved or connected to the runtime. No PASS marker.
+At 256 px the rounded drawing elbow, shallower warm stone ellipse and textured
+rim are closer to the painting. The face/gaze, shoulder drape and crest still
+differ. At 64 px the unit reads as the same archer but remains distinguishable.
+The rest silhouette overlap is approximately .808 (prior .790); this measures
+shape, not art quality.
 
-`refine.py` finishes actual solid/beveled/subdivided geometry before `paint.py`
-freezes the painting camera UVs. It freezes MPFB macro morphs while retaining
-skin weights and the live 53-bone rig; fits the drawing-arm contour through
-inverse skin transforms; reshapes the thick crest and complete swept bow; and
-calibrates product lighting and physical stone. Camera-only projected pigment
-preserves painted illumination, with existing generated fills, native skin,
-cloth weave, AO and curvature underneath. Standard/None plus one fixed rest
-histogram grade avoids a second contrast compression. This is full-depth 3D
-geometry, not a cutout, alpha silhouette, or per-frame camera projection.
+The existing fixed camera projects the original painting onto finished, real
+3D surfaces. Generated hidden-surface fills, actual AO/curvature, beveled straps,
+thick cloth folds, product lighting and one automatic rest histogram grade
+remain. The tunic and borders now deform with pelvis/thigh weights, inverse-bound
+in the painted pose so projection registration remains exact. Cloth is modeled,
+not simulated; shoulder and underside reveals still need refinement.
 
-The original five 8/8/10/4/10-frame clips remain. Move now grounds the finished
-sandal sole instead of the foot-bone origin. Death interpolates limb poles and
-foot orientations from the rest pose, fixing its entry jump. The bow releases
-and settles; the arrow uses keyed visibility. Final death samples are identical.
-The drawn-bow walk remains stiff; cloth is modeled rather than simulated and
-the audit is not a complete collision solver.
+Feedback 23 replaces the previous partial CMU gait and authored hit/death with
+CC0 Quaternius Idle_Loop, Walk_Loop, Hit_Chest and Death01. Rest/roll-compensated
+Blender constraints transfer rotations; carrying arms layer open idle motion.
+Only the bow attack is hand-authored. There are no post-retarget foot rotation
+patches. Root corrections of at most 2.91 cm regularize sampled stance against
+virtual travel; the measured toe residual is below .002 mm. This is a sampled
+contact check, not a complete heel/toe or cloth collision solver. The front/top
+feet sheet exposes all eight samples.
 
-Round-two evidence, 2026-11-23:
+The fall blends out of the painted guard, turns diagonally, stays framed and
+holds its final sample. Its quiver-supported landing and exposed shoulders
+remain less convincing than the painting; it is not a five-clean-clips sign-off.
 
-- All 40 current Cycles CPU/12-sample frames at 256 px, transparent PNG masters,
-  all stage reviews, five animated WebPs, rest split/crossfade and decoded atlas.
-- An actual 512 px CPU detail render is retained. All prior 512/256 round-one
-  evidence is preserved in `masters/archer/round1-cpu/`; current final GPU512
-  masters are pending, not represented by upscaled previews.
-- Trimmed 160 px atlas: **894×753**, **191,284 bytes**, **quality 90**, all forty
-  samples. Premultiplied bicubic reduction, exact lossless alpha and offsets.
-  `pack.py --preview` explicitly marks this CPU256 delivery as a preview.
-- `validate.py` passes current source/clip/grade/frame hashes, clip timing,
-  reconstruction, exact alpha, gutters, margins, visible motion and held death.
-- `audit.py` passes finished-surface UV registration (<.01 token pixel), frozen
-  morphs, 53 bones, fixed base, safe scales, string/nock contact, walking sole
-  contact, death-entry continuity and exact loop closure.
-- `archer-round2.mp4` is verified H.264/yuv420p, 1600×348, 240 frames, eight
-  seconds, five decoded clips at 2x on cream. Review images were inspected.
-- Python AST checks pass for 15 files; Bash syntax passes for three scripts;
-  whitespace checks pass. Missing-input GPU preflight fails with a recorded
-  stage/status and no success receipt. GPU master validation rejects CPU images.
+The lead's preceding GPU pass succeeded: forty real 512/256 masters, 190,436-byte
+Q90 atlas, validated eight-second H.264 movie. That evidence is archived under
+`masters/archer/driver-r1-gpu/` and `review/3d-v2/archer-driver-r1-gpu/`.
+Current CPU previews supersede the gallery, not that historical GPU receipt.
+Current reports are `archer-audit.json`, `archer-foot-contact.json`,
+`archer-comparison.json`, `archer-validation.json` and `archer-video.json`.
 
-The required executable host entry point is:
+Current checks: all forty CPU256/24 frames plus a real CPU512/24 detail master;
+scene/projection/foot audit PASS; trimmed atlas **193,944 bytes, Q90,
+1217×750**, all forty 160 px samples; full decoded
+validation PASS; H.264/yuv420p 1600×348, 240 frames/eight seconds PASS.
+Python syntax (16 files), Bash syntax (3 scripts) and whitespace checks pass.
+GPU validation correctly rejects the current CPU preview.
+
+Run the complete new host pass from the repository root:
 
 ```sh
 ROUND=2 tools/art/anim3d/units/archer/gpu.sh
 ```
 
-It audits and renders every stage on Cycles Metal at GPU512/64 samples, writes
-512/256 masters, checks actual render provenance and saved blend hashes, packs
-and validates the 160 px atlas, and writes the round MP4. `gpu-round.sh` delegates
-to it. The script keeps a transcript and failure status; a success receipt still
-requires visual review and never creates PASS. Metal execution cannot be tested
-in this sandbox and remains for the lead. The browser/art gate and final art
-review remain integration gates, not evidence supplied by these pipeline checks.
+It audits, renders every stage plus feet at Cycles Metal 512/64, retains actual
+512/256 masters, validates provenance, packs the trimmed 160 px atlas at Q>=75
+and <=200,000 bytes, validates all forty frames and emits the decoded-atlas
+round movie. Success receipts never create an art PASS. The new GPU pass is
+pending; CPU checks cannot certify Metal or final art parity.
 
-Non-obvious findings: freeze static macro morphs before inverse skin fitting;
-finish real modifiers before camera UV calibration; sample actual sole geometry
-for grounding; match elbow/knee poles as well as hand/foot targets at clip entry.
-Closely overlapping crest tufts need continuous pigment coverage rather than
-independent visibility samples at their boundaries. Source-color agreement and
-silhouette overlap do not establish anatomical or animation quality.
+Non-obvious findings: project after finishing geometry; inverse-bind cloth to
+retain the painted rest; include equipment and transitional fall frames in
+clipping review; inspect feet below the torso with the top camera's near clip.

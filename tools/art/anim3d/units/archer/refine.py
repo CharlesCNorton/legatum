@@ -60,6 +60,10 @@ def refine():
                 p = screen(world)
                 elbow = math.exp(-((p.x-84)/19)**2)
                 delta = Vector((-22*elbow, -2*elbow)) * min(1,weight)
+                fitted = p + delta
+                # Round the olecranon contour instead of extruding a squared cuff.
+                edge = max(0, min(1, (78-fitted.x)/13))
+                delta.x += edge * 3.4 * min(1, ((fitted.y-80)/8)**2)
                 v.co = skin.inverted() @ rig.matrix_world.inverted() @ move(world, delta)
         # The crest is an actual thick fan. Fit both roots and tips of its tufts,
         # retaining their camera depth and bone parenting, before solidification.
@@ -78,6 +82,14 @@ def refine():
                 # Original front/back width is retained around the registered fan.
                 target.x += .8 if v.index in (1,2) else -.8
                 v.co = inv@move(world,target-screen(world))
+        # Match the shallow painted stone ellipse while preserving a level top.
+        if obj.name == 'GEO-Stationary cream base':
+            obj.scale.x *= .98
+            obj.scale.y *= .80
+            obj.location.x += .035
+            for v in obj.data.vertices:
+                if v.co.z < 0:
+                    v.co.z -= .025
         # Apply the real solid/beveled surface before camera UVs are sampled.
         for mod in list(obj.modifiers):
             if mod.type == 'ARMATURE':
@@ -92,6 +104,29 @@ def refine():
         for m in arms:
             m.show_viewport = m.show_render = True
         records.append({'object': obj.name, 'vertices': len(obj.data.vertices)})
+    # Skin the finished tunic and its two borders to the pelvis and thighs.
+    # Bind through the inverse current skin matrix so the painted rest silhouette
+    # stays exact while lifted knees carry the hem rather than passing through it.
+    for obj in list(sc.objects):
+        if not obj.name.startswith(('GEO-Pleated ivory tunic','GEO-Indigo woven hem')):
+            continue
+        positions=[obj.matrix_world@v.co for v in obj.data.vertices]
+        obj.parent=rig;obj.parent_type='OBJECT';obj.matrix_parent_inverse=Matrix.Identity(4)
+        obj.matrix_world=rig.matrix_world.copy()
+        transforms={name:rig.pose.bones[name].matrix@rig.data.bones[name].matrix_local.inverted()
+                    for name in ['pelvis','thigh_l','thigh_r']}
+        groups={name:obj.vertex_groups.new(name=name) for name in transforms}
+        for v,world in zip(obj.data.vertices,positions):
+            hem=max(0,min(1,(1.145-world.z)/.34))
+            follow=.55*hem**1.5
+            left=max(0,min(1,.5+world.x/.40))
+            weights={'pelvis':1-follow,'thigh_l':follow*left,'thigh_r':follow*(1-left)}
+            skin=Matrix(((0,0,0,0),)*4)
+            for name,w in weights.items():
+                skin+=transforms[name]*w
+                groups[name].add([v.index],w,'REPLACE')
+            v.co=skin.inverted()@rig.matrix_world.inverted()@world
+        arm=obj.modifiers.new('Tunic follows captured thigh motion','ARMATURE');arm.object=rig
     bpy.context.view_layer.update()
     # Recurve the two real bow limbs using measured token centerline landmarks.
     # All original camera depths remain; flex and string endpoints are keyed later.
@@ -135,13 +170,24 @@ def refine():
     for name, rgb in [('MAT-cream-E9CFA0',(.72,.55,.36)),('MAT-cream-rim',(.63,.43,.25))]:
         m = bpy.data.materials[name]
         s = m.node_tree.nodes.get('Principled BSDF')
-        rgb = (.80,.65,.47) if name=='MAT-cream-E9CFA0' else (.70,.49,.30)
+        rgb = (.80,.65,.47) if name=='MAT-cream-E9CFA0' else (.78,.59,.40)
         s.inputs['Base Color'].default_value = (*rgb,1)
         n=m.node_tree.nodes;l=m.node_tree.links;output=n.get('Material Output')
         physical=output.inputs['Surface'].links[0].from_socket
         pigment=n.new('ShaderNodeBsdfPrincipled');pigment.inputs['Base Color'].default_value=(0,0,0,1)
         pigment.inputs['Specular IOR Level'].default_value=0
         pigment.inputs['Emission Color'].default_value=(*rgb,1);pigment.inputs['Emission Strength'].default_value=1
+        # Object-space limestone grain survives on the rounded edge and front rim.
+        tc=n.new('ShaderNodeTexCoord');noise=n.new('ShaderNodeTexNoise')
+        noise.inputs['Scale'].default_value=125;noise.inputs['Detail'].default_value=3
+        l.new(tc.outputs['Object'],noise.inputs['Vector'])
+        grain=n.new('ShaderNodeValToRGB')
+        grain.color_ramp.elements[0].position=.2;grain.color_ramp.elements[0].color=(*[v*.76 for v in rgb],1)
+        grain.color_ramp.elements[1].position=.8;grain.color_ramp.elements[1].color=(*[min(1,v*1.08) for v in rgb],1)
+        l.new(noise.outputs['Fac'],grain.inputs[0])
+        l.new(grain.outputs['Color'],s.inputs['Base Color']);l.new(grain.outputs['Color'],pigment.inputs['Emission Color'])
+        bump=n.new('ShaderNodeBump');bump.inputs['Strength'].default_value=.24;bump.inputs['Distance'].default_value=.002
+        l.new(noise.outputs['Fac'],bump.inputs['Height']);l.new(bump.outputs[0],s.inputs['Normal'])
         ray=n.new('ShaderNodeLightPath');weight=n.new('ShaderNodeMath');weight.operation='MULTIPLY'
         weight.inputs[1].default_value=.62;l.new(ray.outputs['Is Camera Ray'],weight.inputs[0])
         mix=n.new('ShaderNodeMixShader');l.new(weight.outputs[0],mix.inputs[0]);l.new(physical,mix.inputs[1]);l.new(pigment.outputs[0],mix.inputs[2]);l.new(mix.outputs[0],output.inputs['Surface'])
