@@ -106,3 +106,73 @@ tools/art/anim3d/render.sh audit
 ```
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
+
+## Infantry / arquebusier round 1
+
+This unit uses `tools/art/anim3d/units/arquebusier/` and external
+`$ANIM_ROOT/masters/arquebusier/`. It retains MPFB 2.0.18 anatomy and its 53-bone
+`game_engine` rig, with original slashed doublet, puffed breeches, stockings,
+latchet shoes, a swept-brim morion, ten brass-collared powder flasks and a matchlock.
+The cloth is modeled with longitudinal folds and thickness; hard kit has rounded
+edges, separate brass fittings and a real raised helmet comb. No relief planes
+or primitive replacement anatomy are used. The five clips are authored rig keys.
+
+The standard quality method is (1) frozen rest-camera projection of the original
+painting onto actual mesh UVs, blended with facing and source alpha, with generated
+painted fills for hidden surfaces; (2) real thickness, folds, bevels and fittings;
+(3) warm upper-left product key, soft fill, cooler rim and contact shadows; and
+(4) a bounded grade measured from source/render opaque-pixel statistics. The grade
+is fixed from the rest frame for every clip, avoiding per-frame colour pumping.
+Projection contains painted illumination and cannot repair a mismatched silhouette.
+Compare painting/render/50-percent crossfade at 256 and 64 px in
+`arquebusier-f-restpose-compare.png`; the target remains near-indistinguishability.
+
+The base target is lit sRGB **#E9CFA0**, with a darker warm rim. The unit's shared
+stone material is `MAT-cream limestone E9CFA0` (linear pigment `.95,.70,.32` under
+its AgX setup); compare the rendered pixels, not the shader triplet. `bake.py`
+produces six actual 256 px Cycles AO/Pointiness maps for doublet, helmet and stock,
+retaining the maps in the master and external textures folder. The six installed
+Blender skills govern anatomy/geometry, Principled materials, lighting, camera,
+editable keys and render verification. No optional absent calibration skill is needed.
+
+Run sequentially from the repository root:
+
+```sh
+tools/art/anim3d/units/arquebusier/render.sh build
+tools/art/anim3d/units/arquebusier/render.sh bake
+tools/art/anim3d/units/arquebusier/render.sh c
+tools/art/anim3d/units/arquebusier/render.sh animate
+tools/art/anim3d/units/arquebusier/render.sh preview
+tools/art/anim3d/units/arquebusier/render.sh pack
+```
+
+Every Blender invocation is plain `blender -b --disable-autoexec`, using the PATH
+machine gate. CPU previews use Cycles; never bypass the gate or invoke an app binary.
+No effect is scaled to zero: muzzle flash and smoke have actual geometry and keyed
+render visibility. The single lead-side GPU command is:
+
+```sh
+ROUND=1 tools/art/anim3d/units/arquebusier/gpu.sh
+```
+
+It requires a Metal Cycles device, renders all stages at 512 px, retains graded
+512 and 256 sets, regenerates reviews/strips/WebPs and the rest comparison, packs
+and validates the atlas, then writes `arquebusier-round${ROUND}.mp4`: five clips,
+2x scale on cream, eight seconds, H.264 yuv420p. GPU device absence fails explicitly.
+CPU renders are labeled in manifests; a technical validation is not art approval.
+
+### Arquebusier trimmed atlas format (version 2)
+
+The atlas has five logical rows in idle/move/attack/hit/death order. Cells before
+trimming are 160 x 160; all 8/8/10/4/10 frames remain. `frame` records `w,h,ax,ay`.
+Each clip retains `row,frames,fps,loop` and adds `rects`, one per frame:
+`{x,y,w,h,ox,oy}`. `x,y,w,h` address the stored trimmed rectangle; `ox,oy` place it
+back in its original 160 px cell. Draw its destination at
+`anchor - (ax,ay) + (ox,oy)` times the display scale. Rows have variable physical
+heights, so consumers must use rectangles, never infer pixels from `row*160`.
+The existing game runtime is unchanged; it must support version 2 before activation.
+Packing keeps lossless 8-bit alpha, chooses RGB quality 90/85/80/75 and refuses
+anything over 200,000 bytes. No frame removal or lower quality fallback is allowed.
+Validation checks source hashes, counts, offsets, alpha, cell margins, motion,
+terminal death hold and size/quality. Masters are never committed. Only write a
+PASS marker after visual comparison and clean motion establish the full art bar.
