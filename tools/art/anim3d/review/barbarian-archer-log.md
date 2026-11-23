@@ -95,3 +95,18 @@ Round 2 final visual critique: 256px painted cloth/belts and face registration a
 Round 2 checks: CPU256 Cycles8 all40 frames; saved-scene rig/finished-surface/string/nock/base/scale audit passes. Atlas191798 bytes Q90, 160px trimmed offsets, exact decoded alpha, current source/render/grade hashes and held death pass. Four corruption tests pass. MP4 verified H264/yuv420p 1600x348 240frames 8s. SilhouetteIoU .6873 -> .7588, not art approval.
 GPU handoff executable now logs stages, requires Metal, rebuilds clips, renders GPU512/64 every stage, exports512/256, validates and writes round${ROUND}.mp4. Missing-input preflight/logging tested. A sandbox GPU capability probe remained queued at the shared gate and was cancelled; no GPU execution claimed. PriorCPU512 masters retained under round1-cpu.
 Final round2 checks: all13 Python files compile, both shell scripts pass bash -n, gpu.sh is executable, git diff --check passes, and HEAD contains origin/master (0 incoming commits). CPU masters are correctly rejected when GPU provenance is requested. Git add/commit blocked: .git/worktrees/lane-23/index.lock Operation not permitted. Runner must commit with required gpt-6-astra Co-Authored-By trailer. No push/PR/merge; no PASS file.
+Authored idle: 8 frames at 10 fps; dynamic bow/string, grip and stationary base checked, loop closure keyed.
+Authored move: 8 frames at 12 fps; dynamic bow/string, grip and stationary base checked, loop closure keyed.
+Authored attack: 10 frames at 14 fps; dynamic bow/string, grip and stationary base checked, terminal keys retained.
+Authored hit: 4 frames at 12 fps; dynamic bow/string, grip and stationary base checked, terminal keys retained.
+Authored death: 10 frames at 10 fps; dynamic bow/string, grip and stationary base checked, terminal keys retained.
+Rendered b: 512px, Cycles GPU, 64 samples; raw frames preserved.
+Published b review immediately; GPU preview, not art approval.
+Rendered c: 512px, Cycles GPU, 64 samples; raw frames preserved.
+Published c review immediately; GPU preview, not art approval.
+Rendered d: 512px, Cycles GPU, 64 samples; raw frames preserved.
+Published d review immediately; GPU preview, not art approval.
+Rendered e-idle: 512px, Cycles GPU, 64 samples; raw frames preserved.
+Published e-idle review immediately; GPU preview, not art approval.
+Rendered e-move: 512px, Cycles GPU, 64 samples; raw frames preserved.
+Published e-move review immediately; GPU preview, not art approval.
