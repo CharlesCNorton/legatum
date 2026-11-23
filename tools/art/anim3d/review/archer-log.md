@@ -139,3 +139,12 @@
 - Required executable gpu.sh added: all GPU512/64 stages, gallery256, provenance checks, packing/validation and trimmed-atlas MP4. Missing-input preflight and CPU-master rejection PASS. Actual Metal execution is unavailable in sandbox.
 - MP4 PASS: H.264/yuv420p, 1600x348, 240 frames, 8 seconds; five clips at2x on cream. Python syntax15, Bash syntax3 and whitespace checks PASS. No unit-specific feedback file appeared.
 - Commit attempted and blocked: sandbox cannot create .git/worktrees/lane-10/index.lock. Changes left for runner to commit with requested co-author trailer. origin/master is already an ancestor of HEAD; no merge needed.
+- Geometry audit passed: anatomy, fixed base, nonzero scales, bow/nock contact and loop closure.
+- Rendered b: 512px CYCLES GPU, 64 samples.
+- Published b native 256/64 comparison; render device GPU.
+- Rendered c: 512px CYCLES GPU, 64 samples.
+- Published c native 256/64 comparison; render device GPU.
+- Rendered c-details: 512px CYCLES GPU, 64 samples.
+- Published c-details native 256/64 comparison; render device GPU.
+- Rendered d: 512px CYCLES GPU, 64 samples.
+- Published d native 256/64 comparison; render device GPU.
