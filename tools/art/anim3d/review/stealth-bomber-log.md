@@ -22,3 +22,7 @@ e-move: 8 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
 e-attack: 10 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
 e-hit: 4 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
 e-death: 10 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+Round 1 final CPU checkpoint: all 64 stage frames rendered at actual 512 px / 12 samples, with verified 512/256 derivatives. Trimmed atlas 194,946 bytes Q95, all 40 clip frames; alpha reconstruction, gutters, clipping, hashes and terminal death hold pass.
+Independent Blender geometry/rig audit passes all five clips: closed principal volumes, stationary base, loop closure, real motion and terminal wreck/base contact. Five delivery regression tests pass; H.264/yuv420p MP4 verified 1600x348, 240 frames, 8 seconds. Decoded video sample and full clip sheets inspected.
+Visual verdict: same unit at 64 px; close rest silhouette/detail at 256 px but softer canopy/intakes, slightly pink support, too-uniform stone and restrained crash. Rest alpha IoU .96135 / overlap RGB MAE 6.47 are measurements, not approval. No PASS. GPU96 pass remains lead-side via units/stealth-bomber/gpu.sh.
+Commit attempt blocked: git could not create .git/worktrees/lane-1/index.lock (Operation not permitted). Changes left uncommitted for runner; requested commit message: Add stealth bomber round-one 3D animation candidate; trailer Co-Authored-By: gpt-6-astra (Codex) <noreply@openai.com>. No push or PR.
