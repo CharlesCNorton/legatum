@@ -110,3 +110,10 @@ Rendered e-idle: 512px, Cycles GPU, 64 samples; raw frames preserved.
 Published e-idle review immediately; GPU preview, not art approval.
 Rendered e-move: 512px, Cycles GPU, 64 samples; raw frames preserved.
 Published e-move review immediately; GPU preview, not art approval.
+Rendered e-attack: 512px, Cycles GPU, 64 samples; raw frames preserved.
+Published e-attack review immediately; GPU preview, not art approval.
+Rendered e-hit: 512px, Cycles GPU, 64 samples; raw frames preserved.
+Published e-hit review immediately; GPU preview, not art approval.
+Rendered e-death: 512px, Cycles GPU, 64 samples; raw frames preserved.
+Published e-death review immediately; GPU preview, not art approval.
+Packed 40 frames at 160px, trimmed offsets, quality 90, 192166 bytes.
