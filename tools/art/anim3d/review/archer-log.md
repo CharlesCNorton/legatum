@@ -158,3 +158,8 @@
 - Published e-hit native 256/64 comparison; render device GPU.
 - Rendered e-death: 512px CYCLES GPU, 64 samples.
 - Published e-death native 256/64 comparison; render device GPU.
+
+# Driver round 2 after verified GPU round 1 (2026-11-23)
+- Opened GPU c, f, all five e strips and decoded round1 MP4 frame before editing. GPU transcript completed: forty 512px/64-sample frames, 190436-byte Q90 atlas, valid eight-second H.264 movie. No operational GPU failure.
+- Honest critique: at 256px painted chest/skirt/helmet detail is close, but squared elbow, narrow shoulder drape, slightly displaced face/crest and featureless smooth stone remain conspicuous; lower bow silhouette also differs. Move has a rigid drawn-bow torso and unnatural feet; death reveals abrupt skin/cloth transitions. At 64px identity is strong but base, stance and crest still distinguish it from the painting. Not PASS.
+- Read full local PLAYBOOK, all shared feedback 1–23 and prior archer log; archer-FEEDBACK.md absent. Loaded all six Blender skills: modeling for rounded elbow/finished surfaces, materials for stone grain and hidden painted fills, cameras for fixed viewpoint registration, lighting for warm key/contact, animation for open motion/rest-roll mapping, rendering for sequential CPU checks and GPU masters. Prior generated fills and actual AO/curvature bakes are retained.

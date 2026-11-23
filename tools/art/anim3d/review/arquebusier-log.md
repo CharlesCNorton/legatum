@@ -137,3 +137,11 @@
 - Final visual verdict: substantial surface improvement at 256 px; slashed cloth, powder charges and face retain painted brushwork. Still distinguishable: morion comb/brim, gunstock contour/finish, right ankle/shoe fit, revealed sleeve seams, firing shoulder presentation and fall mechanics. At 64 px the unit reads clearly and the silhouette is closer (IoU .79431 vs .68681), but it is not the same token. No PASS marker.
 - Required lead run: ROUND=2 tools/art/anim3d/units/arquebusier/gpu.sh. Native GPU512 masters and fresh GPU visual review remain pending; CPU output is not GPU evidence.
 - Commit attempted with the required Co-Authored-By trailer; sandbox denied .git/worktrees/lane-10/index.lock. Changes remain uncommitted for the runner; no push or PR.
+- Authored and saved idle action (8 output frames).
+- Authored and saved move action (8 output frames).
+- Authored and saved attack action (10 output frames).
+- Authored and saved hit action (4 output frames).
+- Authored and saved death action (10 output frames).
+- Posted b-plain review (GPU, 512 px).
+- Posted c-textured-lit review (GPU, 512 px).
+- Posted d-rig-poses review (GPU, 512 px).
