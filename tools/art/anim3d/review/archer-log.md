@@ -281,3 +281,7 @@
 - Opened GPU c/f and all five e strips, decoded round2 MP4 frames at 0.4/1.53/2.63 seconds before edits. Lead GPU succeeded: all40 masters, 191376 bytes Q90, H264/yuv420p eight seconds. Evidence preserved under driver-r2-gpu.
 - Honest critique at256: rich painted chest and skirt but sleeves are narrow rigid caps, face silhouette/gaze differs, crest tips are serrated, base is too dark/uniform, exposed death shoulders have sharp pigment boundaries, and feet point upward on a quiver-supported fall. At64 same archer identity but base/stance/crest differ. No PASS.
 - Read all PLAYBOOK chapters, entire log and shared feedback1-23; archer-FEEDBACK.md absent. Loaded all six Blender skills: modeling for full-depth shoulder folds and rounded edges, materials for generated unseen fills and transition blending, cameras for frozen source viewpoint, lighting for live contact/product lights, animation for retained Quaternius motion and death support, rendering for sequential CPU review and GPU provenance.
+- Finished static solid/bevel/subdivision geometry before projection; froze MPFB macro mix with native skin weights; fitted drawing-arm contour and complete recurved bow in the fixed rest camera.
+- Projected painting onto finished surfaces with occlusion/facing masks and camera-only pigment; original generated fills, real AO/curvature and physical lighting remain.
+- Rendered c: 256px CYCLES CPU, 12 samples.
+- Published c native 256/64 comparison; render device CPU.
