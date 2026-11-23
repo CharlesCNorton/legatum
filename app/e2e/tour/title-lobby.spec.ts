@@ -37,13 +37,13 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await expect(page.getByRole('heading', { name: 'Single Player', exact: true })).toBeVisible();
     await shot(page, size, '03-lobby');
     // The all-AI control offers Easy, Normal and Hard only (Training is a research tool, 2026-11-21),
-    // then the seat list with the level name closed in every seat (nothing clipped).
-    const levels = page.getByRole('radiogroup', { name: 'AI level (all AI empires)', exact: true });
+    // The one level applies to every AI seat.
+    const levels = page.getByRole('radiogroup', { name: 'AI level', exact: true });
     await expect(levels.getByRole('radio')).toHaveCount(3);
     await levels.scrollIntoViewIfNeeded();
     await page.mouse.move(5, size.height / 2);
     await shot(page, size, '03d-lobby-levels');
-    await page.getByRole('combobox', { name: 'Seat 2 AI level', exact: true }).scrollIntoViewIfNeeded();
+    await page.getByRole('table', { name: 'Seats' }).scrollIntoViewIfNeeded();
     await page.mouse.move(5, size.height / 2);
     await shot(page, size, '03e-lobby-seat-list');
     await page.getByRole('button', { name: /^Seat 1 faction:/ }).click();
@@ -110,6 +110,12 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await expect(page.getByTestId('turn-number')).toHaveText('1', { timeout: 60_000 });
     await expect(page.locator('.loading-screen')).toHaveCount(0);
     await shot(page, size, '05d-six-empires-first-turn');
+    await page.getByRole('button', { name: 'Menu', exact: true }).click();
+    await shot(page, size, '05e-game-menu');
+    await page.getByRole('button', { name: 'Settings', exact: true }).click();
+    await expect(page.getByRole('dialog', { name: 'Settings', exact: true })).toBeVisible();
+    await shot(page, size, '05f-game-settings');
+    await page.getByRole('button', { name: 'Close settings' }).click();
   });
 
 
