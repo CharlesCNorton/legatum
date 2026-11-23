@@ -172,7 +172,8 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
 
     // A routine first turn has no founding celebration, but its report remains available.
     await page.getByRole('button', { name: 'Menu', exact: true }).click();
-    await page.getByRole('button', { name: 'Turn report (L)', exact: true }).click();
+    await page.keyboard.press('Escape');
+  await page.keyboard.press('l');
     await expect(page.getByRole('complementary', { name: 'Turn report' })).toBeVisible();
     await shot(page, size, '09-turn-report');
     await closeReportIfOpen(page);
@@ -235,7 +236,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await page.getByRole('region', { name: 'Victory race', exact: true }).getByRole('button', { name: 'Score ledger', exact: true }).click();
     await expect(page.getByTestId('objective-sheet')).toBeVisible();
     await shot(page, size, '13-vp-race');
-    await page.getByRole('button', { name: 'Close objectives', exact: true }).click();
+    await page.getByRole('button', { name: 'Close score ledger', exact: true }).click();
     await expect(page.getByTestId('objective-sheet')).toHaveCount(0);
 
     // The game menu (in-game settings live here).
