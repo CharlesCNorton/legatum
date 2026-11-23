@@ -8,3 +8,4 @@
 - Posted field-cannon-c-details.png; actual CYCLES render, visual review pending.
 - Applied live reviewer feedback: flat iron tyres, folded sleeves, darker bronze pigment, surface-fitted moustache and eyebrows, warm painted skin, leaning torso, warmer cream base. Rebuilding queued at the machine-wide gate.
 - Posted field-cannon-d-rig-poses.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-idle-strip.png; actual CYCLES render, visual review pending.
