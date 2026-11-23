@@ -96,3 +96,37 @@
 - Posted e-death review (CPU, 256 px).
 - Authored and saved death action (10 output frames).
 - Posted e-death review (CPU, 256 px).
+- Finished-surface camera projection with camera-only pigment; generated hidden fills retained.
+- Posted b-plain review (CPU, 256 px).
+- Posted c-textured-lit review (CPU, 256 px).
+- Authored and saved idle action (8 output frames).
+- Authored and saved move action (8 output frames).
+- Authored and saved attack action (10 output frames).
+- Authored and saved hit action (4 output frames).
+- Authored and saved death action (10 output frames).
+- Posted d-rig-poses review (CPU, 256 px).
+- Posted e-idle review (CPU, 256 px).
+- Replaced double-lit projected albedo with camera-only painted illumination, preserving physical materials on other rays and original generated fills on unseen surfaces. Standard display and one bounded monotone RGB quantile grade preserve the painting brushwork.
+- Fitted full-depth helmet/brim, neckline, sleeves, stockings, shoes and stock; moved the stationary round stone back to the source ellipse and calibrated warm pigment plus live contact AO. Converted solid curve details and applied rigid bevel/thickness before UVs; sampled long faces internally for visibility.
+- Rest preview visibly improved cloth/powder/face detail. Initial shoe/helmet fitting trials and dark stone were rejected; revised silhouette and stone appeared immediately in the stage reviews. Repaired archived relative image paths and packed images into editable masters.
+- Reworked firing as one rigid gun transform with both arm targets, bounded volumetric smoke and a folded-leg fall settled against evaluated ground/disc geometry. Two death framing failures were caught by the raster margin gate and fixed by physical placement; no frame count or alpha-quality reduction.
+- Strengthened delivery with premultiplied bicubic reduction, shared rectangles for identical frames, independent per-frame alpha reconstruction, frame/grade/master hashes and exact decoded death hold. All 40 frames preserved; q75 remains the floor.
+- Geometry audit caught an applied MPFB helper mask reducing native vertices; retained the live helper mask and all original 19,158 vertices/weights, then regenerated dependent output.
+- GPU script executable, no arguments, default round 2, Cycles GPU512/64, complete stage renders and gallery masters, geometry/provenance checks, trimmed pack/validation and decoded five-clip MP4. Direct transcript, failure-stage status and technical receipt added; missing-input and CPU-master rejection tests pass. Metal execution is not available in this sandbox.
+- Posted e-move review (CPU, 256 px).
+- Posted e-attack review (CPU, 256 px).
+- Posted e-hit review (CPU, 256 px).
+- Posted e-death review (CPU, 256 px).
+- Finished-surface camera projection with camera-only pigment; generated hidden fills retained.
+- Posted c-textured-lit review (CPU, 256 px).
+- Authored and saved idle action (8 output frames).
+- Authored and saved move action (8 output frames).
+- Authored and saved attack action (10 output frames).
+- Authored and saved hit action (4 output frames).
+- Authored and saved death action (10 output frames).
+- Posted d-rig-poses review (CPU, 256 px).
+- Posted e-idle review (CPU, 256 px).
+- Posted e-move review (CPU, 256 px).
+- Posted e-attack review (CPU, 256 px).
+- Posted e-hit review (CPU, 256 px).
+- Posted e-death review (CPU, 256 px).

@@ -71,3 +71,19 @@ Published e-death review: CPU 256 px, 8 samples; fixed rest-derived grade.
 Packed 40 trimmed 160 px frames, WebP quality 85, 197932 bytes.
 Published five-clip, 2x, cream-background H.264 review: barbarian-scout-round2.mp4
 Published c review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Published b-plain geometry checkpoint.
+Published c review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Published d review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Published e-idle review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Published e-move review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Published e-attack review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Published e-hit review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Published e-death review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Packed 40 trimmed 160 px frames, WebP quality 80, 172840 bytes.
+Final projection iteration: ray visibility plus source-specific axe/right-hand masks remove ghost equipment and fingers from underlying cloth; raised hand cannot sample the face. Revealed buried axe moved 85mm toward camera; saluting hand anatomy and finger bones reduced together. Exposed skin/linen fallback seams are now visible rather than hidden by duplicated paint.
+Final visual critique at 256 px: face and broad pose registration improved, but painting remains substantially richer; hand-to-brow anatomy, right-hand/waist cloth joins, hair/fur fallback, knee/boot contact and flat stone pigment remain wrong. At 64 px the lookout/fur/horn/red-scarf identity reads, but this is distinguishable from the painting. Attack and crouched shuffle are restrained/stiff; death exposes obvious paint/fill seams and still needs choreography. No PASS.
+Published five-clip, 2x, cream-background H.264 review: barbarian-scout-round2.mp4
+Final round-two CPU delivery: all 40 native256 / Cycles CPU8 frames; trimmed160 atlas 172840 bytes Q80. Full atlas validation and exact decoded alpha checks pass; 3 regression tests, 10 Python parses, 3 Bash syntax checks, whitespace and Blender rig/grip/loop/death audit pass. MP4 verified 1600x348 H.264 yuv420p, 240 frames, 8.000 seconds; reviewed decoded contact sheet.
+Actual gpu.sh invocation correctly exits 1 at gpu-device because Metal is unavailable in this sandbox, before touching source masters. Missing-input failure also recorded correctly. Host GPU512/256 rendering remains unverified; command ROUND=2 tools/art/anim3d/units/barbarian-scout/gpu.sh from scout checkout. No PASS written.
+Archived final CPU evidence in masters/barbarian-scout/round2-cpu. Supplied origin/master a099781d is already an ancestor; no merge or engine tests required for these art-only changes.
+Committed round 2 as becb4bf3 on astra/unit-anim-3d-barbarian-scout in .worktrees/barbarian-scout-round2; worktree clean, gpu.sh mode100755. No push, PR, merge into master or visual PASS.
