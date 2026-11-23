@@ -2884,7 +2884,9 @@ impl Planner<'_> {
         } else {
             None
         };
-        let routine = door.or_else(|| self.choose_item_inner(ci, c, tally));
+        let routine = door
+            .or_else(|| self.rome_opening_build(c))
+            .or_else(|| self.choose_item_inner(ci, c, tally));
         let chosen = if door.is_some() {
             door
         } else {
