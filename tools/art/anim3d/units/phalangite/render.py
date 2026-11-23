@@ -6,7 +6,9 @@ stage=sys.argv[sys.argv.index('--')+1];resolution=int(os.environ.get('RESOLUTION
 stages=['b','c','d','e-idle','e-move','e-attack','e-hit','e-death'] if stage=='all' else [stage]
 for stage in stages:
     clip=stage[2:] if stage.startswith('e-') else 'attack' if stage=='d' else None
-    path=M/'clips'/f'{clip}.blend' if clip else M/('plain.blend' if stage=='b' else 'phalangite.blend')
+    plain=M/'fitted-plain.blend'
+    if not plain.exists() or plain.stat().st_mtime<(M/'plain.blend').stat().st_mtime:plain=M/'plain.blend'
+    path=M/'clips'/f'{clip}.blend' if clip else plain if stage=='b' else M/'phalangite.blend'
     bpy.ops.wm.open_mainfile(filepath=str(path));sc=bpy.context.scene
     assert sc.camera is not None
     if clip:assert sc["source_sha256"]==hashlib.sha256((M/"phalangite.blend").read_bytes()).hexdigest(),"Rebuild stale clips"

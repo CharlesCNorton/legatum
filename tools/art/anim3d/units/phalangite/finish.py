@@ -1,10 +1,14 @@
 """Paint the real rest-pose meshes; retain thickness, weights and back materials."""
-import bpy,os,json,math
+import bpy,os,json,math,sys
 from pathlib import Path
 from mathutils import Vector
 from bpy_extras.object_utils import world_to_camera_view
 R=Path(os.environ['ANIM_ROOT']);M=R/'masters/phalangite';A=R/'assets/phalangite'
 bpy.ops.wm.open_mainfile(filepath=str(M/'plain.blend'));sc=bpy.context.scene
+sys.path.insert(0,str(Path(__file__).parent))
+from refine import refine
+refine(sc)
+bpy.ops.wm.save_as_mainfile(filepath=str(M/'fitted-plain.blend'))
 # Scan-scale grain on every surface, generated original project linen/bronze on unseen faces.
 for mat in list(bpy.data.materials):
     if not mat.use_nodes:continue
@@ -58,7 +62,7 @@ for ob in list(sc.objects):
     bpy.context.view_layer.update();ev=ob.evaluated_get(bpy.context.evaluated_depsgraph_get());me=ev.to_mesh();assert len(me.vertices)==len(ob.data.vertices),ob.name
     coords=[];inc=[]
     for v in me.vertices:
-        world=ev.matrix_world@v.co;q=world_to_camera_view(sc,sc.camera,world);coords.append((q.x,q.y));normal=(ev.matrix_world.to_3x3().inverted().transposed()@v.normal).normalized();inc.append(max(0,min(1,(normal.dot(view)-.05)/.5)))
+        world=ev.matrix_world@v.co;q=world_to_camera_view(sc,sc.camera,world);coords.append((q.x,q.y));normal=(ev.matrix_world.to_3x3().inverted().transposed()@v.normal).normalized();facing=abs(normal.dot(view)) if 'shield' in ob.name else normal.dot(view);inc.append(max(0,min(1,(facing-.02)/.35)))
     ev.to_mesh_clear()
     for mod,state in states:mod.show_viewport=state
     uv=ob.data.uv_layers.new(name='Painting frozen rest');att=ob.data.color_attributes.new(name='Painting confidence',type='FLOAT_COLOR',domain='CORNER')
@@ -67,11 +71,44 @@ for ob in list(sc.objects):
         mat=oldmat.copy();mat.name=ob.name+' painted';ob.data.materials[idx]=mat;n=mat.node_tree.nodes;l=mat.node_tree.links;s=n.get('Principled BSDF')
         if s is None:continue
         uvnode=n.new('ShaderNodeUVMap');uvnode.uv_map=uv.name;tex=n.new('ShaderNodeTexImage');tex.image=painting;tex.extension='CLIP';l.new(uvnode.outputs[0],tex.inputs['Vector']);a=n.new('ShaderNodeVertexColor');a.layer_name=att.name
-        mul=n.new('ShaderNodeMath');mul.operation='MULTIPLY';l.new(a.outputs[0],mul.inputs[0]);l.new(tex.outputs['Alpha'],mul.inputs[1]);strength=n.new('ShaderNodeMath');strength.operation='MULTIPLY';strength.inputs[1].default_value=.88;l.new(mul.outputs[0],strength.inputs[0]);mix=n.new('ShaderNodeMixRGB');l.new(strength.outputs[0],mix.inputs[0])
-        if s.inputs['Base Color'].is_linked:l.new(s.inputs['Base Color'].links[0].from_socket,mix.inputs[1])
-        else:mix.inputs[1].default_value=s.inputs['Base Color'].default_value
-        l.new(tex.outputs['Color'],mix.inputs[2]);l.new(mix.outputs[0],s.inputs['Base Color']);l.new(mix.outputs[0],s.inputs['Emission Color']);s.inputs['Emission Strength'].default_value=.22
+        mul=n.new('ShaderNodeMath');mul.operation='MULTIPLY';l.new(a.outputs[0],mul.inputs[0]);l.new(tex.outputs['Alpha'],mul.inputs[1]);strength=n.new('ShaderNodeMath');strength.operation='MULTIPLY';strength.inputs[1].default_value=.97;l.new(mul.outputs[0],strength.inputs[0])
+        # The painted shaft must not remain stuck to the chest when the real
+        # continuous 3D sarissa moves. This source-space exclusion changes only
+        # paint confidence; real geometry and mesh opacity remain untouched.
+        if any(k in ob.name for k in ['linothorax','pteruges','belt','shoulder-flap']):
+            sep=n.new('ShaderNodeSeparateXYZ');l.new(uvnode.outputs[0],sep.inputs[0])
+            xx=n.new('ShaderNodeMath');xx.operation='MULTIPLY';xx.inputs[1].default_value=256*.73913;l.new(sep.outputs['X'],xx.inputs[0])
+            yy=n.new('ShaderNodeMath');yy.operation='MULTIPLY';yy.inputs[1].default_value=-256;l.new(sep.outputs['Y'],yy.inputs[0])
+            add=n.new('ShaderNodeMath');add.operation='ADD';l.new(xx.outputs[0],add.inputs[0]);l.new(yy.outputs[0],add.inputs[1])
+            bias=n.new('ShaderNodeMath');bias.operation='ADD';bias.inputs[1].default_value=256-193.065;l.new(add.outputs[0],bias.inputs[0])
+            absolute=n.new('ShaderNodeMath');absolute.operation='ABSOLUTE';l.new(bias.outputs[0],absolute.inputs[0])
+            outside=n.new('ShaderNodeMath');outside.operation='GREATER_THAN';outside.inputs[1].default_value=1.6;l.new(absolute.outputs[0],outside.inputs[0])
+            clean=n.new('ShaderNodeMath');clean.operation='MULTIPLY';l.new(mul.outputs[0],clean.inputs[0]);l.new(outside.outputs[0],clean.inputs[1]);l.new(clean.outputs[0],strength.inputs[0])
+        # Preserve painted illumination for camera rays without emitting it into
+        # the scene or applying the product lights a second time.
+        pigment=n.new('ShaderNodeEmission');pigment.name='Camera painted pigment';l.new(tex.outputs['Color'],pigment.inputs['Color'])
+        lightpath=n.new('ShaderNodeLightPath');gate=n.new('ShaderNodeMath');gate.operation='MULTIPLY';l.new(lightpath.outputs['Is Camera Ray'],gate.inputs[0]);l.new(strength.outputs[0],gate.inputs[1])
+        blend=n.new('ShaderNodeMixShader');l.new(gate.outputs[0],blend.inputs[0]);l.new(s.outputs[0],blend.inputs[1]);l.new(pigment.outputs[0],blend.inputs[2]);l.new(blend.outputs[0],n.get('Material Output').inputs['Surface'])
     projected.append(ob.name)
+# Warm limestone has physical contact shade, with camera-only painted pigment.
+# No figure painting (and therefore no permanent painted feet) enters this material.
+base=bpy.data.objects['GEO-stationary-cream-base'];base.data.materials.clear()
+def linear(v):
+    v=v/255
+    return v/12.92 if v<=.04045 else ((v+.055)/1.055)**2.4
+for label,rgb in [('top',(249,224,188)),('rim',(223,177,124))]:
+    mat=bpy.data.materials.new('Cream limestone '+label);mat.use_nodes=True
+    n=mat.node_tree.nodes;l=mat.node_tree.links;s=n.get('Principled BSDF')
+    color=tuple(linear(v) for v in rgb)+(1,);s.inputs['Base Color'].default_value=color;s.inputs['Roughness'].default_value=.86
+    noise=n.new('ShaderNodeTexNoise');noise.inputs['Scale'].default_value=350
+    bump=n.new('ShaderNodeBump');bump.inputs['Strength'].default_value=.045;bump.inputs['Distance'].default_value=.001;l.new(noise.outputs['Fac'],bump.inputs['Height']);l.new(bump.outputs[0],s.inputs['Normal'])
+    ao=n.new('ShaderNodeAmbientOcclusion');ao.inputs['Distance'].default_value=.18
+    shade=n.new('ShaderNodeMixRGB');shade.blend_type='MULTIPLY';shade.inputs[0].default_value=.60;shade.inputs[1].default_value=color;l.new(ao.outputs['AO'],shade.inputs[2])
+    em=n.new('ShaderNodeEmission');l.new(shade.outputs[0],em.inputs['Color'])
+    path=n.new('ShaderNodeLightPath');strength=n.new('ShaderNodeMath');strength.operation='MULTIPLY';strength.inputs[1].default_value=.78;l.new(path.outputs['Is Camera Ray'],strength.inputs[0])
+    mix=n.new('ShaderNodeMixShader');l.new(strength.outputs[0],mix.inputs[0]);l.new(s.outputs[0],mix.inputs[1]);l.new(em.outputs[0],mix.inputs[2]);l.new(mix.outputs[0],n.get('Material Output').inputs['Surface'])
+    base.data.materials.append(mat)
+for face in base.data.polygons:face.material_index=0 if face.normal.z>.5 else 1
 sc['stage']='painted';sc['projection']='Frozen rest-camera UV, incidence and source alpha; true weighted meshes; generated linen/bronze back fills'
 bpy.ops.file.pack_all();bpy.ops.wm.save_as_mainfile(filepath=str(M/'phalangite.blend'))
 (M/'projection.json').write_text(json.dumps({'objects':projected,'source':str(A/'painting-source.png')},indent=2));print('PAINTED_MASTER_READY')

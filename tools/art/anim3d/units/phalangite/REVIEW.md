@@ -1,77 +1,83 @@
-# Phalangite round 1
+# Phalangite round 2
 
-Candidate, not approved for runtime use. The standing painting-parity bar has
-not been met; no `phalangite-PASS` marker is written.
+Candidate, not approved for runtime use. No `phalangite-PASS` marker: painting
+parity and clean finger/equipment contact have not been established.
 
 The editable scene is `~/LegatumRuns/anim-pilot/masters/phalangite/phalangite.blend`.
-It contains MPFB anatomy/weights, physical layered kit, projected original
-painting colour, three AO/curvature pairs and the stationary cream base. Five
-separate clip scenes live under `clips/`. The `512/` and `256/` directories retain
-CPU preview masters; raw frames and their engine/device/sample/source reports
-live under `renders/`. GPU output replaces those preview sets only when the lead
-runs `tools/art/anim3d/units/phalangite/gpu.sh` from this checkout's root.
+`plain.blend` preserves the original morphable MPFB source; `fitted-plain.blend`
+contains the revised full-depth fit; five articulated scenes live in `clips/`.
+All masters, bakes, source textures, raw frames and provenance remain outside git.
+Round-1 blend checkpoints and review sheets are preserved externally.
 
-The first plain and textured reviews are retained in the external
-`review/3d-v2/phalangite-interim/` directory. Latest named sheets, animated WebPs,
-rest-pose split-screen and running log are in `review/3d-v2/`.
+## Changes and visual verdict
 
-## Visual verdict
+Round 2 fits the real arm/sleeve, helmet, complete shield, greave and sandal
+geometry through inverse skin transforms. The MPFB macro mix is frozen on the
+working copy, preserving all 19,158 vertices, original skin weights and 53 bones.
+Rigid thickness/bevels are finished before frozen UV projection. Camera-only
+painted pigment avoids lighting the source illumination twice, while generated
+linen/bronze fills, real AO/curvature and product lights remain. Short nape locks
+have round physical volume. The stone has a warm top, darker rim and live contact
+shade, without painted feet. A source-paint exclusion removes the duplicate spear
+line from the armour. One automatic rest grade is reused across all clips.
 
-At 256 px the unit is recognizable but distinctly less finished than the
-painting. Painting projection restores red cloth and ivory armour brushwork;
-the long diagonal sarissa and small forearm shield distinguish it from the
-spearman. The face/helmet registration, shoulder anatomy, straight lower arm,
-calf/greave volume and shield shading still need refinement. Some projected
-colour crosses physical material boundaries. Fine projection does not replace
-correct sculpture. The stone is warm but more uniformly shaded than the source.
-At 64 px the class and palette read correctly, but the figure remains too narrow
-and its surface highlights are less deliberate than the painting's.
+At 256 px, the arm volume, shield wear, low helmet and cream stone are substantially
+closer than round 1. The face, shoulder contour, hands, greaves and stone rim are
+still simpler or differently shaped than the painting. At 64 px, the same unit
+reads clearly, but the pose and highlights remain distinguishable. A histogram
+match is not art approval, and the unchanged camera plus local geometry fitting
+is not an exact camera solution.
 
-The five clips are authored rig animation. Hand-to-weapon measurements use a
-fixed palm proxy rather than finger contact surfaces. The current maximum proxy
-errors are recorded per clip in `animation-audit.json`; these are diagnostic,
-not a claim of perfect grips. The body fall and released shaft need motion review
-on the GPU, as do sleeve/chest and shield/forearm intersections. Cloth folds are
-modelled and rigged, not simulated. There is no exhaustive collision solver.
+Death folds both legs before grounding, removing the old ankle-supported hover.
+The five clips remain authored skeletal animation, with modelled cloth folds.
+The thrust is restrained and hands need further work: the existing palm proxy
+reports up to 7.1 cm error and does not measure fitted finger contact. Shield/arm
+and cloth/skin intersections are not exhaustively checked. No cloth simulation
+or new motion capture is claimed.
 
-## Reproduction and checks
+## Delivery and verification
 
-Use the Phalangite chapter of `../../PLAYBOOK.md`. Source images are pinned in
-`assets.lock.json`; `prepare.py` verifies them. `run.sh audit` checks the saved
-3D scenes, loops, held death and source hashes. `deliver.py pack` validates all
-40 frames, per-frame trimming, motion, alpha margins, held death, common grade,
-current scene hashes and the quality/size cap before delivery. `deliver.py
-validate` rechecks the emitted atlas. `gpu.sh` adds the eight-second five-column
-MP4 required by the overnight driver.
+The executable, no-argument host entry point is:
 
-Non-obvious finding: projecting the painting's exact pole diagonal can put the
-painted lower hand beyond the current MPFB arm's reach. Check arm reach in 3D
-before texture registration; a good 2D line match is not a valid two-handed pose.
+```sh
+ROUND=2 tools/art/anim3d/units/phalangite/gpu.sh
+```
 
-## Recorded round-1 verification
+It regenerates clips, audits, renders every stage at Cycles Metal/512, verifies
+all 48 GPU masters and their 256px copies, packs/validates the trimmed 160px atlas,
+and encodes the decoded atlas into an eight-second five-column review movie.
+It records a transcript, failure status and round-specific completion receipt;
+that receipt explicitly leaves visual approval false. Metal rendering cannot run
+inside this sandbox. CPU-labelled files are previews, even when 512px.
 
-- 48 review/master PNGs at 512 px and 48 at 256 px, including all 40 clip frames.
-- Atlas: 1600×800, 160 px reconstructed cells, 193,974 bytes, WebP quality 80.
-- Pack and decoded-atlas validation passed: 8/8/10/4/10 frames, trim offsets,
-  transparent padding, current scene/frame/grade hashes, motion and held death.
-- Saved-scene audit passed for all five clips: 19,158-vertex MPFB body, 53 bones,
-  projected UVs, six baked maps, stationary base, loop boundaries and settled pose.
-- Review MP4 verified with ffprobe: H.264/yuv420p, 1600×360, 192 frames, 8 seconds.
-- Python syntax, shell syntax and `git diff --check` passed.
-- CPU masters use Cycles, 512 px, 8 samples. The Metal GPU pass was not run in
-  this sandbox. GPU output may require a different quality in the allowed 90–75
-  range; the handoff refuses an atlas over 200,000 bytes.
-- Sampled base patch: painting #FACE9E, render #EED4B6. The render is warm but
-  still too pale relative to this painting and the shared #E9CFA0 target.
+Bicubic reduction preserves lossless alpha. Validation reconstructs all 40 frames
+at their trim offsets and compares alpha byte-for-byte; it checks hashes, bounds,
+padding, frame counts, timing, size and Q75 floor. Identical adjacent samples share
+an atlas rectangle, making the held death identical in decoded RGB as well.
+The geometry audit verifies native topology, finished-surface frozen UVs,
+camera-only pigment, six actual bake images, source hashes, stationary base,
+loop boundary poses and held death. It is not a full collision solver.
 
-The terminal death is sampled twice from frame 9. Copying that rendered sample
-prevents tiny repeated-evaluation/noise differences from making the hold shimmer;
-all ten requested output frames remain present. The corrected corpse remains
-inside the cell, although the fall still needs more natural articulation.
+GPU missing-input and CPU-master rejection checks passed. Python/Bash syntax and
+whitespace checks passed. Fresh GPU output still needs visual review before PASS.
 
-Commit was attempted with the requested co-author trailer, but this sandbox
-refused `.git/worktrees/lane-14/index.lock`; changes are left uncommitted for the
-runner. `tools/gates/check.py HEAD --base origin/master --checks-only` therefore
-checked only the existing HEAD: hygiene and public-claims passed; art failed when
-`render-sets.mjs` exited 1. It is not a gate result for this uncommitted candidate.
-The unit artifact, geometry, syntax and video checks above cover the actual work.
+## Recorded final CPU checks
+
+- All 48 stage/master PNGs at 512 px and 48 matching 256 px copies exist;
+  all 40 clip frames use Cycles CPU, 512 px, 8 samples.
+- Trimmed atlas: **181,278 bytes at Q90**, 1600×800, 160px logical cells,
+  unchanged 8/8/10/4/10 playback samples. Full decoded-alpha, offset, padding,
+  source/frame/grade hash, motion and held-death validation passed.
+- Final saved-scene audit passed, including finished-surface UV alignment,
+  original topology/weights, stationary base and root transforms at loop/hold.
+- MP4: **H.264/yuv420p, 1600×360, 192 frames, 8 seconds**; ffprobe passed.
+  Decoded movie contact frames and all five PNG strips were visually inspected.
+- Pinned painting/generated-fill hashes, eight Python syntax checks, both Bash
+  scripts and whitespace checks passed. GPU preflight rejection checks passed.
+- Rest silhouette IoU at alpha128: 0.802801. This does not establish art parity.
+
+No Rust, WASM or UI code changed. GPU rendering and final art acceptance remain
+outstanding; neither CPU validation nor this review creates a PASS marker.
+
+Commit creation was attempted with the required co-author trailer, but the sandbox
+denied `.git/worktrees/lane-14/index.lock`. Changes remain for the runner to commit.

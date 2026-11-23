@@ -197,3 +197,44 @@ and clip hashes and the single grade hash. The saved-scene audit checks true MPF
 geometry, projection UVs, bakes, stationary base and matching loop boundaries.
 It is not an exhaustive skin/equipment collision solver. Review 256 and 64 px
 alongside the painting and inspect all five motion strips before art approval.
+
+### Phalangite round 2: fit finished geometry before projection
+
+`finish.py` always starts from the preserved morphable `plain.blend` and calls
+unit-local `refine.py`. Freeze the MPFB macro mix before editing vertices: active
+shape keys otherwise override the fit. The 19,158 original vertices, native skin
+weights and 53 bones remain. Smooth rest-view edits invert the blended skin
+matrix to fit both arms, sleeves, helmet, complete shield, greaves and footwear
+while preserving view depth. Short nape locks are round bone-parented geometry.
+The camera is unchanged; these are local physical fits, not a claim of a solved
+exact camera. `fitted-plain.blend` retains the fitted geometry for plain reviews.
+
+Apply rigid bevel/thickness modifiers before freezing UVs. The old unfinished
+cage gave the finished shield and helmet different UV positions. Audit the
+finished surfaces against their frozen rest-camera coordinates. Projected paint
+is 97% camera-only pigment at fully covered/facing points, with the physical
+BSDF retained on non-camera rays and revealed sides. Standard/None preserves
+the source's painted illumination instead of compressing it through AgX again.
+The existing generated linen/bronze fills, six actual AO/curvature maps, thick
+straps/buckles and cloth folds remain. A narrow source-space exclusion keeps the
+painted spear from remaining on the chest when the real shaft moves; this never
+changes mesh opacity. The cream disc receives physical contact shadows and fine
+grain plus camera-only warm pigment, never a projected painting of the feet.
+One automatically measured rest grade stays frozen across all clips.
+
+Death folds both leg chains before grounding; the previous braced ankle held the
+horizontal torso above the base. Finger contact and equipment intersections still
+need visual review: the existing wrist/palm proxy is not a collision proof.
+Atlas reduction now uses bicubic with lossless alpha; validation reconstructs
+every 160px logical frame and compares its alpha byte-for-byte. Identical adjacent
+source frames share a rectangle, preserving all playback samples and an identical
+lossy-RGB terminal death hold. The JSON `clips.*.rects` contract is unchanged.
+
+The executable, no-argument `gpu.sh` defaults to round 2, resolves its own checkout,
+rebuilds all clips, audits, renders every stage with Cycles Metal at 512, verifies
+all 48 GPU masters and matching 256 copies, packs, validates and writes the
+8-second five-column H.264/yuv420p movie from the decoded trimmed atlas. Its
+external log, status and round-specific completion receipt distinguish a failed
+stage from an unverified pass. Missing-input and CPU-master rejection checks run
+without a GPU. The receipt explicitly leaves visual approval false. Never write
+PASS based on these technical checks; inspect the fresh GPU images and clips.

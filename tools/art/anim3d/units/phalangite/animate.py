@@ -40,8 +40,11 @@ for clip,(count,fps,loop) in clips.items():
             t=max(0,min(1,(u-.10)/.80));smooth=t*t*(3-2*t)
             # Fall obliquely across the base so the long figure remains in the camera.
             rig.rotation_quaternion=Quaternion(Vector((-.60,.80,0)),1.50*smooth);rig.location=initial+Vector((-.43*smooth,-.38*smooth,.16*smooth))
-            for side in ['l','r']:
-                p=rig.pose.bones['calf_'+side];p.rotation_mode='XYZ';p.rotation_euler.x+=.65*smooth+.35*sin(pi*smooth)
+            for side,sg in [('l',1),('r',-1)]:
+                # Fold both real leg chains before grounding: a widely braced
+                # low ankle otherwise holds the horizontal torso in mid-air.
+                target=footrest[side].lerp(Vector((sg*.10,-.12,.52)),smooth)
+                limb('thigh_'+side,'calf_'+side,target,(sg*.15,-.40,.75))
             offset=Vector((.08*smooth,0,-.68*smooth));angle=-.45*smooth
         # Rigid continuous weapon rotation preserves both endpoints and grip separation.
         pivot=gr;transform=Matrix.Translation(pivot+offset)@Matrix.Rotation(angle,4,'Y')@Matrix.Translation(-pivot);weapon.matrix_world=transform@weapon0

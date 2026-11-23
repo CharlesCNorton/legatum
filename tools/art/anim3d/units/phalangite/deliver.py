@@ -68,11 +68,16 @@ def pack():
     records={};atlas=Image.new('RGBA',(1600,800));frame_hashes={};manifests={}
     for row,(name,(count,fps,loop)) in enumerate(CLIPS.items()):
         paths=sorted((M/'256'/f'e-{name}').glob('[0-9][0-9].png'));assert len(paths)==count,(name,len(paths))
-        metadata=[]
+        metadata=[];previous=None
         for i,p in enumerate(paths):
-            im=Image.open(p).convert('RGBA').resize((160,160),Image.Resampling.LANCZOS)
+            im=Image.open(p).convert('RGBA').resize((160,160),Image.Resampling.BICUBIC)
             box=im.getchannel('A').getbbox();assert box and box[0]>0 and box[1]>0 and box[2]<160 and box[3]<160,(name,i,'clipped',box)
-            crop=im.crop(box);atlas.alpha_composite(crop,(i*160,row*160));metadata.append({'x':i*160,'y':row*160,'w':crop.width,'h':crop.height,'ox':box[0],'oy':box[1]});frame_hashes[str(p.relative_to(M))]=hashlib.sha256(p.read_bytes()).hexdigest()
+            crop=im.crop(box)
+            if previous==im.tobytes():
+                metadata.append(metadata[-1].copy())
+            else:
+                atlas.alpha_composite(crop,(i*160,row*160));metadata.append({'x':i*160,'y':row*160,'w':crop.width,'h':crop.height,'ox':box[0],'oy':box[1]})
+            previous=im.tobytes();frame_hashes[str(p.relative_to(M))]=hashlib.sha256(p.read_bytes()).hexdigest()
         records[name]={'row':row,'frames':count,'fps':fps,'loop':loop,'rects':metadata}
         a=Image.open(paths[0]);b=Image.open(paths[count//2]);assert a.tobytes()!=b.tobytes(),name+' has no motion'
         if name=='death':assert Image.open(paths[-1]).tobytes()==Image.open(paths[-2]).tobytes(),'death must hold'
@@ -90,7 +95,7 @@ def pack():
     (output/'phalangite.webp').write_bytes(b.getvalue())
     meta={'version':2,'frame':{'w':160,'h':160,'ax':53,'ay':144},'clips':records}
     (output/'phalangite.json').write_text(json.dumps(meta,indent=2)+'\n')
-    report={'atlas_sha256':hashlib.sha256(b.getvalue()).hexdigest(),'quality':quality,'bytes':len(b.getvalue()),'frames':40,'frame_hashes':frame_hashes,'renders':manifests,'grade_sha256':hashlib.sha256((M/'grade.json').read_bytes()).hexdigest()}
+    report={'atlas_sha256':hashlib.sha256(b.getvalue()).hexdigest(),'quality':quality,'bytes':len(b.getvalue()),'frames':40,'resampler':'bicubic','frame_hashes':frame_hashes,'renders':manifests,'grade_sha256':hashlib.sha256((M/'grade.json').read_bytes()).hexdigest()}
     (M/'pack.json').write_text(json.dumps(report,indent=2));validate();log(f'Packed all 40 frames, WebP quality {quality}, {len(b.getvalue())} bytes; validation passed.')
 
 def validate():
@@ -101,10 +106,18 @@ def validate():
     assert report['quality']>=75 and (out/'phalangite.webp').stat().st_size<=200000
     for name,(count,fps,loop) in CLIPS.items():
         c=meta['clips'][name];assert (c['frames'],c['fps'],c['loop'])==(count,fps,loop);assert len(c['rects'])==count
-        for r in c['rects']:
+        for i,r in enumerate(c['rects']):
+            assert 0<=r['x'] and 0<=r['y'] and r['x']+r['w']<=im.width and r['y']+r['h']<=im.height
             assert 0<=r['ox']<160 and 0<=r['oy']<160 and r['ox']+r['w']<=160 and r['oy']+r['h']<=160
             tile=im.crop((r['x'],r['y'],r['x']+r['w'],r['y']+r['h']));assert tile.getchannel('A').getextrema()[1]>0
+            reconstructed=Image.new('RGBA',(160,160));reconstructed.alpha_composite(tile,(r['ox'],r['oy']))
+            source=Image.open(M/'256'/f'e-{name}'/f'{i:02}.png').convert('RGBA').resize((160,160),Image.Resampling.BICUBIC)
+            assert reconstructed.getchannel('A').tobytes()==source.getchannel('A').tobytes(), (name,i,'decoded alpha differs')
             slot=im.crop((r['x'],r['y'],r['x']+160,r['y']+160));slot.paste((0,0,0,0),(0,0,r['w'],r['h']));assert slot.getchannel('A').getextrema()==(0,0),'Opaque atlas padding'
+        if name=='death':assert c['rects'][-1]==c['rects'][-2], 'Decoded death must hold without lossy RGB flicker'
+        info=report['renders'][name]
+        assert info['master_sha256']==hashlib.sha256((M/'phalangite.blend').read_bytes()).hexdigest(),'stale packed master'
+        assert info['blend_sha256']==hashlib.sha256((M/'clips'/f'{name}.blend').read_bytes()).hexdigest(),'stale packed clip'
         for i in range(count,10):assert im.crop((i*160,c['row']*160,(i+1)*160,(c['row']+1)*160)).getchannel('A').getextrema()==(0,0),'Unused slot is not transparent'
     print('PASS: 40 transparent frames, five clips, 160px trim offsets, anchor, WebP quality and size, held death, hashes')
 
@@ -116,16 +129,41 @@ def movie():
         for col,(name,c) in enumerate(meta['clips'].items()):
             idx=int(f*c['fps']/24)%c['frames'];r=c['rects'][idx];cell=Image.new('RGBA',(160,160));cell.alpha_composite(atlas.crop((r['x'],r['y'],r['x']+r['w'],r['y']+r['h'])),(r['ox'],r['oy']));large=cell.resize((320,320),Image.Resampling.LANCZOS);canvas.paste(large,(col*320,30),large);d.text((col*320+10,8),name,fill=(45,30,20))
         canvas.save(movie_dir/f'{f:03}.png')
-    subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-y','-framerate','24','-i',str(movie_dir/'%03d.png'),'-c:v','libx264','-pix_fmt','yuv420p','-crf','20',str(V/f'phalangite-round{os.environ.get("ROUND","1")}.mp4')],check=True)
+    subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-y','-framerate','24','-i',str(movie_dir/'%03d.png'),'-c:v','libx264','-threads','3','-pix_fmt','yuv420p','-crf','20',str(V/f'phalangite-round{os.environ.get("ROUND","1")}.mp4')],check=True)
     video=V/f'phalangite-round{os.environ.get("ROUND","1")}.mp4'
     probe=json.loads(subprocess.check_output(['ffprobe','-v','error','-show_streams','-show_format','-of','json',str(video)]))
     stream=probe['streams'][0];assert stream['codec_name']=='h264' and stream['pix_fmt']=='yuv420p'
+    assert (stream['width'],stream['height'])==(1600,360)
     assert int(stream['nb_frames'])==192 and abs(float(probe['format']['duration'])-8)<.05
     (M/'video-report.json').write_text(json.dumps({'path':str(video),'frames':192,'duration':8,'width':stream['width'],'height':stream['height'],'codec':stream['codec_name'],'pixel_format':stream['pix_fmt']},indent=2))
     print('MP4_READY: verified H.264/yuv420p, 192 frames, 8 seconds')
+def gpu_check():
+    master_hash=hashlib.sha256((M/'phalangite.blend').read_bytes()).hexdigest()
+    for stage,count in [('b',3),('c',1),('d',4)]+[(f'e-{n}',v[0]) for n,v in CLIPS.items()]:
+        info=json.loads((M/'renders/512'/stage/'render.json').read_text())
+        assert (info['engine'],info['device'],info['resolution'],info['samples'])==('CYCLES','GPU',512,int(os.environ.get('SAMPLES','64'))), 'Not current GPU512 evidence: '+stage
+        assert info['master_sha256']==master_hash, 'Stale GPU master: '+stage
+        blend=M/'clips'/f'{stage[2:]}.blend' if stage.startswith('e-') else M/'clips/attack.blend' if stage=='d' else M/('fitted-plain.blend' if stage=='b' else 'phalangite.blend')
+        assert info['blend_sha256']==hashlib.sha256(blend.read_bytes()).hexdigest(), 'Stale GPU scene: '+stage
+        for size in [512,256]:
+            paths=sorted((M/str(size)/stage).glob('[0-9][0-9].png'))
+            assert len(paths)==count, (stage,size,'missing masters')
+            assert all(Image.open(p).size==(size,size) for p in paths)
+    print('PASS: all 48 current GPU512 masters and matching 256 copies')
+
+def receipt():
+    gpu_check()
+    validate()
+    report={'round':os.environ.get('ROUND','2'),'status':'complete','visual_approval':False,
+            'master_sha256':hashlib.sha256((M/'phalangite.blend').read_bytes()).hexdigest(),
+            'pack':json.loads((M/'pack.json').read_text()),'video':json.loads((M/'video-report.json').read_text())}
+    (V/f"phalangite-gpu-round{report['round']}.json").write_text(json.dumps(report,indent=2))
+
 if __name__=='__main__':
     mode=sys.argv[1]
     if mode=='review':review(sys.argv[2],int(sys.argv[3]))
     elif mode=='pack':pack()
     elif mode=='validate':validate()
     elif mode=='movie':movie()
+    elif mode=='gpu-check':gpu_check()
+    elif mode=='receipt':receipt()
