@@ -7,3 +7,6 @@
 - Hunyuan3D mini skipped: sandbox has no Metal/MPS, so the requested sub-20-minute Apple GPU path cannot be tested here; CPU generation would exceed the light local-work constraint.
 - nice -n 10 is invoked as requested, but macOS sandbox denies setpriority; Blender thread limit remains four. Thumbnail cache writes outside resources are denied and nonfatal.
 - Read lead FEEDBACK.md: Sam says direction is right; priority is premium surface richness. Reworking explicit muscle cuirass, heavier anatomy, iron spear fittings, cream stone, larger framing and baked AO/curvature wear. Existing e-strips are interim, not approval-ready.
+- System asset pack installed successfully (280,737,770 bytes, SHA256 b542127a8e25547c7c29c19f2d1d2adb9a664c80396ecd694095dbc8028a0107); using CC0 high-poly eyes and young male skin on MPFB UVs.
+- Revised c emitted: explicit forged muscle armour, stronger MPFB arm/shoulder targets, wider red cloak, turned shield, iron fittings, cream stone; still below painting's authored-detail richness. Baked 4 x AO and 4 x curvature maps at 512 px.
+- First e-death emitted then rejected shield/base intersection; added an attached shield control that settles face-up onto the base and freezes the last two samples. Re-rendering all five clips with revised model and 384 px / 24-sample CPU previews.
