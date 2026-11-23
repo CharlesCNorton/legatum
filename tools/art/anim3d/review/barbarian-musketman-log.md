@@ -189,3 +189,10 @@
 - Final visual verdict: at 256px rest pigment and silhouette close, warmer stone and broader feather improved, but face edge, feather contour, stone finish and exposed death sleeves/coat remain distinguishable from painting. At64px same unit identity, with visible feather/base differences; move is a very restrained kneeling shuffle. Terminal hands now settle down, but death is not yet premium/fully clean. No PASS written. No fresh unit FEEDBACK; shared feedback still ends at23.
 - GPU handoff: ROUND=2 tools/art/anim3d/units/barbarian-musketman/gpu.sh from this checkout; every final frame isolated, SIGTRAP bounded retry/checkpoints, all stages/masters/atlas/video/validation included. CPU proves orchestration only; host Metal mitigation and final visual review remain unverified.
 - Commit attempted with requested co-author trailer, blocked by sandbox index.lock Operation not permitted. Changes left in this branch for runner commit; origin/master has zero commits ahead of HEAD. Commit-based repository/art gates remain runner/lead work; no stale HEAD result claimed. No push, PR, merge or upload.
+- Built kneeling MPFB human, tailored ragged kit, feather hat, bandolier and solid horizontal musket.
+- Finished-surface camera-only projection applied; physical stone excluded and generated fills retained.
+- Authored idle skeletal action, 8 samples.
+- Authored move skeletal action, 8 samples.
+- Authored attack skeletal action, 10 samples.
+- Authored hit skeletal action, 4 samples.
+- Authored death skeletal action, 10 samples.
