@@ -179,3 +179,73 @@
 - Published e-death native 256/64 comparison; render device CPU.
 - Rendered g-feet-check: 256px CYCLES CPU, 16 samples.
 - Published g-feet-check native 256/64 comparison; render device CPU.
+- Authored death: 10 frames, 10 fps; real rig keys, bow flex and nock keys, stationary base.
+- Rendered e-death: 256px CYCLES CPU, 16 samples.
+- Published e-death native 256/64 comparison; render device CPU.
+- Rendered g-feet-check: 256px CYCLES CPU, 16 samples.
+- Published g-feet-check native 256/64 comparison; render device CPU.
+- Authored death: 10 frames, 10 fps; real rig keys, bow flex and nock keys, stationary base.
+- Rendered e-death: 256px CYCLES CPU, 16 samples.
+- Published e-death native 256/64 comparison; render device CPU.
+- Authored move: 8 frames, 12 fps; real rig keys, bow flex and nock keys, stationary base.
+- Geometry audit passed: anatomy, fixed base, nonzero scales, bow/nock contact and loop closure.
+- Rendered c: 256px CYCLES CPU, 24 samples.
+- Published c native 256/64 comparison; render device CPU.
+- Rendered b: 256px CYCLES CPU, 24 samples.
+- Published b native 256/64 comparison; render device CPU.
+- Rendered c-details: 256px CYCLES CPU, 24 samples.
+- Published c-details native 256/64 comparison; render device CPU.
+- Rendered d: 256px CYCLES CPU, 24 samples.
+- Published d native 256/64 comparison; render device CPU.
+- Rendered e-idle: 256px CYCLES CPU, 24 samples.
+- Published e-idle native 256/64 comparison; render device CPU.
+- Rendered e-move: 256px CYCLES CPU, 24 samples.
+- Published e-move native 256/64 comparison; render device CPU.
+- Rendered e-attack: 256px CYCLES CPU, 24 samples.
+- Published e-attack native 256/64 comparison; render device CPU.
+- Rendered e-hit: 256px CYCLES CPU, 24 samples.
+- Published e-hit native 256/64 comparison; render device CPU.
+- Rendered e-death: 256px CYCLES CPU, 24 samples.
+- Published e-death native 256/64 comparison; render device CPU.
+- Preserved lead GPU evidence under masters/archer/driver-r1-gpu and review/3d-v2/archer-driver-r1-gpu before regenerating anything. Rounded the drawing elbow in full-depth mesh space; adjusted actual stone ellipse/rim and added object-space limestone pigment/grain, retaining fixed source projection, generated fills, bevels, cloth folds and product lights.
+- Feedback 23: replaced partial CMU reconstruction and authored hit/death with existing licensed Quaternius Idle_Loop/Walk_Loop/Hit_Chest/Death01. Rest/roll-compensated Blender constraints retain source foot rotations. Only attack is hand-authored. Added source hashes and unit-local SOURCES.md.
+- First open fall review exposed out-of-frame travel and an underside-heavy view; oriented the captured fall diagonally and centered its real geometry over the disc with measured floor contact. Native source motion remains; no flattened mesh or hidden body. Skirt and unpainted shoulders still need craft work; no PASS.
+- Added front/top eight-frame feet review, with a top-camera near clip exposing feet. Small root translations regularize sampled toe stance against virtual travel without foot rotation changes. GPU entry point now renders and verifies this stage too.
+- Rendered g-feet-check: 256px CYCLES CPU, 24 samples.
+- Published g-feet-check native 256/64 comparison; render device CPU.
+- Published c native 256/64 comparison; render device CPU.
+- Geometry audit passed: anatomy, fixed base, nonzero scales, bow/nock contact and loop closure.
+- Authored death: 10 frames, 10 fps; real rig keys, bow flex and nock keys, stationary base.
+- Rendered e-death: 256px CYCLES CPU, 24 samples.
+- Published e-death native 256/64 comparison; render device CPU.
+- Rendered c-details: 512px CYCLES CPU, 24 samples.
+- Published c-details native 256/64 comparison; render device CPU.
+- Finished static solid/bevel/subdivision geometry before projection; froze MPFB macro mix with native skin weights; fitted drawing-arm contour and complete recurved bow in the fixed rest camera.
+- Projected painting onto finished surfaces with occlusion/facing masks and camera-only pigment; original generated fills, real AO/curvature and physical lighting remain.
+- Authored idle: 8 frames, 10 fps; real rig keys, bow flex and nock keys, stationary base.
+- Authored move: 8 frames, 12 fps; real rig keys, bow flex and nock keys, stationary base.
+- Authored attack: 10 frames, 14 fps; real rig keys, bow flex and nock keys, stationary base.
+- Authored hit: 4 frames, 12 fps; real rig keys, bow flex and nock keys, stationary base.
+- Authored death: 10 frames, 10 fps; real rig keys, bow flex and nock keys, stationary base.
+- Rendered c: 256px CYCLES CPU, 24 samples.
+- Published c native 256/64 comparison; render device CPU.
+- Rendered e-move: 256px CYCLES CPU, 24 samples.
+- Published e-move native 256/64 comparison; render device CPU.
+- Rendered e-death: 256px CYCLES CPU, 24 samples.
+- Published e-death native 256/64 comparison; render device CPU.
+- Geometry audit passed: anatomy, fixed base, nonzero scales, bow/nock contact and loop closure.
+- Rendered b: 256px CYCLES CPU, 24 samples.
+- Published b native 256/64 comparison; render device CPU.
+- Rendered d: 256px CYCLES CPU, 24 samples.
+- Published d native 256/64 comparison; render device CPU.
+- Rendered e-idle: 256px CYCLES CPU, 24 samples.
+- Published e-idle native 256/64 comparison; render device CPU.
+- Rendered e-attack: 256px CYCLES CPU, 24 samples.
+- Published e-attack native 256/64 comparison; render device CPU.
+- Rendered e-hit: 256px CYCLES CPU, 24 samples.
+- Published e-hit native 256/64 comparison; render device CPU.
+- Rendered g-feet-check: 256px CYCLES CPU, 24 samples.
+- Published g-feet-check native 256/64 comparison; render device CPU.
+- Rendered c-details: 512px CYCLES CPU, 24 samples.
+- Published c-details native 256/64 comparison; render device CPU.
+- CPU validation caught death frame 4 touching the canvas; fixed earlier geometry centering and arrow release visibility, then rebuilt/rerendered. Tunic/hem now use inverse-bound pelvis/thigh skinning so raised knees carry the cloth while the exact painted rest surface is preserved. This is modeled cloth, not simulation.
