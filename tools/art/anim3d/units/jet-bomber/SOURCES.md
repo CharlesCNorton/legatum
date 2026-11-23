@@ -21,3 +21,8 @@
 
 `inputs.json` pins both consumed source images by SHA256. Masters, packed images,
 AO/curvature bakes and previews remain under `~/LegatumRuns/anim-pilot/`.
+
+Round 2 reuses those same pinned artwork inputs without new downloads or image
+generation. Fuselage/nacelle contour fitting, source-painted stone rim, solid
+finned bombs and continuous support/wing/pod damage are original MIT scripts;
+rendered art remains CC BY 4.0. Prior GPU evidence stays outside git.

@@ -169,7 +169,7 @@ done
 The complete no-argument lead entry point is:
 
 ```sh
-ROUND=1 tools/art/anim3d/units/jet-bomber/gpu.sh
+ROUND=2 tools/art/anim3d/units/jet-bomber/gpu.sh
 ```
 
 It verifies build/source hashes, renders **every** stage using Metal Cycles at
@@ -224,3 +224,31 @@ reuse their rectangle so lossy RGB is identical too. Validation checks exact
 alpha reconstruction, transparent gutters, clipping, motion, grade/source
 hashes and held death. This lane does not wire the new format into the UI;
 keep the existing static painting until art approval and runtime integration.
+
+### Jet bomber driver round 2
+
+Preserve the previous GPU reviews and decoded movie frames before overwriting
+interims. The round-one GPU pass completed at 189,538 bytes / Q80; that passed
+delivery but still showed narrow fuselage/pod silhouettes and a dark oversized
+stone rim. Inspect a binary silhouette difference as well as RGB: frozen source
+pigment can make missing volume surprisingly difficult to spot. Refit complete
+loft rings and nacelle lengths, retaining their depth, before re-projecting.
+Subdivide long airfoil spans with **Simple** subdivision before projection:
+otherwise occluded root vertices can fade source pigment over an entire wing.
+Use rest-ray visibility for visible thin-airfoil pigment instead of rejecting
+it based on smooth grazing vertex normals. Keep unseen surfaces filled.
+The stationary disc now uses source pigment on its visible curved rim too;
+outward normals must not unnecessarily reject the painting at that silhouette.
+
+Death compresses and bends the solid support continuously, never toggling it
+away. Wing and attached outer pod deform in a shared world-space field; applying
+the same local displacement to objects with different origins breaks their
+attachment. Keep finite support thickness and test its evaluated manifold
+volume. Released bombs have real fins and a release-pose transform followed by
+accelerating fall. No zero-scale effects or volumes are involved.
+
+`rest-metrics.json` records alpha silhouette intersection-over-union and opaque
+RGB error at 256/64. These are diagnostic measurements, not approval gates.
+CPU interims are labelled as CPU; `ROUND=2-cpu .../deliver.py pack` keeps their
+movie separate from the lead's `jet-bomber-round2.mp4`. The GPU script reports
+the active stage, repeats source preflight after delivery, and never writes PASS.

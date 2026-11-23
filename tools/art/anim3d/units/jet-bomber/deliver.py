@@ -15,7 +15,7 @@ def composite(im):
 
 def grade_luts(im):
     def quant(img):
-        ps=[p for p in img.getdata() if p[3]>240]
+        ps=[p for p in img.get_flattened_data() if p[3]>240]
         return [[sorted(p[c] for p in ps)[int((len(ps)-1)*q)] for q in (.1,.5,.9)] for c in range(3)]
     src,dst=quant(im),quant(REF);tables=[]
     for a,b in zip(src,dst):
@@ -30,6 +30,7 @@ def review(stage):
     if not candidates:raise RuntimeError('Missing complete render '+stage)
     res=int(os.environ.get('RESOLUTION',candidates[0]));folder=M/'raw'/str(res)/stage;manifest=json.loads((folder/'render.json').read_text())
     assert manifest['master_sha256']==sha(M/'jet-bomber.blend'),'stale render master'
+    assert manifest['render_script_sha256']==sha(Path(__file__).with_name('render.py')),'stale render script'
     raw=[]
     for name,h in manifest['frames'].items():
         assert sha(folder/name)==h,'frame hash mismatch';raw.append(Image.open(folder/name).convert('RGBA'))
@@ -64,6 +65,19 @@ def review(stage):
         for i,(label,im) in enumerate([('painting',REF),('true 3D',out[0]),('50/50 crossfade',Image.blend(REF,out[0],.5))]):
             compare.alpha_composite(im,(i*256,24));compare.alpha_composite(im.resize((64,64),Image.Resampling.LANCZOS),(i*256+96,282));d.text((i*256+8,5),label,fill='black')
         compare.save(V/'jet-bomber-f-restpose-compare.png')
+        # Descriptive measurements only: neither low error nor size means art approval.
+        metrics={}
+        for size in (256,64):
+            ref=REF.resize((size,size),Image.Resampling.LANCZOS)
+            rendered=out[0].resize((size,size),Image.Resampling.LANCZOS)
+            pairs=list(zip(ref.get_flattened_data(),rendered.get_flattened_data()))
+            intersection=sum(a[3]>127 and b[3]>127 for a,b in pairs)
+            union=sum(a[3]>127 or b[3]>127 for a,b in pairs)
+            opaque=[(a,b) for a,b in pairs if min(a[3],b[3])>240]
+            metrics[str(size)]={'silhouette_iou':intersection/union,
+                'opaque_rgb_mae':sum(abs(a[c]-b[c]) for a,b in opaque for c in range(3))/(len(opaque)*3)}
+        (M/'rest-metrics.json').write_text(json.dumps({'device':manifest['device'],
+            'resolution':res,'metrics':metrics,'art_approval':False},indent=2))
         details=Image.new('RGBA',(1024,560),CREAM);d=ImageDraw.Draw(details)
         for row,(label,box) in enumerate([('cockpit and engine intake finish',(10,98,175,156)),('swept wings and tall tail',(15,38,225,112))]):
             detailref=Image.open(R/'assets/jet-bomber/projection.png').convert('RGBA').resize((512,512),Image.Resampling.LANCZOS)

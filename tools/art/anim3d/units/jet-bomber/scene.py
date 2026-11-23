@@ -60,7 +60,12 @@ def airfoil(name,sections,mat):
     for k in range(len(sections)-1):
         for j in range(N):fs.append((k*N+j,k*N+(j+1)%N,(k+1)*N+(j+1)%N,(k+1)*N+j))
     fs.extend([tuple(range(N-1,-1,-1)),tuple((len(sections)-1)*N+j for j in range(N))])
-    o=mesh(name,vs,fs,mat);b=o.modifiers.new('Rounded edges','BEVEL');b.width=.009;b.segments=2;return o
+    o=mesh(name,vs,fs,mat);b=o.modifiers.new('Rounded edges','BEVEL');b.width=.009;b.segments=2
+    # Localize rest-ray occlusion at the fuselage join. Sparse span quads let
+    # hidden root vertices fade the source pigment across the whole wing.
+    sub=o.modifiers.new('Projection sampling lattice','SUBSURF')
+    sub.subdivision_type='SIMPLE';sub.levels=2;sub.render_levels=2
+    return o
 def ellipsoid(name,center,scale,mat,parent=True):
     bpy.ops.mesh.primitive_uv_sphere_add(segments=32,ring_count=16,location=center);o=bpy.context.object;o.name='GEO-'+name
     # local x is image-right; local y is front; local z is image-up
@@ -77,7 +82,7 @@ def tube(name,points,r,mat,parent=True):
     if parent:objects.append(o)
     return o
 # Aircraft registered to source landmarks, each surface retains genuine depth.
-body=loft('fuselage',[(23,601,.25,2,.02),(38,594,.25,20,.10),(70,584,.23,40,.23),(125,577,.21,54,.31),(215,561,.17,59,.36),(360,535,.1,57,.36),(520,506,0,48,.32),(680,474,-.1,40,.27),(820,442,-.2,31,.21),(950,410,-.3,24,.16),(1031,397,-.38,17,.11)],olive)
+body=loft('fuselage',[(23,601,.25,2,.02),(38,598,.25,17,.10),(70,591,.23,38,.23),(125,583,.21,55,.31),(215,572,.17,61,.36),(360,543,.1,64,.36),(520,513,0,60,.32),(680,480,-.1,51,.27),(820,454,-.2,46,.21),(950,419,-.3,33,.16),(1031,404,-.38,19,.11)],olive)
 near=airfoil('near wing',[((390,512),(518,493),.42,.055),((640,597),(722,554),1.0,.055),((882,678),(950,644),1.65,.045),((1190,781),(1235,778),2.3,.014),((1235,785),(1242,781),2.32,.008)],olive)
 far=airfoil('far wing',[((513,455),(321,491),-.35,.075),((285,302),(209,354),-1.05,.055),((137,214),(116,261),-1.65,.04),((49,164),(69,206),-2.0,.02),((23,161),(25,165),-2.15,.008)],olive)
 airfoil('near tailplane',[((902,433),(973,412),-.15,.035),((1124,464),(1129,453),.35,.015),((1154,467),(1156,469),.38,.007)],olive)
@@ -90,11 +95,11 @@ def solid_profile(name,coords,depth,thickness,mat,parent=True):
     o=mesh(name,vs,fs,mat,parent,False);b=o.modifiers.new('Finished bevel','BEVEL');b.width=.009;b.segments=3;return o
 solid_profile('vertical fin',coords,-.41,.075,olive)
 # Four pairs of jets: real hollow cowls, intake tunnel and compressor blades.
-for label,cx,cy,depth,rad in [('far outer',20,324,-1.40,16),('far inner',119,419,-.83,18),('near inner',548,668,1.12,19),('near outer',761,746,1.79,19)]:
+for label,cx,cy,depth,rad in [('far outer',20,324,-1.40,16),('far inner',119,417,-.83,20),('near inner',548,665,1.12,22),('near outer',761,741,1.79,22)]:
     solid_profile(label+' pylon',[(cx+28,cy-18),(cx+54,cy-50),(cx+105,cy-76),(cx+122,cy-59),(cx+89,cy-24)],depth-.08,.055,olive)
     for pair in range(2):
-        x=cx+pair*28;y=cy+pair*10;dep=depth+pair*.09
-        loft(label+f' jet {pair}',[(x,y,dep,rad,.10),(x+15,y-4,dep-.02,rad+2,.12),(x+42,y-12,dep-.08,rad,.11),(x+70,y-21,dep-.14,rad*.85,.085),(x+90,y-33,dep-.22,rad*.35,.045)],olive)
+        x=cx+4+pair*28;y=cy+pair*10;dep=depth+pair*.09
+        loft(label+f' jet {pair}',[(x,y,dep,rad,.10),(x+15,y-4,dep-.02,rad+2,.12),(x+42,y-8,dep-.08,rad,.11),(x+78,y-15,dep-.14,rad*.85,.085),(x+(110 if label.startswith('near') else 100),y-25,dep-.22,rad*.45,.045)],olive)
         center=p(x,y,dep+.035);axis=(-RIGHT*.55+FRONT*.83).normalized();v=UP;u=axis.cross(v).normalized();radius=rad*reg['scale']*S/1024
         vs=[];N=40
         for off,r in [(-.04,radius),(.018,radius),(.024,radius*.73),(-.065,radius*.73)]:
@@ -109,19 +114,35 @@ for label,cx,cy,depth,rad in [('far outer',20,324,-1.40,16),('far inner',119,419
 for pts in [[(61,566),(83,540),(126,529),(161,529),(173,564)],[(82,540),(106,550),(128,543),(150,541),(161,564)],[(106,550),(99,571)],[(128,543),(126,568)],[(150,541),(151,565)]]:
     tube('cockpit aluminium frame',[p(x,y,.52) for x,y in pts],.0035,silver)
 # One plain round cream disc; the painting's carved support is a separate solid.
-basecenter=p(650,1035,-.55)
-bpy.ops.mesh.primitive_cylinder_add(vertices=96,radius=.985,depth=.15,location=basecenter)
+basecenter=p(650,1031,-.55)
+bpy.ops.mesh.primitive_cylinder_add(vertices=96,radius=.93,depth=.13,location=basecenter)
 base=bpy.context.object;base.name='GEO-stationary cream base';base.data.materials.append(stone)
 b=base.modifiers.new('Rounded stone lip','BEVEL');b.width=.025;b.segments=3
 supportcoords=[(552,1004),(580,970),(603,925),(622,877),(631,834),(629,800),(615,762),(594,730),(568,699),(580,702),(613,735),(646,776),(675,824),(697,875),(718,937),(740,989)]
 support=solid_profile('curved stationary stone support',supportcoords,-.48,.18,stone,False)
+# The silhouette alone concealed a depth gap. Shear the solid bracket toward
+# the near pod while leaving the registered camera coordinates unchanged.
+bottom=min(v.co.dot(UP) for v in support.data.vertices)
+height=max(v.co.dot(UP) for v in support.data.vertices)-bottom
+for v in support.data.vertices:v.co+=FRONT*(1.60*(v.co.dot(UP)-bottom)/height)
 root=bpy.data.objects.new('RIG-airframe',None);bpy.context.collection.objects.link(root);root.location=p(580,495,.1)
 bpy.context.view_layer.update()
 for ob in objects:
     mat=ob.matrix_world.copy();ob.parent=root;ob.matrix_world=mat
 bpy.context.view_layer.update()
 for i in range(3):
-    ob=ellipsoid('bomb-'+str(i),p(470+i*55,565,.25),(.045,.045,.12),black,False);ob.hide_render=True
+    ob=ellipsoid('bomb-'+str(i),p(470+i*55,565,.25),(.055,.055,.135),olive,False);ob.hide_render=True
+    # Real stabilizing fins, joined to the released mesh so all keys agree.
+    parts=[ob];center=ob.location.copy()
+    for axis in (RIGHT,FRONT):
+        verts=[center+UP*z+axis*x+axis.cross(UP)*d
+               for d in (-.006,.006)
+               for x,z in ((-.085,.115),(.085,.115),(.045,.055),(-.045,.055))]
+        fin=mesh('bomb fin',verts,[(3,2,1,0),(4,5,6,7),(0,1,5,4),(1,2,6,5),(2,3,7,6),(3,0,4,7)],olive,False)
+        parts.append(fin)
+    bpy.ops.object.select_all(action='DESELECT')
+    for part in parts:part.select_set(True)
+    bpy.context.view_layer.objects.active=ob;bpy.ops.object.join()
 # Finish modifiers BEFORE projection so UVs register the actual rendered surface.
 for ob in list(bpy.data.objects):
     if ob.type=='CURVE':
@@ -129,6 +150,21 @@ for ob in list(bpy.data.objects):
     if ob.type=='MESH':
         bpy.context.view_layer.objects.active=ob
         for mod in list(ob.modifiers):bpy.ops.object.modifier_apply(modifier=mod.name)
+from mathutils.bvhtree import BVHTree
+top=max(v.co.dot(UP) for v in support.data.vertices)
+tips=[v.co.copy() for v in support.data.vertices if v.co.dot(UP)>top-.04]
+nearest=[]
+for i in range(2):
+    ob=bpy.data.objects[f'GEO-near inner jet {i}']
+    tree=BVHTree.FromPolygons([ob.matrix_world @ v.co for v in ob.data.vertices],
+                              [list(face.vertices) for face in ob.data.polygons])
+    for tip in tips:
+        point,normal,_,distance=tree.find_nearest(tip)
+        nearest.append((distance,point-tip-normal*.008))
+correction=min(nearest,key=lambda pair:pair[0])[1]
+for v in support.data.vertices:
+    weight=max(0,min(1,(v.co.dot(UP)-bottom)/height))**3
+    v.co+=correction*weight
 sc['unit']='jet-bomber';sc['projection_method']='frozen rest UV on finished closed volumes';sc['base_hex']='#E9CFA0'
 bpy.ops.wm.save_as_mainfile(filepath=str(M/'plain.blend'))
 texture=bpy.data.images.load(str(A/'projection.png'));fill=bpy.data.images.load(str(A/'painted-fill.png'))
@@ -139,11 +175,16 @@ for ob in list(bpy.data.objects):
     # Sample finished vertices, not nonplanar quad centroids (which can lie
     # below the tessellated surface and falsely reject visible wing pigment).
     for loop in ob.data.loops:
-        vert=ob.data.vertices[loop.vertex_index];point=ob.matrix_world@vert.co
+        vert=ob.data.vertices[loop.vertex_index];point=ob.matrix_world @ vert.co
         q=world_to_camera_view(sc,cam,point);uv.data[loop.index].uv=(q.x,q.y)
         hit,loc,_,_,hitob,_=sc.ray_cast(deps,point+FRONT*20,-FRONT,distance=20.02)
         visible=hit and (loc-point).length<.025
-        w=max(0,min(1,((normal@vert.normal).normalized().dot(FRONT)+.06)/.15)) if visible else 0
+        w=max(0,min(1,((normal @ vert.normal).normalized().dot(FRONT)+.06)/.15)) if visible else 0
+        if ob==base or any(s in ob.name for s in ('wing','tailplane')):
+            # Smooth normals at a thin airfoil or stone rim point sideways even
+            # on visible surfaces. Rest-ray visibility is the confidence test;
+            # source alpha still gates pigment, never the geometry's opacity.
+            if visible:w=1
         weights.data[loop.index].color=(w,w,w,1)
     old=ob.data.materials[0];mat=old.copy();mat.name=ob.name+' painted';ob.data.materials[0]=mat;n=mat.node_tree.nodes;l=mat.node_tree.links;bs=n.get('Principled BSDF')
     uvnode=n.new('ShaderNodeUVMap');uvnode.uv_map='RestPainting';im=n.new('ShaderNodeTexImage');im.image=texture;im.extension='CLIP';l.new(uvnode.outputs[0],im.inputs[0])

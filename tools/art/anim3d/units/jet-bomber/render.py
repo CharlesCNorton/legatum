@@ -32,15 +32,26 @@ def animate(sc,clip):
     n,fps,loop=CLIPS[clip];sc.render.fps=fps;sc.frame_start=1;sc.frame_end=n
     root=bpy.data.objects['RIG-airframe'];rest=root.location.copy();bombs=[bpy.data.objects['GEO-bomb-'+str(i)] for i in range(3)];bombrest=[o.location.copy() for o in bombs]
     support=bpy.data.objects['GEO-curved stationary stone support']
-    damage=[]
+    damage=[];collapse=None
     if clip=='death':
-        for name in ('GEO-near wing','GEO-fuselage'):
-            o=bpy.data.objects[name];o.shape_key_add(name='Basis');key=o.shape_key_add(name='Impact deformation');damage.append(key)
+        # Deform wing and its attached outer pod/pylon in the same world field.
+        for o in list(bpy.data.objects):
+            if o.type!='MESH' or not (o.name in ('GEO-near wing','GEO-fuselage') or 'near outer' in o.name):continue
+            o.shape_key_add(name='Basis');key=o.shape_key_add(name='Impact deformation');damage.append(key)
+            inv=o.matrix_world.inverted()
             for v,k in zip(o.data.vertices,key.data):
-                if name=='GEO-near wing':
-                    w=max(0,min(1,(v.co.x-.2)/2.7))**2;k.co+=UP*(.55*w)+FRONT*(.12*w)
+                pt=o.matrix_world @ v.co
+                if o.name!='GEO-fuselage':
+                    w=max(0,min(1,(pt.x-.2)/2.7))**1.4
+                    pt+=UP*(.75*w)+FRONT*(.18*w)-RIGHT*(.28*w)
                 else:
-                    w=max(0,min(1,(-v.co.x-1.2)/1.7));k.co-=RIGHT*(.22*w)+UP*(.07*w)
+                    w=max(0,min(1,(-pt.x-1.2)/1.7));pt+=RIGHT*(.28*w)-UP*(.10*w)
+                k.co=inv @ pt
+        support.shape_key_add(name='Basis');collapse=support.shape_key_add(name='Collapsed stone')
+        bottom=min(v.co.dot(UP) for v in support.data.vertices)
+        for v,k in zip(support.data.vertices,collapse.data):
+            height=max(0,v.co.dot(UP)-bottom)
+            k.co=v.co-UP*(height*.87)-RIGHT*(height*.32)-FRONT*(height*.65)
     for j in range(n+1 if loop else n):
         t=j/n if loop else j/(n-1);phase=math.tau*t;sc.frame_set(j+1);root.location=rest.copy();root.rotation_euler=(0,0,0)
         if clip=='idle':root.location+=UP*(.018*math.sin(phase));root.rotation_euler.x=.025*math.sin(phase)
@@ -51,26 +62,37 @@ def animate(sc,clip):
         if clip=='death':
             # Bank, descend, nose impact; terminal wreck held for two samples.
             drop=[0,.04,.14,.36,.72,1.25,1.58,1.48,1.46,1.46][j];ease=drop/1.46;root.location+=-UP*drop+RIGHT*(.12*min(ease,1));root.rotation_euler.x=-.18*min(ease,1);root.rotation_euler.y=-[0,.04,.11,.20,.22,.27,.20,.16,.15,.15][j];root.rotation_euler.z=-.08*min(ease,1)
-            for key in damage:key.value=0 if j<6 else 1;key.keyframe_insert('value',frame=j+1)
+            for key in damage:key.value=[0,0,0,0,0,.15,.85,1,1,1][j];key.keyframe_insert('value',frame=j+1)
+            collapse.value=min(1,drop/1.46);collapse.keyframe_insert('value',frame=j+1)
         root.keyframe_insert('location');root.keyframe_insert('rotation_euler')
-        support.hide_render=clip=='death' and t>.25;support.keyframe_insert('hide_render')
+        support.hide_render=False;support.keyframe_insert('hide_render')
         for k,b in enumerate(bombs):
-            release=.23+k*.12;b.hide_render=not(clip=='attack' and release<=t<=release+.35);b.location=bombrest[k].copy()
-            if clip=='attack':b.location+=RIGHT*(.1*max(0,t-release))-UP*(3.5*max(0,t-release))
+            release=.18+k*.13;age=max(0,t-release)
+            b.hide_render=not(clip=='attack' and release<=t<=release+.55)
+            b.location=bombrest[k].copy()
+            if clip=='attack':
+                # Carry the airframe pose at release, then accelerate in free fall.
+                phase_release=math.tau*release
+                release_rotation=__import__('mathutils').Euler((.04*math.sin(phase_release),-.07*math.sin(math.pi*release),0)).to_matrix()
+                b.location=rest+release_rotation @ (bombrest[k]-rest)
+                b.location+=RIGHT*(-.05*math.sin(math.pi*release)-.10*age)-UP*(.12*math.sin(math.pi*release)+.25*age+7.0*age*age)
             b.keyframe_insert('hide_render');b.keyframe_insert('location')
     for o in [root,support,*bombs]:
         if o.animation_data:
             o.animation_data.action.name=clip+' | '+o.name
             for f in curves(o.animation_data.action):
                 for k in f.keyframe_points:k.interpolation='CONSTANT' if 'hide_render' in f.data_path else 'LINEAR'
+    for key in [*damage,*([collapse] if collapse else [])]:
+        for f in curves(key.id_data.animation_data.action):
+            for k in f.keyframe_points:k.interpolation='LINEAR'
     if clip=='death':
         # Settle the belly on the actual disc, not merely near it in projection.
-        sc.frame_set(n-1);base=bpy.data.objects['GEO-stationary cream base'];top=max((base.matrix_world@Vector(v)).z for v in base.bound_box);points=[]
+        sc.frame_set(n-1);base=bpy.data.objects['GEO-stationary cream base'];top=max((base.matrix_world @ Vector(v)).z for v in base.bound_box);points=[]
         deps=bpy.context.evaluated_depsgraph_get()
         for name in ('GEO-fuselage','GEO-near inner jet 0'):
             o=bpy.data.objects[name].evaluated_get(deps);me=o.to_mesh()
             for v in me.vertices:
-                pt=o.matrix_world@v.co
+                pt=o.matrix_world @ v.co
                 if (pt.xy-base.location.xy).length<.94:points.append(pt.z)
             o.to_mesh_clear()
         assert points,'wreck misses the base footprint'
@@ -89,7 +111,7 @@ for part in stages:
         from mathutils import Matrix
         original=sc.camera.location.copy()
         for i,angle in enumerate((.52,1.20),1):
-            sc.camera.data.ortho_scale=6.4*(1.15 if i==1 else 1.3);sc.camera.location=Matrix.Rotation(angle,4,'Z')@original;sc.camera.rotation_euler=(-sc.camera.location).to_track_quat('-Z','Y').to_euler();render(sc,out/f'{i:03}.png')
+            sc.camera.data.ortho_scale=6.4*(1.15 if i==1 else 1.3);sc.camera.location=Matrix.Rotation(angle,4,'Z') @ original;sc.camera.rotation_euler=(-sc.camera.location).to_track_quat('-Z','Y').to_euler();render(sc,out/f'{i:03}.png')
     elif part=='c':render(sc,out/'000.png')
     elif part=='g':
         animate(sc,'move');center=bpy.data.objects['RIG-airframe'].location.copy()
