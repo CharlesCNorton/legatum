@@ -43,3 +43,7 @@
 - Final CPU512/8 rebuild and independent saved-clip audit pass. Full-alpha packing was 205,022 bytes at Q75; established 32-level delivery alpha gives 188,042 bytes at Q80, 1329x700, all 40 frames, exact reconstructed quantized masks, no clipping and identical terminal death. Full-alpha 512/256 masters retained.
 - Video validated and decoded samples inspected: H.264/yuv420p, 1600x348, 240 frames, 8 seconds; all five clips at 2x on cream. Python/shell syntax, stale-grade/stale-model and CPU-as-GPU rejection checks pass.
 - Visual verdict: NOT PASS. At256 wheels are too plain/clean, carriage/trail registration and stone surface richness still differ; at64 identity reads but painting parity is not achieved. Projection of moving spokes produced doubled lines, so wheels use physical worn-metal material. GPU pass remains for lead. No PASS marker written.
+- Published b-plain CPU/GPU geometry stage before texture work.
+- Baked 256px AO and curvature maps on GEO-Shield wing -1, GEO-Shield wing 1, GEO-Hollow tapered barrel
+- Published painted rest pose and 50/50 comparison; real AO shader, micrograin, edge geometry and hidden-surface fill.
+- Published e-idle: 8 actual rendered frames, 10 fps; GPU 512px 64 samples.
