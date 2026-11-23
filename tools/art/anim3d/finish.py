@@ -13,7 +13,7 @@ for path in paths:
     for sp in ob.data.splines:
      if min(p.co.z for p in sp.points)<1.50:
       for p in sp.points:p.co.z+=.10
-  mat=bpy.data.materials.new('Horsehair painted ridge');mat.diffuse_color=(.47,.065,.018,1);mat.use_nodes=True
+  mat=bpy.data.materials.new('Horsehair painted ridge');mat.diffuse_color=(.68,.065,.018,1);mat.use_nodes=True
   shader=mat.node_tree.nodes.get('Principled BSDF');shader.inputs['Base Color'].default_value=mat.diffuse_color;shader.inputs['Roughness'].default_value=.82
   tufts=sorted([o for o in sc.objects if o.name.startswith('Horsehair crest tuft')],key=lambda o:o.name)
   for tuft in tufts[::2]:

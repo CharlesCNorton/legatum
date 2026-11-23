@@ -25,7 +25,7 @@ def paint(path):
   tex=n.new('ShaderNodeTexImage');tex.image=image;tex.interpolation='Linear';l.new(coords.outputs[0],tex.inputs['Vector'])
   # Moderate blend: retain physical patina/lighting, add source's engraved brushwork.
   old=s.inputs['Base Color'].links[0].from_socket
-  mix=n.new('ShaderNodeMixRGB');mix.blend_type='MIX';mix.inputs[0].default_value=.75
+  mix=n.new('ShaderNodeMixRGB');mix.blend_type='MIX';mix.inputs[0].default_value=.18
   l.new(old,mix.inputs[1]);l.new(tex.outputs['Color'],mix.inputs[2]);l.new(mix.outputs[0],s.inputs['Base Color'])
  sc=bpy.context.scene;sc['painted_shield']='Own CC BY 4.0 spearman source, calibrated UV on convex mesh; PBR + source detail'
  bpy.ops.file.pack_all();bpy.ops.wm.save_as_mainfile(filepath=str(path))

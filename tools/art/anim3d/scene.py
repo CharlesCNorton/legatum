@@ -70,7 +70,7 @@ def limb(upper, lower, target, pole):
 
 def camera(pos):
     c=bpy.context.scene.camera; c.location=pos
-    c.rotation_euler=(Vector((0,0,1.30))-c.location).to_track_quat('-Z','Y').to_euler()
+    c.rotation_euler=(Vector((0,0,1.25))-c.location).to_track_quat('-Z','Y').to_euler()
 
 bpy.ops.object.select_all(action='SELECT'); bpy.ops.object.delete(use_global=False)
 bpy.ops.preferences.addon_enable(module='bl_ext.user_default.mpfb')
@@ -89,7 +89,7 @@ for side in ['l','r']:
 # Normalize real evaluated anatomy; no primitive body construction.
 bpy.context.view_layer.update(); ev=body.evaluated_get(bpy.context.evaluated_depsgraph_get()); me=ev.to_mesh()
 zlo=min(v.co.z for v in me.vertices); zhi=max(v.co.z for v in me.vertices); ev.to_mesh_clear()
-body.scale=(1.72/(zhi-zlo),)*3
+body.scale=(1.72/(zhi-zlo)*1.10,1.72/(zhi-zlo)*1.04,1.72/(zhi-zlo))
 bpy.context.view_layer.objects.active=body; body.select_set(True)
 bpy.ops.object.transform_apply(location=False,rotation=False,scale=True)
 rig=HumanService.add_builtin_rig(body,'game_engine'); rig.name='Spearman • MPFB game_engine'
@@ -144,7 +144,7 @@ def fitted_shell(name, predicate, mat, inflate=.009):
 vs=[];fs=[];rings=28;segments=80
 for j in range(rings+1):
     t=j/rings;z=1.035+.405*t
-    rx=.181+.050*sin(t*pi*.8);ry=.132+.026*sin(t*pi)
+    rx=.193+.054*sin(t*pi*.8);ry=.139+.028*sin(t*pi)
     for i in range(segments):
         a=i*2*pi/segments;x=rx*sin(a);front=max(0,cos(a))
         pec=.030*math.exp(-((abs(x)-.102)/.080)**2-((z-1.24)/.075)**2)
@@ -158,8 +158,15 @@ for j in range(rings):
 cuirass=solid(mesh('Forged bronze muscle cuirass',vs,fs,bronze),.009);bevel(cuirass,.003);attach(cuirass,'spine_03')
 for j in [0,rings]:
     pts=vs[j*segments:(j+1)*segments];attach(curve('Cuirass rolled border',pts+[pts[0]],.005,gold),'spine_03')
+def cuirass_front(x,z):
+    t=max(0,min(1,(z-.105-1.035)/.405));rx=.193+.054*sin(t*pi*.8);ry=.139+.028*sin(t*pi)
+    front=math.sqrt(max(.02,1-(x/rx)**2))
+    pec=.030*math.exp(-((abs(x)-.102)/.080)**2-((z-.105-1.24)/.075)**2)
+    ab=.014*(.5+.5*cos((z-.105-1.10)*55))*math.exp(-(x/.12)**4)
+    return -ry*front-(pec+ab)*front**3-.003
 for sg in [-1,1]:
     pts=[(sg*(.015+.18*k/24),-.17-.026*sin(k*pi/24),1.385-.045*sin(k*pi/24)) for k in range(25)]
+    pts=[(x,cuirass_front(x,z),z) for x,y,z in pts]
     attach(curve('Pectoral chased groove',pts,.003,dark),'spine_03')
     attach(curve('Pectoral bright lip',[(x,y-.003,z-.005) for x,y,z in pts],.002,gold),'spine_03')
 for side in ('l','r'):
@@ -187,6 +194,7 @@ for j in range(18):
 for side in [-1,1]:
     for z in [1.20,1.29,1.38]:
         pts=[(side*(.075+.026*cos(a)), -.151-.014*sin(a), z+.027*sin(a)) for a in [i*pi*1.6/28 for i in range(29)]]
+        pts=[(x,cuirass_front(x,z)-.002,z) for x,y,z in pts]
         attach(curve('Chased cuirass volute',pts,.003,gold),'spine_03')
 for z in [1.08,1.105]:
     attach(curve('Cuirass waist rolled edge',[(.19*sin(a),-.14*cos(a),z) for a in [i*2*pi/96 for i in range(97)]],.009,gold),'spine_01')
@@ -204,15 +212,25 @@ for j in range(12):
     for i in range(64):a=j*64+i;b=j*64+(i+1)%64;faces.append((a,b,b+64,a+64))
 attach(solid(mesh('Corinthian helmet crown',verts,faces,bronze),.006),'head')
 attach(curve('Raised brow',[(cx+.108*sin(a),cy-.120*cos(a),cz+.020) for a in [(-pi+2*pi*i/80) for i in range(81)]],.006,gold),'head')
+# Shallow chased bands and rivets follow the bowl, below the horsehair saddle.
+for band in [.26,.52]:
+    pts=[]
+    for i in range(97):
+        a=-1.35+2.7*i/96;t=band+.035*sin(a*18)
+        pts.append((cx+.110*cos(t)*sin(a),cy-.120*cos(t)*cos(a),cz+.021+.132*sin(t)))
+    attach(curve('Helmet chased wave',pts,.0018,dark),'head')
+for i in range(11):
+    a=-1.25+.25*i;t=.14
+    attach(sphere('Helmet brow rivet',(cx+.110*cos(t)*sin(a),cy-.120*cos(t)*cos(a),cz+.021+.132*sin(t)),(.003,.003,.003),gold),'head')
 # Curved faceplate and real apertures are built by helmet.py in the build stage.
 # Red horsehair fan with individually ridged tufts, curved front to back.
 for i in range(63):
-    a=-.94+i/62*2.47
-    y=cy+.125*sin(a); z=cz-.015+.143*cos(a)
-    yo=cy+.23*sin(a); zo=cz-.015+.252*cos(a)
+    a=-1.15+i/62*2.95
+    y=cy+.142*sin(a); z=cz+.015+.150*cos(a)
+    yo=cy+.315*sin(a); zo=cz+.015+.360*cos(a)
     pts=[(-.023,y,z),(.023,y,z),(.018,yo,zo),(-.018,yo,zo)]
     o=mesh('Horsehair crest tuft',pts,[(0,1,2,3)],red,False);solid(o,.006);attach(o,'head')
-attach(curve('Crest bronze saddle',[(0,cy+.128*sin(a),cz-.015+.148*cos(a)) for a in [-.94+i/60*2.47 for i in range(61)]],.014,gold),'head')
+attach(curve('Crest bronze saddle',[(0,cy+.144*sin(a),cz+.015+.153*cos(a)) for a in [-1.15+i/60*2.95 for i in range(61)]],.014,gold),'head')
 # Sandals on real MPFB feet, leather straps over instep.
 for s,side in [(1,'l'),(-1,'r')]:
     foot=rig.pose.bones['foot_'+side]; x=foot.head.x; y=foot.head.y
@@ -222,8 +240,9 @@ for s,side in [(1,'l'),(-1,'r')]:
         pts=[(x+.058*cos(a),y+yy,.127+.048*sin(a)) for a in [i*pi/16 for i in range(17)]]
         attach(curve('Sandal strap '+side,pts,.009,leather),'foot_'+side)
 # Set natural guard stance before attaching held kit.
-limb('thigh_r','calf_r',(-.27,-.065,.072),(-.29,-.35,.48))
-limb('thigh_l','calf_l',(.27,.025,.072),(.28,-.32,.48))
+rig.location.z=.085
+limb('thigh_r','calf_r',(-.32,-.075,.082),(-.34,-.40,.48))
+limb('thigh_l','calf_l',(.32,.035,.082),(.34,-.36,.48))
 limb('upperarm_r','lowerarm_r',(-.37,-.31,1.19),(-.55,-.04,1.15))
 limb('upperarm_l','lowerarm_l',(.29,-.34,1.12),(.53,-.10,1.13))
 for side in ('r','l'):
@@ -234,9 +253,9 @@ for side in ('r','l'):
 bpy.context.view_layer.update()
 # Spear aligned through right palm; hand-relative attachment preserves grip.
 grip=rig.pose.bones['hand_r'].head+rig.location+Vector((0,-.012,.047))
-shaft=curve('Ash dory shaft',[tuple(grip+Vector((0,0,-1.24))),tuple(grip+Vector((0,0,1.12)))],.013,wood);attach(shaft,'hand_r')
+shaft=curve('Ash dory shaft',[tuple(grip+Vector((0,0,-1.24))),tuple(grip+Vector((0,0,1.06)))],.013,wood);attach(shaft,'hand_r')
 for zz in [.98,1.03]: attach(curve('Spear bronze ferrule',[tuple(grip+Vector((0,0,zz))),tuple(grip+Vector((0,0,zz+.035)))],.019,gold),'hand_r')
-sv=[tuple(grip+Vector(v)) for v in [(-.045,0,1.12),(0,-.012,1.13),(.045,0,1.12),(0,0,1.31),(0,.012,1.13),(0,0,1.065)]]
+sv=[tuple(grip+Vector(v)) for v in [(-.045,0,1.06),(0,-.012,1.07),(.045,0,1.06),(0,0,1.25),(0,.012,1.07),(0,0,1.005)]]
 attach(mesh('Leaf spearhead with medial ridge',sv,[(0,1,3),(1,2,3),(2,4,3),(4,0,3),(0,5,1),(1,5,2),(2,5,4),(4,5,0)],iron,False),'hand_r')
 attach(curve('Iron spear butt',[tuple(grip+Vector((0,0,-1.24))),tuple(grip+Vector((0,0,-1.16)))],.015,iron),'hand_r')
 # Aspis curved shell, raised radial sunburst, concentric engraved rim.
@@ -245,17 +264,20 @@ vs=[tuple(center+Vector((0,-.085,0)))]; fs=[]
 for j in range(1,13):
     r=rad*j/12; depth=-.085*(1-(r/rad)**2)
     for i in range(96):a=2*pi*i/96;vs.append(tuple(center+Vector((r*sin(a),depth,r*cos(a)))))
-for i in range(96):fs.append((0,1+i,1+(i+1)%96))
+for i in range(96):fs.append((0,1+(i+1)%96,1+i))
 for j in range(11):
-    for i in range(96):a=1+j*96+i;b=1+j*96+(i+1)%96;fs.append((a,b,b+96,a+96))
+    for i in range(96):a=1+j*96+i;b=1+j*96+(i+1)%96;fs.append((a,a+96,b+96,b))
 attach(solid(mesh('Convex bronze aspis',vs,fs,bronze),.012),'lowerarm_l')
 for rr in [rad,rad-.022,.087]:
     pts=[tuple(center+Vector((rr*sin(a),-.009-.085*(1-(rr/rad)**2),rr*cos(a)))) for a in [2*pi*i/128 for i in range(129)]]
     attach(curve('Aspis turned rim',pts,.005 if rr<rad else .009,gold),'lowerarm_l')
 for i in range(12):
-    a=2*pi*i/12; r=.285 if i%2==0 else .25
-    pts=[tuple(center+Vector((rr*sin(aa),-.099+.07*(rr/rad)**2,rr*cos(aa)))) for rr,aa in [(.083,a-.13),(r,a),(.083,a+.13),(.12,a)]]
-    attach(mesh('Sunburst raised ray',pts,[(0,1,3),(1,2,3)],gold,False),'lowerarm_l')
+    a=2*pi*i/12; r=.315 if i%2==0 else .275
+    pts=[tuple(center+Vector((rr*sin(aa),-.099+.07*(rr/rad)**2,rr*cos(aa)))) for rr,aa in [(.081,a-.21),(r,a),(.081,a+.21),(.15,a)]]
+    # A raised keel, two distinct facets and side walls catch light at token size.
+    pts[3]=tuple(Vector(pts[3])+Vector((0,-.040,0)))
+    ray=solid(mesh('Sunburst raised ray',pts,[(0,1,3),(1,2,3),(2,0,3)],gold,False),.009)
+    bevel(ray,.0015);attach(ray,'lowerarm_l')
 attach(sphere('Aspis central omphalos',tuple(center+Vector((0,-.104,0))),(.072,.035,.072),gold),'lowerarm_l')
 for i in range(48):
     a=2*pi*i/48;attach(sphere('Aspis rim stud',tuple(center+Vector((.34*sin(a),-.016,.34*cos(a)))),(.0035,.003,.0035),gold),'lowerarm_l')
@@ -266,7 +288,7 @@ for i in range(36):
 # Turn the aspis about its center, preserving thickness.
 for ob in list(bpy.context.scene.objects):
     if any(x in ob.name for x in ['aspis','Aspis','Sunburst']):
-        ob.matrix_world=Matrix.Translation(center) @ Matrix.Rotation(-.65,4,'Z') @ Matrix.Translation(-center) @ ob.matrix_world
+        ob.matrix_world=Matrix.Translation(center+Vector((.12,0,0))) @ Matrix.Rotation(-.40,4,'Z') @ Matrix.Diagonal((.92,1,1.08,1)) @ Matrix.Translation(-center) @ ob.matrix_world
 # One editable aspis control, still bone attached, can be released during death.
 shield_objects=[ob for ob in list(bpy.context.scene.objects) if any(x in ob.name for x in ['aspis','Aspis','Sunburst'])]
 shield_control=bpy.data.objects.new('Aspis control',None);bpy.context.collection.objects.link(shield_control);shield_control.location=center;attach(shield_control,'lowerarm_l')
@@ -277,7 +299,7 @@ vs=[];fs=[]; nx=24;ny=32
 for j in range(ny+1):
     t=j/ny
     for i in range(nx+1):
-        u=i/nx; x=(u-.5)*(.42+.38*t); y=.095+.11*t+.026*sin(u*pi*12)*(.2+.8*t)
+        u=i/nx; x=(u-.5)*(.46+.46*t); y=.095+.11*t+.026*sin(u*pi*12)*(.2+.8*t)
         z=1.51-1.16*t+.025*cos(u*pi*4)*t
         vs.append((x,y,z))
 for j in range(ny):
@@ -306,15 +328,15 @@ base.modifiers.new('Stone cloth collision','COLLISION')
 sc=bpy.context.scene;sc.render.threads_mode='FIXED';sc.render.threads=4;sc.render.engine='CYCLES';sc.cycles.device='CPU';sc.cycles.samples=12;sc.cycles.use_denoising=True
 sc.render.resolution_x=sc.render.resolution_y=256;sc.render.resolution_percentage=100
 sc.render.film_transparent=True;sc.render.image_settings.file_format='PNG';sc.render.image_settings.color_mode='RGBA'
-sc.world.color=(.22,.22,.22)
-sc.view_settings.view_transform='AgX';sc.view_settings.look='AgX - Medium High Contrast';sc.view_settings.exposure=.35
-bpy.ops.object.camera_add();sc.camera=bpy.context.object;sc.camera.data.type='ORTHO';sc.camera.data.ortho_scale=2.98
+sc.world.color=(.13,.13,.13)
+sc.view_settings.view_transform='AgX';sc.view_settings.look='AgX - Medium High Contrast';sc.view_settings.exposure=.1
+bpy.ops.object.camera_add();sc.camera=bpy.context.object;sc.camera.data.type='ORTHO';sc.camera.data.ortho_scale=2.90
 camera((2.5,-7,3.0))
-for name,loc,power,size,col in [('Warm upper-left key',(-3,-4,6),480,3,(1,.79,.55)),('Soft cool fill',(4,-2,3),180,4,(.72,.81,1)),('Warm back rim',(-2,3,4),350,3,(1,.65,.34))]:
+for name,loc,power,size,col in [('Warm upper-left key',(-3,-4,6),800,1.5,(1,.91,.75)),('Soft cool fill',(4,-2,3),310,3,(.88,.92,1)),('Warm back rim',(-2,3,4),700,1.7,(1,.83,.57))]:
     bpy.ops.object.light_add(type='AREA',location=loc);o=bpy.context.object;o.name=name;o.data.energy=power;o.data.shape='DISK';o.data.size=size;o.data.color=col;o.rotation_euler=(Vector((0,0,1))-o.location).to_track_quat('-Z','Y').to_euler()
 sc.render.fps=24
 p=rig.pose.bones['head'];mat=p.matrix.copy();pivot=p.head.copy()
-p.matrix=Matrix.Translation(pivot) @ Matrix.Rotation(-.25,4,'Z') @ Matrix.Translation(-pivot) @ mat
+p.matrix=Matrix.Translation(pivot) @ Matrix.Rotation(-.42,4,'Z') @ Matrix.Translation(-pivot) @ mat
 bpy.context.view_layer.update()
 
 rig['origin']='MPFB 2.0.18 game_engine, CC0 base topology and weights'

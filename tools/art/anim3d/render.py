@@ -21,7 +21,7 @@ if clip:
 else:
  views=[('front',(0,-7,3.0)),('three-quarter',(2.5,-7,3.0)),('side',(7,-.3,3.0))] if stage=='b' else [('three-quarter',(2.5,-7,3.0))]
  for name,pos in views:
-  sc.camera.location=pos;sc.camera.rotation_euler=(Vector((0,0,1.30))-sc.camera.location).to_track_quat('-Z','Y').to_euler()
+  sc.camera.location=pos;sc.camera.rotation_euler=(Vector((0,0,1.25))-sc.camera.location).to_track_quat('-Z','Y').to_euler()
   sc.render.filepath=str(out/(name+'.png'));bpy.ops.render.render(write_still=True)
 (out/'render.json').write_text(json.dumps({'engine':sc.render.engine,'resolution':sc.render.resolution_x,'samples':sc.cycles.samples if sc.render.engine=='CYCLES' else None,'blend_sha256':hashlib.sha256(path.read_bytes()).hexdigest(),'blender':bpy.app.version_string},indent=2))
 print('RENDER_READY',out)

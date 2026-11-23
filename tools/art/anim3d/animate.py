@@ -65,15 +65,18 @@ def pose(t):
   rig.location.z=base_loc.z+.075-floor
   guard(.08+.013*math.cos(4*math.pi*t));turn('spine_03','Z',.045*math.sin(2*math.pi*t))
  elif clip=='attack':
-  # Anticipation, shoulder-height extension, weight shift, recovery.
-  strength=[0,.1,.45,.9,1,1,.65,.25,.04,0][min(9,round(t*9))]
-  rig.location.y=-.12*strength;rig.location.z=base_loc.z-.09*strength
-  turn('spine_03','X',.16*strength)
-  limb('thigh_l','calf_l',(.26,-.20*strength,.072+.09*strength),(.27,-.45,.50))
-  limb('thigh_r','calf_r',(-.27,.10*strength,.072+.09*strength),(-.28,-.2,.5))
-  limb('upperarm_r','lowerarm_r',(-.37+.22*strength,-.31-.24*strength,1.19+.16*strength),(-.55,-.1,1.35))
-  limb('upperarm_l','lowerarm_l',(.29,-.34-.07*strength,1.12+.13*strength),(.5,-.1,1.2))
-  aim('hand_r',(0,-.03,.09));hand_spear(Vector((.92,.39,0))*strength+Vector((0,0,1))*(1-strength))
+  # Raise outside the right shoulder, then drive forward above the shield rim.
+  # Right hand stays on the shaft; the rear shaft stays outside the torso.
+  strength=[0,.05,.22,.72,1,1,.68,.25,.05,0][min(9,round(t*9))]
+  raised=[0,.35,.90,1,1,1,1,.85,.30,0][min(9,round(t*9))]
+  rig.location=base_loc+Vector((.12*strength,-.16*strength,-.12*strength))
+  turn('spine_03','X',.20*strength);turn('spine_03','Y',.15*strength)
+  # Counter root travel in the ankle targets: soles remain on the disc.
+  limb('thigh_l','calf_l',(.32+.08*strength,.035-.18*strength,.082+.12*strength),(.42,-.50,.48))
+  limb('thigh_r','calf_r',(-.32-.12*strength,-.075+.16*strength,.082+.12*strength),(-.40,-.20,.48))
+  limb('upperarm_r','lowerarm_r',(-.37+.10*strength,-.31-.10*raised-.05*strength,1.19+.52*raised),(-.65,.05,1.48))
+  limb('upperarm_l','lowerarm_l',(.29,-.34-.10*strength,1.12+.10*strength),(.55,-.12,1.20))
+  aim('hand_r',(0,-.03,.09));hand_spear(Vector((.98,.17,.12))*raised+Vector((0,0,1))*(1-raised))
  elif clip=='hit':
   a=[0,1,.5,0][min(3,round(t*3))]
   turn('spine_03','X',-.30*a);turn('neck_01','X',-.18*a);turn('head','Z',.09*a)
@@ -98,7 +101,7 @@ def pose(t):
   shaft=bpy.data.objects['Ash dory shaft'];pts=shaft.data.splines[0].points
   direction=(shaft.matrix_world @ Vector(pts[-1].co[:3])-shaft.matrix_world @ Vector(pts[0].co[:3])).normalized()
   for o in spear_objects:
-   mat=o.matrix_world.copy();mat.translation+=direction*.15*strength;o.matrix_world=mat
+   mat=o.matrix_world.copy();mat.translation+=direction*.12*raised;o.matrix_world=mat
   bpy.context.view_layer.update()
  if clip=='death' and shield:
   release=max(0,min(1,(t-.30)/.42));mat=shield.matrix_world.copy();q=mat.to_quaternion().slerp(Matrix.Rotation(-math.pi/2,4,'X').to_quaternion(),release)
