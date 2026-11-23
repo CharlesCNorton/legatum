@@ -40,3 +40,5 @@ Round 2: opened GPU c, f, all five e strips, decoded video check, and extracted 
 Honest GPU critique at 256px: aircraft silhouette and projected brushwork are close; canopy/intake rims are softer than painting, pedestal is smooth/pink with a uniform dark rim and lacks painted stone grain. Idle/move scarcely distinguishable; attack bombs are tiny unarticulated dots. Death abruptly deletes support, then appears to slide behind/through disc despite terminal vertex-contact check. At 64px identity matches; stone reads plastic and action signals are weak. Not PASS.
 Loaded all six Blender skills: modeling for beveled full-depth stone and aircraft surfaces; materials for pigment grain and physical contact AO; cameras for fixed painting registration; lighting for warm key/soft fill/cool rim; animation for support collapse and sampled collision checks; rendering for CPU previews and GPU handoff. Prior complete GPU masters/reviews preserved before rebuild.
 c: 1 frames at 256/64 from 256px CYCLES/CPU, 8 samples.
+e-death: 10 frames at 256/64 from 256px CYCLES/CPU, 8 samples.
+c: 1 frames at 256/64 from 512px CYCLES/CPU, 12 samples.

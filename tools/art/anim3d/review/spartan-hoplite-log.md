@@ -146,3 +146,5 @@ Baked clip attack
 Baked clip hit
 Baked clip death
 Round3 full audit caught43 findings: projected spear fit lost depth grip(0.134m), moving butt dipped through stone, and fitted attack sandal reached z0.069m. Fixed source-camera spear depth by explicit hand constraint while retaining grounded butt; move uses same along-shaft support correction as idle/hit; authored attack receives evaluated-sole vertical support. Full clip rebuild/audit required. Bone-only checks were insufficient, so actual sole yaw/virtual-ground displacement now also tested. Silhouette overlap0.787116 GPU baseline ->0.846812 initialCPU, contour evidence only.
+Baked clip idle
+Round3 actual-sandal test correctly failed: maxvirtualground drift0.037696m despite bone drift0.00000072m; sole yaw4.79deg passed. Updated source-action contact adapter to stabilize evaluated sandal centers by root translation without editing rotations; bone displacement is now diagnostic and actual sole25mm gate remains unchanged. Source scene recheckPASS, rest grip0.03751m, cape projection mean0.21505; final rebuild underway.
