@@ -86,3 +86,7 @@
 - Published e-move: CYCLES/CPU, 256 px, 4 samples; visual review pending.
 - Published e-death: CYCLES/CPU, 256 px, 4 samples; visual review pending.
 - Published c: CYCLES/CPU, 512 px, 8 samples; visual review pending.
+- Published c: CYCLES/CPU, 256 px, 8 samples; visual review pending.
+- Published feet: CYCLES/CPU, 256 px, 8 samples; visual review pending.
+- Published e-move: CYCLES/CPU, 256 px, 8 samples; visual review pending.
+- Published e-death: CYCLES/CPU, 256 px, 8 samples; visual review pending.
