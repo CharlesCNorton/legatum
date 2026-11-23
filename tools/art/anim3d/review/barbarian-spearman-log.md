@@ -30,3 +30,4 @@
 - Inspected hit strip: recoil and recovery read; no frame-bound clipping seen there.
 - Published d review from CPU render.
 - Published e-attack review from CPU render.
+- Published e-death review from CPU render.

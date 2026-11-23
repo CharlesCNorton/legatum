@@ -16,3 +16,14 @@
 - Corrected front wheel centers, enlarged/tilted wooden propeller, excluded fast rotating parts and wheel faces from projection to avoid visibly misplaced brushwork. Rebuilding material/clip hashes and all stages; final CPU masters rendered at native 512, downsampled to 256. GPU final is still required.
 - Saved c review immediately; 1 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/c/render.json.
 - Saved d review immediately; 4 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/d/render.json.
+- Saved e-idle review immediately; 8 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/e-idle/render.json.
+- Saved b review immediately; 1 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/b/render.json.
+- Saved c review immediately; 1 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/c/render.json.
+- Saved d review immediately; 4 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/d/render.json.
+- Saved e-idle review immediately; 8 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/e-idle/render.json.
+- Saved e-move review immediately; 8 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/e-move/render.json.
+- Saved e-attack review immediately; 10 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/e-attack/render.json.
+- Saved e-hit review immediately; 4 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/e-hit/render.json.
+- Saved e-death review immediately; 10 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/e-death/render.json.
+- Final trim validator correctly refused the atlas: crash wingtip touched the left border. Adjusted only death's lateral settle by +0.14 world units; rerendering only that clip and rerunning delivery. Other clips already satisfy bounds. No oversized or clipped atlas was shipped.
+- Saved e-death review immediately; 10 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/e-death/render.json.

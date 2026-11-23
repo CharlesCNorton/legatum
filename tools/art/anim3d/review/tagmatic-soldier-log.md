@@ -5,3 +5,8 @@
 - Saved b-plain immediately, then c-textured-lit/c-details/f-restpose-compare. First comparison exposed floating unfinished toes and a low base; added full leather footwear and raised the disc to match the painting.
 - Cycles baked six real 256 px AO/Pointiness maps for shield, helmet and lamellae. One rest-calibrated colour LUT is shared by all clips, avoiding frame-to-frame histogram pumping.
 - Five authored MPFB clips saved, with true skeletal transforms and continuous released-equipment transforms. Cloth has modeled folds with bone attachment in round 1; it is not cloth simulation.
+- Geometry audit exposed an off-frame helmet and shield/base penetration during death. Revised collapse translation/rotation, shield release, rigid equipment settling and authored 3D contact folds; latest 40-sample audit stays within the cell and above the base underside (minimum world Z 0.090 m, from the stationary base).
+- Added ray visibility to frozen painting UVs: body surfaces occluded by the shield now keep material fills, avoiding a second cross on revealed anatomy. Added actual gathered trouser meshes.
+- Plain review now includes matched, 60-degree and 120-degree views to expose real equipment depth, anatomy and garment construction.
+- Rest verdict: clear same-unit identity at 64 px; not painting parity at 256 px. Face/armour brushwork remains weaker, shield highlights too glossy, cream base too dark after lighting/grade. Death is a readable collapse but still stiff. No PASS marker.
+- Non-obvious pipeline finding: MPFB system-eye import purges unused materials; create task materials after importing eyes. This is handled in build.py. No docs/learnings files edited.

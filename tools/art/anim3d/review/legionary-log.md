@@ -26,3 +26,8 @@
 - Published c: CYCLES/CPU, 512 px, 8 samples; visual review pending.
 - Published d: CYCLES/CPU, 512 px, 8 samples; visual review pending.
 - Published e-idle: CYCLES/CPU, 512 px, 8 samples; visual review pending.
+- Published e-move: CYCLES/CPU, 512 px, 8 samples; visual review pending.
+- Published e-attack: CYCLES/CPU, 512 px, 8 samples; visual review pending.
+- Published e-hit: CYCLES/CPU, 512 px, 8 samples; visual review pending.
+- Archive clarification: `b-interim` and `c-interim` preserve early corrected revisions, not the very first exports; `e-death-first-strip` is the initial death strip. Each original stage was published when it existed, before subsequent overwrite.
+- Published e-death: CYCLES/CPU, 512 px, 8 samples; visual review pending.

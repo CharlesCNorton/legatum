@@ -1,0 +1,2 @@
+- Round 1 started: read project art skill, full pipeline and feedback 1–22. Loaded six Blender skills: modeling (solid beveled kit), materials (painted projection and wear), cameras (reference framing), lighting (warm key and cool rim), animation (five authored skeletal clips), rendering (CPU previews, GPU handoff).
+- Reusing MPFB CC0 anatomy and helper routines from the infantry lead, and unit-local packaging/rendering from barbarian-crossbowman.

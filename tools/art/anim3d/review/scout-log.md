@@ -34,3 +34,22 @@ Rendered e-move 512 px CYCLES/CPU
 Rendered e-attack 512 px CYCLES/CPU
 Rendered e-hit 512 px CYCLES/CPU
 Rendered e-death 512 px CYCLES/CPU
+Rendered b 256 px CYCLES/CPU
+Rendered d 512 px CYCLES/CPU
+Rendered e-attack 512 px CYCLES/CPU
+Geometry audit PASS for 53 bones, stationary base, nondegenerate objects, grip <=0.0426m, exact loop endpoint transforms and held death transforms. Contact diagnostic exposes body min Z 0.0519 at rest and 0.0007 in death vs base top 0.095: toe/body penetration remains a known round-1 defect; not a collision-free verdict.
+Attack transition corrected: hand now eases from brow to brace and back; only attack/d rerendered, other clip source hashes retained.
+Using six Blender skills: MPFB anatomy, solid folded clothing/bevels, textured Principled materials, warm key/cool rim, painting camera, authored keys/secondary cloth, denoised RGBA sequences.
+Rendered b 256 px CYCLES/CPU
+Rendered c 512 px CYCLES/CPU
+Rendered c-details 512 px CYCLES/CPU
+Rendered d 512 px CYCLES/CPU
+Rendered e-idle 512 px CYCLES/CPU
+Initial pack: 194210 bytes at quality 75, but validator correctly failed bottom clipping (idle bounds reached y=512). Candidate withheld from final validation pending framing correction.
+Final correction: lower camera aim to leave base margin; set rest and every sampled pose to evaluated body minimum Z=0.100 above base top 0.095. Full source/projection/clip/render chain regenerating; prior reviews retained in pre-framing-fix.
+Rendered e-move 512 px CYCLES/CPU
+Rendered e-attack 512 px CYCLES/CPU
+Rendered e-hit 512 px CYCLES/CPU
+Framing recheck: idle/move/attack margins restored. The hit peak still lifts the staff to y=0, so reduce only the torso recoil amplitude and refresh the four hit frames after the serial render completes; head/arm recoil remains.
+Rendered e-death 512 px CYCLES/CPU
+Rendered e-hit 512 px CYCLES/CPU
