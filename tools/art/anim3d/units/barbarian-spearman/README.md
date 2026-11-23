@@ -1,4 +1,4 @@
-# Barbarian spearman — round 1
+# Barbarian spearman — round 2
 
 True 3D MPFB body, original kit, 53-bone rig and authored idle/move/attack/hit/death
 clips. See the unit's infantry chapter in `../../PLAYBOOK.md` for build commands,
@@ -13,7 +13,7 @@ For a serial CPU preview batch under one gate acquisition:
 
 ```sh
 source tools/art/anim3d/env.sh
-RESOLUTION=512 SAMPLES=8 blender -b --disable-autoexec --python-exit-code 1 \
+RESOLUTION=256 SAMPLES=8 blender -b --disable-autoexec --python-exit-code 1 \
   --python tools/art/anim3d/units/barbarian-spearman/refresh.py
 ```
 
@@ -32,8 +32,14 @@ The animation atlas is an art candidate, not runtime integration or art approval
 The target remains the original painting at 256 px and the same identity at 64 px.
 Current limitations are recorded in `REVIEW.md` after actual render inspection.
 
-Projection masks exclude the original painting's spear from non-weapon surfaces,
-so moving the actual spear does not leave a second painted spear behind. The
-excluded band uses the underlying material fill. `projection_mask.py` can refresh
-packed masters and preserve their existing animation keys; rerender all textured
-stages and regrade/repack afterward.
+Frozen projection samples the finished 3D surface. Rest-camera visibility tests
+exclude parts hidden by independent equipment. The source spear's narrow band
+uses feathered adjacent painted pigment samples, so the real spear can move
+without leaving another shaft on the clothes. These are shader masks, not alpha
+cutouts or source-image edits. Rebuild paint, bakes and all clips after changes.
+
+The GPU script writes the driver's `barbarian-spearman-round${ROUND}.mp4` after
+reconstructing decoded atlas crops at their per-frame offsets. It verifies all
+40 samples, lossless alpha, size/quality, the identical death hold, and the
+8-second H.264/yuv420p movie. It records a transcript and explicit failure stage.
+CPU256 iteration uses `pack.py --preview`; it never claims current GPU512 masters.

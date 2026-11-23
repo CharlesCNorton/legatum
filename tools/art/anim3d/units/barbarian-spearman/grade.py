@@ -12,8 +12,11 @@ def quant(im,c):
    accum+=n
    if accum>=total*(.02+.96*q/16):out.append(v);break
  return out
+raw=folder/'raw';raw.mkdir(exist_ok=True)
+for path in sorted(folder.glob('[0-9][0-9].png')):
+ if not (raw/path.name).exists():Image.open(path).save(raw/path.name)
 if stage=='c':
- ref=Image.open('app/src/assets/units/barbarian-spearman-256.png').convert('RGBA');im=Image.open(folder/'00.png').convert('RGBA');luts=[];stats={}
+ ref=Image.open('app/src/assets/units/barbarian-spearman-256.png').convert('RGBA');im=Image.open(raw/'00.png').convert('RGBA');luts=[];stats={}
  for c in 'RGB':
   a=quant(im,c);b=quant(ref,c);lut=[]
   for v in range(256):
@@ -26,6 +29,6 @@ if stage=='c':
  (M/'grade.json').write_text(json.dumps({'method':'40% monotonic 17-quantile foreground transfer, rest only','luts':luts,'quantiles':stats},indent=2))
 luts=json.loads((M/'grade.json').read_text())['luts'];raw=folder/'raw';raw.mkdir(exist_ok=True)
 for path in sorted(folder.glob('[0-9][0-9].png')):
- im=Image.open(path).convert('RGBA');im.save(raw/path.name);Image.merge('RGBA',[im.getchannel(c).point(lut) for c,lut in zip('RGB',luts)]+[im.getchannel('A')]).save(path)
+ im=Image.open(raw/path.name).convert('RGBA');Image.merge('RGBA',[im.getchannel(c).point(lut) for c,lut in zip('RGB',luts)]+[im.getchannel('A')]).save(path)
 meta=json.loads((folder/'render.json').read_text());meta['grade_sha256']=hashlib.sha256((M/'grade.json').read_bytes()).hexdigest();(folder/'render.json').write_text(json.dumps(meta,indent=2))
 print('GRADE_READY',stage)

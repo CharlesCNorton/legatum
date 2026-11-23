@@ -14,6 +14,7 @@ for clip,(count,fps,loop) in clips.items():
  if os.environ.get('CLIP') and clip not in os.environ['CLIP'].split(','):continue
  bpy.ops.wm.open_mainfile(filepath=str(source));sc=bpy.context.scene;rig=bpy.data.objects['Barbarian skeleton'];base=bpy.data.objects['Stationary cream base'];base_matrix=base.matrix_world.copy()
  neutral={p.name:p.matrix_basis.copy() for p in rig.pose.bones};root=rig.location.copy();feet={s:rig.pose.bones['foot_'+s].head.copy() for s in ['r','l']}
+ foot_rest={side:rig.pose.bones['foot_'+side].matrix.copy() for side in ['r','l']}
  weapon=bpy.data.objects['Spear grip control'];wrest=weapon.matrix_world.copy();wloc=weapon.location.copy()
  hand_pose_rest=rig.pose.bones['hand_r'].matrix.copy()
  hand_rest=(rig.matrix_world@hand_pose_rest).copy()
@@ -31,16 +32,25 @@ for clip,(count,fps,loop) in clips.items():
   if clip=='idle':
    rotate('spine_03',(1,0,0),.017*sin(2*pi*t));rotate('head',(0,1,0),.025*sin(2*pi*t+.4));rotate('upperarm_r',(0,0,1),.012*sin(2*pi*t))
   elif clip=='move':
+   rig.location.z-=.065
+   bpy.context.view_layer.update()
    # In-place gait with planted contact half and raised swing half.
    for s,offset in [('r',0),('l',.5)]:
     u=(t+offset)%1;a=2*pi*u;target=feet[s].copy();target.y+=.17*cos(a);target.z+=.07*max(0,sin(a))
-    limb('thigh_'+s,'calf_'+s,target,(target.x,-.5,.6))
-   rotate('spine_03',(0,1,0),.035*sin(2*pi*t));rotate('head',(0,0,1),.025*sin(2*pi*t));rig.location.z+=.010*(1-cos(4*pi*t))
+    lift=.07*max(0,sin(a))
+    for correction in range(6):
+     limb('thigh_'+s,'calf_'+s,target,(target.x,-.5,.6))
+     foot=rig.pose.bones['foot_'+s];flat=foot_rest[s].copy();flat.translation=foot.head.copy();foot.matrix=flat
+     bpy.context.view_layer.update()
+     shoe=bpy.data.objects['Lasted leather shoe '+s]
+     lowest=min((shoe.matrix_world@v.co).z for v in shoe.data.vertices)
+     target.z+=.092+lift-lowest
+   rotate('spine_03',(0,1,0),.035*sin(2*pi*t));rotate('head',(0,0,1),.025*sin(2*pi*t))
   elif clip=='attack':
    # Guard -> pull back -> fast thrust -> recover; the weapon follows its palm control.
    pulse=[0,-.15,-.30,.35,1.,.82,.48,.18,.04,0][i]
    rotate('spine_03',(0,1,0),-.08*pulse);bpy.context.view_layer.update()
-   target=hand_pose_rest.translation+Vector((-.015,-.25,.070))*pulse
+   target=hand_pose_rest.translation+Vector((.065,-.18,.090))*pulse
    limb('upperarm_r','lowerarm_r',target,(-.55,-.10,1.17))
    hand=rig.pose.bones['hand_r'];hm=hand_pose_rest.copy();hm.translation=hand.head.copy()
    pivot=hm.translation.copy();hand.matrix=Matrix.Translation(pivot)@Matrix.Rotation(-.12*pulse,4,'Y')@Matrix.Translation(-pivot)@hm
@@ -52,6 +62,12 @@ for clip,(count,fps,loop) in clips.items():
    fall=smooth(max(0,min(1,(t-.12)/.72)))
    rotate('thigh_r',(1,0,0),.72*fall);rotate('calf_r',(1,0,0),-.88*fall);rotate('thigh_l',(1,0,0),.42*fall);rotate('calf_l',(1,0,0),-.65*fall)
    rotate('spine_03',(1,0,0),.20*fall);rotate('head',(0,0,1),.25*fall)
+   # Fold both elbows after release so a straight arm cannot prop up the corpse.
+   tuck=smooth(max(0,min(1,(t-.32)/.42)))
+   if tuck>0:
+    for side,sign in [('r',-1),('l',1)]:
+     start=rig.pose.bones['hand_'+side].head.copy();target=start.lerp(Vector((sign*.12,-.18,1.25)),tuck)
+     limb('upperarm_'+side,'lowerarm_'+side,target,(sign*.40,-.08,1.06))
    pivot=Vector((0,0,1.05));rot=Matrix.Rotation(-1.40*fall,4,'Y');target=Vector((.05*fall,.04*fall,1.05-.75*fall))
    rig.matrix_world=Matrix.Translation(target)@rot@Matrix.Translation(-pivot)@Matrix.Translation(root)
    bpy.context.view_layer.update()

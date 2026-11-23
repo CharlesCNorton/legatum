@@ -18,8 +18,11 @@ if stage.startswith('e-'):
  frames[0].save(O/f'barbarian-spearman-e-{clip}.webp',save_all=True,append_images=frames[1:],duration=round(1000/fps),loop=0,quality=85)
 elif stage=='c-details':
  sheet=Image.new('RGB',(768,550),bg)
+ fullref=Image.open(R/'assets/barbarian-spearman/painting-aligned.png').convert('RGBA')
+ fullrender=Image.open(folder/'00.png').convert('RGBA')
  for j,(name,box) in enumerate([('face / fur',(91,12,162,86)),('tunic / leather',(83,70,151,145)),('shield / iron',(151,47,207,172))]):
-  paste(sheet,ref.crop(box).resize((256,256)),(j*256,25));paste(sheet,frames[0].crop(box).resize((256,256)),(j*256,285));label(sheet,j*256+8,5,name+' : painting / render')
+  a=tuple(round(v*fullref.width/256) for v in box);b=tuple(round(v*fullrender.width/256) for v in box)
+  paste(sheet,fullref.crop(a).resize((256,256)),(j*256,25));paste(sheet,fullrender.crop(b).resize((256,256)),(j*256,285));label(sheet,j*256+8,5,name+f' : painting / {fullrender.width}px render')
  sheet.save(O/'barbarian-spearman-c-details.png')
 else:
  ims=[ref]+frames;sheet=Image.new('RGB',(256*len(ims),370),bg)

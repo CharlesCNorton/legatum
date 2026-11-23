@@ -17,15 +17,15 @@ for name in ['MPFB barbarian anatomy','Linen fitted tunic','Convex oval rawhide 
   im=bpy.data.images.new(name+' '+kind,width=256,height=256,alpha=False);im.colorspace_settings.name='Non-Color'
   tex=n.new('ShaderNodeTexImage');tex.image=im;n.active=tex;l.new(coords.outputs[0],tex.inputs['Vector'])
   if kind=='curvature':
-   geom=n.new('ShaderNodeNewGeometry');l.new(geom.outputs['Pointiness'],bs.inputs['Emission Color']);bs.inputs['Emission Strength'].default_value=1
+   output=n.get('Material Output');prior=output.inputs['Surface'].links[0].from_socket
+   geom=n.new('ShaderNodeNewGeometry');emit=n.new('ShaderNodeEmission');l.new(geom.outputs['Pointiness'],emit.inputs['Color']);l.new(emit.outputs[0],output.inputs['Surface'])
   bpy.ops.object.bake(type='AO' if kind=='AO' else 'EMIT',margin=4,use_clear=True)
   im.filepath_raw=str(T/(name.replace(' ','-')+'-'+kind+'.png'));im.file_format='PNG';im.save();im.pack()
   if kind=='AO':
    for node in n:
     if node.type=='MIX_RGB' and node.blend_type=='MULTIPLY':l.new(tex.outputs['Color'],node.inputs[2]);break
   else:
-   for link in list(bs.inputs['Emission Color'].links):l.remove(link)
-   bs.inputs['Emission Strength'].default_value=0
+   l.new(prior,output.inputs['Surface']);n.remove(emit);n.remove(geom)
    if bs.inputs['Metallic'].default_value==1:
     ramp=next(node for node in n if node.type=='VALTORGB');l.new(tex.outputs['Color'],ramp.inputs[0])
  for mod,value in mods:mod.show_render=value

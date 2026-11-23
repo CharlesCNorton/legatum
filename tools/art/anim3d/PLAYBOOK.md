@@ -153,6 +153,7 @@ source tools/art/anim3d/env.sh
 TASK=tools/art/anim3d/units/barbarian-spearman
 "$ANIM_ROOT/venv/bin/python" "$TASK/prepare.py"
 "$TASK/render.sh" build
+"$TASK/render.sh" refine
 "$TASK/render.sh" b
 "$ANIM_ROOT/venv/bin/python" "$TASK/review.py" b
 "$TASK/render.sh" paint
@@ -170,20 +171,62 @@ No upload, push, runtime integration or art approval is implied.
 
 ### Trimmed atlas v2 (160 px infantry delivery)
 
-`app/src/assets/units/anim/barbarian-spearman.{webp,json}` is a transparent
-1600×800 atlas with five ordered rows (idle/move/attack/hit/death) and ten 160 px
-slots per row. Frame counts remain **8/8/10/4/10**. Each frame's transparent margins
-are removed and the cropped pixels stored at the slot's upper-left; unused slot
-pixels remain transparent. JSON retains `frame:{w:160,h:160,ax:80,ay:137}` and
-`clips:{name:{row,frames,fps,loop}}`, and adds `version:2` and per-clip `rects`:
-`{x,y,w,h,ox,oy}` gives the source atlas rectangle and its offset inside the
-original 160 px cell. To draw at an anchor, destination top-left is
-`anchor + (ox-ax, oy-ay)` scaled to display size. This extension needs a consumer
-that supports per-frame rectangles; this art lane does not modify the runtime.
+`app/src/assets/units/anim/barbarian-spearman.{webp,json}` uses five ordered
+packed rows (idle/move/attack/hit/death), with **8/8/10/4/10** samples. Every source
+is reduced to a logical 160px cell with premultiplied bicubic filtering and full
+8-bit alpha. Transparent margins are trimmed; rows are packed with two-pixel
+outer padding and four-pixel gutters. Identical samples reuse one rectangle,
+so the last two death samples remain byte-identical after lossy WebP decoding.
 
-Keep all rendered 512 px masters and downsampled 256 px masters in external
-`masters/barbarian-spearman/{512,256}/<clip>/`. Packing permits quality 90, 85, 80
-or 75 only, enforces 200,000 bytes, and refuses stale source/clip/grade hashes.
-Validation checks decoded dimensions, transparency, clipping margins, offsets,
-all frame counts, actual pixel motion and the identical terminal death hold.
-Technical checks do not establish painting-level quality.
+JSON retains `frame:{w:160,h:160,ax:80,ay:137}` and each clip's timing/row, adds
+`version:2`, `atlas:{w,h}` and per-clip `rects:[{x,y,w,h,ox,oy},...]`. The source
+rectangle is explicit; never derive it from a fixed grid or the row index. Draw
+at `anchor + (ox-ax, oy-ay)` scaled to display size. This art lane does not change
+the runtime consumer or switch the game away from the painting.
+
+Packing tries Q90/85/80/75, refuses >200,000 bytes, and preserves all samples.
+Source/clip/rest/grade hashes, matching render settings, decoded alpha, padding,
+clipping, offsets, visible motion and terminal hold are independently checked.
+Final delivery retains real 512px masters and 256px copies. `pack.py --preview`
+accepts CPU256 evidence without fabricating 512px output; its report explicitly
+marks the delivery as a preview. Older masters belong in the archived round.
+
+### Barbarian spearman round 2: registered surfaces and driver movie
+
+Start from `plain.blend`; `refine.py` always writes a separate `registered.blend`.
+Freeze the MPFB macro shape keys before changing vertices or they override the
+fit. Preserve the 19,158-vertex body, native weights and all 53 bones. A smooth
+rest-view fitting field broadens shoulders and stance; inverse blended skin
+matrices transfer those changes into the original mesh. The feet move along
+camera rays back onto their contact height. The swept hair, complete convex
+shield, iron boss and spear reach are fitted in geometry. Neither image warps
+nor silhouette transparency substitutes for volume. Apply rigid Solidify/Bevel
+before recording frozen UVs so the paint describes the rendered surface.
+
+The painted front uses camera-only Principled emission to preserve its authored
+illumination; other rays and uncovered surfaces retain physical materials,
+generated linen/hair fills, real AO/curvature and product lights. A finished-scene
+ray test excludes surfaces hidden behind the shield from source projection. Standard/None
+is intentional for this already-painted pigment, not a photographic preset.
+One automatic rest histogram LUT remains frozen across all clips. Repeating the
+grade reads retained raw PNGs, rather than grading an already graded image.
+The independently moving spear's excluded source band samples adjacent frozen
+paint pigment with a feathered edge, reducing the old bright procedural seam.
+This does not modify the source painting or mesh alpha; inspect reveal seams.
+
+Move solves each ankle from the finished shoe sole, preserving the authored
+swing lift and planted contact. The audit checks those heights within 6mm.
+Death folds the elbows after release to reduce the old arm-supported floating
+pose. Attack extends visibly before recovery. The last death frame is copied
+from the identical settled sample; it is not rendered twice. The saved-scene
+floor/grip audit is still not a comprehensive collision or motion-quality check.
+
+`ROUND=2 tools/art/anim3d/units/barbarian-spearman/gpu.sh` is the single host
+handoff. It resolves this checkout, retains a transcript and status receipt,
+rejects unavailable GPU devices before rebuilding, regenerates registration,
+paint, bakes and clips, renders all stages at GPU512/64, grades/reviews, exports
+512/256, packs, validates and writes `barbarian-spearman-round${ROUND}.mp4`.
+`video.py` reconstructs the decoded trimmed atlas using offsets, shows all five
+clips at 2x on cream, and verifies H.264/yuv420p, 1600x348, 240 frames/eight seconds.
+CPU previews cannot pass the final GPU provenance gate. Neither script writes
+an art PASS marker; that requires visual approval of the final GPU output.
