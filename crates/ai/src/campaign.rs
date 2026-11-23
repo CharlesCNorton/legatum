@@ -64,6 +64,9 @@ pub struct FundDelivery {
 #[serde(default)]
 pub struct CampaignMemory {
     pub active: Option<Campaign>,
+    /// Gene `rome_opening_march`: the early city objective, retained through plan reviews.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rome_opening_target: Option<CityId>,
     /// A Gold-fund recruit or refit keeps the objective it was paid for until it reaches
     /// the front. The purchase resolves after planning, so its unit id is bound next turn.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
