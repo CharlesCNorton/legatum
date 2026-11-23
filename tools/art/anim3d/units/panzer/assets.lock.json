@@ -1,0 +1,20 @@
+{
+  "files": [
+    {
+      "path": "masters/panzer/panzer-source.png",
+      "sha256": "8cde89751262870f8af89df7972d8915ee1a0a081c25774f5009c1f70d59e6b7"
+    },
+    {
+      "path": "assets/tank/painted-olive.png",
+      "sha256": "6abccdcaf35f2288543ca2fcffec2c7b589fff873c332db056ffdf7345575a41"
+    },
+    {
+      "path": "assets/Metal034/Metal034_1K-JPG_Displacement.jpg",
+      "sha256": "8582c83e8104b6b091fb15f2aec4182c1e700640710f8df1bba94228bd0f3891"
+    },
+    {
+      "path": "assets/Travertine001/Travertine001_1K-JPG_Displacement.jpg",
+      "sha256": "a16a74e5a74be3e7c9bf5eb091544f9bff9ebc063b3e5936af04db5f314425e0"
+    }
+  ]
+}

@@ -106,3 +106,134 @@ tools/art/anim3d/render.sh audit
 ```
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
+
+## Vehicles — Panzer unit lane
+
+Panzer-specific code is isolated in `tools/art/anim3d/units/panzer/`. This chapter
+supplements the spearman workflow; it does not replace other family chapters.
+The vehicle family scripts were read from `astra/unit-anim-3d-vehicles` and adapted
+locally. No human body or motion library is appropriate for this uncrewed miniature.
+All six Blender skills are used: closed beveled armour and skirt thickness,
+physical pigments/grain, three-point product lighting, painting-camera alignment,
+rigid mechanical animation, and inspected sequential renders.
+
+Build from the repository root:
+
+```sh
+U=tools/art/anim3d/units/panzer
+"$U/run.sh" build
+"$U/run.sh" b
+"$U/run.sh" bake
+"$U/run.sh" paint
+"$U/run.sh" c
+"$U/run.sh" details
+"$U/run.sh" animate
+"$U/run.sh" d
+for clip in idle move attack hit death; do "$U/run.sh" "e-$clip"; done
+"$U/run.sh" g
+"$U/run.sh" audit
+"$U/run.sh" pack
+```
+
+Every Blender call is plain `blender -b --disable-autoexec`, through the installed
+PATH gate. Never call the application directly, pass a private thread override,
+or start a second heavy process in this lane. CPU previews use Cycles, 3 threads,
+4–8 samples at 256px. Smoke has real thickness and keyed visibility; no zero scale.
+
+The model has full-depth closed hull armour, a polygonal turret, open-front turret
+skirts, ten separate hull skirts on hangers, sixteen road wheels in eight paired
+bogies, 144 individual moving track shoes, and an actually ported two-chamber
+muzzle brake. The rig is a rigid parent hierarchy: suspension root, turret
+traverse, recoil group, wheel pivots and link pivots. The stone disc stays fixed.
+Idle/move are loop candidates; attack recoils the gun; hit jolts the hull; death
+settles the hull and gun, darkens the vehicle pigment and emits a small smoke
+plume. Its last two output samples are identical. Frame counts/fps are
+8/10, 8/12, 10/14, 4/12, 10/10 for idle/move/attack/hit/death respectively.
+
+### Quality method and judging
+
+The four standing quality levers are standard: (1) align real geometry to the
+painting camera and freeze projected UVs from the full-resolution source;
+(2) bevel edges, model real thickness and hardware, and bake AO/curvature;
+(3) use a warm upper-left key, soft fill and cool rim with Cycles denoising;
+(4) measure painting/rest RGB quantiles and apply one bounded grade to all frames.
+The rest-pose sheet always includes painting/render/50-50 crossfade at native
+256px and 64px. A valid atlas is not a painting-parity verdict.
+
+The base target is warm cream **#E9CFA0**, with a darker rim and fine grain,
+never neutral grey. Shader inputs are linear values rather than sRGB hex values:
+judge the rendered pixels. The projected rest-camera painting preserves the
+painting's own warm stone and contact shadow. Hidden-surface fill reuses original
+generated olive brushwork with sand pigment; CC0 steel and travertine scans add
+grain. Full source hashes and licences are in the unit's `assets.lock.json` and
+`SOURCES.md`, plus external `assets/SOURCES.md`.
+
+Projection is frozen to real meshes; the camera and topology must be registered
+before baking. Moving shoes/grousers/pins and every rotating wheel descendant retain their own
+physical pigment so painted wheel fragments do not circulate around the belt or
+smear around a wheel axle. The round-one video exposed this defect; projection
+was removed from wheel surfaces before final packing. Hidden surfaces and
+larger viewpoint changes remain approximate; round one's cupola, gun angle and
+front running gear do not yet match perfectly. More geometric registration and
+occlusion-aware projection are needed before approval. Do not claim that camera
+projection alone solves three-dimensional texture layout.
+
+### Motion and running-gear checks
+
+The standard for human lanes is CMU free-use or Quaternius CC0 captured motion,
+retargeted with matched rest poses/bone rolls and checked forward feet. Animal
+lanes use a CC0 animated quadruped. Do not repair foot direction after a flawed
+retarget. Record source and licence in both source ledgers. Only the weapon attack
+is hand-keyed on top of captured human motion.
+
+Vehicles use mechanical kinematics instead: panzer travels along +X; shoes follow
+a closed circle-envelope route at constant arc length; road-wheel rotation is
+travel/radius. The anchored token preview uses a treadmill convention (the app
+would translate the token). `panzer-g-feet-check.png` renders all eight move frames
+from top and front with a clay override to inspect tread direction and contact,
+not camouflage. The numerical audit checks the closed route, contact direction,
+stationary base, frame counts, retained volume, nonzero scale and actual vertex
+bounds. It does not certify no projection distortion or a perfectly invisible
+wheel loop seam. Both remain visual checks.
+
+### Lead GPU handoff and masters
+
+```sh
+ROUND=1 tools/art/anim3d/units/panzer/gpu.sh
+```
+
+This executable takes no arguments, runs from the repo root, and performs the
+entire pass sequentially: every review stage, all 40 clip frames and the top/front
+check in Metal Cycles (`CYCLES_DEVICE=GPU`, default 128 samples), real 512px masters
+plus downsampled 256px masters, geometry audit, trimmed packing/validation and an
+eight-second H.264/yuv420p `panzer-round${ROUND}.mp4`. The five clips play side by
+side at 2x on cream; non-looping clips replay with a held terminal pose. Missing
+Metal fails explicitly. CPU previews are never upscaled and called 512px masters.
+All masters remain in `$ANIM_ROOT/masters/panzer/`, outside git. Review sheets and
+logs appear immediately under `$ANIM_ROOT/review/3d-v2/`.
+
+### Trimmed atlas contract (version 2)
+
+The shipped candidate is `app/src/assets/units/anim/panzer.webp` plus `.json`.
+Logical frames are 160x160; each clip is its own atlas row, with per-frame trimmed
+rectangles and two-pixel transparent gutters. Quality tries 95/90/85/80/75 and
+fails if none fits **200,000 bytes**, retaining all 40 samples. Identical held
+frames share one source rectangle. Masters retain full alpha and resolution.
+
+```json
+{"version":2,"trimmed":true,
+ "frame":{"w":160,"h":160,"ax":79.375,"ay":138.125},
+ "clips":{"idle":{"row":0,"frames":8,"fps":10,"loop":true,
+ "rects":[{"x":2,"y":2,"w":145,"h":106,"ox":8,"oy":26}]}}}
+```
+
+This illustrative snippet shows one of eight idle rectangles. Real metadata has
+all five clips and one rectangle per sample. `x/y/w/h` crop the atlas; `ox/oy`
+place the crop in its logical cell. Draw at `(X-ax+ox,Y-ay+oy)` for anchor `(X,Y)`
+and scale every coordinate consistently. `row` is ordering, not a fixed cell
+height. This lane does not wire the extended format into the game runtime.
+Validation checks bytes/quality, source and scene hashes, grade identity, clip
+counts, rectangle overlap/padding, exact reconstructed alpha, motion and held
+death. Video is decoded with ffprobe/ffmpeg and must have 240 frames, 8 seconds,
+1600x348 pixels, H.264/yuv420p. `panzer-PASS` is written only after actual visual
+parity and clean clips; scripts never manufacture that verdict.
