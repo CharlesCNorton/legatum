@@ -64,3 +64,6 @@
 - Posted e-attack review (GPU, 512 px).
 - Posted e-hit review (GPU, 512 px).
 - Posted e-death review (GPU, 512 px).
+- Round 2 initial GPU critique: opened c-textured-lit, rest comparison, all five strips and round1 MP4 frame. At 256px the painted face/webbing are convincing but left sleeve extends about 10px beyond the painting; pack and roll are squared and oversized, helmet too glossy, skirt hem too straight. Attack reveals flat blue patches and displaced hand/rifle pigment; death shows ghost boots on the stationary base, stiff coat panels and an upright leg. At 64px identity and height read correctly but the shoulders are too broad and pose too stiff. Not hard to distinguish from the painting; no PASS.
+- Round 2 intake: all PLAYBOOK chapters and standing FEEDBACK read; no trench-infantry-FEEDBACK.md exists. Loaded all six Sam Blender skills: modeling for full-depth contour/cloth finish, materials for semantic pigment/fills, lighting for live contact/product shot, cameras for orthographic alignment, animation for source-action reset and clip recovery, rendering for CPU previews/GPU provenance. Original GPU evidence preserved externally.
+- GPU round 1 succeeded: internal gpu-round1.log and receipt verified, Cycles GPU 48 samples at 512px; 40 frames, 192242 bytes at quality 90. Driver log was empty due to internal redirection, not render failure.
