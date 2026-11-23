@@ -1,0 +1,1 @@
+Round 1: read art skill, pipeline, feedback 12–22, source provenance and all six Blender skills; using anatomy, tailored shells, sculpted fur, warm key/cool rim, camera calibration, and authored skeletal clips.

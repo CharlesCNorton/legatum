@@ -4,3 +4,4 @@
 - Retrieved original CC BY 4.0 painting into assets/barbarian-spearman; inspected panel: fur, linen, leather wraps, oval rawhide shield, low diagonal spear.
 - Published b review from CPU render.
 - Published c review from CPU render.
+- Published c review from CPU render.

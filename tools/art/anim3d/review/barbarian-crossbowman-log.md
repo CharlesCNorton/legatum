@@ -1,0 +1,1 @@
+- Round 1: read six Blender skills, art skill, family playbooks and standing feedback; source downloaded and aligned; building MPFB brigand and crossbow.
