@@ -1,0 +1,5 @@
+- Round 1: read project/art instructions, full standing feedback, and all six Blender skills. Using modeled thick wool/straps, frozen camera UV pigment, warm key/cool rim, retargeted CC0 motion, and image-based reviews.
+- Built MPFB anatomical body, 53-bone rig, folded greatcoat, puttees, helmet, webbing and bayonet rifle; plain.blend saved.
+- Posted b-plain review (CPU, 256 px).
+- Finished-surface camera projection with camera-only pigment; generated hidden fills retained.
+- Posted c-textured-lit review (CPU, 256 px).

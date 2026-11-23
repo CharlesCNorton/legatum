@@ -1,2 +1,3 @@
 Round 1: Read project art instructions, mounted PLAYBOOK, feedback 1–23, and all six Blender skills. Reusing licensed Quaternius horse/actions and MPFB anatomy; building knight-specific mail, greathelm, caparison and shield.
 Plain model and first textured render published. Frozen painting UVs on full-depth finished surfaces; original generated linen/metal/hair fills, physical cream stone, AO and bevel detail. Rest identity improves; rear cloth/tail and hoof silhouette remain visibly wrong.
+All five initial motion strips published. Replaced stiff source tail with pale curved locks. Full round now rendering serially at CPU 512px/8 samples; GPU final handoff uses 64+ samples. CC0 source hashes pinned; no PASS claimed.
