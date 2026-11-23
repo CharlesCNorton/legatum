@@ -162,3 +162,18 @@
 - ROUND 4 CONSTRUCTION: Physical barrel pitch/length/position now fit the two measured source-axis points; wheel track centres are closer. Raised shoulder/clavicle endpoints and 10% longer native arm segments match the source proportions; disabled inherited scale on arm children so length does not compound. Camera-ray/sphere elbow and wrist solve retains true segment lengths for the foreshortened rammer arm. Early trials correctly failed on unreachable contact/landmarks; no tolerances were relaxed. Final preview audit passes idle+move palm <2mm. Kept the prior head registration after the attempted gaze/cant change worsened the shako; the face remains an explicit gap.
 - ROUND 4 SURFACES: Fuller tailored coat, fold-aware raised crossbelts, tighter ivory/leather masks, covered foot/toe materials, anatomical boot orientation, porous larger rammer sponge, wider central carriage brace and reduced base bevel. Existing generated navy wool, true AO/curvature, bevels/stitches, fixed camera projection and product lights retained. Added stone pigment compensation before the unchanged frozen histogram grade to reduce the peach cast. Modeling/materials/cameras/animation skills informed these changes; lighting/rendering skills retained AgX, denoising, sequential low-sample CPU previews and GPU final separation.
 - ROUND 4 ENGINEERING: Fixed a sleeve-loop variable overwriting scene wheel-radius metadata (.044 instead of .48); actual rolling geometry was already .48. Audit now checks both radius metadata values. Updated executable GPU handoff default to ROUND=4 and added an explicit GPU64/512 + gallery256 readback gate before packing. No feedback changes arrived during these iterations.
+- Posted field-cannon-b-plain.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-c-textured-lit.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-c-details.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-d-rig-poses.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-idle-strip.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-move-strip.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-attack-strip.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-hit-strip.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-death-strip.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-c-textured-lit.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-c-details.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-d-rig-poses.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-idle-strip.png; actual CYCLES render, visual review pending.
+- ROUND 4 CLIP REVIEW: Opened all five updated CPU strips. Idle, push/roll, recoil/smoke, hit and grounded held death remain readable; the newly fitted right hand follows the rammer. The first complete pass exposed an over-broad leather mask suppressing the shako's painted brass details. Restricted that mask to boot/body leather, restored the source on shako/visor, and am regenerating every affected frame with a single updated master hash. One interim Python indentation error was caught and fixed before this pass; no Blender crash occurred.
+- Posted field-cannon-e-move-strip.png; actual CYCLES render, visual review pending.

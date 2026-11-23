@@ -46,3 +46,4 @@
 - Final round 5 master after evaluated-relief fix: rebuilt and CPU-rendered move at 256px / 12 samples.
 - Final round 5 master after evaluated-relief fix: rebuilt and CPU-rendered attack at 256px / 12 samples.
 - Final round 5 master after evaluated-relief fix: rebuilt and CPU-rendered hit at 256px / 12 samples.
+- Final round 5 master after evaluated-relief fix: rebuilt and CPU-rendered death at 256px / 12 samples.
