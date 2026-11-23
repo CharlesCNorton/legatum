@@ -49,3 +49,4 @@ e-move: 8 frames at 256/64 from 512px CYCLES/GPU, 96 samples.
 e-attack: 10 frames at 256/64 from 512px CYCLES/GPU, 96 samples.
 e-hit: 4 frames at 256/64 from 512px CYCLES/GPU, 96 samples.
 e-death: 10 frames at 256/64 from 512px CYCLES/GPU, 96 samples.
+g: 16 frames at 256/64 from 512px CYCLES/GPU, 96 samples.
