@@ -183,3 +183,5 @@ Every word a player reads (sheets, cards, the Guide, tooltips, breakdowns, repor
 | `references/review-findings-2026-10.md` | Checking what an October UI review already ruled (8.9.6 to train-1101, Mercenary Companies) |
 | `references/review-findings-2026-11.md` | Checking what a November UI review already ruled (train-1103 to the game-upload notice) |
 | `references/plain-language-examples.md` | Rewriting player text (before/after table), the copy lint |
+
+- **Whole-app redundancy (Sam, 2026-11-23):** review the full flow every time, including Resume and Continue. One control and one player-facing name per action. One AI level applies to every AI seat in a game; no per-seat lobby picker. Title and in-game Menu open the same Settings dialog. Cities and Turn report have no duplicate menu entries; C and L still work. The rulebook is called **How to Play** wherever players read its name.
