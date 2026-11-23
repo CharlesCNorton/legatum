@@ -1,78 +1,77 @@
-# Mounted candidate — 22 November 2026
+# Horseman — resumed round 2, 22 November 2026
 
-Delivery exists, but the art does **not** meet the painting-quality approval bar.
+**Not approved; no PASS marker.** The painting is still visibly better.
 
-- 256 px: recognizable bay horse and ivory-clad rider, painted surfaces, warm stone,
-  Greek-key blanket and bronze kit. Horse anatomy remains stylized and angular;
-  mane/tail need volume, cloth needs better folds, and tack/reins need refinement.
-  Painting projection is approximately registered and contains baked lighting.
-- 64 px: reads as the same unit type, but the upright/narrow silhouette and wider
-  base differ visibly from the painting. Higher GPU samples cannot fix that.
-- Motion: source horse trajectories drive the canter; attack couches/thrusts the
-  spear; hit recoils; death collapses to the side with the rider slumped and spear
-  released. Tack intersections and physical plausibility still need art review.
+At 256 px, the raised spear now clears the face, the base width is closer, the
+horse's head registers more closely, and direct painting UVs reduce the earlier
+misplaced colour streaks. The horse remains too slight and angular; its rear
+leg shapes are awkward, the rider's face/helmet and cloth lack the painting's
+craft, and the saddle/torso proportions still differ. Some tack appears rigid or
+intersecting despite its measured endpoints. At 64 px it reads as an ancient
+horseman, but its narrow silhouette and smaller horse do not match the painting.
+Higher GPU samples cannot fix those anatomical differences.
 
-## Verified CPU delivery
+Movement now uses the licensed source Walk cycle instead of the exaggerated
+canter. Tail locks hang from the moving tail root with authored sway. Reins are
+keyed between the bit and rider's hand. Attack/hit begin from the registered
+rest; death lowers the spear during the fall, slumps the arms, releases the spear
+and holds its final two frames. All five clips exist and were visually inspected
+as strips. They are candidates, not a claim of five artistically clean clips.
 
-Cycles CPU, 8 samples, 3 threads, all Blender work through the machine-wide gate.
-Atlas: **198,252 bytes**, quality **60**, 16 alpha levels, 2560×1280, 40 frames in
-8/8/10/4/10 rows, transparent 256 px cells, anchor (127,221).
+## Verified CPU evidence
 
-- `mounted/audit.py`: five clips passed; no reported errors. Checks both rigs,
-  saddle parent, fixed base, height bounds and held terminal geometry. Canter has
-  one unsupported sample out of eight (maximum two).
-- `mounted/validate.py`: passed dimensions, metadata, all 40 frames, transparency,
-  padding, motion, byte cap, frame margins and held terminal pixels/silhouettes.
-- All 18 Python sources compile; both render shell scripts pass `bash -n`;
-  `git diff --check` passes. No Rust or runtime UI code changed.
+- Cycles CPU, 8 samples, gated Blender, three threads.
+- Atlas: **199,202 bytes**, **quality 90**, **1038 x 756**; 40 trimmed 160 px
+  frames in 8/8/10/4/10 clip rows. Full RGB; 32 alpha levels (max error 4/255).
+- `mounted/validate.py`: zero findings. Exact reconstructed quantized alpha,
+  rectangle bounds/non-overlap, frame counts, timing, motion, source hashes,
+  clipping margins, quality/size cap and identical held terminal source pixels.
+- `mounted/audit.py`: five clips, zero errors. True weighted geometry, saddle
+  attachment, stationary base, ground bounds, four hoof-region support heights,
+  both rein endpoints at every sample and held terminal geometry. This is not
+  exhaustive collision detection.
+- Review MP4: **240 frames, 8 seconds, 1600 x 348, H.264 yuv420p**, verified with
+  ffprobe. All five clips reconstructed from trimmed rectangles at 2x on cream.
+- Python syntax: all **22** mounted/unit Python files pass. Both mounted render
+  and unit GPU shell scripts pass `bash -n`; `git diff --check` passes.
 
-These checks establish the delivery contract, not artistic approval or complete
-collision detection. No sandbox Metal render was attempted.
+A premature pack attempt correctly refused mixed old/new grade hashes while the
+render batch was still running. Full 8-bit alpha exceeded the cap at quality 75;
+32-level alpha and clearing invisible RGB allowed quality 90 without dropping
+frames. Validation then found one clipped death spear tip; its pose was fixed
+and the final pack above passed. No failure was treated as approval.
 
-## Review and source files
+## External evidence and GPU handoff
 
-External root: `~/LegatumRuns/anim-pilot/`.
+Under `~/LegatumRuns/anim-pilot/review/3d-v2/`:
 
-- `review/3d-v2/horseman-f-restpose-compare.png`: painting/rest/split/crossfade.
-- `review/3d-v2/horseman-packed-review.png`: original, raw rendered and decoded
-  delivery frame at native 256 and 64 px.
-- `review/3d-v2/horseman-e-*-strip.png` and `.webp`: all clips.
-- `review/3d-v2/horseman-{pack,validation,rig-audit}.json`: exact output evidence.
-- `masters/horseman-3d/horseman.blend` and `clips/*.blend`: editable packed masters.
-- `assets/SOURCES.md` and `mounted/assets.lock.json`: licences and pinned inputs.
-- `assets/horseman/painted-fills.png`: generated unseen-surface fills; exact prompt
-  is `mounted/painted-fills.prompt.txt`. These fills are packed in the masters.
+- `horseman-f-restpose-compare.png`: painting, render, split and crossfade.
+- `horseman-packed-review.png`: painting/render/decoded delivery at 256 and 64.
+- `horseman-b-plain.png`, `horseman-c-textured-lit.png`, `horseman-c-details.png`,
+  `horseman-d-rig-poses.png`, all five `horseman-e-*-strip.png` and `.webp`.
+- `horseman-round2.mp4` and its ffprobe JSON.
+- `horseman-{pack,validation,rig-audit}.json` and running `horseman-log.md`.
 
-## Lead GPU render
-
-Run from the repository root on the host with Metal access. All calls retain the
-shared gate. Render the rest first to recalibrate the common grade, then every clip.
-
-```sh
-export UNIT=horseman RENDER_ENGINE=CYCLES CYCLES_DEVICE=GPU SAMPLES=64
-for stage in c d e-idle e-move e-attack e-hit e-death; do
-  tools/art/anim3d/render.sh "$stage"
-done
-RESOLUTION=512 tools/art/anim3d/render.sh c-details
-source tools/art/anim3d/env.sh
-"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/mounted/pack.py
-"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/mounted/validate.py
-```
-
-Reinspect the GPU comparison and decoded atlas; the CPU byte count is not a
-promise about the future GPU export. The packer refuses output above 200,000 bytes.
-
-## Runner handoff
-
-Git merge and staging were attempted, but the sandbox denied `ORIG_HEAD.lock`
-and `index.lock` in `.git/worktrees/lane-4`. Nothing was committed or pushed.
-The runner must merge the already-fetched `origin/master`, resolve if necessary,
-then run the requested post-merge determinism and pin tests before committing:
+Editable packed masters remain in external `masters/horseman-3d/`. Current CPU
+256 image sets and the 512 detail render are copied to `masters/horseman/`.
+**The full 512 GPU master set has not run in this sandbox.** The required
+executable handoff rebuilds current paint/animation, runs audits, renders every
+stage using Cycles Metal, retains 512/256 masters, packs/validates delivery,
+emits all review images and writes the driver's movie:
 
 ```sh
-tools/sim/build-slot.sh -- cargo test -p legatum-sim --profile release-checked --test determinism
-tools/sim/build-slot.sh -- cargo test -p legatum-sim --profile release-checked --lib pinned
+ROUND=2 tools/art/anim3d/units/horseman/gpu.sh
 ```
 
-The prepared commit message is external
-`review/3d-v2/horseman-commit-message.txt` and includes the requested co-author line.
+Run from the repo root with host Metal access. Default samples: 64. Reinspect the
+GPU output; the current CPU byte count does not predict the GPU pack size. The
+packer refuses delivery above 200,000 bytes at quality 75. The script never writes
+PASS. No runtime loader or game rules changed, and the candidate remains unwired.
+
+## Runner commit
+
+The already-fetched `origin/master` is an ancestor of HEAD; no merge was needed.
+Staging and committing were attempted, but the sandbox denied
+`.git/worktrees/lane-6/index.lock`. Changes remain uncommitted for the runner.
+The prepared external `review/3d-v2/horseman-commit-message.txt` contains the
+requested co-author footer. Nothing was pushed and no PR was created.

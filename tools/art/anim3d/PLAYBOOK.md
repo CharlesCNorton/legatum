@@ -81,208 +81,144 @@ For the next unit, start new external master and review directories; calibrate t
 
 ## Mounted family — Horseman
 
-The mounted candidate uses **true 3D** throughout: Quaternius' CC0 `Horse` mesh,
-its original weighted quadruped skeleton and sampled animation, plus a separately
-created MPFB 2.0.18 male with the native game-engine rig, skin and eyes. No painting
-cutouts, relief planes or camera-facing body parts are used. The bay coat, black
-mane/tail/socks, narrow white blaze, pale pastern markings, ivory riding tunic, bronze helmet
-and upright iron-tipped spear follow `horseman-256.png`. The short crest, tack,
-split tunic, blue Greek-key saddle blanket and spear are editable geometry. Tail
-fibres are skinned to the seven-bone source chain; a rigid-tail experiment was rejected. The rider rig is
-bone-parented to the horse's `Torso`; its limbs and garments remain skinned.
+Horseman remains an unapproved art candidate. It uses the licensed CC0 Quaternius
+Horse mesh and weighted quadruped skeleton plus MPFB 2.0.18 CC0 anatomy and the
+53-bone game-engine rider rig. No cutouts, relief planes or camera-facing anatomy.
+The rider is saddle-parented to Torso. Kit, cloth shells, mane and tail locks,
+spear, blue meander blanket and tack are editable 3D geometry.
 
-### Sources and external masters
+### Inputs and reproduction
 
-`mounted/assets.lock.json` pins the exact downloaded horse and its SHA256.
-Quaternius' official Ultimate Animated Animal Pack page identifies the July 2021
-pack and CC0 licence. Its Drive download returned HTML in this environment, so the
-file comes from the explicitly recorded `trebeljahr/quaternius-showcase` mirror
-at a pinned commit. `mounted/download.py` verifies that checksum. The original
-horse has 13 named clips, including `Gallop`, `Idle`, `Death` and hit reactions.
-The skin and scan licences are the inherited MPFB/CC0 sources described above.
-`$ANIM_ROOT/assets/SOURCES.md` records the source, mirror, licence and painting.
+`mounted/assets.lock.json` pins the Quaternius mirror and original project painting
+and generated fills. `mounted/painted-fills.prompt.txt` records the existing
+imagegen coat/linen/bronze/hair fill atlas. All inputs and licences are recorded in
+`$ANIM_ROOT/assets/SOURCES.md`. No new service or download is needed this round.
+`prepare.py` verifies inputs and aligns the source painting to the committed token.
 
-All raw assets, packed textures, `.blend` masters, bakes, frames and logs stay in
-`~/LegatumRuns/anim-pilot/`, under `assets/horseman/` and `masters/horseman-3d/`.
-The old `masters/horseman/` experiment is not used or overwritten. Only scripts,
-source lock, delivery atlas/JSON and documentation belong in git.
+Use the shared `env.sh`, MPFB installation and plain `blender` on PATH: its shared
+gate limits CPU/GPU concurrency. Every invocation is background, three threads,
+with autoexec disabled. Never bypass the gate, remove a live lock, invoke the
+Blender application directly, or scale an object to zero to hide it.
 
-### Build, texture and review
-
-Use the shared installation and `env.sh`. All Blender calls go through the
-current `~/LegatumRuns/anim-pilot/bin/blender-slot` gate. During this round the lead
-changed it to **one machine-wide Blender process, three threads**, shared with
-other animation work. Never bypass it, remove a live lock, invoke a UI Blender,
-or scale an effect to zero to hide it. Keep CPU checks short. Mounted scripts
-explicitly set three render threads and invoke background Blender.
+Initial build (only when the preserved baked master is unavailable):
 
 ```sh
 source tools/art/anim3d/env.sh
 "$ANIM_ROOT/venv/bin/python" tools/art/anim3d/mounted/download.py
 "$ANIM_ROOT/venv/bin/python" tools/art/anim3d/mounted/prepare.py
-UNIT=horseman tools/art/anim3d/render.sh build
-UNIT=horseman RENDER_ENGINE=CYCLES SAMPLES=8 tools/art/anim3d/render.sh b
-UNIT=horseman tools/art/anim3d/render.sh materials
-UNIT=horseman tools/art/anim3d/render.sh bake
+for stage in build materials bake paint animate audit; do
+  UNIT=horseman tools/art/anim3d/render.sh "$stage"
+done
+```
+
+`paint` reloads `masters/horseman-3d/horseman-unpainted.blend` each time. It does
+not accumulate changes. Blender masters and packed textures remain in that
+external directory; canonical image sets are in `masters/horseman/512/<stage>`
+and `masters/horseman/256/<stage>`. A 256 CPU preview is never called a 512 master.
+Rebuilding or repainting invalidates every clip. `animate` recreates all five.
+
+### Round-3 method and current limitations
+
+Load Sam's six Blender skills. Model and pose registration precede colour:
+`paint.py` solves hands and the near foot against measured reference pixels at
+retained depth, raises the upper torso, shortens the spear above its grip, removes
+tubular fake chest folds and shapes the solid sleeveless linen shell.
+`register.py` applies a smooth displacement from measured horse landmarks to real
+bind-space vertices, undoing each weighted skin transform before writing them.
+It retains depth, weights and volumetric geometry. Horse-attached tack and mane
+receive the same rest correction; there is no per-frame image warp. This is
+approximate sculpture, not proof of exact camera/shape parity. Source anatomy
+and some gait proportions remain visibly stylized.
+
+The painting now uses **direct frozen camera UVs**, replacing the old extra
+landmark warp of colour. Incidence and alpha blend the original brushwork into
+existing image-generated fills on unseen surfaces. Painted lighting is retained,
+so inspect surfaces exposed by motion. Existing AO/curvature maps and scans are
+inherited from the baked master, before the new bind-space sculpture; they are
+not new bakes of the revised shape. Bronze edges, bevels, thick cloth, fringes,
+straps and hair remain geometry. The source rod tail is replaced by volumetric
+locks anchored to its moving tail root, with authored hanging curvature and sway. `reins.py` samples solid sagging curves
+between the moving noseband and the rider's hand, keyed at every delivery frame.
+It is authored leather motion, not a cloth simulation.
+
+Use a warm upper-left key, cool rim, soft fill, contact shadows and one cream
+stone disc. Common cream target: sRGB #E9CFA0; the painting's native lit top is
+approximately #F4D2A8. These are display values, not linear shader inputs.
+`grade.py` measures 17 foreground RGB quantiles from the rest and painting,
+transfers 45 percent into a monotonic LUT, then applies the **same LUT** to every
+frame. Raw images are preserved. Recalibrating rest requires rerendering all clips.
+`c` emits the painting/render/split/crossfade comparison. Large double contours
+mean failure regardless of successful scripts.
+
+### Clips, contact and local previews
+
+Clips retain 8/8/10/4/10 frames at 10/12/14/12/10 fps. Idle and move loop. Move
+samples the licensed 28-frame Walk cycle; the extreme canter was rejected because
+it exaggerated the revised mesh's thin legs. Attack, hit and death are authored adaptations, not captured motion.
+Attack/hit blend from the registered rest; death releases the spear and holds the
+last two samples. Render unique frames once and copy held samples, avoiding
+sampling noise on the held death. Actual deformed geometry supplies ground
+corrections. After bind-space sculpture, original foot controls are no longer
+sole coordinates: `audit.py` measures weighted **hoof mesh** heights for support.
+
+```sh
 UNIT=horseman tools/art/anim3d/render.sh paint
-UNIT=horseman RENDER_ENGINE=CYCLES SAMPLES=12 tools/art/anim3d/render.sh c
-UNIT=horseman RENDER_ENGINE=CYCLES RESOLUTION=512 SAMPLES=12 tools/art/anim3d/render.sh c-details
 UNIT=horseman tools/art/anim3d/render.sh animate
 UNIT=horseman tools/art/anim3d/render.sh audit
-UNIT=horseman RENDER_ENGINE=CYCLES SAMPLES=8 tools/art/anim3d/render.sh d
-for clip in idle move attack hit death; do
-  UNIT=horseman RENDER_ENGINE=CYCLES SAMPLES=8 tools/art/anim3d/render.sh "e-$clip"
-done
+UNIT=horseman RENDER_ENGINE=CYCLES CYCLES_DEVICE=CPU SAMPLES=8 tools/art/anim3d/render.sh c
 ```
 
-`mounted/build.py` reuses infantry mesh/fitting/joint helpers; `materials.py`
-reuses its CC0 box-projected scan helper. Rebuilding invalidates all material bakes
-and clips. Bronze helmet and MPFB skin receive actual 256 px AO/Pointiness bakes;
-the horse receives a shared 512 px AO/Pointiness bake across its material slots.
-Bakes and manifests are external and packed in the masters. Procedural pigment,
-scan detail, cavity shading, bright rolled metal edges and individual mane fibres
-supplement them. This is a candidate finish, not a claim of painting parity.
+Optional `refresh.py` audits and renders a serial batch in one gated Blender
+process. `STAGES=c,d,e-idle,e-move,e-attack,e-hit,e-death` selects stages;
+`CLIP=attack,hit,death` regenerates selected clips first; `GRADE_REUSE=1` retains
+the common LUT for a geometry-only subset refresh. No second Blender is spawned.
+Review outputs are immediately written to `review/3d-v2/horseman-*`.
 
-Import gotchas: the glTF has split vertices for flat normals; weld coincident
-vertices **before** subdivision, or the horse becomes disconnected plates. Its
-armature is scaled 100 and the action supplies the coordinate rotation: evaluate
-an action before fitting anything. Keep its transform hierarchy intact and scale
-its root. Update the dependency graph before preserving `matrix_world` while
-bone-parenting, especially for scaled saddle and rosette meshes. MPFB's asset
-import removes unused materials: retain material fake users until assigned.
-
-Review files are emitted immediately to `review/3d-v2/horseman-<stage>.png`:
-`b-plain`, `c-textured-lit`, `c-details`, `d-rig-poses`, and each `e-<clip>-strip`.
-The `e-<clip>.webp` files are animation previews. They loop for review even when
-the runtime clip does not. `horseman-log.md` records failures as well as progress;
-read `horseman-FEEDBACK.md` before each round. The base and camera are shared by
-all five clips.
-
-### Motion and contact
-
-The 8-frame idle samples Quaternius `Idle`, with rider breathing and a raised
-near foreleg taken from `Walk` frame 19 to approach the painting's stepping pose. The 8-frame move
-adapts the source's actual 14-frame `Gallop` trajectories to a **three-beat canter**.
-`gait.py` reads the glTF foot trajectories without Blender: source contacts occur
-at approximately 6/8/12/0. Time-warping the source trajectories to stance starts at 0, .23, .23 and .46
-pairs right fore with left hind, followed by left fore and suspension. Stances
-occupy .34 of the cycle; merely shifting foreleg phase left excessive airtime,
-so that earlier attempt was rejected. The audit limits unsupported samples to
-at most two of eight. It retains
-source joint paths, torso and tail motion; it is an authored timing adaptation,
-not captured canter data. Check diagonal contact and foot sliding in motion. Attack uses that gait with a short surge, an authored rider lean and
-spear couch/thrust. Hit samples `Idle_HitReact_Left` with rider recoil. Death
-samples `Death`, adds front-leg flexion, removes the source's sideways travel,
-corrects the horse's ground contact and keeps the slumped rider above the base.
-The spear releases during the fall and settles across the stone; hit tips the
-blade forward so the recoil stays inside the fixed camera.
-Those contact corrections are authored presentation keys, not a physics sim.
-Reins retain a slack saddle-attached shape and need intersection review at extreme
-head poses; this is not simulated leather or cloth.
-
-Clips are baked to independent masters at integer delivery frames. The last two
-death samples point to the same settled frame. Render that unique frame once and
-reuse its pixels: two Cycles invocations at the same frame can still differ
-slightly after sampling/denoising.
-The audit checks MPFB topology, both armature modifiers, the rider's saddle parent,
-the immutable base and horse/rider height bounds at every output sample. Pixel
-validation separately checks all 40 samples, transparency, padding, size, motion,
-frame margins and held death. Neither audit approves the art or guarantees no
-intersection between every piece of tack.
-
-### Host GPU rerender and delivery
-
-Once the masters exist, the lead can rerender them through the same entry point;
-Eevee explicitly uses Metal and does not silently fall back:
+### One-command GPU handoff
 
 ```sh
-UNIT=horseman tools/art/anim3d/render.sh c
-UNIT=horseman RESOLUTION=512 tools/art/anim3d/render.sh c-details
-UNIT=horseman tools/art/anim3d/render.sh d
-for clip in idle move attack hit death; do
-  UNIT=horseman tools/art/anim3d/render.sh "e-$clip"
-done
-source tools/art/anim3d/env.sh
-RENDER_ENGINE=BLENDER_EEVEE "$ANIM_ROOT/venv/bin/python" tools/art/anim3d/mounted/pack.py
-"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/mounted/validate.py
-UNIT=horseman tools/art/anim3d/render.sh audit
+ROUND=2 tools/art/anim3d/units/horseman/gpu.sh
 ```
 
-Delivery is `app/src/assets/units/anim/horseman.{webp,json}`, the existing
-2560×1280 grid with transparent 256×256 cells, clip rows idle/move/attack/hit/death,
-8/8/10/4/10 frames, anchor `(127,221)`, and at most 200,000 bytes. Packing never
-silently reduces frame counts. `horseman-pack.json` and `horseman-validation.json`
-in the external review directory bind the delivery to its renders. GPU results
-need a fresh visual review beside the painting at 256 and 64 px. No runtime
-loader is changed and the existing painted unit remains the game asset.
+This executable no-argument script runs from the repository root. It prepares
+inputs, rebuilds paint/animation, audits, renders every stage with Cycles Metal
+GPU at 512 (default 64 samples, denoised), retains 512/256 image sets, packs,
+validates, and creates `horseman-round${ROUND}.mp4`. No GPU silently falls back to
+CPU. The movie reconstructs trimmed frames before placing all five clips side by
+side at 2x on cream; ffprobe checks 240 frames, 8 seconds, H.264 yuv420p. The script
+never writes PASS: fresh human/agent visual judgment is still required.
 
-### Mounted painting-projection and grading standard
+### Trimmed atlas format, version 2
 
-Apply `paint` after scans/bakes and before `animate`. The bake saves an unpainted
-master, and each paint pass reloads it, so projection edits do not accumulate.
-`prepare.py` aligns the full original painting's alpha bounds to the committed
-256 px token at 1024 px, and splits the generated fill atlas into coat, linen,
-bronze and hair. Both external input hashes are pinned. The generated image is
-original project artwork made with the built-in imagegen tool; the exact prompt
-is `mounted/painted-fills.prompt.txt`. Rebuilding elsewhere requires those external
-masters, not an unrecorded regenerated approximation. They are packed into the
-saved `.blend` for the lead's renders.
+`mounted/pack.py` packs all 40 downsampled **160 px** frames in five clip rows,
+trimming only empty alpha margins with one-pixel gutters. It quantizes only alpha to 32 levels (at most 4/255 error), tries quality 90/85/80/75, and refuses to replace delivery above
+200,000 bytes. No frame dropping, RGB posterization or quality below 75.
 
-`paint.py` creates fixed projected UV coordinates on the actual weighted mesh,
-using the rest camera and documented anatomical landmark corrections. Separate
-coat, linen and skin masks prevent cross-material projection spill. The
-painting's original brushwork supplies most visible colour; vertex incidence and
-image alpha blend it into generated fills on unseen sides. Projection is not a
-billboard and does not change mesh alpha. It does carry painted lighting, and
-landmark alignment is approximate: inspect eyes, knees, cloth borders and seams
-when poses expose other surfaces. An aligned colour texture cannot repair the
-wrong anatomy. Subsequent rounds should improve sculpt/pose registration before
-increasing projection strength. The blue meander border, fringe, straps and
-bronze discs remain geometry. Reins still need a more complete dynamic solution.
+The atlas and JSON remain `app/src/assets/units/anim/horseman.{webp,json}`:
 
-Use one warm cream stone material, a low single disc with a darker side and fine
-grain. The reviewer's common target is sRGB **#E9CFA0**; sampling the horseman
-painting's lit top at native pixels `(100,218)-(153,224)` gives median **#F4D2A8**.
-Those are displayed colour targets, not values to paste into a linear shader
-without lighting calibration. The mounted material uses warm pigment under the
-key light, then the painting-derived grade below. Keep it shared across every clip.
-
-`grade.py` derives 17 foreground quantiles per RGB channel from the rest render
-and painting, blends 45 percent of that transfer into a monotonic LUT, then uses
-that **same LUT** for every frame. Raw, ungraded images remain in each stage's
-`raw/` folder. The grade hash is recorded with the render. Never independently
-match each frame: temporal colour pumping would result. Rest review also emits
-`horseman-f-restpose-compare.png`: original, 3D, half-split and 50 percent crossfade.
-Judge the double contours in that crossfade honestly; file generation is not a
-claim that a viewer cannot distinguish the render from the painting.
-
-For final host Cycles renders, use the same entry point with
-`RENDER_ENGINE=CYCLES CYCLES_DEVICE=GPU SAMPLES=64`. It explicitly selects Metal
-and denoising and refuses a silent CPU fallback. The sandbox default remains
-`RENDER_ENGINE=CYCLES` with `CYCLES_DEVICE=CPU`. Example:
-
-```sh
-UNIT=horseman RENDER_ENGINE=CYCLES CYCLES_DEVICE=GPU SAMPLES=64 tools/art/anim3d/render.sh c
-for clip in idle move attack hit death; do
-  UNIT=horseman RENDER_ENGINE=CYCLES CYCLES_DEVICE=GPU SAMPLES=64 tools/art/anim3d/render.sh "e-$clip"
-done
+```json
+{
+  "version": 2,
+  "layout": "trimmed-rows",
+  "frame": {"w": 160, "h": 160, "ax": 79, "ay": 138},
+  "atlas": {"w": 0, "h": 0},
+  "clips": {
+    "idle": {"row": 0, "frames": 8, "fps": 10, "loop": true,
+      "rects": [{"x": 0, "y": 0, "w": 0, "h": 0, "ox": 0, "oy": 0}]}
+  }
+}
 ```
 
-After a new GPU rest render, rerender **all** clips before packing because the
-colour grade may have changed. The pack report records each render's engine,
-device, grade hash and blend hash, alongside all source-frame checksums.
+The zeroes illustrate fields, not actual bounds. `rects[i]` gives atlas source
+coordinates and size; paste at `(ox,oy)` on a transparent 160x160 canvas. The
+untrimmed anchor is `(ax,ay)`; direct drawing relative to a map anchor uses
+`(ox-ax,oy-ay)`. `row` is the semantic clip order, **not a fixed y stride**.
+Each of idle/move/attack/hit/death has its full rectangle list. No game runtime is
+changed; its loader must support this format before activating the candidate.
 
-For a serial review batch under one gate acquisition, the optional mounted
-`refresh.py` runs the audit and requested render stages in one background Blender
-process. It never starts another Blender. `CLIP=move` regenerates only move;
-`STAGES=c,c-details,e-move` selects reviews. `GRADE_REUSE=1` retains the existing
-rest LUT for a geometry-only refresh, so unchanged clips remain colour-consistent.
-The normal per-stage entry points above remain the lead's default.
-
-Mounted CPU delivery uses 16 alpha levels and chooses WebP quality 85–55 while
-enforcing 200,000 bytes. The pack report records the actual choice. No RGB
-posterization, frame dropping or spatial downscaling is used to meet the cap.
-
-`MARKINGS=1` on a serial refresh applies the four white pastern markings to
-existing master/clip files before rendering. Clean builds already include them;
-this material-only updater preserves the source motion and dark horn hooves.
+The pack report binds current blend, grade, frame, metadata and atlas hashes.
+Validation reconstructs every decoded frame, checks exact quantized alpha and a 4/255 source-alpha error limit, rectangle
+bounds/non-overlap, counts, timing, motion, clipping margins, held death, quality
+and bytes. Technical passes never establish painted parity or full collision
+freedom. Keep `horseman-PASS` absent until the rest is hard to distinguish from
+the painting at 256/64 and all five clips are visually clean.

@@ -1,18 +1,18 @@
 """Sample Quaternius's real horse actions, with saddle-parented rider performance."""
-import bpy,os,ast,json,math
+import bpy,os,ast,json,math,sys
 from pathlib import Path
 from mathutils import Vector,Matrix,Quaternion
 from math import sin,cos,pi
+sys.path.insert(0,str(Path('tools/art/anim3d/mounted').resolve()))
+from reins import update_reins
+from tail import update_tail
 R=Path(os.environ['ANIM_ROOT']);M=R/'masters/horseman-3d';(M/'clips').mkdir(exist_ok=True)
-CLIPS={'idle':(8,10,True,'Idle',80),'move':(8,12,True,'Gallop',14),'attack':(10,14,False,'Gallop',14),'hit':(4,12,False,'Idle_HitReact_Left',16),'death':(10,10,False,'Death',24)}
+CLIPS={'idle':(8,10,True,'Idle',80),'move':(8,12,True,'Walk',28),'attack':(10,14,False,'Gallop',14),'hit':(4,12,False,'Idle_HitReact_Left',16),'death':(10,10,False,'Death',24)}
 for node in ast.parse(Path('tools/art/anim3d/scene.py').read_text()).body:
  if isinstance(node,ast.FunctionDef) and node.name in {'aim_bone','limb'}:exec(compile(ast.Module(body=[node],type_ignores=[]),'<shared joints>','exec'))
-# Normalize skinned accessory object space before making any independent clip.
-# Tail vertices are in horse-rig local bind coordinates, so their object basis is identity.
+# Normalize the task-owned shield before making independent clips.
 bpy.ops.wm.open_mainfile(filepath=str(M/'horseman.blend'));horse_rig=bpy.data.objects['AnimalArmature']
 for obj in bpy.context.scene.objects:
- if obj.name.startswith('Skinned tail hair'):
-  obj.parent=horse_rig;obj.matrix_parent_inverse=Matrix.Identity(4);obj.matrix_basis=Matrix.Identity(4)
  if obj.name=='Slung bronze riding shield':
   center=sum(v.co.x for v in obj.data.vertices)/len(obj.data.vertices)
   for v in obj.data.vertices:v.co.x+=.24-center
@@ -20,6 +20,7 @@ bpy.context.view_layer.update();bpy.ops.wm.save_as_mainfile(filepath=str(M/'hors
 for clip,(count,fps,loop,src,length) in CLIPS.items():
  if os.environ.get('CLIP') and clip not in os.environ['CLIP'].split(','):continue
  bpy.ops.wm.open_mainfile(filepath=str(M/'horseman.blend'));sc=bpy.context.scene;hrig=bpy.data.objects['AnimalArmature'];rig=bpy.data.objects['Rider MPFB game_engine'];root=bpy.data.objects['Horse world control']
+ rest_pose={p.name:p.matrix_basis.copy() for p in hrig.pose.bones}
  raised={n:Matrix(m) for n,m in json.loads(hrig.get('raised_idle_foreleg','{}')).items()}
  act=bpy.data.actions['AnimalArmature|'+src];hrig.animation_data.action=act;hrig.animation_data.action_slot=act.slots[0]
  poses=[]
@@ -28,17 +29,9 @@ for clip,(count,fps,loop,src,length) in CLIPS.items():
   f=t*length;sc.frame_set(int(f),subframe=f%1);bpy.context.view_layer.update()
   sampled={p.name:p.matrix_basis.copy() for p in hrig.pose.bones};object_matrix=hrig.matrix_basis.copy()
   if clip=='idle':sampled.update(raised)
-  if clip=='move':
-   # Three-beat canter contact order, using only time-warped source trajectories.
-   # Extend the source's short gallop stances, so support persists until one flight phase.
-   legs=[('back','R',0.,6.,3.),('back','L',.23,8.5,3.),('front','R',.23,11.5,2.5),('front','L',.46,13.5,2.5)]
-   for family,side,start,source_start,stance in legs:
-    phase=(t-start)%1
-    shifted=(source_start+(phase/.34*stance if phase<.34 else stance+(phase-.34)/.66*(length-stance)))%length
-    sc.frame_set(int(shifted),subframe=shifted%1);bpy.context.view_layer.update()
-    prefixes=['FrontShoulder','FrontUpperLeg','FrontLowerLeg','IKFrontLeg','FF','PoleTarget'] if family=='front' else ['BackShoulder','BackLeg','BackUpperLeg','BackLowerLeg','IKBackLeg','FFB','PoleTargetBack']
-    for p in hrig.pose.bones:
-     if p.name.endswith('.'+side) and p.name.split('.')[0] in prefixes:sampled[p.name]=p.matrix_basis.copy()
+  if clip in ('attack','hit','death'):
+   blend=min(t/.35,1) if clip=='death' else sin(pi*t)**.65
+   sampled={n:rest_pose[n].lerp(mat,blend) for n,mat in sampled.items()}
   poses.append((sampled,object_matrix))
  hrig.animation_data_clear();hrig.animation_data_create();hrig.animation_data.action=bpy.data.actions.new('Horseman '+clip+' sampled '+src)
  base={n:Matrix(v) for n,v in json.loads(rig['seated_pose']).items()};root_rest=root.location.copy();rider_rest=rig.matrix_basis.copy();weapons=[bpy.data.objects[n] for n in ['Spear ash shaft','Iron spear blade']];weapon_rest={o.name:o.matrix_basis.copy() for o in weapons}
@@ -59,15 +52,22 @@ for clip,(count,fps,loop,src,length) in CLIPS.items():
   bpy.context.view_layer.update()
   lean=0.;twist=0.
   if clip=='idle':lean=.025*sin(2*pi*t)
-  if clip=='move':lean=.10+.055*sin(2*pi*t);twist=.015*sin(2*pi*t)
+  if clip=='move':lean=.04+.025*sin(2*pi*t);twist=.012*sin(2*pi*t)
   if clip=='attack':
    thrust=sin(pi*t)**.65;lean=.28*thrust
-   limb('upperarm_r','lowerarm_r',(-.31,-.29-.16*thrust,1.34-.15*thrust),(-.47,-.07,1.13))
-   aim_bone('hand_r',(0,-sin(thrust*pi/2),cos(thrust*pi/2)))
+   start=rig.pose.bones['hand_r'].head.copy();pole=rig.pose.bones['lowerarm_r'].head.copy();direction=rig.pose.bones['hand_r'].vector.normalized()
+   limb('upperarm_r','lowerarm_r',start.lerp(Vector((-.31,-.45,1.19)),thrust),pole.lerp(Vector((-.47,-.07,1.13)),thrust))
+   aim_bone('hand_r',direction.lerp(Vector((0,-1,0)),thrust))
   if clip=='hit':
    lean=-.22*sin(pi*t);twist=.19*sin(pi*t)
    angle=.90*sin(pi*t);aim_bone('hand_r',(0,-sin(angle),cos(angle)))
-  if clip=='death':lean=1.1*t;twist=.25*t
+  if clip=='death':
+   lean=1.1*t;twist=.25*t
+   direction=rig.pose.bones['hand_r'].vector.normalized()
+   aim_bone('hand_r',direction.lerp(Vector((0,-1,0)),.8*sin(pi*min(t/.75,1))))
+   slump=max(0,min(1,(t-.35)/.4));slump=slump*slump*(3-2*slump)
+   limb('upperarm_r','lowerarm_r',rig.pose.bones['hand_r'].head.lerp(Vector((-.25,-.24,1.09)),slump),Vector((-.48,-.12,1.19)))
+   limb('upperarm_l','lowerarm_l',rig.pose.bones['hand_l'].head.lerp(Vector((.24,-.22,1.09)),slump),Vector((.43,-.12,1.15)))
   p=rig.pose.bones['spine_02'];p.rotation_mode='QUATERNION';p.rotation_quaternion=p.rotation_quaternion@Quaternion((1,0,0),lean)
   p=rig.pose.bones['head'];p.rotation_mode='QUATERNION';p.rotation_quaternion=p.rotation_quaternion@Quaternion((0,1,0),twist)
   root.location=root_rest.copy()
@@ -79,6 +79,12 @@ for clip,(count,fps,loop,src,length) in CLIPS.items():
    fall=min(t/.5,1);center=Vector(((min(v.x for v in vs)+max(v.x for v in vs))/2,(min(v.y for v in vs)+max(v.y for v in vs))/2,0))
    root.location.x-=center.x*fall;root.location.y-=center.y*fall
    root.location.z+=.112-min(v.z for v in vs)
+  if clip!='death':
+   # Bind-space sculpt changes foot extents; ground actual rendered geometry.
+   bpy.context.view_layer.update()
+   horse=bpy.data.objects['Horse'];ev=horse.evaluated_get(bpy.context.evaluated_depsgraph_get());me=ev.to_mesh()
+   floor=min((ev.matrix_world@v.co).z for v in me.vertices);ev.to_mesh_clear()
+   root.location.z+=max(0,.112-floor)
   root.keyframe_insert('location',frame=f)
   if clip=='death':
    bpy.context.view_layer.update()
@@ -96,10 +102,11 @@ for clip,(count,fps,loop,src,length) in CLIPS.items():
    for obj in weapons:
     obj.matrix_world=transform@obj.matrix_world;obj.rotation_mode='QUATERNION'
     for prop in ['location','rotation_quaternion','scale']:obj.keyframe_insert(prop,frame=f)
+  bpy.context.view_layer.update();update_reins(f);update_tail(f,t,clip in ('move','attack','hit'))
   rig.keyframe_insert('location',frame=f)
   for p in rig.pose.bones:
    p.rotation_mode='QUATERNION'
    for prop in ['location','rotation_quaternion','scale']:p.keyframe_insert(prop,frame=f)
- sc.frame_start=1;sc.frame_end=count;sc.render.fps=fps;sc['sample_frames']=json.dumps(list(range(1,count)) + [count-1] if clip=='death' else list(range(1,count+1)));sc['horse_source_action']=act.name+(' (source trajectories retimed to three-beat canter with extended stances)' if clip=='move' else '');sc['clip']=clip;sc['loop']=loop
+ sc.frame_start=1;sc.frame_end=count;sc.render.fps=fps;sc['sample_frames']=json.dumps(list(range(1,count)) + [count-1] if clip=='death' else list(range(1,count+1)));sc['horse_source_action']=act.name;sc['clip']=clip;sc['loop']=loop
  sc.frame_set(1);bpy.ops.wm.save_as_mainfile(filepath=str(M/'clips'/f'{clip}.blend'))
  print('MOUNTED_CLIP_READY',clip)

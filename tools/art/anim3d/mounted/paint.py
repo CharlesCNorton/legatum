@@ -1,7 +1,7 @@
 """Project the original painting onto true skinned meshes; fill unseen surfaces.
 
 The UVs are fixed in the bind pose and move with vertices. Never a billboard.
-Projection is landmark-calibrated, with an incidence mask and image alpha.
+Projection uses direct rest-camera UVs, with incidence and image-alpha masks.
 """
 import bpy,os,ast,math,json
 from pathlib import Path
@@ -29,15 +29,54 @@ for v in horse.data.vertices:
  shoulder=math.exp(-((v.co.y+.026)/.006)**2-((v.co.z+.013)/.006)**2)
  if abs(v.co.x)>.001:v.co.x+=math.copysign(.00065*shoulder,v.co.x)
 horse.data.update()
+# Replace the source's tapered rod tail with authored volumetric locks.
+import bmesh
+bm=bmesh.new();bm.from_mesh(horse.data);layer=bm.verts.layers.deform.active
+tail_groups={g.index for g in horse.vertex_groups if g.name.startswith('Tail')}
+if layer:
+ doomed=[v for v in bm.verts if sum(w for group,w in v[layer].items() if group in tail_groups)>.55]
+ bmesh.ops.delete(bm,geom=doomed,context='VERTS')
+bm.to_mesh(horse.data);bm.free()
 # Round 2: calibrate view and actual pose before freezing projection UVs.
 sc.camera.location=(-8,-6,3.55)
 sc.camera.rotation_euler=(Vector((0,0,1.4))-sc.camera.location).to_track_quat('-Z','Y').to_euler()
 sc.camera.data.shift_x=-.020
 base=bpy.data.objects['Stationary cream stone'];base.scale.x=base.scale.y=.795
-# Match the painting's lifted spear hand; keep the actual weighted MPFB arm.
-limb('upperarm_r','lowerarm_r',(-.43,-.30,1.53),(-.49,-.12,1.23))
-aim_bone('hand_r',(-.12,0,1))
-# Turn the face toward the horse's direction, retaining its anatomical depth.
+# Solve hands/feet in the painting's pixel coordinates at their existing depth.
+# The shared limb helper expects armature-local coordinates, not world coordinates.
+def pixel_target(bone, xy):
+ world=rig.matrix_world@rig.pose.bones[bone].head
+ q=world_to_camera_view(sc,sc.camera,world)
+ right=sc.camera.matrix_world.to_3x3()@Vector((1,0,0))
+ up=sc.camera.matrix_world.to_3x3()@Vector((0,1,0))
+ world+=right*((xy[0]/256-q.x)*sc.camera.data.ortho_scale)
+ world+=up*((1-xy[1]/256-q.y)*sc.camera.data.ortho_scale)
+ return rig.matrix_world.inverted()@world
+# Lift the upper torso without changing the saddle attachment.
+spine=rig.pose.bones['spine_01'];mat=spine.matrix.copy();mat.translation.z+=.065;spine.matrix=mat
+bpy.context.view_layer.update()
+limb('upperarm_r','lowerarm_r',pixel_target('hand_r',(96,78)),pixel_target('lowerarm_r',(101,98)))
+# Spear's upper end leans a little left; real bone-parented geometry follows the grip.
+up=sc.camera.matrix_world.to_3x3()@Vector((-.12,1,0))
+aim_bone('hand_r',rig.matrix_world.to_3x3().inverted()@up)
+limb('upperarm_l','lowerarm_l',pixel_target('hand_l',(143,105)),pixel_target('lowerarm_l',(146,91)))
+limb('thigh_r','calf_r',pixel_target('foot_r',(125,173)),pixel_target('calf_r',(129,139)))
+# Shorten only the portion of the spear above the grip, retaining the broad iron blade.
+bpy.context.view_layer.update()
+hand=rig.matrix_world@rig.pose.bones['hand_r'].head
+shaft=bpy.data.objects['Spear ash shaft'];blade=bpy.data.objects['Iron spear blade']
+axis=(rig.matrix_world.to_3x3()@rig.pose.bones['hand_r'].vector).normalized()
+for ob in (shaft,blade):
+ inv=ob.matrix_world.inverted()
+ vertices=ob.data.vertices if ob.type=='MESH' else ob.data.splines[0].points
+ for v in vertices:
+  local=v.co.xyz if ob.type=='CURVE' else v.co
+  w=ob.matrix_world@local;distance=(w-hand).dot(axis)
+  if distance>0:
+   w-=axis*min(.17,distance*.20)
+   co=inv@w
+   if ob.type=='CURVE':v.co=(*co,1)
+   else:v.co=co
 from mathutils import Quaternion
 head=rig.pose.bones['head'];head.rotation_mode='QUATERNION';head.rotation_quaternion=head.rotation_quaternion@Quaternion((0,1,0),-.12)
 bpy.context.view_layer.update()
@@ -54,13 +93,26 @@ for v in shirt.data.vertices:
  if v.co.y<0:
   v.co.y-=.004*math.sin(52*v.co.z+18*v.co.x)*math.sin(math.pi*max(0,min(1,(v.co.z-1.02)/.43)))
 shirt.data.update()
-# Work in native 256 px camera coordinates, mapping a handful of anatomical landmarks.
+# Register the full-depth horse, bridle and mane before projecting colour.
+import sys
+sys.path.insert(0,str(Path('tools/art/anim3d/mounted').resolve()))
+from register import Registration, LANDMARKS
+registration=Registration(sc)
+for ob in list(sc.objects):
+ if ob==horse or (ob.parent==hrig and ob.type in {'MESH','CURVE'}):
+  registration.object(ob)
+bpy.context.view_layer.update()
+# Ground the actual sculpted hooves before storing the rest, preserving depth.
+bpy.context.view_layer.update();ev=horse.evaluated_get(bpy.context.evaluated_depsgraph_get());me=ev.to_mesh()
+floor=min((ev.matrix_world@v.co).z for v in me.vertices);ev.to_mesh_clear()
+ground_lift=max(0,.112-floor)
+bpy.data.objects['Horse world control'].location.z+=ground_lift
+bpy.context.view_layer.update()
+rider_world=rig.matrix_world.copy();rider_world.translation.z-=ground_lift;rig.matrix_world=rider_world
+bpy.context.view_layer.update()
+
+# Freeze UVs in the native 256 px camera coordinates.
 # The source file is aligned to the committed token, not independently reframed.
-horse_pairs=[((82,118),(94,138)),((128,137),(133,152)),((149,112),(157,115)),((174,107),(182,100)),((186,137),(189,120)),((161,184),(163,184)),((168,229),(169,220)),((87,220),(96,222)),((112,190),(121,192))]
-rider_pairs=[((119,52),(126,49)),((116,81),(121,79)),((116,110),(125,101)),((113,147),(119,139)),((113,170),(124,174)),((104,91),(101,92)),((139,97),(145,108))]
-def warped(x,y,pairs):
- weights=[1/(36+(x-a[0])**2+(y-a[1])**2)**1.8 for a,b in pairs];total=sum(weights)
- return (x+sum(w*(b[0]-a[0]) for w,(a,b) in zip(weights,pairs))/total,y+sum(w*(b[1]-a[1]) for w,(a,b) in zip(weights,pairs))/total)
 painting=bpy.data.images.load(str(A/'painting-aligned-1024.png'),check_existing=True)
 projections={k:bpy.data.images.load(str(A/f'projection-{k}.png'),check_existing=True) for k in ['coat','linen','skin']}
 fills={k:bpy.data.images.load(str(A/f'fill-{k}.png'),check_existing=True) for k in ['coat','linen','bronze','hair']}
@@ -72,7 +124,7 @@ for m in list(bpy.data.materials):
  n=m.node_tree.nodes;l=m.node_tree.links;s=n.get('Principled BSDF');tex=n.new('ShaderNodeTexImage');tex.image=fills[kind];tex.projection='BOX';tex.projection_blend=.35
  coord=n.new('ShaderNodeTexCoord');l.new(coord.outputs['Generated'],tex.inputs['Vector'])
  old=s.inputs['Base Color'].links[0].from_socket if s.inputs['Base Color'].is_linked else None
- mix=n.new('ShaderNodeMixRGB');mix.blend_type='MIX';mix.inputs[0].default_value=.55
+ mix=n.new('ShaderNodeMixRGB');mix.blend_type='MIX';mix.inputs[0].default_value=.82
  if old:l.new(old,mix.inputs[1])
  else:mix.inputs[1].default_value=s.inputs['Base Color'].default_value
  l.new(tex.outputs[0],mix.inputs[2]);l.new(mix.outputs[0],s.inputs['Base Color'])
@@ -87,7 +139,7 @@ for obj in objects:
  assert len(me.vertices)==len(obj.data.vertices),(obj.name,len(me.vertices),len(obj.data.vertices))
  coords=[];weights=[];view=(sc.camera.location-Vector((0,0,1.2))).normalized()
  for v in me.vertices:
-  world=ev.matrix_world@v.co;q=world_to_camera_view(sc,sc.camera,world);x,y=warped(q.x*256,(1-q.y)*256,horse_pairs if obj.name=='Horse' else rider_pairs)
+  world=ev.matrix_world@v.co;q=world_to_camera_view(sc,sc.camera,world);x,y=q.x*256,(1-q.y)*256
   coords.append((x/256,1-y/256))
   normal=(ev.matrix_world.to_3x3().inverted().transposed()@v.normal).normalized();inc=max(0,min(1,(normal.dot(view)-.05)/.55))
   weights.append(inc)
@@ -101,22 +153,22 @@ for obj in objects:
  oldmats=list(obj.data.materials)
  for idx,oldmat in enumerate(oldmats):
   # Preserve native dark hair/eye/hoof regions and white markings on the horse.
-  if obj.name=='Horse' and oldmat.name not in ['Bay coat','Bay shaded muscle','Bay warm highlights']:continue
+  if obj.name=='Horse' and oldmat.name in ['Dark eyes','Horn hooves']:continue
   mat=oldmat.copy();mat.name=obj.name+' projected '+oldmat.name;obj.data.materials[idx]=mat
   n=mat.node_tree.nodes;l=mat.node_tree.links;s=n.get('Principled BSDF');tc=n.new('ShaderNodeUVMap');tc.uv_map='Painting projection';tex=n.new('ShaderNodeTexImage');tex.image=projections['coat'] if obj.name=='Horse' else projections['skin'] if obj.name=='Rider MPFB CC0 anatomy' else projections['linen'] if any(w in obj.name for w in ['linen','tunic','blanket']) else painting;tex.extension='CLIP';l.new(tc.outputs[0],tex.inputs['Vector'])
   att=n.new('ShaderNodeVertexColor');att.layer_name='Painting incidence';mult=n.new('ShaderNodeMath');mult.operation='MULTIPLY';l.new(att.outputs[0],mult.inputs[0]);l.new(tex.outputs['Alpha'],mult.inputs[1])
-  factor=n.new('ShaderNodeMath');factor.operation='MULTIPLY';factor.inputs[1].default_value=.82;l.new(mult.outputs[0],factor.inputs[0])
+  factor=n.new('ShaderNodeMath');factor.operation='MULTIPLY';factor.inputs[1].default_value=.94;l.new(mult.outputs[0],factor.inputs[0])
   mix=n.new('ShaderNodeMixRGB');mix.blend_type='MIX';old=s.inputs['Base Color'].links[0].from_socket if s.inputs['Base Color'].is_linked else None
   if old:l.new(old,mix.inputs[1])
   else:mix.inputs[1].default_value=s.inputs['Base Color'].default_value
   l.new(factor.outputs[0],mix.inputs[0]);l.new(tex.outputs['Color'],mix.inputs[2]);l.new(mix.outputs[0],s.inputs['Base Color'])
   # Small emissive contribution retains painted recess colour under physical lighting.
-  l.new(mix.outputs[0],s.inputs['Emission Color']);s.inputs['Emission Strength'].default_value=.14
- records.append({'object':obj.name,'vertices':len(obj.data.vertices),'mapping':'static projected UV with incidence/alpha blend'})
+  l.new(mix.outputs[0],s.inputs['Emission Color']);s.inputs['Emission Strength'].default_value=.27
+ records.append({'object':obj.name,'vertices':len(obj.data.vertices),'mapping':'exact rest-camera UV with incidence/alpha blend; geometry remains approximate'})
 # The painting's blue border and Greek-key textile pattern on a real blanket.
 blue=material('Saddle cloth indigo paint',(.025,.09,.13),0,.85);linen=bpy.data.materials['Warm ivory linen'];gold=bpy.data.materials['Bronze • polished edges'];hair=bpy.data.materials['Black mane and tail']
 def attach_horse(o,bone):
- bpy.context.view_layer.update();world=o.matrix_world.copy();o.parent=hrig;o.parent_type='BONE';o.parent_bone=bone;bpy.context.view_layer.update();o.matrix_world=world
+ registration.object(o);bpy.context.view_layer.update();world=o.matrix_world.copy();o.parent=hrig;o.parent_type='BONE';o.parent_bone=bone;bpy.context.view_layer.update();o.matrix_world=world
 for sg in [-1,1]:
  x=sg*.372
  for z in [1.24,1.285,1.35]:
@@ -140,24 +192,19 @@ for ring in range(8):
 shield=solid(mesh('Slung bronze riding shield',verts,faces,bpy.data.materials['Bronze • hammered']),.007)
 # Authored in rider space, then attached to the moving chest without becoming a plane.
 shield.matrix_world=rig.matrix_world.copy();bpy.context.view_layer.update();world=shield.matrix_world.copy();shield.parent=rig;shield.parent_type='BONE';shield.parent_bone='spine_03';bpy.context.view_layer.update();shield.matrix_world=world
-# Skin tail fibres to the actual chain, so a second rigid tail cannot appear in gallop.
+# Volumetric locks hang under gravity rather than inheriting the source's stiff rod.
 for o in list(sc.objects):
- if o.name.startswith('Tail flowing fibre'):bpy.data.objects.remove(o,do_unlink=True)
-names=['Tail'+str(i) for i in range(1,8)];bpy.context.view_layer.update();points=[hrig.matrix_world@hrig.pose.bones[n].head for n in names]
+ if o.name.startswith(('Tail flowing fibre','Skinned tail hair')):bpy.data.objects.remove(o,do_unlink=True)
+bpy.context.view_layer.update()
+root_world=registration.world(hrig.matrix_world@hrig.pose.bones['Tail1'].head)
+sc['tail_root_local']=json.dumps(list((hrig.matrix_world@hrig.pose.bones['Tail1'].matrix).inverted()@root_world))
 for j in range(24):
- a=j*2*math.pi/24;offset=Vector((.065*math.sin(a),.045*math.cos(a),0));pts=[p+offset for p in points]+[points[-1]+offset+Vector((-.025,0,-.20))]
- ob=curve('Skinned tail hair',pts,.008,hair);bpy.ops.object.select_all(action='DESELECT');ob.select_set(True);bpy.context.view_layer.objects.active=ob;bpy.ops.object.convert(target='MESH');ob=bpy.context.object
- for name in names:ob.vertex_groups.new(name=name)
- inv=hrig.matrix_world.inverted()
- for v in ob.data.vertices:
-  world=v.co.copy();near=sorted(range(len(points)),key=lambda i:(world-points[i]).length)[:2];dist=[max(.001,(world-points[i]).length) for i in near];total=sum(1/d for d in dist)
-  for k,d in zip(near,dist):ob.vertex_groups[names[k]].add([v.index],(1/d)/total,'REPLACE')
-  # Bind-space correction: source tail is already posed; undo that deformation.
-  weights=[(1/d)/total for d in dist]
-  transforms=[hrig.pose.bones[names[k]].matrix@hrig.data.bones[names[k]].matrix_local.inverted() for k in near]
-  deform=Matrix([[sum(w*mat[row][col] for w,mat in zip(weights,transforms)) for col in range(4)] for row in range(4)])
-  v.co=deform.inverted()@(inv@world)
- ob.parent=hrig;ob.matrix_parent_inverse=Matrix.Identity(4);ob.matrix_basis=Matrix.Identity(4);ar=ob.modifiers.new('Source tail skin weights','ARMATURE');ar.object=hrig
+ ob=curve('Horseman flowing tail lock',[(0,0,.5)]*13,.009,hair)
+ ob.data.bevel_resolution=3
+from tail import update_tail
+update_tail()
+from reins import update_reins
+update_reins()
 # Shared cream target sampled from the painting's stone top: sRGB E9CFA0.
 stone=bpy.data.materials['Cream limestone'];n=stone.node_tree.nodes;l=stone.node_tree.links;s=n.get('Principled BSDF')
 for link in list(s.inputs['Base Color'].links):l.remove(link)
@@ -167,5 +214,5 @@ sc.view_settings.look='AgX - Very High Contrast';sc.view_settings.exposure=.30
 bpy.data.objects['Cool fill'].data.energy=120;bpy.data.objects['Warm key'].data.energy=550
 bpy.data.objects['Warm rim'].data.energy=220;bpy.data.objects['Warm rim'].data.color=(.78,.86,1)
 sc['painting_projection']='Original CC BY 4.0 painting, fixed UV on skinned geometry, landmark calibrated; generated unseen-surface fills'
-(M/'projection.json').write_text(json.dumps({'meshes':records,'horse_landmarks':horse_pairs,'rider_landmarks':rider_pairs,'cream_target_srgb':'#E9CFA0','limitation':'View-specific painted lighting; landmark alignment is approximate, not pixel parity.'},indent=2))
+(M/'projection.json').write_text(json.dumps({'meshes':records,'horse_geometry_landmarks':LANDMARKS,'cream_target_srgb':'#E9CFA0','limitation':'View-specific painted lighting; 3D bind-space landmark sculpture is approximate, not pixel parity.'},indent=2))
 bpy.ops.file.pack_all();bpy.ops.wm.save_as_mainfile(filepath=str(M/'horseman.blend'))

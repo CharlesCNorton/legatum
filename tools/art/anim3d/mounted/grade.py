@@ -7,7 +7,14 @@ import os,sys,json,hashlib
 from pathlib import Path
 from PIL import Image
 R=Path(os.environ.get('ANIM_ROOT',str(Path.home()/'LegatumRuns/anim-pilot')));M=R/'masters/horseman-3d';stage=sys.argv[1];folder=M/'renders'/stage
-if stage=='b':raise SystemExit(0)
+if stage=='b':
+ for p in sorted(folder.glob('*.png')):
+  im=Image.open(p).convert('RGBA')
+  for size in (512,256):
+   if size>im.width:continue
+   archive=R/'masters/horseman'/str(size)/stage;archive.mkdir(parents=True,exist_ok=True)
+   im.resize((size,size),Image.Resampling.LANCZOS).save(archive/p.name)
+ raise SystemExit(0)
 def hist(im,channel):
  mask=im.getchannel('A').point(lambda x:255 if x>128 else 0)
  return im.getchannel(channel).histogram(mask=mask)
@@ -39,3 +46,14 @@ for p in sorted(folder.glob('*.png')):
  Image.merge('RGBA',channels).save(p)
 meta=json.loads((folder/'render.json').read_text());meta['grade_sha256']=hashlib.sha256((M/'grade.json').read_bytes()).hexdigest();meta['raw_preserved']=True;(folder/'render.json').write_text(json.dumps(meta,indent=2))
 print('GRADED',stage)
+
+# Keep canonical 512 masters and a separately downsampled 256 gallery set.
+size=int(meta['resolution'])
+if size in (256,512):
+ archive=R/'masters/horseman'/str(size)/stage;archive.mkdir(parents=True,exist_ok=True)
+ for p in sorted(folder.glob('*.png')):
+  im=Image.open(p).convert('RGBA');im.save(archive/p.name)
+  if size==512:
+   small=R/'masters/horseman/256'/stage;small.mkdir(parents=True,exist_ok=True)
+   im.resize((256,256),Image.Resampling.LANCZOS).save(small/p.name)
+ (archive/'render.json').write_text((folder/'render.json').read_text())
