@@ -1,3 +1,5 @@
 - Round 1: read project art rules, standing feedback 12–23, vehicles chapter and all six Blender skills. Reuse mechanical pipeline; build low dome, six large wheels, long elevated gun, rear fuel drum. No humanoid/quadruped motion applies.
 - Retrieved original project painting; reuse existing generated olive fill and CC0 scan microstructure.
 - Emitted tank-b-plain.png from actual b renders; visual review pending.
+- Emitted tank-b-plain.png from actual b renders; visual review pending.
+- Emitted tank-c-textured-lit.png from actual c renders; visual review pending.
