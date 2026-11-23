@@ -36,3 +36,16 @@ The date range is the range of dates the repository's own records give (prompt h
 
 - No prompt is stored for the map improvements, the six original resource medallions, the aircraft plan sprites or the parchment texture.
 - Where a set was generated from one shared prompt (terrain, city sets, camps and ruins), there is one prompt for the set, not one per file.
+
+### Animated biplane candidate (round 1)
+
+`units/anim/biplane.webp` and `.json`: original true-3D Blender geometry, mechanical
+rig and authored clips in `tools/art/anim3d/units/biplane/` (MIT scripts; rendered art
+CC BY 4.0). Frozen-camera UV colour uses the existing project biplane painting
+(CC BY 4.0, archived full master); unseen surfaces use original built-in imagegen
+linen/olive/wood/rubber swatches, prompt in `units/biplane/fills.prompt.txt` under the
+pipeline directory. Blender 5.3.0 and Pillow 13.0.0; no external model or mocap asset.
+Full URLs, generation ID and licences are in the external animation
+`assets/SOURCES.md`; input hashes, real AO/curvature bakes and `.blend` masters are
+under `~/LegatumRuns/anim-pilot/masters/biplane/`, never in git. This is an art review
+candidate; existing static token/runtime registration is unchanged.

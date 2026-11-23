@@ -106,3 +106,105 @@ tools/art/anim3d/render.sh audit
 ```
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
+
+## Vehicles / aircraft — biplane (`biplane`)
+
+This aircraft chapter is unit-isolated in `tools/art/anim3d/units/biplane/`; it reuses
+`env.sh`, the Vehicles frozen-camera UV / partial-emission method, and the installed
+Blender/Pillow environment. Read the Vehicles family chapter on
+`astra/unit-anim-3d-vehicles` for the tank-specific build. Biplane uses no MPFB body:
+its model, cockpit, hollow cowling, rotary engine, cambered wings, rib seams, struts,
+landing gear, propeller and cream support are original volumetric geometry. The
+painting's airborne display composition stays intact at rest. Only the base is
+stationary through every clip; the support is hidden during the crash.
+
+### Required finish method
+
+1. Match the painting's camera and rest silhouette first. Freeze camera UVs on real
+   mesh surfaces and project the archived full painting as base colour. Normal and
+   ray-cast visibility masks retain hidden-surface fills. Biplane uses generated
+   painted linen, olive, wood and rubber fills, recorded in the external SOURCES.md.
+   Projection follows articulated geometry; it is not a painted subject plane.
+2. Finish the geometry: cambered closed wing volumes, beveled metal/wood edges,
+   open cockpit and cowling, real seams/rivets, padded seat, distinct tyre/disc/hub.
+   Four major meshes carry actual 256 px Cycles AO and Pointiness emission bakes.
+   AO modulates cavities and curvature modulates roughness; exposed metal parts
+   provide edge glints separately from dielectric paint and doped fabric.
+3. Use a warm upper-left area key, soft fill, cool rim, contact shadows and GPU
+   Cycles denoising for finals. The stone pigment is sRGB **#E9CFA0 converted to
+   linear**, roughness .86, with a bevel and fine grain. Judge rendered pixels;
+   sharing a shader value alone does not establish source matching.
+4. Derive one bounded per-channel 10/50/90-percentile grade from the rest image
+   against the painting. Freeze it for every clip, preserve alpha and raw renders.
+   Compare painting / render / 50–50 crossfade in
+   `biplane-f-restpose-compare.png`, at native 256 and 64 px. This round remains a
+   candidate until silhouettes, surfaces and all clips meet the painting.
+
+### Rebuild and previews
+
+Run from the repository root; source and generated fills are external in
+`$ANIM_ROOT/assets/biplane/`, with input hashes in `masters/biplane/inputs.json`.
+
+```sh
+source tools/art/anim3d/env.sh
+PY="$ANIM_ROOT/venv/bin/python"
+UNIT=tools/art/anim3d/units/biplane
+"$PY" "$UNIT/prepare.py"
+"$UNIT/render.sh" build
+SAMPLES=8 "$UNIT/render.sh" b
+"$PY" "$UNIT/review.py" b
+"$UNIT/render.sh" paint
+SAMPLES=12 "$UNIT/render.sh" c
+"$PY" "$UNIT/review.py" c
+"$UNIT/render.sh" animate
+for stage in d e-idle e-move e-attack e-hit e-death; do
+  RESOLUTION=512 SAMPLES=8 "$UNIT/render.sh" "$stage"
+  "$PY" "$UNIT/review.py" "$stage"
+done
+"$PY" "$UNIT/deliver.py"
+"$PY" "$UNIT/check.py"
+blender -b --disable-autoexec --python "$UNIT/audit.py"
+```
+
+Every Blender call is plain `blender -b --disable-autoexec`; PATH supplies the shared
+machine gate. Never bypass it, add a competing heavy process, or zero-scale effects.
+CPU previews default to Cycles CPU. The five rigid authored clips are idle hover/bank
+8, move 8, attack run 10, hit 4, crash 10. Propeller keys are linear; looping clips
+include a hidden closure sample. Combat clips are one-shot; the crash holds its final
+two frames. Rebuild/paint invalidates animation hashes; reanimate and rerender before
+packing. `deliver.py` rejects stale `.blend` hashes and clipped frames.
+
+### Complete GPU handoff and trimmed atlas format
+
+```sh
+ROUND=1 tools/art/anim3d/units/biplane/gpu.sh
+```
+
+No arguments. This selects Cycles **GPU / Metal**, fails when no Metal device is
+available, renders b/c/d and all 40 animation frames at 512 px, retains actual 512
+and downsampled 256 masters, writes all review sheets and animated WebPs, packs and
+validates the delivery and writes `biplane-round${ROUND}.mp4`: five clips side by
+side, 2x scale on cream, 240 frames / 8 seconds, H.264 yuv420p. Masters remain under
+`$ANIM_ROOT/masters/biplane/`, outside git. CPU 256 previews are never upscaled and
+misrepresented as 512 masters. The handoff preserves the model and baked materials.
+
+The biplane atlas extends the old grid format with `schema: legatum-trimmed-atlas-v1`.
+`frame:{w:160,h:160,ax:73,ay:140}` is the **untrimmed logical cell and anchor**.
+`clips` retains idle/move/attack/hit/death order and `{row,frames,fps,loop}`, adding a
+`rects` array of `{x,y,w,h,ox,oy}` per frame. `x,y,w,h` locate the trimmed rectangle
+in the atlas. Reconstruct it at `(ox,oy)` in a transparent 160×160 cell; draw directly
+at `(anchorX-ax+ox, anchorY-ay+oy)` to preserve placement. `row` is the logical clip
+row; physical Y and width vary. Do not multiply row/frame indices by 160 to sample
+this atlas. The 160 px delivery uses the family pipeline's 32-level alpha (maximum 4/255
+error); native masters retain full alpha. Invisible RGB is discarded by WebP. One transparent pixel separates rectangles. Identical held frames may reuse a
+rectangle without dropping any timeline samples. The renderer verifies the terminal
+pose transforms and reuses its PNG; this avoids stochastic noise in a held wreck.
+The encoder retains all
+40 frames and tries quality 90/85/80/75, refusing anything above **200,000 bytes**.
+Validation decodes the actual WebP and checks exact alpha reconstruction, motion,
+held death, metadata, review completeness and (on the GPU path) both master sizes.
+No runtime loader is changed or candidate adoption implied by this art-only lane.
+
+`biplane-PASS` is a human/agent visual verdict, never written merely because contract
+checks pass. Round-1 shortcomings and exact check results belong in the unit
+`REVIEW.md` and the external `biplane-log.md`.
