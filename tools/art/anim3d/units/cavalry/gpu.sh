@@ -1,15 +1,40 @@
 #!/usr/bin/env bash
-# No arguments; run from repository root. ROUND is supplied by the driver.
+# Complete no-argument GPU handoff; the driver supplies ROUND.
 set -euo pipefail
+cd "$(git -C "$(dirname "$0")" rev-parse --show-toplevel)"
 source tools/art/anim3d/env.sh
 U=tools/art/anim3d/units/cavalry
 export RENDER_ENGINE="${RENDER_ENGINE:-CYCLES}" CYCLES_DEVICE=GPU
-export RESOLUTION=512 SAMPLES="${SAMPLES:-64}" ROUND="${ROUND:-1}"
-# Rebuild editable clips only if absent; source hashes prevent stale delivery.
-[[ -f "$ANIM_ROOT/masters/cavalry/cavalry.blend" ]] || { echo 'Missing cavalry master: run CPU build/materials/bake/paint first.' >&2; exit 1; }
+export RESOLUTION=512 SAMPLES="${SAMPLES:-64}" ROUND="${ROUND:-2}"
+log="$ANIM_ROOT/cavalry-gpu-round${ROUND}.log"
+status="$ANIM_ROOT/review/3d-v2/cavalry-gpu-status.txt"
+exec >> "$log" 2>&1
+stage=preflight
+trap 'code=$?; printf "failed stage=%s exit=%s round=%s\n" "$stage" "$code" "$ROUND" > "$status"; exit "$code"' ERR
+printf 'running round=%s checkout=%s\n' "$ROUND" "$PWD" > "$status"
+git rev-parse HEAD
+git status --short
+command -v blender
+[[ -f "$ANIM_ROOT/masters/cavalry/cavalry-unpainted.blend" ]] || { echo 'Missing unpainted cavalry checkpoint'; false; }
+# Reject unavailable GPU before rebuilding or invalidating any final output.
+if [[ "$RENDER_ENGINE" == CYCLES ]]; then
+  blender -b --disable-autoexec --python-exit-code 1 --python "$U/gpu_check.py"
+elif [[ "$RENDER_ENGINE" != BLENDER_EEVEE ]]; then
+  echo "Unsupported GPU engine: $RENDER_ENGINE"; false
+fi
+stage=paint
+"$U/render.sh" paint
+stage=animate
+"$U/render.sh" animate
+stage=render
 STAGES=b,c,c-details,d,e-idle,e-move,e-attack,e-hit,e-death "$U/render.sh" refresh
+stage=audit
 "$U/render.sh" audit
+stage=pack
 REQUIRE_MASTERS=1 "$ANIM_ROOT/venv/bin/python" "$U/pack.py"
+stage=validate
 "$ANIM_ROOT/venv/bin/python" "$U/validate.py"
+stage=video
 "$ANIM_ROOT/venv/bin/python" "$U/mp4.py"
+printf 'complete round=%s GPU512/gallery256 atlas video; visual review pending\n' "$ROUND" > "$status"
 printf '%s\n' "Round $ROUND: GPU stages, 512/256 masters, trimmed atlas, validation and MP4 complete; visual approval still required." >> "$ANIM_ROOT/review/3d-v2/cavalry-log.md"

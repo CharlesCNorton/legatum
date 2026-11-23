@@ -11,7 +11,13 @@ for clip in ['idle','move','attack','hit','death']:
  for f in json.loads(sc['sample_frames']):
   sc.frame_set(f);bpy.context.view_layer.update();assert base.matrix_world==initial
   assert all(min(abs(v) for v in ob.scale)>.00001 for ob in sc.objects), 'Unsafe zero scale'
+  for suffix in ['', '.001']:
+   rein=bpy.data.objects['Slack leather rein'+suffix];bridle=bpy.data.objects['Cheek bridle'+suffix]
+   bit=bridle.matrix_world @ bridle.data.splines[0].points[-1].co.xyz
+   endpoint=rein.matrix_world @ rein.data.splines[0].points[0].co.xyz
+   assert (endpoint-bit).length<.002,f'{clip}/{f}: detached rein at bit'
+
   for ob in [horse,body]:
-   ev=ob.evaluated_get(bpy.context.evaluated_depsgraph_get());me=ev.to_mesh();z=[(ev.matrix_world@v.co).z for v in me.vertices];ev.to_mesh_clear();heights.append({'frame':f,'object':ob.name,'min_z':min(z),'max_z':max(z)})
+   ev=ob.evaluated_get(bpy.context.evaluated_depsgraph_get());me=ev.to_mesh();z=[(ev.matrix_world @ v.co).z for v in me.vertices];ev.to_mesh_clear();heights.append({'frame':f,'object':ob.name,'min_z':min(z),'max_z':max(z)})
  records.append({'clip':clip,'stationary_base':True,'rigs':True,'height_samples':heights})
 (R/'review/3d-v2/cavalry-audit.json').write_text(json.dumps({'structural_pass':True,'clips':records,'limitations':'No exhaustive mesh collision or hoof slip solver. Inspect strips and video.'},indent=2)+'\n');print('AUDIT cavalry dual rigs, anatomy, safe scale and fixed base passed')

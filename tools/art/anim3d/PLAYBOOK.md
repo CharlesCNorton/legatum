@@ -198,3 +198,61 @@ motion, byte budget and held source death. This is an isolated candidate; the
 runtime must understand version-2 rectangles before using it. The painting stays
 in the game. Write a `cavalry-PASS` only after visual parity and clean motion are
 actually established, not because the packer passes.
+
+### Cavalry round 2: surface fitting and reliable delivery
+
+The runner reassigned lane-20 during work; its cavalry WIP was recovered in
+`legatum/.worktrees/cavalry-round2` on the original cavalry branch. Never switch
+an active lane back from another unit; use the isolated checkout. The clean
+external `cavalry-unpainted.blend` is the repeatable input to `paint`.
+
+`refine.py` freezes MPFB macro shape keys on that working copy, cuts accidental
+jacket-covered hands using native hand/finger skin weights, and fits full-depth
+anatomy through inverse skin matrices. The horse is subdivided in bind space
+before fitting. Bounded local horse corrections replace an oscillating global
+landmark fit that produced a visibly distorted hindquarter; the rejected trial
+was caught in the immediate rest comparison. The rider uses a smooth landmark
+field; the sabre uses a shape-preserving rest-view similarity transform.
+Depth, skin weights and both editable skeletons remain. These are approximate
+landmark corrections, **not** a claim of an exact camera or anatomical match.
+
+Rigid bevels/solid thickness are applied before UV sampling. Frozen source paint
+is camera-ray-only, mixed with the physical material; non-camera rays retain
+real shading and shadows. Standard/None avoids compressing painted illumination
+a second time. Existing generated coat/navy/hair fills, scanned materials,
+AO/curvature, cloth folds, mane locks and metal detail remain. Warm key/fill/rim
+energies are 340/68/110. The independent stone pigment has a warm top and darker
+rim; it never contains painted hooves or static figure shadows. One automatic
+rest histogram LUT stays fixed for all clips; repeated grading uses preserved
+raw files and is idempotent. The source/master hashes are recorded with it.
+
+`tack.py` attaches both real rein curves to the animated bit and the evaluated
+rein hand, retaining slack. Animation keys the curve points in all forty poses.
+This fixes disconnected endpoints, not full leather simulation. Stirrups are
+fitted closer to the boots; source gait, boot/stirrup contact, tail shape and
+horse/rider anatomy still require visual review. A structural pass cannot certify
+clean motion or painting parity.
+
+`ROUND=2 tools/art/anim3d/units/cavalry/gpu.sh` remains the complete no-argument
+host handoff. It resolves its checkout, records revision/dirty inputs and the
+Blender gate in `cavalry-gpu-round${ROUND}.log`, and writes a status file naming
+any failed stage. Cycles Metal preflight precedes changing masters. Every pass
+rebuilds paint and all five clips, then renders all stages at GPU512, exports
+native stage masters and gallery256, audits, packs, validates and makes the
+8-second decoded-atlas MP4. GPU512 provenance is required before final packing;
+CPU previews cannot satisfy that gate. No automatic PASS marker is written.
+
+Atlas v2 keeps the existing per-clip `rects` contract and all 8/8/10/4/10 samples.
+Premultiplied bicubic reduction retains **lossless 8-bit alpha**; identical logical
+frames share a rectangle so held death is identical even after lossy WebP colour
+encoding. Validation checks source hashes, reconstructed alpha byte-for-byte,
+trim offsets, bounds, motion, decoded held death, Q75 minimum and the 200,000-byte
+cap. FFprobe checks the 192-frame H.264/yuv420p, 1600x352, eight-second movie.
+Masters and reviews remain external; the shipped game still uses its painting.
+
+The frame-bounds check caught the hit sabre above the camera and the settled
+horse beyond the right edge in death. Hit and early death now rotate the actual wrist/grip
+until the blade clears the top margin; death settles 0.20m left in the camera's
+ground-plane direction and folds the released sword arm across the body. The
+camera and cell size stay fixed. Rebuild and review those clips after changing
+any rest fit; source trajectories alone do not guarantee safe framing.

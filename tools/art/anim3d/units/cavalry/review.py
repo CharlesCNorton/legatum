@@ -4,6 +4,12 @@ from pathlib import Path
 from PIL import Image,ImageDraw
 R=Path(os.environ.get('ANIM_ROOT',str(Path.home()/'LegatumRuns/anim-pilot')));M=R/'masters/cavalry';V=R/'review/3d-v2';stage=sys.argv[1];folder=M/'renders'/stage
 ref=Image.open('app/src/assets/units/cavalry-256.png').convert('RGBA');frames=[Image.open(p).convert('RGBA').resize((256,256),Image.Resampling.LANCZOS) for p in sorted(folder.glob('*.png'))]
+# Preserve native stage masters and gallery copies, including plain/rest/details.
+for p in sorted(folder.glob('*.png')):
+ native=Image.open(p).convert('RGBA')
+ for size in {native.width,256}:
+  dest=M/str(size)/stage;dest.mkdir(parents=True,exist_ok=True)
+  native.resize((size,size),Image.Resampling.LANCZOS).save(dest/p.name)
 cream=(233,207,160,255)
 def backed(im):
  out=Image.new('RGBA',im.size,cream);out.alpha_composite(im);return out
@@ -19,7 +25,7 @@ if stage=='c':
   out.paste(im,(i*256,25));dr.text((i*256+10,6),title,fill='black');out.paste(im.resize((64,64),Image.Resampling.LANCZOS),(i*256+96,285))
  out.convert('RGB').save(V/'cavalry-f-restpose-compare.png')
 if stage=='c-details':
- raw=Image.open(folder/'00.png').convert('RGBA');r=ref.resize(raw.size,Image.Resampling.LANCZOS);detail=Image.new('RGBA',(1536,300),cream);d=ImageDraw.Draw(detail)
+ raw=Image.open(folder/'00.png').convert('RGBA');r=Image.open(R/'assets/cavalry/painting-aligned-1024.png').convert('RGBA').resize(raw.size,Image.Resampling.LANCZOS);detail=Image.new('RGBA',(1536,300),cream);d=ImageDraw.Draw(detail)
  for j,(name,box) in enumerate([('face / cap',(105,25,164,80)),('uniform / hand',(65,45,162,126)),('horse / tack',(138,69,213,151))]):
   scale=raw.width/256;bb=tuple(round(x*scale) for x in box)
   for i,im in enumerate([r,raw]):detail.alpha_composite(im.crop(bb).resize((256,256),Image.Resampling.LANCZOS),(j*512+i*256,30))

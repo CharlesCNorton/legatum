@@ -4,6 +4,7 @@ Called on the clean unpainted checkpoint, never on an already fitted master.
 The smooth field changes mesh coordinates, not texture coordinates or alpha.
 """
 import bpy
+import bmesh
 import numpy as np
 from mathutils import Matrix, Vector
 from bpy_extras.object_utils import world_to_camera_view
@@ -11,6 +12,22 @@ from bpy_extras.object_utils import world_to_camera_view
 
 def refine(sc):
     rider = bpy.data.objects['Rider MPFB game_engine']
+    # Height-only garment extraction accidentally included the hands. Use the
+    # original MPFB weights to cut the sleeve at the wrist, exposing real fingers.
+    jacket=bpy.data.objects['GEO-navy-jacket']
+    hand_ids={v.index for v in jacket.data.vertices if sum(g.weight for g in v.groups if jacket.vertex_groups[g.group].name.startswith(('hand_', 'thumb_', 'index_', 'middle_', 'ring_', 'pinky_')))>.65}
+    bm=bmesh.new();bm.from_mesh(jacket.data);bm.verts.ensure_lookup_table()
+    bmesh.ops.delete(bm,geom=[bm.verts[i] for i in hand_ids],context='VERTS')
+    bm.to_mesh(jacket.data);bm.free()
+    horse = bpy.data.objects['Horse']
+    # Fit a smooth bind surface, not long low-poly edges across a nonlinear field.
+    bpy.context.view_layer.objects.active = horse
+    arms = [m for m in horse.modifiers if m.type == 'ARMATURE']
+    for m in arms:m.show_viewport = False
+    for m in list(horse.modifiers):
+        if m.type == 'SUBSURF':bpy.ops.object.modifier_apply(modifier=m.name)
+    for m in arms:m.show_viewport = True
+    bpy.context.view_layer.update()
     # Measured token landmarks: source model -> original painting (256px).
     rider_pairs = [((90, 64), (80, 55)), ((106, 69), (100, 66)),
                    ((121, 74), (123, 66)), ((133, 47), (140, 46)),
@@ -32,9 +49,16 @@ def refine(sc):
         kernel = np.exp(-np.sum((a[:, None]-a[None, :])**2, axis=2)/radius**2)
         weights = np.linalg.solve(kernel+np.eye(len(a))*.025, delta)
         def fit(p):
-            return np.exp(-np.sum((a-np.array(p))**2, axis=1)/radius**2) @ weights
+            return np.clip(np.exp(-np.sum((a-np.array(p))**2, axis=1)/radius**2) @ weights, -18, 18)
         return fit
-    fields = [field(horse_pairs, 24), field(rider_pairs, 22)]
+    def horse_fit(p):
+        x,y=p
+        def g(cx,cy,rx,ry):return np.exp(-((x-cx)/rx)**2-((y-cy)/ry)**2)
+        # Bounded local shape changes avoid the oscillation of a global fit in
+        # the sparse, widely separated hind-leg landmarks.
+        head=g(200,85,28,36);rear=g(76,198,19,30);front=g(177,214,15,35)
+        return (-8*head+14*rear+17*front, 4*head+5*rear)
+    fields = [horse_fit, field(rider_pairs, 22)]
     right = sc.camera.matrix_world.to_quaternion() @ Vector((1, 0, 0))
     up = sc.camera.matrix_world.to_quaternion() @ Vector((0, 1, 0))
     unit = sc.camera.data.ortho_scale/256
@@ -62,7 +86,14 @@ def refine(sc):
             if total > .001:skin = sum((m*(w/total) for m,w in influences), Matrix(((0,)*4,)*4))
             world = ob.matrix_world @ (skin @ co)
             q = world_to_camera_view(sc, sc.camera, world)
-            dx, dy = fields[int(human)]((q.x*256, (1-q.y)*256))
+            px, py = q.x*256, (1-q.y)*256
+            dx, dy = fields[int(human)]((px, py))
+            if ob.name.startswith('GEO-stirrup') or ob.name.startswith('GEO-steel-stirrup'):
+                weight=max(0,min(1,(py-130)/25))
+                dx,dy=-15*weight,-12*weight
+            if ob.name.startswith('GEO-sabre'):
+                x, y = px-90, py-64
+                dx, dy = 80+.866*x-.095*y-px, 55+.095*x+.866*y-py
             world += (right*float(dx)-up*float(dy))*unit
             return skin.inverted_safe() @ (ob.matrix_world.inverted() @ world)
         if ob.type == 'MESH':
@@ -84,6 +115,8 @@ def refine(sc):
             if mod.type in {'SOLIDIFY', 'BEVEL', 'SUBSURF'}:bpy.ops.object.modifier_apply(modifier=mod.name)
         ob.select_set(False)
     bpy.context.view_layer.update()
+    from tack import reins
+    reins()
     return {'method':'smooth rest-view full-depth mesh fitting, inverse linear skin transforms',
             'rider_landmarks':rider_pairs, 'horse_landmarks':horse_pairs, 'objects':records,
             'limitation':'Anatomical and camera fit is approximate; original bone pivots retained.'}
