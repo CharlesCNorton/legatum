@@ -24,3 +24,7 @@ for name in ['Lamellar cuirass','Lamellar skirt','Purple shoulder mantle','Heir 
  for mod,v,r in states:mod.show_viewport=v;mod.show_render=r
  records.append({'object':name,'size':256,'maps':{k:v.image.filepath_raw for k,v in maps.items()}})
 bpy.ops.file.pack_all();bpy.ops.wm.save_as_mainfile(filepath=str(M/'byzantine-heir.blend'));(out/'manifest.json').write_text(json.dumps(records,indent=2));(M/'bake-required').unlink(missing_ok=True);print('BAKES_READY')
+
+# The finished-surface stage always restarts from the newly baked source.
+import shutil
+shutil.copy2(M/'byzantine-heir.blend',M/'projection-input.blend')

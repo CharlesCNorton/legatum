@@ -155,7 +155,86 @@ move, attack, hit, death with 8/8/10/4/10 frames. Each clip keeps `row`, `frames
 `{x,y,w,h,ox,oy}`. The first four fields locate the trimmed rectangle in the atlas;
 `ox,oy` locate it inside its original transparent 160 px cell. Reconstruct at
 `(ox,oy)`, then place the logical frame using `ax,ay`; never center each crop.
-Rows start at `row*160`, but columns have variable widths. Quality is selected
+Rows occupy 160 px, with explicit rectangles including two-pixel gutters; columns have variable widths. Identical logical samples may share a rectangle. Quality is selected
 from 90/85/80/75, never lower, with a strict 200,000 byte ceiling. No frame counts
 are reduced. Model/clip/render hashes reject stale output. This candidate is not
 wired into the game; a consumer needs trim-offset support before activation.
+
+### Heir resumed round 2: finished surfaces and stable delivery
+
+`units/byzantine-heir/refine.py` restarts from `projection-input.blend`, a copy
+of the successfully baked master. `bake.py` refreshes that checkpoint after a
+source rebuild. Freeze MPFB macro shape keys before fitting weighted vertices;
+invert their blended bone transforms to fit anatomical feet inside the boots.
+Finish rigid bevel/solidify geometry and body subdivision before freezing the
+rest-camera UVs. Dense cloth retains its authored shape keys and thickness.
+Crown/hair, boot contact and the train are fitted in real geometry. This is still
+an approximate silhouette match, not a claim of exact registration.
+
+The existing generated silk/linen/leather/metal fills and real AO/curvature stay
+in the physical material. A camera-ray-only Principled pigment branch carries
+96% of the source's already-painted illumination on facing surfaces; non-camera
+rays keep the physical shader. Standard/None avoids a second AgX compression of
+that pigment. The warm key, soft fill and cool rim remain; the round stone has
+fine grain and a camera-only cream contribution to open its physical shading.
+Boot masks reject the separate painting's cream stone. No geometry is hidden
+using source alpha, and no static painted feet enter the base.
+
+Move uses ankle IK and actual sole clearance for the lifted return and planted
+stance. Death includes authored distal-cloth settling, not a claimed cloth sim.
+After equality of evaluated terminal geometry, copy the final held PNG instead
+of rerendering it with different noise. All 8/8/10/4/10 samples remain.
+
+The executable no-argument `gpu.sh` defaults to ROUND=2, resolves its checkout,
+retains a round transcript and failed-stage status, checks Metal before editing,
+runs refinement/animation/all render stages, verifies GPU512/48 and 256 gallery
+provenance, then packs, validates and writes the required eight-second decoded
+atlas MP4. Grade provenance binds the current master, reference and rest PNG;
+packing rejects mixed render settings or stale calibration. CPU preview results
+are not GPU evidence. No PASS file is created by the technical pipeline.
+
+Heir delivery now uses bicubic reduction with full lossless alpha, two-pixel
+gutters and identical-frame rectangle reuse. Validation compares every decoded
+alpha byte and requires identical terminal death pixels. The reference remains
+the untrimmed logical 160 px cell; use each rectangle offset, never recenter it.
+
+### Heir motion update: common feedback 23
+
+Use proven open motion by default: CMU free-use or Quaternius CC0 for humans,
+CC0 animated quadrupeds for animals, with only weapon-specific attacks authored
+on top. Match source/target rest poses, coordinate axes and bone rolls. Do not
+repair a faulty retarget by overwriting foot orientations each frame. Record each
+recording URL/licence/hash in the unit's SOURCES.md and assets/SOURCES.md. Render
+a top-down and front foot cycle every round as `<slug>-g-feet-check.png`; inspect
+travel direction, contact and sliding. This is a motion-quality gate, separate
+from successful encoding.
+
+The heir now uses `motion.py`: CMU 77_02 standing, CMU 02_01 walking (one 132-frame
+capture cycle), and CMU 90_18 rug-pull fall for death plus an early balance-loss
+excerpt for hit. The source hit excerpt is retimed forward/back to recover. It
+is not described as a recorded weapon strike. Global rotations use fixed Y-up /
+Z-up and forward-axis calibration with measured rest/bone-roll offsets. Foot
+rotations come from the capture; grounding translates the whole rig. Root motion
+and exact source samples are recorded in clip metadata. Cloth and banner release
+remain authored secondary motion. `g-feet` renders all eight move samples from
+each diagnostic viewpoint, and `gpu.sh` includes that stage at final resolution.
+The earlier authored-march delivery numbers are superseded by the external log's
+final CMU candidate results.
+
+The heir retarget also uses the capture's ankle positions to solve target limb
+lengths/rest spread, while retaining the captured foot orientation target. This
+is positional IK retargeting, not a constant angle pasted over the feet. The
+root trajectory is recorded in metres in the move clip/atlas metadata; in-place
+stance motion must be judged with that removed travel in mind. The rigid ankle
+cuffs still require visual review at strong foot pitch. The backward captured
+fall receives ground-plane framing translation after cloth settling; released
+banner world keys are preserved. Never fix a clipped fall by lowering atlas
+quality or masking the figure.
+
+For stance-slip checks, compensate the retained in-place frames with their
+recorded root travel. The heir's source/target proportion differences initially
+left about 11 cm of measured stance residual. Translation-only contact locking
+now pins the actual sole patch during support, using captured ankle targets and
+preserving the capture's orientation. Inspect and record the measured residual
+and direction from `audit.json`; bone provenance alone does not prove clean
+motion. Never label a technical atlas pass as an animation/art PASS.

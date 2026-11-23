@@ -1,0 +1,30 @@
+[
+  {
+    "file": "cmu-02_01.bvh",
+    "sha256": "cf56db43157acc3d200b3d4215523f54d354a8926bea67e1f6c8031bd335ba7e",
+    "url": "https://raw.githubusercontent.com/una-dinosauria/cmu-mocap/master/data/002/02_01.bvh",
+    "use": "walk: 1-133, full cycle",
+    "license": "CMU free commercial/research use; Bruce Hahne 2010 BVH conversion adds no restrictions"
+  },
+  {
+    "file": "cmu-77_02.bvh",
+    "sha256": "d6eef8f4ab182bef1bb5db0c46cbec0261b81a63ce1720b8a19777b7e79887a9",
+    "url": "https://raw.githubusercontent.com/una-dinosauria/cmu-mocap/master/data/077/77_02.bvh",
+    "use": "standing: 80-320",
+    "license": "CMU free commercial/research use; Bruce Hahne 2010 BVH conversion adds no restrictions"
+  },
+  {
+    "file": "byzantine-heir/cmu-90_18.bvh",
+    "sha256": "32a6bcf85820af466fb141f7e05a7131fbb7d0b76a4f7d407379c6f9457cac10",
+    "url": "https://raw.githubusercontent.com/una-dinosauria/cmu-mocap/master/data/090/90_18.bvh",
+    "use": "rug-pull fall: 50-200; hit excerpt 65/90/78/65",
+    "license": "CMU free commercial/research use; Bruce Hahne 2010 BVH conversion adds no restrictions"
+  },
+  {
+    "file": "byzantine-heir/cmu-77_18.bvh",
+    "sha256": "32bda531c094690b86e7aad23312a2e839afe2a621452d2bab2c99fdbe2a553d",
+    "url": "https://raw.githubusercontent.com/una-dinosauria/cmu-mocap/master/data/077/77_18.bvh",
+    "use": "lying down/getting up, inspected but not used",
+    "license": "CMU free commercial/research use; Bruce Hahne 2010 BVH conversion adds no restrictions"
+  }
+]
