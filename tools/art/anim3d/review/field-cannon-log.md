@@ -46,3 +46,13 @@
 - Posted field-cannon-e-hit-strip.png; actual CYCLES render, visual review pending.
 - Posted field-cannon-e-death-strip.png; actual CYCLES render, visual review pending.
 - Posted field-cannon-e-death-strip.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-c-textured-lit.png; actual CYCLES render, visual review pending.
+- Loaded blender-modeling, blender-materials, blender-lighting, blender-cameras, blender-animation and blender-rendering. Preserved descriptive project object names and orthographic framing. Applied binary-metal/roughness and cloth-sheen finish, cooler reduced rim/fill, disabled autoexec, and explicit camera guard. Kept bevel/thickness, actual MPFB anatomy, keyed mechanical distance, geometry/pose checks, PNG sequences, AgX and CPU/GPU separation. Optional reference-look-calibration skill is absent; sampled image statistics and rest crossfades remain the comparison.
+- Posted field-cannon-c-textured-lit.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-c-details.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-d-rig-poses.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-idle-strip.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-move-strip.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-attack-strip.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-hit-strip.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-death-strip.png; actual CYCLES render, visual review pending.
