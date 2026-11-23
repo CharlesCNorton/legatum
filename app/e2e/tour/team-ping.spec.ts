@@ -1,5 +1,5 @@
 // Team map pings in a hot seat game: the idle and armed control, your own ping, the teammate's view with the named
-// Go to ping button, and the Guide paragraph. Run alone: `npx playwright test e2e/tour/team-ping`.
+// Go to ping button, and How to Play paragraph. Run alone: `npx playwright test e2e/tour/team-ping`.
 import type { Page } from '@playwright/test';
 import { test, expect } from '../fixtures';
 import { SIZES, shot } from './helpers';
@@ -53,7 +53,7 @@ for (const size of SIZES) test.describe(`team ping ${size.name}`, () => {
     await expect(page.getByTestId('ping-button')).toHaveAttribute('aria-pressed', 'false');
   });
 
-  test('the Guide paragraph sits after the Alliance and Peace rules', async ({ page }) => {
+  test('How to Play paragraph sits after the Alliance and Peace rules', async ({ page }) => {
     await page.goto('/?client=wasm');
     await page.getByRole('button', { name: /^How to Play/ }).click();
     const guide = page.getByRole('dialog', { name: 'How to Play', exact: true });
