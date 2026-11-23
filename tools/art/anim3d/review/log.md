@@ -10,3 +10,6 @@
 - System asset pack installed successfully (280,737,770 bytes, SHA256 b542127a8e25547c7c29c19f2d1d2adb9a664c80396ecd694095dbc8028a0107); using CC0 high-poly eyes and young male skin on MPFB UVs.
 - Revised c emitted: explicit forged muscle armour, stronger MPFB arm/shoulder targets, wider red cloak, turned shield, iron fittings, cream stone; still below painting's authored-detail richness. Baked 4 x AO and 4 x curvature maps at 512 px.
 - First e-death emitted then rejected shield/base intersection; added an attached shield control that settles face-up onto the base and freezes the last two samples. Re-rendering all five clips with revised model and 384 px / 24-sample CPU previews.
+- Geometry audit found 21 issues: spear butt low during move/death, sandal soles below base during attack/death, attack butt outside camera. Correcting world foot orientation, lifted march guard, earlier fall spear rotation and attack grip slide; no claim of passing geometry yet.
+- Wrapper fixes: avoided editing live Bash files in place after an iteration hit a truncated-command error; fixed macOS Bash 3 empty-array/set-u handling. Eevee host path now explicitly selects --gpu-backend metal.
+- Verified installed Pillow's actual licence file: version 13.0.0 uses MIT-CMU (corrected earlier HPND label). MPFB high-poly eyes and skin files explicitly carry CC0 headers.
