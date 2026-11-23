@@ -76,3 +76,4 @@
 - Retargeted CC0 / weapon-layer and saved hit action (4 output frames).
 - Retargeted CC0 / weapon-layer and saved death action (10 output frames).
 - Posted d-rig-poses review (GPU, 512 px).
+- Posted e-idle review (GPU, 512 px).
