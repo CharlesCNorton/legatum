@@ -3,3 +3,13 @@
 - Emitted tank-b-plain.png from actual b renders; visual review pending.
 - Emitted tank-b-plain.png from actual b renders; visual review pending.
 - Emitted tank-c-textured-lit.png from actual c renders; visual review pending.
+- Emitted main-battle-tank-c-textured-lit.png from actual c renders; visual review pending.
+- Emitted main-battle-tank-b-plain.png from actual b renders; visual review pending.
+- Emitted main-battle-tank-c-details.png from actual details renders; visual review pending.
+- Emitted main-battle-tank-d-rig-poses.png from actual d renders; visual review pending.
+- Emitted main-battle-tank-e-idle-strip.png from actual e-idle renders; visual review pending.
+- Emitted main-battle-tank-e-move-strip.png from actual e-move renders; visual review pending.
+- Emitted main-battle-tank-e-attack-strip.png from actual e-attack renders; visual review pending.
+- Emitted main-battle-tank-e-hit-strip.png from actual e-hit renders; visual review pending.
+- Emitted main-battle-tank-e-death-strip.png from actual e-death renders; visual review pending.
+- Emitted main-battle-tank-g-feet-check.png from actual g renders; visual review pending.
