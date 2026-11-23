@@ -1,0 +1,224 @@
+{
+  "pass": 3,
+  "deviceScaleFactor": 1,
+  "browser": "153.0.8010.12",
+  "atlases": [
+    {
+      "slug": "spearman",
+      "bytes": 186102,
+      "clips": {
+        "idle": {
+          "row": 0,
+          "frames": 8,
+          "fps": 10,
+          "loop": true
+        },
+        "move": {
+          "row": 1,
+          "frames": 8,
+          "fps": 12,
+          "loop": true
+        },
+        "attack": {
+          "row": 2,
+          "frames": 10,
+          "fps": 14,
+          "loop": false
+        },
+        "hit": {
+          "row": 3,
+          "frames": 4,
+          "fps": 12,
+          "loop": false
+        },
+        "death": {
+          "row": 4,
+          "frames": 10,
+          "fps": 10,
+          "loop": false
+        }
+      }
+    },
+    {
+      "slug": "horseman",
+      "bytes": 172920,
+      "clips": {
+        "idle": {
+          "row": 0,
+          "frames": 4,
+          "fps": 5,
+          "loop": true
+        },
+        "move": {
+          "row": 1,
+          "frames": 8,
+          "fps": 12,
+          "loop": true
+        },
+        "attack": {
+          "row": 2,
+          "frames": 6,
+          "fps": 7.777777777777779,
+          "loop": false
+        },
+        "hit": {
+          "row": 3,
+          "frames": 3,
+          "fps": 8,
+          "loop": false
+        },
+        "death": {
+          "row": 4,
+          "frames": 6,
+          "fps": 5.555555555555555,
+          "loop": false
+        }
+      }
+    },
+    {
+      "slug": "field-cannon",
+      "bytes": 191132,
+      "clips": {
+        "idle": {
+          "row": 0,
+          "frames": 4,
+          "fps": 5,
+          "loop": true
+        },
+        "move": {
+          "row": 1,
+          "frames": 8,
+          "fps": 12,
+          "loop": true
+        },
+        "attack": {
+          "row": 2,
+          "frames": 6,
+          "fps": 7.777777777777779,
+          "loop": false
+        },
+        "hit": {
+          "row": 3,
+          "frames": 3,
+          "fps": 8,
+          "loop": false
+        },
+        "death": {
+          "row": 4,
+          "frames": 6,
+          "fps": 5.555555555555555,
+          "loop": false
+        }
+      }
+    },
+    {
+      "slug": "spartan-hoplite",
+      "bytes": 199396,
+      "clips": {
+        "idle": {
+          "row": 0,
+          "frames": 8,
+          "fps": 10,
+          "loop": true
+        },
+        "move": {
+          "row": 1,
+          "frames": 8,
+          "fps": 12,
+          "loop": true
+        },
+        "attack": {
+          "row": 2,
+          "frames": 10,
+          "fps": 14,
+          "loop": false
+        },
+        "hit": {
+          "row": 3,
+          "frames": 4,
+          "fps": 12,
+          "loop": false
+        },
+        "death": {
+          "row": 4,
+          "frames": 10,
+          "fps": 10,
+          "loop": false
+        }
+      }
+    }
+  ],
+  "stress": [
+    {
+      "avg": 1.096111111342907,
+      "p95": 14.699999988079071,
+      "samples": 180,
+      "tokens": 300,
+      "mode": "cached",
+      "ground": {
+        "avg": 0.0016666667328940497,
+        "p95": 0,
+        "samples": 180
+      },
+      "sprites": {
+        "avg": 1.094444444610013,
+        "p95": 14.699999988079071,
+        "samples": 180
+      }
+    },
+    {
+      "avg": 2.2044444446762403,
+      "p95": 14.5,
+      "samples": 180,
+      "tokens": 600,
+      "mode": "cached",
+      "ground": {
+        "avg": 0.0016666667328940497,
+        "p95": 0,
+        "samples": 180
+      },
+      "sprites": {
+        "avg": 2.2027777779433464,
+        "p95": 14.5,
+        "samples": 180
+      }
+    }
+  ],
+  "originalStress": [
+    {
+      "avg": 4.763888889054457,
+      "p95": 6.300000011920929,
+      "samples": 180,
+      "tokens": 300,
+      "mode": "original",
+      "ground": {
+        "avg": 0.00555555522441864,
+        "p95": 0.09999999403953552,
+        "samples": 180
+      },
+      "sprites": {
+        "avg": 4.758333333830039,
+        "p95": 6.300000011920929,
+        "samples": 180
+      }
+    },
+    {
+      "avg": 10.51388888888889,
+      "p95": 12.199999988079071,
+      "samples": 180,
+      "tokens": 600,
+      "mode": "original",
+      "ground": {
+        "avg": 0.007777777976459927,
+        "p95": 0.09999999403953552,
+        "samples": 180
+      },
+      "sprites": {
+        "avg": 10.506111110912428,
+        "p95": 12.199999988079071,
+        "samples": 180
+      }
+    }
+  ],
+  "errors": []
+}
