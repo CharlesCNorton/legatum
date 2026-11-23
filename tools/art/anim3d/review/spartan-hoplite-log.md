@@ -10,3 +10,6 @@ Built original MPFB anatomy, 53-bone rig and hoplite-specific linen/lambda kit; 
 Textured: CC0 scans, 512 AO/curvature bakes, fixed painting UVs, generated unseen linen/bronze fills, cream pigment and product lighting.
 Review c: 256px CYCLES/CPU, 16 samples; 1 actual frames.
 Baked clip idle
+Baked clip move
+Baked clip attack
+Baked clip hit

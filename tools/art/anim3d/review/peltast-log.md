@@ -1,2 +1,6 @@
 - Built MPFB anatomy, painted rest stance, red chiton, blue cloak, fox-skin cap, woven crescent pelta and three iron-tipped javelins; plain review pending.
 - Published b review immediately: CYCLES/CPU, 256 px, 2 frame(s).
+- Built MPFB anatomy, painted rest stance, red chiton, blue cloak, fox-skin cap, woven crescent pelta and three iron-tipped javelins; plain review pending.
+- Published b review immediately: CYCLES/CPU, 256 px, 2 frame(s).
+- Applied original-painting camera projection to full anatomy and physical clothing/equipment; unseen faces use painted fills and surface shaders. No billboard or relief image plane.
+- Published c review immediately: CYCLES/CPU, 256 px, 1 frame(s).

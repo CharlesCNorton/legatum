@@ -1,2 +1,6 @@
 - Round 1: read project art skill, spearman playbook, mounted projection implementation and standing feedback 1–22. Inspected source and token: kneeling right-facing marksman, feathered hat, ragged buff coat, red sash, horizontal musket.
 - Loaded six Blender skills: modeling for thick folded clothing and beveled gun/straps; materials for roughness/weave and paint; lighting for warm key/cool rim; cameras for calibrated orthographic projection; animation for skeletal keys and held death; rendering for CPU previews and GPU handoff. Reusing installed CC0 MPFB anatomy and existing generated CC BY 4.0 hidden-surface fills.
+- Built kneeling MPFB human, tailored ragged kit, feather hat, bandolier and solid horizontal musket.
+- Posted b-plain review (CPU, 256 px).
+- Camera projection applied to real meshes; hidden surfaces retain generated painted fills.
+- Posted c-textured-lit review (CPU, 256 px).

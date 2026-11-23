@@ -7,3 +7,7 @@
 - Posted b-plain review (CPU, 256 px).
 - Camera projection applied to real meshes; hidden surfaces retain generated painted fills.
 - Posted c-textured-lit review (CPU, 256 px).
+- Built MPFB anatomical body, 53-bone rig and original arquebusier kit; plain.blend saved.
+- Posted b-plain review (CPU, 256 px).
+- Camera projection applied to real meshes; hidden surfaces retain generated painted fills.
+- Posted c-textured-lit review (CPU, 256 px).
