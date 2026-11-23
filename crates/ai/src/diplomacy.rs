@@ -945,6 +945,22 @@ impl Planner<'_> {
                 decisions.push(order);
             }
         }
+        if let Some(city) = self.rome_opening_city() {
+            let against = v.team_of(city.owner);
+            // Keep the opening's one target. The normal prospective siege forecast waits
+            // for a complete assault; here the three melee are already at its door.
+            decisions.retain(|order| !matches!(order, Order::DeclareWar { .. }));
+            if !city.walls
+                && !v.teams_at_war(v.team, against)
+                && self.rome_opening_ready(city)
+                && let Some(order) = v.diplomacy.actions.iter().find(|action| {
+                    action.blocked_reason.is_none()
+                        && matches!(action.order, Order::DeclareWar { against: team, breach: false } if team == against)
+                })
+            {
+                decisions.push(order.order.clone());
+            }
+        }
         self.orders.extend(decisions);
     }
 
