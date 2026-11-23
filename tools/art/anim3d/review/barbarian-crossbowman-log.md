@@ -48,3 +48,17 @@
 - e-move: 8 frames reviewed at 256/64; CYCLES GPU, 64 samples, source 512px.
 - e-attack: 10 frames reviewed at 256/64; CYCLES GPU, 64 samples, source 512px.
 - e-hit: 4 frames reviewed at 256/64; CYCLES GPU, 64 samples, source 512px.
+- e-death: 10 frames reviewed at 256/64; CYCLES GPU, 64 samples, source 512px.
+- Packed 40 frames, trimmed 160px cells, WebP quality 90, 157272 bytes.
+- Wrote 8 second five-clip H.264 yuv420p review barbarian-crossbowman-round1.mp4
+
+- Driver round 2 opening GPU critique: opened c, f, all five e strips and decoded round1 MP4 frame before edits. GPU transcript ends GPU_MASTERS_OK/VIDEO_OK: 512px Cycles GPU64, 40 frames, Q90 157272 bytes; no failed GPU pass to repair. At256 painted face/gambeson are strong, but hood crown separates in hit/death, leg/boot outlines are narrow, bolt case is too dark/large, prod curvature differs, base is too smooth and high, and death floats stiffly. At64 identity and scale read correctly but feet/weapon/base silhouette is visibly different. Not PASS. Prior GPU evidence archived under masters/barbarian-crossbowman/driver-r1-gpu.
+- Read all playbook chapters, all standing feedback including new motion rule23, complete running log, and all six Blender skills. Unit-specific FEEDBACK.md absent. Applying full-depth projection/geometry/material/lighting refinements; replacing authored non-attack motion with existing CC0 Quaternius actions plus front/top feet evidence.
+- c: 1 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- c: 1 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- d: 4 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- e-idle: 8 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- e-move: 8 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- e-attack: 10 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- e-hit: 4 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- e-death: 10 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
