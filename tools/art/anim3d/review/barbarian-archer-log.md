@@ -36,3 +36,9 @@ Rendered b: 512px, Cycles CPU, 4 samples; raw frames preserved.
 Published b review immediately; CPU preview, not art approval.
 Rendered c: 512px, Cycles CPU, 4 samples; raw frames preserved.
 Published c review immediately; CPU preview, not art approval.
+Rendered d: 512px, Cycles CPU, 4 samples; raw frames preserved.
+Published d review immediately; CPU preview, not art approval.
+Rest-pose refinement: widened front pelt coverage, lowered hood, raised ragged skirt/belt, corrected bow asymmetry and framing, added red wrist cloth. Source projection now includes the anatomical body. Saved split-screen/crossfade and actual 512px-source detail crops.
+Visual verdict before packing: same broad wolf-pelt archer identity at 64px, below painting parity at 256px. Face and bow-hand projection artifacts, coarse fur locks, flat garment patches and simplified boots remain visible. Bow curve and torso proportions still differ.
+Death preview inspected through the settled fall. Held terminal samples are checked by transforms and copied exactly to avoid denoiser rounding. Cloak motion is authored deformation, not a physical cloth simulation.
+Consolidated duplicate projected materials; retained independent baked materials. Full preview renders use genuine 512px Cycles CPU frames at 4 samples; GPU handoff uses Metal Cycles at 64 samples.

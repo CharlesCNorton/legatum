@@ -33,3 +33,5 @@
 - Saved hit: 4 frames at 12 fps, editable MPFB rig, stationary base; authored keys.
 - Saved death: 10 frames at 10 fps, editable MPFB rig, stationary base; authored keys.
 - Published d-rig-poses: CYCLES CPU, 512 px, 8 samples; not GPU approval.
+- Published e-idle-strip: CYCLES CPU, 512 px, 8 samples; not GPU approval.
+- Refined diagnosis: the attack's first-frame staff tilt also came from an unconditional IK solve with a different elbow pole at zero attack weight. Preserving the exact neutral arm at zero weight and blending the pole during the gesture fixes that discontinuity. Added first-frame assertion before saving and a targeted motion-attack rerender command.

@@ -14,3 +14,7 @@
 - Saved e-attack review, raw 512 px and graded 512/256 sets; CYCLES CPU 8 samples.
 - Saved e-hit review, raw 512 px and graded 512/256 sets; CYCLES CPU 8 samples.
 - Saved e-death review, raw 512 px and graded 512/256 sets; CYCLES CPU 8 samples.
+- First textured comparison reviewed at native 256/64: recognizable red/gold archer, but narrower pose, imperfect face/hand projection, weak knee contact. Not painting parity.
+- Initial clip review corrected attack follow-through (drawing hand recoils behind cheek independently of released string), hit bow clipping and a raised arm in terminal death.
+- Packer correctly refused hit at y=0 and then death at x=0; revising motion rather than weakening the margin check. Death start poles now interpolate from the actual neutral pose.
+- Python and shell syntax passed. Initial static check: hygiene/public-claims passed; browser-dependent art-set renderer could not run in the sandbox. The documented build-box helper uses AWS, so it is not invoked under this lane's no-AWS constraint.

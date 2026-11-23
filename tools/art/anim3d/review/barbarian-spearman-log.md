@@ -17,3 +17,7 @@
 - Published d review from CPU render.
 - Published e-idle review from CPU render.
 - Published e-move review from CPU render.
+- Inspected final 512-derived rest split-screen at native 256/64: correct oval-shield/low-spear identity, but narrower torso/stance and pointed fur remain below the painting. No approval claimed.
+- Inspected idle and move strips: visible skeletal breathing/march, fixed stone base; gait is restrained and needs more weight transfer.
+- Attack pose review caught a downward weapon dip. Corrected authoring to use an arm reach and stable hand orientation; rerender queued after the current sequential batch.
+- Added explicit lasted footwear and independent shield release; original first plain review retained as b-plain-initial.png.

@@ -9,3 +9,6 @@
 - Rest review remains distinguishable: face, quilting, boots and warm stone need craft refinement; no PASS claim.
 - Authored five clips with common pike control/two-hand solve, loop closure keys, depth-directed fall and held death; CPU clip previews pending.
 - Added no-argument Cycles Metal GPU handoff, immutable per-run grade, trimmed 160 px atlas with lossless alpha, and trim-aware round MP4 encoder.
+- Baked six real 256 px Cycles maps (AO and Pointiness for gambeson, helmet dome and brim); packed into master and saved external PNGs. Geometry helpers excluded, Solidify disabled during baking.
+- Rebuilt all five clips from final baked master; viewport subdivision disabled only during key authoring, reducing the full animation build from 149 s to 20 s without changing render subdivision.
+- Published rest, detail and attack-pose comparisons. Added painting projection to actual base geometry; warm top improved, rough side/rim remains an issue.
