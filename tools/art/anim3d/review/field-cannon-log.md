@@ -19,3 +19,4 @@
 - Move strip review caught the stowed rammer extending outside the frame. Corrected its carriage-local position for the final round; retained actual wheel-distance coupling.
 - Posted field-cannon-e-attack-strip.png; actual CYCLES render, visual review pending.
 - Posted field-cannon-e-hit-strip.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-death-strip.png; actual CYCLES render, visual review pending.

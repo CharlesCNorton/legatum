@@ -12,3 +12,4 @@
 - Generated and saved a four-quadrant coat/linen/bronze/hair fill atlas with built-in imagegen; pinned original pixels and full prompt; no generated geometry or painting cutouts.
 - Added fixed projected UVs on weighted surfaces, incidence/alpha seams, geometry Greek-key blanket/fringe, skinned tail strands, and one rest-calibrated colour LUT for all frames.
 - Source gait inspection found four separate source footfalls. Retiming both forelimb trajectories creates a three-beat canter adaptation; source paths retained and provenance explicit.
+- Investigated alternate CC0 source `Horse Rigged All Gaits` by fdoss001 (BlendSwap 28627). The listing search identifies CC0/all gaits, but opening the source returned HTTP 403; no asset acquired and no account created. Keeping the licensed Quaternius base and documenting its anatomical limits.
