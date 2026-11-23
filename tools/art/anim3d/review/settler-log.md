@@ -215,3 +215,6 @@
 - Saved 3D audit passed: source hashes, 53 bones, actual motion, exact loop closing keys and held death; ground/bounds recorded; collision limits explicit.
 - Saved move: 8 frames at 6 fps, editable MPFB rig, stationary base; CC0 library motion or authored staff attack.
 - Published e-move-strip: CYCLES CPU, 256 px, 8 samples; not GPU approval.
+- Saved death: 10 frames at 10 fps, editable MPFB rig, stationary base; CC0 library motion or authored staff attack.
+- Published e-death-strip: CYCLES CPU, 256 px, 8 samples; not GPU approval.
+- Saved 3D audit passed: source hashes, 53 bones, actual motion, exact loop closing keys and held death; ground/bounds recorded; collision limits explicit.
