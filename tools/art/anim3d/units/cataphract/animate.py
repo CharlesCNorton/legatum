@@ -39,11 +39,12 @@ for clip,(count,fps,loop,src,length) in CLIPS.items():
   if clip=='move':lean=.10+.055*sin(2*pi*t);twist=.015*sin(2*pi*t)
   if clip=='attack':
    thrust=sin(pi*t)**.65;lean=.28*thrust
-   limb('upperarm_r','lowerarm_r',(-.31,-.29-.16*thrust,1.34-.15*thrust),(-.47,-.07,1.13))
-   aim_bone('hand_r',(0,-sin(thrust*.65),cos(thrust*.65)))
+   hand=rig.pose.bones['hand_r'].head.copy();elbow=rig.pose.bones['lowerarm_r'].head.copy()
+   limb('upperarm_r','lowerarm_r',hand+Vector((0,-.16*thrust,-.10*thrust)),elbow)
+   angle=math.atan(.25)+thrust*.65;aim_bone('hand_r',(0,-sin(angle),cos(angle)))
   if clip=='hit':
    lean=-.22*sin(pi*t);twist=.19*sin(pi*t)
-   angle=.25*sin(pi*t);aim_bone('hand_r',(0,-sin(angle),cos(angle)))
+   angle=math.atan(.25)+.25*sin(pi*t);aim_bone('hand_r',(0,-sin(angle),cos(angle)))
   if clip=='death':lean=1.1*t;twist=.25*t
   p=rig.pose.bones['spine_02'];p.rotation_mode='QUATERNION';p.rotation_quaternion=p.rotation_quaternion@Quaternion((1,0,0),lean)
   p=rig.pose.bones['head'];p.rotation_mode='QUATERNION';p.rotation_quaternion=p.rotation_quaternion@Quaternion((0,1,0),twist)

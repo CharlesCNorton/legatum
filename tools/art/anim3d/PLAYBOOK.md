@@ -162,10 +162,10 @@ PATH gate; no direct executable and no nested heavy process. CPU previews use
 Cycles. GPU rerender needs only the executable no-argument script:
 
 ```sh
-ROUND=1 tools/art/anim3d/units/cataphract/gpu.sh
+ROUND=2 tools/art/anim3d/units/cataphract/gpu.sh
 ```
 
-It checks the rig, renders every b/c/d/e stage serially with Cycles Metal GPU at
+It checks Metal availability, regenerates the five clips, checks the rig, and renders every b/c/d/e stage serially with Cycles Metal GPU at
 512px/64 samples, derives true 512/256 masters, makes all review PNGs and animated
 WebPs, packs and validates the atlas and writes `cataphract-round${ROUND}.mp4`.
 The video restores each trimmed frame to its 160px logical canvas, displays all
@@ -184,9 +184,51 @@ transparent 160px canvas; position that canvas relative to `(ax,ay)`. Atlas row
 heights and widths are variable, with two-pixel gutters; do not multiply row/index
 by 160 to find pixels. Runtime loading is unchanged by this art-only candidate.
 
-The packer preserves all frames, quantizes alpha to 32 levels and tries WebP
+The packer preserves all frames, downsamples with bicubic filtering and lossless
+8-bit alpha, shares identical rectangles within each row, and tries WebP
 quality 90/85/80/75, refusing anything over **200,000 bytes**. Decoded bounds,
 transparency, reconstructed motion and held death are validated. Master and clip
 hashes reject stale renders. Raw render PNGs remain untouched; only the derived
 masters/reviews/atlas receive the shared rest LUT. CPU previews are never enlarged
 and labelled as 512px masters: the GPU handoff produces those originals.
+
+### Cataphract round 2: finished surfaces and rider coverage
+
+`finish.py` starts from the preserved clean `unpainted.blend` on every run.
+`refine.py` freezes the MPFB macro mix, applies the actual solidify/bevel/subdivision
+surfaces with armature deformation disabled, then fits the completed weighted
+anatomy through inverse skin transforms. The 53-bone rig, weights and full mesh
+depth remain. This fixes projection sampled on a cage that was displaced later by
+render modifiers. A local camera-plane fitting field broadens the near shoulder,
+lowers the neck crest and moves the rein hand toward the painting; it preserves
+depth but is still an approximate registration, not an exact camera match.
+The rein palm turns down. Source walk/idle/hit/death and authored rider motion
+remain; attack/hit now begin with the guard lance angle instead of snapping upright.
+
+Projection now records finished-surface UVs, normal incidence and ray visibility.
+A separate source-pigment mask rejects cream base pixels on the horse's lower legs;
+otherwise registration error paints the stationary stone onto moving hooves.
+This changes pigment coverage only, never mesh opacity. The original generated
+coat/linen/metal/hair fills remain on unseen areas, along with real mane/tail curves,
+thick straps, folded cloak and scale relief. Original projected painted illumination
+is a camera-only 96% pigment branch; non-camera rays keep physical materials, baked
+helmet AO/Pointiness, shadows and product lighting. Standard/None avoids compressing
+already painted illumination again. This is deliberate source-color preservation,
+not a general photographic preset. The round cream stone uses its own physical and
+camera-only pigment, with no figure or hoof projection, and a single automatic
+rest-histogram grade still applies to all clips.
+
+`gpu.sh` defaults to round 2 and is the only required host command. It retains
+`gpu-logs-cataphract-r${ROUND}.log`, reports the failed stage in
+`review/3d-v2/cataphract-gpu-status.txt`, and writes a round-specific JSON receipt
+only after independent verification. A missing Metal device fails before animation.
+All b/c/d/e stage manifests must be current Cycles GPU512/64; actual 512/256 stage
+and clip masters, lossless reconstructed alpha, unchanged frame counts, margins,
+gutters, motion, exact decoded death hold and the H.264/yuv420p eight-second
+1600x348 / 240-frame movie are checked by `verify.py --gpu`. A successful receipt
+still sets `art_pass:false`; only visual acceptance can create a PASS marker.
+For CPU delivery verification run `ROUND=2 "$ANIM_ROOT/venv/bin/python"
+ tools/art/anim3d/units/cataphract/verify.py` after rendering/packing. CPU previews
+cannot pass the GPU provenance gate. This remains an unwired art candidate.
+
+Round-two CPU evidence: all forty samples at Cycles CPU256/8, **188,488 bytes at Q85**, 1156x736 atlas, lossless alpha and exact decoded death hold. Geometry/finished-surface audit, independent delivery/video checks, syntax, missing-input logging and CPU-master GPU rejection pass. The movie is H.264/yuv420p,1600x348,240frames/eight seconds. Evidence remains in `masters/cataphract/round2-cpu`. At256 the far arm, reins, horse contours and underside finish still differ from the painting; at64 identity reads but silhouette is not equivalent. **No PASS marker; host GPU512/64 and visual acceptance remain outstanding.**

@@ -1,7 +1,7 @@
 """Grade once, retain masters, build reviews, trim 160px frames and validate delivery."""
 import os,json,hashlib,io,subprocess,tempfile,sys
 from pathlib import Path
-from PIL import Image,ImageDraw,ImageChops,ImageStat
+from PIL import Image,ImageDraw,ImageChops
 R=Path(os.environ.get('ANIM_ROOT',str(Path.home()/'LegatumRuns/anim-pilot')));M=R/'masters/cataphract';Q=R/'review/3d-v2'
 CLIPS={'idle':(8,10,True),'move':(8,12,True),'attack':(10,14,False),'hit':(4,12,False),'death':(10,10,False)}
 CREAM=(233,207,160,255);ref=Image.open('app/src/assets/units/cataphract-256.png').convert('RGBA')
@@ -32,11 +32,13 @@ def load(p,size=256):return grade(Image.open(p).convert('RGBA')).resize((size,si
 def tile(im,size=256):
  bg=Image.new('RGBA',(size,size),CREAM);bg.alpha_composite(im.resize((size,size),Image.Resampling.LANCZOS));return bg
 render=load(rest)
+rest_manifest=json.loads((rest.parent/'manifest.json').read_text())
+render_label=f"3D / {rest_manifest['device']} {rest_manifest['resolution']}px"
 # Painting/render, half split and 50 percent crossfade at both review sizes.
 split=ref.copy();split.paste(render.crop((128,0,256,256)),(128,0))
 fade=Image.blend(ref,render,.5)
 sheet=Image.new('RGBA',(1024,364),CREAM);d=ImageDraw.Draw(sheet)
-for i,(name,im) in enumerate([('Painting',ref),('3D candidate',render),('Half split',split),('50% crossfade',fade)]):
+for i,(name,im) in enumerate([('Painting',ref),(render_label,render),('Half split',split),('50% crossfade',fade)]):
  d.text((i*256+8,8),name,fill=(55,42,25));sheet.alpha_composite(im,(i*256,28));sheet.alpha_composite(im.resize((64,64),Image.Resampling.LANCZOS),(i*256+96,292))
 sheet.convert('RGB').save(Q/'cataphract-f-restpose-compare.png')
 sheet.crop((0,0,512,364)).save(Q/'cataphract-c-textured-lit.png')
@@ -44,6 +46,13 @@ sheet.crop((0,0,512,364)).save(Q/'cataphract-c-textured-lit.png')
 bpath=M/'renders/b-plain/000.png'
 if bpath.exists():
  b=Image.open(bpath).convert('RGBA').resize((256,256),Image.Resampling.LANCZOS);s=Image.new('RGBA',(512,284),CREAM);s.alpha_composite(ref,(0,28));s.alpha_composite(b,(256,28));ImageDraw.Draw(s).text((8,8),'Painting / plain 3D',fill=(55,42,25));s.save(Q/'cataphract-b-plain.png')
+# Export actual stage masters; never upscale CPU previews into a 512px claim.
+for stage in ['b-plain','c-textured-lit','d-rig-poses']:
+ for p in sorted((M/'renders'/stage).glob('*.png')):
+  original=Image.open(p).convert('RGBA')
+  if stage!='b-plain':original=grade(original)
+  for size in [256]+([512] if original.width>=512 else []):
+   dest=M/str(size)/stage;dest.mkdir(parents=True,exist_ok=True);original.resize((size,size),Image.Resampling.LANCZOS).save(dest/p.name)
 # Close details, same native pixel scale on each side.
 boxes=[('Helmet / rider',(80,42,145,126)),('Barding / saddle',(54,109,177,178)),('Horse head',(144,69,205,139))]
 detail=Image.new('RGBA',(768,280),CREAM);d=ImageDraw.Draw(detail)
@@ -52,6 +61,7 @@ for i,(name,box) in enumerate(boxes):
  for j,im in enumerate([ref,render]):
   crop=im.crop(box);crop.thumbnail((60,110));detail.alpha_composite(crop.resize((crop.width*2,crop.height*2),Image.Resampling.NEAREST),(i*256+j*128,32))
 detail.save(Q/'cataphract-c-details.png')
+if '--rest-only' in sys.argv:raise SystemExit(0)
 poses=sorted((M/'renders/d-rig-poses').glob('*.png'))
 if poses:
  strip=Image.new('RGBA',(len(poses)*256,284),CREAM)
@@ -61,7 +71,9 @@ frames={};sources={};hashes={}
 for name,(count,fps,loop) in CLIPS.items():
  folder=M/'renders'/('e-'+name);paths=[folder/f'{i:03}.png' for i in range(count)]
  if not all(p.exists() for p in paths) or not (folder/'manifest.json').exists():continue
- frames[name]=[load(p) for p in paths];sources[name]=json.loads((folder/'manifest.json').read_text())
+ manifest=json.loads((folder/'manifest.json').read_text())
+ if manifest['master_sha256']!=sha(M/'cataphract.blend') or manifest['blend_sha256']!=sha(M/'clips'/f'{name}.blend'):continue
+ frames[name]=[load(p) for p in paths];sources[name]=manifest
  strip=Image.new('RGBA',(count*256,356),CREAM)
  for i,(p,im) in enumerate(zip(paths,frames[name])):
   strip.alpha_composite(im,(i*256,28));strip.alpha_composite(im.resize((64,64),Image.Resampling.LANCZOS),(i*256+96,288));hashes[f'{name}/{i}']=sha(p)
@@ -79,17 +91,19 @@ assert json.loads((rest.parent/'manifest.json').read_text())['blend_sha256']==ma
 for name,report in sources.items():
  assert report['master_sha256']==mastersha,f'{name}: stale source master'
  assert report['blend_sha256']==sha(M/'clips'/f'{name}.blend'),f'{name}: stale clip render'
-assert len({(x['engine'],x['device'],x['resolution'],x['samples']) for x in sources.values()})==1,'Mixed render settings'
+assert len({(x['engine'],x['device'],x['resolution'],x['samples']) for x in [*sources.values(),json.loads((rest.parent/'manifest.json').read_text())]})==1,'Mixed render settings'
 # Each row is packed left-to-right; per-frame rects recover original 160x160 canvases.
 anchor=json.loads((rest.parent/'manifest.json').read_text()).get('anchor_160',[75,143])
 meta={'version':2,'layout':'trimmed-rows','frame':{'w':160,'h':160,'ax':anchor[0],'ay':anchor[1]},'clips':{}}
 rows=[];y=1;maxwidth=1;trimmed={};bounds={}
 for row,(name,(count,fps,loop)) in enumerate(CLIPS.items()):
- cells=[];x=1;height=1;rects=[];bounds[name]=[]
+ cells=[];x=1;height=1;rects=[];bounds[name]=[];seen={}
  for im in frames[name]:
-  im=im.resize((160,160),Image.Resampling.LANCZOS);alpha=im.getchannel('A').point(lambda a:round(round(a*31/255)*255/31));im.putalpha(alpha)
+  im=im.resize((160,160),Image.Resampling.BICUBIC);alpha=im.getchannel('A')
   box=alpha.getbbox();assert box,'Empty frame';bounds[name].append(box)
-  crop=im.crop(box);w,h=crop.size;cells.append((crop,x));rects.append({'x':x,'y':y,'w':w,'h':h,'ox':box[0],'oy':box[1]});x+=w+2;height=max(height,h)
+  key=hashlib.sha256(im.tobytes()).hexdigest()
+  if key in seen:rects.append(dict(seen[key]));continue
+  crop=im.crop(box);w,h=crop.size;cells.append((crop,x));rect={'x':x,'y':y,'w':w,'h':h,'ox':box[0],'oy':box[1]};rects.append(rect);seen[key]=rect;x+=w+2;height=max(height,h)
  meta['clips'][name]={'row':row,'frames':count,'fps':fps,'loop':loop,'rects':rects};rows.append((y,cells));maxwidth=max(maxwidth,x);y+=height+2
 atlas=Image.new('RGBA',(maxwidth,y))
 for y,cells in rows:
@@ -98,6 +112,7 @@ for quality in [90,85,80,75]:
  buf=io.BytesIO();atlas.save(buf,format='WEBP',quality=quality,method=6,exact=True)
  if len(buf.getvalue())<=200000:break
 else:raise RuntimeError('Atlas exceeds 200,000 bytes at quality 75. No quality/frame-count downgrade allowed.')
+meta['atlas']={'w':atlas.width,'h':atlas.height};meta['quality']=quality
 out=Path('app/src/assets/units/anim');out.mkdir(parents=True,exist_ok=True);dst=out/'cataphract.webp';dst.write_bytes(buf.getvalue());dst.with_suffix('.json').write_text(json.dumps(meta,indent=2)+'\n')
 # Validate the decoded product and reconstruction rather than only source arrays.
 decoded=Image.open(dst).convert('RGBA');assert decoded.size==atlas.size;reconstructed={};warnings=[]
@@ -110,15 +125,16 @@ for name,c in meta['clips'].items():
   im=Image.new('RGBA',(160,160));im.paste(decoded.crop((x,y,x+w,y+h)),(ox,oy));reconstructed[name].append(im)
   if ox<1 or oy<1 or ox+w>159 or oy+h>159:warnings.append(f'{name}: silhouette reaches canvas edge')
  assert any(ImageChops.difference(reconstructed[name][0],im).convert('RGB').getbbox() for im in reconstructed[name][1:]),f'{name} has no motion'
-assert ImageChops.difference(frames['death'][-1],frames['death'][-2]).getbbox() is None,'Death must hold'
-# Lossy neighboring atlas blocks can differ slightly even for identical source frames.
-assert max(ImageStat.Stat(ImageChops.difference(reconstructed['death'][-1],reconstructed['death'][-2])).mean)<3,'Decoded death hold changed materially'
+assert ImageChops.difference(frames['death'][-1],frames['death'][-2]).convert('RGB').getbbox() is None,'Death must hold'
+# Identical source samples share one encoded rectangle, preserving the exact hold.
+assert ImageChops.difference(reconstructed['death'][-1],reconstructed['death'][-2]).convert('RGB').getbbox() is None,'Decoded death must hold exactly'
+assert decoded.getchannel('A').tobytes()==atlas.getchannel('A').tobytes(),'Lossless alpha must survive WebP'
 assert decoded.getchannel('A').getextrema()==(0,255)
 assert not warnings, sorted(set(warnings))
 report={'bytes':dst.stat().st_size,'quality':quality,'frames':40,'canvas':160,'atlas_size':decoded.size,'warnings':sorted(set(warnings)),'source_frames':hashes,'render_sources':sources,'atlas_sha256':sha(dst),'master_sha256':mastersha,'grade_sha256':sha(M/'grade.json')}
 (Q/'cataphract-validation.json').write_text(json.dumps(report,indent=2)+'\n')
 # 8-second five-clip H.264 review. Trim offsets are restored before scaling.
-video=Q/f'cataphract-round{os.environ.get("ROUND","1")}.mp4'
+video=Q/f'cataphract-round{os.environ.get("ROUND","2")}.mp4'
 with tempfile.TemporaryDirectory(prefix='cataphract-mp4-',dir=R/'tmp') as tmp:
  for t in range(240):
   canvas=Image.new('RGBA',(1600,348),CREAM);d=ImageDraw.Draw(canvas)

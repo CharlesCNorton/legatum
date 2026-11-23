@@ -2,12 +2,33 @@
 import bpy,os,json,hashlib
 from pathlib import Path
 R=Path(os.environ['ANIM_ROOT']);M=R/'masters/cataphract';Q=R/'review/3d-v2'
+def upstream_images(socket,seen=None):
+ seen=set() if seen is None else seen
+ images=[]
+ for link in socket.links:
+  node=link.from_node
+  if node in seen:continue
+  seen.add(node)
+  if node.type=='TEX_IMAGE' and node.image:images.append(node.image.name)
+  for input_socket in node.inputs:images.extend(upstream_images(input_socket,seen))
+ return images
 sha=hashlib.sha256((M/'cataphract.blend').read_bytes()).hexdigest();report={}
 for clip,count in {'idle':8,'move':8,'attack':10,'hit':4,'death':10}.items():
  bpy.ops.wm.open_mainfile(filepath=str(M/'clips'/f'{clip}.blend'));sc=bpy.context.scene
  assert sc['source_master_sha256']==sha,clip+': stale master'
  horse=bpy.data.objects['Horse'];rider=bpy.data.objects['Rider MPFB CC0 anatomy'];base=bpy.data.objects['Stationary cream stone']
  assert len(rider.data.vertices)>10000 and len(horse.data.vertices)>1000
+ assert rider.data.shape_keys is None,'Active macro shapes can override fitting'
+ for ob in sc.objects:
+  if ob.type!='MESH':continue
+  assert ob.get('finished_before_projection'),ob.name
+  assert all(m.type=='ARMATURE' for m in ob.modifiers),ob.name
+  if ob==base:continue
+  assert ob.data.uv_layers.get('Painting projection'),ob.name
+  for mat in ob.data.materials:
+   if not mat or not mat.use_nodes:continue
+   assert mat.node_tree.nodes.get('Painted illumination'),(ob.name,mat.name)
+   assert not any(name.startswith('projection.png') for name in upstream_images(mat.node_tree.nodes['Principled BSDF'].inputs['Alpha'])),(ob.name,'Painting must not cut geometry; native eye alpha is allowed')
  assert any(m.type=='ARMATURE' for m in rider.modifiers) and any(m.type=='ARMATURE' for m in horse.modifiers)
  assert len(bpy.data.objects['Rider MPFB game_engine'].data.bones)==53
  bm=base.matrix_world.copy();cam=sc.camera.matrix_world.copy()

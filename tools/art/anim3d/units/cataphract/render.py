@@ -28,6 +28,8 @@ def render_rest(name,file):
  sc=open_scene(file)
  if name=='b-plain':
   mat=bpy.data.materials.new('Neutral clay review');mat.use_nodes=True;mat.node_tree.nodes['Principled BSDF'].inputs['Base Color'].default_value=(.42,.42,.42,1);mat.node_tree.nodes['Principled BSDF'].inputs['Roughness'].default_value=.8;sc.view_layers[0].material_override=mat
+ (M/'renders'/name).mkdir(parents=True,exist_ok=True)
+ (M/'renders'/name/'manifest.json').unlink(missing_ok=True)
  save_frame(sc,M/'renders'/name/'000.png',0)
  # Every stage gets immediately visible review evidence, even before deliver.py.
  shutil.copyfile(M/'renders'/name/'000.png',Q/f'cataphract-{name}.png');log(f'Rendered {name}: {res}px {sc.render.engine} {sc.cycles.device}, {samples} samples.')
@@ -42,8 +44,12 @@ if stage in ['all','c']:
  # Same full-scene frame preserves framing; deliver.py makes detail crops.
  shutil.copyfile(M/'renders/c-textured-lit/000.png',Q/'cataphract-c-details.png')
 if stage in ['all','d']:
- sc=open_scene(M/'clips/attack.blend')
+ file=M/'clips/attack.blend';sc=open_scene(file)
+ assert sc['source_master_sha256']==hashlib.sha256((M/'cataphract.blend').read_bytes()).hexdigest()
+ (M/'renders/d-rig-poses').mkdir(parents=True,exist_ok=True)
+ (M/'renders/d-rig-poses/manifest.json').unlink(missing_ok=True)
  for i,frame in enumerate([1,3,5,8]):save_frame(sc,M/'renders/d-rig-poses'/f'{i:03}.png',frame)
+ (M/'renders/d-rig-poses/manifest.json').write_text(json.dumps({'engine':sc.render.engine,'device':sc.cycles.device,'resolution':res,'samples':samples,'blend_sha256':hashlib.sha256(file.read_bytes()).hexdigest()}))
  log('Rendered four keyed attack rig poses.')
 for clip,count in clips.items():
  if stage not in ['all','e-'+clip]:continue
