@@ -63,3 +63,6 @@ Skills: loaded modeling, materials, lighting, cameras, animation and rendering; 
 c: 1 frames at 256/64 from 256px CYCLES/CPU, 8 samples.
 e-death: 10 frames at 256/64 from 256px CYCLES/CPU, 8 samples.
 c: 1 frames at 256/64 from 512px CYCLES/CPU, 8 samples.
+Driver round2 interim: published CPU256 rest/death and CPU512 rest/details immediately. Masked original stone grain/edge paint improves the flat tan disc, with a clean procedural contact footprint and live AO. Source-painted thick propellers recover real tip bands. Solid support now collapses rather than disappearing; wing buckling strengthened. 512 detail revealed flat fallback patches behind blades, so created a licensed ImageGen occlusion fill and use it only inside the removal masks. Reference alpha and actual 3D geometry remain authoritative.
+c: 1 frames at 256/64 from 512px CYCLES/CPU, 8 samples.
+c: 1 frames at 256/64 from 512px CYCLES/CPU, 8 samples.
