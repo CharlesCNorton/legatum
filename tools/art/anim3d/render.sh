@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
+# Unit lanes dispatch before the legacy spearman lock/stages.
+if [[ "${UNIT:-spearman}" == settler ]]; then
+  exec "$(dirname "$0")/units/settler/render.sh" "$@"
+fi
 cd "$(dirname "$0")/../../.."
 source tools/art/anim3d/env.sh
 stage="${1:-c}"

@@ -106,3 +106,118 @@ tools/art/anim3d/render.sh audit
 ```
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
+
+## Settler: infantry/civilian round-1 lane
+
+The settler implementation is isolated in `units/settler/`. It reuses the spearman
+MPFB 2.0.18 installation, 53-bone game-engine anatomy/weights and `env.sh`, but
+builds a female traveller and original civilian kit: linen hood and robes, olive
+wrap, rust shawl/fringe, strapped pack, spiral blanket roll, sandals and staff.
+There is no copied hoplite equipment, image plane, or displaced painting relief.
+The skirt has complete circumference and physical thickness. A non-destructive
+body mask culls upper legs fully covered by that opaque garment, preventing stride
+poke-through while retaining the source anatomy. Cloth folds and hem
+follow-through are authored; this lane does **not** claim a cloth simulation or
+motion-capture retarget. The five editable clips retain 8/8/10/4/10 samples.
+
+All six installed Blender skills informed modeling, materials, cameras, lighting,
+animation and rendering. In particular: bevels and real strap thickness; fully
+metallic brass versus dielectric textiles; a warm upper-left key, soft fill and
+cool rim; frozen orthographic rest camera; clamped Bezier rig keys and exact loop
+closing keys; low-sample CPU previews with visual inspection before GPU delivery.
+Every invocation is plain `blender -b --disable-autoexec` through the PATH gate,
+with no private executable, extra lock, thread override on the command line, or
+near-zero-scaled hidden effect. One owned process runs a complete serial round.
+
+### Painting and surface standard
+
+Follow feedback 18's four levers: (1) align geometry to the painting and project
+its brushwork through frozen evaluated-rest-camera UVs onto the real deforming
+mesh, with facing and material-region masks; (2) finish the geometry with thick
+folded textiles, rounded straps, stitches, fringe, a relief clasp and real blanket
+spiral; (3) light as a painted miniature with contact shade and AO; (4) derive a
+bounded monotonic RGB transfer from the rest render and reuse the **same** grade
+for every frame. A single alpha-bounds-derived orthographic framing transform,
+frozen from the rest pose, also matches painting height/centre; raw renders stay
+untouched. Never fit individual animation poses or match histograms independently
+per frame. Unseen areas
+use generated ivory/olive/rust/leather fills, blended beneath the projection.
+Ten actual 256 px AO/Pointiness curvature maps for skirt, olive wrap, hood, shawl
+and clasp are retained in `masters/settler/textures/baked/`; they drive cavity
+shade and roughness. Painted light is deliberately retained in the projected
+colour with a small Principled emission contribution, so this is fixed-view art,
+not a neutral PBR asset suitable for arbitrary lighting without another review.
+
+The shared stone target is displayed sRGB **#E9CFA0**, with a darker rounded rim.
+The settler uses linear warm pigment `(.92,.66,.36)`, roughness `.87`, fine grain,
+and a small warm emission contribution. These shader values are not sRGB values;
+judge actual rendered pixels under the scene's lighting and AgX transform. The
+base is one stationary low disc, never an animated part of the rig.
+
+`settler-f-restpose-compare.png` shows painting, render, half-split and 50/50
+crossfade at 256 and 64 px. The near-indistinguishable target is a judging bar,
+not a claim made by writing a file. The current round remains a review candidate.
+
+### Reproduction and host handoff
+
+All downloads, generated fills and masters stay under `~/LegatumRuns/anim-pilot/`.
+`assets/SOURCES.md` records origins/licences and the fill prompt is checked in.
+`prepare.py` registers the source painting and crops the generated fill sheet.
+The saved `.blend` files pack their images. No account or paid service is needed.
+
+```sh
+source tools/art/anim3d/env.sh
+"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/settler/prepare.py
+UNIT=settler SAMPLES=8 tools/art/anim3d/render.sh rebuild
+UNIT=settler tools/art/anim3d/render.sh pack
+UNIT=settler tools/art/anim3d/render.sh validate
+```
+
+`rebuild` runs build/plain review, materials/bakes, rest/detail review, all five
+animation masters, rig poses, all strips/WebPs, then the saved-geometry audit.
+Stage images publish immediately under `review/3d-v2/settler-*`. `build`,
+`materials`, `animate`, `b`, `c`, `c-details`, `d`, `e-<clip>` and `audit` can also
+run separately. Rebuilding invalidates downstream hashes; regenerate all stages.
+Read `review/3d-v2/settler-FEEDBACK.md` if present before another iteration.
+
+For the lead's GPU rerender, preserve the saved geometry/material/animation work:
+
+```sh
+UNIT=settler RENDER_ENGINE=CYCLES CYCLES_DEVICE=GPU SAMPLES=64 tools/art/anim3d/render.sh final
+UNIT=settler tools/art/anim3d/render.sh pack
+UNIT=settler tools/art/anim3d/render.sh validate
+```
+
+`final` renders rest first to establish the grade, then details, rig poses and all
+five clips, and audits. GPU Cycles explicitly selects Metal with denoising and
+fails if absent. `RENDER_ENGINE=BLENDER_EEVEE` supports a host comparison; CPU
+Cycles is the sandbox default. Masters render at 512 px; graded 512 and 256 sets
+remain in `masters/settler/frames-{512,256}/`. Review the new GPU pixels before
+adopting the candidate. Successful packing does not mean art approval.
+
+### 160 px atlas extension (version 2)
+
+The existing `frame:{w,h,ax,ay}` and `clips:{name:{row,frames,fps,loop}}` remain.
+For this unit the logical cell is 160×160, anchor `(79,138)`, grid 10 columns × 5
+rows. Each clip adds `trim`, one record per sample:
+
+```json
+{"x":160,"y":0,"w":82,"h":145,"dx":40,"dy":8}
+```
+
+`x,y,w,h` is the rectangle in the atlas. `dx,dy` restores its origin in the logical
+160 px cell. A renderer draws it at `(dx-ax,dy-ay)` relative to the token anchor.
+The crop is stored at its grid-cell top-left; the rest of the cell is transparent.
+This preserves row/clip indexing while requiring a trim-aware consumer. The lane
+adds **no runtime wiring**, so the existing static painting stays in use until
+art approval and atlas-consumer integration. The example values above illustrate
+the schema; actual offsets are measured from every frame's alpha.
+
+The packer keeps all 40 frames and searches WebP quality 90/85/80/75, with 16 alpha
+levels, refusing output over 200,000 bytes at quality 75. It records blend, grade,
+raw-frame, 512/256-frame and delivery hashes. The validator checks clip lengths,
+trim bounds/restoration, transparent margins and padding, decoded motion, held
+death, size/quality and 40 masters at both sizes. The decoded-atlas sheet is also
+published for visual review. The 3D audit checks 53 bones, stationary base, actual
+motion, exact loop closure/terminal death and ten bakes; it records ground and
+camera bounds, but is not an exhaustive skin/cloth collision solver.

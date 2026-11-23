@@ -1,0 +1,11 @@
+Built-in imagegen; stylized-concept material texture, 2026-11-22.
+Square 2x2 material texture sheet, four equally sized quadrants, no borders, objects,
+text, labels or perspective. Premium hand-painted historical miniature albedo,
+fine irregular brushwork and textile weave, subtle small scale wear, no cast shadows.
+Top left warm ivory flax linen with tiny ochre woven geometric threads; top right
+muted sage olive wool with delicate pale woven diagonal motifs; bottom left warm
+terracotta rust shawl wool with delicate aged woven motifs; bottom right warm dark
+chestnut leather with lighter wear and small scuffs. Continuous flat tile-friendly
+textures for the hidden sides of a true 3D early-era traveller.
+Source output: 01a2066f-0093-7841-a8c7-6f855f481de8/exec-b3b147d3-6440-488f-ab5b-190d0f4c1011.png
+External canonical file: assets/settler/painted-fills.png. Project CC BY 4.0.
