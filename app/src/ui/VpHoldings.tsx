@@ -140,7 +140,7 @@ export function TokenCard({ model, active, panel }: { model: VpModel | null; act
   return createPortal(
     <div ref={ref} id={CARD_ID} className="vhc-pop" role="tooltip" style={pos ? { top: pos.top, left: pos.left } : { top: 0, left: 0, visibility: 'hidden' }}>
       <SourceCard model={model} s={s} />
-      <div className="vhc-pop-hint"><kbd className="kbd">←</kbd><kbd className="kbd">→</kbd> next way to score <kbd className="kbd">Esc</kbd> <span>Rules: Guide <kbd className="kbd">?</kbd></span></div>
+      <div className="vhc-pop-hint"><kbd className="kbd">←</kbd><kbd className="kbd">→</kbd> next way to score <kbd className="kbd">Esc</kbd> <span>Rules: How to Play <kbd className="kbd">?</kbd></span></div>
     </div>,
     document.body,
   );
