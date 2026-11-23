@@ -12,13 +12,8 @@
   border-left: 1px solid var(--rule);
   color: var(--ink);
   background: transparent;
-  cursor: pointer;
   white-space: nowrap;
 }
-@media (hover: hover) {
-  .era-chip:hover { background: var(--panel-2); }
-}
-.era-chip:focus-visible { outline: 2px solid var(--ink); outline-offset: -3px; }
 .era-chip-numeral {
   display: inline-grid;
   place-items: center;
@@ -39,7 +34,7 @@
   /* The last resort in a bar this crowded: the era's numeral stands for its name (the tooltip and label still say it). */
   .topbar[data-compact~='eraname'] .era-chip .era-chip-name { display: none; }
   .topbar[data-compact~='eraname'] .era-chip .era-chip-numeral { display: inline-grid; }
-  /* Beyond that the research cell wins: the era is still on the Technologies screen. */
+  /* Beyond that the research cell wins: the era is still on the Research screen. */
   .topbar[data-compact~='erachip'] .era-chip-tip { display: none; }
 }
 
