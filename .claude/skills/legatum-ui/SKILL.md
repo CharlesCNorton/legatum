@@ -75,6 +75,7 @@ This file holds the current rules, one line each. The user's words, dates, as-bu
 ## Cities, units and lists
 
 - Build lists are dense; no line holds one short item; locked upgrades nest under the building they follow (user, 2026-10-28, 2026-10-18).
+- In the city build list, Projects (Gold, Science, Food) come last, below wonders and everything buildable, as in Civ 6: they are the "nothing else to do" fallback, never a headline option (Sam, 2026-11-22).
 - Faction-accurate everywhere: show only what helps your faction, with its replacements; when a faction loses a yield, hide it (user, 2026-11-22, Egypt).
 - A unit has two idle buttons: Fortify (civilians: Wait; F) and Skip this turn (Space), plus Heal (H) when damaged (the internal order is still named Sleep); every military unit can auto-explore with E (user, 2026-10-20, 2026-11-01, 2026-11-14).
 - A unit a rule holds in place shows it on the map and card before you try to move it; a released garrison returns to the queue (user, 2026-11-11, 2026-11-15).
