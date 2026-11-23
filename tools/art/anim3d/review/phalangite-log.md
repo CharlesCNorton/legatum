@@ -83,3 +83,8 @@
 - Published e-hit review from 512px GPU renders.
 - Published e-death review from 512px GPU renders.
 - Packed all 40 frames, WebP quality 90, 181270 bytes; validation passed.
+
+# Phalangite round 2 continuation after verified GPU round 1
+- Opened GPU c, f, all five e strips, and four decoded round1 MP4 frames before editing. GPU receipt confirms Cycles Metal 512/64, all40 frames, Q90 181270 bytes and H264/yuv420p 8s; outer driver log is empty because gpu.sh redirects to its own log. Preserved current GPU evidence separately.
+- Honest critique at256: torso/helmet brushwork is close, but the base is an untextured uniform rim with excess depth, sandals lose their toes, calves look straight and thin, face/cheek and shoulder contours still differ. At64 the correct red/ivory/bronze identity and sarissa read clearly, but highlights and footing differ. Idle is restrained; march shuffles rather than transfers weight; attack is slight; death remains visibly suspended. No PASS.
+- Read entire PLAYBOOK and standing FEEDBACK through item23; unit-specific feedback file absent. Loaded all six Blender skills; preserving inverse-skinned real geometry, painted UVs and generated fills, refining limestone geometry/material and replacing synthetic march with licensed open motion plus front/top feet review.
