@@ -77,3 +77,9 @@
 - Emitted e-hit: 4 frames, 256 px CYCLES/CPU, 4 samples.
 - Emitted c: 1 frames, 256 px CYCLES/CPU, 8 samples.
 - Emitted c-details: 1 frames, 256 px CYCLES/CPU, 8 samples.
+- Emitted e-death: 10 frames, 256 px CYCLES/CPU, 8 samples.
+- Removed broad coat hue rejection: warm painted bridle/edge highlights now remain on real horse geometry. Kept ray-tested frozen UVs and generated backfills, widened the far hind hoof, refitted head/withers/axilla, added actual hanging cloth troughs and irregular weighted tail ends. Preserved product lighting and one automatic histogram grade.
+- New base projection initially stamped standing hooves onto the stone; caught in death preview and corrected with a cream-only semantic mask. No stationary ghost feet accepted.
+- Rider now uses pinned CC0 UAL Sitting_Idle_Loop/Hit_Chest/Death01 torso/head deltas with reference/roll compensation; arms remain pistol/rein constrained, pelvis/legs saddle constrained. Removed hand-authored front-leg death bends; source foot rotations retained.
+- Measured old terminal torso-to-lowest-hoof gap 0.572 m. Evaluated whole-mount contact orientation before choosing -30 degree roll/+15 degree pitch, eased into the source fall. Preview now settles close to stone; audit adds a terminal gap <0.20 m check. Rider/horse intersections and backfill still need honest visual judgment.
+- Four delivery regression tests passed in 5.087 s; Bash syntax and whitespace passed before final full CPU rebuild.
