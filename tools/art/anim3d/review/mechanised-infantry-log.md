@@ -55,3 +55,7 @@
 - Exercised complete gpu.sh: expected explicit failure at Metal preflight (exit 1); no silent CPU fallback and CPU evidence retained. Lead must run ROUND=1 tools/art/anim3d/units/mechanised-infantry/gpu.sh from this checkout root.
 - Git staging/commit blocked: cannot create .git/worktrees/lane-23/index.lock (Operation not permitted). Changes remain uncommitted for runner; no push or PR. Intended message: Add mechanised infantry 3D animation round one; trailer Co-Authored-By: gpt-6-astra (Codex) <noreply@openai.com>.
 - Honest verdict: same APC-plus-dismount identity at 64px; below painting at 256px. Soldier rest-pose/face/boots/grip, heavy rubber finish, rear cabin joins, cream stone nuance and visible corpse need further work. No PASS marker.
+- Published b-plain CPU/GPU geometry stage before texture work.
+- Baked 256px AO and curvature maps on GEO-Armoured hull, GEO-Lowered loading ramp, GEO-Turret shell
+- Published painted rest pose and 50/50 comparison; real AO shader, micrograin, edge geometry and hidden-surface fill.
+- Published e-idle: 8 actual rendered frames, 10 fps; GPU 512px 64 samples.
