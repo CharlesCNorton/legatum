@@ -107,3 +107,7 @@
 - c: 1 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
 - e-move: 8 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
 - e-death: 10 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- Round3 iteration findings: a shoe hull built from raw MPFB vertices included hidden helpers; corrected to evaluated visible anatomy. Native calf weights stretched the leather shell, so shoes now use the source foot bones without post-retarget rotation edits; covered anatomical toes are masked. Sleeve coverage improved; tunic/stitch channels now transfer evaluated MPFB spine/hip weights through inverse skin matrices, preserving rest shape. Evaluated masked vertex indices differ from raw body indices; corrected transfer to use evaluated weights.
+- c: 1 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- e-move: 8 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- e-death: 10 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
