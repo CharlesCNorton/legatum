@@ -1,0 +1,17 @@
+{
+  "licence": "Project CC BY 4.0",
+  "files": [
+    {
+      "path": "assets/tank/painted-olive.png",
+      "sha256": "6abccdcaf35f2288543ca2fcffec2c7b589fff873c332db056ffdf7345575a41"
+    },
+    {
+      "path": "masters/tank/tank-source.png",
+      "sha256": "7e68210e5ca4952aed21adb3aba47ea9f10de3013192ef272b287f8a0c28399d"
+    }
+  ],
+  "generated_fill": {
+    "generation": "01a20674-c612-7411-9c8a-075f46e56d4c/exec-bdc68bad-f161-45e0-b0ec-31203ac453e8.png",
+    "source": "Reused original artillery painted olive fill; no new generation"
+  }
+}

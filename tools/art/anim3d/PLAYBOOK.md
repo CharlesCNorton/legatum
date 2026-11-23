@@ -81,78 +81,77 @@ For the next unit, start new external master and review directories; calibrate t
 
 ## Vehicles — WWII Tank (`tank`)
 
-This family uses original hard-surface geometry and authored mechanical motion, not an MPFB body. `tank` is the earlier **turreted** tank; `main-battle-tank` is later. `landship` is the separate turretless WWI Early Tank, so it cannot supply the requested turret-traverse clips. The reference has no insignia: do not add stars, numbers or invented markings.
+This family uses original closed hard-surface geometry and authored mechanical motion, not an MPFB body. `tank` is the turreted WWII tank; `main-battle-tank` is later and `landship` is the turretless Early Tank. Match this painting and do not add insignia.
 
-The Vehicles code is isolated under `tools/art/anim3d/vehicles/`. It reuses `env.sh`, the installed Blender and Pillow, the existing CC0 Travertine001 and Metal034 displacement, the review-sheet layout and exact atlas contract. Masters, packed textures, six 512 px AO/curvature maps, five animated `.blend` files and raw frame PNGs are under `$ANIM_ROOT/masters/tank/`. Source/licence records are in `$ANIM_ROOT/assets/SOURCES.md` and the repository art provenance table. No model or master belongs in git.
+Code is isolated under `tools/art/anim3d/vehicles/`, with the driver entry point at `units/tank/gpu.sh`. It reuses `env.sh`, Blender 5.3.0, the installed Pillow and CC0 Metal034/Travertine001 scans. All Blender invocations are plain `blender -b --disable-autoexec` through the PATH gate, with three render threads and one heavy lane process. Never bypass the gate or call the application directly. Masters, packed textures and renders live outside git at `$ANIM_ROOT/masters/tank/`. The original painting and reused image-generated olive fill are SHA256-pinned in `units/tank/assets.lock.json`; their licences/generation are in `$ANIM_ROOT/assets/SOURCES.md` and the project provenance table.
 
-### Build, bake and mechanical clips
+### Build and registration
 
-```sh
-RENDER_ENGINE=CYCLES tools/art/anim3d/render.sh vehicles-build
-RENDER_ENGINE=CYCLES SAMPLES=6 tools/art/anim3d/render.sh vehicles-b
-RENDER_ENGINE=CYCLES tools/art/anim3d/render.sh vehicles-bake
-RENDER_ENGINE=CYCLES tools/art/anim3d/render.sh vehicles-paint
-RENDER_ENGINE=CYCLES SAMPLES=12 tools/art/anim3d/render.sh vehicles-c
-RENDER_ENGINE=CYCLES SAMPLES=12 tools/art/anim3d/render.sh vehicles-details
-RENDER_ENGINE=CYCLES tools/art/anim3d/render.sh vehicles-animate
-RENDER_ENGINE=CYCLES SAMPLES=8 tools/art/anim3d/render.sh vehicles-d
-for clip in idle move attack hit death; do
-  RENDER_ENGINE=CYCLES SAMPLES=8 tools/art/anim3d/render.sh "vehicles-e-$clip"
-done
-```
-
-Every Vehicles invocation goes through `$ANIM_ROOT/bin/blender-slot`, in background mode, with three render threads. The machine-wide gate may impose a stricter single-process limit; wait for it. Run only one command at a time. The inherited infantry commands remain backward compatible. Do not call the Blender application directly or pass your own thread count. A rebuild invalidates downstream bakes, projected materials, clip masters and frames; repeat those steps in order, including `vehicles-paint` after the bake. Projection intentionally refuses to apply twice to the same master.
-
-The model has a sloped upper hull, rounded transmission nose, rounded cast turret and mantlet, closed cupola, recessed muzzle, short gun, six road wheels in three VVSS bogies per side, drive sprockets, 124 individually moving track shoes and grousers, louvres, jerricans, stowage boxes, headlights, hatch and towing details. Separate rigid parents control suspension, traverse and recoil. The cream stone base is stationary. Paint has multiscale pigment variation and cast grain; **actual Cycles AO and Pointiness emission bakes** on the upper/lower hull and turret drive cavity grime and noisy edge wear. Small original oxide chips, rubbed lips and dried mud supplement the bakes. Visible surfaces use frozen rest-camera UV projection from the full-resolution painting onto actual hull/turret meshes, blended at 90% confidence on camera-facing surfaces and fading into procedural scanned steel on hidden surfaces. The original bake UV layer is explicitly retained. No flat subject cards or silhouette replacement is used. Small turret motions carry the painted UVs with the mesh; substantial viewpoint changes would expose baked-lighting and alignment errors and need repainting.
-
-Idle has restrained engine shake, a small turret scan and exhaust wisps. Move advances each track link continuously around a closed capsule by three eighths of a shoe pitch per output sample, turns the wheels by corresponding travel/radius, and pitches the hull. Attack traverses the turret, recoils the barrel, flashes and emits smoke. Hit jolts the hull and throws short sparks. Death settles the hull into a planted wreck with noise-masked soot, mesh flames and translucent 3D smoke shells. The last two output frames deliberately repeat the settled sample, including its effects. Exact lengths and fps: idle 8/10, move 8/12, attack 10/14, hit 4/12, death 10/10; only idle/move loop at runtime.
-
-**Never hide volume meshes with zero or tiny scales.** That produced an OpenVDB `ScaleMap` exception and a desktop crash dialog. Inactive effects retain sane scale and use keyed `hide_render`. Smoke is now noise/facing-faded translucent shading on actual 3D shells (the volume version took about 11 seconds per CPU frame just to process); flames and sparks are emissive geometry. Effects need frame-margin and visual review under both render engines. No smoke simulation cache or paid effect asset is required.
-
-### Review and host GPU rerender
-
-Each completed stage immediately writes `review/3d-v2/tank-b-plain.png`, `tank-c-textured-lit.png`, `tank-c-details.png`, `tank-d-rig-poses.png` or `tank-e-<clip>-strip.png`, plus each `tank-e-<clip>.webp`. Sheets include the painting and native 256/64 px comparisons. `tank-log.md` records actual progress; check `tank-FEEDBACK.md` between rounds. The first plain sheet is early evidence, not the final material verdict.
-
-From this worktree on the host, after CPU build/bake/animate:
+Run from the repo root, in order; rebuilding invalidates every downstream bake, material, clip and render:
 
 ```sh
-tools/art/anim3d/render.sh vehicles-c
-tools/art/anim3d/render.sh vehicles-details
-tools/art/anim3d/render.sh vehicles-d
-for clip in idle move attack hit death; do
-  tools/art/anim3d/render.sh "vehicles-e-$clip"
-done
-source tools/art/anim3d/env.sh
-"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/vehicles/deliver.py
-tools/art/anim3d/render.sh vehicles-audit
+tools/art/anim3d/render.sh vehicles-build
+tools/art/anim3d/render.sh vehicles-refine
+RENDER_ENGINE=CYCLES SAMPLES=8 tools/art/anim3d/render.sh vehicles-b
+tools/art/anim3d/render.sh vehicles-bake
+tools/art/anim3d/render.sh vehicles-paint
+RENDER_ENGINE=CYCLES SAMPLES=16 tools/art/anim3d/render.sh vehicles-c
+tools/art/anim3d/render.sh vehicles-animate
+RENDER_ENGINE=CYCLES SAMPLES=16 tools/art/anim3d/render.sh vehicles-final
 ```
 
-The default render engine is host Eevee with `--gpu-backend metal`; sandbox previews explicitly request Cycles CPU. For a richer final, use `RENDER_ENGINE=CYCLES CYCLES_DEVICE=GPU SAMPLES=256` before the same render commands; this explicitly selects Metal Cycles and denoising and fails if no Metal device exists. No silent engine fallback. Do not run `vehicles-build` merely to rerender: it overwrites the material master and requires rebaking/reanimating. `deliver.py` refuses thumbnails below 256 px, retains all 40 frames, checks transparent margins/padding and held terminal death, and writes `app/src/assets/units/anim/tank.{webp,json}` with anchor `(127,221)`, under 200,000 bytes. `tank-pack.json` records raw-frame hashes, engine, samples and master hashes. `vehicles-audit` checks articulated geometry, stationary base, track contact, movement, recoil and bake existence. Use `deliver.py --validate-only` to inspect delivery without repacking.
+`scene.py` creates a sloped hull, rounded transmission nose and cast turret/mantlet, recessed short gun, six road wheels in three VVSS bogies per side, sprockets, 124 separate track shoes, hatches, tools, headlights, hull MG, jerricans, folded solid canvas, thick straps and buckles. The cream disc is stationary. `tank-built.blend` preserves the original construction. `refine.py` starts from that untouched file every time and registers full-depth meshes in the fixed camera's horizontal/vertical axes, preserving camera depth and mechanical parents. Its measured part bounds are saved in `registration.json`. This is mesh editing, not image warping, silhouette clipping or a subject card. Three-view plain renders make the retained volume reviewable.
 
-A contract pass does not establish painting parity. Judge the rounded cast shapes, olive surface depth, warm cream base, wheel/bogie readability, source camera and width/height at 256 and 64 px. Watch the move loop for wheel/track aliasing and the combat effects for artificial-looking lobes or frame-edge clipping. GPU re-render and the lead's art review are required before adopting this candidate in the game. No runtime wiring is changed.
+Round-2 calibration widened/lowered the cast silhouette, reduced/moved the cupola, raised the gun 10 native pixels, lowered the jerricans and moved the rear box onto an extended armour shoulder. Road-wheel centres/radii and bogie supports are also registered; invented radial spoke rods and black plug details were removed. Registration is approximate, not proof of exact painting parity; inspect the native 256/64 comparison and crossfade after every change.
 
-#### Warm stone recipe for family reuse
+### Paint, light and grade
 
-The source tank base samples at native 256 px are RGB `(244,209,172)` on the front top and `(232,188,140)` on the front rim. The cloud review's shared target is warm cream near `#E9CFA0`, with a darker rim. A neutral white shader under warm light was insufficient. Vehicles uses linear-light pigment noise from `(.88,.65,.40)` to `(1.0,.84,.60)`, roughness `.86`, no metal, fine Travertine001 displacement at `.006`, and warm material emission `(.9,.64,.40)` at strength `.20` to keep the contact shade from turning grey. Keep the lighting and AgX transform in mind: these shader numbers are **not** sRGB hex values. Sample the rendered base against the painting after any lighting change; do not assume sharing shader values guarantees matching pixels.
+`bake.py` produces six actual 512px Cycles maps: AO and Geometry Pointiness emission for the upper hull, lower hull and turret. Those drive cavity grime and edge wear. `prepare-paint.py` fits the original full-size alpha master to the same token field. `paint.py` freezes rest-camera UVs on the actual meshes, preserving explicit bake UVs. Moving track shoes, grousers, pins and sprocket teeth retain physical steel so they cannot carry projected wheel/bogie fragments around the belt. End-sprocket UVs are locally centred on their source wheels; their geometric centres remain a reference mismatch. Facing/alpha confidence blends 98% projected colour on visible surfaces into the generated olive fill, scanned grain, canvas, rubber and stone materials on hidden surfaces. No hidden-view source painting exists; those fills are an approximation. Small-angle motion is intentional. Large viewpoint changes need repainting and a new review.
 
-#### Painting alignment and finish standard
+The projection shader mixes 88% emission at full confidence with physical BSDF response, retaining the painting's existing lighting without fully lighting it twice. Olive paint is dielectric. Bevels, material grain and the physical component retain three-dimensional relief. Warm upper-left key, soft fill and cool area rim are the product-shot setup. The painting's warm base samples at native 256px are approximately RGB `(244,209,172)` on the front top and `(232,188,140)` on the rim. Procedural fallback uses linear pigment `(.88,.65,.40)` to `(1,.84,.60)`, roughness `.86`, Travertine displacement `.006` and warm emission strength `.20`; these shader values are not sRGB colours. Sample actual pixels after lighting changes.
 
-Following the coordinator's quality feedback: align the real geometry and camera first, then project the full painting as rest-camera UV colour, retaining procedural material for back faces and newly revealed surfaces. Keep edge bevels, real inset/raised detail and the AO/curvature bakes; projection supplies brushwork, not geometry. In this tank, the main projected meshes are the upper/lower hull, turret, mantlet and transmission cover, with a lighter projection on actual wheel faces, hubs and bogie castings. Hidden sides use the same original olive pigment/scanned cast grain; no extra image generation was necessary for these small-angle motions. Check projection seams and any painted-lighting mismatch before reusing the asset at other angles.
+`grade.py` measures opaque rest-pose RGB 10th/50th/90th percentiles against the painting, creates a bounded monotonic LUT (maximum 32 levels/channel), and applies that one frozen grade to details, poses and every clip. Alpha is untouched. Original ungraded renders remain in `renders/ungraded/`; reports bind frames to the grade and saved scene hashes. Render `vehicles-c` before all other painted stages whenever lighting or engine changes. A histogram match never establishes silhouette or craft parity.
 
-`grade.py` measures each RGB channel's 10th, 50th and 90th percentiles over opaque rest-pose pixels against `tank-256.png`. A bounded monotonic LUT (maximum change 32 levels/channel) is frozen from `vehicles-c` and reused for details, poses and every clip. Alpha is untouched; raw renders are retained under `renders/ungraded/`. Always render `vehicles-c` first after changing lighting or engine, and then rerender every clip before packing. The grade and render reports retain the evidence; do not substitute a histogram match for a silhouette/lighting review. `tank-f-restpose-compare.png` shows painting, 3D render and 50/50 crossfade at 256 and 64 px.
+All six Blender skills informed the work: modeling for rounded joins and solid folded stowage; materials for dielectric paint, generated fill and worn surfaces; cameras for measured registration; lighting for key/fill/rim; animation for layered-action linear mechanical curves; rendering for safe CPU previews and explicit Metal Cycles finals. The optional reference-look-calibration skill is absent; native-size images, landmark bounds and quantile measurements supply the comparison.
 
-The final projection pass uses a 45% emission/55% BSDF mix on confidently projected surfaces to avoid lighting the painting's highlights twice; back faces remain fully physical. Wheel/bogie projection uses a gentler 55% colour blend. These are deliberate fixed-view art choices, not physically neutral PBR materials.
+### Five mechanical clips
 
-For the complete host rerender, repack and audit in one serial command (saved masters only):
+Idle uses restrained engine shake, turret scan and exhaust. Move cycles separate links around a closed capsule and turns wheels by matching travel/radius. Attack traverses and recoils the gun, with mesh flash and smoke at the registered muzzle. Hit jolts the hull with short sparks. Death settles into a planted wreck, with masked soot confined to the vehicle and a subdued smoke plume; the stone base keeps its material. Output lengths/fps are idle 8/10, move 8/12, attack 10/14, hit 4/12, death 10/10. Only idle/move loop in the runtime metadata. The last two death output samples are identical.
+
+Never hide effects by setting scale to zero or nearly zero. Key `hide_render` and keep real mesh thickness. The earlier volume approach caused OpenVDB ScaleMap crashes and cost roughly 11 CPU seconds per frame; noise/facing-faded translucent 3D shells avoid that conversion. The former solid orange death spikes were removed after review. Flash, sparks and smoke still need visual review; a successful audit does not make them painterly. Linear interpolation is applied through Blender 5 layered actions, stepped interpolation to visibility.
+
+### Complete host GPU handoff
+
+The executable, no-argument driver entry point is:
 
 ```sh
-RENDER_ENGINE=CYCLES CYCLES_DEVICE=GPU SAMPLES=256 tools/art/anim3d/render.sh vehicles-final
+ROUND=2 tools/art/anim3d/units/tank/gpu.sh
 ```
 
-`vehicles-final` also works with the default Eevee backend or explicit Cycles CPU previews. It renders the rest pose first to establish one grade, then details, rig poses and all five clips, packs/validates, and audits the saved 3D geometry. It never rebuilds the tank or replaces the saved material work.
+It renders every review stage and all 40 clip frames serially in Metal Cycles at 512px, 256 samples with denoising (override `SAMPLES` explicitly if needed). It uses the saved built/baked/projected/animated masters and never rebuilds them. It creates the actual 512px and downsampled 256px master sets, packs and validates the 160px trimmed atlas, audits saved geometry, and makes the eight-second H.264/yuv420p `tank-round${ROUND}.mp4`. All five clips appear side by side at 2x on cream; one-shot clips replay every two seconds with a terminal hold. FFprobe verifies 240 frames, eight seconds and 1600x348 dimensions; representative video frames are decoded for inspection. Missing Metal devices fail explicitly; sandbox CPU previews do not establish GPU success.
 
-#### Blender skill review
+Every stage immediately writes `tank-b-plain.png`, `tank-c-textured-lit.png`, `tank-c-details.png`, `tank-d-rig-poses.png` or `tank-e-<clip>-strip.png` and animated WebP into `review/3d-v2/`. `tank-f-restpose-compare.png` is painting/render/50-50 crossfade at 256/64px. `tank-g-delivery.png` also shows the decoded 160px atlas enlarged for comparison. Check feedback during work and log actual observations. `tank-PASS` is manual evidence of painting parity, clean clips and contract success; scripts never write it automatically.
 
-The newly installed `blender-modeling`, `blender-materials`, `blender-lighting`, `blender-cameras`, `blender-animation` and `blender-rendering` skills were read at the end of this candidate round. They informed a final review of bevels/rounded joins, paint versus exposed steel, key/fill contrast, reference framing, mechanical motion and sequence verification. Concrete additions: every Vehicles invocation now passes `--disable-autoexec` before loading masters, and rendering explicitly rejects an unassigned camera. Existing project object names, orthographic token framing, requested painted lighting and alpha atlas output take priority over generic GEO-prefix, cinematic depth-of-field and glTF presets. The optional `reference-look-calibration` skill is not installed; the source bounding boxes, RGB quantiles, native-size sheets and crossfade provide direct comparison.
+### Trimmed atlas contract (version 2)
 
-The review identified follow-ups rather than establishing art parity: separate dielectric olive paint from truly exposed-metal wear masks instead of treating the present blended metallic values as physical materials; refine cast joins and wheel recess geometry; match gun/camera registration more closely; check subframe linear interpolation for mechanical travel if the masters are reused beyond these integer-frame atlas samples. No material preset was retroactively claimed as tested. Preserve the current candidate when exploring those changes, then regenerate its bake/projection/render/pack chain and compare actual images.
+The old 2560x1280, quality-54 tank candidate is superseded. Delivery preserves all 40 frames, resizes to logical 160x160 cells, removes alpha below 3/255, trims transparent margins, and packs each clip into its own horizontal strip with transparent gutters. WebP uses full-quality alpha and the highest quality in 95–75 that fits **200,000 bytes**. Failure at 75 stops without lowering quality. Masters are retained; delivery never upscales previews to masquerade as 512px originals.
+
+```json
+{
+  "version": 2,
+  "trimmed": true,
+  "frame": {"w": 160, "h": 160, "ax": 79, "ay": 138},
+  "clips": {
+    "idle": {
+      "row": 0, "frames": 8, "fps": 10, "loop": true,
+      "rects": [{"x": 2, "y": 2, "w": 145, "h": 101, "ox": 8, "oy": 29}]
+    }
+  }
+}
+```
+
+The example shows one illustrative rectangle; actual JSON has one rectangle per frame and all five clips in idle/move/attack/hit/death row order. `x/y/w/h` are atlas source pixels. `ox/oy` place that crop into its logical 160px frame. To draw at logical anchor `(X,Y)`, draw the cropped image at `(X - ax + ox, Y - ay + oy)`, applying the same display scale to all coordinates. `row` is clip ordering metadata; it is **not** a constant-height grid coordinate. This is an extended candidate format with no app runtime wiring in this lane.
+
+`deliver.py --validate-only` checks current clip-scene/source hashes, grade consistency, quality/bytes, all clip counts and offsets, nonoverlapping rectangles, transparent padding, motion and held death. `vehicles-audit` checks actual meshes and parents, 124 links, 16 wheel pivots, recoil, planted samples, stationary base and six bake files. `archive.py --require-512` rejects non-GPU or sub-512 source reports. Contract and geometry checks do not replace art review.
+
+Keep the painting in the game until the lead approves the GPU output. At the resumed round-2 checkpoint the rest image is substantially closer, but rear/fender outlines, end-sprocket placement, cast surface shading and motion remain review items; do not infer PASS from a small atlas.

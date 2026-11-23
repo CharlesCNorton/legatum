@@ -11,18 +11,32 @@ bpy.ops.wm.open_mainfile(filepath=str(M/'tank.blend'));sc=bpy.context.scene;bpy.
 tex=bpy.data.images.load(str(M/'textures/painting-projection.png'),check_existing=True)
 view=sc.camera.rotation_euler.to_matrix() @ Vector((0,0,1))
 records=[]
-major=['Sloped upper hull','Rounded cast turret','Rounded transmission nose','Rounded mantlet','Lower hull']
-wheel_prefixes=('Cast wheel dished face','Wheel hub','Drive wheel face','Drive hub','VVSS bogie block','Spring cover')
-names=[o.name for o in bpy.data.objects if o.type=='MESH' and 'effect' not in o]
+# Track shoes pass through many rest-screen positions. Their own physical steel
+# texture must travel with them; camera paint would carry whole wheel/bogie
+# fragments around the belt. Recesses/spokes also retain their physical finish.
+rotating_fill=('Forged track shoe','Polished raised grouser','Track hinge pin',
+               'Wheel recessed aperture','Wheel radial spoke','Sprocket tooth','Sprocket recess')
+names=[o.name for o in bpy.data.objects if o.type=='MESH' and 'effect' not in o
+       and not o.name.startswith(rotating_fill)]
 materials={}
 for name in names:
     o=bpy.data.objects[name];mesh=o.data;old=mesh.uv_layers.active.name if mesh.uv_layers.active else None
     if 'PaintingProjection' in mesh.uv_layers:raise RuntimeError('Projection already applied; bake again before paint')
     uv=mesh.uv_layers.new(name='PaintingProjection');weights=mesh.color_attributes.new(name='Paint confidence',type='FLOAT_COLOR',domain='CORNER')
     normalmatrix=o.matrix_world.to_3x3().inverted().transposed()
+    # The end sprocket centres still differ from the painting. Map each source
+    # wheel around its actual axle, so spinning it cannot carry a whole adjacent
+    # painted bogie around the belt. This is a local texture registration, not a
+    # claim that the chassis silhouette is now identical to the source.
+    shift=Vector((0,0))
+    parent=o.parent
+    if parent and parent.name.startswith('Sprocket pivot -1'):
+        center=world_to_camera_view(sc,sc.camera,parent.matrix_world@Vector((0,-.16,0)))
+        target=(24,139) if parent.location.x<0 else (174,154)
+        shift=Vector((target[0]/256-center.x,1-target[1]/256-center.y))
     for loop in mesh.loops:
         v=mesh.vertices[loop.vertex_index];p=world_to_camera_view(sc,sc.camera,o.matrix_world @ v.co)
-        uv.data[loop.index].uv=(p.x,p.y)
+        uv.data[loop.index].uv=Vector((p.x,p.y))+shift
         facing=max(0,min(1,((normalmatrix @ v.normal).normalized().dot(view)+.08)/.22))
         weights.data[loop.index].color=(facing,facing,facing,1)
     original_material=o.data.materials[0]

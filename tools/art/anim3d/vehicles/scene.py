@@ -162,10 +162,6 @@ for side in [-1,1]:
         cyl('Cast wheel dished face',(0,side*.145,0),.225,.025,paint,wheel,'Y')
         cyl('Wheel hub',(0,side*.18,0),.072,.09,edge,wheel,'Y')
         tube('Wheel outer worn lip',[(.222*cos(a*2*pi/40),side*.165,.222*sin(a*2*pi/40)) for a in range(40)],.009,edge,wheel,True)
-        for j in range(5):
-            a=j*2*pi/5
-            cyl('Wheel recessed aperture',(.14*cos(a),side*.162,.14*sin(a)),.036,.008,black,wheel,'Y',16)
-            rod('Wheel radial spoke',(.07*cos(a+.6),side*.17,.07*sin(a+.6)),(.20*cos(a+.6),side*.17,.20*sin(a+.6)),.018,edge,wheel)
     for idx,x in enumerate([-.83,.01,.85]):
         cube('VVSS bogie block',(x,side*1.17,.85),(.19,.16,.36),paint,bevel=.024)
         for xx in [-.14,.14]:rod('Bogie suspension arm',(x,side*1.19,.76),(x+xx,side*1.19,.55),.043,paint)
@@ -277,9 +273,6 @@ for i in range(12):
     o=sphere(f'Gun smoke {i}',(0,0,0),(1,1,1),smoke,gun);o['effect']='gun_smoke';o['index']=i
 for i in range(14):
     o=sphere(f'Wreck smoke {i}',(0,0,0),(1,1,1),smoke,root);o['effect']='wreck_smoke';o['index']=i
-for i in range(9):
-    for inner,mat in [(False,flame),(True,core)]:
-        o=ringmesh(f'Fire tongue {i} {inner}',[(0,0,0,.11,.09),(.01,0,.18,.10,.07),(-.02,.01,.35,.065,.04),(.04,0,.58,.002,.002)],mat,root,12);o['effect']='fire';o['index']=i;o['inner']=inner
 for i in range(10):
     o=rod(f'Impact spark {i}',(0,0,0),(.06,0,.006),.004,spark,root);o['effect']='spark';o['index']=i
 for i in range(6):
@@ -302,6 +295,7 @@ for o in list(bpy.data.objects):
         bpy.ops.object.select_all(action='DESELECT');o.select_set(True);bpy.context.view_layer.objects.active=o;bpy.ops.object.convert(target='MESH')
 sc['asset']='tank';sc['source']='Original geometry matched to Legatum tank painting; no national markings in reference.'
 sc['track_length']=LENGTH
-bpy.ops.file.pack_all();bpy.ops.wm.save_as_mainfile(filepath=str(MASTER/'tank-plain.blend'))
+bpy.ops.file.pack_all();bpy.ops.wm.save_as_mainfile(filepath=str(MASTER/'tank-built.blend'))
+bpy.ops.wm.save_as_mainfile(filepath=str(MASTER/'tank-plain.blend'))
 bpy.ops.wm.save_as_mainfile(filepath=str(MASTER/'tank.blend'))
 print('TANK_BUILT',len(bpy.data.objects),'objects')

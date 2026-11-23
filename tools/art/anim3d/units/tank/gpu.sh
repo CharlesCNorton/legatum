@@ -5,6 +5,7 @@ cd "$(dirname "$0")/../../../../.."
 source tools/art/anim3d/env.sh
 export RENDER_ENGINE=CYCLES CYCLES_DEVICE=GPU RESOLUTION=512
 export SAMPLES="${SAMPLES:-256}"
+export ROUND="${ROUND:-2}"
 for stage in b c details d e-idle e-move e-attack e-hit e-death; do
   tools/art/anim3d/render.sh "vehicles-$stage"
 done

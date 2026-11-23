@@ -3,6 +3,11 @@ from pathlib import Path
 import os,hashlib,json
 from PIL import Image
 R=Path(os.environ['ANIM_ROOT']);M=R/'masters/tank';source=M/'tank-source.png'
+lock=json.loads(Path('tools/art/anim3d/units/tank/assets.lock.json').read_text())
+for entry in lock['files']:
+    path=R/entry['path']
+    assert hashlib.sha256(path.read_bytes()).hexdigest()==entry['sha256'],f'Asset changed: {path}'
+(M/'textures').mkdir(parents=True,exist_ok=True)
 im=Image.open(source).convert('RGBA');fig=im.crop(im.getchannel('A').getbbox())
 k=min(928/fig.width,928/fig.height);fig=fig.resize((round(fig.width*k),round(fig.height*k)),Image.Resampling.LANCZOS)
 out=Image.new('RGBA',(1024,1024));out.alpha_composite(fig,((1024-fig.width)//2,(1024-fig.height)//2));out.save(M/'textures/painting-projection.png')

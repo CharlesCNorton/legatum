@@ -18,6 +18,7 @@ def pack():
     for row,(clip,(count,fps,loop)) in enumerate(CLIPS.items()):
         folder=M/'renders'/f'e-{clip}'
         renders[clip]=json.loads((folder/'render.json').read_text())
+        assert renders[clip]['blend_sha256']==digest(M/'clips'/f'{clip}.blend'), 'Frames use stale clip geometry'
         rects=[];crops=[];x=2;rh=0
         for i in range(count):
             p=folder/f'{i:02}.png';im=Image.open(p).convert('RGBA')
@@ -53,9 +54,13 @@ def validate():
     assert meta['version']==2 and meta['trimmed'] and meta['frame']==FRAME
     assert (OUT/'tank.webp').stat().st_size<=200000 and report['quality']>=75
     assert report['atlas_sha256']==digest(OUT/'tank.webp')
+    assert len({r['grade_sha256'] for r in report['renders'].values()})==1
+    assert next(iter(report['renders'].values()))['grade_sha256']==digest(M/'grade.json')
     occupied=Image.new('L',atlas.size);motion={};restored={}
     for row,(clip,(count,fps,loop)) in enumerate(CLIPS.items()):
         c=meta['clips'][clip]
+        assert report['renders'][clip]['blend_sha256']==digest(M/'clips'/f'{clip}.blend'), 'Stale clip master'
+        assert report['renders'][clip]==json.loads((M/'renders'/f'e-{clip}'/'render.json').read_text()), 'Stale render metadata'
         assert (c['row'],c['frames'],c['fps'],c['loop'])==(row,count,fps,loop)
         assert len(c['rects'])==count
         restored[clip]=[]
@@ -77,6 +82,22 @@ def validate():
     result=dict(contract='PASS',bytes=(OUT/'tank.webp').stat().st_size,quality=report['quality'],frames=40,cell=160,atlas_size=atlas.size,trimmed=True,motion=motion,held_death=True)
     (REVIEW/'tank-validation.json').write_text(json.dumps(result,indent=2));print(json.dumps(result))
     return restored
+
+def review_delivery(restored):
+    from PIL import ImageDraw
+    source=Image.open('app/src/assets/units/tank-256.png').convert('RGBA')
+    rendered=Image.open(M/'renders/c/three-quarter.png').convert('RGBA').resize((256,256),Image.Resampling.LANCZOS)
+    decoded=restored['idle'][0].resize((256,256),Image.Resampling.LANCZOS)
+    report=json.loads((REVIEW/'tank-pack.json').read_text())
+    sheet=Image.new('RGB',(816,380),(224,215,191));draw=ImageDraw.Draw(sheet)
+    for k,(label,im) in enumerate([('Painting',source),('Rest render',rendered),
+                                  (f"Decoded 160px atlas, quality {report['quality']}",decoded)]):
+        draw.text((8+k*272,10),label,fill=(40,34,27))
+        sheet.paste(im,(8+k*272,36),im)
+        small=im.resize((64,64),Image.Resampling.LANCZOS)
+        sheet.paste(small,(104+k*272,302),small)
+    sheet.save(REVIEW/'tank-g-delivery.png')
+
 if __name__=='__main__':
     if '--validate-only' not in sys.argv:pack()
-    validate()
+    review_delivery(validate())

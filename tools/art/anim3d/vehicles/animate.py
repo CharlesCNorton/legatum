@@ -23,11 +23,18 @@ for clip,(count,fps,loop) in CLIPS.items():
     bpy.ops.wm.open_mainfile(filepath=str(M/'tank.blend'))
     sc=bpy.context.scene;sc.render.fps=fps;sc.frame_start=1;sc.frame_end=count
     root=bpy.data.objects['Vehicle suspension root'];turret=bpy.data.objects['Turret traverse'];gun=bpy.data.objects['Gun recoil']
+    bpy.context.view_layer.update()
+    # Match the registered barrel muzzle, preserving local recoil/traverse motion.
+    camera_basis=sc.camera.rotation_euler.to_matrix()
+    gun_effect_shift=gun.matrix_world.inverted().to_3x3() @ (
+        camera_basis @ Vector((-3,10,0)) * sc.camera.data.ortho_scale/256
+    ) if sc.get('registered') else Vector((0,0,0))
     wheels=[o for o in bpy.data.objects if 'wheel' in o];links=[o for o in bpy.data.objects if 'track_phase' in o];effects=[o for o in bpy.data.objects if 'effect' in o]
     movers=[root,turret,gun]+wheels+links+effects
     burns=[]
     if clip=='death':
         for mat in bpy.data.materials:
+            if mat.name.startswith('Warm cream limestone'):continue
             if not any(term in mat.name for term in ['Olive drab','baked pigment','Dusty rubbed','painted projection']):continue
             n=mat.node_tree.nodes;l=mat.node_tree.links;shader=n.get('Principled BSDF')
             source=shader.inputs['Base Color'].links[0].from_socket
@@ -59,9 +66,11 @@ for clip,(count,fps,loop) in CLIPS.items():
             root.location.z-=.008*settle;turret.rotation_euler[2]+=-.12*settle;gun.rotation_euler[1]=math.radians(-22)+.18*settle
         for o in wheels:
             # Small engine vibration does not turn wheels. Track pattern repeats at key 9; inspect the sampled wheel loop visually.
-            o.rotation_euler[1]=-(i*3/8*LENGTH/62/(.32 if 'Sprocket' in o.name else .28)) if clip=='move' else 0
+            o.rotation_euler[1]=-(i*3/8*LENGTH/62/o.get('rolling_radius',.32 if 'Sprocket' in o.name else .28)) if clip=='move' else 0
         for o in links:
             offset=i*3/8/62 if clip=='move' else 0;x,z,a=trackpoint(o['track_phase']+offset)
+            while a-o.rotation_euler[1]>pi:a-=2*pi
+            while a-o.rotation_euler[1]<-pi:a+=2*pi
             o.location=(x,o['track_side']*.99,z);o.rotation_euler[1]=a
         for o in effects:
             o.scale=(1,)*3;o.hide_render=True;kind=o['effect'];k=o['index']
@@ -85,12 +94,8 @@ for clip,(count,fps,loop) in CLIPS.items():
                 o.hide_render=False
                 growth=min(1,(j-1)/4);age=(k/14+j*.055)%1;r=(.10+.12*age)*growth
                 o.location=(-.65+.16*sin(k*1.7)+.20*age,.15*cos(k*2.4),1.78+.95*age);o.scale=(r*1.3,r,r*1.5)
-            if kind=='fire' and clip=='death' and j>=2:
-                o.hide_render=False
-                growth=min(1,(j-1)/4);inner=.60 if o['inner'] else 1
-                o.location=(-1.05+(k%3)*.22,-.28+(k//3)*.24,1.72)
-                o.scale=(growth*inner*.75,growth*inner*.75,growth*inner*(.65+.25*sin(k*2+j*1.9)))
-                o.rotation_euler=(.13*sin(k+j),.12*cos(k+j),k*2)
+            if kind in ('flash','gun_smoke'):
+                o.location+=gun_effect_shift
         for amount in burns:
             amount.inputs[1].default_value=min(.85,max(0,(j-1)/7))
             amount.inputs[1].keyframe_insert(data_path='default_value',frame=i+1)

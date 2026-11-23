@@ -15,6 +15,7 @@ fi
 args=(-b --disable-autoexec --factory-startup --python-exit-code 1)
 case "$stage" in
   build) script=scene.py ;;
+  refine) script=refine.py ;;
   bake) script=bake.py ;;
   paint) "$ANIM_ROOT/venv/bin/python" tools/art/anim3d/vehicles/prepare-paint.py; script=paint.py ;;
   animate) script=animate.py ;;
