@@ -129,3 +129,40 @@ Keyed hit: 4 output samples; fixed planted contacts, rigid IK segments; terminal
 Keyed death: 10 output samples; fixed planted contacts, rigid IK segments; terminal death held.
 Rendered c: 1 PNGs, 256 px, CYCLES CPU, 16 samples.
 Published c review immediately; frozen grade 342d35426c0a, 256 masters retained.
+Prepared full-source projection; read all six Blender skills, vehicle chapter, art skill and standing feedback 12–22.
+Built original full-depth hull, turret, four mechanical two-link legs, broad feet, pistons, sensors, closed barrel, bevels, and stationary cream disc. All six Blender skills applied. Plain stage ready.
+Finished frozen camera projection on solid geometry; six actual AO/curvature bakes, generated olive hidden-surface fill, grain and chipped edges. No alpha clipping or painted base feet.
+Keyed idle: 8 output samples; fixed planted contacts, rigid IK segments; terminal death held.
+Keyed move: 8 output samples; fixed planted contacts, rigid IK segments; terminal death held.
+Keyed attack: 10 output samples; fixed planted contacts, rigid IK segments; terminal death held.
+Keyed hit: 4 output samples; fixed planted contacts, rigid IK segments; terminal death held.
+Keyed death: 10 output samples; fixed planted contacts, rigid IK segments; terminal death held.
+Rendered b: 3 PNGs, 256 px, CYCLES CPU, 16 samples.
+Rendered c: 1 PNGs, 256 px, CYCLES CPU, 16 samples.
+Published c review immediately; frozen grade 6699ba8ba096, 256 masters retained.
+Rendered details: 2 PNGs, 256 px, CYCLES CPU, 16 samples.
+Published details review immediately; frozen grade 6699ba8ba096, 256 masters retained.
+Rendered d: 4 PNGs, 256 px, CYCLES CPU, 16 samples.
+Published d review immediately; frozen grade 6699ba8ba096, 256 masters retained.
+Rendered g: 16 PNGs, 256 px, CYCLES CPU, 16 samples.
+Published g review immediately; frozen grade 6699ba8ba096, 256 masters retained.
+Rendered e-idle: 8 PNGs, 256 px, CYCLES CPU, 16 samples.
+Published e-idle review immediately; frozen grade 6699ba8ba096, 256 masters retained.
+Rendered e-move: 8 PNGs, 256 px, CYCLES CPU, 16 samples.
+Published e-move review immediately; frozen grade 6699ba8ba096, 256 masters retained.
+Rendered e-attack: 10 PNGs, 256 px, CYCLES CPU, 16 samples.
+Published e-attack review immediately; frozen grade 6699ba8ba096, 256 masters retained.
+Rendered e-hit: 4 PNGs, 256 px, CYCLES CPU, 16 samples.
+Published e-hit review immediately; frozen grade 6699ba8ba096, 256 masters retained.
+Rendered e-death: 10 PNGs, 256 px, CYCLES CPU, 16 samples.
+Published e-death review immediately; frozen grade 6699ba8ba096, 256 masters retained.
+Geometry/contact audit PASS: closed volumes, four IK legs, fixed planted feet, constant segments, stationary disc, six bakes, no zero scales.
+Packed 40 trimmed 160 px frames: 193792 bytes, WebP quality 90.
+Validation PASS: counts, RGBA, rect bounds, transparent margins, five moving clips, held death, quality and size. Art approval remains separate.
+Encoded and ffprobe-verified hunter-killer-round2.mp4: 8 s, 240 frames, 1600x348 H.264 yuv420p; decoded trimmed atlas.
+Published c review immediately; frozen grade 6699ba8ba096, 256 masters retained.
+Published details review immediately; frozen grade 6699ba8ba096, 256 masters retained.
+Round 2 CPU final exit 0: all stages/40 frames at 256px Cycles CPU16; 62 closed meshes, four IK legs, six bakes, zero planted-foot drift, max segment error 2.626983e-7. Trimmed160 atlas 193792 bytes Q90 (Q95 250144); all alpha/trim, bounds, motion/provenance/held-death checks pass, idle/move seam ratios .781931/.734352. Video verified 1600x348 H264 yuv420p, 240 frames/eight seconds.
+Round 2 final visual review: opened all five new strips, front/top feet, native256/64 comparison and decoded MP4 contact sheet. Base now carries stone grain and no painted-foot ghosts; outer armour/shins closer. Still distinguishable at256: simplified turret/joints, continuous bright base rim, projection flattening during articulation. Same unit at64, but movement remains in-place stepping. No PASS; GPU round2 review required. All six skills applied: closed bevelled armour, generated/painterly material fill, warm/cool product lighting retained, fixed reference camera, rigid eased motion, Cycles sequence/encoding verification.
+Round 2 delivery checks: sealed recipe/input/eight-scene preflight passes and rejects deliberately incomplete/stale test receipts. Python AST, shell syntax, git diff whitespace pass. Updated only vehicle playbook chapter and unit scripts; generated fill prompt/hash/provenance retained. No unit FEEDBACK file arrived.
+Round 2 commit attempted; sandbox denied .git/worktrees/lane-15/index.lock (Operation not permitted). Changes remain uncommitted for runner, with required co-author message documented. origin/master already ancestor; no fetch/merge/push. GPU round2 not executed in sandbox; sealed preflight and shell syntax pass.
