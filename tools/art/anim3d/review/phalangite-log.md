@@ -53,3 +53,7 @@
 - Motion inspection caught a second shaft painted on the armour. Added a narrow source-paint exclusion (never an opacity cutout); real sarissa remains continuous geometry. Folded both leg chains before death grounding.
 - GPU missing-input preflight and CPU512 rejection checks passed. Script retains log/status and writes its receipt only after fresh GPU512 masters, all 256 copies, pack/validation and decoded movie. Actual Metal execution is unavailable in this sandbox.
 - Published e-death review from 256px CPU renders.
+- Published b review from 512px CPU renders.
+- Published c review from 512px CPU renders.
+- Published d review from 512px CPU renders.
+- Published e-idle review from 512px CPU renders.

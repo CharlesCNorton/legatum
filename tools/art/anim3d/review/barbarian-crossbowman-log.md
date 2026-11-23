@@ -22,3 +22,4 @@
 - Loaded modeling, materials, lighting, cameras, animation and rendering Blender skills plus Legatum art; read advanced spearman/cannon chapters. Priorities: finished-surface frozen projection, camera-only painted pigment, rest-arm/foot/weapon registration, grounded collapse, and independently verified GPU handoff.
 - c: 1 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
 - Round 2 first revised rest preview: fitted elbows, longer/lower bow, broader boots and finished-surface camera-only pigment restore markedly more painted face/cloth detail. Still not PASS: weapon-side sleeve has a missing visible section, hood outer edge is angular, the prod/string do not align exactly, and physical stone is now too dark. Continuing geometry and stone calibration before all clips.
+- c: 1 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.

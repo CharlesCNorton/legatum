@@ -29,3 +29,5 @@ Round 2 fixes: frozen MPFB morph plus inverse-skin rest fitting; rejected oscill
 d: review emitted from CYCLES frames; no art-pass claim.
 e-idle: review emitted from CYCLES frames; no art-pass claim.
 e-move: review emitted from CYCLES frames; no art-pass claim.
+e-attack: review emitted from CYCLES frames; no art-pass claim.
+e-hit: review emitted from CYCLES frames; no art-pass claim.

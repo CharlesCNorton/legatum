@@ -16,3 +16,5 @@
 - Prior manifests identify Cycles CPU256/8, not a verified GPU delivery. Preserved prior masters/clips/reviews in round1-cpu. Read all standing feedback; no eagle-warrior-FEEDBACK.md exists.
 - Read current playbook and complete advanced spearman/field-cannon chapters through round 8. Loaded modeling, materials, lighting, cameras, animation and rendering skills: finish geometry before projection, camera-only pigment, real cream-disc calibration, held ground-supported death and decoded delivery review.
 - Finished actual solid/beveled surfaces before projection, compacted the weighted weapon fist, and calibrated the physical circular stone and broad product key; retained original MPFB weights and generated feather fill.
+- Froze painting camera UVs and ray-tested visibility, with generated feather backfill on unseen surfaces.
+- Authored idle, move, attack, hit and terminal death on the MPFB skeleton; no mocap or cloth simulation claimed.

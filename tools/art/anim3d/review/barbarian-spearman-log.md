@@ -55,3 +55,16 @@
 - Read all global feedback (1–22); unit-specific FEEDBACK file is absent. Read current PLAYBOOK and advanced spearman/field-cannon chapters through round 8. All six Blender skills loaded: modeling for real surface fitting; cameras for frozen registration; materials for painted illumination and generated fills; lighting for cream stone/product softboxes; animation for preserved articulation; rendering for previews, provenance and movie validation.
 - Published c review from CPU render.
 - Published b review from CPU render.
+- Published c review from CPU render.
+- Published c-details review from CPU render.
+- Published d review from CPU render.
+- Verified the supplied prior images were CPU512/8, not evidence of a GPU pass. Archived complete round-one masters/reviews before edits under masters/barbarian-spearman/round1-cpu.
+- Added repeatable full-depth registration: frozen MPFB macro shape, inverse skin fitting, broader shoulder/stance, swept hair, grounded feet, registered convex shield/boss and shorter forward spear reach. Finished rigid bevel/thickness geometry before frozen UVs.
+- First CPU256 preview improves painted detail and stance markedly, but hair/shoulder silhouette and base warmth still differ. Retained all generated unseen fills and actual AO/curvature; camera-only painted pigment avoids double lighting. Refined the stone, hair and spear before the five-clip render batch.
+- Added required decoded-atlas MP4, self-contained GPU rebuild/preflight/transcript/status, idempotent grading, source/render hash checks, full 8-bit alpha, compact row packing and shared identical-death rectangle. GPU availability remains a host check.
+- Published e-idle review from CPU render.
+- Published e-move review from CPU render.
+- Published e-attack review from CPU render.
+- Published e-hit review from CPU render.
+- Published e-death review from CPU render.
+- Published e-move review from CPU render.

@@ -58,3 +58,7 @@
 - Final geometry audit PASS for all five clips: 53 bones, 19,158 anatomical vertices, finite/nondegenerate transforms, stationary base, nonstatic motion, exact idle/move loop endpoints and held death matrices.
 - Python AST checks (five files), shell syntax (both scripts), and git diff --check PASS.
 - Commit attempted with required Co-Authored-By trailer; sandbox denied .git/worktrees/lane-15/index.lock. Changes are uncommitted for the runner; nothing pushed. origin/master is already an ancestor of HEAD.
+
+# Arquebusier resumed round 2
+- Opened latest rest comparison, decoded video frame, attack/death strips and original panel first. At 256 px the morion is rounded/chrome rather than a tall worn comb, face and sleeve landmarks miss the painting, powder charges are too regular, shoes are red blobs, and the base is pink/low. At 64 px identity survives but stance, helmet and narrow torso differ. Attack slides the weapon out of the palm; death is a rigid sideways fall with poor contact. No PASS.
+- Read complete common feedback; no arquebusier-FEEDBACK.md exists. Read all current and advanced spearman/siege playbook chapters. Applying all six Blender skills: full-depth contour fitting and finished bevels, camera-only painted pigment and existing generated fills, cream stone/product lighting, fixed camera projection, grip-constrained keys, CPU review and verified GPU delivery. Prior evidence archived in masters/arquebusier/round1-cpu.
