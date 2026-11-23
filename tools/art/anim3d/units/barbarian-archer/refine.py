@@ -9,6 +9,10 @@ def refine(sc):
     rig = bpy.data.objects['RIG-barbarian-archer']
     from common import pose
     pose(rig)
+    from garments import clean_regions
+    clean_regions()
+    from footwear import close_toes
+    close_toes()
     camera = sc.camera
     right = camera.matrix_world.to_quaternion() @ Vector((1, 0, 0))
     up = camera.matrix_world.to_quaternion() @ Vector((0, 1, 0))
@@ -63,6 +67,21 @@ def refine(sc):
                     transform = sum((mat*(w/total) for w, mat in weights), Matrix(((0,)*4,)*4))
             posed = o.matrix_world @ transform @ v.co
             fitted = fit(posed)
+            if o.name=='GEO-MPFB-anatomy':
+                hand_weight=sum(g.weight for g in v.groups
+                    if o.vertex_groups[g.group].name.endswith('_l') and
+                    o.vertex_groups[g.group].name.split('_')[0] in
+                    ('hand','thumb','index','middle','ring','pinky'))
+                if hand_weight:
+                    p=screen(fitted)
+                    # Register the full-depth native palm/fingers, not a painted
+                    # replacement hand. Skin weights and camera depth survive.
+                    fitted+=pixel*min(1,hand_weight)*(right*((180-p.x)*.28)-up*((p.y-70)*.18))
+            if o.name=='GEO-Boots' or o.name.startswith('GEO-Boot toe cap') or o.name=='GEO-MPFB-anatomy':
+                p=screen(fitted)
+                for x,y,dx,dy in [(72,217,2,-1.5),(170,218,-1.5,-1)]:
+                    w=math.exp(-((p.x-x)**2+(p.y-y)**2)/64)
+                    fitted+=pixel*w*(right*dx-up*dy)
             if 'Wolf muzzle' in o.name or 'Wolf nose' in o.name:
                 fitted += pixel*(-right*7+up*5)
             elif o.name=='GEO-Wolf pointed ear.001':

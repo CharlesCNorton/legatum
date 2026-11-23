@@ -3,7 +3,7 @@
 set -euo pipefail
 cd "$(cd "$(dirname "$0")/../../../../.." && pwd)"
 source tools/art/anim3d/env.sh
-export ROUND="${ROUND:-2}"
+export ROUND="${ROUND:-3}"
 export CYCLES_DEVICE=GPU RESOLUTION=512 SAMPLES=64
 unit=tools/art/anim3d/units/barbarian-archer
 status="$REVIEW/barbarian-archer-gpu-status.txt"
@@ -15,6 +15,8 @@ git rev-parse HEAD
 command -v blender
 test -f "$ANIM_ROOT/masters/barbarian-archer/master.blend"
 test -f "$ANIM_ROOT/masters/barbarian-archer/refined-plain.blend"
+"$ANIM_ROOT/venv/bin/python" "$unit/preflight.py"
+stage=gpu-probe
 blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python "$unit/gpu_probe.py"
 stage=animate
 "$unit/run.sh" animate

@@ -12,6 +12,16 @@ assert bpy.context.scene.get('round2_finished_projection')
 body = bpy.data.objects['GEO-MPFB-anatomy']
 assert body.data.shape_keys is None and len(body.vertex_groups)>50
 assert len(bpy.data.objects['RIG-barbarian-archer'].data.bones)==53
+for side in ('l','r'):
+    toe=bpy.data.objects['GEO-Boot toe cap.'+side]
+    assert toe.parent==bpy.data.objects['GEO-Boots'].parent, 'Toe box must share rig object motion'
+    assert len(toe.data.polygons)>10 and len(toe.vertex_groups)>40
+for name,allowed in [('GEO-Trousers',lambda n:n.startswith(('pelvis','thigh_','calf_'))),
+                     ('GEO-Leather bow bracer',lambda n:n=='lowerarm_l')]:
+    garment=bpy.data.objects[name]
+    assert all(sum(g.weight for g in v.groups if allowed(garment.vertex_groups[g.group].name))>.60
+               for v in garment.data.vertices), (name,'wrong anatomical region')
+assert bpy.data.objects['GEO-Stationary cream base'].data.uv_layers.get('StonePaintingUV')
 for o in bpy.context.scene.objects:
     if o.type=='MESH' and o.data.uv_layers.get('PaintingUV'):
         # MPFB's helper mask only removes internal construction faces; it does

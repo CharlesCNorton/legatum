@@ -278,3 +278,33 @@ argument-free host pass: Metal Cycles512/64, all stage/clip/foot reviews, curren
 and decoded five-clip eight-second H.264/yuv420p movie. CPU256 previews do not
 replace the archived GPU512 evidence or establish a new GPU result. No art PASS
 is created by technical checks.
+
+### Barbarian archer driver round 3: semantic garments and stone
+
+Preserve actual GPU round2 masters/reviews under `driver-r2-gpu` before overwriting
+CPU previews. The host round2 pass succeeded; its atlas was181276 bytes atQ85.
+That receipt is not painting parity. Native256/64 and decoded movie inspection
+found garment fragments around the bow hand, anatomical toe grooves and a smooth
+base. Ray tests identified trouser and bracer surfaces at the fingertips: selecting
+clothes by height includes the lowered rest-pose hands. `garments.py` filters real
+anatomical weights before fitting, baking and freezing UVs. Audit those regions.
+
+`footwear.py` closes toe grooves using full-depth convex leather toe boxes with
+inherited MPFB weights. New skinned parts must also share the original rig parent:
+a rest match alone missed detached toe boxes in the walk/fall. Sample every clip,
+then audit the parent and the held death geometry. Sole pixels beyond the painted
+boots fade to leather pigment; never move/clamp their UVs into an arbitrary row.
+
+The generated clean stone plate reconstructs only occluded stone, registered to
+the original disc with its lower rim retained. `stone.py` maps color onto the
+actual rounded disc and applies live contact AO. Texture alpha never changes mesh
+opacity. Original hidden-side garment fills, thick straps/folds, product lights,
+eight real bakes and one automatic rest histogram grade remain. Source textures
+are pinned, checked before the GPU probe, and documented in the unit SOURCES.md.
+
+`ROUND=3 tools/art/anim3d/units/barbarian-archer/gpu.sh` is the complete executable
+host handoff: Metal Cycles512/64, rebuilt clips, saved-scene audit, all stage/clip
+and front/top feet reviews,512/256 masters, trimmed160 atlas (Q>=75,<=200000 bytes),
+validation and decoded eight-second five-clip H.264/yuv420p movie. CPU previews
+are256/8; current GPU evidence is pending until this script completes. Never create
+the art PASS from technical checks alone. Remaining art defects live in REVIEW.md.

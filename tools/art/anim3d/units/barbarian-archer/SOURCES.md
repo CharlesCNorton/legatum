@@ -10,4 +10,9 @@ Scripts are MIT; rendered art is project CC BY 4.0.
 - Existing Blender 5.3.0 https://www.blender.org/ (GPL software), Pillow 13.0.0 https://pypi.org/project/pillow/13.0.0/ (MIT-CMU), FFmpeg. All Blender calls through the PATH gate.
 
 The pelt's death contact folds are modelled shape keys, not a cloth simulation.
-No new asset downloads, image generation, accounts or paid services in this pass.
+No new third-party downloads, accounts or paid services.
+
+## Driver round 3
+
+- Clean stone occlusion fill: built-in ImageGen, 2026-11-23, output `01a20a9e-e6b9-7a80-b945-89b296c24d9b/exec-4c29349d-bdc2-425f-92df-5c9ef0562cf8.png`, original project CC BY 4.0; no public URL. Input: the pinned registered painting. External `assets/barbarian-archer/stone-fill-source.png`; exact prompt `stone-fill.prompt.txt`. Derived `stone-pigment.png` registers the clean disc and retains the original lower rim. Both SHA256 values in `inputs.json`. Pigment on closed geometry with live contact AO, no image card.
+- Closed weighted leather toe boxes, semantic garment filtering, stone shader and source preflight are original MIT scripts; rendered art CC BY 4.0. Existing MPFB/Quaternius and generated hidden-side fills reused. Previous GPU evidence preserved under `masters/barbarian-archer/driver-r2-gpu/`.

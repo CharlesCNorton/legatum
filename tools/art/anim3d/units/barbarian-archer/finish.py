@@ -16,6 +16,14 @@ for o in sc.objects:
     if 'Spare arrow feather' in o.name:
         o.data.materials.clear();o.data.materials.append(feather)
 painting=bpy.data.images.load(str(ASSET/'painting-registered.png'));painting.pack()
+# Clothing beneath the visible garment stays clothing when a limb reveals it.
+body=bpy.data.objects['GEO-MPFB-anatomy']
+for material_name in ('Weathered flax linen','Scuffed walnut leather'):
+    body.data.materials.append(bpy.data.materials[material_name])
+for polygon in body.data.polygons:
+    center=sum((body.data.vertices[i].co for i in polygon.vertices),Vector())/len(polygon.vertices)
+    if center.z<.31:polygon.material_index=2
+    elif center.z<.93 or (.93<center.z<1.39 and abs(center.x)<.20):polygon.material_index=1
 # Painted hidden-side fills use object-space triplanar sampling, never camera planes.
 for m in list(bpy.data.materials):
     if not m.use_nodes:continue
@@ -111,15 +119,22 @@ for o in list(sc.objects):
     uv=o.data.uv_layers.new(name='PaintingUV');attr=o.data.attributes.new('PaintConfidence','FLOAT','POINT')
     coords=[]
     for v in me.vertices:
-        world=o.matrix_world@v.co;p=world_to_camera_view(sc,sc.camera,world);# Reject the painted plinth as a skin/boot sample at the left toe.
-        if o.name in ('GEO-Boots','GEO-MPFB-anatomy') and p.x<.36 and p.y<1-216/256:
-            p.y=1-216/256
+        world=o.matrix_world@v.co;p=world_to_camera_view(sc,sc.camera,world)
+        # The finished closed toe boxes now cover the original toe grooves.
+        # Keep real painted boot pixels instead of collapsing the toe UV row.
         coords.append((p.x,p.y))
         normal=(o.matrix_world.to_3x3()@v.normal).normalized();view=(sc.camera.location-world).normalized()
         direction=sc.camera.matrix_world.to_quaternion()@Vector((0,0,1))
         hit,point,*_=sc.ray_cast(deps,world+direction*4,-direction,distance=4.02)
         visible=not hit or (point-world).length<.018
         attr.data[v.index].value=max(0,min(1,(normal.dot(direction)+.05)*5))*.97 if visible else 0
+        if ('Boot' in o.name or o.name=='GEO-MPFB-anatomy') and p.y<.23:
+            # The lowest projected silhouette pixels belong to the cream disc,
+            # not leather. Fade to the generated leather underlayer at the sole;
+            # leave UVs continuous and the actual closed mesh fully opaque.
+            cutoff=216 if p.x<.4 else 218
+            fade=max(0,min(1,(256*p.y-(256-cutoff))/1.5))
+            attr.data[v.index].value*=fade
     for lp in o.data.loops:uv.data[lp.index].uv=coords[lp.vertex_index]
     ev.to_mesh_clear()
     for m,v in mods:m.show_viewport=v
@@ -145,6 +160,8 @@ for o in list(sc.objects):
         l.new(b.outputs[0],blend.inputs[1]);l.new(pigment.outputs[0],blend.inputs[2])
         l.new(blend.outputs[0],n.get('Material Output').inputs['Surface'])
     projected.append(o.name)
+from stone import finish_stone
+finish_stone(sc)
 bpy.ops.file.pack_all();bpy.ops.wm.save_as_mainfile(filepath=str(MASTER/'master.blend'))
 (MASTER/'finish-info.json').write_text(json.dumps({'baked':baked,'projected_meshes':projected,'source':'painting-registered.png','fills':'painted-fills.png'},indent=2))
 log(f'Finished {len(projected)} solid projected meshes; actual AO/curvature bakes on {len(baked)} principal surfaces; generated hidden-side fills packed.')

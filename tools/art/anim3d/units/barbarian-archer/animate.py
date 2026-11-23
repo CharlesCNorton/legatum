@@ -42,8 +42,10 @@ for clip,(n,fps,loop) in CLIPS.items():
             draw=[1,1,1,1,.18,.32,.55,.77,.94,1][frame-1]
             pose(rig,.009*sin((frame-1)*pi/9),0,draw)
         if clip=='move':
-            ev=boots.evaluated_get(bpy.context.evaluated_depsgraph_get());me=ev.to_mesh()
-            low=min((ev.matrix_world@v.co).z for v in me.vertices);ev.to_mesh_clear()
+            low=10
+            for footwear in [o for o in sc.objects if o.type=='MESH' and 'Boot' in o.name]:
+                ev=footwear.evaluated_get(bpy.context.evaluated_depsgraph_get());me=ev.to_mesh()
+                low=min(low,min((ev.matrix_world@v.co).z for v in me.vertices));ev.to_mesh_clear()
             rig.location.z+=.078-low
         elif clip=='death':
             settle=max(0,min(1,(frame-3)/3));settle=settle*settle*(3-2*settle)
