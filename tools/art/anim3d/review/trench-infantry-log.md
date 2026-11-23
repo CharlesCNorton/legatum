@@ -49,3 +49,13 @@
 - Verdict: same unit at 64px; below the painting at 256px. Squared shoulder/pack shapes, narrow/stiff coat drape and projection/fill transitions during death remain. No PASS. Lead must run unit gpu.sh and inspect fresh GPU output.
 - Python and Bash syntax and git whitespace checks passed. Hygiene/public-claims passed. Repository art gate cannot launch Chromium: MachPortRendezvous bootstrap_check_in permission denied in sandbox. GPU completion deliberately remains unverified.
 - Delivery inventory passed: 17 review artifacts, 40 animation frames at each of 512/256, editable plain/final/five clip blends. Git add blocked by index.lock permission; changes left for runner commit. No push, no PR.
+- Built MPFB anatomical body, 53-bone rig, folded greatcoat, puttees, helmet, webbing and bayonet rifle; plain.blend saved.
+- Posted b-plain review (GPU, 512 px).
+- Finished-surface camera projection with camera-only pigment; generated hidden fills retained.
+- Posted c-textured-lit review (GPU, 512 px).
+- Retargeted CC0 / weapon-layer and saved idle action (8 output frames).
+- Retargeted CC0 / weapon-layer and saved move action (8 output frames).
+- Retargeted CC0 / weapon-layer and saved attack action (10 output frames).
+- Retargeted CC0 / weapon-layer and saved hit action (4 output frames).
+- Retargeted CC0 / weapon-layer and saved death action (10 output frames).
+- Posted d-rig-poses review (GPU, 512 px).
