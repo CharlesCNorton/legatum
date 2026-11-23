@@ -116,6 +116,13 @@ def socket(n, name):
 
 
 def setv(n, name, value):
+    # Blender 5.x nodes can expose a float and a colour socket with the same name; pick the one matching the value.
+    vector = isinstance(value, (tuple, list))
+    for s in n.inputs:
+        if s.name == name and s.enabled and hasattr(s, 'default_value'):
+            if vector == hasattr(s.default_value, '__len__') and not isinstance(s.default_value, str):
+                s.default_value = value
+                return
     socket(n, name).default_value = value
 
 
