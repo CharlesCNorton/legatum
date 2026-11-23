@@ -76,3 +76,4 @@
 - GPU round1 log succeeded:177986 bytes Q80, GPU512/64, valid240-frame H264 MP4. Prior evidence archived in masters/composite-archer/driver-round2-before. Unit-specific FEEDBACK absent; read all23 common feedback items, including open-motion and feet-review requirement.
 - Re-loaded all six Blender skills: modeling for full-depth registration/bevels; materials for occlusion fills and smooth confidence; cameras for disc/view calibration; lighting for painted miniature contact; animation for open-source rest/roll retarget; rendering for sequential CPU previews and GPU provenance.
 - Built-in imagegen produced a cheek/beard/collar occlusion fill from original painting, generation01a20912-a0ec-7f03-9a78-d8a012419a85; saved face-fill-source.png. Original painting remains visible surface standard.
+- Saved c review, raw 256 px and graded sets at native resolution or smaller; CYCLES CPU 8 samples.

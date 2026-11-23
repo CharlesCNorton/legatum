@@ -71,3 +71,4 @@ e-death: review emitted from CYCLES frames; no art-pass claim.
 c: review emitted from CYCLES frames; no art-pass claim.
 Full-cycle inspection exposed pinched fetlocks and an upright whip tail. Added continuous weighted leg section profiles, vertical contact correctives over native Quaternius lift, source-timed restrained tail amplitude, and rest transitions for attack/hit/death. Retained native horizontal gait and foot rotations. New feet sheet has actual cutaway geometry, support line and sole heights. Rebuilding before final checks; no PASS.
 Handoff negative test caught denied /dev/fd process substitution in the sandbox. Replaced logging with a normal subshell pipe plus pipefail; missing-checkpoint test now exits 1 with failed preflight receipt and visible driver output.
+c: review emitted from CYCLES frames; no art-pass claim.

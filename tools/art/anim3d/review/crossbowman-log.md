@@ -87,3 +87,23 @@
 - Final death-floor audit passed all ten samples; minimum evaluated crossbow clearance is 0.00399999m above the actual stone top. Final MP4 contact frames opened and inspected: all five decoded clips present; held death exact but visually suspended/stiff, so no art PASS.
 - Final checks: 4 delivery regression tests passed; all-five geometry audit passed; current 40-frame atlas/source/alpha/offset/death validation passed; final MP4 probe passed; 10 Python syntax / 2 Bash syntax / git diff --check passed; direct working-file hygiene scan passed 16 text files after matrix-operator spacing correction. Commit-based art gate remains blocked by Chromium sandbox permissions; no GPU512 evidence claimed.
 - Git add and commit attempted with required co-author footer; both blocked by Operation not permitted creating .git/worktrees/lane-21/index.lock. Changes remain uncommitted for the runner. origin/master is already an ancestor of HEAD; no merge needed and nothing pushed. Lead command: ROUND=2 tools/art/anim3d/units/crossbowman/gpu.sh. Executable script requires GPU, renders every stage/512/256, validates trimmed atlas, and produces round MP4; visual review is still required.
+- Started preflight  (GPU).
+- Completed preflight  (GPU).
+- Started build  (GPU).
+- Completed build  (GPU).
+- Started bake  (GPU).
+- Completed bake  (GPU).
+- Started animate  (GPU).
+- Completed animate  (GPU).
+- Started audit  (GPU).
+- Completed audit  (GPU).
+- Started render b (GPU).
+- Completed render b (GPU).
+- b: genuine front, three-quarter and side geometry views.
+- Started render c (GPU).
+- Completed render c (GPU).
+- c: 1 frames reviewed at 256/64; CYCLES GPU, 64 samples, source 512px.
+- Started render d (GPU).
+- Completed render d (GPU).
+- d: 4 frames reviewed at 256/64; CYCLES GPU, 64 samples, source 512px.
+- Started render e-idle (GPU).
