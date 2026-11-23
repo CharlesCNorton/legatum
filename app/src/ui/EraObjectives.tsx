@@ -1,7 +1,6 @@
 // World Ages, everywhere you look (legatum-ui "era objectives are always visible with progress"): this is how you win.
 // `ObjectiveRows` is the one list of an Age's card with your progress; the race panel's block, the era-up takeover and the
 // research screen all draw it, so a rule reads and counts the same on every surface.
-import { useGame } from '../store';
 import { eraName, eraNumeral } from './eraResearch';
 import { RingMedallion } from './ringMedallion';
 import { useEffect, useRef } from 'react';
@@ -19,7 +18,6 @@ import './eraObjectives.css';
 
 /** The one rule behind every count (R1), shown wherever progress is. */
 const COUNT_NOTE = 'Counts only what you do after this Age begins and after you last scored an Age';
-const open = () => useGame.getState().set({ vpExpanded: true });
 const COUNT_UNIT: Record<string, string> = {
   Cities: 'cities', Population: 'population', Territory: 'tiles', Buildings: 'cities with this building',
 };
@@ -125,7 +123,7 @@ export function SidebarObjective({ view, model }: { view: PlayerView; model: VpM
   const focus = hud.oldest ?? (hud.focus.state === 'scored' ? null : hud.focus);
   const g = focus ? glance({ ...hud, focus }, win.members) : null;
   return <section className="sidebar-objective" data-testid="era-hud" aria-label="Next Age objective">
-    <button className="link sidebar-section-link age" onClick={open}>Score ledger {g?.line && <span className="sidebar-objective-stake">{g.tag}</span>}<Icon name="ui-chevron-right" size={12} /></button>
+    <h3 className="sidebar-section-link age">Next Age {g?.line && <span className="sidebar-objective-stake">{g.tag}</span>}</h3>
     {g?.line && focus ? <div className="sidebar-next" role="group" aria-label={`${g.tag}: ${g.line.text}`}><ObjectiveRows lines={[g.line]} preview={focus.state === 'preview'} compact view={view} era={focus.era} /></div> : <div className="sidebar-next">Age scored</div>}
     {hud.focus.era < ERA_COUNT && !hud.noObjective && <small className="eo-next-reveal">The next Age begins when any empire enters the {eraName(hud.focus.era)} era.</small>}
   </section>;

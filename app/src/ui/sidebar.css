@@ -46,6 +46,7 @@
 .sidebar-alerts p { margin: 4px 0; font-size: 12px; }
 .sidebar-objective { padding: 7px 0; }
 .sidebar-section-link { display: flex; justify-content: space-between; width: 100%; font: 600 15px var(--display); }
+h3.sidebar-section-link { margin: 0 0 5px; }
 .sidebar-objective-stake { display: block; color: var(--ink-2); font: 500 12px/1.5 var(--sans); margin: 3px 0; }
 .sidebar-next { width: 100%; padding: 0; border: 0; color: inherit; background: none; text-align: left; }
 .sidebar-next .eo-lines.compact .eo-line { background: none; padding: 2px 0 6px; }

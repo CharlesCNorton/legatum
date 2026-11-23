@@ -93,7 +93,7 @@ for (const size of SIZES) {
       expect(box.y + box.height).toBeLessThanOrEqual(size.height);
       await expectSidebarGlance(page);
       await shot(page, 'age-standing-line', size);
-      await line.getByRole('button', { name: /Score ledger/ }).click();
+      await page.getByRole('region', { name: 'Victory race', exact: true }).getByRole('button', { name: 'Score ledger', exact: true }).click();
       await expect(page.getByTestId('objective-sheet')).toBeVisible();
     });
 
@@ -104,7 +104,7 @@ for (const size of SIZES) {
       await expect(hud.getByTestId('era-objective')).toHaveCount(1);
       await expect(hud).toContainText('3/4');
       await expectSidebarGlance(page);
-      await hud.getByRole('button', { name: /Score ledger/ }).click();
+      await page.getByRole('region', { name: 'Victory race', exact: true }).getByRole('button', { name: 'Score ledger', exact: true }).click();
       await expect(page.getByTestId('objective-sheet')).toBeVisible();
       const era = page.locator('.sl-row[data-row="era-2"] button');
       if (await era.getAttribute('aria-expanded') === 'false') await era.click();

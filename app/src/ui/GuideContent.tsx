@@ -346,7 +346,7 @@ export function GuideContent({ section }: { section: GuideSection }) {
         <div><dt>H</dt><dd>Heal the selected damaged unit: it rests until its HP is full, then comes back to your orders.</dd></div>
         <div><dt>B / F / R / U</dt><dd>For units: Found city / Fortify or Wait / Ranged attack / Upgrade. F keeps the unit in place until another order or until an enemy military unit comes within its movement range. With an aircraft selected, S opens Strike, A opens Recon, R opens Rebase, and F keeps a Fighter on guard or a Bomber waiting until a target appears. Space skips this turn.</dd></div>
         <div><dt>G</dt><dd>Use your goal action when one is available for your empire.</dd></div>
-        <div><dt>V</dt><dd>Turn Auto-fire on or off for a selected ranged unit standing in one of your cities.</dd></div>
+        <div><dt>V</dt><dd>Turn Auto-fire on or off for a ranged unit in your city.</dd></div>
         <div><dt>T</dt><dd>Open Research.</dd></div>
         <div><dt>Y / O / N</dt><dd>Turn the map overlays on or off: Yields, Resources and Borders. They stay on over any lens and are remembered on this computer.</dd></div>
         <div><dt>C</dt><dd>Open the Cities overview: every city of yours with its population, Food, Production, Gold, Science, defence and what it is building. Click a heading to sort, click a city to go to it. World wonders and costly buildings say which city builds them fastest, wherever you choose them.</dd></div>
