@@ -14,7 +14,7 @@ have in mind.
 - [ARCHITECTURE.md](ARCHITECTURE.md): the crates, the turn pipeline and the determinism rules.
 - [The rules reference](.claude/skills/legatum-rules/references/index.md) (one file per system): how the game works and
   which systems do not exist. It is the engineering reference: long, dated and checked against the code.
-  The in-app Guide is the short version.
+  How to Play in the app is the short version.
 - [docs/README.md](docs/README.md): an index of everything else.
 
 Much of this project is written by AI coding agents. `CLAUDE.md`, `AGENTS.md` and `.claude/` are their
@@ -111,7 +111,7 @@ lacking them. They may lead to follow-up commits or requests.
 - Describe what changed for a player and what you ran. Include screenshots for UI changes (at 1000x600 and
   1440x900, the sizes the layout is tuned for).
 - If the change makes a line in `README.md`, `CONTRIBUTING.md`, `ARCHITECTURE.md`, `docs/README.md` or the
-  in-app Guide untrue, fix that line in the same pull request.
+  in-app How to Play untrue, fix that line in the same pull request.
 - Art and audio: add the prompt or source and its licence next to the file (see `LICENSE-ART` and
   `app/public/audio/CREDITS.md`). Third-party assets need a licence that allows redistribution.
 

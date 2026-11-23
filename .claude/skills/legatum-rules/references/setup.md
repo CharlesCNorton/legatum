@@ -12,8 +12,7 @@ once all factions are in use, a repeated draw is limited to the least-used facti
 `GameSetup::all_ai` seats eight distinct factions from the original nine-faction pool, rotating the omitted faction with the seed; Egypt is selected explicitly in the app or test setups so established seeded tapes do not change
 (`crates/core/src/state.rs::GameSetup::all_ai`).
 
-New app lobbies default every AI seat to **Hard**. The all-AI level and mode-specific seat overrides
-are stored under the release-independent `legatum.lobby.difficulty` key; Normal remains an explicit choice. The game view
+New app lobbies default every AI seat to **Hard**. The single game-wide AI level is stored under the release-independent `legatum.lobby.difficulty` key; Normal remains an explicit choice. The game view
 exposes each seat's recorded difficulty and Search (Training) flag, shown in Diplomacy and the victory race
 and score ledger (`app/src/lobby.ts::newLobby,rememberDifficulty,buildSetup`,
 `crates/core/src/view.rs::public_view`, `app/src/ui/DiplomacyPanel.tsx`, `app/src/ui/VpTrack.tsx`,
@@ -22,7 +21,7 @@ and score ledger (`app/src/lobby.ts::newLobby,rememberDifficulty,buildSetup`,
 **AI levels (2026-11-21):** players are offered **Easy, Normal and Hard**, and all three plan only
 from the seat's own `PlayerView`. **Training is a research tool, not a level a player can choose:**
 its battle study reads the true state, including units the seat cannot see, so no production build
-lists it in any picker (solo lobby, per-seat list, online staging). A development build (`npm run dev`)
+lists it in any picker (solo lobby and online staging). A development build (`npm run dev`)
 offers it with `?training=1` in the URL (remembered under `localStorage['legatum.dev.training']`;
 `?training=0` forgets it; `app/src/lobby.ts::trainingSwitch,offeredLevels`), and there its
 description says it uses the true positions of nearby units. With the switch off, a stored lobby
