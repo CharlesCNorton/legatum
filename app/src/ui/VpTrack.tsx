@@ -55,7 +55,7 @@ export function VpTrack() {
       </div>
       {!finished && nearRival && <details className="sidebar-alerts">
         <summary><Icon name="ui-alert" size={14} />{rivalLine(view, nearRival).replace(/\.$/, '')}</summary>
-        <RivalWin view={view} rival={nearRival} />
+        <RivalWin view={view} rival={nearRival} showSummary={false} />
       </details>}
       {!finished && model && <SidebarObjective view={view} model={model} />}
       <details className="sidebar-standings" onToggle={e => { if (!e.currentTarget.open) cards.reset(); }}>
