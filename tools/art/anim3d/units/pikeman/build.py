@@ -15,19 +15,34 @@ def mat(name,color,metal=0,rough=.65):
  ao=n.new('ShaderNodeAmbientOcclusion');ao.inputs['Distance'].default_value=.08
  mult=n.new('ShaderNodeMixRGB');mult.blend_type='MULTIPLY';mult.inputs[0].default_value=.4;mult.inputs[1].default_value=(*color,1);l.new(ao.outputs['Color'],mult.inputs[2]);l.new(mult.outputs[0],p.inputs['Base Color'])
  if metal:
-  # Original generated bronze brushwork, desaturated in shader for unseen steel.
-  tex=n.new('ShaderNodeTexImage');tex.image=bpy.data.images.load(str(A/'fill-bronze.png'),check_existing=True)
+  # Original generated steel brushwork, with box mapping on full-depth surfaces.
+  tex=n.new('ShaderNodeTexImage');tex.image=bpy.data.images.load(str(A/'fill-steel.png'),check_existing=True)
+  tex.projection='BOX';tex.projection_blend=.25
   coord=n.new('ShaderNodeTexCoord');l.new(coord.outputs['Generated'],tex.inputs['Vector'])
-  hue=n.new('ShaderNodeHueSaturation');hue.inputs['Saturation'].default_value=0;hue.inputs['Value'].default_value=1.5;l.new(tex.outputs['Color'],hue.inputs['Color'])
+  hue=n.new('ShaderNodeHueSaturation');hue.inputs['Saturation'].default_value=0;hue.inputs['Value'].default_value=1.05;l.new(tex.outputs['Color'],hue.inputs['Color'])
   tint=n.new('ShaderNodeMixRGB');tint.blend_type='MULTIPLY';tint.inputs[0].default_value=.65;tint.inputs[1].default_value=(*color,1);l.new(hue.outputs['Color'],tint.inputs[2]);l.new(tint.outputs[0],mult.inputs[1])
   pigment=n.new('ShaderNodeEmission');l.new(mult.outputs[0],pigment.inputs['Color'])
   path=n.new('ShaderNodeLightPath');fac=n.new('ShaderNodeMath');fac.operation='MULTIPLY';fac.inputs[1].default_value=.55;l.new(path.outputs['Is Camera Ray'],fac.inputs[0])
   mix=n.new('ShaderNodeMixShader');l.new(fac.outputs[0],mix.inputs[0]);l.new(p.outputs[0],mix.inputs[1]);l.new(pigment.outputs[0],mix.inputs[2]);l.new(mix.outputs[0],n.get('Material Output').inputs['Surface'])
  return m
-skin=mat('MAT-painted-skin',(.47,.235,.105));cloth=mat('MAT-padded-ivory',(.42,.36,.25));pants=mat('MAT-worn-brown-trousers',(.18,.115,.055));leather=mat('MAT-scuffed-leather',(.18,.07,.022));steel=mat('MAT-worn-bright-steel',(.48,.43,.32),1,.36);edge=mat('MAT-polished-steel-edge',(.64,.59,.46),1,.25);red=mat('MAT-cinnabar-armtie',(.40,.018,.008));wood=mat('MAT-ash-pike',(.32,.13,.035));hair=mat('MAT-beard',(.07,.032,.013));stone=mat('MAT-cream-E9CFA0',(.815,.624,.352),0,.85)
+skin=mat('MAT-painted-skin',(.47,.235,.105));cloth=mat('MAT-padded-ivory',(.42,.36,.25));pants=mat('MAT-painted-slate-hose',(.075,.11,.13));leather=mat('MAT-scuffed-leather',(.18,.07,.022));steel=mat('MAT-worn-bright-steel',(.55,.56,.57),1,.32);edge=mat('MAT-polished-steel-edge',(.68,.65,.56),1,.23);red=mat('MAT-cinnabar-armtie',(.40,.018,.008));wood=mat('MAT-ash-pike',(.32,.13,.035));hair=mat('MAT-beard',(.07,.032,.013));stone=mat('MAT-cream-E9CFA0',(.815,.624,.352),0,.85)
 # Generated linen fills supply brushwork on unseen cloth; source and prompt recorded in SOURCES.
 n=cloth.node_tree.nodes;l=cloth.node_tree.links;p=n.get('Principled BSDF');tex=n.new('ShaderNodeTexImage');tex.image=bpy.data.images.load(str(A/'fill-linen.png'));tc=n.new('ShaderNodeTexCoord');l.new(tc.outputs['Generated'],tex.inputs['Vector']);mix=n.new('ShaderNodeMixRGB');mix.blend_type='MULTIPLY';mix.inputs[0].default_value=.5;mix.inputs[1].default_value=(.55,.35,.15,1);l.new(tex.outputs['Color'],mix.inputs[2]);l.new(mix.outputs[0],p.inputs['Base Color']);p.inputs['Sheen Weight'].default_value=.25
-body.data.materials.clear();body.data.materials.append(skin)
+# Continuous underlayers prevent naked ankles/soles when the captured pose turns.
+for material,fill in [(skin,'skin'),(leather,'leather')]:
+ n=material.node_tree.nodes;l=material.node_tree.links;p=n.get('Principled BSDF')
+ tex=n.new('ShaderNodeTexImage');tex.image=bpy.data.images.load(str(A/f'fill-{fill}.png'));tex.projection='BOX';tex.projection_blend=.3
+ coord=n.new('ShaderNodeTexCoord');l.new(coord.outputs['Generated'],tex.inputs['Vector']);l.new(tex.outputs['Color'],p.inputs['Base Color'])
+body.data.materials.clear()
+for material in [skin,cloth,pants,leather]:body.data.materials.append(material)
+for face in body.data.polygons:
+ scores={}
+ for i in face.vertices:
+  for g in body.data.vertices[i].groups:
+   name=body.vertex_groups[g.group].name
+   if name in rig.data.bones:scores[name]=scores.get(name,0)+g.weight
+ bn=max(scores,key=scores.get) if scores else 'head'
+ face.material_index=3 if bn.startswith(('hand','index','middle','ring','pinky','thumb','foot','ball')) else 2 if bn.startswith(('pelvis','thigh','calf')) else 0 if bn in ['head','neck_01'] else 1
 for f in body.data.polygons:f.use_smooth=True
 sub=body.modifiers.new('Anatomical subdivision','SUBSURF');sub.levels=1;sub.render_levels=1
 
@@ -70,18 +85,25 @@ def shell(name,pred,material,inflation,regions):
  body_group=body.vertex_groups['body'].index
  real={v.index for v in body.data.vertices if any(g.group==body_group and g.weight>.5 for g in v.groups) and sum(g.weight for g in v.groups if body.vertex_groups[g.group].name in regions)>.55}
  fs=[p for p in me.polygons if all(i in real and pred(me.vertices[i].co) for i in p.vertices)];ids=sorted({i for p in fs for i in p.vertices});mp={v:i for i,v in enumerate(ids)}
- vs=[me.vertices[i].co+me.vertices[i].normal*(inflation+.004*math.sin(me.vertices[i].co.z*90)) for i in ids]
+ vs=[]
+ for i in ids:
+  v=me.vertices[i];fold=.004*math.sin(v.co.z*90)
+  if material in [cloth,pants]:
+   angle=math.atan2(v.co.y,v.co.x-(.1 if v.co.x>0 else -.1))
+   fold+=.006*math.cos(angle*10+v.co.z*14)*math.sin(v.co.z*16)**2
+  vs.append(v.co+v.normal*(inflation+fold))
  o=mesh(name,vs,[[mp[i] for i in p.vertices] for p in fs],material);ev.to_mesh_clear()
  for md in disabled:md.show_viewport=True
  weighted(o,weights)
- # Exact inherited anatomy weights: nearest-point lookup after inflation can
- # attach a sleeve vertex to an adjacent finger and stretch it into a spike.
+ # Keep only this garment's anatomical region; small cross-limb weights in
+ # MPFB helpers otherwise pull a trouser vertex with a nearby moving finger.
  o.vertex_groups.clear()
  for dest,src in enumerate(ids):
-  for group in body.data.vertices[src].groups:
+  groups=[g for g in body.data.vertices[src].groups if body.vertex_groups[g.group].name in regions]
+  total=sum(g.weight for g in groups)
+  for group in groups:
    name=body.vertex_groups[group.group].name
-   if name in rig.data.bones:
-    vg=o.vertex_groups.get(name) or o.vertex_groups.new(name=name);vg.add([dest],group.weight,'REPLACE')
+   vg=o.vertex_groups.get(name) or o.vertex_groups.new(name=name);vg.add([dest],group.weight/total,'REPLACE')
  finish(o);sub=o.modifiers.new('Tailored smoothing','SUBSURF');sub.levels=1;sub.render_levels=1;return o
 shell('padded-sleeves',lambda v:1.03<v.z<1.43 and abs(v.x)>.16,cloth,.026,{n for n in rig.data.bones.keys() if n.startswith(('upperarm','lowerarm'))})
 shell('wrinkled-trousers',lambda v:.08<v.z<.98 and abs(v.x)<.30,pants,.028,{n for n in rig.data.bones.keys() if n.startswith(('pelvis','thigh','calf','foot','ball'))})
@@ -174,7 +196,7 @@ for side,x,y in [('r',-.46,-.01),('l',.35,.02)]:
  limb('thigh_'+side,'calf_'+side,(x,y,.08),((-.40 if side=='r' else .23),-.30,.48));aim('foot_'+side,((-.07 if side=='r' else .09),-.17,-.045))
 p=rig.pose.bones['clavicle_r'];m=p.matrix.copy();m.translation.x-=.04;m.translation.z-=.01;p.matrix=m;bpy.context.view_layer.update()
 limb('upperarm_r','lowerarm_r',(-.28,-.22,.80),(-.58,-.16,1.06))
-limb('upperarm_l','lowerarm_l',(.165,-.24,1.085),(.14,-.18,.85))
+limb('upperarm_l','lowerarm_l',(.215,-.24,1.15),(.14,-.18,.85))
 for side in ['r','l']:
  aim('hand_'+side,(.06,-.01,.065))
  for finger in ['index','middle','ring','pinky']:
@@ -189,7 +211,7 @@ shaft=curve('ash-pike-shaft',[start,end-(end-start).normalized()*.085],.0055,woo
 d=(end-start).normalized();a=end-d*.10;u=Vector((0,1,0))*.011;v=d.cross(Vector((0,1,0)))*.018
 head=mesh('iron-pike-point',[a+u,a+v,a-u,a-v,end],[(0,1,4),(1,2,4),(2,3,4),(3,0,4),(3,2,1,0)],steel,False);finish(head,0,.001);head.parent=pike;head.matrix_parent_inverse=pike.matrix_world.inverted()
 # Stationary one-step warm cream base.
-bpy.ops.mesh.primitive_cylinder_add(vertices=96,radius=.62,depth=.075,location=(-.16,.20,.052));base=bpy.context.object;base.name='GEO-cream-stone-base';base.data.materials.append(stone);finish(base,0,.018)
+bpy.ops.mesh.primitive_cylinder_add(vertices=96,radius=.62,depth=.045,location=(-.17,.20,.067));base=bpy.context.object;base.name='GEO-cream-stone-base';base.data.materials.append(stone);finish(base,0,.007)
 for p in base.data.polygons:p.use_smooth=abs(p.normal.z)<.5
 base.modifiers['Rounded edges'].segments=5
 stone.node_tree.nodes.get('Bump').inputs['Distance'].default_value=.001
@@ -204,7 +226,7 @@ em=n.new('ShaderNodeEmission');l.new(pigment.outputs[0],em.inputs['Color'])
 path=n.new('ShaderNodeLightPath');fac=n.new('ShaderNodeMath');fac.operation='MULTIPLY';fac.inputs[1].default_value=.94;l.new(path.outputs['Is Camera Ray'],fac.inputs[0])
 mix=n.new('ShaderNodeMixShader');l.new(fac.outputs[0],mix.inputs[0]);l.new(p.outputs[0],mix.inputs[1]);l.new(em.outputs[0],mix.inputs[2]);l.new(mix.outputs[0],out.inputs['Surface'])
 bpy.ops.object.camera_add(location=(0,-8,1.105+8*math.tan(.22)));cam=bpy.context.object;cam.name='CAM-painting';cam.rotation_euler=(Vector((0,0,1.105))-cam.location).to_track_quat('-Z','Y').to_euler();cam.data.type='ORTHO';cam.data.ortho_scale=2.6;sc.camera=cam
-for name,loc,power,color,size in [('key',(-3,-4,6),300,(1,.95,.85),4),('fill',(3,-2,3),60,(.90,.94,1),3),('rim',(1,3,4),95,(.85,.91,1),2)]:
+for name,loc,power,color,size in [('key',(-3,-4,6),400,(1,.95,.85),3),('fill',(3,-2,3),85,(.90,.94,1),3),('rim',(1,3,4),130,(.85,.91,1),2)]:
  d=bpy.data.lights.new('LGT-'+name,'AREA');d.energy=power;d.color=color;d.shape='DISK';d.size=size;o=bpy.data.objects.new(d.name,d);sc.collection.objects.link(o);o.location=loc;o.rotation_euler=(Vector((0,0,1))-o.location).to_track_quat('-Z','Y').to_euler()
 sc.world.color=(.16,.16,.16);sc.render.film_transparent=True;sc.view_settings.view_transform='Standard';sc.view_settings.look='None'
 sc.render.resolution_x=sc.render.resolution_y=256;sc.render.resolution_percentage=100
@@ -214,8 +236,11 @@ for o in list(sc.objects):
  if o.type=='CURVE':
   bpy.ops.object.select_all(action='DESELECT');o.select_set(True);bpy.context.view_layer.objects.active=o;bpy.ops.object.convert(target='MESH')
 sys.path.insert(0,str(Path(__file__).resolve().parent))
-from surface import finish_surfaces
+from surface import finish_surfaces, fit_contours
 finish_surfaces()
+fit_contours()
+from stone import finish_stone
+finish_stone()
 rig['rest_basis']=json.dumps({p.name:[list(row) for row in p.matrix_basis] for p in rig.pose.bones})
 sc['unit']='pikeman';sc['source']='MPFB 2.0.18 CC0, original articulated steel kit, project painting projection'
 bpy.ops.wm.save_as_mainfile(filepath=str(M/'plain.blend'))

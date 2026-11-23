@@ -107,7 +107,7 @@ tools/art/anim3d/render.sh audit
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
 
-## Infantry chapter: pikeman round 1
+## Infantry chapter: pikeman rounds 1–2
 
 Pikeman is isolated in `tools/art/anim3d/units/pikeman/`; it reuses the MPFB
 installation and reviewed newer infantry helpers, with an original steel harness
@@ -174,7 +174,7 @@ CYCLES_DEVICE=CPU blender -b --disable-autoexec --python-exit-code 1 --python "$
 "$ANIM_ROOT/venv/bin/python" "$unit/validate.py"
 ```
 
-The host/overnight driver runs exactly `ROUND=1 tools/art/anim3d/units/pikeman/gpu.sh`
+The host/overnight driver runs exactly `ROUND=2 tools/art/anim3d/units/pikeman/gpu.sh`
 from the repository root. It checks Metal explicitly, rebuilds all five clips,
 audits them, renders all stages and 40 transparent frames in Cycles GPU at 512,
 renders the feet diagnostic, exports native 512/downsampled 256 masters under
@@ -192,3 +192,37 @@ is `{x,y,w,h,ox,oy}`. Crop that atlas rect, place at `(ox,oy)` in the logical ce
 then anchor by `(ax,ay)`. Duplicate terminal death frames share one rect to ensure
 identical decoded pixels. Source/master/render hashes reject stale or mixed
 outputs. The existing runtime is unchanged; this is an animation candidate.
+
+### Pikeman round 2: GPU critique and surface correction
+
+The round-one GPU pass succeeded at 177646 bytes / quality 90. The images exposed
+helmet/forearm silhouette overhangs, a disconnected raised grip, a smooth thick
+stone rim, and simple gray/skin patches revealed by the death clip. The original
+GPU sheets and movie are retained externally in `review/3d-v2/pikeman-round1-gpu`.
+
+Round two uses all six Blender skills. A swept helmet brim, raised carrying grip,
+fitted breastplate and bounded upper-body contour field align the finished volume
+before freezing UVs. Camera depth and anatomical weights are preserved; no alpha
+cutout or per-frame reprojection is used. The contour field excludes leg garments
+and rejects unstable inverse skin transforms. Cloth has normal-displaced folds;
+garment weights are restricted to the garment's anatomical region. Applied
+Bevel/Subsurf produced negative deform weights (observed -0.949), so every
+finished skinned mesh clamps and normalizes weights before pose evaluation.
+The scene audit rejects negative or unnormalized weights; this removed a
+metre-long trouser spike that the atlas margin check correctly rejected. The continuous underlying body uses
+clothing, gloves and boots on the appropriate regions instead of skin everywhere.
+
+Unseen surfaces use the recorded generated Tagmatic steel/leather and Medjay skin
+fills, with box mapping and physical product lighting. Six Cycles AO/Pointiness
+bakes remain part of the rebuild. A new generated clean stone top removes boots
+and their shadows; it textures the real thinner bevelled disc with frozen
+`CleanStoneCamera` UVs. The original unobstructed lower rim is retained, and live
+AO supplies moving contact shadows. Texture alpha never cuts the geometry. The
+one rest-fitted histogram grade is still reused across every clip.
+
+After the final bake and CPU review, run the virtual-environment Python on
+`units/pikeman/provenance.py --seal`. The no-argument `gpu.sh` checks that exact
+master/script/texture seal before its full GPU pass. The seal uses portable keys
+so a different checkout of the same scripts can render the reviewed master.
+The GPU receipt and PASS remain distinct: a valid 40-frame atlas is not a visual
+approval of glove contact, plate seams or the rest-pose match.

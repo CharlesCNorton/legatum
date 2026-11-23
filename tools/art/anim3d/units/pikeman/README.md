@@ -1,8 +1,12 @@
 # Pikeman animation candidate
 
-Run `ROUND=1 tools/art/anim3d/units/pikeman/gpu.sh` from repository root for the
+Run `ROUND=2 tools/art/anim3d/units/pikeman/gpu.sh` from repository root for the
 complete lead-side GPU pass. No arguments; it uses the installed PATH Blender
 gate. CPU and GPU outputs are explicitly distinguished in render/pack receipts.
+The preflight checks `masters/pikeman/build-inputs.json` against the reviewed
+master, unit scripts and input textures, so changed inputs cannot silently reuse
+an older model. After rebuilding, baking and reviewing CPU output, seal it with
+`python provenance.py --seal` using the pipeline virtual environment.
 
 The unit's chapter in `../../PLAYBOOK.md` documents source rebuild and preview
 commands, retargeting, foot checks, frozen painting UVs and trimmed atlas decoding.

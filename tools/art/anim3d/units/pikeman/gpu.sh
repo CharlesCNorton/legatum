@@ -3,7 +3,7 @@
 set -Eeuo pipefail
 cd "$(dirname "$0")/../../../../.."
 source tools/art/anim3d/env.sh
-export ROUND="${ROUND:-1}"
+export ROUND="${ROUND:-2}"
 unit=tools/art/anim3d/units/pikeman
 status="$REVIEW/pikeman-gpu-status.txt"
 exec >> "$ANIM_ROOT/gpu-logs-pikeman-r${ROUND}.log" 2>&1
@@ -12,6 +12,7 @@ trap 'code=$?; printf "failed: %s (exit %s)\n" "$stage" "$code" > "$status"; exi
 printf 'running: round %s\n' "$ROUND" > "$status"
 rm -f "$REVIEW/pikeman-gpu-round${ROUND}.json"
 export RENDER_ENGINE=CYCLES CYCLES_DEVICE=GPU RESOLUTION=512 SAMPLES="${SAMPLES:-64}"
+"$ANIM_ROOT/venv/bin/python" "$unit/provenance.py"
 CHECK_GPU=1 CYCLES_DEVICE=CPU blender -b --disable-autoexec --python-exit-code 1 --python "$unit/check_scene.py"
 stage=animation
 CYCLES_DEVICE=CPU blender -b --disable-autoexec --python-exit-code 1 --python "$unit/animate.py"

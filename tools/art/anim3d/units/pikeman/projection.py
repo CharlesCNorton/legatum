@@ -45,7 +45,7 @@ def project():
             world = evaluated.matrix_world @ vertex.co
             c = world_to_camera_view(scene, camera, world)
             normal = (evaluated.matrix_world.to_3x3().inverted().transposed() @ vertex.normal).normalized()
-            facing = max(0, min(1, normal.dot(view) / .22))
+            facing = max(0, min(1, normal.dot(view) / .10))
             hit, _, _, _ = visibility.ray_cast(world + view * 10, -view, 10.02)
             visible = hit is not None and (hit - world).length < .012
             coords.append((c.x, c.y))

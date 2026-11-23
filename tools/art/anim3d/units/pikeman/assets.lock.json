@@ -5,5 +5,11 @@
   "assets/quaternius-ual/AnimationLibrary_Godot_Standard.gltf": "0ff075c7ad6855c5c2c37a171592ee8f0d6ab2f58259e2be77a9b63dd8027765",
   "assets/quaternius-ual/AnimationLibrary_Godot_Standard.bin": "6e65377d81558333c4093dbb144a48fd19019343d82b1a3a7992a98ec0e0543c",
   "assets/quaternius-ual/LICENSE": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499",
-  "assets/pikeman/fill-bronze.png": "20233d35d680a1ee510719befd841db3899371d0e9f5821b99400162a8c39720"
+  "assets/pikeman/fill-bronze.png": "20233d35d680a1ee510719befd841db3899371d0e9f5821b99400162a8c39720",
+  "assets/pikeman/stone-fill-source.png": "740084e7c62aed4a3ae4f0546520fa32b328694752ab9b20d41a85a33733bf38",
+  "assets/pikeman/fill-leather.png": "8a14b97d8400525265acb111c194aad5e42491408e42ece3b9a85a756acfc62e",
+  "assets/pikeman/fill-skin.png": "e9699dccd35965546bb5973ecb349cd695ab01bc7d06528b6aaee48b7070d9a9",
+  "assets/pikeman/fill-steel.png": "5124ace2b1e4be82ad201fa95937ecd1edff0e29f2965327293a927506208665",
+  "assets/pikeman/body-fit-mask.png": "147c9efaf0e933efe56a5ff5c26e73e902263f704a3984f3d164f5a44b952f7d",
+  "assets/pikeman/stone-fill-aligned.png": "d4cd5b5e5b41eea38a7bc2014d72058a23dad38c3ff17cf51fc1444a64db6865"
 }
