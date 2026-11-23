@@ -89,3 +89,7 @@
 - Loaded all six Blender skills (modeling, materials, cameras, lighting, animation, rendering), full playbook, shared/unit feedback, prior log, project art instructions and sources. Round7 uses original rig and depth-preserving fitting, frozen painting projection, existing generated backside fills, actual beveled straps/folds and one automatic grade.
 - Round7 first previews: taller real knuckle stack and inverse-skinned whole-arm fit restore the missing sleeve/upper-arm crescent; widened near helmet cheek, lower camera and shallower round disc top. Source projection remains frozen, visibility feather narrowed. Initial metrics improved arm fit but showed the base still needed a taller edge; these previews are intermediate.
 - Added family-local camera-only generated-fill/skin pigment with live AO and 35 percent physical response for unseen surfaces. Preserves original physical BSDF for non-camera rays and retains source texture hashes; no new downloads or generated assets.
+- Final round7 master: rebuilt and CPU-rendered idle, 256px / 12 samples, frozen rest grade.
+- Final round7 master: rebuilt and CPU-rendered move, 256px / 12 samples, frozen rest grade.
+- Final round7 master: rebuilt and CPU-rendered attack, 256px / 12 samples, frozen rest grade.
+- Final round7 master: rebuilt and CPU-rendered hit, 256px / 12 samples, frozen rest grade.
