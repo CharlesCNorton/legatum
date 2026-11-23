@@ -78,8 +78,14 @@ class DeliveryChecks(unittest.TestCase):
             path.write_bytes(old); report_path.write_bytes(old_report)
 
     def test_cpu_cannot_issue_gpu_receipt(self):
-        with self.assertRaisesRegex(AssertionError, 'not final GPU output'):
-            finish.gpu_receipt()
+        path=finish.M/'renders/b-plain/render.json'
+        original=path.read_bytes()
+        try:
+            data=json.loads(original);data['device']='CPU';path.write_text(json.dumps(data))
+            with self.assertRaisesRegex(AssertionError, 'not final GPU output'):
+                finish.gpu_receipt()
+        finally:
+            path.write_bytes(original)
 
 
 if __name__ == '__main__':

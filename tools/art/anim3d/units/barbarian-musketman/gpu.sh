@@ -34,6 +34,8 @@ stage=pack
 "$python" "$unit/finish.py" pack
 stage=validate
 "$python" "$unit/finish.py" validate
+stage=regressions
+"$python" "$unit/test_delivery.py"
 stage=gpu_receipt
 "$python" "$unit/finish.py" gpu-receipt
 printf 'complete round=%s; GPU512 and delivery verified; visual review pending\n' "$ROUND" > "$status"
