@@ -106,3 +106,87 @@ tools/art/anim3d/render.sh audit
 ```
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
+
+## Mounted: cataphract round 1
+
+Unit scripts are isolated in `tools/art/anim3d/units/cataphract/`. This chapter
+extends the mounted family; it does not replace the infantry instructions above.
+The mounted branch's CC0 Quaternius horse and MPFB anatomical rider are reused,
+with unit-specific steel scale barding, articulated neck panels, fitted rider
+armor, rust-red thick folded cloak, straps, stirrups and an iron-tipped lance.
+The source action supplies horse motion; the rider remains parented to the saddle.
+The move clip is a source walk, with authored rider breathing, attack and recoil.
+Death uses the horse collapse, rider slump and a released lance, then holds its
+last two output samples. These are presentation keys, not cloth/rigid-body physics.
+
+The four standing quality levers are the standard here: (1) original painting
+registered to the token and projected through the calibrated rest camera onto
+actual volumetric, weighted meshes; (2) thick, bevelled kit, smooth anatomy and
+folded cloth; (3) warm upper-left key, cool rim, soft fill, contact shadows and AO;
+(4) one automatically sampled 17-quantile RGB grade, shared by every animation
+frame to avoid pumping. Generated mounted-family surface fills cover unseen
+sides and blend through a frozen normal-incidence mask. Projection changes colour,
+never mesh alpha or geometry into a billboard. Rest-camera geometric registration
+preserves depth but is approximate; inspect joint deformation in motion.
+The helmet has actual 256px Cycles AO/Pointiness bakes feeding cavity darkening and
+edge roughness. Other surfaces use geometry, procedural grain and shader AO;
+they do not claim full-body baked AO coverage.
+
+Use a single low stone disc, warm cream **sRGB #E9CFA0**, with a darker shaded rim
+and fine grain. The material starts with the linear equivalent of that pigment;
+judge its displayed colour under the light and shared grade, not its shader value.
+The rest review contains painting/render, a half split and a 50% crossfade at
+256 and 64px in `cataphract-f-restpose-compare.png`. This round remains a candidate
+until the rest silhouette, surfaces and all five clips meet the painting.
+
+All assets and masters are outside git under `~/LegatumRuns/anim-pilot/`.
+`assets/cataphract/` contains the original and registered painting and copied fills;
+`assets.lock.json` pins inputs. `assets/SOURCES.md` records licences and URLs.
+`masters/cataphract/` holds `unpainted.blend`, `plain.blend`, `cataphract.blend`,
+five independent `clips/*.blend`, textures, raw render sequences, grade and masters.
+Rebuild sequentially from the repository root:
+
+```sh
+tools/art/anim3d/units/cataphract/render.sh prepare
+tools/art/anim3d/units/cataphract/render.sh build
+tools/art/anim3d/units/cataphract/render.sh finish
+tools/art/anim3d/units/cataphract/render.sh bake
+tools/art/anim3d/units/cataphract/render.sh animate
+RESOLUTION=256 SAMPLES=8 tools/art/anim3d/units/cataphract/render.sh all
+tools/art/anim3d/units/cataphract/render.sh audit
+tools/art/anim3d/units/cataphract/render.sh pack
+```
+
+Every Blender invocation is plain `blender -b --disable-autoexec` through the
+PATH gate; no direct executable and no nested heavy process. CPU previews use
+Cycles. GPU rerender needs only the executable no-argument script:
+
+```sh
+ROUND=1 tools/art/anim3d/units/cataphract/gpu.sh
+```
+
+It checks the rig, renders every b/c/d/e stage serially with Cycles Metal GPU at
+512px/64 samples, derives true 512/256 masters, makes all review PNGs and animated
+WebPs, packs and validates the atlas and writes `cataphract-round${ROUND}.mp4`.
+The video restores each trimmed frame to its 160px logical canvas, displays all
+five clips side by side at 2x on cream for eight seconds, H.264/yuv420p.
+No CPU fallback is permitted for that script. Review GPU results again; successful
+packing does not grant art approval. The script does not write a PASS marker.
+
+### Cataphract trimmed atlas extension
+
+Delivery is `app/src/assets/units/anim/cataphract.{webp,json}`. JSON version 2 uses
+`layout: "trimmed-rows"`; `frame: {w:160,h:160,ax,ay}` is the **logical**
+canvas and common anchor, measured from the stationary base top centre. `clips` keeps `row`, `frames`, `fps`, `loop` in the order
+idle/move/attack/hit/death, lengths **8/8/10/4/10**. Each clip adds ordered `rects`:
+`{x,y,w,h,ox,oy}`. Crop `(x,y,w,h)` from the atlas and paste at `(ox,oy)` on a
+transparent 160px canvas; position that canvas relative to `(ax,ay)`. Atlas row
+heights and widths are variable, with two-pixel gutters; do not multiply row/index
+by 160 to find pixels. Runtime loading is unchanged by this art-only candidate.
+
+The packer preserves all frames, quantizes alpha to 32 levels and tries WebP
+quality 90/85/80/75, refusing anything over **200,000 bytes**. Decoded bounds,
+transparency, reconstructed motion and held death are validated. Master and clip
+hashes reject stale renders. Raw render PNGs remain untouched; only the derived
+masters/reviews/atlas receive the shared rest LUT. CPU previews are never enlarged
+and labelled as 512px masters: the GPU handoff produces those originals.

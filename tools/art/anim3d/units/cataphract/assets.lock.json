@@ -1,0 +1,23 @@
+{
+  "source_alpha_bbox": [
+    238,
+    7,
+    1016,
+    1247
+  ],
+  "token_alpha_bbox": [
+    55,
+    12,
+    201,
+    244
+  ],
+  "files": {
+    "assets/cataphract/painting-source.png": "0ef4c7973c1f57456474a5f2f420e2581014ce85fda6ed1e41d87542ab4a93e1",
+    "assets/cataphract/projection.png": "26f737d263cd6e5f24c3ee38f69d8c868b1061f4c4549e71487bfe67e49bbc39",
+    "assets/horseman/Horse.glb": "fbddb2c97179eca896ec69c985cd9cc74540484510776c400df64e088e9f2414",
+    "assets/cataphract/fill-hair.png": "f472a44cdc7ee21159636cfb3ab6b7ceaacae420510632164307f0b67245041a",
+    "assets/cataphract/fill-coat.png": "202834d89526e95d00881d507d254c8f597199ccf1ec56ef8722e21f3a438ede",
+    "assets/cataphract/fill-linen.png": "c71ed83e71404d76f318e2410e111c1ec6ecf00864d9730f13514f2f5c932da3",
+    "assets/cataphract/fill-bronze.png": "20233d35d680a1ee510719befd841db3899371d0e9f5821b99400162a8c39720"
+  }
+}

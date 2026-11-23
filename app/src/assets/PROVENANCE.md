@@ -31,6 +31,7 @@ The date range is the range of dates the repository's own records give (prompt h
 | Reward emblems | `app/src/assets/rewards/*.svg` | Code: `rewards/src/build-rewards.mjs` | Not applicable | Not recorded |
 | App icon and favicons | `app/public/favicon*`, `app/public/apple-touch-icon.png` | Composed by `tools/design/app-icon/build.mjs` from a code-drawn seal (`seal.svg`) over a parchment texture (`parchment.jpg`), which that script records as generated with Codex image generation | No prompt for the parchment texture | Not recorded |
 | Music and sound effects | `app/public/audio/` | Third-party recordings released under CC0 1.0 (Kenney, Breviceps, vitalezzz), trimmed and encoded by `tools/audio/build_audio.py` | Not applicable. Sources, authors and licences: `app/public/audio/CREDITS.md`, `manifest.json`, `licenses/` | See `CREDITS.md` |
+| Cataphract 3D animation candidate | `app/src/assets/units/anim/cataphract.{webp,json}` | Blender: CC0 Quaternius Horse (July 2021), MPFB 2.0.18 CC0 anatomy, original steel kit and authored rider clips; original painting projected onto weighted geometry | `tools/art/anim3d/units/cataphract/`, source hashes and reused generated-fill prompt; licences and URLs in the mounted chapter and external `assets/SOURCES.md` | Round 1, 2026-11-22; candidate, not approved |
 
 ## Gaps
 

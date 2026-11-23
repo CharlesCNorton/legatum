@@ -1,0 +1,25 @@
+"""Validate true anatomical geometry, rig ownership and invariant base/camera."""
+import bpy,os,json,hashlib
+from pathlib import Path
+R=Path(os.environ['ANIM_ROOT']);M=R/'masters/cataphract';Q=R/'review/3d-v2'
+sha=hashlib.sha256((M/'cataphract.blend').read_bytes()).hexdigest();report={}
+for clip,count in {'idle':8,'move':8,'attack':10,'hit':4,'death':10}.items():
+ bpy.ops.wm.open_mainfile(filepath=str(M/'clips'/f'{clip}.blend'));sc=bpy.context.scene
+ assert sc['source_master_sha256']==sha,clip+': stale master'
+ horse=bpy.data.objects['Horse'];rider=bpy.data.objects['Rider MPFB CC0 anatomy'];base=bpy.data.objects['Stationary cream stone']
+ assert len(rider.data.vertices)>10000 and len(horse.data.vertices)>1000
+ assert any(m.type=='ARMATURE' for m in rider.modifiers) and any(m.type=='ARMATURE' for m in horse.modifiers)
+ assert len(bpy.data.objects['Rider MPFB game_engine'].data.bones)==53
+ bm=base.matrix_world.copy();cam=sc.camera.matrix_world.copy()
+ for frame in range(1,count+1):
+  sc.frame_set(frame);bpy.context.view_layer.update()
+  assert base.matrix_world==bm and sc.camera.matrix_world==cam
+  for ob in sc.objects:assert min(abs(x) for x in ob.scale)>1e-6,ob.name
+ loop_error=0
+ if clip in ['idle','move']:
+  arm=bpy.data.objects['AnimalArmature'];sc.frame_set(1);bpy.context.view_layer.update();first={p.name:p.matrix.copy() for p in arm.pose.bones}
+  sc.frame_set(count+1);bpy.context.view_layer.update()
+  loop_error=max(abs(p.matrix[i][j]-first[p.name][i][j]) for p in arm.pose.bones for i in range(4) for j in range(4))
+  assert loop_error<.003,(clip,'loop endpoint',loop_error)
+ report[clip]={'loop_matrix_error':loop_error,'frames':count,'rider_vertices':len(rider.data.vertices),'horse_vertices':len(horse.data.vertices),'rider_bones':53,'stationary_base_camera':True}
+(Q/'cataphract-audit.json').write_text(json.dumps(report,indent=2)+'\n');print('CATAPHRACT_AUDIT_PASS',report)
