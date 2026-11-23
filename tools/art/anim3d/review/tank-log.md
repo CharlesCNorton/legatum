@@ -9,3 +9,5 @@
 - Read incoming tank-FEEDBACK: machine-wide single Blender gate now applies; crash dialogs reached desktop. Removed even temporary near-zero effect scale assignments. Inactive smoke uses normal-size geometry and keyed hide_render only; every call is background via blender-slot.
 - Emitted tank-c-textured-lit.png from actual c renders; visual review pending.
 - Emitted tank-c-details.png from actual details renders; visual review pending.
+- c-textured-lit and c-details emitted. Self-review agrees with new cloud feedback: still pale/smooth; mantlet not visible enough; base too neutral. Matching source footprint is close (source alpha bbox 12,48,244,208; render 14,52,242,205).
+- Source base samples: top (128,190) RGB 244,209,172; rim (128,200) 232,188,140. Render top 218,201,181: too neutral/dim. Revised warm stone pigment and low warm emission bounce; deeper/saturated olive; scanned Metal034 microstructure; more wheel edge wear, transmission seams, glacis hatches, hull MG and shovel.
