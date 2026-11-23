@@ -113,7 +113,7 @@ Unit scripts are isolated under `tools/art/anim3d/units/bomber/`. This aircraft 
 
 The standard four finish levers are: (1) align camera and real geometry to the painting, then freeze camera-projected UV colour onto meshes, blending generated painted fills into unseen surfaces; (2) finish geometry with rounded airfoil sections, bevelled lips, real thickness and relief; (3) warm upper-left product key, cool rim and soft fill, with Cycles denoising; (4) measure RGB 10/50/90 percentiles and reuse one bounded rest-pose grade across every frame. Projection retains painted lighting and needs moving-view review. Colour agreement alone never proves silhouette parity. All six installed Blender skills informed geometry, material separation, camera registration, lighting, animation interpolation and rendered QA.
 
-Warm stone standard: target visible top near **#E9CFA0**, darker cream rim. Convert pigment from sRGB to linear before assigning BSDF colour; the bomber's starting value is `(0.815, 0.624, 0.352)`, roughness `.86`, fine noise bump. Its visible surface also receives the painting projection. Recheck rendered pixels after the light/grade changes; a shared shader does not guarantee the same output colour.
+Warm stone standard: target visible top near **#E9CFA0**, darker cream rim. Convert pigment from sRGB to linear before assigning BSDF colour; the bomber's starting value is `(0.815, 0.624, 0.352)`, roughness `.86`, fine noise bump. The stationary disc uses physical limestone with camera-only pigment, without source-object paint or baked support shadows. Recheck rendered pixels after the light/grade changes; a shared shader does not guarantee the same output colour.
 
 ```sh
 # CPU geometry build and review (all Blender calls use the gated plain PATH command)
@@ -132,3 +132,47 @@ The GPU handoff renders each stage serially using Cycles Metal at 512 px, writes
 `app/src/assets/units/anim/bomber.{webp,json}` uses logical 160 × 160 cells and anchor `(80,132)`. Rows remain idle/move/attack/hit/death with 8/8/10/4/10 frames at 10/12/14/12/10 fps; only idle/move loop. Empty margins are removed **per frame**; sprites are packed left-to-right with 2 px gutters within each variable-height row. `clips[name].sprites[i] = {x,y,w,h,ox,oy}` specifies atlas rectangle and offset into its original logical cell. Draw at `(anchorX-ax+ox, anchorY-ay+oy)`; do not recenter crops. `frame.w/h` describe logical cells, not atlas stride. `atlas.w/h/quality` describe the actual image. Legacy fixed-grid consumers need this explicit format support before adoption; no runtime is changed here.
 
 Packing retains all 40 frames and selects quality 80/75, refusing anything above 200,000 bytes. Validation reconstructs logical cells, checks alpha, frame counts, offsets, atlas bounds, visible margin, motion and identical visible held death frames (ignoring RGB under zero alpha). Master and raw-frame hashes prevent interrupted/stale renders from entering review. Masters remain in `$ANIM_ROOT/masters/bomber/`; provenance and generated fill stay under `$ANIM_ROOT/assets/bomber/`. Early CPU review is evidence of progress, not a GPU or art sign-off.
+
+### Bomber round 2: finished surfaces and mechanical motion
+
+Inspect current images before rebuilding and archive their actual provenance. The supplied round-one
+images were Cycles CPU512/4; they did not prove a GPU pass. Prior masters/reviews remain in
+`masters/bomber/round1-cpu`. No PASS follows from technical success.
+
+The fuselage crown now reaches the dorsal turret's mounting surface. Finish bevels/subdivision and
+convert capped frame tubes into solid meshes before freezing UVs. Camera-only pigment avoids
+lighting the stone with the painting's baked highlights; non-camera rays retain the physical BSDF.
+Standard/None preserves already painted illumination, while product lights still shade the true
+geometry. Source visibility/facing masks feather into the existing generated olive fill. A separate
+source-object mask removes rotating blades from underlying body/cowl paint. The plain stationary
+stone disc has physical grain, a cream top/rim, contact shading and no projected figure/support.
+One bounded rest histogram grade is frozen across all clips. Baked AO/curvature remain real maps.
+
+Propellers rotate around local Z under fixed shaft mounts. Adding to a tilted mount's Euler Z had
+changed the shaft direction instead. Two painted blade vectors define a projected circular plane;
+SVD reconstructs its orthonormal 3D basis and radius. Blades retain real thickness and bevels.
+The loop audit checks axis stability as well as three-blade periodicity. Held death is rendered once
+and copied byte-for-byte. All five clips retain 8/8/10/4/10 samples.
+
+Motion standard: humans use licensed CMU or Quaternius CC0 motion and correctly matched rest poses,
+bone rolls and forward axes; animals use a licensed animated CC0 quadruped. Check top/front feet
+through the complete move cycle without hand-correcting orientation after retargeting. For this
+crewless aircraft, feet and mocap are inapplicable: `bomber-g-feet-check.png` explicitly says so and
+shows actual top/front move renders to inspect shaft direction, bank and the fixed pedestal.
+Asset URLs, versions and licences live in unit `SOURCES.md` and external `assets/SOURCES.md`.
+
+`ROUND=2 tools/art/anim3d/units/bomber/gpu.sh` is the one executable host entry point. It runs all
+stages serially in Cycles Metal at 512 px, saves genuine 512/256 masters, refits the rest grade,
+authors/saves the clips, runs the geometry audit, packs/validates the trimmed atlas, and encodes
+all five decoded clips side by side at 2x scale for eight seconds. A retained transcript, status
+and round-specific receipt distinguish missing input/device failures from successful GPU output.
+The receipt requires actual GPU settings, current blend/raw/grade/frame hashes, and verified video
+codec, pixel format, dimensions, duration and frame count. It never writes art PASS.
+
+Atlas validation independently reconstructs all 40 alpha planes at their offsets and checks gutters,
+bounds, timing, motion, held death, current source hashes, quality >=75 and <=200,000 bytes. Packing
+tries quality 95/90/85/80/75 without dropping frames. `test_delivery.py` covers bounded monotone grade,
+stale-master rejection, CPU rejection by the GPU gate, missing-input shell failure receipts, and
+incorrect movie frame count. CPU preview checks do not claim that Metal ran inside the sandbox.
+
+Round-two CPU evidence: 40 samples, Q80 **192,266 bytes**, exact reconstructed alpha and held death; geometry and five delivery regression checks pass. Movie: H.264/yuv420p, 1600x348, 240 frames/eight seconds. Silhouette IoU .878 at256/.883 at64 (prior .847/.858). Canopy/nacelles, propeller finish, stone rim and wreck character still fall short; no PASS. GPU512 rendering and visual acceptance remain outstanding.

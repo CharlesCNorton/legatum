@@ -1,5 +1,5 @@
 """Sequential CPU/GPU stage rendering with authored rigid-action keys."""
-import bpy,sys,os,json,math,hashlib
+import bpy,sys,os,json,math,hashlib,shutil
 from pathlib import Path
 from mathutils import Vector
 R=Path(os.environ['ANIM_ROOT']);M=R/'masters/bomber';stage=sys.argv[sys.argv.index('--')+1]
@@ -69,12 +69,12 @@ def animate(sc,clip):
                 for k in f.keyframe_points:k.interpolation='CONSTANT' if 'hide_render' in f.data_path else 'LINEAR'
     if clip=='death':
         # Settle the belly on the actual disc, not merely near it in projection.
-        sc.frame_set(n-1);base=bpy.data.objects['GEO-stationary cream base'];top=max((base.matrix_world@Vector(v)).z for v in base.bound_box);points=[]
+        sc.frame_set(n-1);base=bpy.data.objects['GEO-stationary cream base'];top=max((base.matrix_world @ Vector(v)).z for v in base.bound_box);points=[]
         deps=bpy.context.evaluated_depsgraph_get()
         for name in ('GEO-fuselage','GEO-near nacelle'):
             o=bpy.data.objects[name].evaluated_get(deps);me=o.to_mesh()
             for v in me.vertices:
-                pt=o.matrix_world@v.co
+                pt=o.matrix_world @ v.co
                 if (pt.xy-base.location.xy).length<.94:points.append(pt.z)
             o.to_mesh_clear()
         assert points,'wreck misses the base footprint'
@@ -82,9 +82,10 @@ def animate(sc,clip):
         for f,weight in zip(range(6,n+1),(.2,.7,1,1,1)):
             sc.frame_set(f);root.location.z-=correction*weight;root.keyframe_insert('location',frame=f)
         sc['wreck_contact_correction']=correction
+    sc['master_sha256']=hashlib.sha256((M/'bomber.blend').read_bytes()).hexdigest()
     sc.frame_set(1);bpy.ops.wm.save_as_mainfile(filepath=str(M/(clip+'.blend')))
 
-stages=['b','c','d',*['e-'+c for c in CLIPS]] if stage=='all' else [stage]
+stages=['b','c','d','g',*['e-'+c for c in CLIPS]] if stage=='all' else [stage]
 for part in stages:
     sc=setup(M/('plain.blend' if part=='b' else 'bomber.blend'))
     out=M/'raw'/str(res)/part;out.mkdir(parents=True,exist_ok=True);manifest=out/'render.json';manifest.unlink(missing_ok=True)
@@ -95,12 +96,25 @@ for part in stages:
         for i,angle in enumerate((.52,1.20),1):
             sc.camera.data.ortho_scale=6.4*(1.15 if i==1 else 1.3);sc.camera.location=Matrix.Rotation(angle,4,'Z')@original;sc.camera.rotation_euler=(-sc.camera.location).to_track_quat('-Z','Y').to_euler();render(sc,out/f'{i:03}.png')
     elif part=='c':render(sc,out/'000.png')
+    elif part=='g':
+        # Aircraft counterpart to feet check: shaft direction and bank from top/front.
+        animate(sc,'move')
+        target=bpy.data.objects['RIG-airframe'].location.copy()
+        for row,direction in enumerate((Vector((0,0,1)),Vector((0,-1,.08)))):
+            sc.camera.location=target+direction*15
+            sc.camera.rotation_euler=(target-sc.camera.location).to_track_quat('-Z','Y').to_euler()
+            sc.camera.data.ortho_scale=7.5
+            for i in range(8):
+                sc.frame_set(i+1);render(sc,out/f'{row*8+i:03}.png')
     elif part=='d':
         animate(sc,'attack')
         for i,f in enumerate((1,4,7,10)):sc.frame_set(f);render(sc,out/f'{i:03}.png')
     else:
         clip=part[2:];animate(sc,clip)
         for i in range(CLIPS[clip][0]):
-            sc.frame_set(9 if clip=='death' and i==9 else i+1);render(sc,out/f'{i:03}.png')
-    manifest.write_text(json.dumps({'stage':part,'engine':sc.render.engine,'device':os.environ.get('CYCLES_DEVICE','CPU'),'samples':samples,'resolution':res,'master_sha256':hashlib.sha256((M/'bomber.blend').read_bytes()).hexdigest(),'frames':{p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(out.glob('*.png'))}},indent=2))
+            if clip=='death' and i==9:
+                shutil.copyfile(out/'008.png',out/'009.png')
+            else:
+                sc.frame_set(i+1);render(sc,out/f'{i:03}.png')
+    manifest.write_text(json.dumps({'stage':part,'engine':sc.render.engine,'device':os.environ.get('CYCLES_DEVICE','CPU'),'samples':samples,'resolution':res,'input_sha256':hashlib.sha256((M/('plain.blend' if part=='b' else 'bomber.blend')).read_bytes()).hexdigest(),'master_sha256':hashlib.sha256((M/'bomber.blend').read_bytes()).hexdigest(),'frames':{p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(out.glob('*.png'))}},indent=2))
     print('STAGE_COMPLETE',part,flush=True)

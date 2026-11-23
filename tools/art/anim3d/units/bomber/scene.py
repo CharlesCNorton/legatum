@@ -3,6 +3,8 @@ Longitudinal loft, solid airfoil lofts, twin fins, radial engines and framed gla
 All colour projection is frozen UV on geometry, never a facing image card.
 """
 import bpy,bmesh,math,json,os,sys
+import numpy as np
+from mathutils import Matrix
 from pathlib import Path
 from mathutils import Vector
 from bpy_extras.object_utils import world_to_camera_view
@@ -15,11 +17,11 @@ def p(x,y,d=0):
     return RIGHT*((u/1024-.5)*S)+UP*((.5-v/1024)*S)+FRONT*d
 bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
 sc=bpy.context.scene;sc.render.engine='CYCLES';sc.render.film_transparent=True
-sc.view_settings.view_transform='AgX';sc.view_settings.look='AgX - Medium High Contrast'
+sc.view_settings.view_transform='Standard';sc.view_settings.look='None'
 sc.world.color=(.15,.15,.15);sc.world.use_nodes=True;sc.world.node_tree.nodes['Background'].inputs['Strength'].default_value=.35
 cam=bpy.data.objects.new('CAM-painting',bpy.data.cameras.new('CAM-painting'));bpy.context.collection.objects.link(cam);cam.location=FRONT*15;cam.rotation_euler=(-cam.location).to_track_quat('-Z','Y').to_euler();cam.data.type='ORTHO';cam.data.ortho_scale=S;sc.camera=cam
 sc.render.resolution_x=sc.render.resolution_y=256;sc.render.resolution_percentage=100
-for name,loc,power,color,size in [('key',(-3,-5,7),850,(1,.89,.73),4),('fill',(4,-4,3),230,(.85,.91,1),5),('rim',(0,5,5),600,(.78,.87,1),3)]:
+for name,loc,power,color,size in [('key',(-3,-5,7),470,(1,.97,.91),4),('fill',(4,-4,3),125,(.92,.95,1),5),('rim',(0,5,5),300,(.85,.91,1),3)]:
     o=bpy.data.objects.new('LGT-'+name,bpy.data.lights.new(name,'AREA'));bpy.context.collection.objects.link(o);o.location=loc;o.rotation_euler=(-o.location).to_track_quat('-Z','Y').to_euler();o.data.energy=power;o.data.color=color;o.data.shape='DISK';o.data.size=size
 
 def material(name,color,metal=0,rough=.65):
@@ -48,7 +50,7 @@ def loft(name,rings,mat):
         for j in range(N):fs.append((i*N+j,i*N+(j+1)%N,(i+1)*N+(j+1)%N,(i+1)*N+j))
     fs.append(tuple((len(rings)-1)*N+j for j in range(N)))
     o=mesh(name,vs,fs,mat);sub=o.modifiers.new('Smooth longitudinal loft','SUBSURF');sub.levels=1;return o
-body=loft('fuselage',[(286,440,-.28,12,.08),(335,450,-.20,46,.21),(450,460,-.1,65,.33),(620,476,.04,72,.39),(820,500,.19,92,.45),(990,510,.33,97,.46),(1080,522,.42,78,.36),(1130,525,.45,53,.23),(1164,523,.46,8,.035)],olive)
+body=loft('fuselage',[(286,440,-.28,12,.08),(335,450,-.20,46,.21),(450,460,-.1,65,.33),(620,476,.04,92,.39),(820,500,.19,119,.45),(990,510,.33,97,.46),(1080,522,.42,78,.36),(1130,525,.45,53,.23),(1164,523,.46,8,.035)],olive)
 
 def airfoil(name,sections,mat):
     # Each span station defines a true closed airfoil: LE/TE screen coords + depth.
@@ -62,7 +64,7 @@ def airfoil(name,sections,mat):
     for k in range(len(sections)-1):
         for j in range(N):fs.append((k*N+j,k*N+(j+1)%N,(k+1)*N+(j+1)%N,(k+1)*N+j))
     fs.extend([tuple(range(N-1,-1,-1)),tuple((len(sections)-1)*N+j for j in range(N))])
-    o=mesh(name,vs,fs,mat);b=o.modifiers.new('Rounded edges','BEVEL');b.width=.009;b.segments=2;return o
+    o=mesh(name,vs,fs,mat);b=o.modifiers.new('Rounded edges','BEVEL');b.width=.014;b.segments=3;return o
 near=airfoil('near wing',[((785,534),(665,477),.35,.065),((634,575),(521,522),.70,.065),((420,681),(316,632),1.07,.045),((125,789),(64,764),1.55,.025),((80,793),(60,781),1.56,.012)],olive)
 far=airfoil('far wing',[((948,394),(811,360),-.2,.06),((1050,310),(941,294),-.9,.055),((1187,214),(1121,201),-1.7,.03),((1232,198),(1201,174),-1.95,.018),((1240,188),(1236,183),-1.98,.01)],olive)
 # Tailplane on both sides, with twin tall rudders.
@@ -104,7 +106,24 @@ props=[]
 for label,cx,cy,depth,rad in [('near',739,623,1.12,73),('far',1142,414,-.30,57)]:
     loft(label+' nacelle',[(cx-147,cy-65,depth-.2,22,.12),(cx-100,cy-35,depth-.07,rad*.95,.27),(cx-35,cy-5,depth,rad,.31),(cx+6,cy+3,depth+.01,rad*.92,.29)],olive)
     # Annular front cowl, recessed radial engine and 12 cylinder heads.
-    center=p(cx,cy,depth+.34);axis=(RIGHT*.65+FRONT*.75).normalized();v=UP;u=axis.cross(v).normalized()
+    center=p(cx,cy,depth+.34)
+    # Fit a circular propeller plane to two painted blade vectors. SVD lifts
+    # the projected ellipse into an orthonormal 3D frame; no stretched blades.
+    pixel=reg['scale']*S/1024
+    first=np.array((45,188) if label=='near' else (16,167),dtype=float)*pixel
+    second=np.array((-135,-95) if label=='near' else (-82,-80),dtype=float)*pixel
+    projected=np.column_stack((first,(second+.5*first)/(math.sqrt(3)/2)))
+    radius=float(np.linalg.svd(projected,compute_uv=False)[0]);projected/=radius
+    values,vectors=np.linalg.eigh(np.eye(2)-projected.T @ projected)
+    depths=vectors[:,-1]*math.sqrt(max(0,float(values[-1])))
+    basis=[RIGHT*float(projected[0,i])+UP*float(projected[1,i])+FRONT*float(depths[i]) for i in range(2)]
+    axis=basis[0].cross(basis[1]).normalized()
+    if axis.dot(RIGHT)<0:
+        depths=-depths
+        basis=[RIGHT*float(projected[0,i])+UP*float(projected[1,i])+FRONT*float(depths[i]) for i in range(2)]
+        axis=basis[0].cross(basis[1]).normalized()
+    prop_rotation=Matrix((basis[0],basis[1],axis)).transposed()
+    v=basis[0];u=basis[1]
     vs=[];N=64
     for off,r in [(-.12,rad*.0047),(.10,rad*.0047),(.10,rad*.00365),(-.12,rad*.00365)]:
         for j in range(N):vs.append(center+axis*off+(u*math.cos(j*2*math.pi/N)+v*math.sin(j*2*math.pi/N))*r)
@@ -114,8 +133,13 @@ for label,cx,cy,depth,rad in [('near',739,623,1.12,73),('far',1142,414,-.30,57)]
     for j in range(12):
         a=j*math.tau/12;pt=center+(u*math.cos(a)+v*math.sin(a))*(rad*.0027)
         tube(label+' radial cylinder',[pt-axis*.08,pt+axis*.02],.034,silver)
-    pivot=bpy.data.objects.new('RIG-'+label+' propeller',None);bpy.context.collection.objects.link(pivot);pivot.location=center+axis*.23;pivot.rotation_euler=axis.to_track_quat('Z','Y').to_euler();objects.append(pivot);props.append(pivot)
-    ellipsoid(label+' spinner',pivot.location,(.12,.14,.12),silver)
+    mount=bpy.data.objects.new('RIG-'+label+' shaft',None);bpy.context.collection.objects.link(mount);mount.location=p(785,640,depth+.50) if label=='near' else p(1155,422,depth+.50);mount.rotation_euler=prop_rotation.to_euler();objects.append(mount)
+    pivot=bpy.data.objects.new('RIG-'+label+' propeller',None);bpy.context.collection.objects.link(pivot);pivot.parent=mount
+    blade_scale=radius/.72
+    props.append(pivot)
+    bpy.context.view_layer.update()
+    spinner=ellipsoid(label+' spinner',mount.location,(.105,.105,.18),silver)
+    spinner.rotation_euler=axis.to_track_quat('Z','Y').to_euler()
     for blade in range(3):
         angle=blade*math.tau/3
         # Curved tapered blade with actual thickness, not a plane.
@@ -124,18 +148,18 @@ for label,cx,cy,depth,rad in [('near',739,623,1.12,73),('far',1142,414,-.30,57)]
         for z in (-.014,.014):
             for r,t in poly:vv.append((r*math.cos(angle)-t*math.sin(angle),r*math.sin(angle)+t*math.cos(angle),z))
         
-        if label=='far':vv=[(x*.72,y*.72,z) for x,y,z in vv]
+        vv=[(x*blade_scale,y*blade_scale,z) for x,y,z in vv]
         n=len(poly);ff=[tuple(range(n-1,-1,-1)),tuple(range(n,2*n))]+[(j,(j+1)%n,(j+1)%n+n,j+n) for j in range(n)]
         ob=mesh(label+' prop blade',vv,ff,black,False);ob.parent=pivot
         bevel=ob.modifiers.new('Blade bevel','BEVEL');bevel.width=.008;bevel.segments=2
         ob.data.materials.append(yellow)
         for f in ob.data.polygons:
-            if sum(ob.data.vertices[k].co.xy.length for k in f.vertices)/len(f.vertices)>.59*(.72 if label=='far' else 1):f.material_index=1
+            if sum(ob.data.vertices[k].co.xy.length for k in f.vertices)/len(f.vertices)>.59*blade_scale:f.material_index=1
 # Nose barrels, upper panel seams are real small tubular relief.
 for yy in (530,548):tube('nose barrel',[p(1155,yy,.82),p(1205,yy+5,.87)],.010,black)
 # Stone pedestal: one disc and a curved, thick support as shown in painting.
 basecenter=p(640,1005,-.55)
-bpy.ops.mesh.primitive_cylinder_add(vertices=96,radius=1.04,depth=.15,location=basecenter);base=bpy.context.object;base.name='GEO-stationary cream base';base.data.materials.append(stone);bev=base.modifiers.new('Rounded stone lip','BEVEL');bev.width=.035;bev.segments=3
+bpy.ops.mesh.primitive_cylinder_add(vertices=96,radius=1.04,depth=.15,location=basecenter);base=bpy.context.object;base.name='GEO-stationary cream base';base.data.materials.append(stone);bev=base.modifiers.new('Rounded stone lip','BEVEL');bev.width=.025;bev.segments=5
 supportcoords=[(521,966),(536,889),(564,804),(609,735),(660,679),(687,653),(667,731),(650,785),(659,845),(688,903),(748,966)]
 vs=[p(x,y,d) for d in (-.38,-.15) for x,y in supportcoords];n=len(supportcoords);fs=[tuple(range(n-1,-1,-1)),tuple(range(n,2*n))]+[(j,(j+1)%n,(j+1)%n+n,j+n) for j in range(n)]
 support=mesh('curved stationary stone support',vs,fs,stone,False);b=support.modifiers.new('Carved stone soft edges','BEVEL');b.width=.03;b.segments=3
@@ -151,25 +175,26 @@ for i in range(3):
 # Save early geometry master before texturing.
 sc['unit']='bomber';sc['projection_method']='frozen camera UV on closed lofted volumes';sc['base_hex']='#E9CFA0'
 bpy.ops.wm.save_as_mainfile(filepath=str(M/'plain.blend'))
-# Project the registered full master into an explicit UV layer on actual mesh vertices.
-texture=bpy.data.images.load(str(A/'projection.png'));fill=bpy.data.images.load(str(A/'painted-fill.png'))
+# Finish the actual rendered surfaces before freezing projection coordinates.
+# Curves retain closed tubular relief; source-pigment mapping removes double cage lines.
 for ob in list(bpy.data.objects):
-    if ob.type!='MESH' or 'bomb-' in ob.name or 'prop blade' in ob.name:continue
-    uv=ob.data.uv_layers.new(name='RestPainting');weights=ob.data.color_attributes.new(name='Facing',type='FLOAT_COLOR',domain='CORNER')
-    normal=ob.matrix_world.to_3x3().inverted().transposed()
-    for loop in ob.data.loops:
-        vert=ob.data.vertices[loop.vertex_index];q=world_to_camera_view(sc,cam,ob.matrix_world@vert.co);uv.data[loop.index].uv=(q.x,q.y)
-        w=max(0,min(1,((normal@vert.normal).normalized().dot(FRONT)-.01)/.25));weights.data[loop.index].color=(w,w,w,1)
-    old=ob.data.materials[0];mat=old.copy();mat.name=ob.name+' painted';ob.data.materials[0]=mat;n=mat.node_tree.nodes;l=mat.node_tree.links;bs=n.get('Principled BSDF')
-    uvnode=n.new('ShaderNodeUVMap');uvnode.uv_map='RestPainting';im=n.new('ShaderNodeTexImage');im.image=texture;im.extension='CLIP';l.new(uvnode.outputs[0],im.inputs[0])
-    tx=n.new('ShaderNodeTexImage');tx.image=fill;tx.projection='BOX';tx.projection_blend=.3;coord=n.new('ShaderNodeTexCoord');l.new(coord.outputs['Generated'],tx.inputs[0])
-    facing=n.new('ShaderNodeVertexColor');facing.layer_name='Facing';mult=n.new('ShaderNodeMath');mult.operation='MULTIPLY';l.new(facing.outputs['Color'],mult.inputs[0]);l.new(im.outputs['Alpha'],mult.inputs[1])
-    mix=n.new('ShaderNodeMixRGB');l.new(mult.outputs[0],mix.inputs[0]);mix.inputs[1].default_value=old.diffuse_color
-    if old==olive:l.new(tx.outputs['Color'],mix.inputs[1])
-    l.new(im.outputs['Color'],mix.inputs[2]);l.new(mix.outputs[0],bs.inputs['Base Color'])
-    # Baked painting lighting gets a controlled contribution, while geometry still shades.
-    l.new(mix.outputs[0],bs.inputs['Emission Color']);em=n.new('ShaderNodeMath');em.operation='MULTIPLY';em.inputs[1].default_value=.65;l.new(mult.outputs[0],em.inputs[0]);l.new(em.outputs[0],bs.inputs['Emission Strength'])
-    bs.inputs['Metallic'].default_value=0
+    if ob.type not in ('MESH','CURVE'):continue
+    bpy.ops.object.select_all(action='DESELECT');ob.select_set(True);bpy.context.view_layer.objects.active=ob
+    if ob.type=='CURVE':
+        ob.data.use_fill_caps=True
+        bpy.ops.object.convert(target='MESH')
+    for mod in list(ob.modifiers):bpy.ops.object.modifier_apply(modifier=mod.name)
+    if any(part in ob.name for part in ('wing','tailplane',' fin','stone support')):
+        bm=bmesh.new();bm.from_mesh(ob.data)
+        bmesh.ops.subdivide_edges(bm,edges=list(bm.edges),cuts=2,use_grid_fill=True)
+        bm.to_mesh(ob.data);bm.free();ob.data.update()
+    ob['surface_finished']=True
+bpy.context.view_layer.update()
+# Keep a finished, unprojected checkpoint for diagnosis and reproducible UV work.
+bpy.ops.wm.save_as_mainfile(filepath=str(M/'surface.blend'))
+sys.path.insert(0,str(Path(__file__).resolve().parent))
+from project import apply_projection
+apply_projection(sc,cam,A,FRONT)
 bpy.ops.file.pack_all();bpy.ops.wm.save_as_mainfile(filepath=str(M/'bomber.blend'))
 (M/'geometry.json').write_text(json.dumps({'blender':bpy.app.version_string,'mesh_count':len([o for o in bpy.data.objects if o.type=='MESH']),'vertices':sum(len(o.data.vertices) for o in bpy.data.objects if o.type=='MESH'),'rig':'airframe, two propeller pivots, three released bombs','volumetric_smoke':False},indent=2))
 print('BOMBER BUILD COMPLETE')

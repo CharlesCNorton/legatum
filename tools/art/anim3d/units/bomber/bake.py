@@ -21,6 +21,6 @@ for index,name in enumerate(('GEO-fuselage','GEO-near wing','GEO-far wing')):
     color=bs.inputs['Base Color'].links[0].from_socket
     grime=n.new('ShaderNodeMixRGB');grime.blend_type='MULTIPLY';grime.inputs[0].default_value=.10;l.new(color,grime.inputs[1]);l.new(maps['AO'].outputs['Color'],grime.inputs[2])
     ramp=n.new('ShaderNodeValToRGB');ramp.color_ramp.elements[0].position=.50;ramp.color_ramp.elements[0].color=(0,0,0,1);ramp.color_ramp.elements[1].position=.62;ramp.color_ramp.elements[1].color=(.09,.09,.09,1);l.new(maps['curvature'].outputs[0],ramp.inputs[0])
-    wear=n.new('ShaderNodeMixRGB');wear.inputs[2].default_value=(.60,.61,.57,1);l.new(ramp.outputs[0],wear.inputs[0]);l.new(grime.outputs[0],wear.inputs[1]);l.new(wear.outputs[0],bs.inputs['Base Color']);l.new(wear.outputs[0],bs.inputs['Emission Color'])
+    wear=n.new('ShaderNodeMixRGB');wear.inputs[2].default_value=(.60,.61,.57,1);l.new(ramp.outputs[0],wear.inputs[0]);l.new(grime.outputs[0],wear.inputs[1]);l.new(wear.outputs[0],bs.inputs['Base Color']);l.new(wear.outputs[0],n['Camera pigment'].inputs['Color'])
     records.append({'object':name,'resolution':512,'AO':maps['AO'].image.filepath_raw,'curvature':maps['curvature'].image.filepath_raw,'method':'Cycles AO / Pointiness EMIT; 10% grime, bounded edge wear'})
 bpy.ops.file.pack_all();bpy.ops.wm.save_as_mainfile(filepath=str(M/'bomber.blend'));(out/'manifest.json').write_text(json.dumps(records,indent=2));print('BAKE COMPLETE',len(records))

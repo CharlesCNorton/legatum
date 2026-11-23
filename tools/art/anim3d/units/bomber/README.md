@@ -1,19 +1,20 @@
-# Bomber — round 1 candidate
+# Bomber — round 2 candidate
 
-Run from the repository root. All Blender work uses the gated `blender` on PATH, one invocation at a time. Downloads, painting, generated fill, editable `.blend` masters, six 512 px AO/curvature maps, frame masters and reviews live under `~/LegatumRuns/anim-pilot/`. `build` reconstructs the original geometry and rebakes, invalidating previous renders.
+The editable aircraft is real closed 3D geometry with frozen painting UVs and generated unseen-surface fills. Round 2 seats the dorsal turret, finishes geometry before projection, separates painted illumination from physical lighting, uses unprojected cream limestone, and spins solid propellers about fixed shaft mounts. Source masks prevent the painting's blades from remaining on the body during rotation.
+
+Run from the repository root. Every Blender invocation uses the gated `blender` on PATH, one at a time. External inputs and masters remain under `~/LegatumRuns/anim-pilot/`; provenance is in `SOURCES.md` and the external asset registry.
 
 ```sh
 tools/art/anim3d/units/bomber/render.sh build
-# Individual low-sample preview stage:
 RESOLUTION=256 SAMPLES=8 tools/art/anim3d/units/bomber/render.sh c
 source tools/art/anim3d/env.sh
-"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/bomber/deliver.py c
-# Complete final GPU pass from the saved material master:
-ROUND=1 tools/art/anim3d/units/bomber/gpu.sh
+RESOLUTION=256 "$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/bomber/deliver.py c
+# Complete final host GPU pass, including all stages, packing, checks and movie:
+ROUND=2 tools/art/anim3d/units/bomber/gpu.sh
 ```
 
-The GPU command requires Metal and never silently falls back. It writes every stage at 512, retains 256 copies, packs/validates the trimmed 160 atlas and renders the five-clip MP4. It preserves CPU raw renders at other resolutions, but replaces the 512 pass on rerender; save a separate round archive externally if needed. The JSON format is documented in the bomber chapter of `PLAYBOOK.md`.
+The executable GPU handoff requires Metal, defaults to 96 samples and 512 px, and never silently falls back. It retains a round log/status and emits a receipt only after verifying GPU512/256 provenance, geometry, the atlas and decoded-atlas MP4. It does not write PASS. `ROUND` comes from the overnight driver. The 160 px trimmed JSON contract is documented in the bomber chapter of `PLAYBOOK.md`.
 
-This is a fixed-view, fully volumetric airframe fitted to the painting, with frozen UV colour, generated underside fill, mechanical pivot animation and crash shape keys. It is not a neutral photogrammetry asset: large rotations reveal projection seams and already-painted highlights. The rest pose is much closer than plain procedural materials, but canopy/turret volume, propeller hubs and stone grading still need refinement. The death has no smoke or debris simulation. No PASS marker or runtime activation is included. A technical pass is not an art approval.
+Round-2 CPU checks: all 40 clip frames, **192,266 bytes at quality 80**, exact decoded alpha/trim reconstruction, transparent gutters, fixed anchor and held death pass. Geometry audit passes all five clips, 73 meshes, finished projected surfaces, stationary base, shaft axes, loop closure and wreck contact. There are 64 stage/master PNGs each at 512 and 256 px, including the top/front move check. The MP4 is H.264/yuv420p, 1600 × 348, 240 frames and 8.000 s. Five delivery regression tests pass. CPU renders use Cycles/8 samples with denoising and remain previews. Prior round evidence is archived under `masters/bomber/round1-cpu`; this round under `round2-cpu`.
 
-Round-1 local checks: 40 frames retained; candidate atlas **193,478 bytes at quality 80**, logical 160 px cells, all trim offsets reconstruct within bounds. Geometry audit passed five clips, closed-volume principal geometry, fixed base, root/propeller loop closure, measured wreck contact and held terminal pose. All final source frames are 512 px Cycles CPU at 4 samples with denoising, with 256 copies; these are previews, not a GPU sign-off. Python and shell syntax and diff whitespace checks passed. Final GPU settings default to 96 samples.
+At 64 px it reads as the same bomber. At 256 px the canopy/nacelle geometry, propeller finish and flat-looking stone rim remain below the painting. The death settles but still looks more like a hard landing than a convincing wreck. Frozen painted highlights and unseen-surface seams remain visible under large rotations. Silhouette IoU improved from .847 to .878 at 256 px and .858 to .883 at 64 px; these metrics do not establish art parity. **No PASS; GPU rendering and visual acceptance remain outstanding.** No runtime activation is included.
