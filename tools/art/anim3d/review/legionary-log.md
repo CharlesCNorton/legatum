@@ -1,0 +1,6 @@
+# Legionary round 1
+- Read project instructions, Legatum art skill, spearman pipeline and mounted/siege family projection chapters; standing feedback 1–21 applied as the target.
+- Loaded all six Blender skills: modeling (thick curved armour, beveled edges and straps), materials (metallic iron/bronze, worn textile fills), lighting (warm key/cool rim/soft fill), cameras (painting-matched orthographic framing), animation (skeletal keys and clip timing), rendering (Cycles CPU previews and retained PNG masters).
+- Downloaded CC BY 4.0 legionary painting; generated original four-material fill atlas with built-in imagegen and prepared external projection inputs.
+- Building original Roman segmented armour, curved scutum, pilum, helmet, folded tunic and sandals around MPFB anatomy/53-bone rig; waiting for gated Blender build. No quality verdict yet.
+- Published b: CYCLES/CPU, 256 px, 8 samples; visual review pending.

@@ -1,0 +1,6 @@
+# Composite archer round 1
+- Read CLAUDE, CONTRIBUTING, ARCHITECTURE, art skill, infantry playbook and newer mounted/siege/vehicle chapters; standing feedback 12–21 applied as the target, not a claimed result.
+- Loaded six Blender skills: modeling (thick fitted kit and bevels), materials (dielectric textiles and metallic gilding), lighting (warm key/cool rim), cameras (fixed painting view), animation (editable rig keys), rendering (Cycles CPU PNG previews and explicit GPU handoff).
+- Source downloaded directly to assets/composite-archer, alpha aligned to committed 256 token; input hashes recorded.
+- Generated four original unseen-surface fills with built-in imagegen; source painting remains projected colour standard.
+- Built isolated scripts for MPFB anatomy, kneeling pose, patterned tunic/trousers, quiver, and recurved composite bow; first build queued behind shared Blender gate.
