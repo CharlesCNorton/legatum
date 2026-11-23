@@ -1,0 +1,14 @@
+{
+  "painting_url": "https://pub-fb5c281dd12d4ea4bbd38d657cdeb907.r2.dev/app/src/assets/units/archer-source.png",
+  "licence": "Project CC BY 4.0",
+  "inputs": {
+    "fill-bronze.png": "20233d35d680a1ee510719befd841db3899371d0e9f5821b99400162a8c39720",
+    "fill-coat.png": "202834d89526e95d00881d507d254c8f597199ccf1ec56ef8722e21f3a438ede",
+    "fill-hair.png": "f472a44cdc7ee21159636cfb3ab6b7ceaacae420510632164307f0b67245041a",
+    "fill-linen.png": "c71ed83e71404d76f318e2410e111c1ec6ecf00864d9730f13514f2f5c932da3",
+    "painting-aligned.png": "3ee9fa00964ca787adcfe2c65554ed3915d164494017a9862f9166033fd161d2",
+    "painting-source.png": "f459f80268880a53ae5a0e787d1efa3e8fd054ab25761a21fb9b0eaedcbd9563"
+  },
+  "shared_dependencies": "tools/art/anim3d/assets.lock.json; assets/SOURCES.md",
+  "generated_fills": "Original mounted lane imagegen, prompt copied to reused-fills.prompt.txt from astra/unit-anim-3d-mounted"
+}

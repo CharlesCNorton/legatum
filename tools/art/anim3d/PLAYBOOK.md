@@ -106,3 +106,126 @@ tools/art/anim3d/render.sh audit
 ```
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
+
+## Infantry: early-era archer, round 1
+
+The archer lane is isolated in `units/archer/`. Its master is
+`$ANIM_ROOT/masters/archer/archer.blend`, with independent masters in `clips/`.
+It uses the infantry lead's MPFB 2.0.18 CC0 anatomy and 53-bone game-engine rig,
+plus original folded tunic, thick leather cuirass and crossed straps, buckles,
+bronze helmet, pale crest, calf laces, sandals, quiver and bow. No relief planes
+or billboard geometry are used. Garment folds are modeled, not cloth-simulated.
+The five sample counts are 8/8/10/4/10. Idle and move reuse the licensed CMU
+77_02/02_01 torso/gait data; combat uses original skeletal keys. Bow flex,
+string tips, nock and arrow visibility are keyed geometry. Death releases the
+bow and holds the last two frames. No object is scaled to zero to hide it.
+
+All six installed Blender skills informed this lane: modeling for thick,
+beveled kit; materials for metal, linen and skin; lighting for a warm key,
+cool rim and soft fill; cameras for fixed orthographic painting registration;
+animation for bone/action keys; rendering for denoised Cycles and image sequences.
+Every invocation is plain `blender -b --disable-autoexec` through the PATH gate.
+Only one heavy archer process runs at a time, with three render threads.
+
+### Four quality levers and review
+
+1. **Painting projection is the standard method.** `prepare.py` fits the full
+   source painting's alpha bounds to the committed token. `paint.py` freezes
+   that camera's UVs on the real skinned mesh, with incidence and painting-alpha
+   blending. Hidden sides retain original materials and the mounted lane's
+   generated painted fills, copied and SHA256-pinned in `assets/archer/`.
+   Projection changes colour only, never model transparency. View-specific
+   painted lighting and registration errors remain limitations.
+2. **Finish geometry before relying on the texture.** The archer has thick,
+   folded and bordered linen, beveled flat crossed leather straps, sewn edges,
+   rosettes, studs, buckles and a fitted bracer. Actual Cycles AO/Pointiness
+   maps for helmet and cuirass drive cavity tone and bronze edge wear. Their
+   Solidify modifiers are disabled only during baking to avoid UV contamination.
+3. **Light a painted miniature.** Warm upper-left area key, soft fill and cool
+   rim, contact shadows and AO. The single cream stone disc targets displayed
+   sRGB **#E9CFA0**, with a darker rim and fine grain. The material's linear
+   pigment is calibrated under the lights; the target is not pasted as linear RGB.
+4. **Grade from the painting, once.** `review.py` fits 17 foreground quantiles
+   per RGB channel at rest, blending 35 percent of the transfer. All frames use
+   the same LUT; raw renders are retained. Re-render every clip after changing
+   the rest grade. No per-frame histogram fitting or colour pumping.
+
+Judge `archer-f-restpose-compare.png`: painting, rendered rest, half-split and
+50 percent crossfade, at native 256 and 64 px. The target is near-indistinguishable
+rest appearance, not a successful bake. The round-one candidate does **not** yet
+meet that target: the face/drawing arm and shoulder cloth remain weaker than the
+painting. Interim plain, textured, detail, four-pose and five clip reviews are
+published immediately in `review/3d-v2/archer-*`; `archer-log.md` records steps.
+Read `archer-FEEDBACK.md` during iteration when present. The existing painting
+remains the game asset until the lead's visual approval and runtime integration.
+
+### Rebuild and GPU handoff
+
+`prepare.py` needs the project painting at `assets/archer/painting-source.png`
+and the documented generated fills in `assets/horseman/fill-*.png`. All other
+licensed inputs are the existing infantry installation. Inputs and generated
+masters remain outside git; the committed `units/archer/assets.lock.json`
+records exact texture checksums. Rebuild sequentially from the repository root:
+
+```sh
+source tools/art/anim3d/env.sh
+"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/archer/prepare.py
+UNIT=archer tools/art/anim3d/render.sh build
+UNIT=archer SAMPLES=8 tools/art/anim3d/render.sh b
+UNIT=archer tools/art/anim3d/render.sh materials
+UNIT=archer tools/art/anim3d/render.sh bake
+UNIT=archer tools/art/anim3d/render.sh paint
+UNIT=archer tools/art/anim3d/render.sh animate
+```
+
+The lead can render the saved masters on Metal without rebuilding. Cycles GPU
+refuses a silent CPU fallback. CPU previews use the same command with
+`CYCLES_DEVICE=CPU`; the default is CPU. 512 px is a real render, never an upscale:
+
+```sh
+export UNIT=archer RENDER_ENGINE=CYCLES CYCLES_DEVICE=GPU RESOLUTION=512 SAMPLES=64
+tools/art/anim3d/render.sh c
+tools/art/anim3d/render.sh c-details
+tools/art/anim3d/render.sh d
+for clip in idle move attack hit death; do
+  tools/art/anim3d/render.sh "e-$clip"
+done
+source tools/art/anim3d/env.sh
+"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/archer/pack.py
+"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/archer/validate.py
+UNIT=archer tools/art/anim3d/render.sh audit
+```
+
+The host may also choose `RENDER_ENGINE=BLENDER_EEVEE`; it passes Metal explicitly
+and does not fall back. Review GPU output afresh. `frames-512/` retains actual
+512 px masters, and `frames-256/` contains transparent gallery derivatives.
+
+### Archer trimmed atlas extension
+
+This lane follows feedback item 20, superseding the older 256 px grid and
+quality-60 rules **for this unit**. Delivery is `anim/archer.{webp,json}`:
+160 px logical cells, all 40 frames, WebP quality **at least 75**, at most
+**200,000 bytes**. The packer refuses an over-budget unit. Original alpha is
+preserved. Empty margins are physically trimmed; each clip occupies one packed
+row with one transparent pixel of padding around every rectangle.
+
+The JSON retains `frame:{w,h,ax,ay}` and
+`clips:{name:{row,frames,fps,loop}}`, and adds `format:"trimmed-v1"` plus
+`clips[name].rects[i]:{x,y,w,h,ox,oy}`. `x,y,w,h` select the atlas rectangle;
+`ox,oy` restore its top-left offset in the original 160×160 logical cell. Draw
+at `(-frame.ax+ox, -frame.ay+oy)` relative to the unit's anchor. `row` preserves
+clip ordering but is **not** a uniform-grid crop coordinate in this format.
+A runtime must branch on `format` and use these rectangles; a grid-only loader
+cannot consume this atlas. This lane does not change runtime wiring.
+
+Packing checks current master, clip and grade hashes and requires all frames to
+be actually rendered at 512 px. Validation decodes the WebP, reconstructs each
+160 px frame, checks exact alpha/offsets, compression error, transparent margins,
+actual motion, frame counts, terminal death and the byte/quality budget. The
+scene audit separately checks MPFB topology, fixed base, nonzero scales,
+bowstring endpoints, nock contact before intentional release, and exact loop closure. Neither check is
+a complete mesh collision solver or an art approval.
+
+Archer convenience wrapper: `tools/art/anim3d/units/archer/gpu-round.sh` runs the
+entire host GPU sequence above, then repacks, validates and audits. It uses the
+same gated `render.sh`; it does not rebuild the saved model or silently use CPU.

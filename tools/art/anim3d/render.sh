@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "$0")/../../.."
+if [[ "${UNIT:-spearman}" == archer ]]; then
+  exec tools/art/anim3d/units/archer/render.sh "$@"
+fi
 source tools/art/anim3d/env.sh
 stage="${1:-c}"
 lock="$ANIM_ROOT/blender-heavy.lock"
