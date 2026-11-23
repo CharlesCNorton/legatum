@@ -231,7 +231,7 @@ for side in ['l','r']:
   for j in range(25):
    t=j/24;center=a.lerp(b,t)
    for k in range(40):
-    angle=2*pi*k/40;wrinkle=(.010*sin(t*27+2.2*sin(angle*2))+.003*sin(t*51-angle*3))*sin(pi*t)**.6
+    angle=2*pi*k/40;wrinkle=(.006*sin(t*22+2.2*sin(angle*2))+.002*sin(t*43-angle*3))*sin(pi*t)**.6
     radius=r0*(1-t)+r1*t+wrinkle;vs.append(tuple(center+radius*(u*cos(angle)+v*sin(angle))))
   for j in range(24):
    for k in range(40):q=j*40+k;z=j*40+(k+1)%40;fs.append((q,z,z+40,q+40))

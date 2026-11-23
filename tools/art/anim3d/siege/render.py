@@ -30,9 +30,15 @@ if clip:
    held_pose=values
   sc.render.filepath=str(out/f'{i:02}.png');bpy.ops.render.render(write_still=True)
 else:
- views=[('three-quarter',(3,-7,3)),('front',(0,-7,3)),('side',(7,0,3))] if stage=='b' else [('three-quarter',None)]
+ views=[('three-quarter',None),('front',(0,-7,3)),('side',(7,0,3))] if stage=='b' else [('three-quarter',None)]
+ base_scale=sc.camera.data.ortho_scale
  for name,pos in views:
+  sc.camera.data.ortho_scale=base_scale
   if pos is not None:
-   sc.camera.location=pos;sc.camera.rotation_euler=(Vector((0,0,.95))-sc.camera.location).to_track_quat('-Z','Y').to_euler()
+   # Auxiliary views need room for the barrel's full length; preserve the hero camera.
+   offset=Vector((.20,0,0)) if name=='front' else Vector((0,0,0))
+   sc.camera.location=Vector(pos)+offset
+   sc.camera.rotation_euler=(Vector((0,0,.95))+offset-sc.camera.location).to_track_quat('-Z','Y').to_euler()
+   sc.camera.data.ortho_scale=3.2 if name=='front' else 3.0
   sc.render.filepath=str(out/(name+'.png'));bpy.ops.render.render(write_still=True)
 (out/'render.json').write_text(json.dumps({'render_id':time.time_ns(),'engine':sc.render.engine,'device':sc.cycles.device if sc.render.engine=='CYCLES' else 'Metal','held_output_samples':{'9':8} if stage=='e-death' else {},'samples':sc.cycles.samples if sc.render.engine=='CYCLES' else None,'resolution':sc.render.resolution_x,'blend_sha256':hashlib.sha256(path.read_bytes()).hexdigest()},indent=2))

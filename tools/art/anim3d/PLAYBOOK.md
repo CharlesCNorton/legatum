@@ -109,7 +109,7 @@ perceptual match. The base is stationary, plain stone, without an era-metal ring
 One MPFB 2.0.18 gunner (53-bone `game_engine` rig) wears navy wool, red facings, ivory breeches and
 crossbelts, black gaiters/shako and a moustache. The painting has a closed blue coat: the erroneous
 vertical ivory waistcoat strip is removed. The torso leans toward the gun before the arms are solved;
-the left arm is solved so the palm rests on the transformed barrel crown throughout idle.
+the left arm is solved so the palm rests on the transformed barrel crown throughout idle and move.
 The other hand holds the sponge rammer. No primitive body, billboard or commercial character asset
 is substituted for the native anatomy.
 
@@ -138,24 +138,31 @@ export ANIM_FAMILY=siege
 source tools/art/anim3d/env.sh
 "$ANIM_ROOT/venv/bin/python" tools/art/anim3d/siege/prepare.py
 tools/art/anim3d/render.sh build
+tools/art/anim3d/render.sh register
 RENDER_ENGINE=CYCLES CYCLES_DEVICE=CPU SAMPLES=8 RESOLUTION=256 tools/art/anim3d/render.sh b
 tools/art/anim3d/render.sh materials
 tools/art/anim3d/render.sh bake
-tools/art/anim3d/render.sh paint
 tools/art/anim3d/render.sh finish
+tools/art/anim3d/render.sh paint
 RENDER_ENGINE=CYCLES CYCLES_DEVICE=CPU SAMPLES=12 RESOLUTION=256 tools/art/anim3d/render.sh c
 ```
 
-Build invalidates all materials, bakes and clips. Bakes are actual geometry AO/curvature. `paint.py`
-uses a shared rest-camera projection for coat, sleeves and breeches, with material-selective alpha
-masks to prevent painted crossbelts duplicating the real geometry. Face, shako and barrel still have
-local landmark corrections. `projection.json` records those exceptions; the camera/pose match is
-approximate, not the promised near-identical rest result. Facing masks blend to the generated/scanned
-fills as surfaces turn away. Painted highlights remain in the base colour, so inspect double lighting
-and motion-revealed areas rather than treating the texture as intrinsic albedo.
+Build invalidates all materials, bakes and clips. `register.py` runs immediately after build and
+adjusts the physical camera, gun track, barrel proportions and skeletal pose against recorded token
+landmarks. It saves residuals in `registration.json`; a successful fit is not an exact-viewpoint claim.
+Bakes are actual geometry AO/curvature. Run finish **before** paint so the sampled paint is not
+multiplied by another patina layer. `paint.py` uses one frozen camera UV mapping on every visible
+mesh, including face, straps, carriage and base. It has no per-part texture stretching. Rest-camera
+ray tests reject occluded surfaces; navy/ivory masks keep the painted rammer and belts from ghosting
+onto clothing when the actual objects move. A source-space hand exclusion on the mechanical meshes
+and a figure exclusion on the base prevent detached hands/boots remaining painted on those surfaces
+in death. These masks do not change UV positions or mesh shape. Normal-facing and source alpha blend to the original generated
+wool/scanned fills. A restrained Principled emission contribution reduces double shadowing from
+painted illumination. This is painted 3D geometry, not a screen-space overlay. Registration residuals
+can still put source features on the wrong surface; inspect both rest and moving reveals.
 
 `finish.py` supplies the aged surfaces, cloth sheen, shared base palette and product lights. Run it
-once after paint (it is a build stage, not an additive touch-up to call repeatedly). `grade.py` writes
+once before paint (it is a build stage, not an additive touch-up to call repeatedly). `grade.py` writes
 an alpha-masked rest calibration and reuses it for every clip. It excludes transparent black from the
 contrast pivot. Raw PNGs stay in each stage's `ungraded/`; repeated review of the same render is
 idempotent. Always render/review `c` first to refresh the calibration after a material or lighting edit.
@@ -173,14 +180,18 @@ append findings to `field-cannon-log.md` between rounds.
 Clips retain **8/8/10/4/10 frames** at **10/12/14/12/10 fps**; only idle and move loop. Idle solves the
 resting palm after shoulder motion, subtracting the hand length to obtain a reachable wrist target. Move is an in-place push with the rammer stowed; runtime supplies
 map travel. Wheel angle is exactly `(virtual travel + local recoil) / 0.48`; twelve-spoke symmetry
-closes the move loop. Attack has recoil, brief solid muzzle flash and bounded smoke lobes. Effects
+closes the move loop. Attack has recoil, brief solid muzzle flash and bounded volumetric smoke lobes with radial density
+falloff. The smoke has no opaque surface shader. Effects
 use keyed `hide_render`, never near-zero scales (the old approach crashed Cycles/OpenVDB). Death
-releases the rammer, tips the gun and settles evaluated geometry on the base. Its last two poses and
+releases the rammer, mildly cants the damaged near wheel and settles evaluated geometry on the base.
+The carriage stays close to wheel-supported height rather than levering the whole gun into the air. Its last two poses and
 source PNGs are identical; the second terminal PNG is reused after asserting all transforms match.
 
 Lead's final host GPU pass, from this branch's checkout: run
-`tools/art/anim3d/siege/gpu-final.sh`. It audits geometry, renders 512 px at 64 samples, packs and
-validates the saved external master. The equivalent individual stages are:
+`ROUND=3 tools/art/anim3d/units/field-cannon/gpu.sh`. It audits geometry, renders every stage
+(including plain views) at 512 px / 64 samples, writes 256 px gallery copies, packs and validates the
+saved external master, and encodes the decoded atlas as the driver-requested round MP4. The old
+`siege/gpu-final.sh` delegates to this entry point. The equivalent individual stages are:
 
 ```sh
 export ANIM_FAMILY=siege RENDER_ENGINE=CYCLES CYCLES_DEVICE=GPU SAMPLES=64 RESOLUTION=512
@@ -195,7 +206,12 @@ tools/art/anim3d/render.sh audit
 ```
 
 The Metal device is required for this GPU path; it never silently falls back. CPU reviews use explicit
-`CYCLES_DEVICE=CPU` and low samples. `round.py` can run the same sequential stages in one gated
+`CYCLES_DEVICE=CPU` and low samples. `video.py` reconstructs each trimmed frame with its offsets before compositing at 2x on cream. It
+streams all five clips to a three-thread FFmpeg encoder and probes the result: H.264 yuv420p,
+1600 × 348, 240 frames, eight seconds. Idle/move loop; combat clips hold and replay every two seconds.
+Neither GPU script creates a PASS marker; that requires actual visual acceptance.
+
+`round.py` can run the same sequential stages in one gated
 process and now respects `RESOLUTION`/`SAMPLES`; `SIEGE_REUSE_MASTER=1` starts with animation of the
 existing finished master. Final GPU frames must be repacked and reviewed afresh.
 
@@ -255,6 +271,27 @@ an exact match (silhouette overlap about 72%). Final sampled luminance spread is
 65.54, and mean HSV saturation 85.51 vs 84.66. Matching those statistics does not establish art quality.
 GPU64 rendering and the lead's art judgment remain required.
 
+### Round-three CPU candidate
+
+The registered camera/pose now uses one shared frozen projection, with source-object masks to keep
+painted hands/rammers from becoming permanent marks on the gun or clothing. The rammer arm bends
+near the chest; the head is raised; axle spacing/yaw and barrel proportions are closer to the reference.
+The move palm now follows the barrel with the same <2 mm audit as idle. Smoke uses real volumetric
+lobes; death keeps the carriage near wheel-supported height. Auxiliary plain views have wider framing
+to prevent barrel clipping, while the hero retains the registered camera.
+
+All 40 **256 px / CPU Cycles / 8-sample** previews pack to **192,634 bytes at Q85**, 903 × 831,
+with 36 unique rectangles, lossless alpha and unchanged clip counts/timing. Six regression checks,
+the geometry audit and decoded-atlas validation pass. The round-3 MP4 is verified H.264/yuv420p,
+1600 × 348, 240 frames/eight seconds. Prior 512 px masters are in `round2-backup`; current CPU
+renders are archived in `round3-cpu`. Fresh 512 px / GPU64 masters remain the lead-side handoff.
+The detail sheet labels its actual source resolution; enlarging a CPU preview is not a 512 px master.
+
+**Not art-approved; no PASS marker.** Silhouette IoU improves from about .721 to .811, but face,
+tailoring, belt drape and wheel perspective remain visibly different at 256 px. At 64 px the unit is
+recognizable; it is not an exact token match. Histogram agreement (luminance spread 65.52 vs65.54;
+saturation85.46 vs84.66) does not establish that the reference painting's craft has been matched.
+
 ### Trimmed JSON format, version 2
 
 ```json
@@ -284,5 +321,5 @@ there is no existing runtime atlas loader to migrate on this branch.
 Checks: `test_pack.py` exercises reconstruction/alpha/grade invariants; `validate.py` verifies every
 rectangle, offset, source alpha byte, logical anchor, transparent gutter, frame count/timing, motion,
 held death, hashes, Q75 floor and 200,000-byte cap. `audit.py` verifies MPFB anatomy, all 53 bones,
-barrel palm contact during idle, stationary base, rolling ratios, safe effect sizes and terminal
+barrel palm contact during idle and move, stationary base, rolling ratios, safe effect sizes and terminal
 contact. The decoded review is `field-cannon-g-decoded-atlas.png`. Art judgment remains separate.

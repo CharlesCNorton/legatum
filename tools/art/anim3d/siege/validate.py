@@ -63,6 +63,17 @@ def main():
     assert not outside.getbbox(), 'Nontransparent atlas padding'
     assert source[('death', 8)].tobytes() == source[('death', 9)].tobytes(), 'Terminal source pixels differ'
     sheet.save(REVIEW / 'field-cannon-g-decoded-atlas.png')
+    delivery = Image.new('RGB', (816, 380), '#e0d7bf'); labels = ImageDraw.Draw(delivery)
+    examples = [('Painting', Image.open('app/src/assets/units/field-cannon-256.png').convert('RGBA')),
+                ('Rendered 3D', source[('idle', 0)]),
+                ('Decoded 160px atlas', reconstruct(atlas, meta['clips']['idle']['rects'][0], 160))]
+    for index, (label, frame) in enumerate(examples):
+        x = 8 + 272 * index
+        labels.text((x, 10), label, fill='#28221b')
+        large = frame.resize((256, 256), Image.Resampling.LANCZOS)
+        small = frame.resize((64, 64), Image.Resampling.LANCZOS)
+        delivery.paste(large, (x, 36), large); delivery.paste(small, (x + 96, 302), small)
+    delivery.save(REVIEW / 'field-cannon-g-delivery.png')
     (REVIEW / 'field-cannon-validation.json').write_text(json.dumps(dict(contract='PASS' if not findings else 'FAIL', bounds=boxes, findings=findings), indent=2))
     print('PASS: v2 rectangles/offsets, all 40 frames, exact alpha, anchor, padding, motion, held death, provenance, quality and byte cap')
     for finding in findings:

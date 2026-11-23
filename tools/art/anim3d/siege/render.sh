@@ -7,7 +7,7 @@ export RENDER_ENGINE="${RENDER_ENGINE:-BLENDER_EEVEE}"
 args=(-b --disable-autoexec --factory-startup --python-exit-code 1)
 if [[ "$stage" == build ]]; then
   blender "${args[@]}" --python tools/art/anim3d/siege/scene.py
-elif [[ "$stage" == finish || "$stage" == paint || "$stage" == materials || "$stage" == bake || "$stage" == animate || "$stage" == audit ]]; then
+elif [[ "$stage" == register || "$stage" == finish || "$stage" == paint || "$stage" == materials || "$stage" == bake || "$stage" == animate || "$stage" == audit ]]; then
   blender "${args[@]}" --python "tools/art/anim3d/siege/$stage.py"
 elif [[ "$stage" == pack || "$stage" == validate ]]; then
   "$ANIM_ROOT/venv/bin/python" "tools/art/anim3d/siege/$stage.py"

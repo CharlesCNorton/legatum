@@ -11,7 +11,7 @@ for clip,count in [('idle',8),('move',8),('attack',10),('hit',4),('death',10)]:
   sc.frame_set(i+1);assert base.matrix_world==base_matrix,'Base moved'
   for o in sc.objects:
    if o.type=='MESH' and not o.hide_render:assert min(abs(s) for s in o.scale)>.001,('Degenerate renderable mesh',o.name)
-  if clip=='idle':
+  if clip in ['idle','move']:
    actual=rig.matrix_world @ rig.pose.bones['hand_l'].tail
    target=bpy.data.objects['Barrel elevation'].matrix_world @ Vector(rig['barrel_contact_local'])
    assert (actual-target).length<.002,('Resting palm lost barrel contact',(actual-target).length)
@@ -40,4 +40,4 @@ for clip,count in [('idle',8),('move',8),('attack',10),('hit',4),('death',10)]:
   records['terminal_ground']=grounds
  records[clip]=samples
 (R/'review/3d-v2/field-cannon-audit.json').write_text(json.dumps(records,indent=2))
-print('PASS: MPFB topology, 53-bone rig, 40 samples, idle palm contact, stationary base, rolling ratio, nondegenerate effects, held grounded death')
+print('PASS: MPFB topology, 53-bone rig, 40 samples, idle/move palm contact, stationary base, rolling ratio, nondegenerate effects, held grounded death')

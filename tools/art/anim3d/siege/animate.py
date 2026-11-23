@@ -23,6 +23,17 @@ def rotate(rig,bone,axis,a):
  p=rig.pose.bones[bone];p.matrix_basis=p.matrix_basis @ Matrix.Rotation(a,4,axis);bpy.context.view_layer.update()
 def effectmat(name,color):
  m=bpy.data.materials.new(name);m.use_nodes=True;p=m.node_tree.nodes.get('Principled BSDF');p.inputs['Base Color'].default_value=(*color,1);p.inputs['Roughness'].default_value=.95;return m
+def smoke_material():
+ # Full-depth volume with density tapering to zero at the surface; no opaque pellets.
+ m=bpy.data.materials.new('Soft powder smoke volume');m.use_nodes=True
+ n=m.node_tree.nodes;l=m.node_tree.links;n.clear()
+ out=n.new('ShaderNodeOutputMaterial');volume=n.new('ShaderNodeVolumePrincipled')
+ volume.inputs['Color'].default_value=(.62,.60,.54,1);volume.inputs['Anisotropy'].default_value=.1
+ tc=n.new('ShaderNodeTexCoord');distance=n.new('ShaderNodeVectorMath');distance.operation='DISTANCE';distance.inputs[1].default_value=(.5,.5,.5);l.new(tc.outputs['Generated'],distance.inputs[0])
+ radial=n.new('ShaderNodeMapRange');radial.inputs['From Min'].default_value=.12;radial.inputs['From Max'].default_value=.50;radial.inputs['To Min'].default_value=14;radial.inputs['To Max'].default_value=0;radial.clamp=True;l.new(distance.outputs['Value'],radial.inputs[0])
+ noise=n.new('ShaderNodeTexNoise');noise.inputs['Scale'].default_value=5;noise.inputs['Detail'].default_value=2;l.new(tc.outputs['Generated'],noise.inputs['Vector'])
+ density=n.new('ShaderNodeMath');density.operation='MULTIPLY';l.new(radial.outputs[0],density.inputs[0]);l.new(noise.outputs['Fac'],density.inputs[1]);l.new(density.outputs[0],volume.inputs['Density']);l.new(volume.outputs['Volume'],out.inputs['Volume'])
+ return m
 requested=sys.argv[sys.argv.index('--')+1] if '--' in sys.argv else None
 if requested:assert requested in CLIPS,requested
 for clip,(count,fps,loop) in CLIPS.items():
@@ -40,7 +51,7 @@ for clip,(count,fps,loop) in CLIPS.items():
   crew=descendants(rig)
  smoke=[];flash=None
  if clip=='attack':
-  sm=effectmat('Smoke warm charcoal wash',(.44,.42,.36));fm=effectmat('Muzzle fire ochre',(.95,.48,.08));p=fm.node_tree.nodes.get('Principled BSDF');p.inputs['Emission Color'].default_value=(1,.32,.035,1);p.inputs['Emission Strength'].default_value=2
+  sm=smoke_material();fm=effectmat('Muzzle fire ochre',(.95,.48,.08));p=fm.node_tree.nodes.get('Principled BSDF');p.inputs['Emission Color'].default_value=(1,.32,.035,1);p.inputs['Emission Strength'].default_value=2
   bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=2,radius=1);flash=bpy.context.object;flash.name='Bounded three dimensional muzzle flash';flash.data.materials.append(fm)
   for i in range(7):
    bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=2,radius=1);o=bpy.context.object;o.name=f'Bounded smoke lobe {i}';o.data.materials.append(sm)
@@ -68,7 +79,10 @@ for clip,(count,fps,loop) in CLIPS.items():
    for side,offset in [('l',0),('r',pi)]:
     stride=sin(phase+offset);lift=max(0,cos(phase+offset))*.045
     limb(rig,'thigh_'+side,'calf_'+side,((.17 if side=='l' else -.19)+.055*stride,-.035+.075*stride,.07+lift),(.2 if side=='l' else -.2,-.35,.5))
-   limb(rig,'upperarm_l','lowerarm_l',(.34,.18,.84),(.46,-.25,1.08));limb(rig,'upperarm_r','lowerarm_r',(.28,.10,.94),(-.30,-.35,1.1))
+   limb(rig,'upperarm_r','lowerarm_r',(.28,.10,.94),(-.30,-.35,1.1))
+   bpy.context.view_layer.update()
+   target=rig.matrix_world.inverted() @ (barrel.matrix_world @ Vector(rig['barrel_contact_local']))-Vector((.11,-.015,-.03)).normalized()*rig.data.bones['hand_l'].length
+   limb(rig,'upperarm_l','lowerarm_l',target,(.56,-.24,1.14));aim(rig,'hand_l',(.11,-.015,-.03))
   elif clip=='attack':
    recoil=[0,0,-.105,-.13,-.085,-.04,-.014,0,0,0][i];gun.location=neutralgun+Vector((recoil*cos(gunangle.z),recoil*sin(gunangle.z),0));bpy.context.view_layer.update()
    for w in wheels:w.rotation_euler.y=recoil/.48
@@ -90,8 +104,8 @@ for clip,(count,fps,loop) in CLIPS.items():
    rotate(rig,'thigh_l','X',.20*sin(pi*fall));rotate(rig,'thigh_r','X',-.14*sin(pi*fall))
    for side,sg in [('l',1),('r',-1)]:
     target=rig.pose.bones['hand_'+side].head.lerp(Vector((sg*.25,-.08,1.0)),ease);limb(rig,'upperarm_'+side,'lowerarm_'+side,target,(sg*.40,-.1,1.15))
-   gun.rotation_euler.x=-.56*ease;gun.location.y=neutralgun.y+.18*ease;gun.location.x=neutralgun.x-.17*ease
-   wheels[0].rotation_euler.x=.20*ease # damaged near-wheel cant, visible broken axle attitude
+   gun.rotation_euler.x=-.08*ease;gun.location.y=neutralgun.y+.18*ease;gun.location.x=neutralgun.x-.17*ease
+   wheels[0].rotation_euler.x=.10*ease # damaged near-wheel cant, visible broken axle attitude
    bpy.context.view_layer.update()
    # Settle actual evaluated geometry on top of the disc, including carried tool.
    rig.location.z+=.098-lowest(crew);gun.location.z+=.098-lowest(gunparts)

@@ -5,6 +5,7 @@ from PIL import Image, ImageDraw
 from pack import compose, encode
 from validate import reconstruct
 from grade import fit, grade
+from video import sample_index
 
 
 class TrimmedAtlasTests(unittest.TestCase):
@@ -45,6 +46,13 @@ class TrimmedAtlasTests(unittest.TestCase):
         decoded = Image.open(io.BytesIO(encode(atlas, 75))).convert('RGBA')
         self.assertEqual(reconstruct(decoded, rects[('death', 8)], 160).tobytes(),
                          reconstruct(decoded, rects[('death', 9)], 160).tobytes())
+
+    def test_video_timing_holds_death_and_loops_idle(self):
+        death = dict(frames=10, fps=10, loop=False)
+        idle = dict(frames=8, fps=10, loop=True)
+        self.assertEqual(sample_index(death, 55), 9)
+        self.assertEqual(sample_index(death, 60), 0)
+        self.assertEqual(sample_index(idle, 24), 0)
 
     def test_invalid_offset_is_rejected(self):
         atlas = Image.new('RGBA', (30, 30))
