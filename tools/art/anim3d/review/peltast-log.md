@@ -69,3 +69,4 @@
 - Published b review immediately: CYCLES/CPU, 512 px, 2 frame(s).
 - Published d review immediately: CYCLES/CPU, 512 px, 4 frame(s).
 - Published e-idle review immediately: CYCLES/CPU, 512 px, 8 frame(s).
+- Published e-move review immediately: CYCLES/CPU, 512 px, 8 frame(s).

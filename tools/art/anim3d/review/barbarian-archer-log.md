@@ -61,3 +61,6 @@ Round 2 resuming: inspected latest rest comparison, attack strip and native CPU5
 Finished 351 solid projected meshes; actual AO/curvature bakes on 4 principal surfaces; generated hidden-side fills packed.
 Rendered c: 256px, Cycles CPU, 8 samples; raw frames preserved.
 Published c review immediately; CPU preview, not art approval.
+Finished 351 solid projected meshes; actual AO/curvature bakes on 4 principal surfaces; generated hidden-side fills packed.
+Rendered c: 256px, Cycles CPU, 8 samples; raw frames preserved.
+Published c review immediately; CPU preview, not art approval.

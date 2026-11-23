@@ -32,3 +32,5 @@ e-move: review emitted from CYCLES frames; no art-pass claim.
 e-attack: review emitted from CYCLES frames; no art-pass claim.
 e-hit: review emitted from CYCLES frames; no art-pass claim.
 e-death: review emitted from CYCLES frames; no art-pass claim.
+e-hit: review emitted from CYCLES frames; no art-pass claim.
+e-death: review emitted from CYCLES frames; no art-pass claim.

@@ -57,3 +57,13 @@
 - Published c review from 512px CPU renders.
 - Published d review from 512px CPU renders.
 - Published e-idle review from 512px CPU renders.
+- Published e-move review from 512px CPU renders.
+- Published e-attack review from 512px CPU renders.
+- Published e-hit review from 512px CPU renders.
+- All five first motion strips inspected at 256/64: folded death is much less suspended, idle/move loops hold their silhouette, and attack still needs stronger articulation and better fingers. Final512 detail check caught oversized dark nape locks; shortened/narrowed the actual geometry before the last rebuild. No PASS.
+- Published e-death review from 512px CPU renders.
+- Published b review from 512px CPU renders.
+- Published c review from 512px CPU renders.
+- Published d review from 512px CPU renders.
+- Published e-idle review from 512px CPU renders.
+- Published e-move review from 512px CPU renders.

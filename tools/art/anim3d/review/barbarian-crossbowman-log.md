@@ -23,3 +23,13 @@
 - c: 1 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
 - Round 2 first revised rest preview: fitted elbows, longer/lower bow, broader boots and finished-surface camera-only pigment restore markedly more painted face/cloth detail. Still not PASS: weapon-side sleeve has a missing visible section, hood outer edge is angular, the prod/string do not align exactly, and physical stone is now too dark. Continuing geometry and stone calibration before all clips.
 - c: 1 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- b: genuine front, three-quarter and side geometry views.
+- c: 1 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- d: 4 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- e-idle: 8 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- e-move: 8 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- e-attack: 10 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- e-hit: 4 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- e-death: 10 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- Packed 40 frames, trimmed 160px cells, WebP quality 90, 139320 bytes.
+- Wrote 8 second five-clip H.264 yuv420p review barbarian-crossbowman-round2.mp4

@@ -107,3 +107,8 @@
 - Published death-check-strip: CYCLES CPU, 256 px, 8 samples; not GPU approval.
 - Published e-death-strip: CYCLES CPU, 256 px, 8 samples; not GPU approval.
 - Saved 3D audit passed: source hashes, 53 bones, actual motion, exact loop closing keys and held death; ground/bounds recorded; collision limits explicit.
+- Final CPU256/8 rest: graded silhouette IoU .843796 vs .775618 for the prior graded frame, measured consistently. At 256, face/hood and cloth pigment improve; robe silhouette, sleeves, sandals/contact and stone shading remain different. At 64 identity reads, but not indistinguishable. No PASS.
+- Inspected all five strips; death trial exposed a calf separated from the compressed robe. Reduced knee rotation and preserved lower-robe width; inspected terminal preview before rerendering death. Calf separation fixed; fall still too rigid, walk contact/sleeve articulation need polish.
+- Final CPU preview pack and independent validator pass: 172316 bytes, Q90, all 40 samples, 160px trim offsets, lossless alpha, exact decoded held death. Saved geometry audit passes body/53-bone topology, macro freeze, loops, fixed base, motion, source hashes and ten bakes.
+- Encoded decoded-atlas settler-round2.mp4; ffprobe passes H.264/yuv420p, 1600x352, 192 frames, eight seconds. CPU preview is not GPU512 delivery.
+- Opened decoded MP4 contact frame; all five offset-restored clips are present on cream. Python syntax (13 scripts), Bash syntax (2), whitespace pass. Repository browser art gate cannot complete: Chromium Mach-port bootstrap permission denied in sandbox; full stderr retained in masters/settler/art-gate-error.log. Matrix-operator whitespace fixes remove hygiene false positives.
