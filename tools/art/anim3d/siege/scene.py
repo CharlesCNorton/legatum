@@ -87,10 +87,10 @@ linen=mat('Siege ivory linen',(.73,.66,.48),0,.88)
 leather=mat('Siege black boot leather',(.025,.023,.018),0,.56)
 skin=mat('Siege painted warm skin',(.52,.30,.16),0,.66)
 stone=mat('Siege cream limestone',(.82,.70,.49),0,.86)
-dark=mat('Siege bore soot',(.045,.028,.014),0,.95)
+dark=mat('Siege bore soot',(.075,.045,.018),0,.95)
 # Physical gun, forward along +X; axle along Y. Radius is the rolling radius.
-gun=empty('Gun travel and recoil');gun['wheel_radius']=.51
-ax=.08;wz=.615;radius=.51
+gun=empty('Gun travel and recoil');gun['wheel_radius']=.525
+ax=.08;wz=.615;radius=.525
 rod('Iron axle',(ax,-.61,wz),(ax,.61,wz),.052,iron,gun)
 for sy in [-1,1]:
  y=sy*.61;wheel=empty('Wheel '+str(sy),(ax,y,wz));parent(wheel,gun)
@@ -100,7 +100,7 @@ for sy in [-1,1]:
  for off in [-.052,.052]:ring('Tyre polished edge',(ax,y+off,wz),radius-.003,.0025,brightiron,p=wheel)
  for i in range(12):
   a=2*pi*i/12;end=Vector((ax+(radius-.054)*cos(a),y,wz+(radius-.054)*sin(a)))
-  start=Vector((ax+.072*cos(a),y,wz+.072*sin(a)))
+  start=Vector((ax+.072*cos(a),y+sy*.065,wz+.072*sin(a)))
   o=cube('Tapered oak spoke',(start+end)*.5,(.041,.047,(end-start).length),wood,wheel);o.rotation_euler=(end-start).to_track_quat('Z','Y').to_euler()
   for vertex in o.data.vertices:
    vertex.co.x*=1-.22*vertex.co.z/((end-start).length*.5)
@@ -124,7 +124,7 @@ for x,z in [(-.62,.24),(-.05,.55),(.35,.60)]:cube('Carriage cross bed',(x,0,z),(
 cube('Trail shoe',(-.76,0,.145),(.15,.59,.07),iron,gun)
 # Hollow lathed bronze barrel with black interior, integral mouldings and cascabel.
 barrel=empty('Barrel elevation',(.20,0,.86));parent(barrel,gun)
-profile=[(-.40,.055),(-.36,.10),(-.31,.14),(-.25,.153),(-.19,.157),(-.15,.155),(.00,.142),(.035,.147),(.065,.145),(.08,.133),(.42,.105),(.46,.109),(.49,.108),(.51,.102),(.65,.108),(.68,.128),(.73,.128),(.76,.115),(.76,.078),(.55,.078),(.25,.070)]
+profile=[(-.40,.055),(-.36,.10),(-.31,.14),(-.25,.153),(-.19,.157),(-.15,.155),(.00,.142),(.035,.147),(.065,.145),(.08,.133),(.42,.105),(.46,.109),(.49,.108),(.51,.102),(.65,.108),(.68,.128),(.73,.128),(.76,.115),(.76,.0624),(.55,.0624),(.25,.056)]
 vs=[];fs=[]
 for x,r in profile:
  for j in range(96):a=j*2*pi/96;vs.append((x+.20,r*cos(a),.88+r*sin(a)))
@@ -134,7 +134,7 @@ o=mesh('Hollow bronze barrel',vs,fs,bronze);o.data.materials.append(dark)
 for p in o.data.polygons:
  if p.index>=18*96:p.material_index=1
 parent(o,barrel);bevel(o,.002)
-rod('Bore shadow stop',(.44,0,.88),(.445,0,.88),.069,dark,barrel)
+rod('Bore shadow stop',(.44,0,.88),(.445,0,.88),.055,dark,barrel)
 for x,r in [(-.06,.155),(.24,.148),(.67,.111),(.90,.129),(.95,.116)]:ring('Bronze turned moulding',(x,0,.88),r,.007,edge,axis='X',p=barrel)
 ball('Cascabel knob',(-.235,0,.88),(.055,.06,.06),bronze,barrel)
 rod('Trunnion',(.16,-.31,.84),(.16,.31,.84),.055,bronze,barrel)
@@ -211,7 +211,7 @@ def attach(o,bone):
 # Tailored torso, closed fitted coat, central ivory waistcoat and sculpted folds.
 vs=[];fs=[]
 for j in range(21):
- t=j/20;z=1.005+t*.475;rx=.185+.040*sin(t*pi*.68);ry=.150+.025*sin(t*pi)
+ t=j/20;z=1.005+t*.475;rx=.198+.043*sin(t*pi*.68);ry=.150+.025*sin(t*pi)
  for i in range(64):
   a=i*2*pi/64
   # Compression folds radiate from the belt and loaded shoulder, rather than regular ribs.
@@ -255,7 +255,7 @@ for side in ['l','r']:
  for t in [.025,.066]:
   pos=tip-v*t+Vector((0,-.047,0));attach(ball('Cuff brass button',pos,(.007,.005,.007),edge),'lowerarm_'+side)
 def coat_front(x,z):
- t=max(0,min(1,(z-1.005)/.475));rx=.185+.040*sin(t*pi*.68);ry=.150+.025*sin(t*pi)
+ t=max(0,min(1,(z-1.005)/.475));rx=.198+.043*sin(t*pi*.68);ry=.150+.025*sin(t*pi)
  a=math.asin(max(-.99,min(.99,x/rx)))
  fold=(.0045*sin(a*9+t*19)+.0025*sin(a*17-t*11))*sin(t*pi)
  fold+=.004*sin(t*37+a*3)*max(0,cos(a))*(1-t)

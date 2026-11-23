@@ -26,6 +26,11 @@ for kind in ['machine','base','coat']:
    ivory=min(red,green,blue)>110 and max(red,green,blue)-min(red,green,blue)<55
    excluded=(kind=='coat' and (rammer or hand or ivory))
    excluded|=kind=='machine' and 123<tx<156 and 100<ty<132
+   # The gunner's pale leg is visible through the near wheel in the source.
+   # Newly sampled spoke faces must not carry it away when the wheel turns.
+   trouser_gap=(96<tx<128 and 120<ty<188 and min(red,green,blue)>105
+                and max(red,green,blue)>145 and max(red,green,blue)-min(red,green,blue)<65)
+   excluded|=kind=='machine' and trouser_gap
    excluded|=kind=='base' and ty<214
    if excluded:px[x,y]=(red,green,blue,0)
  result.save(A/f'projection-{kind}.png')

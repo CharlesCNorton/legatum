@@ -32,7 +32,7 @@ def smoke_material():
  out=n.new('ShaderNodeOutputMaterial');volume=n.new('ShaderNodeVolumePrincipled')
  volume.inputs['Color'].default_value=(.62,.60,.54,1);volume.inputs['Anisotropy'].default_value=.1
  tc=n.new('ShaderNodeTexCoord');distance=n.new('ShaderNodeVectorMath');distance.operation='DISTANCE';distance.inputs[1].default_value=(.5,.5,.5);l.new(tc.outputs['Generated'],distance.inputs[0])
- radial=n.new('ShaderNodeMapRange');radial.inputs['From Min'].default_value=.12;radial.inputs['From Max'].default_value=.50;radial.inputs['To Min'].default_value=14;radial.inputs['To Max'].default_value=0;radial.clamp=True;l.new(distance.outputs['Value'],radial.inputs[0])
+ radial=n.new('ShaderNodeMapRange');radial.inputs['From Min'].default_value=.12;radial.inputs['From Max'].default_value=.50;radial.inputs['To Min'].default_value=24;radial.inputs['To Max'].default_value=0;radial.clamp=True;l.new(distance.outputs['Value'],radial.inputs[0])
  noise=n.new('ShaderNodeTexNoise');noise.inputs['Scale'].default_value=5;noise.inputs['Detail'].default_value=2;l.new(tc.outputs['Generated'],noise.inputs['Vector'])
  density=n.new('ShaderNodeMath');density.operation='MULTIPLY';l.new(radial.outputs[0],density.inputs[0]);l.new(noise.outputs['Fac'],density.inputs[1]);l.new(density.outputs[0],volume.inputs['Density']);l.new(volume.outputs['Volume'],out.inputs['Volume'])
  return m
@@ -74,7 +74,7 @@ for clip,(count,fps,loop) in CLIPS.items():
   elif clip=='move':
    # Ground travel is removed from sprite root by the map; 12-fold wheel symmetry
    # gives an exact cyclic seam after one spoke pitch. theta = distance / radius.
-   distance=.51*(2*pi/12)*t;localtravel=.018*sin(phase);theta=(distance+localtravel)/.51
+   distance=.525*(2*pi/12)*t;localtravel=.018*sin(phase);theta=(distance+localtravel)/.525
    for w in wheels:w.rotation_euler.y=theta
    gun.location=neutralgun+Vector((localtravel*cos(gunangle.z),localtravel*sin(gunangle.z),0))
    rig.location.x+=.32+.018*sin(phase);rig.location.y+=.20;rig.location.z-=.04;rotate(rig,'spine_01','X',.13);rotate(rig,'spine_02','Y',.28)
@@ -108,16 +108,16 @@ for clip,(count,fps,loop) in CLIPS.items():
    limb(rig,'upperarm_l','lowerarm_l',target,(.56,-.24,1.14));aim(rig,'hand_l',(.11,-.015,-.03))
   elif clip=='attack':
    recoil=[0,0,-.105,-.13,-.085,-.04,-.014,0,0,0][i];gun.location=neutralgun+Vector((recoil*cos(gunangle.z),recoil*sin(gunangle.z),0));bpy.context.view_layer.update()
-   for w in wheels:w.rotation_euler.y=recoil/.51
+   for w in wheels:w.rotation_euler.y=recoil/.525
    react=[0,-.025,.16,.23,.16,.09,.03,0,0,0][i];rotate(rig,'spine_01','Y',-react);rotate(rig,'head','X',react*.6);rotate(rig,'upperarm_l','Z',react)
    visible=1 if i==2 else 0;muzzle=barrel.matrix_world @ Vector((.76,0,.02));forward=(barrel.matrix_world.to_3x3() @ Vector((1,0,0))).normalized();flash.location=muzzle+forward*.10;flash.rotation_euler=barrel.matrix_world.to_euler();flash.scale=(.20,.065,.055);flash.hide_render=not visible;flash.keyframe_insert(data_path='hide_render',frame=frame)
    flash.keyframe_insert(data_path='scale',frame=frame);flash.keyframe_insert(data_path='location',frame=frame)
    for j,o in enumerate(smoke):
-    age=max(0,(i-2)/6);size=(.055+.045*age)*(sin(pi*min(age,1)) if i>=2 else 0)
+    age=max(0,(i-2)/6);size=(.060+.080*age)*(sin(pi*min(age,1)) if i>=2 else 0)
     o.location=muzzle+forward*(.06+.07*age)+Vector((.025*cos(j*2.4),.035*sin(j*2.4),.03+.21*age+.045*sin(j*1.3)));o.hide_render=size<.01;o.keyframe_insert(data_path='hide_render',frame=frame);size=max(.02,size);o.scale=(size*1.2,size,size*.9);o.keyframe_insert(data_path='location',frame=frame);o.keyframe_insert(data_path='scale',frame=frame)
   elif clip=='hit':
    a=[0,.17,-.065,0][i];localtravel=-a*.23;gun.rotation_euler.z=gunangle.z+a*.1
-   for w in wheels:w.rotation_euler.y=localtravel/.51
+   for w in wheels:w.rotation_euler.y=localtravel/.525
    gun.location=neutralgun+Vector((localtravel*cos(gunangle.z),localtravel*sin(gunangle.z),0))
    rotate(rig,'spine_02','Y',-a);rotate(rig,'head','X',-a*.7);rotate(rig,'upperarm_r','Z',a)
   else:
@@ -140,7 +140,7 @@ for clip,(count,fps,loop) in CLIPS.items():
    o.keyframe_insert(data_path='location',frame=frame);o.keyframe_insert(data_path='rotation_euler',frame=frame)
   for p in rig.pose.bones:
    p.rotation_mode='QUATERNION';p.keyframe_insert(data_path='location',frame=frame);p.keyframe_insert(data_path='rotation_quaternion',frame=frame);p.keyframe_insert(data_path='scale',frame=frame)
- sc['clip']=clip;sc['sample_frames']=json.dumps(frames);sc['loop']=loop;sc['wheel_motion']='theta = (virtual ground travel + local recoil/travel) / 0.51; 12-spoke cyclic symmetry';sc.frame_set(1)
+ sc['clip']=clip;sc['sample_frames']=json.dumps(frames);sc['loop']=loop;sc['wheel_motion']='theta = (virtual ground travel + local recoil/travel) / 0.525; 12-spoke cyclic symmetry';sc.frame_set(1)
  bpy.ops.wm.save_as_mainfile(filepath=str(M/'clips'/f'{clip}.blend'))
  (M/'clips'/f'{clip}.json').write_text(json.dumps({'source_master_sha256':hashlib.sha256((M/'field-cannon.blend').read_bytes()).hexdigest(),'frames':count,'fps':fps,'loop':loop},indent=2))
  print('CLIP_READY',clip,count)

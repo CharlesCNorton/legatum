@@ -179,7 +179,7 @@ append findings to `field-cannon-log.md` between rounds.
 
 Clips retain **8/8/10/4/10 frames** at **10/12/14/12/10 fps**; only idle and move loop. Idle solves the
 resting palm after shoulder motion, subtracting the hand length to obtain a reachable wrist target. Move is an in-place push with the rammer stowed; runtime supplies
-map travel. Wheel angle is exactly `(virtual travel + local recoil) / 0.51`; twelve-spoke symmetry
+map travel. Wheel angle is exactly `(virtual travel + local recoil) / 0.525`; twelve-spoke symmetry
 closes the move loop. Attack has recoil, brief solid muzzle flash and bounded volumetric smoke lobes with radial density
 falloff. The smoke has no opaque surface shader. Effects
 use keyed `hide_render`, never near-zero scales (the old approach crashed Cycles/OpenVDB). Death
@@ -188,7 +188,7 @@ The carriage stays close to wheel-supported height rather than levering the whol
 source PNGs are identical; the second terminal PNG is reused after asserting all transforms match.
 
 Lead's final host GPU pass, from this branch's checkout: run
-`ROUND=6 tools/art/anim3d/units/field-cannon/gpu.sh`. It audits geometry, renders every stage
+`ROUND=7 tools/art/anim3d/units/field-cannon/gpu.sh`. It audits geometry, renders every stage
 (including plain views) at 512 px / 64 samples, writes 256 px gallery copies, packs and validates the
 saved external master, and encodes the decoded atlas as the driver-requested round MP4. The old
 `siege/gpu-final.sh` delegates to this entry point. The equivalent individual stages are:
@@ -407,6 +407,45 @@ The MP4 is 1600 × 348, H.264/yuv420p, 240 frames/eight seconds. Current CPU evi
 under `round6-cpu`; prior 512 px GPU evidence remains under `round3-gpu`.
 **No art PASS:** face/tailoring, wheel perspective and motion still differ from the painting.
 No GPU pass is claimed from a missing driver log or CPU-labelled render provenance.
+
+### Round-seven wheel registration and projection sampling
+
+The named round-six GPU driver log, unit transcript and receipt were absent; the current render
+metadata was CPU256/12. Opened every available round-six comparison/strip and video contact sheet,
+but did not treat them as verified GPU evidence. The GPU entry point now defaults to round 7,
+removes its own stale success receipt before starting, and retains the direct transcript/error trap.
+Its missing-input preflight and CPU-master rejection are exercised without starting GPU rendering.
+
+A finite-distance camera trial did not fit the wheel/base constraints together well enough to keep.
+The established orthographic camera remains. `wheels.py` fits complete circular tyre silhouettes with
+small physical toe/camber mounting transforms; it does not stretch wheel images or flatten meshes.
+The full wheel retains its hub, thickness and local rolling axis beneath the mounting frame.
+Spokes dish toward the outer hub face, matching the visible spoke convergence in the painting.
+The solid axle is refitted between the wheel centres. Actual wheel radius and rolling calculations
+are now .525 m. Recorded pre-bevel bounds agree within .01 px; the geometry audit independently checks
+the finished tyre surface against the reference bounds within one pixel. This is a measured local
+geometry fit, **not** a claim that the whole camera/pose is exact.
+
+Spoke visibility used to be sampled mostly at vertices hidden inside the hub and rim. Their visible
+middles then inherited zero projection weight. Shape-preserving linear subdivision of the finished
+spokes, cheek straps and barrel supplies interior samples before freezing the camera projection.
+Already projected surfaces do not accumulate another sampling subdivision on repeat paint calls.
+Death review caught pale source trousers being transferred through wheel openings onto the newly
+sampled spokes. A spatial/pigment machine mask excludes that source figure overlap; real wood/metal
+fills remain underneath. Geometry visibility and source-object identity require separate checks.
+Solid ivory belts now retain the source's dark wear instead of rejecting it with a brightness mask.
+The fuller coat keeps matching fitted straps/buttons; the hollow muzzle has a smaller warm recessed
+bore, and bounded volumetric smoke expands more visibly during attack. Existing generated navy-wool
+fills, baked AO/curvature, beveled kit, product lighting and a single automatic rest grade remain.
+
+Round-seven CPU delivery: all 40 frames at256/Cycles CPU12, **185,088 bytes at Q85**,
+915 × 680 atlas pixels, 31 unique rectangles and lossless alpha. Atlas/video validation,
+geometry/contact/finished-UV/tyre-bounds audit, six regression tests, syntax checks and GPU
+preflight rejection checks pass. The MP4 is H.264/yuv420p, 1600 × 348, 240 frames/eight seconds.
+CPU evidence is archived under `round7-cpu`; all 40 prior512 GPU frames remain in `round3-gpu`.
+Silhouette IoU is .859952 versus round6 .839677; this is not art acceptance. At256 face/tailoring,
+wheel wear and motion still fall short. At64 identity reads but the result remains distinguishable.
+**No PASS marker; fresh GPU512 rendering and visual acceptance remain outstanding.**
 
 ### Trimmed JSON format, version 2
 

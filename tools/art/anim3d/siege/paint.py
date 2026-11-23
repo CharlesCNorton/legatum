@@ -60,7 +60,7 @@ for obj in list(sc.objects):
   if not old:
    rgb=n.new('ShaderNodeRGB');rgb.outputs[0].default_value=p.inputs['Base Color'].default_value;old=rgb.outputs[0]
   tc=n.new('ShaderNodeUVMap');tc.uv_map=uv.name
-  tex=n.new('ShaderNodeTexImage');tex.image=trousers if obj.name=='White wool breeches' else coat if obj.name=='Tailored blue coat body' else navy if mat.name.startswith('Siege indigo wool') else ivory if mat.name.startswith('Siege ivory linen') else leather if mat.name.startswith('Siege black boot leather') and not obj.name.startswith(('Black felt shako','Black shako visor')) else machine if obj in gun_meshes else base if obj.name=='Stationary cream base' else image;tex.extension='CLIP';links.new(tc.outputs[0],tex.inputs[0])
+  tex=n.new('ShaderNodeTexImage');tex.image=image if obj.name.startswith('Ivory cross belt') else trousers if obj.name=='White wool breeches' else coat if obj.name=='Tailored blue coat body' else navy if mat.name.startswith('Siege indigo wool') else ivory if mat.name.startswith('Siege ivory linen') else leather if mat.name.startswith('Siege black boot leather') and not obj.name.startswith(('Black felt shako','Black shako visor')) else machine if obj in gun_meshes else base if obj.name=='Stationary cream base' else image;tex.extension='CLIP';links.new(tc.outputs[0],tex.inputs[0])
   colour=tex.outputs['Color']
   if obj.name=='Stationary cream base':
    correction=n.new('ShaderNodeMixRGB');correction.name='Lit cream pigment calibration';correction.blend_type='MULTIPLY'
@@ -82,7 +82,7 @@ for obj in list(sc.objects):
   pigment.inputs['Emission Strength'].default_value=.80
   links.new(colour,pigment.inputs['Emission Color'])
   blend=n.new('ShaderNodeMixShader')
-  amount=n.new('ShaderNodeMath');amount.operation='MULTIPLY';amount.inputs[1].default_value=.80
+  amount=n.new('ShaderNodeMath');amount.operation='MULTIPLY';amount.inputs[1].default_value=.92 if obj.name.startswith(('Ivory cross belt','Hollow bronze barrel','Flat wrought iron tyre')) else .80
   links.new(camera_weight.outputs[0],amount.inputs[0]);links.new(amount.outputs[0],blend.inputs[0])
   links.new(p.outputs[0],blend.inputs[1]);links.new(pigment.outputs[0],blend.inputs[2])
   links.new(blend.outputs[0],n.get('Material Output').inputs['Surface'])

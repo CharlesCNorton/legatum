@@ -24,6 +24,14 @@ def finish_surfaces():
             obj.shape_key_clear()
             for vertex, co in zip(obj.data.vertices, coords):
                 vertex.co = co
+        # Long spokes used to have vertices only at the occluded hub/rim ends.
+        # Their whole visible middle therefore inherited zero projection visibility.
+        # Linear subdivision adds samples without rounding or moving the surface.
+        if (obj.name.startswith(('Tapered oak spoke', 'Iron cheek strap', 'Hollow bronze barrel'))
+                and not obj.data.color_attributes.get('Painting visibility')):
+            sampling = obj.modifiers.new('Paint visibility surface samples', 'SUBSURF')
+            sampling.subdivision_type = 'SIMPLE'
+            sampling.levels = sampling.render_levels = 2
         applied = []
         for mod in list(obj.modifiers):
             if mod.type == 'ARMATURE' or not mod.show_viewport:

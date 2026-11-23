@@ -25,9 +25,21 @@ for name in ['MPFB artillery gunner anatomy','Tailored blue coat body','White wo
  ev.to_mesh_clear();errors[name]=worst
  assert worst<.01,('Finished surface UV registration drift',name,worst)
 records['finished_projection_error_px']=errors
+fit=json.loads((M/'registration.json').read_text())['wheel_surfaces']
+records['wheel_reference_bounds']={}
+for name,reference in fit.items():
+ wheel=bpy.data.objects[name]
+ assert wheel.parent.name.startswith('Wheel mounting '),'Fitted wheel mount missing'
+ tyre=next(o for o in wheel.children if o.name.startswith('Flat wrought iron tyre'))
+ points=[world_to_camera_view(scene,scene.camera,tyre.matrix_world @ v.co) for v in tyre.data.vertices]
+ actual=[min(p.x for p in points)*256,(1-max(p.y for p in points))*256,max(p.x for p in points)*256,(1-min(p.y for p in points))*256]
+ error=max(abs(a-b) for a,b in zip(actual,reference['target_bounds_px']))
+ assert error<1,('Rendered tyre differs from fitted reference bounds',name,actual,error)
+ records['wheel_reference_bounds'][name]={'actual':actual,'max_error_px':error}
+
 for clip,count in [('idle',8),('move',8),('attack',10),('hit',4),('death',10)]:
  bpy.ops.wm.open_mainfile(filepath=str(M/'clips'/f'{clip}.blend'));sc=bpy.context.scene;rig=bpy.data.objects['Gunner MPFB game_engine'];gun=bpy.data.objects['Gun travel and recoil'];base=bpy.data.objects['Stationary cream base'];body=bpy.data.objects['MPFB artillery gunner anatomy']
- assert abs(sc['wheel_radius']-.51)<1e-6 and abs(gun['wheel_radius']-.51)<1e-6,'Wheel radius metadata drifted from geometry'
+ assert abs(sc['wheel_radius']-.525)<1e-6 and abs(gun['wheel_radius']-.525)<1e-6,'Wheel radius metadata drifted from geometry'
  for wheel_name in ['Wheel -1','Wheel 1']:
   wheel=bpy.data.objects[wheel_name]
   tyre=next(o for o in wheel.children if o.name.startswith('Flat wrought iron tyre'))
@@ -63,9 +75,9 @@ for clip,count in [('idle',8),('move',8),('attack',10),('hit',4),('death',10)]:
     bottom=min((sole.matrix_world @ v.co).z for v in sole.data.vertices)
     assert abs(bottom-(.098+lift))<.002,('Pushing boot lost authored ground contact',side,i,bottom,lift)
   if clip in ['move','attack','hit']:
-   travel=.51*(2*math.pi/12)*(i/count) if clip=='move' else 0
+   travel=.525*(2*math.pi/12)*(i/count) if clip=='move' else 0
    rest=gun['rest_location'];yaw=gun['rest_yaw'];localtravel=(gun.location.x-rest[0])*math.cos(yaw)+(gun.location.y-rest[1])*math.sin(yaw)
-   expected=(travel+localtravel)/.51
+   expected=(travel+localtravel)/.525
    for name in ['Wheel -1','Wheel 1']:assert abs(bpy.data.objects[name].rotation_euler.y-expected)<1e-5,'Wheel slip'
   if clip=='death' and i>=count-2:
    values=[v for o in sc.objects for row in o.matrix_world for v in row]

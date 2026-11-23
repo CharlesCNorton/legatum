@@ -114,15 +114,16 @@ bpy.context.view_layer.update();contact=barrel.matrix_world @ Vector((-.20,-.025
 direction=Vector((.11,-.015,-.03)).normalized();target=r.matrix_world.inverted() @ contact-direction*r.data.bones['hand_l'].length
 limb('upperarm_l','lowerarm_l',target,(.56,-.24,1.14));aim('hand_l',direction)
 r['barrel_contact_local']=[-.20,-.025,.171]
+wheel_fit=runpy.run_path(str(Path(__file__).with_name('wheels.py')))['fit_wheels']()
 runpy.run_path(str(Path(__file__).with_name('tailoring.py')))['fit_crossbelts']()
 r['neutral_pose']=json.dumps({p.name:[list(row) for row in p.matrix_basis] for p in r.pose.bones})
 records={}
 for name,xy in [('hand_r',(57,87)),('foot_r',(46,201)),('head',(90,57)),('upperarm_r',(68,65)),('upperarm_l',(105,70)),('lowerarm_r',(49,85))]:
  actual=pixel(r.matrix_world @ r.pose.bones[name].head);records[name]={'target':xy,'actual':list(actual),'error_px':(actual-Vector(xy)).length}
-for name,xy in [('Wheel -1',(113,170)),('Wheel 1',(195,163))]:
+for name,xy in [('Wheel -1',(118,170)),('Wheel 1',(198,162))]:
  actual=pixel(bpy.data.objects[name].matrix_world.translation);records[name]={'target':xy,'actual':list(actual),'error_px':(actual-Vector(xy)).length}
 for name,point,xy in [('barrel_breech',axis_a,target_a),('barrel_muzzle',axis_b,target_b)]:
  actual=pixel(barrel.matrix_world @ point);records[name]={'target':list(xy),'actual':list(actual),'error_px':(actual-xy).length}
-(M/'registration.json').write_text(json.dumps({'landmarks':records,'note':'Measured 3D camera/IK fit; residual errors retained honestly. Not an exact viewpoint claim.'},indent=2))
+(M/'registration.json').write_text(json.dumps({'landmarks':records,'wheel_surfaces':wheel_fit,'note':'Measured 3D camera/IK fit; residual errors retained honestly. Not an exact viewpoint claim.'},indent=2))
 bpy.ops.wm.save_as_mainfile(filepath=str(M/'field-cannon-plain.blend'));bpy.ops.wm.save_as_mainfile(filepath=str(M/'field-cannon.blend'))
 print('REGISTERED',records)
