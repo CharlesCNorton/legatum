@@ -1,0 +1,1 @@
+Round 1: Read project art instructions, mounted PLAYBOOK, feedback 1–23, and all six Blender skills. Reusing licensed Quaternius horse/actions and MPFB anatomy; building knight-specific mail, greathelm, caparison and shield.

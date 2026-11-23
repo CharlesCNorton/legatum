@@ -92,3 +92,36 @@
 - Posted e-attack review (CPU, 512 px).
 - Posted e-hit review (CPU, 512 px).
 - Posted e-death review (CPU, 512 px).
+- Authored idle skeletal action, 8 samples.
+- Authored move skeletal action, 8 samples.
+- Authored attack skeletal action, 10 samples.
+- Authored hit skeletal action, 4 samples.
+- Authored death skeletal action, 10 samples.
+- Posted d-rig-poses review (CPU, 512 px).
+- Posted e-idle review (CPU, 512 px).
+- Posted e-move review (CPU, 512 px).
+- Posted e-attack review (CPU, 512 px).
+- Posted e-hit review (CPU, 512 px).
+- Posted e-death review (CPU, 512 px).
+- Authored idle skeletal action, 8 samples.
+- Authored move skeletal action, 8 samples.
+- Authored attack skeletal action, 10 samples.
+- Authored hit skeletal action, 4 samples.
+- Authored death skeletal action, 10 samples.
+- Posted d-rig-poses review (CPU, 512 px).
+- Posted e-idle review (CPU, 512 px).
+- Posted e-move review (CPU, 512 px).
+- Posted e-attack review (CPU, 512 px).
+- Posted e-hit review (CPU, 512 px).
+- New shared feedback 23 arrived during round 2. Replaced the four non-attack synthetic motions with the existing CC0 Quaternius Universal Animation Library Standard (Crouch_Idle_Loop, Crouch_Fwd_Loop, Hit_Chest, Death01), rather than the initially considered CMU standing/walk-only set. Source hierarchy rotations cancel source rest rolls before Y-up conversion and fixed forward alignment. Kneeling support/contact constraints adapt the crouch cycle; this remains a kneeling tactical move, not a full standing walk. Exact motion/licence hashes are pinned in motion.lock.json and both source ledgers updated.
+- First source-motion review exposed left-hand drift and an early death gun clipping the top cell. Added a two-segment support-hand constraint, earlier physical weapon release, and keyed true cloth contact shapes. No post-retarget foot yaw edits. Added front/top foot-cycle GPU renders and a decoded-atlas sheet; audits now check support-foot slide, hand contact and finished-surface UV calibration. Source-driven death still reveals stretched paint and rigid torso clothing, so no visual PASS is implied.
+- Posted e-death review (CPU, 512 px).
+- Posted g-feet-top review (CPU, 512 px).
+- Posted g-feet-front review (CPU, 512 px).
+- Authored death skeletal action, 10 samples.
+- Posted e-death review (CPU, 512 px).
+- Posted g-feet-top review (CPU, 512 px).
+- Posted g-feet-front review (CPU, 512 px).
+- Authored death skeletal action, 10 samples.
+- Audit passed: five clips, source hashes, 53-bone rig, fixed base and positive object scales.
+- Posted e-death review (CPU, 512 px).
