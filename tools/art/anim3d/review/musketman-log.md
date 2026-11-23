@@ -62,3 +62,17 @@
 - Final CPU512 and 256 inventories: 62 PNGs each; all required review sheets, five animated WebPs and round1 MP4 exist. Atlas 189256 bytes at quality 85; 40 frames.
 - Scene audit, delivery validation, six regression tests, Python/Bash syntax and whitespace pass. GPU not run; no PASS.
 - Git add blocked: cannot create .git/worktrees/lane-9/index.lock (Operation not permitted). Runner must commit; exact co-authored message saved beside this log. HEAD already contains origin/master; no merge needed.
+- Built standing MPFB human, buff coat, red breeches/sash, feather hat, bandolier, musket and bayonet.
+- Posted b-plain review (GPU, 512 px).
+- Finished-surface camera-only projection applied; physical stone excluded and generated fills retained.
+- Posted c-textured-lit review (GPU, 512 px).
+- Saved idle skeletal action, 8 samples; CC0 Quaternius.
+- Saved move skeletal action, 8 samples; CC0 Quaternius.
+- Saved attack skeletal action, 10 samples; authored musket recoil.
+- Saved hit skeletal action, 4 samples; CC0 Quaternius.
+- Saved death skeletal action, 10 samples; CC0 Quaternius.
+- Posted b-plain review (GPU, 512 px).
+- Posted c-textured-lit review (GPU, 512 px).
+- Posted d-rig-poses review (GPU, 512 px).
+- Posted e-idle review (GPU, 512 px).
+- Posted e-move review (GPU, 512 px).
