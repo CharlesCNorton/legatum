@@ -123,3 +123,5 @@ Final code checks:19 Python files parse; shellsyntax/executable/whitespace pass;
 Commit attempt: git add denied creating .git/worktrees/lane-15/index.lock (Operation not permitted). Changes left uncommitted for runner; exact requested coauthor message saved in tmp/spartan-driver-round2-commit.txt. No commit/push/PR occurred.
 Baked clip idle
 Baked clip move
+Baked clip attack
+Baked clip hit
