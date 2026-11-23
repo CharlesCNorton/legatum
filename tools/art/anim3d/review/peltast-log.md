@@ -82,3 +82,4 @@
 - Published b review immediately: CYCLES/GPU, 512 px, 2 frame(s).
 - Published c review immediately: CYCLES/GPU, 512 px, 1 frame(s).
 - Published d review immediately: CYCLES/GPU, 512 px, 4 frame(s).
+- Published e-idle review immediately: CYCLES/GPU, 512 px, 8 frame(s).
