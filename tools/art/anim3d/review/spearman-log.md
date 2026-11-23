@@ -71,3 +71,4 @@
 - Final round 6 after curved-relief/contact correction: rebuilt and CPU-rendered attack at 256px / 12 samples.
 - Final round 6 after curved-relief/contact correction: rebuilt and CPU-rendered hit at 256px / 12 samples.
 - Final round 6 after curved-relief/contact correction: rebuilt and CPU-rendered death at 256px / 12 samples.
+- Stricter first full audit found 29 cases: actual MPFB foot underside below sole and late-death greave penetration; released spearhead was outside the disc footprint. First atlas/movie mechanically validated at 198262 bytes quality85 but are superseded. Corrected foot underside geometry and death calf contact; audit now tests the actual flat disc footprint plus world ground instead of an infinite plane. Checking death/rest before rebuilding the rest of the clips.
