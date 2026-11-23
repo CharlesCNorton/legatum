@@ -122,3 +122,18 @@
 - Posted field-cannon-d-rig-poses.png; actual CYCLES render, visual review pending.
 - Posted field-cannon-e-idle-strip.png; actual CYCLES render, visual review pending.
 - Posted field-cannon-e-move-strip.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-attack-strip.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-hit-strip.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-death-strip.png; actual CYCLES render, visual review pending.
+- ROUND 3 OCCLUSION FIX: Death review exposed the reference palm permanently painted on the barrel. Added source-space hand exclusion for mechanical meshes and figure exclusion for base; hidden surfaces retain filled 3D materials. No live screen-space or mesh flattening. Added move-palm contact solve and strengthened audit to idle+move. Rebuilding/rerendering all 40 at256/8 CPU samples to keep one provenance chain; previous512 masters remain in round2-backup.
+- Posted field-cannon-b-plain.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-c-textured-lit.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-c-details.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-d-rig-poses.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-idle-strip.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-move-strip.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-attack-strip.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-hit-strip.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-death-strip.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-b-plain.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-c-details.png; actual CYCLES render, visual review pending.
