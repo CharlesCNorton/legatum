@@ -106,3 +106,29 @@ tools/art/anim3d/render.sh audit
 ```
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
+
+## Vehicles / aircraft — bomber
+
+Unit scripts are isolated under `tools/art/anim3d/units/bomber/`. This aircraft uses original closed fuselage lofts, thick airfoil lofts, twin fins, recessed radial engines, rolled cowls, three-bladed propellers, convex glazing with real frame tubes, and the painting's curved stone support. There are no subject image cards. Actual 512 px Cycles AO and Pointiness bakes on the fuselage and both wings drive restrained cavity grime and edge wear; those maps retain their own UV layer beside the rest projection. Mechanical pivots control the airframe and two propellers; released bombs have independent keyed transforms and visibility. The disc stays fixed. Death banks, drops, impacts and buckles the near wing and nose into a held wreck, hiding the damaged support with visibility, never a zero scale.
+
+The standard four finish levers are: (1) align camera and real geometry to the painting, then freeze camera-projected UV colour onto meshes, blending generated painted fills into unseen surfaces; (2) finish geometry with rounded airfoil sections, bevelled lips, real thickness and relief; (3) warm upper-left product key, cool rim and soft fill, with Cycles denoising; (4) measure RGB 10/50/90 percentiles and reuse one bounded rest-pose grade across every frame. Projection retains painted lighting and needs moving-view review. Colour agreement alone never proves silhouette parity. All six installed Blender skills informed geometry, material separation, camera registration, lighting, animation interpolation and rendered QA.
+
+Warm stone standard: target visible top near **#E9CFA0**, darker cream rim. Convert pigment from sRGB to linear before assigning BSDF colour; the bomber's starting value is `(0.815, 0.624, 0.352)`, roughness `.86`, fine noise bump. Its visible surface also receives the painting projection. Recheck rendered pixels after the light/grade changes; a shared shader does not guarantee the same output colour.
+
+```sh
+# CPU geometry build and review (all Blender calls use the gated plain PATH command)
+tools/art/anim3d/units/bomber/render.sh build
+RESOLUTION=512 SAMPLES=8 tools/art/anim3d/units/bomber/render.sh all
+source tools/art/anim3d/env.sh
+"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/bomber/deliver.py all
+# Complete host GPU pass, saved masters, no arguments:
+ROUND=1 tools/art/anim3d/units/bomber/gpu.sh
+```
+
+The GPU handoff renders each stage serially using Cycles Metal at 512 px, writes 512/256 masters, stage review images and animated WebPs, the painting/render/crossfade `bomber-f-restpose-compare.png`, trimmed atlas, validation and an 8-second H.264/yuv420p `bomber-round${ROUND}.mp4`. It explicitly fails if Metal is unavailable. The driver supplies ROUND. `audit.py` checks true 3D principal meshes, stationary base, motion, loop closure and held terminal pose. A successful audit is not painting parity; no PASS file is written automatically.
+
+### Bomber trimmed atlas contract (version 2)
+
+`app/src/assets/units/anim/bomber.{webp,json}` uses logical 160 × 160 cells and anchor `(80,132)`. Rows remain idle/move/attack/hit/death with 8/8/10/4/10 frames at 10/12/14/12/10 fps; only idle/move loop. Empty margins are removed **per frame**; sprites are packed left-to-right with 2 px gutters within each variable-height row. `clips[name].sprites[i] = {x,y,w,h,ox,oy}` specifies atlas rectangle and offset into its original logical cell. Draw at `(anchorX-ax+ox, anchorY-ay+oy)`; do not recenter crops. `frame.w/h` describe logical cells, not atlas stride. `atlas.w/h/quality` describe the actual image. Legacy fixed-grid consumers need this explicit format support before adoption; no runtime is changed here.
+
+Packing retains all 40 frames and selects quality 80/75, refusing anything above 200,000 bytes. Validation reconstructs logical cells, checks alpha, frame counts, offsets, atlas bounds, visible margin, motion and identical visible held death frames (ignoring RGB under zero alpha). Master and raw-frame hashes prevent interrupted/stale renders from entering review. Masters remain in `$ANIM_ROOT/masters/bomber/`; provenance and generated fill stay under `$ANIM_ROOT/assets/bomber/`. Early CPU review is evidence of progress, not a GPU or art sign-off.
