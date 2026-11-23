@@ -157,3 +157,46 @@ hashes, mixed render settings, clipped frames or oversized output. This branch s
 candidate only; it does not modify the runtime atlas reader or replace the painting.
 
 Round 1 remains subject to visual review. The pipeline never creates a PASS marker automatically.
+
+### Barbarian musketman round 2: surface calibration and open motion
+
+Preserve prior evidence in external `masters/barbarian-musketman/round1-cpu` before rebuilding.
+The supplied round-one evidence was CPU512/2; it does not establish a GPU pass. Load all six
+Blender skills and inspect the rest comparison and all five strips before edits.
+
+`refine.py` freezes MPFB macro morphs with native weights intact and applies static
+bevel/solidify/subdivision before camera UV calibration. Register the complete brim, crown and
+rolled rim in painting coordinates while retaining each vertex's camera depth. Cambered feather
+vanes, solid straps, folded clothing and hair remain real geometry. The projection uses finished
+posed vertices, facing and ray visibility; camera rays receive the painting's original pigment,
+while physical materials handle other rays and generated fills handle unseen surfaces. Standard
+preserves painted display colors; reduced product-light energy avoids clipping physical surfaces.
+The static circular stone never receives source figure/foot paint. Its cream/top and darker rim use
+camera-only pigment plus live AO and physical shading. Fit one rest-derived automatic histogram
+grade and retain it across all clips. Audit sampled finished-surface UVs, not an unfinished cage.
+
+Shared feedback 23 establishes open motion as the default: humans use CMU or CC0 Quaternius,
+animals use licensed animated quadrupeds. Retarget reference poses and bone rolls before evaluating
+feet; never repair forward direction by rotating feet after retargeting. In this lane `motion.py`
+reads the pinned CC0 Quaternius Standard glTF hierarchy and channels directly. Crouch idle/move,
+chest hit and death supply world-space deltas; the existing kneeling reference cancels source rolls,
+then a fixed axis transform aligns travel. The kneeling support knee/boot remains planted and the
+lead boot moves only while lifted. This is an adapted low tactical shuffle, not an upright walk.
+The musket-specific recoil and release remain authored; the supporting hand follows a rigid grip
+constraint. Contact shape keys correct actual tail/sash vertices in death, retaining UVs/thickness.
+Record source URLs/licences in the unit's `SOURCES.md` and external `assets/SOURCES.md`, with exact
+source hashes in `motion.lock.json`. The terminal death sample is rendered once and copied.
+
+Every round renders front and top views over the move cycle to
+`barbarian-musketman-g-feet-check.png`; inspect forward direction, planting and sliding along with
+the hero clips. The geometry audit checks planted support-foot positions and two-hand weapon
+contact, with explicit limits: it is not a full clothing/skin collision proof. The decoded atlas
+sheet checks the shipped pixels after trim reconstruction. Validators reject stale rest, master,
+clip, frame, grade, metadata and atlas bytes and verify exact reconstructed alpha.
+
+`ROUND=2 tools/art/anim3d/units/barbarian-musketman/gpu.sh` is the executable no-argument host
+handoff. It preflights Metal before rebuilding, retains a round log and stage/status receipt,
+renders all hero and foot-check stages at 512/GPU48 or higher, exports genuine 512/256 masters,
+packs/validates the 160 px atlas and writes the eight-second five-clip H.264/yuv420p MP4. The GPU
+receipt rejects CPU-labelled sources. It never writes PASS; current surface and motion quality
+still require visual review. A failed preflight or absent receipt must not be described as a GPU pass.

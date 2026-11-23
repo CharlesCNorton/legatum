@@ -12,3 +12,10 @@ for kind in ('linen','coat','hair','bronze'):
  if not (A/f'{kind}-fill.png').exists():shutil.copyfile(R/f'assets/horseman/fill-{kind}.png',A/f'{kind}-fill.png')
 (A/'inputs.json').write_text(json.dumps({p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in A.glob('*.png')},indent=2))
 print('Prepared source',src.size,sb,'registered to',b)
+
+# Open motion is shared externally; reject changed source bytes before rebuilding.
+lock=json.loads((Path(__file__).parent/"motion.lock.json").read_text())
+for name,digest in lock.items():
+ path=R/"assets/quaternius-ual"/name
+ assert path.exists(),f"Missing licensed Quaternius source: {path}"
+ assert hashlib.sha256(path.read_bytes()).hexdigest()==digest,f"Changed motion source: {path}"
