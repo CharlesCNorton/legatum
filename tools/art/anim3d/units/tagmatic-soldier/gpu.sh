@@ -3,7 +3,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/../../../../.."
 source tools/art/anim3d/env.sh
-export ROUND="${ROUND:-2}" RENDER_ENGINE=CYCLES CYCLES_DEVICE=GPU RESOLUTION=512 SAMPLES=48
+export ROUND="${ROUND:-3}" RENDER_ENGINE=CYCLES CYCLES_DEVICE=GPU RESOLUTION=512 SAMPLES=48
 UNIT=tools/art/anim3d/units/tagmatic-soldier
 status="$ANIM_ROOT/review/3d-v2/tagmatic-soldier-gpu-status.txt"
 receipt="$ANIM_ROOT/review/3d-v2/tagmatic-soldier-gpu-round${ROUND}.json"

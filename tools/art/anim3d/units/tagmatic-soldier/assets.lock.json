@@ -38,5 +38,12 @@
       "AnimationLibrary_Godot_Standard.bin": "6e65377d81558333c4093dbb144a48fd19019343d82b1a3a7992a98ec0e0543c",
       "LICENSE": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499"
     }
+  },
+  "stone_fill": {
+    "provider": "OpenAI built-in ImageGen",
+    "output": "01a20a32-9e25-7523-ac44-b9a65d8e7a8a/exec-9de37520-944b-4f6a-9337-55ea2a721b22.png",
+    "license": "CC-BY-4.0 project-generated art",
+    "file": "stone-fill-source.png",
+    "sha256": "b66b3d4288a09b7724db6172f5c4b1c0790bc3bdfe043c11d3bdb07711f0dc21"
   }
 }

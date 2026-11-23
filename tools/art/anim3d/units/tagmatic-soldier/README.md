@@ -1,17 +1,19 @@
-# Tagmatic Soldier — round 2 candidate
+# Tagmatic Soldier — round 3 candidate
 
 This folder owns this unit's build, rendering, review and atlas delivery. See its
 infantry chapter in `../../PLAYBOOK.md`. Run commands from the repository root.
 
 The sole GPU entry point is `tools/art/anim3d/units/tagmatic-soldier/gpu.sh`.
 It writes the editable external masters in
-`~/LegatumRuns/anim-pilot/masters/tagmatic-soldier/`. `ROUND` defaults to 2. It rebuilds and rebakes from pinned inputs before rendering.
+`~/LegatumRuns/anim-pilot/masters/tagmatic-soldier/`. `ROUND` defaults to 3. It rebuilds and rebakes from pinned inputs before rendering.
 
 Inputs stay in `~/LegatumRuns/anim-pilot/assets/tagmatic-soldier/`:
 
 - `painting-source.png`: the archived project painting (CC BY 4.0).
 - `painted-fills.png`: original generated cloth/steel/leather/brass fills
   (CC BY 4.0); prompt in `fills.prompt.txt`.
+- `stone-fill-source.png`: generated clean limestone plate (CC BY 4.0),
+  with prompt in `stone-fill.prompt.txt` and SHA256 in the lockfile.
 - The installed MPFB 2.0.18 CC0 body/rig and MakeHuman system eyes under the shared
   isolated Blender resource directory. No new model or motion download.
 
@@ -75,3 +77,9 @@ modelled folds with authored contact keys.
 this stage and validates all 64 GPU512/48 images and their 256 derivatives. Its
 render receipt is technical evidence, not an art approval. CPU previews retain
 their device labels and must not be called GPU finals.
+
+Round 3 fits the actual spear grip in depth, adds a leather shield back and
+bevelled straps/buckles, uses a registered clean stone plate with live contact AO,
+and lands released equipment using assembly-centre rotation and actual mesh
+clearance. Geometry audits now reject detached held grips. See the round-three
+playbook chapter and external running log for the visual verdict and checks.

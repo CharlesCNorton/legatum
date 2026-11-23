@@ -23,7 +23,7 @@ for clip,(count,fps,loop) in CLIPS.items():
  knees={s:rig.matrix_world@rig.pose.bones['calf_'+s].head for s in ['r','l']}
  wrists={s:rig.matrix_world@rig.pose.bones['lowerarm_'+s].tail for s in ['r','l']}
  spear=[o for o in sc.objects if o.name.startswith(('GEO-overhand ash','GEO-iron spear socket','GEO-forged iron spear'))]
- shieldprops=[o for o in sc.objects if o.name.startswith(('GEO-convex wooden kite','GEO-kite shield','GEO-shield brass','GEO-vertical cross','GEO-horizontal cross','GEO-shield boss'))]
+ shieldprops=[o for o in sc.objects if o.name.startswith(('GEO-convex wooden kite','GEO-kite shield','GEO-shield brass','GEO-vertical cross','GEO-horizontal cross','GEO-shield boss','GEO-shield back'))]
  rigidfloor=[o for o in sc.objects if o.name.startswith(('GEO-lamellar skirt panel','GEO-leather scabbard','GEO-sword brass throat'))]
  props=spear+shieldprops+rigidfloor
  clothfloor=[o for o in sc.objects if o.name.startswith(('GEO-folded red tunic skirt','GEO-tunic gold embroidered hem'))]
@@ -75,21 +75,22 @@ for clip,(count,fps,loop) in CLIPS.items():
   if clip=='death':
    # Free-fall from the last held world pose, accelerating to the stone.
    # Apply after root contact so released equipment never follows root corrections.
-   if i==0:
-    release_world.update({o.name:o.matrix_world.copy() for o in spear+shieldprops})
-   d=min(1,(i/6)**2)
-   spearcenter=Vector((-.1,-.15,2.03));target=Vector((-.10,-.40,.29))
-   landing=Matrix.Translation(target)@Matrix.Rotation(-.33,4,'Y')@Matrix.Translation(-spearcenter)
-   delta=(release_world[spear[0].name]@prop_world[spear[0].name].inverted()).lerp(landing,d)
-   for o in spear:o.matrix_world=delta@prop_world[o.name]
-   d=min(1,(i/5)**2)
-   center=Vector((.10,-.45,1.05));target=Vector((.02,-.28,.25))
-   landing=Matrix.Translation(target)@Matrix.Rotation(1.85,4,'X')@Matrix.Translation(-center)
-   delta=(release_world[shieldprops[0].name]@prop_world[shieldprops[0].name].inverted()).lerp(landing,d)
-   for o in shieldprops:o.matrix_world=delta@prop_world[o.name]
+   # Carry through the initial loss of balance, then release from that actual
+   # hand pose. Previously props detached at frame one and hovered for 0.6 s.
+   for group,release,land,pivot,target,angle,axis in [
+    (spear,2,5,Vector((-.1,-.15,2.03)),Vector((-.10,-.40,.29)),-.33,'Y'),
+    (shieldprops,3,5,Vector((.10,-.45,1.05)),Vector((.02,-.28,.25)),-1.20,'X')]:
+    if i<=release:release_world.update({o.name:o.matrix_world.copy() for o in group})
+    else:
+     d=min(1,((i-release)/(land-release))**2)
+     release_delta=release_world[group[0].name]@prop_world[group[0].name].inverted()
+     center=(release_delta@pivot).lerp(target,d)
+     rotation=release_delta.to_quaternion().slerp(Matrix.Rotation(angle,4,axis).to_quaternion(),min(1,(i-release)/(land-release)))
+     delta=Matrix.Translation(center)@rotation.to_matrix().to_4x4()@Matrix.Translation(-pivot)
+     for o in group:o.matrix_world=delta@prop_world[o.name]
    bpy.context.view_layer.update()
    for group in [spear,shieldprops]:
-    low=min((o.matrix_world@Vector(v)).z for o in group for v in o.bound_box)
+    low=min((o.matrix_world@v.co).z for o in group for v in o.data.vertices)
     if low<.178:
      for o in group:
       m=o.matrix_world.copy();m.translation.z+=.178-low;o.matrix_world=m

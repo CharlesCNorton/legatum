@@ -91,6 +91,18 @@ def linear(x):return x/12.92 if x<=.04045 else ((x+.055)/1.055)**2.4
 stone=mat('cream limestone E9CFA0',tuple(linear(x/255) for x in (233,207,160)),0,.85)
 
 body.data.materials.clear();body.data.materials.append(skin)
+# Keep continuous anatomical under-clothing at bent sleeve/trouser joints.
+# Real hands/head retain skin; the fitted outer garments still supply folds.
+body.data.materials.append(red);body.data.materials.append(leather)
+group_names={g.index:g.name for g in body.vertex_groups}
+for face in body.data.polygons:
+ weights={}
+ for index in face.vertices:
+  for g in body.data.vertices[index].groups:
+   name=group_names[g.group];weights[name]=weights.get(name,0)+g.weight
+ dominant=max(weights,key=weights.get) if weights else ''
+ if dominant.startswith(('upperarm','lowerarm','thigh','calf','spine','pelvis','clavicle')):face.material_index=1
+ elif dominant.startswith(('foot','ball')):face.material_index=2
 # Rest stance landmarks: rear leg braced left, near foot under pointed shield.
 limb('thigh_r','calf_r',(-.39,.17,.28),screen(88,169,.07));limb('thigh_l','calf_l',(.20,-.20,.29),screen(143,172,.15))
 for s in ['l','r']:aim('foot_'+s,(0,-1,-.12));aim('ball_'+s,(0,-1,0))
@@ -104,6 +116,17 @@ for name in ['thumb_01_r','thumb_02_r','thumb_03_r']:
 for p in rig.pose.bones:
  if p.name.endswith('_r') and any(p.name.startswith(n) for n in ['index','middle','ring','pinky']):
   p.rotation_mode='XYZ';p.rotation_euler.x=.85
+bpy.context.view_layer.update()
+# Fit the grip in depth as well as screen space before building the sleeves.
+# The old hand was 14 cm behind the shaft: invisible at rest, obvious on a fall.
+hand=rig.pose.bones['hand_r'];hand_matrix=hand.matrix.copy()
+palm=rig.matrix_world@hand.head.lerp(hand.tail,.45)
+shaft_a=screen(43,14,.27);shaft_b=screen(177,62,.27);axis=(shaft_b-shaft_a).normalized()
+grip=shaft_a+axis*(palm-shaft_a).dot(axis)
+wrist=rig.matrix_world@rig.pose.bones['lowerarm_r'].tail
+pole=rig.matrix_world@rig.pose.bones['lowerarm_r'].head
+limb('upperarm_r','lowerarm_r',wrist+D*(grip-palm).dot(D),pole)
+hand_matrix.translation=rig.pose.bones['hand_r'].head;rig.pose.bones['hand_r'].matrix=hand_matrix
 bpy.context.view_layer.update()
 for f in body.data.polygons:f.use_smooth=True
 sub=body.modifiers.new('Anatomy smoothness','SUBSURF');sub.levels=1;sub.render_levels=1
@@ -263,7 +286,20 @@ for i in range(N):fs.append((0,1+i,1+(i+1)%N))
 for j in range(L-1):
  for i in range(N):q=1+j*N+i;n=1+j*N+(i+1)%N;fs.append((q,n,n+N,q+N))
 shield=solid(mesh('convex wooden kite shield',vs,fs,red),.035);bevel(shield,.003);attach(shield,'lowerarm_l')
+shield.data.materials.append(leather)
+shield.modifiers['Physical material thickness'].material_offset=1
+shield.modifiers['Physical material thickness'].material_offset_rim=1
 shield['projection_weight']=.95
+# Real enarmes: broad, bevelled leather ribbons on the concave back. Their
+# attachment and release are part of the shield assembly, including buckles.
+for k,y in enumerate((100,140)):
+ pts=[screen(x,y,.35+.10*(1-min(1,((Vector((x,y))-center).length/90))**2)-.044-.055*sin(pi*j/12)) for j,x in enumerate([124+29*j/12 for j in range(13)])]
+ verts=[p+V*dz for p in pts for dz in (-.022,.022)]
+ strap=bevel(solid(mesh('shield back enarme '+str(k),verts,[(2*j,2*j+1,2*j+3,2*j+2) for j in range(12)],leather),.009),.003)
+ attach(strap,'lowerarm_l')
+ for j in (0,12):attach(sphere('shield back strap rivet',pts[j]-D*.006,(.007,.007,.007),gold),'lowerarm_l')
+ buckle=[pts[3]+Vector((dx,0,0))+V*dz-D*.008 for dx,dz in [(-.018,-.028),(.018,-.028),(.018,.028),(-.018,.028),(-.018,-.028)]]
+ attach(curve('shield back buckle',buckle,.004,gold),'lowerarm_l')
 rim=curve('kite shield brass rim',[screen(*p,.357) for p in edge+[edge[0]]],.011,gold);attach(rim,'lowerarm_l')
 for i in range(0,N,4):attach(sphere('shield brass nail',screen(*edge[i],.37),(.0045,.0045,.0045),gold),'lowerarm_l')
 # Raised gold cross follows the domed shield; it is the supplied painting's device.
@@ -275,6 +311,7 @@ attach(sphere('shield boss',screen(145,113,.49),(.066,.036,.080),gold),'lowerarm
 # Spear in the raised hand, the broad iron leaf faces the camera.
 start=screen(43,14,.27);socket=screen(177,62,.27);tip=screen(213,77,.27)
 shaft=curve('overhand ash spear',[start,socket],.012,wood);attach(shaft,'hand_r')
+shaft['shaft_axis_local']=json.dumps([list(shaft.matrix_world.inverted()@p) for p in (start,socket)])
 attach(curve('iron spear socket',[socket-(tip-socket)*.20,socket+(tip-socket)*.25],.015,steel),'hand_r')
 axis=(tip-socket).normalized();wide=Vector((-axis.z,0,axis.x)).normalized();centerleaf=socket.lerp(tip,.35);v=[socket,centerleaf+wide*.034,tip,centerleaf-wide*.034,centerleaf+D*.014,centerleaf-D*.014]
 f=[(0,1,4),(1,2,4),(2,3,4),(3,0,4),(1,0,5),(2,1,5),(3,2,5),(0,3,5)]
@@ -294,7 +331,7 @@ sc.render.engine='CYCLES';sc.cycles.device='CPU';sc.cycles.samples=8;sc.cycles.u
 sc.render.resolution_x=sc.render.resolution_y=256;sc.render.resolution_percentage=100;sc.render.film_transparent=True;sc.render.image_settings.file_format='PNG';sc.render.image_settings.color_mode='RGBA'
 sc.view_settings.view_transform='Standard';sc.view_settings.look='None';sc.view_settings.exposure=0
 rig['neutral_pose']=json.dumps({p.name:[list(row) for row in p.matrix_basis] for p in rig.pose.bones});rig['source']='MPFB 2.0.18 CC0 anatomy and game_engine rig'
-sc['cream_target_srgb']='#E9CFA0';sc['unit_slug']='tagmatic-soldier';sc['round']=2
+sc['cream_target_srgb']='#E9CFA0';sc['unit_slug']='tagmatic-soldier';sc['round']=3
 # The physical stone keeps live contact shadows. Pigment is camera-only: it is
 # not a lamp and contains none of the source's feet or baked cast shadows.
 n=stone.node_tree.nodes;l=stone.node_tree.links;bs=n.get('Principled BSDF')
@@ -329,6 +366,17 @@ for o in list(sc.objects):
  for mod in list(o.modifiers):
   if mod.type in {'BEVEL','SOLIDIFY','SUBSURF'}:bpy.ops.object.modifier_apply(modifier=mod.name)
 sc['finished_surface_projection']=True
+# Frozen camera UVs on the real disc preserve the painted limestone. The
+# generated top contains no feet/shadows; moving contacts use fresh scene AO.
+bpy.context.view_layer.update()
+uv=base.data.uv_layers.new(name='StoneRestUV')
+for loop in base.data.loops:
+ q=world_to_camera_view(sc,sc.camera,base.matrix_world@base.data.vertices[loop.vertex_index].co)
+ uv.data[loop.index].uv=(q.x,q.y)
+uvn=n.new('ShaderNodeUVMap');uvn.uv_map='StoneRestUV'
+tex=n.new('ShaderNodeTexImage');tex.image=bpy.data.images.load(str(A/'stone-projection.png'));tex.extension='EXTEND';l.new(uvn.outputs[0],tex.inputs['Vector'])
+plate=n.new('ShaderNodeMixRGB');l.new(tex.outputs['Alpha'],plate.inputs[0]);l.new(stonecolor.outputs[0],plate.inputs[1]);l.new(tex.outputs['Color'],plate.inputs[2]);l.new(plate.outputs[0],shade.inputs[1])
+weight.inputs[1].default_value=.97
 bpy.ops.wm.save_as_mainfile(filepath=str(M/'unpainted.blend'))
 # Freeze projected UVs at rest. Facing and ray visibility weights reject occluded/back surfaces.
 # Convert curves to meshes before projection, preserving real cross section.

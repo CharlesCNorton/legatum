@@ -20,11 +20,17 @@ for clip in ([os.environ['AUDIT_CLIP']] if os.environ.get('AUDIT_CLIP') else ['i
  # Relative transforms certify released ornaments remain one rigid assembly.
  sc.frame_set(frames[0]);bpy.context.view_layer.update()
  assemblies=[]
- for prefixes in [('GEO-overhand ash','GEO-iron spear socket','GEO-forged iron spear'),('GEO-convex wooden kite','GEO-kite shield','GEO-shield brass','GEO-vertical cross','GEO-horizontal cross','GEO-shield boss')]:
+ for prefixes in [('GEO-overhand ash','GEO-iron spear socket','GEO-forged iron spear'),('GEO-convex wooden kite','GEO-kite shield','GEO-shield brass','GEO-vertical cross','GEO-horizontal cross','GEO-shield boss','GEO-shield back')]:
   group=[o for o in sc.objects if o.name.startswith(prefixes)];reference=group[0]
   assemblies.append((reference,[(o,reference.matrix_world.inverted()@o.matrix_world) for o in group[1:]]))
  for fr in frames:
   sc.frame_set(fr);bpy.context.view_layer.update();dg=bpy.context.evaluated_depsgraph_get();cam_inv=sc.camera.matrix_world.inverted();span=sc.camera.data.ortho_scale;xs=[];ys=[];zmin=99;culprits=[];feet={};directions={}
+  shaft=bpy.data.objects['GEO-overhand ash spear']
+  a,b=[shaft.matrix_world@Vector(p) for p in json.loads(shaft['shaft_axis_local'])]
+  hand=rig.pose.bones['hand_r'];palm=rig.matrix_world@hand.head.lerp(hand.tail,.45)
+  axis=(b-a).normalized();nearest=a+axis*max(0,min((b-a).length,(palm-a).dot(axis)))
+  grip_distance=(palm-nearest).length
+  if clip!='death' or fr<=3:assert grip_distance<.055,(clip,fr,'detached grip',grip_distance)
   assert all(abs(base.matrix_world[i][j]-base_mat[i][j])<1e-7 for i in range(4) for j in range(4))
   for reference,parts in assemblies:
    for ob,expected in parts:
@@ -40,7 +46,7 @@ for clip in ([os.environ['AUDIT_CLIP']] if os.environ.get('AUDIT_CLIP') else ['i
     forward=ev.matrix_world.to_3x3()@Vector((0,-1,0));directions[o.name]={'yaw_degrees':round(math.degrees(math.atan2(forward.x,-forward.y)),3),'sole_min_z':round(low,5)}
    ev.to_mesh_clear();xs.extend([xmin,xmax]);ys.extend([ymin,ymax]);zmin=min(zmin,low) if o!=base else zmin
    if xmin<.005 or ymin<.005 or xmax>.995 or ymax>.995 or (o!=base and low<.165):culprits.append({'object':o.name,'bbox':[round(x*256,1) for x in [xmin,1-ymax,xmax,1-ymin]],'min_z':round(low,3)})
-  bounds.append({'frame':fr,'bbox256':[round(x*256,1) for x in [min(xs),1-max(ys),max(xs),1-min(ys)]],'min_z':round(zmin,3),'suspects':culprits,'shoe_min_z':feet,'feet_direction':directions})
+  bounds.append({'frame':fr,'grip_distance':round(grip_distance,5),'bbox256':[round(x*256,1) for x in [min(xs),1-max(ys),max(xs),1-min(ys)]],'min_z':round(zmin,3),'suspects':culprits,'shoe_min_z':feet,'feet_direction':directions})
  records[clip]={'stationary_base':True,'samples':bounds};print(clip,[(b['bbox256'],b['min_z']) for b in bounds],flush=True)
 (M/('geometry-audit-'+os.environ['AUDIT_CLIP']+'.json' if os.environ.get('AUDIT_CLIP') else 'geometry-audit.json')).write_text(json.dumps(records,indent=2))
 failures=[]

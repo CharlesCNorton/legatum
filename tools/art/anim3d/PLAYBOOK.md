@@ -264,3 +264,34 @@ the trimmed 160 atlas, validates exact alpha/offset reconstruction and held deat
 encodes the trim-aware round MP4, verifies ffprobe output, and writes a receipt
 with `art_approved: false`. It never creates PASS automatically. Inspect the
 GPU result at 256 and 64 before art approval.
+
+
+### Tagmatic round 3: grip depth, stone pigment and released equipment
+
+The round-2 GPU pass completed at 187,990 bytes/Q75; its visual critique exposed
+plain limestone and a disconnected-looking death. A matched 2D grip had hidden
+a roughly 14 cm depth gap. Fit the real wrist along the camera depth axis before
+building sleeves or freezing UVs, then audit palm-to-shaft distance in every held
+sample. Painting alignment alone cannot certify a physical grip.
+
+The stone now projects a registered generated clean plate on its full-depth
+bevelled disc. `stone-fill.prompt.txt` and `assets.lock.json` pin the source edit;
+the generated top removes the soldier and shadows, the original unobscured lower
+rim retains its exact pigment. Live AO supplies new contacts. This texture never
+cuts the silhouette or replaces geometry. One automatic hashed rest grade still
+applies to all clips. Standard/None preserves existing painted illumination.
+
+The shield has a leather back material, solid bevelled enarmes, rivets and buckles.
+All belong to the same rigid release assembly. Continuous MPFB under-clothing
+keeps exposed bent sleeve/trouser joints from reverting to skin. Death carries
+props through the initial loss of balance, then releases from their actual held
+poses. Interpolate the assembly centre and quaternion separately; interpolating
+world transform translations can create an unwanted orbital arc. Use actual
+mesh vertices for ground clearance: a rotated bounding box can spuriously lift
+a thin shield above the stone. This remains an authored equipment landing and
+modelled cloth contact, not a rigid-body or cloth simulation.
+
+`gpu.sh` defaults to ROUND=3 and rebuilds everything from the pinned inputs. It
+retains GPU512/48 and 256 masters, all interim sheets, feet diagnostics, trimmed
+160 atlas, alpha/offset/motion validation and the eight-second trim-aware MP4.
+A technical receipt leaves art_approved false; only visual review can create PASS.

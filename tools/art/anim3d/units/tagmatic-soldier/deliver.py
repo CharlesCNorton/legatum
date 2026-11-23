@@ -150,7 +150,7 @@ def validate():
 
 def video():
  meta=json.loads((OUT/f'{SLUG}.json').read_text());atlas=read(OUT/f'{SLUG}.webp');frames={c:[shrink(im,320) for im in unpack(meta,atlas,c)] for c in CLIPS}
- out=REV/f'{SLUG}-round{os.environ.get("ROUND","2")}.mp4'
+ out=REV/f'{SLUG}-round{os.environ.get("ROUND","3")}.mp4'
  proc=subprocess.Popen(['ffmpeg','-y','-loglevel','error','-f','rawvideo','-pix_fmt','rgb24','-s','1600x348','-r','30','-i','-','-an','-c:v','libx264','-threads','2','-pix_fmt','yuv420p','-crf','20','-movflags','+faststart',str(out)],stdin=subprocess.PIPE)
  for t in range(240):
   canvas=Image.new('RGBA',(1600,348),CREAM);d=ImageDraw.Draw(canvas)
@@ -162,13 +162,16 @@ def video():
  assert probe['codec_name']=='h264' and probe['pix_fmt']=='yuv420p'
  assert (probe['width'],probe['height'],int(probe['nb_frames']))==(1600,348,240)
  assert abs(float(probe['duration'])-8)<.001 and probe['r_frame_rate']=='30/1'
+ # Decode the delivered video, rather than composing a separate idealized sheet.
+ contact=out.with_name(out.stem+'-contact.png')
+ subprocess.run(['ffmpeg','-y','-loglevel','error','-i',str(out),'-vf','fps=5,scale=800:174,tile=2x5','-frames:v','1',str(contact)],check=True)
  (M/'video-validation.json').write_text(json.dumps({'file':str(out),'sha256':sha(out),'stream':probe},indent=2))
  print('VIDEO_READY',out,probe)
 
-def gpu_masters():
+def verify_masters(device,samples):
  for stage,count in [('b',3),('c',1),('d',4),('g',16)]+[('e-'+c,n) for c,(n,_,_) in CLIPS.items()]:
   folder=M/'renders'/stage;meta=json.loads((folder/'render.json').read_text())
-  assert (meta['device'],meta['engine'],meta['resolution'],meta['samples'],meta['frames'])==('GPU','CYCLES',512,48,count),(stage,'not GPU512/48')
+  assert (meta['device'],meta['engine'],meta['resolution'],meta['samples'],meta['frames'])==(device,'CYCLES',512,samples,count),(stage,f'not {device}512/{samples}')
   blend=M/'clips'/f'{stage[2:]}.blend' if stage.startswith('e-') else M/'clips/attack.blend' if stage=='d' else M/'clips/move.blend' if stage=='g' else M/('unpainted.blend' if stage=='b' else f'{SLUG}.blend')
   assert meta['blend_sha256']==sha(blend),(stage,'stale model')
   reviewed=json.loads((folder/'review.json').read_text());assert reviewed['render_sha256']==sha(folder/'render.json')
@@ -178,11 +181,14 @@ def gpu_masters():
    expected=raw if stage=='b' else graded(raw)
    assert read(M/'512'/stage/f'{i:02}.png').tobytes()==expected.tobytes(),(stage,i,'stale 512 master')
    assert read(M/'256'/stage/f'{i:02}.png').tobytes()==shrink(expected,256).tobytes(),(stage,i,'stale 256 master')
- print('GPU_MASTERS_VERIFIED',64,'images at both sizes')
+ print(device+'_MASTERS_VERIFIED',64,'images at both sizes; samples',samples)
+
+def gpu_masters():
+ verify_masters('GPU',48)
 
 def receipt():
  gpu_masters();validate()
- proof={'round':os.environ.get('ROUND','2'),'model_sha256':sha(M/f'{SLUG}.blend'),'atlas_sha256':sha(OUT/f'{SLUG}.webp'),'validation':json.loads((M/'validation.json').read_text()),'geometry':json.loads((M/'geometry-audit.json').read_text()),'video':json.loads((M/'video-validation.json').read_text()),'art_approved':False}
+ proof={'round':os.environ.get('ROUND','3'),'model_sha256':sha(M/f'{SLUG}.blend'),'atlas_sha256':sha(OUT/f'{SLUG}.webp'),'validation':json.loads((M/'validation.json').read_text()),'geometry':json.loads((M/'geometry-audit.json').read_text()),'video':json.loads((M/'video-validation.json').read_text()),'art_approved':False}
  (REV/f'{SLUG}-gpu-round{proof["round"]}.json').write_text(json.dumps(proof,indent=2))
 
 if __name__=='__main__':
@@ -192,4 +198,5 @@ if __name__=='__main__':
  elif command=='validate':validate()
  elif command=='video':video()
  elif command=='gpu-masters':gpu_masters()
+ elif command=='cpu-masters':verify_masters('CPU',8)
  elif command=='receipt':receipt()
