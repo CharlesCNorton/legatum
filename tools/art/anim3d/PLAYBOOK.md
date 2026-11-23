@@ -106,3 +106,83 @@ tools/art/anim3d/render.sh audit
 ```
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
+
+## Infantry chapter: Medjay (round 1)
+
+This unit's scripts are isolated under `tools/art/anim3d/units/medjay/`. The
+existing spearman chapter supplies MPFB installation and environment setup;
+Medjay uses its own 53-bone MPFB body and original kit, not hoplite armour.
+The reference has a bare torso, pleated ivory kilt, feathered headband, long
+bronze-tipped spear and round-topped oxhide shield. All are true 3D surfaces.
+Masters, source painting, generated fill textures and bakes remain outside git
+under `ANIM_ROOT/assets/medjay` and `ANIM_ROOT/masters/medjay`.
+
+### Standard finish and review method
+
+Apply all four quality levers together: align the rest camera and geometry to
+the painting, project the original painting as fixed UV colour on the actual
+skinned surfaces, finish geometry with physical thickness/rounded edges/folds,
+and light as a painted miniature with a warm upper-left key, cool rim and soft
+fill. Camera projection is the standard method, not a flat subject card.
+Normal-incidence and source-alpha masks blend into generated painted skin,
+linen, hide and wood fills on unseen sides. Actual geometry AO and Pointiness
+bakes supply cavity shading and roughness variation. Projection includes painted
+lighting, so large pose changes and texture registration need visual review.
+
+The single stationary cream stone disc targets **sRGB #E9CFA0** with a darker
+rim and fine grain. Shader inputs are linear values, not that hex pasted into
+Blender. Medjay starts with linear pigment `(.98,.60,.30)` and a restrained warm
+emission contribution under its product lights. A 17-quantile foreground RGB transfer is calibrated against the painting
+at rest, bounded to 24 levels/channel and frozen for all clips; alpha is retained.
+Raw frames remain ungraded. Never histogram-fit each frame independently.
+`medjay-f-restpose-compare.png` includes the painting, 3D, a half split and
+50/50 crossfade at 256 px with 64 px checks. File creation is not art approval.
+
+All six installed Blender skills inform the pipeline: organic subdivision and
+bevels; dielectric cloth/skin versus bronze; aimed key/fill/rim; orthographic
+reference framing; clamped skeletal keys; Cycles previews and image-sequence
+verification. All Blender calls are plain `blender -b --disable-autoexec` through
+the machine-wide gate. Never bypass PATH or launch concurrent heavy processes.
+
+```sh
+tools/art/anim3d/units/medjay/render.sh build
+SAMPLES=8 tools/art/anim3d/units/medjay/render.sh b
+tools/art/anim3d/units/medjay/render.sh finish
+SAMPLES=8 tools/art/anim3d/units/medjay/render.sh c
+tools/art/anim3d/units/medjay/render.sh animate
+for stage in c-details d e-idle e-move e-attack e-hit e-death; do
+  SAMPLES=8 tools/art/anim3d/units/medjay/render.sh "$stage"
+done
+```
+
+The five authored actions are idle 8, move 8, attack 10, hit 4 and death 10.
+Idle/move have an extra keyed seam pose beyond the exported range. Death releases the spear and shield, curls the legs with world-space IK and ends
+with a held pose. Motion is authored on the MPFB skeleton; it is not represented
+as motion capture. Kit follows hands, forearm, head and pelvis. The kilt has
+modeled folds and thickness; it is not a cloth simulation.
+
+### GPU handoff and atlas extension
+
+Run from the repo root, no arguments:
+
+```sh
+ROUND=1 tools/art/anim3d/units/medjay/gpu.sh
+```
+
+This serial script selects Cycles Metal explicitly, refuses CPU fallback, renders
+every stage and all five clips at 512 px, retains 512/256 masters, writes all
+review images/WebPs, packs and validates the candidate, audits the rig and writes
+`medjay-round${ROUND}.mp4`. The video reconstructs trimmed frames, shows all five
+clips side by side at 2x on cream, and verifies 240 frames of H.264 yuv420p (8 s).
+GPU results still need visual review. The script never writes a PASS marker.
+
+Medjay uses the **version 2 trimmed-rows format**. `frame:{w:160,h:160,ax:84,ay:141}`
+defines the original logical frame and stationary anchor. `clips` retains
+`row,frames,fps,loop`; each clip also has `rects`, one entry per frame with
+`{x,y,w,h,ox,oy}`. `(x,y,w,h)` locates a cropped rectangle in the WebP; paste it
+at `(ox,oy)` in a transparent 160px logical frame before drawing at `(ax,ay)`.
+Physical atlas rows have variable heights and widths; never derive pixel
+coordinates from `row*160` or frame index. Two-pixel gutters separate crops.
+Quality tries 90/85/80/75, never below 75, and refuses >200,000 bytes. No frames
+are dropped. Blend hashes, source-frame hashes and the frozen grade bind the
+pack report to its source renders. The candidate is not wired into the runtime.
