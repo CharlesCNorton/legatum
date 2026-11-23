@@ -195,3 +195,59 @@ The video reconstructs each trimmed frame using its offsets, shows all five clip
 side by side at 2× on cream, and verifies H.264/yuv420p/240 frames at 30 fps (~8 s).
 No CPU fallback is allowed on this GPU path. Only a reviewed painting-parity result
 may create `fighter-PASS`; scripts never grant themselves art approval.
+
+### Fighter resumed round 2: surface and mechanical review
+
+Preserve the previous editable masters, raw/graded frames and review sheets before
+rebuilding (`masters/fighter/round1-preserved`). The supplied round-one manifests
+were CPU512/8; those images do not prove a host GPU pass.
+
+The glazing is a full-depth smooth ellipsoid with framing seated on that surface;
+free-standing frame loops cannot be repaired by projected paint. The propeller
+uses an orthonormal circular plane fitted to source landmarks. The painting's four
+tips are not exactly symmetric, so the fit is a documented geometric compromise.
+Quaternion rotation is local to the fitted shaft, with closed, thick blades and
+separately assigned ochre tips. Do not add a rotation to the parent's Euler X once
+the shaft has been tilted. Subdivision/bevels are applied before freezing source
+UVs. The existing generated olive fill and six actual AO/Pointiness maps remain.
+
+Source-painted illumination is now a 96% camera-only pigment branch; non-camera
+rays and unseen surfaces retain physical materials, generated brushwork and baked
+cavity/wear. Standard/None avoids a second highlight compression on that source.
+This is specific to the painted-reference workflow. Warm key, soft fill and cool
+rim remain. Fit one bounded automatic RGB quantile grade at rest and freeze it
+across all clips. Material-space blade exclusions must drive both the pigment
+colour and its shader weight, or a static duplicate blade survives in the wing.
+
+The plain circular stone disc has physical top/rim materials, restrained grain,
+soft bevel and real contact shadows; it receives no projected painting. This
+prevents static aircraft/support shadows from remaining when those objects move.
+The complete solid support topples around its foot in death instead of vanishing.
+The airframe and support each receive rigid contact correction against the actual
+disc footprint and world ground. The final held pose is rendered once then copied
+only after verifying every visible mesh/light/camera transform and visibility.
+
+**Motion standard:** humans use CMU free-use or Quaternius CC0 idle/walk/hit/death
+retargeted with matching rest bases and bone rolls; animals use native CC0 animated
+quadruped motion. Do not hand-correct feet after retargeting. Only weapon-specific
+attacks are authored. This aircraft has no human/animal rig or feet: authored rigid
+flight/shaft motion is appropriate. Its required `fighter-g-feet-check.png` shows
+actual top/front views of all eight move samples, labelled with that exception,
+for travel-axis, propeller and stationary-base inspection. Unit-local `SOURCES.md`
+and the external ledger record all inputs and licences.
+
+Packing now uses premultiplied bicubic reduction with unchanged 8-bit alpha,
+transparent gutters, and shared rectangles for identical frames. It retains all
+40 samples and five logical rows. The validator checks decoded alpha byte for
+byte, crop bounds/offsets/gutters, timing, motion, exact source/decoded terminal
+hold, current master/clip/grade/frame hashes and consistent engine/device/sample
+settings. Its decoded-atlas sheet and round MP4 come from the shipped WebP.
+
+`ROUND=2 tools/art/anim3d/units/fighter/gpu.sh` is the complete no-argument host
+entry point. It resolves this checkout, refreshes clips from the reviewed master,
+audits geometry/contact, renders b/c/all clips/top-front views at real GPU512,
+exports 512/256 masters, verifies GPU provenance, packs/validates and encodes the
+five-clip 1600×348 eight-second H.264/yuv420p MP4. It retains a round log, status and
+hash-bound receipt with `art_approved:false`. Explicit failure guards prevent a
+missing input or failed stage from falling through. A CPU preview cannot satisfy
+its GPU512 gate. Neither the script nor the technical validator writes art PASS.
