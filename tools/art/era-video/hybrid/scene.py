@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Hybrid Classical v6. Python --prepare; Blender 5.3 builds/bakes/renders under lead's lock."""
+"""Hybrid Classical v8. Python --prepare; Blender 5.3 builds/bakes/renders under lead's lock."""
 import os
 for _name in ('OMP_NUM_THREADS', 'MKL_NUM_THREADS', 'OPENBLAS_NUM_THREADS',
               'VECLIB_MAXIMUM_THREADS'):
@@ -19,6 +19,7 @@ import numpy as np
 HERE = Path(__file__).resolve().parent
 BASE = HERE.parent / 'build_scene.py'
 FRAMES, FPS, SIM_START = 144, 24, -95
+PREVIEW_SIZE, FULL_SIZE = (960, 540), (1920, 1080)
 CAMERA_Z, HEIGHT, WIDTH, RELIEF = 800.0, 200.0, 200 * 16 / 9, 8.0
 DOLLY, DRIFT = .16, (12.0, 11.0)
 INPUTS = ('painting.png', 'background.png', 'depth-smooth16.png', 'relief.npz',
@@ -29,10 +30,12 @@ SHIP_SCALE, SHIP_Z = 2.1, 32.
 # The painted galley at this water depth spans source x=575..720.
 PAINTED_SHIP_BOUNDS = ((575., 550.), (720., 550.))
 SHIP_WATERLINE = -.65
-FLUID_RESOLUTION, FLUID_SIZE = 96, (32, 88, 28)
+FLUID_RESOLUTION, FLUID_SIZE = 128, (42, 96, 28)
+FLUID_NOISE_SCALE = 2
 # Extinction is per world unit: the 28-unit-deep domain needs a small gain.
 # At 3.4 even dilute cached billows saturated into an apparently solid box.
 SMOKE_Z, SMOKE_DENSITY_GAIN = 24., .3
+FLAME_FLICKER_GAIN = 5
 SMOKE_FADE = (.67, .84)
 FLUID_GRAVITY = (0., -9.81, 0.)  # +Y is picture-up; Z is camera depth.
 BANNERS = (
@@ -199,11 +202,14 @@ def prepare(args):
         cv2.fillPoly(patch,[np.array(polygon)],strength)
         spill = np.maximum(spill,cv2.GaussianBlur(patch,(0,0),10))
     Image.fromarray(np.uint8(spill*255)).save(textures/'fire-spill.png')
-    y, x = np.mgrid[:540, :960]
+    y, x = np.mgrid[:PREVIEW_SIZE[1], :PREVIEW_SIZE[0]]
     rng = np.random.default_rng(44)
     tooth = np.clip(1 + .012*np.sin(x*2.3)*np.sin(y*2.6)
                     + rng.normal(0, .003, x.shape), .975, 1)
-    Image.fromarray(np.uint8(tooth*255)).save(textures / 'canvas.png')
+    canvas = Image.fromarray(np.uint8(tooth*255))
+    canvas.save(textures / 'canvas.png')
+    # The same tooth at twice the pixel density, not a different grain pattern.
+    canvas.resize(FULL_SIZE, Image.Resampling.BILINEAR).save(textures / 'canvas-full.png')
     files = {str(p.relative_to(args.masters)): digest(p)
              for folder in (plates, textures) for p in sorted(folder.iterdir()) if p.is_file()}
     manifest = {'source': str(args.source), 'source_hashes':
@@ -415,7 +421,7 @@ def water(args, relief):
     wake = mathn(tree, 'MULTIPLY', mathn(tree, 'MULTIPLY', ridge, trail),
                  mathn(tree, 'MULTIPLY', decay, noise.outputs['Fac']))
     bump = node(tree, 'ShaderNodeBump', 'Real time-varying surface normal')
-    setv(bump, 'Strength', .52); setv(bump, 'Distance', .20)
+    setv(bump, 'Strength', .72); setv(bump, 'Distance', .28)
     tree.links.new(mathn(tree, 'ADD', noise.outputs['Fac'], wake), bump.inputs['Height'])
     # Emission anchors albedo to the original linear pigment. Gloss adds a restrained
     # moving reflection only; a large diffuse contribution would double-light the art.
@@ -445,9 +451,22 @@ def water(args, relief):
     tree.links.new(foam.outputs[0], emission.inputs['Color'])
     # Broad, moving bands are visible at 960 wide; high-frequency normals alone
     # mostly disappear in antialiasing. Modulate only water, never the painting.
-    moving = mathn(tree, 'MULTIPLY', ripple, .13)
-    sparkle = mathn(tree, 'MULTIPLY', mathn(tree, 'GREATER_THAN', noise.outputs['Fac'], .64),
-                    mathn(tree, 'MULTIPLY', mathn(tree, 'MAXIMUM', ripple, 0), .65))
+    moving = mathn(tree, 'MULTIPLY', ripple, .21)
+    # Soft thresholds keep bright horizontal crests readable without binary popping.
+    crest = node(tree, 'ShaderNodeMapRange', 'Rolling sunlit ripple crests'); crest.clamp=True
+    setv(crest, 'From Min', .55); setv(crest, 'From Max', .82)
+    tree.links.new(ripple, crest.inputs['Value'])
+    breakup = node(tree, 'ShaderNodeMapRange', 'Sparse glint breakup'); breakup.clamp=True
+    setv(breakup, 'From Min', .54); setv(breakup, 'From Max', .73)
+    tree.links.new(noise.outputs['Fac'], breakup.inputs['Value'])
+    sparkle = mathn(tree, 'MULTIPLY', crest.outputs[0], breakup.outputs[0])
+    glints = node(tree, 'ShaderNodeMixRGB', 'Ivory light on painted wave crests')
+    glints.blend_type = 'ADD'
+    tree.links.new(mathn(tree, 'MULTIPLY', sparkle, .48), glints.inputs[0])
+    tree.links.new(foam.outputs[0], glints.inputs[1])
+    glints.inputs[2].default_value = (.62, .59, .43, 1)
+    tree.links.new(glints.outputs[0], emission.inputs['Color'])
+    sparkle = mathn(tree, 'MULTIPLY', sparkle, .90)
     ellipse=mathn(tree,'ADD',mathn(tree,'POWER',mathn(tree,'MULTIPLY',dx,13),2),
                   mathn(tree,'POWER',mathn(tree,'MULTIPLY',dy,145),2))
     contact=mathn(tree,'MULTIPLY',mathn(tree,'EXPONENT',mathn(tree,'MULTIPLY',ellipse,-2)),.62)
@@ -455,8 +474,8 @@ def water(args, relief):
     tree.links.new(mathn(tree, 'ADD', luminance, mathn(tree, 'ADD', moving, sparkle)),
                    emission.inputs['Strength'])
     gloss = node(tree, 'ShaderNodeBsdfGlossy', 'Warm moving sun glints')
-    gloss.inputs['Color'].default_value = (.16, .17, .15, 1)
-    gloss.inputs['Roughness'].default_value = .22
+    setv(gloss, 'Color', (.23, .24, .21, 1))
+    setv(gloss, 'Roughness', .19)
     tree.links.new(bump.outputs['Normal'], gloss.inputs['Normal'])
     add = node(tree, 'ShaderNodeAddShader', 'Pigment plus glints')
     tree.links.new(emission.outputs[0], add.inputs[0]); tree.links.new(gloss.outputs[0], add.inputs[1])
@@ -662,26 +681,63 @@ def ship(args, depth):
 
 
 def ship_splashes(args, parent):
-    """Small reusable brush-shaped meshes; no expensive liquid/particle solve."""
+    """Stroke-synchronous foam decals and pooled ballistic spray particles."""
     mat, tree = material('Warm ivory bow spray and rowing foam')
     e = node(tree, 'ShaderNodeEmission', 'Sunlit foam pigment')
-    setv(e, 'Color', (.70, .69, .56, 1)); setv(e, 'Strength', 1.15)
+    setv(e, 'Color', (.82, .81, .68, 1)); setv(e, 'Strength', 1.25)
     alpha = ship_visibility(args, tree)
     aov(tree, alpha); finish_surface(mat, e.outputs[0], alpha)
-    # Each oar enters on the same phase as its shaft; short fans lift and fall.
+    # Project the actual rotated blade tip onto the water. The existing shaft
+    # sweep is unchanged; cos(phase)<0 is its downstroke, deepest at phase=pi.
+    def tip(side, index, phase):
+        rx, rz = side*.15*math.cos(phase), side*.36*math.sin(phase)
+        reach = math.cos(rx)*side*2.85 + math.sin(rx)*.24
+        return (-4.2+index*.95-math.sin(rz)*reach,
+                side*.95+math.cos(rz)*reach, SHIP_WATERLINE+.04)
+
     for side in (-1, 1):
         for index in range(9):
             fan = mesh(f'GEO-oar-splash-{side}-{index}',
-                       [(-.45,0,0),(.40,0,0),(.23,side*.22,.32),
-                        (0,side*.08,.13),(-.20,side*.16,.24)],
+                       [(-.55,0,0),(.50,0,0),(.31,side*.22,.62),
+                        (0,side*.08,.20),(-.25,side*.16,.48)],
                        [(0,1,2,3,4)], mat, parent=parent)
+            # Broken low rings spread along the surface after each entry.
+            verts, faces = [], []
+            for segment in range(12):
+                if segment in (2, 6, 9):
+                    continue
+                start = len(verts)
+                for angle, radius in ((segment*.524,.52),((segment+1)*.524,.52),
+                                      ((segment+1)*.524,.34),(segment*.524,.34)):
+                    verts.append((math.cos(angle)*radius, math.sin(angle)*radius*.55, 0))
+                faces.append(tuple(range(start,start+4)))
+            foam = mesh(f'GEO-oar-whitewater-{side}-{index}', verts, faces, mat, parent=parent)
             for frame in range(1, FRAMES+1):
                 phase = (frame-1)/FPS*3.4+index*.045
-                pulse = max(0., -math.cos(phase)) ** 3
-                fan.location = (-4.2+index*.95-.9*math.sin(phase), side*3.65, -.18)
-                fan.scale = (max(.025, pulse),)*3
+                pulse = max(0., -math.cos(phase)) ** 2
+                fan.location = tip(side,index,phase)
+                fan.scale = (pulse,)*3
                 fan.keyframe_insert('location', frame=frame)
                 fan.keyframe_insert('scale', frame=frame)
+                foam.location = fan.location
+                foam.scale = (pulse*1.6, pulse*1.4, 1)
+                foam.keyframe_insert('location', frame=frame)
+                foam.keyframe_insert('scale', frame=frame)
+            for particle in range(4):
+                drop = mesh(f'GEO-oar-droplet-{side}-{index}-{particle}',
+                            [(-.13,0,0),(.13,0,0),(0,0,.29)], [(0,1,2)], mat, parent=parent)
+                for frame in range(1,FRAMES+1):
+                    phase = (frame-1)/FPS*3.4+index*.045
+                    age = ((phase-2.05-particle*.12) % math.tau)/3.4
+                    life = .48
+                    age_visible = min(age,life)
+                    origin = np.array(tip(side,index,2.05+particle*.12))
+                    drop.location = origin + np.array(((particle-1.5)*age_visible,
+                        side*age_visible*.8, 4.2*age_visible*(1-age_visible/life)))
+                    size = float(smooth(age/.06)*(1-smooth((age-.25)/.23))) if age<life else 0.
+                    drop.scale = (size,)*3
+                    drop.keyframe_insert('location',frame=frame)
+                    drop.keyframe_insert('scale',frame=frame)
     # Droplets peel aft from the bow, not stationary glowing dots. Staggered
     # ballistic arcs form two continuous low fans with a lively broken silhouette.
     rng = np.random.default_rng(52)
@@ -743,9 +799,9 @@ def banners(args, depth):
                 u,v=uv[k][0],1-uv[k][1]
                 pin=v**1.3
                 phase=v*4+u*2+mode*1.8
-                point.co.x+=pin*(.72 if mode==0 else .30)*math.sin(phase)
-                point.co.y+=pin*.12*math.sin(phase+1)
-                point.co.z+=pin*.30*math.cos(phase)
+                point.co.x+=pin*(1.55 if mode==0 else .68)*math.sin(phase)
+                point.co.y+=pin*.26*math.sin(phase+1)
+                point.co.z+=pin*.65*math.cos(phase)
             for frame in range(1,FRAMES+1):
                 key.value=math.sin((frame-1)/FPS*(3.1+mode*.8)+index+mode*1.6)
                 key.keyframe_insert('value',frame=frame)
@@ -804,46 +860,97 @@ def box(name, location, size):
     return ob
 
 
+def fire_sparks(source):
+    """Seeded particle pool: staggered births, buoyant curl, cooling and death.
+
+    Keyed meshes avoid a second simulation cache and legacy particle API changes.
+    All ages are absolute, so stills and out-of-order frame renders agree.
+    """
+    rng = np.random.default_rng(81)
+    for index in range(48):
+        mat, tree = material(f'Cooling ember {index:02d}')
+        glow = node(tree, 'ShaderNodeEmission', 'Hot ember radiance')
+        alpha = node(tree, 'ShaderNodeValue', 'Particle lifetime fade')
+        finish_surface(mat, glow.outputs[0], alpha.outputs[0])
+        # Narrow camera-facing shards; 0.7-1.5px cores in the 960 preview.
+        radius = float(rng.uniform(.12,.24))
+        spark = mesh(f'GEO-brazier-spark-{index:02d}',
+                     [(-radius,0,0),(0,-radius*1.8,0),(radius,0,0),(0,radius*2.5,0)],
+                     [(0,1,2,3)], mat)
+        lifetime = float(rng.uniform(.7,1.45))
+        period = lifetime+float(rng.uniform(.6,1.4))
+        offset = float(rng.uniform(0,period))
+        origin = np.array((rng.uniform(-2,2),rng.uniform(0,2),rng.uniform(2.5,4)))
+        rise, drift = float(rng.uniform(11,19)), float(rng.uniform(1.3,3.5))
+        curl = float(rng.uniform(.3,.9))
+        for frame in range(1,FRAMES+1):
+            age = ((frame-1)/FPS+offset) % period
+            t = min(age/lifetime,1.)
+            fade = float(smooth(t/.10)*(1-smooth((t-.45)/.55))) if age<lifetime else 0.
+            spark.location = np.array(source)+origin+np.array((
+                drift*age+curl*(math.sin(age*6+index)-math.sin(index)),
+                rise*age-2*age*age, .4*math.sin(age*4+index)))
+            spark.scale = (1-.55*t,1-.30*t,1)
+            spark.keyframe_insert('location',frame=frame)
+            spark.keyframe_insert('scale',frame=frame)
+            setv(glow,'Color',(1., .38*(1-t)+.055, .045*(1-t), 1))
+            setv(glow,'Strength',(2.2+1.8*fire_flicker(frame))*(1-.75*t))
+            socket(glow,'Color').keyframe_insert('default_value',frame=frame)
+            socket(glow,'Strength').keyframe_insert('default_value',frame=frame)
+            alpha.outputs[0].default_value=fade
+            alpha.outputs[0].keyframe_insert('default_value',frame=frame)
+
+
 def fire(args, depth):
     source=projected(390,676,SMOKE_Z)
     bpy.ops.mesh.primitive_uv_sphere_add(segments=16,ring_count=8,radius=1,location=source)
     flow=bpy.context.object; flow.name='GEO-brazier-fire-emitter'
-    flow.scale=(2.1,1.4,2.0)
+    flow.scale=(2.6,1.6,2.0)
     bpy.ops.object.transform_apply(location=False,rotation=False,scale=True)
     mod=flow.modifiers.new('Real fire and smoke inflow','FLUID'); mod.fluid_type='FLOW'
     fs=mod.flow_settings
     fs.flow_type='BOTH'; fs.flow_behavior='INFLOW'; fs.surface_distance=2.0
     fs.subframes=2
-    fs.fuel_amount=1.8; fs.temperature=2.0; fs.density=3.8
+    fs.fuel_amount=2.4; fs.temperature=3.2; fs.density=4.6
     fs.use_initial_velocity=True; fs.velocity_coord=(1.2,18.0,0)
     transparent, tree=material('Invisible closed fluid emitter')
     tr=node(tree,'ShaderNodeBsdfTransparent','Emitter surface hidden')
     finish_surface(transparent,tr.outputs[0]); flow.data.materials.append(transparent)
-    domain=box('GEO-brazier-Mantaflow-domain',source+Vector((5,40,0)),FLUID_SIZE)
+    domain=box('GEO-brazier-Mantaflow-domain',source+Vector((8,44,0)),FLUID_SIZE)
     assert source.z-FLUID_SIZE[2]/2 > max(RELIEF, float(np.max(depth))*RELIEF), \
         'The entire smoke volume must be in front of the painted relief'
-    mod=domain.modifiers.new('96 voxel billowing smoke plus 2x noise','FLUID'); mod.fluid_type='DOMAIN'
+    mod=domain.modifiers.new('128 voxel billowing smoke plus 2x noise','FLUID'); mod.fluid_type='DOMAIN'
     ds=mod.domain_settings; ds.domain_type='GAS'; ds.resolution_max=FLUID_RESOLUTION
     ds.cache_frame_start=SIM_START; ds.cache_frame_end=FRAMES
     ds.cache_type='ALL'; ds.cache_directory=str(args.masters/'cache/fluid')
     ds.cache_data_format='UNI'; ds.cache_noise_format='UNI'
     ds.gravity=FLUID_GRAVITY  # Keep the fallback consistent with scene gravity.
-    ds.use_noise=True; ds.noise_scale=2; ds.noise_strength=.5
+    ds.use_noise=True; ds.noise_scale=FLUID_NOISE_SCALE; ds.noise_strength=.85
+    ds.noise_pos_scale=2.6; ds.noise_time_anim=.15
     # Confinement reinforces existing curl each step. The old 2.5/2.0 settings
     # drove cached velocities above 1500 and flushed the noise plume through
     # open boundaries. Use gentle curl; fuel pulses and wavelets supply detail.
     ds.use_adaptive_domain=False; ds.vorticity=.15; ds.flame_vorticity=.1
-    ds.alpha=2.0; ds.beta=3.0; ds.burning_rate=1.1; ds.flame_smoke=3.2
+    ds.alpha=2.0; ds.beta=3.0; ds.burning_rate=.85; ds.flame_smoke=3.2
     ds.use_dissolve_smoke=True; ds.dissolve_speed=160
     ds.cfl_condition=2.; ds.timesteps_min=1; ds.timesteps_max=6
     # Animate inflow quantities, never domain or emitter transforms. Pulsing
     # density/fuel injects separated billows before the first delivery frame.
     for frame in range(SIM_START, FRAMES+1):
-        fs.fuel_amount=1.8*fire_flicker(frame)
-        fs.density=3.8+.8*math.sin(frame*.17)
-        fs.velocity_coord=(1.2+.45*math.sin(frame*.09),18+2*math.sin(frame*.21),0)
-        for prop in ('fuel_amount','density','velocity_coord'):
+        fs.fuel_amount=2.4*fire_flicker(frame)
+        fs.density=4.6+1.2*math.sin(frame*.17)
+        fs.temperature=3.2+.45*math.sin(frame*.23)
+        fs.velocity_coord=(1.2+.8*math.sin(frame*.09),19+3*math.sin(frame*.21),
+                           .65*math.sin(frame*.13))
+        for prop in ('fuel_amount','density','temperature','velocity_coord'):
             fs.keyframe_insert(prop,frame=frame)
+    # WIND acts along local +Z: point it towards picture-right, not camera depth.
+    bpy.ops.object.effector_add(type='WIND',location=source+Vector((-12,14,0)))
+    wind=bpy.context.object; wind.name='FX-light-rightward-brazier-wind'
+    wind.rotation_euler=Vector((1,.12,0)).to_track_quat('Z','Y').to_euler()
+    wind.field.shape='PLANE'
+    wind.field.strength=.65
+    wind.field.noise=0  # Wavelets supply curl without unstable force noise.
     # The set is in camera-projection coordinates: +Y is picture-up. Scene gravity
     # below makes buoyancy rise +Y. Open every side; fade before the +Y boundary.
     for face in ('front','back','left','right','top','bottom'):
@@ -881,7 +988,16 @@ def fire(args, depth):
         setv(feather,'From Min',.015); setv(feather,'From Max',.17)
         tree.links.new(edge,feather.inputs['Value'])
         envelope = mathn(tree,'MULTIPLY',envelope,feather.outputs[0])
-    tree.links.new(mathn(tree,'MULTIPLY',grids.outputs['Density'],envelope),socket(p,'Density'))
+    bottom = node(tree,'ShaderNodeMapRange','Feather the domain floor'); bottom.clamp=True
+    setv(bottom,'From Min',0); setv(bottom,'From Max',.035)
+    tree.links.new(xyz.outputs['Y'],bottom.inputs['Value'])
+    envelope = mathn(tree,'MULTIPLY',envelope,bottom.outputs[0])
+    contrast = node(tree,'ShaderNodeMapRange','Preserve billow cores and thin wisps'); contrast.clamp=True
+    setv(contrast,'From Min',.12); setv(contrast,'From Max',2.92)
+    tree.links.new(grids.outputs['Density'],contrast.inputs['Value'])
+    density = mathn(tree,'MULTIPLY',grids.outputs['Density'],
+                    mathn(tree,'ADD',.35,mathn(tree,'MULTIPLY',contrast.outputs[0],.65)))
+    tree.links.new(mathn(tree,'MULTIPLY',density,envelope),socket(p,'Density'))
     warm_base = node(tree,'ShaderNodeMapRange','Warm smoke at the fire, cool ash above')
     warm_base.clamp=True
     setv(warm_base,'From Min',.05); setv(warm_base,'From Max',.27)
@@ -889,8 +1005,12 @@ def fire(args, depth):
     smoke_color = node(tree,'ShaderNodeMixRGB','Amber-lit base and translucent ash')
     tree.links.new(warm_base.outputs[0],smoke_color.inputs[0])
     smoke_color.inputs[1].default_value=(.65,.38,.15,1)
-    smoke_color.inputs[2].default_value=(.49,.45,.37,1)
-    tree.links.new(smoke_color.outputs[0],socket(p,'Color'))
+    smoke_color.inputs[2].default_value=(.53,.50,.43,1)
+    core = node(tree,'ShaderNodeMixRGB','Darker ochre-grey rolling cores')
+    tree.links.new(mathn(tree,'MULTIPLY',contrast.outputs[0],warm_base.outputs[0]),core.inputs[0])
+    tree.links.new(smoke_color.outputs[0],core.inputs[1])
+    core.inputs[2].default_value=(.32,.29,.23,1)
+    tree.links.new(core.outputs[0],socket(p,'Color'))
     temp=node(tree,'ShaderNodeMapRange','Heat to kelvin'); temp.clamp=True
     setv(temp,'From Min',0); setv(temp,'From Max',1)
     setv(temp,'To Min',1250); setv(temp,'To Max',2050)
@@ -900,7 +1020,7 @@ def fire(args, depth):
     setv(p,'Blackbody Intensity',0)
     flicker=node(tree,'ShaderNodeValue','Visible flame flicker')
     for frame in range(1,FRAMES+1):
-        flicker.outputs[0].default_value=5*fire_flicker(frame)
+        flicker.outputs[0].default_value=FLAME_FLICKER_GAIN*fire_flicker(frame)
         flicker.outputs[0].keyframe_insert('default_value',frame=frame)
     power=mathn(tree,'MULTIPLY',mathn(tree,'POWER',grids.outputs['Flame'],1.2),flicker.outputs[0])
     power=mathn(tree,'MULTIPLY',power,mathn(tree,'DIVIDE',envelope,SMOKE_DENSITY_GAIN))
@@ -924,6 +1044,7 @@ def fire(args, depth):
                     for bag in strip.channelbags:
                         assert all(fc.data_path not in ('scale','location','rotation_euler')
                                    for fc in bag.fcurves), 'Never animate fluid transforms'
+    fire_sparks(source)
     return domain
 
 
@@ -965,11 +1086,13 @@ def compositor(scene,args):
     setv(grade,'Lift',(1,1,1,1)); setv(grade,'Gamma',(1.015,1,.985,1))
     setv(grade,'Gain',(1.015,1,.985,1)); tree.links.new(original,grade.inputs['Image'])
     kuw=node(tree,'CompositorNodeKuwahara','Small CG brush unification')
-    setv(kuw,'Type','Anisotropic'); setv(kuw,'Size',2); setv(kuw,'Uniformity',2)
+    setv(kuw,'Type','Anisotropic'); setv(kuw,'Size',2*args.pixel_scale); setv(kuw,'Uniformity',2)
     tree.links.new(grade.outputs[0],kuw.inputs['Image'])
     cg=mix('Only 25 percent filtering','MIX',grade.outputs[0],kuw.outputs[0],.25)
     canvas=node(tree,'CompositorNodeImage','Fixed canvas tooth')
-    canvas.image=bpy.data.images.load(str(args.masters/'textures/canvas.png'),check_existing=True)
+    canvas.image=bpy.data.images.load(str(args.masters/'textures'/
+                                        ('canvas-full.png' if args.full else 'canvas.png')),
+                                     check_existing=True)
     canvas.image.colorspace_settings.name='Non-Color'
     cg=mix('Subtle CG canvas grain','MULTIPLY',cg,canvas.outputs['Image'],.30)
     beauty=mix('Keep original painting crisp','MIX',original,cg,rl.outputs['CGMask'])
@@ -988,6 +1111,8 @@ def validate_vfx(scene, depth):
     from bpy_extras.object_utils import world_to_camera_view
     hull=bpy.data.objects['GEO-rounded-planked-hull']
     root=bpy.data.objects['GEO-sailing-galley']
+    width,height=scene.render.resolution_x,scene.render.resolution_y
+    pixel_scale=width/PREVIEW_SIZE[0]
     samples=[]
     for frame in (1,72,144):
         scene.frame_set(frame); bpy.context.view_layer.update()
@@ -996,17 +1121,34 @@ def validate_vfx(scene, depth):
         centre=world_to_camera_view(scene,scene.camera,root.matrix_world.translation)
         reference=[world_to_camera_view(scene,scene.camera,projected(x,y,sample_depth(depth,x,y)))
                    for x,y in PAINTED_SHIP_BOUNDS]
-        reference_width=abs(reference[1].x-reference[0].x)*960
-        hull_width=(max(p.x for p in points)-min(p.x for p in points))*960
+        reference_width=abs(reference[1].x-reference[0].x)*width
+        hull_width=(max(p.x for p in points)-min(p.x for p in points))*width
         assert hull_width/reference_width <= 1.3, (frame,hull_width,reference_width)
         samples.append({'frame':frame,'hull_width_px':hull_width,
                         'painted_ship_width_px':reference_width,'relative_ship_scale':hull_width/reference_width,
-                        'centre_px':[centre.x*960,(1-centre.y)*540]})
+                        'centre_px':[centre.x*width,(1-centre.y)*height]})
     travel=samples[0]['centre_px'][0]-samples[-1]['centre_px'][0]
-    assert 80 <= samples[-1]['hull_width_px'] <= 115, samples
-    assert 240 <= travel <= 384, samples
+    assert 80 <= samples[-1]['hull_width_px']/pixel_scale <= 115, samples
+    assert 240 <= travel/pixel_scale <= 384, samples
     return {'hero_ship_projection':samples,'hero_ship_travel_px':travel,'gulls':7,
-            'blue_banner_cutouts':2}
+            'blue_banner_cutouts':2,'brazier_spark_pool':48,'oar_spray_particles':72}
+
+
+def configure_output(scene,args):
+    """Apply output-only settings even when reusing a differently sized baked scene.
+
+    Camera, source-pixel shore polygons, UV masks and simulations stay in their
+    original 1920x1080 authoring space. Only raster-sized finishing scales.
+    """
+    scene.render.resolution_x,scene.render.resolution_y=args.width,args.height
+    scene.render.resolution_percentage=100
+    tree=scene.compositing_node_group
+    if tree is not None:
+        setv(tree.nodes['Small CG brush unification'],'Size',2*args.pixel_scale)
+        texture='canvas-full.png' if args.full else 'canvas.png'
+        canvas=tree.nodes['Fixed canvas tooth']
+        canvas.image=bpy.data.images.load(str(args.masters/'textures'/texture),check_existing=True)
+        canvas.image.colorspace_settings.name='Non-Color'
 
 
 def build(args):
@@ -1022,7 +1164,7 @@ def build(args):
     scene=bpy.context.scene
     scene.render.engine='BLENDER_EEVEE'
     scene.render.threads_mode='FIXED'; scene.render.threads=6
-    scene.render.resolution_x=960; scene.render.resolution_y=540; scene.render.resolution_percentage=100
+    configure_output(scene,args)
     scene.render.fps=FPS; scene.render.fps_base=1
     scene.render.image_settings.file_format='PNG'; scene.render.image_settings.color_mode='RGB'
     scene.render.image_settings.color_depth='8'; scene.render.image_settings.compression=15
@@ -1030,6 +1172,8 @@ def build(args):
     scene.eevee.taa_render_samples=32; scene.eevee.use_raytracing=True
     scene.eevee.ray_tracing_method='SCREEN'; scene.eevee.use_volumetric_shadows=True
     scene.eevee.volumetric_samples=96; scene.eevee.volumetric_shadow_samples=16
+    # Eight-pixel volume tiles hide fine curls on this small preview plume.
+    scene.eevee.volumetric_tile_size='4'
     # Concentrate froxels around the shallow set over the whole camera move;
     # sampling 0..900 would undersample a ten-unit-thick smoke domain at distance 800.
     scene.eevee.use_volume_custom_range=True
@@ -1052,10 +1196,11 @@ def build(args):
     stats.update(validate_vfx(scene,depth))
     scene.frame_set(1); bpy.context.view_layer.update()
     bpy.ops.file.pack_all()
-    stats.update({'resolution':[960,540],'frames':FRAMES,'fps':FPS,'threads':6,
+    stats.update({'resolution':[args.width,args.height],'frames':FRAMES,'fps':FPS,'threads':6,
                   'camera_dolly':DOLLY,'camera_drift':DRIFT,'relief':RELIEF,
                   'simulation_frames':[SIM_START,FRAMES],'fluid_resolution':FLUID_RESOLUTION,
-                  'fluid_noise_scale':2,'fluid_dimensions':list(domain.dimensions),
+                  'fluid_noise_scale':FLUID_NOISE_SCALE,'fluid_dimensions':list(domain.dimensions),
+                  'volume_tile_pixels':4,
                   'fluid_setup':validate_fluid_axes(scene,domain),
                   'status':'built; not baked or rendered'})
     return scene,domain,stats
@@ -1142,7 +1287,9 @@ def verify_smoke(scene):
         gx,gy,gz=[(np.arange(n)+.5)/n for n in resolution]
         fade=np.clip((SMOKE_FADE[1]-gy)/(SMOKE_FADE[1]-SMOKE_FADE[0]),0,1)
         sides=[np.clip((np.minimum(q,1-q)-.015)/(.17-.015),0,1) for q in (gx,gz)]
-        grid *= SMOKE_DENSITY_GAIN*fade[None,:,None]*sides[0][None,None,:]*sides[1][:,None,None]
+        grid *= .35+.65*np.clip((grid-.12)/2.8,0,1)
+        floor=np.clip(gy/.035,0,1)
+        grid *= SMOKE_DENSITY_GAIN*(fade*floor)[None,:,None]*sides[0][None,None,:]*sides[1][:,None,None]
         occupied=np.flatnonzero(np.max(grid,axis=(0,2))>.04)
         if occupied.size<2:
             raise RuntimeError(f'No visible smoke column at frame {frame}')
@@ -1150,9 +1297,12 @@ def verify_smoke(scene):
                 for i in (occupied[0],occupied[-1])]
         screen=[world_to_camera_view(scene,scene.camera,p) for p in points]
         pixels=abs(screen[1].y-screen[0].y)*scene.render.resolution_y
-        if not 150 <= pixels <= 250:
+        pixel_scale=scene.render.resolution_y/PREVIEW_SIZE[1]
+        if not 150 <= pixels/pixel_scale <= 250:
             # Report rather than abort: the plume is still growing early in the shot, and the rendered frames are the real check.
-            print(f'WARNING: visible smoke height {pixels:.1f}px outside 150-250 at frame {frame}; raw XYZ spans={spans}', flush=True)
+            print(f'WARNING: visible smoke height {pixels:.1f}px outside '
+                  f'{150*pixel_scale:.0f}-{250*pixel_scale:.0f} at frame {frame}; '
+                  f'raw XYZ spans={spans}', flush=True)
         samples.append({'frame':frame,'maximum_density':maximum,
                         'plume_height_units':height,'plume_spans_xyz':spans,
                         'visible_plume_height_px':pixels,
@@ -1173,7 +1323,7 @@ def bake(args,scene,domain,stamp,report):
     active(domain)
     started=time.monotonic()
     validate_fluid_axes(scene,domain)
-    print(f'BAKE: {FLUID_RESOLUTION} voxels + 2x noise, {SIM_START}..{FRAMES}, '
+    print(f'BAKE: {FLUID_RESOLUTION} voxels + {FLUID_NOISE_SCALE}x noise, {SIM_START}..{FRAMES}, '
           'six threads, at most six substeps; target <480 seconds',flush=True)
     result=bpy.ops.fluid.bake_all()
     ds=domain.modifiers[0].domain_settings
@@ -1204,12 +1354,15 @@ def parse_args():
     p.add_argument('--out',type=Path,required=True)
     p.add_argument('--source',type=Path,help='Existing classical plates; default: masters sibling/classical')
     p.add_argument('--frames',default='1-144',help='Inclusive global frames, e.g. 1-1 or 72-96')
+    p.add_argument('--full',action='store_true',help='1920x1080 output; default 960x540, identical framing')
     mode=p.add_mutually_exclusive_group()
     mode.add_argument('--prepare',action='store_true',help='Python-only asset preparation; no bpy required')
     mode.add_argument('--dry-run',action='store_true',help='Build/validate/save only, no bake/render')
     mode.add_argument('--bake-only',action='store_true',help='Build and bake or reuse valid cache; no render')
     argv=sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else sys.argv[1:]
     args=p.parse_args(argv)
+    args.width,args.height=FULL_SIZE if args.full else PREVIEW_SIZE
+    args.pixel_scale=args.width/PREVIEW_SIZE[0]
     try:
         args.first,args.last=map(int,args.frames.split('-'))
         if not 1<=args.first<=args.last<=FRAMES:
@@ -1238,8 +1391,13 @@ def main():
     if not args.dry_run and cache_valid(args,stamp):
         bpy.ops.wm.open_mainfile(filepath=str(args.masters/'cache/baked.blend'))
         scene=bpy.context.scene
+        configure_output(scene,args)
         report=json.loads((args.masters/'scene-report.json').read_text())
+        with np.load(args.masters/'plates/relief.npz') as data:
+            report.update(validate_vfx(scene,data['depth']))
+        report['resolution']=[args.width,args.height]
         report['smoke_readback']=verify_smoke(scene)
+        (args.masters/'scene-report.json').write_text(json.dumps(report,indent=2)+'\n')
         print('CACHE: loaded verified baked scene',flush=True)
     else:
         scene,domain,report=build(args)
