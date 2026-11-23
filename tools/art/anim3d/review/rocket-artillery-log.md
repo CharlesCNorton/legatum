@@ -80,3 +80,7 @@
 - Final surface iteration: mirrored clean source-stone swatches now wrap the real disc with a directional rim wash and live AO; inspected swatches contain no tire silhouettes/contact shadows. Reduced tread blocks from 32 to 24 with shallower height; near-wheel pigment no longer loses visible sidewall detail to self-occlusion confidence.
 - Inspected updated 512-derived c/f/detail sheets: stone brightness/grain substantially closer and five-wheel-row defect removed. Remaining gaps at 256px: front tire slightly small/flat, bore lip registration and hood/fender construction; projected wheel shading rotates in move. At 64px the correct raised-rack truck and three near wheels read clearly. No PASS; fresh GPU round 2 review still required.
 - Published e-move: 8 actual rendered frames, 12 fps; CPU 512px 8 samples.
+- Published e-attack: 10 actual rendered frames, 14 fps; CPU 512px 8 samples.
+- Published e-hit: 4 actual rendered frames, 12 fps; CPU 512px 8 samples.
+- Published e-death: 10 actual rendered frames, 10 fps; CPU 512px 8 samples.
+- Completed all five clips and wheel contact audit; delivery pack may now run.
