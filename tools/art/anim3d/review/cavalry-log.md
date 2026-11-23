@@ -41,3 +41,7 @@ Round 2 final CPU evidence: all 40 frames at Cycles CPU/256/8 samples (details g
 Checks: 18 Python files parse, both shell entry points parse, executable GPU handoff and whitespace pass; grade reapplication preserves raw/render/LUT hashes; missing-input GPU receipt and CPU-master rejection passed. Repository art gate blocked by Chromium bootstrap_check_in permission denied (1100), not by a visual comparison result.
 Final visual verdict: at 256px uniform/face brushwork and cream base improve; horse shape, pale blaze patches, thick tack, tail and sabre remain visibly unlike the painting. At 64px cavalry identity is clear but the silhouette/stance are not the same. Motion framing now passes, but contact, transitions and anatomy still need polish. No PASS. GPU512/64 masters and fresh visual review remain pending. Lead runs ROUND=2 tools/art/anim3d/units/cavalry/gpu.sh from legatum/.worktrees/cavalry-round2 (or another checkout of the cavalry branch).
 Committed a553ab6d on astra/unit-anim-3d-cavalry; clean isolated worktree. Final committed hygiene check: 0 findings. Inspected decoded MP4 contact frame; no art PASS.
+b: review emitted from CYCLES frames; no art-pass claim.
+c: review emitted from CYCLES frames; no art-pass claim.
+c-details: review emitted from CYCLES frames; no art-pass claim.
+d: review emitted from CYCLES frames; no art-pass claim.
