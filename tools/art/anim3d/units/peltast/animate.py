@@ -41,15 +41,15 @@ for clip,(n,fps,loop) in CLIPS.items():
     limb(rig,'thigh_'+side,'calf_'+side,target,rig.pose.bones['calf_'+side].head+Vector((0,-.5,.1)))
     mat=orig.copy();mat.translation=target;rig.pose.bones['foot_'+side].matrix=mat;bpy.context.view_layer.update()
    rotate(rig,'spine_03',.024*sin(phase),'Z');cloth.value=.65*sin(phase-.8)
-  elif clip=='attack':
+  elif clip=='attack' and i not in (0,n-1):
    # Windup, forward acceleration, release, follow-through, recovered guard.
    xs=[66,61,59,77,107,145,158,134,91,66];ys=[47,49,51,44,44,59,78,72,53,47]
    target=P(xs[i],ys[i],-.075-.10*sin(pi*t));elbow=P(62+(xs[i]-66)*.6,76+12*sin(pi*t),-.07)
    bone_line(rig,'upperarm_r',rig.pose.bones['upperarm_r'].head,elbow);bone_line(rig,'lowerarm_r',elbow,target);bone_line(rig,'hand_r',target,target+Vector((.02,-.015,.03)))
-   rotate(rig,'spine_03',-.06*sin(pi*t),'Y');cloth.value=.60*sin(pi*t-.65)
+   rotate(rig,'spine_03',-.06*sin(pi*t),'Y');cloth.value=.60*sin(pi*t)
   elif clip=='hit':
    angle=[0,-.14,-.07,0][i];rotate(rig,'spine_01',angle,'Y');rotate(rig,'neck_01',-angle*.6,'Y');cloth.value=[0,.6,.25,0][i]
-  else:
+  elif clip=='death':
    tt=min(i/(n-2),1);ease=tt*tt*(3-2*tt)
    rotate(rig,'upperarm_r',-.9*ease,'Y');rotate(rig,'lowerarm_r',-.65*ease,'X');rotate(rig,'upperarm_l',.35*ease,'Y')
    pivot=Vector((-.145,0,1.03));rig.matrix_world=Matrix.Translation(Vector((0,-.10*ease,-.57*ease)))@Matrix.Translation(pivot)@Matrix.Rotation(-1.5*ease,4,'X')@Matrix.Translation(-pivot)
@@ -57,7 +57,7 @@ for clip,(n,fps,loop) in CLIPS.items():
   bpy.context.view_layer.update()
   for name,o in controls.items():
    mat=rig.matrix_world@rig.pose.bones[bones[name]].matrix@restbones[name].inverted()@worlds[name]
-   if clip=='attack' and name=='CTRL-Throwing javelin':
+   if clip=='attack' and i not in (0,n-1) and name=='CTRL-Throwing javelin':
     grip=P(xs[i]+2,ys[i]-4,-.11);mat=Matrix.Translation(grip)@Matrix.Rotation([0,-.08,-.16,.22,.65,.75,.75,.4,.15,0][i],4,'Z')@Matrix.Translation(-worlds[name].translation)@worlds[name]
     hidden=5<=i<=8
    else:hidden=False

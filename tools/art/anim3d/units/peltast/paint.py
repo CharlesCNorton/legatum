@@ -4,8 +4,11 @@ from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parent))
 from common import *
 from bpy_extras.object_utils import world_to_camera_view
+from surface import finish
 bpy.ops.wm.open_mainfile(filepath=str(M/'peltast-unpainted.blend'));sc=bpy.context.scene;rig=bpy.data.objects['RIG-Peltast']
+finished=finish();bpy.context.view_layer.update()
 image=bpy.data.images.load(str(A/'painting-aligned.png'));view=(sc.camera.location-TARGET).normalized();records=[]
+deps=bpy.context.evaluated_depsgraph_get()
 objects=[o for o in sc.objects if o.type=='MESH' and o.name not in ['GEO-Stationary cream base','GEO-MPFB eyes'] and not 'iron leaf' in o.name and not 'brooch' in o.name and not 'nose' in o.name]
 for o in objects:
  states=[(m,m.show_viewport) for m in o.modifiers]
@@ -15,7 +18,13 @@ for o in objects:
  coords=[];amount=[]
  for v in me.vertices:
   world=ev.matrix_world@v.co;q=world_to_camera_view(sc,sc.camera,world);normal=(ev.matrix_world.to_3x3().inverted().transposed()@v.normal).normalized()
-  coords.append((q.x,q.y));amount.append(max(0,min(1,(normal.dot(view)+.05)/.5)))
+  coords.append((q.x,q.y))
+  facing=max(0,min(1,(normal.dot(view)+.05)/.5))
+  # Test visibility at the frozen rest pose, including other equipment.
+  hit,loc,_,_,hit_obj,_=sc.ray_cast(deps,world+view*6,-view,distance=6.03)
+  visible=not hit or (loc-world).length<.025 or hit_obj==o
+  if o.name=='GEO-Dished wicker crescent pelta' and hit and hit_obj.name.startswith(('GEO-Pelta reed','GEO-Pelta rawhide')):visible=True
+  amount.append(facing if visible else 0)
  ev.to_mesh_clear()
  for m,s in states:m.show_viewport=s
  uv=o.data.uv_layers.get('Painting rest UV') or o.data.uv_layers.new(name='Painting rest UV');attr=o.data.color_attributes.new(name='Painting facing',type='FLOAT_COLOR',domain='CORNER')
@@ -23,10 +32,19 @@ for o in objects:
  for i,old in enumerate(list(o.data.materials)):
   mat=old.copy();mat.name=o.name+' projected paint';o.data.materials[i]=mat;n=mat.node_tree.nodes;l=mat.node_tree.links;s=n.get('Principled BSDF')
   uvn=n.new('ShaderNodeUVMap');uvn.uv_map=uv.name;tex=n.new('ShaderNodeTexImage');tex.image=image;tex.extension='CLIP';l.new(uvn.outputs[0],tex.inputs['Vector']);att=n.new('ShaderNodeVertexColor');att.layer_name=attr.name
-  mul=n.new('ShaderNodeMath');mul.operation='MULTIPLY';l.new(tex.outputs['Alpha'],mul.inputs[0]);l.new(att.outputs[0],mul.inputs[1]);strength=n.new('ShaderNodeMath');strength.operation='MULTIPLY';strength.inputs[1].default_value=.9;l.new(mul.outputs[0],strength.inputs[0]);mix=n.new('ShaderNodeMixRGB')
+  mul=n.new('ShaderNodeMath');mul.operation='MULTIPLY';l.new(tex.outputs['Alpha'],mul.inputs[0]);l.new(att.outputs[0],mul.inputs[1]);strength=n.new('ShaderNodeMath');strength.operation='MULTIPLY';strength.inputs[1].default_value=.96;l.new(mul.outputs[0],strength.inputs[0]);mix=n.new('ShaderNodeMixRGB')
   old=s.inputs['Base Color'].links[0].from_socket if s.inputs['Base Color'].is_linked else None
   if old:l.new(old,mix.inputs[1])
   else:mix.inputs[1].default_value=s.inputs['Base Color'].default_value
-  l.new(strength.outputs[0],mix.inputs[0]);l.new(tex.outputs['Color'],mix.inputs[2]);l.new(mix.outputs[0],s.inputs['Base Color']);l.new(mix.outputs[0],s.inputs['Emission Color']);s.inputs['Emission Strength'].default_value=.15
- records.append({'mesh':o.name,'vertices':len(o.data.vertices),'method':'Fixed camera UV on deformed rest mesh, alpha and normal incidence blend into generated/procedural unseen material'})
+  l.new(strength.outputs[0],mix.inputs[0]);l.new(tex.outputs['Color'],mix.inputs[2]);l.new(mix.outputs[0],s.inputs['Base Color']);# Camera-only pigment preserves painted illumination without emitting into the scene.
+  pigment=n.new('ShaderNodeBsdfPrincipled');pigment.name='Camera painted pigment'
+  pigment.inputs['Base Color'].default_value=(0,0,0,1)
+  pigment.inputs['Roughness'].default_value=1
+  pigment.inputs['Specular IOR Level'].default_value=0
+  l.new(tex.outputs['Color'],pigment.inputs['Emission Color']);pigment.inputs['Emission Strength'].default_value=1
+  ray=n.new('ShaderNodeLightPath');camera_weight=n.new('ShaderNodeMath');camera_weight.operation='MULTIPLY'
+  l.new(ray.outputs['Is Camera Ray'],camera_weight.inputs[0]);l.new(strength.outputs[0],camera_weight.inputs[1])
+  shader=n.new('ShaderNodeMixShader');l.new(camera_weight.outputs[0],shader.inputs[0]);l.new(s.outputs[0],shader.inputs[1]);l.new(pigment.outputs[0],shader.inputs[2])
+  output=next(node for node in n if node.type=='OUTPUT_MATERIAL');l.new(shader.outputs[0],output.inputs['Surface'])
+ records.append({'mesh':o.name,'vertices':len(o.data.vertices),'finished_rigid':o.name in finished,'method':'Fixed camera UV on deformed rest mesh, alpha and normal incidence blend into generated/procedural unseen material'})
 sc['painting_projection']='Frozen rest-pose UV; original project painting, real moving geometry';save('peltast.blend');(M/'projection.json').write_text(json.dumps(records,indent=2));log('- Applied original-painting camera projection to full anatomy and physical clothing/equipment; unseen faces use painted fills and surface shaders. No billboard or relief image plane.')

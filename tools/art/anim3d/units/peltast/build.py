@@ -45,7 +45,7 @@ def body_shell(name,predicate,mat,inflate):
  for m,v in states:m.show_viewport=v
  bind_posed(ob,rig,ww);solid(ob,.007);bevel(ob,.003);return ob
 for side,sign in [('l',1),('r',-1)]:body_shell('Laced ankle boot '+side,lambda v,s=sign:v.z<.28 and v.x*s>.04,leather,.009)
-body_shell('Short sculpted beard',lambda v:1.69<v.z<1.77 and v.y<-.065,dark,.004)
+body_shell('Short sculpted beard',lambda v:1.72<v.z<1.77 and v.y<-.065,dark,.004)
 # Real laces and cuffs follow their anatomical foot, not the stationary base.
 for side,px,py in [('r',52,202),('l',160,199)]:
  pts=[P(px+dx,py+dy,-.115) for dx,dy in [(-4,-10),(3,-8),(-4,-5),(3,-2),(-4,1),(3,4)]]
@@ -53,7 +53,7 @@ for side,px,py in [('r',52,202),('l',160,199)]:
 # Gathered linen: a closed 3D tube with sculpted fold channels, shoulder-to-waist.
 verts=[];faces=[];weights=[];N=64;K=24
 for j in range(K+1):
- t=j/K;py=65+47*t;cx=112-2*sin(t*pi);rx=17+6*sin(t*pi*.8);ry=.21+.025*sin(t*pi)
+ t=j/K;py=65+47*t;cx=112-2*sin(t*pi);rx=22-4*t+2*sin(t*pi);ry=.21+.025*sin(t*pi)
  for i in range(N):
   a=2*pi*i/N;fold=(.012*sin(a*12+t*2)+.005*sin(a*23-t*5))*sin(pi*t*.8)
   x=cx+(rx+fold*108)*sin(a);depth=-(ry+fold)*cos(a);y=py+3*sin(a)**2*(1-t)**3
@@ -77,9 +77,9 @@ attach(curve('Belt buckle',[P(x,y,-.154) for x,y in [(108,107),(113,107),(113,11
 # Broad cloak behind the throwing side, with cloth volume and delayed flutter keys.
 verts=[];faces=[];nx=30;ny=36
 for j in range(ny+1):
- t=j/ny;left=96-65*t;right=130-49*t;width=right-left
+ t=j/ny;left=96-71*sin(t*pi/2)+19*t**7;right=130-62*t;width=right-left
  for i in range(nx+1):
-  u=i/nx;px=left+width*u;py=67+91*t+5*t*sin(u*pi*5);depth=.13+.055*sin(u*pi*5+1.8*t)+.025*sin(u*pi*11-3*t)+.06*t
+  u=i/nx;px=left+width*u;py=67+91*t+3*t*sin(u*pi*5+.6)+2*t*sin(u*pi*9);depth=.13+.035*sin(u*pi*5+1.8*t)+.014*sin(u*pi*11-3*t)+.06*t
   verts.append(P(px,py,depth))
 for j in range(ny):
  for i in range(nx):a=j*(nx+1)+i;faces.append((a,a+nx+1,a+nx+2,a+1))
@@ -93,6 +93,11 @@ for k in range(4):
  pts=[P(90+51*u,62+9*sin(pi*u)+k*2,-.15-.018*k) for u in [i/40 for i in range(41)]]
  attach(curve('Wool collar fold',pts,.018,blue),rig,'spine_03')
 attach(sphere('Bronze shoulder brooch',P(99,65,-.20),(.027,.009,.027),gold),rig,'spine_03')
+# The source has a visible mass of dark curls behind the ear, beneath the hide.
+attach(sphere('Dark curls beneath fox hide',P(98,45,.035),(.078,.075,.13),dark),rig,'head')
+for j in range(13):
+ x=94+(j%3)*3;y=38+(j//3)*5
+ attach(sphere('Small back hair curl',P(x,y,-.024),(.019,.024,.022),dark),rig,'head')
 # Fox-skin cap: sculpted ellipsoid shell with muzzle, ears and textured fur strands.
 verts=[];faces=[]
 for j in range(15):
@@ -104,15 +109,23 @@ for j in range(14):
  for i in range(64):a=j*64+i;b=j*64+(i+1)%64;faces.append((a,b,b+64,a+64))
 cap=solid(mesh('Fox skin cap crown',verts,faces,fur),.008);attach(cap,rig,'head')
 # The fox muzzle lies forward across the wearer's brow; this is hide, not a helmet.
-attach(sphere('Fox cap muzzle',P(119,29,-.065),(.105,.08,.038),fur),rig,'head')
-attach(sphere('Fox dark nose',P(128,29,-.065),(.025,.030,.018),dark),rig,'head')
-for coords in [[(98,25),(97,14),(106,22)],[(108,23),(112,17),(115,26)]]:
+attach(sphere('Fox cap muzzle',P(117,29,-.065),(.075,.065,.030),fur),rig,'head')
+attach(sphere('Fox dark nose',P(125,29,-.065),(.016,.022,.013),dark),rig,'head')
+for coords in [[(94,24),(96,14),(102,23)],[(106,24),(109,21),(113,26)]]:
  ob=solid(mesh('Fox pointed ear',[P(x,y,-.08) for x,y in coords],[(0,1,2)],fur),.016);bevel(ob,.002);attach(ob,rig,'head')
 for j in range(75):
  x=random.uniform(95,120);y=random.uniform(23,32);d=-.1+random.uniform(-.025,.02)
  attach(curve('Fox fur strand',[P(x,y,d),P(x-1,y+2,d-.008),P(x-3,y+4,d+.002)],.0022,cream if j%5==0 else fur),rig,'head')
-pts=[P(97,29,.10),P(91,45,.13),P(89,60,.17),P(86,70,.20)]
-attach(curve('Fox hide nape flap',pts,.045,fur),rig,'head')
+# Tapered full-depth hanging hide, not a constant-width rod.
+verts=[];faces=[]
+for j in range(25):
+ t=j/24;cx=94-6*t;py=31+35*t;radius=.045*(1-.72*t)+.005*sin(t*19)
+ for i in range(16):
+  a=i*2*pi/16;verts.append(P(cx+radius*109*sin(a),py,.10+radius*cos(a)))
+for j in range(24):
+ for i in range(16):a=j*16+i;b=j*16+(i+1)%16;faces.append((a,b,b+16,a+16))
+faces.extend([tuple(reversed(range(16))),tuple(range(384,400))])
+attach(mesh('Fox hide nape flap',verts,faces,fur),rig,'head')
 # Crescent pelta: dished wicker mesh with a true missing upper crescent.
 # Boundary uses a lower ellipse and a concave upper arc between its two horns.
 points=[(187,39),(199,55),(205,77),(205,99),(196,120),(180,128),(163,117),(153,96),(151,64),(159,71),(170,70),(180,60)]
@@ -138,7 +151,7 @@ for i in range(ns):
  a=outline[i];b=outline[(i+1)%ns];parent_shield(curve('Pelta rawhide rim',[P(*a,.024),P(*b,.024)],.014,cream if i//6%2==0 else leather))
 # Raised wicker splints follow the curved surface; projection supplies fine weave.
 for j in range(4,14):
- rr=j/14;pts=[P(center[0]+(x-center[0])*rr,center[1]+(y-center[1])*rr,-.007-.04*(1-rr*rr)) for x,y in outline]
+ rr=j/14;pts=[P(center[0]+(x-center[0])*rr,center[1]+(y-center[1])*rr,.039-.045*(1-rr*rr)) for x,y in outline]
  parent_shield(curve('Pelta reed ring',pts+[pts[0]],.0025,wood))
 parent_shield(curve('Pelta hand grip',[P(176,81,-.13),P(176,99,-.13)],.016,leather))
 # Three true javelins: one held above shoulder, two carried behind the shield.
@@ -158,17 +171,34 @@ weapon=bpy.data.objects.new('CTRL-Throwing javelin',None);bpy.context.collection
 javelin('Throwing javelin',P(16,44,-.11),P(220,23,-.11),parent=weapon)
 for dy in [0,7]:javelin('Reserve javelin',P(66,95+dy,.09),P(240,79+dy,.09),parent=control)
 # Single cream stone disc, no extra tier.
-bpy.ops.mesh.primitive_cylinder_add(vertices=128,radius=.86,depth=.12,location=(-.11,0,.17));base=bpy.context.object;base.name='GEO-Stationary cream base';base.data.materials.append(stone);bevel(base,.014)
+bpy.ops.mesh.primitive_cylinder_add(vertices=128,radius=.76,depth=.14,location=(-.147,-.08,.16));base=bpy.context.object;base.name='GEO-Stationary cream base';base.data.materials.append(stone);bevel(base,.014)
+# Camera-only stone pigment retains cream under the painted display transform.
+# Other rays still see a rough physical stone; no projected feet/shadows on the disc.
+n=stone.node_tree.nodes;l=stone.node_tree.links;bs=n.get('Principled BSDF')
+pig=n.new('ShaderNodeBsdfPrincipled');pig.name='Stone camera pigment'
+pig.inputs['Base Color'].default_value=(0,0,0,1);pig.inputs['Specular IOR Level'].default_value=0
+geo=n.new('ShaderNodeNewGeometry');separate=n.new('ShaderNodeSeparateXYZ');l.new(geo.outputs['Normal'],separate.inputs[0])
+ramp=n.new('ShaderNodeValToRGB');ramp.color_ramp.elements[0].position=.05;ramp.color_ramp.elements[0].color=tuple(linear(c/255) for c in (228,195,152))+(1,)
+ramp.color_ramp.elements[1].position=.92;ramp.color_ramp.elements[1].color=tuple(linear(c/255) for c in (245,225,192))+(1,)
+l.new(separate.outputs['Z'],ramp.inputs[0])
+noise=n.new('ShaderNodeTexNoise');noise.inputs['Scale'].default_value=190;noise.inputs['Detail'].default_value=2
+variation=n.new('ShaderNodeMapRange');variation.inputs['To Min'].default_value=.91;variation.inputs['To Max'].default_value=1.03;l.new(noise.outputs['Fac'],variation.inputs[0])
+grain=n.new('ShaderNodeMixRGB');grain.blend_type='MULTIPLY';grain.inputs[0].default_value=1;l.new(ramp.outputs[0],grain.inputs[1]);l.new(variation.outputs[0],grain.inputs[2])
+ao=n.new('ShaderNodeAmbientOcclusion');ao.inputs['Distance'].default_value=.20
+contact=n.new('ShaderNodeMixRGB');contact.blend_type='MULTIPLY';contact.inputs[0].default_value=.38;l.new(grain.outputs[0],contact.inputs[1]);l.new(ao.outputs['AO'],contact.inputs[2]);l.new(contact.outputs[0],pig.inputs['Emission Color'])
+pig.inputs['Emission Strength'].default_value=1
+ray=n.new('ShaderNodeLightPath');weight=n.new('ShaderNodeMath');weight.operation='MULTIPLY';weight.inputs[1].default_value=.82
+l.new(ray.outputs['Is Camera Ray'],weight.inputs[0]);mix=n.new('ShaderNodeMixShader');l.new(weight.outputs[0],mix.inputs[0]);l.new(bs.outputs[0],mix.inputs[1]);l.new(pig.outputs[0],mix.inputs[2]);l.new(mix.outputs[0],n.get('Material Output').inputs['Surface'])
 # Anatomical subdivision after skinning. All surfaces retain real side/back geometry.
 sub=body.modifiers.new('Anatomical subdivision','SUBSURF');sub.levels=1;sub.render_levels=1
 for p in body.data.polygons:p.use_smooth=True
 bpy.ops.object.camera_add();sc.camera=bpy.context.object;sc.camera.name='CAM-Painting';sc.camera.data.type='ORTHO';sc.camera.data.ortho_scale=SCALE;sc.camera.location=TARGET+Vector((0,-8*cos(ELEV),8*sin(ELEV)));aim(sc.camera,TARGET)
-for name,loc,power,size,col in [('Warm upper-left key',(-3,-4,6),650,3,(1,.91,.76)),('Soft fill',(4,-3,3),140,4,(.85,.91,1)),('Cool rim',(2,3,5),350,2.5,(.72,.83,1))]:
+for name,loc,power,size,col in [('Warm upper-left key',(-3,-4,6),360,4,(1,.96,.88)),('Soft fill',(4,-3,3),75,4,(.91,.95,1)),('Cool rim',(2,3,5),150,3,(.83,.91,1))]:
  bpy.ops.object.light_add(type='AREA',location=loc);o=bpy.context.object;o.name='LGT-'+name;o.data.energy=power;o.data.size=size;o.data.color=col;aim(o,(0,0,1))
 sc.world.use_nodes=True;sc.world.node_tree.nodes['Background'].inputs[0].default_value=(.32,.36,.45,1);sc.world.node_tree.nodes['Background'].inputs[1].default_value=.3
 sc.render.engine='CYCLES';sc.cycles.device='CPU';sc.cycles.samples=8;sc.cycles.use_denoising=True;sc.cycles.max_bounces=5
 sc.render.resolution_x=sc.render.resolution_y=256;sc.render.resolution_percentage=100;sc.render.film_transparent=True;sc.render.image_settings.file_format='PNG';sc.render.image_settings.color_mode='RGBA';sc.render.fps=24
-sc.view_settings.view_transform='AgX';sc.view_settings.look='AgX - Medium High Contrast';sc.view_settings.exposure=.2
+sc.view_settings.view_transform='Standard';sc.view_settings.look='None';sc.view_settings.exposure=0
 rig['rest_pose']=json.dumps({p.name:[list(row) for row in p.matrix_basis] for p in rig.pose.bones});rig['source']='MPFB 2.0.18 CC0 body and 53-bone game_engine rig'
 sc['unit']='peltast';sc['geometry']='Full MPFB anatomy, thick 3D clothing, convex wicker pelta, three javelins, no cards';sc['cream_target']='#E9CFA0'
 (M/'model-info.json').write_text(json.dumps({'body_vertices':len(body.data.vertices),'bones':len(rig.data.bones),'objects':len(sc.objects),'landmarks':lines},indent=2))

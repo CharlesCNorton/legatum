@@ -3,13 +3,16 @@ import os,json,hashlib
 from pathlib import Path
 from PIL import Image,ImageChops
 R=Path(os.environ.get('ANIM_ROOT',Path.home()/'LegatumRuns/anim-pilot'));M=R/'masters/peltast';V=R/'review/3d-v2';p=Path('app/src/assets/units/anim/peltast.webp');data=json.loads(p.with_suffix('.json').read_text());pack=json.loads((V/'peltast-pack.json').read_text());atlas=Image.open(p).convert('RGBA');counts={'idle':8,'move':8,'attack':10,'hit':4,'death':10}
+assert pack['resampling']=='premultiplied-bicubic'
 assert data['version']==2 and data['frame']['w']==data['frame']['h']==160
 assert p.stat().st_size<=200000 and pack['quality']>=75
 assert atlas.size==(data['atlas']['w'],data['atlas']['h']);assert hashlib.sha256(p.read_bytes()).hexdigest()==pack['atlas_sha256'];assert list(data['clips'])==list(counts)
 def sha(path):return hashlib.sha256(path.read_bytes()).hexdigest()
-report={};allrects=[]
+report={};allrects=[];preview=False
 for row,(clip,n) in enumerate(counts.items()):
  delivery=json.loads((M/'raw'/f'e-{clip}'/'delivery.json').read_text())
+ preview=preview or delivery['device']!='GPU'
+ assert delivery['resolution']==512,'Delivery requires actual 512 renders; do not reuse old masters'
  assert delivery['blend_sha256']==sha(M/'clips'/f'{clip}.blend'),f'{clip}: changed blend'
  assert delivery['grade_sha256']==sha(M/'grade.json'),f'{clip}: changed grade'
  assert json.loads((M/'clips'/f'{clip}.json').read_text())['source_sha256']==sha(M/'peltast.blend'),f'{clip}: changed source master'
@@ -19,7 +22,7 @@ for row,(clip,n) in enumerate(counts.items()):
   assert 0<=r['ox']<160 and 0<=r['oy']<160 and r['ox']+r['w']<=160 and r['oy']+r['h']<=160
   assert r['x']>=1 and r['y']>=1 and r['x']+r['w']<atlas.width and r['y']+r['h']<atlas.height
   box=(r['x'],r['y'],r['x']+r['w'],r['y']+r['h']);allrects.append(box);im=Image.new('RGBA',(160,160));im.paste(atlas.crop(box),(r['ox'],r['oy']));frames.append(im)
-  path=M/'256'/f'e-{clip}'/f'{i:02}.png';assert hashlib.sha256(path.read_bytes()).hexdigest()==pack['source_sha256'][f'{clip}/{i}'];source=Image.open(path).convert('RGBA').resize((160,160),Image.Resampling.LANCZOS)
+  path=M/'256'/f'e-{clip}'/f'{i:02}.png';assert hashlib.sha256(path.read_bytes()).hexdigest()==pack['source_sha256'][f'{clip}/{i}'];source=Image.open(path).convert('RGBa').resize((160,160),Image.Resampling.BICUBIC).convert('RGBA')
   expected=source.getchannel('A');levels=pack['alpha_levels']
   if levels<256:expected=expected.point(lambda v:round(round(v*(levels-1)/255)*255/(levels-1)))
   assert expected.tobytes()==im.getchannel('A').tobytes(),f'{clip}/{i} trim/alpha mismatch'
@@ -28,10 +31,11 @@ for row,(clip,n) in enumerate(counts.items()):
   assert Image.open(M/'512'/f'e-{clip}'/f'{i:02}.png').size==(512,512),'Missing 512 master'
  hashes={hashlib.sha256(im.tobytes()).hexdigest() for im in frames};assert len(hashes)>1,f'{clip} static'
  if clip=='death':
-  # Raw terminal samples must be byte-identical; atlas RGB can vary by lossy block context.
+  # Shared terminal rectangle also prevents lossy atlas block-context shimmer.
+  assert frames[-1].tobytes()==frames[-2].tobytes(),'Decoded death not held'
   a=Image.open(M/'256'/'e-death'/'08.png');b=Image.open(M/'256'/'e-death'/'09.png');assert a.tobytes()==b.tobytes(),'Death not held'
  report[clip]={'frames':n,'distinct_decoded_frames':len(hashes),'trim_alpha':'exact after bounded quantization','clipping':'clear'}
 for i,a in enumerate(allrects):
- for b in allrects[i+1:]:assert a[2]<=b[0] or b[2]<=a[0] or a[3]<=b[1] or b[3]<=a[1],'Overlapping rects'
+ for b in allrects[i+1:]:assert a==b or a[2]<=b[0] or b[2]<=a[0] or a[3]<=b[1] or b[3]<=a[1],'Overlapping rects'
 for name in ['b-plain','c-textured-lit','c-details','d-rig-poses','f-restpose-compare']+[f'e-{c}-strip' for c in counts]:assert (V/f'peltast-{name}.png').exists(),name
-result={'checks':'passed','bytes':p.stat().st_size,'quality':pack['quality'],'alpha_levels':pack['alpha_levels'],'alpha_max_error':pack['alpha_max_error'],'clips':report,'limitations':'Technical contract only; no visual quality approval or runtime integration.'};(V/'peltast-validation.json').write_text(json.dumps(result,indent=2));print(json.dumps(result,indent=2))
+result={'checks':'passed','preview':preview,'bytes':p.stat().st_size,'quality':pack['quality'],'alpha_levels':pack['alpha_levels'],'alpha_max_error':pack['alpha_max_error'],'clips':report,'limitations':'Technical contract only; no visual quality approval or runtime integration.'};(V/'peltast-validation.json').write_text(json.dumps(result,indent=2));print(json.dumps(result,indent=2))

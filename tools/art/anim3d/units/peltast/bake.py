@@ -9,8 +9,10 @@ for idx,name in enumerate(['GEO-Dished wicker crescent pelta','GEO-Folded red ch
  o=bpy.data.objects[name];bpy.ops.object.select_all(action='DESELECT');o.select_set(True);bpy.context.view_layer.objects.active=o
  states=[(m,m.show_render,m.show_viewport) for m in o.modifiers if m.type=='SOLIDIFY']
  for m,_,_ in states:m.show_render=m.show_viewport=False
- uv=o.data.uv_layers.new(name='Baked surface UV');o.data.uv_layers.active=uv;uv.active_render=True
+ uv=o.data.uv_layers.new(name='Baked surface UV');o.data.uv_layers.active=uv;uv.active_render=True;uv_name=uv.name
  bpy.ops.object.mode_set(mode='EDIT');bpy.ops.mesh.select_all(action='SELECT');bpy.ops.uv.smart_project(angle_limit=1.15,island_margin=.02);bpy.ops.object.mode_set(mode='OBJECT')
+ # Edit-mode mesh rebuild invalidates the earlier UV-layer RNA reference.
+ uv=o.data.uv_layers[uv_name]
  m=o.data.materials[0];n=m.node_tree.nodes;l=m.node_tree.links;s=n.get('Principled BSDF');output=next(x for x in n if x.type=='OUTPUT_MATERIAL');coord=n.new('ShaderNodeUVMap');coord.uv_map=uv.name;maps={}
  for kind in ['AO','curvature']:
   im=bpy.data.images.new(name+' '+kind,512,512,alpha=False);im.colorspace_settings.name='Non-Color';tex=n.new('ShaderNodeTexImage');tex.image=im;n.active=tex;l.new(coord.outputs[0],tex.inputs['Vector']);old=output.inputs['Surface'].links[0].from_socket

@@ -200,7 +200,7 @@ canvas and its ground anchor. `atlas:{w,h}` records encoded dimensions. Each
 `rects:[{x,y,w,h,ox,oy}, ...]`. `x/y/w/h` selects the tightly cropped atlas region;
 `ox/oy` restores it in the logical frame. Draw at
 `(anchorX + ox - ax, anchorY + oy - ay)` with the desired scale. Atlas rectangles
-have a transparent one-pixel gutter. RGB quality remains 75. The packer tries
+have a transparent one-pixel gutter. RGB quality tries 90/85/80/75, preserving the highest fitting quality within each alpha level. The packer tries
 256, 64, then 32 alpha levels (maximum opacity error 0, 2, or 4/255 as
 conservatively bounded in the report; actual quantizer errors are checked).
 WebP stores the chosen alpha losslessly. This follows the original infantry
@@ -215,3 +215,64 @@ which distorted the shield and shifted its UV registration. The unit helper firs
 measures the bone parent's full world matrix with identity child transforms, then
 stores its inverse in `matrix_parent_inverse` and the original transform in
 `matrix_basis`. This retains the authored geometry without approximating shear.
+
+### Peltast round 2: finished projection and contour correction
+
+Read the spearman and field-cannon eight-round chapters before this refinement.
+Previous peltast evidence was CPU-labelled; no GPU completion is inferred from
+old review images. The previous masters/reviews are preserved externally in
+`masters/peltast/round1-cpu/`. All six Blender skills informed this round.
+
+The tunic has fuller shoulders, the cloak has a broader irregular contour and
+shallower folds, the fox ears/muzzle are smaller, and the nape hide tapers as a
+volumetric mesh. The stationary circular stone is narrower and has a deeper rim.
+The existing calibrated orthographic camera, MPFB anatomy/weights, thick cloth,
+beveled kit, generated unseen fills and original painting remain. These are
+physical geometry edits, not raster warps or silhouette cutouts.
+
+`surface.py` converts rigid curve details to meshes and applies their static
+thickness/bevel modifiers **before** recording frozen projection UVs. Weighted
+anatomy and the animated cloak retain their live deformation modifiers. The
+scene audit checks finished rigid UV registration independently at rest; it does
+not claim the deforming body's final subdivision has perfect correspondence.
+Occlusion tests exclude other objects. The shield shell deliberately accepts
+its own reed/rim occluders: every original radial sample sat under a raised reed,
+so ordinary vertex visibility erased nearly all its projected wicker. Reeds now
+sit close to the actual dished shell instead of floating about five centimetres
+in front of it. Both shell and solid bindings retain paint during movement.
+
+Camera-only Principled pigment preserves source illumination at 96% coverage;
+non-camera rays and unseen faces use the physical/generated materials. The
+painted display uses Standard/None, with reduced warm key/fill/rim energies.
+This is specific to already illuminated painted textures. Stone has a separate
+normal-dependent cream-top/darker-rim pigment and physical response; no source
+feet or static shadows are projected onto the base. Actual AO/curvature bakes
+remain, and the bounded automatic rest histogram grade stays fixed for all clips.
+
+Attack begins and ends in the saved guard pose rather than constructing a
+different hand orientation at its endpoints. The audit checks both endpoints.
+Rearming, revealed facial shading and whole-body death motion still need visual
+judgment; matching endpoint matrices is not a collision or animation-quality pass.
+
+The executable no-argument `units/peltast/gpu.sh` defaults to round 2 and selects
+Cycles Metal GPU, 512 px, 64 samples. It rebuilds all five clips, audits them,
+renders b/c/d/e, generates 512/256 outputs and review sheets, verifies GPU/master/
+grade provenance, packs and validates the trimmed atlas, then encodes/probes the
+decoded five-clip video. `ROUND` supplied by the driver names the eight-second
+MP4. It retains a transcript, failing-stage status and a completion receipt that
+explicitly leaves art approval false. CPU/master rejection and missing-input
+preflight can be checked without launching GPU renders. The script never writes
+the art PASS marker; the actual GPU output still needs visual acceptance.
+
+Round-two packing uses premultiplied bicubic reduction at 160 px, avoiding
+Lanczos edge ringing while retaining the full-alpha-first encoding attempt.
+Identical logical frames within a clip share a rectangle; their playback count
+and timing stay unchanged. Validation requires the last two decoded death frames
+to be byte-identical, so lossy WebP block context cannot shimmer during the hold.
+The full-alpha masters remain untouched. Final measured bytes/alpha choice and
+the remaining art defects are recorded in `units/peltast/REVIEW.md`.
+
+Bake API finding: smart-project's edit-mode rebuild can invalidate an existing
+UV-layer RNA reference. Save its name before entering edit mode and reacquire
+the layer afterward; using the stale reference intermittently raised a
+`UnicodeDecodeError`. The corrected bake was rerun, not skipped.
