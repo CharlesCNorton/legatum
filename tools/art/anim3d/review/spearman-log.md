@@ -47,3 +47,7 @@
 - Final round 5 master after evaluated-relief fix: rebuilt and CPU-rendered attack at 256px / 12 samples.
 - Final round 5 master after evaluated-relief fix: rebuilt and CPU-rendered hit at 256px / 12 samples.
 - Final round 5 master after evaluated-relief fix: rebuilt and CPU-rendered death at 256px / 12 samples.
+- Final round 5 CPU checks: 40 saved-rig samples, zero findings; trimmed 160px atlas 196706 bytes at quality 85, all 40 frames, decoded alpha/offset/gutter/hash validation PASS and held death byte identity PASS. Two regression tests, syntax 24 Python/3 Bash/2 JSON, 32-file hygiene scan and whitespace PASS.
+- Final movie verified: five simultaneous decoded clips, H.264 yuv420p, 1600x352, 192 frames at 24fps, 8 seconds. Opened final clay/details/rig poses/all five strips/decoded atlas and freshly extracted movie contact frames.
+- Final round 5 verdict: NOT PASS at 256px; shield, shoulder and feet closer, but base ellipse/shading, sleeve edge and crest differ. At 64px same identity, still different base/stance. Raised shoulder/lifted foot projection stretch and pale death surfaces remain. No PASS file. GPU pass and final 512/256 master export pending via ROUND=5 tools/art/anim3d/units/spearman/gpu.sh.
+- Git add failed: sandbox denied .git/worktrees/spearman-round2/index.lock. Left seven changed/new files for runner commit; use Co-Authored-By: gpt-6-astra (Codex) <noreply@openai.com>. Branch already contains available origin/master (0 missing commits); no fetch, merge, push or PR.
