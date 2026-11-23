@@ -41,3 +41,7 @@
 - Emitted panzer-d-rig-poses.png from actual d renders; visual review pending.
 - Emitted panzer-e-idle-strip.png from actual e-idle renders; visual review pending.
 - Emitted panzer-e-move-strip.png from actual e-move renders; visual review pending.
+- Emitted panzer-e-attack-strip.png from actual e-attack renders; visual review pending.
+- Emitted panzer-e-hit-strip.png from actual e-hit renders; visual review pending.
+- Emitted panzer-e-death-strip.png from actual e-death renders; visual review pending.
+- Emitted panzer-g-feet-check.png from actual g renders; visual review pending.
