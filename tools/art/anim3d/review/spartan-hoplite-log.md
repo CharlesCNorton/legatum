@@ -79,3 +79,12 @@ Review e-hit: 512px CYCLES/GPU, 64 samples; 4 actual frames.
 Review e-death: 512px CYCLES/GPU, 64 samples; 10 actual frames.
 
 Resumed driver round 2 critique (2026-11-23): opened GPU c/f and all five e strips, extracted and opened 8 round1 movie frames before editing. GPU status says complete round1 GPU512/64; driver stdout log is empty because gpu.sh redirects internally. At256 the broad round plume, high stiff mantle/neck shelf, straight spear, spread feet and dark flat stone rim visibly depart from the painting. Skin and linen also show patchy projection masks. At64 lambda/red/bronze identity reads, but wide stance and helmet contour remain distinct. Attack is readable; move has lifted marching knees and explicitly overridden foot rotations; death is perched and shield orientation jumps. No PASS. Unit-specific FEEDBACK remains absent. Read all common feedback including new23; using all six Blender skills for full-depth fitting, finished UVs/painted fills, warm product light/stone, fixed camera, open-action rest/roll retarget, CPU preview and encoded validation. Prior GPU evidence preserved.
+Review c: 256px CYCLES/CPU, 8 samples; 1 actual frames.
+Baked clip idle
+Baked clip move
+Baked clip attack
+Baked clip hit
+Baked clip death
+Review c: 256px CYCLES/CPU, 12 samples; 1 actual frames.
+Baked clip idle
+Baked clip move

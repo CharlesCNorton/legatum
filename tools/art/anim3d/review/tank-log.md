@@ -142,3 +142,8 @@
 - Emitted tank-e-attack-strip.png from actual e-attack renders; visual review pending.
 - Emitted tank-e-hit-strip.png from actual e-hit renders; visual review pending.
 - Emitted tank-e-death-strip.png from actual e-death renders; visual review pending.
+
+## Round 3 after the lead GPU pass
+- Opened GPU c-textured-lit, f-restpose/crossfade, all five e strips, and round2 MP4 decoded frames before edits; GPU log completed successfully: 40 frames, Q80, 190044 bytes, eight-second H.264/yuv420p video. Prior no-GPU notes are historical. Preserved receipt renders/clips/masters under masters/tank/round2-gpu-receipt.
+- Honest 256px critique: premium brushwork now survives but rear hull shoulder, front fender/track width, muzzle thickness and base ellipse still differ; near wheels retain regular circular shading. At64 the WWII identity is clear but the wider nose/base and wheel mass distinguish it. Move wheel lighting rotates with the paint; flash/smoke are clean but simplified. NOT PASS.
+- Loaded all six Sam Blender skills plus complete playbook/common feedback/tank feedback/art direction and provenance; this pass targets full-depth contour registration before rebaking/rest-camera projection, retaining generated hidden fill, bevels, thick straps/folded canvas, product lights and one frozen automatic histogram grade.
