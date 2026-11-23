@@ -186,3 +186,22 @@
 - Read complete playbook, both full feedback files, prior log, art direction and all six Blender skills. Modeling/cameras target closed fender geometry at the saved viewpoint; materials/animation target rotating pigment versus fixed broad lighting; lighting/rendering retain product lights, real bakes, generated olive fallback and frozen histogram grade.
 - Emitted tank-c-textured-lit.png from actual c renders; visual review pending.
 - Emitted tank-e-move-strip.png from actual e-move renders; visual review pending.
+- Emitted tank-b-plain.png from actual b renders; visual review pending.
+- Emitted tank-c-textured-lit.png from actual c renders; visual review pending.
+- Emitted tank-c-details.png from actual details renders; visual review pending.
+- Emitted tank-d-rig-poses.png from actual d renders; visual review pending.
+- Corrected side classification for converted fender curves using actual mesh positions; seated the far rolled edge, shortened forward mudguard tips, narrowed shoes and raised/softened the rear hull shoulder. Real depth, bevels, straps and folded canvas retained; regenerated all six AO/curvature bakes.
+- Wheel material now separates a bounded low-frequency painted-light estimate from rotating high-frequency pigment. Its fixed orthographic field follows suspension, not wheel spin; original frozen projection is preserved at rest. This is an approximate decomposition, not recovered physical albedo. Generated olive fill and product lighting remain; new shader needs GPU/motion review.
+- Refreshed c/f and move interim images immediately. GPU round3 512px originals retained under round3-gpu-receipt; current-round 512px folder deliberately absent until the host renders it.
+- Emitted tank-e-idle-strip.png from actual e-idle renders; visual review pending.
+- Emitted tank-e-move-strip.png from actual e-move renders; visual review pending.
+- Emitted tank-e-attack-strip.png from actual e-attack renders; visual review pending.
+- Emitted tank-e-hit-strip.png from actual e-hit renders; visual review pending.
+- Emitted tank-e-death-strip.png from actual e-death renders; visual review pending.
+- Emitted tank-g-feet-check.png: actual top/front geometry renders of all eight move samples.
+- Complete CPU256/12-sample pass emitted every stage and all 40 clip frames. Atlas contract PASS: 181292 bytes Q80, 1381x556, 160px trimmed cells; exact alpha/offsets, source/master/grade/camera checks, timing and identical decoded death hold passed.
+- New lighting audit initially used exact matrix equality and failed; inspection measured only 4.768e-7 evaluation roundoff with unchanged transforms. Changed to 1e-5 tolerance; all five saved clips now pass geometry/contact, 124 links/16 pivots, wheel-track speed, recoil, six bakes, stationary base and fixed broad-light coordinate checks. Three route tests pass; 16 Python files parse; three shell syntax checks pass.
+- Opened fresh b/c/details/f, all five e strips, top/front running-gear sheet, decoded delivery and MP4 frames at .3/.6/1.5 seconds. Body/shoulder/fender outline is closer; front tread finish and circular wheel details remain too regular. Fine aperture shading still rotates despite broad-light correction. At64 same WWII identity, but front running-gear mass remains distinguishable. CPU smoke is grainy; flash simplified. No clipping or broken held wreck. NOT PASS; no tank-PASS written.
+- Actual 256px masters archived. Video PASS: tank-round4-cpu.mp4, H.264/yuv420p, 1600x348, 240 frames/eight seconds. Fresh GPU512/256 masters and round4.mp4 await lead command ROUND=4 tools/art/anim3d/units/tank/gpu.sh. Existing GPU script succeeded in round3; updated default round and CPU video label.
+- Descriptive metrics: at256 IoU .949667 -> .952378, opaque RGB MAE 6.594 -> 7.598; at64 IoU .911663 -> .913194, MAE 16.104 -> 15.880. GPU512/256-sample baseline versus CPU256/12 samples is not a controlled quality comparison; exact hashes saved. Checked tank feedback again; no new entries.
+- Final atlas validation, source pins, 16 Python syntax checks, three shell syntax checks and git diff --check PASS. origin/master has zero commits missing from HEAD; no fetch/merge needed. Git add/commit blocked creating .git/worktrees/tank-round3/index.lock (Operation not permitted); left the 11 changed files uncommitted for runner, requested co-author message saved in masters/tank/commit-message.txt. No push, PR, uploads, Rust/UI changes or unrelated builds.
