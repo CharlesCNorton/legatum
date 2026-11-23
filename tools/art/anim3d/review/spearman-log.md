@@ -113,3 +113,7 @@
 - Round8 saved-scene checks pass: original19158 body vertices/53 bones,314 camera-only painting materials,280 unseen fills, all12 shield rays clear, .105m disc contact top/.155m thickness, five-segment bevel,1mm maximum stone bump distance and5m key. Opened new plain geometry and detail previews before motion rebuilds.
 - Round8 rebuilt and CPU-rendered idle, 256px /12 samples, one frozen rest grade.
 - Round8 rebuilt and CPU-rendered move, 256px /12 samples, one frozen rest grade.
+- Round8 rebuilt and CPU-rendered attack, 256px /12 samples, one frozen rest grade.
+- Round8 opened new idle/move/attack strips at256/64: same recognizable unit, fuller fist retained, base shadows quieter. Lifted foot and raised-arm paint stretching remain; no visual PASS inferred from successful renders. Unit feedback unchanged on recheck.
+- Round8 rebuilt and CPU-rendered hit, 256px /12 samples, one frozen rest grade.
+- Round8 rebuilt and CPU-rendered death, 256px /12 samples, one frozen rest grade.
