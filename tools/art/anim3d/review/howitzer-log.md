@@ -103,3 +103,8 @@
 - Published painted rest pose and 50/50 comparison; real AO shader, micrograin, edge geometry and hidden-surface fill.
 - Final material refinement replaces grey-green generated wheel pigment with continuous UV sampling of an unoccluded original shield-metal swatch; source paint grain/palette, Pointiness wear, AO and physical product shading, without frozen wheel holes/occlusions. Generated olive fill remains on unseen gun surfaces. Slightly narrowed tread depth and corrected hub-cap reach; no new asset/download. Full CPU512/8 rebuild underway.
 - Published e-idle: 8 actual rendered frames, 10 fps; CPU 512px 8 samples.
+- Published e-move: 8 actual rendered frames, 12 fps; CPU 512px 8 samples.
+- Published e-attack: 10 actual rendered frames, 14 fps; CPU 512px 8 samples.
+- Published e-hit: 4 actual rendered frames, 12 fps; CPU 512px 8 samples.
+- Published e-death: 10 actual rendered frames, 10 fps; CPU 512px 8 samples.
+- Completed all five clips and geometry audit; delivery pack may now run.
