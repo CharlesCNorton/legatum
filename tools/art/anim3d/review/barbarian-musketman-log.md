@@ -196,3 +196,4 @@
 - Authored attack skeletal action, 10 samples.
 - Authored hit skeletal action, 4 samples.
 - Authored death skeletal action, 10 samples.
+- Audit passed: five clips, source hashes, 53-bone rig, fixed base and positive object scales.
