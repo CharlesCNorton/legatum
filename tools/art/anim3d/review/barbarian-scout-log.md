@@ -156,3 +156,11 @@ Visual verdict: 256px improves stone surface, hand garment correctness and settl
 Shared feedback rechecked through23, unit-specific FEEDBACK still absent. Supplied origin/master has zero commits ahead of this branch; no merge or Rust/runtime change. Lead must run ROUND=2 tools/art/anim3d/units/barbarian-scout/gpu.sh for rebuilt GPU512/256, top/front feet, trimmed atlas/validation and round2 MP4.
 Final held-death rerender with root/object/cloth-state guard passed; both raw terminal frames now match byte-for-byte (the four one-LSB differences were from the earlier render). Final packed receipt remains Q80, 180678 bytes.
 Commit attempt blocked by sandbox index.lock Operation not permitted; changes remain uncommitted on astra/unit-anim-3d-barbarian-scout for runner. No push/PR/master merge. New gpu.sh test was cancelled with exit130 while waiting at the shared device gate; it never reached the device probe or rebuild and did not touch CPU masters. Status corrected to host GPU pending; prior round1 GPU pass succeeded, new host GPU pass unverified.
+Completed build stage.
+Completed refine stage.
+Completed texture stage.
+Completed bake stage.
+Completed animate stage.
+Published b-plain geometry checkpoint.
+Published c review: GPU 512 px, 64 samples; fixed rest-derived grade.
+Published d review: GPU 512 px, 64 samples; fixed rest-derived grade.

@@ -216,3 +216,23 @@
 - Authored death skeletal action, 10 samples.
 - Posted e-death review (CPU, 256 px).
 - Round3 iteration: inspected freshly extracted round2 movie frames and preserved them; generated a clean stone plate with built-in ImageGen and registered pigment on the real disc, retaining original rim and live AO. First preview exposed black empty texture margins and overaggressive body skin masking; rejected both, extended RGB beyond plate and replaced skin mask with anatomical garment underlayers. Rebuilt hooked feather as a thick cambered vane and barb geometry.
+- Built kneeling MPFB human, tailored ragged kit, feather hat, bandolier and solid horizontal musket.
+- Posted b-plain review (CPU, 512 px).
+- Finished-surface camera-only projection applied; physical stone excluded and generated fills retained.
+- Posted c-textured-lit review (CPU, 512 px).
+- Authored idle skeletal action, 8 samples.
+- Authored move skeletal action, 8 samples.
+- Authored attack skeletal action, 10 samples.
+- Authored hit skeletal action, 4 samples.
+- Authored death skeletal action, 10 samples.
+- Posted e-death review (CPU, 512 px).
+- Built kneeling MPFB human, tailored ragged kit, feather hat, bandolier and solid horizontal musket.
+- Finished-surface camera-only projection applied; physical stone excluded and generated fills retained.
+- Authored idle skeletal action, 8 samples.
+- Authored move skeletal action, 8 samples.
+- Authored attack skeletal action, 10 samples.
+- Authored hit skeletal action, 4 samples.
+- Authored death skeletal action, 10 samples.
+- Round3 material diagnosis: opened inherited coat-fill.png and found horse fur, not clothing leather. Generated unit-specific buff leather/ivory linen/flesh/charcoal plates; recorded both ImageGen outputs, prompts, licences and pinned source hashes. Experimental Medjay skin was superseded by the unit fill. Added body material regions from actual rig groups and excluded non-bone MPFB selection groups after a caught KeyError.
+- CPU512/4 rest and death previews inspected: clean stone texture/contact improved; hooked feather is closer, but still too tidy. View-dependent garment/skin fill removes much of the death collage; newly exposed surfaces remain less authored than the painting. Final isolated-process full-stage CPU pass running; no PASS.
+- Audit passed: five clips, source hashes, 53-bone rig, fixed base and positive object scales.
