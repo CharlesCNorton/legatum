@@ -459,6 +459,7 @@ impl ScriptedBrain {
         p.update_roster();
         p.reconcile_campaign();
         p.choose_plan();
+        p.choose_rome_opening();
         p.note_operation_took();
         p
     }
