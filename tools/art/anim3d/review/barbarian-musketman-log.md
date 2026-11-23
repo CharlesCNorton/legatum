@@ -132,3 +132,17 @@
 - Round 2 final visual critique: substantially closer hat and pigment at 256px, but feather thin, head contour imperfect, stone too smooth, and death exposes stretched paint/rigid coat/poor terminal contact. At64px it is the same recognizable kneeling musketman, still distinguishable from painting. No PASS.
 - Final repository gate found Python matrix-product expressions misidentified as email addresses; spaced the @ operators without semantic changes. Public-claims passed. Art distinctness could not launch Chromium: macOS MachPortRendezvous bootstrap permission denied (1100). Lead must rerun the art/browser gate outside this sandbox. Removed only the node_modules symlink accidentally tracked by runner WIP, leaving shared dependencies intact.
 - Committed completion on astra/unit-anim-3d-barbarian-musketman: b409be4c delivery/review and 207d6ac4 hygiene-safe matrix formatting/gate report; runner WIP 3c7b309a contains the main round-two source changes. Isolated checkout clean. Final hygiene and public-claims gates pass with art explicitly excluded after its sandbox Chromium failure. No push, PR, deployment or PASS marker.
+- Built kneeling MPFB human, tailored ragged kit, feather hat, bandolier and solid horizontal musket.
+- Posted b-plain review (GPU, 512 px).
+- Finished-surface camera-only projection applied; physical stone excluded and generated fills retained.
+- Posted c-textured-lit review (GPU, 512 px).
+- Authored idle skeletal action, 8 samples.
+- Authored move skeletal action, 8 samples.
+- Authored attack skeletal action, 10 samples.
+- Authored hit skeletal action, 4 samples.
+- Authored death skeletal action, 10 samples.
+- Posted b-plain review (GPU, 512 px).
+- Posted c-textured-lit review (GPU, 512 px).
+- Posted d-rig-poses review (GPU, 512 px).
+- Posted e-idle review (GPU, 512 px).
+- Posted e-move review (GPU, 512 px).
