@@ -1,0 +1,7 @@
+- Round 1 started; read project art instructions, standing feedback 1-23 and infantry family playbook.
+- Applied six Blender skills: modeling (real thick kit), materials (paint/cloth and wear), lighting (warm key/cool rim), cameras (fixed painting viewpoint), animation (CC0 retarget), rendering (Cycles CPU preview, GPU final handoff).
+- Read and isolated related musketeer delivery/projection helpers; geometry rebuilt for standing buff-coated musketman.
+- Built standing MPFB human, buff coat, red breeches/sash, feather hat, bandolier, musket and bayonet.
+- Posted b-plain review (CPU, 256 px).
+- Finished-surface camera-only projection applied; physical stone excluded and generated fills retained.
+- Posted c-textured-lit review (CPU, 256 px).
