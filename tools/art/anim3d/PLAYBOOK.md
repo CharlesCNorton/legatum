@@ -106,3 +106,58 @@ tools/art/anim3d/render.sh audit
 ```
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
+
+## Vehicles with dismounted infantry — mechanised-infantry
+
+This chapter applies only to `units/mechanised-infantry/`. The current painting
+shows an eight-wheeled APC and exactly one soldier stepping off its lowered rear
+ramp. The older three-person prompt is superseded. Original full-depth bevelled
+armour, hollow cabin frame, lowered ramp, eight round tires, hubs and tread sit
+beside MPFB CC0 anatomy with modern combat kit. The soldier has a 53-bone rig;
+the carrier uses separate mechanical parent controls. No billboard/subject card
+is used. Geometry registration preserves depth and requires alternate-view review.
+
+Run `tools/art/anim3d/units/mechanised-infantry/render.sh stills` for the plain and
+painted stages; omit `stills` to build/bake/render all five clips. CPU previews
+use `RESOLUTION=256 SAMPLES=6`. Every invocation is plain `blender -b` through
+the PATH gate, sequential, with no zero-scaled hidden effects. All downloads,
+.blend files, bakes and master images stay under `ANIM_ROOT`, outside git.
+
+Standing quality method: calibrate the painting camera and full-depth rest pose;
+freeze the full source painting into UVs on finished meshes; blend hidden surfaces
+into licensed generated painted fills. The vehicle source excludes the soldier
+so its silhouette cannot be duplicated on the ramp. Bevel hard edges, model real
+strap/buckle thickness and cloth folds, and bake actual AO/Pointiness for cavity
+wear and roughness. Use a warm upper-left key, soft fill and cool rim. The cream
+base starts from sRGB **#E9CFA0** (linear `.81485,.62396,.35153`), with a darker
+rim and fine grain. Calibrate one bounded RGB grade against the source and apply
+it consistently to clips; never change alpha to hide geometry errors. Standard
+view transform is intentional for camera-only painted pigment, not a general
+photographic preset. Judge painting/render/50-50 crossfade at 256 and 64 px in
+`mechanised-infantry-f-restpose-compare.png`; technical validity is not art approval.
+
+Human motion standard: use proven CMU free-use or Quaternius CC0 motion for
+idle/walk/hit/death, compensated in rest/reference poses including bone rolls.
+This unit uses Quaternius Idle_Loop, Walk_Loop, Hit_Chest and Death01, with idle
+carrying-arm constraints during walking. Never hand-rotate feet after retargeting.
+Root-only stance corrections retain captured foot directions. Each round renders
+all eight move samples from above and in front to
+`mechanised-infantry-g-feet-check.png`; review travel direction, contact and slip.
+The vehicle rolls wheels by travel/radius; only weapon-specific attack is authored.
+Licences and pinned source hashes are in the unit's SOURCES.md and assets.lock.json.
+
+`ROUND=1 tools/art/anim3d/units/mechanised-infantry/gpu.sh` is the no-argument
+lead handoff from repo root. It explicitly requires Metal, rebuilds all stages,
+renders actual Cycles GPU 512px frames, retains 512 and downsampled 256 masters,
+publishes every b/c/d/e/f/g review, packs/validates the atlas, and creates the
+8-second five-clip H.264/yuv420p review MP4 at 2x on cream. Missing Metal fails
+before replacing CPU evidence. GPU receipts are distinct from visual approval.
+
+Delivery uses logical 160x160 cells, 40 samples (8/8/10/4/10), WebP quality at
+least 75 and at most 200,000 bytes. Version-2 JSON contains `frame:{w,h,ax,ay}`
+and `clips:{name:{row,frames,fps,loop,rects:[{x,y,w,h,ox,oy}]}}`. Each rectangle
+is an atlas crop, and ox/oy restores it into the original logical cell. Draw at
+`anchor - (ax,ay) + (ox,oy)`; row is ordering metadata, not a fixed grid row.
+Exact reconstructed alpha and held death are validated. Runtime wiring remains
+unchanged. Do not write a PASS marker until rest-pose parity and clean motion
+have actually passed visual review.
