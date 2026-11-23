@@ -129,11 +129,11 @@ def build():
  rig=HumanService.add_builtin_rig(body,'game_engine');rig.name='RIG-Rifleman MPFB';rig.location.z=.09
  system=R/'blender-user/extensions/.user/user_default/mpfb/data'
  eyes=HumanService.add_mhclo_asset(str(system/'eyes/high-poly/high-poly.mhclo'),body,asset_type='Eyes',subdiv_levels=1,material_type='MAKESKIN');eyes.name='GEO-MPFB eyes'
- skin=mat('warm painted skin',(.5,.29,.14));red=mat('painted indigo wool',(.055,.085,.15),fill='wool');linen=mat('faded blue trousers',(.18,.25,.29),fill='linen');leather=mat('scuffed tan leather',(.10,.075,.045),fill='leather');steel=mat('worn steel',(.26,.28,.31),1,.55);brass=mat('antique brass buttons',(.48,.32,.13),1,.35);wood=mat('walnut rifle stock',(.26,.115,.035));dark=mat('bore and moustache',(.05,.025,.012));stone=mat('cream limestone E9CFA0',(.81485,.62396,.35153),0,.88)
+ skin=mat('warm painted skin',(.5,.29,.14),fill='skin');red=mat('painted indigo wool',(.055,.085,.15),fill='wool');linen=mat('faded blue trousers',(.18,.25,.29),fill='linen');leather=mat('scuffed tan leather',(.10,.075,.045),fill='leather');steel=mat('worn steel',(.26,.28,.31),1,.55);brass=mat('antique brass buttons',(.48,.32,.13),1,.35);wood=mat('walnut rifle stock',(.26,.115,.035));dark=mat('bore and moustache',(.05,.025,.012));stone=mat('cream limestone E9CFA0',(.81485,.62396,.35153),0,.88)
  body.data.materials.clear();body.data.materials.append(skin)
  for p in body.data.polygons:p.use_smooth=True
  sub=body.modifiers.new('Anatomical smoothing','SUBSURF');sub.levels=sub.render_levels=1
- limb('thigh_r','calf_r',(-.29,-.015,.085),(-.31,-.4,.5));limb('thigh_l','calf_l',(.29,.035,.085),(.31,-.4,.5))
+ limb('thigh_r','calf_r',(-.29,.24,.085),(-.31,-.4,.5));limb('thigh_l','calf_l',(.29,.035,.085),(.31,-.4,.5))
  limb('upperarm_r','lowerarm_r',(-.13,-.26,1.12),(-.44,-.12,1.16));limb('upperarm_l','lowerarm_l',(.20,-.25,1.34),(.40,-.09,1.17))
  aim('hand_r',(.06,-.02,-.02));aim('hand_l',(-.025,-.02,.07))
  for side in ('r','l'):
@@ -207,7 +207,7 @@ def build():
  parent(curve('trigger guard',[gp(t,w,-.036) for t,w in [(.27,-.02),(.27,-.065),(.33,-.065),(.35,-.02)]],.0045,steel),gun)
  sling=[]
  for i in range(33):
-  t=i/32;point=gp(.32+.40*t,-.018,-.005);point+=Vector((.21*sin(pi*t),0,-.17*sin(pi*t)));sling.append(point)
+  t=i/32;point=gp(.18+.42*t,-.018,-.005);point+=Vector((.075*sin(pi*t),0,-.18*sin(pi*t)));sling.append(point)
  vs=[]
  for point in sling:vs.extend([tuple(point+Vector((-.008,0,.006))),tuple(point+Vector((.008,0,-.006)))])
  parent(bevel(solid(mesh('hanging leather rifle sling',vs,[(i*2,i*2+1,i*2+3,i*2+2) for i in range(32)],leather),.004),.0015),gun)
@@ -240,13 +240,8 @@ def fit_surfaces(sc,rig,body):
  """Fit complete volumes to painted landmarks, inverse skinning preserves weights.
  No camera-facing cards or contour alpha are introduced. Soles keep world Z.
  """
- # Freeze MPFB's mixed macros before editing vertex coordinates.
- if body.data.shape_keys:
-  key=body.shape_key_add(name='Frozen anatomical mix',from_mix=True)
-  points=[v.co.copy() for v in key.data]
-  body.shape_key_clear()
-  for v,co in zip(body.data.vertices,points):v.co=co
- bpy.context.view_layer.update()
+ from refine import finish
+ finish(rig,body)
 
 
 def box(name,loc,dimensions,ma,width):
@@ -315,7 +310,9 @@ def bake_surface_maps():
 def project():
  """Freeze finished-surface UVs; camera-only pigment avoids double illumination."""
  bake_surface_maps()
- sc=bpy.context.scene;cam=sc.camera;im=bpy.data.images.load(str(A/'projection.png'),check_existing=True);records=[]
+ sc=bpy.context.scene;cam=sc.camera;im=bpy.data.images.load(str(A/'projection.png'),check_existing=True);clean=bpy.data.images.load(str(A/'cloth-projection.png'),check_existing=True);records=[]
+ from refine import stone
+ stone(sc,bpy.data.images.load(str(A/'stone-projection.png'),check_existing=True))
  for o in list(sc.objects):
   if o.type!='MESH' or any(x in o.name for x in ('muzzle','eyes','stationary cream base')):continue
   mods=[m for m in o.modifiers if m.type!='ARMATURE' and m.show_viewport]
@@ -343,7 +340,7 @@ def project():
    if not slot.material:continue
    ma=slot.material.copy();slot.material=ma;n=ma.node_tree.nodes;l=ma.node_tree.links;p=n.get('Principled BSDF');out=n.get('Material Output')
    if p is None:continue
-   tc=n.new('ShaderNodeUVMap');tc.uv_map='Painting';tex=n.new('ShaderNodeTexImage');tex.image=im;tex.extension='CLIP';l.new(tc.outputs[0],tex.inputs[0])
+   tc=n.new('ShaderNodeUVMap');tc.uv_map='Painting';tex=n.new('ShaderNodeTexImage');tex.image=clean if any(k in ma.name for k in ('indigo','trousers','leather','brass')) and not (o.parent and o.parent.name=='CTRL-rifle') else im;tex.extension='CLIP';l.new(tc.outputs[0],tex.inputs[0])
    attr=n.new('ShaderNodeVertexColor');attr.layer_name=col.name
    alpha=n.new('ShaderNodeMath');alpha.operation='MULTIPLY';l.new(attr.outputs[0],alpha.inputs[0]);l.new(tex.outputs['Alpha'],alpha.inputs[1])
    camera=n.new('ShaderNodeLightPath');weight=n.new('ShaderNodeMath');weight.operation='MULTIPLY';l.new(alpha.outputs[0],weight.inputs[0]);l.new(camera.outputs['Is Camera Ray'],weight.inputs[1])
@@ -382,8 +379,13 @@ def animate(clip):
   for p in rig.pose.bones:p.matrix_basis=rest[p.name].copy()
   rig.location=loc.copy();rig.rotation_euler=(0,0,0);gun.matrix_basis=gb.copy() if clip!='death' else gw.copy();bpy.context.view_layer.update();t=idx/count if loop else idx/(count-1);s=sin(2*pi*t)
   if clip!='attack':
-   sample=min(72,24+round(t*48))
+   phase=([0,.65,.9,1][idx] if clip=='hit' else t)
+   sample=min(72,24+round(phase*48))
    motion=motion_frames[sample];rig.location=loc+motion['root'];apply_matrices(rig,motion['matrices'])
+   if clip in ('hit','death'):
+    blend=([0,1,.5,0][idx] if clip=='hit' else min(1,t/.24))
+    for p in rig.pose.bones:p.matrix_basis=rest[p.name].lerp(p.matrix_basis,blend)
+    rig.location=loc+motion['root']*blend
    bpy.context.view_layer.update()
    if clip=='move':
     # Root height correction preserves captured foot rotations and virtual-ground stride.
@@ -391,12 +393,19 @@ def animate(clip):
     support=next((side for side in ('l','r') if flags.get(side)),None)
     if support:
      boot=bpy.data.objects['GEO-boot sole '+support];ev=boot.evaluated_get(bpy.context.evaluated_depsgraph_get());me=ev.to_mesh();lowest=min((ev.matrix_world @ v.co).z for v in me.vertices);ev.to_mesh_clear();rig.location.z+=.086-lowest
+    # A rifle carrier relaxes the barrel slightly forward during locomotion.
+    # Rotate at the wrist, preserving both grip origins and full source gait.
+    bpy.context.view_layer.update();pivot=rig.matrix_world @ rig.pose.bones['hand_r'].head
+    delta=Matrix.Translation(pivot) @ Matrix.Rotation(.10,4,'Y') @ Matrix.Translation(-pivot)
+    desired=delta @ gun.matrix_world
+    p=rig.pose.bones['hand_r'];hm=rig.matrix_world.inverted() @ delta @ rig.matrix_world @ p.matrix;hm.translation=p.head.copy();p.matrix=hm
+    bpy.context.view_layer.update();gun.matrix_world=desired
   elif clip=='attack':
    # Aim, settle, fire/recoil, recover. Whole weapon remains attached to the hand.
    amount=[0,.25,.65,1,1,.90,.95,.60,.20,0][idx]
    pivot=right_wrist
-   rot=Matrix.Rotation(.65*amount,4,'Y')
-   desired=Matrix.Translation(pivot+Vector((.06*amount,0,.35*amount))) @ rot @ Matrix.Translation(-pivot) @ gw
+   rot=Matrix.Rotation(-.32*amount,4,'Z') @ Matrix.Rotation(.65*amount,4,'Y')
+   desired=Matrix.Translation(pivot+Vector((.10*amount,.015*amount,.46*amount))) @ rot @ Matrix.Translation(-pivot) @ gw
    # Move both hands by the same rigid weapon transform.
    delta=desired @ gw.inverted()
    for side,wrist,pole in [('r',right_wrist,(-.43,-.12,1.18)),('l',left_wrist,(.42,-.10,1.22))]:

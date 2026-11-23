@@ -10,7 +10,12 @@ for stage,n in stages.items():
  assert manifest['frames']==n
  for size in (512,256):
   for i in range(n):assert Image.open(M/str(size)/stage/f'{i:02}.png').size==(size,size)
-assert json.loads((V/'rifleman-validation.json').read_text())['status']=='pass'
+validation=json.loads((V/'rifleman-validation.json').read_text())
+assert validation['status']=='pass' and not validation['preview']
+audit=json.loads((M/'audit.json').read_text())
+assert audit['structural_checks']=='pass' and audit['master_sha256']==hashlib.sha256((M/'rifleman.blend').read_bytes()).hexdigest()
+assert audit['max_rest_uv_error_px']<.01
+assert audit['finished_projection_meshes']>0
 for suffix in ['f-restpose-compare.png','g-feet-check.png',f"round{os.environ.get('ROUND','1')}.mp4"]:assert (V/('rifleman-'+suffix)).stat().st_size>0
 (V/f"rifleman-gpu-round{os.environ.get('ROUND','1')}.json").write_text(json.dumps({'status':'complete','art_approved':False,'master_sha256':hashlib.sha256((M/'rifleman.blend').read_bytes()).hexdigest(),'stages':stages},indent=2))
 print('GPU masters, atlas, review and movie receipt verified')

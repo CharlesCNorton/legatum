@@ -7,3 +7,8 @@
 - Original rifleman kit geometry and code adaptations: Legatum, 2026-11-23; code MIT, rendered art CC BY 4.0. Pipeline helpers adapted as a unit-local snapshot from the infantry worktree on `astra/unit-anim-3d-infantry`, with the family playbook consulted through `git show astra/unit-anim-3d-v2:tools/art/anim3d/PLAYBOOK.md`.
 
 `assets.lock.json` pins exact painting, generated fill and motion input bytes. Generated masters and third-party assets stay outside git. No commercial motion libraries, accounts or paid services were used.
+
+## Rifleman driver round 2, 2026-11-23
+- Original built-in ImageGen stone and cloth occlusion fills, project CC BY 4.0, no public URL. Generation 01a209eb-f0a8-71b3-ac21-7112629cfb9a: stone exec-a655a416-bd00-40c8-885e-e2fc2771a9f7.png; cloth exec-247893e4-06cc-4602-9df4-765837f64320.png. Input is the existing rifleman painting. External assets/rifleman/{stone,cloth}-fill-source.png; exact prompts and SHA256 in unit scripts. Stone textures the solid base with live AO; only feathered rifle/hand regions replace garment pigment so moving hands do not leave painted duplicates.
+- Reuses unchanged generated Medjay skin, built-in ImageGen 01a20671-5037-7490-a90a-decacb274446/exec-401b9b3e-9eef-48db-b965-0d53769ebddc.png, original project CC BY 4.0; copied assets/rifleman/skin-fill.png, hash pinned. MPFB CC0 anatomy and Quaternius CC0 motion unchanged. No new third-party download.
+- Original full-depth contour/hand fitting, normals/topology finish, semantic garment underlayers and weapon aim adaptation: MIT scripts / CC BY 4.0 renders. Refinement approach informed by inspected musketman/infantry helpers. GPU round1 preserved in masters/rifleman/driver-r1-gpu.

@@ -4,5 +4,8 @@
   "assets/horseman/fill-coat.png": "202834d89526e95d00881d507d254c8f597199ccf1ec56ef8722e21f3a438ede",
   "assets/quaternius-ual/AnimationLibrary_Godot_Standard.gltf": "0ff075c7ad6855c5c2c37a171592ee8f0d6ab2f58259e2be77a9b63dd8027765",
   "assets/quaternius-ual/AnimationLibrary_Godot_Standard.bin": "6e65377d81558333c4093dbb144a48fd19019343d82b1a3a7992a98ec0e0543c",
-  "assets/quaternius-ual/LICENSE": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499"
+  "assets/quaternius-ual/LICENSE": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499",
+  "assets/rifleman/stone-fill-source.png": "85f6cc7fed33f05c138ece0e824a49cde5f8fdd8bbfa0a1eddb78b0b805d31b8",
+  "assets/rifleman/skin-fill.png": "e9699dccd35965546bb5973ecb349cd695ab01bc7d06528b6aaee48b7070d9a9",
+  "assets/rifleman/cloth-fill-source.png": "ef4e1e9c0482fb8953a1547742ae7fb39fde574f6c19d92f16f7436a396bca0b"
 }

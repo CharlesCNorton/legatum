@@ -121,6 +121,7 @@ def prepare(rig, root, clip, phases):
         strip.action_slot = idle.slots[0]
         strip.action_frame_start, strip.action_frame_end = idle.frame_range
         strip.frame_end = last
+    for bone in source.pose.bones:bone.matrix_basis=Matrix.Identity(4)
     scene.frame_set(int(first))
     bpy.context.view_layer.update()
     reference = {n: source.pose.bones[n].matrix.copy() for n in MAP.values()}
@@ -166,6 +167,7 @@ def prepare(rig, root, clip, phases):
     scale = sum(rig.data.bones[n+'_l'].length for n in ['thigh', 'calf']) / sum(source.data.bones[n].length for n in ['DEF-thigh.L', 'DEF-shin.L'])
     frames = []
     for phase in phases:
+        for bone in source.pose.bones:bone.matrix_basis=Matrix.Identity(4)
         frame = first+(last-first)*max(0, min(1, phase))
         scene.frame_set(int(frame), subframe=frame-int(frame))
         bpy.context.view_layer.update()

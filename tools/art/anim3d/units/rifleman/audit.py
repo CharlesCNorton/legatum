@@ -9,6 +9,22 @@ bpy.ops.wm.open_mainfile(filepath=str(M/'rifleman.blend'))
 rig=bpy.data.objects['RIG-Rifleman MPFB'];gun=bpy.data.objects['CTRL-rifle']
 sc=bpy.context.scene;anchor=world_to_camera_view(sc,sc.camera,Vector((0,0,.085)))
 (M/'registration.json').write_text(json.dumps({'ax':anchor.x*160,'ay':(1-anchor.y)*160,'world':[0,0,.085],'meaning':'stationary stone contact center'},indent=2))
+# Finished rest-camera UVs must describe the evaluated surface actually rendered.
+deps=bpy.context.evaluated_depsgraph_get();projection_error=0;checked=0
+for obj in sc.objects:
+ if obj.type!='MESH':continue
+ assert obj.get('finished_surface'),obj.name
+ assert all(m.type=='ARMATURE' for m in obj.modifiers),obj.name
+ uv=obj.data.uv_layers.get('Painting')
+ if not uv:continue
+ ev=obj.evaluated_get(deps);me=ev.to_mesh();assert len(me.vertices)==len(obj.data.vertices),obj.name
+ for loop in list(obj.data.loops)[::max(1,len(obj.data.loops)//64)]:
+  co=world_to_camera_view(sc,sc.camera,ev.matrix_world @ me.vertices[loop.vertex_index].co)
+  error=(uv.data[loop.index].uv-Vector((co.x,co.y))).length*256;projection_error=max(projection_error,error)
+  assert error<.01,(obj.name,error)
+ ev.to_mesh_clear();checked+=1
+body=bpy.data.objects['GEO-MPFB rifleman anatomy']
+assert {0,1,2,3}.issubset({p.material_index for p in body.data.polygons}),'Semantic skin/cloth/boot underlayers missing'
 grips={side:gun.matrix_world.inverted() @ rig.matrix_world @ rig.pose.bones['hand_'+side].head for side in ('l','r')}
 for clip,n in [('idle',8),('move',8),('attack',10),('hit',4),('death',10)]:
  meta=json.loads((M/'clips'/f'{clip}.json').read_text());assert meta['source_sha256']==master_hash
@@ -44,5 +60,5 @@ for clip,n in [('idle',8),('move',8),('attack',10),('hit',4),('death',10)]:
   assert max(x['slip_m'] for x in contact_errors)<.015,contact_errors
  if grip_errors:assert max(v for e in grip_errors for v in e.values())<.06,(clip,grip_errors)
  records[clip]={'grip_errors_m':grip_errors,'frames':n,'feet':poses,'motion':meta['motion'],'planted_interval_errors':contact_errors}
-(M/'audit.json').write_text(json.dumps({'structural_checks':'pass','visual_approval':False,'clips':records},indent=2))
+(M/'audit.json').write_text(json.dumps({'structural_checks':'pass','master_sha256':master_hash,'visual_approval':False,'finished_projection_meshes':checked,'max_rest_uv_error_px':projection_error,'clips':records},indent=2))
 print('Structural audit passed; full contact/contour judgment requires feet and clip images.')

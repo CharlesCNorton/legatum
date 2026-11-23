@@ -1,59 +1,41 @@
-# Rifleman round 1
+# Rifleman round 2 candidate
 
-Candidate only; no PASS. CPU Cycles, 256px, six samples. GPU final renders have
-not run in the sandbox. The executable `gpu.sh` is the complete driver handoff;
-it rebuilds and renders on Cycles Metal GPU at 512px, exports 512/256 masters,
-re-packs/validates, and writes `rifleman-round${ROUND}.mp4`.
+Not visually approved; do not write `rifleman-PASS` from a technical receipt.
+Incoming GPU round 1 completed successfully and is archived externally under
+`masters/rifleman/driver-r1-gpu/`, including review images and movie samples.
+The running critique and check results are in `review/3d-v2/rifleman-log.md`.
 
-## Exists
+Round 2 fits full-depth coat, trousers, cap, pouches, boots and weighted hand
+surfaces to the painting, fixes inward normals on the stock, and freezes finished
+geometry before projection. The original painting remains the main pigment source.
+Generated clean stone and cloth plates fill occluded areas; the coat no longer
+retains the painted hand and rifle after those objects move. Hidden anatomy uses
+skin, blue wool, blue trousers or leather according to deform-bone weights.
+Aimed warm key, soft fill, reduced cool rim, baked AO/Pointiness, and one bounded
+histogram grade remain in place. No alpha card substitutes for geometry.
 
-- External `masters/rifleman/plain.blend`, `rifleman.blend`, and five editable
-  clip blends: MPFB anatomy/53-bone rig, continuous weighted blue coat/sleeves/
-  trousers, kepi, crossbelts and brass, rifle/lock/trigger/barrel/sling.
-- Frozen rest-camera painting UVs, existing generated pigment fills for unseen
-  surfaces, physical material response, actual AO/Pointiness bakes, one measured
-  frozen histogram grade, cream stone and three aimed product lights.
-- CPU 256px raw/graded frames, three clay viewpoints, textured/detail comparisons,
-  four attack poses, all five PNG strips/animated WebPs, rest split/crossfade,
-  top/front feet cycle and eight-second decoded-atlas movie in external review.
-- Candidate `app/src/assets/units/anim/rifleman.webp` and version-2 JSON. Logical
-  160px cells, exact alpha/offset reconstruction, 8/8/10/4/10 samples. Anchor is
-  projected from the stationary stone contact center, not the canvas midpoint.
+Quaternius CC0 idle/walk/hit/death remain the motion source; sparse donor channels
+are reset before evaluation. Hit recovers into the guard; death blends out of it.
+The original rifle attack raises the gun toward the shoulder with a small depth
+turn. No foot rotations are patched after retargeting. Surface fit and fingers
+still require visual judgment; wrist metrics do not establish full contact.
 
-## Verification
+All source assets, blend files, bakes, 512/256 masters and raw renders are external.
+Only scripts, prompts/provenance, and the trimmed candidate atlas/JSON are in git.
+The existing painting remains runtime art pending lead review.
 
-- Atlas: **179,188 bytes at quality 90**, 1182 x 749 packed pixels. All 40 samples
-  present; bounds, trim offsets, decoded alpha, camera margin, visible motion,
-  identical held-death frames, source/clip/frame/grade hashes and byte cap pass.
-- MP4: H.264, yuv420p, 1600 x 348, 240 frames, 30 fps, eight seconds.
-- Rig: 53 bones, original MPFB anatomy retained, stationary stone, nonzero scales,
-  CC0 donor actions for idle/move/hit/death, two-hand attachment positions pass.
-  Maximum sampled wrist error 0.000000649m (positions only, not finger contact).
-- Walk: max foot heading 13.44 degrees from travel direction; four measured
-  planted intervals, max virtual-ground ankle drift 0.000000218m. Top/front
-  screenshots inspected. This does not prove heel/toe contact or all-frame
-  collision correctness; there is no complete skin/cloth collision solver.
-- Python syntax: 6 files passed. Bash syntax: 2 files passed. Working-file
-  hygiene: 13 files, zero findings. `git diff --check` passed.
-- No Rust, rules, runtime UI or animation-loader changes. Commit-based art/browser
-  gates remain for the lead: Git index.lock was denied, so the runner must commit.
+From the repository root, the complete GPU handoff is:
 
-## Honest art verdict
+```sh
+ROUND=2 tools/art/anim3d/units/rifleman/gpu.sh
+```
 
-At 256px the blue uniform, kepi and diagonal rifle match the identity and inherit
-much of the original brushwork, but the rest pose is visibly distinguishable.
-The coat/shoulder and trouser silhouette remains narrower and more angular,
-boot outlines pick up pale projected edge colors, the rifle stock/sling do not
-register exactly, and the base ellipse/edge still differs. Newly exposed surfaces
-and the hand/finger pose need better craft. The firing pose has wrist attachment
-but is not yet a convincing shoulder-stock contact; the held death is visibly
-stiff. These are visual issues despite the structural checks passing.
+This rebuilds b/c/details/d/e stages using Cycles Metal with no CPU fallback,
+keeps genuine 512/256 masters, writes top/front feet and split/crossfade rest
+comparison, runs the finished-surface/rig audit, packs and decodes the 40-frame
+160px trimmed atlas at quality >=75 and <=200,000 bytes, and makes the eight-second
+1600x348 H.264/yuv420p movie. Logs now go both to the driver and master log.
+CPU iteration uses `render.sh build`, `animate`, `preview`, `feet`, `audit`, `pack`,
+and `validate`. Packing rejects clipped frames rather than cropping visible art.
 
-At 64px it reads as the same blue-coated rifleman, though thinner and less grounded
-than the painting. Do not promote on file size or successful render alone.
-
-Non-obvious fixes this round: rigid upper/lower trouser cylinders open at knees,
-so bind a continuous surface across both bones; camera-projected illumination
-needs camera-only pigment to avoid lighting the rest of the scene; do not rotate
-feet after retargeting to repair an incorrect rest basis; freeze one grade for
-all clips; copy the held death PNG rather than re-rendering stochastic noise.
+Round-2 CPU result: 165,824 bytes at quality 90; all 40 frames and decoded trims/alpha pass. Audit: 63 finished projected meshes, zero sampled rest UV error, max wrist attachment error 0.000000784 m. Movie: H.264/yuv420p, 1600x348, 240 frames, 8 seconds. Static syntax/hygiene checks pass. At 64 px the identity is clear; at 256 px cap shape, supporting cuff/grip, shoulder contact and stiff death remain visibly below the painting. No PASS; next lead GPU review is required.

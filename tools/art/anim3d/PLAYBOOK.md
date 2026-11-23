@@ -169,3 +169,27 @@ The target remains a rest pose hard to distinguish from the painting, plus clean
 motion at 256 and readable identity at 64. Do not write `rifleman-PASS` until actual
 visual evidence supports that judgment. Syntax, atlas/rig validation and art-only
 repository gates suffice here; no Rust or UI implementation changes are involved.
+
+### Rifleman round 2: finish the geometry and remove occluder pigment
+
+`units/rifleman/refine.py` now fits real coat, trouser, boot, cap, pouch and hand
+surfaces before projection, inverse-skinning articulated vertices and preserving
+full depth. Freeze non-armature topology in bind space and recalculate normals
+before computing visibility. An inward stock face can reject camera pigment and
+look like untextured wood despite correct UVs. Wrist attachment metrics alone
+cannot prove finger contact: inspect the actual hand mesh in the firing strip.
+
+The generated clean cloth plate fills only feathered rifle/hand regions on garment
+materials; otherwise the old painted hand can remain on the torso after the real
+hand moves. Generated clean stone pigment goes onto the solid disc with current
+AO, with alpha selecting a cream fallback rather than black at its boundary.
+Both inputs and prompts are pinned; original inputs/reviews are archived externally.
+Clear sparse donor pose channels before action evaluation. The new firing pose
+raises the stock toward the shoulder and turns the gun slightly in depth. Every
+round still needs all five clips, top/front feet and the split comparison reviewed.
+
+CPU commands additionally support `render.sh audit` and `render.sh validate`.
+`ROUND=2 units/rifleman/gpu.sh` (under `tools/art/anim3d/`) performs the complete
+GPU rebuild. Its log is now tee'd to the driver's log as well as the master log;
+it removes a stale same-round completion receipt before starting. Successful
+technical validation remains separate from visual approval and `rifleman-PASS`.
