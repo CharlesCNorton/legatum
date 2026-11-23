@@ -21,3 +21,7 @@
 - origin/master advanced to 27fa4cb0747035bf4181e5abe6d8f284a3731203. Its crates tree exactly matches HEAD (ffb2dbc0d3be1c25d5492e1f2ece3921e3c72c8f). Merge was blocked creating ORIG_HEAD.lock; git add was blocked creating index.lock. Changes left uncommitted for the runner; no push or master merge.
 - Art remains below painting parity at 256 px; recognizable at 64 px. No PASS marker. GPU rerender remains for the host via ROUND=1 tools/art/anim3d/units/war-elephant/gpu.sh.
 - Final MP4 verified with ffprobe: H.264, yuv420p, 1600x348, 30 fps, 240 frames, 8.000 seconds. Decoded frame inspected for all five trimmed-atlas reconstructions.
+
+# War Elephant round 2
+- Opened the prior rest/split/crossfade, native 64 px comparison and death strip before editing. At 256 px the blanket is much too broad/red, timber enclosure too bright/tall, tusks and trunk overextend, riders misregister and stone is dull. At 64 px the elephant/howdah identity reads but the broad red rectangle and raised trunk clearly differ. Death hovers on folded legs and reveals source spill; not painting parity, no PASS.
+- Loaded all six Sam Blender skills; read the complete shared feedback, local playbook and advanced spearman/field-cannon chapters. No war-elephant-specific feedback file was present. Round focus: volumetric registration, finished-surface frozen projection, camera-only painted illumination, physical cream base and grounded collapse.

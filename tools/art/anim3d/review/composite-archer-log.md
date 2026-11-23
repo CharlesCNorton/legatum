@@ -28,3 +28,7 @@
 - No unit-specific FEEDBACK file was present at the final check. No uploads, PR, push or deployment.
 - Final working-tree checks PASS: hygiene line checks on 21 text files, public claims, all 14 Python AST parses, shell syntax, whitespace, and atlas validation. Matrix @ spacing fixed hygiene's email false positives; AST equivalence confirmed no semantic change.
 - Git add/commit blocked: cannot create .git/worktrees/lane-9/index.lock (Operation not permitted). Left all changes uncommitted for the runner; do not push or merge. Required commit trailer: Co-Authored-By: gpt-6-astra (Codex) <noreply@openai.com>.
+
+# Composite archer round 2 (resumed)
+- Opened latest rest comparison and decoded atlas before edits. Honest 256px critique: source has a much broader drawing elbow and sleeve, more readable face, larger braced kneeling silhouette and a shallower base ellipse. Render has a pinched torso, a pale doubled face/hand area, swollen bow grip, floating rear knee and exposed projection seams; current rest is readily distinguishable. At64px red/gold archer identity survives but the source's confident width and grounded stance do not. No PASS.
+- Loaded Blender modeling/materials/lighting/cameras/animation/rendering skills; applying finished-surface projection, actual geometry registration, camera-only painted illumination, contact checks and decoded-atlas video verification. Existing image-generated fills are retained. No unit-specific feedback file exists at round start.

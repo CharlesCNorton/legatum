@@ -14,3 +14,5 @@ Rest review: still visibly behind painting; adjusted side camera/elevation, wide
 Motion review: source horse gait renders; authored sabre sweep revised downward after attack pose inspection. Shortening blade to keep all cells inside bounds.
 e-hit: review emitted from CYCLES frames; no art-pass claim.
 e-death: review emitted from CYCLES frames; no art-pass claim.
+
+Round 2 opening critique: opened latest rest comparison and rig poses before editing. At 256px horse chest/muzzle and legs differ markedly, sword hand is too far right/up, arm is bent rather than extended left, saddle blanket is oversized and surfaces are shiny/patchy. At 64px cavalry identity survives but pose and silhouette are clearly different; no PASS. Cavalry-specific FEEDBACK file absent; read all standing FEEDBACK. Loaded six Blender skills; use finished-surface frozen UVs, camera-only painted pigment, physical pose fitting, and validated sequential GPU delivery.

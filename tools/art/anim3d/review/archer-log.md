@@ -81,3 +81,7 @@
 - Commit blocked by index.lock permission; merge of newly advanced origin/master 27fa4cb blocked by ORIG_HEAD.lock permission. Runner must merge/commit; no push or PR attempted.
 - Browser art check attempted twice: local Playwright missing, then reused main checkout installation; Chromium launch blocked by sandbox bootstrap_check_in permission (1100), SIGTRAP. Check remains pending on host/build box.
 - GPU handoff wrapper saved at tools/art/anim3d/units/archer/gpu-round.sh. No unit-specific feedback file was present at final check.
+
+# Archer round 2 (resumed 2026-11-23)
+- Opened latest rest comparison, attack strip and decoded-atlas check before edits. At 256 px the drawing arm is too thin/short, helmet crest is a blunt wedge, chest straps overpower the painted lacing, bow curve/tips differ, and stone has a dark rim and oversize shadow. At 64 px it reads as an archer but the tall straight bow and narrow shoulder/face are distinguishable from the painting; no PASS.
+- Read all shared feedback (1–22); archer-FEEDBACK.md is absent. Read both lead playbooks through round 8 and loaded all six Blender skills; prioritize finished-surface projection and actual silhouette geometry, retaining original generated fills and one frozen histogram grade.
