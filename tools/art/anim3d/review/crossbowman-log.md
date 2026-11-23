@@ -113,3 +113,6 @@
 - Completed render e-move (GPU).
 - e-move: 8 frames reviewed at 256/64; CYCLES GPU, 64 samples, source 512px.
 - Started render e-attack (GPU).
+- Completed render e-attack (GPU).
+- e-attack: 10 frames reviewed at 256/64; CYCLES GPU, 64 samples, source 512px.
+- Started render e-hit (GPU).
