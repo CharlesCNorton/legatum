@@ -6,6 +6,8 @@ from bpy_extras.object_utils import world_to_camera_view
 from math import sin,cos,pi
 sys.path.insert(0,str(Path(__file__).parent))
 from tack import reins
+from rider_motion import sample_rider
+from contacts import key_contacts
 R=Path(os.environ['ANIM_ROOT']);M=R/'masters/cavalry';(M/'clips').mkdir(exist_ok=True)
 CLIPS={'idle':(8,10,True,'Idle',80),'move':(8,12,True,'Gallop',14),'attack':(10,14,False,'Gallop',14),'hit':(4,12,False,'Idle_HitReact_Left',16),'death':(10,10,False,'Death',24)}
 for node in ast.parse(Path('tools/art/anim3d/scene.py').read_text()).body:
@@ -13,6 +15,8 @@ for node in ast.parse(Path('tools/art/anim3d/scene.py').read_text()).body:
 for clip,(count,fps,loop,src,length) in CLIPS.items():
  if os.environ.get('CLIP') and clip not in os.environ['CLIP'].split(','):continue
  bpy.ops.wm.open_mainfile(filepath=str(M/'cavalry.blend'));sc=bpy.context.scene;hrig=bpy.data.objects['AnimalArmature'];rig=bpy.data.objects['Rider MPFB game_engine'];root=bpy.data.objects['Horse world control']
+ rest_pose={p.name:p.matrix_basis.copy() for p in hrig.pose.bones}
+ rider_action,rider_samples=sample_rider(rig,clip,count,loop)
  raised={n:Matrix(m) for n,m in json.loads(hrig.get('raised_idle_foreleg','{}')).items()}
  act=bpy.data.actions['AnimalArmature|'+src];hrig.animation_data.action=act;hrig.animation_data.action_slot=act.slots[0]
  poses=[]
@@ -21,17 +25,13 @@ for clip,(count,fps,loop,src,length) in CLIPS.items():
   f=t*length;sc.frame_set(int(f),subframe=f%1);bpy.context.view_layer.update()
   sampled={p.name:p.matrix_basis.copy() for p in hrig.pose.bones};object_matrix=hrig.matrix_basis.copy()
   if clip=='idle':sampled.update(raised)
-  if clip=='move':
-   # Three-beat canter contact order, using only time-warped source trajectories.
-   # Extend the source's short gallop stances, so support persists until one flight phase.
-   legs=[('back','R',0.,6.,3.),('back','L',.23,8.5,3.),('front','R',.23,11.5,2.5),('front','L',.46,13.5,2.5)]
-   for family,side,start,source_start,stance in legs:
-    phase=(t-start)%1
-    shifted=(source_start+(phase/.34*stance if phase<.34 else stance+(phase-.34)/.66*(length-stance)))%length
-    sc.frame_set(int(shifted),subframe=shifted%1);bpy.context.view_layer.update()
-    prefixes=['FrontShoulder','FrontUpperLeg','FrontLowerLeg','IKFrontLeg','FF','PoleTarget'] if family=='front' else ['BackShoulder','BackLeg','BackUpperLeg','BackLowerLeg','IKBackLeg','FFB','PoleTargetBack']
-    for p in hrig.pose.bones:
-     if p.name.endswith('.'+side) and p.name.split('.')[0] in prefixes:sampled[p.name]=p.matrix_basis.copy()
+  if clip in {'attack','hit','death'}:
+   blend=min(t/.22,1) if clip=='death' else sin(pi*t)**.65
+   sampled={n:rest_pose[n].lerp(m,blend) for n,m in sampled.items()}
+  # Preserve source tail timing with restrained amplitude on the longer
+  # painted hair sculpture; raw source angles turn it into an upright whip.
+  for n,m in sampled.items():
+   if n.startswith('Tail'):sampled[n]=rest_pose[n].lerp(m,.4 if clip=='death' else .25)
   poses.append((sampled,object_matrix))
  hrig.animation_data_clear();hrig.animation_data_create();hrig.animation_data.action=bpy.data.actions.new('Cavalry '+clip+' sampled '+src)
  base={n:Matrix(v) for n,v in json.loads(rig['seated_pose']).items()};root_rest=root.location.copy();rider_rest=rig.matrix_basis.copy();weapons=[bpy.data.objects[n] for n in ['GEO-sabre-grip','GEO-sabre-blade','GEO-sabre-guard']];weapon_rest={o.name:o.matrix_basis.copy() for o in weapons}
@@ -49,9 +49,10 @@ for clip,(count,fps,loop,src,length) in CLIPS.items():
   hrig.rotation_mode='QUATERNION'
   for prop in ['location','rotation_quaternion','scale']:hrig.keyframe_insert(prop,frame=f)
   for n,m in base.items():rig.pose.bones[n].matrix_basis=m
+  for n,delta in rider_samples[i].items():
+   p=rig.pose.bones[n];p.rotation_mode='QUATERNION';p.rotation_quaternion=p.rotation_quaternion @ delta
   bpy.context.view_layer.update()
   lean=0.;twist=0.
-  if clip=='idle':lean=.025*sin(2*pi*t)
   if clip=='move':lean=.10+.055*sin(2*pi*t);twist=.015*sin(2*pi*t)
   if clip=='attack':
    thrust=sin(pi*t)**.8;lean=.15*thrust
@@ -59,10 +60,6 @@ for clip,(count,fps,loop,src,length) in CLIPS.items():
    p=rig.pose.bones['lowerarm_r'];p.rotation_mode='QUATERNION';p.rotation_quaternion=p.rotation_quaternion @ Quaternion((0,1,0),.15*thrust)
    bpy.context.view_layer.update()
    wrist=rig.pose.bones['hand_r'];pivot=wrist.head.copy();wrist.matrix=Matrix.Translation(pivot) @ Quaternion((1,0,0),1.3*thrust).to_matrix().to_4x4() @ Matrix.Translation(-pivot) @ wrist.matrix
-  if clip=='hit':
-   lean=-.22*sin(pi*t);twist=.19*sin(pi*t)
-   p=rig.pose.bones['upperarm_r'];p.rotation_mode='QUATERNION';p.rotation_quaternion=p.rotation_quaternion @ Quaternion((1,0,0),.15*sin(pi*t))
-  if clip=='death':lean=1.1*t;twist=.25*t
   p=rig.pose.bones['spine_02'];p.rotation_mode='QUATERNION';p.rotation_quaternion=p.rotation_quaternion @ Quaternion((1,0,0),lean)
   p=rig.pose.bones['head'];p.rotation_mode='QUATERNION';p.rotation_quaternion=p.rotation_quaternion @ Quaternion((0,1,0),twist)
   root.location=root_rest.copy()
@@ -118,6 +115,7 @@ for clip,(count,fps,loop,src,length) in CLIPS.items():
    p.rotation_mode='QUATERNION'
    for prop in ['location','rotation_quaternion','scale']:p.keyframe_insert(prop,frame=f)
   bpy.context.view_layer.update();reins(f)
+ key_contacts(count,loop,clip)
  # Smooth interpolation for the editable rig; delivered samples remain exact.
  for obj in [hrig,rig,root]+weapons:
   if obj.animation_data and obj.animation_data.action:
@@ -127,7 +125,7 @@ for clip,(count,fps,loop,src,length) in CLIPS.items():
       for bag in strip.channelbags:
        for fc in bag.fcurves:
         for k in fc.keyframe_points:k.interpolation='BEZIER';k.handle_left_type='AUTO_CLAMPED';k.handle_right_type='AUTO_CLAMPED'
- sc.frame_start=1;sc.frame_end=count;sc.render.fps=fps;sc['sample_frames']=json.dumps(list(range(1,count)) + [count-1] if clip=='death' else list(range(1,count+1)));sc['horse_source_action']=act.name+(' (source trajectories retimed to three-beat canter with extended stances)' if clip=='move' else '');sc['clip']=clip;sc['loop']=loop
+ sc.frame_start=1;sc.frame_end=count;sc.render.fps=fps;sc['sample_frames']=json.dumps(list(range(1,count)) + [count-1] if clip=='death' else list(range(1,count+1)));sc['horse_source_action']=act.name+' (native synchronized source trajectories)';sc['clip']=clip;sc['loop']=loop;sc['rider_source_action']=rider_action
  sc.frame_set(1);bpy.ops.wm.save_as_mainfile(filepath=str(M/'clips'/f'{clip}.blend'))
- (M/'clips'/f'{clip}.json').write_text(json.dumps({'clip':clip,'source_master_sha256':hashlib.sha256((M/'cavalry.blend').read_bytes()).hexdigest(),'frames':count,'fps':fps,'loop':loop},indent=2))
+ (M/'clips'/f'{clip}.json').write_text(json.dumps({'clip':clip,'rider_source_action':rider_action,'source_master_sha256':hashlib.sha256((M/'cavalry.blend').read_bytes()).hexdigest(),'frames':count,'fps':fps,'loop':loop},indent=2))
  print('CAVALRY_CLIP_READY',clip)

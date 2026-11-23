@@ -9,10 +9,14 @@
   "git_blob": "c93b598005fd4a6163f12782eeb31b10b6e4bc48",
   "paint_assets_sha256": {
     "fill-hair.png": "f472a44cdc7ee21159636cfb3ab6b7ceaacae420510632164307f0b67245041a",
+    "projection-skin.png": "d4eb2fc4183afe57b04ffb540d5c356f6fdd553326bbfbc569be207d27b55923",
+    "projection-coat.png": "d17bc95a530154007cde23939f1947ff1cbd4a3c8c80e2e3af0e917fb885a9b6",
     "fill-coat.png": "202834d89526e95d00881d507d254c8f597199ccf1ec56ef8722e21f3a438ede",
     "painting-aligned-1024.png": "062a59a09fc42b28817d53a1c5de845059fe1bae9f74e3045a2889cbc64bd5db",
     "fill-linen.png": "c71ed83e71404d76f318e2410e111c1ec6ecf00864d9730f13514f2f5c932da3",
+    "projection-horse.png": "062a59a09fc42b28817d53a1c5de845059fe1bae9f74e3045a2889cbc64bd5db",
     "fill-bronze.png": "20233d35d680a1ee510719befd841db3899371d0e9f5821b99400162a8c39720",
+    "projection-cloth.png": "41f19385498310d3defb1bdb2ce7fef844532b9b671e78d95f1bc79ba3ff3176",
     "painting-source.png": "8e7d0af4f826eef42d714ea74d6c3a6124788cf26525293477716b39e47b6503"
   }
 }

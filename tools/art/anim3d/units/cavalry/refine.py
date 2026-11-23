@@ -56,8 +56,8 @@ def refine(sc):
         def g(cx,cy,rx,ry):return np.exp(-((x-cx)/rx)**2-((y-cy)/ry)**2)
         # Bounded local shape changes avoid the oscillation of a global fit in
         # the sparse, widely separated hind-leg landmarks.
-        head=g(200,85,28,36);rear=g(76,198,19,30);front=g(177,214,15,35)
-        return (-8*head+14*rear+17*front, 4*head+5*rear)
+        head=g(200,85,28,36)
+        return (-8*head, 4*head)
     fields = [horse_fit, field(rider_pairs, 22)]
     right = sc.camera.matrix_world.to_quaternion() @ Vector((1, 0, 0))
     up = sc.camera.matrix_world.to_quaternion() @ Vector((0, 1, 0))
@@ -88,14 +88,28 @@ def refine(sc):
             q = world_to_camera_view(sc, sc.camera, world)
             px, py = q.x*256, (1-q.y)*256
             dx, dy = fields[int(human)]((px, py))
+            if ob.name == 'Horse':
+                limb_weight=sum(g.weight for g in groups if any(k in ob.vertex_groups[g.group].name for k in ('Leg','Shoulder','FF')))
+                dx*=1-min(1,limb_weight);dy*=1-min(1,limb_weight)
             if ob.name.startswith('GEO-stirrup') or ob.name.startswith('GEO-steel-stirrup'):
                 weight=max(0,min(1,(py-130)/25))
                 dx,dy=-15*weight,-12*weight
             if ob.name.startswith('GEO-sabre'):
                 x, y = px-90, py-64
                 dx, dy = 80+.866*x-.095*y-px, 55+.095*x+.866*y-py
+                if ob.name == 'GEO-sabre-blade':
+                    t=max(0,min(1,(55-(py+dy))/44))
+                    dx-=5*np.sin(np.pi*t)
+                    dy+=3*t-2*np.sin(np.pi*t)
             world += (right*float(dx)-up*float(dy))*unit
             return skin.inverted_safe() @ (ob.matrix_world.inverted() @ world)
+        if ob.name == 'GEO-sabre-blade':
+            # Broaden the diamond section before bevel/projection; its narrow
+            # face otherwise vanishes at token size. Keep ring centers fixed.
+            for j in range(25):
+                ring=list(ob.data.vertices)[j*4:j*4+4]
+                center=sum((v.co for v in ring),Vector())/4
+                for v in ring:v.co=center+(v.co-center)*1.8
         if ob.type == 'MESH':
             for v in ob.data.vertices:v.co = fitted(v.co, v.groups)
             ob.data.update()
@@ -115,6 +129,8 @@ def refine(sc):
             if mod.type in {'SOLIDIFY', 'BEVEL', 'SUBSURF'}:bpy.ops.object.modifier_apply(modifier=mod.name)
         ob.select_set(False)
     bpy.context.view_layer.update()
+    from finish import finish
+    finish(sc)
     from tack import reins
     reins()
     return {'method':'smooth rest-view full-depth mesh fitting, inverse linear skin transforms',

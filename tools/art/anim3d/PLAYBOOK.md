@@ -256,3 +256,60 @@ until the blade clears the top margin; death settles 0.20m left in the camera's
 ground-plane direction and folds the released sword arm across the body. The
 camera and cell size stay fixed. Rebuild and review those clips after changing
 any rest fit; source trajectories alone do not guarantee safe framing.
+
+### Cavalry driver round 2: silhouette and source motion
+
+Round-one GPU evidence is preserved under `masters/cavalry/driver-r1-gpu/`.
+The outer driver log was empty because the handoff redirected stdout; `gpu.sh`
+now tees its detailed transcript to the caller too. Its completed round-one
+receipt was 188,260 bytes at Q80, not an art approval.
+
+`finish.py` refines the horse in bind space through inverse skin matrices,
+retaining depth, weights and both editable rigs. It lowers/rounds the croup,
+adjusts muzzle landmarks, fits thinner bridle/stirrup geometry and builds
+thirteen tapered, solid, weighted tail locks. `refine.py` broadens the actual
+sabre diamond section before bevel and frozen projection. Source ivory material
+patches are removed: the painting supplies its own narrow blaze and fetlocks.
+A warm-colour mask had discarded those details and the grey muzzle; full source
+pigment now uses rest-view visibility/incidence on the actual horse mesh.
+No pigment mask clips rendered alpha. Existing generated fills, real cloth
+folds, scans/bakes and product-shot lights remain; stone gets fine colour grain.
+One rest histogram LUT is applied unchanged to all clips.
+
+Use open motion as the default: the horse uses synchronized native Quaternius
+Idle/Gallop/Hit/Death trajectories, not independently retimed legs. The rider
+uses the CC0 Universal Animation Library Sitting_Idle_Loop, Hit_Chest and Death01
+with reference/roll compensation. Pelvis/legs stay saddle-constrained; sabre
+attack/release and framing/contact adaptations are original. Full URLs,
+licences and SHA256 pins are in the unit `SOURCES.md` and `rider_motion.py`.
+No post-retarget foot rotation correction is applied.
+
+The mounted review standard includes actual top/front renders of the evaluated
+lower legs for every move sample, `cavalry-g-feet-check.png`, plus sole positions
+in `masters/cavalry/feet/manifest.json`. This cutaway is a diagnostic copy only;
+the master remains complete. Inspect travel direction, planted intervals and
+sliding in addition to the five hero-view clips. A structural audit and a
+readable feet sheet do not certify clean contact.
+
+`ROUND=2 tools/art/anim3d/units/cavalry/gpu.sh` still performs the complete
+sequential GPU512 pass, gallery256, trimmed Q75+ atlas, validation, feet sheet
+and eight-second five-clip MP4. It now regenerates/pins derived painting inputs
+before paint and retains the driver's transcript. CPU previews remain labelled
+CPU; no PASS is generated automatically. Horse anatomy, silhouette and extreme
+motion must be reviewed against the painting after the fresh GPU pass.
+
+The full-cycle CPU review rejected lower-leg silhouette fitting: both local
+warps and a continuous section trial pulled anatomy away from its source joints
+and stretched it during gallop. The final fitter masks out native leg/shoulder
+weights, preserving source leg volumes. `contacts.py` adds vertical support
+correctives over native foot lift, retaining horizontal gait and foot rotations
+and the raised idle foreleg. Attack/hit blend back to rest; death blends into its
+source action. Tail motion keeps source timing at reduced amplitude for the
+longer hair sculpture. These are mounted contact adaptations, not a foot-slip
+proof. The remaining source-pose silhouette mismatch must not be hidden by a
+static-only fit or an art-PASS claim.
+
+Added tail locks must copy both the native horse object parent hierarchy and
+its skin weights. An armature modifier alone looked attached at rest but left
+the hair behind during root-level death translation; the structural audit now
+checks that shared hierarchy, and the death strip is reviewed after rebuild.
