@@ -201,6 +201,36 @@ masters by upscaling. Rest and clips must share engine, device, resolution and
 sample settings. The old root `pack.py`/`validate.py` retain their fixed-grid
 contract for older callers; they are **not** the spearman delivery entry points.
 
+### Round 5 fitting and painted color
+
+`infantry/refine.py` now registers the whole volumetric shield outline before
+seating its ornament. Relief intersection uses the **evaluated** shell including
+Solidify; the raw mesh lies inside the rendered surface at oblique angles and
+still buried several rays despite the round-4 depth correction. Review clay
+again after any support-surface or modifier change. A smooth rest-view fitting field seats the spear-side
+shoulder and shin, and broadens the other sandal's actual toe/sole together.
+For weighted anatomy and clothing it inverts each vertex's blended bone matrix
+after fitting, preserving MPFB topology, original weights and live articulation.
+Rigid footwear uses its bone-parent matrix. These are mesh-coordinate edits,
+not a silhouette cutout, alpha mask, or per-frame reprojection.
+
+The source already contains painted illumination. In this specific pipeline,
+AgX was compressing that pigment a second time. Standard/None now preserves its
+display colors, with the existing 96% pigment / 4% physical mix and one frozen
+rest histogram grade. This choice is specific to projected painted illumination,
+not a general photographic rendering preset. The warm key is less orange,
+the cool fill remains soft, and a low stone-pigment emission contribution opens
+the physical rim. No figure/foot paint or static cast shadows enter the base.
+Generated bronze/wool/linen/leather fills and beveled straps/folds remain intact.
+
+`ROUND=5 tools/art/anim3d/units/spearman/gpu.sh` is the same complete host
+handoff. It first checks for the requested Cycles GPU, then reruns projection
+from the preserved clean input, all cloth/animation builds and all render stages.
+It retains `ANIM_ROOT/gpu-logs-spearman-r${ROUND}.log` itself unless the driver
+already redirects there, and logs the failed stage on error. No prior GPU pass
+is inferred from old review files. The round-4 files supplied for round 5 were
+CPU-labelled, and the requested round-4 GPU log was absent.
+
 ### Trimmed atlas v2 and checks
 
 `units/spearman/delivery.py` preserves 8/8/10/4/10 frames, real alpha, and the
