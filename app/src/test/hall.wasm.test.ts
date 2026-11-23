@@ -109,7 +109,7 @@ describe.skipIf(!available)('Yam Relay Station and the Mongols goal: WASM behavi
       };
       (expect(listingOf(fixtureClient)).toMatchSnapshot(), void (listingOf(core)));
       expect(listingOf(core).options).toEqual([]);
-      expect(listingOf(core).unavailable[0]?.reason).toContain('The Mongols raise Walls from the Medieval era');
+      expect(listingOf(core).unavailable[0]?.reason).toContain('The Mongols never build Walls');
       for (const order of [{ type: 'SetProduction', city: home.id, item }, { type: 'BuyItem', city: home.id, item }] as Order[]) {
         (expect(fixtureClient.validate(0, [order])).toMatchSnapshot(), void (core.validate(0, [order])));
         expect(core.validate(0, [order])).not.toEqual([]);

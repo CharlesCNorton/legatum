@@ -1118,22 +1118,29 @@ pub fn tech_has_player_benefit(
         })
 }
 
-/// The era (0 Ancient, 1 Classical, 2 Medieval) from which the Mongols raise Walls, Castles and
-/// Star Forts and buy Siege (user, 2026-10-19 and 2026-10-31). Before it, neither is available.
-pub const MONGOL_WALLS_ERA: u8 = 2;
+/// The era (0 Ancient, 1 Classical, 2 Medieval) from which the Mongols buy Siege (user,
+/// 2026-10-19 and 2026-10-31). Before it, Siege is not available to them.
+pub const MONGOL_SIEGE_ERA: u8 = 2;
 
-/// Whether `item` is one of the Mongols' era-gated buildings: the Walls line.
-fn is_mongol_gated(item: ProductionItem) -> bool {
-    matches!(
-        item,
-        ProductionItem::Building {
-            building: BuildingKind::Walls | BuildingKind::Castle | BuildingKind::StarFort
-        }
-    )
+/// Whether `building` is in the Walls line (Walls, Castle, Star Fort, and any later wall level:
+/// every building whose family is Walls).
+pub fn is_walls_line(building: BuildingKind) -> bool {
+    building_family(building) == BuildingKind::Walls
 }
 
-/// Whether a player can build an item now, including the Mongols' Medieval-era start for the
-/// Walls line. `era` is the player's era.
+/// Whether `faction` may never have the Walls line (rules 57, user 2026-11-22: "no walls ever"):
+/// the Mongols, unless the ablation switch turns the rule off. Every wall level, every era.
+pub fn never_walls(off: FactionRuleSet, faction: Faction) -> bool {
+    faction == Faction::Mongols && !off.contains(FactionRule::MongolsNoWalls)
+}
+
+/// Whether `item` is one of the Mongols' shut buildings: the Walls line.
+fn is_mongol_gated(item: ProductionItem) -> bool {
+    matches!(item, ProductionItem::Building { building } if is_walls_line(building))
+}
+
+/// Whether a player can build an item now. `era` is the player's era (no rule reads it since
+/// the Mongols' Walls stopped opening in the Medieval era, rules 57; kept for callers).
 pub fn available_to_player(faction: Faction, era: u8, item: ProductionItem) -> bool {
     available_to_player_rules(FactionRuleSet::EMPTY, faction, era, item)
 }
@@ -1145,13 +1152,8 @@ pub fn available_to_player_rules(
     era: u8,
     item: ProductionItem,
 ) -> bool {
-    if !available_to_faction_rules(off, faction, item) {
-        return false;
-    }
-    faction != Faction::Mongols
-        || era >= MONGOL_WALLS_ERA
-        || !is_mongol_gated(item)
-        || off.contains(FactionRule::MongolsNoWalls)
+    let _ = era;
+    available_to_faction_rules(off, faction, item)
 }
 
 /// Whether a player may buy Siege now: the Mongols only from the Medieval era.
@@ -1162,7 +1164,7 @@ pub fn siege_available(faction: Faction, era: u8) -> bool {
 /// `siege_available` with the faction rules in `off` switched off (ablation).
 pub fn siege_available_rules(off: FactionRuleSet, faction: Faction, era: u8) -> bool {
     faction != Faction::Mongols
-        || era >= MONGOL_WALLS_ERA
+        || era >= MONGOL_SIEGE_ERA
         || off.contains(FactionRule::MongolsNoWalls)
 }
 
@@ -1368,10 +1370,10 @@ pub fn faction_excluded_building(faction: Faction, building: BuildingKind) -> Op
     }
 }
 
-/// The reason the Mongols cannot raise the Walls line yet.
-pub const MONGOL_WALLS_REASON: &str = "The Mongols raise Walls from the Medieval era";
+/// The reason the Mongols cannot raise the Walls line (rules 57: never).
+pub const MONGOL_WALLS_REASON: &str = "The Mongols never build Walls";
 
-/// `faction_excluded_building`, with the Mongols' Walls line shut until the Medieval era.
+/// `faction_excluded_building`, with the Mongols' Walls line shut (every era since rules 57).
 pub fn faction_excluded_building_at(
     faction: Faction,
     building: BuildingKind,
@@ -1387,14 +1389,8 @@ pub fn faction_excluded_building_at_rules(
     building: BuildingKind,
     era: u8,
 ) -> Option<&'static str> {
-    if faction == Faction::Mongols
-        && !off.contains(FactionRule::MongolsNoWalls)
-        && era < MONGOL_WALLS_ERA
-        && matches!(
-            building,
-            BuildingKind::Walls | BuildingKind::Castle | BuildingKind::StarFort
-        )
-    {
+    let _ = era;
+    if never_walls(off, faction) && is_walls_line(building) {
         return Some(MONGOL_WALLS_REASON);
     }
     faction_excluded_building(faction, building)
@@ -1436,7 +1432,9 @@ pub fn available_to_faction_rules(
         }
         ProductionItem::Improvement { .. } => true,
         ProductionItem::Building { building } | ProductionItem::Wonder { building, .. } => {
-            if faction_excluded_building(faction, building).is_some() {
+            if faction_excluded_building(faction, building).is_some()
+                || (never_walls(off, faction) && is_walls_line(building))
+            {
                 return false;
             }
             // The Nile: Egypt has no Production, so the Workshop line would do nothing.
@@ -1893,6 +1891,11 @@ pub fn faction_unavailable_reason(item: ProductionItem, faction: Faction) -> Opt
             if faction == Faction::Egypt && is_workshop_line_building(building) =>
         {
             "Workshops, Forges and Factories do nothing for Egypt, which has no Production".into()
+        }
+        ProductionItem::Building { building }
+            if faction == Faction::Mongols && is_walls_line(building) =>
+        {
+            MONGOL_WALLS_REASON.into()
         }
         ProductionItem::Building {
             building: BuildingKind::RiceStorehouse,

@@ -72,13 +72,9 @@ describe.skipIf(!available)('the unlock card for every technology', () => {
     const names = (faction: Faction, tech: TechId) => unlockCardFor(views.get(faction)!, tech).tiles.map((t) => t.name);
     expect(names('India', 'CropRotation')).toContain('Farms and Pastures upgrade: Irrigated Farm, Ranch (+1 Food)');
     expect(names('Byzantium', 'IronWorking')).toContain('Mines upgrade: Deep Mine (+1 Gold on Copper, +1 Production on Iron and Coal)');
-    // The Mongols raise Walls from the Medieval era, so their Masonry card lists Walls like everyone's.
+    // The Mongols never raise Walls (rules 57): their Masonry card keeps its Quarry bonus and leaves Walls out.
     expect(names('Mongols', 'Masonry')).not.toEqual([]);
-    // ...but cannot raise them yet: the tile says so, from the core view, in place of the sentence and the price.
-    const walls = unlockCardFor(views.get('Mongols')!, 'Masonry').tiles.find((t) => t.name === 'Walls')!;
-    expect(walls.locked).toBe('Walls for the Mongols from the Medieval era');
-    expect(walls.sentence).toBe(walls.locked);
-    expect(walls.cost).toBeNull();
+    expect(names('Mongols', 'Masonry')).not.toContain('Walls');
     expect(unlockCardFor(views.get('India')!, 'Masonry').tiles.find((t) => t.name === 'Walls')!.locked).toBeNull();
     expect(unlockCardFor(views.get('Byzantium')!, 'PrintingPress').tiles).not.toEqual([]);
   });
