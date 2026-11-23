@@ -1,52 +1,61 @@
-# Drone swarm round 2
+# Drone swarm — driver round 2
 
-Not art-approved; no PASS marker. Current evidence is Cycles CPU at 512 px,
-12 samples, with 256 px copies. A host GPU pass is still required.
+Not art-approved; no PASS marker. The supplied round-1 GPU pass succeeded at
+512 px / 96 samples. Its images, movie, receipt and masters are archived under
+`masters/drone-swarm/driver-r1-gpu/`. This revision was checked with Cycles CPU
+at 512 px / 8 samples; the updated GPU handoff still needs to run on the host.
 
-The stone now closely matches the warm painting and its deeper rim. Finished
-bevelled surfaces preserve more projected brushwork; the lower formation and
-rotor-pod positions are closer. At 256 px hull undersides, landing struts and
-blade outlines remain visibly simpler. At 64 px this reads as the same three-drone
-unit, but the contours remain distinguishable. Oblique/death views expose warm
-fill seams and crowded overlapping wrecks. No near-identical-rest claim is made.
+At 256 px the cream stone and projected paint are close. Wider lower hulls,
+thicker near struts, hidden far supports, tapered solid rotor spars and adjusted
+blades improve the outline. Muted generated brass removes the orange seams.
+The blade shapes, hull shoulders, arm contours and gimbal profile still differ
+from the painting. At 64 px the formation and identity match, but the contours
+remain distinguishable. The rest-pose acceptance bar is not met.
 
-Silhouette intersection-over-union at alpha >128 improved from .7322 to .8060
-for the full token; drones alone .6022 to .6609, base .8766 to .9675. These are
-measurements of overlap, not artistic acceptance.
+Rest silhouette IoU at alpha >128 improved from .8060 to **.8301** overall and
+.6609 to **.7048** for drones. Base IoU is .9670. These are overlap measurements,
+not art approval. All c/f/detail, plain, pose, five clip strips, front/top move
+views, decoded atlas and four encoded MP4 contact frames were visually inspected.
 
-## Verified outputs
+The new triangle audit exposed real lower-drone intersections hidden by the
+orthographic view. Separate flight depths retain the painting registration.
+Staggered descent prevents the upper drone catching the lower ones; three
+separate terminal wrecks replace the crowded pile. The terminal pose is clearer,
+but blade sampling still looks stepped and the crash feels like a controlled
+landing. These remain visual weaknesses for the next pass.
 
-- Five clips, 8/8/10/4/10 frames; all 40 transparent masters at 512 and 256 px.
-- Trimmed 160 px logical cells, **176,538 bytes at WebP quality 85**, lossless alpha.
-  Every decoded alpha matches its source at the recorded offset. Held death
-  reuses the same rectangle and is identical in decoded RGBA.
-- Native 256/64 rest comparison, plain views, close-ups, rig poses, five strips,
-  five animated WebPs, decoded atlas sheet and front/top move-cycle diagnostic.
-- `drone-swarm-round2.mp4`: decoded clips, H.264/yuv420p, 1600 x 348,
-  240 frames, eight seconds. Contact frames from the encoded movie inspected.
-- Geometry audit passes: 163 solid meshes, finished projection UVs, camera-only
-  pigment, six AO/Pointiness bakes, stationary base, clip-entry transforms, loop
-  roots/gimbals and settled death contact. This is not a complete collision solver.
-- Four delivery regression tests pass, including corrupted offsets/atlas and
-  rejection of CPU evidence as GPU completion. GPU missing-input preflight
-  returns exit 1 and records its failed stage, without launching Blender.
+## Checks and outputs
 
-The browser art gate cannot run in this sandbox: using the installed main
-checkout Playwright reaches Chromium but its macOS MachPort bootstrap fails
-with Permission denied (1100). The initial direct invocation also lacked this
-worktree's Playwright dependency. No browser/art gate pass is claimed.
+- Geometry audit passes: 163 solid meshes, frozen UVs on finished surfaces,
+  camera-only pigment, six real AO/Pointiness bakes, stationary base, rest-matching
+  clip entries, closed root/gimbal loops, and grounded held death.
+- Zero inter-drone triangle intersections across all **40 sampled poses**.
+  This does not prove continuous collision freedom, containment without surface
+  crossings, or intra-drone joint clearance.
+- All five clips: **8/8/10/4/10**, transparent 512 and 256 px masters.
+- Trimmed 160 px atlas: **180,000 bytes, WebP quality 85**. Exact decoded alpha
+  and per-frame offsets; final two death frames share an identical rectangle.
+- Six delivery/provenance regression tests pass, including changed build-input
+  rejection, corrupted offset/atlas rejection and CPU-as-GPU rejection.
+- MP4: H.264, yuv420p, **1600 x 348, 240 frames, 8 seconds**, decoded atlas at 2x.
+- Ten Python files parse; both shell scripts pass `bash -n`; `git diff --check`
+  passes. No engine, UI, rules or runtime changes.
 
-## Host handoff
+The broader static gate on committed HEAD passed hygiene and public-claims;
+the art gate could not render its sets (`render-sets.mjs` exited 1). It did not
+check the uncommitted edits. Git staging/commit was attempted with the required
+coauthor but denied at `.git/worktrees/lane-23/index.lock`; changes remain for
+the runner to commit. No push, merge or PR. `origin/master` is already included.
+
+The GPU script now checks sealed build inputs before launching Blender and runs
+the new collision audit plus delivery regressions. The receipt includes both
+build inputs and collision results. GPU512 provenance is checked for every stage.
 
 ```sh
 ROUND=2 tools/art/anim3d/units/drone-swarm/gpu.sh
 ```
 
-The executable takes no arguments. It renders all stages at GPU512, exports
-256 masters, audits, checks GPU provenance, packs/validates and verifies the
-round movie. Defaults: Cycles Metal, 96 samples. It writes
-`drone-swarm-gpu-round2.log` under ANIM_ROOT plus stage status and a success
-receipt in review/3d-v2. Actual GPU execution remains unverified in the sandbox.
-
-Prior evidence is preserved under `masters/drone-swarm/round1-cpu/`.
-All masters/review media stay outside git. The runtime still uses the painting.
+This no-argument executable renders all stages on Metal Cycles at 96 samples,
+keeps 512/256 masters, rebuilds the trimmed atlas, gallery and round movie,
+validates them and records a receipt. No new GPU success is claimed from CPU
+previews. The runtime continues to use the original painting.

@@ -12,7 +12,9 @@ ROUND=2 tools/art/anim3d/units/drone-swarm/gpu.sh
 It renders all stages with Metal Cycles at 512 px, retains 256 masters, writes the
 review sheets and animated WebPs, packs the trimmed 160 px atlas, audits/validates,
 and encodes the required 8-second five-clip review MP4. It also renders front/top
-move diagnostics and retains a transcript, stage status and GPU completion receipt. `ROUND` defaults to 2 and
+move diagnostics, checks all 40 poses for inter-drone surface intersections and
+verifies sealed build inputs before rendering. It retains a transcript, stage
+status and GPU completion receipt. `ROUND` defaults to 2 and
 `SAMPLES` to 96. It refuses GPU-to-CPU fallback. Every invocation uses the PATH
 `blender` gate in background mode with automatic Python execution disabled.
 

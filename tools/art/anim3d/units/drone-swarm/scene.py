@@ -29,7 +29,11 @@ bronze=material('worn bronze alloy',(.54,.49,.35),1,.52);steel=material('polishe
 # Generated material artwork supplies hidden/back surfaces, with true metal only on metal.
 fill=bpy.data.images.load(str(A/'painted-fill.png'))
 for mat in (bronze,steel):
- n=mat.node_tree.nodes;l=mat.node_tree.links;b=n.get('Principled BSDF');t=n.new('ShaderNodeTexImage');t.image=fill;t.projection='BOX';t.projection_blend=.25;tc=n.new('ShaderNodeTexCoord');l.new(tc.outputs['Generated'],t.inputs[0]);l.new(t.outputs['Color'],b.inputs['Base Color'])
+ n=mat.node_tree.nodes;l=mat.node_tree.links;b=n.get('Principled BSDF');t=n.new('ShaderNodeTexImage');t.image=fill;t.projection='BOX';t.projection_blend=.25;tc=n.new('ShaderNodeTexCoord');l.new(tc.outputs['Generated'],t.inputs[0])
+ # The generated bronze is orange; the painted drones are muted champagne alloy.
+ # Preserve its brushwork while matching hidden sides to the visible pigment.
+ sat=n.new('ShaderNodeHueSaturation');sat.inputs['Saturation'].default_value=.12;l.new(t.outputs['Color'],sat.inputs['Color'])
+ tint=n.new('ShaderNodeMixRGB');tint.blend_type='MULTIPLY';tint.inputs[0].default_value=1;tint.inputs[2].default_value=(.82,.90,1.02,1);l.new(sat.outputs['Color'],tint.inputs[1]);l.new(tint.outputs[0],b.inputs['Base Color'])
 
 def P(x,y,d=0):return CENTER+RIGHT*((OX+x*5*S-128)*K)+UP*((128-OY-y*5*S)*K)+VIEW*d
 
@@ -68,14 +72,17 @@ roots=[];hulls=[];rotors=[];gimbals=[]
 # Offsets / scales drafted from each reference silhouette (source coordinates / 5).
 for idx,(dx,dy,scale) in enumerate([(0,0,1),(-47,68,.94),(25,110,.94)]):
  tag=f'drone{idx+1}'
- def Q(x,y,d=0):return P(138+(x-138)*scale+dx,34+(y-34)*scale+dy,d*scale)
+ # Screen overlap does not imply shared flight depth. Separate the lower pair
+ # along the view ray, preserving their exact orthographic registration.
+ def Q(x,y,d=0):return P(138+(x-138)*scale+dx,34+(y-34)*scale+dy,d*scale+(0,-1.1,1.1)[idx])
  root=empty(tag,Q(138,36));roots.append(root);parts=[]
  # Hand-drafted volumetric armour shell: broad side, bevelled bonnet, rear dome.
  contour=[(117,24,-.10),(124,16,-.22),(133,13,-.23),(143,16,-.13),(151,23,.03),(157,31,.22),(161,37,.40),(158,44,.44),(141,45,.42),(126,44,.24),(120,34,.05)]
- vs=[Q(*v) for v in contour]
+ def H(x,y,d):return Q(149+(x-149)*(1.14 if idx else 1),y+(1.2 if idx==2 else 0),d)
+ vs=[H(*v) for v in contour]
  vs += [Q(132,23,-.03),Q(138,30,.20),Q(141,39,.40)]
  # A full curved underside closes the shell well behind its visible side plates.
- vs += [Q(135+(x-135)*.82,29+(y-29)*.82,d-.48) for x,y,d in contour]
+ vs += [H(135+(x-135)*.82,29+(y-29)*.82,d-.48) for x,y,d in contour]
  faces=[(0,1,11,12,13,8,9,10),(1,2,3,4,11),(11,4,5,6,13,12),(13,6,7,8),tuple(reversed(range(14,25)))]
  faces += [(i,(i+1)%11,(i+1)%11+14,i+14) for i in range(11)]
  hull=solid(tag+' hull',vs,faces,bronze,.022);parts.append(hull);hulls.append(hull)
@@ -94,22 +101,29 @@ for idx,(dx,dy,scale) in enumerate([(0,0,1),(-47,68,.94),(25,110,.94)]):
  lens=cylinder(tag+' lens ring',Q(148,57,.58),Q(148,57,.72),.181*scale,steel);parent(lens,gm)
  iris=ellipsoid(tag+' lens glass',Q(148,57,.75),(.145*scale,.145*scale,.145*scale),glass);parent(iris,gm)
  # Two weighty articulated rotor pods and aerodynamically tapered solid blades.
- motor_landmarks=[((98,19),(181,26)),((98,19),(177,19)),((98,19),(181,21))][idx]
+ motor_landmarks=[((98,19),(183,26)),((98,19),(177,19)),((98,22),(181,26))][idx]
  for side,(x,y) in enumerate(motor_landmarks):
-  parts.append(rod(tag+' rotor spar',Q(126 if side==0 else 153,27,.0),Q(x,y+5,.0),.075*scale,bronze))
+  # Tapered boxed spars expose the broad painted plate rather than a thin rod.
+  rootx=126 if side==0 else 153
+  spar=[(rootx,24),(x,y+3),(x,y+7),(rootx,32)]
+  verts=[Q(a,b,d) for d in (-.11,.10) for a,b in spar]
+  parts.append(solid(tag+' rotor spar',verts,[(0,3,2,1),(4,5,6,7),(0,1,5,4),(1,2,6,5),(2,3,7,6),(3,0,4,7)],bronze,.012))
   for zoff,r,depth,mat in [(5,.148,.17,bronze),(0,.12,.21,steel),(-5,.07,.09,dark)]:
    pos=Q(x,y+zoff,.0);parts.append(cylinder(tag+' motor casing',pos-Vector((0,0,depth*scale/2)),pos+Vector((0,0,depth*scale/2)),r*scale,mat))
   rp=Q(x,y-9,.025);rot=empty(tag+f' rotor{side}',rp);rotors.append(rot);parent(rot,root)
   # Rotor lies horizontally, with swept, rounded tips. Root and blade retain thickness.
   for sign in (-1,1):
-   length=.59*scale;outline=[(.025,-.035),(.25,-.12),(.52,-.12),(.59,-.018),(.53,.08),(.22,.10)]
-   verts=[rp+Vector((sign*a,sign*b,dz)) for dz in (-.012,.012) for a,b in outline];nf=len(outline)
+   length=(.72 if side==0 else .54)*scale;outline=[(.025,-.035),(.25,-.12),(.52,-.12),(.59,-.018),(.53,.08),(.22,.10)]
+   verts=[rp+Vector((sign*a*length/.59,sign*b*scale,dz)) for dz in (-.012,.012) for a,b in outline];nf=len(outline)
    ob=solid(tag+f' rotor{side} blade{sign}',verts,[tuple(reversed(range(nf))),tuple(range(nf,2*nf))]+[(i,(i+1)%nf,(i+1)%nf+nf,i+nf) for i in range(nf)],blade,.008);parent(ob,rot)
-  rot.rotation_euler.z=.65 if side==0 else -.65
+  rot.rotation_euler.z=(.65 if idx==0 else .90) if side==0 else -.65
   cap=ellipsoid(tag+' rotor hub',rp,(.09*scale,.09*scale,.045*scale),steel);parent(cap,rot)
  # Landing struts, no support columns down to the pedestal.
- for x,off in ((126,0),(140,.18)):
-  parts.append(rod(tag+' landing strut',Q(x,39,-.03+off),Q(x-8,55,-.03+off),.084*scale,bronze));parts.append(rod(tag+' landing toe',Q(x-8,55,-.03+off),Q(x-6,57,.03+off),.076*scale,dark))
+ for x,off in ((126,0),(140,-.30)):
+  x-=3
+  # The far support terminates behind the gimbal, not as a second visible foot.
+  endy=(58 if idx else 57) if off==0 else 44
+  parts.append(rod(tag+' landing strut',Q(x,39,-.03+off),Q(x-8,endy,-.03+off),.105*scale,bronze));parts.append(rod(tag+' landing toe',Q(x-8,endy,-.03+off),Q(x-6,endy+2,.03+off),.086*scale,dark))
  # Panel seams, screw heads, vents and beveled edge rails are actual small geometry.
  for (a,b) in [((125,14),(137,26)),((140,16),(152,29)),((137,26),(152,29)),((130,36),(140,45))]:parts.append(rod(tag+' raised panel seam',Q(*a,.01),Q(*b,.33),.012*scale,steel))
  for x,y,d in [(128,20,-.18),(136,21,-.12),(140,29,.34),(151,31,.34),(155,42,.35),(138,40,.35),(100,23,.13),(180,30,.13)]:

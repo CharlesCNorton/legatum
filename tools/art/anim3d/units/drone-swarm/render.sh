@@ -8,6 +8,7 @@ if [[ "$stage" == build ]]; then
   blender -b --disable-autoexec --python-exit-code 1 --python "$unit/scene.py"
 elif [[ "$stage" == bake ]]; then
   blender -b --disable-autoexec --python-exit-code 1 --python "$unit/bake.py"
+  "$ANIM_ROOT/venv/bin/python" "$unit/provenance.py" seal
 else
   blender -b --disable-autoexec --python-exit-code 1 --python "$unit/render.py" -- "$stage"
 fi

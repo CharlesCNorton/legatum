@@ -16,3 +16,11 @@
 
 Flying drones have no gait to retarget. Their front/top move-cycle diagnostic
 shows landing struts and rotor clearance; it does not claim captured locomotion.
+
+Driver round 2 reuses these exact inputs. The original generated orange bronze
+is desaturated and tinted in the shader to match the painting's champagne alloy.
+No new image or model download. Original tapered solid spars, wider hulls,
+flight-depth separation, decelerating rotors, staggered descent and intersection
+checks are MIT scripts; resulting art is CC BY 4.0. `provenance.py` verifies the
+locked assets and seals the baked masters against the build scripts before GPU
+rendering. Prior GPU evidence is in `masters/drone-swarm/driver-r1-gpu/`.

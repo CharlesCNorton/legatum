@@ -31,9 +31,9 @@ def animate(sc,clip):
  n,fps,loop=CLIPS[clip];sc.render.fps=fps;sc.frame_start=1;sc.frame_end=n
  roots=[bpy.data.objects['RIG-drone'+str(i)] for i in (1,2,3)];rests=[o.location.copy() for o in roots];rotors=[o for o in bpy.data.objects if o.name.startswith('RIG-') and ' rotor' in o.name];gimbals=[bpy.data.objects['RIG-drone'+str(i)+' gimbal'] for i in (1,2,3)]
  base=bpy.data.objects['GEO-stationary cream base'];basepos=base.location.copy();top=max((base.matrix_world @ Vector(v)).z for v in base.bound_box)
- targets=[basepos+Vector((-.7,.5,0)),basepos+Vector((.6,.1,0)),basepos+Vector((-.05,-.65,0))]
+ targets=[basepos+Vector((.80,.85,0)),basepos+Vector((-1,.45,0)),basepos+Vector((.25,-.90,0))]
  # Different settling orientations keep the three mechanical wrecks distinguishable.
- terminal=[(.52,.48,-.3),(-.4,-.42,.5),(.35,.30,-.22)];restrot=[o.rotation_euler.copy() for o in rotors]
+ terminal=[(.16,.18,.95),(-.14,-.16,-.95),(.14,.12,0)];restrot=[o.rotation_euler.copy() for o in rotors]
  for j in range(n+1 if loop else n):
   t=j/n if loop else min(j,8)/8 if clip=='death' else j/(n-1);phase=math.tau*t;sc.frame_set(j+1)
   for k,(root,rest,gm) in enumerate(zip(roots,rests,gimbals)):
@@ -49,7 +49,7 @@ def animate(sc,clip):
    if clip=='hit':
     h=[0,1,-.45,0][j];root.location+=UP*(.01*h*(1-.16*k))-RIGHT*(.045*h);root.rotation_euler.x=.065*h;root.rotation_euler.y=.04*h;gm.rotation_euler.z=.13*h
    if clip=='death':
-    q=max(0,min(1,(t-k*.05)/(.78-k*.05)));fall=q*q*(3-2*q);target=targets[k];root.location=rest.lerp(target,fall);root.rotation_euler=tuple(v*fall for v in terminal[k]);gm.rotation_euler.x=.3*fall
+    delay=(.32,.08,0)[k];q=max(0,min(1,(t-delay)/(.86-delay)));fall=q*q*(3-2*q);target=targets[k];root.location=rest.lerp(target,fall);root.rotation_euler=tuple(v*fall for v in terminal[k]);gm.rotation_euler.x=.3*fall
     # Calculate real geometry contact at each sample; stop at the cream pedestal.
     bpy.context.view_layer.update();points=[];deps=bpy.context.evaluated_depsgraph_get()
     for ob in root.children_recursive:
@@ -61,7 +61,9 @@ def animate(sc,clip):
    o.rotation_euler=restrot[k].copy()
    # A blade is half-turn symmetric; n+1 boundary matches at the loop seam.
    spin=j*math.pi/4
-   if clip=='death':spin=min(j,6)*math.pi/4+min(j,8)*.07
+   if clip=='death':
+    # Decelerate to a repeatable parked blade orientation before touchdown.
+    u=min(j/6,1);spin=math.tau*(1-(1-u)**2)
    o.rotation_euler.z+=(-1 if k%2 else 1)*spin;o.keyframe_insert('rotation_euler')
  # Rotor orientation must be final before evaluating the actual touchdown.
   if clip=='death':

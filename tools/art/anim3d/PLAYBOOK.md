@@ -269,3 +269,33 @@ success receipt. It renders every stage at GPU512, retains 256 masters, audits,
 checks GPU provenance, packs/validates and writes the round movie. It does not
 rebuild finished art or create PASS. No successful GPU run is inferred from a
 CPU-labelled gallery or absent receipt. The final art judgment remains visual.
+
+### Drone swarm driver round 2 after the successful GPU round 1
+
+Inspect the actual GPU receipt, c/f/e images and decoded MP4 before changing the
+model. The supplied GPU pass succeeded at 512/96; it is preserved externally in
+`masters/drone-swarm/driver-r1-gpu/`. Current CPU evidence is 512/8 with 256 copies.
+The wider lower hulls, thicker near struts, shorter hidden supports and tapered
+boxed rotor spars improve contour registration. Grade the generated orange
+bronze toward the painting's muted brass in the shader; retain its brushwork.
+Rebuild the finished-surface UVs and all six AO/Pointiness maps after these edits.
+
+Orthographic overlap can hide real collisions: the lower pair previously shared
+flight depth and their surfaces intersected. Separating them along the camera
+ray keeps the exact projected placement while giving the rotors physical room.
+For death, let the lowest drone descend first; the upper one must not catch it.
+Park three distinct wrecks with decelerating rotors and preserve the held ending.
+`collisions.py` checks inter-drone triangle intersections in all 40 sampled poses,
+reports object pairs and rejects stale clips. It does not prove clearance between
+samples, containment without a surface crossing, or intra-drone joint clearance.
+
+`render.sh bake` now seals the build scripts, locked painting/fill, registered
+texture, token and both baked/plain masters into `build-inputs.json`.
+`gpu.sh` verifies that seal before Blender starts, then runs the full render,
+geometry/intersection audits, atlas validation, six delivery regressions and
+FFprobe checks. The GPU receipt includes the seal and collision report. It never
+creates PASS. Current delivery is 180,000 bytes, Q85, 160 px trimmed cells, all
+8/8/10/4/10 frames; these technical passes do not establish visual acceptance.
+At 256 px the spar, blade, hull and gimbal contours still differ; at 64 px it is
+the same unit but distinguishable. Rest silhouette IoU is .8301 overall and .7048
+for drones (previous .8060/.6609). Continue visual refinement after the host pass.

@@ -8,9 +8,22 @@ from unittest.mock import patch
 spec = importlib.util.spec_from_file_location('drone_delivery', Path(__file__).with_name('deliver.py'))
 delivery = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(delivery)
+spec = importlib.util.spec_from_file_location('drone_provenance', Path(__file__).with_name('provenance.py'))
+provenance = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(provenance)
 
 
 class DeliveryEvidenceTests(unittest.TestCase):
+    def test_baked_input_seal_is_current(self):
+        provenance.check()
+
+    def test_changed_build_script_is_rejected(self):
+        current = provenance.inputs()
+        current['scene.py'] = 'changed'
+        with patch.object(provenance, 'inputs', return_value=current):
+            with self.assertRaisesRegex(AssertionError, 'rebuild and rebake'):
+                provenance.check()
+
     def test_real_delivery_reconstructs(self):
         _, frames = delivery.validate()
         self.assertEqual(sum(map(len, frames.values())), 40)
