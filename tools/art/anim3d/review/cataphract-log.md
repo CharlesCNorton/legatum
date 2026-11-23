@@ -62,3 +62,5 @@ Rendered hit: 4 frames, 256px, 8 samples, CPU.
 Rendered death: 10 frames, 256px, 8 samples, CPU.
 Packed and decoded 40 trimmed frames, quality 85, 193514 bytes; wrote cataphract-round2.mp4. Warnings: []
 Rendered death: 10 frames, 256px, 8 samples, CPU.
+Packed and decoded 40 trimmed frames, quality 85, 193816 bytes; wrote cataphract-round2.mp4. Warnings: []
+Rendered death: 10 frames, 256px, 8 samples, CPU.
