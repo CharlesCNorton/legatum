@@ -64,3 +64,9 @@
 - Round 6 rebuilt and CPU-rendered attack at 256px / 12 samples, frozen rest grade.
 - Round 6 rebuilt and CPU-rendered hit at 256px / 12 samples, frozen rest grade.
 - Round 6 rebuilt and CPU-rendered death at 256px / 12 samples, frozen rest grade.
+- Curved-ray check initially failed: finished ray underside still 8.4mm inside shell. Increased actual relief clearance, reran projection/check/clay/rest; all 12 finished rays now have positive minimum face-center clearance (lowest 6.59mm), including underside faces. No threshold relaxation.
+- Tightened floor audit to actual disc top minus 10mm; the old .07m constant allowed roughly 30mm of buried sandal. Lifted foot geometry along the camera ray (unchanged painted screen positions) and added small per-frame foot-bone contact corrections measured from the actual sole. Rebuilding all five clips after this correction.
+- Final round 6 after curved-relief/contact correction: rebuilt and CPU-rendered idle at 256px / 12 samples.
+- Final round 6 after curved-relief/contact correction: rebuilt and CPU-rendered move at 256px / 12 samples.
+- Final round 6 after curved-relief/contact correction: rebuilt and CPU-rendered attack at 256px / 12 samples.
+- Final round 6 after curved-relief/contact correction: rebuilt and CPU-rendered hit at 256px / 12 samples.
