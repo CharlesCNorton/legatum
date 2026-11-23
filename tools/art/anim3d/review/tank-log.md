@@ -103,3 +103,4 @@
 - Runner switched lane-5 from vehicles to settler while reading. Preserved that checkout and created .worktrees/tank-round3 on astra/unit-anim-3d-vehicles; GPU driver must use the tank checkout. No tank source was deleted: gpu.sh exists on the correct branch.
 - Emitted tank-b-plain.png from actual b renders; visual review pending.
 - Emitted tank-c-textured-lit.png from actual c renders; visual review pending.
+- Emitted tank-c-textured-lit.png from actual c renders; visual review pending.

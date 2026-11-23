@@ -17,3 +17,4 @@ e-death: review emitted from CYCLES frames; no art-pass claim.
 
 Round 2 opening critique: opened latest rest comparison and rig poses before editing. At 256px horse chest/muzzle and legs differ markedly, sword hand is too far right/up, arm is bent rather than extended left, saddle blanket is oversized and surfaces are shiny/patchy. At 64px cavalry identity survives but pose and silhouette are clearly different; no PASS. Cavalry-specific FEEDBACK file absent; read all standing FEEDBACK. Loaded six Blender skills; use finished-surface frozen UVs, camera-only painted pigment, physical pose fitting, and validated sequential GPU delivery.
 c: review emitted from CYCLES frames; no art-pass claim.
+c: review emitted from CYCLES frames; no art-pass claim.

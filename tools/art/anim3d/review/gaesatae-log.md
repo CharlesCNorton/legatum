@@ -6,3 +6,7 @@
 - Saved b-plain immediately; first geometry preview exposed low framing and weapon attachment rotation. Corrected the camera and preserved the spear world transform after grip adjustment.
 - Saved c-textured-lit, c-details and f-restpose-compare from 256px/8-sample CPU preview. Frozen camera projection restores torso tattoos, shield design and trouser brushwork; visible head/hand silhouette offsets and overly regular trouser folds remain.
 - Adjusted head width/position, grip, ankle stance and cloth fold frequency before clip authoring. No quality PASS claimed.
+
+# Resumed round 2 — 2026-11-23
+- Opened latest rest/attack reviews before edits. At 256 px: torso tattoos and shield brushwork are close, but feet appear detached above the too-round, smooth base; hair/head and spear hand silhouettes disagree; leg folds remain tubular. At 64 px: identity reads, but base thickness and the lifted-looking stance distinguish the render. Attack samples lack meaningful body weight transfer. No PASS.
+- Loaded all six Blender skills. Branch switch denied by sandbox index.lock; restored only Gaesatae unit sources and its chapter from the WIP branch, preserving eagle-warrior files for runner reconciliation.

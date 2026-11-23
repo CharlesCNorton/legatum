@@ -59,3 +59,9 @@
 - Inspected all initial clips. Revised terminal death from stiff leaning to a flatter side fall: relaxed arms/open released hand, authored cloth compression below the hips and pack shift, while preserving garment coverage. Inspected a single terminal preview before rerendering death; this is authored deformation, not cloth simulation.
 - Published e-death-strip: CYCLES CPU, 512 px, 8 samples; not GPU approval.
 - Saved 3D audit passed: source hashes, 53 bones, actual motion, exact loop closing keys and held death; ground/bounds recorded; collision limits explicit.
+
+# Settler resumed round 2, 2026-11-23
+- Opened latest rest comparison and death strip before editing. At 256 px: face/hood and shawl are misregistered; cape tail too low, horizontal chest folds too tubular, stance too narrow/upright, base too flat and pale. At 64 px: recognizable traveller palette/staff/roll, but not the same silhouette or weight as the painting. Death is still a rigid sideways fall with stretched garment surfaces. No PASS.
+- Read all common feedback (1-22); settler-specific feedback file is absent. Current manifests identify CPU8/512, not GPU evidence. Read own and advanced spearman/field-cannon playbooks and all six Blender skills. Apply modeling/cameras to fit actual surfaces, materials/lighting to separate painted illumination from physical response, animation/rendering to preserve and inspect five clips.
+- Built MPFB female, full folded robes, open hood, shawl/fringe, pack/spiral bedroll, staff, straps and sandals; plain master saved.
+- Published b-plain: CYCLES CPU, 256 px, 8 samples; not GPU approval.

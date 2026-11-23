@@ -41,3 +41,5 @@
 # Legionary round 2 (resume, 2026-11-23)
 - Opened latest rest comparison and attack/death strips before edits. Honest 256px critique: jagged overbright shoulder lames float above the chest; face is simplified and the near hand is visibly open beside the shaft; smooth thin legs/sandals and square shield silhouette differ from painting. 64px identity is clearly Roman but shoulder width, base and stance are distinguishable. Attack is too subtle; death folds stiffly. No PASS. Prior manifests say CPU, not verified GPU. Preserved prior evidence in masters/legionary/round1-cpu.
 - Read complete common feedback (1-22); no legionary-specific feedback file exists. Read current playbook plus advanced spearman/field-cannon chapters, external source register and six Blender skills. Applying modeling/materials to fitted shoulders and finished-surface projection; cameras to frozen rest calibration; lighting to restrained product softboxes; animation to grip/clip entry; rendering to CPU inspection and complete GPU delivery.
+- Published b: CYCLES/CPU, 256 px, 8 samples; visual review pending.
+- Published c: CYCLES/CPU, 256 px, 8 samples; visual review pending.
