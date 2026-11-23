@@ -49,3 +49,9 @@
 - Published e-hit: 4 actual rendered frames, 12 fps; CPU 256px 8 samples.
 - Published e-death: 10 actual rendered frames, 10 fps; CPU 256px 8 samples.
 - Completed all five clips and wheel contact audit; delivery pack may now run.
+- Final CPU256/8-sample round-1 pass completed: 40 frames, five clip blends, b/c/details/d/e/f/g PNGs, five animated WebPs and all-five-clips MP4. Final trimmed 160 atlas = 176,272 bytes at Q85; original/decoded alpha reconstruction, held death, clip motion, hashes and clipping margins passed. MP4 = 240 frames, 8.000 s, 1600x348, H.264/yuv420p; decoded preview visually inspected.
+- Final geometry audit passed: MPFB 53 bones and actions, eight wheels, stationary base, foot direction within 35 degrees (observed max 12.526), lowest-sole contact within .003m. These checks do not certify horizontal slip or hand/ramp intersections.
+- Python compilation, shell syntax and git diff --check passed. No Rust/UI code changed. Branch already contains origin/master a099781d. Ref-based repository art gates cannot evaluate these uncommitted artifacts; standalone pipeline validation covers this round. Full GPU512 masters remain the lead's pass.
+- Exercised complete gpu.sh: expected explicit failure at Metal preflight (exit 1); no silent CPU fallback and CPU evidence retained. Lead must run ROUND=1 tools/art/anim3d/units/mechanised-infantry/gpu.sh from this checkout root.
+- Git staging/commit blocked: cannot create .git/worktrees/lane-23/index.lock (Operation not permitted). Changes remain uncommitted for runner; no push or PR. Intended message: Add mechanised infantry 3D animation round one; trailer Co-Authored-By: gpt-6-astra (Codex) <noreply@openai.com>.
+- Honest verdict: same APC-plus-dismount identity at 64px; below painting at 256px. Soldier rest-pose/face/boots/grip, heavy rubber finish, rear cabin joins, cream stone nuance and visible corpse need further work. No PASS marker.
