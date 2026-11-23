@@ -114,6 +114,12 @@ for ob in list(sc.objects):
   v.co=s.inverted_safe()@sculpt(ob,co,target);pts.append(target)
  ob.data.update()
  records.append({'object':name,'kind':kind,'bounds':[min(p.x for p in pts),min(p.y for p in pts),max(p.x for p in pts),max(p.y for p in pts)]})
+finish=runpy.run_path('tools/art/anim3d/units/spartan-hoplite/finish_round3.py')
+finish['fit'](sc,body,skin,pixel,sculpt,view)
+finish['skin_sandals'](sc,body,skin)
+finish['fills'](R)
+finish['spear'](sc,weapons,pixel,sculpt,view)
+bpy.context.view_layer.update()
 # Softer substantial limestone edge, preserving the stationary contact plane.
 base=bpy.data.objects['Stationary cream stone'];base.scale.x*=.97;base.scale.y*=.97
 # Stored source has a real beveled base. Finished mesh is retained, not a plane.
@@ -131,7 +137,7 @@ for ob in list(sc.objects):
  elif name.startswith(('Forged bronze muscle','Linen pteruges','Pteruges','Linen armour','Narrow linen','Leather baldric','Baldric')):kind='all'
  elif name.startswith(('Convex bronze','Aspis turned','Aspis oak')):kind='all'
  elif name.startswith(('Corinthian','Raised brow','Helmet','Crest bronze')):kind='all'
- elif name.startswith(('Contoured greave','Greave chased')):kind='bronze'
+ elif name.startswith(('Contoured greave','Greave chased')):kind='all'
  elif ob==body:kind='all'
  elif name.startswith(('Leather sandal','Sandal')):kind='all'
  if not kind:continue
@@ -186,6 +192,7 @@ for name,rgb,amount in [('Cream limestone',(245,220,182),.55),('Cream limestone 
  pig.inputs['Emission Color'].default_value=color;pig.inputs['Emission Strength'].default_value=1
  light=n.new('ShaderNodeLightPath');weight=n.new('ShaderNodeMath');weight.operation='MULTIPLY';weight.inputs[1].default_value=amount;l.new(light.outputs['Is Camera Ray'],weight.inputs[0])
  mix=n.new('ShaderNodeMixShader');l.new(weight.outputs[0],mix.inputs[0]);l.new(s.outputs[0],mix.inputs[1]);l.new(pig.outputs[0],mix.inputs[2]);l.new(mix.outputs[0],n.get('Material Output').inputs['Surface'])
+finish['stone_grain']()
 sc['projection_method']='Single frozen camera; finished solid kit; camera-only source pigment; original physical backs, AO and generated linen'
 (M/'registration.json').write_text(json.dumps({'camera':list(sc.camera.location),'target':[0,0,1.05],'objects':records,'limitations':'Measured contour fit; not an exact camera/pose match'},indent=2))
 cloth.modifiers['Cloth per clip'].show_viewport=True

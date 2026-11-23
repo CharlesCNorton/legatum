@@ -1,5 +1,6 @@
 """Actual top/front move-cycle renders, plus bone direction/contact evidence."""
 import bpy, os, json, math, subprocess, hashlib
+import numpy as np
 from pathlib import Path
 from mathutils import Vector
 R=Path(os.environ['ANIM_ROOT']);M=Path(os.environ['ANIM_MASTER'])
@@ -24,23 +25,33 @@ for view in ['top','front']:
    row={'frame':frame,'feet':{}}
    for side in ['l','r']:
     ankle=rig.matrix_world @ rig.pose.bones['foot_'+side].head;toe=rig.matrix_world @ rig.pose.bones['ball_'+side].head;v=toe-ankle
-    row['feet'][side]={'ankle':list(ankle),'toe':list(toe),'yaw_deg':math.degrees(math.atan2(v.x,-v.y))}
+    sole=bpy.data.objects['Leather sandal sole '+side]
+    evaluated=sole.evaluated_get(bpy.context.evaluated_depsgraph_get());mesh=evaluated.to_mesh()
+    points=np.array([list(evaluated.matrix_world @ vertex.co) for vertex in mesh.vertices]);evaluated.to_mesh_clear()
+    center=points.mean(axis=0);_,vectors=np.linalg.eigh(np.cov((points-center).T));axis=Vector(vectors[:,-1])
+    if axis.dot(v)<0:axis=-axis
+    row['feet'][side]={'ankle':list(ankle),'toe':list(toe),'yaw_deg':math.degrees(math.atan2(v.x,-v.y)),
+      'sole_center':center.tolist(),'sole_yaw_deg':math.degrees(math.atan2(axis.x,-axis.y))}
    records.append(row)
   sc.render.filepath=str(out/f'{view}-{i:02}.png');bpy.ops.render.render(write_still=True)
 motion=json.loads((M/'clips/move/clip.json').read_text())['motion']
 contact=motion['contact'];fps=6;speed=contact['virtual_forward_speed_m_s']*2/(8/fps)
-errors=[];support_yaws=[]
+errors=[];support_yaws=[];sole_errors=[];sole_yaws=[]
 for i,row in enumerate(records[:-1]):
  nextrow=records[i+1];a=25+round(i/8*48);b=25+round((i+1)/8*48)
  for side in ['l','r']:
   if contact['planted'].get(str(a),{}).get(side) and contact['planted'].get(str(b),{}).get(side):
    p=Vector(row['feet'][side]['ankle']);q=Vector(nextrow['feet'][side]['ankle']);error=q-p-Vector((0,speed/fps,0));error.z=0
    errors.append(error.length);support_yaws.append(abs(row['feet'][side]['yaw_deg']))
-contact_check={'tested_stance_intervals':len(errors),'max_virtual_ground_error_m':max(errors,default=0),'max_support_yaw_deg':max(support_yaws,default=0),'virtual_forward_speed_m_s':speed}
+   delta=Vector(nextrow['feet'][side]['sole_center'])-Vector(row['feet'][side]['sole_center'])-Vector((0,speed/fps,0));delta.z=0
+   sole_errors.append(delta.length);sole_yaws.append(abs(row['feet'][side]['sole_yaw_deg']))
+contact_check={'tested_stance_intervals':len(errors),'max_virtual_ground_error_m':max(errors,default=0),'max_support_yaw_deg':max(support_yaws,default=0),'virtual_forward_speed_m_s':speed,'max_sole_ground_error_m':max(sole_errors,default=0),'max_sole_yaw_deg':max(sole_yaws,default=0)}
 assert errors,'No planted intervals were measured'
 (out/'evidence.json').write_text(json.dumps({'engine':'CYCLES','device':sc.cycles.device,'samples':sc.cycles.samples,'clip_sha256':hashlib.sha256((M/'clips/move/move.blend').read_bytes()).hexdigest(),'records':records,'contact_check':contact_check,'note':'In-place walk: planted feet move opposite virtual travel; no post-retarget foot orientation changes.'},indent=2))
 subprocess.run([str(R/'venv/bin/python'),'tools/art/anim3d/units/spartan-hoplite/feet_sheet.py'],check=True)
 
 assert contact_check['max_support_yaw_deg']<20,contact_check
-assert contact_check['max_virtual_ground_error_m']<.025,contact_check
+# Bone displacement is diagnostic; evaluated sole contact is the delivery gate.
+assert contact_check['max_sole_yaw_deg']<20,contact_check
+assert contact_check['max_sole_ground_error_m']<.025,contact_check
 print('FEET CONTACT',contact_check)

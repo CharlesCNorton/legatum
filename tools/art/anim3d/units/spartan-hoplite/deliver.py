@@ -2,7 +2,7 @@
 import os,sys,json,hashlib,io
 from pathlib import Path
 from PIL import Image,ImageDraw,ImageChops,ImageStat
-R=Path(os.environ.get('ANIM_ROOT',str(Path.home()/'LegatumRuns/anim-pilot')));M=Path(os.environ.get('ANIM_MASTER',str(R/'masters/spartan-hoplite/round3-3d')));A=R/'assets/spartan-hoplite';REV=R/'review/3d-v2';SLUG='spartan-hoplite'
+R=Path(os.environ.get('ANIM_ROOT',str(Path.home()/'LegatumRuns/anim-pilot')));M=Path(os.environ.get('ANIM_MASTER',str(R/'masters/spartan-hoplite/round4-3d')));A=R/'assets/spartan-hoplite';REV=R/'review/3d-v2';SLUG='spartan-hoplite'
 CLIPS={'idle':(8,4,True),'move':(8,6,True),'attack':(10,14,False),'hit':(4,8,False),'death':(10,5,False)}
 REF=Path('app/src/assets/units/spartan-hoplite-256.png');OUT=Path('app/src/assets/units/anim')
 def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
@@ -64,7 +64,7 @@ def review(stage):
  ref=Image.open(REF).convert('RGBA')
  if stage=='b':sheet([ref]+images,['Painting','Front plain','3/4 plain','Side plain'],REV/(SLUG+'-b-plain.png'))
  elif stage=='c':
-  im=images[0].resize((256,256),Image.Resampling.LANCZOS);sheet([ref,im],['Painting','Third pass Cycles'],REV/(SLUG+'-c-textured-lit.png'))
+  im=images[0].resize((256,256),Image.Resampling.LANCZOS);sheet([ref,im],['Painting',f'{meta["device"]} Cycles {meta["resolution"]} px / {meta["samples"]} samples'],REV/(SLUG+'-c-textured-lit.png'))
   split=ref.copy();split.paste(im.crop((128,0,256,256)),(128,0));fade=Image.blend(ref,im,.5);sheet([ref,im,split,fade],['Painting','3D rest','Half split','50% crossfade'],REV/(SLUG+'-f-restpose-compare.png'))
   crops=[(101,22,149,87),(92,68,149,139),(132,82,188,174)]
   details=[];labels=[]

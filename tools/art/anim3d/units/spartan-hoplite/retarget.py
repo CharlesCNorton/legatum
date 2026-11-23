@@ -41,7 +41,7 @@ def stabilize_walk(rig, frames, phases, scale):
     """Small root contact correction; never alter retargeted bone rotations.
 
 The in-place source has slightly unequal stance speeds. Lock flat planted
-ankles to one virtual ground speed, blend the root offset across toe-off, and
+evaluated sandal centers to one virtual ground speed, blend the root offset across toe-off, and
 retain the captured swing/roll. Landing frames still moving forward are not
 classified as planted. The closing frame anchors the loop to its starting pose.
 """
@@ -58,6 +58,20 @@ classified as planted. The closing frame anchors the loop to its starting pose.
             if flag and nxt==i+1 and following[2]<minima[side]+.015:
                 velocities.append((following[1]-point[1])*24*scale)
     speed = statistics.median(velocities)
+    centers = {}; sole_spans=[]
+    original_location = rig.location.copy()
+    for i in active:
+        rig.location = original_location+frames[i]['root']
+        apply_matrices(rig, frames[i]['matrices'])
+        centers[i] = {}
+        for side in ['l','r']:
+            sole=bpy.data.objects['Leather sandal sole '+side]
+            evaluated=sole.evaluated_get(bpy.context.evaluated_depsgraph_get());mesh=evaluated.to_mesh()
+            points=[evaluated.matrix_world @ v.co for v in mesh.vertices]
+            center=sum(points,Vector())/len(points);centers[i][side]=center
+            sole_spans.append(2*max((p-center).length for p in points))
+            evaluated.to_mesh_clear()
+    rig.location=original_location
     offsets = {}
     for side in ['l','r']:
         anchor = None
@@ -65,7 +79,7 @@ classified as planted. The closing frame anchors the loop to its starting pose.
             if not flag:
                 anchor = None
                 continue
-            position = frames[i]['matrices']['foot_'+side].translation + frames[i]['root']
+            position = centers[i][side]
             if anchor is None:
                 anchor = (i,position.copy())
             offset = anchor[1]+Vector((0,speed*(i-anchor[0])/24,0))-position
@@ -82,8 +96,12 @@ classified as planted. The closing frame anchors the loop to its starting pose.
             offsets[i] = offsets[a].lerp(offsets[b],t)
         frames[i]['root'] += offsets[i]
     maximum = max(v.length for v in offsets.values())
-    assert maximum < .04, f'Contact correction too large: {maximum:.4f}m; fix rest mapping'
-    return {'virtual_forward_speed_m_s': speed, 'max_root_xy_correction_m': maximum,
+    # Mesh centers include the sandal's offset and captured foot roll. Bound
+    # solver travel to one quarter of the actual shoe length; the independent
+    # rendered contact gate still requires less than 25mm of ground slip.
+    limit=.25*min(sole_spans)
+    assert maximum < limit, f'Contact correction {maximum:.4f}m exceeds quarter-sole {limit:.4f}m'
+    return {'virtual_forward_speed_m_s': speed, 'max_root_xy_correction_m': maximum, 'root_correction_limit_m':limit, 'contact_target':'evaluated sandal center',
             'planted': {str(i+1): {side: planted[side][j] for side in planted} for j,i in enumerate(active)}}
 
 
@@ -175,11 +193,11 @@ def prepare(rig, root, clip, phases):
                        'root': (hip-hip0)*scale,
                        'source_feet': {s: list(source.pose.bones['DEF-foot.'+s.upper()].head) for s in ['l', 'r']},
                        'source_toes': {s: list(source.pose.bones['DEF-toe.'+s.upper()].head) for s in ['l', 'r']}})
-    contact = stabilize_walk(rig,frames,phases,scale) if clip=='move' else None
     for p, constraint in constraints:
         p.constraints.remove(constraint)
     for ob in helpers+list(imported):
         bpy.data.objects.remove(ob, do_unlink=True)
+    contact = stabilize_walk(rig,frames,phases,scale) if clip=='move' else None
     apply_matrices(rig, neutral)
     scene.frame_set(1)
     bpy.context.view_layer.update()

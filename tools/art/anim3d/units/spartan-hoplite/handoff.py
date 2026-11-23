@@ -22,7 +22,8 @@ def verify_gpu():
  assert len(feet['records'])==8
  assert feet['contact_check']['tested_stance_intervals']>0
  assert feet['contact_check']['max_support_yaw_deg']<20
- assert feet['contact_check']['max_virtual_ground_error_m']<.025
+ assert feet['contact_check']['max_sole_yaw_deg']<20
+ assert feet['contact_check']['max_sole_ground_error_m']<.025
  for view in ['top','front']:
   for i in range(8):assert Image.open(M/f'feet/{view}-{i:02}.png').size==(256,256)
  assert (REV/(SLUG+'-g-feet-check.png')).is_file()
@@ -37,7 +38,7 @@ def video():
    frame=Image.new('RGBA',(160,160));frame.paste(atlas.crop((r['x'],r['y'],r['x']+r['w'],r['y']+r['h'])),(r['ox'],r['oy']))
    frames[clip].append(frame.resize((320,320),Image.Resampling.LANCZOS))
   assert len(frames[clip])==count
- out=REV/f'{SLUG}-round{os.environ.get("ROUND","2")}.mp4'
+ out=REV/f'{SLUG}-round{os.environ.get("ROUND","3")}.mp4'
  proc=subprocess.Popen(['ffmpeg','-y','-loglevel','error','-f','rawvideo','-pixel_format','rgb24','-video_size','1600x348','-framerate','30','-i','-','-an','-c:v','libx264','-threads','3','-pix_fmt','yuv420p','-crf','20','-movflags','+faststart',str(out)],stdin=subprocess.PIPE)
  for t in range(240):
   canvas=Image.new('RGBA',(1600,348),(240,232,214,255));draw=ImageDraw.Draw(canvas)

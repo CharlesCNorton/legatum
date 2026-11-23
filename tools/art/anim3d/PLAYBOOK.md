@@ -312,3 +312,56 @@ A finite hidden collision slab catches simulated cloth beyond the base edge;
 released equipment stays inside the fixed camera and the spear's planted butt
 uses only an along-shaft contact correction. These are unit-specific contact
 constraints, not a claim that the original donor animation fits every weapon.
+
+### Hoplite driver round 3: visible cape, linen layers and fitted sandals
+
+Keep the successful round-2 GPU masters in `round3-3d/`; the new repeatable
+checkpoint is `masters/spartan-hoplite/round4-3d/unpainted.blend`. Incoming GPU
+review files and movie are copied into `spartan-hoplite-round2-gpu-preserved/`.
+The driver entry point defaults to `ROUND=3` and the new master directory.
+
+`finish_round3.py` works before UV freezing. It fits the complete lower limbs,
+greaves and sandals through the inverse skin matrix while retaining depth,
+original topology and weights. Sole fitting preserves the ground plane. Short
+armour tabs now overlap a separate folded linen underlayer with a solid hem.
+The straight solid spear is registered as a single axis/cross-section assembly,
+with a grounded butt. None of these edits changes donor foot rotations.
+
+The cape's camera-visible side had reversed winding: every stored projection
+weight was zero. Correcting winding before projection restores painted folds;
+more saturation would not have fixed it. Its asymmetric hem and real cloth
+simulation remain. Skin, wool and leather revealed in movement now use recorded
+image-generated physical fills, blended with live AO. The limestone's camera
+pigment also receives fine grain and live contact AO instead of a flat colour.
+Original bevels, buckles, straps, product lighting and a single automatically
+sampled rest-pose histogram grade remain in use.
+
+Every move review now checks the **evaluated sandal meshes** as well as bones:
+sole principal-axis yaw and virtual-ground center displacement are measured in
+planted intervals. This catches mesh registration errors that a bone-only foot
+check misses. Top/front actual renders remain required; numeric checks do not
+establish art quality. The complete lead-side pass is:
+
+```sh
+ROUND=3 tools/art/anim3d/units/spartan-hoplite/gpu.sh
+```
+
+All stages, genuine GPU512/64 masters and 256 derivatives, feet review, trimmed
+160 px atlas, validation and the decoded eight-second movie remain part of this
+single no-argument handoff. It never writes PASS; rest parity and five clean clips
+still require visual inspection of the final GPU output.
+
+The first full-depth fit exposed why screen matching alone is insufficient:
+constrain the weapon to the hand in camera **depth**, not only in screen pixels,
+and rerun all equipment/ground audits. Sandal-center drift exceeded the 25 mm
+contact gate even while ankle drift was below a micrometre. The unit's open-walk
+adapter now stabilizes evaluated sandal centers by root translation; it retains
+source rotations and records ankle displacement diagnostically. Delivery gates
+use the actual sole centers and their yaw. Attack and carried spear support also
+use evaluated geometry rather than assumed rest offsets.
+
+Sandals must share the anatomical foot/toe skinning: rigid parenting to `foot_*`
+while MPFB toes bend on `ball_*` lets toes pass through soles on toe-off. This
+round transfers nearby anatomical weights to finished soles and straps with
+inverse neutral skinning, preserving their rest geometry. Do this before frozen
+projection and cloth/clip regeneration, then repeat actual mesh contact views.

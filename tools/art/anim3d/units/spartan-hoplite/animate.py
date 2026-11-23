@@ -86,6 +86,12 @@ def pose(t):
   for side in ['l','r']:
    aim('foot_'+side,(0,-.12,-.045));aim('ball_'+side,(0,-1,0))
  if clip=='attack':
+  lows=[]
+  for side in ['l','r']:
+   sole=bpy.data.objects['Leather sandal sole '+side];ev=sole.evaluated_get(bpy.context.evaluated_depsgraph_get());mesh=ev.to_mesh()
+   lows.append(min((ev.matrix_world @ v.co).z for v in mesh.vertices));ev.to_mesh_clear()
+  rig.location.z+=.10-min(lows);bpy.context.view_layer.update()
+ if clip=='attack':
   # Slide the grip down the shaft during extension; preserve a continuous grip
   # while keeping both ends of the long spear inside the fixed atlas cell.
   shaft=bpy.data.objects['Ash dory shaft'];pts=shaft.data.splines[0].points
@@ -93,7 +99,7 @@ def pose(t):
   for o in spear_objects:
    mat=o.matrix_world.copy();mat.translation+=direction*(float(os.environ.get('ANIM_ATTACK_SLIDE','.25'))*raised+.29*max(0,min(1,(raised-.4)/.4)));o.matrix_world=mat
   bpy.context.view_layer.update()
- if clip in ['idle','hit']:
+ if clip in ['idle','move','hit']:
   butt=bpy.data.objects['Iron spear butt'];ev=butt.evaluated_get(bpy.context.evaluated_depsgraph_get());me=ev.to_mesh()
   lowest=min((ev.matrix_world @ v.co).z for v in me.vertices);ev.to_mesh_clear()
   if lowest<.10:

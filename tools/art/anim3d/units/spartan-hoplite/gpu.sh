@@ -3,8 +3,8 @@
 set -euo pipefail
 cd "$(dirname "$0")/../../../../.."
 source tools/art/anim3d/env.sh
-export ROUND="${ROUND:-2}"
-export ANIM_MASTER="${ANIM_MASTER:-$ANIM_ROOT/masters/spartan-hoplite/round3-3d}"
+export ROUND="${ROUND:-3}"
+export ANIM_MASTER="${ANIM_MASTER:-$ANIM_ROOT/masters/spartan-hoplite/round4-3d}"
 export UNIT=spartan-hoplite RENDER_ENGINE=CYCLES CYCLES_DEVICE=GPU RESOLUTION=512 SAMPLES=64
 unit=tools/art/anim3d/units/spartan-hoplite
 status="$ANIM_ROOT/review/3d-v2/spartan-hoplite-gpu-status.txt"
