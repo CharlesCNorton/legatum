@@ -57,3 +57,7 @@
 - Repository art gate could not complete its Chromium render command; hygiene initially mistook unspaced matrix @ operators for email addresses, fixed by ordinary operator spacing. Final committed-tree hygiene/public-claims check follows.
 - Working-tree hygiene line checks passed: 18 text files, zero findings; current public-claims check passed. Git add/commit is blocked by sandbox denial of .git/worktrees/lane-3/index.lock; changes and the two new candidate atlas files remain uncommitted for the runner. origin/master is already an ancestor of this branch; no fetch/merge/push performed.
 - CPU evidence archived under masters/cuirassier/round2-cpu, including raw/graded frames, review images, validation, decoded movie and hashes. Lead: ROUND=2 tools/art/anim3d/units/cuirassier/gpu.sh (driver may supply another ROUND). Still no art PASS.
+- Emitted b: 3 frames, 512 px CYCLES/GPU, 64 samples.
+- Emitted c: 1 frames, 512 px CYCLES/GPU, 64 samples.
+- Emitted c-details: 1 frames, 512 px CYCLES/GPU, 64 samples.
+- Emitted d: 4 frames, 512 px CYCLES/GPU, 64 samples.
