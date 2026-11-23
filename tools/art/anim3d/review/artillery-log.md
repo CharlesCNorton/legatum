@@ -165,3 +165,22 @@
 - Published e-hit: 4 actual rendered frames, 12 fps; CPU 256px 16 samples.
 - Published e-death: 10 actual rendered frames, 10 fps; CPU 256px 16 samples.
 - Completed all five clips and geometry audit; delivery pack may now run.
+- Published b-plain CPU/GPU geometry stage before texture work.
+- Baked 256px AO and curvature maps on GEO-Shield wing -1, GEO-Shield wing 1, GEO-Hollow tapered barrel
+- Published painted rest pose and 50/50 comparison; real AO shader, micrograin, edge geometry and hidden-surface fill.
+- Published e-idle: 8 actual rendered frames, 10 fps; CPU 256px 16 samples.
+- Published e-move: 8 actual rendered frames, 12 fps; CPU 256px 16 samples.
+- Published e-attack: 10 actual rendered frames, 14 fps; CPU 256px 16 samples.
+- Published e-hit: 4 actual rendered frames, 12 fps; CPU 256px 16 samples.
+- Published e-death: 10 actual rendered frames, 10 fps; CPU 256px 16 samples.
+- Completed all five clips and geometry audit; delivery pack may now run.
+- Published b-plain CPU/GPU geometry stage before texture work.
+- Baked 256px AO and curvature maps on GEO-Shield wing -1, GEO-Shield wing 1, GEO-Hollow tapered barrel
+- Published painted rest pose and 50/50 comparison; real AO shader, micrograin, edge geometry and hidden-surface fill.
+- Published e-idle: 8 actual rendered frames, 10 fps; CPU 256px 16 samples.
+- Published e-move: 8 actual rendered frames, 12 fps; CPU 256px 16 samples.
+- Published e-attack: 10 actual rendered frames, 14 fps; CPU 256px 16 samples.
+- Published e-hit: 4 actual rendered frames, 12 fps; CPU 256px 16 samples.
+- Published e-death: 10 actual rendered frames, 10 fps; CPU 256px 16 samples.
+- Completed all five clips and geometry audit; delivery pack may now run.
+- Full rolling check rejected mirrored source tire UVs: they brought hidden shield/axle colors into view. Replaced all rubber with continuous physical material using desaturated existing generated pigment, short cavity AO and real dusty bevels. Corrected tread radial frames and overlapping lugs; deeper separated chevrons, darker sidewalls and three fine physical molding rings now carry the form. Hub paint retains an approximate non-rolling light field; front/top audits verify its center/orientation. Rest wheel seating now uses measured geometry radius.
