@@ -108,7 +108,7 @@ for (const size of SIZES) testWithFailingRequests.describe(`online screens ${siz
     const worst = await page.context().newPage();
     await refuse(worst, REFUSALS[0]);
     await multiplayer(worst);
-    await worst.evaluate(() => { (window as unknown as GameWindow).legatum.setState({ views: [{ turn: 14 }] as never }); });
+    await worst.evaluate(() => { (window as unknown as GameWindow).legatum.setState({ views: [{ turn: 14, players: [{ id: 0, is_human: true, faction: 'Rome' }] }] as never }); });
     await worst.getByLabel('Your name in the game list').fill('Ada \u{1F600}');
     await worst.getByRole('button', { name: /^Host Game/ }).click();
     await expect(worst.locator('.title-notice')).toBeVisible();
@@ -124,7 +124,7 @@ for (const size of SIZES) testWithFailingRequests.describe(`online screens ${siz
     // The name note with a game open and no other message.
     const note = await page.context().newPage();
     await multiplayer(note);
-    await note.evaluate(() => { (window as unknown as GameWindow).legatum.setState({ views: [{ turn: 14 }] as never }); });
+    await note.evaluate(() => { (window as unknown as GameWindow).legatum.setState({ views: [{ turn: 14, players: [{ id: 0, is_human: true, faction: 'Rome' }] }] as never }); });
     await note.getByLabel('Your name in the game list').fill('Ada \u{1F600} of Rome');
     await note.mouse.move(5, 5);
     await expectMenuAboveFooter(note, '25c name note, game open');
