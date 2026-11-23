@@ -59,3 +59,9 @@
 - Posted e-attack review (CPU, 256 px).
 - Posted e-hit review (CPU, 256 px).
 - Posted e-death review (CPU, 256 px).
+- Completed and visually inspected final CPU clay, rest/details, rig poses, all 40 clip frames, and top/front feet sheets. All requested review PNG/WebP stages exist; 256 masters retained. Genuine 512 masters are deferred to the required GPU handoff, not fabricated by upscaling.
+- Rig audit passed: 53 bones, stable base, safe scales, source motions, max foot heading 13.44 degrees; four sampled planted-interval ankle drifts <=0.000000218m; max living-clip wrist attachment error <=0.000000649m. Finger contact and complete collisions are not established by these checks.
+- Atlas validation passed: 179188 bytes, WebP quality 90, all 40 frames, lossless alpha, per-frame trims/offsets, bounds/margins, motion, identical death hold and source hashes. Anchor derived from stationary base contact center. Preview marked CPU in report.
+- Verified rifleman-round1.mp4: H.264/yuv420p, 1600x348, 240 frames at 30fps, 8 seconds. GPU script is ready, GPU pass not run. No PASS: narrower/angular silhouette, pale boot edges, stock/sling registration, shoulder-stock contact, hidden surfaces and stiff death still need work.
+- Final checks: Python AST syntax (6 files), Bash syntax (2 entrypoints), working-file hygiene (13 files, zero findings), git diff --check, atlas revalidation all passed. Hygiene initially mistook an unspaced matrix @ operator for an email; spacing fixed, check rerun cleanly. origin/master is already an ancestor; no merge required.
+- Git add/commit attempted with the requested co-author footer, but sandbox denied .git/worktrees/lane-17/index.lock. Changes remain uncommitted for the runner. Commit-based browser/art gates and final visual approval remain for the lead; no Rust/UI tests apply to this art-only change.
