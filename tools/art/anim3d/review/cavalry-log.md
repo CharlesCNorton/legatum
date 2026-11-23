@@ -45,3 +45,4 @@ b: review emitted from CYCLES frames; no art-pass claim.
 c: review emitted from CYCLES frames; no art-pass claim.
 c-details: review emitted from CYCLES frames; no art-pass claim.
 d: review emitted from CYCLES frames; no art-pass claim.
+e-idle: review emitted from CYCLES frames; no art-pass claim.
