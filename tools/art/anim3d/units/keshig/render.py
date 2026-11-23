@@ -33,7 +33,7 @@ def render_rest(name,file):
  save_frame(sc,M/'renders'/name/'000.png',sc.get('rest_frame',3))
  # Every stage gets immediately visible review evidence, even before deliver.py.
  shutil.copyfile(M/'renders'/name/'000.png',Q/f'keshig-{name}.png');log(f'Rendered {name}: {res}px {sc.render.engine} {sc.cycles.device}, {samples} samples.')
- base=bpy.data.objects['Stationary cream stone'];anchor=world_to_camera_view(sc,sc.camera,base.matrix_world@Vector((0,0,.05)))
+ base=bpy.data.objects['Stationary cream stone'];anchor=world_to_camera_view(sc,sc.camera,base.matrix_world @ Vector((0,0,.05)))
  manifest={'anchor_160':[round(anchor.x*160),round((1-anchor.y)*160)],'engine':sc.render.engine,'device':sc.cycles.device,'resolution':res,'samples':samples,'blend_sha256':hashlib.sha256(file.read_bytes()).hexdigest()}
  (M/'renders'/name/'manifest.json').write_text(json.dumps(manifest,indent=2))
 if stage in ['all','b']:

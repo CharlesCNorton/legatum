@@ -198,3 +198,43 @@ Keshig round-one motion review rejected an inverse-skin horse leg fit: it matche
 the rest silhouette better but stretched the hocks during the native gallop. The
 final round-one horse retains its original weighted anatomy and gait. Its narrower
 painted silhouette remains an explicit next-round quality issue.
+
+### Keshig driver round 2: register joints before pigment
+
+The supplied round-one GPU pass completed (quality80, 187340 bytes), but the
+horse's upright narrow stance and thin tail failed the painting at both sizes.
+The prior GPU sheets, movie and raw frames are preserved externally in
+`masters/keshig/driver-r1-gpu/`. No visual PASS is implied by that receipt.
+
+`pose_fit.py` now registers full-depth anatomical joints to the 256px painting
+before surface finishing. It retains the camera and depth of each joint, stores
+native/fitted local rest matrices, and creates a separate registered-rest action.
+`animate.py` transports the CC0 actions through those local rest transforms.
+Crucially, reset every bone to the native reference before sampling each frame:
+glTF actions omit static channels, and otherwise fitted translations leak into
+the source and get applied twice. This adaptation preserves native foot rotation
+and changes limb placement; it is not unmodified source motion or mocap.
+
+Full-depth sleeve/head sculpture and bow registration accompany the skeletal fit.
+The recurved bow uses a smooth Catmull-Rom centreline. `tail.py` replaces the
+narrow source tail with closed tapered locks carrying native Tail1..7 weights,
+and creates thick reins weighted between head and saddle. Both are finished
+before frozen visibility/incidence-tested painting projection. Existing generated
+coat/linen/metal/hair fills, actual AO/Pointiness bakes, physical cloth thickness,
+bevels, straps and product lights remain; stone camera pigment now includes fine
+grain and contact AO. One rest-fitted histogram grade is still shared by all clips.
+
+CPU checks use 256px Cycles/8 samples; GPU remains the authoritative 512px/64-sample
+pass. `gpu.sh` now rebuilds every model stage from the current checkout, avoiding
+stale external masters after script edits, and tees its full transcript to both
+the driver's log and its unit log. Run `ROUND=2 tools/art/anim3d/units/keshig/gpu.sh`.
+It retains true 512/256 masters, trims all 40 frames to logical 160px cells,
+verifies the atlas and eight-second five-clip movie, and never writes PASS.
+
+The current registered stride/tail envelope is wider than the source canvas in
+some samples. The candidate keeps the camera/base fixed and uniformly fits the
+moving assembly into 240px, then re-grounds it; this is bounded above 0.85 scale
+and recorded per sample in `audit.json`. It prevents clipping but can visibly
+modulate size, so it remains an explicit quality issue, not a clean-motion claim.
+The next refinement should solve the anatomical motion envelope and remove the
+need for this fit before visual acceptance.

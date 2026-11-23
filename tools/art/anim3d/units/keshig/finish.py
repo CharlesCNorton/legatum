@@ -6,7 +6,9 @@ from bpy_extras.object_utils import world_to_camera_view
 R=Path(os.environ['ANIM_ROOT']);M=R/'masters/keshig';A=R/'assets/keshig'
 bpy.ops.wm.open_mainfile(filepath=str(M/'unpainted.blend'));sc=bpy.context.scene
 rig=bpy.data.objects['Rider MPFB game_engine'];hrig=bpy.data.objects['AnimalArmature'];body=bpy.data.objects['Rider MPFB CC0 anatomy']
+exec(compile(Path('tools/art/anim3d/units/keshig/pose_fit.py').read_text(),'registered skeleton','exec'))
 exec(compile(Path('tools/art/anim3d/units/keshig/surface.py').read_text(),'finished surfaces','exec'))
+exec(compile(Path('tools/art/anim3d/units/keshig/tail.py').read_text(),'weighted tail','exec'))
 # Save true-geometry stage before projection, with neutral clay material override.
 bpy.ops.wm.save_as_mainfile(filepath=str(M/'plain.blend'))
 painting=bpy.data.images.load(str(A/'projection.png'),check_existing=True)
@@ -40,10 +42,10 @@ for o in list(sc.objects):
   if m.type!='ARMATURE':m.show_viewport=False
  bpy.context.view_layer.update();ev=o.evaluated_get(bpy.context.evaluated_depsgraph_get());me=ev.to_mesh()
  if len(me.vertices)!=len(o.data.vertices):raise RuntimeError(o.name)
- coords=[];weights=[];deps=bpy.context.evaluated_depsgraph_get();view=sc.camera.matrix_world.to_quaternion()@Vector((0,0,1))
+ coords=[];weights=[];deps=bpy.context.evaluated_depsgraph_get();view=sc.camera.matrix_world.to_quaternion() @ Vector((0,0,1))
  for v in me.vertices:
-  w=ev.matrix_world@v.co;q=world_to_camera_view(sc,sc.camera,w);coords.append((q.x,q.y))
-  normal=(ev.matrix_world.to_3x3().inverted().transposed()@v.normal).normalized()
+  w=ev.matrix_world @ v.co;q=world_to_camera_view(sc,sc.camera,w);coords.append((q.x,q.y))
+  normal=(ev.matrix_world.to_3x3().inverted().transposed() @ v.normal).normalized()
   facing=max(0,min(1,(normal.dot(view)+.02)/.22))
   hit,location,_,_,hit_object,_=sc.ray_cast(deps,w+view*20,-view,distance=20.04)
   visible=hit and (location-w).length<.025

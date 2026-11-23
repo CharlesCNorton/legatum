@@ -8,3 +8,12 @@
 - Blender 5.3.0, installed GPL software; Pillow 13.0.0, MIT-CMU; FFmpeg installed software. No paid or account-gated asset. Original kit, sculpture and scripts MIT; rendered art CC BY 4.0.
 
 Inherited code was read with git show from the mounted family and cataphract lane, then copied into this unit's isolated namespace. Source assets and masters remain outside git.
+
+## Driver round 2, 2026-11-23
+
+No new download or image-generation call. Reuses all original CC BY 4.0 painting
+and generated fills, MPFB CC0 anatomy and both pinned Quaternius CC0 libraries
+above. Original joint registration/local motion transport, closed weighted tail
+locks, endpoint-weighted reins and smooth bow refinement: MIT scripts; rendered
+art CC BY 4.0. Source motion is adapted, not claimed as mocap. Prior GPU evidence
+is retained in `masters/keshig/driver-r1-gpu/`, outside git.
