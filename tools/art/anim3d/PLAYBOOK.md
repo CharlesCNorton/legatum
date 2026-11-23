@@ -106,3 +106,77 @@ tools/art/anim3d/render.sh audit
 ```
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
+
+## Vehicles — Rocket Artillery (`rocket-artillery`)
+
+This unit uses `tools/art/anim3d/units/rocket-artillery/` exclusively. It is a six-wheel
+truck carrying forty hollow rocket tubes. The closed cab, hood, fenders, bed, fuel
+and storage boxes, tire rings/treads/hubs, full axles and hydraulic launcher have
+real depth. Screen landmarks register the solid bodywork before finishing; they
+never replace it with a painting plane. The mechanical hierarchy separates the
+chassis, suspension body, six wheels, traverse and launcher elevation. No human or
+animal is in this painting, so mocap is inapplicable.
+
+The four standing quality levers apply: (1) freeze rest-camera UV projection of
+the source painting on finished geometry, with facing and ray-visibility masks
+and generated olive brushwork on unseen surfaces; (2) bevel hard edges, model
+hollow bores, raised rails, tire tread, rims, rivets, straps and fittings; (3) use
+warm upper-left key, soft fill, cool rim and Cycles contact shadows; (4) measure
+rest subject RGB statistics against the source and freeze one bounded grade for
+all clips. AO and Pointiness curvature are genuinely baked on cab, hood and
+launcher panel and drive grime/roughness. The painting contains illumination, so
+camera-only painted pigment preserves it while other rays see physical materials.
+Standard/None is intentional for this source-painted render, not a photographic
+preset. The unseen side remains an approximation requiring motion review.
+
+The base is one stationary cream disc, target sRGB **#E9CFA0** (linear pigment
+approximately `.815,.624,.352`), with darker rim, grain and contact shading.
+Never animate the base or project stationary tire shadows onto it. All six Blender
+skills are used; the optional reference-look-calibration skill is absent, so native
+256/64px comparisons, alpha bounds and measured grades provide the calibration.
+
+Run from the repository root:
+
+```sh
+RESOLUTION=256 SAMPLES=8 tools/art/anim3d/units/rocket-artillery/render.sh stills
+RESOLUTION=256 SAMPLES=8 tools/art/anim3d/units/rocket-artillery/render.sh preview
+# Complete lead-side GPU pass; no arguments; ROUND supplied by overnight driver:
+ROUND=1 tools/art/anim3d/units/rocket-artillery/gpu.sh
+```
+
+`gpu.sh` rebuilds, bakes and renders **every** stage in Metal Cycles at 512px,
+64 samples (configurable, minimum 48 verified), then creates graded 256px masters,
+the trimmed 160px atlas and JSON, independent validation and the eight-second
+`rocket-artillery-round${ROUND}.mp4`. The movie reconstructs per-frame offsets
+from the decoded atlas, shows all five clips side by side at 2x on cream, and
+verifies 240 frames, H.264/yuv420p and 1600x348 size. Missing GPU fails explicitly;
+CPU previews are never relabeled GPU. Every invocation is plain `blender -b`
+through the PATH gate; never bypass it, never run concurrent lane jobs, never hide
+anything with zero/near-zero scale. The solid rocket and flare use keyed visibility.
+
+Idle has restrained engine vibration and traverse; move rotates each wheel by
+common travel/radius while the body rides on its suspension; attack elevates and
+fires two visible rocket pulses; hit jolts the body and launcher; death slumps the
+launcher and damaged suspension into a planted wreck. Counts/fps are 8/10, 8/12,
+10/14, 4/12, 10/10. Idle/move loop; last two death samples are held identically.
+Top/front renders across all eight move samples are published as
+`rocket-artillery-g-feet-check.png`: for this machine they inspect wheel axes,
+travel and contact instead of feet. The motion standard for human/animal units
+remains open CMU/CC0 captured motion, rest/bone-roll matching, and a top/front
+feet check each round; never correct foot direction after retargeting.
+
+Each stage immediately publishes its prescribed b/c/d/e review sheet and e-WebP.
+The rest review `rocket-artillery-f-restpose-compare.png` contains painting, render
+and 50/50 crossfade at native 256/64px. The run log and per-unit feedback live in
+`ANIM_ROOT/review/3d-v2/`. The packer preserves forty frames, five ordered rows,
+logical 160px cells, anchor `(80,121.25)`, and per-frame `rects` containing atlas
+`x/y/w/h` plus logical `ox/oy`. Drawing position is `(X-ax+ox,Y-ay+oy)`. Quality
+never drops below 75, and exceeding 200,000 bytes fails. Reused terminal rectangles
+preserve exact decoded death hold. Validation reconstructs all alpha masks,
+checks motion/contact and hashes source, scripts, model, clip files, grade, raw
+frames and graded gallery. No app runtime wiring is included.
+
+Technical success is not art approval. A `rocket-artillery-PASS` marker must only
+follow visual parity at rest and clean motion, plus the atlas contract. The
+pipeline never writes it automatically. Round-one findings belong in the unit's
+README and external running log; GPU output still needs the lead's visual review.
