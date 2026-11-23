@@ -9,7 +9,7 @@ use crate::events::Event;
 use crate::game;
 use crate::hex::Hex;
 use crate::orders::{Order, OrderError};
-use crate::rng::{self, Rng};
+use crate::rng;
 use crate::state::{City, GameState, WonderLoss};
 use crate::types::*;
 use std::collections::{BTreeMap, BTreeSet};
@@ -661,136 +661,24 @@ pub fn apply_city_orders(
     }
 }
 
-const SWISS_NAMES: [&str; 20] = [
-    "Bern",
-    "Zürich",
-    "Lucerne",
-    "Basel",
-    "Geneva",
-    "Lausanne",
-    "Fribourg",
-    "Solothurn",
-    "Schaffhausen",
-    "St. Gallen",
-    "Chur",
-    "Zug",
-    "Sion",
-    "Neuchâtel",
-    "Bellinzona",
-    "Lugano",
-    "Winterthur",
-    "Thun",
-    "Biel",
-    "Aarau",
-];
+pub use super::city_names::city_names;
 
-const INDIA_NAMES: [&str; 20] = [
-    "Agra",
-    "Delhi",
-    "Lahore",
-    "Fatehpur Sikri",
-    "Ajmer",
-    "Allahabad",
-    "Jaunpur",
-    "Varanasi",
-    "Patna",
-    "Ahmedabad",
-    "Surat",
-    "Burhanpur",
-    "Gwalior",
-    "Ujjain",
-    "Kabul",
-    "Multan",
-    "Srinagar",
-    "Ranthambore",
-    "Bikaner",
-    "Chittor",
-];
-
-const BYZANTIUM_NAMES: [&str; 20] = [
-    "Constantinople",
-    "Thessalonica",
-    "Nicaea",
-    "Smyrna",
-    "Trebizond",
-    "Adrianople",
-    "Antioch",
-    "Ephesus",
-    "Corinth",
-    "Mystras",
-    "Ravenna",
-    "Dyrrachium",
-    "Nicomedia",
-    "Caesarea",
-    "Edessa",
-    "Syracuse",
-    "Cherson",
-    "Philadelphia",
-    "Pergamon",
-    "Heraclea",
-];
-
-pub fn city_names(faction: Faction) -> &'static [&'static str] {
-    match faction {
-        Faction::Aztecs => &[
-            "Tenochtitlan",
-            "Texcoco",
-            "Tlacopan",
-            "Tlatelolco",
-            "Chalco",
-            "Xochimilco",
-        ],
-        Faction::Switzerland => &SWISS_NAMES,
-        Faction::India => &INDIA_NAMES,
-        Faction::Byzantium => &BYZANTIUM_NAMES,
-        Faction::Germany => &["Berlin", "Cologne", "Hamburg", "Munich", "Leipzig", "Essen"],
-        Faction::Celts => &[
-            "Alesia",
-            "Bibracte",
-            "Lugdunum",
-            "Gergovia",
-            "Tara",
-            "Emain Macha",
-        ],
-        Faction::Mongols => &[
-            "Karakorum",
-            "Sarai",
-            "Khanbaliq",
-            "Shangdu",
-            "Almaliq",
-            "Bukhara",
-        ],
-        Faction::Sparta => &[
-            "Sparta", "Amyclae", "Therapne", "Sellasia", "Gytheio", "Pylos",
-        ],
-        Faction::Athens => &[
-            "Athens", "Piraeus", "Eleusis", "Marathon", "Phaleron", "Laurion",
-        ],
-        Faction::Egypt => &["Memphis", "Thebes", "Heliopolis", "Abydos", "Aswan", "Sais"],
-        Faction::Rome => &[
-            "Rome",
-            "Ostia",
-            "Capua",
-            "Ariminum",
-            "Aquileia",
-            "Mediolanum",
-        ],
-    }
-}
-
-/// The owner's next city name: walk the faction list from a per-empire seeded start and take the
-/// first name no city in the game uses; after that, "<Faction> Colony N".
+/// The owner's next city name: the first name on the faction's list that no city in the game uses,
+/// so the capital takes the historic capital (Rome, Athens, ...) unless another empire of the same
+/// faction already holds it. A list that runs out goes on to "New <name>", then "<Faction> Colony N".
 pub fn next_city_name(state: &GameState, owner: PlayerId) -> String {
     let faction = state.player(owner).faction;
     let names = city_names(faction);
     let used: BTreeSet<&str> = state.cities.values().map(|c| c.name.as_str()).collect();
-    let start = Rng::derive(state.setup.seed, &[rng::purpose::NAMES, owner.0 as u64])
-        .range(0, names.len() as i64 - 1) as usize;
-    for i in 0..names.len() {
-        let name = names[(start + i) % names.len()];
-        if !used.contains(name) {
-            return name.to_string();
-        }
+    if let Some(name) = names.iter().find(|name| !used.contains(**name)) {
+        return name.to_string();
+    }
+    if let Some(name) = names
+        .iter()
+        .map(|name| format!("New {name}"))
+        .find(|name| !used.contains(name.as_str()))
+    {
+        return name;
     }
     let mut n = state.cities.values().filter(|c| c.founder == owner).count() + 1;
     loop {
