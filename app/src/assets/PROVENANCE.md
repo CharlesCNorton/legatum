@@ -36,3 +36,16 @@ The date range is the range of dates the repository's own records give (prompt h
 
 - No prompt is stored for the map improvements, the six original resource medallions, the aircraft plan sprites or the parchment texture.
 - Where a set was generated from one shared prompt (terrain, city sets, camps and ruins), there is one prompt for the set, not one per file.
+
+## Barbarian pikeman animation candidate (2026-11-22)
+
+`units/anim/barbarian-pikeman.webp` and `.json` are Blender renders of MPFB 2.0.18
+CC0 anatomy and its game_engine rig with original quilted costume, kettle helmet,
+pike and skeletal motion. The existing project CC BY 4.0 barbarian-pikeman painting
+is frozen-camera UV color on the articulated meshes. Hidden cloth reuses the
+mounted pipeline's generated linen fill, with its source and prompt recorded in
+`~/LegatumRuns/anim-pilot/assets/SOURCES.md`. Scripts are in
+`tools/art/anim3d/units/barbarian-pikeman/`; source hashes, editable masters, AO and
+curvature bakes and reviews stay outside git. Code is MIT; rendered artwork is
+CC BY 4.0. This is an unapproved round-one candidate, not a replacement for the
+existing painted token.

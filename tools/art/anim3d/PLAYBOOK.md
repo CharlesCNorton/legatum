@@ -106,3 +106,88 @@ tools/art/anim3d/render.sh audit
 ```
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
+
+## Infantry / two-handed pikes — barbarian pikeman round 1
+
+This unit lives entirely in `units/barbarian-pikeman/`; its external assets and
+masters live under `ANIM_ROOT/assets/barbarian-pikeman` and
+`ANIM_ROOT/masters/barbarian-pikeman`. It uses MPFB 2.0.18's anatomical body and
+53-bone game_engine skeleton with original quilted gambeson, trousers, boots,
+kettle helmet, straps, buckle, rivets and red arm tie. It has no shield. Keep the
+painting's unusually long diagonal shaft and small figure within the same camera.
+All Blender commands use plain `blender -b --disable-autoexec` on PATH, so they
+participate in the shared gate. Do not pass a private thread count or bypass it.
+
+The four standing quality levers are the standard method: (1) register the full
+painting to the token, match the rest pose, then freeze camera UVs on real geometry;
+(2) finish geometry with thick cloth, quilt displacement, rounded hard edges and
+real fittings; (3) warm upper-left product key, soft fill, cool rim and contact AO;
+(4) derive one monotonic foreground histogram grade from the rest render and apply
+that same grade to every frame, avoiding temporal color pumping. Facing and alpha
+masks fade projected color into the existing generated linen fill on hidden cloth.
+The fill reuses the mounted family's recorded imagegen asset; unpainted leather,
+metal and skin retain procedural materials. These still need richer unseen-side
+painting. Projection carries painted lighting and cannot repair misaligned anatomy.
+
+The common stone material targets displayed sRGB **#E9CFA0** (linear pigment
+approximately `.815, .624, .352`) on one low disc. Use a darker bevel/side through
+lighting, fine grain and contact shadows. Judge the displayed material after
+lighting and the fixed grade; linear pigment alone is not color calibration.
+
+```sh
+source tools/art/anim3d/env.sh
+UNIT_DIR=tools/art/anim3d/units/barbarian-pikeman
+"$ANIM_ROOT/venv/bin/python" "$UNIT_DIR/prepare.py"
+blender -b --disable-autoexec --python-exit-code 1 --python "$UNIT_DIR/anatomy.py"
+blender -b --disable-autoexec --python-exit-code 1 --python "$UNIT_DIR/build.py"
+blender -b --disable-autoexec --python-exit-code 1 --python "$UNIT_DIR/bake.py"
+SAMPLES=8 "$UNIT_DIR/render.sh"
+blender -b --disable-autoexec --python-exit-code 1 --python "$UNIT_DIR/animate.py"
+STAGES=c-details,d-rig-poses,e-idle,e-move,e-attack,e-hit,e-death SAMPLES=8 "$UNIT_DIR/render.sh"
+"$ANIM_ROOT/venv/bin/python" "$UNIT_DIR/deliver.py" --resolution 256
+"$ANIM_ROOT/venv/bin/python" "$UNIT_DIR/validate.py"
+```
+
+`anatomy.py` creates the isolated anatomy master and bone inventory. Only the
+`body` vertex group may contribute to fitted shells: disabling MPFB's helper mask
+for UV projection must not copy its hidden skirt/fit helpers into clothes.
+`bake.py` writes six real 256 px Cycles AO/Pointiness maps for the coat and
+helmet, then uses cavity AO in pigment and curvature in roughness. Solidify is
+disabled during baking to avoid shared inside/outside UV contamination.
+Projection UVs evaluate the rest armature but temporarily disable topology-changing
+modifiers so loop indices remain valid. Preserve the separate unprojected master.
+
+Idle/move have an extra unshipped closure key; output remains 8/8/10/4/10. Both
+hands solve against the same pike control during guard, walk, thrust and recoil.
+Death releases it, tips it into depth, collapses the skeleton and holds the final
+two output frames. These are authored keys, not motion capture or cloth simulation.
+The ribbons follow the arm rig. Inspect grip, knee deformation and contact visually;
+the validator is not a complete collision solver.
+
+The executable **`units/barbarian-pikeman/gpu.sh`** is the no-argument host handoff.
+It renders all stages with Cycles Metal and denoising at 512 px, keeps raw masters,
+creates graded 512 and downsampled 256 masters, all review PNG/WebP images, the
+required `barbarian-pikeman-f-restpose-compare.png`, validates the atlas and writes
+`barbarian-pikeman-round${ROUND}.mp4`. It refuses a missing Metal device rather than
+silently falling back to CPU. The MP4 reconstructs trims before placing all five
+clips side by side at 2x scale for eight seconds in H.264/yuv420p. CPU preview
+manifests explicitly say CPU/256; they are not 512 masters or GPU approval.
+
+### Pikeman trimmed atlas contract (version 2)
+
+The shipped WebP has 160 px **logical** frames, all 40 original samples, lossless
+8-bit alpha and RGB quality chosen from 90/85/80/75 under 200,000 bytes. Physical
+packing has one row per clip, in idle/move/attack/hit/death order; rows and columns
+are variable size because transparent margins are removed. JSON retains
+`frame:{w,h,ax,ay}` and `clips:{name:{row,frames,fps,loop,rects}}`, plus
+`version:2, atlas:{w,h}`. Each rect is `{x,y,w,h,ox,oy}`: crop `(x,y,w,h)` from the
+atlas and draw at `(ox,oy)` within the logical frame. Apply the shared `ax,ay`
+anchor to that reconstructed frame, not to the trimmed rectangle. This branch
+adds the candidate asset only and does not change runtime loading.
+
+Packing checks master/clip/render hashes. Validation reconstructs every decoded
+frame, compares its exact alpha with the master, checks borders, counts, motion,
+held death and the byte/quality caps. Reviews include painting versus render at
+256 and 64, details, four attack poses, every clip strip, and a half split plus
+50/50 crossfade. No successful validation writes PASS; that requires a separate
+visual judgment that the rest pose is hard to distinguish from the painting.
