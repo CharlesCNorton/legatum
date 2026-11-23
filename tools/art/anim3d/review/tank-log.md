@@ -133,3 +133,7 @@
 - Three numerical belt tests pass; sixteen Python files parse, three shell entry points pass bash -n, source hashes match and git diff --check passes. GPU512 archival gate correctly rejects CPU256 renders. No Rust/UI code changed or unrelated test suite run. No new external assets, paid services, uploads or pushes.
 - GPU entry-point check initially queued behind another GPU job; interrupted that own queued invocation. Device discovery now uses the ordinary gated CPU startup (no render), while final GPU rendering still takes the GPU gate. Exercised the full entry point: clean exit 1 at metal-preflight with no Metal device, retained transcript and failed-stage receipt; CPU outputs untouched. No GPU success claimed.
 - Committed visual/pipeline changes as 08b09e45 on astra/unit-anim-3d-vehicles in .worktrees/tank-round3. origin/master has zero missing commits; no merge/fetch/push/PR. GPU preflight startup and final evidence notes receive a separate follow-up commit.
+- Emitted tank-b-plain.png from actual b renders; visual review pending.
+- Emitted tank-c-textured-lit.png from actual c renders; visual review pending.
+- Emitted tank-c-details.png from actual details renders; visual review pending.
+- Emitted tank-d-rig-poses.png from actual d renders; visual review pending.
