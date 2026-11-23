@@ -196,3 +196,22 @@
 - Saved death: 10 frames at 10 fps, editable MPFB rig, stationary base; CC0 library motion or authored staff attack.
 - Published e-death-strip: CYCLES CPU, 256 px, 8 samples; not GPU approval.
 - Saved 3D audit passed: source hashes, 53 bones, actual motion, exact loop closing keys and held death; ground/bounds recorded; collision limits explicit.
+- Built MPFB female, full folded robes, open hood, shawl/fringe, pack/spiral bedroll, staff, straps and sandals; plain master saved.
+- Published b-plain: CYCLES CPU, 256 px, 8 samples; not GPU approval.
+- Applied frozen-camera painting, generated unseen linen/olive/rust/leather, fine bump, warm product lights, physical AO and ten actual AO/curvature maps.
+- Published c-textured-lit: CYCLES CPU, 256 px, 8 samples; not GPU approval.
+- Published c-details: CYCLES CPU, 256 px, 8 samples; not GPU approval.
+- Saved idle: 8 frames at 10 fps, editable MPFB rig, stationary base; CC0 library motion or authored staff attack.
+- Saved move: 8 frames at 12 fps, editable MPFB rig, stationary base; CC0 library motion or authored staff attack.
+- Saved attack: 10 frames at 14 fps, editable MPFB rig, stationary base; CC0 library motion or authored staff attack.
+- Saved hit: 4 frames at 12 fps, editable MPFB rig, stationary base; CC0 library motion or authored staff attack.
+- Saved death: 10 frames at 10 fps, editable MPFB rig, stationary base; CC0 library motion or authored staff attack.
+- Published d-rig-poses: CYCLES CPU, 256 px, 8 samples; not GPU approval.
+- Published e-idle-strip: CYCLES CPU, 256 px, 8 samples; not GPU approval.
+- Published e-move-strip: CYCLES CPU, 256 px, 8 samples; not GPU approval.
+- Published e-attack-strip: CYCLES CPU, 256 px, 8 samples; not GPU approval.
+- Published e-hit-strip: CYCLES CPU, 256 px, 8 samples; not GPU approval.
+- Published e-death-strip: CYCLES CPU, 256 px, 8 samples; not GPU approval.
+- Saved 3D audit passed: source hashes, 53 bones, actual motion, exact loop closing keys and held death; ground/bounds recorded; collision limits explicit.
+- Saved move: 8 frames at 6 fps, editable MPFB rig, stationary base; CC0 library motion or authored staff attack.
+- Published e-move-strip: CYCLES CPU, 256 px, 8 samples; not GPU approval.
