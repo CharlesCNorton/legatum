@@ -34,3 +34,8 @@ Round 2 technical: CPU512/12 with 256 copies; 40 samples at 8/8/10/4/10; trimmed
 Round 2 verdict: 256px color/base are substantially closer but hull underside, struts, rotor silhouettes and fill seams still differ; 64px same unit, not indistinguishable. Silhouette IoU whole .7322->.8060, drones .6022->.6609, base .8766->.9675. No PASS marker. GPU handoff executable: ROUND=2 tools/art/anim3d/units/drone-swarm/gpu.sh. Browser art gate blocked by Chromium macOS MachPort Permission denied (1100).
 Final checks: 8 Python files parse, both shell scripts pass bash -n, gpu.sh is executable, git diff --check passes, four delivery regression tests pass, geometry audit passes, and FFprobe movie verification passes. The generic gate ran against committed HEAD (not uncommitted round-2 edits) and flagged old compact matrix @ syntax as email addresses; current unit scripts use spaced operators. Browser art gate remains blocked by MachPort permission.
 Commit attempted with required coauthor, but git add failed creating .git/worktrees/lane-1/index.lock: Operation not permitted. All round-2 changes are left uncommitted for the runner; no push or PR. origin/master already contained in this branch (0 missing commits).
+b: 3 frames at 256/64 from 512px CYCLES/GPU, 96 samples.
+c: 1 frames at 256/64 from 512px CYCLES/GPU, 96 samples.
+d: 4 frames at 256/64 from 512px CYCLES/GPU, 96 samples.
+e-idle: 8 frames at 256/64 from 512px CYCLES/GPU, 96 samples.
+e-move: 8 frames at 256/64 from 512px CYCLES/GPU, 96 samples.

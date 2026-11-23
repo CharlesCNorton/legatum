@@ -66,3 +66,8 @@
 - Emitted e-attack: 10 frames, 512 px CYCLES/GPU, 64 samples.
 - Emitted e-hit: 4 frames, 512 px CYCLES/GPU, 64 samples.
 - Emitted e-death: 10 frames, 512 px CYCLES/GPU, 64 samples.
+
+# Driver round 2 after round-1 GPU review — 2026-11-23
+- Opened GPU c, split/crossfade, all five e strips and eight sampled movie frames before editing. GPU round1 succeeded: 40 samples, Q85, 199170 bytes, 512 px Cycles/Metal64; archived supplied evidence in masters/cuirassier/driver-r1-gpu.
+- Honest critique at 256 px: rider armour retains good painted detail, but head is broad/short, neck and shoulder contain patchy projection holes, hind legs are too splayed and one hoof is absent behind the rider, tail looks like a slab, and the stone is too uniform. At 64 px mounted pistol identity survives but the stance, head and base visibly differ. Death is visibly propped up on limbs with no convincing body contact; hit exposes paint discontinuities. No PASS.
+- Read all local PLAYBOOK chapters, complete FEEDBACK and prior log; cuirassier-FEEDBACK.md absent. Loaded all six Sam Blender skills: full-depth modeling/camera fit, material projection and generated fills, product light/grade, sampled source motion and render-sequence verification. New feedback 23 also requires source-driven rider motion and front/top foot-cycle review.
