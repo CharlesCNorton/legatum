@@ -1,6 +1,7 @@
 """Independently reopen saved clips and verify evaluated geometry, not build claims."""
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 
@@ -34,6 +35,16 @@ for clip, count in COUNTS.items():
             bottom = min((evaluated.matrix_world @ v.co).z for v in evaluated.data.vertices)
             assert abs(bottom - .13) < .002, (clip, index, 'wheel contact', bottom)
             contacts.append(bottom)
+            wheel=bpy.data.objects[f'RIG-wheel {sign}']
+            inverse=wheel.matrix_world.inverted()
+            rim_radius=max(math.hypot(q.x,q.z) for v in evaluated.data.vertices
+                           for q in [inverse@(evaluated.matrix_world@v.co)])
+            for part in wheel.children:
+                if not any(k in part.name for k in ['Dished wheel spoke','Spoke socket']):
+                    continue
+                radius=max(math.hypot(q.x,q.z) for v in part.data.vertices
+                           for q in [inverse@(part.matrix_world@v.co)])
+                assert radius <= rim_radius+.001, (clip,index,part.name,'spoke outside rim',radius,rim_radius)
         assert all(min(abs(value) for value in obj.scale) > .001
                    for obj in scene.objects if obj.type == 'MESH')
         frames.append({'frame': index + 1, 'wheel_bottom_z': contacts})
@@ -56,6 +67,6 @@ for clip, count in COUNTS.items():
 for path in sorted((MASTER / 'textures').glob('*.png')):
     report['bakes'][path.name] = hashlib.sha256(path.read_bytes()).hexdigest()
 assert len(report['bakes']) == 6, 'expected three AO and three curvature maps'
-report['status'] = 'PASS: reopened geometry, 40 contacts, fixed base, nondegenerate scales, cyclic closure, held death and six baked maps'
+report['status'] = 'PASS: reopened geometry, 40 contacts, spoke envelopes, fixed base, nondegenerate scales, cyclic closure, held death and six baked maps'
 (MASTER / 'geometry-audit.json').write_text(json.dumps(report, indent=2) + '\n')
 print(report['status'])

@@ -107,7 +107,7 @@ tools/art/anim3d/render.sh audit
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
 
-## Siege chapter — howitzer, round 1
+## Siege chapter — howitzer, round 2
 
 The howitzer painting depicts a gun with no crew. Use a rigid mechanical hierarchy
 instead of adding people absent from its composition. This unit's isolated scripts
@@ -131,14 +131,21 @@ thickness, bright edges, bolts, hollow muzzle and actual AO/curvature bakes;
 (4) measure the painting/rest opaque-subject RGB mean and spread, then freeze one
 bounded grade for all frames. Standard/None preserves painted pigment already
 containing light; this is not the photographic default. Non-camera rays retain the
-physical shader. Spokes use physical worn-metal fill because projected spoke lines
-otherwise double. Camera/geometry registration remains approximate.
+physical shader. Round 2 fits the solid beveled spokes to source endpoints by intersecting camera
+rays with their physical dish planes and constraining their radial extent.
+All rotating wheel parts use continuous source-metal swatch paint: the source
+wheel occlusions otherwise rotate into visible patchwork. Fixed gun surfaces
+keep the frozen painting UVs. Hidden faces use the generated paint fill. Ray tests must
+exclude hide_render geometry, or invisible braces incorrectly erase source pigment.
+Camera/geometry registration remains approximate, especially around hubs.
 
 The common stone target is warm cream **#E9CFA0**, with a darker warm rim and fine
 grain. Convert sRGB pigment to linear shader values (approximately .815/.624/.352)
 before lighting; do not pass those byte-normalized sRGB values as linear. Review
-actual rendered colour after grade. Do not project stationary source wheel shadows
-onto the disc: contact shading must follow the gun. At every round write
+actual rendered colour after grade. A separate warm-pigment source mask can texture the disc, excluding gun pixels
+and dark stationary wheel shadows; contact shading must follow the gun. Grain
+must feed the camera-visible pigment branch as well as the physical shader, or
+the emitted stone will remain flat despite having a noise node. At every round write
 `howitzer-f-restpose-compare.png`: painting, rest render and 50/50 crossfade at
 256 and 64px. The target remains hard-to-distinguish painting parity, not merely a
 technically valid atlas. No automatic PASS marker.
@@ -161,7 +168,7 @@ asset; its actual top/front move renders document wheel contact instead.
 Complete host handoff (executable, no arguments, from repo root):
 
 ```sh
-ROUND=1 tools/art/anim3d/units/howitzer/gpu.sh
+ROUND=2 tools/art/anim3d/units/howitzer/gpu.sh
 ```
 
 The script explicitly requires Metal Cycles, rebuilds/bakes and renders every
@@ -196,3 +203,39 @@ carriage/trail and stone still differ from the painting. Never infer GPU success
 from the actual CPU512 preview set. Rendering-script hashes protect frames;
 postprocessing versions have separate delivery/check receipts so a packing change
 does not falsely invalidate or claim a new render of otherwise unchanged masters.
+
+### Howitzer round-two GPU review follow-up
+
+The supplied round-one GPU pass succeeded (187,034 bytes, Q75), but failed the
+visual bar: smooth narrow rims/wire spokes, a flat ochre disc and mismatched
+lower carriage. Evidence is retained in `masters/howitzer/driver-r1-gpu/`.
+Round two adds deeper broad rolled rims, 96 solid rim rivets, beveled rectangular
+spokes and sockets, local wheel-plane landmark fitting, generated hidden paint,
+masked source stone pigment, and grain in the actual camera-visible shader.
+The trail moves toward its painted footprint and the solid flash is less saturated.
+No cloth or human/animal motion is applicable to this uncrewed painting.
+
+`prepare.py` checks the source/fill SHA256 pins before build. The GPU entry point
+now tees its transcript to the driver's log as well as its own log; round one's
+redirect had left the supplied driver log empty despite a successful receipt.
+The GPU handoff still rebuilds every stage and refuses CPU evidence. Geometry,
+40 frames, trimmed delivery, video and fresh visual comparison must be rechecked;
+these improvements do not authorize a PASS marker by themselves.
+
+Source landmarks must also obey the mechanism: a spoke endpoint inferred by
+camera-ray/plane intersection may sit outside the real circular rim, because the
+painted outline includes tread thickness and perspective. Round two's move audit
+caught exactly that (rim z=.243 instead of .13). Clamp the radial extent to the
+physical rim and test all angles, including the non-exported loop closure.
+Build-time and independent saved-clip audits now check each spoke/socket envelope;
+this is necessary even when the rest-pose comparison looks closer.
+
+Do not judge wheel projection only at rest. Even with correct geometry, the
+painting's occluded regions become revolving patches. The final round-two wheels
+retain object-space source-metal swatch paint and physical lighting; source projection stays
+on the fixed gun. A later wheel texture needs completed, occlusion-free painted
+surfaces before reintroducing projection. This is still a painting-parity gap.
+
+Round-two CPU512/8 delivery: **174,700 bytes at Q80**, all 40 frames, independent
+geometry/provenance/trim checks and 240-frame eight-second movie validated.
+Wheel pigment still looks pale/flat and tread banding remains: NOT PASS.

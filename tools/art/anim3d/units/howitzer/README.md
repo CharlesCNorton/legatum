@@ -1,4 +1,4 @@
-# Howitzer animation, round 1
+# Howitzer animation, round 2
 
 True 3D candidate matching the original uncrewed gun: hollow short elevated tube,
 recuperators, thick shield, dished twelve-spoke steel wheels, stepped hubs,
@@ -20,7 +20,7 @@ blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python to
 CPU renders are previews even at 512px. The lead's complete no-argument host pass is:
 
 ```sh
-ROUND=1 tools/art/anim3d/units/howitzer/gpu.sh
+ROUND=2 tools/art/anim3d/units/howitzer/gpu.sh
 ```
 
 It rebuilds and bakes the scene, renders every stage and all 40 clip frames with
@@ -45,25 +45,26 @@ Each clip's `rects` list contains atlas `(x,y,w,h)` and logical `(ox,oy)` offset
 Draw at `(X + (ox-ax)*s, Y + (oy-ay)*s)` for display scale s and anchor (X,Y).
 Do not treat `row` as a fixed grid coordinate. Runtime support remains outside this lane.
 
-Review limitations: camera matching is approximate; the rest view remains visibly
-different from the painting. Spokes deliberately retain real worn-metal material
-to avoid doubled lines from projected spokes. Hidden sides use generated fill;
-the base has live contact shading rather than frozen source wheel shadows.
-Fresh host GPU output needs visual review. Do not infer art approval from validation.
+Round-two changes: deeper rolled rims, 96 solid rim rivets, beveled spokes and
+sockets fitted to source landmarks and constrained inside physical wheel radii,
+continuous source-metal swatch wheel pigment, generated paint on unseen faces, masked source stone pigment and
+camera-visible grain. Projection occluders now exclude hidden geometry. Original
+input hashes are checked before every build. GPU logs also reach the driver.
 
-Round-one verified delivery: **188,042 bytes at Q80**, 1329x700 atlas, all 40 frames.
-Delivery alpha uses 32 levels, as in the shared pipeline; 512/256 masters keep full
-alpha. Every decoded quantized mask reconstructs exactly. The saved-clip audit
-passes all 40 wheel contacts, loop closure, stationary base, nondegenerate meshes,
-held death and six baked maps. MP4: 240 frames, eight seconds, H.264/yuv420p,
-1600x348. Python/shell syntax and stale-grade/model/CPU-as-GPU rejection checks pass.
-Postprocessing scripts are versioned separately from the render inputs; changing
-the packer does not claim that the unchanged Blender frames were re-rendered.
+The supplied round-one GPU pass succeeded: **187,034 bytes at Q75**, actual
+512px/64-sample Metal masters, all forty frames and eight-second H.264 movie.
+That evidence is preserved in external `masters/howitzer/driver-r1-gpu/`.
+Round-two CPU preview and validation results are recorded in the running
+`review/3d-v2/howitzer-log.md`; CPU output is never GPU evidence.
 
-Art verdict: not PASS. At 256px the wheels are too clean/flat, the lower carriage
-and trail differ, and the cream base lacks the painting's subtle surface richness.
-At 64px the howitzer identity is clear, but it is distinguishable from the painting.
-Rest silhouette IoU .827851 and opaque-overlap RGB MAE 30.0975 are diagnostic only.
-GPU64 rendering has not run in the sandbox. Current masters are real CPU512/8,
-not final GPU evidence. Git index.lock is denied; runner must commit using the
-message saved in external masters/howitzer/commit-message.txt.
+Art verdict: not PASS. The wider finished rims and cream stone are closer, and
+64px identity remains clear. Hub/spoke registration, the lower carriage and trail,
+and some bright/dark boundaries still differ at 256px. There is no painting-parity
+claim and no PASS marker. Camera matching remains approximate. Fresh GPU output
+needs visual review before acceptance.
+
+Final round-two CPU checks: 512px/8 samples, all 40 frames; independent saved-clip
+audit (including spoke envelopes), provenance and trim reconstruction pass. Atlas
+**174,700 bytes at Q80**; H.264/yuv420p, 1600x348, 240 frames, eight seconds.
+Stale model, altered grade and CPU-as-GPU rejection checks pass. Wheel pigment
+remains pale/flat with tread banding; no PASS. GPU round two remains pending.

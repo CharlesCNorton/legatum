@@ -84,7 +84,7 @@ cube('Axle saddle',(.32,0,.61),(.28,.48,.21),olive,root)
 wheels=[]
 for sign in [-1,1]:
  y=sign*.66;c=Vector((.32,y,.66));w=empty('wheel '+str(sign),c,root);wheels.append(w)
- profile=[(-.065,.475),(-.065,.53),(.065,.53),(.065,.475)]
+ profile=[(-.095,.452),(-.095,.53),(.095,.53),(.095,.452)]
  v=[];f=[]
  for off,r in profile:
   for j in range(96):
@@ -92,15 +92,20 @@ for sign in [-1,1]:
  for k in range(4):
   for j in range(96):f.append((k*96+j,k*96+(j+1)%96,((k+1)%4)*96+(j+1)%96,((k+1)%4)*96+j))
  bevel(mesh('Rolled steel wheel rim '+str(sign),v,f,wheelpaint,w,True),.004)
- for side in [-1,1]:ring('Polished wheel lip',c+Vector((0,side*.062,0)),.515,.009,edge,w)
+ for side in [-1,1]:ring('Polished wheel lip',c+Vector((0,side*.093,0)),.520,.006,edge,w)
  for j in range(12):
-  a=2*pi*j/12
+  a=2*pi*j/12+.10
   inner=c+Vector((.075*cos(a),sign*.10,.075*sin(a)))
   outer=c+Vector((.484*cos(a),0,.484*sin(a)))
-  rod('Dished wheel spoke',inner,outer,.021,wheelpaint,w,r2=.015,verts=12)
-  rod('Spoke socket',c+Vector((.432*cos(a),.005,.432*sin(a))),outer,.025,edge,w,verts=12)
- rod('Deep stepped hub',c+Vector((0,-.10,0)),c+Vector((0,.10,0)),.087,wheelpaint,w)
- rod('Axle hub cap',c+Vector((0,sign*.10,0)),c+Vector((0,sign*.145,0)),.057,edge,w)
+  beam('Dished wheel spoke',inner,outer,.036,.036,wheelpaint,w)
+  beam('Spoke socket',c+Vector((.418*cos(a),.005,.418*sin(a))),outer,.044,.045,edge,w)
+ for j in range(24):
+  a=2*pi*j/24+.10
+  for side in [-1,1]:
+   at=c+Vector((.494*cos(a),side*.098,.494*sin(a)))
+   rod('Wheel rim rivet',at,at+Vector((0,side*.010,0)),.009,edge,w,verts=8)
+ rod('Deep stepped hub',c+Vector((0,-.10,0)),c+Vector((0,.10,0)),.102,wheelpaint,w)
+ rod('Axle hub cap',c+Vector((0,sign*.10,0)),c+Vector((0,sign*.12,0)),.057,edge,w)
  for j in range(6):
   a=2*pi*j/6;pos=c+Vector((.066*cos(a),sign*.105,.066*sin(a)))
   rod('Hub bolt',pos,pos+Vector((0,sign*.015,0)),.010,steel,w,verts=6)
@@ -195,11 +200,11 @@ for name in assignments:
  if o!=base:
   for i in range(len(o.data.materials)):o.data.materials[i]=plain
 save('howitzer-plain.blend');render(M/'renders/b-plain.png');review('b-plain');log('Published b-plain CPU/GPU geometry stage before texture work.')
-hero_location=cam.location.copy();hero_rotation=cam.rotation_euler.copy()
+hero_location=cam.location.copy();hero_rotation=cam.rotation_euler.copy();hero_scale=cam.data.ortho_scale
 for view,location in [('side',(0,-8,3.0)),('front',(8,0,3.0))]:
- cam.location=location;cam.rotation_euler=(Vector((0,0,.91))-cam.location).to_track_quat('-Z','Y').to_euler()
+ cam.location=location;cam.rotation_euler=(Vector((0,0,.91))-cam.location).to_track_quat('-Z','Y').to_euler();cam.data.ortho_scale=3.5
  render(M/'renders'/f'b-{view}.png')
-cam.location=hero_location;cam.rotation_euler=hero_rotation
+cam.location=hero_location;cam.rotation_euler=hero_rotation;cam.data.ortho_scale=hero_scale
 review('b-plain')
 for name,mats in assignments.items():
  for i,m in enumerate(mats):bpy.data.objects[name].data.materials[i]=m
@@ -210,16 +215,39 @@ for m in [olive,edge,rubber,stone,wheelpaint]:
  tc=n.new('ShaderNodeTexCoord');noise=n.new('ShaderNodeTexNoise');noise.inputs['Scale'].default_value=95;noise.inputs['Detail'].default_value=3;l.new(tc.outputs['Generated'],noise.inputs['Vector'])
  bump=n.new('ShaderNodeBump');bump.inputs['Strength'].default_value=.18;bump.inputs['Distance'].default_value=.0015;l.new(noise.outputs['Fac'],bump.inputs['Height']);l.new(bump.outputs[0],s.inputs['Normal'])
  ramp=n.new('ShaderNodeValToRGB');ramp.color_ramp.elements[0].color=tuple(c*.7 for c in color[:3])+(1,);ramp.color_ramp.elements[1].color=tuple(min(1,c*1.13) for c in color[:3])+(1,);l.new(noise.outputs['Fac'],ramp.inputs[0]);source=ramp.outputs[0]
- if m==olive:
-  tex=n.new('ShaderNodeTexImage');tex.image=fill;tex.projection='BOX';tex.projection_blend=.25;l.new(tc.outputs['Generated'],tex.inputs['Vector']);hue=n.new('ShaderNodeHueSaturation');hue.inputs['Saturation'].default_value=.20;hue.inputs['Value'].default_value=1.03;l.new(tex.outputs['Color'],hue.inputs['Color']);source=hue.outputs['Color']
+ if m in [olive,wheelpaint,edge]:
+  tex=n.new('ShaderNodeTexImage');tex.image=fill;tex.projection='BOX';tex.projection_blend=.25;l.new(tc.outputs['Generated'],tex.inputs['Vector']);hue=n.new('ShaderNodeHueSaturation');hue.inputs['Saturation'].default_value=.20;hue.inputs['Value'].default_value=1.03 if m==olive else 3.2 if m==wheelpaint else 1.8;l.new(tex.outputs['Color'],hue.inputs['Color']);source=hue.outputs['Color']
  ao=n.new('ShaderNodeAmbientOcclusion');ao.inputs['Distance'].default_value=.09
  mix=n.new('ShaderNodeMixRGB');mix.blend_type='MULTIPLY';mix.inputs[0].default_value=.32;l.new(source,mix.inputs[1]);l.new(ao.outputs['Color'],mix.inputs[2]);l.new(mix.outputs[0],s.inputs['Base Color'])
+# Continuous paint on moving parts: a clean source-metal swatch supplies the
+# visible wheel pigment; the generated fill remains on other unseen surfaces.
+# Its brushwork follows the object; camera pigment avoids relighting baked paint twice.
+wheel_source=bpy.data.images.load(str(A/'projection.png'));wheel_source.pack()
+for m in [wheelpaint,edge]:
+ n=m.node_tree.nodes;l=m.node_tree.links;physical=n.get('Principled BSDF');out=n.get('Material Output')
+ tex=next(v for v in n if v.type=='TEX_IMAGE')
+ if m==wheelpaint:
+  # Sample an unoccluded patch of the shield's original painted metal. This is
+  # ordinary object-space material mapping, never a projected hole/other part.
+  tex.image=wheel_source;tex.projection='FLAT'
+  tc=n.new('ShaderNodeTexCoord');sep=n.new('ShaderNodeSeparateXYZ');combine=n.new('ShaderNodeCombineXYZ');mapping=n.new('ShaderNodeVectorMath');mapping.operation='MULTIPLY_ADD';mapping.inputs[1].default_value=(.10,.055,0);mapping.inputs[2].default_value=(.39,.68,0)
+  l.new(tc.outputs['Generated'],sep.inputs[0]);l.new(sep.outputs['X'],combine.inputs['X']);l.new(sep.outputs['Z'],combine.inputs['Y']);l.new(combine.outputs[0],mapping.inputs[0]);l.new(mapping.outputs[0],tex.inputs['Vector'])
+  physical_hue=next(v for v in n if v.type=='HUE_SAT');physical_hue.inputs['Saturation'].default_value=1;physical_hue.inputs['Value'].default_value=.8
+ hue=n.new('ShaderNodeHueSaturation');hue.inputs['Saturation'].default_value=1 if m==wheelpaint else .35;hue.inputs['Value'].default_value=.9 if m==wheelpaint else 3.8;l.new(tex.outputs['Color'],hue.inputs['Color'])
+ geom=n.new('ShaderNodeNewGeometry');wear=n.new('ShaderNodeValToRGB');wear.color_ramp.elements[0].position=.47;wear.color_ramp.elements[0].color=(.48,.45,.40,1);wear.color_ramp.elements[1].position=.53;wear.color_ramp.elements[1].color=(1,1,1,1);l.new(geom.outputs['Pointiness'],wear.inputs[0])
+ patina=n.new('ShaderNodeMixRGB');patina.blend_type='MULTIPLY';patina.inputs[0].default_value=.50;l.new(hue.outputs['Color'],patina.inputs[1]);l.new(wear.outputs['Color'],patina.inputs[2])
+ ao=n.new('ShaderNodeAmbientOcclusion');ao.inputs['Distance'].default_value=.07;contact=n.new('ShaderNodeMixRGB');contact.blend_type='MULTIPLY';contact.inputs[0].default_value=.30;l.new(patina.outputs[0],contact.inputs[1]);l.new(ao.outputs['Color'],contact.inputs[2])
+ pigment=n.new('ShaderNodeBsdfPrincipled');pigment.inputs['Base Color'].default_value=(0,0,0,1);pigment.inputs['Specular IOR Level'].default_value=0;pigment.inputs['Emission Strength'].default_value=1;l.new(contact.outputs[0],pigment.inputs['Emission Color'])
+ ray=n.new('ShaderNodeLightPath');weight=n.new('ShaderNodeMath');weight.operation='MULTIPLY';weight.inputs[1].default_value=.55 if m==wheelpaint else .65;l.new(ray.outputs['Is Camera Ray'],weight.inputs[0]);mix=n.new('ShaderNodeMixShader');l.new(weight.outputs[0],mix.inputs[0]);l.new(physical.outputs[0],mix.inputs[1]);l.new(pigment.outputs[0],mix.inputs[2]);l.new(mix.outputs[0],out.inputs['Surface'])
 # Warm stone pigment is camera-only, so real product lights still cast contact shadows.
 n=stone.node_tree.nodes;l=stone.node_tree.links;s=n.get('Principled BSDF')
 g=n.new('ShaderNodeNewGeometry');sep=n.new('ShaderNodeSeparateXYZ');l.new(g.outputs['Normal'],sep.inputs[0])
 ramp=n.new('ShaderNodeValToRGB');ramp.color_ramp.elements[0].position=.15;ramp.color_ramp.elements[0].color=(.56,.35,.17,1);ramp.color_ramp.elements[1].position=.8;ramp.color_ramp.elements[1].color=(.81,.62,.35,1);l.new(sep.outputs['Z'],ramp.inputs[0])
 pigment=n.new('ShaderNodeBsdfPrincipled');pigment.inputs['Base Color'].default_value=(0,0,0,1);pigment.inputs['Specular IOR Level'].default_value=0;ao=n.new('ShaderNodeAmbientOcclusion');ao.inputs['Distance'].default_value=.12
 contact=n.new('ShaderNodeMixRGB');contact.blend_type='MULTIPLY';contact.inputs[0].default_value=.32;l.new(ramp.outputs['Color'],contact.inputs[1]);l.new(ao.outputs['Color'],contact.inputs[2]);l.new(contact.outputs[0],pigment.inputs['Emission Color']);pigment.inputs['Emission Strength'].default_value=1
+stonegrain=n.new('ShaderNodeTexNoise');stonegrain.inputs['Scale'].default_value=130;stonegrain.inputs['Detail'].default_value=3
+stoneramp=n.new('ShaderNodeValToRGB');stoneramp.color_ramp.elements[0].color=(.82,.82,.82,1);stoneramp.color_ramp.elements[1].color=(1,1,1,1);l.new(stonegrain.outputs['Fac'],stoneramp.inputs[0])
+grained=n.new('ShaderNodeMixRGB');grained.blend_type='MULTIPLY';grained.inputs[0].default_value=1;l.new(contact.outputs[0],grained.inputs[1]);l.new(stoneramp.outputs[0],grained.inputs[2]);l.new(grained.outputs[0],pigment.inputs['Emission Color'])
 ray=n.new('ShaderNodeLightPath');weight=n.new('ShaderNodeMath');weight.operation='MULTIPLY';weight.inputs[1].default_value=.72;l.new(ray.outputs['Is Camera Ray'],weight.inputs[0])
 mix=n.new('ShaderNodeMixShader');l.new(weight.outputs[0],mix.inputs[0]);l.new(s.outputs[0],mix.inputs[1]);l.new(pigment.outputs[0],mix.inputs[2]);l.new(mix.outputs[0],n.get('Material Output').inputs['Surface'])
 # Genuine surface bakes supplement shader contact AO and physical worn edges.
@@ -238,8 +266,8 @@ if MODE=='stills':sys.exit(0)
 axle=bpy.data.objects['GEO-Axle']
 controls=[root,pivot,recoil,*wheels,*trails,axle];neutral={o.name:(o.location.copy(),o.rotation_euler.copy()) for o in controls}
 # Small solid flash, hidden with visibility rather than degenerate scale.
-flashmat=mat('Muzzle flash warm core',(1,.35,.025),0,.6);s=flashmat.node_tree.nodes.get('Principled BSDF');s.inputs['Emission Color'].default_value=(1,.35,.02,1);s.inputs['Emission Strength'].default_value=3
-flash=rod('Muzzle flash',recoil.matrix_world@Vector((1.35,0,0)),recoil.matrix_world@Vector((1.48,0,0)),.075,flashmat,recoil,r2=.008);flash.hide_render=True
+flashmat=mat('Muzzle flash warm core',(1,.35,.025),0,.6);s=flashmat.node_tree.nodes.get('Principled BSDF');s.inputs['Emission Color'].default_value=(1,.65,.25,1);s.inputs['Emission Strength'].default_value=1.5
+flash=rod('Muzzle flash',recoil.matrix_world@Vector((1.35,0,0)),recoil.matrix_world@Vector((1.54,0,0)),.05,flashmat,recoil,r2=.008);flash.hide_render=True
 
 ground_audit=[]
 def pose(clip,i,n):

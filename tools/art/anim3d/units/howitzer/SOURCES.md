@@ -5,3 +5,11 @@
 - Original full-depth howitzer meshes, mechanical hierarchy, five authored mechanical clips, materials, AO/curvature bakes and projection: MIT scripts; rendered art CC BY 4.0. Adapted pipeline helpers from `astra/unit-anim-3d-artillery`; reviewed newer `astra/unit-anim-3d-siege` and `astra/unit-anim-3d-vehicles` chapters, especially finished-surface projection and spoke exclusions.
 - Blender 5.3.0 (`02f0899d78e3`), GPL software; Pillow 13.0.0, HPND; FFmpeg/libx264 installed by the shared pipeline. No software or source model is redistributed here.
 - This painting depicts an uncrewed gun. There are no humans, animals or feet to retarget. Motion is rigid mechanical recoil/elevation and local-axis wheel rolling; actual top/front move views document wheel contact. No Mixamo or other motion asset was used.
+
+## Driver round 2
+
+Reuses the unchanged original painting and generated olive fill above; no new
+asset or image service. Original deeper rim/spoke/rivet geometry, physical
+wheel-plane landmark fitting, hidden-geometry exclusion, masked stone pigment
+and camera-visible grain are MIT scripts / CC BY 4.0 renders. Prior GPU evidence
+is preserved in external `masters/howitzer/driver-r1-gpu/`.

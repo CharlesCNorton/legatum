@@ -11,7 +11,7 @@ def refine(scene, camera, wheels, base, folder):
     report = {}
     # Both complete wheels stay round, with real tread/hubs and local rolling axes.
     # The painting includes modest perspective; physical mounting yaw accommodates it.
-    for wheel, target, size, yaw in zip(wheels, [(106, 159), (209, 153)], [1, 1], [-12, -12]):
+    for wheel, target, size, yaw in zip(wheels, [(107.5, 159), (213, 153)], [1, .96], [-21, -21]):
         center = wheel.matrix_world.translation.copy()
         new_center = center.copy()
         new_center.z = .13 + .53 * size
@@ -31,6 +31,39 @@ def refine(scene, camera, wheels, base, folder):
         bpy.context.view_layer.update()
         p = world_to_camera_view(scene, camera, new_center)
         report[wheel.name] = {'target_px': target, 'actual_px': [p.x*256, (1-p.y)*256], 'radius': .53*size, 'mount_yaw_degrees': yaw}
+    # Register the actual solid spokes, not a painted wheel card. Each endpoint is
+    # intersected with its wheel's physical dish plane; beam width/depth stay real.
+    source_wheels = [
+        ((98,159), [(104,119),(116,125),(122,141),(124,158),(122,177),(115,193),
+                    (104,200),(92,193),(85,179),(82,161),(87,142),(95,127)]),
+        ((207,155), [(211,116),(224,119),(232,135),(235,153),(232,172),(225,188),
+                    (214,193),(203,185),(197,171),(193,153),(197,135),(204,121)])]
+    view = camera.rotation_euler.to_matrix() @ Vector((0,0,1))
+    image_center = camera.location-view*5
+    for wheel,(hub,ends) in zip(wheels,source_wheels):
+        def wheelpoint(pixel,depth):
+            q=image_center+right*(pixel[0]-128)*scale-up*(pixel[1]-128)*scale
+            normal=wheel.matrix_world.to_3x3()@Vector((0,1,0))
+            plane=wheel.matrix_world@Vector((0,depth,0))
+            return q+view*((plane-q).dot(normal)/view.dot(normal))
+        spokes=sorted([o for o in wheel.children if o.name.startswith('GEO-Dished wheel spoke')],key=lambda o:o.name)
+        sockets=sorted([o for o in wheel.children if o.name.startswith('GEO-Spoke socket')],key=lambda o:o.name)
+        for spoke,socket,end in zip(spokes,sockets,ends):
+            start=(hub[0]+(end[0]-hub[0])*.15,hub[1]+(end[1]-hub[1])*.15)
+            a,b=wheelpoint(start,-.10),wheelpoint(end,-.025)
+            # A source silhouette includes tread thickness and perspective. Its
+            # ray/plane intersection is not a safe radius: keep sockets inside
+            # the real circular rim throughout a complete wheel revolution.
+            local=wheel.matrix_world.inverted()@b
+            radial=Vector((local.x,0,local.z)).normalized()
+            radius=.53 if wheel==wheels[0] else .53*.96
+            a=wheel.matrix_world@(radial*.085+Vector((0,-.13,0)))
+            b=wheel.matrix_world@(radial*(radius-.054)+Vector((0,-.025,0)))
+            for obj,first,last in [(spoke,a,b),(socket,a+(b-a)*.88,b)]:
+                length=max(v.co.z for v in obj.data.vertices)-min(v.co.z for v in obj.data.vertices)
+                d=last-first
+                obj.matrix_world=Matrix.Translation((first+last)/2)@d.to_track_quat('Z','Y').to_matrix().to_4x4()@Matrix.Diagonal((1,1,d.length/length,1))
+        bpy.context.view_layer.update()
     # Refit the full solid axle to the registered wheel hubs.
     axle = bpy.data.objects['GEO-Axle']
     a,b = [o.matrix_world.translation.copy() for o in wheels]
@@ -82,7 +115,8 @@ def refine(scene, camera, wheels, base, folder):
         if any(k in o.name for k in ['handwheel','Handwheel']):o.location+=shift
     for trail in [o for o in scene.objects if o.name.startswith('RIG-trail')]:
         # Grounded trail start remains under carriage; align the spade by rotating about it.
-        trail.rotation_euler.z=-.20
+        trail.rotation_euler.z=-.04
+        trail.location.x-=.12
     bpy.context.view_layer.update()
     # Apply all rigid finish before projection: curves and bevels become real vertices.
     for o in list(scene.objects):
@@ -100,4 +134,13 @@ def refine(scene, camera, wheels, base, folder):
             edges=[e for e in bm.edges if e.calc_length()>.12]
             if edges:bmesh.ops.subdivide_edges(bm,edges=edges,cuts=3,use_grid_fill=True)
         bm.to_mesh(o.data);bm.free();o.data.update()
+    # Fail before expensive rendering if fitted spokes can lift the round rim.
+    for wheel in wheels:
+        inverse=wheel.matrix_world.inverted()
+        rim=next(o for o in wheel.children if 'Rolled steel wheel rim' in o.name)
+        radius=max(math.hypot(q.x,q.z) for v in rim.data.vertices for q in [inverse@(rim.matrix_world@v.co)])
+        for obj in wheel.children:
+            if any(k in obj.name for k in ['Dished wheel spoke','Spoke socket']):
+                extent=max(math.hypot(q.x,q.z) for v in obj.data.vertices for q in [inverse@(obj.matrix_world@v.co)])
+                assert extent<=radius+.001,(obj.name,'spoke outside rim',extent,radius)
     (folder/'registration.json').write_text(json.dumps(report,indent=2))

@@ -4,6 +4,9 @@ import os, json, hashlib
 from PIL import Image
 ROOT=Path(os.environ.get('ANIM_ROOT',Path.home()/'LegatumRuns/anim-pilot'))
 A=ROOT/'assets/howitzer'; M=ROOT/'masters/howitzer'; M.mkdir(parents=True,exist_ok=True)
+pins=json.loads((Path(__file__).parent/'assets.lock.json').read_text())
+for name,digest in pins.items():
+ assert hashlib.sha256((A/name).read_bytes()).hexdigest()==digest, 'asset changed: '+name
 source=Image.open(A/'painting-source.png').convert('RGBA')
 # Source archive may carry the original magenta key background.
 pixels=list(source.getdata())
@@ -15,5 +18,9 @@ canvas=Image.new('RGBA',(1024,1024)); canvas.alpha_composite(crop.resize(((b[2]-
 mechanical=canvas.copy()
 mechanical.putdata([(r,g,b,0 if r>165 and g>140 and b>90 and r>g*1.05 else a) for r,g,b,a in canvas.getdata()])
 mechanical.save(A/'machine-projection.png')
+# Only actual warm stone pigment, never gun pixels or frozen wheel shadows.
+stone=canvas.copy()
+stone.putdata([(r,g,b,a if r>185 and g>150 and b>95 and r>g*1.055 and g>b*1.13 and i//1024>710 else 0) for i,(r,g,b,a) in enumerate(canvas.getdata())])
+stone.save(A/'stone-projection.png')
 (M/'inputs.json').write_text(json.dumps({'source_sha256':hashlib.sha256((A/'painting-source.png').read_bytes()).hexdigest(),'painting_bounds_256':b,'projection':'full master fitted to shipped alpha bbox; no mesh replacement','fill_sha256':hashlib.sha256((A/'painted-olive.png').read_bytes()).hexdigest()},indent=2))
 print('Painting bounds',b)
