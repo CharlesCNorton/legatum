@@ -341,3 +341,16 @@ Validation PASS: counts, RGBA, rect bounds, transparent margins, five moving cli
 Encoded and ffprobe-verified autonomous-armour-round2.mp4: 8 s, 240 frames, 1600x348 H.264 yuv420p; decoded trimmed atlas.
 Validation PASS: counts, RGBA, rect bounds, transparent margins, five moving clips, held death, quality and size. Art approval remains separate.
 Driver round 3 initial GPU critique: opened c/f, all five e strips and decoded round2 MP4 frames before edits. GPU r2 succeeded at Cycles GPU96/512, atlas 192282 bytes Q85, verified 8-second H.264 movie; evidence preserved in masters/autonomous-armour/driver-round2-gpu. At 256 the hull/turret pigment is close but near-side tread extends too far forward, wheel centers sit too low, smooth pale wheel rings and dark blank tread faces lose the painting's grime and sculpted highlights; fender outlines double the source edges. Stone is close but uniform in masked areas. At 64 the twin-aerial unmanned identity reads, yet the gear silhouette remains different. Five clips show restrained mechanical movement, no visible clipping; death is a turret/gun failure rather than a destroyed chassis. No PASS. Read all playbook chapters, full log and common feedback 1-23; unit-specific FEEDBACK is absent. Loaded all six Blender skills; prioritize full-depth gear registration, moving pigment/fixed light separation, beveled track detail and guarded GPU delivery; cloth/straps and human mocap do not apply to this unmanned vehicle.
+Prepared full-source projection; read all six Blender skills, vehicle chapter, art skill and standing feedback 12–22.
+Built true 3D hard-surface geometry and rigid rig: 1335 objects; bevels, open muzzle, sensors, six wheels per side, 128 articulated tracks.
+Rendered b: 3 PNGs, 256 px, CYCLES CPU, 8 samples.
+Finished materials: three actual AO/curvature bake pairs, generated unseen paint, 1176 genuine projected meshes; all textures packed.
+Authored idle: 8 output samples at 10 fps; 150 mechanical controls; loop=True.
+Authored move: 8 output samples at 12 fps; 150 mechanical controls; loop=True.
+Authored attack: 10 output samples at 14 fps; 150 mechanical controls; loop=False.
+Authored hit: 4 output samples at 12 fps; 150 mechanical controls; loop=False.
+Authored death: 10 output samples at 10 fps; 150 mechanical controls; loop=False.
+Round 3 construction: replaced the capsule belt with a convex closed wrap around grounded road tyres and raised end sprockets; moved the lower carriage toward the source contact line. Shared solved path length drives five shoe pitches, five road-wheel stud periods and four sprocket tooth periods. Added two beveled raised pads per link and hinge ridge; reused generated unseen olive fill, new generated wheel pigment with twelve-angle de-lighting/periodicity, live AO and retained physical response. A trial perspective fit could not preserve both upper silhouette and lower gear; retained the closer orthographic upper framing rather than claiming an exact physical camera match.
+Rendered c: 1 PNGs, 256 px, CYCLES CPU, 8 samples.
+Published c review immediately; frozen grade 823d620c5772, 256 masters retained.
+Saved-scene audit PASS: current source hashes, 128 track links, 16 wheels, stationary base, nonzero scales, loop closure keys and held death.
