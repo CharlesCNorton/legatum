@@ -58,7 +58,7 @@ def attach(o,bone):
  o.matrix_parent_inverse=o.matrix_world.inverted();o.matrix_basis=w;bpy.context.view_layer.update();return o
 
 def aim(name,direction):
- p=rig.pose.bones[name];q=p.bone.matrix_local.to_quaternion();v=q@Vector((0,1,0));rot=(v.rotation_difference(Vector(direction).normalized())@q).to_matrix().to_4x4();rot.translation=p.head;p.matrix=rot;bpy.context.view_layer.update()
+ p=rig.pose.bones[name];q=p.bone.matrix_local.to_quaternion();v=q @ Vector((0,1,0));rot=(v.rotation_difference(Vector(direction).normalized()) @ q).to_matrix().to_4x4();rot.translation=p.head;p.matrix=rot;bpy.context.view_layer.update()
 
 def limb(upper,lower,target,pole):
  a=rig.pose.bones[upper].head.copy();t=Vector(target);axis=t-a;l1=rig.data.bones[upper].length;l2=rig.data.bones[lower].length;d=min(axis.length,l1+l2-.0001);axis.normalize();along=(l1*l1-l2*l2+d*d)/(2*d);h=max(0,l1*l1-along*along)**.5;side=Vector(pole)-a;side=(side-axis*side.dot(axis)).normalized();elbow=a+axis*along+side*h;aim(upper,elbow-a);aim(lower,t-elbow)
@@ -102,9 +102,9 @@ def P(x,y,depth=0):return CENTER+Vector(((x-128)*SPAN/256,0,0))+UP*((128-y)*SPAN
 def setbone(name,a,b,yaw=0):
  p=rig.pose.bones[name];a=Vector(a);b=Vector(b);direction=b-a
  # Orient long axis exactly along target; preserve anatomical roll with rest matrix.
- q=p.bone.matrix_local.to_quaternion();r=(q@Vector((0,1,0))).rotation_difference(direction.normalized())@q
- if yaw:r=__import__('mathutils').Quaternion(direction.normalized(),yaw)@r
- m=r.to_matrix().to_4x4()@Matrix.Diagonal((1,direction.length/p.bone.length,1,1));m.translation=rig.matrix_world.inverted()@a;p.matrix=m;bpy.context.view_layer.update()
+ q=p.bone.matrix_local.to_quaternion();r=(q @ Vector((0,1,0))).rotation_difference(direction.normalized()) @ q
+ if yaw:r=__import__('mathutils').Quaternion(direction.normalized(),yaw) @ r
+ m=r.to_matrix().to_4x4() @ Matrix.Diagonal((1,direction.length/p.bone.length,1,1));m.translation=rig.matrix_world.inverted() @ a;p.matrix=m;bpy.context.view_layer.update()
 
 def ribbon(name,points,width,ma,bone):
  vs=[]
@@ -158,18 +158,18 @@ def build():
   attach(bevel(solid(mesh(label,vs,fs,ma),.006),.002),'spine_02')
  # Sleeves gathered at elbows; forearms and hands remain true MPFB skin.
  for side in ('r','l'):
-  p=rig.pose.bones['upperarm_'+side];a=rig.matrix_world@p.head;b=rig.matrix_world@p.tail
+  p=rig.pose.bones['upperarm_'+side];a=rig.matrix_world @ p.head;b=rig.matrix_world @ p.tail
   tube('billowing ivory sleeve '+side,a,b+(b-a)*.08,(.085,.075,.036),linen,'upperarm_'+side)
   tube('rolled sleeve cuff '+side,b-(b-a)*.12,b+(b-a)*.12,(.083,.080,.012),linen,'upperarm_'+side)
-  p=rig.pose.bones['thigh_'+side];a=rig.matrix_world@p.head;b=rig.matrix_world@p.tail
+  p=rig.pose.bones['thigh_'+side];a=rig.matrix_world @ p.head;b=rig.matrix_world @ p.tail
   tube('patched breeches '+side,a,b,(.115,.086,.020),buff,'thigh_'+side)
-  p=rig.pose.bones['calf_'+side];a=rig.matrix_world@p.head;b=rig.matrix_world@p.tail
+  p=rig.pose.bones['calf_'+side];a=rig.matrix_world @ p.head;b=rig.matrix_world @ p.tail
   tube('dark gaiter '+side,a,b,(.079,.047,.012),pants,'calf_'+side)
   # Visible patches and stitch loops, kept on their anatomical segment.
   for t in (.28,.65):
    center=a.lerp(b,t)+Vector((0,-.065,0));patchvs=[center+Vector((x,-.003,z)) for x,z in [(-.035,-.034),(.033,-.028),(.038,.025),(-.026,.035)]]
    attach(bevel(solid(mesh('stitched gaiter patch '+side,patchvs,[(0,1,2,3)],leather),.004),.002),'calf_'+side)
-  ankle=rig.matrix_world@rig.pose.bones['foot_'+side].head
+  ankle=rig.matrix_world @ rig.pose.bones['foot_'+side].head
   loc=P(137,199,.24) if side=='l' else P(38,191,.40)
   attach(sphere('leather boot '+side,loc,(.09,.11,.052),leather),'foot_'+side)
   for t in (.60,.73,.86):
@@ -291,11 +291,11 @@ def project():
   if o.type!='MESH' or any(x in o.name for x in ('muzzle','eyes','stationary cream base')):continue
   ev=o.evaluated_get(dg);me=ev.to_mesh();assert len(me.vertices)==len(o.data.vertices)
   uv=o.data.uv_layers.get('Painting') or o.data.uv_layers.new(name='Painting');col=o.data.color_attributes.new(name='Projection facing',type='FLOAT_COLOR',domain='CORNER')
-  coords=[world_to_camera_view(sc,cam,ev.matrix_world@v.co) for v in me.vertices]
+  coords=[world_to_camera_view(sc,cam,ev.matrix_world @ v.co) for v in me.vertices]
   normalmat=ev.matrix_world.to_3x3().inverted().transposed();facing=[]
   for vertex in me.vertices:
-   world=ev.matrix_world@vertex.co;direction=(cam.location-world).normalized()
-   f=max(0,min(1,((normalmat@vertex.normal).normalized().dot(direction)+.01)/.14))
+   world=ev.matrix_world @ vertex.co;direction=(cam.location-world).normalized()
+   f=max(0,min(1,((normalmat @ vertex.normal).normalized().dot(direction)+.01)/.14))
    if f:
     # Reject paint from a different visible surface at this camera pixel.
     hit,loc,_,_,hitobj,_=sc.ray_cast(dg,world+direction*.001,direction,distance=8)
@@ -347,19 +347,19 @@ def animate(clip):
  source0=motion.sample(clip,0) if motion else None
  count,fps,loop=CLIPS[clip];sc.render.fps=fps;sc.frame_start=1;sc.frame_end=count
  rest={p.name:p.matrix_basis.copy() for p in rig.pose.bones};restworld={p.name:p.matrix.copy() for p in rig.pose.bones};gunrest=gun.matrix_basis.copy();rigrest=rig.matrix_world.copy()
- grip=gun.matrix_world.inverted()@rig.pose.bones['hand_l'].matrix
+ grip=gun.matrix_world.inverted() @ rig.pose.bones['hand_l'].matrix
  cloth=[o for o in sc.objects if any(word in o.name for word in ('ragged coat tail','torn sash ribbon'))]
  if clip=='death':
   for obj in cloth:obj.shape_key_add(name='Basis')
  for p in rig.pose.bones:p.rotation_mode='QUATERNION'
  def constrain_grip():
-  target_matrix=gun.matrix_world@grip;target=target_matrix.translation;a=rig.pose.bones['upperarm_l'].head.copy()
+  target_matrix=gun.matrix_world @ grip;target=target_matrix.translation;a=rig.pose.bones['upperarm_l'].head.copy()
   l1=(restworld['lowerarm_l'].translation-restworld['upperarm_l'].translation).length;l2=(restworld['hand_l'].translation-restworld['lowerarm_l'].translation).length
   axis=target-a;distance=min(axis.length,l1+l2-.00001);axis.normalize();along=(l1*l1-l2*l2+distance*distance)/(2*distance)
   pole=rig.pose.bones['lowerarm_l'].head-a;side=(pole-axis*pole.dot(axis)).normalized();elbow=a+along*axis+max(0,l1*l1-along*along)**.5*side
   setbone('upperarm_l',a,elbow);setbone('lowerarm_l',elbow,target);rig.pose.bones['hand_l'].matrix=target_matrix;bpy.context.view_layer.update()
  def turn(name,axis,angle):
-  p=rig.pose.bones[name];m=p.matrix.copy();pos=m.translation.copy();m=Matrix.Rotation(angle,4,axis)@m;m.translation=pos;p.matrix=m;bpy.context.view_layer.update()
+  p=rig.pose.bones[name];m=p.matrix.copy();pos=m.translation.copy();m=Matrix.Rotation(angle,4,axis) @ m;m.translation=pos;p.matrix=m;bpy.context.view_layer.update()
  for i in range(count+(1 if loop else 0)):
   frame=i+1;t=i/count if loop else min(i/(count-2),1);wave=sin(2*pi*t)
   rig.matrix_world=rigrest;gun.matrix_basis=gunrest
@@ -372,14 +372,14 @@ def animate(clip):
    for name,source_name in MAP.items():
     if name=='pelvis':continue
     if clip in ('idle','move','hit') and name.startswith(('thigh','calf','foot','ball')):continue
-    delta=source[source_name].to_quaternion()@source0[source_name].to_quaternion().inverted()
+    delta=source[source_name].to_quaternion() @ source0[source_name].to_quaternion().inverted()
     if clip!='death':
-     hipdelta=source['DEF-hips'].to_quaternion()@source0['DEF-hips'].to_quaternion().inverted()
-     delta=hipdelta.inverted()@delta
+     hipdelta=source['DEF-hips'].to_quaternion() @ source0['DEF-hips'].to_quaternion().inverted()
+     delta=hipdelta.inverted() @ delta
     if clip=='death':
-     hipdelta=source['DEF-hips'].to_quaternion()@source0['DEF-hips'].to_quaternion().inverted();delta=hipdelta.inverted()@delta
+     hipdelta=source['DEF-hips'].to_quaternion() @ source0['DEF-hips'].to_quaternion().inverted();delta=hipdelta.inverted() @ delta
     p=rig.pose.bones[name];position=p.head.copy();_,q,scale=restworld[name].decompose()
-    p.matrix=Matrix.LocRotScale(position,delta@q,scale);bpy.context.view_layer.update()
+    p.matrix=Matrix.LocRotScale(position,delta @ q,scale);bpy.context.view_layer.update()
   if clip=='move':
    # Retain the source's crouched rhythm, constrained to this unit's kneeling support.
    # The planted right knee/boot never translates. Left boot moves only while lifted.
@@ -393,9 +393,9 @@ def animate(clip):
     # Source delta retains ankle articulation; reference rig owns foot forward direction.
     foot=restworld['foot_'+side].copy();foot.translation=ankle
     if side=='l' and gate:
-     delta=source['DEF-foot.L'].to_quaternion()@source0['DEF-foot.L'].to_quaternion().inverted()
+     delta=source['DEF-foot.L'].to_quaternion() @ source0['DEF-foot.L'].to_quaternion().inverted()
      q=__import__('mathutils').Quaternion().slerp(delta,.20*gate)
-     foot=Matrix.LocRotScale(ankle,q@foot.to_quaternion(),foot.to_scale())
+     foot=Matrix.LocRotScale(ankle,q @ foot.to_quaternion(),foot.to_scale())
     rig.pose.bones['foot_'+side].matrix=foot;bpy.context.view_layer.update()
   elif clip=='attack':
    recoil=[0,0,.02,.10,.85,1,.5,.2,.05,0][i];turn('spine_02','Y',-.10*recoil);turn('head','Y',-.04*recoil)
@@ -403,20 +403,20 @@ def animate(clip):
   elif clip=='death':
    fall=min(1,t/.55)
    source_hip=source['DEF-hips'];origin_hip=source0['DEF-hips']
-   delta=source_hip.to_quaternion()@origin_hip.to_quaternion().inverted()
+   delta=source_hip.to_quaternion() @ origin_hip.to_quaternion().inverted()
    # The source's timed backward fall drives the root; contact/framing solve its placement.
    pivot=restworld['pelvis'].translation
    displacement=(source_hip.translation-origin_hip.translation)*.48
-   rig.matrix_world=Matrix.Translation(pivot+displacement)@delta.to_matrix().to_4x4()@Matrix.Translation(-pivot)@rigrest
+   rig.matrix_world=Matrix.Translation(pivot+displacement) @ delta.to_matrix().to_4x4() @ Matrix.Translation(-pivot) @ rigrest
    # Transition the kneeling reference legs into the source's actual terminal
    # leg directions. Keeping kneeling offsets at full fall left both boots airborne.
    blend=max(0,min(1,(t-.20)/.45))
    for side,suffix in (('l','.L'),('r','.R')):
     for target_bone,source_a,source_b in [('thigh','thigh','shin'),('calf','shin','foot'),('foot','foot','toe')]:
      name=target_bone+'_'+side;p=rig.pose.bones[name];a=p.head.copy();current=(p.tail-p.head).normalized()
-     direction=delta.inverted()@(source['DEF-'+source_b+suffix].translation-source['DEF-'+source_a+suffix].translation).normalized()
-     desired=current.lerp(direction,blend).normalized();length=(restworld[name]@Vector((0,p.bone.length,0))-restworld[name].translation).length
-     rest_rotation=p.bone.matrix_local.to_quaternion();orientation=(rest_rotation@Vector((0,1,0))).rotation_difference(desired)@rest_rotation
+     direction=delta.inverted() @ (source['DEF-'+source_b+suffix].translation-source['DEF-'+source_a+suffix].translation).normalized()
+     desired=current.lerp(direction,blend).normalized();length=(restworld[name] @ Vector((0,p.bone.length,0))-restworld[name].translation).length
+     rest_rotation=p.bone.matrix_local.to_quaternion();orientation=(rest_rotation @ Vector((0,1,0))).rotation_difference(desired) @ rest_rotation
      p.matrix=Matrix.LocRotScale(a,orientation,Vector((1,length/p.bone.length,1)));bpy.context.view_layer.update()
    bpy.context.view_layer.update()
    # Settle actual evaluated anatomy/boots on the disc, not oversized object bounds.
@@ -425,7 +425,7 @@ def animate(clip):
     zs=[];xs=[];dg=bpy.context.evaluated_depsgraph_get()
     for o in sc.objects:
      if o.type!='MESH' or o.name=='GEO-stationary cream base' or 'muzzle' in o.name or o.parent==gun:continue
-     ev=o.evaluated_get(dg);me=ev.to_mesh();points=[ev.matrix_world@v.co for v in me.vertices];xs.extend(p.x for p in points)
+     ev=o.evaluated_get(dg);me=ev.to_mesh();points=[ev.matrix_world @ v.co for v in me.vertices];xs.extend(p.x for p in points)
      if any(word in o.name for word in ('anatomical','boot','sleeve','breeches','gaiter')):zs.extend(p.z for p in points)
      ev.to_mesh_clear()
     rig.location.z+=.086-min(zs)
@@ -445,9 +445,9 @@ def animate(clip):
    for obj in cloth:
     key=obj.shape_key_add(name=f'Contact {frame}',from_mix=False)
     for vert in key.data:
-     world=obj.matrix_world@vert.co;local=base.matrix_world.inverted()@world
+     world=obj.matrix_world @ vert.co;local=base.matrix_world.inverted() @ world
      floor=.087 if local.x*local.x+local.y*local.y<.505**2 else .012
-     if world.z<floor:world.z=floor+(world.z-floor)*.03;vert.co=obj.matrix_world.inverted()@world
+     if world.z<floor:world.z=floor+(world.z-floor)*.03;vert.co=obj.matrix_world.inverted() @ world
     key.value=0;key.keyframe_insert('value',frame=max(0,frame-1));key.value=1;key.keyframe_insert('value',frame=frame);key.value=0;key.keyframe_insert('value',frame=frame+1)
   for p in rig.pose.bones:
    for prop in ('location','rotation_quaternion','scale'):p.keyframe_insert(prop,frame=frame)
@@ -482,19 +482,19 @@ def audit():
   path=M/'clips'/f'{clip}.blend';meta=json.loads(path.with_suffix('.json').read_text());assert meta['source_sha256']==source
   bpy.ops.wm.open_mainfile(filepath=str(path));sc=bpy.context.scene;rig=bpy.data.objects['RIG-Barbarian musketman MPFB'];assert len(rig.data.bones)==53
   base=bpy.data.objects['GEO-stationary cream base'];origin=base.matrix_world.copy();counts=[];minz=100;poses=[];feet=[];grips=[]
-  sc.frame_set(1);bpy.context.view_layer.update();gun=bpy.data.objects['CTRL-musket'];grip=gun.matrix_world.inverted()@rig.matrix_world@rig.pose.bones['hand_l'].matrix
+  sc.frame_set(1);bpy.context.view_layer.update();gun=bpy.data.objects['CTRL-musket'];grip=gun.matrix_world.inverted() @ rig.matrix_world @ rig.pose.bones['hand_l'].matrix
   for frame in range(1,n+1):
    sc.frame_set(frame);bpy.context.view_layer.update();assert base.matrix_world==origin
    for bone in rig.pose.bones:
     if bone.name.startswith(('thigh','calf','foot')):assert .85<(bone.tail-bone.head).length/lengths[bone.name]<1.15,(clip,frame,bone.name,'retarget stretch')
-   feet.append({side:list((rig.matrix_world@rig.pose.bones['foot_'+side].matrix).translation) for side in ('l','r')})
+   feet.append({side:list((rig.matrix_world @ rig.pose.bones['foot_'+side].matrix).translation) for side in ('l','r')})
    if clip!='death':
-    error=((gun.matrix_world@grip).translation-(rig.matrix_world@rig.pose.bones['hand_l'].matrix).translation).length;grips.append(error);assert error<.002,(clip,frame,'support hand left gun',error)
+    error=((gun.matrix_world @ grip).translation-(rig.matrix_world @ rig.pose.bones['hand_l'].matrix).translation).length;grips.append(error);assert error<.002,(clip,frame,'support hand left gun',error)
    poses.append(tuple(round(v,5) for p in rig.pose.bones for row in p.matrix for v in row)+tuple(round(v,5) for row in rig.matrix_world for v in row))
    for o in sc.objects:
     assert min(abs(v) for v in o.scale)>1e-5,(clip,frame,o.name,'unsafe scale')
     if o.type=='MESH' and not o.hide_render:
-     ev=o.evaluated_get(bpy.context.evaluated_depsgraph_get());minz=min(minz,min((ev.matrix_world@Vector(c)).z for c in ev.bound_box))
+     ev=o.evaluated_get(bpy.context.evaluated_depsgraph_get());minz=min(minz,min((ev.matrix_world @ Vector(c)).z for c in ev.bound_box))
    counts.append(sum(not o.hide_render for o in sc.objects if 'muzzle smoke' in o.name))
   assert len(set(poses))>1,(clip,'rig does not animate')
   if clip=='death':assert poses[-1]==poses[-2],'Death skeletal pose is not held'

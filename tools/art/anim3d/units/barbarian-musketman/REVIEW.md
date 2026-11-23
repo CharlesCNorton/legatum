@@ -48,3 +48,10 @@ The runner switched lane-22 to reislaufer during this round and preserved the sc
 `3c7b309a`. Continuation uses `legatum/.worktrees/barbarian-musketman-round2` on the original
 `astra/unit-anim-3d-barbarian-musketman` branch. The final atlas was moved into that checkout;
 no source files from the newly assigned lane were changed. Use this isolated checkout for follow-up.
+
+Repository gate follow-up: compact Python matrix multiplication was falsely classified as email
+addresses by hygiene. Spacing the `@` operators fixes that without changing transforms. The
+browser-dependent art distinctness gate could not run: Chromium's macOS MachPortRendezvous
+bootstrap check fails with sandbox permission denied (1100). This remains a lead-side check;
+public-claims passed. A node_modules symlink accidentally included by the runner WIP was removed
+from tracking; the shared dependency directory was untouched.
