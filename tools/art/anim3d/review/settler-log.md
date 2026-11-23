@@ -5,3 +5,5 @@
 - Downloaded project CC BY source; generated painted unseen cloth/leather fills with built-in imagegen. Source/fills kept under assets/settler.
 - Built MPFB female, full folded robes, open hood, shawl/fringe, pack/spiral bedroll, staff, straps and sandals; plain master saved.
 - Published b-plain: CYCLES CPU, 256 px, 8 samples; not GPU approval.
+- Built MPFB female, full folded robes, open hood, shawl/fringe, pack/spiral bedroll, staff, straps and sandals; plain master saved.
+- Published b-plain: CYCLES CPU, 256 px, 8 samples; not GPU approval.

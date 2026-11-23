@@ -5,3 +5,9 @@
 - Built MPFB archer, thick folded garments, lacing, bronze helmet, pale crest, sandals, quiver and bow; rest needs visual review.
 - Rendered b: 256px CYCLES CPU, 6 samples.
 - Published b native 256/64 comparison; render device CPU.
+- Built MPFB archer, thick folded garments, lacing, bronze helmet, pale crest, sandals, quiver and bow; rest needs visual review.
+- Applied generated painted fills, CC0 linen weave, skin map, cavity shading and warm cream base.
+- Baked actual AO and curvature maps for helmet and laced cuirass; no shared-UV Solidify contamination.
+- Projected source painting onto true meshes in rest pose, preserving physical back-surface fill and alpha.
+- Rendered c: 256px CYCLES CPU, 12 samples.
+- Published c native 256/64 comparison; render device CPU.
