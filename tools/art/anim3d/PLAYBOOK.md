@@ -207,3 +207,34 @@ honest 256/64 verdict are in the external artillery log and unit README.
 Artillery packing reuses identical frame rectangles within each clip. This preserves all forty playback
 samples and makes the decoded final death hold pixel-identical too; separately encoded duplicates
 had different lossy RGB despite equal source PNGs. The unit transcript name avoids the driver log.
+
+### Artillery round 3: raised trails and projection coverage
+
+Round-2 GPU output is preserved under `masters/artillery/round2-gpu/` and
+`review/3d-v2/artillery-round2-gpu/`. Its pass completed; the driver log was empty because the
+unit script redirected stdout. The handoff now tees its transcript to both logs and defaults to
+`ROUND=3`. A GPU receipt proves delivery checks, not artistic parity.
+
+The six Blender skills inform these refinements: actual raised box trails, braced upright spades,
+beveled collars/bolt heads, full-depth U-shaped trunnion supports, narrower muzzle and wheel mounting
+fit; no invented crew, straps or cloth. All static finish is applied before rest-camera UVs. Flat
+hub caps use face normals for projection confidence instead of averaged radial vertex normals.
+Occlusion samples sit just inside each corner; front self-hits are accepted, while other component
+occlusion retains the existing image-generated olive backs. Cream-source exclusion also covers
+running gear so stone pigment cannot rotate around a tire. The camera remains a calibrated
+orthographic approximation; image-derived local landmarks are not proof of exact camera recovery.
+
+Product key/fill/rim, real AO/Pointiness bakes, and physical contact shading remain. The fixed rest
+grade now samples separate gun/stone histograms (RGB median and 10/90 percentiles, bounded contrast
+and offsets). Full CDF matching amplified low-sample stone noise; the bounded affine curves avoid
+that failure. Alpha is unchanged and clips never receive independent exposure corrections.
+
+`contact_views.py` opens the actual saved move clip and renders all eight samples from the front and
+top with the upper carriage hidden, publishing `artillery-g-feet-check.png`. Artillery has no feet or
+human/animal gait; this is a mechanical inspection, not mocap. It checks parallel rolling axes;
+the existing sample audit checks both tire contacts and ground clearance. In-place wheel rotation
+has no runtime travel-speed evidence, so the report does not claim a world-space no-slip test.
+
+Run the same no-argument `ROUND=3 tools/art/anim3d/units/artillery/gpu.sh` after CPU inspection.
+It includes the new front/top review as a sequential gated Blender process. Keep the source painting
+in-game and withhold `artillery-PASS` while the comparison or any clip still has visible defects.

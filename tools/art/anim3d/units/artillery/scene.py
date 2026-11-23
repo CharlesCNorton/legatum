@@ -130,7 +130,7 @@ for j in range(3):
  a=j*2*pi/3;rod('Handwheel spoke',(.14,-.35,.91),(.14+.1*cos(a),-.35,.91+.1*sin(a)),.008,steel,root)
 rod('Handwheel handle',(.14,-.35,1.01),(.14,-.42,1.01),.017,black,root)
 # Barrel lathe includes the inner bore: never a capped primitive posing as a muzzle.
-profile=[(-.14,.090),(-.08,.112),(.06,.115),(.20,.104),(.58,.083),(.66,.085),(.70,.077),(1.30,.056),(1.32,.063),(1.35,.063),(1.35,.043),(1.10,.043)]
+profile=[(-.14,.090),(-.08,.112),(.06,.115),(.20,.104),(.58,.083),(.66,.085),(.70,.077),(1.30,.046),(1.32,.050),(1.35,.050),(1.35,.034),(1.10,.034)]
 v=[];f=[]
 for x,r in profile:
  for j in range(96):a=2*pi*j/96;v.append((.35+x,r*cos(a),1.13+r*sin(a)))
@@ -140,10 +140,10 @@ barrel=mesh('Hollow tapered barrel',v,f,olive,recoil,True);barrel.data.materials
 for p in barrel.data.polygons:
  if p.index>=10*96:p.material_index=1
 rod('Bore deep shadow',(1.43,0,1.13),(1.44,0,1.13),.043,black,recoil)
-for x,r in [(.40,.118),(.94,.09),(1.67,.066)]:ring('Turned barrel band',(x,0,1.13),r,.008,edge,recoil,axis='X')
+for x,r in [(.40,.118),(.94,.09),(1.67,.051)]:ring('Turned barrel band',(x,0,1.13),r,.008,edge,recoil,axis='X')
 cube('Breech block',(.16,0,1.13),(.27,.22,.22),olive,recoil)
 # Hydraulic recuperators above and alongside the central tube.
-for yy,zz,rr in [(0,1.23,.058),(-.14,1.16,.038)]:
+for yy,zz,rr in [(0,1.18,.058),(-.14,1.16,.038)]:
  rod('Recoil cylinder',(.18,yy,zz),(.91,yy,zz),rr,olive,pivot)
  rod('Recuperator rod',(.90,yy,zz),(1.02,yy,zz),rr*.55,steel,recoil)
  for xx in [.28,.81,.92]:ring('Cylinder clamp',(xx,yy,zz),rr+.006,.009,edge,pivot,axis='X')
@@ -165,7 +165,7 @@ bpy.context.view_layer.update()
 
 sys.path.insert(0,str(HERE))
 from refine import refine
-refine(sc,cam,wheels,base,M)
+refine(sc,cam,wheels,base,M,trails,(beam,cube,rod),(olive,edge,steel))
 
 def save(name):bpy.ops.wm.save_as_mainfile(filepath=str(M/name))
 def render(path):
@@ -203,6 +203,10 @@ g=n.new('ShaderNodeNewGeometry');sep=n.new('ShaderNodeSeparateXYZ');l.new(g.outp
 ramp=n.new('ShaderNodeValToRGB');ramp.color_ramp.elements[0].position=.15;ramp.color_ramp.elements[0].color=(.81,.55,.31,1);ramp.color_ramp.elements[1].position=.8;ramp.color_ramp.elements[1].color=(.98,.78,.54,1);l.new(sep.outputs['Z'],ramp.inputs[0])
 pigment=n.new('ShaderNodeBsdfPrincipled');pigment.inputs['Base Color'].default_value=(0,0,0,1);pigment.inputs['Specular IOR Level'].default_value=0;ao=n.new('ShaderNodeAmbientOcclusion');ao.inputs['Distance'].default_value=.12
 contact=n.new('ShaderNodeMixRGB');contact.blend_type='MULTIPLY';contact.inputs[0].default_value=.32;l.new(ramp.outputs['Color'],contact.inputs[1]);l.new(ao.outputs['Color'],contact.inputs[2]);l.new(contact.outputs[0],pigment.inputs['Emission Color']);pigment.inputs['Emission Strength'].default_value=1
+# Fine stone pigment variation remains visible even on the camera pigment branch.
+stone_noise=n.new('ShaderNodeTexNoise');stone_noise.inputs['Scale'].default_value=120;stone_noise.inputs['Detail'].default_value=2
+stone_grain=n.new('ShaderNodeValToRGB');stone_grain.color_ramp.elements[0].color=(.94,.93,.91,1);stone_grain.color_ramp.elements[1].color=(1.03,1.02,1.0,1);l.new(stone_noise.outputs['Fac'],stone_grain.inputs[0])
+stone_mix=n.new('ShaderNodeMixRGB');stone_mix.blend_type='MULTIPLY';stone_mix.inputs[0].default_value=.65;l.new(contact.outputs[0],stone_mix.inputs[1]);l.new(stone_grain.outputs[0],stone_mix.inputs[2]);l.new(stone_mix.outputs[0],pigment.inputs['Emission Color'])
 ray=n.new('ShaderNodeLightPath');weight=n.new('ShaderNodeMath');weight.operation='MULTIPLY';weight.inputs[1].default_value=.72;l.new(ray.outputs['Is Camera Ray'],weight.inputs[0])
 mix=n.new('ShaderNodeMixShader');l.new(weight.outputs[0],mix.inputs[0]);l.new(s.outputs[0],mix.inputs[1]);l.new(pigment.outputs[0],mix.inputs[2]);l.new(mix.outputs[0],n.get('Material Output').inputs['Surface'])
 # Genuine surface bakes supplement shader contact AO and physical worn edges.
@@ -239,7 +243,7 @@ def pose(clip,i,n):
  elif clip=='attack':
   kick=[0,0,.025,-.22,-.13,-.055,-.018,0,0,0][i];recoil.location.x+=kick;pivot.rotation_euler.y+=.025*sin(pi*t);flash.hide_render=i!=3
  elif clip=='hit':
-  root.rotation_euler.x=[0,-.085,.04,0][i];pivot.rotation_euler.y+=[0,.06,-.025,0][i]
+  root.rotation_euler.x=[0,-.045,.022,0][i];pivot.rotation_euler.y+=[0,.06,-.025,0][i]
  elif clip=='death':
   # Broken axle settles with tires on the disc; upper gun slumps and remains visibly disabled.
   f=min(1,t/.78);f=f*f*(3-2*f);root.location.z=-.095*f;root.rotation_euler.x=-.13*f;pivot.rotation_euler.y+=.54*f;recoil.location.x-=.16*f

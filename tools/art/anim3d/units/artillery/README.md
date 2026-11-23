@@ -1,54 +1,62 @@
-# Artillery resumed round 2 candidate
+# Artillery round 3 candidate
 
 Run the complete host pass from the repository root:
 
 ```sh
-ROUND=2 tools/art/anim3d/units/artillery/gpu.sh
+ROUND=3 tools/art/anim3d/units/artillery/gpu.sh
 ```
 
-The executable script rebuilds the true 3D gun, bakes AO/curvature, renders every review stage and
-all 40 frames with Cycles Metal (512 px, default 64 samples), retains 512/256 masters, packs the
-trimmed 160 px atlas, validates it, and encodes the eight-second five-clip MP4. It keeps its own
-`artillery-gpu-pass-r${ROUND}.log`, failure/status file and verified GPU receipt. Unavailable Metal,
-missing inputs, stale outputs, CPU masters and failed delivery checks cannot produce a success receipt.
-It never writes an art PASS marker. The hardware GPU pass cannot run in this sandbox.
-
-For CPU iteration:
+This executable, no-argument handoff rebuilds the true 3D gun, bakes AO/curvature, renders plain,
+textured, details, poses and all 40 frames with Cycles Metal at 512px/64 samples, retains 512/256
+masters, renders the front/top move inspection, packs the trimmed 160px atlas, validates it, and
+encodes the eight-second five-clip MP4. The transcript goes to both stdout and
+`artillery-gpu-pass-r${ROUND}.log`. Failure status and the GPU receipt are round-specific; unavailable
+Metal, stale inputs/frames, CPU masters and failed checks cannot issue a successful receipt.
+The script never writes an art PASS. The sandbox cannot run the hardware GPU stage.
 
 ```sh
-RESOLUTION=256 SAMPLES=12 tools/art/anim3d/units/artillery/render.sh preview
-~/LegatumRuns/anim-pilot/venv/bin/python tools/art/anim3d/units/artillery/deliver.py
+RESOLUTION=256 SAMPLES=16 tools/art/anim3d/units/artillery/render.sh preview
+ROUND=3 ~/LegatumRuns/anim-pilot/venv/bin/python tools/art/anim3d/units/artillery/deliver.py
 ```
 
-`render.sh stills` publishes plain/rest/detail comparisons only. Inputs are the original painting
-and existing generated olive fill in `~/LegatumRuns/anim-pilot/assets/artillery/`; no download is needed.
-Editable masters and rendered frames remain outside git. Prior WIP evidence is preserved under
-`masters/artillery/round1-wip/` and `review/3d-v2/artillery-round1-wip/`.
+`render.sh stills` publishes plain/rest/detail comparisons only. Assets remain in
+`~/LegatumRuns/anim-pilot/assets/artillery/`; editable blends, bakes and frames remain in
+`masters/artillery/`. The prior successful round-2 GPU evidence is preserved in
+`masters/artillery/round2-gpu/` and `review/3d-v2/artillery-round2-gpu/`. That GPU atlas was
+180,322 bytes at Q80; it was technically valid and not art-approved.
 
-Round 2 fits complete circular wheels and thick shield plates to source landmarks, applies rigid
-bevel/curve topology before frozen camera UVs, and uses visibility-tested camera-only painted
-illumination. Hidden surfaces retain the generated olive fill and physical materials. Standard/None
-avoids double tone-mapping; the warm stone has top/rim pigment, physical shading and live contact AO.
-The automatic rest grade remains fixed across clips. There is no crew in this painting, no image
-plane, no per-frame reprojection and no alpha-driven geometry replacement.
+Round 3 adds raised box trails, collars, bolts, upright/braced spades and actual axle hinge arms.
+Full-depth U-shaped supports, a narrower muzzle and whole-wheel mounting changes improve the source
+fit. Bevels/curve conversion and subdivision of long rigid faces precede frozen rest-camera UVs.
+Flat cap normals and interior visibility samples improve painting coverage. Cream-source exclusion
+covers running gear as well as trails, removing stone pigment that rotated around the tires.
+Hidden surfaces reuse the recorded image-generated olive paint and physical materials.
 
-Move lifts the trails in the correct hinge directions. Every sampled pose seats both wheels on the
-stone and refits the axle, including the damaged-carriage death. The audit checks all 40 samples plus
-two loop endpoints for ground clearance and tire contact; it is not a general collision solver.
-Identical atlas frames share a rectangle so the final death hold is pixel-identical after lossy decode.
-Frame counts remain 8/8/10/4/10. The atlas contract is `version:2, layout:"trimmed-rows"`, with explicit
-`sprites` rectangles/offsets and invariant frame anchor; see the artillery PLAYBOOK chapter.
-The candidate is not wired into the game.
+Warm key, cool rim, soft fill, physical AO and Pointiness bakes remain. Fine stone pigment grain
+and separate gun/stone histogram measurements supplement the finish. Bounded median/10th/90th
+percentile channel curves are fixed at rest and shared across every clip; alpha is unchanged.
+Full CDF matching was rejected because it amplified low-sample stone noise.
 
-**Not art-approved; no PASS marker.** At 256 px the hubs/tread are muddier than the painting, trails
-and axle construction are simpler, and shield/barrel registration and revealed surfaces still differ.
-The stone is warmer but more uniform. At 64 px the same unit reads clearly, with a closer silhouette,
-but it remains distinguishable. Silhouette IoU is 0.87784 versus round one's 0.8366; the shared base
-contributes to this measurement, so it is not an approval score. Death reads as a disabled gun rather
-than a complete wreck. Fresh GPU512 output needs visual review before acceptance.
+Frame counts stay 8/8/10/4/10. Move rolls in place with raised trails; attack recoils; hit uses a
+smaller chassis roll; death slumps and holds its final pose. The 42 sampled poses include loop
+endpoints and check both tire contacts and ground clearance. Front/top views come from the actual
+saved move clip, with upper equipment hidden for inspection, and check parallel rolling axes.
+These are mechanical checks, not a full collision solver or a world-space no-slip test.
+Identical atlas frames share a rectangle to keep the decoded death hold pixel-identical.
+The atlas is `version:2, layout:"trimmed-rows"`, with explicit rectangles/offsets and fixed anchor;
+see the artillery PLAYBOOK chapter. No runtime integration or game rules changed.
 
-Final round-2 CPU delivery: 178,156 bytes at Q80, 1521×563, all 40 samples at CPU256/Cycles12. Exact decoded alpha reconstruction, ground clearance, both tire contacts, all clip motion and pixel-identical decoded held death passed. MP4: H.264/yuv420p, 1600×348, 240 frames/eight seconds.
+**Not art-approved; no PASS marker.** At 256px the raised trails and muzzle are closer, but wheel
+shading, central support registration and stone richness still differ visibly from the painting.
+At 64px it reads as the same artillery, but the tonal structure remains distinguishable. Rolling
+baked illumination is still visible in move, and death reads as disabled rather than destroyed.
+The orthographic camera is a calibrated approximation, not an exact recovered camera. Current
+round-3 512px finals require the lead's GPU pass and a fresh visual review.
 
-Nine Python syntax checks, two shell syntax checks, whitespace, executable handoff, missing-input
-preflight and CPU-master rejection pass. Current 512px finals remain pending the host GPU pass;
-old 512px evidence is archived in `round1-wip/512/` and `round1-512-stale/`. No Rust/UI code changed.
+Round-3 CPU validation: 40 frames at 256px/Cycles16; 160px trimmed atlas 1520×557, **182,934 bytes
+at Q85**. All 40 decoded alpha masks reconstruct exactly; ground/tire contacts, held death, hashes,
+16 front/top samples and video checks pass. MP4: 240 frames, eight seconds, 1600×348, H.264 yuv420p.
+Ten Python syntax checks, two shell syntax checks and whitespace checks pass. Missing-input preflight
+fails with a transcript/status and no receipt; `--require-gpu` correctly rejects CPU256 previews.
+The repository-wide `tools/gates/art.py` check failed in its Node render-sets subprocess, so its
+lookalike check is unverified. It reads committed HEAD; it is not the unit's render/atlas validator.

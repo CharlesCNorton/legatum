@@ -37,7 +37,13 @@ def check(require_gpu=False):
     assert min(a['minimum_z'] for a in man['ground_audit'])>=.1279
     assert all(abs(z-.13)<.0001 for a in man['ground_audit'] for z in a['wheel_contact_z']),'floating wheel'
     assert (M/'renders/death/08.png').read_bytes()==(M/'renders/death/09.png').read_bytes()
-    for stage in ['b-plain','c-textured-lit','c-details','d-rig-poses','f-restpose-compare']:
+    contact=json.loads((M/'contact-review.json').read_text())
+    assert contact['clip_sha256']==sha(M/'artillery-move.blend'),'stale running-gear review'
+    assert len(contact['renders'])==16
+    for name,value in contact['renders'].items():assert sha(M/name)==value,'changed contact view'
+    assert contact['device']==man['device'] and contact['resolution']==man['resolution']
+    assert len(contact['samples'])==8 and all(s['parallel_axles'] for s in contact['samples'])
+    for stage in ['b-plain','c-textured-lit','c-details','d-rig-poses','f-restpose-compare','g-feet-check']:
         assert (V/f'artillery-{stage}.png').is_file()
     print('PASS: pipeline/model/clip/grade/gallery hashes, 40 frames, ground clearance, held death'+('; GPU512 provenance' if require_gpu else '; CPU preview permitted'))
     return man
