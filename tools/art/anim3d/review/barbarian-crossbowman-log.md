@@ -41,3 +41,8 @@
 - Round 2 verdict: 256px painted face/cloth and pose closer; silhouette IoU .7300 -> .8099. At64 identity reads, but hood outline, tailoring, footwear, case and stiff motion remain distinguishable from the painting. No PASS marker. CPU evidence is retained; fresh GPU64/512 masters remain pending.
 - GPU handoff executable and all local build/bake/animate/render/review/pack/audit/video stages exercised. Final-master gate rejects actual CPU manifests. gpu.sh preflight reaches Blender through the PATH gate and explicitly rejects unavailable Metal (exit1), recording failed stage; a prior queued GPU-slot probe was interrupted and discovery now uses a CPU slot. Full GPU success is not claimed.
 - Final round-2 checks repeated after the death fix: both regression tests, atlas validation, all12 Python compilation, both shell syntax checks and whitespace passed. origin/master is already an ancestor of HEAD. Git staging was denied creating .git/worktrees/lane-13/index.lock; changes remain uncommitted for the runner. No push or PR. Pre-existing Tagmatic files/chapter were left intact; the prepared own-chapter staging patch is /tmp/barbarian-crossbowman-playbook.patch.
+- b: genuine front, three-quarter and side geometry views.
+- c: 1 frames reviewed at 256/64; CYCLES GPU, 64 samples, source 512px.
+- d: 4 frames reviewed at 256/64; CYCLES GPU, 64 samples, source 512px.
+- e-idle: 8 frames reviewed at 256/64; CYCLES GPU, 64 samples, source 512px.
+- e-move: 8 frames reviewed at 256/64; CYCLES GPU, 64 samples, source 512px.
