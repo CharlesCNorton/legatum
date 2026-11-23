@@ -144,3 +144,8 @@
 - Published e-hit: 4 actual rendered frames, 12 fps; GPU 512px 64 samples.
 - Published e-death: 10 actual rendered frames, 10 fps; GPU 512px 64 samples.
 - Completed all five clips and geometry audit; delivery pack may now run.
+
+# Artillery round 4
+- Opened GPU c/f, all five e strips and round3 MP4 contact frames first. GPU pass succeeded: 176,450 bytes Q80, 40 GPU512/Cycles64 masters, eight-second H264. Preserved masters/reviews under round3-gpu. No artillery-FEEDBACK.md exists. Read all common feedback 1-23 and every local PLAYBOOK chapter.
+- Honest critique before edits: at 256px overall silhouette is close, but tire hubs/tread look dark and blurred, wheel paint/illumination rotates into flat black patches during move, support detail differs, and the base has a flat ochre rim rather than the painting's fine warm stone. At 64px identity is clear but base and wheel tonal structure remain distinguishable. Attack flash is a hard yellow wedge; death reads as disabled. No art PASS.
+- Loaded all six Blender skills: modeling for finished full-depth meshes/bevels; materials for stable rubber pigment; lighting for fixed world light direction; cameras for registered rest UVs; animation for linear mechanical rotation; rendering for CPU previews and GPU provenance. Imagegen skill used for clean stone occlusion fill. No crew/cloth/straps exist in this painting.

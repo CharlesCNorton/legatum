@@ -315,3 +315,11 @@ Driver round 2 complete CPU delivery PASS: 40 RGBA256 samples (8/8/10/4/10); tri
 Driver round 2 handoff checks PASS: 8 Python AST parses, 2 Bash syntax checks, executable gpu.sh, diff whitespace; build-source/asset/scene hashes match. Isolated stale-generator trial rejected scene.py; independent GPU verifier rejected CPU b. gpu.sh now checks build-input hashes before rendering and at its final receipt. Current256 evidence archived in masters/autonomous-armour/driver-round2-cpu; existing512 evidence is old and remains preserved in driver-round1-gpu, not new-final evidence.
 Lead handoff: from repository root run ROUND=2 tools/art/anim3d/units/autonomous-armour/gpu.sh for fresh GPU512/256, all stages, trimmed atlas, validation and round2 MP4. No GPU rerender or visual art acceptance claimed in this CPU turn. origin/master is already an ancestor; no fetch/push/PR/master merge.
 Driver round 2 commit attempt blocked: git add and git commit cannot create .git/worktrees/lane-2/index.lock (Operation not permitted). Leave the scoped changes for runner commit; requested Co-Authored-By trailer supplied in attempted commit.
+Saved-scene audit PASS: current source hashes, 128 track links, 16 wheels, stationary base, nonzero scales, loop closure keys and held death.
+Rendered b: 3 PNGs, 512 px, CYCLES GPU, 96 samples.
+Rendered c: 1 PNGs, 512 px, CYCLES GPU, 96 samples.
+Published c review immediately; frozen grade 222b91b21f3f, 256 masters retained.
+Rendered details: 2 PNGs, 512 px, CYCLES GPU, 96 samples.
+Published details review immediately; frozen grade 222b91b21f3f, 256 masters retained.
+Rendered d: 4 PNGs, 512 px, CYCLES GPU, 96 samples.
+Published d review immediately; frozen grade 222b91b21f3f, 256 masters retained.
