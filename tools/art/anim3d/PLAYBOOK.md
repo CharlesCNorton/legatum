@@ -144,3 +144,51 @@ uses Cycles Metal GPU for every review stage and 512 px clip master, writes 256
 masters, packs/validates 160 px output and makes the eight-second five-clip H.264
 review at `review/3d-v2/cuirassier-round${ROUND}.mp4`. No automatic PASS marker:
 painting parity and clean clips still require an honest visual verdict.
+
+### Cuirassier resumed round 2: finished surfaces and delivery
+
+`paint.py` always restarts from `cuirassier-plain.blend`. It retains the real
+AO/Pointiness bakes and generated hair/metal/linen fills, then calls the unit's
+`refine.py` before freezing camera UVs. Static MPFB macro keys are baked, rigid
+bevel/thickness modifiers and curve kit are finished, and the horse's bind-space
+subdivision retains interpolated skin weights. The MPFB skeleton still has 53
+bones. A smooth rest-view fitting field adjusts actual full-depth vertices;
+inverse blended skin matrices return them to bind space. A compact Gaussian fit
+over-bent a hind leg and was rejected. The retained field and measured pixel
+landmarks are recorded in `registration.json`; this is an approximate anatomical
+fit, not exact camera recovery. Hoof soles are seated along the viewing rays,
+and the horizontal circular stone shifts on the ground to fit the reference.
+
+Visible source pigment is now 96% camera-only painted illumination, with normal
+and ray-visibility masks. Non-camera rays retain the physical BSDF; generated
+fills remain on unseen surfaces. Standard/None avoids compressing the painting's
+illumination again; this is specific to this painted pipeline. The 5:1:1.5
+product key/fill/rim remains. The white forehead marking is removed, fuller hair
+locks use the source tail chain, and actual bridle/rein geometry is refitted to
+the raised head. Projection still cannot repair a wrong head or shoulder shape.
+
+Raw frames live in `renders/<stage>/raw/`; postprocessing reads those each time,
+so rerunning a review does not accumulate the grade. Fit one rest histogram LUT,
+then reuse it for every clip. Keep 512/256 exports distinct from CPU256 previews.
+Packing uses premultiplied bicubic reduction to 160 px with full 8-bit alpha,
+and identical frames share a source rectangle while keeping all playback samples.
+Validation checks current master/clip/grade hashes, consistent rendering settings,
+decoded alpha against the reduced source, gutters, motion, clipping and exact
+source/decoded death holds. The v2 `rects` contract above is unchanged.
+
+`ROUND=2 tools/art/anim3d/units/cuirassier/gpu.sh` is the complete host entry point.
+It resolves its checkout, requires Metal, rebuilds paint and all clips, audits,
+renders every stage at GPU512, exports gallery256, packs/validates, and writes the
+eight-second decoded-atlas H.264 movie. `ffprobe` requires yuv420p, 1600 x 348,
+192 frames and eight seconds. A retained transcript, failure-stage status and
+GPU-only success receipt distinguish a real host pass from CPU previews. The
+script is executable and takes no arguments; it never writes an art PASS marker.
+Fresh GPU output and visual approval remain required for delivery acceptance.
+
+The move clip now samples the original four-beat Walk action instead of the
+retimed gallop. Ground correction lifts the mount only when it penetrates the
+stone; the audit now asserts that floor. Tail rotations are damped toward rest
+for idle/attack/hit and move. Death starts from the guard elbow pole and lowers
+the held pistol during the fall to retain fixed-camera margins. Its terminal
+body grounding still needs visual refinement; a floor minimum is not a contact
+solver. Keep that limitation separate from the atlas validation result.

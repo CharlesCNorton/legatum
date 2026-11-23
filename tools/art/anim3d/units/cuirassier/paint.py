@@ -45,6 +45,41 @@ for name in ['GEO-ridged steel cuirass','GEO-perforated visor']:
  for mod,a,b in saved:mod.show_render=a;mod.show_viewport=b
  records.append({'object':name,'maps':['AO','Pointiness curvature'],'size':256})
 (out/'manifest.json').write_text(json.dumps(records,indent=2))
+hrig=bpy.data.objects['AnimalArmature'];hair=bpy.data.materials['Black mane and tail']
+import ast
+for node in ast.parse(Path('tools/art/anim3d/scene.py').read_text()).body:
+ if isinstance(node,ast.FunctionDef) and node.name=='curve':exec(compile(ast.Module(body=[node],type_ignores=[]),'<shared curve>','exec'))
+# Skin tail fibres to the actual chain, so a second rigid tail cannot appear in gallop.
+for o in list(sc.objects):
+ if o.name.startswith('Tail flowing fibre'):bpy.data.objects.remove(o,do_unlink=True)
+names=['Tail'+str(i) for i in range(1,8)];bpy.context.view_layer.update();points=[hrig.matrix_world @ hrig.pose.bones[n].head for n in names]
+for j in range(24):
+ a=j*2*math.pi/24
+ right=sc.camera.matrix_world.to_quaternion() @ Vector((1,0,0));up=sc.camera.matrix_world.to_quaternion() @ Vector((0,1,0));view=sc.camera.matrix_world.to_quaternion() @ Vector((0,0,1))
+ targets=[(114,107),(105,119),(102,131),(96,143),(91,153),(88,165),(94,174)]
+ pts=[]
+ for k,(p,xy) in enumerate(zip(points,targets)):
+  q=world_to_camera_view(sc,sc.camera,p);width=[.07,.10,.13,.15,.15,.12,.04][k]
+  pts.append(p+right*((xy[0]/256-q.x)*sc.camera.data.ortho_scale+width*math.sin(a))+up*((1-xy[1]/256-q.y)*sc.camera.data.ortho_scale)+view*(.06*math.cos(a)))
+ ob=curve('Skinned tail hair',pts,.021,hair);bpy.ops.object.select_all(action='DESELECT');ob.select_set(True);bpy.context.view_layer.objects.active=ob;bpy.ops.object.convert(target='MESH');ob=bpy.context.object
+ for name in names:ob.vertex_groups.new(name=name)
+ inv=hrig.matrix_world.inverted()
+ for v in ob.data.vertices:
+  world=v.co.copy();near=sorted(range(len(points)),key=lambda i:(world-pts[i]).length)[:2];dist=[max(.001,(world-pts[i]).length) for i in near];total=sum(1/d for d in dist)
+  for k,d in zip(near,dist):ob.vertex_groups[names[k]].add([v.index],(1/d)/total,'REPLACE')
+  # Bind-space correction: source tail is already posed; undo that deformation.
+  weights=[(1/d)/total for d in dist]
+  transforms=[hrig.pose.bones[names[k]].matrix @ hrig.data.bones[names[k]].matrix_local.inverted() for k in near]
+  deform=Matrix([[sum(w*mat[row][col] for w,mat in zip(weights,transforms)) for col in range(4)] for row in range(4)])
+  v.co=deform.inverted() @ (inv @ world)
+ ob.parent=hrig;ob.matrix_parent_inverse=Matrix.Identity(4);ob.matrix_basis=Matrix.Identity(4);ar=ob.modifiers.new('Source tail skin weights','ARMATURE');ar.object=hrig
+
+
+import sys
+sys.path.insert(0,str(Path(__file__).parent))
+from refine import refine
+refine(M)
+bpy.ops.wm.save_as_mainfile(filepath=str(M/'cuirassier-refined-plain.blend'))
 painting=bpy.data.images.load(str(A/'painting-aligned.png'));masked={k:bpy.data.images.load(str(A/f'projection-{k}.png')) for k in ['coat','steel']};view=(sc.camera.location-Vector((0,0,1.3))).normalized();records=[]
 for obj in list(sc.objects):
  if obj.type!='MESH' or obj.name=='Stationary cream stone':continue
@@ -55,7 +90,12 @@ for obj in list(sc.objects):
  bpy.context.view_layer.update();ev=obj.evaluated_get(bpy.context.evaluated_depsgraph_get());me=ev.to_mesh();assert len(me.vertices)==len(obj.data.vertices)
  coords=[];weights=[]
  for v in me.vertices:
-  q=world_to_camera_view(sc,sc.camera,ev.matrix_world@v.co);coords.append((q.x,q.y));normal=(ev.matrix_world.to_3x3().inverted().transposed()@v.normal).normalized();weights.append(max(0,min(1,(normal.dot(view)-.05)/.45)))
+  q=world_to_camera_view(sc,sc.camera,ev.matrix_world @ v.co);coords.append((q.x,q.y));normal=(ev.matrix_world.to_3x3().inverted().transposed() @ v.normal).normalized();
+  facing=max(0,min(1,(normal.dot(view)-.02)/.28))
+  world=ev.matrix_world @ v.co
+  hit,location,_,_,_,_=sc.ray_cast(bpy.context.evaluated_depsgraph_get(),world+view*8,-view)
+  visible=not hit or (location-world).length<.025
+  weights.append(facing if visible else 0.)
  ev.to_mesh_clear()
  for m,enabled in mods:m.show_viewport=enabled
  uv=obj.data.uv_layers.new(name='Painting projection');attr=obj.data.color_attributes.new(name='Projection incidence',type='FLOAT_COLOR',domain='CORNER')
@@ -65,36 +105,15 @@ for obj in list(sc.objects):
   if not old or not old.use_nodes:continue
   mat=old.copy();mat.name=obj.name+' painting '+old.name;obj.data.materials[j]=mat;n=mat.node_tree.nodes;l=mat.node_tree.links;bs=n.get('Principled BSDF')
   if not bs:continue
-  tc=n.new('ShaderNodeUVMap');tc.uv_map='Painting projection';tex=n.new('ShaderNodeTexImage');tex.image=masked['coat'] if obj.name=='Horse' else masked['steel'] if any(k in old.name for k in ['steel','helmet','visor']) else painting;tex.extension='CLIP';l.new(tc.outputs[0],tex.inputs['Vector'])
+  tc=n.new('ShaderNodeUVMap');tc.uv_map='Painting projection';tex=n.new('ShaderNodeTexImage');tex.image=masked['coat'] if obj.name=='Horse' else painting;tex.extension='CLIP';l.new(tc.outputs[0],tex.inputs['Vector'])
   att=n.new('ShaderNodeVertexColor');att.layer_name='Projection incidence';factor=n.new('ShaderNodeMath');factor.operation='MULTIPLY';l.new(att.outputs[0],factor.inputs[0]);l.new(tex.outputs['Alpha'],factor.inputs[1])
-  strength=n.new('ShaderNodeMath');strength.operation='MULTIPLY';strength.inputs[1].default_value=.87;l.new(factor.outputs[0],strength.inputs[0])
-  mix=n.new('ShaderNodeMixRGB');old=bs.inputs['Base Color'].links[0].from_socket if bs.inputs['Base Color'].is_linked else None
-  if old:l.new(old,mix.inputs[1])
-  else:mix.inputs[1].default_value=bs.inputs['Base Color'].default_value
-  l.new(strength.outputs[0],mix.inputs[0]);l.new(tex.outputs[0],mix.inputs[2]);l.new(mix.outputs[0],bs.inputs['Base Color']);l.new(mix.outputs[0],bs.inputs['Emission Color']);bs.inputs['Emission Strength'].default_value=.18
+  # Preserve the painting's existing illumination only for camera rays.
+  # Shadow/reflection rays retain the real PBR shader and generated backfill.
+  strength=n.new('ShaderNodeMath');strength.operation='MULTIPLY';strength.inputs[1].default_value=.96;l.new(factor.outputs[0],strength.inputs[0])
+  ray=n.new('ShaderNodeLightPath');gate=n.new('ShaderNodeMath');gate.operation='MULTIPLY';l.new(ray.outputs['Is Camera Ray'],gate.inputs[0]);l.new(strength.outputs[0],gate.inputs[1])
+  pigment=n.new('ShaderNodeEmission');pigment.name='Frozen painted illumination';l.new(tex.outputs['Color'],pigment.inputs['Color']);pigment.inputs['Strength'].default_value=1
+  output=n.get('Material Output');physical=output.inputs['Surface'].links[0].from_socket
+  mix=n.new('ShaderNodeMixShader');l.new(gate.outputs[0],mix.inputs[0]);l.new(physical,mix.inputs[1]);l.new(pigment.outputs[0],mix.inputs[2]);l.new(mix.outputs[0],output.inputs['Surface'])
  records.append({'object':obj.name,'vertices':len(obj.data.vertices)})
-
-hrig=bpy.data.objects['AnimalArmature'];hair=bpy.data.materials['Black mane and tail']
-import ast
-for node in ast.parse(Path('tools/art/anim3d/scene.py').read_text()).body:
- if isinstance(node,ast.FunctionDef) and node.name=='curve':exec(compile(ast.Module(body=[node],type_ignores=[]),'<shared curve>','exec'))
-# Skin tail fibres to the actual chain, so a second rigid tail cannot appear in gallop.
-for o in list(sc.objects):
- if o.name.startswith('Tail flowing fibre'):bpy.data.objects.remove(o,do_unlink=True)
-names=['Tail'+str(i) for i in range(1,8)];bpy.context.view_layer.update();points=[hrig.matrix_world@hrig.pose.bones[n].head for n in names]
-for j in range(24):
- a=j*2*math.pi/24;offset=Vector((.065*math.sin(a),.045*math.cos(a),0));pts=[p+offset for p in points]+[points[-1]+offset+Vector((-.025,0,-.20))]
- ob=curve('Skinned tail hair',pts,.008,hair);bpy.ops.object.select_all(action='DESELECT');ob.select_set(True);bpy.context.view_layer.objects.active=ob;bpy.ops.object.convert(target='MESH');ob=bpy.context.object
- for name in names:ob.vertex_groups.new(name=name)
- inv=hrig.matrix_world.inverted()
- for v in ob.data.vertices:
-  world=v.co.copy();near=sorted(range(len(points)),key=lambda i:(world-points[i]).length)[:2];dist=[max(.001,(world-points[i]).length) for i in near];total=sum(1/d for d in dist)
-  for k,d in zip(near,dist):ob.vertex_groups[names[k]].add([v.index],(1/d)/total,'REPLACE')
-  # Bind-space correction: source tail is already posed; undo that deformation.
-  weights=[(1/d)/total for d in dist]
-  transforms=[hrig.pose.bones[names[k]].matrix@hrig.data.bones[names[k]].matrix_local.inverted() for k in near]
-  deform=Matrix([[sum(w*mat[row][col] for w,mat in zip(weights,transforms)) for col in range(4)] for row in range(4)])
-  v.co=deform.inverted()@(inv@world)
- ob.parent=hrig;ob.matrix_parent_inverse=Matrix.Identity(4);ob.matrix_basis=Matrix.Identity(4);ar=ob.modifiers.new('Source tail skin weights','ARMATURE');ar.object=hrig
 
 (M/'projection.json').write_text(json.dumps(records,indent=2));bpy.ops.file.pack_all();bpy.ops.wm.save_as_mainfile(filepath=str(M/'cuirassier.blend'))

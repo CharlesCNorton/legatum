@@ -13,7 +13,7 @@ def quantile(im,c):
    if acc>=total*(.02+.96*i/16):result.append(x);break
  return result
 if stage=='c':
- raw=Image.open(folder/'00.png').convert('RGBA');luts=[]
+ raw=Image.open(folder/'raw/00.png').convert('RGBA');luts=[]
  for c in 'RGB':
   a,b=quantile(raw,c),quantile(painting,c);lut=[]
   for x in range(256):
@@ -23,13 +23,13 @@ if stage=='c':
     k=next(i for i in range(16) if a[i]<=x<=a[i+1]);target=b[k]+(b[k+1]-b[k])*(x-a[k])/max(1,a[k+1]-a[k])
    lut.append(round(max(0,min(255,.65*x+.35*target))))
   luts.append(lut)
- (M/'grade.json').write_text(json.dumps({'luts':luts,'method':'35% rest foreground quantile transfer, fixed for all frames'}))
-files=sorted(folder.glob('*.png'));images=[]
+ (M/'grade.json').write_text(json.dumps({'luts':luts,'method':'35% rest foreground quantile transfer, fixed for all frames','master_sha256':hashlib.sha256((M/'cuirassier.blend').read_bytes()).hexdigest(),'raw_sha256':hashlib.sha256((folder/'raw/00.png').read_bytes()).hexdigest()}))
+files=sorted((folder/'raw').glob('*.png'));images=[]
 for p in files:
  im=Image.open(p).convert('RGBA')
  if stage!='b':
-  (folder/'raw').mkdir(exist_ok=True);im.save(folder/'raw'/p.name)
-  lut=json.loads((M/'grade.json').read_text())['luts'];im=Image.merge('RGBA',[im.getchannel(c).point(l) for c,l in zip('RGB',lut)]+[im.getchannel('A')]);im.save(p)
+  lut=json.loads((M/'grade.json').read_text())['luts'];im=Image.merge('RGBA',[im.getchannel(c).point(l) for c,l in zip('RGB',lut)]+[im.getchannel('A')]);im.save(folder/p.name)
+ if stage=='b':im.save(folder/p.name)
  for size in [512,256]:
   if im.width>=size:
    dest=M/str(size)/stage;dest.mkdir(parents=True,exist_ok=True);im.resize((size,size),Image.Resampling.LANCZOS).save(dest/p.name)
@@ -49,9 +49,9 @@ if stage=='c-details':
  full=Image.open(folder/'00.png').convert('RGBA');reference=Image.open(R/'assets/cuirassier/painting-aligned.png').convert('RGBA')
  out=Image.new('RGBA',(768,550),cream);d=ImageDraw.Draw(out)
  for j,(label,box) in enumerate([('helmet and breastplate',(132,8,183,100)),('horse and tack',(139,65,235,181)),('pistol and arm',(27,20,154,83))]):
-  d.text((j*256+8,5),label+' / painting above',fill='#30281e')
+  d.text((j*256+8,5),label+f' / painting above, {manifest["device"]}{manifest["resolution"]} below',fill='#30281e')
   for row,im in enumerate([reference,full]):
-   scale=im.width/256;region=im.crop(tuple(round(v*scale) for v in box));region.thumbnail((248,248),Image.Resampling.LANCZOS);out.alpha_composite(region,(j*256+(256-region.width)//2,24+row*260))
+   scale=im.width/256;region=im.crop(tuple(round(v*scale) for v in box));factor=min(248/region.width,248/region.height);region=region.resize((round(region.width*factor),round(region.height*factor)),Image.Resampling.LANCZOS);out.alpha_composite(region,(j*256+(256-region.width)//2,24+row*260))
  out.convert('RGB').save(V/'cuirassier-c-details.png')
 if stage=='c':
  render=images[0];split=painting.copy();split.paste(render.crop((128,0,256,256)),(128,0));cross=Image.blend(painting,render,.5)

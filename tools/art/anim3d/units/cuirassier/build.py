@@ -205,8 +205,8 @@ for action in bpy.data.actions:action.use_fake_user=True
 pose={p.name:p.matrix_basis.copy() for p in hrig.pose.bones};basis=hrig.matrix_basis.copy();hrig.animation_data_clear();hrig.animation_data_create();hrig.animation_data.action=bpy.data.actions.new('Cuirassier rest horse')
 hrig.matrix_basis=basis
 for p in hrig.pose.bones:p.matrix_basis=pose[p.name]
-bpy.context.view_layer.update();p=hrig.pose.bones['Neck1'];head=p.head.copy();axis=hrig.matrix_world.to_3x3().inverted()@Vector((1,0,0))
-p.matrix=Matrix.Translation(head)@Quaternion(axis.normalized(),-.34).to_matrix().to_4x4()@Matrix.Translation(-head)@p.matrix
+bpy.context.view_layer.update();p=hrig.pose.bones['Neck1'];head=p.head.copy();axis=hrig.matrix_world.to_3x3().inverted() @ Vector((1,0,0))
+p.matrix=Matrix.Translation(head) @ Quaternion(axis.normalized(),-.34).to_matrix().to_4x4() @ Matrix.Translation(-head) @ p.matrix
 for p in hrig.pose.bones:
  p.rotation_mode='QUATERNION'
  for prop in ['location','rotation_quaternion','scale']:p.keyframe_insert(prop,frame=0)

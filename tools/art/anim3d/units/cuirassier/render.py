@@ -6,7 +6,7 @@ R=Path(os.environ['ANIM_ROOT']);M=R/'masters/cuirassier';U=Path('tools/art/anim3
 sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
 for stage in os.environ.get('STAGES','b,c,c-details,d,e-idle,e-move,e-attack,e-hit,e-death').split(','):
  clip=stage[2:] if stage.startswith('e-') else 'attack' if stage=='d' else None
- path=M/'clips'/f'{clip}.blend' if clip else M/('cuirassier-plain.blend' if stage=='b' else 'cuirassier.blend')
+ path=M/'clips'/f'{clip}.blend' if clip else M/('cuirassier-refined-plain.blend' if stage=='b' else 'cuirassier.blend')
  bpy.ops.wm.open_mainfile(filepath=str(path));sc=bpy.context.scene;assert sc.camera
  sc.render.engine=os.environ.get('RENDER_ENGINE','CYCLES');device=os.environ.get('CYCLES_DEVICE','CPU')
  if sc.render.engine=='CYCLES':
@@ -24,7 +24,8 @@ for stage in os.environ.get('STAGES','b,c,c-details,d,e-idle,e-move,e-attack,e-h
  if stage=='b':frames=[0,0,0]
  out=M/'renders'/stage;out.mkdir(parents=True,exist_ok=True);(out/'render.json').unlink(missing_ok=True);used={};camera=sc.camera.matrix_world.copy()
  for i,f in enumerate(frames):
-  dst=out/f'{i:02}.png'
+  (out/'raw').mkdir(exist_ok=True)
+  dst=out/'raw'/f'{i:02}.png'
   if f in used and stage!='b':shutil.copyfile(used[f],dst)
   else:
    sc.frame_set(f)

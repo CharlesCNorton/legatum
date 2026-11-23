@@ -1,4 +1,4 @@
-# Cuirassier round 1
+# Cuirassier resumed round 2
 
 True Blender geometry: a CC0 Quaternius skinned horse, a CC0 MPFB anatomical rider,
 original steel armour with rolled gilt edges, perforated visor, thick tack,
@@ -31,6 +31,8 @@ images, bakes, raw renders, grade LUTs and 512/256 masters live outside git in
 `~/LegatumRuns/anim-pilot/{assets,masters}/cuirassier/`.
 
 `paint.py` bakes real 256 px AO and Pointiness maps for breastplate and visor.
+It calls `refine.py` to finish rigid surfaces, freeze MPFB macro keys and fit
+full-depth anatomy through inverse skin matrices before freezing the UVs.
 The full original painting is registered to the token, projected to frozen UVs
 on the actual deformed rest mesh, then carried by the skin weights through motion.
 Incidence/alpha and pigment masks blend into generated painted fills on hidden
@@ -40,15 +42,19 @@ surfaces. The reused fill sources and their original generation are recorded in
 ## Lead GPU pass
 
 ```sh
-ROUND=1 tools/art/anim3d/units/cuirassier/gpu.sh
+ROUND=2 tools/art/anim3d/units/cuirassier/gpu.sh
 ```
 
-This uses Cycles Metal GPU, refuses CPU fallback, renders all review stages and
+This first verifies Metal and rebuilds paint, clips and the geometry audit.
+It uses Cycles Metal GPU, refuses CPU fallback, renders all review stages and
 40 clip samples at 512 px, retains 512 and 256 masters, writes the trimmed 160 px
 atlas and JSON, validates them, and writes `cuirassier-round${ROUND}.mp4` (eight
 seconds, all five clips side by side at 2x, H.264 yuv420p on cream). It also emits
 the rest comparison, detail crops and animated WebP reviews. GPU quality still
 needs visual review; no PASS marker is generated automatically.
+The script retains `gpu-logs-cuirassier-r${ROUND}.log`, updates
+`review/3d-v2/cuirassier-gpu-status.txt`, and writes a round receipt only after
+checking current GPU512/gallery256 output and probing the encoded MP4.
 
 ## Atlas contract
 
@@ -59,6 +65,16 @@ packed atlas and the top-left offset in its virtual cell. Restore a cell by
 pasting that rectangle at `(ox,oy)`; draw relative to `(ax,ay)` after restoration.
 Physical row heights and widths vary. There are two transparent gutter pixels
 around every tile. WebP is quality 75 or above, at most 200,000 bytes.
+Reduction is premultiplied bicubic with unquantized alpha. Identical samples may
+share a rectangle. Source and decoded death holds must both be pixel-identical.
 
 This is a candidate asset. The app's static painting remains in use; no runtime
 loader was changed. A legacy fixed-grid reader cannot interpret this format.
+
+Round-2 CPU preview result: all 40 frames at Cycles CPU8 / 256 px pack to
+198,044 bytes at quality 85 (1281 x 749 atlas). Geometry, source/decoded alpha,
+bounds, held death and eight-second video checks pass. Four delivery regression
+tests pass. This is not a GPU512 result or art approval: horse head/leg anatomy,
+shoulder coverage, paint reveals and the propped terminal collapse still differ
+from the painting. No PASS marker. GPU preflight rejects this sandbox's missing
+Metal device; run the executable host entry point above for the final masters.
