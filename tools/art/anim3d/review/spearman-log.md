@@ -13,3 +13,4 @@
 - Round 4: rebuilt and CPU-rendered move at 256 px / 12 samples.
 - Round 4: rebuilt and CPU-rendered attack at 256 px / 12 samples.
 - Round 4: rebuilt and CPU-rendered hit at 256 px / 12 samples.
+- Plain-material review caught buried shield relief after lateral registration: the convex surface depth changed beneath the moved rays. Corrected with per-vertex ray intersection against the true shell plus nonzero raised keel/boss/rim depth. Rebuilding dependent renders and clips again; the earlier visually cleaner painted result was insufficient geometry evidence.
