@@ -7,3 +7,7 @@
 - Vehicle chapter and paint/bake methods read with `git show astra/unit-anim-3d-vehicles` at `0b2616f595e964a79641689ec26d31d2ed56cd28`. Delivery/render helpers adapted as isolated unit-local copies from `astra/unit-anim-3d-autonomous-armour` at `8a0f4f8c733974fea55a3f51025f3bb803bd4ccf` (same repository MIT code).
 
 `assets.lock.json` pins the painting, shipped reference and generated fill. All downloaded assets, Blender masters, bakes and uncompressed renders remain under `~/LegatumRuns/anim-pilot/` outside git.
+
+## Hunter-killer driver round 2 after GPU review, 2026-11-23
+- Original built-in ImageGen clean stone occlusion fill: generation 01a2095f-d60f-7ae1-b551-c31a79587375/exec-6a833d2d-e574-4a4b-a9e9-9451f17d7016.png, original project CC BY 4.0, no public URL. Editing the recorded hunter-killer painting removes the walker and its shadows; only the exposed stone pigment textures the real 3D disc. Source stored at assets/hunter-killer/stone-fill-source.png, prompt in units/hunter-killer/stone-fill.prompt.txt, SHA256 in assets.lock.json. Original lower rim preserved below y184; generated alpha does not cut geometry.
+- Reuses the original CC BY 4.0 painting and generated tank olive fill recorded above. Full-depth fitted outer armour, bevelled stone, mechanical weight/recoil timing and guarded GPU handoff: MIT scripts, CC BY 4.0 renders. No human or animal motion applies. Prior GPU evidence preserved in masters/hunter-killer/driver-r1-gpu/.

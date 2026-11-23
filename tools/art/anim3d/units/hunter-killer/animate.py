@@ -29,9 +29,9 @@ for clip,(count,fps,loop) in CLIPS.items():
  for frame in range(1,count+2 if loop else count+1):
   t=(frame-1)/(count if loop else count-1);s=math.sin(TAU*t);body.location=body0;body.rotation_euler=(0,0,0);turret.rotation_euler=turret0;recoil.location=recoil0;flash.hide_render=True
   if clip=='idle':body.location.z-=.012*(1-math.cos(TAU*t));turret.rotation_euler.z+=math.radians(2)*s
-  elif clip=='move':body.location.x+=.025*math.sin(TAU*t);body.location.z-=.035*math.sin(4*TAU*t)**2
+  elif clip=='move':body.location.x+=.055*math.sin(TAU*t);body.location.z-=.025*(1-math.cos(2*TAU*t));body.rotation_euler.y=.012*math.sin(TAU*t)
   elif clip=='attack':
-   pulse=max(0,1-abs(t-.34)/.14);body.location.x-=.045*pulse;body.location.z-=.07*pulse;turret.rotation_euler.z+=math.radians(3)*math.sin(math.pi*t);recoil.location.x-=.14*pulse;flash.hide_render=not(.27<t<.43)
+   pulse=[0,.0,.15,1,.55,.20,.05,0,0,0][frame-1];body.location.x-=.075*pulse;body.location.z-=.09*pulse;body.rotation_euler.y=-.025*pulse;turret.rotation_euler.z+=math.radians(3)*math.sin(math.pi*t);recoil.location.x-=.24*pulse;flash.hide_render=not(.27<t<.43)
   elif clip=='hit':
    q=[0,1,-.35,0][frame-1];body.location.x+=.06*q;body.location.z-=.09*abs(q);body.rotation_euler.y+=.018*q;turret.rotation_euler.z-=.04*q
   elif clip=='death':
@@ -42,8 +42,8 @@ for clip,(count,fps,loop) in CLIPS.items():
    hip0,knee0,foot0=[Vector(leg[k]) for k in ('hip','knee','foot')];hip=body.matrix_world@(bodymat.inverted()@hip0);foot=foot0.copy();air=False
    if clip=='move':
     phase=(t-j/4)%1
-    if phase<.25:
-     u=phase*4;lift=math.sin(math.pi*u)**2;foot.z+=.24*lift;foot.y-=.12*math.sin(TAU*u)*lift;air=lift>1e-8
+    if phase<.375:
+     u=phase/.375;lift=math.sin(math.pi*u)**2;foot.z+=.18*lift;foot.y-=.03*math.sin(TAU*u)*lift;air=lift>1e-8
    knee=solve(hip,foot,knee0,hip0,foot0,*leg['lengths'])
    upper=bpy.data.objects['RIG-upper-'+leg['name']];lower=bpy.data.objects['RIG-lower-'+leg['name']];shoe=bpy.data.objects['RIG-foot-'+leg['name']]
    upper.location=hip;lower.location=knee;shoe.location=foot

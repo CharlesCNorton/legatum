@@ -7,11 +7,12 @@ export RENDER_ENGINE="${RENDER_ENGINE:-CYCLES}" CYCLES_DEVICE="${CYCLES_DEVICE:-
 export RESOLUTION="${RESOLUTION:-256}" SAMPLES="${SAMPLES:-8}"
 run() { blender -b --disable-autoexec --python-exit-code 1 --python "$unit/$1.py" -- "${@:2}"; }
 case "${1:-}" in
-  build) "$py" "$unit/prepare.py"; run scene ;;
-  finish) run finish; run animate ;;
+  build) "$py" "$unit/preflight.py" begin; "$py" "$unit/prepare.py"; run scene ;;
+  finish) run finish; run animate; "$py" "$unit/preflight.py" seal ;;
   b|c|details|d|g|e-idle|e-move|e-attack|e-hit|e-death)
     run render "$1"; "$py" "$unit/deliver.py" review "$1" ;;
   final)
+    "$py" "$unit/preflight.py" verify
     for stage in b c details d g e-idle e-move e-attack e-hit e-death; do
       run render "$stage"
       "$py" "$unit/deliver.py" review "$stage"

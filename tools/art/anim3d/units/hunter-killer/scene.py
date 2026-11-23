@@ -39,7 +39,7 @@ def poly(name,points,depth,material=olive,parent=None):
  return finish(o,name,material,parent,.018)
 # Camera and one stationary cream base.
 camdata=bpy.data.cameras.new('CAM-reference');cam=bpy.data.objects.new('CAM-reference',camdata);sc.collection.objects.link(cam);cam.location=TARGET+VIEW*15;cam.rotation_euler=(-VIEW).to_track_quat('-Z','Y').to_euler();camdata.type='ORTHO';camdata.ortho_scale=5.12;sc.camera=cam
-bpy.ops.mesh.primitive_cylinder_add(vertices=128,radius=2.32,depth=.32,location=(0,0,.16));base=finish(bpy.context.object,'Stationary cream disc',stone,bevel=.035)
+bpy.ops.mesh.primitive_cylinder_add(vertices=128,radius=2.32,depth=.32,location=(0,0,.16));base=finish(bpy.context.object,'Stationary cream disc',stone,bevel=.09)
 # Chassis is an independent rigid transform; legs solve against its moving hips.
 body=empty('RIG-chassis',(0,0,1.45));bpy.context.view_layer.update()
 # Explicit six-face hull topology: each visible plane is an actual armour face.
@@ -66,20 +66,31 @@ cyl('Muzzle collar',screen(167,58,.3),screen(172,58,.3),.064,steel,recoil)
 cyl('Dark recessed bore',screen(172,58,.3),screen(172.4,58,.3),.040,dark,recoil)
 # Four independent closed mechanical limbs; no animal skeleton or borrowed dog motion.
 legs=[]
-for name,h,k,f in [('near-left',(108,116,1.61),(91,142,.95),(81,174,.43)),('far-left',(55,104,1.53),(36,127,.91),(34,153,.43)),('near-right',(197,114,1.60),(218,136,.95),(217,166,.43)),('far-right',(146,118,1.44),(147,133,.86),(151,146,.43))]:
+for name,h,k,f in [('near-left',(108,116,1.61),(91,142,.95),(81,174,.43)),('far-left',(55,104,1.53),(36,127,.91),(39,153,.43)),('near-right',(197,114,1.60),(218,136,.95),(217,166,.43)),('far-right',(146,118,1.44),(147,133,.86),(151,146,.43))]:
  hip,knee,foot=[atz(*v) for v in (h,k,f)]
  upper=empty('RIG-upper-'+name,hip);lower=empty('RIG-lower-'+name,knee);shoe=empty('RIG-foot-'+name,foot);bpy.context.view_layer.update()
  upper.rotation_mode=lower.rotation_mode='QUATERNION'
  # Put mesh endpoints in world rest space and retain those exact transforms.
  delta=knee-hip
- if name=='near-left':
+ if name in ('near-left','far-left','near-right'):
   normal=(VIEW-delta.normalized()*delta.normalized().dot(VIEW)).normalized();plane=(hip+knee)/2+normal*.23
-  outline=[(89,106),(110,109),(114,119),(97,146),(74,138),(80,121)]
+  outline={'near-left':[(89,106),(110,109),(114,119),(97,146),(74,138),(80,121)],
+           'far-left':[(46,94),(54,100),(49,115),(39,129),(26,122),(27,117)],
+           'near-right':[(201,108),(209,107),(230,132),(218,144),(204,135)]}[name]
   points=[(x,y,normal.dot(plane-screen(x,y))/normal.dot(VIEW)) for x,y in outline]
   o=poly('Upper armour '+name,points,.43,olive,upper)
  else:
   o=cube('Upper armour '+name,(hip+knee)/2,(.43,.38,delta.length+.13),olive,None,.035);o.rotation_euler=delta.to_track_quat('Z','Y').to_euler();bpy.context.view_layer.update();o.parent=upper;o.matrix_parent_inverse=upper.matrix_world.inverted()
- delta=foot-knee;o=cube('Lower shin '+name,(knee+foot)/2,(.42 if name=='near-left' else .32,.31,delta.length+.08),olive,None,.025);o.rotation_euler=delta.to_track_quat('Z','Y').to_euler();bpy.context.view_layer.update();o.parent=lower;o.matrix_parent_inverse=lower.matrix_world.inverted()
+ delta=foot-knee
+ shin_outlines={'near-left':[(74,145),(95,147),(90,166),(70,166)],
+                'far-left':[(29,129),(46,130),(43,147),(26,147)],
+                'near-right':[(204,139),(223,137),(228,158),(209,158)]}
+ if name in shin_outlines:
+  normal=(VIEW-delta.normalized()*delta.normalized().dot(VIEW)).normalized();plane=(knee+foot)/2+normal*.16
+  points=[(x,y,normal.dot(plane-screen(x,y))/normal.dot(VIEW)) for x,y in shin_outlines[name]]
+  poly('Lower shin '+name,points,.31,olive,lower)
+ else:
+  o=cube('Lower shin '+name,(knee+foot)/2,(.32,.31,delta.length+.08),olive,None,.025);o.rotation_euler=delta.to_track_quat('Z','Y').to_euler();bpy.context.view_layer.update();o.parent=lower;o.matrix_parent_inverse=lower.matrix_world.inverted()
  for label,p,par,rad in [('Hip',hip,upper,.175),('Knee',knee,lower,.13)]:
   cyl(label+' pin '+name,p-VIEW*.20,p+VIEW*.24,rad,dark,par);cyl(label+' cap '+name,p+VIEW*.24,p+VIEW*.265,rad*.8,steel,par)
  o=cube('Broad foot '+name,(foot.x,foot.y,.415),(.98 if name=='near-left' else .9 if name=='near-right' else .78,.58,.19),olive,shoe,.065)

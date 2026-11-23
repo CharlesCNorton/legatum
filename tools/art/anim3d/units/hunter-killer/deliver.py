@@ -56,15 +56,15 @@ def review(stage):
                      for n in (256,512) if meta['resolution']>=n}
     (folder/'graded.json').write_text(json.dumps(meta,indent=2))
     if stage=='c':
-        sheet([ref,images[0]],['Painting','Cycles rest'],REVIEW/f'{SLUG}-c-textured-lit.png')
+        sheet([ref,images[0]],['Painting',f'Cycles {meta["device"]} {meta["resolution"]}px'],REVIEW/f'{SLUG}-c-textured-lit.png')
         canvas=Image.new('RGBA',(768,376),CREAM);d=ImageDraw.Draw(canvas)
-        for i,(im,label) in enumerate([(ref,'Painting'),(images[0],'3D rest'),(Image.blend(ref,images[0],.5),'50/50 crossfade')]):
+        for i,(im,label) in enumerate([(ref,'Painting'),(images[0],f'3D {meta["device"]} rest'),(Image.blend(ref,images[0],.5),'50/50 crossfade')]):
             canvas.alpha_composite(im,(256*i,28));token=read(Path(f'app/src/assets/units/{SLUG}-64.png')) if i==0 else small(im,64);canvas.alpha_composite(token,(256*i+96,302));d.text((256*i+8,8),label,fill='#423a30')
         canvas.convert('RGB').save(REVIEW/f'{SLUG}-f-restpose-compare.png')
     elif stage=='details':
         crops=[];labels=[]
         for label,box in [('turret / optics',(78,45,175,84)),('hull wear',(51,80,199,138)),('near leg',(55,103,117,184))]:
-            for im,prefix in [(read(ASSETS/'projection.png'),'Painting'),(images[0],'3D')]:
+            for im,prefix in [(ref,'Painting 256px'),(images[0],'3D 256px')]:
                 scale=im.width/256;crop=im.crop(tuple(round(v*scale) for v in box));fit=min(248/crop.width,240/crop.height);crop=crop.resize((round(crop.width*fit),round(crop.height*fit)),Image.Resampling.LANCZOS)
                 tile=Image.new('RGBA',(256,256));tile.alpha_composite(crop,((256-crop.width)//2,(256-crop.height)//2));crops.append(tile);labels.append(prefix+' '+label)
         sheet(crops,labels,REVIEW/f'{SLUG}-c-details.png')

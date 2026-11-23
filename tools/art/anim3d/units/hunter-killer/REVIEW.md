@@ -1,32 +1,33 @@
-# Hunter-killer round 1
+# Hunter-killer driver round 2
 
-CPU candidate; **not PASS**. The rest image reads as the same walker at 64 px, and frozen painting projection gives convincing panel wear at 256 px. It is still distinguishable from the painting: the cream disc is too smooth, its rim/edge highlights are flatter, the leg/foot silhouettes and upper hull proportions differ, and the projection is visibly stretched in alternate views. The move is stiff on-the-spot mechanical stepping rather than convincing advancing locomotion; the compact attack and folding death need timing/art review. The original prompt explicitly asks for a four-legged machine, so aircraft motion and animal mocap would be the wrong category.
+**Not PASS.** At 64 px this reads as the same unit, with closer outer legs and a less plastic cream base. At 256 px the stone grain and silhouettes improve on round 1, but the turret and joint shapes remain simplified, the base highlight is too continuous, and some projected armour loses depth when moving. Movement is still deliberate in-place mechanical stepping; it does not convincingly advance. No PASS marker was written.
 
-## Delivered
+## Changes and evidence
 
-- Unit-isolated build/material/rig/render/review/delivery scripts, provenance, input hashes and no-argument executable `gpu.sh`.
-- External editable model/plain/finished masters, five keyed clip scenes, six AO/Pointiness bakes, and all forty CPU256 RGBA frames under `~/LegatumRuns/anim-pilot/masters/hunter-killer/`.
-- Every required b/c/details/d/e/f/g review image, five animated WebPs, running log and round-1 MP4 under `~/LegatumRuns/anim-pilot/review/3d-v2/`.
-- Candidate `app/src/assets/units/anim/hunter-killer.webp` + JSON: 160 px logical frames, per-frame trim offsets, 8/8/10/4/10 samples, Q90, **182,178 bytes**. No runtime wiring replaces the painting.
+- Opened the lead GPU c/f, every clip strip and sampled round-1 MP4 frames before editing. Round 1 actually succeeded: 187,526 bytes at Q90 and verified GPU512/256 masters. Archived its review files and master frames in `masters/hunter-killer/driver-r1-gpu/`.
+- Refitted full-depth outer upper armour and three shin contours; moved the far-left foot inward and widened the stone bevel. Kept the closed mechanical rig, six AO/Pointiness bakes, original projected painting, generated olive backfill and product lights.
+- Built-in ImageGen supplied a clean stone occlusion fill, registered to the base and feathered into the original lower rim. The real mesh carries it; alpha never cuts geometry and no source feet are painted on the fixed disc. Prompt: `stone-fill.prompt.txt`; bitmap: external `assets/hunter-killer/stone-fill-source.png`; input hash and licence recorded.
+- Lengthened overlapping foot swings, reduced fore-aft travel after the rear leg reached its IK limit, added chassis weight shift and stronger recoil/recovery. All rigid links keep their lengths and planted feet retain their positions.
+- Added sealed recipe/input/scene checks before final rendering and GPU work. Incomplete or stale builds now fail explicitly. `gpu.sh` defaults to round 2 and still renders every stage, all masters, atlas, validation and movie.
+- Review c/f labels state CPU/GPU. Detail crops now compare both images at native 256 px; previously the original 1024 source was compared against an enlarged 256 render.
 
-## Verification
+## Exact checks
 
-- Complete CPU final pipeline: exit 0, Cycles, eight samples, actual 256 px renders; atlas validation passed all forty alpha/trim reconstructions, bounds, motion, size/quality and held-death checks. Idle/move boundary-to-largest-internal-difference ratios .789/.783.
-- Geometry audit: 62 manifold closed meshes, four rigid IK legs, six baked maps, zero sampled planted-foot error, maximum segment-length error 2.63e-7 Blender units. Saved endpoint transforms meet the knees/feet, base stays fixed, loop endpoints close and no zero/near-zero scale is used. Not a full collision audit.
-- FFprobe: 1600x348, H.264, yuv420p, 240 frames, exactly eight seconds. Decoded representative MP4 frames visually inspected.
-- Python AST and shell syntax checks passed; `git diff --check` passed.
-- The GPU entry point was exercised: input hashes and scene audit passed, then it stopped explicitly with `No Metal device; refusing CPU fallback`, as expected in this sandbox. CPU evidence was preserved. **Actual GPU512 masters and independent GPU verification are pending**; previews were not upscaled and no GPU success is claimed.
+- Complete CPU pipeline: exit 0; Cycles CPU, 256 px, 16 samples. All b/c/details/d/g stages plus 8/8/10/4/10 clip frames, five animated WebPs, f comparison and round-2 MP4 regenerated. No CPU preview was upscaled to a 512 master; existing round-1 GPU512 files remain historical until the new GPU pass.
+- Trimmed 160 px atlas: **193,792 bytes, WebP Q90** (Q95 was 250,144 bytes). All 40 frames retained; transparent alpha/trim reconstruction, frame bounds, clip metadata, motion, provenance and held death passed. Idle/move loop seam ratios 0.781931/0.734352.
+- Geometry audit: **62 closed manifold meshes**, four IK legs, six baked maps, zero sampled planted-foot error, maximum segment-length error **2.626983e-7** Blender units; fixed base and closed loop endpoints. This is not a complete collision audit.
+- FFprobe: **1600x348 H.264 yuv420p, 240 frames, exactly 8 seconds**. All five strips, top/front foot sheet and decoded MP4 contact sheet inspected; no detached parts or frozen painted feet observed in those views.
+- Preflight positive check and intentional incomplete/stale-recipe rejection checks passed. Python AST, shell syntax and whitespace checks passed. No Rust or UI changes, so their build suites were not run.
+- Round-2 GPU512 rendering remains pending on the lead's Metal host. The current CPU evidence is not a GPU or art sign-off.
 
 ## Lead command
 
-Run from this checkout's repo root on the Metal host:
-
 ```sh
-ROUND=1 tools/art/anim3d/units/hunter-killer/gpu.sh
+ROUND=2 tools/art/anim3d/units/hunter-killer/gpu.sh
 ```
 
-This renders every stage and all clips at GPU512, retains 512/256 masters, creates the atlas, validates it, regenerates every review image and the MP4, and writes the GPU receipt only on verified success. No PASS marker is created automatically.
+Run from this checkout on the GPU host. No arguments needed. It verifies sealed masters, renders every stage serially at GPU512/96 samples, creates 256 gallery frames and the trimmed atlas, validates provenance and video, and publishes the round-2 receipt. Review painting parity before setting PASS.
 
-Non-obvious lessons: register the mechanical mount in physical space as well as the image; a tiny painted turret gap became a floating turret until a full-depth overlapping socket was added. Projected paint can hide disconnected geometry, so retain plain alternate views. A nearly straight rear leg left too little reach for upward idle bob; compress the chassis instead of stretching links or sliding feet. The stone must not carry projected feet when legs move.
+Non-obvious findings: a near-extended rear leg limits fore-aft swing well before the visible front legs do; preserve link lengths and reduce travel rather than forcing the solver. A source-projected base must exclude feet and shadows, or motion leaves ghost contacts. Detail comparisons must use matching resolution. Changes to a script must invalidate the baked scenes as well as render hashes.
 
-Git staging/commit were attempted and refused by the sandbox (`.git/worktrees/lane-14/index.lock: Operation not permitted`). Changes remain uncommitted for the runner. `origin/master` is already an ancestor of the starting HEAD; no merge was required. Rust/UI code is unchanged, so their build suites were not run. The commit-based browser art gate cannot validate this uncommitted candidate; lead art approval remains pending.
+Git staging/commit attempted; sandbox denied `.git/worktrees/lane-15/index.lock` (Operation not permitted). Changes remain uncommitted for the runner. `origin/master` is already an ancestor of HEAD. No push or PR. Commit trailer: `Co-Authored-By: gpt-6-astra (Codex) <noreply@openai.com>`.

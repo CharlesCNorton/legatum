@@ -5,7 +5,7 @@ cd "$(dirname "$0")/../../../../.."
 source tools/art/anim3d/env.sh
 export RENDER_ENGINE=CYCLES CYCLES_DEVICE=GPU
 export SAMPLES="${SAMPLES:-96}" RESOLUTION=512
-export ROUND="${ROUND:-1}"
+export ROUND="${ROUND:-2}"
 unit=tools/art/anim3d/units/hunter-killer
 status="$REVIEW/hunter-killer-gpu-status.txt"
 receipt="$REVIEW/hunter-killer-gpu-round${ROUND}.json"
@@ -26,13 +26,8 @@ for file in model.blend plain.blend finished.blend clips/idle.blend clips/move.b
   test -s "$ANIM_ROOT/masters/hunter-killer/$file"
 done
 test ! -e "$ANIM_ROOT/masters/hunter-killer/build-pending"
-stage=input-hashes
-"$ANIM_ROOT/venv/bin/python" - <<'CHECK'
-import hashlib,json
-from pathlib import Path
-for name,digest in json.loads(Path('tools/art/anim3d/units/hunter-killer/assets.lock.json').read_text()).items():
-    assert hashlib.sha256(Path(name).read_bytes()).hexdigest()==digest, 'Changed input: '+name
-CHECK
+stage=sealed-build-inputs
+"$ANIM_ROOT/venv/bin/python" "$unit/preflight.py" verify
 stage=scene-audit
 "$unit/render.sh" audit
 stage=gpu-renders-and-delivery

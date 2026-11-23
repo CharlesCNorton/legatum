@@ -50,12 +50,20 @@ for o in sc.objects:
  # Painting-specific display transform and camera-ray pigment avoid double-lighting.
  em=n.new('ShaderNodeEmission');l.new(mix.outputs[0],em.inputs['Color']);ray=n.new('ShaderNodeLightPath');factor=n.new('ShaderNodeMath');factor.operation='MULTIPLY';l.new(mask.outputs[0],factor.inputs[0]);l.new(ray.outputs['Is Camera Ray'],factor.inputs[1]);strength=n.new('ShaderNodeMath');strength.operation='MULTIPLY';strength.inputs[1].default_value=.94;l.new(factor.outputs[0],strength.inputs[0]);mixs=n.new('ShaderNodeMixShader');l.new(strength.outputs[0],mixs.inputs[0]);l.new(s.outputs[0],mixs.inputs[1]);l.new(em.outputs[0],mixs.inputs[2]);l.new(mixs.outputs[0],out.inputs['Surface'])
  records.append(o.name)
-# Stone is intentionally independent of the painting's feet/contact shadows.
-m=bpy.data.materials['MAT-cream stone E9CFA0'];n=m.node_tree.nodes;l=m.node_tree.links;s=n.get('Principled BSDF');noise=n.new('ShaderNodeTexNoise');noise.inputs['Scale'].default_value=150;b=n.new('ShaderNodeBump');b.inputs['Strength'].default_value=.10;b.inputs['Distance'].default_value=.008;l.new(noise.outputs['Fac'],b.inputs['Height']);l.new(b.outputs[0],s.inputs['Normal']);s.inputs['Roughness'].default_value=.88
-# Camera-only painted stone preserves warm rim pigment; short-range AO retains
-# real foot contact without baking source feet into the fixed base.
-ao=n.new('ShaderNodeAmbientOcclusion');ao.inputs['Color'].default_value=(.815,.624,.352,1);ao.inputs['Distance'].default_value=.20
-em=n.new('ShaderNodeEmission');l.new(ao.outputs['Color'],em.inputs['Color']);ray=n.new('ShaderNodeLightPath');fac=n.new('ShaderNodeMath');fac.operation='MULTIPLY';fac.inputs[1].default_value=.72;l.new(ray.outputs['Is Camera Ray'],fac.inputs[0]);blend=n.new('ShaderNodeMixShader');l.new(fac.outputs[0],blend.inputs[0]);l.new(s.outputs[0],blend.inputs[1]);l.new(em.outputs[0],blend.inputs[2]);l.new(blend.outputs[0],n.get('Material Output').inputs['Surface'])
+# Independent stone material: camera-visible mineral grain, physical contact AO,
+# and only the unobscured lower painted disc. No reference foot/shadow survives.
+base=bpy.data.objects['GEO-Stationary cream disc']
+m=bpy.data.materials['MAT-cream stone E9CFA0'];n=m.node_tree.nodes;l=m.node_tree.links;s=n.get('Principled BSDF')
+noise=n.new('ShaderNodeTexNoise');noise.inputs['Scale'].default_value=110;noise.inputs['Detail'].default_value=3
+b=n.new('ShaderNodeBump');b.inputs['Strength'].default_value=.20;b.inputs['Distance'].default_value=.012;l.new(noise.outputs['Fac'],b.inputs['Height']);l.new(b.outputs[0],s.inputs['Normal']);s.inputs['Roughness'].default_value=.88
+ramp=n.new('ShaderNodeValToRGB');ramp.color_ramp.elements[0].position=.22;ramp.color_ramp.elements[0].color=(.70,.48,.26,1);ramp.color_ramp.elements[1].position=.78;ramp.color_ramp.elements[1].color=(.95,.77,.51,1);l.new(noise.outputs['Fac'],ramp.inputs[0])
+uv=base.data.uv_layers.new(name='StoneCamera')
+for loop in base.data.loops:
+ p=world_to_camera_view(sc,sc.camera,base.matrix_world@base.data.vertices[loop.vertex_index].co);uv.data[loop.index].uv=(p.x,p.y)
+uvnode=n.new('ShaderNodeUVMap');uvnode.uv_map='StoneCamera';tex=n.new('ShaderNodeTexImage');tex.image=bpy.data.images.load(str(ASSETS/'stone-projection.png'));tex.extension='CLIP';l.new(uvnode.outputs[0],tex.inputs[0])
+pigment=n.new('ShaderNodeMixRGB');l.new(tex.outputs['Alpha'],pigment.inputs[0]);l.new(ramp.outputs[0],pigment.inputs[1]);l.new(tex.outputs['Color'],pigment.inputs[2]);l.new(pigment.outputs[0],s.inputs['Base Color'])
+ao=n.new('ShaderNodeAmbientOcclusion');l.new(pigment.outputs[0],ao.inputs['Color']);ao.inputs['Distance'].default_value=.20
+em=n.new('ShaderNodeEmission');l.new(ao.outputs['Color'],em.inputs['Color']);ray=n.new('ShaderNodeLightPath');fac=n.new('ShaderNodeMath');fac.operation='MULTIPLY';fac.inputs[1].default_value=.91;l.new(ray.outputs['Is Camera Ray'],fac.inputs[0]);blend=n.new('ShaderNodeMixShader');l.new(fac.outputs[0],blend.inputs[0]);l.new(s.outputs[0],blend.inputs[1]);l.new(em.outputs[0],blend.inputs[2]);l.new(blend.outputs[0],n.get('Material Output').inputs['Surface'])
 bpy.ops.file.pack_all();bpy.ops.wm.save_as_mainfile(filepath=str(MASTER/'finished.blend'))
-(MASTER/'materials.json').write_text(json.dumps({'projected_meshes':records,'bakes':{name:{k:str(v.filepath_raw) for k,v in maps.items()} for name,maps in baked.items()},'hidden_fill':'original tank painted olive CC BY 4.0; box projected', 'base':'linear pigment from sRGB E9CFA0; independent contact shadows'},indent=2))
+(MASTER/'materials.json').write_text(json.dumps({'projected_meshes':records,'bakes':{name:{k:str(v.filepath_raw) for k,v in maps.items()} for name,maps in baked.items()},'hidden_fill':'original tank painted olive CC BY 4.0; box projected', 'base':'generated clean stone fill plus original rim below y184, independent contact shadows'},indent=2))
 log('Finished frozen camera projection on solid geometry; six actual AO/curvature bakes, generated olive hidden-surface fill, grain and chipped edges. No alpha clipping or painted base feet.')
