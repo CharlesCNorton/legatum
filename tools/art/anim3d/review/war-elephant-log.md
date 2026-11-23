@@ -8,3 +8,6 @@
 - Fixed macOS Bash 3 empty-array handling in unit wrapper; fixed review crossfade dimensions for 256 px CPU previews.
 - b-plain: three actual 3D views emitted; c: projected painting colour with incidence blend and one rest-derived histogram grade.
 - Candidate remains clearly distinguishable from painting; do not create PASS marker.
+- Rig audit exposed foot sinking during hit; raised the rest stance and added ground correction to every clip. Tightened body-contact audit to z >= 0.125 above the 0.12 stone top.
+- Death raw 512 views show shoulder-cloth projection spill, rigid humans and a body supported too high by folded legs; retained as next-round evidence.
+- Packing now reuses identical logical frames at one atlas rectangle, keeping held death identical after lossy WebP decoding.

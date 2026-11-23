@@ -31,3 +31,6 @@
 - Published e-death review from 512px CPU renders.
 - Published e-death review from 512px CPU renders.
 - Packed all 40 frames, WebP quality 80, 193974 bytes; validation passed.
+- Final CPU pass complete: 48 masters each at 512/256 px; all requested stage sheets, five animated WebPs, split/crossfade and eight-second MP4 exist.
+- Final atlas: 40 frames, trimmed 160 px, quality 80, 193,974 bytes. Pack/decoded-alpha/hash checks and saved-scene audit passed; ffprobe confirms 192 H.264/yuv420p frames over 8 seconds.
+- Art verdict: recognizable at 64 px, below painting richness at 256 px. Face/helmet, arm and grip pose, greave volume, shield finish, attack amplitude and death articulation need another round. No PASS marker. GPU script ready but not executed in sandbox.

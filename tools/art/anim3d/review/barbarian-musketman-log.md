@@ -24,3 +24,29 @@
 - Posted b-plain review (CPU, 256 px).
 - Camera projection applied to real meshes; hidden surfaces retain generated painted fills.
 - Posted c-textured-lit review (CPU, 256 px).
+- Authored idle skeletal action, 8 samples.
+- Authored move skeletal action, 8 samples.
+- Authored attack skeletal action, 10 samples.
+- Authored hit skeletal action, 4 samples.
+- Authored death skeletal action, 10 samples.
+- Posted d-rig-poses review (CPU, 256 px).
+- Posted e-idle review (CPU, 256 px).
+- Built kneeling MPFB human, tailored ragged kit, feather hat, bandolier and solid horizontal musket.
+- Posted b-plain review (CPU, 256 px).
+- Camera projection applied to real meshes; hidden surfaces retain generated painted fills.
+- Posted c-textured-lit review (CPU, 256 px).
+- Authored idle skeletal action, 8 samples.
+- Authored move skeletal action, 8 samples.
+- Authored attack skeletal action, 10 samples.
+- Authored hit skeletal action, 4 samples.
+- Authored death skeletal action, 10 samples.
+- Posted b-plain review (CPU, 512 px).
+- Posted c-textured-lit review (CPU, 512 px).
+- Posted d-rig-poses review (CPU, 512 px).
+- Corrected nonuniform bone-scale inheritance and rigid equipment parenting by cancelling the complete bone-parent matrix. Fixed brim face winding after a diagnostic found zero camera-projection weight. Rebuilt all five clips; final round-1 CPU preview pass uses real 512 px / 2-sample renders, with GPU 48-sample handoff still required.
+- Posted e-idle review (CPU, 512 px).
+- Posted e-move review (CPU, 512 px).
+- Posted e-attack review (CPU, 512 px).
+- Posted e-hit review (CPU, 512 px).
+- Posted e-death review (CPU, 512 px).
+- Audit passed: five clips, source hashes, 53-bone rig, fixed base and positive object scales.

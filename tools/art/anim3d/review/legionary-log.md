@@ -24,3 +24,5 @@
 - Repository gate on starting HEAD: hygiene PASS, public-claims PASS; art distinctness failed when its Chromium renderer exited 1 in sandbox. No browser/art approval claimed.
 - Published b: CYCLES/CPU, 256 px, 8 samples; visual review pending.
 - Published c: CYCLES/CPU, 512 px, 8 samples; visual review pending.
+- Published d: CYCLES/CPU, 512 px, 8 samples; visual review pending.
+- Published e-idle: CYCLES/CPU, 512 px, 8 samples; visual review pending.

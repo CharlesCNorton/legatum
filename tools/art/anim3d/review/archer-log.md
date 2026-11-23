@@ -73,3 +73,7 @@
 - Published d native 256/64 comparison; render device CPU.
 - Rendered e-attack: 512px CYCLES CPU, 12 samples.
 - Published e-attack native 256/64 comparison; render device CPU.
+- Final attack correction rendered and visually inspected: cheek-side follow-through, independent string release, arrow hidden by keyed visibility and renocked.
+- All 40 real 512 px CPU clip frames and all 40 256 px derivatives retained; five strips/WebPs and rest/detail/pose comparisons published.
+- Packed trimmed 160 px atlas: 938×763, 188696 bytes, WebP quality 75, all 40 frames, exact alpha retained.
+- Pixel validation PASS (hashes, trim reconstruction, exact alpha, margins, motion, held death); scene audit PASS across all clips; Python/shell syntax and whitespace checks PASS.

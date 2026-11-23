@@ -22,3 +22,4 @@ e-hit: 4 frames at 256/64 from 512px CYCLES/CPU, 4 samples.
 e-death: 10 frames at 256/64 from 512px CYCLES/CPU, 4 samples.
 b: 3 frames at 256/64 from 512px CYCLES/CPU, 4 samples.
 d: 4 frames at 256/64 from 512px CYCLES/CPU, 4 samples.
+e-attack: 10 frames at 256/64 from 512px CYCLES/CPU, 4 samples.
