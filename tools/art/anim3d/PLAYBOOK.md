@@ -106,3 +106,92 @@ tools/art/anim3d/render.sh audit
 ```
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
+
+## Vehicles — propeller aircraft: Fighter (`fighter`)
+
+Unit-owned implementation: `tools/art/anim3d/units/fighter/`. This chapter extends the
+vehicles family to an airborne miniature. Do not substitute an infantry body or a
+flat image card. The painting has an olive/silver monocoque, two thick wings, tail
+surfaces, glazed canopy, four-blade propeller, a curved display support, and one cream
+stone disc. Preserve its elevated composition and keep the base stationary.
+
+### Fighter build and review
+
+```sh
+tools/art/anim3d/units/fighter/render.sh build
+tools/art/anim3d/units/fighter/render.sh finish
+tools/art/anim3d/units/fighter/render.sh animate
+tools/art/anim3d/units/fighter/render.sh b
+tools/art/anim3d/units/fighter/render.sh c
+for clip in idle move attack hit death; do
+  tools/art/anim3d/units/fighter/render.sh "e-$clip"
+done
+source tools/art/anim3d/env.sh
+"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/fighter/deliver.py pack
+"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/fighter/deliver.py movie
+```
+
+Every invocation is plain `blender -b --disable-autoexec --python-exit-code 1`,
+through the PATH gate, sequentially. No application-binary bypass, thread override,
+zero-scale visibility or volumes. Local previews default to Cycles CPU, 256 px,
+8 samples. The six installed Blender skills informed closed loft topology,
+bevels, layered-action compatibility, material separation, aimed product lighting,
+orthographic source calibration, transparent sequence rendering and playback checks.
+
+The standard quality method is: align real geometry to the source camera; freeze
+camera-projected painting UVs on that geometry; blend newly exposed surfaces into
+licensed generated painted fills; preserve bevels, thickness, worn metal and baked
+cavity/edge detail; light with a warm upper-left key, soft fill and cool rim; freeze
+one bounded RGB quantile grade from the rest render and apply it to all frames.
+`finish.py` bakes real Cycles AO and Geometry Pointiness maps at 512 px on fuselage
+and wings. These drive hidden-surface grime and polish. Projection supplies the
+painting's visible rivets and panel brushwork, not the silhouette. Generated bomber
+paint brushwork is reused with its original CC BY 4.0 provenance and modulates the
+appropriate olive, silver or charcoal pigment. No new third-party model is used.
+
+The shared base target is **sRGB #E9CFA0**, approximately linear
+`(.815, .624, .352)`, dielectric roughness `.83`, with fine stone bump and a bevelled
+rim. The final pixels also depend on lighting, painting projection and grade: inspect
+and sample the render, not only the material constant. A pale grey base fails.
+
+Masters live outside git at `$ANIM_ROOT/masters/fighter/`: `plain.blend`,
+`fighter.blend`, separate `.blend` files for each clip, baked maps, render manifests,
+and real 512/256 image sets. Rebuild → finish → animate after geometry changes;
+render manifests and clip hashes reject stale inputs. Reviews are published as each
+stage finishes under `$ANIM_ROOT/review/3d-v2/fighter-*`. The rest comparison shows
+painting, render, and a 50/50 crossfade, plus a native 64 px comparison. Passing the
+atlas validator does not mean the painting-parity bar has been met.
+
+Flight and propeller pivots carry authored idle hover/bank, move, attack run, hit
+jolt and stall/crash clips. Exact counts are 8/8/10/4/10; fps 10/12/14/12/10. Only
+idle/move loop at runtime; a closing key is excluded from the sampled loop. The
+last death samples hold. The support disappears at impact; that is an explicit
+round-one presentation limitation pending a broken-support treatment.
+
+### Fighter trimmed atlas v2
+
+The source frame remains 160 × 160; its fixed base anchor is `(79,124)`. Clips keep
+`row`, `frames`, `fps`, `loop`, and add `rects`, one entry per frame:
+`{x,y,w,h,ox,oy}`. Crop rectangle `(x,y,w,h)` from the atlas and composite it at
+`(ox,oy)` in the original 160 px frame. For world-anchor drawing, the crop origin is
+`world + (ox-ax, oy-ay) * displayScale`. Packed rows remain idle/move/attack/hit/death,
+with two pixels between trimmed crops. `atlas:{w,h}` gives actual decoded dimensions.
+This is an extended format, not compatible with a fixed-grid cropper; this lane does
+not change the app runtime or replace its static unit painting. Quality is selected
+from 90/85/80/75 and packing fails above 200,000 bytes instead of dropping frames or
+quality. Validation checks hashes, counts, motion, transparent margins and held death.
+
+### One-command host GPU handoff
+
+```sh
+ROUND=1 tools/art/anim3d/units/fighter/gpu.sh
+```
+
+No positional arguments; run from repository root. Requires the saved finished
+masters. It renders every stage serially with Cycles Metal GPU, 512 px, 64 samples
+(override `SAMPLES` if needed), keeps 512 and 256 masters, emits all review images,
+rebuilds/validates the trimmed 160 px atlas, and writes `fighter-round${ROUND}.mp4`.
+The video reconstructs each trimmed frame using its offsets, shows all five clips
+side by side at 2× on cream, and verifies H.264/yuv420p/240 frames at 30 fps (~8 s).
+No CPU fallback is allowed on this GPU path. Only a reviewed painting-parity result
+may create `fighter-PASS`; scripts never grant themselves art approval.
