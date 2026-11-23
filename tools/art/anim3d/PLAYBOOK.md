@@ -106,3 +106,56 @@ tools/art/anim3d/render.sh audit
 ```
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
+
+## Infantry / musketman round 1
+
+The unit-local chapter and scripts are `units/musketman/`. This standing unit
+uses MPFB anatomy, a 53-bone game_engine rig, tailored buff coat/red breeches,
+real straps/buckles/powder flasks, feathered hat, solid musket and bayonet.
+The original source is registered to the committed token, then projected as
+frozen UVs onto finished full-depth meshes. Geometry retains depth and moves
+with the rig; no image cards, live camera reprojection, or painted feet on stone.
+
+Apply the four standing quality levers: (1) frozen source-camera brushwork with
+painted unseen fills blended by visibility/facing, (2) beveled solid kit,
+folded thick cloth, anatomical face/hands, (3) warm upper-left key, cool rim,
+soft fill and AO/contact, and (4) a bounded histogram grade sampled from the
+rest comparison and frozen across every clip. The stone albedo is the shared
+warm cream #E9CFA0 (linear approximately .815/.624/.352). Evaluate rendered
+pixels as well as the material. `musketman-f-restpose-compare.png` contains
+painting, 3D rest and 50/50 crossfade, including native 256 and 64 px views.
+Sam's positive verdict on the brighter round-2 spearman establishes direction,
+not approval of another unit. The rest pose should be hard to distinguish from
+its own painting; all five clips and the size cap must pass before a PASS file.
+
+Human motion standard: use pinned CC0 Quaternius or CMU free-use captures for
+idle/walk/hit/death. Match rest poses and bone rolls before retargeting. Only
+weapon-specific attacks are authored. Check feet against travel direction,
+never patch their yaw after retargeting. Every round emits top/front views of
+one move cycle as `musketman-g-feet-check.png`. Musketman uses A_TPose leg
+calibration, a flat-contact boot reference, captured carrying-arm motion,
+support-hand IK and vertical root floor contact. Its +X in-place walk still
+requires visual review of contact timing, ground speed and clip entry.
+
+All heavy invocations are plain `blender -b --disable-autoexec` through PATH's
+shared gate, sequential within this lane. CPU previews use Cycles; GPU final
+uses Cycles with `CYCLES_DEVICE=GPU`, Metal discovery and failure if absent.
+Effects use keyed visibility and nonzero, real-thickness volumes.
+
+`ROUND=1 tools/art/anim3d/units/musketman/gpu.sh` is the complete no-argument
+lead handoff: rebuild/bake/retarget, GPU render of every stage, 512 and 256
+masters outside git, review sheets/WebPs, rest comparison, feet check,
+trimmed atlas, validation and an 8-second 1600×348 H.264/yuv420p movie with all
+five reconstructed clips side by side at 2× on cream. It records a GPU receipt
+only after checking actual stage settings and source hashes.
+
+Musketman atlas v2 retains rows idle/move/attack/hit/death and 8/8/10/4/10
+frames. Logical cells are 160×160; frame anchor is `(54,141)`. JSON has
+`version:2`, `unit`, `atlas:{w,h}`, `frame:{w,h,ax,ay}`, and
+`clips:{name:{row,frames,fps,loop,rects:[{x,y,w,h,ox,oy}]}}`.
+Each `rects` entry describes a packed crop and its offset in the original cell.
+Draw at `anchor + (ox-ax,oy-ay)*scale`; `row` does not imply fixed grid coordinates.
+WebP quality tries 90/85/80/75 and refuses output above 200,000 bytes. Validation
+reconstructs all alpha at trim offsets and rejects stale masters/frames/grades,
+clipping, missing motion or an unheld death. GPU masters are never synthesized
+by upscaling CPU previews. No app rendering or game rules change in this lane.
