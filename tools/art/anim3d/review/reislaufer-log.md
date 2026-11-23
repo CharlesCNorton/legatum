@@ -95,3 +95,37 @@
 - Posted b-plain review (CPU, 256 px).
 - Finished-surface camera-only projection applied; physical stone excluded and generated fills retained.
 - Posted c-textured-lit review (CPU, 256 px).
+- Built MPFB standing reislaufer, steel breastplate, slashed two-colour clothing, feathered beret and solid pike.
+- Posted b-plain review (CPU, 256 px).
+- Finished-surface camera-only projection applied; physical stone excluded and generated fills retained.
+- Posted c-textured-lit review (CPU, 256 px).
+- Saved idle skeletal action, 8 samples.
+- Saved move skeletal action, 8 samples.
+- Saved attack skeletal action, 10 samples.
+- Saved hit skeletal action, 4 samples.
+- Saved death skeletal action, 10 samples.
+- Built MPFB standing reislaufer, steel breastplate, slashed two-colour clothing, feathered beret and solid pike.
+- Posted b-plain review (CPU, 256 px).
+- Finished-surface camera-only projection applied; physical stone excluded and generated fills retained.
+- Posted c-textured-lit review (CPU, 256 px).
+- Saved idle skeletal action, 8 samples.
+- Saved move skeletal action, 8 samples.
+- Saved attack skeletal action, 10 samples.
+- Saved hit skeletal action, 4 samples.
+- Saved death skeletal action, 10 samples.
+- Posted d-rig-poses review (CPU, 256 px).
+- Posted e-idle review (CPU, 256 px).
+- Posted e-move review (CPU, 256 px).
+- Posted e-attack review (CPU, 256 px).
+- Posted e-hit review (CPU, 256 px).
+- Posted e-death review (CPU, 256 px).
+- Posted g-feet-top review (CPU, 256 px).
+- Posted g-feet-front review (CPU, 256 px).
+- Audit passed: five clips, source hashes, 53-bone rig, fixed base and positive object scales.
+- Saved death skeletal action, 10 samples.
+- Posted e-death review (CPU, 256 px).
+- Audit passed: five clips, source hashes, 53-bone rig, fixed base and positive object scales.
+- Audit passed: five clips, source hashes, 53-bone rig, fixed base and positive object scales.
+- Saved death skeletal action, 10 samples.
+- Posted e-death review (CPU, 256 px).
+- Audit passed: five clips, source hashes, 53-bone rig, fixed base and positive object scales.
