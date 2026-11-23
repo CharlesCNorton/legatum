@@ -4,7 +4,7 @@ import { advisorOrders } from '../automation';
 import { buildingStatsFor, itemKey, itemName, TECH_NAME } from '../data';
 import { isThreat } from '../diplomacy';
 import { distance, hexEq } from '../hex';
-import { effectiveResearchQueue } from '../orders';
+import { effectiveResearchQueue, pendingResearchQueue } from '../orders';
 import { pendingDecisions } from '../turnFlow';
 import { HOLD_TURNS } from '../victoryHold';
 import { techCardUnlocks } from './techCardUnlocks';
@@ -13,7 +13,7 @@ import type { BattleForecast, CityView, Hex, Order, OrderError, PlayerView, Unit
 
 /** Keep the old key: disabling first-game hints also disables the advisor. */
 export const ADVISOR_KEY = 'legatum.first-game-hints.v2';
-export type AdvisorTarget = { kind: 'tile'; hex: Hex } | { kind: 'control'; name: 'research' | 'turn' | 'race' | 'found' | 'fortify' | 'explore' | 'skip' | 'ranged' | 'build' | 'tech'; value?: string } | null;
+export type AdvisorTarget = { kind: 'tile'; hex: Hex } | { kind: 'control'; name: 'research' | 'turn' | 'race' | 'found' | 'fortify' | 'explore' | 'skip' | 'ranged' | 'build' | 'tech' | 'closeResearch'; value?: string } | null;
 export interface AdvisorStep { instruction: string; key?: string; target: AdvisorTarget }
 export interface Suggestion { id: string; title: string; why: string; steps: AdvisorStep[]; current: number; acknowledge?: boolean }
 export interface AdvisorContext {
@@ -155,6 +155,14 @@ export function advisorSuggestion(ctx: AdvisorContext, seen: readonly string[], 
   const plan = ctx.plan === undefined ? advisorOrders(v) : ctx.plan;
   const orders = validOrders(ctx);
   const decisions = pendingDecisions(v, orders, ctx.errors ?? [], ctx.local);
+  // Research is chosen but its panel is still open: closing it is the next step, since the rest of the turn is behind it.
+  // Only after a choice made this turn, so opening Research later to browse isn't nagged; "Not now" dismisses it.
+  const chosen = pendingResearchQueue(orders);
+  if (ctx.techOpen && chosen?.length && !skipped.includes('closeResearch')) {
+    const tech = TECH_NAME[chosen[0]];
+    return { id: 'closeResearch', title: 'Close Research', why: tech ? `${tech} is chosen. Your other decisions are on the map.` : 'Your research is chosen. Your other decisions are on the map.',
+      steps: [{ instruction: `${ctx.touch ? 'Tap' : 'Click'} Close.`, key: ctx.touch ? undefined : 'Esc', target: control('closeResearch') }], current: 0 };
+  }
   const handled = (kind: string) => kind === 'city' || kind === 'unit' || kind === 'research';
   const firstHandled = decisions.findIndex((d) => handled(d.kind));
   const firstUnanswered = decisions.findIndex((d, i) => !handled(d.kind) && (firstHandled < 0 || i < firstHandled) && !skipped.includes(`answer:${d.kind}:${'id' in d ? d.id : ''}`));
