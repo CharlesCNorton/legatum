@@ -255,3 +255,22 @@
 - Final visual verdict: improved base/elbow and moving tunic; at256 face/gaze, thin shoulder drape, comb-like crest edges and elbow pigment seams remain weaker than the painting. At64 recognizable but distinguishable. Fall now fits/holds but its exposed surfaces and quiver-supported landing need another craft pass. No archer-PASS.
 - Python AST16, Bash syntax3, git whitespace PASS; GPU validator correctly rejects CPU previews. New gpu.sh includes all16 feet views, GPU512/64 masters, atlas validation and round MP4. Previous GPU succeeded; modified masters still require the lead to run ROUND=2 tools/art/anim3d/units/archer/gpu.sh. No new unit feedback; shared feedback remains1–23.
 - Commit attempted; sandbox denied .git/worktrees/lane-24/index.lock for both add and commit. Changes remain uncommitted for runner. Requested message: Refine archer surfaces and retarget open animation clips; final trailer Co-Authored-By: gpt-6-astra (Codex) <noreply@openai.com>. origin/master is already an ancestor of HEAD; no fetch/merge/push/PR performed.
+- Geometry audit passed: anatomy, fixed base, nonzero scales, bow/nock contact and loop closure.
+- Rendered b: 512px CYCLES GPU, 64 samples.
+- Published b native 256/64 comparison; render device GPU.
+- Rendered c: 512px CYCLES GPU, 64 samples.
+- Published c native 256/64 comparison; render device GPU.
+- Rendered c-details: 512px CYCLES GPU, 64 samples.
+- Published c-details native 256/64 comparison; render device GPU.
+- Rendered d: 512px CYCLES GPU, 64 samples.
+- Published d native 256/64 comparison; render device GPU.
+- Rendered e-idle: 512px CYCLES GPU, 64 samples.
+- Published e-idle native 256/64 comparison; render device GPU.
+- Rendered e-move: 512px CYCLES GPU, 64 samples.
+- Published e-move native 256/64 comparison; render device GPU.
+- Rendered e-attack: 512px CYCLES GPU, 64 samples.
+- Published e-attack native 256/64 comparison; render device GPU.
+- Rendered e-hit: 512px CYCLES GPU, 64 samples.
+- Published e-hit native 256/64 comparison; render device GPU.
+- Rendered e-death: 512px CYCLES GPU, 64 samples.
+- Published e-death native 256/64 comparison; render device GPU.
