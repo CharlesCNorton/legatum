@@ -169,3 +169,8 @@
 - Archived current actual 256px masters. Previous actual 512px masters were moved under round2-gpu-receipt/512 to avoid representing stale GPU art as current. New GPU512 remains pending. CPU video probe PASS: H.264/yuv420p, 1600x348, 240 frames/eight seconds; GPU handoff still writes the exact driver ROUND name and now includes running-gear views.
 - Decoded new CPU MP4 frames at 0.3s, 0.6s and 1.5s opened and checked; no frame clipping, short muzzle flash followed by smoke, held smoking wreck. Re-ran atlas validation after final documentation changes: 1393x556, 180602 bytes at Q80, all contract checks PASS. git diff --check and all shell syntax checks PASS.
 - Git add and commit blocked: Operation not permitted creating .git/worktrees/tank-round3/index.lock. No escalation or index workaround; changes remain uncommitted for the runner. Exact requested co-author commit message saved in masters/tank/commit-message.txt. origin/master has zero commits missing from HEAD; no fetch/merge/push/PR. No Rust/UI changes or unrelated build suite run. Current host command: ROUND=3 tools/art/anim3d/units/tank/gpu.sh from this worktree. No tank-PASS.
+- Emitted tank-b-plain.png from actual b renders; visual review pending.
+- Emitted tank-c-textured-lit.png from actual c renders; visual review pending.
+- Emitted tank-c-details.png from actual details renders; visual review pending.
+- Emitted tank-d-rig-poses.png from actual d renders; visual review pending.
+- Emitted tank-e-idle-strip.png from actual e-idle renders; visual review pending.
