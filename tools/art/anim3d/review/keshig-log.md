@@ -76,3 +76,14 @@ Rendered attack: 10 frames, 256px, 8 samples, CPU.
 Rendered hit: 4 frames, 256px, 8 samples, CPU.
 Rendered death: 10 frames, 256px, 8 samples, CPU.
 Rendered top/front views for all eight move samples; native -Y travel axis, no post-retarget foot rotation.
+Rendered b-plain: 256px CYCLES CPU, 8 samples.
+Rendered c-textured-lit: 256px CYCLES CPU, 8 samples.
+Rendered four keyed attack rig poses.
+Rendered idle: 8 frames, 256px, 8 samples, CPU.
+Atlas check rejected clipped move/attack/death frames and preserved the prior atlas. Measured the full evaluated mesh envelope: tail + extended front leg reached ~264–268 px. Added bounded uniform assembly fitting (never below 0.85) only for over-wide samples, re-grounded afterward; this avoids cropping but visible scale modulation remains a motion-quality limitation for the next review. No PASS.
+Repository HEAD gate: public-claims passed; hygiene misread compact Python matrix @ operators as email addresses; added spaces and proved identical ASTs. Direct working-tree hygiene line checks passed all 23 unit/playbook files with zero findings. Art gate failed in render-sets.mjs browser subprocess before a distinctness verdict. Git add denied creating lane-12/index.lock; runner must commit.
+Rendered move: 8 frames, 256px, 8 samples, CPU.
+Rendered attack: 10 frames, 256px, 8 samples, CPU.
+Rendered hit: 4 frames, 256px, 8 samples, CPU.
+Rendered death: 10 frames, 256px, 8 samples, CPU.
+Rendered top/front views for all eight move samples; native -Y travel axis, no post-retarget foot rotation.
