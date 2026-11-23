@@ -106,3 +106,77 @@ tools/art/anim3d/render.sh audit
 ```
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
+
+## Infantry chapter: grenade-throwing infantry
+
+The isolated entry points are `units/infantry/`; they do not alter the spearman
+scripts or runtime. This unit is the painting's olive-uniform grenade thrower,
+with a netted steel helmet, webbing, canvas pouches, gaiters and upright rifle.
+MPFB anatomy, face/hands, original skin weights and the 53-bone rig are retained.
+The uniform has folded full-depth surfaces, real thickness, bevelled pocket flaps,
+helmet net cords, chin strap and a separate segmented grenade. Rest-view fitting
+moves full volumes; inverse skin transforms preserve articulation. Bake mixed
+MPFB shape keys before fitting, or those macros override vertex edits.
+
+This chapter applies the four quality levers as the standard method: frozen
+camera projection of the original high-resolution painting with visibility and
+facing masks; finished geometry with bevels, folds and thick kit; warm upper-left
+product key, soft fill and cool rim; and one bounded monotone RGB histogram grade
+fitted at rest and held for every clip. Hidden surfaces use the existing generated
+painted linen/coat fills recoloured to infantry pigments. The camera-only painted
+illumination is 98% in covered regions; non-camera rays retain physical materials.
+Standard colour management here avoids applying AgX twice to already-lit paint.
+This is not an inverse-lighting solution: inspect exposed fills and seams in motion.
+Real Cycles AO and Pointiness maps are baked for helmet and jacket. Their physical
+materials use cavity grime and curvature roughness. Maps and `.blend` files stay
+external, packed for reproducibility.
+
+The stationary disc uses **#E9CFA0** sRGB cream top, converted to linear values,
+fine grain and a darker physical rim. Never project the figure onto the base:
+painted feet would remain behind when the real feet move. Compare rendered colour,
+not only the shader parameter. Every round emits painting/render/crossfade/center
+split comparisons at 256 and 64 px in `infantry-f-restpose-compare.png`.
+
+### Open motion and feet: standard for on-foot units
+
+Use CMU free-use motion or Quaternius CC0 as the default for idle, walk, hit and
+death. Infantry uses Quaternius `Idle_Loop`, `Walk_Loop`, `Hit_Chest`, `Death01`
+through Blender world-space rotation constraints with reference/rest matrix and
+bone-roll compensation. Match anatomical leg axes before sampling; never rotate
+feet by hand after retargeting. Carrying arms use the open idle NLA layer; only
+the grenade-specific attack is authored. A small root contact correction retains
+captured foot orientation and swing; source phases, mapping and contact metadata
+are saved beside each clip. `infantry-g-feet-check.png` shows all eight move
+samples from above and in front. Review travel-axis direction and stance sliding;
+a structural audit alone does not approve motion. No Mixamo or paid assets.
+
+### Round-1 commands and handoff
+
+```sh
+# Short CPU review; every invocation uses the machine-wide PATH gate.
+RESOLUTION=256 SAMPLES=8 tools/art/anim3d/units/infantry/render.sh build
+tools/art/anim3d/units/infantry/render.sh animate
+tools/art/anim3d/units/infantry/render.sh preview
+tools/art/anim3d/units/infantry/render.sh feet
+tools/art/anim3d/units/infantry/render.sh pack
+# Complete host pass; no arguments, run from repo root. ROUND comes from driver.
+ROUND=1 tools/art/anim3d/units/infantry/gpu.sh
+```
+
+The GPU script builds/reprojects/bakes, rebuilds all five clips, renders every
+stage at 512 px with verified Cycles Metal GPU, exports 512/256 masters, renders
+the feet views, audits, packs, independently decodes/validates and writes the
+8-second H.264/yuv420p `infantry-round${ROUND}.mp4`. The movie reconstructs trim
+offsets, shows all five clips at 2x on cream and is verified by ffprobe. No GPU
+fallback or PASS marker is synthesized. All masters live in `masters/infantry/`.
+CPU render manifests and review labels remain explicit until the host pass.
+
+The atlas retains 8/8/10/4/10 frames, uses WebP quality >=75 and refuses delivery
+above 200,000 bytes. JSON version 2 has `frame:{w:160,h:160,ax:80,ay:140}` and
+`clips:{name:{row,frames,fps,loop,rects:[{x,y,w,h,ox,oy},...]}}`. `x/y/w/h` select
+an atlas rectangle; paste it at `ox/oy` in the transparent 160px logical cell,
+then anchor the cell at `ax/ay`. Rows are idle/move/attack/hit/death. Identical
+terminal death samples may share a rectangle. Preserve lossless alpha and gutters;
+never infer a fixed grid from `row`. This art candidate does not change the app's
+runtime loader. Source/master/render hashes prevent stale packs; no 512px master
+is manufactured by enlarging a CPU preview.
