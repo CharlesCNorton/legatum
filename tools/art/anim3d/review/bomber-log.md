@@ -34,3 +34,12 @@ Round 2 opening critique: inspected latest rest comparison, move strip and engin
 Round 2 method: read all local playbook chapters and advanced spearman/field-cannon branch chapters, standing feedback 1–23, sources and six Blender skills (modeling, materials, lighting, cameras, animation, rendering). Priorities: seat glazing in real geometry, finish surfaces before projection, camera-only painted illumination to avoid doubled lighting and pink spill, physical cream stone, independently verify GPU delivery and mechanical move cycle. Human/animal mocap and feet are not applicable to this unmanned miniature aircraft.
 c: 1 frames at 256/64 from 256px CYCLES/CPU, 8 samples.
 c: 1 frames at 256/64 from 512px CYCLES/CPU, 8 samples.
+c: 1 frames at 256/64 from 512px CYCLES/CPU, 8 samples.
+b: 3 frames at 256/64 from 512px CYCLES/CPU, 8 samples.
+d: 4 frames at 256/64 from 512px CYCLES/CPU, 8 samples.
+e-idle: 8 frames at 256/64 from 512px CYCLES/CPU, 8 samples.
+e-move: 8 frames at 256/64 from 512px CYCLES/CPU, 8 samples.
+Round 2 rest CPU512/8: turret now seated; glazing/fins/wing surfaces receive frozen UVs after actual modifiers; camera-only pigment removes orange emission spill. Source blade masks remove stationary propeller paint; circular prop planes fit measured source vectors, and rotors turn about fixed local shafts. New cream disc is cleaner but still too flat at 256. At 64 silhouette/identity remain close; source nacelles, canopy and base richness still exceed this candidate. No PASS.
+e-attack: 10 frames at 256/64 from 512px CYCLES/CPU, 8 samples.
+e-hit: 4 frames at 256/64 from 512px CYCLES/CPU, 8 samples.
+e-death: 10 frames at 256/64 from 512px CYCLES/CPU, 8 samples.

@@ -100,3 +100,11 @@ Authored hit: 4 output samples at 12 fps; 152 mechanical controls; loop=False.
 Authored death: 10 output samples at 10 fps; 152 mechanical controls; loop=False.
 Rendered c: 1 PNGs, 256 px, CYCLES CPU, 8 samples.
 Published c review immediately; frozen grade bf8ce6853a7f, 256 masters retained.
+Finished materials: three actual AO/curvature bake pairs, generated unseen paint, 906 genuine projected meshes; all textures packed.
+Authored idle: 8 output samples at 10 fps; 152 mechanical controls; loop=True.
+Authored move: 8 output samples at 12 fps; 152 mechanical controls; loop=True.
+Authored attack: 10 output samples at 14 fps; 152 mechanical controls; loop=False.
+Authored hit: 4 output samples at 12 fps; 152 mechanical controls; loop=False.
+Authored death: 10 output samples at 10 fps; 152 mechanical controls; loop=False.
+Rendered c: 1 PNGs, 256 px, CYCLES CPU, 8 samples.
+Published c review immediately; frozen grade 7f2d09fc3553, 256 masters retained.

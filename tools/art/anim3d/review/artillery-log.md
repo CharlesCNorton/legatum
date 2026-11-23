@@ -70,3 +70,18 @@
 - Published e-hit: 4 actual rendered frames, 12 fps; CPU 256px 12 samples.
 - Published e-death: 10 actual rendered frames, 10 fps; CPU 256px 12 samples.
 - Completed all five clips and geometry audit; delivery pack may now run.
+- Published b-plain CPU/GPU geometry stage before texture work.
+- Baked 256px AO and curvature maps on GEO-Shield wing -1, GEO-Shield wing 1, GEO-Hollow tapered barrel
+- Published painted rest pose and 50/50 comparison; real AO shader, micrograin, edge geometry and hidden-surface fill.
+- Published e-idle: 8 actual rendered frames, 10 fps; CPU 256px 12 samples.
+- Published e-move: 8 actual rendered frames, 12 fps; CPU 256px 12 samples.
+- Published e-attack: 10 actual rendered frames, 14 fps; CPU 256px 12 samples.
+- Published e-hit: 4 actual rendered frames, 12 fps; CPU 256px 12 samples.
+- Published e-death: 10 actual rendered frames, 10 fps; CPU 256px 12 samples.
+- Completed all five clips and geometry audit; delivery pack may now run.
+- Final round-2 CPU delivery: 178,156 bytes at Q80, 1521×563, all 40 samples at CPU256/Cycles12. Exact decoded alpha reconstruction, ground clearance, both tire contacts, all clip motion and pixel-identical decoded held death passed. MP4: H.264/yuv420p, 1600×348, 240 frames/eight seconds.
+- Reviewed all five strips, detail/rest sheets and a decoded MP4 frame. At 256px hubs/tread remain muddy, trails/axle are simpler and shield/barrel registration differs; stone is warmer but more uniform. At 64px identity is clear and silhouette closer, not indistinguishable. Death is a disabled/slumped gun rather than a complete wreck. No artillery-PASS.
+- Silhouette IoU .87784 versus prior .8366 includes the shared base and is not art approval. Current 512px output is pending the host GPU pass; preserved old 512 files in round1-wip/512 and round1-512-stale.
+- Nine Python syntax checks, two shell syntax checks, executable GPU entry point, missing-input failure preflight, actual CPU-master rejection and git whitespace checks passed. No Rust or UI/runtime code changed. origin/master is zero commits ahead; no merge needed.
+- Non-obvious delivery finding: separate lossy atlas copies of identical held frames can decode differently. Reuse their rectangle and assert decoded RGBA equality.
+- Commit attempted; sandbox denied .git/worktrees/lane-17/index.lock (Operation not permitted). Changes remain uncommitted for runner. Requested message: Refine artillery projection and wheel contact for round two; trailer: Co-Authored-By: gpt-6-astra (Codex) <noreply@openai.com>. No push or PR. Lead: ROUND=2 tools/art/anim3d/units/artillery/gpu.sh.

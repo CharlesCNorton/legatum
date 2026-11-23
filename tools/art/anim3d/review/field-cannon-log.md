@@ -320,3 +320,4 @@
 - Posted field-cannon-e-move-strip.png; actual CYCLES render, visual review pending.
 - Posted field-cannon-e-attack-strip.png; actual CYCLES render, visual review pending.
 - Posted field-cannon-e-hit-strip.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-death-strip.png; actual CYCLES render, visual review pending.

@@ -130,3 +130,10 @@
 - Posted e-attack review (CPU, 256 px).
 - Posted e-hit review (CPU, 256 px).
 - Posted e-death review (CPU, 256 px).
+- Rest visibility fix: sample the native anatomical cage with helper masks disabled, then restore masks before occlusion rays; invisible MPFB helpers must not block the painting. Reran projection, six bakes, clips, all dependent previews and delivery.
+- Final CPU256/8-sample delivery: 40 frames, 167,352 bytes at q90, 1132 x 746 trimmed atlas, lossless alpha. Independent validator passes frame/master/grade hashes, offsets/bounds, reconstructed alpha, motion, decoded terminal hold and size/quality. Geometry audit passes all five clips, original 19,158 vertices/53 bones, finite nonzero scales, stationary base, loops and held death.
+- MP4 verified after final render: H.264 yuv420p, 1600 x 348, 240 frames, 8 seconds; decoded five-clip frame inspected. Three delivery tests, eight Python AST checks, two shell syntax checks, executable GPU script, working-file hygiene and git diff --check pass. Existing public-claims gate passes; origin/master is an ancestor of HEAD.
+- Full browser art gate remains blocked by Chromium bootstrap_check_in MachPortRendezvousServer Permission denied (1100), SIGTRAP; exact current failure saved in masters/arquebusier/art-r2-error.log. No Rust or app runtime changed.
+- Final visual verdict: substantial surface improvement at 256 px; slashed cloth, powder charges and face retain painted brushwork. Still distinguishable: morion comb/brim, gunstock contour/finish, right ankle/shoe fit, revealed sleeve seams, firing shoulder presentation and fall mechanics. At 64 px the unit reads clearly and the silhouette is closer (IoU .79431 vs .68681), but it is not the same token. No PASS marker.
+- Required lead run: ROUND=2 tools/art/anim3d/units/arquebusier/gpu.sh. Native GPU512 masters and fresh GPU visual review remain pending; CPU output is not GPU evidence.
+- Commit attempted with the required Co-Authored-By trailer; sandbox denied .git/worktrees/lane-10/index.lock. Changes remain uncommitted for the runner; no push or PR.
