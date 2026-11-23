@@ -33,6 +33,13 @@ def feather(mask, sigma=2):
     return np.clip(cv2.GaussianBlur(mask.astype(np.float32), (0, 0), sigma), 0, 1)
 
 
+def inward_feather(mask, width):
+    """Taper within a silhouette; motion must never spill into masts or masonry."""
+    distance = cv2.distanceTransform((mask > 0.5).astype(np.uint8), cv2.DIST_L2, 5)
+    t = np.clip((distance - 1) / width, 0, 1)
+    return t * t * (3 - 2 * t)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--image', type=Path, default=ROOT / 'app/src/assets/eras/classical-1920.jpg')
@@ -48,7 +55,10 @@ def main():
     if raw.shape != (h, w):
         parser.error('Depth dimensions differ from painting; rerun depth.py.')
     gray = cv2.cvtColor(rgb.astype(np.float32) / 255, cv2.COLOR_RGB2GRAY)
-    depth = np.clip(guided(gray, cv2.bilateralFilter(raw, 11, 0.045, 5)), 0, 1)
+    # The painting stays sharp. Only geometry is softened: sharp inferred depth
+    # steps stretched leaf/column pixels even when almost no vertices were faded.
+    edge_depth = np.clip(guided(gray, cv2.bilateralFilter(raw, 11, 0.045, 5)), 0, 1)
+    depth = cv2.GaussianBlur(edge_depth, (0, 0), 6)
     Image.fromarray(np.round(depth * 65535).astype(np.uint16)).save(args.masters / 'depth-smooth16.png')
     Image.fromarray(np.round(depth * 255).astype(np.uint8)).save(args.masters / 'depth-smooth-preview.png')
     Image.fromarray(rgb).save(args.masters / 'painting.png')
@@ -88,11 +98,12 @@ def main():
     blue = (hue > 88) & (hue < 119) & (sat > 38)
     water_region = polygon((h, w), [(250, 345), (565, 345), (680, 386), (820, 420),
         (837, 478), (715, 522), (665, 578), (515, 601), (367, 566), (250, 504)])
-    water = feather(cv2.erode((blue * water_region).astype(np.float32), np.ones((5, 5), np.uint8)), 2)
+    water = inward_feather(blue * water_region, 7)
     # Depth gates sky around temple, leaves, and the irregular distant ridgeline.
     sky_region = polygon((h, w), [(0, 0), (1919, 0), (1919, 105), (1600, 132),
         (1460, 208), (1090, 170), (920, 239), (720, 250), (592, 202), (370, 245), (0, 265)])
-    sky = feather(sky_region * (depth < 0.035), 3)
+    # Use the unsmoothed silhouette for masks, not the softened geometric ramp.
+    sky = inward_feather(sky_region * (edge_depth < 0.035), 4)
     cloth = np.zeros((h, w), np.float32)
     # Conservative interiors: fixed masts/rooflines excluded, edges taper to zero.
     for points in [
@@ -104,7 +115,7 @@ def main():
     ]:
         cloth = np.maximum(cloth, polygon((h, w), points))
     # Allow painted folds and blue pennants, not adjoining sea or building surfaces.
-    cloth = feather(cv2.erode(cloth, np.ones((5, 5), np.uint8)), 3)
+    cloth = inward_feather(cloth, 9)
     masks = {'water': water, 'sky': sky, 'cloth': cloth}
     for name, mask in masks.items():
         Image.fromarray(np.uint8(np.round(mask * 255))).save(args.masters / f'mask-{name}.png')
@@ -123,7 +134,9 @@ def main():
         cloth=cv2.resize(cloth, (641, 361), interpolation=cv2.INTER_AREA))
     stats = {'inpaint_band_percent': float(np.mean(band > 0) * 100),
              'mask_percent': {key: float(np.mean(value > 0.2) * 100) for key, value in masks.items()},
-             'mesh_grid': [641, 361], 'source': str(args.image.resolve())}
+             'mesh_grid': [641, 361], 'geometry_blur_sigma_px': 6,
+             'motion_masks': 'inward feather; no coverage outside authored regions',
+             'source': str(args.image.resolve())}
     (args.masters / 'plates.json').write_text(json.dumps(stats, indent=2) + '\n')
     print(json.dumps(stats, indent=2))
 

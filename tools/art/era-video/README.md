@@ -17,7 +17,7 @@ No downloads, installs, generated replacement art, or game integration are neede
 | Script | Work | Outputs under masters |
 | --- | --- | --- |
 | `depth.py` | Offline Depth Anything V2 Small, CPU, six Torch threads; robust percentile normalization | `depth16.png`, `depth-preview.png`, `depth.json` |
-| `plates.py` | Bilateral + luminance-guided depth smoothing; depth-aware donor preparation and OpenCV Telea inpainting; soft position/color masks | `depth-smooth16.png`, `depth-smooth-preview.png`, `painting.png`, `background.png`, `inpaint-band.png`, `mask-{water,sky,cloth}.png`, `masks-overlay.png`, `relief.npz`, `plates.json` |
+| `plates.py` | Bilateral + luminance-guided depth, then geometric smoothing; depth-aware donor preparation and OpenCV Telea inpainting; inward-feathered position/color masks | `depth-smooth16.png`, `depth-smooth-preview.png`, `painting.png`, `background.png`, `inpaint-band.png`, `mask-{water,sky,cloth}.png`, `masks-overlay.png`, `relief.npz`, `plates.json` |
 | `build_scene.py` | Builds and packs an Eevee scene; optionally renders an inclusive frame range | `scene.blend`, `scene-report.json`, `preview/frame_0001.png` or `frames/frame_0001.png`, etc. |
 | `encode.sh` | Checks 168 inputs and first-frame dimensions; H.264 MP4 and VP9 WebM with six encoder threads, serially | `<basename>.mp4`, `<basename>.webm` |
 | `contact_sheet.py` | Six evenly spaced frames including both endpoints; labels appear on the QA sheet only | Caller-selected PNG, 1440×592 |
@@ -85,36 +85,58 @@ sheet; the delivery encoder intentionally requires the complete full-size sequen
 There are no separately cut-out people, buildings, trees, or ships. The painting is one
 641×361 vertex relief with 460,800 triangles, carrying the original painted texture.
 Each vertex is projected back onto the original camera ray after depth displacement,
-so the starting composition has no depth-induced bulging. Relief is only 0.38 units at
-a camera distance of 8. A physical 9% dolly-in produces about 10% magnification, with a
-0.026-unit horizontal drift and 0.008-unit upward drift. The initial 1.5% crop protects
-the image perimeter. Camera progression uses quintic easing.
+so the starting composition has no depth-induced bulging. V2 uses 0.20 units of relief
+at a camera distance of 8, a 4.5% dolly-in (about 4.7% magnification), 0.008 units of
+horizontal drift and 0.003 units of upward drift. Depth gets a six-source-pixel Gaussian
+transition before mesh sampling; the painting texture is not blurred. The initial
+1.5% crop protects the image perimeter. Camera progression uses quintic easing.
 
-At discontinuities, opacity depends on projected triangle stretch after removing
-ordinary zoom, with folded triangles also faded. Opacity is averaged at shared vertices
-and the repair reveal eases in with the camera. This preserves brushwork that is steep
-in 3D but undistorted on screen. One background repair plane at z=-0.045 fills exposed
-seams. Its 25-pixel dilated repair apron uses farther-depth donors before inpainting to
-reduce foreground color halos. The repair image intentionally looks incomplete on its
-own: almost all of it remains hidden. The last dry run faded about 0.39% of mesh vertices
-below 95% opacity; large-scale body and architectural forms remain a continuous surface.
+The geometric guard measures both principal stretches of each projected triangle,
+including compression and shear, after removing ordinary zoom. Camera-only geometry
+outside the 0.90–1.10 stretch bounds fails the build; seven evaluated cloth/camera
+samples must also have no folds and stay within 0.75–1.25. The existing repair plane
+at z=-0.045 and opacity fallback remain, but the default v2 has no faded vertices:
+its camera-only principal stretches are 0.9643–1.0368. The repair image is not a
+visible scene layer. It uses a 25-pixel dilated apron and farther-depth donors before
+inpainting, and should remain hidden rather than compensate for excessive parallax.
 
-Water uses less than one pixel of shader UV distortion under its soft mask. Sails and
-pennants use two tiny local shape-key deformations on the same mesh. Slow broad noise
-adds a depth-weighted atmospheric glaze and weak oblique sunlight bands; three distant
-birds are tiny tapered umber curves. Emission materials and the Standard view transform
-preserve the source pigments and brushwork without new CG highlights, sharpening, or
-simulated depth of field. Warm glaze levels remain under a few percent.
+Water uses up to 1.15 horizontal / 0.30 vertical source pixels of shader UV distortion
+and at most ±2.5% linear brightness modulation of the existing painted strokes. Sails
+and pennants use two local shape-key deformations, with about 1.5 pixels of maximum
+combined horizontal displacement. Inward-feathered masks pin their boundaries and keep
+motion away from hulls, masts and masonry. Seven evaluated samples measured combined
+cloth/camera principal stretches of 0.8629–1.1382, with no folded triangles.
+
+Slow broad noise adds a distance-limited atmospheric glaze and weak oblique sunlight
+bands. The haze is reduced and vanishes at relative depth 0.25; sky glaze is halved.
+Three tapered blue-gray birds span roughly 7 pixels each at 1080p, travel about 48
+pixels independently of the camera over the motion clock, and flex their wings with
+staggered phases. Emission materials and the Standard view transform preserve the
+source pigments and brushwork without new CG highlights, sharpening, or depth of field.
 
 Camera motion ends at frame 145. A separate motion clock decelerates environmental
 motion over seconds 5–6; shader clocks, cloth, and birds all stop too. The scene builder
-compares Blender-evaluated state at 145 and 168 in its dry run. During rendering, it copies
+compares Blender-evaluated state throughout 145–168, including bird wing control points.
+During rendering, it copies
 the settled image for the rest of the hold, ensuring all final 24 PNGs are byte-identical
 and avoiding temporal alpha-dither noise. A range wholly inside the hold renders the
 settled scene once, then copies it to the requested frame numbers only. To resume,
 rerun with an explicit `--frames a-b`; the script overwrites files in that range.
 
 ## Review and verified limits
+
+The rendered v1 review is [review/v1-critique.md](review/v1-critique.md). V1's large camera
+move dominated its almost invisible environmental motion; left columns/leaves had
+localized depth strain. Its graceful ease into the byte-identical hold passed review
+and is unchanged. V2 reduces camera/relief, smooths geometric transitions, improves
+motion-mask boundaries and effect readability, and reduces the glaze.
+
+For v2, plates were regenerated and inspected, Python syntax passed, and Blender's
+full-size dry build passed geometry and hold assertions at six threads / 64 samples.
+`masters/classical/scene.blend`, prepared plates and `scene-report.json` now describe
+v2. The existing `frames/` and `classical-v1.mp4/.webm` still contain **v1**; no v2
+frames have been rendered. Render steps 4–7 above to judge v2 and encode it. The
+v1 diagnostic crops, measurements and preparation snapshot are in `masters/review/`.
 
 Completed here: actual offline CPU depth inference; plate generation; visual inspection
 of depth, masks, and background; Blender preview/range and full-size dry builds; evaluated
@@ -136,6 +158,7 @@ Weakest masks: the two small blue pennants and narrow harbor gaps are hand-bound
 conservative. The leftmost water sliver is deliberately left still to avoid the column;
 tiny distant sails are omitted. Sky depth gating can miss a thin strip along ridges and
 temple silhouettes. Inspect `masks-overlay.png` (cyan water, violet sky, orange cloth).
+The right canopy, human gestures, fire and olive foliage have no independent animation.
 
 In the lead's motion preview, check foreground column/leaf edges, people's outlines,
 the statue, and the right awning for repair blur or halos; check pennants for motion in
@@ -143,22 +166,13 @@ adjacent masonry and water for shore crawl. Inpainting cannot recover genuinely 
 architecture, so larger camera moves are outside this pilot's safe range. Keep the
 camera subtle; tune `RELIEF`, `DOLLY`, `DRIFT`, and the projected stretch fade together.
 Review the final hold and compressed clips before approving the visual result. Masters
-remain local, and no game files, art manifests, rules, or unrelated documentation changed.
+remain local; game code, art manifests and rules are unchanged.
 
 Blender API reference used for transparent materials:
 [Material.surface_render_method](https://docs.blender.org/api/current/bpy.types.Material.html#bpy.types.Material.surface_render_method).
 
-## Commit handoff
+## Lead handoff
 
-Only these six files were created. Staging was attempted, but this sandbox denies
-creating `.git/index.lock`, so no commit could be made here. From an unrestricted shell
-on the already checked-out `astra/era-video-pilot` branch:
-
-```sh
-git add tools/art/era-video/README.md tools/art/era-video/depth.py \
-  tools/art/era-video/plates.py tools/art/era-video/build_scene.py \
-  tools/art/era-video/encode.sh tools/art/era-video/contact_sheet.py
-git commit -m "Add Classical era living painting video pilot tools"
-```
-
-No push was attempted. Art review and rendered visual approval remain with the lead.
+V1 was committed by the lead. V2 edits are left uncommitted as requested; no staging,
+commit or push was attempted. Commands and flags are unchanged. Art review and rendered
+visual approval remain with the lead; a successful dry build is not visual approval.

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Blender 5.3/Eevee living painting. Run with blender -b -P ... -- --masters ... --out ... ."""
 import os
-for key in ('OMP_NUM_THREADS', 'OPENBLAS_NUM_THREADS', 'VECLIB_MAXIMUM_THREADS'):
+for key in ('OMP_NUM_THREADS', 'MKL_NUM_THREADS', 'OPENBLAS_NUM_THREADS', 'VECLIB_MAXIMUM_THREADS'):
     os.environ[key] = '6'
 import argparse
 import json
@@ -17,9 +17,9 @@ SETTLE = 145
 CAMERA_Z = 8.0
 HEIGHT = 2.0
 WIDTH = HEIGHT * 16 / 9
-RELIEF = 0.38
-DOLLY = 0.09
-DRIFT = (0.026, 0.008)
+RELIEF = 0.20
+DOLLY = 0.045
+DRIFT = (0.008, 0.003)
 
 
 def smoother(t):
@@ -80,38 +80,47 @@ def material(masters, background=False):
     components = node(nodes, 'ShaderNodeSeparateXYZ', 'UV components')
     links.new(uv, components.inputs[0])
     x, y = components.outputs['X'], components.outputs['Y']
-    # Subpixel ripple in the original paint, not a synthetic water surface.
+    # About 1.15px horizontal / 0.30px vertical at source resolution. The inward
+    # feather keeps fixed shorelines, hulls and masts out of the moving texture.
     wave = math_node('SINE', math_node('ADD', math_node('MULTIPLY', y, 480),
-                                     math_node('MULTIPLY', clock.outputs[0], 0.95)))
+                                     math_node('MULTIPLY', clock.outputs[0], 1.7)))
     wave2 = math_node('SINE', math_node('ADD', math_node('MULTIPLY', x, 130),
-                                      math_node('MULTIPLY', clock.outputs[0], -0.65)))
-    offset = node(nodes, 'ShaderNodeCombineXYZ', 'Water UV ripple < 0.6 pixel')
-    links.new(math_node('MULTIPLY', math_node('MULTIPLY', wave, water), 0.00027), offset.inputs['X'])
-    links.new(math_node('MULTIPLY', math_node('MULTIPLY', wave2, water), 0.00013), offset.inputs['Y'])
+                                      math_node('MULTIPLY', clock.outputs[0], -1.2)))
+    offset = node(nodes, 'ShaderNodeCombineXYZ', 'Water UV ripple <= 1.15 source pixels')
+    links.new(math_node('MULTIPLY', math_node('MULTIPLY', wave, water), 0.00060), offset.inputs['X'])
+    links.new(math_node('MULTIPLY', math_node('MULTIPLY', wave2, water), 0.00028), offset.inputs['Y'])
     add = node(nodes, 'ShaderNodeVectorMath', 'Ripple coordinates')
     add.operation = 'ADD'
     links.new(uv, add.inputs[0]); links.new(offset.outputs[0], add.inputs[1])
     color = texture('background.png' if background else 'painting.png', add.outputs['Vector'])
+    # Modulate existing painted water strokes, rather than lay white CG glints
+    # over them. At most +/- 2.5% linear brightness, with no effect off the water.
+    shimmer = math_node('MULTIPLY', math_node('MULTIPLY', wave, wave2), water)
+    shimmer = math_node('ADD', 1, math_node('MULTIPLY', shimmer, 0.025))
+    water_color = node(nodes, 'ShaderNodeVectorMath', 'Painted water luminance')
+    water_color.operation = 'SCALE'
+    links.new(color, water_color.inputs[0])
+    links.new(shimmer, water_color.inputs['Scale'])
     # Atmospheric glaze: broad noise, depth weighted; preserve painted contrast and grain.
     noise = node(nodes, 'ShaderNodeTexNoise', 'Slow atmospheric glaze')
     noise.noise_dimensions = '4D'
     noise.inputs['Scale'].default_value = 4.0
     noise.inputs['Detail'].default_value = 1.0
     links.new(uv, noise.inputs['Vector'])
-    links.new(math_node('MULTIPLY', clock.outputs[0], 0.035), noise.inputs['W'])
-    far = math_node('SUBTRACT', 1, depth)
-    haze = math_node('MULTIPLY', math_node('MULTIPLY', noise.outputs['Fac'], far), 0.018)
+    links.new(math_node('MULTIPLY', clock.outputs[0], 0.08), noise.inputs['W'])
+    far = math_node('MAXIMUM', math_node('SUBTRACT', 1, math_node('MULTIPLY', depth, 4)), 0)
+    haze = math_node('MULTIPLY', math_node('MULTIPLY', noise.outputs['Fac'], far), 0.012)
     # Soft oblique sunlight bands, very low contrast, strongest in distant air.
     ray_phase = math_node('ADD', math_node('MULTIPLY', x, 32), math_node('MULTIPLY', y, 12))
     ray_phase = math_node('ADD', ray_phase, math_node('MULTIPLY', clock.outputs[0], 0.045))
     ray = math_node('POWER', math_node('MAXIMUM', math_node('SINE', ray_phase), 0), 8)
-    ray = math_node('MULTIPLY', math_node('MULTIPLY', ray, far), 0.008)
+    ray = math_node('MULTIPLY', math_node('MULTIPLY', ray, far), 0.006)
     glaze = node(nodes, 'ShaderNodeMixRGB', 'Warm ivory atmospheric glaze')
     links.new(math_node('ADD', haze, ray), glaze.inputs[0])
-    links.new(color, glaze.inputs[1])
+    links.new(water_color.outputs['Vector'], glaze.inputs[1])
     glaze.inputs[2].default_value = (0.80, 0.72, 0.56, 1)
     sky_glaze = node(nodes, 'ShaderNodeMixRGB', 'Sky drift')
-    links.new(math_node('MULTIPLY', math_node('MULTIPLY', sky, noise.outputs['Fac']), 0.008), sky_glaze.inputs[0])
+    links.new(math_node('MULTIPLY', math_node('MULTIPLY', sky, noise.outputs['Fac']), 0.004), sky_glaze.inputs[0])
     links.new(glaze.outputs[0], sky_glaze.inputs[1])
     sky_glaze.inputs[2].default_value = (0.63, 0.70, 0.76, 1)
     emission = node(nodes, 'ShaderNodeEmission', 'Unlit painted surface (no CG highlights)')
@@ -155,6 +164,16 @@ def mesh_object(name, vertices, faces, uv, mat):
     return obj
 
 
+def projected_strain(start_xy, end_xy, faces, zoom):
+    """Both principal stretches detect compression/shear missed by edge lengths."""
+    def edges(points):
+        return np.stack((points[faces[:, 1]] - points[faces[:, 0]],
+                         points[faces[:, 2]] - points[faces[:, 0]]), axis=-1)
+    transform = edges(end_xy) @ np.linalg.inv(edges(start_xy)) / zoom
+    singular = np.linalg.svd(transform, compute_uv=False)
+    return singular, np.linalg.det(transform)
+
+
 def relief(masters):
     with np.load(masters / 'relief.npz') as data:
         depth, cloth = data['depth'], data['cloth']
@@ -176,18 +195,11 @@ def relief(masters):
     start_xy = xyz[:, :2] / (CAMERA_Z - xyz[:, 2, None])
     end_z = CAMERA_Z * (1 - DOLLY)
     end_xy = (xyz[:, :2] - DRIFT) / (end_z - xyz[:, 2, None])
-    stretch = np.ones(len(faces), np.float32)
-    for left, right in ((0, 1), (1, 2), (2, 0)):
-        initial = start_xy[faces[:, left]] - start_xy[faces[:, right]]
-        final = end_xy[faces[:, left]] - end_xy[faces[:, right]]
-        ratio = np.linalg.norm(final, axis=1) / np.maximum(np.linalg.norm(initial, axis=1), 1e-8)
-        ratio *= 1 - DOLLY
-        stretch = np.maximum(stretch, ratio)
-    t = np.clip((stretch - 1.15) / 0.40, 0, 1)
+    singular, determinant = projected_strain(start_xy, end_xy, faces, 1 / (1 - DOLLY))
+    strain = np.maximum(singular[:, 0], 1 / np.maximum(singular[:, 1], 1e-8))
+    t = np.clip((strain - 1.10) / 0.25, 0, 1)
     face_alpha = 1 - t * t * (3 - 2 * t)
-    edge_a = end_xy[faces[:, 1]] - end_xy[faces[:, 0]]
-    edge_b = end_xy[faces[:, 2]] - end_xy[faces[:, 0]]
-    face_alpha[edge_a[:, 0] * edge_b[:, 1] - edge_a[:, 1] * edge_b[:, 0] <= 0] = 0
+    face_alpha[determinant <= 0] = 0
     alpha = np.zeros(len(xyz), np.float32)
     count = np.zeros(len(xyz), np.float32)
     for corner in range(3):
@@ -197,13 +209,14 @@ def relief(masters):
     attr = obj.data.attributes.new('stretch_opacity', 'FLOAT', 'POINT')
     attr.data.foreach_set('value', alpha)
     obj.shape_key_add(name='Basis')
-    # Two local deformation modes, no separate sail objects. Motion stays below 0.8px.
+    # Two local fold modes, pinned by inward masks; ~1.5px maximum combined
+    # horizontal displacement at 1080p. Masts and sail silhouettes stay fixed.
     for index, phase in enumerate((0.0, 1.7)):
         key = obj.shape_key_add(name=f'Painted cloth breath {index + 1}')
         displaced = xyz.copy()
         strength = cloth.ravel() * np.sin(u.ravel() * 110 + v.ravel() * 39 + phase)
-        displaced[:, 0] += strength * 0.00065
-        displaced[:, 2] += strength * 0.0008
+        displaced[:, 0] += strength * 0.0020
+        displaced[:, 2] += strength * 0.0012
         key.data.foreach_set('co', displaced.astype(np.float32).ravel())
         key.slider_min = -1
         for frame in range(1, FRAMES + 1):
@@ -216,7 +229,14 @@ def relief(masters):
                 for x, y in [(-0.5, -0.5), (0.5, -0.5), (0.5, 0.5), (-0.5, 0.5)]]
     mesh_object('Hidden inpainted underpainting', vertices, [(0, 1, 2, 3)],
                 [(0, 0), (1, 0), (1, 1), (0, 1)], material(masters, True))
+    # Fail a scene build rather than rely on inpainting to conceal bad geometry.
+    # This is for the camera-only relief; cloth deformation is checked separately.
+    assert singular[:, 0].max() < 1.10 and singular[:, 1].min() > 0.90, \
+        'Relief exceeds 10% local strain; rerun plates.py or reduce the camera/relief'
     return {'vertices': len(xyz), 'triangles': len(faces),
+            'camera_relief_max_stretch': float(singular[:, 0].max()),
+            'camera_relief_min_stretch': float(singular[:, 1].min()),
+            'camera_relief_folded_triangles': int(np.sum(determinant <= 0)),
             'faded_vertices_percent': float(np.mean(alpha < 0.95) * 100),
             'fully_faded_vertices_percent': float(np.mean(alpha < 0.05) * 100)}
 
@@ -229,18 +249,18 @@ def birds():
     nodes.clear()
     out = nodes.new('ShaderNodeOutputMaterial')
     emit = nodes.new('ShaderNodeEmission')
-    emit.inputs['Color'].default_value = (0.18, 0.17, 0.15, 1)
+    emit.inputs['Color'].default_value = (0.13, 0.15, 0.16, 1)
     mat.node_tree.links.new(emit.outputs[0], out.inputs[0])
     for index, (u, v) in enumerate(((0.40, 0.89), (0.425, 0.875), (0.446, 0.90))):
         curve = bpy.data.curves.new(f'Bird stroke {index + 1}', 'CURVE')
         curve.dimensions = '3D'
         curve.resolution_u = 8
-        curve.bevel_depth = 0.00038
+        curve.bevel_depth = 0.00095
         curve.bevel_resolution = 1
         spline = curve.splines.new('BEZIER')
         spline.bezier_points.add(4)
         for p, co, radius in zip(spline.bezier_points,
-                [(-0.004, 0.001, 0), (-0.002, 0.0014, 0), (0, 0, 0), (0.002, 0.0014, 0), (0.004, 0.001, 0)],
+                [(-0.006, 0.001, 0), (-0.003, 0.0018, 0), (0, 0, 0), (0.003, 0.0018, 0), (0.006, 0.001, 0)],
                 [0.12, 0.65, 0.9, 0.65, 0.12]):
             p.co, p.radius = co, radius
             p.handle_left_type = p.handle_right_type = 'AUTO'
@@ -249,10 +269,16 @@ def birds():
         curve.materials.append(mat)
         for frame in range(1, FRAMES + 1):
             t = timing(frame)[1]
-            obj.location = ((u - 0.5) * WIDTH + t * 0.0045, (v - 0.5) * HEIGHT + t * 0.0008, 0.025)
+            obj.location = ((u - 0.5) * WIDTH + t * 0.016,
+                            (v - 0.5) * HEIGHT + t * 0.0015, 0.025)
             obj.rotation_euler[2] = 0.06 * math.sin(t * 0.6 + index)
             obj.keyframe_insert('location', frame=frame)
             obj.keyframe_insert('rotation_euler', frame=frame)
+            # Small asynchronous wing flex, not three identical sliding glyphs.
+            for point_index, point in enumerate(spline.bezier_points):
+                distance = abs(point_index - 2) / 2
+                point.co.y = distance * (0.0015 + 0.0018 * math.sin(t * 2.4 + index * 1.9))
+                point.keyframe_insert('co', frame=frame)
 
 
 def parse_args():
@@ -288,13 +314,48 @@ def validate_hold(scene):
             state.extend(value for row in obj.matrix_world for value in row)
             if obj.type == 'MESH' and obj.data.shape_keys:
                 state.extend(key.value for key in obj.data.shape_keys.key_blocks)
+            if obj.type == 'CURVE':
+                for spline in obj.data.splines:
+                    for point in spline.bezier_points:
+                        state.extend(point.co)
         for mat in bpy.data.materials:
             if mat.use_nodes:
                 state.extend(n.outputs[0].default_value for n in mat.node_tree.nodes if n.type == 'VALUE')
         return np.array(state)
     held = snapshot(SETTLE)
-    assert np.array_equal(held, snapshot(FRAMES)), 'Animation does not settle completely'
+    for frame in range(SETTLE + 1, FRAMES + 1):
+        assert np.array_equal(held, snapshot(frame)), f'Animation moves during hold at {frame}'
     assert not np.array_equal(snapshot(1), held), 'Animation is unexpectedly static'
+
+
+def validate_deformation(scene):
+    """Sample the evaluated cloth + camera mesh, not just undeformed endpoint depth."""
+    obj = bpy.data.objects['Continuous painted relief']
+    base = np.empty((len(obj.data.vertices), 3), np.float64)
+    obj.data.vertices.foreach_get('co', base.ravel())
+    indices = np.empty(len(obj.data.loops), np.int32)
+    obj.data.loops.foreach_get('vertex_index', indices)
+    faces = indices.reshape(-1, 3)
+    reference = base[:, :2] / (CAMERA_Z - base[:, 2, None])
+    max_stretch, min_stretch, folds = 1.0, 1.0, 0
+    frames = [1, 25, 49, 73, 97, 121, 145]
+    for frame in frames:
+        scene.frame_set(frame)
+        evaluated = obj.evaluated_get(bpy.context.evaluated_depsgraph_get())
+        mesh = evaluated.to_mesh()
+        xyz = np.empty_like(base)
+        mesh.vertices.foreach_get('co', xyz.ravel())
+        evaluated.to_mesh_clear()
+        camera = np.array(scene.camera.location)
+        projected = (xyz[:, :2] - camera[:2]) / (camera[2] - xyz[:, 2, None])
+        singular, determinant = projected_strain(reference, projected, faces, CAMERA_Z / camera[2])
+        max_stretch = max(max_stretch, float(singular[:, 0].max()))
+        min_stretch = min(min_stretch, float(singular[:, 1].min()))
+        folds += int(np.sum(determinant <= 0))
+    assert not folds, 'Animated relief contains folded triangles'
+    assert max_stretch < 1.25 and min_stretch > 0.75, 'Cloth or relief stretches paint excessively'
+    return {'deformation_sample_frames': frames, 'animated_max_stretch': max_stretch,
+            'animated_min_stretch': min_stretch, 'animated_folded_triangles': folds}
 
 
 def main():
@@ -350,12 +411,14 @@ def main():
     args.out.mkdir(parents=True, exist_ok=True)
     scene.render.filepath = str(args.out / 'frame_')
     validate_hold(scene)
+    stats.update(validate_deformation(scene))
     scene.frame_set(args.start)
     scene['era_video'] = 'Classical: 168 frames at 24 fps; hold 145-168; no text'
-    stats.update({'frames': [args.start, args.end], 'preview': args.preview,
+    stats.update({'revision': 2, 'frames': [args.start, args.end], 'preview': args.preview,
                   'resolution': [scene.render.resolution_x, scene.render.resolution_y],
                   'engine': scene.render.engine, 'hold_frames': [SETTLE, FRAMES],
-                  'relief_depth': RELIEF, 'camera_dolly_fraction': DOLLY, 'threads': 6,
+                  'relief_depth': RELIEF, 'camera_dolly_fraction': DOLLY,
+                  'camera_drift': DRIFT, 'threads': 6,
                   'hold_state_verified': True,
                   'samples': scene.eevee.taa_render_samples})
     # Pack textures: scene.blend remains usable if transferred with the frames directory.
