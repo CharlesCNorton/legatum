@@ -201,3 +201,6 @@
 - Posted field-cannon-e-idle-strip.png; actual CYCLES render, visual review pending.
 - Posted field-cannon-e-move-strip.png; actual CYCLES render, visual review pending.
 - ROUND 5 CPU PRECHECKS: 40-sample geometry audit passes, now also checking actual tyre geometry against .51m rolling metadata and full-depth coat-parented solid belts. Six existing regression tests PASS;18 Python files and both embedded GPU scripts parse;three shell entry points and git diff --check PASS. GPU master negative check correctly rejects current CPU256 files. GPU script default ROUND=5 writes its own transcript and a round-specific success receipt after all validation/video stages, with no automatic art PASS.
+- Posted field-cannon-e-attack-strip.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-hit-strip.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-death-strip.png; actual CYCLES render, visual review pending.

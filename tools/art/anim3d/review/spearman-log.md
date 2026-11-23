@@ -63,3 +63,4 @@
 - Round 6 rebuilt and CPU-rendered move at 256px / 12 samples, frozen rest grade.
 - Round 6 rebuilt and CPU-rendered attack at 256px / 12 samples, frozen rest grade.
 - Round 6 rebuilt and CPU-rendered hit at 256px / 12 samples, frozen rest grade.
+- Round 6 rebuilt and CPU-rendered death at 256px / 12 samples, frozen rest grade.
