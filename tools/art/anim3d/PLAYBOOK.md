@@ -106,3 +106,116 @@ tools/art/anim3d/render.sh audit
 ```
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
+
+## Vehicles / aircraft and drones — `drone-swarm`
+
+This unit's round-1 implementation is isolated in `tools/art/anim3d/units/drone-swarm/`.
+It reuses the vehicle family's frozen-camera projection and AO/Pointiness approach,
+and the bomber lane's stage manifests, trimmed atlas, review sheets and MP4 encoder.
+It is a review candidate; the original painting stays in the runtime.
+
+The reference is three hovering bronze drones with two visible rotor pods each,
+large optical gimbals and landing struts, above one stationary cream stone disc.
+There are 163 solid mesh parts, three rigid airframe roots, six rotor pivots and
+three gimbals. Screen-space landmarks constrain the camera-facing draft, but the
+hulls are closed volumetric shells with rear/underside geometry, the motor pods
+are cylinders, lenses are spheres and propellers have physical thickness. The
+plain stage includes two rotated views to expose the geometry. No subject cards,
+background planes, MPFB humans, purchased models or motion services are involved.
+
+All six installed Blender skills informed this unit: bevelled shell/airfoil geometry,
+metal versus dielectric materials, aimed product lighting, orthographic framing,
+layered-action compatibility and rendered-sequence inspection. The optional
+reference-look-calibration skill is unavailable; explicit alpha-bound registration,
+RGB quantiles, native-size comparisons and a crossfade supply the calibration.
+
+### Four finish levers and reference judging
+
+1. Register the full source painting's alpha bounds to the shipped 256 px token.
+   Project it onto actual geometry with frozen rest-camera UVs and facing/alpha
+   confidence. UVs move with the drone. Hidden faces use the mounted lane's original
+   generated painted-bronze fill (source, licence and prompt recorded), with a seam
+   blend. Projection supplies paint, never missing shape.
+2. Bevel hard edges and retain actual rotor spars, panel seams, fasteners, cooling
+   vents, inset sensor windows, lens rings and gimbal trunnions. Three hulls receive
+   six actual 512 px Cycles AO/Pointiness bakes; grime and wear supplement the paint.
+3. Use a warm upper-left area key, soft fill and cool rim. The painting already
+   contains highlights, so confidently projected faces use a controlled emission /
+   physical-surface blend. Final Cycles GPU frames use denoising; CPU previews are
+   explicitly labelled. Raw ungraded renders are retained.
+4. Match the rest render's 10th/50th/90th RGB quantiles to the painting with a bounded
+   24-level monotonic LUT, frozen for every clip. Alpha is unchanged. A histogram
+   match is not proof of matching surfaces or shape.
+
+The base's fallback pigment is exact sRGB `#E9CFA0`, converted to linear shader
+values, roughness .84, fine-grain bump, no metal. Its visible surfaces also receive
+reference projection. Sample the resulting pixels: lighting and colour management
+can shift cream toward grey or yellow even with correct shader inputs.
+
+Judge `drone-swarm-f-restpose-compare.png`: painting, true 3D and 50/50 crossfade at
+256 and 64 px. The pass bar is barely distinguishable rest appearance, clean five
+clips and <=200,000-byte atlas; technical validation never writes a PASS marker.
+
+### Commands and outputs
+
+Run from the repository root. Every Blender call is plain `blender -b
+--disable-autoexec`, through the PATH gate. No parallel heavy subprocesses, direct
+application path or scale-to-zero hiding. No Metal is requested in the sandbox.
+
+```sh
+unit=tools/art/anim3d/units/drone-swarm
+source tools/art/anim3d/env.sh
+"$unit/render.sh" build
+RESOLUTION=256 SAMPLES=4 "$unit/render.sh" b
+"$ANIM_ROOT/venv/bin/python" "$unit/deliver.py" b
+"$unit/render.sh" bake
+for stage in c d e-idle e-move e-attack e-hit e-death; do
+  RESOLUTION=256 SAMPLES=12 "$unit/render.sh" "$stage"
+  "$ANIM_ROOT/venv/bin/python" "$unit/deliver.py" "$stage"
+done
+blender -b --disable-autoexec --python-exit-code 1 --python "$unit/audit.py"
+"$ANIM_ROOT/venv/bin/python" "$unit/deliver.py" pack
+```
+
+`prepare.py` expects the source in `$ANIM_ROOT/assets/drone-swarm/painting-source.png`
+and the already licensed `$ANIM_ROOT/assets/horseman/fill-bronze.png`. It records
+registration and input hashes. Build invalidates downstream material and animation
+work: repeat bake, all render stages and delivery after any rebuild. Bakes, textures,
+`.blend` masters and 512/256 PNG sequences live in `masters/drone-swarm/`, never git.
+The three plain views, textured rest, detail crops, four attack poses, five strips,
+five animated WebPs and comparison are written immediately to `review/3d-v2/`.
+
+Idle uses staggered hovering/banking; move adds directional banking and formation
+motion; attack anticipates and performs a forward/downward run with gimbal tracking;
+hit recoils; death loses altitude, banks and lands as three held wrecks. The floor
+contact is evaluated from the actual transformed meshes. No unsupported laser or
+missile is added to the painting. Counts remain 8/8/10/4/10 at 10/12/14/12/10 fps.
+Only idle/move loop in the runtime; the final two death frames are identical.
+
+The required complete host handoff is one no-argument executable:
+
+```sh
+ROUND=1 tools/art/anim3d/units/drone-swarm/gpu.sh
+```
+
+It fails if Metal Cycles is unavailable, uses `CYCLES_DEVICE=GPU`, renders every
+stage at 512 px, retains 512 and 256 masters, rebuilds all review images and clips,
+audits the geometry, packs and validates the atlas and writes
+`drone-swarm-round${ROUND}.mp4`: five clips side by side, 2x on cream, 8 seconds,
+H.264 yuv420p. Re-renders use saved art; they do not rebuild or rebake the model.
+The lead should inspect GPU results because they are not CPU-preview sign-off.
+
+### Trimmed 160 px atlas contract (version 2)
+
+For this unit, this contract supersedes the legacy 256-cell spearman pack described
+above. `frame:{w:160,h:160,ax:80,ay:139}` defines a fixed logical canvas and anchor.
+`clips` retain row/frame count/fps/loop. Each clip also has `sprites`, one per frame,
+with `{x,y,w,h,ox,oy}`: atlas rectangle and offsets within that logical canvas.
+Rows remain idle/move/attack/hit/death; rectangles have two-pixel separation. Draw
+at `worldAnchor - (ax,ay) + (ox,oy)` with no per-frame rescale. The atlas dimensions
+and encoded quality are in `atlas`. Reconstruct logical frames before making videos.
+The packer tries WebP quality 80 then 75 and refuses >200,000 bytes; it never drops
+frames or quality below 75. Per-stage master/grade/frame SHA256 checks reject stale
+or interrupted renders. Validation checks rectangle bounds, offsets, alpha, all
+40 frames, visible motion and held death. The existing runtime is not modified to
+consume this candidate format in this branch.

@@ -1,0 +1,14 @@
+{
+  "painting": {
+    "file": "assets/drone-swarm/painting-source.png",
+    "url": "https://pub-fb5c281dd12d4ea4bbd38d657cdeb907.r2.dev/app/src/assets/units/drone-swarm-source.png",
+    "licence": "CC-BY-4.0",
+    "sha256": "95a547b19dc18fbeacff1b445fe763da6297fa186ac3ab8b63ed037fa7f59e1b"
+  },
+  "hidden_fill": {
+    "file": "assets/drone-swarm/painted-fill.png",
+    "source": "assets/horseman/fill-bronze.png; generated artwork recorded in assets/SOURCES.md",
+    "licence": "CC-BY-4.0",
+    "sha256": "20233d35d680a1ee510719befd841db3899371d0e9f5821b99400162a8c39720"
+  }
+}

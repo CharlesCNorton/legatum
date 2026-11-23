@@ -32,6 +32,8 @@ The date range is the range of dates the repository's own records give (prompt h
 | App icon and favicons | `app/public/favicon*`, `app/public/apple-touch-icon.png` | Composed by `tools/design/app-icon/build.mjs` from a code-drawn seal (`seal.svg`) over a parchment texture (`parchment.jpg`), which that script records as generated with Codex image generation | No prompt for the parchment texture | Not recorded |
 | Music and sound effects | `app/public/audio/` | Third-party recordings released under CC0 1.0 (Kenney, Breviceps, vitalezzz), trimmed and encoded by `tools/audio/build_audio.py` | Not applicable. Sources, authors and licences: `app/public/audio/CREDITS.md`, `manifest.json`, `licenses/` | See `CREDITS.md` |
 
+| Drone swarm 3D animation candidate | `app/src/assets/units/anim/drone-swarm.{webp,json}` | Original closed bronze drone geometry, mechanical rig and authored motion; camera-projected existing project CC BY 4.0 drone-swarm painting; generated hidden-surface bronze reused from mounted family (prompt beside scripts); actual Cycles AO/Pointiness bakes; Blender 5.3 and Pillow 13 | `tools/art/anim3d/units/drone-swarm/`; masters and input hashes in external `masters/drone-swarm/`; review candidate, not runtime art approval | 2026-11-22 |
+
 ## Gaps
 
 - No prompt is stored for the map improvements, the six original resource medallions, the aircraft plan sprites or the parchment texture.
