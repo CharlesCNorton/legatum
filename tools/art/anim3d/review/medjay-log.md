@@ -230,3 +230,30 @@ Packed 40 trimmed 160px frames at quality 90: 168218 bytes.
 Validation passed: 40 frames, motion in five clips, held death, transparent trimmed geometry, >=75 quality and <=200 KB. Art parity remains a visual judgment.
 Validation passed: 40 frames, motion in five clips, held death, transparent trimmed geometry, >=75 quality and <=200 KB. Art parity remains a visual judgment.
 Encoded medjay-round1.mp4: all five clips, 1600x348, H.264 yuv420p, 240 frames / 8 seconds.
+
+Driver round 2, 2026-11-23: opened GPU c/f and all five e strips plus eight decoded round1 MP4 frames before edits. GPU pass succeeded (GPU512/64, Q90 168218 bytes), not the earlier CPU evidence. At 256 px the projected chest/shield/linen brushwork is strong but calves have triangular fins, shoulder/neck mass is too wide, spearhead is thin, base is too uniform; death is a sideways hinge and walk shuffles. At 64 px identity is clear, but calves and stance still differ. Not PASS. Preserved supplied masters and reviews in masters/medjay/driver-r1-gpu.
+Read full playbook, all common feedback 1-23, full prior log and assets/SOURCES.md; medjay-FEEDBACK.md absent. Loaded all six Blender skills and legatum-art: applying depth-preserving finished anatomy fitting, solid straps/bevels/folds, source paint plus existing generated hidden fills, product lighting/frozen grade, reference/roll-calibrated open motion and actual front/top feet renders.
+Built MPFB Medjay anatomy, folded linen, convex hide shield, bronze spear, feather, camera and cream disc; saved plain master.
+Finished eight actual AO/curvature bake pairs and frozen-camera painting UVs with incidence blending into generated back-surface fills.
+Rendered c: 1 frames, 256px, CYCLES/CPU.
+Published c-textured-lit review immediately; source CYCLES/CPU, 256px.
+Saved idle: 8 frames at 10 fps; saved editable rig action and equipment attachments.
+Saved move: 8 frames at 12 fps; saved editable rig action and equipment attachments.
+Saved attack: 10 frames at 14 fps; saved editable rig action and equipment attachments.
+Saved hit: 4 frames at 12 fps; saved editable rig action and equipment attachments.
+Saved death: 10 frames at 10 fps; saved editable rig action and equipment attachments.
+Finished eight actual AO/curvature bake pairs and frozen-camera painting UVs with incidence blending into generated back-surface fills.
+Rendered c: 1 frames, 256px, CYCLES/CPU.
+Published c-textured-lit review immediately; source CYCLES/CPU, 256px.
+Saved idle: 8 frames at 10 fps; saved editable rig action and equipment attachments.
+Saved move: 8 frames at 12 fps; saved editable rig action and equipment attachments.
+Saved attack: 10 frames at 14 fps; saved editable rig action and equipment attachments.
+Saved hit: 4 frames at 12 fps; saved editable rig action and equipment attachments.
+Saved death: 10 frames at 10 fps; saved editable rig action and equipment attachments.
+Rendered e-move: 8 frames, 256px, CYCLES/CPU.
+Published e-move-strip review immediately; source CYCLES/CPU, 256px.
+Rendered e-death: 10 frames, 256px, CYCLES/CPU.
+Published e-death-strip review immediately; source CYCLES/CPU, 256px.
+Finished eight actual AO/curvature bake pairs and frozen-camera painting UVs with incidence blending into generated back-surface fills.
+Rendered c: 1 frames, 256px, CYCLES/CPU.
+Published c-textured-lit review immediately; source CYCLES/CPU, 256px.
