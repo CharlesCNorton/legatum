@@ -1,143 +1,96 @@
-# Classical harbour: hybrid v5
+# Classical harbour: hybrid v6
 
-The v4 painting, camera, 144 frames, 24 fps, 960×540, six workers and CLI are
-preserved. V5 makes the motion readable at delivery size. The lead's dry run
-passed; its first bake finished in 38.78 seconds but failed smoke verification.
-**The smoke stability fix below has not been run in Blender.** The lead owns all
-Blender execution through the machine-wide lock. No commit or game integration.
+V6 responds to the supplied v5 renders: moving CG needs to belong to the painting.
+The approved camera, ship route, cloth, 144 frames, 24 fps, 960×540, six threads,
+CLI and CG-only compositor are preserved. **No v6 Blender execution has occurred.**
+The lead owns every Blender invocation through the machine-wide lock.
 
 ## Changes
 
-- **Hero galley:** the painted-texture hull is now 3.65 times its v4 size. It
-  sails left from source pixel (825,550) to (400,550), with the bow facing its
-  travel. Numerical projection gives a 146 px initial hull, 175 px final hull
-  (18.2% of the frame), and 314 px centre travel (32.7%). Actual built bounds
-  are checked before baking. A ray-projected shoreline/column matte keeps the
-  ship behind foreground architecture. Original painted vessels remain.
-- **Sail and oars:** two stronger top-pinned sail shape keys, eighteen rowing
-  oars, eighteen stroke-synchronised splash fans and 36 staggered bow-spray
-  droplets. Spray is animated geometry; there is no liquid bake.
-- **Water:** broader moving normals, broken glints and travelling ripples over
-  the original water mask, an ivory foam wake and a broken ochre sail reflection.
-  Reflection is an artistic shader silhouette, not a physical planar reflection:
-  the harbour is a nearly camera-facing relief surface. Its position and the
-  wake follow the ship's current camera ray so they stay attached during the
-  push. Shorelines and painted ships are excluded by the original water mask.
-- **Brazier:** emitter centred on the painted bowl at (390,676). A fixed
-  **24×52×16**, **72-voxel**, **2× noise** Mantaflow domain sits entirely in front
-  of the relief. Stronger rising/drifting inflow, animated fuel/density/velocity,
-  grey-ochre smoke, brighter flame-grid-gated blackbody emission, warm local light
-  and glare. All scales are applied; domain/emitter transforms never animate.
-  Pre-roll remains -47..144. Smoke/flame vorticity is now 0.15/0.1, noise strength
-  0.5, with up to six adaptive substeps at CFL 2. The elongated domain has roughly
-  the same base voxel count as v4; no other simulation is introduced.
-- **Seven gulls:** approximately 11–25 px open wingspans, separate flap/glide
-  phases, crossing paths through sky and harbour, and one nearer pass at Z=160.
-- **Cloth:** two blue banners use their original painted pixels on top-pinned
-  meshes with free lower edges. Preparation repairs only the wall hidden behind
-  those cutouts. The awning retains the inward-masked relief deformation, now
-  faster and stronger, with travelling light/shadow folds. Architecture stays
-  pinned. Optional walkers are omitted.
+- **Galley:** scale 2.1 instead of 3.65. Python projection gives hull widths
+  84.5, 93.2 and 104.3 px at frames 1, 72 and 144: 1.15–1.19 times the painted
+  galley at the same depth (source hull x=575..720, y=550). Build validation rejects
+  a ratio above 1.3. This supersedes v5's 15–20% frame-width target; travel remains
+  about 314 px. Original painted vessels and foreground occlusion remain.
+- **Paint:** source-derived warm ivory sail with folds, seams and hems; dark umber
+  timber with planking and wet keel shading; raised ochre gunwales, prow and eyes.
+  Materials preserve more of their painted contrast, retain restrained daylight
+  modelling and UV-locked bristle bump, and write the existing CG-only paint AOV.
+- **Contact:** wake/reflection scale with the smaller vessel. Their camera-ray
+  anchor now follows the immersed hull at local Z=-0.65 instead of the deck/root.
+  Darker contact, brighter broken linen reflection and stronger foam support the
+  waterline. The water mesh extends far enough right to carry the initial wake;
+  its original mask still excludes shore and painted ships.
+- **Smoke:** 32×88×28 domain, 96 base voxels, 2× noise, entirely at Z>=10 in front
+  of the relief's maximum Z=8. Stronger/larger inflow, density 3.8±0.8, upward
+  velocity 18±2, flame smoke 3.2 and render density gain 3.4. Pre-roll extends to
+  -95 so the taller column can fill before frame 1. Ceiling and side feathers
+  soften edges before the domain boundaries, with an amber base and cooler ash
+  above. The vorticity stability fix (0.15/0.1, noise 0.5, six substeps, CFL 2)
+  remains. No transforms animate on the fluid objects.
+- **Gulls:** five distant birds preserved; two nearer passes now use Z=180/210
+  and scale 3.1/3.5, approximately 28–44 px open wingspans.
+- **Fire:** fuel, flame emission, point light and localized painted-surface spill
+  share irregular flicker (roughly 0.53–1.44×). The scholars are emission-painted
+  geometry and cannot receive a point light directly, so a soft surface mask
+  applies amber light to nearby faces, robes and the brazier pedestal without
+  relighting the entire picture. The point light illuminates the volume/CG.
 
-The original source image remains unchanged. The displayed plate differs only in
-local banner repairs hidden by the moving cutouts and masked cloth lighting.
-Standard colour management, the v4 CG-only pigment finish and the fixed-lens 16%
-physical push remain. The lead's Blender 5.3 `setv()` fix for same-named float and
-colour sockets is retained verbatim; the compositor still uses
-`scene.compositing_node_group` and the node-group output interface.
+The source painting is unchanged. Generated textures and manifests are in
+`masters/hybrid-v6`; v5 frames, clip and cache are preserved.
 
 ## Commands
 
-Run from the repository root. New output directory preserves all v4 renders and
-caches. Python preparation has already been run; rerun it after recipe changes.
+Python preparation and syntax checks have been run. Rerun preparation whenever
+the recipe changes. The CLI is unchanged.
 
 ```sh
-export ERA_HYBRID=/Users/samcorcos/LegatumRuns/era-video-pilot/masters/hybrid-v5
+export ERA_HYBRID=/Users/samcorcos/LegatumRuns/era-video-pilot/masters/hybrid-v6
 export ERA_PYTHON=/Users/samcorcos/LegatumRuns/era-video-pilot/venv/bin/python
 export OMP_NUM_THREADS=6
-
 python3 -m py_compile tools/art/era-video/hybrid/scene.py
 "$ERA_PYTHON" tools/art/era-video/hybrid/scene.py \
   --masters "$ERA_HYBRID" --out "$ERA_HYBRID/frames" --prepare
 
-# Define and invoke ONLY while the lead holds the existing Blender lock.
+# Invoke ONLY while the lead holds the existing Blender lock.
 # This function does not acquire the lock itself.
-hybrid_v5() {
+hybrid_v6() {
   /opt/homebrew/bin/blender -b --factory-startup --disable-autoexec -t 6 \
     --python-exit-code 1 -P tools/art/era-video/hybrid/scene.py -- \
     --masters "$ERA_HYBRID" --out "$ERA_HYBRID/frames" "$@"
 }
-hybrid_v5 --dry-run
-hybrid_v5 --bake-only
-hybrid_v5 --frames 1-1
-hybrid_v5 --frames 72-72
-hybrid_v5 --frames 144-144
-# Review these stills and a short motion sample before the full run.
-hybrid_v5 --frames 49-72
-hybrid_v5 --frames 1-144
-
+hybrid_v6 --dry-run
+hybrid_v6 --bake-only
+hybrid_v6 --frames 1-1
+hybrid_v6 --frames 72-72
+hybrid_v6 --frames 144-144
+# Review representative stills and motion before rendering the entire clip.
+hybrid_v6 --frames 49-72
+hybrid_v6 --frames 1-144
 FRAMES=144 SIZE=960x540 bash tools/art/era-video/encode.sh \
-  "$ERA_HYBRID/frames" "$ERA_HYBRID/classical-vfx-v5"
+  "$ERA_HYBRID/frames" "$ERA_HYBRID/classical-vfx-v6"
 FRAMES=144 SIZE=960x540 "$ERA_PYTHON" tools/art/era-video/contact_sheet.py \
-  "$ERA_HYBRID/frames" "$ERA_HYBRID/contact-vfx-v5.png"
+  "$ERA_HYBRID/frames" "$ERA_HYBRID/contact-vfx-v6.png"
 ```
 
-The CLI remains `--masters`, `--out`, `--frames`, `--dry-run`, `--bake-only`,
-`--prepare`, and optional `--source`. The default source is the sibling `classical`
-directory. Only preparation imports Pillow/OpenCV; Blender uses bundled NumPy.
-`--dry-run` builds and saves without baking; `--bake-only` bakes all simulation
-frames; render ranges reuse the verified bake.
+## Verification and handoff
 
-## Validation and review
+Python-only checks: `py_compile`, preparation, source/prepared hashes, unchanged
+camera/timing/CLI/socket-helper ASTs, projected hull/reference ratios, and exact
+camera-ray alignment of the hull contact and water effects. The checked textures
+retain source paint; no image-generation service or Blender process was used.
+Measurements are in `masters/hybrid-v6/static-validation.json`.
 
-`prepared.json` records recipe/source/asset hashes, painting crops and CC BY 4.0
-provenance. The signature also includes the base builder and Blender version.
-Incomplete or stale task-owned caches are rebuilt. Completion requires every
-base/noise UNI frame and nonzero density at frames 1, 48, 96 and 144. V5 also checks
-that smoke actually extends up the image (at least 8 world units at frame 1 and 12
-thereafter), rather than accepting density confined to the emitter. This reads
-the noise-grid dimensions explicitly. The bake report records actual seconds and
-whether the eight-minute target was met; there is no process-killing watchdog.
+The lead-side bake must pass the existing complete-cache checks and now measures
+the smoke grid **after the shader's density gain and boundary fades**. Its
+projected occupied height must be 150–250 px at frames 1, 48, 96 and 144. Density
+occupancy is a geometric proxy: rendered opacity and brush character still need
+visual review. Actual smoke height, clipping, flame shape, spill registration,
+ship integration and runtime are unverified until the lead renders. The larger
+domain and longer pre-roll increase bake work; the runtime report retains the
+480-second target.
 
-Python-only checks passed: syntax, asset preparation, source hashes, unchanged
-camera/CLI/socket helper, projected ship size/travel and reflection alignment,
-and sampled cloth/camera strain with no folded triangles. Results are in
-`masters/hybrid-v5/static-validation.json`. The lead-side scene also checks actual
-hull projection and inherited evaluated cloth strain before baking.
-
-**Still requires the lead's Blender run after the fix:** 5.3 API execution, smoke height and
-appearance, bake time under 480 seconds, banner cutout registration, shoreline
-occlusion, sail/reflection match, and readable motion at 960 wide. Review full
-frames and motion, not only enlarged crops. The failed v5 bake's 38.78 seconds
-leaves substantial headroom for doubling the substep cap from three to six;
-the corrected bake's runtime remains unmeasured.
-
-### Smoke bake diagnosis
-
-Python readback of the failed bake's gzip/MNT3 UNI files reproduces the 2.89-unit
-frame-1 noise height. Base XYZ resolution is 33×72×22; noise is 66×144×44.
-X is contiguous, so reshaping to ZYX and reducing axes (0,2) correctly measures
-Y. Direct SDNA inspection of `cache/baked.blend` confirms an unrotated,
-unit-scale domain and enabled scene gravity `(0,-9.81,0)`. The domain's default
-`(0,0,-9.81)` fallback was unused; it now explicitly matches the scene.
-
-The 48-frame pre-roll is not the cause: noise height already reached 36.11 units
-at frame -24, then collapsed to 2.89 at frame 1 while the base grid still spanned
-12.28. Cached velocity components grew from 3.26 at frame -47 to 1,022 at -24 and
-1,527 at frame 0, with strong motion on every axis. Heat stayed near 3 and the
-inflow remained active. This indicates excessive curl reinforcement at the old
-smoke/flame vorticity 2.5/2.0, exhausting the three-substep budget and flushing
-the open domain, rather than absent buoyancy or a measurement-axis error.
-
-The fix reduces confinement and wavelet strength and raises the substep cap;
-positive density/heat buoyancy (2/3), temperature (2), pulsed +Y inflow (about 6),
-pre-roll, domain thickness and the 8/12-unit verification thresholds are retained.
-Build and readback now check gravity/orientation and report all three plume spans.
-Offline measurements are in `masters/hybrid-v5/failed-bake-diagnosis.json`.
-
-API checks used the installed 5.3 fluid UI and Blender's primary sources:
-[fluid RNA](https://github.com/blender/blender/blob/main/source/blender/makesrna/intern/rna_fluid.cc)
-for properties, ranges and noise-grid readback, and
-[Mantaflow smoke integration](https://github.com/blender/blender/blob/main/intern/mantaflow/intern/strings/smoke_script.h)
-for gravity-directed buoyancy. The main branch is a static reference, not runtime
-verification of the installed build.
+V5's successful lead render used a 21.49-second bake but only reached 13.36–27.44
+world units of smoke height. The earlier excessive-vorticity diagnosis is recorded
+in `docs/learnings/2026-11/22-hybrid-smoke-vorticity.md` and the preserved v5
+diagnosis artifacts. Do not restore its unstable confinement settings.
