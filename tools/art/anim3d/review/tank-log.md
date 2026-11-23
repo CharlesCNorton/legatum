@@ -179,3 +179,8 @@
 - Emitted tank-e-hit-strip.png from actual e-hit renders; visual review pending.
 - Emitted tank-e-death-strip.png from actual e-death renders; visual review pending.
 - Emitted tank-g-feet-check.png: actual top/front geometry renders of all eight move samples.
+
+## Round 4 after the lead GPU pass
+- Opened GPU c/f comparison, all five e strips and decoded round3 MP4 frames before editing. GPU round3 completed: 40 frames, 197260 bytes Q80, H.264/yuv420p 1600x348 / 240 frames / eight seconds. Preserved incoming renders, clips, actual 512/256 masters and review evidence under masters/tank/round3-gpu-receipt.
+- Honest 256px critique: body brushwork and base colour are close, but outer front/right track is too heavy, near forward fender is a straight protruding blade, rear shoulder still angular, and painted shadows/apertures tumble around the wheels during move. Attack smoke reads as a dark smudge and flash is angular. At64 identity is correct but the nose/track mass and mechanical wheel pattern distinguish the render. NOT PASS.
+- Read complete playbook, both full feedback files, prior log, art direction and all six Blender skills. Modeling/cameras target closed fender geometry at the saved viewpoint; materials/animation target rotating pigment versus fixed broad lighting; lighting/rendering retain product lights, real bakes, generated olive fallback and frozen histogram grade.
