@@ -41,3 +41,12 @@ Driver round2 opening: opened c-textured-lit, f-restpose comparison, ALL five e-
 Driver round2 loaded all six Sam Blender skills and project art skill: modeling for solid reins and silhouette, materials for projection/fills and stone grain, cameras for registration plus foot views, lighting for contact/AO, animation for source actions and endpoint constraints, rendering for CPU preview/GPU provenance.
 Rendered c-textured-lit: 256px CYCLES CPU, 8 samples.
 Rendered c-textured-lit: 256px CYCLES CPU, 8 samples.
+Rendered b-plain: 256px CYCLES CPU, 8 samples.
+Rendered c-textured-lit: 256px CYCLES CPU, 8 samples.
+Rendered four keyed attack rig poses.
+Rendered idle: 8 frames, 256px, 8 samples, CPU.
+Rendered move: 8 frames, 256px, 8 samples, CPU.
+Rendered attack: 10 frames, 256px, 8 samples, CPU.
+Rendered hit: 4 frames, 256px, 8 samples, CPU.
+Rendered death: 10 frames, 256px, 8 samples, CPU.
+Packed and decoded 40 trimmed frames, quality 85, 191950 bytes; wrote cataphract-round2.mp4. Warnings: []
