@@ -52,3 +52,18 @@
 - Emitted main-battle-tank-e-death-strip.png from actual e-death renders; visual review pending.
 - Emitted main-battle-tank-g-feet-check.png from actual g renders; visual review pending.
 - Round 2 initial GPU critique (opened c, f, every e strip and decoded round1 movie frames first): at 256px, convincing painted olive wear and cream base, but flattened hull front, shortened roof silhouette, simplified drum ends and thick barrel sleeve visibly differ from painting; base rim extends too low. At 64px same unit reads clearly, though squatter roof and heavy barrel remain. Move wheels carry rotating patches of projected hull/highlight; idle exhaust appears as a detached puff; death smoke is clustered spheres. Not indistinguishable, no PASS. GPU round1 succeeded: Q90 / 191884 bytes, 40 frames and 8s H264/yuv420p. Unit-specific FEEDBACK.md absent; all shared feedback 1–23 read. Round1 evidence preserved under masters/main-battle-tank/round1-gpu/.
+- Emitted main-battle-tank-c-textured-lit.png from actual c renders; visual review pending.
+- Emitted main-battle-tank-e-move-strip.png from actual e-move renders; visual review pending.
+- Emitted main-battle-tank-c-textured-lit.png from actual c renders; visual review pending.
+- Emitted main-battle-tank-b-plain.png from actual b renders; visual review pending.
+- Emitted main-battle-tank-c-details.png from actual details renders; visual review pending.
+- Emitted main-battle-tank-d-rig-poses.png from actual d renders; visual review pending.
+- Emitted main-battle-tank-e-idle-strip.png from actual e-idle renders; visual review pending.
+- Emitted main-battle-tank-e-move-strip.png from actual e-move renders; visual review pending.
+- Emitted main-battle-tank-e-attack-strip.png from actual e-attack renders; visual review pending.
+- Emitted main-battle-tank-e-hit-strip.png from actual e-hit renders; visual review pending.
+- Emitted main-battle-tank-e-death-strip.png from actual e-death renders; visual review pending.
+- Round 2 applied all six Blender skills: individually registered beveled roof solids, longer full-depth upper deck and lower far front sprocket, thinner gun, gathered canvas geometry plus webbing/buckles, retained generated fills and product lights, rebuilt actual AO/Pointiness bakes, frozen projection and automatic rest histogram grade. Separated wheel projection materials and fixed their illumination coordinates while geometry rotates; smaller outlet exhaust and spreading muzzle smoke. CPU rest/move previews inspected: roof identity improved and rotating hull-colour patches reduced, but hull outline and rear drum remain distinguishable. No PASS.
+- Emitted main-battle-tank-g-feet-check.png from actual g renders; visual review pending.
+- Emitted main-battle-tank-d-rig-poses.png from actual d renders; visual review pending.
+- Emitted main-battle-tank-e-attack-strip.png from actual e-attack renders; visual review pending.
