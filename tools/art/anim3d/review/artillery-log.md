@@ -27,3 +27,4 @@
 - Runner commit trailer: Co-Authored-By: gpt-6-astra (Codex) <noreply@openai.com>
 - Published b-plain CPU/GPU geometry stage before texture work.
 - Baked 256px AO and curvature maps on GEO-Shield wing -1, GEO-Shield wing 1, GEO-Hollow tapered barrel
+- Published painted rest pose and 50/50 comparison; real AO shader, micrograin, edge geometry and hidden-surface fill.

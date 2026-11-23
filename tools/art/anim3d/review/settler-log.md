@@ -54,3 +54,8 @@
 - Saved 3D audit passed: source hashes, 53 bones, actual motion, exact loop closing keys and held death; ground/bounds recorded; collision limits explicit.
 - Saved death: 10 frames at 10 fps, editable MPFB rig, stationary base; authored keys.
 - Published death-check-strip: CYCLES CPU, 512 px, 8 samples; not GPU approval.
+- Saved death: 10 frames at 10 fps, editable MPFB rig, stationary base; authored keys.
+- Published death-check-strip: CYCLES CPU, 512 px, 8 samples; not GPU approval.
+- Inspected all initial clips. Revised terminal death from stiff leaning to a flatter side fall: relaxed arms/open released hand, authored cloth compression below the hips and pack shift, while preserving garment coverage. Inspected a single terminal preview before rerendering death; this is authored deformation, not cloth simulation.
+- Published e-death-strip: CYCLES CPU, 512 px, 8 samples; not GPU approval.
+- Saved 3D audit passed: source hashes, 53 bones, actual motion, exact loop closing keys and held death; ground/bounds recorded; collision limits explicit.
