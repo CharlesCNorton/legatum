@@ -89,3 +89,19 @@
 - Honest critique at256: torso/helmet brushwork is close, but the base is an untextured uniform rim with excess depth, sandals lose their toes, calves look straight and thin, face/cheek and shoulder contours still differ. At64 the correct red/ivory/bronze identity and sarissa read clearly, but highlights and footing differ. Idle is restrained; march shuffles rather than transfers weight; attack is slight; death remains visibly suspended. No PASS.
 - Read entire PLAYBOOK and standing FEEDBACK through item23; unit-specific feedback file absent. Loaded all six Blender skills; preserving inverse-skinned real geometry, painted UVs and generated fills, refining limestone geometry/material and replacing synthetic march with licensed open motion plus front/top feet review.
 - Published c review from 256px CPU renders.
+- Published c review from 256px CPU renders.
+- Published e-death review from 256px CPU renders.
+- Published e-move review from 256px CPU renders.
+- Published c review from 256px CPU renders.
+- Published b review from 256px CPU renders.
+- Published c review from 256px CPU renders.
+- Published d review from 256px CPU renders.
+- Published e-idle review from 256px CPU renders.
+- Published e-move review from 256px CPU renders.
+- New clean stone generation applied to the actual bevelled disc; alpha only blends pigment, never surface opacity. Corrected black back-edge texels caught in first CPU preview. Broadened full-depth calf and right sandal fit; retained generated bronze/linen fills, physical straps/folds, product lights and automatic grade.
+- Adapted pinned Quaternius CC0 four-action retargeter from Medjay; all3 input hashes checked, calibrated rest poses and bone rolls before sampling. Two-handed sarissa layer retained; increased attack now shifts weight to stay within existing grip limit; death releases on first falling sample. Source motion replaces sinusoidal march and authored fall.
+- Native topology/bakes/UVs, five current clips, loop/hold and exact retained source foot-rotation audit passed. Front/top feet sheet inspected: supporting feet near travel direction, real swing/stance alternation; sandal/greave shapes remain rough at rotated angles.
+- Larger source death exposes previously hidden surfaces and projection contamination. Limited camera visibility mask to real shield geometry after a whole-body mask visibly regressed overlapping armour. No claim of complete occlusion or collision solution; no PASS.
+- Published e-attack review from 256px CPU renders.
+- Published e-hit review from 256px CPU renders.
+- Published e-death review from 256px CPU renders.
