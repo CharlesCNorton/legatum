@@ -392,7 +392,7 @@ export function cityFireStatus(view: PlayerView, city: CityView): { fires: boole
   const faction = view.players.find((p) => p.id === city.owner)?.faction;
   const wall = faction === 'Switzerland' ? 'Alpine Redoubt' : 'Walls';
   // Core `data::never_walls`: a Mongol city never has Walls, so the status names the rule, not a fix.
-  if (!city.walls) return { fires: false, text: faction === 'Mongols' ? "Mongols never build Walls: can't fire" : `No ${wall}: can't fire` };
+  if (!city.walls) return { fires: false, text: faction === 'Mongols' ? "Can't fire: Mongols never build Walls" : `No ${wall}: can't fire` };
   if (!cityCanFire(city.walls, city.hp)) return { fires: false, text: "0 HP: can't fire" };
   return { fires: true, text: `${wall}: fires at units within 2 tiles` };
 }
