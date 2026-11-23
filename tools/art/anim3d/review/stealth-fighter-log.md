@@ -66,3 +66,7 @@ e-move: 8 frames at 256/64 from 512px CYCLES/CPU, 8 samples.
 e-attack: 10 frames at 256/64 from 512px CYCLES/CPU, 8 samples.
 e-hit: 4 frames at 256/64 from 512px CYCLES/CPU, 8 samples.
 e-death: 10 frames at 256/64 from 512px CYCLES/CPU, 8 samples.
+Round 2 finish: clean generated stone fill registered with original rim and live AO; alpha 1–8 specks initially broke crop, corrected and rebuilt. Solid support now reaches belly in alternate plain camera and topples without hiding; wider beveled missile travels farther.
+Round 2 CPU final: all nine native512 + derived256 sets regenerated at 8 Cycles samples; 40 frames, 168516-byte Q90 trimmed160 atlas. Seven regression tests, eight Python parses, two shell syntax checks, five geometry audits, all frame/grade/build hashes and alpha/trim/hold validation pass. Movie H264/yuv420p 1600x348, 240 frames, 8s, decoded sample inspected.
+Verdict: 64px identity/scale match strong; 256px rest close with much richer stone, but softened panel/canopy edges, coarse oblique joins and controlled-looking crash remain. RGB MAE 5.026279 vs incoming GPU 5.649796; not art approval. No PASS. Round2 GPU not run in sandbox; lead runs ROUND=2 tools/art/anim3d/units/stealth-fighter/gpu.sh.
+Git staging denied creating .git/worktrees/lane-19/index.lock (Operation not permitted); changes left for runner commit. origin/master already contained in HEAD, no merge needed. No push or PR. Suggested commit: Refine stealth fighter stone, support and release animation; trailer Co-Authored-By: gpt-6-astra (Codex) <noreply@openai.com>.
