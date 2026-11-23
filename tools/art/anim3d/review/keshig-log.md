@@ -47,3 +47,4 @@ Rendered attack: 10 frames, 512px, 64 samples, GPU.
 Rendered hit: 4 frames, 512px, 64 samples, GPU.
 Rendered death: 10 frames, 512px, 64 samples, GPU.
 Rendered top/front views for all eight move samples; native -Y travel axis, no post-retarget foot rotation.
+Packed and decoded 40 trimmed frames, quality 80, 187340 bytes; wrote keshig-round1.mp4. Warnings: []
