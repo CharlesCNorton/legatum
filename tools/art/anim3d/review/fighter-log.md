@@ -10,3 +10,15 @@
 - Rendered e-attack: 256px, CYCLES; review published.
 - Rendered e-hit: 256px, CYCLES; review published.
 - Rendered e-death: 256px, CYCLES; review published.
+- Rendered b: 512px, CYCLES; review published.
+- Rendered c: 512px, CYCLES; review published.
+- Rendered e-idle: 512px, CYCLES; review published.
+- Rendered e-move: 512px, CYCLES; review published.
+- Rendered e-attack: 512px, CYCLES; review published.
+- Rendered e-hit: 512px, CYCLES; review published.
+- Corrected outward airfoil normals and canopy/fuselage join after first plain/textured comparison; saved all model and clip masters outside git.
+- Baked six real 512 px AO/Pointiness maps (fuselage and both wings); generated bomber paint brushwork fills unobserved surfaces. Added a material-space exclusion for foreground propeller paint on the wing.
+- Geometry audit passed: four principal closed solids with positive volume, stationary base over 40 samples, safe object scales, closed flight loops, held terminal death.
+- First 256 CPU pack: 197406 bytes at quality 85; MP4 verified H.264/yuv420p, 240 frames/8 seconds. Superseded by final 512-source pack after propeller/projection fixes.
+- Visual verdict: recognizable matching fighter silhouette and palette at 64 px; still below painting richness at 256 px. Canopy join/profile, thinner propeller silhouette, base shadow and support disappearance in crash need another round. No fighter-PASS file warranted.
+- Rendered e-death: 512px, CYCLES; review published.

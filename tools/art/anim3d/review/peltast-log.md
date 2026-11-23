@@ -34,3 +34,8 @@
 - Authored idle/move/attack/hit/death on MPFB rig: 8/8/10/4/10 samples; looping breathing/steps, thrown-javelin visibility, hit recovery, independent equipment release and held death. Cloth uses authored secondary deformation, not a cloth simulation.
 - Published e-death review immediately: CYCLES/CPU, 512 px, 10 frame(s).
 - Published e-death review immediately: CYCLES/CPU, 512 px, 10 frame(s).
+- Death review caught skinned garments missing rig-root inheritance; corrected parenting and rerendered death. Final held samples reuse settled timeline frame 9, preserving 10 output frames without render-noise shimmer.
+- Pack measured 255286 bytes with full alpha and 213264 at 64 levels; 32 levels fits at 170184 bytes, RGB quality75, all40 frames, max alpha error4/255. 512/256 masters retain full alpha.
+- Final validation PASS: 40 frames, masters, source/grade hashes, trim/alpha reconstruction, margins, motion and held death. Blender audit PASS: stationary base, finite transforms, true3D, both loop matrix errors0.0.
+- Final syntax checks PASS (13 Python scripts, 2 shell scripts); git diff --check PASS. MP4 verified H264/yuv420p,1600x348,30fps,240frames,8.000s; decoded atlas comparison and MP4 snapshot visually inspected.
+- Round1 verdict: recognizable as peltast at64px, below painting at256px (face/cap, narrow torso, regular cloth folds, boot laces and abrupt rearm). No PASS marker. GPU Metal pass unrun; lead runs tools/art/anim3d/units/peltast/gpu.sh. Git commit/merge remain blocked for runner.

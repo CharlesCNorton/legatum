@@ -4,3 +4,14 @@
 - Emitted b: 3 frames, 256 px CYCLES/CPU, 4 samples.
 - Emitted c: 1 frames, 256 px CYCLES/CPU, 6 samples.
 - Emitted c-details: 1 frames, 256 px CYCLES/CPU, 6 samples.
+- Emitted d: 4 frames, 256 px CYCLES/CPU, 4 samples.
+- Emitted e-idle: 8 frames, 256 px CYCLES/CPU, 4 samples.
+- Emitted e-move: 8 frames, 256 px CYCLES/CPU, 4 samples.
+- Emitted e-attack: 10 frames, 256 px CYCLES/CPU, 4 samples.
+- Emitted e-hit: 4 frames, 256 px CYCLES/CPU, 4 samples.
+- Emitted e-death: 10 frames, 256 px CYCLES/CPU, 4 samples.
+- First full motion review emitted. Found source coat/base projection spill and bottom-cell clipping. Archived first reviews under masters/cuirassier/review-initial. A live edit to render.sh caused a shell footer error after rendering completed; fresh invocations include Python error exit codes.
+- Corrected camera extent and pistol aim; added pigment masks, raised neck pose and source-chain skinned tail. Rebuilding all dependent masters.
+- Emitted b: 3 frames, 256 px CYCLES/CPU, 4 samples.
+- Emitted c: 1 frames, 256 px CYCLES/CPU, 8 samples.
+- Emitted c-details: 1 frames, 256 px CYCLES/CPU, 8 samples.

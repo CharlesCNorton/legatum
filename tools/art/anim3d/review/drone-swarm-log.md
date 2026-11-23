@@ -4,3 +4,12 @@ c: 1 frames at 256/64 from 256px CYCLES/CPU, 6 samples.
 b: 3 frames at 256/64 from 256px CYCLES/CPU, 4 samples.
 c: 1 frames at 256/64 from 256px CYCLES/CPU, 12 samples.
 First b/c images published immediately. Visual check: narrow hulls, thin rotor bars and tall base ellipse; rebuilt fuller volumetric shells, broadened/angled solid blades, corrected formation and camera elevation. Initial evidence retained in masters/drone-swarm/first-*.png.
+b: 3 frames at 256/64 from 512px CYCLES/CPU, 8 samples.
+c: 1 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+d: 4 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+e-idle: 8 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+e-move: 8 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+e-attack: 10 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+e-hit: 4 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+e-death: 10 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+e-hit: 4 frames at 256/64 from 512px CYCLES/CPU, 12 samples.

@@ -17,3 +17,4 @@ Baked actual 256px helmet AO and Pointiness in Cycles, wired cavity darkening an
 Built 8/8/10/4/10 idle/walk/attack/hit/death clip masters with source horse actions, authored rider motion, released lance and terminal death hold.
 Render wrapper was edited while an earlier invocation was running, causing a shell read-position syntax failure after animation; current wrapper passed bash -n and the serial render batch was restarted.
 Rest comparison: rider height improved but chest/forearms remain patchy, horse neck too narrow, rein hand high, base still darker than painting; candidate requires another round, no PASS marker.
+Packed and decoded 40 trimmed frames, quality 80, 187204 bytes; wrote cataphract-round1.mp4. Warnings: []
