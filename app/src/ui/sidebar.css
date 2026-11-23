@@ -47,7 +47,7 @@
 .sidebar-objective { padding: 7px 0; }
 .sidebar-section-link { display: flex; justify-content: space-between; width: 100%; font: 600 15px var(--display); }
 .sidebar-objective-stake { display: block; color: var(--ink-2); font: 500 12px/1.5 var(--sans); margin: 3px 0; }
-.sidebar-next { width: 100%; padding: 0; border: 0; color: inherit; background: none; cursor: pointer; text-align: left; }
+.sidebar-next { width: 100%; padding: 0; border: 0; color: inherit; background: none; text-align: left; }
 .sidebar-next .eo-lines.compact .eo-line { background: none; padding: 2px 0 6px; }
 .sidebar-next .eo-lines.compact .eo-bar { top: auto; bottom: 0; height: 2px; background: var(--rule-2); }
 .sidebar-next .eo-lines.compact .eo-bar i { background: var(--gilt); }
