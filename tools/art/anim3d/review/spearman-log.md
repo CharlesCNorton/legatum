@@ -16,3 +16,7 @@
 - Plain-material review caught buried shield relief after lateral registration: the convex surface depth changed beneath the moved rays. Corrected with per-vertex ray intersection against the true shell plus nonzero raised keel/boss/rim depth. Rebuilding dependent renders and clips again; the earlier visually cleaner painted result was insufficient geometry evidence.
 - Final round-4 master: rebuilt and CPU-rendered idle, 256 px / 12 samples.
 - Final round-4 master: rebuilt and CPU-rendered move, 256 px / 12 samples.
+- Final round-4 master: rebuilt and CPU-rendered attack, 256 px / 12 samples.
+- Review image captions now identify CPU preview versus GPU directly from each render manifest, to prevent mistaking the supplied CPU evidence for a completed GPU pass.
+- Final round-4 master: rebuilt and CPU-rendered hit, 256 px / 12 samples.
+- Final round-4 master: rebuilt and CPU-rendered death, 256 px / 12 samples.
