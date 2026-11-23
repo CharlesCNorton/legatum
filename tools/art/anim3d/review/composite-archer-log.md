@@ -70,3 +70,9 @@
 - Saved e-attack review, raw 512 px and graded sets at native resolution or smaller; CYCLES GPU 64 samples.
 - Saved e-hit review, raw 512 px and graded sets at native resolution or smaller; CYCLES GPU 64 samples.
 - Saved e-death review, raw 512 px and graded sets at native resolution or smaller; CYCLES GPU 64 samples.
+
+# Driver round 2 after successful round1 GPU pass
+- Opened GPU c, f, all five e strips and decoded round1 MP4 frame before edits. At 256px costume projection is rich and silhouette is much closer, but bow has a thin plain gold outline instead of painted horn/bindings, base has an overly deep ellipse and flat rim, face is broken into dark/misaligned blocks when drawing hand moves. Move is a sideways squat shuffle with misshapen exposed boot soles; death is a crumpled pile. At64 red/gold archer identity reads, but bow/base and motion still visibly differ. Honest verdict: not PASS.
+- GPU round1 log succeeded:177986 bytes Q80, GPU512/64, valid240-frame H264 MP4. Prior evidence archived in masters/composite-archer/driver-round2-before. Unit-specific FEEDBACK absent; read all23 common feedback items, including open-motion and feet-review requirement.
+- Re-loaded all six Blender skills: modeling for full-depth registration/bevels; materials for occlusion fills and smooth confidence; cameras for disc/view calibration; lighting for painted miniature contact; animation for open-source rest/roll retarget; rendering for sequential CPU previews and GPU provenance.
+- Built-in imagegen produced a cheek/beard/collar occlusion fill from original painting, generation01a20912-a0ec-7f03-9a78-d8a012419a85; saved face-fill-source.png. Original painting remains visible surface standard.
