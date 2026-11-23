@@ -96,3 +96,28 @@
 - Posted b-plain review (CPU, 512 px).
 - Finished-surface camera-only projection applied; physical stone excluded and generated fills retained.
 - Posted c-textured-lit review (CPU, 512 px).
+- Built standing MPFB human, buff coat, red breeches/sash, feather hat, bandolier, musket and bayonet.
+- Posted b-plain review (CPU, 512 px).
+- Finished-surface camera-only projection applied; physical stone excluded and generated fills retained.
+- Posted c-textured-lit review (CPU, 512 px).
+- Saved idle skeletal action, 8 samples; CC0 Quaternius.
+- Saved move skeletal action, 8 samples; CC0 Quaternius.
+- Saved attack skeletal action, 10 samples; authored musket recoil.
+- Saved hit skeletal action, 4 samples; CC0 Quaternius.
+- Saved death skeletal action, 10 samples; CC0 Quaternius.
+- Round-2 CPU rest iterations posted immediately: widened red plume and added thick ivory lower plume; replaced bounding-box brim fit with the painting's asymmetric curved outline. First ellipse attempt exposed too much underside and was corrected.
+- Calibrated camera pitch to 8 degrees and stone center/depth to the painting's top ellipse/rim; sampled reference top RGB 250/213/174 versus prior render 222/198/154, then warmed pigment and added restrained grain. Static stone remains physical, with AO and no projected feet.
+- Fitted support fingers in evaluated mesh space through inverse linear skinning, retaining MPFB topology/weights; removed the extra long ramrod/barrel line, aligned socket/blade, and extended the solid stock into the painted butt instead of leaving that detail on the coat.
+- Hit now samples the pinned captured recoil outward and back (0/.65/.35/0); attack remains authored. Captured walk/idle/death sources remain unchanged. Regenerating all five actions and CPU512 preview stages.
+- GPU hardening: persistent Cycles caches disabled; each final frame runs in a fresh gated Blender process, with source/settings/renderer/PNG checkpoints and one bounded SIGTRAP retry. Incomplete or stale stages cannot publish render.json or a GPU receipt. Metal recovery still requires lead-side verification.
+- Posted b-plain review (CPU, 512 px); isolated verified frame jobs.
+- Posted c-textured-lit review (CPU, 512 px); isolated verified frame jobs.
+- Posted d-rig-poses review (CPU, 512 px); isolated verified frame jobs.
+- Posted e-idle review (CPU, 512 px); isolated verified frame jobs.
+- Posted e-move review (CPU, 512 px); isolated verified frame jobs.
+- Posted e-attack review (CPU, 512 px); isolated verified frame jobs.
+- Posted e-hit review (CPU, 512 px); isolated verified frame jobs.
+- Posted e-death review (CPU, 512 px); isolated verified frame jobs.
+- Posted g-feet-top review (CPU, 512 px); isolated verified frame jobs.
+- Posted g-feet-front review (CPU, 512 px); isolated verified frame jobs.
+- Audit passed: five clips, source hashes, 53-bone rig, fixed base and positive object scales.
