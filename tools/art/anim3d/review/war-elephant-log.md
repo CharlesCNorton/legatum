@@ -11,3 +11,13 @@
 - Rig audit exposed foot sinking during hit; raised the rest stance and added ground correction to every clip. Tightened body-contact audit to z >= 0.125 above the 0.12 stone top.
 - Death raw 512 views show shoulder-cloth projection spill, rigid humans and a body supported too high by folded legs; retained as next-round evidence.
 - Packing now reuses identical logical frames at one atlas rectangle, keeping held death identical after lossy WebP decoding.
+- Corrected attack tusk clipping with a smaller surge, downward head strike and officer spine brace; hit now recoils through the head/trunk. Final attack pose review has 3 px logical margin.
+- Atlas validation exposed Lanczos alpha ringing at the edge of death frame 2 despite raw-frame clearance. Area-filtered alpha separately from Lanczos RGB; all 40 decoded frames now pass alpha/bounds/motion checks.
+- Final atlas: 183608 bytes, quality 75, 160 px logical canvas, all 40 frames; duplicate held frames share one rectangle.
+- Final rig audit passed all five clips: fixed base/camera, body minimum z 0.13, 20 bones, MPFB topology/weights, loop closures and held death.
+- Python syntax (6 files), Bash syntax (2 entry points) and git diff --check passed. Source input SHA256 verification passed.
+- cargo test -p legatum-sim --profile release-checked --test determinism: 12 passed, 0 failed.
+- cargo test -p legatum-sim --profile release-checked --bin legatum-sim pinned: 2 passed, 0 failed. Both wrapped with tools/sim/build-slot.sh; automatic offloader used its low-priority local fallback because the build box was unavailable.
+- origin/master advanced to 27fa4cb0747035bf4181e5abe6d8f284a3731203. Its crates tree exactly matches HEAD (ffb2dbc0d3be1c25d5492e1f2ece3921e3c72c8f). Merge was blocked creating ORIG_HEAD.lock; git add was blocked creating index.lock. Changes left uncommitted for the runner; no push or master merge.
+- Art remains below painting parity at 256 px; recognizable at 64 px. No PASS marker. GPU rerender remains for the host via ROUND=1 tools/art/anim3d/units/war-elephant/gpu.sh.
+- Final MP4 verified with ffprobe: H.264, yuv420p, 1600x348, 30 fps, 240 frames, 8.000 seconds. Decoded frame inspected for all five trimmed-atlas reconstructions.
