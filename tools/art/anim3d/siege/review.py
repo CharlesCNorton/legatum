@@ -1,6 +1,6 @@
 """Publish review evidence immediately, preserving the first plain stage."""
 from pathlib import Path
-import os,sys
+import os,sys,json
 from PIL import Image,ImageDraw
 root=Path(os.environ['ANIM_ROOT']);m=root/'masters/field-cannon';r=root/'review/3d-v2';stage=sys.argv[1];folder=m/'renders'/stage
 files=sorted(folder.glob('*.png'));source=Image.open('app/src/assets/units/field-cannon-256.png').convert('RGBA')
@@ -19,6 +19,11 @@ if stage=='c':
  for j,(label,im) in enumerate([('Painting',source),('Rendered 3D',render),('50/50 crossfade',cross)]):
   x=8+j*272;draw.text((x,10),label,fill=(40,34,27));comparison.paste(im,(x,36),im);small=im.resize((64,64),Image.Resampling.LANCZOS);comparison.paste(small,(x+96,302),small)
  comparison.save(r/'field-cannon-f-restpose-compare.png')
+ from grade import stats
+ from PIL import ImageChops
+ sa=source.getchannel('A').point(lambda a:255 if a>128 else 0);ra=render.getchannel('A').point(lambda a:255 if a>128 else 0)
+ intersection=ImageChops.multiply(sa,ra).histogram()[255];union=ImageChops.lighter(sa,ra).histogram()[255]
+ (r/'field-cannon-look-metrics.json').write_text(json.dumps({'painting':stats(source),'render':stats(render),'silhouette_iou':intersection/max(1,union),'painting_bounds':sa.getbbox(),'render_bounds':ra.getbbox(),'note':'Measured residuals, not an art approval or exact-viewpoint claim'},indent=2)+'\n')
 if stage=='detail':
  detail=Image.new('RGB',(1024,512),(224,215,191))
  for i,im in enumerate([source,Image.open(files[0]).convert('RGBA')]):

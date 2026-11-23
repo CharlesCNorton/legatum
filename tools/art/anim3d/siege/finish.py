@@ -52,6 +52,24 @@ base.data.materials.append(rim)
 for face in base.data.polygons:
     face.material_index = 0 if face.normal.z > .5 else 1
 
+# Distinct neutral iron tyres: broad scuffed steel patches, not olive reflected wood.
+for obj in bpy.data.objects:
+    if not obj.name.startswith('Flat wrought iron tyre'):
+        continue
+    tyre = obj.data.materials[0].copy(); tyre.name = 'Siege worn iron tyre ' + obj.name
+    obj.data.materials[0] = tyre
+    nodes, links = tyre.node_tree.nodes, tyre.node_tree.links
+    p = nodes.get('Principled BSDF')
+    noise = nodes.new('ShaderNodeTexNoise'); noise.inputs['Scale'].default_value = 19
+    noise.inputs['Detail'].default_value = 3; noise.inputs['Roughness'].default_value = .75
+    palette = nodes.new('ShaderNodeValToRGB')
+    palette.color_ramp.elements[0].position = .32; palette.color_ramp.elements[0].color = srgb('474C53')
+    palette.color_ramp.elements[1].position = .70; palette.color_ramp.elements[1].color = srgb('A6A5A1')
+    links.new(noise.outputs['Fac'], palette.inputs[0]); links.new(palette.outputs[0], p.inputs['Base Color'])
+    roughness = nodes.new('ShaderNodeMapRange')
+    roughness.inputs['To Min'].default_value = .48; roughness.inputs['To Max'].default_value = .82
+    links.new(noise.outputs['Fac'], roughness.inputs[0]); links.new(roughness.outputs[0], p.inputs['Roughness'])
+
 # Mouldings are worn bronze, not bright gold jewellery; buttons keep their glints.
 aged = bpy.data.objects['Hollow bronze barrel'].data.materials[0]
 for obj in bpy.data.objects:

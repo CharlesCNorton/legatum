@@ -11,6 +11,10 @@ for clip,count in [('idle',8),('move',8),('attack',10),('hit',4),('death',10)]:
   sc.frame_set(i+1);assert base.matrix_world==base_matrix,'Base moved'
   for o in sc.objects:
    if o.type=='MESH' and not o.hide_render:assert min(abs(s) for s in o.scale)>.001,('Degenerate renderable mesh',o.name)
+  if clip=='idle':
+   actual=rig.matrix_world @ rig.pose.bones['hand_l'].tail
+   target=bpy.data.objects['Barrel elevation'].matrix_world @ Vector(rig['barrel_contact_local'])
+   assert (actual-target).length<.002,('Resting palm lost barrel contact',(actual-target).length)
   if clip in ['move','attack','hit']:
    travel=.48*(2*math.pi/12)*(i/count) if clip=='move' else 0
    rest=gun['rest_location'];yaw=gun['rest_yaw'];localtravel=(gun.location.x-rest[0])*math.cos(yaw)+(gun.location.y-rest[1])*math.sin(yaw)
@@ -31,9 +35,9 @@ for clip,count in [('idle',8),('move',8),('attack',10),('hit',4),('death',10)]:
    lows=[]
    for o in sc.objects:
     if o.type!='MESH' or o.hide_render or not(root==o or o in root.children_recursive):continue
-    ev=o.evaluated_get(dg);me=ev.to_mesh();lows.extend((ev.matrix_world@v.co).z for v in me.vertices);ev.to_mesh_clear()
+    ev=o.evaluated_get(dg);me=ev.to_mesh();lows.extend((ev.matrix_world @ v.co).z for v in me.vertices);ev.to_mesh_clear()
    grounds[root.name]=min(lows);assert .09<=min(lows)<=.15,('Terminal object not grounded',root.name,min(lows))
   records['terminal_ground']=grounds
  records[clip]=samples
 (R/'review/3d-v2/field-cannon-audit.json').write_text(json.dumps(records,indent=2))
-print('PASS: MPFB topology, 53-bone rig, 40 samples, stationary base, rolling ratio, nondegenerate effects, held grounded death')
+print('PASS: MPFB topology, 53-bone rig, 40 samples, idle palm contact, stationary base, rolling ratio, nondegenerate effects, held grounded death')

@@ -22,12 +22,12 @@ for name,rect,strength in regions:
   if mod.type not in ['ARMATURE'] and mod.show_viewport:disabled.append(mod);mod.show_viewport=False
  bpy.context.view_layer.update();ev=obj.evaluated_get(bpy.context.evaluated_depsgraph_get());me=ev.to_mesh()
  assert len(me.vertices)==len(obj.data.vertices),(name,'projection topology')
- coords=[world_to_camera_view(sc,cam,ev.matrix_world@v.co) for v in me.vertices]
+ coords=[world_to_camera_view(sc,cam,ev.matrix_world @ v.co) for v in me.vertices]
  face_only=name.startswith('MPFB');selected=[i for i,v in enumerate(me.vertices) if not face_only or v.co.z>1.49]
  xmin=min(coords[i].x for i in selected);xmax=max(coords[i].x for i in selected);ymin=min(coords[i].y for i in selected);ymax=max(coords[i].y for i in selected)
  facing=[]
  for v in me.vertices:
-  normal=(ev.matrix_world.to_3x3()@v.normal).normalized();toward=(cam.location-ev.matrix_world@v.co).normalized();facing.append(max(0,min(1,(normal.dot(toward)-.05)/.55)))
+  normal=(ev.matrix_world.to_3x3() @ v.normal).normalized();toward=(cam.location-ev.matrix_world @ v.co).normalized();facing.append(max(0,min(1,(normal.dot(toward)-.05)/.55)))
  ev.to_mesh_clear()
  for mod in disabled:mod.show_viewport=True
  uv=obj.data.uv_layers.get('Painting projection') or obj.data.uv_layers.new(name='Painting projection')

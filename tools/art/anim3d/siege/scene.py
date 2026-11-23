@@ -97,7 +97,7 @@ for sy in [-1,1]:
  # Broad wooden felloe and iron tyre, with genuine spoke openings.
  for off in [-.037,.037]:
   ring('Oak felloe',(ax,y+off,wz),radius-.035,.029,wood,p=wheel)
- hoop('Flat wrought iron tyre',(ax,y,wz),radius,.085,.014,iron,wheel)
+ hoop('Flat wrought iron tyre',(ax,y,wz),radius,.105,.014,iron,wheel)
  for off in [-.034,.034]:ring('Tyre polished edge',(ax,y+off,wz),radius-.006,.005,brightiron,p=wheel)
  for i in range(12):
   a=2*pi*i/12;end=Vector((ax+(radius-.054)*cos(a),y,wz+(radius-.054)*sin(a)))
@@ -272,8 +272,7 @@ for sg in [-1,1]:
 attach(curve('Red standing collar',[(.073*sin(a),-.061*cos(a),1.415) for a in [i*2*pi/48 for i in range(49)]],.018,red),'neck_01')
 for sg in [-1,1]:
  attach(cube('Red shoulder board',(sg*.185,-.015,1.385),(.105,.07,.018),red),'upperarm_'+('l' if sg>0 else 'r'))
-# White waistcoat opening and red coat edges, below the crossing straps.
-ribbon('Ivory waistcoat',[(-.005,-.161,1.35),(-.005,-.170,1.22),(-.005,-.149,1.03)],.047,linen,'spine_02')
+# The painting has a closed navy coat, not a third vertical ivory chest strap.
 for sg in [-1,1]:
  attach(curve('Red lapel piping',[(sg*.10,-.155,1.38),(sg*.065,-.172,1.24),(sg*.046,-.155,1.02)],.0035,red),'spine_02')
 # Shako fitted to anatomical head; no maker marks or national emblems.
@@ -310,12 +309,12 @@ for side in ['l','r']:
  for z in [.13,.21,.29,.37,.44]:attach(ball('Gaiter button',(x+.05,-.048,z),(.006,.006,.006),iron),'calf_'+side)
 # IK-like two-bone solve, authored end-effector placements in anatomical coordinates.
 def aim(name,d):
- p=rig.pose.bones[name];q=p.bone.matrix_local.to_quaternion();v=q@Vector((0,1,0));rot=(v.rotation_difference(Vector(d).normalized())@q).to_matrix().to_4x4();rot.translation=p.head.copy();p.matrix=rot;bpy.context.view_layer.update()
+ p=rig.pose.bones[name];q=p.bone.matrix_local.to_quaternion();v=q @ Vector((0,1,0));rot=(v.rotation_difference(Vector(d).normalized()) @ q).to_matrix().to_4x4();rot.translation=p.head.copy();p.matrix=rot;bpy.context.view_layer.update()
 def limb(up,low,t,pole):
  a=rig.pose.bones[up].head.copy();delta=Vector(t)-a;l1=rig.data.bones[up].length;l2=rig.data.bones[low].length;d=min(delta.length,l1+l2-.0001);delta.normalize();along=(l1*l1-l2*l2+d*d)/(2*d);h=max(0,l1*l1-along*along)**.5
  side=Vector(pole)-a;side=(side-delta*side.dot(delta)).normalized();el=a+delta*along+side*h;aim(up,el-a);aim(low,Vector(t)-el)
 limb('thigh_r','calf_r',(-.32,-.055,.07),(-.32,-.3,.5));limb('thigh_l','calf_l',(.22,.015,.07),(.23,-.3,.5))
-p=rig.pose.bones['spine_01'];pivot=p.head.copy();p.matrix=Matrix.Translation(pivot)@Matrix.Rotation(.18,4,'Y')@Matrix.Translation(-pivot)@p.matrix
+p=rig.pose.bones['spine_01'];pivot=p.head.copy();p.matrix=Matrix.Translation(pivot) @ Matrix.Rotation(.18,4,'Y') @ Matrix.Translation(-pivot) @ p.matrix
 bpy.context.view_layer.update()
 limb('upperarm_r','lowerarm_r',(-.26,-.23,1.13),(-.44,-.18,1.10));limb('upperarm_l','lowerarm_l',(.40,.16,.82),(.46,-.03,1.10))
 aim('hand_r',(0,-.08,.015));aim('hand_l',(.10,0,-.025))
@@ -328,7 +327,7 @@ grip=rig.pose.bones['hand_r'].head+Vector((0,-.055,.015))
 rammer=empty('Rammer hand control',grip);attach(rammer,'hand_r')
 rod('Wooden rammer',grip+Vector((.08,0,-1.11)),grip+Vector((-.05,0,.34)),.013,rawwood,rammer)
 rod('Rammer sponge',grip+Vector((-.05,0,.32)),grip+Vector((-.065,0,.48)),.037,dark,rammer)
-p=rig.pose.bones['head'];p.matrix_basis=p.matrix_basis@Matrix.Rotation(-.14,4,'Z')
+p=rig.pose.bones['head'];p.matrix_basis=p.matrix_basis @ Matrix.Rotation(-.14,4,'Z')
 rig.pose.bones['head'].scale=(1.12,1.12,1.12)
 rig.location=(-.60,.06,.105);rig.scale=(1.16,1.03,1.0)
 # Stationary cream stone base, matched to the painting's low plain disc.
@@ -345,11 +344,12 @@ gun.rotation_euler.z=-.55;gun.location.x=.12;gun['rest_location']=[.12,0,0];gun[
 barrel.scale.x=1.40;barrel.location.x+=.10;barrel.rotation_euler.y=-.10
 # Solve the weight-bearing wrist against the final transformed barrel crown.
 bpy.context.view_layer.update()
-contact=barrel.matrix_world@Vector((-.23,-.025,.171))
-target=rig.matrix_world.inverted()@contact
+contact=barrel.matrix_world @ Vector((-.25,-.025,.171))
+# End of the hand bone is the palm contact; the wrist is one hand length behind it.
+target=rig.matrix_world.inverted() @ contact-Vector((.11,-.015,-.03)).normalized()*rig.data.bones['hand_l'].length
 limb('upperarm_l','lowerarm_l',target,(.56,-.24,1.14))
 aim('hand_l',(.11,-.015,-.03))
-rig['barrel_contact_local']=list(barrel.matrix_world.inverted()@(rig.matrix_world@rig.pose.bones['hand_l'].head))
+rig['barrel_contact_local']=[-.25,-.025,.171]
 rig['neutral_pose']=json.dumps({p.name:[list(row) for row in p.matrix_basis] for p in rig.pose.bones})
 sc['source']='Field cannon painting: one visible MPFB gunner, original hard surface artillery';sc['wheel_radius']=radius
 bpy.ops.wm.save_as_mainfile(filepath=str(MASTER/'field-cannon-plain.blend'))

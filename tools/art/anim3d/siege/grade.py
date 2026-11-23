@@ -14,10 +14,16 @@ def stats(im):
 
 def fit(im, source):
     actual, target = stats(im), stats(source)
-    gain = [max(.90, min(1.12, b / max(1, a))) for a, b in zip(actual['mean'], target['mean'])]
-    return {'channel_gain': gain, 'contrast': max(1, min(1.25, target['luma_std'] / max(1, actual['luma_std']))),
-            'saturation': max(1.07, min(1.25, target['saturation'] / max(1, actual['saturation']))),
-            'pivot': sum(actual['mean']) / 3, 'source': target, 'rest_before': actual}
+    gain = [max(.90, min(1.18, b / max(1, a))) for a, b in zip(actual['mean'], target['mean'])]
+    calibration = {'channel_gain': gain, 'contrast': 1., 'saturation': 1.,
+                   'pivot': sum(actual['mean']) / 3, 'source': target, 'rest_before': actual}
+    # Fit in application order: gains alter both contrast and saturation.
+    balanced = stats(grade(im, calibration))
+    calibration['contrast'] = max(.90, min(1.25, target['luma_std'] / max(1, balanced['luma_std'])))
+    contrasted = stats(grade(im, calibration))
+    calibration['saturation'] = max(.80, min(1.25, target['saturation'] / max(1, contrasted['saturation'])))
+    return calibration
+
 
 
 def grade(im, calibration):

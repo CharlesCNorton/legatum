@@ -25,6 +25,27 @@ class TrimmedAtlasTests(unittest.TestCase):
             # The destination is offset minus a fixed logical anchor; no bbox recentering.
             self.assertEqual(rects[key]['ox'], original.getchannel('A').getbbox()[0])
 
+    def test_master_reduction_preserves_bicubic_alpha_exactly(self):
+        master = Image.new('RGBA', (512, 512))
+        draw = ImageDraw.Draw(master)
+        draw.ellipse((31, 80, 450, 460), fill=(180, 120, 60, 255))
+        draw.line((15, 17, 470, 380), fill=(40, 70, 90, 175), width=5)
+        atlas, rects = compose({('idle', 0): master})
+        decoded = Image.open(io.BytesIO(encode(atlas, 75))).convert('RGBA')
+        actual = reconstruct(decoded, rects[('idle', 0)], 160)
+        expected = master.resize((160, 160), Image.Resampling.BICUBIC)
+        self.assertEqual(actual.getchannel('A').tobytes(), expected.getchannel('A').tobytes())
+
+    def test_identical_hold_shares_one_encoded_rectangle(self):
+        frame = Image.new('RGBA', (160, 160))
+        ImageDraw.Draw(frame).ellipse((25, 55, 125, 145), fill=(90, 70, 40, 235))
+        atlas, rects = compose({('death', 8): frame, ('death', 9): frame.copy()})
+        self.assertEqual(rects[('death', 8)], rects[('death', 9)])
+        self.assertEqual(len(rects), 2)  # Both playback samples remain.
+        decoded = Image.open(io.BytesIO(encode(atlas, 75))).convert('RGBA')
+        self.assertEqual(reconstruct(decoded, rects[('death', 8)], 160).tobytes(),
+                         reconstruct(decoded, rects[('death', 9)], 160).tobytes())
+
     def test_invalid_offset_is_rejected(self):
         atlas = Image.new('RGBA', (30, 30))
         with self.assertRaises(AssertionError):

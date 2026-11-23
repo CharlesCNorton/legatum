@@ -12,15 +12,15 @@ def lowest(objects):
  for o in objects:
   if o.type not in ['MESH','CURVE'] or o.hide_render:continue
   ev=o.evaluated_get(dg);me=ev.to_mesh()
-  zs.extend((ev.matrix_world@v.co).z for v in me.vertices);ev.to_mesh_clear()
+  zs.extend((ev.matrix_world @ v.co).z for v in me.vertices);ev.to_mesh_clear()
  return min(zs)
 def aim(rig,name,d):
- p=rig.pose.bones[name];q=p.bone.matrix_local.to_quaternion();rot=((q@Vector((0,1,0))).rotation_difference(Vector(d).normalized())@q).to_matrix().to_4x4();rot.translation=p.head.copy();p.matrix=rot;bpy.context.view_layer.update()
+ p=rig.pose.bones[name];q=p.bone.matrix_local.to_quaternion();rot=((q @ Vector((0,1,0))).rotation_difference(Vector(d).normalized()) @ q).to_matrix().to_4x4();rot.translation=p.head.copy();p.matrix=rot;bpy.context.view_layer.update()
 def limb(rig,up,low,t,pole):
  a=rig.pose.bones[up].head.copy();delta=Vector(t)-a;l1=rig.data.bones[up].length;l2=rig.data.bones[low].length;d=min(delta.length,l1+l2-.0001);delta.normalize();along=(l1*l1-l2*l2+d*d)/(2*d);h=max(0,l1*l1-along*along)**.5
  side=Vector(pole)-a;side=(side-delta*side.dot(delta)).normalized();el=a+delta*along+side*h;aim(rig,up,el-a);aim(rig,low,Vector(t)-el)
 def rotate(rig,bone,axis,a):
- p=rig.pose.bones[bone];p.matrix_basis=p.matrix_basis@Matrix.Rotation(a,4,axis);bpy.context.view_layer.update()
+ p=rig.pose.bones[bone];p.matrix_basis=p.matrix_basis @ Matrix.Rotation(a,4,axis);bpy.context.view_layer.update()
 def effectmat(name,color):
  m=bpy.data.materials.new(name);m.use_nodes=True;p=m.node_tree.nodes.get('Principled BSDF');p.inputs['Base Color'].default_value=(*color,1);p.inputs['Roughness'].default_value=.95;return m
 requested=sys.argv[sys.argv.index('--')+1] if '--' in sys.argv else None
@@ -55,7 +55,9 @@ for clip,(count,fps,loop) in CLIPS.items():
   rig.location=start;rig.rotation_euler=(0,0,0);gun.location=neutralgun;gun.rotation_euler=gunangle
   for w in wheels:w.rotation_euler=(0,0,0)
   if clip=='idle':
-   rotate(rig,'spine_02','X',.016*sin(phase));rotate(rig,'head','Z',.055*sin(phase+.5));rotate(rig,'lowerarm_l','X',.055*sin(phase))
+   rotate(rig,'spine_02','X',.016*sin(phase));rotate(rig,'head','Z',.035*sin(phase))
+   target=rig.matrix_world.inverted() @ (barrel.matrix_world @ Vector(rig['barrel_contact_local']))-Vector((.11,-.015,-.03)).normalized()*rig.data.bones['hand_l'].length
+   limb(rig,'upperarm_l','lowerarm_l',target,(.56,-.24,1.14));aim(rig,'hand_l',(.11,-.015,-.03))
   elif clip=='move':
    # Ground travel is removed from sprite root by the map; 12-fold wheel symmetry
    # gives an exact cyclic seam after one spoke pitch. theta = distance / radius.
@@ -71,7 +73,7 @@ for clip,(count,fps,loop) in CLIPS.items():
    recoil=[0,0,-.105,-.13,-.085,-.04,-.014,0,0,0][i];gun.location=neutralgun+Vector((recoil*cos(gunangle.z),recoil*sin(gunangle.z),0));bpy.context.view_layer.update()
    for w in wheels:w.rotation_euler.y=recoil/.48
    react=[0,-.025,.16,.23,.16,.09,.03,0,0,0][i];rotate(rig,'spine_01','Y',-react);rotate(rig,'head','X',react*.6);rotate(rig,'upperarm_l','Z',react)
-   visible=1 if i==2 else 0;muzzle=barrel.matrix_world@Vector((.76,0,.02));forward=(barrel.matrix_world.to_3x3()@Vector((1,0,0))).normalized();flash.location=muzzle+forward*.10;flash.rotation_euler=barrel.matrix_world.to_euler();flash.scale=(.20,.065,.055);flash.hide_render=not visible;flash.keyframe_insert(data_path='hide_render',frame=frame)
+   visible=1 if i==2 else 0;muzzle=barrel.matrix_world @ Vector((.76,0,.02));forward=(barrel.matrix_world.to_3x3() @ Vector((1,0,0))).normalized();flash.location=muzzle+forward*.10;flash.rotation_euler=barrel.matrix_world.to_euler();flash.scale=(.20,.065,.055);flash.hide_render=not visible;flash.keyframe_insert(data_path='hide_render',frame=frame)
    flash.keyframe_insert(data_path='scale',frame=frame);flash.keyframe_insert(data_path='location',frame=frame)
    for j,o in enumerate(smoke):
     age=max(0,(i-2)/6);size=(.055+.045*age)*(sin(pi*min(age,1)) if i>=2 else 0)
@@ -84,7 +86,7 @@ for clip,(count,fps,loop) in CLIPS.items():
   else:
    fall=max(0,min(1,(t-.12)/.70));ease=fall*fall*(3-2*fall)
    rig.location.x=start.x+1.55*ease**.65;rig.location.y=start.y-.36*ease
-   endrot=(Matrix.Rotation(pi/2,4,'Z')@Matrix.Rotation(-pi/2,4,'X')).to_quaternion();rig.rotation_euler=Matrix.Identity(4).to_quaternion().slerp(endrot,ease).to_euler()
+   endrot=(Matrix.Rotation(pi/2,4,'Z') @ Matrix.Rotation(-pi/2,4,'X')).to_quaternion();rig.rotation_euler=Matrix.Identity(4).to_quaternion().slerp(endrot,ease).to_euler()
    rotate(rig,'thigh_l','X',.20*sin(pi*fall));rotate(rig,'thigh_r','X',-.14*sin(pi*fall))
    for side,sg in [('l',1),('r',-1)]:
     target=rig.pose.bones['hand_'+side].head.lerp(Vector((sg*.25,-.08,1.0)),ease);limb(rig,'upperarm_'+side,'lowerarm_'+side,target,(sg*.40,-.1,1.15))

@@ -30,7 +30,7 @@ def main():
     source, _, hashes = load_frames(MASTER / 'renders')
     assert hashes == report['source_sha256'], 'Source frames changed since pack'
     occupied = Image.new('L', atlas.size); draw = ImageDraw.Draw(occupied)
-    boxes, findings = {}, []
+    boxes, findings, shared = {}, [], {}
     sheet = Image.new('RGB', (10*160, 5*160), '#ddd3ba')
     for row, (clip, (count, fps, loop)) in enumerate(CLIPS.items()):
         info = meta['clips'][clip]
@@ -40,9 +40,14 @@ def main():
         for i, rect in enumerate(info['rects']):
             frame = reconstruct(atlas, rect, 160)
             x, y, w, h = [rect[k] for k in ('x', 'y', 'w', 'h')]
-            assert not occupied.crop((x, y, x+w, y+h)).getbbox(), 'Overlapping atlas rectangles'
-            draw.rectangle((x, y, x+w-1, y+h-1), fill=255)
-            expected = source[(clip, i)].resize((160, 160), Image.Resampling.LANCZOS)
+            expected = source[(clip, i)].resize((160, 160), Image.Resampling.BICUBIC)
+            signature = tuple(rect[k] for k in ('x', 'y', 'w', 'h', 'ox', 'oy'))
+            if signature in shared:
+                assert shared[signature] == expected.tobytes(), 'Shared rectangle has differing source frames'
+            else:
+                assert not occupied.crop((x, y, x+w, y+h)).getbbox(), 'Overlapping atlas rectangles'
+                draw.rectangle((x, y, x+w-1, y+h-1), fill=255)
+                shared[signature] = expected.tobytes()
             assert frame.getchannel('A').tobytes() == expected.getchannel('A').tobytes(), f'{clip}/{i}: alpha or offset drift'
             box = frame.getchannel('A').point(lambda a: 255 if a > 16 else 0).getbbox()
             assert box
@@ -53,7 +58,7 @@ def main():
             frames.append(frame)
         assert any(ImageChops.difference(frames[0], f).getbbox(alpha_only=False) for f in frames[1:]), f'{clip}: no motion'
         if clip == 'death':
-            assert frames[-1].getchannel('A').tobytes() == frames[-2].getchannel('A').tobytes(), 'Death silhouette moved'
+            assert frames[-1].tobytes() == frames[-2].tobytes(), 'Decoded death hold changed'
     outside = ImageChops.multiply(atlas.getchannel('A'), ImageChops.invert(occupied))
     assert not outside.getbbox(), 'Nontransparent atlas padding'
     assert source[('death', 8)].tobytes() == source[('death', 9)].tobytes(), 'Terminal source pixels differ'

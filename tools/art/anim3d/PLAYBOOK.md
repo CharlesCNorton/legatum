@@ -79,88 +79,114 @@ The review bar is the original painting: equally rich at 256 px, same identity a
 
 For the next unit, start new external master and review directories; calibrate the painting's camera, proportions and anchor first. Adjust the MPFB macro targets, fit new kit to the same skeletal segments, select and license suitable captured motion, then author the combat keys. Repeat the plain, textured, pose and per-clip reviews before packing. Reuse the download, bake, retarget and validation approach; do not treat a copied spearman mesh, texture or motion as finished art for another unit.
 
+## Shared painted-miniature method (round two)
+
+Judge the rest pose before motion: painting on the left, render on the right, and a 50/50 crossfade,
+at both 256 and 64 px, named `<slug>-f-restpose-compare.png`. Passing an atlas validator is not art
+approval. The target is a nearly indistinguishable rest pose, including silhouette and equipment.
+
+The four quality levers, in order:
+
+1. Match the painting's viewpoint and pose, then project its brushwork onto the actual meshes through
+   that camera. Use image-generated fills for unseen surfaces and blend at seams. Do not use a flat
+   cutout, or describe independently stretched texture regions as an exact camera match. Record any
+   local landmark corrections and remaining registration error.
+2. Finish geometry: beveled hard edges, thick straps with stitched edges and buckles, highlighted
+   buttons, folded and subdivided cloth, recognizable face and hands. Texture is not a substitute
+   for missing relief, contact or silhouette.
+3. Light as a painted miniature in a product photograph: warm upper-left key, broad soft fill,
+   cooler restrained rim and contact shadows. Use AgX, Cycles and denoising for the final GPU pass.
+4. Automatically sample opaque source/render pixels to fit contrast, saturation and colour balance.
+   Fit once at rest and apply that same transform to the entire clip set; per-frame fitting flickers.
+
+The shared base palette is sRGB **cream `#E9CFA0`** on top, with a darker warm rim (`#BA9968` in the
+siege shader). Convert sRGB to scene-linear before assigning a shader colour; do not enter the 8-bit
+triplet directly. Judge the *lit and graded pixels* too: a numeric material match does not prove a
+perceptual match. The base is stationary, plain stone, without an era-metal ring.
+
 ## Siege — field cannon
 
-The field-cannon candidate uses the painting's **one visible gunner**, navy coat, red cuffs and collar,
-ivory breeches and cross-belts, black gaiters and shako, and upright sponge rammer. The person is a
-fresh MPFB 2.0.18 human with native topology and the 53-bone `game_engine` rig. The gun is entirely
-editable hard-surface geometry: hollow lathed bronze barrel, mouldings, cascabel and trunnions;
-olive-painted oak cheeks and trail; cross-beds, axle, twelve open spokes per wheel, flat iron tyres,
-hub bands, cheek straps, cap bolts, tow eyes and elevation wedge. It is not an image extrusion.
+One MPFB 2.0.18 gunner (53-bone `game_engine` rig) wears navy wool, red facings, ivory breeches and
+crossbelts, black gaiters/shako and a moustache. The painting has a closed blue coat: the erroneous
+vertical ivory waistcoat strip is removed. The torso leans toward the gun before the arms are solved;
+the left arm is solved so the palm rests on the transformed barrel crown throughout idle.
+The other hand holds the sponge rammer. No primitive body, billboard or commercial character asset
+is substituted for the native anatomy.
 
-All siege scripts are in `tools/art/anim3d/siege/`. They source the shared `env.sh`, use its installed
-MPFB and CC0 material packs, and write only to `masters/field-cannon/` and the shared review folder
-under `ANIM_ROOT`. `assets/field-cannon/painting-source.png` is the external painting reference;
-`assets/SOURCES.md` records its licence and the reused packs. No masters or downloads enter git.
-The shared renderer dispatches to this family when `ANIM_FAMILY=siege`; its default stays spearman.
-Every siege Blender invocation goes through `bin/blender-slot`, with no private lock or direct
-Blender call. The live machine-wide gate currently allows **one Blender process**, three threads;
-keep following that wrapper if the lead changes its implementation. Always use background mode.
+The gun is editable geometry: hollow lathed barrel, mouldings, cascabel, trunnions, olive oak carriage,
+axle, twelve open spokes per wheel, flat iron tyres, hub bands and iron fastenings. The wheel track and
+yaw are adjusted toward the painting. Broader irregular coat/sleeve folds, real belt thickness, both
+stitched edges, a raised rectangular buckle/pin and brass buttons address the chest/crossbelt critique.
+The dark mottled barrel has aged roughness; mouldings use aged bronze rather than bright gold rings.
+Broader tyres have neutral scuffed iron, varied roughness, polished arrises and felloe nails.
 
-### Building and CPU review
+All family code is in `tools/art/anim3d/siege/`. `ANIM_FAMILY=siege` selects it through the shared
+renderer. Every Blender invocation uses **`blender` on PATH**, always `-b --disable-autoexec`; the
+machine-wide gate owns serialization, its three-thread cap and retry policy. Do not bypass it with
+an application path or a direct private wrapper. All six installed `blender-*` skills were applied.
 
-From the repository root:
+Masters and images live outside git under `~/LegatumRuns/anim-pilot/masters/field-cannon/`.
+`assets/field-cannon/painting-source.png` is the original painting; existing CC0 Metal034, Fabric030,
+Travertine001 and Poly Haven wood/leather remain in use. The original image-generated
+`painted-navy-wool.png` fills unseen cloth. No new external asset licence is introduced. The central
+provenance table and external `assets/SOURCES.md` identify these sources.
+
+### Build, paint and judge
 
 ```sh
 export ANIM_FAMILY=siege
 source tools/art/anim3d/env.sh
 "$ANIM_ROOT/venv/bin/python" tools/art/anim3d/siege/prepare.py
 tools/art/anim3d/render.sh build
-RENDER_ENGINE=CYCLES SAMPLES=8 tools/art/anim3d/render.sh b
+RENDER_ENGINE=CYCLES CYCLES_DEVICE=CPU SAMPLES=8 RESOLUTION=256 tools/art/anim3d/render.sh b
 tools/art/anim3d/render.sh materials
 tools/art/anim3d/render.sh bake
 tools/art/anim3d/render.sh paint
 tools/art/anim3d/render.sh finish
-RENDER_ENGINE=CYCLES SAMPLES=16 tools/art/anim3d/render.sh c
-RENDER_ENGINE=CYCLES SAMPLES=16 RESOLUTION=512 tools/art/anim3d/render.sh detail
-tools/art/anim3d/render.sh animate
-RENDER_ENGINE=CYCLES SAMPLES=12 tools/art/anim3d/render.sh d
-for clip in idle move attack hit death; do
-  RENDER_ENGINE=CYCLES SAMPLES=12 tools/art/anim3d/render.sh "e-$clip"
-done
-tools/art/anim3d/render.sh pack
-tools/art/anim3d/render.sh validate
-tools/art/anim3d/render.sh audit
+RENDER_ENGINE=CYCLES CYCLES_DEVICE=CPU SAMPLES=12 RESOLUTION=256 tools/art/anim3d/render.sh c
 ```
 
-Build invalidates materials, bakes and all clips. Material changes require re-running `animate` to
-copy them into clip masters. The plain master is separate from the textured one. Review sheets
-are named `field-cannon-b-plain.png`, `field-cannon-c-textured-lit.png`, `field-cannon-c-details.png`,
-`field-cannon-d-rig-poses.png`, and `field-cannon-e-<clip>-strip.png`, alongside animated WebPs.
-They show native 256 and 64 px beside the painting. Review sheets and `field-cannon-log.md` are
-written immediately; check `field-cannon-FEEDBACK.md` before another render round.
+Build invalidates all materials, bakes and clips. Bakes are actual geometry AO/curvature. `paint.py`
+uses a shared rest-camera projection for coat, sleeves and breeches, with material-selective alpha
+masks to prevent painted crossbelts duplicating the real geometry. Face, shako and barrel still have
+local landmark corrections. `projection.json` records those exceptions; the camera/pose match is
+approximate, not the promised near-identical rest result. Facing masks blend to the generated/scanned
+fills as surfaces turn away. Painted highlights remain in the base colour, so inspect double lighting
+and motion-revealed areas rather than treating the texture as intrinsic albedo.
 
-The materials reuse ambientCG Metal034, Fabric030 and Travertine001 and Poly Haven wood/leather,
-with pigment grading, restrained grain, skin texture, visible sculpted cloth folds, physical edge
-trim and scratches. Real 256 px AO and curvature maps are baked for barrel, carriage cheek and
-coat; AO darkens cavities and barrel curvature drives brighter wear. Bakes and textures are packed
-into the master. The existing painting remains the quality reference: successful technical checks
-are not art approval, and this candidate is not wired into the game.
+`finish.py` supplies the aged surfaces, cloth sheen, shared base palette and product lights. Run it
+once after paint (it is a build stage, not an additive touch-up to call repeatedly). `grade.py` writes
+an alpha-masked rest calibration and reuses it for every clip. It excludes transparent black from the
+contrast pivot. Raw PNGs stay in each stage's `ungraded/`; repeated review of the same render is
+idempotent. Always render/review `c` first to refresh the calibration after a material or lighting edit.
 
-### Siege motion and grounding
+The renderer defaults to **512 px** and keeps those PNG masters; `review.py` also saves
+`gallery256/<stage>/` PNGs for gallery/marketing. A 256 px CPU preview is explicitly a preview, not a
+512 px master. Review PNGs appear immediately under `review/3d-v2/` as
+`field-cannon-b-plain.png`, `field-cannon-c-textured-lit.png`, `field-cannon-c-details.png`,
+`field-cannon-d-rig-poses.png`, `field-cannon-e-<clip>-strip.png`, and
+`field-cannon-f-restpose-compare.png`, plus animated WebP previews. Read the complete feedback and
+append findings to `field-cannon-log.md` between rounds.
 
-Idle shifts shoulders and head while the free hand tends the breech. Move is an in-place push cycle:
-the runtime supplies map translation. Virtual ground travel advances by one of twelve spoke pitches
-per loop; local body/gun sway is added to travel, and wheel angle is exactly `distance / 0.48` metres.
-The repeated spoke pattern makes the rotating wheel's seam cyclic. Recoil uses the same relation,
-so wheels roll backward with the carriage rather than spinning independently. The rammer is stowed
-alongside the trail while moving. Combat is authored on the same MPFB skeleton, not screen warping.
+### Motion, contact and final render
 
-Attack combines anticipation, rearward carriage recoil, recovery, a brief solid 3D muzzle flash and
-seven small smoke lobes confined to the frame. Effects use keyed `hide_render`, never zero or nearly
-zero scale: the lead observed Cycles/OpenVDB crashes from collapsed smoke geometry. Hit flinches the
-crew and jolts the gun. Death tips the gun, cants a damaged wheel and lowers the crew; evaluated
-geometry is settled on the cream disc, and the final two samples hold exactly. The base never moves.
-No particle simulation or external motion download is required for these short authored clips.
+Clips retain **8/8/10/4/10 frames** at **10/12/14/12/10 fps**; only idle and move loop. Idle solves the
+resting palm after shoulder motion, subtracting the hand length to obtain a reachable wrist target. Move is an in-place push with the rammer stowed; runtime supplies
+map travel. Wheel angle is exactly `(virtual travel + local recoil) / 0.48`; twelve-spoke symmetry
+closes the move loop. Attack has recoil, brief solid muzzle flash and bounded smoke lobes. Effects
+use keyed `hide_render`, never near-zero scales (the old approach crashed Cycles/OpenVDB). Death
+releases the rammer, tips the gun and settles evaluated geometry on the base. Its last two poses and
+source PNGs are identical; the second terminal PNG is reused after asserting all transforms match.
 
-### Host GPU render and delivery
-
-The saved clip masters are ready for the lead's host Metal/Cycles pass (denoising enabled):
+Lead's final host GPU pass, from this branch's checkout: run
+`tools/art/anim3d/siege/gpu-final.sh`. It audits geometry, renders 512 px at 64 samples, packs and
+validates the saved external master. The equivalent individual stages are:
 
 ```sh
-export ANIM_FAMILY=siege RENDER_ENGINE=CYCLES CYCLES_DEVICE=GPU SAMPLES=64
+export ANIM_FAMILY=siege RENDER_ENGINE=CYCLES CYCLES_DEVICE=GPU SAMPLES=64 RESOLUTION=512
+tools/art/anim3d/render.sh animate
 tools/art/anim3d/render.sh c
-RESOLUTION=512 tools/art/anim3d/render.sh detail
+tools/art/anim3d/render.sh detail
 tools/art/anim3d/render.sh d
 for clip in idle move attack hit death; do tools/art/anim3d/render.sh "e-$clip"; done
 tools/art/anim3d/render.sh pack
@@ -168,67 +194,78 @@ tools/art/anim3d/render.sh validate
 tools/art/anim3d/render.sh audit
 ```
 
-The packer preserves 8/8/10/4/10 frames in the existing five-row 2560 × 1280 layout, with transparent
-256 px cells and anchor `(127,221)`. It quantizes only alpha to 32 levels and tries WebP quality
-85–40 without exceeding 200,000 bytes. It writes `app/src/assets/units/anim/field-cannon.webp` and
-`.json`; source frame hashes and engine provenance go to `field-cannon-pack.json` outside git.
-Validation checks frame counts, alpha, transparent padding, margins, motion, held death and size.
-The geometry audit checks MPFB topology, stationary base, nondegenerate effects, rolling ratios and
-terminal contact. Judge the GPU result afresh: different render engines can alter surfaces and shadows.
+The Metal device is required for this GPU path; it never silently falls back. CPU reviews use explicit
+`CYCLES_DEVICE=CPU` and low samples. `round.py` can run the same sequential stages in one gated
+process and now respects `RESOLUTION`/`SAMPLES`; `SIEGE_REUSE_MASTER=1` starts with animation of the
+existing finished master. Final GPU frames must be repacked and reviewed afresh.
 
-### Painting projection and the craft bar
+### Atlas decision and measured alternatives
 
-The coordinator's next-round method is source-painting projection, geometry finish, product lighting,
-and a restrained measured grade. `paint.py` projects the original painting onto the actual mesh UVs
-at the rest camera, with per-region calibration for face, coat, sleeves, breeches, shako and barrel.
-A baked facing mask and source alpha blend it into the underlying material. It never replaces
-geometry with an image plane. Source rectangles and blend weights are saved in `projection.json`.
-The source's highlights remain partly baked into these textures; inspect motion-revealed surfaces
-and double lighting rather than assuming this is fully intrinsic albedo. The generated original
-`assets/field-cannon/painted-navy-wool.png` fills unseen cloth and blends under the projection;
-other unseen surfaces use the licensed CC0 scans. The mask follows the deforming geometry.
+Use **160 px logical cells, bicubic reduction in premultiplied RGBA, per-frame trimming, lossy WebP
+colour at quality >=75 and lossless 8-bit alpha**. Preserve all 40 frames and their timing. Bicubic is
+chosen for token reduction: Lanczos ringing creates many low-opacity perimeter pixels which are
+expensive to encode losslessly. This is a resampling choice, not alpha quantization. The encoder's
+alpha is checked byte-for-byte after decode. Identical logical frames share an encoded rectangle
+without removing a playback sample; this makes the final death hold identical in decoded RGB too. Retain the 512 px masters and 256 px gallery copies.
 
-Clothing has thick ribbons, real brass buttons, red fitted cuffs, sculpted sleeve folds and solid
-coat tails. The face has a moustache and eyebrows placed against evaluated facial coordinates.
-Stone is deliberately warm cream: the review target is approximately sRGB `#E9CFA0` on the lit top,
-with a darker warm rim. Under this scene's AgX lighting, the shader uses linear `(0.95,0.70,0.32)`;
-do not copy an sRGB triplet blindly into a linear shader or grade by material input alone.
+Measured on the **round-one Cycles GPU / 64-sample / 256 px** PNGs (decimal bytes; these are not
+estimates for the revised geometry):
 
-`grade.py` samples source and render opaque-pixel statistics, caps channel gains to 0.90–1.12 and
-contrast to 1.14, and adds 7% saturation. Alpha is untouched; ungraded frames remain in each render
-folder. `c` also writes `field-cannon-f-restpose-compare.png`, with painting, render and 50/50
-crossfade at 256 and 64 px. The target is near-indistinguishability at rest, not merely a passing
-atlas validator. Current silhouette and texture-registration differences remain review work.
+| Option | Frames | Q75 bytes | Q85 bytes |
+| --- | ---: | ---: | ---: |
+| 256 grid, lossless alpha | 40 | 293,052 | 383,330 |
+| 256 trimmed, lossless alpha | 40 | 298,648 | 390,956 |
+| 256 trimmed, idle 6 / hit 3 | 37 | 272,566 | 356,012 |
+| 256 trimmed, old 32-level alpha | 40 | 284,130 | 374,500 |
+| 160 grid, Lanczos / lossless alpha | 40 | 223,266 | 275,906 |
+| 160 trimmed, Lanczos / lossless alpha | 40 | 228,124 | 279,744 |
+| 128 trimmed, Lanczos / lossless alpha | 40 | 169,718 | 207,448 |
+| **160 trimmed, bicubic / lossless alpha** | **40** | **174,566** | **220,468** |
 
-For Eevee host comparisons use `RENDER_ENGINE=BLENDER_EEVEE` instead. For sandbox previews keep
-`CYCLES_DEVICE=CPU`; the GPU path explicitly requires a Metal Cycles device and never silently
-falls back. All invocations still go through the live machine-wide Blender gate.
+The chosen 160 px/bicubic option also fits at **Q80: 196,242 bytes** on those GPU frames. Fully
+lossless colour+alpha at 160 px/Lanczos costs **791,132 bytes**. cwebp's picture preset with sharp YUV,
+10 analysis passes and best alpha filtering reached 222,920 bytes at Q75; SNS=100 reached 214,018,
+still over the cap. The table predates identical-frame rectangle reuse, which saves additional bytes.
+Frame trimming reduces raster area, but not necessarily WebP bytes: transparent
+blocks already compress well. Fewer idle/hit samples save too little at 256 px and are not shipped.
 
-To avoid reacquiring a busy gate between every short stage, the same complete CPU round can run in
-one Blender process after `prepare.py`:
+`pack.py` tries Q90/85/80/75 and three deterministic shelf widths, selecting the smallest layout at
+the highest fitting quality. It refuses to write an over-budget atlas and never goes below 75. If a
+new GPU render still fails, report the measured result instead of silently dropping frames or quality.
+It writes `app/src/assets/units/anim/field-cannon.{webp,json}`. Hashes, engine/sample provenance,
+resampler, quality and attempted sizes go to `field-cannon-pack.json` outside git. Reproduce the full
+option matrix with `python tools/art/anim3d/siege/pack.py --measure`; `--renders` and `--report` select
+an archived render folder and separate report. The original GPU evidence is retained in
+`masters/field-cannon/round1-backup/renders/` and `field-cannon-atlas-options-round1-gpu.json`.
 
-```sh
-source tools/art/anim3d/env.sh
-RENDER_ENGINE=CYCLES CYCLES_DEVICE=CPU "$ANIM_ROOT/bin/blender-slot" \
-  -b --disable-autoexec --factory-startup --python-exit-code 1 --python tools/art/anim3d/siege/round.py
+### Trimmed JSON format, version 2
+
+```json
+{
+  "version": 2,
+  "atlas": {"w": 800, "h": 1000},
+  "frame": {"w": 160, "h": 160, "ax": 79.375, "ay": 138.125},
+  "clips": {
+    "idle": {
+      "frames": 8, "fps": 10, "loop": true,
+      "rects": [{"x": 1, "y": 1, "w": 124, "h": 140, "ox": 18, "oy": 12}]
+    }
+  }
+}
 ```
 
-`round.py` posts each stage as soon as it renders, then audits the saved clips. Run pack and validate
-separately afterward. The ordinary stage commands remain available for targeted iteration.
+Illustrative dimensions/rectangle only: each real clip has exactly `frames` rectangles in playback
+order. `x/y/w/h` locate the cropped pixels in the atlas; `ox/oy` place them back into the original
+160-square logical cell. `ax/ay` are the old `(127,221)` anchor scaled by 160/256; retain the fractional
+values. For draw scale `s` and world anchor `(X,Y)`, draw the source rectangle at
+`(X + (ox-ax)*s, Y + (oy-ay)*s)` with size `(w*s,h*s)`. Do not recenter each crop or multiply its alpha
+again. Identical source frames may reference the same rectangle. There is a transparent pixel of gutter
+around each unique rectangle. The five-row v1 layout cannot
+read v2; the eventual loader must dispatch on `version`. **This remains an unwired art candidate**;
+there is no existing runtime atlas loader to migrate on this branch.
 
-The richly textured 40-frame CPU atlas exceeded 200 KB at quality 60 in testing. The siege packer
-therefore searches down to quality 40, keeping all dimensions and frames, and records the size at
-every tried quality. It refuses anything larger than the cap. Review the decoded atlas as well as
-the uncompressed strips; the GPU pass must be repacked and may select a different quality.
-
-The final two death samples are one held geometry pose. The renderer asserts all object and bone
-matrices agree within `1e-6`, then reuses the first terminal PNG for the second output sample; this
-avoids insignificant CPU-render rounding differences breaking the exact-pixel hold contract.
-The audit checks the same matrices, plus gunner, gun and dropped-rammer ground contact.
-
-The six installed Blender skills were loaded during the final review. `finish.py` applies fully
-metallic bronze/iron with roughness controlling wear, cloth sheen, and a cooler weaker rim/fill.
-It runs after painting and before animation. Entry points disable automatic script execution,
-and the renderer asserts its saved camera exists. Existing descriptive object names and the
-orthographic token camera are kept as project conventions. The optional `reference-look-calibration`
-skill is absent; image bounds, sampled colour statistics and visual crossfades supply that comparison.
+Checks: `test_pack.py` exercises reconstruction/alpha/grade invariants; `validate.py` verifies every
+rectangle, offset, source alpha byte, logical anchor, transparent gutter, frame count/timing, motion,
+held death, hashes, Q75 floor and 200,000-byte cap. `audit.py` verifies MPFB anatomy, all 53 bones,
+barrel palm contact during idle, stationary base, rolling ratios, safe effect sizes and terminal
+contact. The decoded review is `field-cannon-g-decoded-atlas.png`. Art judgment remains separate.
