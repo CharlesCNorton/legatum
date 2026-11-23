@@ -32,3 +32,17 @@ Published c review: CPU 256 px, 8 samples; fixed rest-derived grade.
 Published c review: CPU 256 px, 8 samples; fixed rest-derived grade.
 Published c review: CPU 256 px, 8 samples; fixed rest-derived grade.
 Published c review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Published b-plain geometry checkpoint.
+Published c review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Published d review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Published e-idle review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Round 2: finished static surfaces and refitted full-depth bind meshes plus 53-bone skeleton; maximum control residual 0.54 px (local landmarks only, not silhouette parity). Lower camera matches the base ellipse more closely. Reversed axe normals were the reason its visible face rejected paint; recalculated outward normals.
+Round 2: added camera-only pigment, tinted pinned generated linen fallback, widened rear pelt, warm separate stone rim; retained generated fur, sculpted locks, solid straps/cloth, six real AO/Pointiness bakes and one frozen histogram grade.
+Round 2: axe grip now uses an actual haft point; Blender audit passes <2 mm grip-to-palm during strike, full rig/source checks, five moving clips, closed loop endpoints and held death. Fingers and body collisions still need visual review.
+GPU handoff: executable no-argument script resolves checkout, records status/transcript, probes Metal before rebuild, runs all stages, rejects non-native/non-GPU512 masters, validates atlas/decoded alpha and verifies MP4. Missing-input preflight correctly exits 1 and records failed stage.
+Repository art gate blocked: Playwright Chromium launch fails bootstrap_check_in / MachPortRendezvousServer permission in sandbox. No distinctness verdict; lead must run browser art gate on host.
+Published e-move review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Published e-attack review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Published e-hit review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Published e-death review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Published b-plain geometry checkpoint.

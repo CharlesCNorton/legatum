@@ -33,3 +33,6 @@
 - Opened latest rest comparison and video contact sheet before edits. At 256px the far tyre is too large/high, near tyre too face-on, shield too tall/square, recuperator too thick, hub wear misregistered; base is too dark and flat. At 64px it reads as artillery but remains distinguishable from the painting. No PASS.
 - Read all shared feedback (1–22), all local playbook chapters and advanced spearman/field-cannon chapters through round 8. artillery-FEEDBACK.md is absent. Loaded six Blender skills; applying finished bevel topology before UV projection, physical wheel mounting/registration, camera-only painted illumination, fixed automatic grade, and mechanical motion review. No cloth/hair/straps added: this painting contains no crew or fabric.
 - Preserved prior WIP masters and review evidence in round1-wip / artillery-round1-wip. Latest WIP has no render-manifest.json, so previous atlas cannot establish current-master completion.
+- Published b-plain CPU/GPU geometry stage before texture work.
+- Baked 256px AO and curvature maps on GEO-Shield wing -1, GEO-Shield wing 1, GEO-Hollow tapered barrel
+- Published painted rest pose and 50/50 comparison; real AO shader, micrograin, edge geometry and hidden-surface fill.

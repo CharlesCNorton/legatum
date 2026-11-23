@@ -51,3 +51,13 @@ Baked clip move
 Baked clip attack
 Baked clip hit
 Baked clip death
+Round 2 verification: scene invariant/input hash check passed (172 projected meshes, 19158 anatomical vertices, 53 bones). First full rig audit found 6 attack butt/camera-bound violations after raising the grip; fixed with .29m extra slide only in raised poses, preserved baked cloth because the spear is not a collider, and encoded identical correction into full animation rebuild. Repeated full 40-sample audit: 0 findings. Targeted fingertip pixels remain shield-covered; surrounding probe region also contains legitimate body pixels.
+Repository baseline gates: public-claims passed; hygiene flagged two existing matrix @ expressions as email addresses (fixed operator spacing). Browser art-set gate failed in its Node renderer in this sandbox; host art review remains required.
+Review b: 256px CYCLES/CPU, 12 samples; 3 actual frames.
+Review c: 256px CYCLES/CPU, 12 samples; 1 actual frames.
+Review d: 256px CYCLES/CPU, 12 samples; 4 actual frames.
+Review e-idle: 256px CYCLES/CPU, 12 samples; 8 actual frames.
+Review e-move: 256px CYCLES/CPU, 12 samples; 8 actual frames.
+Review e-attack: 256px CYCLES/CPU, 12 samples; 10 actual frames.
+Review e-hit: 256px CYCLES/CPU, 12 samples; 4 actual frames.
+Review e-death: 256px CYCLES/CPU, 12 samples; 10 actual frames.

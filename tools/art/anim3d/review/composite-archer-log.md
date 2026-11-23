@@ -52,3 +52,10 @@
 - Visibility masking initially hit an invalid evaluated-vertex reference after a dependency-graph query. Fixed by caching the graph and copying coordinates/normals/indices before ray queries; repaint completed successfully.
 - Motion masks remove the source-hand ghost; revealed jaw remains simpler than the painting, so added warm AO-shaded camera pigment. Shortened attack recovery to avoid a conspicuous sleeve spike. Reduced skirt flare after reviewing the protruding unpainted edge. Low soles are seated along camera rays and animated foot bones correct penetration from actual evaluated sole minima; audit now checks boot/stone clearance independently.
 - GPU handoff failure preflights PASS: missing inputs retain a failure transcript and do not emit a receipt; CPU-labelled masters are rejected. Actual GPU execution cannot be verified in this no-Metal sandbox.
+- Saved c review, raw 512 px and graded 512/256 sets; CYCLES CPU 8 samples.
+- Independent contact audit caught death frame2 boot penetration of 12.70mm, outside the 12mm tolerance. Corrected the cause: floor correction must apply fully, not be multiplied by fall progress. Rebuilt death and reran all 40 poses; audit PASS. Worst measured boot penetration now 2.83mm; body minima >=.0902m, versus disc top .085m. Neutral death-start delta 5.96e-8; all 53 bones and 19158 body vertices retained. This is not full self-collision or art approval.
+- Saved e-idle review, raw 512 px and graded 512/256 sets; CYCLES CPU 8 samples.
+- Saved e-move review, raw 512 px and graded sets at native resolution or smaller; CYCLES CPU 8 samples.
+- Saved e-attack review, raw 512 px and graded sets at native resolution or smaller; CYCLES CPU 8 samples.
+- Saved e-hit review, raw 512 px and graded sets at native resolution or smaller; CYCLES CPU 8 samples.
+- Saved e-death review, raw 512 px and graded sets at native resolution or smaller; CYCLES CPU 8 samples.
