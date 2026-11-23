@@ -74,3 +74,22 @@
 - Published b-plain CPU/GPU geometry stage before texture work.
 - Baked 256px AO and curvature maps on GEO-Armoured hull, GEO-Lowered loading ramp, GEO-Turret shell
 - Published painted rest pose and 50/50 comparison; real AO shader, micrograin, edge geometry and hidden-surface fill.
+- Round 2 refinement: changed camera azimuth to register physical wheel ellipses; added original ImageGen orthographic wheel albedo and clean stone occlusion fill (both copied externally and SHA256-pinned). Wheel albedo rotates in axle coordinates while highlights remain in world lighting. Corrected alpha fallback at stone edge and reduced rim thickness with support top held at z=.15. Moved/refitted soldier stance, grip and long rifle, added thick strap buckles, continuous inverse-skinned folded sleeves and semantic cloth under-uniform. Applied human bevel/solidify topology in bind space before visibility-tested frozen painting UVs; this fixed the unpainted pre-bevel-corner defect observed in the second CPU still. All three intermediate CPU c/f/detail comparisons opened; final all-clip CPU256/8-sample run started. Still below reference at 256px, especially wheel sidewalls/scale progression and soldier face/hand detail.
+- Published b-plain CPU/GPU geometry stage before texture work.
+- Baked 256px AO and curvature maps on GEO-Armoured hull, GEO-Lowered loading ramp, GEO-Turret shell
+- Published painted rest pose and 50/50 comparison; real AO shader, micrograin, edge geometry and hidden-surface fill.
+- Published e-idle: 8 actual rendered frames, 10 fps; CPU 256px 8 samples.
+- Published e-move: 8 actual rendered frames, 12 fps; CPU 256px 8 samples.
+- Published e-attack: 10 actual rendered frames, 14 fps; CPU 256px 8 samples.
+- Published e-hit: 4 actual rendered frames, 12 fps; CPU 256px 8 samples.
+- Published e-death: 10 actual rendered frames, 10 fps; CPU 256px 8 samples.
+- Completed all five clips and wheel contact audit; delivery pack may now run.
+- Published b-plain CPU/GPU geometry stage before texture work.
+- Baked 256px AO and curvature maps on GEO-Armoured hull, GEO-Lowered loading ramp, GEO-Turret shell
+- Published painted rest pose and 50/50 comparison; real AO shader, micrograin, edge geometry and hidden-surface fill.
+- Published e-idle: 8 actual rendered frames, 10 fps; CPU 256px 8 samples.
+- Published e-move: 8 actual rendered frames, 12 fps; CPU 256px 8 samples.
+- Published e-attack: 10 actual rendered frames, 14 fps; CPU 256px 8 samples.
+- Published e-hit: 4 actual rendered frames, 12 fps; CPU 256px 8 samples.
+- Published e-death: 10 actual rendered frames, 10 fps; CPU 256px 8 samples.
+- Completed all five clips and wheel contact audit; delivery pack may now run.
