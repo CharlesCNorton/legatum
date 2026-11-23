@@ -156,7 +156,7 @@ impl Planner<'_> {
         self.pass("protect_heirs");
         self.protect_heirs();
         self.pass("plan_primitive_escorts");
-        let primitive_escorts = if self.settler_safety() {
+        let primitive_escorts = if self.settler_safety() || self.rome_opening_active() {
             false
         } else {
             self.plan_primitive_escorts()
@@ -177,14 +177,16 @@ impl Planner<'_> {
         self.pass("storm_fallen");
         self.storm_fallen(&army);
         self.pass("withdraw_failed_campaign");
-        self.withdraw_failed_campaign(&army);
+        if !self.rome_opening_active() {
+            self.withdraw_failed_campaign(&army);
+        }
         // Gene `door_defense`: strikes on the attackers at our cities, garrisons for empty
         // threatened cities and retaking a weakened lost city come before any withdrawal.
         self.pass("door_military");
         self.door_military(&army);
         // A Roman recruit adjacent to a favourable fight can earn its first
         // promotion now. Leave distant marches to the later field pass.
-        if self.faction == Faction::Rome {
+        if self.faction == Faction::Rome && !self.rome_opening_active() {
             self.pass("drill_nearby_recruits");
             self.drill_veterans(&army, false);
         }
@@ -206,7 +208,9 @@ impl Planner<'_> {
         self.pass("reserve_front_guards");
         self.reserve_front_guards(&army);
         self.pass("guard_exposed_settlers");
-        self.guard_exposed_settlers(&army);
+        if !self.rome_opening_active() {
+            self.guard_exposed_settlers(&army);
+        }
         self.pass("sortie_garrisons");
         self.sortie_garrisons(&army);
         self.pass("occupy_rush_city");
@@ -251,7 +255,9 @@ impl Planner<'_> {
         // Coordinated fire takes favourable kills first; surviving Roman recruits
         // then seek their own first promotion before routine garrisons park them.
         self.pass("drill_veterans");
-        self.drill_veterans(&army, true);
+        if !self.rome_opening_active() {
+            self.drill_veterans(&army, true);
+        }
         self.pass("rush_siege");
         self.rush_siege(&army);
         self.pass("counterattack");
@@ -278,9 +284,15 @@ impl Planner<'_> {
         }
         self.pass("answer_bombardment");
         self.answer_bombardment(&army);
+        self.pass("rome_opening_march");
+        self.march_rome_opening(&army);
         self.pass("avoid_free_damage");
         self.avoid_free_damage(&army);
-        if !primitive_escorts && self.opening.is_some() && !self.settler_safety() {
+        if !primitive_escorts
+            && self.opening.is_some()
+            && !self.settler_safety()
+            && !self.rome_opening_active()
+        {
             self.pass("plan_opening_escorts");
             self.plan_opening_escorts();
         }
