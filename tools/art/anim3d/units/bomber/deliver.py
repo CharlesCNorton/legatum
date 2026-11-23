@@ -11,6 +11,24 @@ REF=Image.open('app/src/assets/units/bomber-256.png').convert('RGBA');CREAM=(233
 STAGES=('b','c','d','g',*['e-'+c for c in CLIPS])
 COUNTS={'b':3,'c':1,'d':4,'g':16,**{'e-'+c:v[0] for c,v in CLIPS.items()}}
 def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
+def build_inputs(write=False):
+    unit=Path(__file__).parent
+    paths=[unit/name for name in ('prepare.py','scene.py','project.py','bake.py')]
+    paths += [R/'assets/bomber'/name for name in
+              ('bomber-source.png','painted-fill.png','projection.png','projection-mask.png','stone-mask.png',
+               'occlusion-fill-source.png','occlusion-fill.png')]
+    paths += [M/name for name in ('bomber.blend','plain.blend','textures/baked/manifest.json')]
+    # Logical keys let the lead use a different checkout of the same sources.
+    current={('code/'+path.name if path.parent==unit else
+              'assets/'+path.name if path.parent==R/'assets/bomber' else
+              'masters/'+str(path.relative_to(M))):sha(path) for path in paths}
+    dest=M/'build-inputs.json'
+    if write:
+        dest.write_text(json.dumps(current,indent=2))
+    else:
+        assert json.loads(dest.read_text())==current,'build inputs changed; run render.sh build'
+        print('Current source, generated fill, geometry scripts and saved masters verified')
+
 def composite(im):
     out=Image.new('RGBA',im.size,CREAM);out.alpha_composite(im);return out
 
@@ -201,6 +219,8 @@ if __name__=='__main__':
     if mode=='validate':validate()
     elif mode=='gpu-check':gpu_check()
     elif mode=='receipt':receipt()
+    elif mode=='inputs-stamp':build_inputs(write=True)
+    elif mode=='inputs-check':build_inputs()
     elif mode=='pack':pack();meta,frames=validate();video(meta,frames)
     elif mode=='all':
         for stage in STAGES:review(stage)

@@ -14,6 +14,22 @@ spec.loader.exec_module(delivery)
 
 
 class DeliveryChecks(unittest.TestCase):
+    def test_changed_occlusion_fill_invalidates_saved_build(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root=Path(folder);master=root/'masters/bomber';assets=root/'assets/bomber'
+            master.mkdir(parents=True);assets.mkdir(parents=True)
+            for name in ('bomber-source.png','painted-fill.png','projection.png','projection-mask.png',
+                         'stone-mask.png','occlusion-fill-source.png','occlusion-fill.png'):
+                (assets/name).write_bytes(b'original texture')
+            for name in ('bomber.blend','plain.blend','textures/baked/manifest.json'):
+                path=master/name;path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(b'master')
+            with patch.object(delivery,'R',root),patch.object(delivery,'M',master):
+                delivery.build_inputs(write=True)
+                delivery.build_inputs()
+                (assets/'occlusion-fill-source.png').write_bytes(b'new texture, old blend')
+                with self.assertRaisesRegex(AssertionError,'build inputs changed'):
+                    delivery.build_inputs()
+
     def test_grade_is_monotone_and_bounded(self):
         with tempfile.TemporaryDirectory() as folder, patch.object(delivery, 'M', Path(folder)):
             (Path(folder) / 'bomber.blend').write_bytes(b'fixture')

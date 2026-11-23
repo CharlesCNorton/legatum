@@ -90,18 +90,22 @@ def tube(name,points,r,mat,parent=True):
     if parent:objects.append(o)
     return o
 # Convex glazed nose and cockpit, complete 3D cages, no decal plane.
-for name,cx,cy,dep,rx,rz in [('nose glazing',1096,515,.77,88,77),('cockpit',903,416,.43,87,45),('dorsal turret',760,356,.10,49,36)]:
+for name,cx,cy,dep,rx,rz in [('nose glazing',1090,525,.77,70,98),('cockpit',903,416,.43,87,45),('dorsal turret',760,356,.10,49,36)]:
+    lens_rotation=Matrix.Rotation(math.radians(36) if name=='nose glazing' else 0,3,FRONT)
+    lens_center=p(cx,cy,dep)
+    def lens_point(point):return lens_center+lens_rotation @ (point-lens_center)
     q=ellipsoid(name,p(cx,cy,dep),(rx*.0047,.20,rz*.0047),glass)
+    q.rotation_euler=(lens_rotation @ q.rotation_euler.to_matrix()).to_euler()
     for lon in (-.65,0,.65):
         pts=[]
         for k in range(25):
             a=-math.pi/2+math.pi*k/24;pts.append(p(cx+rx*lon,cy+rz*math.sin(a)*math.sqrt(1-lon*lon),dep)+FRONT*(.204*math.cos(a)*math.sqrt(1-lon*lon)))
-        tube(name+' longitudinal frame',pts,.004,silver)
+        tube(name+' longitudinal frame',[lens_point(pt) for pt in pts],.004,silver)
     for lat in (-.52,.05,.58):
         pts=[]
         for k in range(29):
             a=-math.pi/2+math.pi*k/28;pts.append(p(cx+rx*math.sin(a)*math.sqrt(1-lat*lat),cy+rz*lat,dep)+FRONT*(.205*math.cos(a)*math.sqrt(1-lat*lat)))
-        tube(name+' transverse frame',pts,.004,silver)
+        tube(name+' transverse frame',[lens_point(pt) for pt in pts],.004,silver)
 props=[]
 for label,cx,cy,depth,rad in [('near',739,623,1.12,73),('far',1142,414,-.30,57)]:
     loft(label+' nacelle',[(cx-147,cy-65,depth-.2,22,.12),(cx-100,cy-35,depth-.07,rad*.95,.27),(cx-35,cy-5,depth,rad,.31),(cx+6,cy+3,depth+.01,rad*.92,.29)],olive)
@@ -138,7 +142,7 @@ for label,cx,cy,depth,rad in [('near',739,623,1.12,73),('far',1142,414,-.30,57)]
     blade_scale=radius/.72
     props.append(pivot)
     bpy.context.view_layer.update()
-    spinner=ellipsoid(label+' spinner',mount.location,(.105,.105,.18),silver)
+    spinner=ellipsoid(label+' spinner',mount.location,(.078,.078,.125),silver)
     spinner.rotation_euler=axis.to_track_quat('Z','Y').to_euler()
     for blade in range(3):
         angle=blade*math.tau/3
@@ -152,14 +156,13 @@ for label,cx,cy,depth,rad in [('near',739,623,1.12,73),('far',1142,414,-.30,57)]
         n=len(poly);ff=[tuple(range(n-1,-1,-1)),tuple(range(n,2*n))]+[(j,(j+1)%n,(j+1)%n+n,j+n) for j in range(n)]
         ob=mesh(label+' prop blade',vv,ff,black,False);ob.parent=pivot
         bevel=ob.modifiers.new('Blade bevel','BEVEL');bevel.width=.008;bevel.segments=2
-        ob.data.materials.append(yellow)
-        for f in ob.data.polygons:
-            if sum(ob.data.vertices[k].co.xy.length for k in f.vertices)/len(f.vertices)>.59*blade_scale:f.material_index=1
+        # All faces share the frozen source pigment and physical charcoal fill;
+        # tip highlights come from the painting, not an invented yellow band.
 # Nose barrels, upper panel seams are real small tubular relief.
 for yy in (530,548):tube('nose barrel',[p(1155,yy,.82),p(1205,yy+5,.87)],.010,black)
 # Stone pedestal: one disc and a curved, thick support as shown in painting.
 basecenter=p(640,1005,-.55)
-bpy.ops.mesh.primitive_cylinder_add(vertices=96,radius=1.04,depth=.15,location=basecenter);base=bpy.context.object;base.name='GEO-stationary cream base';base.data.materials.append(stone);bev=base.modifiers.new('Rounded stone lip','BEVEL');bev.width=.025;bev.segments=5
+bpy.ops.mesh.primitive_cylinder_add(vertices=128,radius=1.04,depth=.15,location=basecenter);base=bpy.context.object;base.name='GEO-stationary cream base';base.data.materials.append(stone);bev=base.modifiers.new('Rounded stone lip','BEVEL');bev.width=.018;bev.segments=5
 supportcoords=[(521,966),(536,889),(564,804),(609,735),(660,679),(687,653),(667,731),(650,785),(659,845),(688,903),(748,966)]
 vs=[p(x,y,d) for d in (-.38,-.15) for x,y in supportcoords];n=len(supportcoords);fs=[tuple(range(n-1,-1,-1)),tuple(range(n,2*n))]+[(j,(j+1)%n,(j+1)%n+n,j+n) for j in range(n)]
 support=mesh('curved stationary stone support',vs,fs,stone,False);b=support.modifiers.new('Carved stone soft edges','BEVEL');b.width=.03;b.segments=3

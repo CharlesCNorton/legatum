@@ -109,11 +109,11 @@ Run each heavy stage sequentially. Other unit lanes share the same lock; if one 
 
 ## Vehicles / aircraft — bomber
 
-Unit scripts are isolated under `tools/art/anim3d/units/bomber/`. This aircraft uses original closed fuselage lofts, thick airfoil lofts, twin fins, recessed radial engines, rolled cowls, three-bladed propellers, convex glazing with real frame tubes, and the painting's curved stone support. There are no subject image cards. Actual 512 px Cycles AO and Pointiness bakes on the fuselage and both wings drive restrained cavity grime and edge wear; those maps retain their own UV layer beside the rest projection. Mechanical pivots control the airframe and two propellers; released bombs have independent keyed transforms and visibility. The disc stays fixed. Death banks, drops, impacts and buckles the near wing and nose into a held wreck, hiding the damaged support with visibility, never a zero scale.
+Unit scripts are isolated under `tools/art/anim3d/units/bomber/`. This aircraft uses original closed fuselage lofts, thick airfoil lofts, twin fins, recessed radial engines, rolled cowls, three-bladed propellers, convex glazing with real frame tubes, and the painting's curved stone support. There are no subject image cards. Actual 512 px Cycles AO and Pointiness bakes on the fuselage and both wings drive restrained cavity grime and edge wear; those maps retain their own UV layer beside the rest projection. Mechanical pivots control the airframe and two propellers; released bombs have independent keyed transforms and visibility. The disc stays fixed. Death banks, drops, impacts and buckles the near wing and nose into a held wreck, collapsing the damaged support as solid geometry, never a zero scale.
 
 The standard four finish levers are: (1) align camera and real geometry to the painting, then freeze camera-projected UV colour onto meshes, blending generated painted fills into unseen surfaces; (2) finish geometry with rounded airfoil sections, bevelled lips, real thickness and relief; (3) warm upper-left product key, cool rim and soft fill, with Cycles denoising; (4) measure RGB 10/50/90 percentiles and reuse one bounded rest-pose grade across every frame. Projection retains painted lighting and needs moving-view review. Colour agreement alone never proves silhouette parity. All six installed Blender skills informed geometry, material separation, camera registration, lighting, animation interpolation and rendered QA.
 
-Warm stone standard: target visible top near **#E9CFA0**, darker cream rim. Convert pigment from sRGB to linear before assigning BSDF colour; the bomber's starting value is `(0.815, 0.624, 0.352)`, roughness `.86`, fine noise bump. The stationary disc uses physical limestone with camera-only pigment, without source-object paint or baked support shadows. Recheck rendered pixels after the light/grade changes; a shared shader does not guarantee the same output colour.
+Warm stone standard: target visible top near **#E9CFA0**, darker cream rim. Convert pigment from sRGB to linear before assigning BSDF colour; the bomber's starting value is `(0.815, 0.624, 0.352)`, roughness `.86`, fine noise bump. The stationary disc uses physical limestone with masked source rim pigment and a clean support footprint; live AO provides changing contact shadows. Recheck rendered pixels after the light/grade changes; a shared shader does not guarantee the same output colour.
 
 ```sh
 # CPU geometry build and review (all Blender calls use the gated plain PATH command)
@@ -176,3 +176,46 @@ stale-master rejection, CPU rejection by the GPU gate, missing-input shell failu
 incorrect movie frame count. CPU preview checks do not claim that Metal ran inside the sandbox.
 
 Round-two CPU evidence: 40 samples, Q80 **192,266 bytes**, exact reconstructed alpha and held death; geometry and five delivery regression checks pass. Movie: H.264/yuv420p, 1600x348, 240 frames/eight seconds. Silhouette IoU .878 at256/.883 at64 (prior .847/.858). Canopy/nacelles, propeller finish, stone rim and wreck character still fall short; no PASS. GPU512 rendering and visual acceptance remain outstanding.
+
+### Bomber driver round 2: GPU findings and occluded paint
+
+The actual driver round-one pass succeeded at GPU512/96: all 40 clip frames, Q80
+191,852-byte atlas, and the verified eight-second movie. Its full evidence is preserved
+in `masters/bomber/driver-r1-gpu/`. The outer driver log was empty because gpu.sh redirected
+all output; the script now reports the transcript path and completion/failure to the driver.
+It uses a saved output descriptor because sandboxed Bash rejected /dev/fd process substitution.
+
+At 256 px the largest gaps were the flat tan disc, white/blue fallback patches behind
+rotating blades, an overly round nose lens, and the disappearing support during death.
+At 64 px identity was already close, but the empty-disc death remained visibly wrong.
+The revised disc projects only the exposed stone rim/outer top; its support footprint
+uses clean procedural pigment and live AO, so no raised support is baked onto the base.
+The nose lens and its solid frame tubes share a tilted elliptical volume. Propeller
+blades retain thickness/bevels and receive original painted highlights and tip bands.
+
+Do not fill a blade-removal mask with one flat material colour. The generated
+`occlusion-fill-source.png` reconstructs the surfaces behind the six blades, using the
+original registration and only the excluded pixels. The original painting still supplies
+all other visible colour, and real geometry supplies all silhouette/alpha. Convex glazing
+and small attached mechanical parts skip the coarse vertex-visibility mask: a frame
+intersecting a few vertices otherwise spreads blue/white fallback across whole polygons.
+The normal-facing mask still blends unseen surfaces to material fills. New artwork is
+recorded in unit SOURCES.md and external assets/SOURCES.md; no masters enter git.
+
+Death compresses the solid stone support into a remnant, buckles the near wing and
+settles the belly on the disc. The propeller decelerates into a held angle, with an audit
+for the last three angular deltas. A scalar ground-contact check alone did not establish
+a convincing grounded silhouette; inspect the strip and decoded movie as well.
+
+The no-argument `gpu.sh` verifies hashes for builder scripts, textures and saved masters
+before rendering; run `render.sh build` after changing them. Its final GPU512/256 stages,
+trimmed atlas, validation and decoded H.264 movie are unchanged as deliverables. The
+`build-inputs.json` keys are logical paths so identical source in another checkout works.
+No automatic art PASS is written.
+
+Driver-round-two CPU checks: 64 stage/master PNGs at each of 512/256, all 40 clip samples,
+73-mesh audits across five clips, exact decoded alpha/offset/gutter checks and held death
+pass. Atlas: **197,232 bytes at Q80**. Six delivery regression tests pass. Movie: H.264
+yuv420p, 1600x348, 240 frames/eight seconds. The native 256/64 comparison improves, but
+wingtip shape, propeller hubs and the too-intact wreck still differ; no PASS. Run
+`ROUND=2 tools/art/anim3d/units/bomber/gpu.sh` for the final Metal pass and visual review.

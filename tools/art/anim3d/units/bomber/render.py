@@ -33,12 +33,24 @@ def animate(sc,clip):
     root=bpy.data.objects['RIG-airframe'];rest=root.location.copy();props=[bpy.data.objects['RIG-'+side+' propeller'] for side in ('near','far')];rot=[o.rotation_euler.copy() for o in props];bombs=[bpy.data.objects['GEO-bomb-'+str(i)] for i in range(3)];bombrest=[o.location.copy() for o in bombs]
     support=bpy.data.objects['GEO-curved stationary stone support']
     damage=[]
+    support_damage=None
     if clip=='death':
+        # Keep the support as a crushed, solid remnant; disappearing it made
+        # the contact look like levitation despite the scalar height audit.
+        base=bpy.data.objects['GEO-stationary cream base']
+        top=max((base.matrix_world @ Vector(v)).z for v in base.bound_box)
+        support.shape_key_add(name='Basis')
+        support_damage=support.shape_key_add(name='Crushed stone support')
+        for v,k in zip(support.data.vertices,support_damage.data):
+            height=max(0,v.co.z-top)
+            k.co.x+=.12*height
+            k.co.y=base.location.y+(v.co.y-base.location.y)*.6+.17*height
+            k.co.z=top+.025+.10*height
         for name in ('GEO-near wing','GEO-fuselage'):
             o=bpy.data.objects[name];o.shape_key_add(name='Basis');key=o.shape_key_add(name='Impact deformation');damage.append(key)
             for v,k in zip(o.data.vertices,key.data):
                 if name=='GEO-near wing':
-                    w=max(0,min(1,(-v.co.x+.2)/2.7))**2;k.co+=UP*(.55*w)+FRONT*(.12*w)
+                    w=max(0,min(1,(-v.co.x+.2)/2.7))**2;k.co+=UP*(.95*w)+FRONT*(.22*w)
                 else:
                     w=max(0,min(1,(v.co.x-1.2)/1.7));k.co-=RIGHT*(.22*w)+UP*(.07*w)
     for j in range(n+1 if loop else n):
@@ -52,12 +64,17 @@ def animate(sc,clip):
             # Bank, descend, nose impact; terminal wreck held for two samples.
             drop=[0,.04,.14,.36,.72,1.25,1.58,1.48,1.46,1.46][j];ease=drop/1.46;root.location+=-UP*drop-RIGHT*(.25*min(ease,1));root.rotation_euler.x=-.36*min(ease,1);root.rotation_euler.y=[0,.04,.11,.20,.32,.38,.27,.21,.20,.20][j];root.rotation_euler.z=-.08*min(ease,1)
             for key in damage:key.value=0 if j<6 else 1;key.keyframe_insert('value',frame=j+1)
+            support_damage.value=[0,0,.08,.25,.55,.85,1,1,1,1][j]
+            support_damage.keyframe_insert('value',frame=j+1)
         root.keyframe_insert('location');root.keyframe_insert('rotation_euler')
         for k,o in enumerate(props):
-            o.rotation_euler=rot[k].copy();o.rotation_euler.z+=j*(math.tau/3+math.tau/(3*n)) if loop else j*math.tau/3+(0 if clip=='death' and t>.7 else j*.26)
-            if clip=='death' and j>=8:o.rotation_euler.z=rot[k].z+7*math.tau/3+7*.26
+            o.rotation_euler=rot[k].copy()
+            angle=j*(math.tau/3+math.tau/(3*n)) if loop else j*(math.tau/3+.26)
+            if clip=='death' and j>=7:
+                angle=6*(math.tau/3+.26)+(.16 if j==7 else .22)
+            o.rotation_euler.z+=angle
             o.keyframe_insert('rotation_euler')
-        support.hide_render=clip=='death' and t>.25;support.keyframe_insert('hide_render')
+        support.hide_render=False;support.keyframe_insert('hide_render')
         for k,b in enumerate(bombs):
             release=.23+k*.12;b.hide_render=not(clip=='attack' and release<=t<=release+.35);b.location=bombrest[k].copy()
             if clip=='attack':b.location+=RIGHT*(.1*max(0,t-release))-UP*(3.5*max(0,t-release))
