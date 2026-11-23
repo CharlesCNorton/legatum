@@ -36,3 +36,13 @@ The date range is the range of dates the repository's own records give (prompt h
 
 - No prompt is stored for the map improvements, the six original resource medallions, the aircraft plan sprites or the parchment texture.
 - Where a set was generated from one shared prompt (terrain, city sets, camps and ruins), there is one prompt for the set, not one per file.
+
+### Scout animation candidate (round 1, 2026-11-22)
+
+`units/anim/scout.webp` is a true Blender 3D render of MPFB 2.0.18 / MakeHuman CC0
+anatomy and rig, with original procedural clothing/equipment and authored animation.
+It uses this project's CC BY 4.0 scout painting as frozen-camera mesh colour and
+original generated painted surface fills (prompt: `tools/art/anim3d/units/scout/painted-fills.prompt.txt`).
+Scripts are MIT; renders are CC BY 4.0. Source URLs, versions and hashes are recorded
+in external `anim-pilot/assets/SOURCES.md` and `masters/scout/inputs.json`. This is an
+unapproved art candidate, not a replacement for the active painted token.

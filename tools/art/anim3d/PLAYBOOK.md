@@ -106,3 +106,104 @@ tools/art/anim3d/render.sh audit
 ```
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
+
+## Infantry / scout — round 1
+
+The scout's isolated scripts are in `units/scout/`. Reuse the MPFB installation and
+`env.sh`; the scout adds no external model or motion dependency. Its MPFB body and
+53-bone game-engine rig wear original thick folded linen, a shoulder cowl and olive
+cloak, stitched leather straps/satchel, real buckles, sandals, curls/beard and a forked
+walking staff. The cape uses authored secondary shape keys, **not a claimed cloth
+simulation**. All five actions are authored on the anatomical rig. Masters and all
+raw render sequences remain under `~/LegatumRuns/anim-pilot/masters/scout/`.
+
+The six Blender skills informed rounded edges and overlapping joins; dielectric
+cloth/leather and metallic brass; a warm upper-left key, soft fill and cool rim;
+orthographic painting-camera registration; eased skeletal keys and cape follow-through;
+and denoised transparent image sequences. Every invocation is plain `blender -b
+--disable-autoexec` through the installed PATH gate, with three CPU threads and no
+nested Blender process. Do not call the application binary or add another heavy process.
+
+### Scout quality method
+
+The standing four quality levers are the standard: align the real rest geometry and
+camera, project the painting as **fixed UV colour on that geometry**, finish its
+bevels/straps/folds, light it as a painted miniature, and apply a measured grade.
+Projection never provides mesh transparency or a billboard. Material-specific alpha
+masks suppress skin/cloth spill, and facing weights blend into generated painted
+linen/wool/leather/skin fills on unseen surfaces. Regional registration boxes are
+explicit in `paint.py` and recorded in the master directory. Some lighting remains
+baked into this colour; inspect motion-revealed seams. AO and curvature are actually
+baked from four meshes and drive cavity colour and roughness. They are 256 px maps.
+
+The base is one stationary cream disc, with the common displayed target **#E9CFA0**
+and a darker rim. Its linear shader pigment is `(0.86, 0.65, 0.37)` under AgX/product
+lighting; this is not a literal sRGB-to-shader conversion. `review.py` samples opaque
+RGB quantiles at rest, bounds the grade, and reuses the same LUT for all clips. It
+retains raw images. `scout-f-restpose-compare.png` shows painting, render and 50/50
+crossfade at 256 and 64 px. Silhouette and surface mismatches remain visible; a valid
+atlas is not art approval. The original painting stays the active game asset.
+
+### Scout build, review and GPU handoff
+
+```sh
+UNIT=scout tools/art/anim3d/render.sh prepare
+UNIT=scout RENDER_ENGINE=CYCLES CYCLES_DEVICE=CPU SAMPLES=8 tools/art/anim3d/render.sh round
+UNIT=scout tools/art/anim3d/render.sh pack
+UNIT=scout tools/art/anim3d/render.sh validate
+```
+
+`round` serially builds, publishes b, bakes/projects, publishes c/details, saves all
+five clip masters, and publishes d and each e strip/WebP immediately. The log and
+reviews use `review/3d-v2/scout-*`. The source painting and generated fill atlas must
+exist under `assets/scout/`; `inputs.json` records their hashes. The generated fill
+prompt is `units/scout/painted-fills.prompt.txt`. To rerender **saved masters** on the
+lead's host, then repack and validate:
+
+```sh
+UNIT=scout RENDER_ENGINE=CYCLES CYCLES_DEVICE=GPU SAMPLES=64 RESOLUTION=512 tools/art/anim3d/render.sh final
+UNIT=scout tools/art/anim3d/render.sh pack
+UNIT=scout tools/art/anim3d/render.sh validate
+```
+
+`final` starts with c to establish the GPU grade, then details/d/all five clips. Metal
+is required explicitly; there is no silent CPU fallback. `RENDER_ENGINE=BLENDER_EEVEE`
+is also supported for comparison. Each renderer manifest binds frames to the saved
+blend and grade. Changing model/materials requires rebuilding clips; changing grade
+requires rerendering every clip. Recheck visual quality after the GPU pass.
+
+### Scout atlas v2: 160 px source canvases, per-frame trim offsets
+
+Keep true 512 px rendered masters and derived 256 px gallery frames; pack all
+8/8/10/4/10 samples at **160 px**, WebP quality **90, 85, 80 or 75**, at most
+**200,000 bytes**. Packing refuses a larger image instead of reducing quality or
+frame counts. No full-size masters enter git.
+
+The extended JSON preserves `frame:{w,h,ax,ay}` and numeric
+`clips[name]:{row,frames,fps,loop}`, and adds `formatVersion:2` plus
+`trims[name][sample]:{x,y,w,h,ox,oy}`. `x,y,w,h` address the cropped rectangle in the
+packed atlas; `ox,oy` restore it in the untrimmed 160×160 canvas. Drawing relative
+to the anchor uses `(ox-ax, oy-ay)`. Each clip occupies one packed row, in
+idle/move/attack/hit/death order; sample widths and row heights vary, with a 2 px
+transparent gutter. `row` is logical order, **not** a fixed-cell addressing formula
+for v2. A v1 loader must be extended before activating this candidate; this art lane
+does not change runtime loading. Validation reconstructs all 40 frames and writes
+`scout-atlas-decoded.png`, checks crop bounds/overlap, alpha, clipping, motion, held
+death, source hashes, master sizes and the byte/quality limits.
+
+Scout `audit` is also an explicit stage (`UNIT=scout tools/art/anim3d/render.sh audit`).
+It checks all sampled base transforms, MPFB topology/53 bones, nonzero object scale,
+hand-to-staff distance, loop endpoint transforms and held death transforms. Body
+minimum Z must stay between 0.095 and 0.105; detailed cloth/sandal contact still needs review.
+
+The scout packer quantizes **alpha only** to 32 levels, retaining RGB detail and all
+40 samples. This follows the infantry packing approach while enforcing the newer
+quality floor. Input source/fill hashes are pinned in `units/scout/assets.lock.json`
+and checked by `prepare`. The final frame placement uses evaluated anatomy to keep
+body minimum Z at 0.100 above the stone top at 0.095; this is not a full cloth-contact solver.
+
+During death, per-sample corrective shape keys settle the real cloak and hem on
+Z 0.108 while retaining shell thickness. This prevents the long cape passing through
+the base; it is authored contact deformation rather than a cloth-physics bake.
+A targeted motion refresh is `UNIT=scout CLIP=hit tools/art/anim3d/render.sh refresh`
+(or another clip name); it updates only that clip, its reviews and the full rig audit.

@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
+# Unit-isolated scout pipeline; all existing spearman stages remain unchanged.
+if [[ "${UNIT:-}" == scout ]]; then
+  exec "$(dirname "$0")/units/scout/run.sh" "$@"
+fi
 cd "$(dirname "$0")/../../.."
 source tools/art/anim3d/env.sh
 stage="${1:-c}"
