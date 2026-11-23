@@ -103,7 +103,7 @@ export const FACTION_SHEETS: Record<Faction, FactionSheet> = {
     lore: 'The Nile flood fed the builders of Egypt. In play, each city chooses between building with its Food and growing with it.',
     ratings: { aggression: 2, economy: 5, complexity: 3 },
     pairs: [
-      { strength: 'Egyptian cities get double Food, and spare Food builds what the city is working on.', strengthDetail: `Egyptian cities get double Food. Food beyond what their people eat builds whatever the city is working on, units and Settlers included${EGYPT_NILE_BUILD_PERCENT === 100 ? '' : `: ${EGYPT_NILE_BUILD_PERCENT} progress for every 100 Food`}.`, price: "Egypt has no Production. A city that is building doesn't grow: switch it to Grow to grow it.", strengthIcon: 'yield-food', priceIcon: 'yield-production' },
+      { strength: 'Egyptian cities get double Food, and surplus Food builds what the city is working on.', strengthDetail: `Egyptian cities get double Food. Food beyond what their people eat builds whatever the city is working on, units and Settlers included${EGYPT_NILE_BUILD_PERCENT === 100 ? '' : `: ${EGYPT_NILE_BUILD_PERCENT} progress for every 100 Food`}.`, price: "Egypt has no Production. A city that is building doesn't grow: switch it to Grow to grow it.", strengthIcon: 'yield-food', priceIcon: 'yield-production' },
       { strength: 'Royal Granary replaces the Granary and gives +3 Food total.', strengthIcon: 'building-royalgranary', onCard: true },
       specialRow('Egypt', 'unit-medjay'),
     ],
@@ -202,7 +202,7 @@ export const FACTION_SHEETS: Record<Faction, FactionSheet> = {
     ratings: { aggression: 5, economy: 1, complexity: 3 },
     pairs: [
       { strength: 'Your military units start at level 1, level up faster and can reach level 6.', strengthDetail: `Your military units start at level 1, gain XP 50% faster and can reach level 6, Spartan Veteran. Each level adds ${RULES.promotion.strengthPercent}% to a unit’s strength.`, strengthIcon: 'unit-spartanhoplite' },
-      { strength: 'Kills heal your units, and capturing a city fully heals your army nearby.', strengthDetail: 'Destroying an enemy unit restores up to 100 HP, shared among your units that hit it. Capturing a city fully heals your military units within 2 tiles.', strengthIcon: 'mark-heal' },
+      { strength: 'Kills heal your units, and capturing a city fully heals your military units nearby.', strengthDetail: 'Destroying an enemy unit restores up to 100 HP, shared among your units that hit it. Capturing a city fully heals your military units within 2 tiles.', strengthIcon: 'mark-heal' },
       { price: 'Settlers and non-military buildings cost 50% more Production.', priceDetail: 'Settlers and non-military buildings cost 50% more Production. Walls, Castles, Star Forts and the Agoge cost the normal price.', priceIcon: 'unit-settler' },
     ],
     counteredBy: 'Hold behind Walls and deny them kills, so their wounded units stay wounded.',

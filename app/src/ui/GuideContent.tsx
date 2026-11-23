@@ -16,7 +16,7 @@ import { WONDERS, WONDER_INFO, WONDER_PERCENT, wonderArt, wonderRewardText, wond
 import { slugUrl, improvementArtSlug, buildingArtSlug } from '../unlockArt';
 import type { ImprovementKind } from '../types';
 import { TILE_RELEASE_RULE } from './cityTerritoryText';
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 
 /** A row of painted unlock miniatures with their names (only the ones painted so far). */
 function GuideArtRow({ label, pieces }: { label: string; pieces: { slug: string; name: string; icon?: string }[] }) {
@@ -317,7 +317,7 @@ export function GuideContent({ section }: { section: GuideSection }) {
             <div className="guide-heir-head"><FactionSeal faction={faction} size={44} /><h3>{info.name}</h3></div>
             <blockquote>“{info.motto}”</blockquote>
             <p>{FACTION_SHEETS[faction].lore}</p>
-            {FACTION_SHEETS[faction].pairs.map((pair, i) => <p key={i}>{pair.strength && <><b>Strength:</b> <Amounts text={pair.strengthDetail ?? pair.strength} /></>}{pair.price && <> <b>Price:</b> <Amounts text={pair.priceDetail ?? pair.price} /></>}</p>)}
+            {FACTION_SHEETS[faction].pairs.map((pair, i) => <Fragment key={i}>{pair.strength && <p><b>Strength:</b> <Amounts text={pair.strengthDetail ?? pair.strength} /></p>}{pair.price && <p><b>Price:</b> <Amounts text={pair.priceDetail ?? pair.price} /></p>}</Fragment>)}
             {/* A sheet whose pair lines already carry the piece's numbers and its comparison (Germany's Foundry) says them once. */}
             {info.unique && <p><Amounts text={FACTION_SHEETS[faction].piecePairs ? uniquePieceBare(faction) : info.unique} /></p>}
             {!FACTION_SHEETS[faction].piecePairs && comparedItems(faction).map((item) => {

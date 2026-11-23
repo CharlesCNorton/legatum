@@ -147,9 +147,9 @@ export const CLASS_NAME: Record<UnitClass, string> = { Melee: 'Melee line', Rang
 
 /** What each class does, in plain words (the triangle, with the numbers). */
 export const CLASS_NOTE: Record<UnitClass, string> = {
-  Melee: `Beats mounted: +${CLASS_BONUS_PERCENT}% strength against mounted units, attacking or defending, before the World War era.`,
+  Melee: `Beats mounted: +${CLASS_BONUS_PERCENT}% strength against mounted units, attacking or defending.`,
   Ranged: 'Beats the melee line: strikes from range with no retaliation.',
-  Mounted: `${MOUNTED_MOVES} moves. Beats ranged: +${CLASS_BONUS_PERCENT}% strength charging ranged units. Horses take −${MOUNTED_CITY_PENALTY_PERCENT}% charging a city.`,
+  Mounted: `Beats ranged: +${CLASS_BONUS_PERCENT}% strength charging ranged units. Horses have −${MOUNTED_CITY_PENALTY_PERCENT}% strength charging a city.`,
   Air: 'Based in a city; strikes from the air.',
 };
 
@@ -157,7 +157,7 @@ export const CLASS_NOTE: Record<UnitClass, string> = {
 const WALLS_HALF_RULE = `attacks on the city's HP do ${RULES.walls.damagePercent === 50 ? 'half damage' : `${RULES.walls.damagePercent}% damage`}`;
 /** Siege's rule, in one wording for the unit card, tech card and Guide. */
 /** Indirect fire on a card or tip: the headline (the Guide prints ARTILLERY_RULE in full). */
-export const ARTILLERY_HEADLINE = 'Fires over terrain at targets your team can see, and ignores every tier of Walls.';
+export const ARTILLERY_HEADLINE = 'Fires over terrain at targets your team can see, and ignores Walls, Castles and Star Forts.';
 export const ARTILLERY_RULE = 'From Steel, Howitzers, Artillery, Rocket Artillery and Combat Drones fire over terrain at targets your team can see. They have full Siege built in, so they ignore Walls, Castles and Star Forts when damaging city HP. Cities still fire and defend.';
 /** Siege on a card or tip: the headline (the Guide prints SIEGE_RULE in full). */
 export const SIEGE_HEADLINE = 'A unit with Siege ignores enemy Walls when it attacks a city.';
@@ -183,7 +183,7 @@ export const builtInSiege = (kind: UnitKind): boolean => landMilitary(kind) && u
 export const canHaveSiege = (kind: UnitKind): boolean => landMilitary(kind) && !builtInSiege(kind);
 
 const MELEE_NOTE = `+${CLASS_BONUS_PERCENT}% strength against mounted units.`;
-const MOUNTED_NOTE = `${MOUNTED_MOVES} moves; +${CLASS_BONUS_PERCENT}% strength charging ranged units, −${MOUNTED_CITY_PENALTY_PERCENT}% charging a city.`;
+const MOUNTED_NOTE = `+${CLASS_BONUS_PERCENT}% strength charging ranged units, −${MOUNTED_CITY_PENALTY_PERCENT}% charging a city.`;
 const UNIT_COPY: Record<UnitKind, { summary: string; blurb: string }> = {
   Scout: { summary: 'Explores quickly and finds ruins and rivals', blurb: 'Fast explorer. Finds ruins and rivals.' },
   Settler: { summary: 'Founds a city. Costs 1 population.', blurb: 'Founds a new city. A city needs 2 population to train one, and loses 1 population when it does.' },
@@ -202,26 +202,26 @@ const UNIT_COPY: Record<UnitKind, { summary: string; blurb: string }> = {
   Crossbowman: { summary: 'Strikes from 2 tiles away without retaliation', blurb: 'Medieval crossbow line. Strikes from 2 tiles away, with no retaliation.' },
   Arquebusier: { summary: 'Strikes from 2 tiles away without retaliation', blurb: 'Renaissance gunpowder shooters. Strike from 2 tiles away, with no retaliation.' },
   FieldCannon: { summary: 'Strikes from 2 tiles away without retaliation', blurb: 'Industrial gun line. Strikes from 2 tiles away, with no retaliation.' },
-  Howitzer: { summary: 'Indirect fire and full Siege built in', blurb: 'Machine Age gun line. Fires over terrain from 2 tiles away and ignores every tier of Walls.' },
+  Howitzer: { summary: 'Indirect fire and full Siege built in', blurb: 'Machine Age gun line. Fires over terrain from 2 tiles away and ignores Walls, Castles and Star Forts.' },
   Artillery: { summary: 'Indirect fire and full Siege built in', blurb: 'World War gun line. Fires over terrain at visible targets and ignores every tier of Walls.' },
-  RocketArtillery: { summary: `Indirect fire from ${RULES.rocketArtilleryRange} tiles away; full Siege built in`, blurb: `Modern rocket launchers. Fire over terrain from ${RULES.rocketArtilleryRange} tiles away and ignore every tier of Walls.` },
+  RocketArtillery: { summary: `Indirect fire from ${RULES.rocketArtilleryRange} tiles away; full Siege built in`, blurb: `Modern rocket launchers. Fire over terrain from ${RULES.rocketArtilleryRange} tiles away and ignore Walls, Castles and Star Forts.` },
   CombatDrone: { summary: 'Quick indirect fire and full Siege built in', blurb: 'Future strike drones. Quick, fire over terrain at visible targets, and ignore every tier of Walls.' },
   Horseman: { summary: 'Fast riders; strong against ranged units', blurb: `Fast riders. ${MOUNTED_NOTE}` },
   Cataphract: { summary: 'Armoured riders; strong against ranged units', blurb: `Armoured lancers of the Classical age. ${MOUNTED_NOTE}` },
   Knight: { summary: 'Armoured riders; strong against ranged units', blurb: `Armoured riders of the Medieval age. ${MOUNTED_NOTE}` },
   Cuirassier: { summary: 'Fast riders; strong against ranged units', blurb: `Breastplated heavy horse of the Renaissance. ${MOUNTED_NOTE}` },
   Cavalry: { summary: 'Fast riders; strong against ranged units', blurb: `Sabre cavalry of the Industrial age. ${MOUNTED_NOTE}` },
-  EarlyTank: { summary: `Slow first armour, ${EARLY_TANK_MOVES} moves; strong against ranged units`, blurb: `The first armour, of the Machine Age. ${EARLY_TANK_MOVES} moves; +${CLASS_BONUS_PERCENT}% strength charging ranged units, with no penalty charging a city.` },
+  EarlyTank: { summary: `Slow first armour, ${EARLY_TANK_MOVES} moves; strong against ranged units`, blurb: `The first armour, of the Machine Age. +${CLASS_BONUS_PERCENT}% strength charging ranged units, with no penalty charging a city.` },
   Tank: { summary: `Heavy armour with ${TANK_MOVES} moves`, blurb: `Armour of the World War era. ${TANK_MOVES} moves. No class bonuses from the World War era on.` },
   MainBattleTank: { summary: `Modern armour with ${TANK_MOVES} moves`, blurb: `Armour of the Modern era, stronger than the Tank. ${TANK_MOVES} moves. No class bonuses.` },
   AutonomousArmour: { summary: `Unmanned armour with ${AUTONOMOUS_ARMOUR_MOVES} moves`, blurb: `Unmanned armour of the Future era. ${AUTONOMOUS_ARMOUR_MOVES} moves. No class bonuses.` },
-  Biplane: { summary: `Sees ${RULES.aircraftSight} tiles around its city, strikes ${RULES.biplaneStrikeRange} tiles away and guards ${RULES.biplaneGuardRange}`, blurb: `Strikes enemy units or cities within ${RULES.biplaneStrikeRange} tiles of its city, or guards against air strikes. Uses 1 Oil supply.` },
-  Fighter: { summary: `Guards ${RULES.fighterRange} tiles against air strikes, or strikes up to ${RULES.fighterStrikeRange} tiles away`, blurb: `Guards against air strikes within ${RULES.fighterRange} tiles of its city, or strikes up to ${RULES.fighterStrikeRange} tiles away. Uses 1 Oil supply.` },
-  JetFighter: { summary: `Guards ${RULES.fighterRange} tiles against air strikes, or strikes up to ${RULES.jetFighterStrikeRange} tiles away`, blurb: `Guards against air strikes within ${RULES.fighterRange} tiles of its city, or strikes up to ${RULES.jetFighterStrikeRange} tiles away. Uses 1 Oil supply.` },
-  Bomber: { summary: `Strikes units or cities within ${RULES.bomberRange} tiles, +${siegeBonusOf('Bomber')} vs city HP`, blurb: `Strikes enemy units or cities within ${RULES.bomberRange} tiles of its city, with no retaliation. Uses 1 Oil supply.` },
-  JetBomber: { summary: `Strikes units or cities within ${RULES.jetBomberRange} tiles, +${siegeBonusOf('JetBomber')} vs city HP`, blurb: `Strikes enemy units or cities within ${RULES.jetBomberRange} tiles of its city, with no retaliation. Uses 1 Oil supply.` },
-  StealthFighter: { summary: 'Strikes up to 7 tiles away; guards 5 tiles around its city', blurb: 'Strikes up to 7 tiles away or guards 5 tiles around its city, and alone stops Stealth Bombers. Uses 1 Silicon supply.' },
-  StealthBomber: { summary: 'Strikes up to 10 tiles away; only Stealth Fighters intercept', blurb: 'Strikes units or cities up to 10 tiles away; only a Stealth Fighter can stop it. Uses 1 Silicon supply.' },
+  Biplane: { summary: `Sees ${RULES.aircraftSight} tiles around its city, strikes ${RULES.biplaneStrikeRange} tiles away and guards ${RULES.biplaneGuardRange}`, blurb: `Its strikes take no retaliation and do ${RULES.biplaneCityDamagePercent}% damage to city HP. Lives in a city's hangar, never on the map.` },
+  Fighter: { summary: `Guards ${RULES.fighterRange} tiles against air strikes, or strikes up to ${RULES.fighterStrikeRange} tiles away`, blurb: `Its strikes take no retaliation. Lives in a city's hangar, never on the map.` },
+  JetFighter: { summary: `Guards ${RULES.fighterRange} tiles against air strikes, or strikes up to ${RULES.jetFighterStrikeRange} tiles away`, blurb: `Its strikes take no retaliation. Lives in a city's hangar, never on the map.` },
+  Bomber: { summary: `Strikes units or cities within ${RULES.bomberRange} tiles, +${siegeBonusOf('Bomber')} vs city HP`, blurb: `Strikes with no retaliation and +${siegeBonusOf('Bomber')} against city HP. Lives in a city's hangar, never on the map.` },
+  JetBomber: { summary: `Strikes units or cities within ${RULES.jetBomberRange} tiles, +${siegeBonusOf('JetBomber')} vs city HP`, blurb: `Strikes with no retaliation and +${siegeBonusOf('JetBomber')} against city HP. Lives in a city's hangar, never on the map.` },
+  StealthFighter: { summary: 'Strikes up to 7 tiles away; guards 5 tiles around its city', blurb: `The only aircraft that stops a Stealth Bomber. Lives in a city's hangar, never on the map.` },
+  StealthBomber: { summary: 'Strikes up to 10 tiles away; only Stealth Fighters intercept', blurb: `Strikes with no retaliation and +${siegeBonusOf('StealthBomber')} against city HP. Lives in a city's hangar, never on the map.` },
 };
 
 export const UNIT_STATS = Object.fromEntries(
@@ -278,7 +278,7 @@ export const BUILDING_STATS: Record<
   IterFusionReactor: { cost: 900, yields: { science: 4 }, cityStrength: 0, requires: 'FusionPower', summary: 'World wonder: +4 Science and +2 held VP', blurb: 'The ITER Fusion Reactor can be completed once in the world. The holder gains +4 Science in its city and +2 VP.' },
   RoyalArsenal: { cost: 600, yields: {}, cityStrength: 0, requires: 'Cannonry', summary: 'World wonder: whoever holds its tile scores +2 VP', blurb: 'World wonder: whoever holds its tile scores +2 VP. Requires a Factory in this city.' },
   GrandBazaar: { cost: 600, yields: {}, cityStrength: 0, requires: 'Banking', summary: 'World wonder: whoever holds its tile scores +2 VP', blurb: 'World wonder: whoever holds its tile scores +2 VP. Own two Banks; build in one of them.' },
-  YamRelayStation: { cost: 600, yields: {}, cityStrength: 0, requires: null, summary: `Links cities by road; whoever holds its tile scores ${RULES.factionGoals.Mongols.vp} VP`, blurb: `Only Mongols can build it, once. It lays roads to every city on the map, and whoever holds its tile scores ${RULES.factionGoals.Mongols.vp} VP.` },
+  YamRelayStation: { cost: 600, yields: {}, cityStrength: 0, requires: null, summary: `Links cities by road; whoever holds its tile scores ${RULES.factionGoals.Mongols.vp} VP`, blurb: `Each Mongol empire gets one. It lays roads to every city on the map, and whoever holds its tile scores ${RULES.factionGoals.Mongols.vp} VP.` },
   Roadworks: { cost: 140, yields: { gold: 1 }, cityStrength: 0, requires: 'Engineering', summary: '+1 Gold; links cities within 8 tiles (12 with Railways)', blurb: '+1 Gold. Builds roads to cities within 8 tiles, or 12 once you know Railways, including cities founded later. Rivals can use them too.' },
 };
 
@@ -498,7 +498,7 @@ const UNIQUE_PIECE: Record<Exclude<Faction, 'Aztecs' | 'Celts'>, UniquePiece> & 
   Sparta: { name: 'Spartan Hoplite', replaces: 'Spearman', cost: 80, effect: '20 strength, 2 moves', rules: [], other: ['Military units trained at the Agoge start one level higher.'] },
   Athens: { name: 'Lyceum', replaces: 'Library', cost: 70, effect: '+6 Science', requires: 'Writing', rules: [] },
   Egypt: { name: 'Royal Granary', replaces: 'Granary', cost: 50, effect: '+3 Food total', rules: [] },
-  Rome: { name: 'Castrum', replaces: 'Walls', cost: 100, effect: '+10 city strength', requires: 'Masonry', rules: ['Upgrading a melee unit in this city restores 50 HP, up to full health.'] },
+  Rome: { name: 'Castrum', replaces: 'Walls', cost: 100, effect: '+10 city strength', requires: 'Masonry', rules: ['Upgrading a melee unit here heals it 50 HP.'] },
 };
 /** Egypt's Grow project (the Nile): the city grows with its surplus Food instead of building. */
 export const isGrow = (item: ProductionItem | null | undefined): boolean => item?.kind === 'Project' && item.project === 'Grow';
