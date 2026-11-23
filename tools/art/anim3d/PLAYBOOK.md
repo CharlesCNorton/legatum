@@ -106,3 +106,69 @@ tools/art/anim3d/render.sh audit
 ```
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
+
+## Infantry chapter: Gaesatae, round 1
+
+The Gaesatae unit lives exclusively in `units/gaesatae/`; it does not replace the
+spearman's master or shared scripts. Use all six Blender skills. Its CC0 MPFB
+anatomy and 53-bone skeleton support the painting's bare tattooed torso, swept
+hair and moustache, gold torc, folded trousers, leather boots, convex elongated
+wooden shield and overhead iron-tipped spear. The shield, clothing, spear and
+hair have real thickness. No image plane or alpha-cutout geometry is used.
+
+The four quality levers are the standard method: (1) calibrate the fixed camera
+and rest anatomy against the painting, register the original full-size source
+to token bounds, and freeze camera UVs on deforming surfaces with ray visibility
+and facing masks; unseen sides use recorded original generated painted fills;
+(2) finish geometry with subdivision, folds, thick bindings and beveled metal;
+(3) use warm upper-left area key, soft fill, cool rim and actual contact shadows;
+(4) fit a bounded RGB histogram correction from the rest image and freeze that
+same grade for all clips. Painted illumination is deliberately retained by the
+projection layer. It does not establish a match when silhouettes disagree.
+The shared cream stone recipe uses sRGB **#E9CFA0**, converted to linear inputs,
+with roughness 0.87 and fine grain. Every unit keeps one stationary low disc.
+
+Inspect `gaesatae-f-restpose-compare.png`: painting left, render middle, 50/50
+crossfade right. Compare native 256 and 64 pixels, plus face/torc, torso and
+shield details. Silhouette, equipment attachment and motion quality remain
+visual gates. A technically valid atlas is not a PASS. Never write the PASS file
+until rest and all five clips satisfy the art bar.
+
+From the repository root, with existing MPFB installation and painting assets:
+
+```sh
+source tools/art/anim3d/env.sh
+unit=tools/art/anim3d/units/gaesatae
+"$ANIM_ROOT/venv/bin/python" "$unit/prepare.py"
+blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python "$unit/build.py"
+blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python "$unit/project.py"
+blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python "$unit/animate.py"
+CYCLES_DEVICE=CPU RESOLUTION=256 SAMPLES=8 blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python "$unit/render.py" -- all
+"$ANIM_ROOT/venv/bin/python" "$unit/deliver.py" --movie
+```
+
+Every Blender invocation uses plain `blender` on PATH, the machine-wide gate.
+Never bypass it or start simultaneous heavy jobs. CPU renders are previews;
+`ROUND=1 tools/art/anim3d/units/gaesatae/gpu.sh` is the complete lead handoff.
+It requires a real Metal Cycles GPU, renders every stage at 512 pixels, retains
+512/256 sets under external `masters/gaesatae/masters/`, rebuilds review images,
+packs/validates the atlas and encodes `gaesatae-round${ROUND}.mp4`. The movie
+reconstructs trimmed frames, shows five clips side by side at 2x on cream, and
+is 8 seconds, H.264, yuv420p. It does not silently fall back to CPU.
+
+### Gaesatae trimmed atlas format (version 2)
+
+The logical frame is 160x160, anchor `(ax,ay)=(80,142)`. The atlas packs one
+horizontal variable-width row per clip in idle/move/attack/hit/death order.
+`clips[name]` retains `row`, numeric `frames`, `fps` and `loop`, and adds `rects`,
+one `{x,y,w,h,ox,oy}` per frame. `(x,y,w,h)` selects the atlas crop; `(ox,oy)`
+is its top-left in the original 160px transparent cell. Reconstruct before
+anchoring, or draw the crop at `screenAnchor + (ox-ax, oy-ay)`. Do not infer
+atlas coordinates from `row * frame.h`. No runtime consumer is changed here.
+
+Packing keeps 8/8/10/4/10 frames, quality 90 down to **75 minimum**, and refuses
+anything over **200,000 bytes**. It checks master/render hashes, transparent
+margins, rectangles, offsets, motion and identical lossless terminal death frames.
+The final death PNG is copied rather than rerendered. Raw, graded and derived
+masters remain outside Git. Render manifests name engine, device and samples;
+CPU preview masters are never labelled GPU output or upscaled to fake 512px.
