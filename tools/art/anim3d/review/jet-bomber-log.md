@@ -66,3 +66,14 @@ e-attack: 10 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
 e-hit: 4 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
 e-death: 10 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
 g: 16 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+c: 1 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+Round 2 first preview: base refit and visible-rim pigment remove the oversized dark ring; support now visibly folds continuously through death. CPU512 rest diagnostic revealed only 0.831 silhouette IoU despite close colour, so inspected a missing/excess silhouette overlay and source alpha contours before further polish.
+Refitted full-depth fuselage rings to the painting's lower contour and lengthened paired nacelle rear bodies; previous model was missing 1299 silhouette pixels at 256. All work remains actual geometry, not alpha cutouts. Bombs now have joined solid fins and release-pose-aware accelerated fall; outer pod damage shares the wing's world-space deformation field.
+b: 3 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+d: 4 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+e-idle: 8 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+e-move: 8 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+e-attack: 10 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+e-hit: 4 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+e-death: 10 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+g: 16 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
