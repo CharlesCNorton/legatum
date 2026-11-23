@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
+# Family-specific masters and scripts; retain the existing spearman default.
+if [[ "${ANIM_FAMILY:-}" == siege ]]; then
+  exec "$(dirname "$0")/siege/render.sh" "$@"
+fi
 cd "$(dirname "$0")/../../.."
 source tools/art/anim3d/env.sh
 stage="${1:-c}"
