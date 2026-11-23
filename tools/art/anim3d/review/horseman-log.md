@@ -8,3 +8,7 @@
 - Textured/detail renders now include MPFB face/skin, short beard, dark helmet crest, CC0 scan materials and actual AO/Pointiness maps on helmet, skin and horse.
 - First death review caught source sideways travel, clipped head/rider and rider/base penetration. Added front-leg buckle, recentering and contact corrections; geometry audit passed all five clips.
 - Reduced hide specular, added visible mane locks, flowing tail fibres and bronze breast-strap discs; rendering revised stage and clip evidence.
+- Read fresh owner/cloud feedback: current round fails craft bar; prioritize original-painting projection, warm base, richer geometry, generated unseen-surface fills and rest crossfade. No claim of art approval.
+- Generated and saved a four-quadrant coat/linen/bronze/hair fill atlas with built-in imagegen; pinned original pixels and full prompt; no generated geometry or painting cutouts.
+- Added fixed projected UVs on weighted surfaces, incidence/alpha seams, geometry Greek-key blanket/fringe, skinned tail strands, and one rest-calibrated colour LUT for all frames.
+- Source gait inspection found four separate source footfalls. Retiming both forelimb trajectories creates a three-beat canter adaptation; source paths retained and provenance explicit.
