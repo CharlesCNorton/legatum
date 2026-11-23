@@ -72,7 +72,7 @@ export function LobbyScreen() {
   const setLobby = (next: Lobby) => {
     // The host's own name is the one the game list shows next time.
     if (mode === 'host' && next.slots[0]?.name !== lobby?.slots[0]?.name) rememberPlayerName(next.slots[0]?.name ?? '');
-    const changedLevel = lobby && (levelOf(next) !== levelOf(lobby) || next.slots.some((slot, i) => slot.kind === 'ai' && levelOf(slot) !== levelOf(lobby.slots[i] ?? lobby)));
+    const changedLevel = lobby && levelOf(next) !== levelOf(lobby);
     if (!rememberDifficulty(next) && changedLevel) set({ error: 'AI level could not be saved on this device. It will reset when you leave this lobby.' });
     setDraft({
       lobby: next,
