@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Procedural Classical harbour VFX blockout. Blender 5.3; no render in --dry-run."""
+"""Painted Classical harbour cinematic. Blender 5.3; no render in --dry-run."""
 import argparse
 from array import array
 import hashlib
@@ -115,27 +115,59 @@ def drive(ob, path, index, expression):
 
 
 def paint(name, color):
-    """Eevee diffuse -> RGB -> soft paint bands, retaining actual sun shadows."""
+    """Object-space pigment strokes and impasto; real lights still cast shadows.
+
+    Principled preserves coloured fill/specular and also permits CPU look checks.
+    The normal ramp softly groups pigment values rather than flattening illumination
+    through Shader-to-RGB followed by emission (the v1 grey-card failure).
+    """
     mat = bpy.data.materials.new(name)
     mat.diffuse_color = color
     mat.use_nodes = True
     t = mat.node_tree
-    t.nodes.clear()
-    diffuse = node(t, 'ShaderNodeBsdfDiffuse', 'Sun and shadow illumination')
-    diffuse.inputs['Color'].default_value = (0.8, .8, .8, 1)
-    rgb = node(t, 'ShaderNodeShaderToRGB', 'Eevee light into pigment')
-    ramp = node(t, 'ShaderNodeValToRGB', 'Soft paint bands')
-    ramp.color_ramp.interpolation = 'EASE'
-    stops = [(.12, .32), (.36, .68), (.55, .85), (.78, 1.2)]
-    for i, (position, amount) in enumerate(stops):
-        e = ramp.color_ramp.elements[i] if i < 2 else ramp.color_ramp.elements.new(position)
-        e.position = position
-        e.color = tuple(min(1, c*amount) for c in color[:3]) + (1,)
-    emit = node(t, 'ShaderNodeEmission', 'Paint surface')
-    out = node(t, 'ShaderNodeOutputMaterial', 'Output')
-    for a, b in [(diffuse.outputs[0], rgb.inputs[0]), (rgb.outputs[0], ramp.inputs[0]),
-                 (ramp.outputs[0], emit.inputs[0]), (emit.outputs[0], out.inputs['Surface'])]:
-        t.links.new(a, b)
+    bsdf = t.nodes.get('Principled BSDF')
+    bsdf.inputs['IOR'].default_value = 1.46
+    coord = node(t, 'ShaderNodeTexCoord', 'Stable object-space brushwork')
+    mapping = node(t, 'ShaderNodeVectorMath', 'Elongated pigment strokes')
+    mapping.operation = 'MULTIPLY'
+    mapping.inputs[1].default_value = (1.8, 7.0, 3.5)
+    t.links.new(coord.outputs['Object'], mapping.inputs[0])
+    noise = node(t, 'ShaderNodeTexNoise', 'Broken bristle marks')
+    noise.inputs['Scale'].default_value = 2.4
+    noise.inputs['Detail'].default_value = 3
+    noise.inputs['Roughness'].default_value = .72
+    t.links.new(mapping.outputs[0], noise.inputs['Vector'])
+    pigment = node(t, 'ShaderNodeValToRGB', 'Ochre and ivory pigment variation')
+    pigment.color_ramp.elements[0].position = .22
+    pigment.color_ramp.elements[0].color = tuple(c*.58 for c in color[:3])+(1,)
+    pigment.color_ramp.elements[1].position = .78
+    pigment.color_ramp.elements[1].color = tuple(min(1,c*1.24+.025) for c in color[:3])+(1,)
+    t.links.new(noise.outputs['Fac'], pigment.inputs[0])
+    geo = node(t, 'ShaderNodeNewGeometry', 'Paint plane orientation')
+    dot = node(t, 'ShaderNodeVectorMath', 'Sun-facing paint planes')
+    dot.operation = 'DOT_PRODUCT'
+    dot.inputs[1].default_value = (-.68, -.53, .50)
+    t.links.new(geo.outputs['Normal'], dot.inputs[0])
+    bands = node(t, 'ShaderNodeValToRGB', 'Soft grouped paint values')
+    bands.color_ramp.interpolation = 'EASE'
+    bands.color_ramp.elements[0].position = .05
+    bands.color_ramp.elements[0].color = (.65,.73,.84,1)
+    bands.color_ramp.elements[1].position = .65
+    bands.color_ramp.elements[1].color = (1,.97,.88,1)
+    mid = bands.color_ramp.elements.new(.36); mid.color=(.87,.88,.88,1)
+    t.links.new(dot.outputs['Value'], bands.inputs[0])
+    mix = node(t, 'ShaderNodeMixRGB', 'Pigment times soft bands')
+    mix.blend_type = 'MULTIPLY'; mix.inputs[0].default_value = .5
+    t.links.new(pigment.outputs[0],mix.inputs[1]); t.links.new(bands.outputs[0],mix.inputs[2])
+    t.links.new(mix.outputs[0],bsdf.inputs['Base Color'])
+    rough = node(t, 'ShaderNodeMapRange', 'Dry brush roughness')
+    rough.inputs['To Min'].default_value=.48; rough.inputs['To Max'].default_value=.91
+    t.links.new(noise.outputs['Fac'],rough.inputs['Value'])
+    t.links.new(rough.outputs[0],bsdf.inputs['Roughness'])
+    bump = node(t,'ShaderNodeBump','Subtle pigment relief')
+    bump.inputs['Strength'].default_value=.22; bump.inputs['Distance'].default_value=.045
+    t.links.new(noise.outputs['Fac'],bump.inputs['Height'])
+    t.links.new(bump.outputs[0],bsdf.inputs['Normal'])
     return mat
 
 
@@ -158,7 +190,7 @@ def backdrop():
     source = bpy.data.images.load(str(PAINTING))
     pixels = array('f', [0]) * (source.size[0]*source.size[1]*4)
     source.pixels.foreach_get(pixels)
-    x0, x1, top, bottom = 460, 890, 15, 340
+    x0, x1, top, bottom = 460, 890, 15, 200
     w, h = x1-x0, bottom-top
     crop = array('f')
     for y in range(source.size[1]-bottom, source.size[1]-top):
@@ -177,20 +209,40 @@ def backdrop():
     aov.aov_name = 'BackdropMask'
     aov.inputs['Value'].default_value = 1
     verts, faces = [], []
-    for i in range(41):
-        a = math.radians(-65+130*i/40)
-        for z in (-5, 85):
-            verts.append((130*math.sin(a), 130*math.cos(a), z))
-    for i in range(40):
+    for i in range(81):
+        a = math.radians(-100+200*i/80)
+        for z in (-40, 260):
+            verts.append((200*math.sin(a), 200*math.cos(a), z))
+    for i in range(80):
         faces.append((2*i, 2*i+1, 2*i+3, 2*i+2))
     ob = mesh('GEO-curved-sky-and-mountain-card', verts, faces, mat)
     uv = ob.data.uv_layers.new()
     for poly in ob.data.polygons:
         for li in poly.loop_indices:
             vi = ob.data.loops[li].vertex_index
-            uv.data[li].uv = (vi//2/40, vi % 2)
+            uv.data[li].uv = (vi//2/80, vi % 2)
     ob.pass_index = 1
     ob['source_crop_xy_top_origin'] = [x0, top, x1, bottom]
+    # Actual intervening ridges change parallax and occlusion during the crane.
+    for layer,(y,base,height,col) in enumerate(((112,-2,25,(.25,.35,.44,1)),
+                                               (88,-2,17,(.23,.31,.35,1)),
+                                               (67,-2,10,(.20,.27,.26,1)))):
+        ridge_mat=paint(f'Distant mountain pigment {layer}',col)
+        verts,faces=[],[]
+        nx,ny=129,13
+        for j in range(ny):
+            depth=j/(ny-1)
+            for i in range(nx):
+                x=-150+i*2.5
+                peak=height*(.60+.19*math.sin(i*.19+layer)+.10*math.sin(i*.51)+.05*math.sin(i*1.17))
+                z=base+peak*math.sin(math.pi*depth)**.8
+                verts.append((x,y-8+depth*32,z))
+        for j in range(ny-1):
+            for i in range(nx-1):
+                a=j*nx+i
+                faces.append((a,a+1,a+nx+1,a+nx))
+        ridge=mesh('GEO-parallax-mountain-ridge',verts,faces,ridge_mat)
+        for poly in ridge.data.polygons: poly.use_smooth=True
     return ob
 
 
@@ -198,42 +250,55 @@ def sea():
     ob = mesh('GEO-ocean', [(0, 0, 0)], [])
     ocean = ob.modifiers.new('Moving ocean and foam vertex layer', 'OCEAN')
     ocean.geometry_mode = 'GENERATE'
-    ocean.resolution = 7
-    ocean.viewport_resolution = 5
-    ocean.spatial_size = 160
-    ocean.wave_scale = .62
-    ocean.choppiness = .65
-    ocean.wind_velocity = 12
-    ocean.wave_scale_min = .06
+    ocean.resolution = 8
+    ocean.viewport_resolution = 6
+    ocean.spatial_size = 220
+    ocean.wave_scale = .38
+    ocean.choppiness = .85
+    ocean.wind_velocity = 9
+    ocean.wave_scale_min = .04
     ocean.use_normals = True
     ocean.use_foam = True
     ocean.foam_layer_name = 'foam'
-    ocean.foam_coverage = .28
+    ocean.foam_coverage = -.35
     ocean.random_seed = 19
     drive(ocean, 'time', None, '2 + frame / 24.0')
-    mat = bpy.data.materials.new('Mineral blue water with white crest foam')
+    mat = bpy.data.materials.new('Mineral blue water with sparse crest foam')
     mat.use_nodes = True
     t = mat.node_tree
     bsdf = t.nodes.get('Principled BSDF')
-    bsdf.inputs['Roughness'].default_value = .22
-    bsdf.inputs['IOR'].default_value = 1.333
-    attr = node(t, 'ShaderNodeAttribute', 'Ocean foam vertex layer')
-    attr.attribute_name = 'foam'
-    ramp = node(t, 'ShaderNodeValToRGB', 'Blue water to ivory foam')
-    ramp.color_ramp.elements[0].position = .05
-    ramp.color_ramp.elements[0].color = BLUE
-    ramp.color_ramp.elements[1].position = .55
-    ramp.color_ramp.elements[1].color = (.86, .89, .82, 1)
-    t.links.new(attr.outputs['Fac'], ramp.inputs[0])
-    t.links.new(ramp.outputs[0], bsdf.inputs['Base Color'])
-    rough = node(t, 'ShaderNodeMapRange', 'Rougher whitecaps')
-    rough.inputs['To Min'].default_value = .22
-    rough.inputs['To Max'].default_value = .8
-    t.links.new(attr.outputs['Fac'], rough.inputs['Value'])
-    t.links.new(rough.outputs[0], bsdf.inputs['Roughness'])
+    bsdf.inputs['IOR'].default_value = 1.333  # dielectric Fresnel, not metallic paint
+    bsdf.inputs['Metallic'].default_value = 0
+    coord=node(t,'ShaderNodeTexCoord','Water coordinates')
+    mapping=node(t,'ShaderNodeVectorMath','Wind-stretched water brush marks')
+    mapping.operation='MULTIPLY'; mapping.inputs[1].default_value=(.7,3.5,1)
+    t.links.new(coord.outputs['Object'],mapping.inputs[0])
+    noise=node(t,'ShaderNodeTexNoise','Small wind ripples')
+    noise.inputs['Scale'].default_value=3.2; noise.inputs['Detail'].default_value=2
+    t.links.new(mapping.outputs[0],noise.inputs['Vector'])
+    water=node(t,'ShaderNodeValToRGB','Deep mineral blue and teal')
+    water.color_ramp.elements[0].color=(.008,.055,.10,1)
+    water.color_ramp.elements[1].color=(.025,.20,.23,1)
+    t.links.new(noise.outputs['Fac'],water.inputs[0])
+    attr=node(t,'ShaderNodeAttribute','Ocean foam vertex layer'); attr.attribute_name='foam'
+    crest=node(t,'ShaderNodeMapRange','Only high foam crests survive')
+    crest.clamp=True; crest.inputs['From Min'].default_value=.72
+    crest.inputs['From Max'].default_value=.96
+    t.links.new(attr.outputs['Fac'],crest.inputs['Value'])
+    broken=node(t,'ShaderNodeMath','Broken crest flecks'); broken.operation='MULTIPLY'
+    t.links.new(crest.outputs[0],broken.inputs[0]); t.links.new(noise.outputs['Fac'],broken.inputs[1])
+    mix=node(t,'ShaderNodeMixRGB','Crest-only ivory foam')
+    t.links.new(broken.outputs[0],mix.inputs[0]); t.links.new(water.outputs[0],mix.inputs[1])
+    mix.inputs[2].default_value=(.65,.79,.74,1)
+    t.links.new(mix.outputs[0],bsdf.inputs['Base Color'])
+    rough=node(t,'ShaderNodeMapRange','Fresnel glints and rough whitecaps')
+    rough.inputs['To Min'].default_value=.16; rough.inputs['To Max'].default_value=.68
+    t.links.new(broken.outputs[0],rough.inputs['Value']); t.links.new(rough.outputs[0],bsdf.inputs['Roughness'])
+    bump=node(t,'ShaderNodeBump','Sun-catching ripple normals')
+    bump.inputs['Strength'].default_value=.27; bump.inputs['Distance'].default_value=.065
+    t.links.new(noise.outputs['Fac'],bump.inputs['Height']); t.links.new(bump.outputs[0],bsdf.inputs['Normal'])
     ob.data.materials.append(mat)
-    # Large sea extent, enough for the opening's low horizon.
-    ob.location.y = 20
+    ob.location.y=20
     return ob
 
 
@@ -278,12 +343,13 @@ def cloth(name, width, height, loc, mat, cache, parent=None, pin_tacks=False):
 def ship(mats, cache):
     wood, ivory, blue = mats['wood'], mats['ivory'], mats['blue']
     rig = empty('RIG-trireme')
-    drive(rig, 'location', 0, '-5 + .18*sin(frame*.04)')
-    drive(rig, 'location', 1, '-5 + (frame-1)*.038')
+    rig.scale=(1.35,1.35,1.35)
+    drive(rig, 'location', 0, '-6 + (frame-1)*.025')
+    drive(rig, 'location', 1, '-5 + (frame-1)*.045')
     drive(rig, 'location', 2, '.35 + .16*sin(frame*.09)')
     drive(rig, 'rotation_euler', 0, '.025*sin(frame*.09+.5)')
     drive(rig, 'rotation_euler', 1, '.045*sin(frame*.08)')
-    drive(rig, 'rotation_euler', 2, '-.12 + .025*sin(frame*.035)')
+    drive(rig, 'rotation_euler', 2, '-.62 + .025*sin(frame*.035)')
     verts, faces = [], []
     for y, width, lift in [(-5.4,.13,.55),(-4,1.05,0),(-2,1.38,0),(2,1.38,0),(4,1.0,.1),(5.7,.06,.9)]:
         verts += [(-width,y,1.0+lift),(-width*.65,y,-.15+lift),(0,y,-.45+lift),
@@ -296,6 +362,17 @@ def ship(mats, cache):
     faces += [(0,4,3,2,1),(25,26,27,28,29)]
     hull = mesh('GEO-trireme-carved-hull', verts, [face[::-1] for face in faces], wood)
     hull.parent = rig
+    bevel=hull.modifiers.new('Rounded carved hull edges','BEVEL'); bevel.width=.16; bevel.segments=3
+    for poly in hull.data.polygons: poly.use_smooth=True
+    for side in (-1,1):
+        for z in (.2,.48,.76):
+            curve=bpy.data.curves.new('Hull strake','CURVE'); curve.dimensions='3D'
+            curve.bevel_depth=.028; curve.bevel_resolution=2
+            spline=curve.splines.new('POLY'); spline.points.add(5)
+            for point,(y,w,lift) in zip(spline.points,[(-5.4,.13,.55),(-4,1.05,0),(-2,1.38,0),(2,1.38,0),(4,1,.1),(5.7,.06,.9)]):
+                point.co=(side*w*.94,y,z+lift,1)
+            strake=bpy.data.objects.new('GEO-hull-strake',curve); bpy.context.collection.objects.link(strake)
+            curve.materials.append(mats['ochre']); strake.parent=rig
     cube('GEO-deck', (0,0,1.0), (2.1,7.8,.18), mats['ochre'], rig)
     for side in (-1,1):
         rod('GEO-gunwale', (side*1.28,-3.8,1.2), (side*1.28,3.8,1.2), .10, ivory, rig)
@@ -307,19 +384,20 @@ def ship(mats, cache):
             cube('GEO-oar-blade',(side*2.65,0,-.15),(.70,.23,.065),ivory,pivot)
     rod('GEO-mast',(0,.3,1),(0,.3,6.8),.13,wood,rig)
     rod('GEO-yard',(-2.6,.3,6.4),(2.6,.3,6.4),.085,wood,rig)
-    cloth('GEO-sail',4.9,3.8,(0,.38,6.35),ivory,cache,rig,pin_tacks=True)
+    cloth('GEO-sail',4.9,2.5,(0,.38,6.35),ivory,cache,rig,pin_tacks=True)
     for side in (-1,1):
-        rod('GEO-sail-tack-rope',(side*2.45,.38,2.55),(side*1.2,2,1.2),.025,wood,rig,6)
+        rod('GEO-sail-tack-rope',(side*2.45,.38,3.85),(side*1.2,2,1.2),.025,wood,rig,6)
     rod('GEO-bow-ram',(0,4.7,.1),(0,6.5,.1),.16,mats['ochre'],rig)
     # A spatial foam wake, trailing the stern; analytic ribbons and flecks, not a fluid solve.
-    wake_mat = emission('Wake foam',(.63,.76,.73,1),.85)
+    wake_mat = paint('Wake foam',(.30,.53,.49,1))
     for side in (-1,1):
         vs, fs = [], []
         for j in range(30):
             d=j/29
             for edge in (-1,1):
-                vs.append((side*(.8+d*2.6)+edge*(.12+.22*d),-5-d*10,.03))
+                vs.append((side*(.8+d*2.6)+edge*(.035+.09*d),-5-d*10,-.20))
         for j in range(29):
+            if j % 5 in (2,4): continue
             fs.append((2*j,2*j+1,2*j+3,2*j+2))
         wake=mesh('GEO-foamy-wake-ribbon',vs,fs,wake_mat)
         wake.parent=rig
@@ -332,48 +410,136 @@ def ship(mats, cache):
         wave.narrowness=2
     for j in range(34):
         side=RNG.choice((-1,1)); d=RNG.uniform(0,9)
-        fleck=sphere('GEO-wake-bubbles',(side*(.8+d*.25),-5-d,-.15),(.12,.35,.045),wake_mat,rig)
+        fleck=sphere('GEO-wake-flecks',(side*(.8+d*.25),-5-d,-.15),(.065,.24,.012),wake_mat,rig)
         drive(fleck,'location',2,f'-.15+.10*sin(frame*.24+{j})')
+    for ob in rig.children:
+        if ob.name.startswith(('GEO-foamy-wake','GEO-wake-flecks')):
+            wrap=ob.modifiers.new('Foam follows actual wave surface','SHRINKWRAP')
+            wrap.target=bpy.data.objects['GEO-ocean']; wrap.offset=.018
     return rig
 
 
 def architecture(m):
-    cube('GEO-quay', (0,15,.1), (43,7,2.4),m['stone'])
-    cube('GEO-quay-coping',(0,11.6,1.3),(43,.4,.3),m['ivory'])
-    for x in range(-20,22,3):
+    cube('GEO-quay', (0,15,.1), (110,7,2.4),m['stone'])
+    cube('GEO-quay-coping',(0,11.6,1.3),(110,.4,.3),m['ivory'])
+    for x in range(-53,55,3):
         cube('GEO-pier-joint',(x,11.36,.35),(.08,.07,1.9),m['wood'])
-    sphere('GEO-headland',(5,32,1),(19,18,9),m['stone'])
-    for j in range(25):
-        x,y=RNG.uniform(-12,23),RNG.uniform(19,43)
-        sphere('GEO-limestone-rock',(x,y,RNG.uniform(.4,3)),
-               (RNG.uniform(1,3),RNG.uniform(1,3),RNG.uniform(2,5)),m['stone'])
-    for j in range(12):
-        cube('GEO-acropolis-stair',(4,18+j*.64,1.4+j*.59),(7,1.0,.6),m['ivory'])
+    cube('GEO-coastal-town-ground',(0,103,.35),(200,170,2.1),m['stone'])
+    # Layered irregular outcrop, with a genuinely flat acropolis platform.
+    verts,faces=[],[]
+    sectors=64
+    for ring,(rx,ry,z) in enumerate(((22,19,-.5),(19,17,1.8),(16,14,4.1),(13.5,12.5,6.4),(12,11.5,8.0))):
+        for i in range(sectors):
+            theta=2*math.pi*i/sectors
+            broken=1+.07*math.sin(5*theta+.4)+.04*math.sin(13*theta+ring*.7)
+            verts.append((5+rx*math.cos(theta)*broken,34+ry*math.sin(theta)*broken,
+                          z+(RNG.uniform(-.65,.65) if ring not in (0,4) else 0)))
+    for ring in range(4):
+        for i in range(sectors):
+            a=ring*sectors+i; b=ring*sectors+(i+1)%sectors
+            faces.extend(((a,b,b+sectors),(a,b+sectors,a+sectors)))
+    faces.append(tuple(range(4*sectors,5*sectors)))
+    cliff=mesh('GEO-stratified-limestone-outcrop',verts,faces,m['stone'])
+    for poly in cliff.data.polygons: poly.use_smooth=True
+    for j in range(95):
+        theta=RNG.uniform(0,math.tau); r=RNG.uniform(.78,1)
+        x,y=5+18*r*math.cos(theta),34+16*r*math.sin(theta)
+        rock=sphere('GEO-weathered-limestone-buttress',(x,y,RNG.uniform(1.3,4)),
+                    (RNG.uniform(.6,1.8),RNG.uniform(.7,2),RNG.uniform(1.2,3.7)),m['stone'])
+        rock.rotation_euler=(RNG.uniform(-.3,.3),RNG.uniform(-.3,.3),RNG.random())
+        texture=bpy.data.textures.get('Weathered limestone') or bpy.data.textures.new('Weathered limestone','CLOUDS')
+        texture.noise_scale=.7
+        displace=rock.modifiers.new('Eroded rock faces','DISPLACE'); displace.texture=texture; displace.strength=.3
+        for poly in rock.data.polygons: poly.use_smooth=True
+    # Mortared courses, not a solid featureless box; joints remain narrow.
+    for course in range(4):
+        z=5.3+course*.76
+        for j in range(12):
+            x=-5.8+j*1.95+(course%2)*.45
+            cube('GEO-acropolis-front-ashlar',(x,22.7,z),(1.91,1.4,.73),m['ivory'])
+        for side in (-1,1):
+            for j in range(11):
+                cube('GEO-acropolis-side-ashlar',(5+side*12,23.7+j*1.85,z),
+                     (1.4,1.81,.73),m['ivory'])
+    cube('GEO-acropolis-terrace',(5,33.4,8.03),(25.5,23.4,.35),m['ivory'])
+    for x in (-7,17):
+        cube('GEO-retaining-wall-cap',(x,33.4,8.4),(1.7,23.8,.35),m['ivory'])
+    for j in range(24):
+        cube('GEO-acropolis-stair',(4,15.2+j*.34,1.4+j*.29),(5,.58,.31),m['ivory'])
     for j in range(3):
         cube('GEO-temple-stylobate',(5,32,8.1+j*.35),(14-j*.6,18-j*.6,.4),m['ivory'])
     for x in (-.7,10.7):
         for y in (24.8,27.7,30.6,33.5,36.4,39.3):
-            rod('GEO-doric-column',(x,y,9),(x,y,14.5),.40,m['ivory'],vertices=12)
+            rod('GEO-doric-column',(x,y,9),(x,y,14.5),.40,m['ivory'],vertices=24)
             cube('GEO-doric-capital',(x,y,14.5),(1.05,1.05,.3),m['ivory'])
     for y in (24.8,39.3):
         for x in (1.6,3.9,6.2,8.5):
-            rod('GEO-front-column',(x,y,9),(x,y,14.5),.40,m['ivory'],vertices=12)
+            rod('GEO-front-column',(x,y,9),(x,y,14.5),.40,m['ivory'],vertices=24)
             cube('GEO-front-capital',(x,y,14.5),(1.05,1.05,.3),m['ivory'])
     cube('GEO-cella',(5,32,11.4),(6.5,10,4.8),m['ochre'])
     cube('GEO-entablature',(5,32,14.9),(13.5,17,.65),m['ivory'])
     roof=mesh('GEO-terracotta-pediment', [(-2,23.3,15.2),(12,23.3,15.2),(5,23.3,18),
              (-2,40.7,15.2),(12,40.7,15.2),(5,40.7,18)],
              [(0,1,2),(5,4,3),(0,3,4,1),(0,2,5,3),(1,4,5,2)],m['terra'])
-    for x in (-16,-10,17,22):
-        y=22+RNG.uniform(-2,4)
-        cube('GEO-harbour-house',(x,y,2.6),(3.5,4,4),m['ivory'])
-        cube('GEO-house-roof',(x,y,4.8),(4,4.5,.4),m['terra'])
-        for offset in (-.8,.8):
-            cube('GEO-house-window',(x+offset,y-2.02,3.1),(.5,.08,.9),m['wood'])
+    # Roof structure, triglyph rhythm, capitals and tympanum give scale at 540p.
+    for y in (23.18,40.82):
+        mesh('GEO-limestone-tympanum',[(-1.8,y,15.22),(11.8,y,15.22),(5,y,17.7)],[(0,1,2)],m['ivory'])
+        rod('GEO-pediment-raking-cornice',(-2,y,15.25),(5,y,17.95),.14,m['ivory'])
+        rod('GEO-pediment-raking-cornice',(5,y,17.95),(12,y,15.25),.14,m['ivory'])
+        for j in range(19):
+            cube('GEO-frieze-triglyph',(-1.4+j*.71,y,14.95),(.17,.16,.48),m['ochre'])
+        for j in range(9):
+            x=1+j
+            z=15.45
+            h=max(.2,1.5-abs(x-5)*.28)
+            sphere('GEO-pediment-relief',(x,y-.08,z+h*.4),(.19,.13,h*.45),m['ivory'])
+    for j in range(28):
+        y=23.45+j*.63
+        for side in (-1,1):
+            rod('GEO-roof-tile-ridge',(5,y,18.03),(5+side*7,y,15.27),.047,m['terra'],vertices=6)
+    for ob in list(bpy.context.scene.objects):
+        if 'column' in ob.name:
+            for poly in ob.data.polygons: poly.use_smooth=True
+            x,y,_=ob.location
+            rod('GEO-doric-echinus',(x,y,14.23),(x,y,14.48),.54,m['ivory'],vertices=24)
+    # Cluster houses along both flanks and the waterfront, leaving the stair open.
+    for j in range(64):
+        side=-1 if j%2 else 1
+        # Staggered neighbourhoods continue beyond the wide, not an isolated plinth.
+        x=5+side*(16+(j//2)%8*4.5+RNG.uniform(-.4,.4))
+        y=22+(j//16)*7+RNG.uniform(-.6,.6)
+        ground=1.2 if y<25 else 2.0
+        w,d,h=RNG.uniform(2.2,3.6),RNG.uniform(2.5,4),RNG.uniform(2.2,4)
+        cube('GEO-harbour-house',(x,y,ground+h/2),(w,d,h),m['ivory'])
+        mesh('GEO-house-pitched-roof',[(x-w*.56,y-d*.56,ground+h),(x+w*.56,y-d*.56,ground+h),
+             (x,y-d*.56,ground+h+.9),(x-w*.56,y+d*.56,ground+h),
+             (x+w*.56,y+d*.56,ground+h),(x,y+d*.56,ground+h+.9)],
+             [(0,1,2),(5,4,3),(0,2,5,3),(1,4,5,2)],m['terra'])
+        for offset in (-.6,.6):
+            cube('GEO-house-window',(x+offset,y-d/2-.025,ground+h*.65),(.4,.08,.65),m['wood'])
+        cube('GEO-house-door',(x,y-d/2-.03,ground+.65),(.65,.09,1.3),m['wood'])
+    # Harbour stoa: deep shadowed arcade against warm columns.
+    cube('GEO-stoa-back',(-15,23,3.5),(14,.6,4.2),m['ochre'])
+    cube('GEO-stoa-roof',(-15,21.1,5.8),(15,4.8,.45),m['terra'])
+    for j in range(12):
+        rod('GEO-stoa-column',(-21.5+j*1.18,19.2,1.4),(-21.5+j*1.18,19.2,5.55),.19,m['ivory'],vertices=20)
+    for x in (-38,-28,28,38,48):
+        y=18.8
+        rod('GEO-olive-trunk',(x,y,1.4),(x+.3,y,4),.19,m['wood'],vertices=16)
+        for j in range(5):
+            crown=sphere('GEO-olive-crown',(x+RNG.uniform(-1,1),y+RNG.uniform(-.7,.7),4+RNG.uniform(0,.7)),
+                         (1.3,1.0,.85),m['sage'])
+            for poly in crown.data.polygons: poly.use_smooth=True
+        for j in range(3):
+            cube('GEO-quayside-cargo',(x+j*.75,y-2.2,1.8),(.65,.65,.8),m['wood'])
     for j in range(18):
         x,y=RNG.choice((-1,1))*RNG.uniform(10,18)+4,RNG.uniform(22,39)
         rod('GEO-cypress-trunk',(x,y,3),(x,y,7),.16,m['wood'])
-        sphere('GEO-cypress',(x,y,7.2),(.8,.85,3.2),m['sage'])
+        tree=sphere('GEO-cypress',(x,y,7.2),(.8,.85,3.2),m['sage'])
+        for poly in tree.data.polygons: poly.use_smooth=True
+        tex=bpy.data.textures.get('Cypress foliage') or bpy.data.textures.new('Cypress foliage','CLOUDS')
+        tex.noise_scale=.35
+        dis=tree.modifiers.new('Uneven foliage silhouette','DISPLACE'); dis.texture=tex; dis.strength=.35
 
 
 def fire(m, cache):
@@ -381,17 +547,18 @@ def fire(m, cache):
     rod('GEO-beacon-bowl',(-12,15,2.8),(-12,15,3.3),1.05,m['ochre'])
     for i in range(5):
         rod('GEO-burning-log',(-12.6,14.65+i*.16,3.25),(-11.4,15.35-i*.16,3.5),.12,m['wood'])
-    flow=sphere('GEO-fire-smoke-emitter',(-12,15,3.65),(.65,.65,.55))
+    flow=sphere('GEO-fire-smoke-emitter',(-12,15,3.65),(1.05,.9,.55))
     mod=flow.modifiers.new('Fire and smoke source','FLUID')
     mod.fluid_type='FLOW'
     fs=mod.flow_settings
     fs.flow_type='BOTH'
     fs.flow_behavior='INFLOW'
-    fs.surface_distance=1.5
-    fs.fuel_amount=1.4
-    fs.density=.8
+    fs.surface_distance=1.0
+    fs.fuel_amount=.9
+    fs.temperature=2.2
+    fs.density=2.8
     fs.use_initial_velocity=True
-    fs.velocity_coord=(.2,0,1.1)
+    fs.velocity_coord=(.35,.05,2.3)
     # Transparent surface, while the closed emitter remains present in the solver.
     transparent=bpy.data.materials.new('Invisible fluid emitter surface')
     transparent.use_nodes=True
@@ -401,43 +568,60 @@ def fire(m, cache):
     out=node(t,'ShaderNodeOutputMaterial','Output')
     t.links.new(tr.outputs[0],out.inputs['Surface'])
     flow.data.materials.append(transparent)
-    domain=cube('GEO-Mantaflow-fire-smoke-domain',(-11.3,15,8.1),(6,6,11))
-    mod=domain.modifiers.new('48 voxel real billowing gas','FLUID')
+    domain=cube('GEO-Mantaflow-fire-smoke-domain',(-10.7,15,10.5),(9,8,17))
+    mod=domain.modifiers.new('64 voxel real billowing gas','FLUID')
     mod.fluid_type='DOMAIN'
     ds=mod.domain_settings
     ds.domain_type='GAS'
-    ds.resolution_max=48
+    ds.resolution_max=64
     ds.cache_frame_start,ds.cache_frame_end=SIM_START,FRAMES
     ds.cache_type='ALL'
     ds.cache_data_format='UNI'
     ds.cache_directory=str(cache/'fluid')
     ds.use_noise=False
     ds.use_adaptive_domain=False
-    ds.vorticity=.7
-    ds.flame_vorticity=1.1
-    ds.burning_rate=.7
-    ds.flame_smoke=.8
+    ds.vorticity=1.3
+    ds.flame_vorticity=1.8
+    ds.burning_rate=1.1
+    ds.flame_smoke=2.0
     ds.use_dissolve_smoke=True
-    ds.dissolve_speed=50
-    ds.timesteps_max=2
+    ds.dissolve_speed=85
+    ds.timesteps_max=3
     ds.effector_weights.wind=.15
     vol=bpy.data.materials.new('Real density and flame grids')
     vol.use_nodes=True
     t=vol.node_tree
     t.nodes.clear()
     p=node(t,'ShaderNodeVolumePrincipled','Mantaflow density and blackbody')
-    setv(p,'Color',(.23,.21,.18,1))
-    setv(p,'Density',2.0)
+    setv(p,'Color',(.12,.105,.09,1))
+    setv(p,'Anisotropy',.18)
+    setv(p,'Density',6.0)
     setv(p,'Density Attribute','density')
-    setv(p,'Blackbody Intensity',1.5)
+    setv(p,'Blackbody Intensity',0)  # Flame-grid emission only: smoke must not glow.
     setv(p,'Temperature',1100)
     setv(p,'Temperature Attribute','temperature')
     attr=node(t,'ShaderNodeAttribute','Flame grid')
     attr.attribute_name='flame'
     power=node(t,'ShaderNodeMath','Flame emission strength')
     power.operation='MULTIPLY'
-    power.inputs[1].default_value=5
-    t.links.new(attr.outputs['Fac'],power.inputs[0])
+    power.inputs[1].default_value=70
+    hot=node(t,'ShaderNodeMath','Only the hot flame core emits'); hot.operation='POWER'
+    hot.inputs[1].default_value=3
+    t.links.new(attr.outputs['Fac'],hot.inputs[0])
+    geometry=node(t,'ShaderNodeNewGeometry','World-space flame height')
+    xyz=node(t,'ShaderNodeSeparateXYZ','Flame height')
+    t.links.new(geometry.outputs['Position'],xyz.inputs[0])
+    fade=node(t,'ShaderNodeMapRange','Smoke above the flame is not emissive')
+    fade.clamp=True; fade.inputs['From Min'].default_value=4.1; fade.inputs['From Max'].default_value=5.8
+    fade.inputs['To Min'].default_value=1; fade.inputs['To Max'].default_value=0
+    t.links.new(xyz.outputs['Z'],fade.inputs['Value'])
+    density=node(t,'ShaderNodeMapRange','Open flame base and dense upper smoke')
+    density.clamp=True; density.inputs['From Min'].default_value=3.8; density.inputs['From Max'].default_value=6.0
+    density.inputs['To Min'].default_value=1.4; density.inputs['To Max'].default_value=6.0
+    t.links.new(xyz.outputs['Z'],density.inputs['Value']); t.links.new(density.outputs[0],inp(p,'Density'))
+    mask=node(t,'ShaderNodeMath','Temperature core times flame height'); mask.operation='MULTIPLY'
+    t.links.new(hot.outputs[0],mask.inputs[0]); t.links.new(fade.outputs[0],mask.inputs[1])
+    t.links.new(mask.outputs[0],power.inputs[0])
     t.links.new(power.outputs[0],inp(p,'Emission Strength'))
     setv(p,'Emission Color',(1,.22,.025,1))
     out=node(t,'ShaderNodeOutputMaterial','Volume only output')
@@ -446,11 +630,16 @@ def fire(m, cache):
     lamp=bpy.data.lights.new('LGT-fire-flicker','POINT')
     lamp.color=(1,.25,.035)
     lamp.energy=650
-    lamp.shadow_soft_size=1.1
+    lamp.shadow_soft_size=.7
     lob=bpy.data.objects.new(lamp.name,lamp)
     bpy.context.collection.objects.link(lob)
     lob.location=(-12,15,4)
-    drive(lamp,'energy',None,'650+160*sin(frame*.7)+90*sin(frame*1.73)')
+    drive(lamp,'energy',None,'650+160*sin(frame*.7)+80*sin(frame*1.73)')
+    under=bpy.data.lights.new('LGT-warm-smoke-underside','AREA')
+    under.energy=300; under.color=(1,.40,.12); under.shape='DISK'; under.size=3
+    uob=bpy.data.objects.new(under.name,under); bpy.context.collection.objects.link(uob)
+    uob.location=(-12,13,3.7)
+    uob.rotation_euler=(Vector((-11,15,8))-uob.location).to_track_quat('-Z','Y').to_euler()
     return domain
 
 
@@ -489,8 +678,8 @@ def crowds(m):
         stride.slider_min=-1
         drive(stride,'value',None,f'sin(frame*.32+{variant*1.7})')
         move_to_collection(ob,library)
-    pts=[(RNG.uniform(-19,15),RNG.uniform(12.6,16.7),1.36) for _ in range(42)]
-    host=mesh('GEO-42-instanced-quay-walkers',pts,[])
+    pts=[(RNG.uniform(-42,44),RNG.uniform(12.6,16.7),1.36) for _ in range(84)]
+    host=mesh('GEO-84-instanced-quay-walkers',pts,[])
     ng=bpy.data.node_groups.new('Walking crowd instances','GeometryNodeTree')
     ng.interface.new_socket(name='Geometry',in_out='INPUT',socket_type='NodeSocketGeometry')
     ng.interface.new_socket(name='Geometry',in_out='OUTPUT',socket_type='NodeSocketGeometry')
@@ -544,15 +733,34 @@ def gulls(m):
 
 
 def lights_camera(scene,m):
-    world=bpy.data.worlds.new('Mineral blue sky fill'); scene.world=world
+    world=bpy.data.worlds.new('Cool daylight environment'); scene.world=world
     world.use_nodes=True
-    world.node_tree.nodes['Background'].inputs[0].default_value=(.28,.39,.52,1)
-    world.node_tree.nodes['Background'].inputs[1].default_value=.55
-    sun=bpy.data.lights.new('LGT-warm-upper-left-sun','SUN'); sun.energy=2.6
-    sun.color=(1,.84,.61); sun.angle=.12
+    wt=world.node_tree
+    sky=node(wt,'ShaderNodeTexSky','Physical sky for water Fresnel reflections')
+    sky.sky_type='MULTIPLE_SCATTERING'; sky.sun_disc=False
+    sky.sun_elevation=math.radians(30); sky.sun_rotation=math.radians(218)
+    sky.air_density=1.1; sky.aerosol_density=.6
+    wt.links.new(sky.outputs[0],wt.nodes['Background'].inputs[0])
+    wt.nodes['Background'].inputs[1].default_value=.22
+    sun=bpy.data.lights.new('LGT-warm-upper-left-sun','SUN'); sun.energy=3.2
+    sun.color=(1,.83,.60); sun.angle=math.radians(2.0)
     ob=bpy.data.objects.new(sun.name,sun); scene.collection.objects.link(ob)
-    ob.rotation_euler=(math.radians(28),math.radians(-30),math.radians(-35))
-    sphere('GEO-sun-disc',(-28,94,38),(3,1,3),emission('Sun glow',(1,.75,.42,1),6))
+    ob.location=(-45,-35,33)
+    ob.rotation_euler=(Vector((0,0,0))-ob.location).to_track_quat('-Z','Y').to_euler()
+    # A specular-only reflection accent puts the sun path into the water without
+    # introducing a second set of architectural shadows.
+    glint=bpy.data.lights.new('LGT-water-sun-glints','SUN')
+    glint.energy=1.4; glint.color=(1,.86,.62); glint.angle=math.radians(.6)
+    glint.diffuse_factor=0; glint.volume_factor=0
+    gob=bpy.data.objects.new(glint.name,glint); scene.collection.objects.link(gob)
+    gob.location=(-25,70,32)
+    gob.rotation_euler=(-gob.location).to_track_quat('-Z','Y').to_euler()
+    # The reference has an offscreen sun. No opaque white sphere in the sky.
+    fill=bpy.data.lights.new('LGT-large-cool-sky-fill','AREA')
+    fill.energy=6000; fill.color=(.50,.69,1); fill.shape='DISK'; fill.size=45
+    fob=bpy.data.objects.new(fill.name,fill); scene.collection.objects.link(fob)
+    fob.location=(15,0,30)
+    fob.rotation_euler=(Vector((0,22,5))-fob.location).to_track_quat('-Z','Y').to_euler()
     bpy.ops.object.effector_add(type='WIND',location=(-10,-10,5))
     wind=bpy.context.object; wind.name='FX-wind-for-sail-banners-smoke'
     wind.rotation_euler=(math.radians(-82),math.radians(12),0)
@@ -564,18 +772,32 @@ def lights_camera(scene,m):
     turbulence.field.strength=1.2; turbulence.field.size=1.5
     turbulence.field.seed=19
     turbulence.field.use_max_distance=True; turbulence.field.distance_max=7
-    camera_data=bpy.data.cameras.new('CAM-water-to-acropolis'); camera_data.lens=26
-    camera_data.clip_end=400
+    camera_data=bpy.data.cameras.new('CAM-water-to-acropolis'); camera_data.lens=32
+    camera_data.clip_end=500; camera_data.show_composition_thirds=True
     cam=bpy.data.objects.new(camera_data.name,camera_data); scene.collection.objects.link(cam)
     scene.camera=cam
-    # Explicit per-frame cubic paths: substantial translation, zero velocity at end.
-    # First movement passes ship to its right; last 18 frames ease into destination.
-    points=[Vector(p) for p in [(-13,-22,1.7),(-7,-17,2.0),(14,-3,13),(5,9,13.5)]]
+    # Continuous Hermite path: follow broadside for 2.5s, then rise above the mast
+    # while pulling out to a wide. The last 18 frames decelerate, not zoom in.
+    keys=[(1,(-24,-25,4.8),(-1,14,4.8)),
+          (55,(-23,-25,6.0),(0,17,4.0)),
+          (88,(-24,-28,13.5),(1,20,2.0)),
+          (126,(-28,-36,22.5),(2,22,3.0)),
+          (144,(-28.5,-37,23),(2,22,3.0))]
+    def hermite(frame,index):
+        for j in range(len(keys)-1):
+            if frame<=keys[j+1][0]: break
+        f0,f1=keys[j][0],keys[j+1][0]; dt=f1-f0
+        u=max(0,min(1,(frame-f0)/dt))
+        p0,p1=Vector(keys[j][index]),Vector(keys[j+1][index])
+        m0=Vector((0,0,0)) if j==0 else (p1-Vector(keys[j-1][index]))/(f1-keys[j-1][0])
+        m1=Vector((0,0,0)) if j==len(keys)-2 else (Vector(keys[j+2][index])-p0)/(keys[j+2][0]-f0)
+        return (2*u**3-3*u*u+1)*p0+(u**3-2*u*u+u)*dt*m0+(-2*u**3+3*u*u)*p1+(u**3-u*u)*dt*m1
     for frame in range(SIM_START,FRAMES+1):
-        t=max(0,(frame-1)/(FRAMES-1))
-        s=t*t*(3-2*t)
-        cam.location=(1-s)**3*points[0]+3*(1-s)**2*s*points[1]+3*(1-s)*s*s*points[2]+s**3*points[3]
-        target=Vector((-3,6,4.0)).lerp(Vector((5,31,12.8)),s)
+        crane=max(0,min(1,(frame-35)/65))
+        camera_data.lens=32-5*crane*crane*(3-2*crane)
+        camera_data.keyframe_insert('lens',frame=frame)
+        cam.location=hermite(frame,1)
+        target=hermite(frame,2)
         cam.rotation_euler=(target-cam.location).to_track_quat('-Z','Y').to_euler()
         cam.keyframe_insert('location',frame=frame)
         cam.keyframe_insert('rotation_euler',frame=frame)
@@ -602,7 +824,7 @@ def compositor(scene):
     layer=scene.view_layers[0]; layer.use_pass_mist=True
     aov=layer.aovs.add(); aov.name='BackdropMask'; aov.type='VALUE'
     layer.update_render_passes()
-    scene.world.mist_settings.start=22; scene.world.mist_settings.depth=100
+    scene.world.mist_settings.start=38; scene.world.mist_settings.depth=130
     scene.world.mist_settings.falloff='QUADRATIC'
     rl=node(ng,'CompositorNodeRLayers','Beauty, mist and backdrop ID'); rl.scene=scene
     def link(a,b): ng.links.new(a,b)
@@ -618,8 +840,8 @@ def compositor(scene):
             if isinstance(value,(float,int)): sock.default_value=value
             else: link(value,sock)
         return n.outputs[0]
-    mist=mathn('Gentle depth haze','MULTIPLY',rl.outputs['Mist'],.30)
-    beauty=mix('Blue parchment distance haze','MIX',rl.outputs['Image'],(.55,.63,.68,1),mist)
+    mist=mathn('Gentle depth haze','MULTIPLY',rl.outputs['Mist'],.35)
+    beauty=mix('Blue parchment distance haze','MIX',rl.outputs['Image'],(.38,.51,.64,1),mist)
     # Shader AOV matte isolates the bright card, blurs its colour across silhouettes,
     # then removes the card itself: a real foreground-edge light wrap.
     mask=rl.outputs['BackdropMask']
@@ -628,10 +850,10 @@ def compositor(scene):
     link(isolated,blur.inputs['Image'])
     foreground=mathn('Foreground mask','SUBTRACT',1,mask)
     wrap=mix('Wrap restricted to foreground','MULTIPLY',blur.outputs[0],foreground,1.0)
-    beauty=mix('Light wrap edge add','ADD',beauty,wrap,.18)
+    beauty=mix('Light wrap edge add','ADD',beauty,wrap,.055)
     glare=node(ng,'CompositorNodeGlare','Fire and sun bloom'); setv(glare,'Type','Fog Glow')
-    setv(glare,'Quality','Low'); setv(glare,'Threshold',1.25); setv(glare,'Strength',.7)
-    setv(glare,'Size',.35); link(beauty,glare.inputs['Image'])
+    setv(glare,'Quality','High'); setv(glare,'Threshold',1.5); setv(glare,'Strength',1.1)
+    setv(glare,'Size',.25); link(beauty,glare.inputs['Image'])
     # Packed procedural dirt and vignette: no external image dependencies.
     specks=[(RNG.random(),RNG.random(),RNG.uniform(.002,.012),RNG.uniform(.15,.7)) for _ in range(65)]
     def dirt(x,y):
@@ -644,12 +866,12 @@ def compositor(scene):
     dirty=mix('Lens dirt multiplied with glare only','MULTIPLY',glow_socket,dn.outputs['Image'],1.0)
     beauty=mix('Subtle dirty lens halo','ADD',glare.outputs['Image'],dirty,.16)
     grade=node(ng,'CompositorNodeColorBalance','Ivory ochre mineral-blue grade')
-    setv(grade,'Lift',(.98,1.0,1.015,1)); setv(grade,'Gamma',(1.025,1.0,.97,1))
-    setv(grade,'Gain',(1.045,1.02,.96,1)); link(beauty,grade.inputs['Image'])
+    setv(grade,'Lift',(.985,.995,1.01,1)); setv(grade,'Gamma',(1.035,1.0,.96,1))
+    setv(grade,'Gain',(1.07,1.025,.94,1)); link(beauty,grade.inputs['Image'])
     kuw=node(ng,'CompositorNodeKuwahara','Anisotropic brush unification')
-    setv(kuw,'Type','Anisotropic'); setv(kuw,'Size',2)
+    setv(kuw,'Type','Anisotropic'); setv(kuw,'Size',4)
     setv(kuw,'Uniformity',2); link(grade.outputs[0],kuw.inputs['Image'])
-    beauty=mix('Retain detail under paint pass','MIX',grade.outputs[0],kuw.outputs[0],.45)
+    beauty=mix('Retain detail under paint pass','MIX',grade.outputs[0],kuw.outputs[0],.78)
     vignette=node(ng,'CompositorNodeImage','Soft elliptical vignette')
     vignette.image=procedural_mask('Procedural vignette',960,540,
         lambda x,y: 1-.22*min(1,((x-.5)/.7)**2+((y-.5)/.7)**2))
@@ -670,12 +892,20 @@ def build(args):
     scene.render.image_settings.color_depth='8'; scene.render.image_settings.compression=15
     scene.render.filepath=str(args.out/'frame_')
     scene.render.use_file_extension=True
-    scene.eevee.taa_render_samples=12
+    scene.eevee.taa_render_samples=32
+    scene.eevee.use_fast_gi=True
+    scene.eevee.fast_gi_method='AMBIENT_OCCLUSION_ONLY'
+    scene.eevee.fast_gi_distance=3
+    scene.eevee.shadow_ray_count=3
+    scene.eevee.use_volumetric_shadows=True
     scene.eevee.use_raytracing=True
     scene.eevee.ray_tracing_method='SCREEN'
-    scene.eevee.volumetric_samples=24
-    scene.eevee.volumetric_shadow_samples=8
+    scene.eevee.volumetric_samples=64
+    scene.eevee.volumetric_shadow_samples=16
     scene.view_settings.view_transform='AgX'
+    scene.view_settings.look='AgX - Medium High Contrast'
+    scene.view_settings.exposure=-.35
+    scene.render.compositor_device='CPU'
     mats={key:paint(key,col) for key,col in {
         'ivory':IVORY,'ochre':OCHRE,'terra':TERRA,'blue':BLUE,'sage':SAGE,
         'wood':(.12,.055,.021,1),'stone':(.42,.36,.25,1),'skin':(.49,.29,.15,1)}.items()}
@@ -755,7 +985,7 @@ def bake(args, scene, domain):
     # Packed cloth point caches and external Mantaflow grids both live under cache/.
     bpy.ops.wm.save_as_mainfile(filepath=str(cache/'baked.blend'))
     active(domain)
-    print('BAKE: Mantaflow 48 voxels, -23..144, six workers',flush=True)
+    print('BAKE: Mantaflow 64 voxels, -23..144, six workers',flush=True)
     result=bpy.ops.fluid.bake_all()
     if 'FINISHED' not in result or not domain.modifiers[0].domain_settings.has_cache_baked_data:
         raise RuntimeError(f'Mantaflow bake failed: {result}; no completion marker written')
@@ -819,8 +1049,8 @@ def main():
         scene,domain=build(args)
         bpy.ops.wm.save_as_mainfile(filepath=str(args.masters/'scene.blend'))
         report={'blender':bpy.app.version_string,'objects':len(scene.objects),
-                'resolution':[960,540],'frames':144,'samples':12,'threads':6,
-                'cloth':[ob.name for ob in CLOTH],'fluid_resolution':48,
+                'resolution':[960,540],'frames':144,'samples':32,'threads':6,
+                'cloth':[ob.name for ob in CLOTH],'fluid_resolution':64,
                 'fluid_dimensions':list(domain.dimensions),'simulation_frames':[SIM_START,FRAMES],
                 'status':'built, not baked or rendered','source_signature':signature()}
         (args.masters/'scene-report.json').write_text(json.dumps(report,indent=2)+'\n')

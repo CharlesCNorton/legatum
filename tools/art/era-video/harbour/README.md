@@ -1,47 +1,48 @@
-# Classical harbour: rough 3D VFX test
+# Classical harbour: painted VFX revision
 
-Six seconds, 144 frames at 24 fps, 960×540, Eevee / 12 samples / six workers.
+Six seconds, 144 frames at 24 fps, 960×540, Eevee / 32 samples / six workers.
 Requires the installed **Blender 5.3** API. All geometry, motion and effect masks are
-procedural. The existing Classical painting supplies only a cropped sky/far-mountain
-card (source pixels x=460–890, y=15–340, top origin) and the pigment palette.
+procedural. The existing Classical painting supplies only a cropped painted
+sky (source pixels x=460–890, y=15–200, top origin) and the pigment palette.
 No downloads, text, game integration or committed masters.
 
 The scene contains a modeled quay, limestone headland, Doric temple, houses and
 cypresses; a trireme with 24 rowing oars, moving hull and foam wake; an Ocean modifier
 with a `foam` vertex attribute; a pinned cloth sail and two pinned banners; a real
-48-voxel Mantaflow fire/smoke beacon; 42 geometry-nodes instanced walkers and nine
-collection-instanced flapping gulls. The camera travels from water level past the
-ship and cranes toward the temple, easing to rest during the final 18 frames.
+64-voxel Mantaflow fire/smoke beacon; 84 geometry-nodes instanced walkers and nine
+collection-instanced flapping gulls. The camera follows the enlarged ship, then cranes above the mast and withdraws
+to a wide of the harbour and acropolis, settling during the final 18 frames.
 Water, smoke, cloth, rowing and crowds continue moving during the camera's settle.
 
 Finishing: soft-banded sunlit pigment materials, screen-space water reflections,
 mist-pass depth haze, backdrop-AOV edge light wrap, fire/sun Fog Glow, procedural
-lens dirt multiplied by glare, warm colour grade, a small anisotropic Kuwahara
-pass mixed with the original, and a soft vignette. No shader replaces the smoke
-simulation; the domain uses actual density, temperature and flame grids.
+lens dirt multiplied by glare, warm colour grade, a radius-4 anisotropic Kuwahara
+pass mixed at 78% with the original, and a soft vignette. No shader replaces the smoke
+simulation; the material reads density and flame grids, while temperature drives
+the gas simulation.
 
 ## Commands
 
-Run from the repository root. **The lead runs bake/render outside the sandbox,
-inside the lead's existing lock.** These commands do not acquire that external lock.
+Run from the repository root. **The lead runs final Eevee rendering inside the existing render lock.
+Dry-run and CPU bake can run in the sandbox; do not render with Metal here.** These commands do not acquire that external lock.
 
 ```sh
-export ERA_VFX=/Users/samcorcos/LegatumRuns/era-video-pilot/masters/vfx
+export ERA_VFX=/Users/samcorcos/LegatumRuns/era-video-pilot/masters/vfx-v2
 export ERA_PYTHON=/Users/samcorcos/LegatumRuns/era-video-pilot/venv/bin/python
 export OMP_NUM_THREADS=6
 
 # Build only; saves scene.blend and scene-report.json. No bake or render.
-blender -b --factory-startup --python-exit-code 1 \
+blender -b --factory-startup --disable-autoexec --python-exit-code 1 \
   -P tools/art/era-video/harbour/scene.py -- \
   --masters "$ERA_VFX" --out "$ERA_VFX/frames" --dry-run
 
 # CPU simulations only, including one second of pre-roll (-23..144).
-blender -b --factory-startup --python-exit-code 1 \
+blender -b --factory-startup --disable-autoexec --python-exit-code 1 \
   -P tools/art/era-video/harbour/scene.py -- \
   --masters "$ERA_VFX" --out "$ERA_VFX/frames" --bake-only
 
 # Lead only, under the render lock: bakes if needed, then renders all 144 PNGs.
-blender -b --factory-startup --python-exit-code 1 \
+blender -b --factory-startup --disable-autoexec --python-exit-code 1 \
   -P tools/art/era-video/harbour/scene.py -- \
   --masters "$ERA_VFX" --out "$ERA_VFX/frames"
 
@@ -69,20 +70,15 @@ only `cache/complete.json` and rerun `--bake-only`. Do not open the pre-bake mas
 and expect cached cloth; use `cache/baked.blend` after a successful bake.
 
 All fluid geometry is closed, has applied unit scale and nonzero thickness on all
-axes. No volume scale is animated. The domain is fixed at 6×6×11 units, no expensive
+axes. No volume scale is animated. The domain is fixed at 9×8×17 units, no expensive
 noise upres; cloth uses 18×12 quads each, four solver steps, no self-collision.
 The Ocean is evaluated procedurally rather than baked.
 
-Weakest parts: rough hull/architecture and crowd silhouettes; stylized ribbon wake
-rather than a hydrodynamic solve; sail has no mast/hull collision; a stretched
-skyline crop; low-resolution smoke; synchronized phases within each gull/figure
-variant. The painterly finish, framing, motion and reflections need visual review
-by the lead. **Under 4 s/frame and under 10 min/bake are targets; actual bake results are recorded below.** No rendered frames have been inspected or produced in the sandbox.
+The v1 critique and v2 changes, CPU checks and remaining visual limitations are in
+[`../review/vfx-v1-critique.md`](../review/vfx-v1-critique.md). V1 masters and its
+rendered sequence remain intact; v2 uses `masters/vfx-v2`. The saved production
+scene is Eevee. Optional review stills use Cycles CPU plus the CPU compositor and
+must not be mistaken for an Eevee approval or a completed 144-frame delivery.
 
-Verified in the sandbox (2026-11-22): the final `--dry-run` passed; the CPU bake
-completed in **11.83 seconds**; a separate process reopened `cache/baked.blend`
-and verified moving cloth vertices, nonzero smoke density and the Ocean foam
-attribute at frames 1, 48, 96 and 144. `cache-validation.json` records the readback.
-Synthetic moving-rectangle fixtures passed H.264/VP9 frame-count, size and rate
-checks for both 144/960×540 and 168/1920×1080, plus both contact sheets. These are
-codec tests, not scene renders. No scene PNGs were rendered, and nothing was committed.
+Budget: under about five minutes per CPU bake. Actual final timing and readback
+results are recorded in the critique and `scene-report.json`. No commits made.
