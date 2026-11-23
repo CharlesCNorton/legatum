@@ -132,6 +132,17 @@ function connectStaging() {
   return state;
 }
 
+it('shows a guest’s chosen faction as text in the seat row', async () => {
+  const state = connectStaging();
+  state.occupants[1] = { ...state.occupants[1]!, faction: 'Byzantium' };
+  sockets[0].push({ type: 'staging', state });
+  await act(async () => root.render(<StagingSeats guest />));
+  const row = container.querySelectorAll('.seat-row')[2];
+  expect(row.textContent).toContain('Byzantium');
+  expect(row.querySelector('[aria-label="Seat 2 faction"]')?.tagName).toBe('SPAN');
+  expect(row.querySelector('button[aria-label="Seat 2 faction"]')).toBeNull();
+});
+
 it('releases a staging reservation in one confirmed action without changing seat type or host credential', async () => {
   const state = connectStaging();
   const confirm = vi.fn().mockReturnValue(false);
