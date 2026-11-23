@@ -75,3 +75,5 @@
 - Emitted c-details: 1 frames, 256 px CYCLES/CPU, 8 samples.
 - Emitted e-death: 10 frames, 256 px CYCLES/CPU, 4 samples.
 - Emitted e-hit: 4 frames, 256 px CYCLES/CPU, 4 samples.
+- Emitted c: 1 frames, 256 px CYCLES/CPU, 8 samples.
+- Emitted c-details: 1 frames, 256 px CYCLES/CPU, 8 samples.

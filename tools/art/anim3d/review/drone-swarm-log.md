@@ -46,3 +46,5 @@ g: 16 frames at 256/64 from 512px CYCLES/GPU, 96 samples.
 GPU round 1: all stages GPU512, 256 masters, audited, trimmed atlas validated, decoded MP4 verified. Art verdict remains manual.
 
 Driver round 2 GPU-first critique: inspected c, f, all five e strips and four decoded round1 MP4 contact frames before editing. GPU round1 succeeded (GPU512/96 receipt); no crash fix needed. At 256px the bright paint and cream base are close, but lower-drone silhouette/struts and rotor width are visibly wrong; at 64px identity/formation match but contours remain distinct. Death is the biggest motion failure: crowded intersecting-looking wrecks and orange unseen-fill seams. Not PASS. Prior GPU evidence and masters archived in masters/drone-swarm/driver-r1-gpu. Unit-specific FEEDBACK is absent; all 23 global feedback items read. All six Blender skills loaded; preserve volumetric mechanics, refine exact-view projection, grade existing generated fill, soften blade aliasing and separate terminal wrecks. Cloth/straps and living locomotion do not apply.
+c: 1 frames at 256/64 from 256px CYCLES/CPU, 8 samples.
+e-death: 10 frames at 256/64 from 256px CYCLES/CPU, 6 samples.
