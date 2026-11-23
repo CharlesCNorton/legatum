@@ -89,3 +89,18 @@
 - Opened GPU c/f, all five e strips and eight decoded round1.mp4 samples before edits. GPU receipt/log confirms Cycles GPU512/64, 191950 bytes Q80, 40 frames, 240-frame 8s H.264/yuv420p; no failed GPU stage. Preserved evidence in masters/biplane/driver-r1-gpu and review/3d-v2/biplane-driver-r1-gpu.
 - Honest critique: at 256, plain uniform peach stone lacks the painting's grain/highlight and support contact; struts are too slender, wheels too dark/metallic, cockpit opening/coaming differs, projected attachment marks remain on lower wing; attack flashes are buried in cowling, death support abruptly vanishes. At 64 it clearly reads as the same aircraft, but darker wheels/propeller and flat disc still distinguish it. No PASS.
 - Read all PLAYBOOK chapters and common feedback 1–23; biplane-FEEDBACK.md absent. Loaded all six Blender skills: finished thick geometry/bevels, painted material variation, warm key/cool rim, frozen source-camera projection, mechanical keys/visibility, low-cost CPU review and provenance-checked GPU delivery. Reuse recorded generated fills; no people/animal gait applies.
+- Saved c review immediately; 1 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/c/render.json.
+- Saved e-attack review immediately; 10 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/e-attack/render.json.
+- Saved c review immediately; 1 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/c/render.json.
+- Saved c review immediately; 1 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/c/render.json.
+- Saved b review immediately; 1 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/b/render.json.
+- Saved d review immediately; 4 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/d/render.json.
+- Saved g review immediately; 16 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/g/render.json.
+- Saved e-idle review immediately; 8 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/e-idle/render.json.
+- Saved e-move review immediately; 8 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/e-move/render.json.
+- Saved e-attack review immediately; 10 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/e-attack/render.json.
+- Saved e-hit review immediately; 4 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/e-hit/render.json.
+- Widened real strut cross sections 24%, reduced wheel hub radius 30% and changed exposed hubs to dull steel. Amber propeller retains generated wood grain. Base now blends source lower-disc brushwork with object-space stone grain, masked away from the support/contact footprint. Frozen camera UVs and eight actual bakes regenerated.
+- Fixed attack flash anchoring to finished barrel endpoints; two short nonzero-volume bursts now read in the strip at 256/64. Updated gpu.sh to invalidate stale PASS at run start; no prior GPU failure needed repair.
+- Saved e-death review immediately; 10 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/e-death/render.json.
+- Packed/decoded/validated 40 trimmed 160 px frames: 199758 bytes, WebP q85; exact alpha offsets and held death. Encoded and ffprobe-verified 240-frame 8 s H.264 yuv420p MP4.

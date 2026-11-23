@@ -109,3 +109,22 @@
 - Published e-death review from CPU render.
 - Published e-move review from CPU render.
 - Published g-feet review from CPU render.
+- Published c review from CPU render.
+- Published e-death review from CPU render.
+- Published e-move review from CPU render.
+- Reused pinned CC0 Quaternius Idle_Loop/Walk_Loop/Hit_Chest/Death01 with calibrated Blender constraints and carrying-arm layer; original spear attack retained. Added actual 16-view top/front feet evidence and source/stance audit. No post-retarget foot rotation patch.
+- First new motion render exposed ghost boots in the stone projection. Added a pigment-luminance mask to keep figure pixels out; rerender confirms ghost boots removed. Physical base remains opaque.
+- Added continuous thick shoulder pelt, generated fur/leather fills, corrected shield slant and narrowed the source-spear band while excluding gripping anatomy. All bakes and frozen UVs regenerated.
+- Diagnosed high death contact in saved geometry: fitted shoe center lay behind the unfitted ankle; rotating the foot during the source fall put the shoe below the body. Rebinding evaluated fitted skin to the same fitted joint field, retaining 19158 vertices, 53 bones, original skin weights and kit world positions. This must be judged in fresh previews, not assumed fixed.
+- Published c review from CPU render.
+- Published e-death review from CPU render.
+- Published e-move review from CPU render.
+- Published b review from CPU render.
+- Published c-details review from CPU render.
+- Published d review from CPU render.
+- Published e-idle review from CPU render.
+- Published e-attack review from CPU render.
+- Published e-hit review from CPU render.
+- Published g-feet review from CPU render.
+- Published e-move review from CPU render.
+- Published g-feet review from CPU render.
