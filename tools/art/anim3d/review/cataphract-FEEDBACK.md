@@ -1,0 +1,1 @@
+- (coordinator, morning review) Riders are pale and stiff. Project the painting onto rider AND horse as was done for the spearman (camera projection at the painting viewpoint, image-generated fills for unseen areas), match the riders' skin tone and posture (relaxed, weight in the seat, legs around the barrel), and add real mane and tail volume (hair cards or curves).
