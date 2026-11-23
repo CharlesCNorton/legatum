@@ -13,3 +13,15 @@ e-hit: 4 frames at 256/64 from 256px CYCLES/CPU, 8 samples.
 e-death: 10 frames at 256/64 from 256px CYCLES/CPU, 8 samples.
 g: 16 frames at 256/64 from 256px CYCLES/CPU, 8 samples.
 e-death: 10 frames at 256/64 from 256px CYCLES/CPU, 8 samples.
+First plain/textured sheets retained under masters/jet-bomber/first-stage/. Corrected near-wing airfoil chord landmarks and vertex-based projection visibility after the first comparison.
+All five CPU256 draft strips reviewed; attack releases three bombs. Found nose clipping during crash and a copied nose-axis sign; corrected the crash translation and nose-down pitch before delivery.
+No human/animal gait applies. Top/nose move-cycle review explicitly documents this in jet-bomber-g-feet-check.png.
+b: 3 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+c: 1 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+d: 4 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+e-idle: 8 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+e-move: 8 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+e-attack: 10 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+e-hit: 4 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+e-death: 10 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+g: 16 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
