@@ -79,3 +79,6 @@
 - Final round 6 after MPFB morph/contact fix: rebuilt and CPU-rendered attack, 256px / 12 samples.
 - Final round 6 after MPFB morph/contact fix: rebuilt and CPU-rendered hit, 256px / 12 samples.
 - Final round 6 after MPFB morph/contact fix: death rebuilt, narrow audit zero findings, CPU-rendered 256px / 12 samples.
+- Final round6 CPU checks: all 40 saved-rig samples pass stricter disc/ground audit with zero findings; saved-scene checks pass. Trimmed 160px atlas 198474 bytes at quality85, 40 records; current hashes, exact decoded alpha/offsets/gutters, bounds and held-death byte identity pass. Two regression tests; syntax25 Python/3 Bash/2 JSON; 33-file hygiene and whitespace pass.
+- Final movie verified: H.264 yuv420p, 1600x352, 192 frames at24fps, exactly8 seconds, five simultaneous decoded clips. Opened final clay/details/rest at256/64/rig poses/all five strips/decoded atlas and new movie contact frames.
+- Final round6 verdict: NOT PASS. At256px cleaner shield and better body/base fit, but shoulder contour, sandals, crest and stone surface differ; raised-arm paint and pale oblique/death surfaces remain. At64px same unit, still different stance/base. No PASS file. GPU512/256 master export pending via ROUND=6 tools/art/anim3d/units/spearman/gpu.sh; missing round5 GPU log and supplied CPU labels do not establish GPU execution.
