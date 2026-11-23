@@ -1,6 +1,9 @@
 """True MPFB anatomy, fitted quilted kit and fixed-camera painting UVs."""
 import bpy,os,math,json,sys,random
 from pathlib import Path
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from rig_constants import PIKE_START, PIKE_END, PIKE_ORIGIN
 from mathutils import Vector,Matrix
 from mathutils.kdtree import KDTree
 from bpy_extras.object_utils import world_to_camera_view
@@ -19,16 +22,16 @@ skin=mat('MAT-painted-skin',(.47,.235,.105));cloth=mat('MAT-quilted-buff',(.55,.
 # Generated linen fills supply brushwork on unseen cloth; source and prompt recorded in SOURCES.
 n=cloth.node_tree.nodes;l=cloth.node_tree.links;p=n.get('Principled BSDF');tex=n.new('ShaderNodeTexImage');tex.image=bpy.data.images.load(str(A/'fill-linen.png'));tex.projection='BOX';tex.projection_blend=.3;tc=n.new('ShaderNodeTexCoord');l.new(tc.outputs['Generated'],tex.inputs['Vector']);mix=n.new('ShaderNodeMixRGB');mix.blend_type='MULTIPLY';mix.inputs[0].default_value=.5;mix.inputs[1].default_value=(.55,.35,.15,1);l.new(tex.outputs['Color'],mix.inputs[2]);l.new(mix.outputs[0],p.inputs['Base Color']);p.inputs['Sheen Weight'].default_value=.25
 # Generated linen across all faces, with physical cavity shading and low sheen.
-for material in [cloth,pants,leather]:
+for material,fill in [(cloth,'quilt'),(pants,'trousers'),(leather,'leather'),(skin,'skin')]:
  n=material.node_tree.nodes;l=material.node_tree.links;p=n.get('Principled BSDF');out=n.get('Material Output')
- image=n.new('ShaderNodeTexImage');image.image=tex.image;image.projection='BOX';image.projection_blend=.3
+ image=n.new('ShaderNodeTexImage');image.image=bpy.data.images.load(str(A/f'fill-{fill}.png'));image.projection='BOX';image.projection_blend=.3
  coord=n.new('ShaderNodeTexCoord');l.new(coord.outputs['Generated'],image.inputs['Vector'])
- tint=n.new('ShaderNodeMixRGB');tint.blend_type='MULTIPLY';tint.inputs[0].default_value=.62;tint.inputs[1].default_value=material.diffuse_color;l.new(image.outputs['Color'],tint.inputs[2])
+ tint=n.new('ShaderNodeMixRGB');tint.blend_type='MULTIPLY';tint.inputs[0].default_value=.40 if fill=='skin' else .12;tint.inputs[2].default_value=material.diffuse_color;l.new(image.outputs['Color'],tint.inputs[1])
  cavity=n.new('ShaderNodeAmbientOcclusion');cavity.inputs['Distance'].default_value=.06
  shaded=n.new('ShaderNodeMixRGB');shaded.blend_type='MULTIPLY';shaded.inputs[0].default_value=.5;l.new(tint.outputs[0],shaded.inputs[1]);l.new(cavity.outputs['Color'],shaded.inputs[2])
  l.new(shaded.outputs[0],p.inputs['Base Color'])
  emission=n.new('ShaderNodeEmission');l.new(shaded.outputs[0],emission.inputs['Color'])
- path=n.new('ShaderNodeLightPath');weight=n.new('ShaderNodeMath');weight.operation='MULTIPLY';weight.inputs[1].default_value=.40;l.new(path.outputs['Is Camera Ray'],weight.inputs[0])
+ path=n.new('ShaderNodeLightPath');weight=n.new('ShaderNodeMath');weight.operation='MULTIPLY';weight.inputs[1].default_value=.40 if fill=='skin' else .64;l.new(path.outputs['Is Camera Ray'],weight.inputs[0])
  mixed=n.new('ShaderNodeMixShader');l.new(weight.outputs[0],mixed.inputs[0]);l.new(p.outputs[0],mixed.inputs[1]);l.new(emission.outputs[0],mixed.inputs[2]);l.new(mixed.outputs[0],out.inputs['Surface'])
 # Raised diagonal quilting continues around unseen shoulders and back.
 n=cloth.node_tree.nodes;l=cloth.node_tree.links;p=n.get('Principled BSDF')
@@ -43,7 +46,22 @@ shade=n.new('ShaderNodeMixRGB');shade.blend_type='MULTIPLY';shade.inputs[2].defa
 for node in n:
  if node.type=='EMISSION':l.new(shade.outputs[0],node.inputs['Color'])
 bump=n.new('ShaderNodeBump');bump.invert=True;bump.inputs['Strength'].default_value=.3;bump.inputs['Distance'].default_value=.002;l.new(combine.outputs[0],bump.inputs['Height']);l.new(p.inputs['Normal'].links[0].from_socket,bump.inputs['Normal']);l.new(bump.outputs[0],p.inputs['Normal'])
-body.data.materials.clear();body.data.materials.append(skin)
+body.data.materials.clear()
+for material in [skin,cloth,pants,leather]:body.data.materials.append(material)
+# Anatomical underlayers prevent bare skin appearing between moving garment
+# pieces. Hands, neck and face remain skin; real thick garments sit above them.
+for polygon in body.data.polygons:
+ scores={kind:0 for kind in ['arm','leg','foot','torso']}
+ for index in polygon.vertices:
+  v=body.data.vertices[index]
+  for group in v.groups:
+   name=body.vertex_groups[group.group].name
+   kind='arm' if name.startswith(('upperarm','lowerarm')) else 'foot' if name.startswith(('foot','ball')) else 'leg' if name.startswith(('thigh','calf','pelvis')) else 'torso' if name.startswith(('spine','clavicle')) else None
+   if kind:scores[kind]+=group.weight/len(polygon.vertices)
+ z=sum(body.data.vertices[i].co.z for i in polygon.vertices)/len(polygon.vertices)
+ if scores['arm']>.62 or (scores['torso']>.65 and z<1.44):polygon.material_index=1
+ elif scores['foot']>.6 or (scores['leg']>.6 and z<.17):polygon.material_index=3
+ elif scores['leg']>.6:polygon.material_index=2
 for f in body.data.polygons:f.use_smooth=True
 sub=body.modifiers.new('Anatomical subdivision','SUBSURF');sub.levels=1;sub.render_levels=1
 
@@ -99,7 +117,7 @@ def shell(name,pred,material,inflation,regions):
    if name in rig.data.bones:
     vg=o.vertex_groups.get(name) or o.vertex_groups.new(name=name);vg.add([dest],group.weight,'REPLACE')
  finish(o);sub=o.modifiers.new('Tailored smoothing','SUBSURF');sub.levels=1;sub.render_levels=1;return o
-shell('padded-sleeves',lambda v:1.03<v.z<1.43 and abs(v.x)>.16,cloth,.026,{n for n in rig.data.bones.keys() if n.startswith(('upperarm','lowerarm'))})
+shell('padded-sleeves',lambda v:.94<v.z<1.59 and abs(v.x)>.10,cloth,.026,{n for n in rig.data.bones.keys() if n.startswith(('upperarm','lowerarm','clavicle'))})
 shell('wrinkled-trousers',lambda v:.08<v.z<.98 and abs(v.x)<.30,pants,.028,{n for n in rig.data.bones.keys() if n.startswith(('pelvis','thigh','calf','foot','ball'))})
 shell('leather-boots',lambda v:v.z<.19,leather,.025,{n for n in rig.data.bones.keys() if n.startswith(('calf','foot','ball'))})
 # Fitted coat with real quilt displacement, open neckline and flared skirt.
@@ -131,7 +149,7 @@ ring('waist-belt',.99,.205,.19,.045,leather,'pelvis')
 # Short diagonal ribbon conforms to the coat front.
 vs=[]
 for i in range(21):
- t=i/20;x=-.17+.34*t;z=1.01+.38*t
+ t=i/20;x=-.21+.25*t;z=1.01+.38*t
  for dx in [-.024,.024]:vs.append((x+dx,-.195,z+.10))
 baldric=attach(finish(mesh('diagonal-leather-baldric',vs,[(i*2,i*2+1,i*2+3,i*2+2) for i in range(20)],leather),.007,.002),'spine_03')
 attach(curve('belt-buckle',[(-.04,-.205,1.065),(.04,-.205,1.065),(.04,-.205,1.12),(-.04,-.205,1.12),(-.04,-.205,1.065)],.007,edge),'pelvis')
@@ -169,7 +187,7 @@ def limb(up,lo,target,pole):
 rig.location=(-.17,0,.10)
 p=rig.pose.bones['pelvis'];m=p.matrix.copy();m.translation.z-=.14;p.matrix=m;bpy.context.view_layer.update()
 for side,x,y in [('r',-.36,-.01),('l',.35,.02)]:
- limb('thigh_'+side,'calf_'+side,(x,y,.08),((-.40 if side=='r' else .23),-.30,.48));aim('foot_'+side,((-.16 if side=='r' else .19),-.10,-.065))
+ limb('thigh_'+side,'calf_'+side,(x,y,.08),((-.40 if side=='r' else .23),-.30,.48));aim('foot_'+side,((.14 if side=='r' else .19),-.10,-.065))
 p=rig.pose.bones['clavicle_r'];m=p.matrix.copy();m.translation.x-=.04;m.translation.z-=.01;p.matrix=m;bpy.context.view_layer.update()
 limb('upperarm_r','lowerarm_r',(-.34,-.22,.72),(-.56,-.16,1.00))
 limb('upperarm_l','lowerarm_l',(.165,-.24,1.085),(.14,-.18,.85))
@@ -180,8 +198,8 @@ for side in ['r','l']:
    p=rig.pose.bones[f'{finger}_{k:02}_{side}'];p.rotation_mode='XYZ';p.rotation_euler.x=1.25
 p=rig.pose.bones['head'];m=p.matrix.copy();pos=p.head.copy();m=Matrix.Rotation(.65,4,'Z') @ m;m.translation=pos;p.matrix=m;bpy.context.view_layer.update()
 # Pike endpoints match painting in screen projection. It is a uniform 3D cylinder.
-start=Vector((-1.17,-.26,.20));end=Vector((1.17,-.26,2.34))
-grip=Vector((-.24,-.26,1.06))
+start=Vector(PIKE_START);end=Vector(PIKE_END)
+grip=Vector(PIKE_ORIGIN)
 pike=bpy.data.objects.new('CTRL-pike',None);sc.collection.objects.link(pike);pike.location=grip;bpy.context.view_layer.update()
 shaft=curve('ash-pike-shaft',[start,end-(end-start).normalized()*.085],.0055,wood);shaft.parent=pike;shaft.matrix_parent_inverse=pike.matrix_world.inverted()
 d=(end-start).normalized();a=end-d*.10;u=Vector((0,1,0))*.011;v=d.cross(Vector((0,1,0)))*.018
@@ -197,7 +215,7 @@ for off in [-.03,.02]:
   for s in [-1,1]:vs.append(center+Vector((off+.013*s+.015*math.sin(t*8),-.08+.025*math.sin(t*5),-.23*t)))
  attach(finish(mesh('red-tie-tail',vs,[(2*i,2*i+1,2*i+3,2*i+2) for i in range(12)],red),.004,.001),'upperarm_r')
 # Stationary one-step warm cream base.
-bpy.ops.mesh.primitive_cylinder_add(vertices=96,radius=.59,depth=.075,location=(-.14,.20,.052));base=bpy.context.object;base.name='GEO-cream-stone-base';base.data.materials.append(stone);base.scale.y=.88;base.location.z+=.012;finish(base,0,.012)
+bpy.ops.mesh.primitive_cylinder_add(vertices=96,radius=.59,depth=.075,location=(-.14,.07,.052));base=bpy.context.object;base.name='GEO-cream-stone-base';base.data.materials.append(stone);base.scale.y=.66;base.location.z+=.012;finish(base,0,.012)
 for p in base.data.polygons:p.use_smooth=abs(p.normal.z)<.5
 base.modifiers['Rounded edges'].segments=5
 stone.node_tree.nodes.get('Bump').inputs['Distance'].default_value=.001

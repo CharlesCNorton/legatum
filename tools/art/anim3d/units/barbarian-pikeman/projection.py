@@ -14,6 +14,7 @@ def project():
     scene = bpy.context.scene
     camera = scene.camera
     painting = bpy.data.images.load(str(root / 'assets/barbarian-pikeman/painting-aligned.png'))
+    stone_paint = bpy.data.images.load(str(root / 'assets/barbarian-pikeman/stone-registered.png'))
     pixels = list(painting.pixels); image_w, image_h = painting.size
     view = camera.matrix_world.to_quaternion() @ Vector((0, 0, 1))
     deps = bpy.context.evaluated_depsgraph_get()
@@ -47,11 +48,9 @@ def project():
             hit, _, _, _ = visibility.ray_cast(world + view * 10, -view, 10.02)
             visible = hit is not None and (hit - world).length < .012
             coords.append((c.x, c.y))
-            # Only the clean front rim below the lowest painted boot receives
-            # source pigment. The top remains physical stone with live contact.
-            safe_stone = max(0, min(1, ((1-c.y)*256-225)/3)) if is_stone else 1
-            weight = (facing if visible else 0)*safe_stone
-            if is_stone and normal.z > .35: weight = 0
+            # The generated plate contains no feet or cast shadows. Its pigment
+            # colors the entire real disc; live AO supplies moving contact.
+            weight = facing if visible else 0
             if obj.name.startswith(('GEO-leather-boots', 'GEO-MPFB-anatomy')) and (1-c.y)*256 > 209:
                 x = max(0,min(image_w-1,int(c.x*image_w))); y = max(0,min(image_h-1,int(c.y*image_h)))
                 color = pixels[4*(y*image_w+x):4*(y*image_w+x)+3]
@@ -71,7 +70,7 @@ def project():
             output = nodes.get('Material Output')
             physical = output.inputs['Surface'].links[0].from_socket
             tex = nodes.new('ShaderNodeTexImage')
-            tex.image = painting
+            tex.image = stone_paint if is_stone else painting
             tex.extension = 'CLIP'
             mapping = nodes.new('ShaderNodeUVMap')
             mapping.uv_map = uv.name
@@ -94,6 +93,15 @@ def project():
             pigment = nodes.new('ShaderNodeEmission')
             pigment.name = 'Camera-only painted illumination'
             links.new(tex.outputs['Color'], pigment.inputs['Color'])
+            if is_stone:
+                ao = nodes.new('ShaderNodeAmbientOcclusion')
+                ao.inputs['Distance'].default_value = .075
+                contact = nodes.new('ShaderNodeMixRGB')
+                contact.blend_type = 'MULTIPLY'
+                contact.inputs[0].default_value = .65
+                links.new(tex.outputs['Color'], contact.inputs[1])
+                links.new(ao.outputs['Color'], contact.inputs[2])
+                links.new(contact.outputs[0], pigment.inputs['Color'])
             if obj.name == 'GEO-ash-pike-shaft':
                 # Subpixel source-axis disagreement made the slender shaft pale
                 # and broken. Keep a continuous ash pigment on its real cylinder.
@@ -107,6 +115,6 @@ def project():
             links.new(pigment.outputs[0], mix.inputs[2])
             links.new(mix.outputs[0], output.inputs['Surface'])
         records.append({'mesh': obj.name, 'vertices': len(obj.data.vertices),
-                        'uv': uv.name, 'safe_stone_cutoff_token_y': 225 if is_stone else None, 'visible_vertices': sum(w > 0 for w in weights)})
+                        'uv': uv.name, 'stone_pigment': 'stone-registered.png' if is_stone else None, 'visible_vertices': sum(w > 0 for w in weights)})
     (root / 'masters/barbarian-pikeman/projection.json').write_text(json.dumps(records, indent=2))
     print('PROJECTION_OK', len(records), flush=True)

@@ -11,10 +11,10 @@ root = Path(os.environ['ANIM_ROOT'])
 master = root / 'masters/barbarian-pikeman'
 review = root / 'review/3d-v2'
 slug = 'barbarian-pikeman'
-round_number = os.environ.get('ROUND', '2')
+round_number = os.environ.get('ROUND', '3')
 report = json.loads((review / f'{slug}-pack.json').read_text())
 validation = json.loads((review / f'{slug}-validation.json').read_text())
-assert report['source_resolution'] == 512 and validation['gpu'] and validation['ok']
+assert report['source_resolution'] == 512 and validation['gpu'] and validation['ok'], 'GPU512 delivery required; CPU previews cannot produce a receipt'
 expected = {'b-plain': 1, 'c-textured-lit': 1, 'c-details': 1, 'd-rig-poses': 4,
             'e-idle': 8, 'e-move': 8, 'e-attack': 10, 'e-hit': 4, 'e-death': 10, 'g-feet-check': 16}
 assert set(report['render_sources']) == set(expected)

@@ -1,6 +1,9 @@
 """Independent master/rig audit without rendering or changing saved assets."""
 import bpy,os,json,math
 from pathlib import Path
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from rig_constants import PIKE_START, PIKE_END, PIKE_ORIGIN
 from mathutils import Matrix,Vector
 R=Path(os.environ['ANIM_ROOT']);M=R/'masters/barbarian-pikeman';result=[]
 for clip,n in [('idle',8),('move',8),('attack',10),('hit',4),('death',10)]:
@@ -13,7 +16,7 @@ for clip,n in [('idle',8),('move',8),('attack',10),('hit',4),('death',10)]:
   for o in sc.objects:
    assert all(math.isfinite(v) for row in o.matrix_world for v in row),o.name
    assert min(abs(v) for v in o.scale)>.0001,o.name
-  inv=Matrix.Translation(Vector((-.24,-.26,1.06))).inverted();a=pike.matrix_world @ (inv @ Vector((-1.17,-.26,.20)));b=pike.matrix_world @ (inv @ Vector((1.17,-.26,2.34)));axis=(b-a).normalized()
+  inv=Matrix.Translation(Vector(PIKE_ORIGIN)).inverted();a=pike.matrix_world @ (inv @ Vector(PIKE_START));b=pike.matrix_world @ (inv @ Vector(PIKE_END));axis=(b-a).normalized()
   if clip!='death':
    for side in ['r','l']:
     delta=rig.matrix_world @ rig.pose.bones['hand_'+side].head-a;maxgrip=max(maxgrip,(delta-axis*delta.dot(axis)).length)

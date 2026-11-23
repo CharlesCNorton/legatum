@@ -30,6 +30,16 @@ def finish_surfaces():
             mod.show_viewport = visible
         obj['finished_surface'] = True
     bpy.context.view_layer.update()
+    # The original bowl sat behind/left of the actual MPFB crown, exposing
+    # scalp through the metal. Center the full bowl over the measured skull;
+    # blend the inner brim to that center while retaining its outer silhouette.
+    for name in ['GEO-kettle-helmet-dome', 'GEO-kettle-helmet-brim']:
+        obj = bpy.data.objects[name]
+        local_delta = obj.matrix_world.inverted().to_3x3() @ Vector((.025, -.035, .004))
+        for vertex in obj.data.vertices:
+            radius = ((vertex.co.x / .125) ** 2 + ((vertex.co.y + .015) / .12) ** 2) ** .5
+            weight = 1 if name.endswith('dome') else max(0, min(1, (1.4 - radius) / .4))
+            vertex.co += local_delta * weight
     # Fit the solid brim's overwide side while preserving its camera depth and
     # complete volume. UVs are frozen only after this physical contour change.
     scene = bpy.context.scene
@@ -71,3 +81,32 @@ def finish_surfaces():
                     vertex.co += transform.to_3x3().inverted() @ delta
     evaluated.to_mesh_clear()
     bpy.context.view_layer.update()
+    # Full-depth sleeve contour fit in the calibrated guard. Only the
+    # camera-horizontal component changes; no image silhouettes/alpha geometry.
+    for name in ['GEO-padded-sleeves']:
+        obj = bpy.data.objects[name]
+        evaluated = obj.evaluated_get(bpy.context.evaluated_depsgraph_get())
+        mesh = evaluated.to_mesh()
+        for vertex, posed in zip(obj.data.vertices, mesh.vertices):
+            world = evaluated.matrix_world @ posed.co
+            screen = world_to_camera_view(scene, scene.camera, world)
+            x, y = screen.x * 256, (1 - screen.y) * 256
+            target = x
+            if name == 'GEO-padded-sleeves' and 96 < y < 117:
+                limit = 123 + (y - 101) * .55
+                target -= max(0, x - limit) * min(1, (y - 96) / 5, (117 - y) / 4)
+            if target == x:
+                continue
+            transform = Matrix(((0, 0, 0, 0),) * 4)
+            total = 0
+            for group in vertex.groups:
+                bone = obj.vertex_groups[group.group].name
+                if bone in rig.pose.bones:
+                    transform += (rig.pose.bones[bone].matrix @ rig.data.bones[bone].matrix_local.inverted()) * group.weight
+                    total += group.weight
+            if total:
+                transform *= 1 / total
+                delta = rig.matrix_world.inverted().to_3x3() @ (right * (target - x) * scene.camera.data.ortho_scale / 256)
+                vertex.co += transform.to_3x3().inverted() @ delta
+        evaluated.to_mesh_clear()
+        bpy.context.view_layer.update()

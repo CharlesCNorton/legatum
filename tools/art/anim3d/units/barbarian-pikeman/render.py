@@ -1,6 +1,9 @@
 """Sequential renders with provenance; never silently falls back from GPU."""
 import bpy,os,json,hashlib,sys
 from pathlib import Path
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from rig_constants import PIKE_START, PIKE_END, PIKE_ORIGIN
 R=Path(os.environ['ANIM_ROOT']);M=R/'masters/barbarian-pikeman';V=R/'review/3d-v2';V.mkdir(exist_ok=True,parents=True)
 stages=os.environ.get('STAGES','b-plain,c-textured-lit').split(',');resolution=int(os.environ.get('RESOLUTION','256'))
 for stage in stages:
@@ -37,7 +40,7 @@ for stage in stages:
   assert all(min(abs(v) for v in o.scale)>.0001 for o in sc.objects),'Unsafe near-zero scale'
   if clip and clip!='death':
    from mathutils import Vector,Matrix
-   rig=bpy.data.objects['RIG-pikeman'];pike=bpy.data.objects['CTRL-pike'];inv=Matrix.Translation(Vector((-.24,-.26,1.06))).inverted();a=pike.matrix_world @ (inv @ Vector((-1.17,-.26,.20)));b=pike.matrix_world @ (inv @ Vector((1.17,-.26,2.34)));axis=(b-a).normalized();distances={}
+   rig=bpy.data.objects['RIG-pikeman'];pike=bpy.data.objects['CTRL-pike'];inv=Matrix.Translation(Vector(PIKE_ORIGIN)).inverted();a=pike.matrix_world @ (inv @ Vector(PIKE_START));b=pike.matrix_world @ (inv @ Vector(PIKE_END));axis=(b-a).normalized();distances={}
    for side in ['r','l']:
     hand=rig.matrix_world @ rig.pose.bones['hand_'+side].head;delta=hand-a;distance=(delta-axis*delta.dot(axis)).length;distances[side]=distance;assert distance<.13,(clip,frame,side,'hand too far from shaft',distance)
    audit.append({'frame':frame,'wrist_to_shaft':distances})

@@ -278,3 +278,34 @@ the front/top feet stage and requires its 512/256 masters in the receipt. All
 Blender invocations still run sequentially through plain `blender` on PATH.
 Technical success never creates PASS; rest and all five clips still require
 visual parity with the painting.
+
+### Pikeman driver round 3: occlusion fills and shared weapon registration
+
+Incoming round2 GPU pass succeeded at 184344 bytes/Q90; its comparison and movie
+are preserved under `masters/barbarian-pikeman/driver-r2-gpu`. That technical
+receipt did not establish painting parity.
+
+`prepare_fills.py` registers the generated clean stone top and retains only the
+unoccluded original lower rim. The shader colors the actual solid beveled disc,
+uses image alpha only as a pigment blend, and multiplies fresh contact AO every
+frame. Fit the disc's depth/position to the painting before projecting; otherwise
+the generated image border appears as a line on an oversized top. The existing
+camera stays fixed. Generated quilt, trouser, leather and skin swatches fill
+unseen sides with blended box mapping. Sources, prompts and hashes are recorded
+in the unit directory and external assets ledger.
+
+Continuous sleeves inherit exact anatomical weights; clothing materials on the
+underlying anatomy avoid bare skin at moving joins. Small inverse-skin contour
+corrections keep complete 3D depth. `rig_constants.py` owns the straight pike's
+registered endpoints for modeling, animation and audits. Camera-up includes
+positive world Y in this downward-looking view: subtract the depth contribution
+when solving world Z from a token pixel. The source action rig clears residual
+pose channels before sampling sparse library actions. Feet retain the open
+library's rotations; only the weapon attack is authored.
+
+Rebuild generated derivatives with `prepare_fills.py`, then build/bake/animate
+and run scene/rig checks and all ten CPU review stages. The no-argument GPU script
+defaults to ROUND=3, retains all 512/256 masters, validates trimmed 160px delivery
+and makes the required movie. Review all five clips, native 256/64 rest, detail,
+front/top feet and decoded movie frames before a visual verdict. Never create
+PASS solely from the quantitative receipt.

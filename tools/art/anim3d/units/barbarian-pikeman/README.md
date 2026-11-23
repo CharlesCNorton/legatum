@@ -1,4 +1,4 @@
-# Barbarian pikeman — driver round 2 candidate
+# Barbarian pikeman — driver round 3 candidate
 
 Run from the repository root. The infantry/two-handed-pike chapter in
 `tools/art/anim3d/PLAYBOOK.md` documents rebuilding, external inputs and metadata.
@@ -6,7 +6,7 @@ Run from the repository root. The infantry/two-handed-pike chapter in
 The one-command host render is:
 
 ```sh
-ROUND=2 tools/art/anim3d/units/barbarian-pikeman/gpu.sh
+ROUND=3 tools/art/anim3d/units/barbarian-pikeman/gpu.sh
 ```
 
 It requires the saved unit masters under `~/LegatumRuns/anim-pilot/masters/barbarian-pikeman/`

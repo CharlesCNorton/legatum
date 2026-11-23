@@ -7,7 +7,7 @@ for name,c in meta['clips'].items():
  frames[name]=[]
  for r in c['rects']:
   im=Image.new('RGBA',(160,160));im.paste(atlas.crop((r['x'],r['y'],r['x']+r['w'],r['y']+r['h'])),(r['ox'],r['oy']));frames[name].append(im.resize((320,320),Image.Resampling.LANCZOS))
-out=R/'review/3d-v2'/f'{slug}-round{os.environ.get("ROUND","1")}.mp4'
+out=R/'review/3d-v2'/f'{slug}-round{os.environ.get("ROUND","3")}.mp4'
 # Pipe raw RGB: bounded memory and no 240-frame temp directory.
 proc=subprocess.Popen(['ffmpeg','-y','-loglevel','error','-f','rawvideo','-pix_fmt','rgb24','-s','1600x348','-r','30','-i','-','-an','-c:v','libx264','-threads','3','-pix_fmt','yuv420p','-crf','20','-movflags','+faststart',str(out)],stdin=subprocess.PIPE)
 for t in range(240):

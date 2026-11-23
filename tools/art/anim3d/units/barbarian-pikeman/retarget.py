@@ -51,6 +51,9 @@ def prepare(rig, root, clip, phases):
     source = next(o for o in imported if o.type == 'ARMATURE')
     for track in source.animation_data.nla_tracks:
         track.mute = True
+    source.animation_data.action = None
+    for bone in source.pose.bones:
+        bone.matrix_basis = Matrix.Identity(4)
     action = bpy.data.actions[ACTIONS[clip]]
     source.animation_data.action = action
     source.animation_data.action_slot = action.slots[0]
@@ -64,6 +67,8 @@ def prepare(rig, root, clip, phases):
         imported.add(carry)
         carry.animation_data_clear()
         carry.animation_data_create()
+        for bone in carry.pose.bones:
+            bone.matrix_basis = Matrix.Identity(4)
         track = carry.animation_data.nla_tracks.new()
         idle = bpy.data.actions['Idle_Loop']
         strip = track.strips.new('Open idle carrying arms', int(first), idle)

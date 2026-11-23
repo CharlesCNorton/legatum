@@ -1,6 +1,9 @@
 """CC0 animation-library motion, native two-hand pike layer and authored thrust."""
 import bpy, os, math, json, hashlib, sys
 from pathlib import Path
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from rig_constants import PIKE_START, PIKE_END, PIKE_ORIGIN
 from mathutils import Vector, Matrix, Quaternion
 from bpy_extras.object_utils import world_to_camera_view
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -34,7 +37,7 @@ def floor_gap():
         ev = obj.evaluated_get(deps); mesh = ev.to_mesh()
         for vertex in mesh.vertices:
             v = ev.matrix_world @ vertex.co
-            floor = .103 if ((v.x+.14)/.59)**2+((v.y-.20)/(.59*.88))**2 < 1 else .015
+            floor = .103 if ((v.x+.14)/.59)**2+((v.y-.07)/(.59*.66))**2 < 1 else .015
             lowest = min(lowest,v.z-floor)
         ev.to_mesh_clear()
     return lowest
@@ -90,12 +93,16 @@ for clip,(count,fps,loop) in CLIPS.items():
                 pike.location.y += .50*ease; pike.location.z -= .94*ease
                 bpy.context.view_layer.update()
                 inv = Matrix.Translation(ppos).inverted()
-                low = min((pike.matrix_world @ (inv @ v)).z for v in [Vector((-1.17,-.26,.20)),Vector((1.17,-.26,2.34))])
+                low = min((pike.matrix_world @ (inv @ v)).z for v in [Vector(PIKE_START),Vector(PIKE_END)])
                 pike.location.z += max(0,.12-low)
         else:
-            amount = [0,-.25,-.4,.15,1,.9,.55,.2,.05,0][i]
-            pike.location += Vector((.07,-.06,.06))*amount
-            pike.rotation_euler.x = .08*amount; rig.location.x += .035*amount
+            amount = [0,-.12,-.2,.15,1,.9,.55,.2,.05,0][i]
+            pike.location += Vector((.08,-.14,-.06))*amount
+            direction = (Vector(PIKE_END)-Vector(PIKE_START)).normalized()
+            thrust = direction.rotation_difference(Vector((.65,-.62,.44)).normalized())
+            axis, angle = thrust.to_axis_angle()
+            pike.rotation_euler = Quaternion(axis,angle*amount).to_euler()
+            rig.location += Vector((.035,-.06,0))*amount
             p = rig.pose.bones['spine_03']
             p.rotation_quaternion = p.rotation_quaternion @ Quaternion((0,0,1),-.08*amount)
             bpy.context.view_layer.update()
@@ -110,7 +117,7 @@ for clip,(count,fps,loop) in CLIPS.items():
             # fixed painting camera; hands solve after this equipment adjustment.
             inv = Matrix.Translation(ppos).inverted()
             top = max(world_to_camera_view(sc,sc.camera,pike.matrix_world @ (inv @ v)).y
-                      for v in [Vector((-1.17,-.26,.20)),Vector((1.17,-.26,2.34))])
+                      for v in [Vector(PIKE_START),Vector(PIKE_END)])
             if top > .97:
                 pike.location -= (sc.camera.matrix_world.to_quaternion() @ Vector((0,1,0)))*((top-.97)*sc.camera.data.ortho_scale)
                 bpy.context.view_layer.update()

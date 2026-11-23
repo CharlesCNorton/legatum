@@ -3,7 +3,7 @@
 set -Eeuo pipefail
 cd "$(dirname "$0")/../../../../.."
 source tools/art/anim3d/env.sh
-export ROUND="${ROUND:-2}"
+export ROUND="${ROUND:-3}"
 status="$ANIM_ROOT/review/3d-v2/barbarian-pikeman-gpu-status.txt"
 receipt="$ANIM_ROOT/review/3d-v2/barbarian-pikeman-gpu-round${ROUND}.json"
 log="$ANIM_ROOT/gpu-logs-barbarian-pikeman-r${ROUND}.log"
