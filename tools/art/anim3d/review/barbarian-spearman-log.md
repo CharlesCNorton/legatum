@@ -149,3 +149,9 @@
 - Non-obvious learning: fitting visible skin without moving its joint field creates offsets that become floor-contact errors in a rotated pose. Rebinding fitted skin/joints while preserving weights and attached kit is necessary. Base projection must exclude the figure spatially; colour-only masks leave pale foot-shaped pigment holes. Recorded here and in this unit's PLAYBOOK chapter, not docs/learnings/.
 - Inspected frames decoded from the actual round2.mp4; confirms the remaining death-cloth and boot-join issues. No art PASS.
 - Git add/commit blocked by sandbox denial of .git/worktrees/lane-22/index.lock. Work remains uncommitted for the runner. Requested commit: Refine barbarian spearman surfaces and retarget open motion; final trailer Co-Authored-By: gpt-6-astra (Codex) <noreply@openai.com>. No push/PR/master merge. origin/master already contained in HEAD.
+- Published b review from GPU render.
+- Published c review from GPU render.
+- Published c-details review from GPU render.
+- Published d review from GPU render.
+- Published e-idle review from GPU render.
+- Published e-move review from GPU render.
