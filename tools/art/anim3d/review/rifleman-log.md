@@ -41,3 +41,21 @@
 - Posted e-attack review (CPU, 256 px).
 - Posted e-hit review (CPU, 256 px).
 - Posted e-death review (CPU, 256 px).
+- Built MPFB anatomical body, 53-bone rig, blue coat, full-volume kepi, crossed leather belts, diagonal rifle and sling; plain.blend saved.
+- Posted b-plain review (CPU, 256 px).
+- Baked real 256px Cycles AO and Pointiness curvature for kepi and jacket; physical recess grime and edge roughness applied.
+- Finished-surface camera projection with camera-only pigment; generated hidden fills retained.
+- Posted c-textured-lit review (CPU, 256 px).
+- Retargeted CC0 / weapon-layer and saved idle action (8 output frames).
+- Retargeted CC0 / weapon-layer and saved move action (8 output frames).
+- Retargeted CC0 / weapon-layer and saved attack action (10 output frames).
+- Retargeted CC0 / weapon-layer and saved hit action (4 output frames).
+- Retargeted CC0 / weapon-layer and saved death action (10 output frames).
+- Posted d-rig-poses review (CPU, 256 px).
+- Posted e-idle review (CPU, 256 px).
+- Posted e-move review (CPU, 256 px).
+- Inspected all first-pass strips and top/front feet. Replaced segmented trousers/sleeves with continuous weighted meshes to close joint gaps; corrected attack pitch and supporting-hand orientation. Dropped rifle now rotates onto the stone rather than through it.
+- Added three real clay camera views. Adjusted rifle butt registration, raised the firing posture, and blended camera-only cream pigment with physical stone shading to reduce a white top/brown rim. Final low-sample CPU set rebuilding; GPU remains unrun in this sandbox.
+- Posted e-attack review (CPU, 256 px).
+- Posted e-hit review (CPU, 256 px).
+- Posted e-death review (CPU, 256 px).

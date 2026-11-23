@@ -18,3 +18,14 @@
 - Published e-hit: 4 actual rendered frames, 12 fps; CPU 512px 8 samples.
 - Published e-death: 10 actual rendered frames, 10 fps; CPU 512px 8 samples.
 - Completed all five clips and geometry audit; delivery pack may now run.
+- Published b-plain CPU/GPU geometry stage before texture work.
+- Baked 256px AO and curvature maps on GEO-Shield wing -1, GEO-Shield wing 1, GEO-Hollow tapered barrel
+- Published painted rest pose and 50/50 comparison; real AO shader, micrograin, edge geometry and hidden-surface fill.
+- Published e-idle: 8 actual rendered frames, 10 fps; CPU 512px 8 samples.
+- Published e-move: 8 actual rendered frames, 12 fps; CPU 512px 8 samples.
+- Published e-attack: 10 actual rendered frames, 14 fps; CPU 512px 8 samples.
+- First atlas validation correctly rejected death-frame left-edge clipping. Shortened trails back onto stone support, added explicit frame advancement while constructing clip keys, restored a full wheel revolution for loop closure, and excluded wheel paint projection to prevent moving ghost details. Re-rendering full CPU512 set.
+- Added independent saved-clip audit and a pre-render Metal device check; missing GPU fails before invalidating CPU render provenance. Current rest silhouette IoU .827851, opaque-overlap RGB MAE 30.0975; these are diagnostic, not art approval.
+- Published e-hit: 4 actual rendered frames, 12 fps; CPU 512px 8 samples.
+- Published e-death: 10 actual rendered frames, 10 fps; CPU 512px 8 samples.
+- Completed all five clips and geometry audit; delivery pack may now run.

@@ -17,3 +17,15 @@
 - Published e-hit: 4 actual rendered frames, 12 fps; CPU 256px 8 samples.
 - Published e-death: 10 actual rendered frames, 10 fps; CPU 256px 8 samples.
 - Completed all five clips and wheel contact audit; delivery pack may now run.
+- Published b-plain CPU/GPU geometry stage before texture work.
+- Baked 256px AO and curvature maps on GEO-Armoured hull, GEO-Lowered loading ramp, GEO-Turret shell
+- Published painted rest pose and 50/50 comparison; real AO shader, micrograin, edge geometry and hidden-surface fill.
+- Published e-idle: 8 actual rendered frames, 10 fps; CPU 256px 8 samples.
+- All forty CPU256/8-sample frames and five keyed blend clips completed. First candidate validated at 180,572 bytes Q85; exact alpha restoration, held death and 8-second H.264 video passed.
+- Visual movement review found rotating wheel pigment appeared elliptical. True tire dimensions are constant in X/Z (0.636m diameter), verified from saved move blend. Corrected source wheel registration and removed tread yaw that changed the wheel contact envelope; rebuilding once for these visible defects.
+- Feet check shows forward-aligned Quaternius feet without post-retarget rotation edits. Removed unrelated curve objects from the diagnostic sheet. Full contact/weapon and soldier projection still require next-round visual work; no PASS marker.
+- Published e-move: 8 actual rendered frames, 12 fps; CPU 256px 8 samples.
+- Published e-attack: 10 actual rendered frames, 14 fps; CPU 256px 8 samples.
+- Published e-hit: 4 actual rendered frames, 12 fps; CPU 256px 8 samples.
+- Published e-death: 10 actual rendered frames, 10 fps; CPU 256px 8 samples.
+- Completed all five clips and wheel contact audit; delivery pack may now run.
