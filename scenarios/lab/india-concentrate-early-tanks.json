@@ -56,12 +56,6 @@
     "win_percent": 0,
     "measured_at": "2026-11-15T20:15:19Z"
   },
-  "lab": {
-    "question": "Will India concentrate Early Tank production in its two fast cities?",
-    "blurb": "India, turn 146: Srinagar and Chittor can finish tanks much sooner than Ranthambore and Lahore.",
-    "era": 5,
-    "requires": "AI validation only"
-  },
   "state": {
     "encoding": "gzip-base64",
     "hash": "1100311458653270182",

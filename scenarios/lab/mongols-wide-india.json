@@ -72,11 +72,6 @@
     "median_turns": 8,
     "measured_at": "2026-11-08T22:26:15Z"
   },
-  "lab": {
-    "question": "India has 13 cities and 5 military units. Can you take one?",
-    "blurb": "Turn 120. You are the Mongols, at War with India for 79 turns. Ajmer, a walled Indian city of 8, stands 4 tiles from Almaliq.",
-    "era": 4
-  },
   "state": {
     "encoding": "gzip-base64",
     "hash": "4143552222539499164",

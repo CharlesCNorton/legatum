@@ -58,14 +58,6 @@
     "win_percent": 0,
     "measured_at": "2026-10-18T18:48:29Z"
   },
-  "lab": {
-    "question": "Warned on turn 10, can a human Athens hold against Sparta's Hoplite rush?",
-    "blurb": "Turn 10. You are Athens, one walled city with two defenders and 69 Gold. Sparta is training Spearmen, and it will declare war in six turns.",
-    "ask": "Did the rush feel beatable? What would have let you hold, and what did you want to do that you could not?",
-    "era": 0,
-    "opponent": "Sparta follows a fixed rush plan. It trains Spearmen without a break, declares war on you on turn 16, never accepts peace, and attacks together once three Spearmen stand next to your city. Everything else it does is the normal Hard AI.",
-    "order": 10
-  },
   "rusher": {
     "player": 0,
     "wars": [

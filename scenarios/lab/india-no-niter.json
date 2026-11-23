@@ -71,11 +71,6 @@
     "win_percent": 0,
     "measured_at": "2026-11-08T22:26:08Z"
   },
-  "lab": {
-    "question": "India has no Niter and an Ancient army. Can you take the Niter city next door?",
-    "blurb": "Turn 115. You are India, the most advanced AI, with no Niter. Biel, an unwalled Swiss city on a Niter deposit, stands 4 tiles from Varanasi.",
-    "era": 4
-  },
   "state": {
     "encoding": "gzip-base64",
     "hash": "4320023793926113685",

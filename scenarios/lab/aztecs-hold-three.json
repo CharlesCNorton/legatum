@@ -75,11 +75,6 @@
     "median_turns": 15,
     "measured_at": "2026-11-16T00:46:34Z"
   },
-  "lab": {
-    "question": "Can you keep Tlatelolco, Chalco and Texcoco?",
-    "blurb": "Aztecs, turn 111: you have declared War on Germany. Save your 1,300 Gold for the front.",
-    "era": 4
-  },
   "state": {
     "encoding": "gzip-base64",
     "hash": "1492535249767893466",

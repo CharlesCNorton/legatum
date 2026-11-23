@@ -71,11 +71,6 @@
     "win_percent": 0,
     "measured_at": "2026-11-08T22:26:00Z"
   },
-  "lab": {
-    "question": "Can you take a world wonder city from the runaway leader before its hold ends?",
-    "blurb": "Turn 173. The Aztecs hold 12 VP and win in nine turns. Caesarea, which carries 2 of those VP, stands eight tiles east of Laurion.",
-    "era": 5
-  },
   "state": {
     "encoding": "gzip-base64",
     "hash": "7893446830821137003",

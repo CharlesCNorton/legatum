@@ -10,7 +10,7 @@ Dependencies are taken from each crate's `Cargo.toml`. An arrow means "depends o
   hosts            app (WASM in the browser)       crates/sim   crates/analysis
                             |                           |              |
                             v                           v              v
-  shared loop       crates/wasm  (Session, saves, tapes, scenarios)  <- crates/archive
+  shared loop       crates/wasm  (Session, saves, tapes, position loading)  <- crates/archive
                          |
                          v
   brains            crates/ai    (Brain trait: PlayerView -> Orders)
@@ -102,7 +102,7 @@ The UI depends on one interface, `GameClient` in `app/src/client.ts`. Local game
 
 | Client | File | Used for |
 | --- | --- | --- |
-| WASM | `app/src/wasmClient.ts` | Single player, hot seat and scenarios. The engine runs in the page, loaded from `app/src/wasm-pkg` (built by `scripts/build-wasm.sh`). Views, validation, forecasts, saves and turn resolution are JSON strings across the WASM boundary. |
+| WASM | `app/src/wasmClient.ts` | Single player and hot seat. The engine runs in the page, loaded from `app/src/wasm-pkg` (built by `scripts/build-wasm.sh`). Views, validation, forecasts, saves and turn resolution are JSON strings across the WASM boundary. |
 | Remote | `app/src/remote.ts` | Online play. The client is bound to one human seat and talks to the host's tab through the relay's room URL (`setServerBase`); `app/src/relaySocket.ts` reassembles `chunk` messages. The host's own seat uses an in-tab socket instead. |
 
 The game state lives in a Zustand store (`app/src/store.ts`); the map is drawn on a 2D canvas (`app/src/map/`, entry points `MapCanvas.tsx` and `render.ts`). Test fixtures in `app/src/test/` start from Rust-generated saves and resolve turns through WASM.
@@ -141,10 +141,10 @@ All brains implement `Brain` (`crates/ai/src/lib.rs`): `orders(&mut self, &Playe
 
 `crates/sim` builds `legatum-sim` (`src/main.rs`; `--help` lists every flag). It plays AI-only games in parallel with rayon, one game per task, using the same `Session` as the app. Typical outputs are markdown and JSON reports (win rates by faction, pacing, telemetry modules such as `hold_telemetry.rs` and `opponent_telemetry.rs`), optional order tapes (`--tape-out`) and replays. Other modes: `--determinism`, `--proxy` (a human-proxy benchmark seat), `--duel-matrix`, `--search`, `--ai-params`, `--replay` and `--tape-in`. Larger studies live in `crates/sim/examples/`, such as `hard_vs_human.rs` and `war_suite`, which the scripts in `tools/sim/` wrap.
 
-Scenarios are start states with a briefing, a measurable objective and predictions:
+Scenario files are AI measurement positions with a checked start state, objective and predictions:
 
-- **Format.** `crates/wasm/src/scenario.rs` defines the file format (a gzip and base64 encoded save, checked against a recorded hash). `crates/core/src/scenario.rs` defines objectives and scoring, which read only game state, so the app, the runner and any replay score a run identically.
-- **Files.** `scenarios/*.json` holds the training positions. `scenarios/war/*.json` holds short wars cut from recorded human games and brought forward to the current rules by `legatum-sim war-build` (`crates/sim/src/war_build.rs`).
+- **Format.** `crates/wasm/src/scenario.rs` defines the file format (a gzip and base64 encoded save, checked against a recorded hash). `crates/core/src/scenario.rs` defines objectives and scoring, which read only game state, so the runner and replays score a position identically.
+- **Files.** `scenarios/*.json` holds root-level test positions; `scenarios/lab/*.json` holds AI measurement cuts from saves. `scenarios/war/*.json` holds short wars cut from recorded human games and brought forward to the current rules by `legatum-sim war-build` (`crates/sim/src/war_build.rs`).
 - **AI baselines.** `legatum-sim scenario <file> --runs N` has the scripted AI play the scenario seat across many seeds and writes a report. The human-seat benchmark and the war suite compare AI changes against recorded human results; the methodology is in [docs/sim-results/hard-vs-human/README.md](docs/sim-results/hard-vs-human/README.md).
 
 ## Test layers

@@ -42,7 +42,6 @@ import { artFadeFor, DEFAULT_OVERLAYS, ownerWashScale, type OverlaySet } from '.
 import { drawYieldIcons, yieldClusterRects, YIELD_FILL } from './yieldIcons';
 import { drawImprovements } from './improvementArt';
 import { drawResourceIcons, medallionTop, resourceDetail, STACK_LIFT } from './resourceIcons';
-import type { ScenarioTarget } from '../scenarios/scenarios';
 import { drawRoads } from './roadArt';
 import { drawClosedLand } from './sakokuLand';
 import { drawStationBadge, drawStationLand, stationBadgeAt, stationSites } from './yamRelayStation';
@@ -163,8 +162,6 @@ export interface RenderInput {
   /** Idle life's clock (idleLife.ts), when it differs from `time`: an idle tick advances only idle life. */
   idleT?: number;
   seatColor: string;
-  /** The scenario objective's cities, ringed even in fog. */
-  scenarioTargets?: ScenarioTarget[];
   /** Own cities under attack (city id → how soon it falls): drawn alarmed (siegeMark.ts). */
   siege?: ReadonlyMap<number, SiegeLevel>;
   reducedMotion: boolean;
@@ -812,12 +809,6 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
     }
   }
 
-  // Scenario objective: every target city is ringed from the first turn, fog or not.
-  for (const t of inp.scenarioTargets ?? []) {
-    const p = S2(t.pos);
-    if (p.x < -120 || p.x > w + 120 || p.y < -120 || p.y > h + 120) continue;
-    drawTargetMark(ctx, look, S, t, p.x, p.y, hexPx, pulse, !view.cities.some((c) => c.id === t.city));
-  }
 
   // A damaged city burns for the whole turn: smoke and fires over its art, under banners and units.
   // Each box is what a clipped ambient frame repaints (MapCanvas: smoke and siege rings move without a full redraw).
@@ -1272,78 +1263,6 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
     }),
     liftedHits,
     idle: idleLive > 0, ring, ambient };
-}
-
-/** A scenario target: a double ring around the city's hex (red to take or contain, ink to hold)
- *  with the objective's mark on top: crosshair, shield or dashed ring. A city the seat hasn't
- *  seen yet is named under the ring, so the objective is findable from turn 1. */
-function drawTargetMark(ctx: CanvasRenderingContext2D, look: LookId, S: MapStyle, t: ScenarioTarget, x: number, y: number, hexPx: number, pulse: number, unseen: boolean) {
-  const halo = S.tone.vellum;
-  const ink = t.kind === 'Hold' ? TOKEN_INK.atlas.ink : S.ink.attack;
-  const r = Math.max(14, hexPx * 0.92);
-  ctx.save();
-  ctx.lineCap = 'round';
-  for (const [color, width] of [[halo, 5], [ink, 2.2]] as const) {
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, Math.PI * 2);
-    ctx.strokeStyle = color;
-    ctx.lineWidth = width;
-    ctx.setLineDash(t.kind === 'Contain' && color === ink ? [7, 4] : []);
-    ctx.stroke();
-  }
-  ctx.setLineDash([]);
-  ctx.globalAlpha = 0.35 + 0.35 * pulse;
-  ctx.beginPath();
-  ctx.arc(x, y, r + 5, 0, Math.PI * 2);
-  ctx.strokeStyle = ink;
-  ctx.lineWidth = 1.2;
-  ctx.stroke();
-  ctx.globalAlpha = 1;
-  // The mark sits on the ring's upper right, on a halo disc.
-  const bx = x + r * 0.72, by = y - r * 0.72, br = Math.max(7, Math.min(11, hexPx * 0.3));
-  ctx.beginPath();
-  ctx.arc(bx, by, br, 0, Math.PI * 2);
-  ctx.fillStyle = halo;
-  ctx.fill();
-  ctx.strokeStyle = ink;
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
-  const m = br * 0.62;
-  ctx.beginPath();
-  if (t.kind === 'Take') {
-    ctx.arc(bx, by, m * 0.62, 0, Math.PI * 2);
-    ctx.moveTo(bx, by - m); ctx.lineTo(bx, by - m * 0.35);
-    ctx.moveTo(bx, by + m); ctx.lineTo(bx, by + m * 0.35);
-    ctx.moveTo(bx - m, by); ctx.lineTo(bx - m * 0.35, by);
-    ctx.moveTo(bx + m, by); ctx.lineTo(bx + m * 0.35, by);
-  } else if (t.kind === 'Hold') {
-    ctx.moveTo(bx, by - m);
-    ctx.lineTo(bx + m * 0.85, by - m * 0.6);
-    ctx.lineTo(bx + m * 0.75, by + m * 0.2);
-    ctx.quadraticCurveTo(bx + m * 0.5, by + m * 0.8, bx, by + m);
-    ctx.quadraticCurveTo(bx - m * 0.5, by + m * 0.8, bx - m * 0.75, by + m * 0.2);
-    ctx.lineTo(bx - m * 0.85, by - m * 0.6);
-    ctx.closePath();
-  } else {
-    ctx.arc(bx, by, m * 0.75, 0, Math.PI * 2);
-  }
-  ctx.strokeStyle = ink;
-  ctx.lineWidth = 1.6;
-  ctx.stroke();
-  if (unseen) {
-    const fs = Math.round(Math.max(11, Math.min(14, hexPx * 0.36)));
-    ctx.font = `600 ${fs}px ${FONTS[look].sans}`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'top';
-    ctx.lineJoin = 'round';
-    ctx.lineWidth = 4;
-    ctx.strokeStyle = halo;
-    const label = `${t.name} (not yet seen)`;
-    ctx.strokeText(label, x, y + r + 4);
-    ctx.fillStyle = ink;
-    ctx.fillText(label, x, y + r + 4);
-  }
-  ctx.restore();
 }
 
 /** The icon each automatic-build focus wears on the banner. */

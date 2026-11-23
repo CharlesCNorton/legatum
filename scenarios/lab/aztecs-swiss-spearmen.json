@@ -80,11 +80,6 @@
     "win_percent": 0,
     "measured_at": "2026-11-09T02:02:43Z"
   },
-  "lab": {
-    "question": "Can four Aztec Spearmen take Schaffhausen and Solothurn in 14 turns?",
-    "blurb": "Turn 24, at Peace with Switzerland. Its two towns have one military unit between them.",
-    "era": 1
-  },
   "state": {
     "encoding": "gzip-base64",
     "hash": "18080492616931816932",

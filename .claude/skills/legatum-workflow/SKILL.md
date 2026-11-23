@@ -78,11 +78,10 @@ Current rules only, one line each with the date and who. Detail, the user's full
 - Rules first, then heavy simulation (user, 2026-10-06). Sims use Standard only; pass `--difficulty hard`.
 - WIP limit: no new Codex write tasks while more than 5 finished branches await review (user, 2026-11-06).
 
-## Scenarios
+## AI measurement positions
 
-- When a question needs a human's play or feel, make it a Scenario Lab scenario; pick ones where Hard fails and a human finds it easy (user, 2026-10-18, 2026-11-08).
-- Scenarios are for learning: delete ones that no longer teach anything and any Lab file that cannot be played on the current rules (user, 2026-11-07, 2026-11-14). Scenarios ship without a release (user, 2026-11-07).
-- Sanity-check every scenario: a perfect player can meet it, it is not decided on turn 1, its targets are marked from turn 1.
+- Keep `scenarios/lab/` and its IDs for AI measurement. A position-only branch runs the fast scenario gate; no player-facing Lab or required coach-review cut remains (Sam, 2026-11-22).
+- Delete positions that no longer measure a useful AI gap. Validate state hashes and objectives through the simulator.
 
 ## Public repository
 
@@ -106,6 +105,6 @@ Current rules only, one line each with the date and who. Detail, the user's full
 | `references/ai-quality-methods.md` | Choosing how to measure an AI change (benchmarks, scenarios, card loop, climbs, leagues) |
 | `references/pipeline-and-merge-gates.md` | Details of the static gates (hygiene, public claims, engine invariants, art, scenario), sim policy, playtest build rules, merge hotspots |
 | `references/cloud-box-and-test-gates.md` | Using the cloud build box, the verify profiles (fast, extended, release) and their failure policy, the AI-impact gate |
-| `references/coach-scenarios-and-discipline.md` | Coach reviews, Scenario Lab, keeping the project tight, landing discipline, the rules freeze history |
+| `references/coach-scenarios-and-discipline.md` | Coach reviews, AI measurement positions, keeping the project tight, landing discipline, the rules freeze history |
 | `references/gotchas-mac-era.md` | Diagnosing an old incident, or maintainer work on the Mac (battery rule, lanes, Terraform approvals) |
 | `references/training-and-supervisors.md` | Working on Training mode or on supervisor design |

@@ -66,8 +66,6 @@ import { currentActivePlaySeconds, currentPlaySessionId, resetActivePlayTurn } f
 import { takeTurnFrameTime } from './frameTelemetry';
 import { mapViewport } from './map/camera';
 import { cancelTurnFeedback, feel, feedbackForTurn, playTurnFeedback } from './feel';
-import { newRun, saveRecord, type ScenarioEntry, type ScenarioFeedback, type ScenarioRun, type ScenarioStatus } from './scenarios/scenarios';
-import { saveScenarioRun, type SavedRun } from './platform/scenarioRuns';
 import { NO_WHY, answerLine, remember as rememberWhy, MAX_SAVED_ANSWERS, withAnswer, writeAnswer, type WhyEngine, type WhyMemory, type WhyQuestion } from './why';
 import { TrainingDriver, reportLine as trainingReportLine, trainingCapMs, writeTrainingLog, type TrainingEngine, type TrainingProgress, type TrainingUi } from './training';
 import { setSeatFactions } from './theme';
@@ -82,7 +80,7 @@ type OrderFeedback = 'commit' | 'commitAttack' | 'queue' | 'purchase';
 /** Index into the local human seats (`humans`); not a player id. */
 export type Seat = number;
 type Selection = { kind: 'unit' | 'air'; id: number } | { kind: 'city'; id: number } | null;
-type Screen = 'title' | 'setup' | 'join' | 'staging' | 'game' | 'scenarios' | 'online';
+type Screen = 'title' | 'setup' | 'join' | 'staging' | 'game' | 'online';
 /** What the setup screen is for: a single-player game, several humans on this screen, or hosting an online game. */
 type SetupMode = 'solo' | 'hotseat' | 'host';
 
@@ -97,19 +95,6 @@ export interface NetState {
   credentialRejected?: boolean;
   /** A guest: the host wants a join code for a seat (the lobby row said Locked, or the host refused a claim). */
   locked?: boolean;
-}
-
-/** A scenario in play (scenarios/*.json): its objective status and the run being recorded. */
-export interface ActiveScenario {
-  entry: ScenarioEntry;
-  status: ScenarioStatus;
-  run: ScenarioRun;
-  /** The result screen is showing (it opens when the scenario ends). */
-  resultOpen: boolean;
-  /** Where the finished run was saved, or why it could not be. */
-  saved: SavedRun | { error: string } | null;
-  /** When the current turn began (ms since the epoch), for the time-per-turn record. */
-  turnStartedAt: number;
 }
 
 export interface TurnReport {
@@ -327,7 +312,6 @@ interface State {
   booted: boolean;
   /** Bumped when an async forecast arrives so the map re-asks. */
   forecastTick: number;
-  scenario: ActiveScenario | null;
   /** The browser would not keep the latest autosave: the notice offering Save to file shows (once per game). */
   autosaveNotice: boolean;
   /** This game's rewinds ("Load an earlier turn"), saved with it and sent with its uploaded record. */
@@ -379,10 +363,6 @@ interface State {
    * dropped once the earlier turn is saved again.
    */
   rewindTo(campaign: string, save: SaveFile): Promise<void>;
-  /** Start a scenario: its state with the seat as the only human, scored by the engine. */
-  startScenario(entry: ScenarioEntry): Promise<void>;
-  /** Attach the player's feedback to the finished run and save the run again. */
-  submitScenarioFeedback(feedback: Omit<ScenarioFeedback, 'at'>): Promise<void>;
   setSeat(seat: Seat): void;
   /** Whether pings can go to a teammate in this game: a human teammate, and (online) a host that relays them. */
   canPing(): boolean;
@@ -671,8 +651,7 @@ export const useGame = create<State>((set, get) => {
 
   const afterLoad = (client: GameClient) => {
     const previous = get().client;
-    // A scenario's history is saved with its run, never in the game archive.
-    if (previous !== client && previous?.archive && !get().scenario) {
+    if (previous !== client && previous?.archive) {
       try {
         const history = historyToRecord(previous as { archive(): string }, get().why.answers, get().rewinds);
         const replacingSameGame = client.archive && JSON.parse(client.archive()).metadata.game_id === JSON.parse(history).metadata.game_id;
@@ -720,7 +699,6 @@ export const useGame = create<State>((set, get) => {
       busy: null,
       error: null,
       focus: hex ? { hex, seq: ++focusSeq } : null,
-      scenario: null,
     });
     const first = nextUnitNeedingOrders(views[0], [], null);
     if (first) get().select({ kind: first.kind, id: first.id }, true);
@@ -738,7 +716,7 @@ export const useGame = create<State>((set, get) => {
     trainedThisTurn = null;
     const client = get().client;
     const engine = client as unknown as Partial<TrainingEngine> | null;
-    if (!client || client.kind !== 'wasm' || get().scenario || typeof engine?.trainingBegin !== 'function') {
+    if (!client || client.kind !== 'wasm' || typeof engine?.trainingBegin !== 'function') {
       if (get().training) set({ training: null });
       return;
     }
@@ -760,54 +738,6 @@ export const useGame = create<State>((set, get) => {
     });
     trainingDriver = driver;
     set({ training: { progress, startedAt: driver.started, capMs, waiting: false } });
-  };
-
-  /** After a scenario turn: record it, and finish the run when the objective is decided. */
-  const recordScenarioTurn = (client: GameClient, orders: Order[], result: TurnResult) => {
-    const sc = get().scenario;
-    if (!sc || !client.scenarioStatus) return;
-    let status: ScenarioStatus;
-    try {
-      status = client.scenarioStatus();
-    } catch (e) {
-      set({ error: `Could not score the scenario: ${String(e)}` });
-      return;
-    }
-    const me = get().views?.[0]?.me ?? -1;
-    const seatLines = get().report?.lines[0] ?? [];
-    const events = seatLines
-      .filter((l) => l.weight > 0 && l.category !== 'movement')
-      .map((l) => ({ text: l.text, tone: l.tone, category: l.category, weight: l.weight, mine: l.players.includes(me) }));
-    const now = Date.now();
-    const run: ScenarioRun = {
-      ...sc.run,
-      turns: [...sc.run.turns, { turn: result.turn, orders, hash: result.hash, score: status.score, outcome: status.outcome, turns_left: status.turns_left, ms: Math.max(0, now - sc.turnStartedAt), events }],
-    };
-    if (status.outcome === 'Playing') {
-      set({ scenario: { ...sc, status, run, turnStartedAt: now } });
-      return;
-    }
-    let archive: unknown = null;
-    try { archive = client.archive ? JSON.parse(client.archive()) : null; } catch { /* the turns still hold every order */ }
-    const finished: ScenarioRun = { ...run, finished_at: new Date().toISOString(), outcome: status, score: status.score, archive };
-    saveRecord(sc.entry.file.id, sc.entry.file.revision, status);
-    set({ scenario: { ...sc, status, run: finished, resultOpen: true, saved: null, turnStartedAt: now }, reportOpen: false, techOpen: false, citiesOpen: false, selection: null });
-    void saveScenarioRun(finished).then(
-      (saved) => { if (get().scenario?.run === finished) set({ scenario: { ...get().scenario!, saved } }); },
-      (e) => { if (get().scenario?.run === finished) set({ scenario: { ...get().scenario!, saved: { error: String(e instanceof Error ? e.message : e) } } }); },
-    );
-  };
-
-  /** Leaving a scenario that is still being played keeps what was played (the coach reads it as "gave up"). */
-  const saveAbandonedScenario = () => {
-    const sc = get().scenario;
-    if (!sc || sc.status.outcome !== 'Playing' || sc.run.turns.length === 0) return;
-    const client = get().client;
-    let archive: unknown = null;
-    try { archive = client?.archive ? JSON.parse(client.archive()) : null; } catch { /* the turns still hold every order */ }
-    const run: ScenarioRun = { ...sc.run, abandoned: true, finished_at: null, outcome: sc.status, score: sc.status.score, archive };
-    set({ scenario: null });
-    void saveScenarioRun(run).catch((e) => set({ error: `Your unfinished run could not be saved: ${String(e instanceof Error ? e.message : e)}` }));
   };
 
   /** New views after a resolution: report, slide animation, fresh orders. */
@@ -1153,7 +1083,7 @@ export const useGame = create<State>((set, get) => {
       const why = get().why;
       const priorQuestion = get().whyQuestion;
       const engine = client as unknown as Partial<WhyEngine>;
-      if (why.enabled && !get().scenario && !isEliminated(views[0]) && typeof engine.whyReview === 'function') {
+      if (why.enabled && !isEliminated(views[0]) && typeof engine.whyReview === 'function') {
         try {
           asked = engine.whyReview(humans[0], submitted[0], { keys: why.asked, last: why.last, skipped: priorQuestion ? [...(why.skipped ?? []), priorQuestion.category] : (why.skipped ?? []) }).question;
         } catch (e) {
@@ -1201,7 +1131,7 @@ export const useGame = create<State>((set, get) => {
       if (result.training_lines?.length) {
         writeTrainingLog((client as unknown as TrainingEngine).trainingGameId(), result.training_lines);
       }
-      if (!get().scenario && client.recordTurnTime) {
+      if (client.recordTurnTime) {
         try {
           const era = views[0].players.find((player) => player.id === views[0].me)?.era ?? 1;
           client.recordTurnTime(views[0].turn, endedAt, activeSeconds, era, currentPlaySessionId());
@@ -1209,7 +1139,7 @@ export const useGame = create<State>((set, get) => {
           console.error('legatum: turn play time was not recorded', e);
         }
       }
-      if (!get().scenario && client.recordFrameTime) {
+      if (client.recordFrameTime) {
         try {
           const map = mapViewport();
           client.recordFrameTime(takeTurnFrameTime(views[0].turn, { units: views[0].units.length, cities: views[0].cities.length,
@@ -1221,10 +1151,7 @@ export const useGame = create<State>((set, get) => {
       resetActivePlayTurn();
       const nextViews = measureTurn('readViews', () => readViews(client, humans));
       measureTurn('applyTurn', () => applyTurn(views, nextViews, result));
-      // Scenarios never replace the campaign autosave; their runs are saved when they end.
-      let saved: string | null = null;
-      if (get().scenario) recordScenarioTurn(client, submitted[0], result);
-      else saved = measureTurn('writeAutosave', () => writeAutosave(client, get().views!));
+      const saved = measureTurn('writeAutosave', () => writeAutosave(client, get().views!));
       measureTurn('remember', () => remember(client, saved));
       startTraining();
     }
@@ -1321,7 +1248,6 @@ export const useGame = create<State>((set, get) => {
     stagingLeaving: false,
     booted: false,
     forecastTick: 0,
-    scenario: null,
     autosaveNotice: false,
     rewinds: [],
 
@@ -1525,7 +1451,6 @@ export const useGame = create<State>((set, get) => {
 
     exitToTitle: () => {
       stopResolving();
-      saveAbandonedScenario();
       // A join owns a socket before its first view installs the remote client.
       if (remote || get().client?.kind === 'remote') get().leaveOnline();
       else get().goto('title');
@@ -1672,7 +1597,7 @@ export const useGame = create<State>((set, get) => {
 
     rewindTo: async (target, save) => {
       // Left from the open game, or (from the title) from this game's newest kept turn.
-      const live = target === campaign && get().views && !get().scenario && get().client?.kind !== 'remote';
+      const live = target === campaign && get().views && get().client?.kind !== 'remote';
       const newest = live ? null : parseAutosave((await listAutosaves()).find((r) => r.campaign === target)?.text ?? null);
       const from = live ? get().views![0].turn : newest?.turn ?? save.turn;
       pendingRewind = { from, prior: live ? get().rewinds : newest ? saveRewinds(newest) : saveRewinds(save) };
@@ -1680,44 +1605,6 @@ export const useGame = create<State>((set, get) => {
       await get().loadSave(save);
       resumeCampaign = null;
       pendingRewind = null;
-    },
-
-    startScenario: async (entry) => {
-      stopResolving();
-      set({ busy: 'Loading…', error: null });
-      try {
-        const client = await createClient('wasm');
-        if (!client.loadScenario || !client.scenarioStatus) throw new Error('scenarios need the WASM engine');
-        client.loadScenario(entry.text);
-        const status = client.scenarioStatus();
-        afterLoad(client);
-        // Open on the objective's city, else the seat's capital, rather than whichever unit
-        // happens to need orders first.
-        const view = get().views?.[0];
-        const target = entry.file.objective.win?.map((c) => (c as { OwnCity?: number }).OwnCity).find((id) => id !== undefined);
-        const home = view?.cities.find((c) => c.id === target) ?? view?.cities.find((c) => c.owner === view.me && c.is_capital) ??
-          view?.cities.find((c) => c.owner === view.me);
-        set({ scenario: { entry, status, run: newRun(entry, status, client.kind), resultOpen: false, saved: null, turnStartedAt: Date.now() } });
-        if (home) {
-          set({ selection: null });
-          get().jumpTo(home.pos);
-        }
-      } catch (e) {
-        set({ busy: null, error: `Could not start the scenario: ${String(e instanceof Error ? e.message : e)}` });
-      }
-    },
-
-    submitScenarioFeedback: async (feedback) => {
-      const sc = get().scenario;
-      if (!sc || !sc.run.finished_at) return;
-      const run: ScenarioRun = { ...sc.run, feedback: { ...feedback, at: new Date().toISOString() } };
-      set({ scenario: { ...sc, run, saved: null } });
-      try {
-        const saved = await saveScenarioRun(run);
-        if (get().scenario?.run === run) set({ scenario: { ...get().scenario!, saved } });
-      } catch (e) {
-        if (get().scenario?.run === run) set({ scenario: { ...get().scenario!, saved: { error: String(e instanceof Error ? e.message : e) } } });
-      }
     },
 
     canPing: () => {
@@ -1884,10 +1771,8 @@ export const useGame = create<State>((set, get) => {
     },
 
     toggleReady: async (which) => {
-      const { seat, ready, errors, orders, busy, views, scenario } = get();
+      const { seat, ready, errors, orders, busy, views } = get();
       if (busy || !views || views[0].finished) return;
-      // A decided scenario plays no further turns.
-      if (scenario && scenario.status.outcome !== 'Playing') return;
       const s = which ?? seat;
       const observer = isEliminated(views[s]);
       if (observer && !canResolveToEnd(views[s], get().client?.kind === 'remote' ? get().net : null)) return;
@@ -2021,7 +1906,7 @@ let ordersAtRisk = false;
 function keepOrdersNow() {
   ordersTimer = null;
   const s = useGame.getState();
-  if (!s.client || s.client.kind === 'remote' || !s.views || s.scenario) { ordersAtRisk = false; return; }
+  if (!s.client || s.client.kind === 'remote' || !s.views) { ordersAtRisk = false; return; }
   const turn = s.views[0].turn;
   const pending = s.orders.some((list) => list.length > 0);
   const text = pending ? JSON.stringify(s.orders) : null;

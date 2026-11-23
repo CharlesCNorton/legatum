@@ -53,7 +53,6 @@ export async function pickSaveFile(onLoad: (s: SaveFile) => void | Promise<void>
 export function GameMenu() {
   const [open, setOpen] = useState(false);
   const [earlier, setEarlier] = useState(false);
-  const scenario = useGame((s) => !!s.scenario);
   const [activeSeconds, setActiveSeconds] = useState(0);
   const ref = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
@@ -127,7 +126,7 @@ export function GameMenu() {
                 Load from file…
               </button>
               {/* Going back is for games on this screen only: an online game's host would rewind everyone. */}
-              {kind === 'wasm' && !scenario && turn !== undefined && turn > 1 &&
+              {kind === 'wasm' && turn !== undefined && turn > 1 &&
                 <button onClick={() => (setOpen(false), setEarlier(true))}>Load an earlier turn…</button>}
               <hr />
             </>
