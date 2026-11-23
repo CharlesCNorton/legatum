@@ -1,27 +1,20 @@
 """Authored mechanical animation on the actual 3D hierarchy. No image deformation.
 Track speed is three eighths of a link pitch / output frame; wheel rotation uses the same distance.
 """
-import bpy,os,math,json
+import bpy,os,math,json,sys
 from pathlib import Path
 from math import pi,sin,cos
 from mathutils import Vector
+sys.path.insert(0,str(Path(__file__).resolve().parent))
+from runninggear import route
 R=Path(os.environ['ANIM_ROOT']);M=R/'masters/tank';out=M/'clips';out.mkdir(exist_ok=True)
 CLIPS={'idle':(8,10,True),'move':(8,12,True),'attack':(10,14,False),'hit':(4,12,False),'death':(10,10,False)}
-HALF=1.39;RAD=.40;Z=.79;LENGTH=4*HALF+2*pi*RAD
-
-def trackpoint(t):
-    d=(t%1)*LENGTH
-    if d<2*HALF:return(-HALF+d,Z+RAD,0)
-    d-=2*HALF
-    if d<pi*RAD:
-        a=pi/2-d/RAD;return(HALF+RAD*cos(a),Z+RAD*sin(a),pi/2-a)
-    d-=pi*RAD
-    if d<2*HALF:return(HALF-d,Z-RAD,pi)
-    d-=2*HALF;a=-pi/2-d/RAD;return(-HALF+RAD*cos(a),Z+RAD*sin(a),pi/2-a)
-
 for clip,(count,fps,loop) in CLIPS.items():
     bpy.ops.wm.open_mainfile(filepath=str(M/'tank.blend'))
-    sc=bpy.context.scene;sc.render.fps=fps;sc.frame_start=1;sc.frame_end=count
+    sc=bpy.context.scene
+    routes={int(side):route(circles) for side,circles in json.loads(sc['track_circles']).items()}
+    LENGTH=routes[-1][0]
+    sc.render.fps=fps;sc.frame_start=1;sc.frame_end=count
     root=bpy.data.objects['Vehicle suspension root'];turret=bpy.data.objects['Turret traverse'];gun=bpy.data.objects['Gun recoil']
     bpy.context.view_layer.update()
     # Match the registered barrel muzzle, preserving local recoil/traverse motion.
@@ -38,8 +31,8 @@ for clip,(count,fps,loop) in CLIPS.items():
             if not any(term in mat.name for term in ['Olive drab','baked pigment','Dusty rubbed','painted projection']):continue
             n=mat.node_tree.nodes;l=mat.node_tree.links;shader=n.get('Principled BSDF')
             source=shader.inputs['Base Color'].links[0].from_socket
-            noise=n.new('ShaderNodeTexNoise');noise.inputs['Scale'].default_value=7
-            mask=n.new('ShaderNodeValToRGB');mask.color_ramp.elements[0].position=.25;mask.color_ramp.elements[0].color=(.45,.45,.45,1);mask.color_ramp.elements[1].position=.60
+            noise=n.new('ShaderNodeTexNoise');noise.inputs['Scale'].default_value=3
+            mask=n.new('ShaderNodeValToRGB');mask.color_ramp.elements[0].position=.25;mask.color_ramp.elements[0].color=(.80,.80,.80,1);mask.color_ramp.elements[1].position=.60
             l.new(noise.outputs['Fac'],mask.inputs[0])
             amount=n.new('ShaderNodeMath');amount.operation='MULTIPLY';l.new(mask.outputs[0],amount.inputs[0]);burns.append(amount)
             soot=n.new('ShaderNodeMixRGB');soot.inputs[2].default_value=(.013,.011,.008,1)
@@ -66,9 +59,9 @@ for clip,(count,fps,loop) in CLIPS.items():
             root.location.z-=.008*settle;turret.rotation_euler[2]+=-.12*settle;gun.rotation_euler[1]=math.radians(-22)+.18*settle
         for o in wheels:
             # Small engine vibration does not turn wheels. Track pattern repeats at key 9; inspect the sampled wheel loop visually.
-            o.rotation_euler[1]=-(i*3/8*LENGTH/62/o.get('rolling_radius',.32 if 'Sprocket' in o.name else .28)) if clip=='move' else 0
+            o.rotation_euler[1]=-(i*3/8*routes[o['track_side']][0]/62/o.get('rolling_radius',.32 if 'Sprocket' in o.name else .28)) if clip=='move' else 0
         for o in links:
-            offset=i*3/8/62 if clip=='move' else 0;x,z,a=trackpoint(o['track_phase']+offset)
+            offset=i*3/8/62 if clip=='move' else 0;x,z,a=routes[o['track_side']][1](o['track_phase']+offset)
             while a-o.rotation_euler[1]>pi:a-=2*pi
             while a-o.rotation_euler[1]<-pi:a+=2*pi
             o.location=(x,o['track_side']*.99,z);o.rotation_euler[1]=a
@@ -97,7 +90,7 @@ for clip,(count,fps,loop) in CLIPS.items():
             if kind in ('flash','gun_smoke'):
                 o.location+=gun_effect_shift
         for amount in burns:
-            amount.inputs[1].default_value=min(.85,max(0,(j-1)/7))
+            amount.inputs[1].default_value=min(.75,max(0,(j-1)/7))
             amount.inputs[1].keyframe_insert(data_path='default_value',frame=i+1)
         for o in effects:
             o.keyframe_insert(data_path='hide_render',frame=i+1)
@@ -115,5 +108,6 @@ for clip,(count,fps,loop) in CLIPS.items():
     if clip=='death':samples[-1]=samples[-2]
     sc['sample_frames']=json.dumps(samples);sc['clip']=clip;sc['loop']=loop
     sc['track_distance_per_frame']=3/8*LENGTH/62 if clip=='move' else 0
+    sc['track_distances_per_frame']=json.dumps({str(side):3/8*data[0]/62 if clip=='move' else 0 for side,data in routes.items()})
     sc.frame_set(1);bpy.ops.wm.save_as_mainfile(filepath=str(out/f'{clip}.blend'))
     print('ANIMATED',clip,samples)

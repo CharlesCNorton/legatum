@@ -5,7 +5,7 @@ from PIL import Image, ImageDraw
 from deliver import CLIPS, restore, OUT, REVIEW, R
 meta=json.loads((OUT/'tank.json').read_text());atlas=Image.open(OUT/'tank.webp').convert('RGBA')
 frames={n:[restore(atlas,r).resize((320,320),Image.Resampling.LANCZOS) for r in c['rects']] for n,c in meta['clips'].items()}
-round_label=os.environ.get('ROUND','2-cpu')
+round_label=os.environ.get('ROUND','3-cpu')
 assert all(c.isalnum() or c in '-_' for c in round_label)
 out=REVIEW/f'tank-round{round_label}.mp4'
 cmd=['ffmpeg','-y','-loglevel','error','-f','rawvideo','-pixel_format','rgb24','-video_size','1600x348','-framerate','30','-i','pipe:0','-an','-c:v','libx264','-threads','3','-pix_fmt','yuv420p','-crf','18','-movflags','+faststart',str(out)]

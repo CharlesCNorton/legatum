@@ -24,16 +24,7 @@ for name in names:
     if 'PaintingProjection' in mesh.uv_layers:raise RuntimeError('Projection already applied; bake again before paint')
     uv=mesh.uv_layers.new(name='PaintingProjection');weights=mesh.color_attributes.new(name='Paint confidence',type='FLOAT_COLOR',domain='CORNER')
     normalmatrix=o.matrix_world.to_3x3().inverted().transposed()
-    # The end sprocket centres still differ from the painting. Map each source
-    # wheel around its actual axle, so spinning it cannot carry a whole adjacent
-    # painted bogie around the belt. This is a local texture registration, not a
-    # claim that the chassis silhouette is now identical to the source.
     shift=Vector((0,0))
-    parent=o.parent
-    if parent and parent.name.startswith('Sprocket pivot -1'):
-        center=world_to_camera_view(sc,sc.camera,parent.matrix_world@Vector((0,-.16,0)))
-        target=(24,139) if parent.location.x<0 else (174,154)
-        shift=Vector((target[0]/256-center.x,1-target[1]/256-center.y))
     for loop in mesh.loops:
         v=mesh.vertices[loop.vertex_index];p=world_to_camera_view(sc,sc.camera,o.matrix_world @ v.co)
         uv.data[loop.index].uv=Vector((p.x,p.y))+shift
@@ -62,8 +53,18 @@ for name in names:
     # that brushwork while the physical BSDF still supplies grain, edge glints and relief.
     output=next(node for node in n if node.type=='OUTPUT_MATERIAL')
     emission=n.new('ShaderNodeEmission');l.new(blend.outputs[0],emission.inputs['Color'])
-    keep=n.new('ShaderNodeMath');keep.operation='MULTIPLY';keep.inputs[1].default_value=.88;l.new(mask.outputs[0],keep.inputs[0])
+    keep=n.new('ShaderNodeMath');keep.operation='MULTIPLY';keep.inputs[1].default_value=.96;camera=n.new('ShaderNodeLightPath')
+    camera_mask=n.new('ShaderNodeMath');camera_mask.operation='MULTIPLY';l.new(mask.outputs[0],camera_mask.inputs[0]);l.new(camera.outputs['Is Camera Ray'],camera_mask.inputs[1]);l.new(camera_mask.outputs[0],keep.inputs[0])
     surface=n.new('ShaderNodeMixShader');l.new(keep.outputs[0],surface.inputs[0]);l.new(s.outputs[0],surface.inputs[1]);l.new(emission.outputs[0],surface.inputs[2]);l.new(surface.outputs[0],output.inputs['Surface'])
     records.append({'mesh':name,'uv':'PaintingProjection','hidden_fill':'generated olive brushwork + scanned steel; procedural stone and rubber','strength':strength.inputs[1].default_value})
+# Moving shoes use their own dusty metal pigment, never wheel/bogie fragments.
+# Camera-only pigment opens the dark steel without illuminating the hull/base.
+for material_name in ('Track steel • worn and earth packed', 'Dusty rubbed edges'):
+    mat=bpy.data.materials[material_name];n=mat.node_tree.nodes;l=mat.node_tree.links
+    shader=n.get('Principled BSDF');output=next(node for node in n if node.type=='OUTPUT_MATERIAL')
+    emission=n.new('ShaderNodeEmission');l.new(shader.inputs['Base Color'].links[0].from_socket,emission.inputs['Color'])
+    lightpath=n.new('ShaderNodeLightPath');weight=n.new('ShaderNodeMath');weight.operation='MULTIPLY';weight.inputs[1].default_value=.25
+    l.new(lightpath.outputs['Is Camera Ray'],weight.inputs[0])
+    mix=n.new('ShaderNodeMixShader');l.new(weight.outputs[0],mix.inputs[0]);l.new(shader.outputs[0],mix.inputs[1]);l.new(emission.outputs[0],mix.inputs[2]);l.new(mix.outputs[0],output.inputs['Surface'])
 bpy.ops.file.pack_all();bpy.ops.wm.save_as_mainfile(filepath=str(M/'tank.blend'))
 (M/'textures/paint-manifest.json').write_text(json.dumps(records,indent=2));print('PROJECTED',len(names),'real meshes, with hidden-surface fallback')

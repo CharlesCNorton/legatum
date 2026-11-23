@@ -1,11 +1,18 @@
 """Audit geometry, articulated movement, bakes and planted terminal wreck."""
-import bpy,os,json,math
+import bpy,os,json,math,sys
 from pathlib import Path
 from mathutils import Vector
+sys.path.insert(0,str(Path(__file__).resolve().parent))
+from runninggear import route
 R=Path(os.environ['ANIM_ROOT']);M=R/'masters/tank';results={}
 for clip,count in [('idle',8),('move',8),('attack',10),('hit',4),('death',10)]:
     bpy.ops.wm.open_mainfile(filepath=str(M/'clips'/f'{clip}.blend'));sc=bpy.context.scene
     samples=json.loads(sc['sample_frames']);assert len(samples)==count
+    routes={int(side):route(circles) for side,circles in json.loads(sc['track_circles']).items()}
+    assert sc.view_settings.view_transform=='Standard'
+    for material in bpy.data.materials:
+        if 'painted projection' in material.name:
+            assert any(n.type=='LIGHT_PATH' for n in material.node_tree.nodes), 'Missing camera-only pigment'
     base=bpy.data.objects['Stationary cream stone base'];base_initial=base.matrix_world.copy()
     links=[o for o in bpy.data.objects if 'track_phase' in o];wheels=[o for o in bpy.data.objects if 'wheel' in o]
     assert len(links)==124 and len(wheels)==16
@@ -20,7 +27,14 @@ for clip,count in [('idle',8),('move',8),('attack',10),('hit',4),('death',10)]:
         ground.append(min((o.matrix_world.translation.z-.028) for o in links))
         assert all(o.hide_render or min(o.scale)>0.005 for o in bpy.data.objects if 'effect' in o), 'Visible effect has degenerate scale'
     assert min(ground)>.17 and max(ground)<.30,(clip,ground)
-    if clip=='move':assert len(set(positions))==8 and len(set(wheel_angles))==8
+    if clip=='move':
+        assert len(set(positions))==8 and len(set(wheel_angles))==8
+        for i,f in enumerate(samples):
+            sc.frame_set(f)
+            for wheel in wheels:
+                length=routes[wheel['track_side']][0]
+                expected=-i*3/8*length/62/wheel['rolling_radius']
+                assert abs(wheel.rotation_euler.y-expected)<1e-5, 'Wheel/track speed mismatch'
     if clip=='attack':assert max(gun_positions)-min(gun_positions)>.16
     if clip=='death':assert samples[-1]==samples[-2] and ground[-1]<.26
     results[clip]={'samples':samples,'track_contact_z':ground,'stationary_base':True,'links':len(links),'wheel_pivots':len(wheels)}
