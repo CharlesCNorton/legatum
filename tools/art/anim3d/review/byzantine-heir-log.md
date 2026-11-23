@@ -7,3 +7,4 @@
 - Completed real 256 px AO/Pointiness bakes for cuirass, skirt, shoulder mantle and MPFB anatomy; maps are retained and packed into the master.
 - Saved five editable clips and rendered all 40 initial CPU frames; published strips/WebPs immediately. First pack rejected death frame 5 at the left border (no atlas shipped from that pass).
 - Increased attack articulation, moved the collapse inward, connected boot ankles and added a sculpted hair cap. Rebuilding all outputs at 512 px / 8 CPU samples; these are drafts for the 48-sample Metal GPU pass.
+- Rebuild exposed a Blender UV-layer handle invalidated by edit-mode unwrap; bake stopped before saving. Fixed by retaining the UV name as a string, added nonzero Python exit codes and a bake-required guard so incomplete rebuilds cannot render/pack as valid.

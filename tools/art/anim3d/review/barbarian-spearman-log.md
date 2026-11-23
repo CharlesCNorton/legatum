@@ -41,3 +41,11 @@
 - Published e-move review from CPU render.
 - Published e-attack review from CPU render.
 - Published e-hit review from CPU render.
+- Published e-death review from CPU render.
+- Final technical validation PASSED: 40 frames, 512/256 masters, 160px per-frame trim offsets, alpha reconstruction, no canvas clipping, actual pixel motion and held death; WebP 185064 bytes at quality 75.
+- Saved-scene audit PASSED: source hashes, 19158-vertex MPFB body, 53 bones, stationary base, safe scales, evaluated death ground clearance and maximum pre-release hand-to-shaft gap 0.0252m.
+- Final visual verdict: below painting at 256; recognizable unit at 64 but narrow/upright. Face/fur, boss registration, masked texture seam and stiff/high death settling remain next-round work. GPU pass not run in sandbox.
+- Python parse (13), shell syntax (2) and all four pinned external asset hashes passed. Preparing commit; no push or PR.
+- Git commit blocked by sandbox denial of .git/worktrees/lane-8/index.lock; changes deliberately left uncommitted for runner. Requested co-author line is documented in unit REVIEW.md.
+- origin/master advanced by two CI/browser-test commits during the run. Merge attempt blocked by ORIG_HEAD.lock permission; those incoming commits do not overlap this unit's changed paths. Runner must commit and merge the new master.
+- HEAD-based hygiene/public-claims gate passed, but HEAD excludes this uncommitted work; this is NOT claimed as a gate pass for the new files. Browser art gate/GPU art review remain pending.

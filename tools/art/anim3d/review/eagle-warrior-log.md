@@ -5,3 +5,8 @@
 - Reusing MPFB and family projection method; snapshotting sibling lane packing/review helpers into this unit directory.
 - Built MPFB anatomy, original three-dimensional feather costume, eagle hood, woven shield and macuahuitl; saved plain and material masters.
 - Froze painting camera UVs and ray-tested visibility, with generated feather backfill on unseen surfaces.
+- Built MPFB anatomy, original three-dimensional feather costume, eagle hood, woven shield and macuahuitl; saved plain and material masters.
+- Froze painting camera UVs and ray-tested visibility, with generated feather backfill on unseen surfaces.
+- Authored idle, move, attack, hit and terminal death on the MPFB skeleton; no mocap or cloth simulation claimed.
+- Froze painting camera UVs and ray-tested visibility, with generated feather backfill on unseen surfaces.
+- Authored idle, move, attack, hit and terminal death on the MPFB skeleton; no mocap or cloth simulation claimed.
