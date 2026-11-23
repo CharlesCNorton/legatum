@@ -180,3 +180,5 @@
 - Posted field-cannon-e-attack-strip.png; actual CYCLES render, visual review pending.
 - Posted field-cannon-e-hit-strip.png; actual CYCLES render, visual review pending.
 - Posted field-cannon-e-death-strip.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-death-strip.png; actual CYCLES render, visual review pending.
+- ROUND 4 DELIVERY GATE: First pack fit at Q85 /198760 bytes, but atlas validation FAILED death sample3's left margin (0,10,143,152). Video had not started. The validator printed a generic PASS before its bounds FAIL; corrected that misleading output so PASS appears only after all checks succeed. Shifted the released rammer's settled position right by .20m and am rerendering death only; unchanged clips/master retain their existing hashes. No tolerance was loosened.
