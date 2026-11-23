@@ -84,7 +84,15 @@ for (const size of SIZES) test.describe(`first run with advisor ${size.name}`, (
     await expect(ring).toBeVisible();
     await capture('05-research-card-ring');
     await tech.getByRole('button', { name: 'Research now' }).first().click();
-    if (await tech.isVisible()) await page.keyboard.press('Escape');
+    // With research chosen, the advisor's next step is closing the panel, and its ring is on Close.
+    await expect(card).toHaveAttribute('data-advisor-id', 'closeResearch');
+    await expect(ring).toBeVisible();
+    const close = (await tech.getByRole('button', { name: 'Close research' }).boundingBox())!;
+    const closeRing = (await ring.boundingBox())!;
+    expect(closeRing.x <= close.x && closeRing.x + closeRing.width >= close.x + close.width, 'the ring surrounds Close').toBe(true);
+    await capture('05b-close-research-ring');
+    await page.keyboard.press('Escape');
+    await expect(tech).toBeHidden();
     await page.evaluate(() => (window as unknown as GameWindow).legatum.getState().select(null));
 
     // The first Hard unit move teaches the right-click command and its exact destination.

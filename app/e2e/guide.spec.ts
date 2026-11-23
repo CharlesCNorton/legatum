@@ -25,7 +25,7 @@ test('guide chapters, focus loop and shortcuts preserve the current screen', asy
   }
   await chapters.filter({ hasText: 'The peoples' }).click();
   await expect(guide(page).getByRole('heading', { level: 3 })).toHaveCount(FACTIONS.length);
-  await expect(guide(page)).toContainText('Peoples with different ways to shape history.');
+  await expect(guide(page)).toContainText('Every faction is playable, with a rule it bends and a weakness that pays for it.');
   await expect(guide(page)).toContainText('Ruhr Foundry replaces Forge');
   for (let i = 0; i < 16; i++) {
     await page.keyboard.press('Tab');
