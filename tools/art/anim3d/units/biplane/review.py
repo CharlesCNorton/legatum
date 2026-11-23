@@ -16,7 +16,7 @@ if stage=='c':
   for v in range(256):
    lo,hi=next((lo,hi) for lo,hi in zip(pts,pts[1:]) if lo[0]<=v<=hi[0]);target=lo[1]+(hi[1]-lo[1])*(v-lo[0])/max(1,hi[0]-lo[0]);lut.append(round(max(0,min(255,max(v-24,min(v+24,target))))))
   luts.append(lut)
- (M/'grade.json').write_text(json.dumps({'source_quantiles':dst,'raw_quantiles':src,'max_delta':24,'luts':luts},indent=2))
+ (M/'grade.json').write_text(json.dumps({'source_quantiles':dst,'raw_quantiles':src,'painting_sha256':hashlib.sha256(Path('app/src/assets/units/biplane-256.png').read_bytes()).hexdigest(),'rest_raw_sha256':hashlib.sha256(paths[0].read_bytes()).hexdigest(),'rest_manifest':json.loads((raw/'render.json').read_text()),'max_delta':24,'luts':luts},indent=2))
 if stage!='b':
  luts=json.loads((M/'grade.json').read_text())['luts'];ims=[Image.merge('RGBA',tuple(im.getchannel(c).point(luts[i]) for i,c in enumerate('RGB'))+(im.getchannel('A'),)) for im in ims]
 for size in (512,256):
@@ -39,6 +39,14 @@ elif stage=='c':
   for i,im in enumerate([ref,ims[0]]):out.paste(im.crop(box).resize((256,240),Image.Resampling.LANCZOS),(j*256,20+i*260),im.crop(box).resize((256,240),Image.Resampling.LANCZOS))
   d.text((j*256+8,3),name,fill='#4b3f32')
  out.save(D/'biplane-c-details.png')
+elif stage=='g':
+ out=Image.new('RGBA',(8*256,600),cream);d=ImageDraw.Draw(out)
+ for i,im in enumerate(ims):
+  col=i%8;row=i//8
+  d.text((col*256+8,row*290+5),('Top' if row==0 else 'Front')+f' gear / move {col+1}',fill='#4b3f32')
+  out.alpha_composite(im,(col*256,row*290+25))
+ d.text((8,584),'Airborne mechanical unit: no human feet, no grounded walk or foot sliding. Wheel planes follow the flight axis.',fill='#4b3f32')
+ out.convert('RGB').save(D/'biplane-g-feet-check.png')
 elif stage=='d':sheet(ims,['Attack pose '+str(i) for i in range(len(ims))],'biplane-d-rig-poses.png')
 else:
  clip=stage[2:];sheet(ims,[clip+' '+str(i+1) for i in range(len(ims))],f'biplane-e-{clip}-strip.png')

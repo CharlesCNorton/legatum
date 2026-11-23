@@ -151,13 +151,14 @@ PY="$ANIM_ROOT/venv/bin/python"
 UNIT=tools/art/anim3d/units/biplane
 "$PY" "$UNIT/prepare.py"
 "$UNIT/render.sh" build
+"$UNIT/render.sh" register
 SAMPLES=8 "$UNIT/render.sh" b
 "$PY" "$UNIT/review.py" b
 "$UNIT/render.sh" paint
 SAMPLES=12 "$UNIT/render.sh" c
 "$PY" "$UNIT/review.py" c
 "$UNIT/render.sh" animate
-for stage in d e-idle e-move e-attack e-hit e-death; do
+for stage in d g e-idle e-move e-attack e-hit e-death; do
   RESOLUTION=512 SAMPLES=8 "$UNIT/render.sh" "$stage"
   "$PY" "$UNIT/review.py" "$stage"
 done
@@ -177,16 +178,16 @@ packing. `deliver.py` rejects stale `.blend` hashes and clipped frames.
 ### Complete GPU handoff and trimmed atlas format
 
 ```sh
-ROUND=1 tools/art/anim3d/units/biplane/gpu.sh
+ROUND=2 tools/art/anim3d/units/biplane/gpu.sh
 ```
 
 No arguments. This selects Cycles **GPU / Metal**, fails when no Metal device is
-available, renders b/c/d and all 40 animation frames at 512 px, retains actual 512
+available, renders b/c/d, sixteen top/front gear diagnostic views, and all 40 animation frames at 512 px, retains actual 512
 and downsampled 256 masters, writes all review sheets and animated WebPs, packs and
 validates the delivery and writes `biplane-round${ROUND}.mp4`: five clips side by
 side, 2x scale on cream, 240 frames / 8 seconds, H.264 yuv420p. Masters remain under
 `$ANIM_ROOT/masters/biplane/`, outside git. CPU 256 previews are never upscaled and
-misrepresented as 512 masters. The handoff preserves the model and baked materials.
+misrepresented as 512 masters. The handoff verifies current build/asset hashes, preserves the finished model and baked materials, regenerates the five clips, audits them, and records a round log/status/receipt. It fails on missing inputs, mixed settings, stale hashes, or CPU-labelled output. The receipt explicitly leaves visual approval false.
 
 The biplane atlas extends the old grid format with `schema: legatum-trimmed-atlas-v1`.
 `frame:{w:160,h:160,ax:73,ay:140}` is the **untrimmed logical cell and anchor**.
@@ -195,8 +196,7 @@ The biplane atlas extends the old grid format with `schema: legatum-trimmed-atla
 in the atlas. Reconstruct it at `(ox,oy)` in a transparent 160×160 cell; draw directly
 at `(anchorX-ax+ox, anchorY-ay+oy)` to preserve placement. `row` is the logical clip
 row; physical Y and width vary. Do not multiply row/frame indices by 160 to sample
-this atlas. The 160 px delivery uses the family pipeline's 32-level alpha (maximum 4/255
-error); native masters retain full alpha. Invisible RGB is discarded by WebP. One transparent pixel separates rectangles. Identical held frames may reuse a
+this atlas. Round 2 adds `version:2` and uses premultiplied bicubic reduction with full lossless 8-bit alpha. Native masters retain full alpha. Invisible RGB is discarded by WebP. One transparent pixel separates rectangles. Identical held frames may reuse a
 rectangle without dropping any timeline samples. The renderer verifies the terminal
 pose transforms and reuses its PNG; this avoids stochastic noise in a held wreck.
 The encoder retains all
@@ -208,3 +208,58 @@ No runtime loader is changed or candidate adoption implied by this art-only lane
 `biplane-PASS` is a human/agent visual verdict, never written merely because contract
 checks pass. Round-1 shortcomings and exact check results belong in the unit
 `REVIEW.md` and the external `biplane-log.md`.
+
+### Resumed round 2: registration, pigment and evidence
+
+`refine.py` runs after build and before paint. It converts curved seam details to
+solid meshes, applies the finished bevels, corrects normals, and fits the actual
+wing/cowl/tail surfaces in the fixed source camera while retaining camera depth.
+Registration bounds and residual changes are recorded in `registration.json`;
+this is a local full-depth fit, not proof of an exact global camera match.
+Four interplane struts replace eight accidentally coincident struts. Their solid
+end fittings follow measured source attachment points. The propeller is physically
+shorter about its spindle. A curved, beveled, full-depth stone support replaces the
+broad straight support; the horizontal circular disc moves on its ground plane.
+
+Before projection, shape-preserving subdivision supplies visibility samples along
+long faces. A single frozen world-space BVH avoids rebuilding the dependency graph
+on every UV/colour-attribute write. Projecting the original source on the finished
+surface prevents bevels moving its brushwork. A 96% camera-only pigment branch
+retains painted illumination; non-camera rays and unseen surfaces keep the physical
+material and existing generated linen/olive/wood/rubber fills. Standard/None avoids
+compressing the painted pigment twice, with lower product-light energies. This is
+specific to painted illumination, not a general photographic preset. The base
+uses physical cream plus a camera-only top/rim pigment; it never retains a painted
+shadow or image of the moving support. Eight actual AO/curvature bakes remain.
+
+One automatically fitted rest grade is frozen for every clip. Its source painting,
+raw rest and render-manifest hashes are recorded. Packing rejects mixed rest/clip
+render settings, stale masters, raw images, processed frames or grades. Round-two
+CPU256 previews are labelled as such; old native CPU512 masters stay archived under
+`masters/biplane/round1-cpu`, never relabelled as this round's GPU output.
+
+`gpu.sh` resolves its own checkout, defaults to round 2, retains
+`gpu-logs-biplane-r${ROUND}.log`, writes `biplane-gpu-status.txt`, and writes a
+round-specific JSON receipt only after every stage, current GPU512/256 master,
+trimmed atlas and eight-second decoded-atlas MP4 passes. It never creates PASS.
+`--python-exit-code 1` makes Blender Python exceptions fail the shell stage.
+Six unit regressions cover changed scripts/paintings/masters, CPU falsely presented
+as GPU, and stale GPU source hashes. A missing-input invocation tests the actual
+shell logger/error trap without starting Blender.
+
+### Motion standard and aircraft diagnostic
+
+The cross-family standard is proven CMU free-use or Quaternius CC0 motion for
+humans, and a CC0 animated base/retarget for quadrupeds; match rest poses, bone rolls
+and travel axes before retargeting, without a later foot-orientation patch. Every
+round requires top/front move-cycle foot review and checks for sliding. Record
+source URL, version and licence in unit and external `SOURCES.md`.
+
+Biplane has no human or animal. Its rigid flight and propeller motion is mechanical;
+retargeted walking is inapplicable. `g` writes `biplane-g-feet-check.png` with top
+and front landing-gear views over all eight move samples, explicitly labelled
+**airborne, no grounded walk**. The audit checks wheel planes follow the flight
+axis throughout all forty poses. Clear excluded meshes' keyed visibility only in the unsaved diagnostic scene: rendering reevaluates animation even after `frame_set` and otherwise turns the hidden support back on. Wing ribs
+follow the actual upper-wing pivot in death; the final wreck pose and decoded
+last two frames are identical. Review the source-painted surfaces exposed in banking
+and crash poses; geometric/encoding checks do not establish clean art or motion.

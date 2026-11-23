@@ -91,7 +91,7 @@ lower=wing('lower-cambered-wing',-.20,-.31,4.32,.66,linen)
 for z,xc,span in [(.59,-.40,4.55),(-.31,-.20,4.32)]:
  for j in range(-9,10):
   y=j*.22;tube('stitched-wing-rib',[(xc-.30+.60*i/16,y,z+.058*math.sin(math.pi*i/16)) for i in range(17)],.0045,linen)
- for y in [-1.62,1.62]:
+ for y in ([-1.62,1.62] if z==.59 else []):
   for x in [-.61,-.08]:
    rod('varnished-interplane-strut',(x+.10,y,-.28),(x-.08,y,.55),.038,wood)
    for zz,xx in [(-.28,x+.10),(.55,x-.08)]:uvball('strut-brass-shoe',(xx,y,zz),(.055,.052,.026),brass)

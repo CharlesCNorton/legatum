@@ -1,7 +1,7 @@
 import bpy,os,json,hashlib,shutil
 from pathlib import Path
 R=Path(os.environ['ANIM_ROOT']);M=R/'masters/biplane';stage=os.environ['STAGE'];size=int(os.environ.get('RESOLUTION','256'))
-path=M/(f'{stage[2:]}.blend' if stage.startswith('e-') else ('attack.blend' if stage=='d' else 'biplane.blend'))
+path=M/(f'{stage[2:]}.blend' if stage.startswith('e-') else ('attack.blend' if stage=='d' else 'move.blend' if stage=='g' else 'unpainted.blend' if stage=='b' else 'biplane.blend'))
 bpy.ops.wm.open_mainfile(filepath=str(path));sc=bpy.context.scene
 assert sc.camera is not None
 sc.render.engine='CYCLES';sc.cycles.device=os.environ.get('CYCLES_DEVICE','CPU');sc.cycles.samples=int(os.environ.get('SAMPLES','8'))
@@ -15,8 +15,20 @@ if stage=='b':
  clay=bpy.data.materials.new('Plain geometry review');clay.diffuse_color=(.55,.55,.55,1);sc.view_layers[0].material_override=clay
 if stage.startswith('e-'):frames=list(range(1,sc.frame_end+1))
 elif stage=='d':frames=[1,4,6,10]
+elif stage=='g':frames=list(range(1,9))*2
 else:frames=[1]
+if stage=='g':
+ from mathutils import Vector
+ # Airborne aircraft: front/top landing gear checks, no invented foot contacts.
+ for o in sc.objects:
+  if o.type=='MESH' and not o.name.startswith(('GEO-rubber-wheel','GEO-linen-wheel-disc','GEO-wheel-brass-hub','GEO-wheel-axle','GEO-undercarriage-strut')):
+   o.animation_data_clear();o.hide_render=True
+ sc.camera.data.ortho_scale=2.2
 for i,f in enumerate(frames):
+ if stage=='g':
+  target=Vector((-.9,0,1.3));sc.camera.location=target+Vector((0,0,6) if i<8 else (-6,0,.35))
+  sc.camera.rotation_euler=(target-sc.camera.location).to_track_quat('-Z','Y').to_euler()
+  bpy.context.view_layer.update()
  if stage=='e-death' and i==len(frames)-1:
   def pose(frame):
    sc.frame_set(frame);bpy.context.view_layer.update()
@@ -24,5 +36,10 @@ for i,f in enumerate(frames):
   assert pose(f-1)==pose(f),'Terminal death transforms are not held'
   shutil.copyfile(out/f'{i-1:02}.png',out/f'{i:02}.png')
   continue
- sc.frame_set(f);sc.render.filepath=str(out/f'{i:02}.png');bpy.ops.render.render(write_still=True)
+ sc.frame_set(f)
+ if stage=='g':
+  # Keyed visibility is evaluated by frame_set; enforce diagnostic isolation after it.
+  for o in sc.objects:
+   if o.type=='MESH' and not o.name.startswith(('GEO-rubber-wheel','GEO-linen-wheel-disc','GEO-wheel-brass-hub','GEO-wheel-axle','GEO-undercarriage-strut')):o.hide_render=True
+ sc.render.filepath=str(out/f'{i:02}.png');bpy.ops.render.render(write_still=True)
 manifest.write_text(json.dumps({'stage':stage,'resolution':size,'samples':sc.cycles.samples,'device':sc.cycles.device,'engine':sc.render.engine,'blend_sha256':hashlib.sha256(path.read_bytes()).hexdigest(),'frames':len(frames),'terminal_hold_verified':stage=='e-death'},indent=2))

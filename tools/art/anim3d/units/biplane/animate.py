@@ -13,6 +13,13 @@ for clip,(count,fps,loop) in clips.items():
  for side in [-1,1]:
   bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=1,radius=1,location=(-1.13,side*.10,.30));o=bpy.context.object;o.name='GEO-muzzle-flash';o.scale=(.14,.027,.027);o.parent=root
   ma=bpy.data.materials.new('MAT-muzzle');ma.use_nodes=True;s=ma.node_tree.nodes.get('Principled BSDF');s.inputs['Base Color'].default_value=(1,.3,.02,1);s.inputs['Emission Color'].default_value=(1,.45,.02,1);s.inputs['Emission Strength'].default_value=3;o.data.materials.append(ma);flash.append(o)
+ # Upper-wing stitching follows the physical wing during the crash.
+ upper=bpy.data.objects['GEO-upper-cambered-wing']
+ for rib in list(sc.objects):
+  if rib.name.startswith('GEO-stitched-wing-rib'):
+   z=sum(v.co.z for v in rib.data.vertices)/len(rib.data.vertices)
+   if z>0:
+    world=rib.matrix_world.copy();rib.parent=upper;rib.matrix_world=world
  # A broken upper wing pivots at the center on impact, rather than a generic fade.
  wing=bpy.data.objects['GEO-upper-cambered-wing'];wing_rest=wing.rotation_euler.copy()
  for i in range(count+(1 if loop else 0)):
@@ -26,6 +33,7 @@ for clip,(count,fps,loop) in clips.items():
   elif clip=='death':
    # Descent, nose-down impact, crumpled wing, then a held planted wreck.
    k=min(1,i/6);ease=k*k;root.location.z-=.54*ease;root.location.x+=.36*ease;root.rotation_euler.y-=.5*ease;root.rotation_euler.x+=.11*ease
+   root.location -= (sc.camera.matrix_world.to_3x3()@Vector((1,0,0)))*(.14*ease)
    if i>=5:wing.rotation_euler.x+=.14*min(1,(i-4)/3)
    support.hide_render=i>=2;prop.rotation_euler.x=i*2.13 if i<5 else -1.0
   for o in flash:o.hide_render=not(clip=='attack' and i in [3,5]);o.keyframe_insert('hide_render',frame=f)
