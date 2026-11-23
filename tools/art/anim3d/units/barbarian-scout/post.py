@@ -59,9 +59,11 @@ def stage(name):
     else:luts=json.loads((M/'grade.json').read_text())['luts']
     frames=[graded(im,luts) for im in raws]
     for size in (512,256):
+        if size>raws[0].width:continue  # Never manufacture masters by upscaling previews.
         out=M/str(size)/name;out.mkdir(parents=True,exist_ok=True)
         for i,im in enumerate(frames):im.resize((size,size),Image.Resampling.LANCZOS).save(out/f'{i:02}.png')
     manifest=json.loads((rawdir/'render.json').read_text());manifest['grade_sha256']=hashlib.sha256((M/'grade.json').read_bytes()).hexdigest();(M/'256'/name/'render.json').write_text(json.dumps(manifest,indent=2))
+    if raws[0].width>=512:(M/'512'/name/'render.json').write_text(json.dumps(manifest,indent=2))
     if name=='c':
         im=frames[0].resize((256,256),Image.Resampling.LANCZOS)
         sheet([ref,im],['Painting 256','3D 256'],V/f'{SLUG}-c-textured-lit.png')
@@ -90,8 +92,10 @@ def pack():
     records={};strips=[];maxw=0;y=0;rawhash={};cliphash={}
     sourcehash=hashlib.sha256((M/'barbarian-scout.blend').read_bytes()).hexdigest()
     gradehash=hashlib.sha256((M/'grade.json').read_bytes()).hexdigest()
+    restmanifest=json.loads((M/'256/c/render.json').read_text())
     for row,(clip,(n,fps,loop)) in enumerate(CLIPS.items()):
         d=M/'256'/('e-'+clip);manifest=json.loads((d/'render.json').read_text())
+        assert all(manifest[k]==restmanifest[k] for k in ('engine','device','samples','resolution')),(clip,'mixed render settings')
         assert manifest['source_sha256']==sourcehash,(clip,'stale model')
         cliphash[clip]=hashlib.sha256((M/'clips'/clip/(clip+'.blend')).read_bytes()).hexdigest()
         assert manifest['blend_sha256']==cliphash[clip],(clip,'stale clip render')
@@ -137,23 +141,48 @@ def validate():
     for i,a in enumerate(rects):
         for b in rects[i+1:]:
             assert a['x']+a['w']<=b['x'] or b['x']+b['w']<=a['x'] or a['y']+a['h']<=b['y'] or b['y']+b['h']<=a['y'],'Overlapping packed rectangles'
+    dest=REPO/'app/src/assets/units/anim'
+    assert (dest/f'{SLUG}.webp').stat().st_size==report['bytes']
+    assert atlas.size==(meta['atlas']['w'],meta['atlas']['h'])
     assert meta['frame']=={'w':160,'h':160,'ax':80,'ay':140};assert atlas.getextrema()[3]==(0,255)
     for name,(n,fps,loop) in CLIPS.items():
         assert report['clip_hashes'][name]==hashlib.sha256((M/'clips'/name/(name+'.blend')).read_bytes()).hexdigest(),(name,'stale clip')
         for i in range(n):
             assert report['frame_hashes'][f'{name}/{i:02}']==hashlib.sha256((M/'256'/('e-'+name)/f'{i:02}.png').read_bytes()).hexdigest(),(name,i,'stale frame')
         c=meta['clips'][name];assert len(c['rects'])==c['frames']==n and c['fps']==fps and c['loop']==loop
-        for rect,im in zip(c['rects'],clips[name]):
+        for i,(rect,im) in enumerate(zip(c['rects'],clips[name])):
             assert 0<=rect['ox']<160 and rect['ox']+rect['w']<=160
             assert 0<=rect['oy']<160 and rect['oy']+rect['h']<=160
             assert rect['x']+rect['w']<=atlas.width and rect['y']+rect['h']<=atlas.height
             assert im.getchannel('A').getbbox()
+            expected=Image.open(M/'256'/('e-'+name)/f'{i:02}.png').convert('RGBA').resize((160,160),Image.Resampling.LANCZOS).getchannel('A').point(lambda v:round(v/17)*17)
+            assert im.getchannel('A').tobytes()==expected.tobytes(),(name,i,'decoded alpha differs')
         assert len({im.tobytes() for im in clips[name]})>1,(name,'no motion')
     # Lossy packed colours can differ by location; held death is checked in masters.
     death=[Image.open(M/'256/e-death'/f'{i:02}.png').tobytes() for i in (8,9)]
     assert death[0]==death[1],'Death not held'
     result={'status':'technical checks passed','frames':sum(c['frames'] for c in meta['clips'].values()),'bytes':report['bytes'],'quality':report['quality'],'art_approved':False}
     (M/'validation.json').write_text(json.dumps(result,indent=2));print(json.dumps(result))
+
+def gpu_check():
+    sourcehash=hashlib.sha256((M/'barbarian-scout.blend').read_bytes()).hexdigest()
+    for stage_name in ['b','c','d']+['e-'+n for n in CLIPS]:
+        raw=M/'renders'/stage_name
+        manifest=json.loads((raw/'render.json').read_text())
+        assert manifest['device']=='GPU' and manifest['engine']=='CYCLES' and manifest['resolution']==512,(stage_name,'not GPU512')
+        assert manifest['source_sha256']==sourcehash,(stage_name,'stale source')
+        clip=stage_name[2:] if stage_name.startswith('e-') else 'attack' if stage_name=='d' else None
+        blend=M/'clips'/clip/(clip+'.blend') if clip else M/('registered.blend' if stage_name=='b' else 'barbarian-scout.blend')
+        assert manifest['blend_sha256']==hashlib.sha256(blend.read_bytes()).hexdigest(),(stage_name,'stale rendered blend')
+        for i in range(len(manifest['frames'])):
+            assert Image.open(raw/f'{i:02}.png').size==(512,512)
+            if stage_name=='b':continue
+            for size in (512,256):
+                assert Image.open(M/str(size)/stage_name/f'{i:02}.png').size==(size,size)
+                saved=json.loads((M/str(size)/stage_name/'render.json').read_text())
+                assert saved['blend_sha256']==manifest['blend_sha256']
+                assert saved['grade_sha256']==hashlib.sha256((M/'grade.json').read_bytes()).hexdigest()
+    print('GPU512_MASTER_GATE_OK')
 
 def video():
     meta,atlas,clips=decoded();fps=30;directory=M/'video';directory.mkdir(exist_ok=True)
@@ -180,4 +209,5 @@ if __name__=='__main__':
     if cmd=='pack':pack()
     elif cmd=='validate':validate()
     elif cmd=='video':video()
+    elif cmd=='gpu-check':gpu_check()
     else:stage(cmd)

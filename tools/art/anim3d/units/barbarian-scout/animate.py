@@ -12,6 +12,14 @@ for clip,(count,fps,loop) in CLIPS.items():
     rest={p.name:p.matrix_basis.copy() for p in rig.pose.bones}
     hand0=(rig.matrix_world@rig.pose.bones['hand_r'].matrix).copy()
     axe0={o.name:o.matrix_world.copy() for o in axe}
+    haft=bpy.data.objects['GEO-axe-haft']
+    verts=[haft.matrix_world@v.co for v in haft.data.vertices]
+    low=min(v.z for v in verts);high=max(v.z for v in verts)
+    lower=[v for v in verts if v.z<low+.035]
+    upper=[v for v in verts if v.z>high-.035]
+    grip0=(sum(lower,Vector())/len(lower)).lerp(sum(upper,Vector())/len(upper),.72)
+    palm0=hand0@Vector((0,.035,0))
+    haft['grip_local']=list(haft.matrix_world.inverted()@grip0)
     targets0={n:(rig.matrix_world@rig.pose.bones[n].head).copy() for n in ('hand_l','hand_r','foot_l','foot_r','calf_l','calf_r','lowerarm_l','lowerarm_r')}
     def aim(name,direction):
         p=rig.pose.bones[name];q=p.bone.matrix_local.to_quaternion()
@@ -42,13 +50,19 @@ for clip,(count,fps,loop) in CLIPS.items():
             a=[0,.15,.55,1,.78,.32,-.12,-.06,0,0][i]
             turn('spine_03',2,-.15*a);turn('upperarm_r',0,-1.1*a);turn('lowerarm_r',0,-.45*a)
             turn('upperarm_l',0,.22*a);turn('head',2,-.08*a)
+            draw=min(1,i/2) if i<7 else max(0,(9-i)/2)
+            for finger in ('index','middle','ring','pinky'):
+                for joint in ('01','02','03'):
+                    name=f'{finger}_{joint}_r'
+                    if name in rig.pose.bones:turn(name,0,.65*draw)
+            # The measured haft grip seats in the palm during the strike.
             # Belt axe is gripped during the attack, and returns to its carrier.
             bpy.context.view_layer.update()
             hand=rig.matrix_world@rig.pose.bones['hand_r'].matrix
             for o in axe:
                 original=axe0[o.name].copy()
                 draw=min(1,i/2) if i<7 else max(0,(9-i)/2)
-                original.translation.y-=.16*draw
+                original.translation+=(palm0-grip0)*draw
                 o.matrix_world=hand@hand0.inverted()@original
                 o.keyframe_insert('location',frame=i+1);o.keyframe_insert('rotation_euler',frame=i+1)
         elif clip=='hit':

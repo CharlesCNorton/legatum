@@ -8,6 +8,8 @@ counts={'idle':8,'move':8,'attack':10,'hit':4,'death':10};report={}
 for name,count in counts.items():
     bpy.ops.wm.open_mainfile(filepath=str(M/'clips'/name/(name+'.blend')))
     sc=bpy.context.scene;rig=bpy.data.objects['Scout • MPFB rig'];base=bpy.data.objects['GEO-stationary-cream-base']
+    assert sc.get('round2_registered'), 'Missing round-two geometry registration'
+    assert not bpy.data.objects['GEO-anatomy'].data.shape_keys, 'Unfrozen shape keys'
     assert sc.camera and rig.type=='ARMATURE' and len(rig.data.bones)>=50
     assert sc['source_sha256']==source and sc['clip_count']==count
     assert sc.get('actual_bakes') and (M/'bakes.json').exists()
@@ -18,6 +20,11 @@ for name,count in counts.items():
         assert base.matrix_world==rest,'Moving base'
         for o in sc.objects:
             assert min(abs(v) for v in o.scale)>1e-4,(name,frame,o.name,'degenerate scale')
+        if name=='attack' and 3<=frame<=7:
+            haft=bpy.data.objects['GEO-axe-haft']
+            grip=haft.matrix_world@Vector(haft['grip_local'])
+            palm=rig.matrix_world@rig.pose.bones['hand_r'].matrix@Vector((0,.035,0))
+            assert (grip-palm).length<.002,(frame,'axe grip misses palm',(grip-palm).length)
         poses.append([v for p in rig.pose.bones for row in p.matrix for v in row])
         points=[]
         for o in sc.objects:

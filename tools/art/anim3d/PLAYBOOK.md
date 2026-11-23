@@ -203,3 +203,44 @@ alpha, margins, rectangle bounds, counts, source/grade freshness, clip motion an
 held terminal death. This is a technical contract, not painting parity. Only write
 `barbarian-scout-PASS` after visual review finds the rest pose hard to distinguish
 from the painting and all five clips clean. Round 1 is explicitly not a PASS.
+
+### Barbarian scout round 2: bind fitting and finished projection
+
+Start from the original `plain.blend`, then run unit-local `refine.py` before
+`texture.py`. A measured, smooth camera-space field fits the full-depth anatomy,
+clothing and the 53-bone bind skeleton together. It preserves mesh depth and uses
+shared per-side camera-depth translations to retain foot contact height.
+Per-vertex or calf-only floor corrections were rejected after side views exposed
+stretched feet and torso. Major-limb length ratios are checked and recorded. The camera is
+`(0,-6,1.95)`, aimed at `(0,0,.67)`, orthographic scale 1.65; the horizontal round
+stone keeps its real geometry and a separate cream rim. These are registration
+improvements, not a claim of an exact silhouette match. Control residuals live in
+external `registration.json`.
+
+Finish static subdivision, thickness and bevels before freezing projection UVs.
+Keep skin weights and live armature deformation. Recalculate outward normals on
+closed boots and the axe: an inward-facing axe sampled no source pigment even
+when its screen position was correct. The source's painted illumination now
+uses a 94% camera-only pigment branch; non-camera rays retain the physical
+surface shader. Hidden pelt uses the existing generated fur; cloth/leather uses
+a pinned, tinted copy of the existing mounted-family linen. Real AO/curvature
+bakes, folds, straps, sculpted hair and soft product lighting remain. Fit the
+same automatic rest histogram grade across every clip, never per-frame.
+
+The axe draw seats a measured local haft point in the palm; `audit.py` checks
+less than 2mm separation during the striking frames. This does not establish
+finger contact, collision-free motion or visual animation quality.
+
+`ROUND=2 tools/art/anim3d/units/barbarian-scout/gpu.sh` resolves its own checkout,
+records a transcript/status, checks actual Metal availability, rebuilds source
+and clips, audits, renders every stage at GPU512, verifies native 512/256 masters,
+packs/validates and writes the eight-second decoded-atlas MP4. All Blender calls
+use the PATH gate sequentially. Missing inputs or unavailable GPU fail explicitly;
+there is no automatic PASS. CPU previews use native 256 px: `post.py` no longer
+upscales those into misleading 512 px masters. Round-one native CPU512 evidence
+is preserved in `masters/barbarian-scout/round1-cpu/`. Fresh GPU512 is still a
+lead-side requirement.
+
+Scout projection now includes rest-view ray visibility and source-object masks: the stowed axe must not remain on underlying cloth after the actual axe moves. Raised-hand vertices cannot inherit the painted face. Hidden surfaces retain half physical shading and the existing generated fills; projected pigment remains 94% camera-only. Review the unpainted model and exposed death surfaces as well as the rest match.
+
+The round-two visibility pass exposed an axe head buried in the shirt. Seat the actual weapon 85mm toward the rest camera before projection; never preserve its painted silhouette on the cloth as a substitute. The saluting hand and its finger bones are fitted together. These fixes improve model honesty, but exposed hand/cloth fill seams and crouched/death motion remain below the art bar.

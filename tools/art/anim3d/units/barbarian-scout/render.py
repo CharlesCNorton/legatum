@@ -7,7 +7,7 @@ arg=sys.argv[sys.argv.index('--')+1] if '--' in sys.argv else 'c'
 stages=['b','c','d','e-idle','e-move','e-attack','e-hit','e-death'] if arg=='all' else [arg]
 for stage in stages:
     clip=stage[2:] if stage.startswith('e-') else 'attack' if stage=='d' else None
-    path=M/'clips'/clip/(clip+'.blend') if clip else M/('plain.blend' if stage=='b' else 'barbarian-scout.blend')
+    path=M/'clips'/clip/(clip+'.blend') if clip else M/('registered.blend' if stage=='b' else 'barbarian-scout.blend')
     bpy.ops.wm.open_mainfile(filepath=str(path));sc=bpy.context.scene
     sc.render.engine='CYCLES';sc.cycles.samples=int(os.environ.get('SAMPLES','8'));sc.cycles.device=os.environ.get('CYCLES_DEVICE','CPU')
     if sc.cycles.device=='GPU':
@@ -21,8 +21,10 @@ for stage in stages:
     for i,frame in enumerate(frames):
         sc.frame_set(frame)
         if stage=='b':
-            sc.camera.location=[(0,-6,2.46),(3.5,-5,2.46),(6,0,2.46)][i]
-            sc.camera.rotation_euler=(Vector((0,0,.67))-sc.camera.location).to_track_quat('-Z','Y').to_euler()
+            sc.camera.location=[(0,-6,1.95),(3.5,-5,1.95),(6,0,1.95)][i]
+            target=Vector((0,0,.67)) if i==0 else Vector((0,.28,.67))
+            sc.camera.rotation_euler=(target-sc.camera.location).to_track_quat('-Z','Y').to_euler()
+            sc.camera.data.ortho_scale=1.65 if i==0 else 2.1
         if clip=='death' and i==len(frames)-1:
             rig=bpy.data.objects['Scout • MPFB rig']
             current=[tuple(v for row in p.matrix for v in row) for p in rig.pose.bones]
