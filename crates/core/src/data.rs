@@ -1128,7 +1128,7 @@ pub fn is_walls_line(building: BuildingKind) -> bool {
     building_family(building) == BuildingKind::Walls
 }
 
-/// Whether `faction` may never have the Walls line (rules 56, user 2026-11-22: "no walls ever"):
+/// Whether `faction` may never have the Walls line (rules 57, user 2026-11-22: "no walls ever"):
 /// the Mongols, unless the ablation switch turns the rule off. Every wall level, every era.
 pub fn never_walls(off: FactionRuleSet, faction: Faction) -> bool {
     faction == Faction::Mongols && !off.contains(FactionRule::MongolsNoWalls)
@@ -1140,7 +1140,7 @@ fn is_mongol_gated(item: ProductionItem) -> bool {
 }
 
 /// Whether a player can build an item now. `era` is the player's era (no rule reads it since
-/// the Mongols' Walls stopped opening in the Medieval era, rules 56; kept for callers).
+/// the Mongols' Walls stopped opening in the Medieval era, rules 57; kept for callers).
 pub fn available_to_player(faction: Faction, era: u8, item: ProductionItem) -> bool {
     available_to_player_rules(FactionRuleSet::EMPTY, faction, era, item)
 }
@@ -1370,10 +1370,10 @@ pub fn faction_excluded_building(faction: Faction, building: BuildingKind) -> Op
     }
 }
 
-/// The reason the Mongols cannot raise the Walls line (rules 56: never).
+/// The reason the Mongols cannot raise the Walls line (rules 57: never).
 pub const MONGOL_WALLS_REASON: &str = "The Mongols never build Walls";
 
-/// `faction_excluded_building`, with the Mongols' Walls line shut (every era since rules 56).
+/// `faction_excluded_building`, with the Mongols' Walls line shut (every era since rules 57).
 pub fn faction_excluded_building_at(
     faction: Faction,
     building: BuildingKind,

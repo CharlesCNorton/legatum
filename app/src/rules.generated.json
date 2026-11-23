@@ -10164,7 +10164,7 @@
   "rocketArtilleryRange": 3,
   "rollMax": 120,
   "rollMin": 80,
-  "saveVersion": 56,
+  "saveVersion": 57,
   "settlerCostStep": 50,
   "siege": {
     "baseGold": 160,

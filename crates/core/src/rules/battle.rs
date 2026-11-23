@@ -1515,7 +1515,7 @@ pub fn capture_city(
             .setup
             .rule_experiments
             .rule_off(FactionRule::SpartaKillHeal);
-    // The Mongols never have Walls (rules 56): a city they take loses its whole Walls line.
+    // The Mongols never have Walls (rules 57): a city they take loses its whole Walls line.
     let slight_walls = data::never_walls(
         state.setup.rule_experiments.faction_rules_off,
         state.player(captor).faction,

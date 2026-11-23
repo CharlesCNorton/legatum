@@ -91,7 +91,7 @@ for (const size of sizes) test.describe(`${size.width}×${size.height}`, () => {
 });
 
 test('Mongols: Masonry gives the Mongols its Quarry bonus and never lists Walls', async ({ page }) => {
-  // The Mongols never build Walls (rules 56), so Masonry lists only what it gives them. A tech that gives a faction nothing is
+  // The Mongols never build Walls (rules 57), so Masonry lists only what it gives them. A tech that gives a faction nothing is
   // skipped (known from the start), so no card ever says it does nothing.
   const { researchFixture } = await import('../src/test/researchFixture');
   const { coreFixture } = await import('../src/test/coreFixture');

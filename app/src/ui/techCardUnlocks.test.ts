@@ -92,7 +92,7 @@ describe('faction-accurate tech cards', () => {
 
   it('every card a faction researches gives it something; a tech with nothing for it is skipped', () => {
     expect(techHasBenefit('Byzantium', 'PrintingPress')).toBe(true);
-    // The Mongols never raise Walls (rules 56), but Masonry's Quarry bonus still helps them.
+    // The Mongols never raise Walls (rules 57), but Masonry's Quarry bonus still helps them.
     expect(techHasBenefit('Mongols', 'Masonry')).toBe(true);
     // The Nile: Egypt has no Production, so Bronze Working's Workshop does nothing for it: Egypt skips it.
     const noBenefit = new Set<string>(['Egypt BronzeWorking']);

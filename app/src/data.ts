@@ -809,7 +809,7 @@ export function isWallsLine(building: BuildingKind): boolean {
   return false;
 }
 
-/** Mirrors core `data::faction_excluded_building_at`: the Mongols never have the Walls line (rules 56). */
+/** Mirrors core `data::faction_excluded_building_at`: the Mongols never have the Walls line (rules 57). */
 export function factionExcludedBuilding(faction: Faction, building: BuildingKind): string | null {
   if (faction !== 'Sparta' && building === 'Agoge') return 'Only Sparta can build an Agoge';
   if (building === 'RiceStorehouse') return 'No people can build the Rice Storehouse yet';
@@ -840,7 +840,7 @@ export function availableToFaction(faction: Faction, item: ProductionItem): bool
     || Object.values(buildingStatsFor(faction, b).yields).some((n) => !!n);
 }
 
-/** Core `data::available_to_player`: no rule reads the era since the Mongols' Walls stopped opening in the Medieval era (rules 56). */
+/** Core `data::available_to_player`: no rule reads the era since the Mongols' Walls stopped opening in the Medieval era (rules 57). */
 export function availableToPlayer(faction: Faction, item: ProductionItem): boolean {
   return availableToFaction(faction, item);
 }

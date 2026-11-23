@@ -45,7 +45,7 @@ pub struct TechUnlock {
     pub min_population: i32,
     pub cities: Vec<UnlockCity>,
     /// Why this faction cannot build the item yet: the card lists it, but says this in place of
-    /// the build line, price and forecasts. Always None since rules 56 (its one use, the Mongols'
+    /// the build line, price and forecasts. Always None since rules 57 (its one use, the Mongols'
     /// Medieval-era Walls, is gone: a card lists only what the faction can build); kept so the
     /// app's handling and older saved views still read.
     #[serde(default)]

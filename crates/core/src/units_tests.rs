@@ -535,7 +535,7 @@ fn faction_rules_follow_the_class_through_the_lineage() {
         data::unit_stats_for(Faction::Mongols, UnitKind::Horseman).moves,
         MOUNTED_MOVES + 1
     );
-    // The Mongols build no Walls in any era (rules 56; before, from the Medieval era) and buy
+    // The Mongols build no Walls in any era (rules 57; before, from the Medieval era) and buy
     // no Siege before the Medieval era.
     let walls = ProductionItem::Building {
         building: BuildingKind::Walls,
