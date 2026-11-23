@@ -56,3 +56,26 @@
 - Emitted panzer-c-textured-lit.png from actual c renders; visual review pending.
 - Emitted panzer-b-plain.png from actual b renders; visual review pending.
 - Emitted panzer-c-textured-lit.png from actual c renders; visual review pending.
+- Emitted panzer-b-plain.png from actual b renders; visual review pending.
+- Emitted panzer-c-textured-lit.png from actual c renders; visual review pending.
+- Emitted panzer-c-details.png from actual details renders; visual review pending.
+- Emitted panzer-d-rig-poses.png from actual d renders; visual review pending.
+- Emitted panzer-e-idle-strip.png from actual e-idle renders; visual review pending.
+- Emitted panzer-e-move-strip.png from actual e-move renders; visual review pending.
+- Emitted panzer-e-attack-strip.png from actual e-attack renders; visual review pending.
+- Emitted panzer-e-hit-strip.png from actual e-hit renders; visual review pending.
+- Emitted panzer-e-death-strip.png from actual e-death renders; visual review pending.
+- Emitted panzer-g-feet-check.png from actual g renders; visual review pending.
+- CPU strips inspected: no original wheel paint smear; idle/move/attack/hit readable; new smoke breaks up the oval stack but remains grainy at 12 samples. Packing caught a hit-frame alpha tail touching the 160px border despite geometry being in bounds. Added 2% geometry margin, a small keyed gun retraction on hit/death, shortened flash further. Failed-pack video was invalidated; video.py now validates current atlas/scene hashes before encoding so an old atlas cannot be labelled as the new round.
+- Emitted panzer-d-rig-poses.png from actual d renders; visual review pending.
+- Emitted panzer-e-idle-strip.png from actual e-idle renders; visual review pending.
+- Emitted panzer-e-move-strip.png from actual e-move renders; visual review pending.
+- Emitted panzer-e-attack-strip.png from actual e-attack renders; visual review pending.
+- Emitted panzer-e-hit-strip.png from actual e-hit renders; visual review pending.
+- Emitted panzer-e-death-strip.png from actual e-death renders; visual review pending.
+- Emitted panzer-g-feet-check.png from actual g renders; visual review pending.
+- Final round-2 CPU evidence inspected: c/f and new running-gear close-up, all five e strips, top/front g sheet, decoded delivery comparison, and actual H.264 frames at 0/0.3/0.6/1.5 seconds. 256px verdict: upper armour/cupola closer; wheels still too uniform/shallow with different track highlights, smoke less geometric but grainy. 64px verdict: same Panzer identity, simpler running-gear band. No painting parity; no PASS. Wheel smear was not observed; perfect loop seam and smoke finish still require GPU review.
+- Final CPU checks: all five saved clips pass source/frame/base/nonzero-scale/full-geometry/2%-margin audit; both track routes pass physical contact direction, and 4 numerical track tests pass. All 15 Python files parse, both shell scripts pass bash -n, git diff --check passes. Updated interim b/c/details/d/e/g/f images and 256px masters with provenance manifest. Round-one 512/256 masters preserved separately; current 512 masters pending GPU.
+- Final CPU pack: 40 frames, 160px trimmed logical cells, 1413x583 atlas, quality 85, 199414 bytes; exact alpha reconstruction, row/offset/gutter/source/grade checks, five moving clips and exact held death pass. CPU MP4 verified H.264/yuv420p, 1600x348, 240 frames, 8.000 seconds; named panzer-round2-cpu.mp4.
+- Updated executable no-argument GPU handoff: ROUND=2 tools/art/anim3d/units/panzer/gpu.sh audits before rendering, generates every 512px GPU stage, 512/256 masters, atlas/validation/reviews/round MP4, and verifies all stage GPU provenance. Missing Metal or delivery failure stops; no automatic visual PASS. No panzer-FEEDBACK.md present at final feedback check.
+- Git staging failed: .git/worktrees/lane-4/index.lock Operation not permitted. Changes remain uncommitted for the runner; no push or PR. Intended commit: Refine panzer wheel finish and round-two animation handoff; final trailer Co-Authored-By: gpt-6-astra (Codex) <noreply@openai.com>.

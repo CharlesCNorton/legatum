@@ -81,3 +81,5 @@
 - Published e-move review from 512px GPU renders.
 - Published e-attack review from 512px GPU renders.
 - Published e-hit review from 512px GPU renders.
+- Published e-death review from 512px GPU renders.
+- Packed all 40 frames, WebP quality 90, 181270 bytes; validation passed.
