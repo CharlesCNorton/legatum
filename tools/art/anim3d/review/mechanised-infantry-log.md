@@ -93,3 +93,23 @@
 - Published e-hit: 4 actual rendered frames, 12 fps; CPU 256px 8 samples.
 - Published e-death: 10 actual rendered frames, 10 fps; CPU 256px 8 samples.
 - Completed all five clips and wheel contact audit; delivery pack may now run.
+- Published b-plain CPU/GPU geometry stage before texture work.
+- Baked 256px AO and curvature maps on GEO-Armoured hull, GEO-Lowered loading ramp, GEO-Turret shell
+- Published painted rest pose and 50/50 comparison; real AO shader, micrograin, edge geometry and hidden-surface fill.
+- Round 2 full CPU pass rendered all 40 frames and 16 foot views; opened all strips, rest comparison and alternate views. First pack technically fit at 190468 bytes Q85 with exact decoded alpha/offsets and 8s MP4, but saved geometry audit FAILED move frame 7: raised left sole was nearly vertical and projected yaw -74.15 degrees. Do not treat that pack as final. Diagnosed footwear built level in the bent guard rather than anatomical rest; transported boot geometry with the complete foot rest-to-pose matrix (no retargeted foot rotation edits). Added clip-blend hashes to geometry audit and require them during delivery so stale successful audit cannot pass. Rebuilding all clips before rechecking. Alternate views still show awkward hull/cabin attachment depth and are not approved.
+- Published e-idle: 8 actual rendered frames, 10 fps; CPU 256px 8 samples.
+- Published e-move: 8 actual rendered frames, 12 fps; CPU 256px 8 samples.
+- Published e-attack: 10 actual rendered frames, 14 fps; CPU 256px 8 samples.
+- Published e-hit: 4 actual rendered frames, 12 fps; CPU 256px 8 samples.
+- Published e-death: 10 actual rendered frames, 10 fps; CPU 256px 8 samples.
+- Completed all five clips and wheel contact audit; delivery pack may now run.
+- Footwear rest-space correction passed the unchanged saved-scene audit: 53-bone rig, eight wheels, all 40 samples, move sole direction <35 degrees and support contact within 3mm. Opened updated top/front foot cycle: no vertical sole collapse. Added neutral guard ankle calibration BEFORE donor sampling so the stepped rest pose also keeps anatomically aligned soles. Final rebuild now running; no post-retarget foot rotation patches. GPU script still requires actual Metal and full GPU512 samples; CPU result is not GPU approval.
+- Published b-plain CPU/GPU geometry stage before texture work.
+- Baked 256px AO and curvature maps on GEO-Armoured hull, GEO-Lowered loading ramp, GEO-Turret shell
+- Published painted rest pose and 50/50 comparison; real AO shader, micrograin, edge geometry and hidden-surface fill.
+- Published e-idle: 8 actual rendered frames, 10 fps; CPU 256px 8 samples.
+- Published e-move: 8 actual rendered frames, 12 fps; CPU 256px 8 samples.
+- Published e-attack: 10 actual rendered frames, 14 fps; CPU 256px 8 samples.
+- Published e-hit: 4 actual rendered frames, 12 fps; CPU 256px 8 samples.
+- Published e-death: 10 actual rendered frames, 10 fps; CPU 256px 8 samples.
+- Completed all five clips and wheel contact audit; delivery pack may now run.
