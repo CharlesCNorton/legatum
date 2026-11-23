@@ -2,8 +2,9 @@
 
 V6 responds to the supplied v5 renders: moving CG needs to belong to the painting.
 The approved camera, ship route, cloth, 144 frames, 24 fps, 960×540, six threads,
-CLI and CG-only compositor are preserved. **No v6 Blender execution has occurred.**
-The lead owns every Blender invocation through the machine-wide lock.
+CLI and CG-only compositor are preserved. The lead rendered v6; the subsequent
+smoke/spill correction below has only Python verification so far. The lead owns
+every Blender invocation through the machine-wide lock.
 
 ## Changes
 
@@ -23,7 +24,7 @@ The lead owns every Blender invocation through the machine-wide lock.
   its original mask still excludes shore and painted ships.
 - **Smoke:** 32×88×28 domain, 96 base voxels, 2× noise, entirely at Z>=10 in front
   of the relief's maximum Z=8. Stronger/larger inflow, density 3.8±0.8, upward
-  velocity 18±2, flame smoke 3.2 and render density gain 3.4. Pre-roll extends to
+  velocity 18±2, flame smoke 3.2 and render density gain 0.035. Pre-roll extends to
   -95 so the taller column can fill before frame 1. Ceiling and side feathers
   soften edges before the domain boundaries, with an amber base and cooler ash
   above. The vorticity stability fix (0.15/0.1, noise 0.5, six substeps, CFL 2)
@@ -35,6 +36,25 @@ The lead owns every Blender invocation through the machine-wide lock.
   geometry and cannot receive a point light directly, so a soft surface mask
   applies amber light to nearby faces, robes and the brazier pedestal without
   relighting the entire picture. The point light illuminates the volume/CG.
+
+### V6 smoke/spill correction
+
+The lead's renders exposed an opaque, box-like smoke column. Reading the existing
+noise caches without Blender shows that gain 3.4 saturates 86–90% of occupied
+columns above optical depth 3 (under 5% transmission), even with boundary fades.
+Gain 0.035 preserves density variation and translucent edges across the 28-unit
+depth. Volume Info supplies scalar `density`, `flame` and `temperature`; density
+times gain times side/ceiling feathers is the sole scattering/absorption density.
+World Position normalized by the fixed domain bounds supplies the feathers.
+Color only tints this density, and emission remains flame^1.2 times flicker times
+the boundary envelope. Empty density/flame therefore produces no volume closure.
+There is no surface shader or world volume. Warm base/grey-ochre colors remain.
+
+The scholars' painted-surface spill is halved (0.48 → 0.24); the point light stays
+unchanged because it lights the CG/volume, not the emission-painted scholars.
+Galley, gulls, simulation and `verify_smoke()` height warnings are preserved.
+`masters/hybrid-v6/smoke-shader-audit.json` records Python-only cache integration;
+it is an opacity proxy, not a render. The lead must rebuild/render under the lock.
 
 The source painting is unchanged. Generated textures and manifests are in
 `masters/hybrid-v6`; v5 frames, clip and cache are preserved.
@@ -83,7 +103,8 @@ Measurements are in `masters/hybrid-v6/static-validation.json`.
 
 The lead-side bake must pass the existing complete-cache checks and now measures
 the smoke grid **after the shader's density gain and boundary fades**. Its
-projected occupied height must be 150–250 px at frames 1, 48, 96 and 144. Density
+projected occupied height target is 150–250 px at frames 1, 48, 96 and 144; misses
+print a WARNING rather than aborting, preserving the lead's change. Density
 occupancy is a geometric proxy: rendered opacity and brush character still need
 visual review. Actual smoke height, clipping, flame shape, spill registration,
 ship integration and runtime are unverified until the lead renders. The larger

@@ -30,7 +30,9 @@ SHIP_SCALE, SHIP_Z = 2.1, 32.
 PAINTED_SHIP_BOUNDS = ((575., 550.), (720., 550.))
 SHIP_WATERLINE = -.65
 FLUID_RESOLUTION, FLUID_SIZE = 96, (32, 88, 28)
-SMOKE_Z, SMOKE_DENSITY_GAIN = 24., 3.4
+# Extinction is per world unit: the 28-unit-deep domain needs a small gain.
+# At 3.4 even dilute cached billows saturated into an apparently solid box.
+SMOKE_Z, SMOKE_DENSITY_GAIN = 24., .035
 SMOKE_FADE = (.67, .84)
 FLUID_GRAVITY = (0., -9.81, 0.)  # +Y is picture-up; Z is camera depth.
 BANNERS = (
@@ -297,7 +299,7 @@ def plate_material(masters, background=False):
         spill = image_node(tree, masters.parent/'textures/fire-spill.png', uv, True)
         pulse = node(tree, 'ShaderNodeValue', 'Brazier flicker on painted scholars')
         for frame in range(1, FRAMES+1):
-            pulse.outputs[0].default_value = .48*fire_flicker(frame)
+            pulse.outputs[0].default_value = .24*fire_flicker(frame)
             pulse.outputs[0].keyframe_insert('default_value', frame=frame)
         warm = node(tree, 'ShaderNodeMixRGB', 'Local amber reflected firelight')
         warm.blend_type = 'ADD'
@@ -850,14 +852,28 @@ def fire(args, depth):
     p=node(tree,'ShaderNodeVolumePrincipled','Smoke is non-emissive except actual flame')
     setv(p,'Color',(.49,.45,.37,1)); setv(p,'Color Attribute','')
     setv(p,'Density Attribute',''); setv(p,'Anisotropy',.18)
-    coord=node(tree,'ShaderNodeTexCoord','Local domain position')
+    setv(p,'Absorption Color',(0,0,0,1))
+    setv(p,'Density',0); setv(p,'Emission Strength',0)
+    # Normalize world position explicitly: Generated coordinates can depend on
+    # the fluid mesh's texture space. These bounds also drive verify_smoke().
+    coord=node(tree,'ShaderNodeNewGeometry','World volume position')
+    offset=node(tree,'ShaderNodeVectorMath','Position from domain minimum')
+    offset.operation='SUBTRACT'
+    tree.links.new(coord.outputs['Position'],offset.inputs[0])
+    offset.inputs[1].default_value=domain.location-Vector(FLUID_SIZE)*.5
+    normalized=node(tree,'ShaderNodeVectorMath','Unit domain coordinates')
+    normalized.operation='DIVIDE'
+    tree.links.new(offset.outputs['Vector'],normalized.inputs[0])
+    normalized.inputs[1].default_value=FLUID_SIZE
     xyz=node(tree,'ShaderNodeSeparateXYZ','Fade before plume ceiling')
-    tree.links.new(coord.outputs['Generated'],xyz.inputs[0])
+    tree.links.new(normalized.outputs['Vector'],xyz.inputs[0])
     ceiling=node(tree,'ShaderNodeMapRange','No rectangular smoke cutoff'); ceiling.clamp=True
     setv(ceiling,'From Min',SMOKE_FADE[0]); setv(ceiling,'From Max',SMOKE_FADE[1])
     setv(ceiling,'To Min',SMOKE_DENSITY_GAIN); setv(ceiling,'To Max',0)
     tree.links.new(xyz.outputs['Y'],ceiling.inputs['Value'])
-    density=node(tree,'ShaderNodeAttribute','Smoke density grid'); density.attribute_name='density'
+    # Volume Info reads scalar density/flame directly (R), avoiding the generic
+    # Attribute Fac's RGB average. No constant density or second attribute gain.
+    grids=node(tree,'ShaderNodeVolumeInfo','Simulated density flame and temperature')
     envelope = ceiling.outputs[0]
     for axis in ('X','Z'):
         edge = mathn(tree,'MINIMUM',xyz.outputs[axis],mathn(tree,'SUBTRACT',1,xyz.outputs[axis]))
@@ -865,7 +881,7 @@ def fire(args, depth):
         setv(feather,'From Min',.015); setv(feather,'From Max',.17)
         tree.links.new(edge,feather.inputs['Value'])
         envelope = mathn(tree,'MULTIPLY',envelope,feather.outputs[0])
-    tree.links.new(mathn(tree,'MULTIPLY',density.outputs['Fac'],envelope),socket(p,'Density'))
+    tree.links.new(mathn(tree,'MULTIPLY',grids.outputs['Density'],envelope),socket(p,'Density'))
     warm_base = node(tree,'ShaderNodeMapRange','Warm smoke at the fire, cool ash above')
     warm_base.clamp=True
     setv(warm_base,'From Min',.05); setv(warm_base,'From Max',.27)
@@ -875,12 +891,10 @@ def fire(args, depth):
     smoke_color.inputs[1].default_value=(.65,.38,.15,1)
     smoke_color.inputs[2].default_value=(.49,.45,.37,1)
     tree.links.new(smoke_color.outputs[0],socket(p,'Color'))
-    flame=node(tree,'ShaderNodeAttribute','Flame grid'); flame.attribute_name='flame'
-    heat=node(tree,'ShaderNodeAttribute','Heat grid'); heat.attribute_name='temperature'
     temp=node(tree,'ShaderNodeMapRange','Heat to kelvin'); temp.clamp=True
     setv(temp,'From Min',0); setv(temp,'From Max',1)
     setv(temp,'To Min',1250); setv(temp,'To Max',2050)
-    tree.links.new(heat.outputs['Fac'],temp.inputs['Value'])
+    tree.links.new(grids.outputs['Temperature'],temp.inputs['Value'])
     bb=node(tree,'ShaderNodeBlackbody','Warm blackbody fire')
     tree.links.new(temp.outputs[0],bb.inputs[0]); tree.links.new(bb.outputs[0],socket(p,'Emission Color'))
     setv(p,'Blackbody Intensity',0)
@@ -888,7 +902,7 @@ def fire(args, depth):
     for frame in range(1,FRAMES+1):
         flicker.outputs[0].default_value=12*fire_flicker(frame)
         flicker.outputs[0].keyframe_insert('default_value',frame=frame)
-    power=mathn(tree,'MULTIPLY',mathn(tree,'POWER',flame.outputs['Fac'],1.2),flicker.outputs[0])
+    power=mathn(tree,'MULTIPLY',mathn(tree,'POWER',grids.outputs['Flame'],1.2),flicker.outputs[0])
     power=mathn(tree,'MULTIPLY',power,mathn(tree,'DIVIDE',envelope,SMOKE_DENSITY_GAIN))
     tree.links.new(power,socket(p,'Emission Strength'))
     out=node(tree,'ShaderNodeOutputMaterial','Volume only')
