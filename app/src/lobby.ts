@@ -82,7 +82,7 @@ export const offeredLevels = (): AiLevel[] => levelsFor(trainingOffered());
 /** Stable across releases: the previous lobby had no difficulty preference to carry forward. */
 export const LOBBY_DIFFICULTY_KEY = 'legatum.lobby.difficulty';
 
-interface DifficultyPreference { level: AiLevel; seats?: Record<string, AiLevel> }
+interface DifficultyPreference { level: AiLevel }
 const isLevel = (value: unknown): value is AiLevel => offeredLevels().includes(value as AiLevel);
 /** A stored Training (or the older `HardSearch`) reads as Hard unless the developer switch is on. */
 const storedLevel = (value: unknown): unknown => value === 'HardSearch' || value === 'Training' ? (trainingOffered() ? 'Training' : 'Hard') : value;
@@ -93,24 +93,17 @@ export function readDifficultyPreference(): DifficultyPreference | null {
     if (raw) {
       const value = JSON.parse(raw) as DifficultyPreference;
       const level = storedLevel(value?.level);
-      if (value && isLevel(level)) return {
-        level,
-        seats: Object.fromEntries(Object.entries(value.seats ?? {}).map(([seat, l]) => [seat, storedLevel(l)]).filter(([, l]) => isLevel(l))),
-      };
+      // Older preferences may have per-seat overrides. The saved game-wide level wins.
+      if (value && isLevel(level)) return { level };
     }
   } catch { /* Storage can be unavailable. */ }
   return null;
 }
 
 export function rememberDifficulty(lobby: Lobby): boolean {
-  const seats: Record<string, AiLevel> = Object.fromEntries(Object.entries(readDifficultyPreference()?.seats ?? {})
-    .filter(([key]) => !key.startsWith(`${lobby.mode}:`)));
-  lobby.slots.forEach((slot, i) => {
-    if (slot.kind === 'ai' && levelOf(slot) !== levelOf(lobby)) seats[`${lobby.mode}:${i}`] = levelOf(slot);
-  });
   try {
     if (!globalThis.localStorage) return false;
-    globalThis.localStorage.setItem(LOBBY_DIFFICULTY_KEY, JSON.stringify({ level: levelOf(lobby), seats }));
+    globalThis.localStorage.setItem(LOBBY_DIFFICULTY_KEY, JSON.stringify({ level: levelOf(lobby) }));
     return true;
   } catch { return false; }
 }
@@ -217,12 +210,8 @@ export function newLobby(mode: LobbyMode, seed: string): Lobby {
   const preference = readDifficultyPreference();
   const base: Lobby = { mode, preset: 'custom', slots: [], mapSize: 'Standard', turnLimit: null, barbarians: true, seed, ...levelFields(preference?.level ?? 'Hard') };
   const lobby = applyPreset(base, mode === 'solo' ? 'ffa' : 'coop');
-  const restored = { ...lobby, slots: lobby.slots.map((slot, i) => {
-    const override = preference?.seats?.[`${mode}:${i}`];
-    return slot.kind === 'ai' && isLevel(override) ? { ...slot, ...levelFields(override) } : slot;
-  }) };
-  rememberDifficulty(restored);
-  return restored;
+  rememberDifficulty(lobby);
+  return lobby;
 }
 
 /** Edit one seat. Changing who sits there or their team makes the preset Custom. */

@@ -84,7 +84,7 @@ export function Settings({ lobby, onChange }: { lobby: Lobby; onChange?: (l: Lob
       )}
       {anyAi && onChange && (
         <Segmented
-          label="AI level (all AI empires)"
+          label="AI level"
           value={levelOf(lobby)}
           options={offeredLevels().map((d) => ({ id: d, label: d, sub: LEVEL_SUB[d], tip: DIFFICULTY_INFO[d] }))}
           onChange={(d) => onChange(setDifficulty(lobby, d))}
