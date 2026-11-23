@@ -106,3 +106,88 @@ tools/art/anim3d/render.sh audit
 ```
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
+
+## Infantry / barbarian archer: round 1
+
+This unit owns `units/barbarian-archer/`; other families and the original spearman
+entry points are unchanged. Use the six installed Blender skills. The MPFB body,
+face, hands, anatomical weights and game-engine skeleton remain real 3D anatomy.
+The wolf-head pelt, thick folded mantle and skirt, fitted trousers and boots,
+crossbelts, buckles, quiver, curved yew bow and string are original geometry.
+The bow remains hand-attached; the string endpoints and nock follow the stave and
+drawing hand. Five authored actions retain 8/8/10/4/10 samples. The base is stationary.
+The cape's folds are modelled and bone-deformed in this round, not cloth simulation.
+
+### Standard finish and judging method
+
+Standing feedback 12–21 applies: a small valid atlas does not establish painting
+parity. First match rest silhouette, camera and figure extent. Use **frozen
+rest-camera UV projection of the painting onto actual mesh surfaces** as the
+standard visible-colour method. Retain geometry and opacity; never use subject
+cards or flatten the figure. The projected UVs deform with the weighted mesh.
+Incidence and source alpha fade projection into generated fur, linen and leather
+fills on unseen surfaces. The source is registered to the shipped 256 px token,
+so full-master padding does not change composition. The generated atlas and
+source hashes are external under `assets/barbarian-archer/`, packed into the blend.
+
+Finish geometry before increasing projection: real thickness, rounded hard edges,
+folded fabric, layered fur, buckles and distinct small forms. Actual 256 px AO and
+Pointiness emission bakes on four principal meshes drive cavity colour and surface
+roughness. Match warm upper-left key, restrained cool rim and soft fill to the
+painting; Cycles denoising is used for the final pass. Grade from opaque-pixel RGB
+quantiles of the rest render and painting, with one bounded LUT reused for every
+clip. Preserve raw renders. The shared base target is displayed sRGB **#E9CFA0**:
+this unit starts from linear pigment `(.815,.624,.352)` and fine grain, then checks
+rendered colour under its own lighting. Never assume a hex shader alone guarantees
+that displayed colour. No metallic component is used for stone or cloth.
+
+Publish b/plain, c/textured, c/details, d/poses and each e/clip immediately. The
+`barbarian-archer-f-restpose-compare.png` sheet contains painting, render, half-split
+and 50/50 crossfade at native 256 and 64 px. Double contours and projection spill
+are defects to report, not evidence of parity. The target remains a rest pose
+that is barely distinguishable from the painting. This round is a review candidate.
+
+### Commands and complete GPU handoff
+
+From repo root, after the external source and generated fill are available:
+
+```sh
+source tools/art/anim3d/env.sh
+"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/barbarian-archer/prepare.py
+tools/art/anim3d/units/barbarian-archer/run.sh build
+tools/art/anim3d/units/barbarian-archer/run.sh b
+tools/art/anim3d/units/barbarian-archer/run.sh finish
+tools/art/anim3d/units/barbarian-archer/run.sh c
+tools/art/anim3d/units/barbarian-archer/run.sh animate
+```
+
+Every Blender invocation is plain `blender -b --disable-autoexec` through the PATH
+gate, one heavy process at a time, three threads. No direct application executable,
+no zero-scale hiding, no paid asset or service. CPU defaults are Cycles/8 samples.
+The complete no-argument lead-side script is:
+
+```sh
+tools/art/anim3d/units/barbarian-archer/gpu.sh
+```
+
+It requires Metal Cycles, refuses CPU fallback, renders every stage and all 40
+frames at 512 px/64 samples, creates 512 and 256 masters, regenerates reviews,
+packs and validates the atlas, and checks sources, real bakes and rig audit reports.
+The saved plain/master/clip blend files are outside git in `masters/barbarian-archer/`.
+The script rerenders saved geometry; it does not overwrite it with a rebuild.
+
+### Version 2 trimmed atlas format
+
+`barbarian-archer.webp` uses a 1600 × 800 grid, 160 px maximum cells. Each frame is
+trimmed to its alpha bounds and packed at its cell's top left. `frame` remains
+`{w:160,h:160,ax:75,ay:143}` in **untrimmed** coordinates. Each clip keeps `row`,
+`frames`, `fps`, and `loop`; `rects[i]` adds `{x,y,w,h,ox,oy}`. `x/y/w/h` select the
+trimmed atlas rectangle; `ox/oy` restore its location in the original cell. Draw at
+`anchor + (ox-ax, oy-ay)` times display scale. Do not stretch trimmed rectangles
+back to 160 px. Idle/move loop; attack/hit/death do not. The final two death frames
+hold. Consumers must support this extension before enabling the candidate.
+
+Quality is selected from 90, 85, 80, 75 while enforcing 200,000 bytes. The packer
+refuses an oversized atlas at 75 instead of reducing quality or dropping frames.
+Master and raw-frame hashes, actual engine/device/samples and grade hash remain in
+`masters/barbarian-archer/pack.json`. No masters or source rasters belong in git.

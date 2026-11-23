@@ -1,0 +1,5 @@
+Built-in imagegen, round 1; original generated project art, CC BY 4.0.
+Output: assets/barbarian-archer/painted-fills.png; SHA256 in inputs.json.
+
+Exact prompt:
+Create a square 1024x1024 material texture atlas for an original premium painted historical miniature. Four equal square quadrants, edge to edge, no gutters no text: top left grey-brown wolf fur with cream fibre tips, fine directional shaggy fur painted in small brushstrokes; top right weathered warm ivory coarse linen with painterly woven fibres and subtle ochre recesses; bottom left scuffed dark walnut brown leather with warm worn edges and fine grain; bottom right dark brown and grey beard hair with individual ochre strands. Orthographic flat swatches, diffuse albedo only, no objects, no folds suggesting whole garments, no directional shadows, no metallic shine. Sophisticated oil-painted miniature brushwork. Intended as hidden side texture fills on a real 3D wolf-pelt barbarian archer. No symbols, no text, no borders.
