@@ -22,7 +22,7 @@ for clip in ['idle','move','attack','hit','death']:
    if release<=.8:continue
    dg=bpy.context.evaluated_depsgraph_get();lowest=100
    for ob in ctl.children:
-    ev=ob.evaluated_get(dg);me=ev.to_mesh();lowest=min(lowest,min((ob.matrix_world@v.co).z for v in me.vertices));ev.to_mesh_clear()
+    ev=ob.evaluated_get(dg);me=ev.to_mesh();lowest=min(lowest,min((ob.matrix_world @ v.co).z for v in me.vertices));ev.to_mesh_clear()
    mat=ctl.matrix_world.copy();mat.translation.z+=.1-lowest;ctl.matrix_world=mat;ctl.keyframe_insert('location',frame=f)
  sc['source_master_sha256']=new;sc['shield_clearance']='75mm forward, final released shield rests at z=.10'
  sc.frame_set(25);bpy.ops.wm.save_as_mainfile(filepath=str(path))

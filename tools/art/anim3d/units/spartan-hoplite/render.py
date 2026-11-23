@@ -1,5 +1,5 @@
 """Resumable fixed-camera Cycles masters; one render process, honest manifests."""
-import bpy, os, json, hashlib, subprocess
+import bpy, os, json, hashlib, subprocess, shutil
 from pathlib import Path
 from mathutils import Vector
 R=Path(os.environ['ANIM_ROOT']);M=Path(os.environ['ANIM_MASTER']);stage=os.environ['HOPLITE_STAGE']
@@ -28,7 +28,10 @@ def render_stage(stage):
   sc.frame_set(f)
   if pos:
    sc.camera.location=pos;sc.camera.rotation_euler=(Vector((0,0,1.13))-sc.camera.location).to_track_quat('-Z','Y').to_euler()
-  sc.render.filepath=str(out/f'{i:02}.png');bpy.ops.render.render(write_still=True)
+  if i and f == frames[i-1] and pos is None:
+   shutil.copyfile(out/f'{i-1:02}.png',out/f'{i:02}.png')
+  else:
+   sc.render.filepath=str(out/f'{i:02}.png');bpy.ops.render.render(write_still=True)
  (out/'render.json').write_text(json.dumps({'stage':stage,'engine':engine,'device':device,'resolution':size,'samples':sc.cycles.samples,'blend_sha256':sha(path),'source_master_sha256':sha(M/'spearman.blend'),'frames':frames,'blender':bpy.app.version_string},indent=2))
  subprocess.run([str(R/'venv/bin/python'),'tools/art/anim3d/units/spartan-hoplite/deliver.py','review',stage],check=True)
 if stage=='all-renders':

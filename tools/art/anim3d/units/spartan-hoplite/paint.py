@@ -43,7 +43,7 @@ for ob in list(sc.objects):
  assert len(me.vertices)==len(ob.data.vertices),(ob.name,'topology changed')
  camera_pts=[];weights=[];view=(sc.camera.location-Vector((0,0,1.2))).normalized()
  for v in me.vertices:
-  q=world_to_camera_view(sc,sc.camera,ev.matrix_world@v.co);camera_pts.append((q.x*256,(1-q.y)*256))
+  q=world_to_camera_view(sc,sc.camera,ev.matrix_world @ v.co);camera_pts.append((q.x*256,(1-q.y)*256))
   normal=(ev.matrix_world.to_3x3().inverted().transposed()@v.normal).normalized();weights.append(max(0,min(1,(normal.dot(view)-.03)/.55)))
  ev.to_mesh_clear()
  for mod,state in states:mod.show_viewport=state

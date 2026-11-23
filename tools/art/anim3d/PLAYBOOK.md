@@ -197,3 +197,69 @@ A targeted rest-camera probe caught fingertips protruding through the aspis;
 its surfaces now sit 75 mm farther forward. The hoplite-only
 `ANIM_SHIELD_SETTLE=1` grounds the fully released shield after that clearance
 change. These switches leave the spearman defaults unchanged.
+
+### Hoplite round 2: finished surfaces and driver handoff
+
+The resumed master lives in `masters/spartan-hoplite/round2-3d/`; round-one masters
+and review images remain preserved. `refine` always starts from this directory's
+`unpainted.blend`, so repeated driver runs do not accumulate fitting or shader
+layers. To reconstruct that checkpoint, run the unit's build/materials stages;
+`materials` preserves the unprojected, baked input before its older paint pass.
+Then run `refine`. All changed code remains in `units/spartan-hoplite/`.
+
+`refine.py` freezes the mixed MPFB shape keys while retaining its 19,158 vertices,
+original skin weights and 53 bones. The spear hand rises 24 cm while the weapon's
+world transform stays fixed; the unit-owned animation uses that same guard and
+interpolates combat elbow poles from it. Camera framing raises the figure, the
+crest and complete shield narrow, shoulder cloth corners lower, and the actual
+helmet/head geometry moves upward. Weighted fitting inverts the blended skin
+matrix. These are depth-preserving edits to articulated surfaces, not cutouts.
+The recorded camera and contour fit are approximate, not an exact source match.
+
+Static bevel, thickness and subdivision finish before projection. A single
+frozen rest-camera UV map replaces the old per-part rectangle stretching. Surface
+facing, ray visibility and source pigment masks blend into existing physical
+materials and generated linen fills. A camera-only Principled pigment branch
+preserves the source's painted illumination; other rays see the original PBR
+surface. Standard/None avoids grading already painted light through AgX again.
+This is specific to painted projection. Product lights and the physical cream
+disc remain; the disc receives no painted feet or stationary figure shadows.
+The rest-derived histogram LUT is shared unchanged by every clip.
+
+The complete, executable, no-argument host handoff is now:
+
+```sh
+ROUND=2 tools/art/anim3d/units/spartan-hoplite/gpu.sh
+```
+
+It resolves this checkout, records revision/dirty inputs and the Blender gate,
+then sequentially refines, checks the scene/input hashes, rebuilds all five cloth
+clips, audits the rig, renders plain/rest/details/poses/all clips with **Cycles
+GPU, 512 px, 64 samples**, checks GPU provenance and actual 512/256 dimensions,
+packs and validates the 160 px trimmed atlas, and encodes
+`review/3d-v2/spartan-hoplite-round${ROUND}.mp4`. The movie reconstructs decoded
+crops with their offsets, displays all five clips at 2x on cream, and verifies
+H.264/yuv420p, 1600×348, 240 frames/eight seconds with ffprobe. Nonlooping clips
+hold and replay every two seconds. The script retains its own transcript and a
+running/failed-stage/complete status file; technical completion never writes PASS.
+
+CPU iteration uses `SAMPLES=12 RESOLUTION=256 UNIT=spartan-hoplite
+ tools/art/anim3d/render.sh STAGE`. The scene check covers original anatomy,
+nonzero scales, fixed camera, frozen UV topology, camera-only pigment wiring and
+source hashes. Existing equipment/cloth audits and trim/motion validation remain.
+Repeated death samples copy the already-rendered PNG instead of trusting denoiser
+noise to match. Packing and validation reject changed masters, clips, grades and
+frames. A CPU rerender cannot relabel an old 512 px master as fresh output.
+
+At this round's first calibrated rest preview, alpha-threshold silhouette overlap
+improved from .644822 to .770323. That measures the contour only: crest curvature,
+helmet/gaze, shoulder drape, stone shading and animation still need visual review.
+No art PASS is implied by the measurement or by a valid atlas.
+
+The raised guard exposed a framing regression during the full audit: six attack
+samples put the butt outside the fixed cell. `animate.py` adds another .29m shaft
+slide only after the raise passes .4, reaching the full correction by .8. Keeping
+the early diagonal pose unchanged avoids pushing its spearhead above the canvas.
+`attack-clearance` applies the same rigid-only correction to an existing attack
+cache; it asserts the weapon is not a cloth collider and preserves the cloth bake.
+The subsequent full forty-sample audit reports zero findings.

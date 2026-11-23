@@ -2,7 +2,7 @@
 import os,sys,json,hashlib,io
 from pathlib import Path
 from PIL import Image,ImageDraw,ImageChops,ImageStat
-R=Path(os.environ.get('ANIM_ROOT',str(Path.home()/'LegatumRuns/anim-pilot')));M=R/'masters/spartan-hoplite/round1-3d';A=R/'assets/spartan-hoplite';REV=R/'review/3d-v2';SLUG='spartan-hoplite'
+R=Path(os.environ.get('ANIM_ROOT',str(Path.home()/'LegatumRuns/anim-pilot')));M=Path(os.environ.get('ANIM_MASTER',str(R/'masters/spartan-hoplite/round2-3d')));A=R/'assets/spartan-hoplite';REV=R/'review/3d-v2';SLUG='spartan-hoplite'
 CLIPS={'idle':(8,10,True),'move':(8,12,True),'attack':(10,14,False),'hit':(4,12,False),'death':(10,10,False)}
 REF=Path('app/src/assets/units/spartan-hoplite-256.png');OUT=Path('app/src/assets/units/anim')
 def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
@@ -60,11 +60,11 @@ def review(stage):
  meta['raw_preserved']=True;(folder/'render.json').write_text(json.dumps(meta,indent=2))
  # The 256 gallery carries the same render provenance and grade hash.
  for size in [512,256]:
-  if (M/str(size)/stage).exists():(M/str(size)/stage/'render.json').write_text(json.dumps(meta,indent=2))
+  if size<=meta['resolution']:(M/str(size)/stage/'render.json').write_text(json.dumps(meta,indent=2))
  ref=Image.open(REF).convert('RGBA')
  if stage=='b':sheet([ref]+images,['Painting','Front plain','3/4 plain','Side plain'],REV/(SLUG+'-b-plain.png'))
  elif stage=='c':
-  im=images[0].resize((256,256),Image.Resampling.LANCZOS);sheet([ref,im],['Painting','Round 1 Cycles'],REV/(SLUG+'-c-textured-lit.png'))
+  im=images[0].resize((256,256),Image.Resampling.LANCZOS);sheet([ref,im],['Painting','Round 2 Cycles'],REV/(SLUG+'-c-textured-lit.png'))
   split=ref.copy();split.paste(im.crop((128,0,256,256)),(128,0));fade=Image.blend(ref,im,.5);sheet([ref,im,split,fade],['Painting','3D rest','Half split','50% crossfade'],REV/(SLUG+'-f-restpose-compare.png'))
   crops=[(101,22,149,87),(92,68,149,139),(132,82,188,174)]
   details=[];labels=[]
@@ -100,9 +100,15 @@ def validate():
  for clip,(count,fps,loop) in CLIPS.items():
   c=meta['clips'][clip];assert (c['frames'],c['fps'],c['loop'])==(count,fps,loop);assert len(c['rects'])==count
   images=[]
+  folder=M/'256'/('e-'+clip);render=json.loads((folder/'render.json').read_text())
+  assert render==report['clips'][clip]['render'],'render changed after packing'
+  assert render['source_master_sha256']==sha(M/'spearman.blend'),'stale master'
+  assert render['blend_sha256']==sha(M/'clips'/clip/(clip+'.blend')),'stale clip'
+  assert render['grade_sha256']==sha(M/'grade.json'),'stale grade'
   for i,r in enumerate(c['rects']):
    assert 0<=r['ox']<160 and 0<=r['oy']<160 and r['ox']+r['w']<=160 and r['oy']+r['h']<=160
-   im=Image.open(M/'256'/('e-'+clip)/f'{i:02}.png').convert('RGBA');images.append(im)
+   path=folder/f'{i:02}.png';assert sha(path)==report['clips'][clip]['sha256'][i],'frame changed after packing'
+   im=Image.open(path).convert('RGBA');images.append(im)
    assert r['x']==i*160 and r['y']==c['row']*160
    restored=Image.new('RGBA',(160,160));restored.paste(atlas.crop((r['x'],r['y'],r['x']+r['w'],r['y']+r['h'])),(r['ox'],r['oy']))
    expected=im.resize((160,160),Image.Resampling.LANCZOS)
@@ -114,7 +120,7 @@ def validate():
   differences=[ImageChops.difference(images[i],images[i+1]).convert('RGB').getbbox() is not None for i in range(count-1)];assert any(differences),clip+' no movement'
   if clip=='death':assert images[-1].tobytes()==images[-2].tobytes(),'death must hold'
   checks[clip]={'frames':count,'motion':True,'inside_canvas':True,'trim_offsets':True}
- result={'status':'passed','checks':checks,'bytes':report['bytes'],'quality':report['quality'],'limits':'CPU candidate, not art approval; shader projection is view-dependent.'};(REV/(SLUG+'-validation.json')).write_text(json.dumps(result,indent=2));print(json.dumps(result,indent=2))
+ result={'status':'passed','checks':checks,'bytes':report['bytes'],'quality':report['quality'],'limits':'Technical validation only; not art approval. Frozen projection is view-dependent.'};(REV/(SLUG+'-validation.json')).write_text(json.dumps(result,indent=2));print(json.dumps(result,indent=2))
 if __name__=='__main__':
  mode=sys.argv[1]
  if mode=='prepare':prepare()
@@ -125,3 +131,6 @@ if __name__=='__main__':
    stop.unlink();raise SystemExit('Stopped after completed review stage for a master revision')
  elif mode=='pack':pack()
  elif mode=='validate':validate()
+ elif mode in {'video','verify-gpu'}:
+  import handoff
+  handoff.video() if mode=='video' else handoff.verify_gpu()

@@ -19,7 +19,7 @@ if not sc.get('hoplite_attack_slide_043') and sc.get('attack_slide',.25)<.43:
   sc.frame_set(f);t=max(0,min(1,(f-25)/max(1,sc.frame_end-25)))
   raised=[0,.35,.90,1,1,1,1,.85,.30,0][min(9,round(t*9))]
   shaft=bpy.data.objects['Ash dory shaft'];pts=shaft.data.splines[0].points
-  direction=(shaft.matrix_world@Vector(pts[-1].co[:3])-shaft.matrix_world@Vector(pts[0].co[:3])).normalized()
+  direction=(shaft.matrix_world @ Vector(pts[-1].co[:3])-shaft.matrix_world @ Vector(pts[0].co[:3])).normalized()
   for o in objects:
    mat=o.matrix_world.copy();mat.translation+=direction*.18*raised;o.matrix_world=mat;o.keyframe_insert('location',frame=f)
  sc['hoplite_attack_slide_043']=True
