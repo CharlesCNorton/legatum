@@ -7,13 +7,13 @@ CLIPS={'idle':(8,10),'move':(8,12),'attack':(10,14),'hit':(4,12),'death':(10,10)
 for node in ast.parse(Path('tools/art/anim3d/scene.py').read_text()).body:
     if isinstance(node,ast.FunctionDef) and node.name in {'aim_bone','limb'}:exec(compile(ast.Module(body=[node],type_ignores=[]),'<infantry IK>','exec'))
 def turn(name,axis,a):
-    p=rig.pose.bones[name];m=p.matrix.copy();pos=m.translation.copy();m=Matrix.Rotation(a,4,axis)@m;m.translation=pos;p.matrix=m;bpy.context.view_layer.update()
+    p=rig.pose.bones[name];m=p.matrix.copy();pos=m.translation.copy();m=Matrix.Rotation(a,4,axis) @ m;m.translation=pos;p.matrix=m;bpy.context.view_layer.update()
 def contact():
     # Exact evaluated surface bounds prevent floor penetration after collapse.
     dg=bpy.context.evaluated_depsgraph_get();pts=[]
     for o in bpy.context.scene.objects:
         if o.type!='MESH' or o.name=='GEO-stationary cream stone' or o.parent==weapon or o.parent==shield:continue
-        ev=o.evaluated_get(dg);me=ev.to_mesh();pts.extend(ev.matrix_world@v.co for v in me.vertices);ev.to_mesh_clear()
+        ev=o.evaluated_get(dg);me=ev.to_mesh();pts.extend(ev.matrix_world @ v.co for v in me.vertices);ev.to_mesh_clear()
     return min(p.z for p in pts),min(p.x for p in pts),max(p.x for p in pts)
 for clip,(count,fps) in CLIPS.items():
     if os.environ.get('CLIP') and os.environ['CLIP']!=clip:continue
@@ -36,17 +36,17 @@ for clip,(count,fps) in CLIPS.items():
             weapon.location.z+=.10+.009*math.cos(4*math.pi*phase)
             shield.location.z+=.09+.008*math.cos(4*math.pi*phase)
             shield.rotation_euler.y=.025*wave
-            limb('upperarm_l','lowerarm_l',(.455,-.25,1.49),(.48,.01,1.5))
-            limb('upperarm_r','lowerarm_r',tuple(rig.matrix_world.inverted()@(weapon.location+Vector((.05,.035,.04)))),(-.35,-.1,1.3))
+            limb('upperarm_l','lowerarm_l',(.455,-.25,1.49),(.30,-.80,1.44))
+            limb('upperarm_r','lowerarm_r',tuple(rig.matrix_world.inverted() @ (weapon.location+Vector((.05,.035,.04)))),(-.29,-.80,1.18))
         elif clip=='attack':
             lift=[0,.35,.80,1,1,.98,.95,.65,.25,0][i];kick=[0,0,0,0,1,.35,0,0,0,0][i]
             direction=Vector((.85,-.52,.13)).normalized();q=Vector((0,0,-1)).rotation_difference(direction);weapon.rotation_quaternion=Quaternion().slerp(q,lift)
             weapon.location=wloc+Vector((.10,-.08,.36))*lift+Vector((-.025,.04,-.01))*kick
             # Hands follow the same rigid stock transform; support reaches onto the forestock.
-            right=weapon.location+weapon.rotation_quaternion@Vector((.05,.035,.04))
-            leftrest=Vector((.455,-.25,1.40));lefttarget=rig.matrix_world.inverted()@(weapon.location+weapon.rotation_quaternion@Vector((.05,.025,-.40)))
-            limb('upperarm_r','lowerarm_r',tuple(rig.matrix_world.inverted()@right),(-.39,-.08,1.35))
-            limb('upperarm_l','lowerarm_l',tuple(leftrest.lerp(lefttarget,lift)),(.37,-.2,1.35))
+            right=weapon.location+weapon.rotation_quaternion @ Vector((.05,.035,.04))
+            leftrest=Vector((.455,-.25,1.40));lefttarget=rig.matrix_world.inverted() @ (weapon.location+weapon.rotation_quaternion @ Vector((.05,.025,-.40)))
+            limb('upperarm_r','lowerarm_r',tuple(rig.matrix_world.inverted() @ right),(-.29,-.80,1.18))
+            limb('upperarm_l','lowerarm_l',tuple(leftrest.lerp(lefttarget,lift)),(.30,-.80,1.44))
             turn('head','Z',.12*lift);turn('spine_03','X',-.04*kick)
             # Released bolt visibility is keyed, never hidden by zero scale.
             bolt=bpy.data.objects['GEO-loaded bolt'];bolt.hide_render=i in [4,5,6];bolt.keyframe_insert('hide_render',frame=f)
@@ -57,17 +57,32 @@ for clip,(count,fps) in CLIPS.items():
             # Fold knees, roll onto the side and let the released crossbow settle in front.
             turn('thigh_l','X',-.65*a);turn('calf_l','X',1.15*a);turn('thigh_r','X',-.40*a);turn('calf_r','X',.85*a);turn('spine_02','X',.25*a);turn('head','X',.17*a)
             rig.rotation_euler=(.12*a,1.47*a,.12*a);rig.location=rigloc+Vector((-.7*a,.10*a,-.06*a));bpy.context.view_layer.update()
-            low,x0,x1=contact();rig.location.z+=max(0,.085-low);rig.location.x-=(x0+x1)*.6*a
-            release=min(1,i/5);weapon.rotation_quaternion=Quaternion().slerp(Vector((0,0,-1)).rotation_difference(Vector((1,0,0))),release);weapon.location=wloc.lerp(Vector((-.58,-.36,.19)),release)
+            base=bpy.data.objects['GEO-stationary cream stone']
+            floor=max((base.matrix_world @ Vector(corner)).z for corner in base.bound_box)+.004
+            low,x0,x1=contact();rig.location.z+=max(0,floor-low);rig.location.x-=(x0+x1)*.6*a
+            release=min(1,i/5)
+            # Roll around the fallen stock axis as it lands: the prod must lie
+            # flat rather than turn vertical and stab through the stone.
+            flat=Quaternion((1,0,0),math.pi/2) @ Vector((0,0,-1)).rotation_difference(Vector((1,0,0)))
+            weapon.rotation_quaternion=Quaternion().slerp(flat,release)
+            weapon.location=wloc.lerp(Vector((-.58,-.36,.19)),release)
+            bpy.context.view_layer.update()
+            dg=bpy.context.evaluated_depsgraph_get();lowest=float('inf')
+            for part in weapon.children:
+                if part.type!='MESH':continue
+                ev=part.evaluated_get(dg);me=ev.to_mesh()
+                lowest=min(lowest,min((ev.matrix_world @ v.co).z for v in me.vertices))
+                ev.to_mesh_clear()
+            weapon.location.z+=max(0,floor-lowest)
         if clip in ['idle','hit']:
-            grip=weapon.location+weapon.rotation_quaternion@Vector((.05,.035,.04))
-            limb('upperarm_r','lowerarm_r',tuple(rig.matrix_world.inverted()@grip),(-.39,-.04,1.28))
+            grip=weapon.location+weapon.rotation_quaternion @ Vector((.05,.035,.04))
+            limb('upperarm_r','lowerarm_r',tuple(rig.matrix_world.inverted() @ grip),(-.29,-.80,1.18))
         bowstring=bpy.data.objects['GEO-taut bowstring']
         if bowstring.data.shape_keys:
             draw=bowstring.data.shape_keys.key_blocks['Draw'];draw.value=([0,.3,.8,1,0,0,.2,.4,.2,0][i] if clip=='attack' else 0);draw.keyframe_insert('value',frame=f)
         if clip=='attack':
-            aim_bone('hand_r',weapon.rotation_quaternion@Vector((0,0,-1)))
-            aim_bone('hand_l',Vector((0,-.2,-1)).lerp(weapon.rotation_quaternion@Vector((0,0,-1)),lift))
+            aim_bone('hand_r',weapon.rotation_quaternion @ Vector((0,0,-1)))
+            aim_bone('hand_l',Vector((0,-.2,-1)).lerp(weapon.rotation_quaternion @ Vector((0,0,-1)),lift))
         bpy.context.view_layer.update()
         shield.keyframe_insert('location',frame=f);shield.keyframe_insert('rotation_euler',frame=f)
         for p in rig.pose.bones:

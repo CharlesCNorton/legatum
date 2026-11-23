@@ -158,3 +158,61 @@ interpret the new atlas as the old fixed grid. Frame counts are 8/8/10/4/10,
 quality is selected only from 90/85/80/75 and delivery refuses files over 200,000
 bytes. Source and render hashes prevent packing stale clips. This is an art
 candidate; runtime integration and visual approval remain separate.
+
+### Crossbowman round 2: finished surfaces and delivery evidence
+
+Read the spearman and field-cannon chapters through round eight before resuming.
+The interrupted round-one evidence was CPU256; no GPU delivery was present.
+Preserve prior review images outside git before rebuilding. Both elbow poles now
+point forward so the arms fit the painting's lowered right elbow and supported
+left forearm. Animation uses the same poles at clip entry. The real steel prod,
+string and stirrup sit lower; wider leather shoes and a softer cream stone bevel
+improve the token silhouette. Hand shape and shoe/base registration still require
+visual judgment; these edits do not establish an exact viewpoint or art PASS.
+
+Finish rigid Solidify/Bevel/Subdivision before recording projection UVs. Sampling
+an unfinished cage can move painted features on the final rendered surface.
+Native weighted anatomy/clothing retain their armature deformation. Projection
+is frozen on complete three-dimensional geometry, with facing/occlusion/alpha
+weights; no cutout, opacity silhouette or per-frame reprojection is used. The
+original generated linen remains the unseen cloth fill. A 97% camera-only painted
+pigment branch preserves the source's already-painted illumination; non-camera
+rays retain the physical BSDF and real shadows. Standard/None is intentional for
+this illumination-bearing texture, not a general photographic preset. The soft
+warm key/fill ratio is 5:1 with a restrained cool rim. One automatic rest RGB grade
+still applies to every frame. The stone has fine physical grain and a camera-only
+pigment contribution; no painted feet or static figure shadow is projected on it.
+
+`ROUND=2 tools/art/anim3d/units/crossbowman/gpu.sh` is the no-argument host pass.
+It resolves its checkout, writes its own round transcript and running/failure/
+completion status, verifies Metal before rebuilding, then rebuilds geometry,
+bakes, actions and all eight review stages. `check_final.py` requires actual
+current GPU512/64+ renders and derived256 masters before delivery. A completed
+receipt includes atlas, animation audit and probed MP4 evidence, with visual_pass
+explicitly false. The sandbox's CPU images cannot satisfy that final-master gate.
+
+The trimmed atlas now reduces premultiplied RGBA with bicubic sampling, keeps
+lossless 8-bit alpha, includes a transparent gutter and shares exact duplicate
+frame rectangles without changing any clip length. All five logical clip rows,
+160px canvases, offsets, anchor and quality>=75 / 200,000-byte cap remain. The
+validator independently checks model/clip/frame/metadata hashes, reconstructed
+alpha and offsets, and identical decoded terminal-death pixels. Four synthetic
+regressions cover intact delivery, modified masters, modified clip sources and
+incorrect trim offsets. `post.py video` decodes the delivered rectangles and
+ffprobe verifies H.264/yuv420p, 1600x348, 240 frames and eight seconds. Neither
+successful validation nor the GPU receipt writes the visual PASS marker.
+
+Death review caught the rotated crossbow prod extending below the disc. A fallen
+stock needs an additional roll about its long axis so the prod lies flat. Use the
+actual transformed base top rather than the old fixed .085m floor, and measure
+the evaluated weapon vertices before settling it. The death audit independently
+checks weapon clearance at every sample. Copy held terminal PNGs after verifying
+identical transforms, and reuse their atlas rectangle so decoded RGB is held too.
+
+Round-two CPU256/8 evidence retains all 40 frames at **Q90, 178,988 bytes**.
+The eight-second decoded-atlas MP4 is H.264/yuv420p, 1600x348, 240 frames.
+At 256px sleeve quilting, helmet/face pigment and elbow pose are closer; at 64px
+identity reads, but silhouette IoU remains about .84 at both sizes. Raised sleeve
+joints, fingers/shoes, base edge and suspended-looking death limbs remain visible
+gaps. **No visual PASS.** Fresh GPU512 masters and the lead's art verdict remain
+outstanding; the Chromium art gate is blocked by sandbox Mach-port permissions.

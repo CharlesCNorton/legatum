@@ -1,4 +1,4 @@
-# Crossbowman round 1
+# Crossbowman round 2
 
 True 3D candidate built from MPFB anatomy and a 53-bone rig, with solid quilted
 clothing, red cowl, kettle helmet, convex pavise and functioning crossbow geometry.
@@ -31,7 +31,7 @@ hashes are pinned in `inputs.json`; prepare refuses changed inputs.
 The complete host GPU pass is one no-argument command:
 
 ```sh
-ROUND=1 tools/art/anim3d/units/crossbowman/gpu.sh
+ROUND=2 tools/art/anim3d/units/crossbowman/gpu.sh
 ```
 
 It requires Cycles Metal GPU, rebuilds and renders every stage at 512 px, retains
@@ -43,3 +43,9 @@ The atlas is a review candidate. The existing runtime remains untouched. No PASS
 marker should be written until the painting/rest comparison and all five clips
 meet the user's bar. Structural audits do not prove absence of every mesh
 intersection, and histogram matching does not establish painting fidelity.
+
+Round 2 freezes projection on finished rigid surfaces and preserves painted illumination
+with a camera-only pigment branch. The GPU script retains its transcript/status and
+checks GPU512/64+ provenance before delivery. `test_delivery.py` runs four lightweight
+regressions with the isolated Pillow Python. The MP4 is decoded from the trimmed atlas
+and its codec, size, frame count and duration are verified with ffprobe.

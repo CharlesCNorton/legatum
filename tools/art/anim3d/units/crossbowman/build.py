@@ -55,15 +55,15 @@ trousers=garment('GEO-olive wool trousers',lambda v:.16<v.z<1.02,olive,.015)
 boots=garment('GEO-leather boots',lambda v:v.z<.15,leather,.017)
 
 # Pose: upright rather than spearman guard. World points account for rig elevation.
-limb('upperarm_r','lowerarm_r',(-.325,-.20,1.06),(-.39,-.04,1.28))
-limb('upperarm_l','lowerarm_l',(.455,-.25,1.40),(.43,.01,1.49))
+limb('upperarm_r','lowerarm_r',(-.325,-.20,1.06),(-.29,-.80,1.18))
+limb('upperarm_l','lowerarm_l',(.455,-.25,1.40),(.30,-.80,1.44))
 aim_bone('hand_r',(0,0,-1));aim_bone('hand_l',(0,-.25,-1))
 for side in ['r','l']:
     for digit in ['index','middle','ring','pinky']:
         for k in [1,2,3]:
             p=rig.pose.bones[f'{digit}_{k:02d}_{side}'];p.rotation_mode='XYZ';p.rotation_euler.x=.65 if side=='r' else .18
 # Three-quarter head orientation follows the source painting.
-p=rig.pose.bones['head'];m=p.matrix.copy();pivot=m.translation.copy();m=Matrix.Rotation(.65,4,'Z')@m;m.translation=pivot;p.matrix=m;bpy.context.view_layer.update()
+p=rig.pose.bones['head'];m=p.matrix.copy();pivot=m.translation.copy();m=Matrix.Rotation(.65,4,'Z') @ m;m.translation=pivot;p.matrix=m;bpy.context.view_layer.update()
 # Lift head to register painted face; helmet dome is reduced correspondingly.
 p=rig.pose.bones['head'];m=p.matrix.copy();m.translation.z+=.06;p.matrix=m;bpy.context.view_layer.update()
 # Feet slightly apart, stable on the base.
@@ -89,10 +89,10 @@ def sleeve(name,a,b,r0,r1,bone):
 for side in ['l','r']:
     for part in ['upperarm','lowerarm']:
         bone=part+'_'+side;p=rig.pose.bones[bone]
-        sleeve('GEO-quilted '+bone,rig.matrix_world@p.head,rig.matrix_world@p.tail,.077 if part=='upperarm' else .067,.067 if part=='upperarm' else .046,bone)
+        sleeve('GEO-quilted '+bone,rig.matrix_world @ p.head,rig.matrix_world @ p.tail,.077 if part=='upperarm' else .067,.067 if part=='upperarm' else .046,bone)
 for side in ['l','r']:
-    fp=rig.matrix_world@rig.pose.bones['foot_'+side].head
-    shoe=sphere('GEO-rounded leather shoe '+side,(fp.x,fp.y-.065,.145),(.063,.12,.054),leather);attach(shoe,'foot_'+side)
+    fp=rig.matrix_world @ rig.pose.bones['foot_'+side].head
+    shoe=sphere('GEO-rounded leather shoe '+side,(fp.x,fp.y-.065,.145),(.074,.12,.054),leather);attach(shoe,'foot_'+side)
 # Torso/skirt: shaped cloth with broad folds and real thickness, not a body primitive.
 def cloth_rings(name,rings,mat,bone,folds=.004):
     vs=[];fs=[];N=64
@@ -128,7 +128,7 @@ for j in range(J):
 cowl=solid(mesh('GEO-red draped cowl',vs,[tuple(reversed(f)) for f in fs],wool),.008);attach(cowl,'spine_03')
 attach(curve('GEO-cowl stitched hem',vs[-N:]+[vs[-N]],.0025,string),'spine_03')
 # Steel kettle helmet: closed domed bowl, flared brim, rolled rim and rivets.
-hp=rig.matrix_world@((rig.pose.bones['head'].head+rig.pose.bones['head'].tail)*.5)
+hp=rig.matrix_world @ ((rig.pose.bones['head'].head+rig.pose.bones['head'].tail)*.5)
 vs=[];fs=[];N=64;J=20
 for j in range(J+1):
     t=j/J*pi/2
@@ -151,7 +151,7 @@ for i in range(12):
 # Kettle brim slopes across the face like the source painting.
 for ob in list(bpy.context.scene.objects):
     if any(key in ob.name for key in ['kettle helmet','helmet rolled','helmet rivet']):
-        ob.matrix_world=Matrix.Translation(hp)@Matrix.Rotation(-.18,4,'Y')@Matrix.Translation(-hp)@ob.matrix_world
+        ob.matrix_world=Matrix.Translation(hp) @ Matrix.Rotation(-.18,4,'Y') @ Matrix.Translation(-hp) @ ob.matrix_world
 # Real beard surface fitted onto lower face.
 beard=garment('GEO-short beard',lambda v:1.60<v.z<1.69 and v.y<-.045 and abs(v.x)<.075,leather,.004)
 # Diagonal leather strap with open brass buckle, stitching, and hip pouch.
@@ -172,6 +172,10 @@ weaponize(curve('GEO-steel foot stirrup',[(-.31,-.26,.29),(-.325,-.26,.19),(-.22
 weaponize(curve('GEO-loaded bolt',[(-.275,-.30,.97),(-.275,-.30,.39)],.004,wood))
 for z in [.32,.72,1.02]:weaponize(box('GEO-stock steel band',(-.275,-.26,z),(.063,.067,.021),steel))
 for z in [.78,.81,.84,.87]:weaponize(curve('GEO-stock binding', [(-.305,-.30,z),(-.245,-.30,z)],.0025,string))
+# Register lower bow hardware to the painted shins without moving the grip.
+for part in list(weapon.children):
+    if any(key in part.name for key in ['bow prod','bowstring']):part.location.z-=.105
+    elif 'foot stirrup' in part.name:part.location.z-=.035
 weapon.location.x-=.05
 # Side bolt case, leather straps, brass studs.
 case=cloth_rings('GEO-bolt leather case',[(.72,.063,.051),(1.01,.063,.051)],leather,'pelvis',.001)
@@ -202,14 +206,14 @@ for side in [0,N]:
 shieldize(curve('GEO-pavise rear grip',[(.37,-.12,.85),(.37,-.03,.85),(.44,-.03,.85),(.44,-.12,.85)],.012,leather))
 shield.location.z+=.045
 # Cream base is stationary for all poses.
-bpy.ops.mesh.primitive_cylinder_add(vertices=96,radius=.635,depth=.075,location=(.025,0,.0375));base=bpy.context.object;base.name='GEO-stationary cream stone';base.data.materials.append(stone);base.data.materials.append(material('Stone darker cream rim',(.468,.254,.082),0,.88));
+bpy.ops.mesh.primitive_cylinder_add(vertices=96,radius=.635,depth=.075,location=(.025,0,.0375));base=bpy.context.object;base.name='GEO-stationary cream stone';base.data.materials.append(stone);base.data.materials.append(material('Stone darker cream rim',(.59,.36,.15),0,.88));
 for poly in base.data.polygons:poly.material_index=0 if poly.normal.z>.5 else 1
-bevel(base,.012,3)
+bevel(base,.020,5)
 sc=bpy.context.scene;sc.render.engine='CYCLES';sc.cycles.device='CPU';sc.cycles.samples=8;sc.cycles.use_denoising=True
 sc.render.resolution_x=sc.render.resolution_y=256;sc.render.resolution_percentage=100;sc.render.film_transparent=True;sc.render.image_settings.file_format='PNG';sc.render.image_settings.color_mode='RGBA'
-sc.world.color=(.15,.15,.15);sc.view_settings.view_transform='AgX';sc.view_settings.look='AgX - Medium High Contrast';sc.view_settings.exposure=.1
+sc.world.color=(.15,.15,.15);sc.view_settings.view_transform='Standard';sc.view_settings.look='None';sc.view_settings.exposure=0
 bpy.ops.object.camera_add(location=(0,-7,2.90));sc.camera=bpy.context.object;sc.camera.name='CAM-painting';sc.camera.data.type='ORTHO';sc.camera.data.ortho_scale=2.25;sc.camera.rotation_euler=(Vector((0,0,.925))-sc.camera.location).to_track_quat('-Z','Y').to_euler()
-for name,loc,power,size,col in [('Warm key',(-3,-4,6),550,3,(1,.89,.72)),('Soft fill',(3,-3,3),140,4,(.85,.91,1)),('Cool rim',(2,3,4),360,2,(.73,.85,1))]:
+for name,loc,power,size,col in [('Warm key',(-3,-4,7),450,4,(1,.96,.88)),('Soft fill',(3,-3,3),90,4,(.92,.96,1)),('Cool rim',(2,3,4),135,3,(.85,.92,1))]:
     bpy.ops.object.light_add(type='AREA',location=loc);o=bpy.context.object;o.name=name;o.data.energy=power;o.data.size=size;o.data.color=col;o.rotation_euler=(Vector((0,0,1))-o.location).to_track_quat('-Z','Y').to_euler()
 # Compress the figure/base stack around the helmet to match source frame height.
 for root_obj in [rig,weapon,shield,base]:
@@ -225,22 +229,36 @@ for mat in [linen,wool,olive]:
 for mat in [skin,linen,wool,olive,leather,wood,steel,brass,stone]:
     n=mat.node_tree.nodes;l=mat.node_tree.links;s=n.get('Principled BSDF')
     tex=n.new('ShaderNodeTexNoise');tex.inputs['Scale'].default_value=170 if mat in [linen,wool,olive] else 95;tex.inputs['Detail'].default_value=3
-    bump=n.new('ShaderNodeBump');bump.inputs['Strength'].default_value=.18;bump.inputs['Distance'].default_value=.003;l.new(tex.outputs['Fac'],bump.inputs['Height']);l.new(bump.outputs[0],s.inputs['Normal'])
+    bump=n.new('ShaderNodeBump');bump.inputs['Strength'].default_value=.18;bump.inputs['Distance'].default_value=.001 if mat==stone else .003;l.new(tex.outputs['Fac'],bump.inputs['Height']);l.new(bump.outputs[0],s.inputs['Normal'])
     ao=n.new('ShaderNodeAmbientOcclusion');ao.inputs['Distance'].default_value=.08
     mix=n.new('ShaderNodeMixRGB');mix.blend_type='MULTIPLY';mix.inputs[0].default_value=.3;mix.inputs[1].default_value=s.inputs['Base Color'].default_value;
     if s.inputs['Base Color'].is_linked:l.new(s.inputs['Base Color'].links[0].from_socket,mix.inputs[1])
     l.new(ao.outputs['Color'],mix.inputs[2]);l.new(mix.outputs[0],s.inputs['Base Color'])
     if mat in [steel,brass]:
         geo=n.new('ShaderNodeNewGeometry');r=n.new('ShaderNodeMapRange');r.inputs['From Min'].default_value=.35;r.inputs['From Max'].default_value=.6;r.inputs['To Min'].default_value=.65;r.inputs['To Max'].default_value=.23;l.new(geo.outputs['Pointiness'],r.inputs['Value']);l.new(r.outputs[0],s.inputs['Roughness'])
+# Stone retains live shadows, with camera-only cream pigment to open its rim.
+for mat in base.data.materials:
+    n=mat.node_tree.nodes;l=mat.node_tree.links;s=n.get('Principled BSDF')
+    pigment=n.new('ShaderNodeEmission');pigment.inputs['Color'].default_value=s.inputs['Base Color'].default_value
+    camera=n.new('ShaderNodeLightPath');fac=n.new('ShaderNodeMath');fac.operation='MULTIPLY';fac.inputs[1].default_value=.42;l.new(camera.outputs['Is Camera Ray'],fac.inputs[0])
+    mix=n.new('ShaderNodeMixShader');l.new(fac.outputs[0],mix.inputs[0]);l.new(s.outputs[0],mix.inputs[1]);l.new(pigment.outputs[0],mix.inputs[2]);l.new(mix.outputs[0],n.get('Material Output').inputs['Surface'])
 # Freeze visibility in the rest pose, including occlusion by shield and clothing.
 from mathutils.bvhtree import BVHTree
 for ob in list(sc.objects):
     if ob.type=='CURVE':
         bpy.ops.object.select_all(action='DESELECT');ob.select_set(True);bpy.context.view_layer.objects.active=ob;bpy.ops.object.convert(target='MESH')
+# Freeze actual finished rigid surfaces before recording camera UVs. Weighted
+# anatomy and garments retain their native topology and armature deformation.
+for ob in list(sc.objects):
+    if ob.type!='MESH' or any(m.type=='ARMATURE' for m in ob.modifiers):continue
+    bpy.context.view_layer.objects.active=ob
+    for modifier in list(ob.modifiers):
+        if modifier.type in {'SOLIDIFY','BEVEL','SUBSURF'}:
+            bpy.ops.object.modifier_apply(modifier=modifier.name)
 verts=[];faces=[];dg=bpy.context.evaluated_depsgraph_get()
 for ob in sc.objects:
     if ob.type!='MESH':continue
-    ev=ob.evaluated_get(dg);me=ev.to_mesh();off=len(verts);verts.extend(ev.matrix_world@v.co for v in me.vertices);faces.extend(tuple(off+i for i in poly.vertices) for poly in me.polygons);ev.to_mesh_clear()
+    ev=ob.evaluated_get(dg);me=ev.to_mesh();off=len(verts);verts.extend(ev.matrix_world @ v.co for v in me.vertices);faces.extend(tuple(off+i for i in poly.vertices) for poly in me.polygons);ev.to_mesh_clear()
 visibility_bvh=BVHTree.FromPolygons(verts,faces)
 # Fix painting UVs in the posed mesh, disabling topology-changing modifiers for registration.
 painting=bpy.data.images.load(str(A/'painting-aligned.png'));view=(sc.camera.location-Vector((0,0,1))).normalized();records=[]
@@ -254,16 +272,20 @@ for obj in list(sc.objects):
     bpy.context.view_layer.update();ev=obj.evaluated_get(bpy.context.evaluated_depsgraph_get());me=ev.to_mesh()
     uv=obj.data.uv_layers.new(name='Painting fixed UV');att=obj.data.color_attributes.new(name='Painting incidence',type='FLOAT_COLOR',domain='CORNER');coords=[];weights=[]
     for v in me.vertices:
-        q=world_to_camera_view(sc,sc.camera,ev.matrix_world@v.co);coords.append((q.x,q.y));normal=(ev.matrix_world.to_3x3().inverted().transposed()@v.normal).normalized();hit=visibility_bvh.ray_cast(ev.matrix_world@v.co+view*.018,view,20)[0];weights.append(max(0,min(1,normal.dot(view)*2.5)) if hit is None else 0)
+        q=world_to_camera_view(sc,sc.camera,ev.matrix_world @ v.co);coords.append((q.x,q.y));normal=(ev.matrix_world.to_3x3().inverted().transposed() @ v.normal).normalized();hit=visibility_bvh.ray_cast(ev.matrix_world @ v.co+view*.018,view,20)[0];weights.append(max(0,min(1,normal.dot(view)*2.5)) if hit is None else 0)
     assert len(me.vertices)==len(obj.data.vertices),obj.name
     for i,loop in enumerate(obj.data.loops):uv.data[i].uv=coords[loop.vertex_index];att.data[i].color=(weights[loop.vertex_index],)*3+(1,)
     ev.to_mesh_clear()
     for m,on in states:m.show_viewport=on
     for i,old in enumerate(list(obj.data.materials)):
         mat=old.copy();obj.data.materials[i]=mat;n=mat.node_tree.nodes;l=mat.node_tree.links;s=n.get('Principled BSDF');tex=n.new('ShaderNodeTexImage');tex.image=painting;tex.extension='CLIP';u=n.new('ShaderNodeUVMap');u.uv_map=uv.name;l.new(u.outputs[0],tex.inputs[0]);attr=n.new('ShaderNodeVertexColor');attr.layer_name=att.name
-        mult=n.new('ShaderNodeMath');mult.operation='MULTIPLY';l.new(attr.outputs[0],mult.inputs[0]);l.new(tex.outputs['Alpha'],mult.inputs[1]);factor=n.new('ShaderNodeMath');factor.operation='MULTIPLY';factor.inputs[1].default_value=.88;l.new(mult.outputs[0],factor.inputs[0]);mix=n.new('ShaderNodeMixRGB');mix.inputs[1].default_value=s.inputs['Base Color'].default_value;
-        if s.inputs['Base Color'].is_linked:l.new(s.inputs['Base Color'].links[0].from_socket,mix.inputs[1])
-        l.new(tex.outputs['Color'],mix.inputs[2]);l.new(factor.outputs[0],mix.inputs[0]);l.new(mix.outputs[0],s.inputs['Base Color']);l.new(mix.outputs[0],s.inputs['Emission Color']);s.inputs['Emission Strength'].default_value=.18
+        mult=n.new('ShaderNodeMath');mult.operation='MULTIPLY';l.new(attr.outputs[0],mult.inputs[0]);l.new(tex.outputs['Alpha'],mult.inputs[1])
+        # The painting already has illumination. Camera-only pigment preserves
+        # it without turning the character into a lamp for indirect rays.
+        camera=n.new('ShaderNodeLightPath');factor=n.new('ShaderNodeMath');factor.operation='MULTIPLY';l.new(mult.outputs[0],factor.inputs[0]);l.new(camera.outputs['Is Camera Ray'],factor.inputs[1])
+        strength=n.new('ShaderNodeMath');strength.operation='MULTIPLY';strength.inputs[1].default_value=.97;l.new(factor.outputs[0],strength.inputs[0])
+        pigment=n.new('ShaderNodeEmission');pigment.name='Frozen painting pigment';l.new(tex.outputs['Color'],pigment.inputs['Color'])
+        mix=n.new('ShaderNodeMixShader');l.new(strength.outputs[0],mix.inputs[0]);l.new(s.outputs[0],mix.inputs[1]);l.new(pigment.outputs[0],mix.inputs[2]);l.new(mix.outputs[0],n.get('Material Output').inputs['Surface'])
     records.append({'name':obj.name,'vertices':len(obj.data.vertices)})
 bowstring=bpy.data.objects.get('GEO-taut bowstring')
 if bowstring and bowstring.type=='MESH':

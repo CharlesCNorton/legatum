@@ -36,6 +36,10 @@ def fit_grade(rest,manifest,raw_path):
 def grade(im):
     luts=json.loads((M/'grade.json').read_text())['luts'];return Image.merge('RGBA',[im.getchannel(c).point(l) for c,l in zip('RGB',luts)]+[im.getchannel('A')])
 
+def token(im):
+    # Premultiplied bicubic avoids Lanczos alpha ringing without discarding alpha.
+    return im.convert('RGBa').resize((160,160),Image.Resampling.BICUBIC).convert('RGBA')
+
 def review(stage,size):
     folder=M/'renders'/str(size)/stage;manifest=json.loads((folder/'render.json').read_text());raw=[Image.open(folder/f'{i:02d}.png').convert('RGBA') for i in range(manifest['frames'])]
     if stage=='c':
@@ -81,19 +85,22 @@ def pack():
         assert render['source_sha256']==digest(source),'Stale clip render '+name
         assert render['grade_sha256']==grade_hash,'Stale grade '+name
         clipmeta=json.loads((M/'clips'/f'{name}.json').read_text());assert clipmeta['model_sha256']==digest(M/'model.blend'),'Stale clip model '+name
-        frames=[];entries=[];x=0
+        frames=[];entries=[];unique={};x=1
         for i in range(count):
-            im=Image.open(folder/f'{i:02d}.png').convert('RGBA').resize((160,160),Image.Resampling.LANCZOS)
-            # Remove negligible antialiasing alpha, preserving all meaningful silhouette pixels.
-            im.putalpha(im.getchannel('A').point(lambda a:0 if a<4 else a));bb=im.getbbox();assert bb,(name,i)
+            im=token(Image.open(folder/f'{i:02d}.png').convert('RGBA'))
+            bb=im.getbbox();assert bb,(name,i)
             assert bb[0]>0 and bb[1]>0 and bb[2]<160 and bb[3]<160,('clipping',name,i,bb)
-            crop=im.crop(bb);frames.append(crop);entries.append({'x':x,'y':0,'w':crop.width,'h':crop.height,'ox':bb[0],'oy':bb[1]});x+=crop.width+2
-        rows.append((frames,entries,x,max(im.height for im in frames)+2));meta['clips'][name]={'row':row,'frames':count,'fps':fps,'loop':loop,'rects':entries}
+            key=im.tobytes()
+            if key not in unique:
+                crop=im.crop(bb);entry={'x':x,'y':0,'w':crop.width,'h':crop.height,'ox':bb[0],'oy':bb[1]}
+                unique[key]=entry;frames.append((crop,entry));x+=crop.width+2
+            entries.append(unique[key])
+        rows.append((frames,entries,x,max(im.height for im,_ in frames)+2));meta['clips'][name]={'row':row,'frames':count,'fps':fps,'loop':loop,'rects':entries}
         provenance[name]={'render':render,'frames':[digest(folder/f'{i:02d}.png') for i in range(count)]}
     grade_info=json.loads((M/'grade.json').read_text());assert grade_info['model_sha256']==digest(M/'model.blend'),'Stale rest grade'
     width=max(r[2] for r in rows);height=sum(r[3] for r in rows);atlas=Image.new('RGBA',(width,height));y=0
     for frames,entries,_,h in rows:
-        for im,e in zip(frames,entries):e['y']=y;atlas.alpha_composite(im,(e['x'],y))
+        for im,e in frames:e['y']=y+1;atlas.paste(im,(e['x'],y+1))
         y+=h
     for quality in [90,85,80,75]:
         buf=io.BytesIO();atlas.save(buf,format='WEBP',quality=quality,method=6)
@@ -101,7 +108,7 @@ def pack():
     else:raise RuntimeError('Atlas exceeds 200 KB at quality 75; refusing degraded delivery')
     meta.update({'atlas':{'w':width,'h':height},'quality':quality})
     (atlas_dir/f'{SLUG}.webp').write_bytes(buf.getvalue());(atlas_dir/f'{SLUG}.json').write_text(json.dumps(meta,indent=2)+'\n')
-    (M/'pack.json').write_text(json.dumps({'bytes':len(buf.getvalue()),'quality':quality,'clips':provenance,'atlas_sha256':digest(atlas_dir/f'{SLUG}.webp')},indent=2))
+    (M/'pack.json').write_text(json.dumps({'bytes':len(buf.getvalue()),'quality':quality,'clips':provenance,'atlas_sha256':digest(atlas_dir/f'{SLUG}.webp'),'metadata_sha256':digest(atlas_dir/f'{SLUG}.json'),'model_sha256':digest(M/'model.blend'),'grade_sha256':grade_hash},indent=2))
     validate();log(f'Packed 40 frames, trimmed 160px cells, WebP quality {quality}, {len(buf.getvalue())} bytes.')
 
 def restored(atlas,c,i):
@@ -109,15 +116,25 @@ def restored(atlas,c,i):
 
 def validate():
     p=Path(f'app/src/assets/units/anim/{SLUG}.webp');meta=json.loads(p.with_suffix('.json').read_text());atlas=Image.open(p).convert('RGBA');assert p.stat().st_size<=200000;assert meta['quality']>=75;assert atlas.size==(meta['atlas']['w'],meta['atlas']['h']);assert atlas.getchannel('A').getextrema()==(0,255),'Transparency missing';assert meta['frame']=={'w':160,'h':160,'ax':80,'ay':140}
+    receipt=json.loads((M/'pack.json').read_text())
+    assert receipt['atlas_sha256']==digest(p) and receipt['metadata_sha256']==digest(p.with_suffix('.json')),'Changed delivery'
+    assert receipt['model_sha256']==digest(M/'model.blend') and receipt['grade_sha256']==digest(M/'grade.json'),'Stale delivery'
     for name,(count,fps,loop) in CLIPS.items():
         c=meta['clips'][name];assert c['frames']==count and len(c['rects'])==count and c['fps']==fps and c['loop']==loop
         for e in c['rects']:
             assert 0<=e['ox']<160 and 0<=e['oy']<160 and e['ox']+e['w']<=160 and e['oy']+e['h']<=160
             assert 0<=e['x'] and 0<=e['y'] and e['w']>0 and e['h']>0 and e['x']+e['w']<=atlas.width and e['y']+e['h']<=atlas.height
         frames=[restored(atlas,c,i) for i in range(count)];assert len({im.tobytes() for im in frames})>1,'No motion '+name
+        folder=M/'frames/256'/('e-'+name)
+        assert receipt['clips'][name]['render']['source_sha256']==digest(M/'clips'/f'{name}.blend'),'Changed clip '+name
+        for i,decoded in enumerate(frames):
+            source=folder/f'{i:02d}.png'
+            assert receipt['clips'][name]['frames'][i]==digest(source),'Changed master '+name
+            assert decoded.getchannel('A').tobytes()==token(Image.open(source).convert('RGBA')).getchannel('A').tobytes(),('Changed alpha/offset',name,i)
         if name=='death':
             # Compare raw settled frames, avoiding lossy tile encoding differences.
             a=Image.open(M/'frames/256/e-death/08.png');b=Image.open(M/'frames/256/e-death/09.png');assert a.tobytes()==b.tobytes(),'Death not held'
+            assert frames[-1].tobytes()==frames[-2].tobytes(),'Decoded death not held'
     report={'status':'PASS technical only','frames':40,'bytes':p.stat().st_size,'quality':meta['quality'],'trim_offsets':True,'death_held':True}
     (M/'validation.json').write_text(json.dumps(report,indent=2));print(json.dumps(report))
 
@@ -131,7 +148,11 @@ def video():
                 canvas.alpha_composite(frames[n][i],(320*j,28));d.text((320*j+8,8),n,fill='black')
             canvas.convert('RGB').save(f'{temp}/{t:04d}.png')
         subprocess.run(['ffmpeg','-y','-loglevel','error','-framerate','30','-i',f'{temp}/%04d.png','-c:v','libx264','-threads','2','-pix_fmt','yuv420p','-crf','20','-movflags','+faststart',str(out)],check=True)
-    log('Wrote 8 second five-clip H.264 yuv420p review '+out.name);print(out)
+    probe=json.loads(subprocess.check_output(['ffprobe','-v','error','-count_frames','-show_streams','-of','json',str(out)]))['streams'][0]
+    assert (probe['codec_name'],probe['pix_fmt'],probe['width'],probe['height'],int(probe['nb_read_frames']))==('h264','yuv420p',1600,348,240)
+    assert abs(float(probe['duration'])-8)<.01
+    (M/'video-validation.json').write_text(json.dumps({'path':str(out),'sha256':digest(out),'codec':'h264','pixel_format':'yuv420p','width':1600,'height':348,'frames':240,'duration':8},indent=2))
+    log('Verified 8 second five-clip H.264 yuv420p review '+out.name);print(out)
 
 if __name__=='__main__':
     cmd=sys.argv[1]
