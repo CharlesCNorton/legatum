@@ -117,3 +117,36 @@ Published e-death review: CPU 256 px, 8 samples; fixed rest-derived grade.
 Published e-move review: CPU 256 px, 8 samples; fixed rest-derived grade.
 Published e-death review: CPU 256 px, 8 samples; fixed rest-derived grade.
 Published c review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Completed build stage.
+Completed refine stage.
+Completed texture stage.
+Completed bake stage.
+Completed animate stage.
+Published b-plain geometry checkpoint.
+Published c review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Published d review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Published e-idle review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Published e-move review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Published e-attack review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Published e-hit review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Published e-death review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Published actual top/front boot cycle; contact/direction measurements in feet.json; diagnostic, not gait approval.
+Driver round2 iteration: object-ID render proved trousers included MPFB fingers/palms; replaced height-only garment selection with arm/hand vertex-group exclusions. Refitted right palm/finger bind together, recovered projection at grazing surfaces, applied painting grain to actual stone rim and added generated skin/hair/leather hidden fills.
+Open Quaternius Crouch_Idle_Loop/Crouch_Fwd_Loop/Hit_Chest/Death01 now drive world-space reference-pose deltas; axe attack stays authored. First unrestricted gait lifted the kneeling figure out of frame and was rejected. Kneeling contact constraints now preserve support while captured lead-foot motion supplies the shuffle; no post-retarget foot yaw patch. Death revealed the rigid cape holding anatomy 23cm above stone; added contact-driven cloth shape folds, not a simulated cloth claim.
+Published b-plain geometry checkpoint.
+Published c review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Published d review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Published e-idle review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Published e-move review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Published e-attack review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Published e-hit review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Published e-death review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Published actual top/front boot cycle; contact/direction measurements in feet.json; diagnostic, not gait approval.
+Published five-clip, 2x, cream-background H.264 review: barbarian-scout-round2.mp4
+Published e-hit review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Published e-death review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Packed 40 trimmed 160 px frames, WebP quality 80, 180680 bytes.
+Published five-clip, 2x, cream-background H.264 review: barbarian-scout-round2.mp4
+Published e-death review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Packed 40 trimmed 160 px frames, WebP quality 80, 180678 bytes.
+Published five-clip, 2x, cream-background H.264 review: barbarian-scout-round2.mp4
