@@ -175,3 +175,7 @@
 - Emitted tank-d-rig-poses.png from actual d renders; visual review pending.
 - Emitted tank-e-idle-strip.png from actual e-idle renders; visual review pending.
 - Emitted tank-e-move-strip.png from actual e-move renders; visual review pending.
+- Emitted tank-e-attack-strip.png from actual e-attack renders; visual review pending.
+- Emitted tank-e-hit-strip.png from actual e-hit renders; visual review pending.
+- Emitted tank-e-death-strip.png from actual e-death renders; visual review pending.
+- Emitted tank-g-feet-check.png: actual top/front geometry renders of all eight move samples.
