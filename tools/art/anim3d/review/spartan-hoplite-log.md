@@ -125,3 +125,4 @@ Baked clip idle
 Baked clip move
 Baked clip attack
 Baked clip hit
+Baked clip death
