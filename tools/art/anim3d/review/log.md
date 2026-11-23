@@ -6,3 +6,4 @@
 - CMU 77_02 standing and 02_01 walk downloaded with conversion licence; first hand-keyed attack and real cloth bake saved. Retarget parser fixed its HIERARCHY header handling.
 - Hunyuan3D mini skipped: sandbox has no Metal/MPS, so the requested sub-20-minute Apple GPU path cannot be tested here; CPU generation would exceed the light local-work constraint.
 - nice -n 10 is invoked as requested, but macOS sandbox denies setpriority; Blender thread limit remains four. Thumbnail cache writes outside resources are denied and nonfatal.
+- Read lead FEEDBACK.md: Sam says direction is right; priority is premium surface richness. Reworking explicit muscle cuirass, heavier anatomy, iron spear fittings, cream stone, larger framing and baked AO/curvature wear. Existing e-strips are interim, not approval-ready.
