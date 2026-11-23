@@ -36,3 +36,8 @@
 - Emitted main-battle-tank-e-hit-strip.png from actual e-hit renders; visual review pending.
 - Emitted main-battle-tank-e-death-strip.png from actual e-death renders; visual review pending.
 - Emitted main-battle-tank-g-feet-check.png from actual g renders; visual review pending.
+- Final CPU round-one checks: all 40 frames rendered at 256px; 3 belt tests, geometry/motion/contact audit, trimmed reconstruction and held-death validation passed. Atlas Q90, 176488 bytes, 1375x403, logical 160px.
+- Movie verified and decoded: main-battle-tank-round1-cpu.mp4, H.264/yuv420p, 1600x348, 240 frames, 8 seconds. Rest/detail/contact/attack/death and decoded movie samples visually inspected.
+- GPU handoff exercised: stopped explicitly at missing Metal device before changing render output. Actual 512px renders remain pending lead GPU pass. Command: ROUND=1 tools/art/anim3d/units/main-battle-tank/gpu.sh.
+- Verdict: same identity at 64px; still visibly different at 256px, especially cupola/MG, barrel sleeve, drum/track contours, rotating painted light and grainy preview smoke. No PASS marker. Rest alpha IoU .9091 and RGB MAE 10.02 are diagnostics only.
+- Commit attempted; sandbox denied .git/worktrees/lane-16/index.lock. Changes remain uncommitted for the runner, with the requested co-author trailer recorded in the handoff. No push or PR.

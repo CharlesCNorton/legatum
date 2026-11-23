@@ -66,3 +66,4 @@ Round 2 visual verdict: improved contour and painted linen but NO PASS. At256 pl
 Final code checks: 16 unit Python files parse; render.sh and executable gpu.sh pass bash -n; git diff --check passed; current-file hygiene scan 21 files/0 findings. Baseline public-claims passed; browser art gate remains blocked by Node renderer failure. Git add/commit both denied creating .git/worktrees/lane-12/index.lock; runner must commit with requested co-author (message saved tmp/spartan-round2-commit.txt). No push, PR, upload or PASS.
 Baked clip idle
 Baked clip move
+Baked clip attack

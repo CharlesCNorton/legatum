@@ -29,3 +29,4 @@
 - Preserved prior editable masters, frames, grade, atlas receipts and reviews under masters/fighter/round1-preserved before rebuilding. Prior manifests are CPU, not verified GPU evidence.
 - Rendered b: 256px, CYCLES; review published.
 - Rendered c: 256px, CYCLES; review published.
+- Rendered c: 256px, CYCLES; review published.
