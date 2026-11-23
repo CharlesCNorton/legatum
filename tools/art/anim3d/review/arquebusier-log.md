@@ -239,3 +239,10 @@
 - Final visual verdict: stock projection and foot binding improved; at 256px the painted cloth/face/wood are richer, but the morion still has an undersized/overbright swept brim, the outside stocking is too red, bent cloth exposes seams, and the broad shoe/sole shapes and firing shoulder remain conspicuous. The captured fall is articulated and within frame but still needs polish. At 64px the same unit reads clearly; helmet/leg silhouettes still differ from the painting. NOT PASS; no marker written.
 - GPU handoff: ROUND=2 tools/art/anim3d/units/arquebusier/gpu.sh, no arguments, all stages plus new GPU512/256 foot views, provenance/geometry/atlas validation and round2 MP4. Metal unavailable in this sandbox; new GPU result remains pending.
 - Commit attempted with required Co-Authored-By trailer; sandbox denied .git/worktrees/lane-20/index.lock. Changes remain uncommitted for the runner; prepared message in masters/arquebusier/commit-message-r2.txt. origin/master is already an ancestor of HEAD. No push, PR or master merge. Unit-specific feedback file still absent.
+- Retargeted CC0 and saved idle action (8 output frames).
+- Retargeted CC0 and saved move action (8 output frames).
+- Authored and saved attack action (10 output frames).
+- Retargeted CC0 and saved hit action (4 output frames).
+- Retargeted CC0 and saved death action (10 output frames).
+- Posted b-plain review (GPU, 512 px).
+- Posted c-textured-lit review (GPU, 512 px).
