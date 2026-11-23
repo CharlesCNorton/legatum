@@ -288,3 +288,93 @@ Published c-textured-lit review immediately; source CYCLES/CPU, 512px.
 Finished eight actual AO/curvature bake pairs and frozen-camera painting UVs with incidence blending into generated back-surface fills.
 Rendered c: 1 frames, 512px, CYCLES/CPU.
 Published c-textured-lit review immediately; source CYCLES/CPU, 512px.
+Saved idle: 8 frames at 10 fps; saved editable rig action and equipment attachments.
+Saved move: 8 frames at 12 fps; saved editable rig action and equipment attachments.
+Saved attack: 10 frames at 14 fps; saved editable rig action and equipment attachments.
+Saved hit: 4 frames at 12 fps; saved editable rig action and equipment attachments.
+Saved death: 10 frames at 10 fps; saved editable rig action and equipment attachments.
+Structural audit passed: genuine weighted anatomy, 53 bones, fixed projection UVs, stationary base and sane scales across every clip sample.
+Rendered b: 1 frames, 512px, CYCLES/CPU.
+Published b-plain review immediately; source CYCLES/CPU, 512px.
+Rendered c-details: 1 frames, 512px, CYCLES/CPU.
+Published c-details review immediately; source CYCLES/CPU, 512px.
+Rendered d: 4 frames, 512px, CYCLES/CPU.
+Published d-rig-poses review immediately; source CYCLES/CPU, 512px.
+Rendered e-idle: 8 frames, 512px, CYCLES/CPU.
+Published e-idle-strip review immediately; source CYCLES/CPU, 512px.
+Rendered e-move: 8 frames, 512px, CYCLES/CPU.
+Published e-move-strip review immediately; source CYCLES/CPU, 512px.
+Rendered e-attack: 10 frames, 512px, CYCLES/CPU.
+Published e-attack-strip review immediately; source CYCLES/CPU, 512px.
+Rendered e-hit: 4 frames, 512px, CYCLES/CPU.
+Published e-hit-strip review immediately; source CYCLES/CPU, 512px.
+Rendered e-death: 10 frames, 512px, CYCLES/CPU.
+Published e-death-strip review immediately; source CYCLES/CPU, 512px.
+Built MPFB Medjay anatomy, folded linen, convex hide shield, bronze spear, feather, camera and cream disc; saved plain master.
+Finished eight actual AO/curvature bake pairs and frozen-camera painting UVs with incidence blending into generated back-surface fills.
+Saved idle: 8 frames at 10 fps; saved editable rig action and equipment attachments.
+Saved move: 8 frames at 12 fps; saved editable rig action and equipment attachments.
+Saved attack: 10 frames at 14 fps; saved editable rig action and equipment attachments.
+Saved hit: 4 frames at 12 fps; saved editable rig action and equipment attachments.
+Saved death: 10 frames at 10 fps; saved editable rig action and equipment attachments.
+Structural audit passed: genuine weighted anatomy, 53 bones, fixed projection UVs, stationary base and sane scales across every clip sample.
+Rendered b: 1 frames, 512px, CYCLES/CPU.
+Published b-plain review immediately; source CYCLES/CPU, 512px.
+Rendered c: 1 frames, 512px, CYCLES/CPU.
+Published c-textured-lit review immediately; source CYCLES/CPU, 512px.
+Rendered c-details: 1 frames, 512px, CYCLES/CPU.
+Published c-details review immediately; source CYCLES/CPU, 512px.
+Rendered d: 4 frames, 512px, CYCLES/CPU.
+Published d-rig-poses review immediately; source CYCLES/CPU, 512px.
+Driver round 2 geometry: finished-surface calf envelopes now exclude hidden MPFB helpers and split alpha into connected runs, preventing the spear silhouette from enlarging calves. Inverse-skin fitting preserves full depth/native weights; fitted neck/shoulder wedge, solid reverse shield straps, thick folded linen, source-painted unobstructed lower stone rim with live top AO/grain. Painting camera and existing generated fills retained; frozen histogram grade regenerated.
+Driver round 2 motion: Quaternius UAL Standard CC0 Idle_Loop/Walk_Loop/Hit_Chest/Death01 retargeted through calibrated Blender constraints with full bone rolls, open-idle carrying-arm layer, root stance and evaluated vertical support; no post-retarget foot rotations. Front/top feet sheet inspected. Attack remains authored. Foot orientation and exact loop seam checks added to audit; this is not a full collision/contact certificate.
+Static gate attempt against prior HEAD: public-claims passed; hygiene falsely interpreted compact Python matrix multiplication as email addresses (all unit operators now spaced, AST equivalence checked); art gate renderer exited nonzero. No engine/rules/runtime changes. Final source-sealed CPU rebuild underway after formatting.
+Rendered e-idle: 8 frames, 512px, CYCLES/CPU.
+Published e-idle-strip review immediately; source CYCLES/CPU, 512px.
+Rendered e-move: 8 frames, 512px, CYCLES/CPU.
+Published e-move-strip review immediately; source CYCLES/CPU, 512px.
+Rendered e-attack: 10 frames, 512px, CYCLES/CPU.
+Published e-attack-strip review immediately; source CYCLES/CPU, 512px.
+Rendered e-hit: 4 frames, 512px, CYCLES/CPU.
+Published e-hit-strip review immediately; source CYCLES/CPU, 512px.
+Rendered e-death: 10 frames, 512px, CYCLES/CPU.
+Published e-death-strip review immediately; source CYCLES/CPU, 512px.
+Packed 40 trimmed 160px frames at quality 90: 175222 bytes.
+Validation passed: 40 frames, motion in five clips, held death, transparent trimmed geometry, >=75 quality and <=200 KB. Art parity remains a visual judgment.
+Validation passed: 40 frames, motion in five clips, held death, transparent trimmed geometry, >=75 quality and <=200 KB. Art parity remains a visual judgment.
+Encoded medjay-round2.mp4: all five clips, 1600x348, H.264 yuv420p, 240 frames / 8 seconds.
+Finished eight actual AO/curvature bake pairs and frozen-camera painting UVs with incidence blending into generated back-surface fills.
+Saved idle: 8 frames at 10 fps; saved editable rig action and equipment attachments.
+Saved move: 8 frames at 12 fps; saved editable rig action and equipment attachments.
+Saved attack: 10 frames at 14 fps; saved editable rig action and equipment attachments.
+Saved hit: 4 frames at 12 fps; saved editable rig action and equipment attachments.
+Saved death: 10 frames at 10 fps; saved editable rig action and equipment attachments.
+Structural audit passed: genuine weighted anatomy, 53 bones, fixed projection UVs, stationary base and sane scales across every clip sample.
+Rendered b: 1 frames, 512px, CYCLES/CPU.
+Published b-plain review immediately; source CYCLES/CPU, 512px.
+Rendered c: 1 frames, 512px, CYCLES/CPU.
+Published c-textured-lit review immediately; source CYCLES/CPU, 512px.
+Rendered c-details: 1 frames, 512px, CYCLES/CPU.
+Published c-details review immediately; source CYCLES/CPU, 512px.
+Rendered d: 4 frames, 512px, CYCLES/CPU.
+Published d-rig-poses review immediately; source CYCLES/CPU, 512px.
+Rendered e-idle: 8 frames, 512px, CYCLES/CPU.
+Published e-idle-strip review immediately; source CYCLES/CPU, 512px.
+Rendered e-move: 8 frames, 512px, CYCLES/CPU.
+Published e-move-strip review immediately; source CYCLES/CPU, 512px.
+Rendered e-attack: 10 frames, 512px, CYCLES/CPU.
+Published e-attack-strip review immediately; source CYCLES/CPU, 512px.
+Rendered e-hit: 4 frames, 512px, CYCLES/CPU.
+Published e-hit-strip review immediately; source CYCLES/CPU, 512px.
+Final top-view inspection caught a base pigment defect: corner-weight interpolation on the top n-gon leaked source-painted toes. Replaced the gate with per-pixel UV evaluation (y220-224 blend), preserving live grain/AO above. Regenerating all masters, clips, atlas and video from the corrected source; previous candidate was not approved.
+Rendered e-death: 10 frames, 512px, CYCLES/CPU.
+Published e-death-strip review immediately; source CYCLES/CPU, 512px.
+Packed 40 trimmed 160px frames at quality 90: 175564 bytes.
+Validation passed: 40 frames, motion in five clips, held death, transparent trimmed geometry, >=75 quality and <=200 KB. Art parity remains a visual judgment.
+Validation passed: 40 frames, motion in five clips, held death, transparent trimmed geometry, >=75 quality and <=200 KB. Art parity remains a visual judgment.
+Encoded medjay-round2.mp4: all five clips, 1600x348, H.264 yuv420p, 240 frames / 8 seconds.
+Final driver-round-2 CPU verification: Cycles CPU8, all 40 frames retained at 512 and 256 px, 160px trimmed atlas 175,564 bytes at quality 90; lossless alpha reconstruction/current frame-grade-master hashes/exact decoded death hold passed. Video H.264 yuv420p 1600x348, 30 fps, 240 frames, 8 seconds.
+Audit passed: 75,008 finished body vertices, 53 bones, 0.0 px frozen-UV residual, exact combat entries and loop seams, stationary base/nonzero scales; move foot rotation deviation from calibrated source 0.0 radians. All 16 front/top foot samples rendered and visually checked; per-pixel base-mask fix removed ghost toes.
+Current preflight and rejection probes passed: input/asset/build/animation seals, missing-input rejection, changed-code rejection, CPU-as-GPU rejection. Fifteen Python modules compile; both shell entry points pass bash -n; git diff --check passes. Working-tree hygiene line scan across 46 changed/new text files has zero findings. The commit-ref art gate remains unverified because its node renderer exited nonzero; lead must run it and art review.
+Final visual verdict: source alpha IoU 256px 0.801766 -> 0.851451; 64px 0.819820 -> 0.877235. Calves/neck/stone match more closely and 64px identity is strong; at 256px head/shoulder transition, spear extent/finish and shield outline still differ. Attack remains a modest lateral jab; death reveals less detailed underside pigment and stiff linen/hand forms. No claim of five visually approved clips or full collision freedom; NO PASS marker.
+Git staging was blocked: .git/worktrees/lane-22/index.lock Operation not permitted. Changes left uncommitted for runner; commit-message file has required co-author trailer. origin/master is already an ancestor of HEAD. No fetch, push, PR, master merge or runtime change. Lead command: ROUND=2 tools/art/anim3d/units/medjay/gpu.sh. Final host GPU render and art judgment remain pending.
