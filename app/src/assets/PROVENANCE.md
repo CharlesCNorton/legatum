@@ -36,3 +36,16 @@ The date range is the range of dates the repository's own records give (prompt h
 
 - No prompt is stored for the map improvements, the six original resource medallions, the aircraft plan sprites or the parchment texture.
 - Where a set was generated from one shared prompt (terrain, city sets, camps and ruins), there is one prompt for the set, not one per file.
+
+### Cuirassier true-3D animation candidate (2026-11-22)
+
+`units/anim/cuirassier.{webp,json}`: original project Blender render, CC BY 4.0.
+Uses the existing cuirassier painting for fixed mesh-UV colour, MPFB 2.0.18
+CC0 anatomy/weights, and Quaternius Ultimate Animated Animals (July 2021) CC0
+horse mesh and skeletal actions. The immutable horse mirror is commit
+`5b491b755c6d2aaa263aaaf8671b30b559a380a4` in
+[trebeljahr/quaternius-showcase](https://github.com/trebeljahr/quaternius-showcase/blob/5b491b755c6d2aaa263aaaf8671b30b559a380a4/public/glb/animals_pack/Horse.glb).
+Hidden-side fills reuse the mounted lane's original generated CC BY 4.0 painted
+hair/linen/bronze artwork. Original armour, pistol, tack and authored rider keys
+are in `tools/art/anim3d/units/cuirassier/`; exact external input hashes are in
+`masters/cuirassier/inputs.json`. This candidate does not replace the static unit.

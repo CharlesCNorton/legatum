@@ -106,3 +106,41 @@ tools/art/anim3d/render.sh audit
 ```
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
+
+## Mounted chapter: cuirassier round 1
+
+The unit implementation is isolated under `units/cuirassier/`. It reuses the
+mounted branch's CC0 Quaternius horse and MPFB skeletal rider, with original
+articulated steel armour, open visor apertures, gilt rims, leather tack, stirrups
+and a wheellock pistol. `units/cuirassier/README.md` lists rebuild commands and
+source dependencies. Use only plain background `blender` on PATH; the shared
+machine gate owns CPU/GPU concurrency. Never hide geometry with zero scale.
+
+The mounted standard uses all four quality levers: match camera and rest
+silhouette, project the original painting to fixed mesh UVs with incidence and
+pigment masks, blend generated painted fills on hidden sides; give armour and
+straps thickness, rolled/bevelled edges, joints and real buckles; light with a
+warm upper-left product key, soft fill and cool rim plus contact shadows; apply
+one rest-derived histogram LUT to every frame. Real AO/Pointiness bakes drive
+cuirass/visor cavity shade and roughness. The shared base target is warm cream
+sRGB **#E9CFA0** (linear pigment approximately `.815,.624,.352`), a low stationary
+stone disc with grain and a darker rim. Rendered colour remains lighting-dependent.
+
+Judge `cuirassier-f-restpose-compare.png`: painting, render, half split and 50%
+crossfade, at native 256 px and 64 px. Technical validation does not establish
+painting parity. Projection can carry baked lighting and cannot repair wrong
+anatomy or silhouette. Check tack intersections and tail motion in every clip.
+
+The new candidate atlas is **160 px virtual cells, per-frame trim offsets**,
+40 frames in the prescribed five clip rows. JSON version 2 keeps `frame`
+`{w,h,ax,ay}` and each clip's `row/frames/fps/loop`, adding a `rects` array of
+`{x,y,w,h,ox,oy}`. Read a packed source rectangle and paste at `(ox,oy)` before
+applying the common anchor; row dimensions vary. Keep 512/256 masters externally.
+Do not apply fixed-grid indexing to trimmed data. Packing requires quality >=75,
+size <=200,000 bytes, current master/clip/render/grade hashes and all 40 samples.
+
+The no-argument host entry point `units/cuirassier/gpu.sh`, run from repo root,
+uses Cycles Metal GPU for every review stage and 512 px clip master, writes 256
+masters, packs/validates 160 px output and makes the eight-second five-clip H.264
+review at `review/3d-v2/cuirassier-round${ROUND}.mp4`. No automatic PASS marker:
+painting parity and clean clips still require an honest visual verdict.
