@@ -86,3 +86,5 @@
 - Published e-move review immediately: CYCLES/GPU, 512 px, 8 frame(s).
 - Published e-attack review immediately: CYCLES/GPU, 512 px, 10 frame(s).
 - Published e-hit review immediately: CYCLES/GPU, 512 px, 4 frame(s).
+- Published e-death review immediately: CYCLES/GPU, 512 px, 10 frame(s).
+- GPU pass: all review stages, 512/256 masters, trimmed 160 px atlas, validation, audit and round MP4 completed. Art verdict remains manual.
