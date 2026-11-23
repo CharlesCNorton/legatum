@@ -1,3 +1,4 @@
+import { newestAutosave } from './autosave';
 import { revealSidebar } from './sidebarAssertions';
 import { dismissInterstitials, endPlanning } from './turnActions';
 import { chooseCapitalProduction } from './opening';
@@ -9,10 +10,10 @@ async function configureLobby(page: Page, seed: string) {
   await small.click();
   await expect(small).toBeChecked();
   // Choosing Small trims to four empires, which keeps the real AI/WASM turns quick.
-  const hard = page.getByRole('radiogroup', { name: 'AI level (all AI empires)', exact: true }).getByRole('radio', { name: /^Hard Ruthless/ });
+  const hard = page.getByRole('radiogroup', { name: 'AI level', exact: true }).getByRole('radio', { name: /^Hard Ruthless/ });
   await hard.click();
   await expect(hard).toBeChecked();
-  for (const level of await page.getByRole('combobox', { name: /^Seat \d+ AI level$/ }).all()) await expect(level).toHaveValue('Hard');
+  await expect(page.getByRole('combobox', { name: /^Seat \d+ AI level$/ })).toHaveCount(0);
   await page.getByLabel('Map seed', { exact: true }).fill(seed);
 }
 
@@ -46,12 +47,12 @@ async function skipCelebrations(page: Page) {
 }
 
 function turnReport(page: Page) {
-  return page.getByRole('complementary').filter({ has: page.getByRole('heading', { name: 'What happened', exact: true }) });
+  return page.getByRole('complementary').filter({ has: page.getByRole('heading', { name: 'Turn report', exact: true }) });
 }
 
 async function autosave(page: Page): Promise<{ client: string; turn: number; game: string; savedAt: string }> {
   // Read the actual persisted artifact; never seed or drive the game via its store.
-  return page.evaluate(() => JSON.parse(localStorage.getItem('legatum.autosave.v1') ?? 'null'));
+  return (await newestAutosave(page))!;
 }
 
 test('Single Player: choose capital production and play six turns with VP visible', async ({ page }) => {
@@ -113,7 +114,7 @@ test('Autosave: reload and Continue restore the same turn and exact game state',
   await page.reload();
   const resume = page.getByRole('button', { name: /^Continue/ });
   await expect(resume).toBeEnabled();
-  await expect(resume).toContainText('turn 3');
+  await expect(resume).toContainText('Turn 3');
   await resume.click();
   await expectTurn(page, before.turn);
 
