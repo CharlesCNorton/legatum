@@ -8,3 +8,7 @@
 - Retargeted Quaternius CC0 Idle_Loop, Walk_Loop, Hit_Chest and Death01 with reference-space/bone-roll alignment; authored only two-hand thrust.
 - Scene audit passed: finished volumetric surfaces, frozen camera UVs, 53 bones, safe scales and unprojected stationary base.
 - Five-clip rig audit passed: finite transforms, held death and maximum wrist-axis distance 0.0821 m (wrist metric, not a finger-contact guarantee).
+- First 40-frame atlas decoded successfully at 176462 bytes, quality 90; all trim/alpha/margin/held-death checks passed, CPU-only.
+- Visual death check caught braced guard legs persisting into collapse; fixed reference-space retarget for death and blended entry.
+- Added generated hidden metal brushwork, desaturated in the shader, with camera-only pigment plus physical response; rebuilding to keep all outputs on one master.
+- Feet diagnostic now checks planted direction separately from airborne toe-off and measures stance residual against virtual travel.
