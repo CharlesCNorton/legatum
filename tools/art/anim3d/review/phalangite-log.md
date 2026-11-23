@@ -78,3 +78,4 @@
 - Published c review from 512px GPU renders.
 - Published d review from 512px GPU renders.
 - Published e-idle review from 512px GPU renders.
+- Published e-move review from 512px GPU renders.
