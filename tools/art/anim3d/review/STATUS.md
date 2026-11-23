@@ -1,6 +1,6 @@
 # Animated units status
 
-Updated 2026-11-23T04:12:16Z. Round = finished rounds (driver count). Pass = the lane declared the bar met (`<slug>-PASS`); the lead and Sam still review.
+Updated 2026-11-23T04:14:56Z. Round = finished rounds (driver count). Pass = the lane declared the bar met (`<slug>-PASS`); the lead and Sam still review.
 
 | Unit | Branch | State | Rounds done | Atlas KB | Pass | Latest note |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -24,7 +24,7 @@ Updated 2026-11-23T04:12:16Z. Round = finished rounds (driver count). Pass = the
 | cuirassier | `astra/unit-anim-3d-cuirassier` | idle | 0 | - | no | - Emitted c-details: 1 frames, 256 px CYCLES/CPU, 8 samples. |
 | drone-swarm | `astra/unit-anim-3d-drone-swarm` | idle | 0 | 187 | no | e-hit: 4 frames at 256/64 from 512px CYCLES/CPU, 12 samples. |
 | eagle-warrior | `astra/unit-anim-3d-eagle-warrior` | idle | 0 | - | no | - Authored idle, move, attack, hit and terminal death on the MPFB skeleton; no mocap or cloth simulation claimed. |
-| field-cannon | `astra/unit-anim-3d-siege` | idle | 0 | 180 | no | - FINAL GIT: committed code de7bec7 and delivery f79c7ef on astra/unit-anim-3d-siege in .worktrees/siege-round2. Working tree clean; origin/master already ances |
+| field-cannon | `astra/unit-anim-3d-siege` | queued | 1 | 180 | no | - FINAL GIT: committed code de7bec7 and delivery f79c7ef on astra/unit-anim-3d-siege in .worktrees/siege-round2. Working tree clean; origin/master already ances |
 | fighter | `astra/unit-anim-3d-fighter` | idle | 0 | 193 | no | - Rendered e-death: 512px, CYCLES; review published. |
 | gaesatae | `astra/unit-anim-3d-gaesatae` | idle | 0 | - | no | - Adjusted head width/position, grip, ankle stance and cloth fold frequency before clip authoring. No quality PASS claimed. |
 | horseman | `astra/unit-anim-3d-mounted` | idle | 1 | 194 | no | - Loaded all six Sam Blender skills: modeling (thickness/bevel/fold geometry), materials (painted colour plus generated fills and roughness), lighting (warm key |
@@ -51,7 +51,7 @@ Updated 2026-11-23T04:12:16Z. Round = finished rounds (driver count). Pass = the
 | scout | `astra/unit-anim-3d-scout` | idle | 0 | 195 | no | Final verdict: genuine 3D and recognizable scout at 64px; below painting parity at 256px. Next pass should match raised-knee stance, larger expressive face/bear |
 | settler | `astra/unit-anim-3d-settler` | idle | 0 | - | no | - Saved 3D audit passed: source hashes, 53 bones, actual motion, exact loop closing keys and held death; ground/bounds recorded; collision limits explicit. |
 | spartan-hoplite | `astra/unit-anim-3d-spartan-hoplite` | idle | 0 | 169 | no | Commit attempt blocked: Git could not create .git/worktrees/lane-5/index.lock (Operation not permitted); changes left for the runner to commit with the requeste |
-| spearman | `astra/unit-anim-3d-v2` | idle | 0 | 191 | no | - Final handoff: git add/commit blocked by sandbox denial creating .git/worktrees/spearman-round2/index.lock (exit 128). Changes remain scoped and uncommitted.  |
+| spearman | `astra/unit-anim-3d-v2` | queued | 1 | 191 | no | - Final handoff: git add/commit blocked by sandbox denial creating .git/worktrees/spearman-round2/index.lock (exit 128). Changes remain scoped and uncommitted.  |
 | stealth-bomber | `astra/unit-anim-3d-stealth-bomber` | not started | 0 | - | no |  |
 | stealth-fighter | `astra/unit-anim-3d-stealth-fighter` | not started | 0 | - | no |  |
 | tagmatic-soldier | `astra/unit-anim-3d-tagmatic-soldier` | idle | 0 | 186 | no | - GPU handoff: from repo root, tools/art/anim3d/units/tagmatic-soldier/gpu.sh (no arguments; uses ROUND from driver). This performs geometry audit, all GPU stag |
