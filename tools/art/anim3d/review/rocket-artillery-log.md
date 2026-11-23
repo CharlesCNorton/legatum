@@ -53,3 +53,30 @@
 - Published e-hit: 4 actual rendered frames, 12 fps; GPU 512px 64 samples.
 - Published e-death: 10 actual rendered frames, 10 fps; GPU 512px 64 samples.
 - Completed all five clips and wheel contact audit; delivery pack may now run.
+- Round 2 initial critique after opening GPU c/f/all five e strips and decoded round1 MP4: at 256px, cab/launcher paint is convincing but six equally bright front-wheel copies expose five wheels in a row, far wheels sit too low, tread is mechanical and repetitive, stone silhouette is too deep with flat color, and attack is a tiny yellow dot. At 64px the launcher identity survives but the wheel row and broad base change the silhouette. Death lowers the rack but still reads like an operational truck. NOT art parity; no PASS.
+- Round 1 GPU pass succeeded: receipt reports 189894 bytes at quality 75; complete status, GPU512/64 frames. Driver log is empty because gpu.sh redirects into rocket-artillery-gpu-pass-r1.log. Per-unit feedback file is absent; all 23 shared feedback items read. Preserved round1 review evidence before overwriting stages.
+- Loaded all six Blender skills: modeling for bevels and full-depth mechanical construction; cameras for registered viewpoint and stone silhouette; materials for worn surfaces and isolated wheel pigments; lighting for product key/fill/rim and contact; animation for continuous mechanical curves and visible attack; rendering for low-cost CPU previews, masters, encoding and actual image review. Existing generated olive fill and source provenance reused; no person/cloth occurs in this painting.
+- Published b-plain CPU/GPU geometry stage before texture work.
+- Baked 256px AO and curvature maps on GEO-Cab full shell, GEO-Hood engine enclosure, GEO-Launcher near side panel
+- Published painted rest pose and 50/50 comparison; real AO shader, micrograin, edge geometry and hidden-surface fill.
+- Published b-plain CPU/GPU geometry stage before texture work.
+- Baked 256px AO and curvature maps on GEO-Cab full shell, GEO-Hood engine enclosure, GEO-Launcher near side panel
+- Published painted rest pose and 50/50 comparison; real AO shader, micrograin, edge geometry and hidden-surface fill.
+- Published b-plain CPU/GPU geometry stage before texture work.
+- Baked 256px AO and curvature maps on GEO-Cab full shell, GEO-Hood engine enclosure, GEO-Launcher near side panel
+- Published painted rest pose and 50/50 comparison; real AO shader, micrograin, edge geometry and hidden-surface fill.
+- Published e-idle: 8 actual rendered frames, 10 fps; CPU 512px 8 samples.
+- Published e-move: 8 actual rendered frames, 12 fps; CPU 512px 8 samples.
+- Round 2 first CPU stills: lower camera and independently shadowed far tires restore three-axle silhouette. Re-registered disc depth/aim height; far-wheel contact now checked against disc radius as well as ground Z. Base remains flatter than source; front tire tread and launcher lip registration remain visible gaps.
+- Replaced mean/std grade with native-256 RGB histogram-quantile LUT, bounded to +/-12 per channel and frozen across clips. Extended solid rocket/exhaust flight over five attack samples. gpu.sh now tees its own log into the driver log; default ROUND=2.
+- Published e-attack: 10 actual rendered frames, 14 fps; CPU 512px 8 samples.
+- Published e-hit: 4 actual rendered frames, 12 fps; CPU 512px 8 samples.
+- Published e-death: 10 actual rendered frames, 10 fps; CPU 512px 8 samples.
+- Completed all five clips and wheel contact audit; delivery pack may now run.
+- Published b-plain CPU/GPU geometry stage before texture work.
+- Baked 256px AO and curvature maps on GEO-Cab full shell, GEO-Hood engine enclosure, GEO-Launcher near side panel
+- Published painted rest pose and 50/50 comparison; real AO shader, micrograin, edge geometry and hidden-surface fill.
+- Published e-idle: 8 actual rendered frames, 10 fps; CPU 512px 8 samples.
+- Final surface iteration: mirrored clean source-stone swatches now wrap the real disc with a directional rim wash and live AO; inspected swatches contain no tire silhouettes/contact shadows. Reduced tread blocks from 32 to 24 with shallower height; near-wheel pigment no longer loses visible sidewall detail to self-occlusion confidence.
+- Inspected updated 512-derived c/f/detail sheets: stone brightness/grain substantially closer and five-wheel-row defect removed. Remaining gaps at 256px: front tire slightly small/flat, bore lip registration and hood/fender construction; projected wheel shading rotates in move. At 64px the correct raised-rack truck and three near wheels read clearly. No PASS; fresh GPU round 2 review still required.
+- Published e-move: 8 actual rendered frames, 12 fps; CPU 512px 8 samples.
