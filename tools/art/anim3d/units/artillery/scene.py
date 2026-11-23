@@ -11,6 +11,9 @@ HERE=Path(__file__).resolve().parent; MODE=os.environ.get('ARTILLERY_MODE','prev
 RES=int(os.environ.get('RESOLUTION','256')); SAMPLES=int(os.environ.get('SAMPLES','8'))
 CLIPS={'idle':(8,10,True),'move':(8,12,True),'attack':(10,14,False),'hit':(4,12,False),'death':(10,10,False)}
 random.seed(18)
+pipeline_hashes={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in HERE.glob('*.py')}
+render_provenance={}
+(M/'render-manifest.json').unlink(missing_ok=True)
 def log(s):
  with (REVIEW/'artillery-log.md').open('a') as f:f.write('- '+s+'\n')
  print(s,flush=True)
@@ -69,12 +72,12 @@ bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=Fals
 olive=mat('Olive painted steel',(.25,.245,.105));rubber=mat('Dusty charcoal rubber',(.12,.108,.085),0,.88)
 edge=mat('Worn ochre paint edges',(.37,.32,.15));steel=mat('Exposed bright steel',(.35,.34,.27),1,.40)
 black=mat('Recess and bore soot',(.012,.014,.009),0,.95)
-stone=mat('Warm cream limestone target E9CFA0',(1.0,.66,.26),0,.85)
+stone=mat('Warm cream limestone target E9CFA0',(.82,.64,.40),0,.85)
 plain=mat('Plain clay inspection',(.4,.43,.45))
 root=empty('carriage');pivot=empty('elevation',(.35,0,1.13),root);recoil=empty('recoil',(.35,0,1.13),pivot)
 # Low single stone disc, fixed throughout all animations.
 bpy.ops.mesh.primitive_cylinder_add(vertices=128,radius=1.25,depth=.13,location=(0,0,.065));base=bpy.context.object;base.name='GEO-stationary cream disc';base.data.materials.append(stone);bevel(base,.018)
-rod('Axle',(.32,-.82,.53),(.32,.82,.53),.065,olive,root)
+rod('Axle',(.32,-.82,.53),(.32,.82,.53),.035,olive,root)
 cube('Axle saddle',(.32,0,.61),(.28,.48,.21),olive,root)
 # Tire profile is a continuous closed ring around real dished hubs, plus individual tread blocks.
 wheels=[]
@@ -117,7 +120,7 @@ for sign in [-1,1]:
  rod('Trunnion pin',(.35,sign*.18,1.13),(.35,sign*.31,1.13),.065,steel,root)
  # Each shield half has its own solid thickness and beveled outline.
  outline=[(sign*.14,.72),(sign*.46,.72),(sign*.55,.96),(sign*.69,1.02),(sign*.69,1.43),(sign*.60,1.54),(sign*.34,1.54),(sign*.24,1.45),(sign*.14,1.45)]
- outline=[(y-.09,z-.06-(.22 if sign==1 and z>1.3 else 0)) for y,z in outline]
+ outline=[(y-.09,z-.06-(.22 if sign==1 and z>1.3 else 0)-max(0,z-1.1)*.18) for y,z in outline]
  plate('Shield wing '+str(sign),.25,outline,.035,olive,root)
  for yy,zz in [(sign*.62,1.30),(sign*.60,1.07),(sign*.40,.79),(sign*.19,1.33)]:rod('Shield rivet',(.273,yy-.09,zz-.06),(.289,yy-.09,zz-.06),.014,edge,root,verts=8)
  beam('Shield folded brace',(.21,sign*.50-.09,.80),(.21,sign*.56-.09,1.33-(.22 if sign==1 else 0)),.028,.045,edge,root)
@@ -140,7 +143,7 @@ rod('Bore deep shadow',(1.43,0,1.13),(1.44,0,1.13),.043,black,recoil)
 for x,r in [(.40,.118),(.94,.09),(1.67,.066)]:ring('Turned barrel band',(x,0,1.13),r,.008,edge,recoil,axis='X')
 cube('Breech block',(.16,0,1.13),(.27,.22,.22),olive,recoil)
 # Hydraulic recuperators above and alongside the central tube.
-for yy,zz,rr in [(0,1.30,.070),(-.14,1.19,.042)]:
+for yy,zz,rr in [(0,1.23,.058),(-.14,1.16,.038)]:
  rod('Recoil cylinder',(.18,yy,zz),(.91,yy,zz),rr,olive,pivot)
  rod('Recuperator rod',(.90,yy,zz),(1.02,yy,zz),rr*.55,steel,recoil)
  for xx in [.28,.81,.92]:ring('Cylinder clamp',(xx,yy,zz),rr+.006,.009,edge,pivot,axis='X')
@@ -154,16 +157,21 @@ if sc.cycles.device=='GPU':
  for d in prefs.devices:d.use=d.type=='METAL'
 sc.render.resolution_x=sc.render.resolution_y=RES;sc.render.resolution_percentage=100;sc.render.film_transparent=True;sc.render.image_settings.file_format='PNG';sc.render.image_settings.color_mode='RGBA'
 sc.world.use_nodes=True;sc.world.node_tree.nodes['Background'].inputs['Color'].default_value=(.52,.56,.65,1);sc.world.node_tree.nodes['Background'].inputs['Strength'].default_value=.3
-sc.view_settings.view_transform='AgX';sc.view_settings.look='AgX - Medium High Contrast';sc.view_settings.exposure=.5
+sc.view_settings.view_transform='Standard';sc.view_settings.look='None';sc.view_settings.exposure=0
 bpy.ops.object.camera_add(location=(6,-7,3.07));cam=bpy.context.object;cam.name='CAM-painting';cam.rotation_euler=(Vector((0,0,.57))-cam.location).to_track_quat('-Z','Y').to_euler();cam.data.type='ORTHO';cam.data.ortho_scale=2.76;sc.camera=cam
 for name,loc,power,size,color in [('key',(-3,-4,6),650,4,(1,.88,.70)),('fill',(4,-2,3),125,4,(.85,.91,1)),('rim',(1,4,4),210,3,(.75,.85,1))]:
- bpy.ops.object.light_add(type='AREA',location=loc);o=bpy.context.object;o.name='LGT-'+name;o.data.energy=power;o.data.size=size;o.data.color=color;o.rotation_euler=(Vector((0,0,.7))-o.location).to_track_quat('-Z','Y').to_euler()
+ bpy.ops.object.light_add(type='AREA',location=loc);o=bpy.context.object;o.name='LGT-'+name;o.data.energy=power*.55;o.data.size=size;o.data.color=color;o.rotation_euler=(Vector((0,0,.7))-o.location).to_track_quat('-Z','Y').to_euler()
 bpy.context.view_layer.update()
+
+sys.path.insert(0,str(HERE))
+from refine import refine
+refine(sc,cam,wheels,base,M)
 
 def save(name):bpy.ops.wm.save_as_mainfile(filepath=str(M/name))
 def render(path):
  assert sc.camera and sc.camera.type=='CAMERA'
  path.parent.mkdir(parents=True,exist_ok=True);sc.render.filepath=str(path);bpy.ops.render.render(write_still=True)
+ render_provenance[str(path.relative_to(M/'renders'))]={'sha256':hashlib.sha256(path.read_bytes()).hexdigest(),'resolution':RES,'engine':'CYCLES','device':sc.cycles.device,'samples':SAMPLES}
  if RES==512:
   import shutil
   dest=M/'512'/path.relative_to(M/'renders');dest.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(path,dest)
@@ -183,46 +191,40 @@ fill=bpy.data.images.load(str(A/'painted-olive.png'));fill.pack()
 for m in [olive,edge,rubber,stone]:
  n=m.node_tree.nodes;l=m.node_tree.links;s=n.get('Principled BSDF');color=s.inputs['Base Color'].default_value[:]
  tc=n.new('ShaderNodeTexCoord');noise=n.new('ShaderNodeTexNoise');noise.inputs['Scale'].default_value=95;noise.inputs['Detail'].default_value=3;l.new(tc.outputs['Generated'],noise.inputs['Vector'])
- bump=n.new('ShaderNodeBump');bump.inputs['Strength'].default_value=.18;bump.inputs['Distance'].default_value=.008;l.new(noise.outputs['Fac'],bump.inputs['Height']);l.new(bump.outputs[0],s.inputs['Normal'])
+ bump=n.new('ShaderNodeBump');bump.inputs['Strength'].default_value=.18;bump.inputs['Distance'].default_value=.0015;l.new(noise.outputs['Fac'],bump.inputs['Height']);l.new(bump.outputs[0],s.inputs['Normal'])
  ramp=n.new('ShaderNodeValToRGB');ramp.color_ramp.elements[0].color=tuple(c*.7 for c in color[:3])+(1,);ramp.color_ramp.elements[1].color=tuple(min(1,c*1.13) for c in color[:3])+(1,);l.new(noise.outputs['Fac'],ramp.inputs[0]);source=ramp.outputs[0]
  if m==olive:
   tex=n.new('ShaderNodeTexImage');tex.image=fill;tex.projection='BOX';tex.projection_blend=.25;l.new(tc.outputs['Generated'],tex.inputs['Vector']);source=tex.outputs['Color']
  ao=n.new('ShaderNodeAmbientOcclusion');ao.inputs['Distance'].default_value=.09
  mix=n.new('ShaderNodeMixRGB');mix.blend_type='MULTIPLY';mix.inputs[0].default_value=.32;l.new(source,mix.inputs[1]);l.new(ao.outputs['Color'],mix.inputs[2]);l.new(mix.outputs[0],s.inputs['Base Color'])
+# Warm stone pigment is camera-only, so real product lights still cast contact shadows.
+n=stone.node_tree.nodes;l=stone.node_tree.links;s=n.get('Principled BSDF')
+g=n.new('ShaderNodeNewGeometry');sep=n.new('ShaderNodeSeparateXYZ');l.new(g.outputs['Normal'],sep.inputs[0])
+ramp=n.new('ShaderNodeValToRGB');ramp.color_ramp.elements[0].position=.15;ramp.color_ramp.elements[0].color=(.81,.55,.31,1);ramp.color_ramp.elements[1].position=.8;ramp.color_ramp.elements[1].color=(.98,.78,.54,1);l.new(sep.outputs['Z'],ramp.inputs[0])
+pigment=n.new('ShaderNodeBsdfPrincipled');pigment.inputs['Base Color'].default_value=(0,0,0,1);pigment.inputs['Specular IOR Level'].default_value=0;ao=n.new('ShaderNodeAmbientOcclusion');ao.inputs['Distance'].default_value=.12
+contact=n.new('ShaderNodeMixRGB');contact.blend_type='MULTIPLY';contact.inputs[0].default_value=.32;l.new(ramp.outputs['Color'],contact.inputs[1]);l.new(ao.outputs['Color'],contact.inputs[2]);l.new(contact.outputs[0],pigment.inputs['Emission Color']);pigment.inputs['Emission Strength'].default_value=1
+ray=n.new('ShaderNodeLightPath');weight=n.new('ShaderNodeMath');weight.operation='MULTIPLY';weight.inputs[1].default_value=.72;l.new(ray.outputs['Is Camera Ray'],weight.inputs[0])
+mix=n.new('ShaderNodeMixShader');l.new(weight.outputs[0],mix.inputs[0]);l.new(s.outputs[0],mix.inputs[1]);l.new(pigment.outputs[0],mix.inputs[2]);l.new(mix.outputs[0],n.get('Material Output').inputs['Surface'])
 # Genuine surface bakes supplement shader contact AO and physical worn edges.
 sys.path.insert(0,str(HERE))
 from bake import bake_finish
 baked=bake_finish(M/'textures', [o for o in sc.objects if o.type=='MESH' and ('Shield wing' in o.name or 'Hollow tapered barrel' in o.name)])
 log('Baked 256px AO and curvature maps on '+', '.join(baked))
-# Freeze painting UV coordinates at the rest pose. Camera facing mask is attached to geometry,
-# not evaluated live, so texture travels with animated meshes. No alpha drives geometry visibility.
-tex=bpy.data.images.load(str(A/'projection.png'));tex.pack();view=cam.rotation_euler.to_matrix()@Vector((0,0,1));records=[]
-for o in list(sc.objects):
- if o.type!='MESH' or o==base or not any(m in [olive,rubber,edge] or 'baked finish' in m.name for m in o.data.materials):continue
- uv=o.data.uv_layers.new(name='RestPainting');mask=o.data.color_attributes.new(name='ProjectionConfidence',type='FLOAT_COLOR',domain='CORNER');nm=o.matrix_world.to_3x3().inverted().transposed()
- for loop in o.data.loops:
-  v=o.data.vertices[loop.vertex_index];p=world_to_camera_view(sc,cam,o.matrix_world@v.co);uv.data[loop.index].uv=(p.x,p.y)
-  weight=max(0,min(1,((nm@v.normal).normalized().dot(view)-.02)/.40))
-  mask.data[loop.index].color=(weight,weight,weight,1)
- for i,orig in enumerate(list(o.data.materials)):
-  if orig not in [olive,rubber,edge] and 'baked finish' not in orig.name:continue
-  m=orig.copy();m.name=o.name+' projected';o.data.materials[i]=m;n=m.node_tree.nodes;l=m.node_tree.links;s=n.get('Principled BSDF');original=s.inputs['Base Color'].links[0].from_socket
-  uvn=n.new('ShaderNodeUVMap');uvn.uv_map=uv.name;im=n.new('ShaderNodeTexImage');im.image=tex;im.extension='CLIP';l.new(uvn.outputs[0],im.inputs[0]);vc=n.new('ShaderNodeVertexColor');vc.layer_name=mask.name
-  fac=n.new('ShaderNodeMath');fac.operation='MULTIPLY';l.new(vc.outputs['Color'],fac.inputs[0]);l.new(im.outputs['Alpha'],fac.inputs[1]);strength=n.new('ShaderNodeMath');strength.operation='MULTIPLY';strength.inputs[1].default_value=.72;l.new(fac.outputs[0],strength.inputs[0])
-  mix=n.new('ShaderNodeMixRGB');l.new(strength.outputs[0],mix.inputs[0]);l.new(original,mix.inputs[1]);l.new(im.outputs['Color'],mix.inputs[2]);l.new(mix.outputs[0],s.inputs['Base Color'])
-  # Preserve some painted illumination with Principled emission, still opaque physical surfaces.
-  l.new(mix.outputs[0],s.inputs['Emission Color']);s.inputs['Emission Strength'].default_value=.40
- records.append(o.name)
-(M/'projection.json').write_text(json.dumps({'meshes':records,'method':'frozen rest-camera UV with facing and source-alpha blend into original painted fill','strength':.72},indent=2))
+# Finished surfaces own frozen UVs and camera-only pigment; back/occluded surfaces
+# retain the generated fill and physical product-light response.
+from projection import project
+records=project(sc,cam,base,A,M)
 save('artillery.blend');render(M/'renders/c-textured-lit.png');review('c-textured-lit');log('Published painted rest pose and 50/50 comparison; real AO shader, micrograin, edge geometry and hidden-surface fill.')
 review('c-details')
 if MODE=='stills':sys.exit(0)
 # Mechanical object hierarchy is the editable rig; each clip saved separately with explicit keys.
-controls=[root,pivot,recoil,*wheels,*trails];neutral={o.name:(o.location.copy(),o.rotation_euler.copy()) for o in controls}
+axle=bpy.data.objects['GEO-Axle']
+controls=[root,pivot,recoil,*wheels,*trails,axle];neutral={o.name:(o.location.copy(),o.rotation_euler.copy()) for o in controls}
 # Small solid flash, hidden with visibility rather than degenerate scale.
 flashmat=mat('Muzzle flash warm core',(1,.35,.025),0,.6);s=flashmat.node_tree.nodes.get('Principled BSDF');s.inputs['Emission Color'].default_value=(1,.35,.02,1);s.inputs['Emission Strength'].default_value=3
 flash=rod('Muzzle flash',recoil.matrix_world@Vector((1.35,0,0)),recoil.matrix_world@Vector((1.53,0,0)),.075,flashmat,recoil,r2=.008);flash.hide_render=True
 
+ground_audit=[]
 def pose(clip,i,n):
  t=i/n if clip in ['idle','move'] else i/(n-1)
  for o in controls:o.location=neutral[o.name][0];o.rotation_euler=neutral[o.name][1]
@@ -232,7 +234,8 @@ def pose(clip,i,n):
   # In-place rolling, like a treadmill: runtime supplies world translation. Trails lifted clear.
   root.location.z=.018*(1+sin(4*pi*t));root.rotation_euler.y=.025*sin(2*pi*t)
   for w in wheels:w.rotation_euler.y=-2*pi*t
-  for tr in trails:tr.rotation_euler.y=-.10
+  trails[0].rotation_euler.y=.10
+  trails[1].rotation_euler.y=-.10
  elif clip=='attack':
   kick=[0,0,.025,-.22,-.13,-.055,-.018,0,0,0][i];recoil.location.x+=kick;pivot.rotation_euler.y+=.025*sin(pi*t);flash.hide_render=i!=3
  elif clip=='hit':
@@ -243,8 +246,31 @@ def pose(clip,i,n):
   wheels[0].rotation_euler.x=.28*f;wheels[0].location.z+=.06*f
   trails[0].rotation_euler.z=-.06*f
  bpy.context.view_layer.update()
+ # Keep every mechanical solid above the stone through recoil and axle collapse.
+ meshes=[o for o in sc.objects if o.type=='MESH' and o not in [base,flash] and not o.hide_render]
+ lowest=min((o.matrix_world@v.co).z for o in meshes for v in o.data.vertices)
+ if lowest<.128:
+  root.location.z+=.128-lowest
+  bpy.context.view_layer.update()
+ # Wheel suspension keeps both tires planted even when the damaged carriage tilts.
+ wheel_floor=[]
+ for wheel in wheels:
+  parts=[o for o in wheel.children_recursive if o.type=='MESH']
+  bottom=min((o.matrix_world@v.co).z for o in parts for v in o.data.vertices)
+  matrix=wheel.matrix_world.copy();matrix.translation.z+=.13-bottom;wheel.matrix_world=matrix
+  bpy.context.view_layer.update()
+  wheel_floor.append(min((o.matrix_world@v.co).z for o in parts for v in o.data.vertices))
+ a,b=[w.matrix_world.translation.copy() for w in wheels]
+ matrix=axle.matrix_world.copy();matrix.translation=(a+b)/2
+ axle.matrix_world=matrix
+ axle.rotation_euler=(root.matrix_world.to_quaternion().inverted() @ (b-a).to_track_quat('Z','Y')).to_euler()
+ axle.scale.z=(b-a).length/1.64
+ bpy.context.view_layer.update()
+ lowest=min((o.matrix_world@v.co).z for o in meshes for v in o.data.vertices)
+ assert lowest>=.1279,(clip,i,lowest)
+ ground_audit.append({'clip':clip,'sample':i,'minimum_z':lowest,'wheel_contact_z':wheel_floor})
 
-manifest={'engine':'CYCLES','device':sc.cycles.device,'samples':SAMPLES,'resolution':RES,'clips':{},'source_sha256':hashlib.sha256((M/'artillery.blend').read_bytes()).hexdigest(),'script_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest()}
+manifest={'engine':'CYCLES','device':sc.cycles.device,'samples':SAMPLES,'resolution':RES,'clips':{},'source_sha256':hashlib.sha256((M/'artillery.blend').read_bytes()).hexdigest(),'script_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),'pipeline_sha256':pipeline_hashes}
 (M/'render-manifest.json').unlink(missing_ok=True)
 for clip,(count,fps,loop) in CLIPS.items():
  for o in controls+[flash]:o.animation_data_clear()
@@ -253,6 +279,7 @@ for clip,(count,fps,loop) in CLIPS.items():
   pose(clip,i,count)
   for o in controls:
    o.keyframe_insert('location',frame=i+1);o.keyframe_insert('rotation_euler',frame=i+1)
+  axle.keyframe_insert('scale',frame=i+1)
   flash.keyframe_insert('hide_render',frame=i+1)
  # Stable linear sampling for mechanical motion and constant effect visibility.
  for o in controls+[flash]:
@@ -272,6 +299,12 @@ for clip,(count,fps,loop) in CLIPS.items():
  review('e-'+clip);log(f'Published e-{clip}: {count} actual rendered frames, {fps} fps; {sc.cycles.device} {RES}px {SAMPLES} samples.')
  manifest['clips'][clip]={'frames':count,'fps':fps,'loop':loop,'hashes':[hashlib.sha256((folder/f'{i:02}.png').read_bytes()).hexdigest() for i in range(count)]}
 review('d-rig-poses')
+manifest['renders']=render_provenance
+manifest['inputs_sha256']=hashlib.sha256((M/'inputs.json').read_bytes()).hexdigest()
+manifest['grade_sha256']=hashlib.sha256((M/'grade.json').read_bytes()).hexdigest()
+manifest['gallery_sha256']={str(p.relative_to(M/'256')):hashlib.sha256(p.read_bytes()).hexdigest() for p in (M/'256').rglob('*.png')}
+manifest['clip_blends']={c:hashlib.sha256((M/f'artillery-{c}.blend').read_bytes()).hexdigest() for c in CLIPS}
+manifest['ground_audit']=ground_audit
 # Check stationary base and finite nondegenerate mesh scales across all samples.
 assert base.animation_data is None
 assert all(min(abs(x) for x in o.scale)>.001 for o in sc.objects if o.type=='MESH')

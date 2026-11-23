@@ -125,8 +125,8 @@ painted lighting and needs review in motion. It never supplies the geometry's al
 mesh with a billboard. Shield and barrel also have actual 256px AO and Cycles Pointiness bakes.
 
 The one stationary stone disc targets a lit top around **sRGB #E9CFA0**, with a darker warm rim and
-fine grain. Its shader uses scene-calibrated linear `(1.0, 0.66, 0.26)` under AgX; the render, not the
-input triplet, is the colour evidence. The review background is exactly #E9CFA0.
+fine grain. Round 2 uses physical limestone plus camera-only warm top/rim pigment and live contact AO;
+the render, not the input triplet, is the colour evidence. The review background is exactly #E9CFA0.
 
 ```sh
 # CPU previews, one gate-managed Blender process; never bypass the plain blender command.
@@ -167,3 +167,43 @@ never lower, enforcing 200,000 bytes. All 40 alpha masks must reconstruct exactl
 validation also checks margins, source hashes, motion, held death, video codec/duration/frame count.
 An atlas contract PASS is separate from art approval; only write `artillery-PASS` when the rest pose
 is hard to distinguish from the painting and all five clips are clean.
+
+
+### Artillery resumed round 2: finished surfaces and mechanical contact
+
+Prior WIP masters/reviews are preserved in `masters/artillery/round1-wip/` and
+`review/3d-v2/artillery-round1-wip/`. A prior atlas is not proof of a completed WIP rebuild:
+the resumed WIP had no current render manifest. No GPU execution is inferred from those CPU images.
+
+`refine.py` registers complete circular tires, hubs and tread with uniform size and physical mounting
+yaw; both wheels keep their own local rolling axis. It fits the thick shield's polygon outlines on
+its actual transverse plane, seats solid fastenings, and applies bevels/converts curves before UVs.
+This is local geometry registration against source landmarks, not a claim of an exact whole-camera
+fit. The original orthographic camera remains. `projection.py` ray-tests the finished surfaces and
+freezes their camera UVs, blending into the recorded generated olive fill on occluded/back surfaces.
+A camera-only Principled pigment branch retains 96% of painted illumination; other rays retain the
+physical shader, bakes and product lights. Standard/None avoids a second tone-map of that pigment.
+A source-color exclusion prevents cream stone from being painted onto trails/axle. No source alpha
+controls geometry visibility; there is no billboard or per-frame reprojection. No crew/fabric is added.
+
+The stone uses separate warm top/rim pigment with live AO and physical contact shadows. One automatic
+rest grade is frozen across all clips. Move lifts each trail in its correct hinge direction. Every
+sample seats both complete tires on the .13m contact plane and refits the axle, including the damaged
+carriage in death; a lower-bound audit alone had allowed visibly floating wheels. Final death PNGs
+remain exactly identical. These checks are contact/ground checks, not a general collision solver.
+
+`ROUND=2 tools/art/anim3d/units/artillery/gpu.sh` is the executable, no-argument host handoff (default
+round 2). It resolves its checkout, retains `artillery-gpu-pass-r${ROUND}.log`, writes stage/failure
+status, and issues a round-specific receipt only after current GPU512 masters, 256 gallery images,
+trimmed atlas and the eight-second decoded MP4 validate. `check.py --require-gpu` rejects CPU previews,
+stale pipeline/input/model/clip/grade/gallery hashes and floating tires. A missing-input preflight
+verifies the failure transcript without invoking Blender. The script never writes an art PASS.
+
+CPU iteration stays at 256px / Cycles12; fresh 512px finals remain the host GPU pass. Compare the rest
+sheet and all five strips after rebuilding: registration, hub/tread richness, trail construction and
+revealed surfaces can still fall short despite technical validation. Current measured results and
+honest 256/64 verdict are in the external artillery log and unit README.
+
+Artillery packing reuses identical frame rectangles within each clip. This preserves all forty playback
+samples and makes the decoded final death hold pixel-identical too; separately encoded duplicates
+had different lossy RGB despite equal source PNGs. The unit transcript name avoids the driver log.

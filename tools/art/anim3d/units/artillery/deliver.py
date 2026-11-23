@@ -4,6 +4,8 @@ Quality never below 75. Refuse partial/stale frames. No atlas runtime changes.
 from pathlib import Path
 import hashlib, io, json, os, subprocess, tempfile
 from PIL import Image, ImageChops, ImageDraw
+from check import check
+check(os.environ.get("CYCLES_DEVICE")=="GPU")
 R=Path(os.environ.get('ANIM_ROOT',Path.home()/'LegatumRuns/anim-pilot'));M=R/'masters/artillery';V=R/'review/3d-v2'
 OUT=Path('app/src/assets/units/anim');OUT.mkdir(parents=True,exist_ok=True)
 CLIPS={'idle':(8,10,True),'move':(8,12,True),'attack':(10,14,False),'hit':(4,12,False),'death':(10,10,False)}
@@ -12,14 +14,20 @@ assert man['script_sha256']==hashlib.sha256((Path(__file__).parent/'scene.py').r
 frames={};rects={};rows=[];y=0
 meta={'version':2,'layout':'trimmed-rows','frame':{'w':160,'h':160,'ax':80,'ay':124},'clips':{}}
 for row,(clip,(count,fps,loop)) in enumerate(CLIPS.items()):
- frames[clip]=[];rects[clip]=[];x=0;rh=0
+ frames[clip]=[];rects[clip]=[];x=0;rh=0;seen={}
  for i in range(count):
   raw=M/'renders'/clip/f'{i:02}.png';assert hashlib.sha256(raw.read_bytes()).hexdigest()==man['clips'][clip]['hashes'][i],'stale frame'
   p=M/'256'/clip/f'{i:02}.png';im=Image.open(p).convert('RGBA');assert im.size==(256,256)
   im=im.resize((160,160),Image.Resampling.LANCZOS);alpha=im.getchannel('A');box=alpha.point(lambda a:255 if a>12 else 0).getbbox();assert box
   assert box[0]>=1 and box[1]>=1 and box[2]<=159 and box[3]<=159,(clip,i,'clipped',box)
   box=alpha.getbbox();crop=im.crop(box);w,h=crop.size
-  rects[clip].append({'x':x,'y':y,'w':w,'h':h,'ox':box[0],'oy':box[1]});frames[clip].append(im);x+=w+2;rh=max(rh,h)
+  key=hashlib.sha256(im.tobytes()).hexdigest()
+  if key in seen:
+   rects[clip].append(seen[key].copy())
+  else:
+   rect={'x':x,'y':y,'w':w,'h':h,'ox':box[0],'oy':box[1]}
+   rects[clip].append(rect);seen[key]=rect;x+=w+2;rh=max(rh,h)
+  frames[clip].append(im)
  meta['clips'][clip]={'row':row,'frames':count,'fps':fps,'loop':loop,'sprites':rects[clip]};rows.append((x,rh));y+=rh+2
 atlas=Image.new('RGBA',(max(w for w,h in rows),y))
 for clip in CLIPS:
@@ -43,10 +51,11 @@ for clip,(count,fps,loop) in CLIPS.items():
  assert any(ImageChops.difference(restored[clip][0],im).getbbox(alpha_only=False) for im in restored[clip][1:]),clip+' no motion'
  assert all(a.getchannel('A').tobytes()==b.getchannel('A').tobytes() for a,b in zip(frames[clip],restored[clip])),clip+' trim offsets changed alpha'
 assert frames['death'][-1].tobytes()==frames['death'][-2].tobytes(),'death not held'
+assert restored['death'][-1].tobytes()==restored['death'][-2].tobytes(),'decoded death not held'
 report={'status':'technical PASS, not art approval','bytes':len(buf.getvalue()),'quality':quality,'logical_cell':160,'frames':40,'atlas_size':atlas.size,'decoded_offsets':'all 40 alpha masks reconstruct exactly','held_death':True,'provenance':man}
 (V/'artillery-validation.json').write_text(json.dumps(report,indent=2))
 # 8 seconds, all clips together, decoded trimmed atlas, 2x logical scale on cream.
-mp4=V/f'artillery-round{os.environ.get("ROUND","1")}.mp4'
+mp4=V/f'artillery-round{os.environ.get("ROUND","2")}.mp4'
 with tempfile.TemporaryDirectory(prefix='artillery-video-',dir=R/'tmp') as tmp:
  for tick in range(240):
   canvas=Image.new('RGBA',(1600,348),(233,207,160,255));draw=ImageDraw.Draw(canvas)
@@ -54,9 +63,10 @@ with tempfile.TemporaryDirectory(prefix='artillery-video-',dir=R/'tmp') as tmp:
    i=int(tick/30*fps)%count if loop else min(int((tick%60)/30*fps),count-1)
    canvas.alpha_composite(restored[clip][i].resize((320,320),Image.Resampling.LANCZOS),(k*320,28));draw.text((k*320+10,7),clip,fill='#423b2d')
   canvas.convert('RGB').save(Path(tmp)/f'{tick:04}.png')
- subprocess.run(['ffmpeg','-y','-loglevel','error','-framerate','30','-i',tmp+'/%04d.png','-c:v','libx264','-pix_fmt','yuv420p','-crf','20','-movflags','+faststart',str(mp4)],check=True)
+ subprocess.run(['ffmpeg','-y','-loglevel','error','-framerate','30','-i',tmp+'/%04d.png','-c:v','libx264','-threads','3','-pix_fmt','yuv420p','-crf','20','-movflags','+faststart',str(mp4)],check=True)
 probe=json.loads(subprocess.check_output(['ffprobe','-v','error','-show_entries','stream=codec_name,pix_fmt,width,height,nb_frames:format=duration','-of','json',str(mp4)]));stream=probe['streams'][0]
 assert stream['codec_name']=='h264' and stream['pix_fmt']=='yuv420p' and int(stream['nb_frames'])==240
 assert float(probe['format']['duration'])==8
+assert (stream['width'],stream['height'])==(1600,348)
 (V/'artillery-video-validation.json').write_text(json.dumps(probe,indent=2))
 print('PASS: 40 frames, >=75 quality, <=200KB, exact trim offsets, all clips move, held death, 240-frame 8s H264 yuv420p MP4',mp4)
