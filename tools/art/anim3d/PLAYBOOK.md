@@ -41,6 +41,35 @@ right, 50/50 crossfade and a split-screen, each at 256 and 64 px. Review motion
 strips and playback too: fixed UVs can stretch or expose fill seams away from rest.
 A histogram match measures tone distribution, not geometric or artistic fidelity.
 
+### Open motion standard — every unit (Sam, feedback 23)
+
+Use proven open motion as the default. Humans use CMU (free use) or the free
+Quaternius Universal Animation Library (CC0) for idle, move, hit and death.
+Retarget through Rokoko's free add-on or Blender's native constraints and baking.
+Match the source T-pose/rest pose to the target anatomy and carry complete bone
+rotations, including roll. Positions or a single bone direction do not preserve
+roll. Keep only the weapon-specific attack hand-keyed, starting and ending on the
+new idle. Holding a weapon may require a constant upper-body reference offset;
+record it rather than replacing the source motion with invented keys.
+
+For horses, elephants and other animals, use a CC0 animated quadruped (for
+example Quaternius animated animal packs), retargeted or as the weighted base.
+Idle, walk/gallop and death come from its open actions. Motion licences for this
+public repository are **CC0 or CMU free use only**: no Mixamo or paid animations.
+Record exact source URL, version/commit, file hash, action and licence in both
+`units/<slug>/SOURCES.md` and external `assets/SOURCES.md`.
+
+Never hand-correct foot orientation after retargeting. Fix the rest-pose/roll
+mapping instead. Do not camera-ray-shift, widen or twist foot meshes to imitate
+a painted footprint. Small contact translations are allowed; measure their
+size. Every round renders actual feet from above and from the front over the
+whole move cycle to `<slug>-g-feet-check.png`. Check their heading against the
+rig's documented forward axis and check planted-foot slip, including the loop
+seam. An in-place walking atlas needs a documented virtual root velocity for
+this test: backwards stance travel is expected, lateral drift or variable
+planted-foot speed is not. Inspect rendered sole geometry as well as bones.
+A source label, a successful bake or a still image alone is not a clean-walk pass.
+
 ### Shared cream base
 
 Every family uses one stationary round cream stone disc: **#E9CFA0 sRGB top**,
@@ -142,18 +171,44 @@ and exact measured results live in `REVIEW.md`, not in this method document.
 
 ### Motion, cloth and review
 
-CMU 77_02 standing and 02_01 walking use Bruce Hahne's 2010 MotionBuilder BVH
-conversion (research/commercial use permitted). Data came from mocap.cs.cmu.edu;
-the database was funded by NSF EIA-0196217. `mocap.py` preserves channel order and
-computes forward kinematics; `animate.py` retargets standing torso deltas and
-walking legs with an authored shield-bearing guard. Attack, hit and death are
-keyed on that same rig. Attack raises outside the right shoulder and slides the
-grip on the shaft to retain framing. Death opens the fingers, releases the spear
-across the front of the base, folds the legs and settles the shield.
+Round 9 replaces the earlier partial CMU direction reconstruction with the
+CC0 Quaternius Standard actions `Idle_Loop`, `Walk_Loop`, `Hit_Chest` and
+`Death01`. `infantry/retarget.py` imports the glTF with Blender, calibrates full
+rest/reference matrices (including roll), then samples native world-space Copy
+Rotation constraints. Blender's `Bone.convert_local_to_pose` bakes each visual
+matrix with its sampled parent, avoiding stale-parent dependency updates.
+Locomotion legs match the source T-pose axes while retaining MPFB roll; a
+Blender NLA layer supplies `Idle_Loop` arms over the unarmed walk. The upper
+body uses constant reference offsets into the spear/shield guard. The hand-keyed attack
+starts and finishes at that idle reference. Equipment release remains authored.
+Death blends from the guard into the fully rest-matched open action over its
+first 18 percent; it does not carry the guard's arm/leg offsets through the fall.
+Hit samples the open recoil then blends back to the same idle over its final
+third, so the four-frame reaction does not snap out of a held wounded pose.
+Exact provenance, pinned hashes and source actions are in
+`units/spearman/SOURCES.md`; each `clip.json` includes the mapping and source hash.
+
+The walk keeps the source cadence. Bounded root translations and Blender
+two-bone IK lock evaluated heel/toe contact landmarks to one fitted virtual
+travel speed, including heel strike, toe-off and support across the loop seam.
+Native world-space rotation constraints retain the source foot roll during IK;
+there is no authored foot angle correction. Bone-ankle positions alone cannot prove foot contact: verify the actual
+heel/toe landmarks and support height. The source fall is grounded against the
+raised stone and armour surfaces; an invisible, thick floor collider supports
+cloth outside the disc. The released spear follows its own trajectory.
+
+`infantry/refine.py` no longer splays toes, broadens sandals in screen space or
+raises feet along the camera ray. It preserves the anatomical foot/sandal shape
+and aligns rest rotations before projection. The finished leather soles and
+straps are skinned to foot + ball bones, preserving the fitted neutral surface;
+a rigid ankle-parented sandal cannot reproduce an articulated human toe-off. Per-frame foot orientation comes
+only from the retarget. `units/spearman/feet.py` renders isolated, evaluated
+lower-leg geometry for the top/front review without changing the saved master.
 
 Each clip has one second of cloth pre-roll and a persistent simulation bake.
 Light edge pinning keeps the cloak's broad rest silhouette while its middle
-moves. Lengths are 8/8/10/4/10 frames at 10/12/14/12/10 fps. Idle and move loop.
+moves. Lengths are 8/8/10/4/10 frames at 4/6/14/12/4 fps (walk keeps the source
+1.33-second cycle rather than playing at twice its speed). Idle and move loop.
 Death's terminal sample is rendered **once and copied**, including identical PNG
 bytes. Never weaken the pixel-equality check to hide stochastic render noise.
 

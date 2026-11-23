@@ -1,80 +1,100 @@
-# Spearman review — round 8
+# Spearman review — round 9 motion fix
 
-**Not PASS.** At 256 px the hand and shoulder contour are slightly closer,
-the crest ends higher beside the cheek, and the cream stone is paler with a
-smoother bevel and softer shadows. Cheek shape, sandals, stance, shield edge
-and base shading still distinguish the render from the painting. At 64 px it
-reads as the same spearman, with a remaining difference in stance and base.
-All evidence from this iteration is explicitly labelled CPU preview.
+**Not PASS against the painting yet.** The walk now uses a complete open action,
+points forward when supporting weight, and has measured heel/toe contact through
+heel strike, toe-off and the loop boundary. It still reads as a slightly stylized
+march. At 256 px, face/shield/foot proportions and pale surfaces exposed during
+hit/death remain distinguishable from the painting. At 64 px it clearly reads as
+the same spearman. No `spearman-PASS` was written.
 
-The requested round-7 GPU log is absent, and supplied images and movie are
-CPU-labelled. No GPU success or failure was inferred. The received evidence is
-preserved under `review/3d-v2/spearman-round7-preserved/`.
+## Diagnosis and change
 
-## Changes
+Round 8 reconstructed only CMU leg directions, overwrote foot directions, and
+screen-fitted/lifted the feet along the camera ray. That discarded captured roll
+and embedded splay in the fitted geometry. Sandals were rigid ankle children,
+so even correct ankle rotation could not reproduce toe flex.
 
-The frozen rest-camera projection, original MPFB body and skin weights, real
-beveled equipment, straps, cloth folds, and image-generated unseen fills remain.
-Inverse-skin fitting expands the actual knuckle stack and adjusts the shoulder;
-real crest volume now ends above the cheek and extends farther forward.
+The replacement imports the pinned CC0 Quaternius Standard library through
+Blender and samples native world-space Copy Rotation constraints with complete
+rest/reference offsets. MPFB's spread-leg rest is matched to the source T-pose;
+roll is retained. Blender's pose-to-local conversion bakes sampled parent
+matrices, avoiding stale-parent transforms. No foot angle is authored after
+retargeting. The actual finished sandals and straps now bend on foot/ball bones,
+while retaining their neutral surface and the original MPFB body/53-bone rig.
 
-The stone has a 22mm five-segment bevel, restrained scan bump and finer pigment
-variation. An elevated broad area key softens the previous diagonal shadows.
-A small linear pigment lift brings the rendered cream closer to source samples.
-Raw/graded pixel comparisons showed that the existing automatic grade improves
-the figure overall; that single rest-fitted grade remains fixed for all clips.
+- Idle: `Idle_Loop`, with a reference offset into the weapon guard.
+- Move: `Walk_Loop`, with open idle arms layered through Blender NLA for carrying
+  the spear/shield. Source pacing is retained at 1.33 seconds per cycle.
+- Hit: `Hit_Chest`, with a final transition back to the same idle.
+- Death: `Death01`, with an 18% entry transition out of the guard. Source joint
+  motion remains intact; the armoured body is grounded against the raised disc,
+  and an invisible thick collider supports cloth outside it. This needs up to
+  180 mm of body-root lift for the armour/disc; it is not the walk contact solve.
+- Attack: original weapon-specific keys, with planted controls rebased on idle.
+  Weapon release and sliding the grip along the shaft remain accessory handling.
 
-The scene check verifies the new finish in addition to topology, original rig,
-camera-only pigment, contact plane and actual shield relief clearance. GPU
-handoff defaults to round 8 and logs the checkout revision, dirty input paths
-and resolved Blender gate, alongside its existing stage/failure receipts.
+Motion sources, versions, hashes and licences are in `units/spearman/SOURCES.md`
+and external `assets/SOURCES.md`. No Mixamo, paid assets, accounts or uploads.
 
 ## Verification
 
-- CPU Cycles rest and all 40 frames: **256 px / 12 samples**. Detail inspection
-  render: **512 px / 12 samples**, still CPU. Final GPU masters remain pending.
-- Trimmed 160 px atlas: **181,968 bytes, quality 80**, all 8/8/10/4/10
-  frames retained. SHA256 `33742c6d2b0128c92207db9649bf90d6d41d27955b490f55ea703feaad256218`.
-- Independent decoded validation passes current hashes, clip timing, exact
-  reconstructed alpha, offsets, gutters, bounds, visible motion, byte/quality
-  limits and byte-identical held-death PNGs.
-- Full saved-rig audit: **40 samples, zero findings**, including guard arm
-  transitions, hand/shaft attachment, spear crossings, camera and floor bounds.
-- Saved-scene checks pass: **19,158 body vertices / 53 bones**, 314 camera-gated
-  painting materials, 280 unseen fills, all 12 raised shield rays clear.
-- **2 pipeline regression tests pass**. **26 Python / 3 Bash / 2 JSON syntax checks pass**; **34-file hygiene**
-  reports zero findings, and diff whitespace passes. Exact report:
-  `spearman-round8-checks.json`.
-- Movie verified: **H.264 yuv420p, 1600 × 352, 192 frames, 24 fps, 8 seconds**;
-  all five decoded clips run simultaneously on cream.
-- Rest diagnostic silhouette IoU: **0.8862**, versus round 7 **0.8839**;
-  RGB union errors: **21.61 / 26.82 / 27.92**, versus **22.25 / 27.27 / 28.60**.
-  These small improvements do not establish artistic equivalence.
-- Opened clay, rest split/crossfade, details, rig poses, all five strips, decoded
-  atlas and extracted round-8 movie frames. Motion remains readable, but raised
-  arm/lifted foot projection stretch and pale fallen-pose seams remain.
+All new images are explicitly **CPU Cycles previews, 256 px / 8 samples**.
+The top/front feet views use 192 px cells / 8 samples. Opened the rest comparison,
+all five strips and the feet sheet at 256/64 px. Animated WebP strips exist.
 
-No `spearman-PASS` was written.
+- Final geometry audit: **40 samples, zero findings**, covering camera bounds,
+  disc/ground intersections, spear crossings, grip, baked cloth and entry/exit
+  arm continuity for attack/hit plus death entry.
+- Walk: **33 dense frames, 38 supporting-foot samples**, including toe-off and
+  wrapped stance. Maximum planted heading **2.397 degrees**, readable horizontal
+  footprint heading **4.052 degrees**, actual heel/toe drift **0.0022 mm** after
+  virtual travel compensation, support-height error **0.869 mm**, zero positional
+  loop seam. Virtual speed: **1.07334 m/s**.
+- Corrections stay small: root XY **27.2 mm**, native two-bone foot IK **23.4 mm**,
+  vertical sole contact **29.9 mm**. Retargeted foot rotation is preserved by a
+  native world-space rotation constraint during IK.
+- The metric retains raw airborne yaw. A nearly vertical toe-down foot projects
+  less than 8 cm onto the ground, making horizontal yaw ill-conditioned; these
+  samples are labelled raised and are not used as a planted-foot heading test.
+  Ankle travel while the foot rolls is also reported separately from sole slip.
+- Scene checks pass original **19,158 body vertices / 53 bones**, 314 painted
+  materials, 280 unseen fills, articulated sandal weights, shared cream base,
+  calibrated camera and all twelve shield-relief clearances.
+- CPU preview packing: **182,334 bytes, quality 80**, trimmed 160 px cells, all
+  **8/8/10/4/10** frames. Independent decoding passes source hashes, timing,
+  offsets, exact alpha, gutters, bounds, motion and byte-identical held death.
+  This preview is external in `masters/spearman-3d-v2/round9-cpu-atlas/`;
+  the shipped atlas is reserved for the driver's GPU pass.
+- **2 pipeline regression tests pass**. Changed Python/Bash syntax and public
+  hygiene pass; `git diff --check` passes.
+- The repository-wide art distinctness gate could not launch Chromium in this
+  sandbox: macOS `bootstrap_check_in ... Permission denied (1100)`. It did not
+  produce an art verdict. Full error: `spearman-round9-art-gate.txt` in review.
+
+Exact current motion results: `review/3d-v2/spearman-motion-checks.json`.
+CPU delivery validation: `review/3d-v2/spearman-round9-cpu-delivery/`.
+Round-8 masters, clips and renders remain in
+`masters/spearman-3d-v2/round8-preserved/`.
 
 ## GPU handoff
 
-From the repository root on the GPU host:
+From the repository root, on the GPU host:
 
 ```sh
-ROUND=8 tools/art/anim3d/units/spearman/gpu.sh
+ROUND=9 tools/art/anim3d/units/spearman/gpu.sh
 ```
 
-This executable checks Cycles GPU/Metal, rebuilds the projection and all five
-clips, renders every stage and 40 frames at 512 px / 64 samples, fits one grade,
-exports genuine 512/256 masters, packs and independently validates the trimmed
-160 px atlas, and encodes all five decoded clips side by side for eight seconds.
-It writes `spearman-round8.mp4`, all review images including the rest comparison,
-`gpu-logs-spearman-r8.log` and a stage/status receipt. It never writes PASS.
-Final GPU rendering and visual review remain required.
+The executable verifies GPU availability and pinned motion assets, rebuilds the
+master and all five clips, renders every stage at 512 px on Cycles GPU, checks
+and renders the feet, exports 512/256 masters, packs and validates the trimmed
+160 px atlas, and writes `spearman-round${ROUND}.mp4`: all five decoded clips,
+eight seconds, 2x on cream, H.264 yuv420p. It also writes the rest comparison and
+stage/status receipts. It never awards PASS automatically.
 
-Masters remain outside git. No Rust, rules, WASM or UI runtime changed; the
-game still displays its painting. No push, PR or master merge is part of this task.
+Final GPU size/quality and visual approval remain pending. No Rust, game rules,
+WASM or UI runtime changed. No push, PR or master merge is part of this round.
 
-Git staging failed because the sandbox denied the worktree `index.lock`.
-Seven files remain for the runner to commit with the requested gpt-6-astra
-co-author trailer. The branch already contains available `origin/master`.
+Git staging was blocked by the sandbox (`index.lock: Operation not permitted`).
+Sixteen changed/new files remain for the runner to commit. The requested
+gpt-6-astra co-author trailer is included in external
+`review/3d-v2/spearman-round9-commit-message.txt`.

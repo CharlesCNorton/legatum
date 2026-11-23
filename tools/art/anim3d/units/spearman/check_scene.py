@@ -1,12 +1,15 @@
 """Verify the saved round-8 surface pipeline before rebuilding cloth/clips."""
 import json
 import os
+import sys
 from pathlib import Path
 
 import bpy
 from mathutils import Vector
 from mathutils.bvhtree import BVHTree
 
+sys.path.insert(0,str(Path(__file__).resolve().parents[2]/'infantry'))
+from contact import sole_points
 root = Path(os.environ['ANIM_ROOT'])
 bpy.ops.wm.open_mainfile(filepath=str(root/'masters/spearman-3d-v2/spearman.blend'))
 sc = bpy.context.scene
@@ -59,7 +62,12 @@ assert abs(max(heights)-min(heights)-.155) < .0001, 'Stone underside was not dee
 assert tuple(sc.camera.location) == (2.5, -7.0, 3.0)
 for side in ['l', 'r']:
     sole = bpy.data.objects['Leather sandal sole '+side]
-    lowest = min((sole.matrix_world @ v.co).z for v in sole.data.vertices)
+    assert any(m.type=='ARMATURE' for m in sole.modifiers), 'Sandal must bend at the ball'
+    assert set(g.name for g in sole.vertex_groups)=={'foot_'+side,'ball_'+side}
+    assert all(abs(sum(g.weight for g in v.groups)-1)<1e-5 for v in sole.data.vertices)
+    assert 0<=sole['toe_vertex']<len(sole.data.vertices)
+    assert 0<=sole['heel_vertex']<len(sole.data.vertices)
+    lowest = min(v.z for v in sole_points(side))
     assert lowest >= .100, (sole.name, lowest)
 for mat in base.data.materials:
     for node in mat.node_tree.nodes:
@@ -92,7 +100,7 @@ for ob in sc.objects:
 assert len(clearance) == 12
 report = {'refinement': 8, 'painted_materials': painted, 'camera_only_pigment': True,
           'camera_only_unseen_fills': unseen_fills, 'base_thickness': max(heights)-min(heights),
-          'rigid_finish_before_projection': True, 'body_vertices': 19158, 'bones': 53,
+          'rigid_finish_before_projection': True, 'articulated_sandals': True, 'body_vertices': 19158, 'bones': 53,
           'base_top': .105, 'camera': list(sc.camera.location),
           'stone_bevel_segments': stone_bevel.segments, 'key_size': 5.0,
           'shield_ray_min_face_clearance': clearance}

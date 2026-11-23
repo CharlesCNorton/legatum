@@ -13,8 +13,8 @@ ROOT = Path(os.environ.get('ANIM_ROOT', Path.home()/'LegatumRuns/anim-pilot'))
 MASTER = ROOT/'masters/spearman-3d-v2'
 REVIEW = ROOT/'review/3d-v2'
 OUTPUT = Path('app/src/assets/units/anim')
-CLIPS = {'idle': (8, 10, True), 'move': (8, 12, True), 'attack': (10, 14, False),
-         'hit': (4, 12, False), 'death': (10, 10, False)}
+CLIPS = {'idle': (8, 4, True), 'move': (8, 6, True), 'attack': (10, 14, False),
+         'hit': (4, 12, False), 'death': (10, 4, False)}
 CELL, PAD = 160, 2
 
 

@@ -28,8 +28,8 @@ for clip in clips:
   if not rows:
    entry_arms[clip]={name:rig.matrix_world @ rig.pose.bones[name].head
                     for name in ['upperarm_r','lowerarm_r','hand_r','upperarm_l','lowerarm_l','hand_l']}
-  if clip=='attack' and frame==json.loads(sc['sample_frames'])[-1]:
-   entry_arms['attack exit']={name:rig.matrix_world @ rig.pose.bones[name].head
+  if clip in ['attack','hit'] and frame==json.loads(sc['sample_frames'])[-1]:
+   entry_arms[clip+' exit']={name:rig.matrix_world @ rig.pose.bones[name].head
                             for name in entry_arms[clip]}
   assert base.matrix_world==base_matrix
   for o in sc.objects:
@@ -64,7 +64,7 @@ for clip in clips:
  report[clip]=rows
 transition_errors={}
 if 'idle' in entry_arms:
- for clip in ['attack','death','attack exit']:
+ for clip in ['attack','death','hit','attack exit','hit exit']:
   if clip not in entry_arms:continue
   transition_errors[clip]={}
   for name,point in entry_arms[clip].items():

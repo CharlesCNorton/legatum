@@ -20,7 +20,7 @@ for i,(name,im) in enumerate(images):
 filename='spearman-'+{'b':'b-plain.png','c':'c-textured-lit.png','d':'d-rig-poses.png'}.get(stage,stage+'-strip.png')
 sheet.save(review/filename)
 if stage.startswith('e-'):
- fps={'idle':10,'move':12,'attack':14,'hit':12,'death':10}[stage[2:]]
+ fps={'idle':4,'move':6,'attack':14,'hit':12,'death':4}[stage[2:]]
  frames=[im for _,im in images[1:]]
  frames[0].save(review/('spearman-'+stage+'.webp'),save_all=True,append_images=frames[1:],duration=round(1000/fps),loop=0,quality=85,method=6)
 print(review/filename)

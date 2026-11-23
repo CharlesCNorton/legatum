@@ -3,7 +3,8 @@
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/../../../../.."
 source tools/art/anim3d/env.sh
-export ROUND="${ROUND:-8}"
+export ROUND="${ROUND:-9}"
+unset MOTION_DIAGNOSTIC FEET_METRICS_ONLY
 [[ "$ROUND" =~ ^[0-9]+$ ]] || { echo 'ROUND must be an integer' >&2; exit 2; }
 # Keep the exact requested log even if the overnight driver's redirection changes.
 # Avoid a second writer when the driver already redirects to this exact file.
@@ -29,6 +30,8 @@ export RENDER_ENGINE=CYCLES CYCLES_DEVICE=GPU CYCLES_BACKEND="${CYCLES_BACKEND:-
 export RESOLUTION=512 SAMPLES="${SAMPLES:-64}" GRADE=1
 # Fail before expensive cloth baking if the host cannot expose a GPU.
 blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python tools/art/anim3d/units/spearman/preflight.py
+stage=motion-sources
+"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/spearman/fetch_motion.py
 stage=project
 tools/art/anim3d/render.sh project
 stage=scene-checks
@@ -51,6 +54,9 @@ for clip in idle move attack hit death; do
   stage="e-$clip"
   tools/art/anim3d/render.sh "e-$clip"
 done
+stage=feet
+blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python tools/art/anim3d/units/spearman/feet.py
+"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/spearman/feet_sheet.py
 stage=audit
 tools/art/anim3d/render.sh audit
 stage=delivery

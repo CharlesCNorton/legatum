@@ -22,12 +22,16 @@ def refine(sc, aim, screen_sculpt):
         bpy.context.view_layer.objects.active = body
         bpy.ops.object.shape_key_remove(all=True, apply_mix=True)
     assert len(body.data.vertices) == 19158 and body.data.shape_keys is None
-    # Turn the real feet outward, rather than sampling pale stone onto inward toes.
-    aim('foot_l', (.075, -.12, -.035))
-    aim('foot_r', (-.075, -.12, -.035))
-    aim('ball_l', (.3, -1, 0))
-    aim('ball_r', (-.3, -1, 0))
-    bpy.context.view_layer.update()
+    # Match the anatomical rest rotations once, including MPFB bone roll.
+    # The locomotion retarget uses this bind; no per-frame toe aiming is allowed.
+    rig = bpy.data.objects['Spearman • MPFB game_engine']
+    for side in ['l', 'r']:
+        for name in ['foot_'+side, 'ball_'+side]:
+            bone = rig.pose.bones[name]
+            matrix = bone.bone.matrix_local.copy()
+            matrix.translation = bone.head
+            bone.matrix = matrix
+            bpy.context.view_layer.update()
 
     def pixel(ob, co):
         p = world_to_camera_view(sc, sc.camera, ob.matrix_world @ co)
@@ -65,35 +69,14 @@ def refine(sc, aim, screen_sculpt):
         # knuckle stack around the shaft without replacing fingers or the rig.
         fist = math.exp(-((p.x-97)/8)**4-((p.y-115)/9)**4)
         target += Vector((.08*(p.x-97), .82*(p.y-115)+.3))*fist
-        if p.x < 122:
-            # Seat the spear-side shin/foot under the painted greave rather
-            # than leaving an exposed sliver beyond the painted toe silhouette.
-            target.x += 4.5*max(0, min(1, (p.y-179)/30))
-            # Match the wider side-on toe box, including all real straps and
-            # the MPFB foot. Fitting only the shin left a round, narrow sandal.
-            toe = max(0, min(1, (p.y-207)/8))
-            target.x += ((target.x-102)*.45-1)*toe
-        elif p.x > 137:
-            # The other sandal was viewed almost end-on. Broaden its real toe
-            # and sole together, keeping the ankle and contact height fixed.
-            weight = max(0, min(1, (p.y-207)/9))
-            target.x += (p.x-156)*.65*weight
         return target
 
     def fitted_local(ob, co, p):
         local = screen_sculpt(ob, co, fitted_pixel(p))
-        # Lift the fitted feet onto the actual stone top along the view ray.
-        # This preserves painted landmarks while correcting the old buried
-        # soles. Blend through the ankle; original skin weights remain intact.
-        weight = max(0, min(1, (p.y-199)/9))
-        view_ray = sc.camera.matrix_world.to_quaternion() @ Vector((0, 0, 1))
+        # Preserve anatomical feet and original sandal geometry. Screen-space
+        # broadening and camera-ray lifting made a correct bone direction look
+        # splayed and displaced the contact point during rotation.
         world = ob.matrix_world @ local
-        world += view_ray*(.034*weight/view_ray.z)
-        # Anatomy must sit INSIDE the sandal, not protrude below its sole.
-        # Flatten only the underside of the fitted foot; subdivision smooths
-        # the transition and the original topology/weights remain unchanged.
-        if ob.name == 'MPFB anatomical male • original topology' and p.y > 199:
-            world.z = max(world.z, .123)
         return ob.matrix_world.inverted() @ world
 
     for name in ['MPFB anatomical male • original topology', 'Linen tunic shoulder sleeves']:
@@ -125,6 +108,18 @@ def refine(sc, aim, screen_sculpt):
             posed = skin @ v.co
             v.co = skin.inverted_safe() @ fitted_local(ob, posed, pixel(ob, posed))
         ob.data.update()
+
+    for side in ['l', 'r']:
+        sole = bpy.data.objects['Leather sandal sole '+side]
+        evaluated=sole.evaluated_get(bpy.context.evaluated_depsgraph_get())
+        mesh=evaluated.to_mesh()
+        lowest = min((sole.matrix_world @ v.co).z for v in mesh.vertices)
+        evaluated.to_mesh_clear()
+        foot = rig.pose.bones['foot_'+side]
+        matrix = foot.matrix.copy()
+        matrix.translation += rig.matrix_world.to_3x3().inverted() @ Vector((0, 0, .108-lowest))
+        foot.matrix = matrix
+        bpy.context.view_layer.update()
 
     # Lower the squared rear neckline behind the helmet. Work on the actual
     # folded collar and weighted cape, leaving pin weights and thickness intact.
@@ -311,5 +306,36 @@ def refine(sc, aim, screen_sculpt):
         for mod in list(ob.modifiers):
             if mod.type in {'SOLIDIFY', 'BEVEL', 'SUBSURF'}:
                 bpy.ops.object.modifier_apply(modifier=mod.name)
+    # A leather sandal bends at the ball of the foot. A rigid sole parented to
+    # the ankle cannot reproduce the source's toe-off, even with correct rolls.
+    # Bind the already-finished real sole/straps to MPFB foot + ball, preserving
+    # their exact fitted rest surface and UV topology.
+    for ob in sc.objects:
+        if ob.type!='MESH' or not ob.name.startswith(('Leather sandal sole','Sandal strap')):continue
+        side=ob.parent_bone[-1]
+        foot,ball=rig.pose.bones['foot_'+side],rig.pose.bones['ball_'+side]
+        transforms={p.name:p.matrix @ p.bone.matrix_local.inverted() for p in [foot,ball]}
+        world=ob.matrix_world.copy()
+        axis=(ball.tail-ball.head).normalized()
+        coordinates=[rig.matrix_world.inverted() @ world @ v.co for v in ob.data.vertices]
+        if ob.name.startswith('Leather sandal sole'):
+            # Store actual finished-surface landmarks before inverse skinning.
+            longitudinal=[(v-ball.head).dot(axis) for v in coordinates]
+            lo,hi=min(longitudinal),max(longitudinal)
+            ob['toe_vertex']=min((i for i,d in enumerate(longitudinal) if d>hi-.01),key=lambda i:coordinates[i].z)
+            ob['heel_vertex']=min((i for i,d in enumerate(longitudinal) if d<lo+.01),key=lambda i:coordinates[i].z)
+        ob.vertex_groups.clear()
+        groups={name:ob.vertex_groups.new(name=name) for name in transforms}
+        for vertex,posed in zip(ob.data.vertices,coordinates):
+            t=max(0,min(1,((posed-ball.head).dot(axis)+.025)/.055))
+            weight=t*t*(3-2*t)
+            skin=transforms[foot.name]*(1-weight)+transforms[ball.name]*weight
+            vertex.co=skin.inverted() @ posed
+            groups[foot.name].add([vertex.index],1-weight,'REPLACE')
+            groups[ball.name].add([vertex.index],weight,'REPLACE')
+        ob.parent=rig;ob.parent_type='OBJECT';ob.parent_bone=''
+        ob.matrix_parent_inverse=Matrix.Identity(4);ob.matrix_basis=Matrix.Identity(4)
+        modifier=ob.modifiers.new('Anatomical sandal toe flex','ARMATURE');modifier.object=rig
+        ob.data.update()
     sc['infantry_refinement'] = 8
     bpy.context.view_layer.update()

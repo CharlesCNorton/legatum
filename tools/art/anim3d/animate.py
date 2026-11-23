@@ -1,22 +1,26 @@
-"""Retarget CMU standing/walk, layer weapon poses, bake real cloth per clip."""
+"""Bake Blender-retargeted CC0 motion and the weapon-specific attack."""
 import bpy,os,sys,json,math,hashlib
 from pathlib import Path
 from mathutils import Vector,Matrix,Quaternion
 from mathutils.bvhtree import BVHTree
 sys.path.insert(0,str(Path(__file__).parent))
-from mocap import BVH
+sys.path.insert(0,str(Path(__file__).parent/'infantry'))
+from retarget import prepare, apply_matrices, contact_ik
+from contact import sole_points
 root=Path(os.environ['ANIM_ROOT']);M=root/'masters/spearman-3d-v2';A=root/'assets'
-CLIPS={'idle':(8,10),'move':(8,12),'attack':(10,14),'hit':(4,12),'death':(10,10)}
-walk=BVH(A/'cmu-02_01.bvh');stand=BVH(A/'cmu-77_02.bvh')
+CLIPS={'idle':(8,4),'move':(8,6),'attack':(10,14),'hit':(4,12),'death':(10,4)}
+
 clip=sys.argv[sys.argv.index('--')+1] if '--' in sys.argv else 'idle'
 out=M/'clips'/clip;out.mkdir(parents=True,exist_ok=True)
-(out/'clip.json').unlink(missing_ok=True)
+if os.environ.get('MOTION_DIAGNOSTIC')!='1':(out/'clip.json').unlink(missing_ok=True)
 bpy.ops.wm.open_mainfile(filepath=str(M/'spearman.blend'))
 sc=bpy.context.scene;sc.render.threads_mode='FIXED';sc.render.threads=3;rig=bpy.data.objects['Spearman • MPFB game_engine'];neutral=json.loads(rig['neutral_pose'])
 base_loc=rig.location.copy()
+neutral_world={p.name:p.matrix.copy() for p in rig.pose.bones}
 guard_hand=Vector(rig.get('guard_hand_target',(-.37,-.31,1.34)))
 spear_objects=[o for o in sc.objects if any(o.name.startswith(n) for n in ['Ash dory shaft','Spear bronze ferrule','Leaf spearhead','Iron spear butt'])]
 spear_neutral={o.name:o.matrix_basis.copy() for o in spear_objects}
+spear_world={o.name:o.matrix_world.copy() for o in spear_objects}
 for o in spear_objects:o.rotation_mode='QUATERNION'
 
 shield=bpy.data.objects.get('Aspis control');shield_neutral=shield.matrix_basis.copy() if shield else None
@@ -31,6 +35,12 @@ if clip=='death':
   for g in v.groups:
    if g.group==pins.index and g.weight<.99:pins.add([v.index],g.weight*.15,'REPLACE')
  cloth.settings.bending_stiffness=.4
+ bpy.ops.mesh.primitive_cube_add(size=1,location=(0,0,-.02))
+ ground=bpy.context.object;ground.name='Death ground cloth collider';ground.scale=(6,6,.04)
+ bpy.ops.object.transform_apply(location=False,rotation=False,scale=True)
+ ground.hide_render=True;ground.modifiers.new('Ground cloth collision','COLLISION')
+ cloth.settings.quality=8
+ cloth.collision_settings.collision_quality=6
 for p in rig.pose.bones:p.rotation_mode='QUATERNION'
 def reset():
  rig.location=base_loc
@@ -52,31 +62,14 @@ def hand_spear(direction):
  # Weapon was attached in neutral pose: rotate hand from neutral, not from rest.
  p=rig.pose.bones['hand_r'];reset_mat=p.matrix.copy();q=Vector((0,0,1)).rotation_difference(Vector(direction))
  rot=q.to_matrix().to_4x4();pos=reset_mat.translation.copy();mat=rot @ reset_mat;mat.translation=pos;p.matrix=mat;bpy.context.view_layer.update()
-def guard(t=0):
- limb('upperarm_r','lowerarm_r',guard_hand+Vector((0,0,t)),(-.48,-.12,1.08))
- limb('upperarm_l','lowerarm_l',(.29,-.34,1.12+t),(.53,-.10,1.13))
- aim('hand_r',(0,-.03,.09));aim('hand_l',(0,-.03,.09))
 def pose(t):
  reset()
- if clip=='idle':
-  p=stand.positions(80+round(t*240));p0=stand.positions(80)
-  v=(p['Neck']-p['Hips']).normalized();v0=(p0['Neck']-p0['Hips']).normalized()
-  delta=(v-v0)*.65
-  # Keep the end near the start for a gentle loop; only CMU deltas drive sway.
-  envelope=math.sin(math.pi*t)**2
-  turn('spine_03','X',delta.y*envelope);turn('spine_03','Y',delta.x*envelope)
-  guard(.007*math.sin(2*math.pi*t))
- elif clip=='move':
-  p=walk.positions(40+round(t*120))
-  for side,prefix in [('l','Left'),('r','Right')]:
-   upper=p[prefix+'Leg']-p[prefix+'UpLeg'];lower=p[prefix+'Foot']-p[prefix+'Leg']
-   # Captured sagittal gait, spread for the shield-bearing stance.
-   upper.x=.14 if side=='l' else -.14
-   aim('thigh_'+side,upper);aim('calf_'+side,lower)
-   aim('foot_'+side,(0,-.12,-.04));aim('ball_'+side,(0,-1,0))
-  floor=min(rig.pose.bones['foot_'+s].head.z for s in ['l','r'])
-  rig.location.z=base_loc.z+.09-floor
-  guard(.08+.013*math.cos(4*math.pi*t));turn('spine_03','Z',.045*math.sin(2*math.pi*t))
+ if clip in ['idle','move','hit','death']:
+  motion=retarget_frames[active_frame-1]
+  rig.location=base_loc+motion['root']
+  apply_matrices(rig,motion['matrices'])
+  if clip=='move':contact_ik(rig,motion['foot_corrections'])
+  bpy.context.view_layer.update()
  elif clip=='attack':
   # Raise outside the right shoulder, then drive forward above the shield rim.
   # Right hand stays on the shaft; the rear shaft stays outside the torso.
@@ -91,27 +84,14 @@ def pose(t):
   limb('upperarm_r','lowerarm_r',(guard_hand.x+(-.27-guard_hand.x)*strength,guard_hand.y+(-.41-guard_hand.y)*raised-.05*strength,guard_hand.z+(1.71-guard_hand.z)*raised),pole)
   limb('upperarm_l','lowerarm_l',(.29,-.34-.10*strength,1.12+.10*strength),Vector((.53,-.10,1.13)).lerp(Vector((.55,-.12,1.20)),strength))
   aim('hand_r',(0,-.03,.09));hand_spear(Vector((.98,.17,.12))*raised+Vector((0,0,1))*(1-raised))
- elif clip=='hit':
-  a=[0,1,.5,0][min(3,round(t*3))]
-  turn('spine_03','X',-.30*a);turn('neck_01','X',-.18*a);turn('head','Z',.09*a)
-  guard(.06*a);turn('lowerarm_l','Z',.25*a);rig.location.y=.045*a
- elif clip=='death':
-  # Side collapse onto the disc, folded legs; held terminal key pose.
-  a=min(1,t/.72);smooth=a*a*(3-2*a)
-  rig.location=base_loc+Vector((-.27*smooth,.02*smooth,-.585*smooth))
-  turn('pelvis','Y',1.25*smooth);turn('spine_03','Y',.22*smooth);turn('head','X',.28*smooth)
-  for side,sgn in [('l',1),('r',-1)]:
-   # Begin in the same wide guard, then fold the ankles into the fall.
-   x=(.21 if side=='l' else -.39)*(1-smooth)+(-.22+sgn*.12)*smooth
-   y=(.15 if side=='l' else -.075)*(1-smooth)+(.02+sgn*.12)*smooth
-   limb('thigh_'+side,'calf_'+side,(x,y,.75*smooth+.082*(1-smooth)),(-.45,-.30,.55))
-  limb('upperarm_r','lowerarm_r',guard_hand.lerp(Vector((.11,-.21,.85)),smooth),Vector((-.48,-.12,1.08)).lerp(Vector((-.35,-.32,.85)),smooth))
-  limb('upperarm_l','lowerarm_l',(.29+.14*smooth,-.34+.08*smooth,1.12-.30*smooth),Vector((.53,-.10,1.13)).lerp(Vector((.4,-.15,.9)),smooth))
-  aim('hand_r',(0,-.03,.09));hand_spear(Vector((0,0,1)))
  bpy.context.view_layer.update()
- if clip in ['attack','death']:
+ if clip=='attack':
+  # The authored attack has planted foot controls, rebased on the new idle.
+  # These are attack keys, not a correction to any retargeted clip.
   for side in ['l','r']:
-   aim('foot_'+side,(.075 if side=='l' else -.075,-.12,-.035));aim('ball_'+side,(.3 if side=='l' else -.3,-1,0))
+   for name in ['foot_'+side,'ball_'+side]:
+    bone=rig.pose.bones[name];matrix=neutral_world[name].copy();matrix.translation=bone.head
+    bone.matrix=matrix;bpy.context.view_layer.update()
  if clip=='attack':
   # Slide the grip down the shaft during extension; preserve a continuous grip
   # while keeping both ends of the long spear inside the fixed atlas cell.
@@ -123,7 +103,10 @@ def pose(t):
  if clip=='death':
   # Let go before the body rolls across the shaft. The rigid weapon lands across
   # the front edge of the stone; it is never hidden or teleported out of frame.
-  release=max(0,min(1,(t-.04)/.44))
+  release=max(0,min(1,t/.44))
+  if release>0:
+   for o in spear_objects:o.matrix_world=spear_world[o.name]
+   bpy.context.view_layer.update()
   shaft=bpy.data.objects['Ash dory shaft'];pts=shaft.data.splines[0].points
   start=shaft.matrix_world @ Vector(pts[0].co[:3]);end=shaft.matrix_world @ Vector(pts[-1].co[:3])
   center=(start+end)*.5;direction=(end-start).normalized()
@@ -133,9 +116,10 @@ def pose(t):
   tilt=max(0,min(1,(release-.20)/.55));tilt=tilt*tilt*(3-2*tilt)
   rotation=Quaternion().slerp(direction.rotation_difference(Vector((.99,.08,.015)).normalized()),tilt)
   target=center.lerp(Vector((-.05,-.57,.13)),release)
-  target.x+=.13*math.sin(math.pi*release)
-  target.y=center.y+(-.78-center.y)*depth
-  if release>.80:target.y=-.78+.21*(release-.80)/.20
+  target.x-=.08*math.sin(math.pi*release)
+  target.x+=.12*tilt
+  target.y=center.y+(-.95-center.y)*depth
+  if release>.80:target.y=-.95+.38*(release-.80)/.20
   drop=min(1,release/.75)
   target.z=center.z*(1-drop)+.13*drop
   if release>0:target.z=max(target.z,.11+(end-start).length*.5*abs((rotation @ direction).z))
@@ -162,13 +146,20 @@ def pose(t):
    bpy.context.view_layer.update()
 count,fps=CLIPS[clip];samples=[25+round(i*24/fps) for i in range(count)]
 # Give cloth one second to settle before any output sample.
-end=samples[-1];sc.frame_start=1;sc.frame_end=end;sc.render.fps=24
+end=25+round(count*24/fps) if clip in ['idle','move'] else samples[-1]
+sc.frame_start=1;sc.frame_end=end;sc.render.fps=24
+phases=[max(0,(f-25))/(count*24/fps) if clip in ['idle','move']
+        else max(0,min(1,(f-25)/max(1,end-25))) for f in range(1,end+1)]
+retarget_frames,motion_source=prepare(rig,root,clip,phases) if clip!='attack' else (None,{'provider':'Original weapon-specific hand keys, rebased on Quaternius idle reference'})
+# A single complete source cycle, sampled before its duplicate endpoint.
+
 for f in range(1,end+1):
  if f==1 or f%8==0:print('POSE',clip,f,'/',end,flush=True)
  sc.frame_set(f)
  t=max(0,min(1,(f-25)/max(1,end-25)))
  # Loop clips sample before the duplicate final phase.
  if clip in ['idle','move']:t=max(0,(f-25))/(count*24/fps)
+ active_frame=f
  pose(t)
  # Resolve the actual finished sandal underside against the real stone top.
  # Small foot-bone translations preserve the keyed action and live skinning;
@@ -176,33 +167,68 @@ for f in range(1,end+1):
  if sc.get('infantry_refinement',0)>=6:
   base=bpy.data.objects['Stationary cream stone']
   floor=max((base.matrix_world @ v.co).z for v in base.data.vertices)
+  if clip=='move':
+   flags=motion_source['contact']['planted'].get(str(f),{})
+   support=next((s for s in ['l','r'] if flags.get(s)),None)
+   if support:
+    sole=bpy.data.objects['Leather sandal sole '+support]
+    lowest=min(v.z for v in sole_points(support))
+    correction=floor+.001-lowest
+    assert abs(correction)<.04, f'Large contact height correction: {correction}'
+    rig.location.z+=correction
+    bpy.context.view_layer.update()
   base_inverse=base.matrix_world.inverted()
   base_radius=max((v.co.x*v.co.x+v.co.y*v.co.y)**.5 for v in base.data.vertices)-.015
   if clip=='death':
-   # Folded greaves can reach the disc before the released shield settles.
-   # Correct the actual calf surface, then let the foot contact solve follow.
-   for side in ['l','r']:
-    for _ in range(2):
-     dg=bpy.context.evaluated_depsgraph_get();lowest=10
-     for ob in sc.objects:
-      if not ob.name.startswith(('Contoured greave '+side,'Greave chased spiral '+side)):continue
-      ev=ob.evaluated_get(dg);me=ev.to_mesh()
-      for v in me.vertices:
-       w=ob.matrix_world @ v.co
-       local=base_inverse @ w
-       if local.x*local.x+local.y*local.y<base_radius**2:lowest=min(lowest,w.z)
-      ev.to_mesh_clear()
-     if lowest>=floor+.002:break
-     calf=rig.pose.bones['calf_'+side];mat=calf.matrix.copy()
-     mat.translation+=rig.matrix_world.to_3x3().inverted() @ Vector((0,0,floor+.002-lowest))
-     calf.matrix=mat;bpy.context.view_layer.update()
+   # The open clip falls onto a flat floor. Fit its root to the actual raised
+   # stone and thick armour, preserving every retargeted joint rotation.
+   released={o:o.matrix_world.copy() for o in spear_objects}
+   if shield and t>.30:released[shield]=shield.matrix_world.copy()
+   dg=bpy.context.evaluated_depsgraph_get();lift=0
+   for ob in (sc.objects if t>.30 else []):
+    if ob.type!='MESH' or ob.hide_render or ob==base or ob.name.startswith(('Cloak •','Aspis','Sunburst','Convex bronze aspis','Shield','Leather shield')):continue
+    if ob in spear_objects:continue
+    # Only rig-carried body/clothes/armour; released equipment has its own solve.
+    parent=ob.parent
+    if parent!=rig:continue
+    ev=ob.evaluated_get(dg);me=ev.to_mesh()
+    for v in me.vertices:
+     w=ob.matrix_world @ v.co;local=base_inverse @ w
+     plane=floor+.005 if local.x*local.x+local.y*local.y<base_radius**2 else .012
+     lift=max(lift,plane-w.z)
+    ev.to_mesh_clear()
+   if lift>0:
+    rig.location.z+=lift;bpy.context.view_layer.update()
+    for ob,matrix in released.items():ob.matrix_world=matrix
+    bpy.context.view_layer.update()
+   motion_source['max_armoured_fall_root_lift_m']=max(motion_source.get('max_armoured_fall_root_lift_m',0),lift)
   for side in ['l','r']:
    sole=bpy.data.objects['Leather sandal sole '+side]
-   lowest=min((sole.matrix_world @ v.co).z for v in sole.data.vertices)
-   if lowest<floor+.001:
+   planted=clip=='move' and flags.get(side,False)
+   lift=-10 if planted else 0
+   for point in sole_points(side):
+    local=base_inverse @ point
+    plane=floor+.001 if local.x*local.x+local.y*local.y<base_radius**2 else .006
+    lift=max(lift,plane-point.z)
+   if abs(lift)>1e-8:
+    if clip=='move':assert abs(lift)<.04,('Large sole contact translation',side,lift)
+    motion_source['max_sole_translation_m']=max(motion_source.get('max_sole_translation_m',0),abs(lift))
+    motion_source['max_sole_lift_m']=max(motion_source.get('max_sole_lift_m',0),lift)
     foot=rig.pose.bones['foot_'+side];mat=foot.matrix.copy()
-    mat.translation+=rig.matrix_world.to_3x3().inverted() @ Vector((0,0,floor+.001-lowest))
+    mat.translation+=rig.matrix_world.to_3x3().inverted() @ Vector((0,0,lift))
     foot.matrix=mat;bpy.context.view_layer.update()
+ if clip!='death':
+  butt=next(o for o in spear_objects if o.name.startswith('Iron spear butt'))
+  ev=butt.evaluated_get(bpy.context.evaluated_depsgraph_get());mesh=ev.to_mesh()
+  lowest=min((butt.matrix_world @ v.co).z for v in mesh.vertices);ev.to_mesh_clear()
+  if lowest<.107:
+   shaft=bpy.data.objects['Ash dory shaft'];points=shaft.data.splines[0].points
+   direction=(shaft.matrix_world @ Vector(points[-1].co[:3])-shaft.matrix_world @ Vector(points[0].co[:3])).normalized()
+   if direction.z>.25:
+    shift=direction*((.107-lowest)/direction.z)
+    for ob in spear_objects:
+     matrix=ob.matrix_world.copy();matrix.translation+=shift;ob.matrix_world=matrix
+    bpy.context.view_layer.update()
  rig.keyframe_insert(data_path='location',frame=f)
  for o in spear_objects:
   o.keyframe_insert(data_path='location',frame=f);o.keyframe_insert(data_path='rotation_quaternion',frame=f)
@@ -210,6 +236,14 @@ for f in range(1,end+1):
   shield.keyframe_insert(data_path='location',frame=f);shield.keyframe_insert(data_path='rotation_quaternion',frame=f)
  for p in rig.pose.bones:
   p.rotation_mode='QUATERNION';p.keyframe_insert(data_path='location',frame=f);p.keyframe_insert(data_path='rotation_quaternion',frame=f);p.keyframe_insert(data_path='scale',frame=f)
+sc['motion_source']=json.dumps(motion_source)
+sc['sample_frames']=json.dumps(samples)
+if os.environ.get('MOTION_DIAGNOSTIC') == '1':
+ sc['source_master_sha256']=hashlib.sha256((M/'spearman.blend').read_bytes()).hexdigest()
+ sc['clip']=clip;sc['cloth_baked']=False
+ bpy.ops.wm.save_as_mainfile(filepath=str(out/(clip+'-diagnostic.blend')))
+ print('MOTION_DIAGNOSTIC_READY',clip,flush=True)
+ raise SystemExit(0)
 # Fail on rigid equipment crossings before spending time baking cloth.
 for frame in samples:
  sc.frame_set(frame);dg=bpy.context.evaluated_depsgraph_get()
@@ -230,8 +264,8 @@ with bpy.context.temp_override(point_cache=pc):bpy.ops.ptcache.bake(bake=True)
 assert pc.is_baked, 'Cloth bake did not complete'
 if clip=='death':samples[-2]=samples[-1]
 sc['source_master_sha256']=hashlib.sha256((M/'spearman.blend').read_bytes()).hexdigest()
-sc['spear_release_start']=.04 if clip=='death' else -1
+sc['spear_release_start']=0 if clip=='death' else -1
 sc['clip']=clip;sc['sample_frames']=json.dumps(samples);sc['cloth_baked']=True
 sc.frame_set(samples[0]);bpy.ops.wm.save_as_mainfile(filepath=str(out/(clip+'.blend')))
-(out/'clip.json').write_text(json.dumps({'source_master_sha256':sc['source_master_sha256'],'clip':clip,'frames':samples,'fps':fps,'cloth_baked':pc.is_baked,'mocap':{'idle':'CMU 77_02 standing, frames 80-320, torso deltas','move':'CMU 02_01 walk, frames 40-160, sagittal legs'}.get(clip,'hand keyed')},indent=2))
+(out/'clip.json').write_text(json.dumps({'source_master_sha256':sc['source_master_sha256'],'clip':clip,'frames':samples,'fps':fps,'cloth_baked':pc.is_baked,'motion_source':motion_source},indent=2))
 print('CLIP_READY',clip, samples)
