@@ -25,3 +25,4 @@
 - Froze painting camera UVs and ray-tested visibility, with generated feather backfill on unseen surfaces.
 - Authored idle, move, attack, hit and terminal death on the MPFB skeleton; no mocap or cloth simulation claimed.
 - Authored idle, move, attack, hit and terminal death on the MPFB skeleton; no mocap or cloth simulation claimed.
+- Authored idle, move, attack, hit and terminal death on the MPFB skeleton; no mocap or cloth simulation claimed.

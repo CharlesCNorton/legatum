@@ -48,3 +48,6 @@
 - Emitted d: 4 frames, 256 px CYCLES/CPU, 8 samples.
 - Emitted e-idle: 8 frames, 256 px CYCLES/CPU, 8 samples.
 - Emitted e-move: 8 frames, 256 px CYCLES/CPU, 8 samples.
+- Emitted e-attack: 10 frames, 256 px CYCLES/CPU, 8 samples.
+- Emitted e-hit: 4 frames, 256 px CYCLES/CPU, 8 samples.
+- Emitted e-death: 10 frames, 256 px CYCLES/CPU, 8 samples.
