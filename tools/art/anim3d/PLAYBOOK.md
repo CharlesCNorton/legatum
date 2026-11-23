@@ -106,3 +106,79 @@ tools/art/anim3d/render.sh audit
 ```
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
+
+## Infantry: barbarian-crossbowman round 1
+
+Unit-specific entry points are under `units/barbarian-crossbowman/`. This chapter
+extends the spearman infantry method without changing its scripts. The brigand
+uses CC0 MPFB anatomy and the 53-bone `game_engine` skeleton, with original hood,
+quilted gambeson, olive trousers, boots, belt buckle, bolt case and a rigid
+crossbow. The bow has separate steel prod, walnut tiller, string, trigger hardware,
+loaded bolt and foot stirrup. The five clips use authored skeletal keys, with a
+weapon control and arm IK during the raise/fire; no motion-capture or simulated
+cloth claim is made. The last two death samples hold the same settled pose.
+
+Standing feedback 12–21 is the quality bar, including Sam's “still pretty rough”
+and “high school student” criticism and the later “huge improvement” verdict.
+The four standard quality levers are applied here:
+
+1. Register the rest camera and pose to the painting, then assign fixed camera
+   UVs to actual mesh vertices. Painting alpha and surface incidence blend the
+   projected brushwork into unseen-side fills; neither image alpha nor camera
+   projection changes the geometry silhouette. Generated linen from the mounted
+   family's CC BY 4.0 fill sheet supplements unseen wool/linen. Projection cannot
+   correct the wrong anatomy, hood opening or pose.
+2. Finish the geometry: bevel hard edges, keep real thickness on cloth and straps,
+   model the buckle opening and tongue, stitch channels, hood seams and weapon
+   hardware, and subdivide the anatomy. `bake.py` creates actual 256px AO and
+   curvature maps for skin, gambeson, hood and stock, then uses those maps for
+   cavity shading and roughness. Procedural weave and grain remain at finer scale.
+3. Light the miniature with an upper-left warm area key, soft fill and cool rim.
+   CPU previews use denoised Cycles. Finals explicitly select Metal Cycles GPU
+   and fail if it is unavailable. Every invocation is plain `blender -b` through
+   the shared PATH gate, with automatic script execution disabled.
+4. Fit one monotonic RGB grade from the rest image and painting's foreground
+   quantiles and apply that same grade to every clip. Keep raw renders. The
+   common stone material target is **#E9CFA0** sRGB; its linear pigment is
+   `(0.815, 0.624, 0.352)`, with grain and darker contact shading. Judge displayed
+   color after lighting and grade, not merely the shader constants.
+
+`post.py review c` writes the painting/render/50-percent crossfade at native 256
+and 64 pixels to `barbarian-crossbowman-f-restpose-compare.png`. It also emits
+hood/face, quilt/belt and crossbow close-ups. All stage images and looping WebPs
+land immediately in the external review directory, and each stage appends to
+the unit log. The first plain review is retained separately. Do not write a PASS
+marker until the rest pose is difficult to distinguish and the five clips are
+visually clean; the validator's technical PASS does not establish that verdict.
+
+From the repository root, for CPU iterations:
+
+```sh
+unit=tools/art/anim3d/units/barbarian-crossbowman
+"$unit/render.sh" build
+"$unit/render.sh" bake
+"$unit/render.sh" animate
+STAGE=c "$unit/render.sh" render
+~/LegatumRuns/anim-pilot/venv/bin/python "$unit/post.py" review c
+```
+
+The complete GPU handoff is the executable, no-argument `gpu.sh` in that unit
+directory. `ROUND` is supplied by the overnight driver. It rebuilds, bakes,
+animates and renders b/c/d/all five e stages at 512px, creates 256px derivatives,
+packs and validates the atlas, audits the editable scenes and creates the
+8-second H.264 yuv420p video with all five reconstructed clips at 2x on cream.
+Masters stay under `masters/barbarian-crossbowman/`, outside git.
+
+### This unit's trimmed atlas extension
+
+The delivery retains `{frame:{w:160,h:160,ax:80,ay:140}, clips:{...}}`. Each clip
+has `row`, `frames`, `fps`, `loop`, and `rects`, one rectangle per frame:
+`{x,y,w,h,ox,oy}`. `x/y/w/h` address its packed atlas crop; `ox/oy` restore it to
+the original 160px logical frame. Draw at `(anchorX-ax+ox, anchorY-ay+oy)`.
+Rows are idle/move/attack/hit/death, with 8/8/10/4/10 frames; physical row heights
+vary because empty margins are removed. Readers must use rectangles, not assume
+fixed 160px strides. This candidate does not alter or enable the app runtime.
+WebP is encoded at quality 90, 85, 80 or 75, refusing delivery above 200,000 bytes.
+Model hashes, clip hashes, grade hashes and raw frame hashes reject stale packing.
+The validator checks bounds, transparency, motion, all 40 samples and held death;
+`video` reconstructs frames using the exact same trim offsets.
