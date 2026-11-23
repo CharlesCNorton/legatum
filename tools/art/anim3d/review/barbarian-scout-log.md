@@ -168,3 +168,7 @@ Published e-idle review: GPU 512 px, 64 samples; fixed rest-derived grade.
 Published e-move review: GPU 512 px, 64 samples; fixed rest-derived grade.
 Published e-attack review: GPU 512 px, 64 samples; fixed rest-derived grade.
 Published e-hit review: GPU 512 px, 64 samples; fixed rest-derived grade.
+Published e-death review: GPU 512 px, 64 samples; fixed rest-derived grade.
+Published actual top/front boot cycle; contact/direction measurements in feet.json; diagnostic, not gait approval.
+Packed 40 trimmed 160 px frames, WebP quality 80, 187628 bytes.
+Published five-clip, 2x, cream-background H.264 review: barbarian-scout-round2.mp4
