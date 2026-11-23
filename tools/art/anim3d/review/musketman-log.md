@@ -76,3 +76,11 @@
 - Posted d-rig-poses review (GPU, 512 px).
 - Posted e-idle review (GPU, 512 px).
 - Posted e-move review (GPU, 512 px).
+- Round 2: opened GPU c/rest comparison, all five e strips, and extracted round1 MP4 frame before changes; read full PLAYBOOK and standing FEEDBACK 1-23. musketman-FEEDBACK.md does not exist. Preserved mixed prior evidence in musketman-round1-preserved and masters/musketman/driver-r1-gpu.
+- Honest round-1 critique: at 256 px, coat/face/bandolier brushwork is close, but the feather is thin and detached, hat brim too wide/flat, weapon has an extra pale ramrod line and misplaced socket, support hand looks small, and stone is dull olive/tan with a weak rim. At 64 px the same buff/red musketman reads, but feather/hat and base remain distinguishable. Walk has stiff carrying arms; hit ends bent without recovery; death exposes patchy cloth/hand surfaces and abrupt release. No PASS.
+- GPU log failed with Trace/BPT trap (exit 133) after attack frame 7; no complete GPU receipt. Idle/move and c are GPU, later clip evidence/movie is from previous CPU pack. Root cause is not established by the log. Will isolate frame renders, disable persistent render caches, and checkpoint source/settings/frame hashes so interrupted runs cannot mix evidence.
+- Loaded six Sam Blender skills: modeling for bevel/thickness and hat/feather/weapon silhouette fit; materials for generated unseen fills and stone grain; lighting for warm key/soft fill/cool rim; cameras for orthographic calibration; animation for captured-motion recovery and constant effect visibility; rendering for isolated Cycles previews, resumable frames and encoding verification.
+- Built standing MPFB human, buff coat, red breeches/sash, feather hat, bandolier, musket and bayonet.
+- Posted b-plain review (CPU, 256 px).
+- Finished-surface camera-only projection applied; physical stone excluded and generated fills retained.
+- Posted c-textured-lit review (CPU, 256 px).

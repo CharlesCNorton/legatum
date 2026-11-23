@@ -40,3 +40,4 @@
 - Emitted panzer-c-details.png from actual details renders; visual review pending.
 - Emitted panzer-d-rig-poses.png from actual d renders; visual review pending.
 - Emitted panzer-e-idle-strip.png from actual e-idle renders; visual review pending.
+- Emitted panzer-e-move-strip.png from actual e-move renders; visual review pending.
