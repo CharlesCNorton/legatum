@@ -49,3 +49,8 @@
 - Round 2: read all PLAYBOOK chapters, complete shared FEEDBACK (1–23), prior log, project art skill and six Sam Blender skills. No panzer-FEEDBACK.md exists. GPU r1 succeeded: 188914 bytes at q75, 40 frames, 512/256 masters and valid H.264/yuv420p 8-second video. Preserved round-one review/master evidence in masters/panzer/driver-r1-gpu.
 - Emitted panzer-b-plain.png from actual b renders; visual review pending.
 - Emitted panzer-c-textured-lit.png from actual c renders; visual review pending.
+- Emitted panzer-b-plain.png from actual b renders; visual review pending.
+- Round 2 geometry: measured source/r1 axle projections; shortened and moved camera-near running gear beneath the skirt, raised end sprockets, retained separately registered far-side track under glacis; enlarged/raised cupola and extended ported brake. Added true recessed wheel dishes, raised beveled rings and chipped pigment. CPU plain stage inspected in three views.
+- Round 2 materials: generated ochre brushwork fill via built-in imagegen (exact prompt and SHA256 committed, provenance in both ledgers), mapped to rotating wheel faces/rims; existing hidden olive fill retained. Conservative rest-camera occlusion checks now reject only wholly hidden polygons: centre-only checks incorrectly erased partially visible base/hull paint and were corrected before delivery. Warm key/cool rim retained, soft front fill lowered to reach wheel recesses.
+- Round 2 smoke: replaced six evenly stacked shells with nine irregular full-volume shells, staggered centres and normal/view falloff; visibility keyed, scales always >=1. No volumetric grid or zero-scale hiding. Animation and actual output still awaiting inspection.
+- Emitted panzer-c-textured-lit.png from actual c renders; visual review pending.
