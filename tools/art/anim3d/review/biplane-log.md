@@ -74,3 +74,6 @@
 - Final visual verdict: silhouette IoU .840495 vs prior .678447, not an approval metric. At256 visibly closer but strut width, cockpit, lower-wing marks and stone finish still miss; at64 same identity but distinguishable. No biplane-PASS. Lead command: ROUND=2 tools/art/anim3d/units/biplane/gpu.sh.
 - Final syntax: 12 Python files, both Bash scripts and diff whitespace pass. Current build-input preflight passes; GPU provenance gate rejects actual CPU256 masters as intended. Preserved this round in masters/biplane/round2-cpu.
 - origin/master is already an ancestor of HEAD; no merge needed. git add/commit blocked by sandbox denial creating .git/worktrees/lane-5/index.lock. Runner must commit with the requested gpt-6-astra co-author trailer. No push/PR/merge performed. Repository art gate and lead art review are pending on the committed candidate; no inherited-HEAD result is represented as validation of these uncommitted changes.
+- Saved b review immediately; 1 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/b/render.json.
+- Saved c review immediately; 1 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/c/render.json.
+- Saved d review immediately; 4 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/d/render.json.
