@@ -16,3 +16,6 @@
 - First projected comparison posted immediately. Warmth and detail improve, but crossfade shows substantial registration/silhouette differences; broad projection leaked linen onto horse. Added separate coat/linen/skin masks and corrected tail inverse-skin bind coordinates.
 - Near forehoof now uses a real source Walk pose for the idle/rest silhouette; added pale crest section, deeper neck/shoulder form and a small slung bronze shield.
 - Final render batch is waiting on the machine-wide gate. No lock removed, no direct Blender invocation, no extra own heavy process launched.
+- Revised projected clips and pose sheet posted. Audit: all five clips passed topology, saddle parent, immutable base, horse/rider contact and held terminal geometry.
+- Canter phase-only retime showed three unsupported samples out of eight. Replaced it with source-trajectory time warps that extend stance to .34 of the stride; final audit now explicitly caps unsupported samples at two.
+- Running a serial final refresh (canter, rest, close-up) under one Blender slot, retaining the shared colour LUT. Remaining primary art defects are low-poly horse anatomy, coarse rider drapery, and imperfect painting registration.
