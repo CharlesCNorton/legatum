@@ -51,3 +51,18 @@ e-hit: 4 frames at 256/64 from 512px CYCLES/GPU, 96 samples.
 e-death: 10 frames at 256/64 from 512px CYCLES/GPU, 96 samples.
 g: 16 frames at 256/64 from 512px CYCLES/GPU, 96 samples.
 GPU round 1: all stages rendered at 512; 256 masters, validated 160 atlas and 8-second MP4. Visual review pending.
+Round 2 start: opened GPU c, f, all five e strips, round1 contact image and four frames decoded directly from round1.mp4; preserved reviews in masters/jet-bomber/driver-r1-gpu. GPU log succeeded: 512px/96 samples, 189538 bytes Q80, 40 frames, validation passed. No jet-bomber-FEEDBACK.md exists at start; full shared FEEDBACK read.
+Honest GPU critique at 256px: camera/large camouflage/fin are close, but the base is oversized with a conspicuously dark lower rim, near pods sit low and look undersized, wing trailing contour differs, and projected paint loses relief in banks. At 64px it is clearly the same eight-jet bomber; the dark base remains visible. Rest is not yet hard to distinguish side by side.
+Motion critique from decoded MP4 and all strips: idle/move stay legible, attack bombs are near-black ovals with constant-speed fall and abrupt disappearance, hit recovers, death support vanishes between samples and terminal plane still looks mostly intact. Improve continuous support deformation and attached pod/wing damage, preserving a held last pair.
+Loaded Sam's six Blender skills: modeling (finished closed geometry and bevels), materials (source pigment/generated unseen fill), cameras (fixed registered orthographic view), lighting (warm key/cool rim/contact), animation (continuous shape keys and release), rendering (small CPU preview then inspect). Aircraft has no straps, cloth, human or animal gait; do not invent them. Reuse pinned generated olive fill and actual AO/curvature bakes.
+c: 1 frames at 256/64 from 256px CYCLES/CPU, 8 samples.
+e-death: 10 frames at 256/64 from 256px CYCLES/CPU, 8 samples.
+b: 3 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+c: 1 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+d: 4 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+e-idle: 8 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+e-move: 8 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+e-attack: 10 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+e-hit: 4 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+e-death: 10 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+g: 16 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
