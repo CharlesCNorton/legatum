@@ -107,3 +107,6 @@
 - Completed render d (GPU).
 - d: 4 frames reviewed at 256/64; CYCLES GPU, 64 samples, source 512px.
 - Started render e-idle (GPU).
+- Completed render e-idle (GPU).
+- e-idle: 8 frames reviewed at 256/64; CYCLES GPU, 64 samples, source 512px.
+- Started render e-move (GPU).
