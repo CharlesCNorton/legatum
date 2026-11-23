@@ -333,3 +333,10 @@ Rendered e-attack: 10 PNGs, 512 px, CYCLES GPU, 96 samples.
 Published e-attack review immediately; frozen grade 222b91b21f3f, 256 masters retained.
 Rendered e-hit: 4 PNGs, 512 px, CYCLES GPU, 96 samples.
 Published e-hit review immediately; frozen grade 222b91b21f3f, 256 masters retained.
+Rendered e-death: 10 PNGs, 512 px, CYCLES GPU, 96 samples.
+Published e-death review immediately; frozen grade 222b91b21f3f, 256 masters retained.
+Saved-scene audit PASS: current source hashes, 128 track links, 16 wheels, stationary base, nonzero scales, loop closure keys and held death.
+Packed 40 trimmed 160 px frames: 192282 bytes, WebP quality 85.
+Validation PASS: counts, RGBA, rect bounds, transparent margins, five moving clips, held death, quality and size. Art approval remains separate.
+Encoded and ffprobe-verified autonomous-armour-round2.mp4: 8 s, 240 frames, 1600x348 H.264 yuv420p; decoded trimmed atlas.
+Validation PASS: counts, RGBA, rect bounds, transparent margins, five moving clips, held death, quality and size. Art approval remains separate.
