@@ -1,4 +1,4 @@
-# War Elephant — round 1 candidate
+# War Elephant — round 2 candidate
 
 This is an art candidate, not an approved replacement for the painting. No runtime
 loader or game rule changes. The elephant, articulated trunk, ears, tusks, harness,
@@ -42,24 +42,26 @@ RESOLUTION=256 "$unit/run.sh" d
 "$unit/run.sh" e-attack
 "$unit/run.sh" e-hit
 "$unit/run.sh" e-death
-"$ANIM_ROOT/venv/bin/python" "$unit/deliver.py" pack
+"$ANIM_ROOT/venv/bin/python" "$unit/deliver.py" pack --preview
 "$ANIM_ROOT/venv/bin/python" "$unit/deliver.py" validate
-ROUND=1 "$ANIM_ROOT/venv/bin/python" "$unit/deliver.py" video
+ROUND=2 "$ANIM_ROOT/venv/bin/python" "$unit/deliver.py" video
 ```
 
 Every invocation is background Blender, disables autoexec, and goes through the
-shared `bin/blender-slot` gate. CPU previews default to Cycles, four samples and
+shared `blender` gate on PATH. CPU previews default to Cycles, four samples and
 512 px. No new dependency installs. Final host GPU rerender:
 
 ```sh
-ROUND=1 tools/art/anim3d/units/war-elephant/gpu.sh
+ROUND=2 tools/art/anim3d/units/war-elephant/gpu.sh
 ```
 
-That renders all clips at 512 px with Cycles Metal, 32 samples and denoising;
+That renders all clips at 512 px with Cycles Metal, 64 samples and denoising;
 `SAMPLES=64` raises quality. It refuses a silent CPU fallback. An explicit
-`RENDER_ENGINE=BLENDER_EEVEE` uses the Metal Eevee backend. It refreshes the rest
-LUT before every clip, then packs, validates and writes the review MP4. Geometry
-changes require build and animate first. All raw 512 frames and graded 256 gallery
+`RENDER_ENGINE=BLENDER_EEVEE` uses the Metal Eevee backend. It fits the rest LUT once, then uses it for every clip. It reruns projection,
+animation and the geometry audit, renders plain/rest/pose/clip stages, verifies
+GPU512 provenance, exports 512/256 masters, packs, validates and writes the MP4.
+Geometry source changes require `build` first; fitting changes restart from the
+external `sculpt-input.blend` via `project`. All raw 512 frames and graded 256 gallery
 frames remain in the unit's master directory. A failed render invalidates its
 manifest. Packing verifies master/clip/render/grade hashes to reject stale output.
 
@@ -112,3 +114,26 @@ projection spill and rigid riders, and the folded legs leave the body supported
 too high. These are visible art/animation defects, not a GPU sampling issue.
 No `war-elephant-PASS` marker is written. Preserve the painting in the game and
 use the split/crossfade and death strip to direct the next modeling round.
+
+## Round-two method and limits
+
+`project.py` uses finished mesh surfaces and inverse skin transforms for the
+rest fit. The howdah receives interior geometry samples before the ray visibility
+mask is frozen. Original generated fills remain on unseen surfaces; source
+illumination is 96% camera-only pigment with physical non-camera response.
+The cream base uses live AO and a top/rim palette, never copied figure paint.
+One rest histogram grade is frozen for all five clips. Projection is an
+approximate geometric registration; it is not a claim of painting parity.
+
+Death tucks the near legs and rolls farther onto the flank. The expanded audit
+checks terminal torso height as well as ground clearance, original rigs, loop
+closure and frozen UV agreement on the actual finished surfaces. Human/equipment
+collisions still need visual review. The riders, trunk shape and revealed paint
+seams remain below the reference. No PASS marker is warranted.
+
+Delivery uses bicubic reduction with full 8-bit alpha. Validation independently
+reconstructs alpha from each source frame. `pack --preview` explicitly labels CPU
+output; ordinary `pack` and `masters` require GPU512 provenance. The host script
+writes `gpu-logs-war-elephant-r${ROUND}.log` and `war-elephant-gpu-status.txt`;
+absence of a completed receipt does not establish a GPU pass. `video` probes the
+actual encoded file: H.264/yuv420p, 1600x348, 240 frames, eight seconds.

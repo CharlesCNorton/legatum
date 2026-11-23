@@ -10,7 +10,6 @@ import os
 from pathlib import Path
 
 import bpy
-from bpy_extras.object_utils import world_to_camera_view
 from mathutils import Matrix, Vector
 
 ROOT = Path(os.environ['ANIM_ROOT'])
@@ -446,49 +445,7 @@ sc['unit']='war-elephant';sc['source']='Original elephant sculpture; MPFB CC0 ri
 bpy.context.view_layer.update()
 erig.pose.bones['body'].location.y = .08
 bpy.context.view_layer.update()
-bpy.ops.wm.save_as_mainfile(filepath=str(MASTER/'plain.blend'))
-
-# Frozen-camera projection: evaluated pose coordinates, fixed UVs, facing blend.
-painting=bpy.data.images.load(str(ASSETS/'painting-aligned.png'))
-view=(cam.location-target).normalized()
-projected=[]
-for obj in list(sc.objects):
-    if obj.type!='MESH' or obj==base:
-        continue
-    states=[(m,m.show_viewport) for m in obj.modifiers]
-    for m,state in states:
-        if m.type!='ARMATURE':m.show_viewport=False
-    bpy.context.view_layer.update()
-    ev=obj.evaluated_get(bpy.context.evaluated_depsgraph_get());me=ev.to_mesh()
-    assert len(me.vertices)==len(obj.data.vertices),obj.name
-    coords=[];weights=[]
-    for v in me.vertices:
-        q=world_to_camera_view(sc,cam,ev.matrix_world@v.co)
-        coords.append((q.x,q.y))
-        normal=(ev.matrix_world.to_3x3().inverted().transposed()@v.normal).normalized()
-        weights.append(max(0,min(1,(normal.dot(view)-.05)/.40)))
-    ev.to_mesh_clear()
-    for m,state in states:m.show_viewport=state
-    uv=obj.data.uv_layers.new(name='Painting projection')
-    attr=obj.data.color_attributes.new(name='Painting incidence',type='FLOAT_COLOR',domain='CORNER')
-    for i,loop in enumerate(obj.data.loops):
-        uv.data[i].uv=coords[loop.vertex_index]
-        attr.data[i].color=(weights[loop.vertex_index],)*3+(1,)
-    for index,old in enumerate(list(obj.data.materials)):
-        mat=old.copy();mat.name=obj.name+' painted';obj.data.materials[index]=mat
-        nodes=mat.node_tree.nodes;links=mat.node_tree.links;s=nodes.get('Principled BSDF')
-        tex=nodes.new('ShaderNodeTexImage');tex.image=painting;tex.extension='CLIP'
-        uvnode=nodes.new('ShaderNodeUVMap');uvnode.uv_map='Painting projection';links.new(uvnode.outputs[0],tex.inputs['Vector'])
-        incidence=nodes.new('ShaderNodeVertexColor');incidence.layer_name='Painting incidence'
-        mult=nodes.new('ShaderNodeMath');mult.operation='MULTIPLY';links.new(incidence.outputs[0],mult.inputs[0]);links.new(tex.outputs['Alpha'],mult.inputs[1])
-        mix=nodes.new('ShaderNodeMixRGB');mix.inputs[1].default_value=s.inputs['Base Color'].default_value
-        
-        if s.inputs['Base Color'].is_linked:
-            links.new(s.inputs['Base Color'].links[0].from_socket,mix.inputs[1])
-        links.new(mult.outputs[0],mix.inputs[0]);links.new(tex.outputs['Color'],mix.inputs[2]);links.new(mix.outputs[0],s.inputs['Base Color'])
-        links.new(mix.outputs[0],s.inputs['Emission Color']);s.inputs['Emission Strength'].default_value=.18
-    projected.append(obj.name)
-painting.pack()
-sc['projected_meshes']=json.dumps(projected)
-bpy.ops.wm.save_as_mainfile(filepath=str(MASTER/'war-elephant.blend'))
-print('BUILT',len(projected),'projected meshes; original elephant rig and two MPFB riders')
+bpy.ops.wm.save_as_mainfile(filepath=str(MASTER/'sculpt-input.blend'))
+# Finish actual surfaces, register geometry and freeze the painting only once.
+import runpy
+runpy.run_path(str(Path(__file__).with_name('project.py')), run_name='__main__')

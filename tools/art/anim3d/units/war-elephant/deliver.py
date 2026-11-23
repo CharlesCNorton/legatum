@@ -79,12 +79,14 @@ def review(stage):
     if stage=='b':
         sheet([ref]+images,['Painting','Three-quarter','Side','Front'],R/f'{SLUG}-b-plain.png')
     elif stage=='c':
-        sheet([ref,images[0]],['Painting','3D candidate'],R/f'{SLUG}-c-textured-lit.png')
-        sheet([ref,images[0]],['Painting','3D candidate'],R/f'{SLUG}-c-details.png',512)
+        label=f'3D {report["device"]} / {report["resolution"]} px'
+        sheet([ref,images[0]],['Painting',label],R/f'{SLUG}-c-textured-lit.png')
+        detail_ref=rgba(ROOT/'assets/war-elephant/painting-aligned.png',images[0].width)
+        sheet([detail_ref,images[0]],['Painting',f'3D {report["resolution"]} px {report["device"]}'],R/f'{SLUG}-c-details.png',min(512,images[0].width))
         size=ref.width;half=size//2
         split=ref.copy();split.paste(images[0].crop((half,0,size,size)),(half,0))
         sheet([ref,images[0],split,Image.blend(ref,images[0],.5)],
-              ['Painting','3D candidate','Half split','50% crossfade'],R/f'{SLUG}-f-restpose-compare.png')
+              ['Painting',label,'Half split','50% crossfade'],R/f'{SLUG}-f-restpose-compare.png')
         sheet([ref,images[0]],['Painting','3D'],R/f'{SLUG}-64-compare.png',64)
     elif stage=='d':sheet(images,['Anticipation','Brace','Strike','Recover'],R/f'{SLUG}-d-rig-poses.png')
     else:
@@ -97,7 +99,37 @@ def review(stage):
     print('REVIEW',stage)
 
 
+def token(raw):
+    # Premultiplied bicubic reduction retains smooth coverage without Lanczos
+    # ringing. WebP alpha stays full 8-bit; no palette or alpha quantization.
+    return graded(raw.resize((160,160),Image.Resampling.BICUBIC))
+
+
+def masters():
+    """Require real GPU512 evidence; never upscale a preview into a master."""
+    for stage in ['b','c','d']+['e-'+c for c in CLIPS]:
+        folder=M/'renders'/stage
+        report=json.loads((folder/'review.json').read_text())
+        assert report['resolution']==512 and report['device']=='GPU',(stage,'Not a GPU512 master')
+        assert report['engine'] in ['CYCLES','BLENDER_EEVEE']
+        blend=M/('plain.blend' if stage=='b' else 'war-elephant.blend')
+        if stage=='d':blend=M/'clips/attack/attack.blend'
+        if stage.startswith('e-'):blend=M/'clips'/stage[2:]/(stage[2:]+'.blend')
+        assert report['blend_sha256']==sha(blend),(stage,'Stale blend')
+        if stage!='b':assert report['grade_sha256']==sha(M/'grade.json')
+        for size in [512,256]:(M/str(size)/stage).mkdir(parents=True,exist_ok=True)
+        for frame in report['frames']:
+            path=folder/frame['path'];im=rgba(path)
+            assert im.size==(512,512) and sha(path)==frame['sha256']
+            if stage!='b':im=graded(im)
+            im.save(M/'512'/stage/path.name)
+            im.resize((256,256),Image.Resampling.LANCZOS).save(M/'256'/stage/path.name)
+    print('MASTERS verified GPU512 and exported 512/256')
+
+
 def pack():
+    preview='--preview' in sys.argv
+    assert json.loads((M/'grade.json').read_text())['rest_sha256']==sha(M/'renders/c/00.png'),'Stale rest grade'
     OUT.mkdir(parents=True,exist_ok=True)
     meta={'version':2,'layout':'trimmed','frame':{'w':160,'h':160,'ax':79,'ay':138},'clips':{}}
     atlas=Image.new('RGBA',(1600,1000));y=2;source_hashes={};sources={}
@@ -108,7 +140,11 @@ def pack():
         assert info['blend_sha256']==sha(blend),f'{clip}: stale render'
         assert info['grade_sha256']==sha(M/'grade.json'),f'{clip}: stale grade'
         assert json.loads((blend.parent/'clip.json').read_text())['source_master_sha256']==sha(M/'war-elephant.blend')
-        assert info['resolution']==512,'Delivery requires 512 px source masters'
+        if not preview:
+            assert info['resolution']==512 and info['device']=='GPU','Final delivery requires GPU512; use --preview for CPU review'
+        rest=json.loads((M/'renders/c/review.json').read_text())
+        for key in ['engine','device','resolution','samples']:
+            assert info[key]==rest[key],f'{clip}: rest and clip {key} differ'
         sources[clip]=info
         x=2;maxh=0;rects=[];seen={}
         for i in range(n):
@@ -116,10 +152,8 @@ def pack():
             assert sha(source)==info['frames'][i]['sha256'],'Changed raw frame'
             source_hashes[f'{clip}/{i}']=sha(source)
             raw=rgba(source)
-            im=graded(raw.resize((160,160),Image.Resampling.LANCZOS))
-            # Area-filter coverage separately: Lanczos alpha can ring into empty margins.
-            alpha=raw.getchannel('A').resize((160,160),Image.Resampling.BOX).point(lambda a:round(round(a*31/255)*255/31))
-            im.putalpha(alpha)
+            im=token(raw)
+            alpha=im.getchannel('A')
             im.paste((0,0,0,0),mask=alpha.point(lambda a:255 if a==0 else 0))
             key=hashlib.sha256(im.tobytes()).hexdigest()
             if key in seen:
@@ -140,7 +174,7 @@ def pack():
     else:raise RuntimeError('Atlas exceeds 200 KB at quality 75; do not lower quality or drop frames')
     (OUT/f'{SLUG}.webp').write_bytes(buff.getvalue())
     (OUT/f'{SLUG}.json').write_text(json.dumps(meta,separators=(',',':'))+'\n')
-    report={'bytes':buff.tell(),'quality':quality,'frames':40,'logical_size':160,
+    report={'bytes':buff.tell(),'quality':quality,'frames':40,'logical_size':160,'preview':preview,
             'atlas_sha256':sha(OUT/f'{SLUG}.webp'),'metadata_sha256':sha(OUT/f'{SLUG}.json'),
             'source_hashes':source_hashes,'renders':sources}
     (R/f'{SLUG}-pack.json').write_text(json.dumps(report,indent=2)+'\n')
@@ -181,8 +215,10 @@ def validate():
             assert r['x']+r['w']<=atlas.width and r['y']+r['h']<=atlas.height
             assert r['ox']+r['w']<=160 and r['oy']+r['h']<=160
         frames=unpack(meta,atlas,clip)
-        for im in frames:
+        for i,im in enumerate(frames):
             a=im.getchannel('A');bounds=a.getbbox();assert bounds
+            expected=token(rgba(M/'renders'/('e-'+clip)/f'{i:02}.png')).getchannel('A')
+            assert a.tobytes()==expected.tobytes(),(clip,i,'Alpha reconstruction mismatch')
             assert a.getextrema()==(0,255)
             assert min(bounds[0],bounds[1],160-bounds[2],160-bounds[3])>=2,(clip,bounds,'clipped')
         hashes=[hashlib.sha256(im.tobytes()).hexdigest() for im in frames]
@@ -200,7 +236,7 @@ def validate():
 def video():
     path=OUT/f'{SLUG}.webp';atlas=rgba(path);meta=json.loads(path.with_suffix('.json').read_text())
     frames={c:[im.resize((320,320),Image.Resampling.LANCZOS) for im in unpack(meta,atlas,c)] for c in CLIPS}
-    out=R/f'{SLUG}-round{os.environ.get("ROUND","1")}.mp4'
+    out=R/f'{SLUG}-round{os.environ.get("ROUND","2")}.mp4'
     with tempfile.TemporaryDirectory(prefix='war-elephant-',dir=ROOT/'tmp') as tmp:
         for tick in range(240):
             canvas=Image.new('RGBA',(1600,348),CREAM);draw=ImageDraw.Draw(canvas)
@@ -211,10 +247,15 @@ def video():
             canvas.convert('RGB').save(Path(tmp)/f'{tick:04}.png')
         subprocess.run(['ffmpeg','-y','-loglevel','error','-framerate','30','-i',f'{tmp}/%04d.png',
                         '-c:v','libx264','-threads','2','-pix_fmt','yuv420p','-crf','20','-movflags','+faststart',str(out)],check=True)
-    print('VIDEO',out)
+    probe=json.loads(subprocess.check_output(['ffprobe','-v','error','-select_streams','v:0',
+        '-show_entries','stream=codec_name,pix_fmt,width,height,nb_frames,duration','-of','json',str(out)]))['streams'][0]
+    assert (probe['codec_name'],probe['pix_fmt'],probe['width'],probe['height'])==('h264','yuv420p',1600,348)
+    assert int(probe['nb_frames'])==240 and abs(float(probe['duration'])-8)<.01
+    (R/f'{SLUG}-video.json').write_text(json.dumps(probe,indent=2)+'\n')
+    print('VIDEO verified',out)
 
 
 if __name__=='__main__':
     command=sys.argv[1]
     if command=='review':review(sys.argv[2])
-    else:{'pack':pack,'validate':validate,'video':video}[command]()
+    else:{'pack':pack,'validate':validate,'video':video,'masters':masters}[command]()

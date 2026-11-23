@@ -48,9 +48,10 @@ else:samples=[0]
 for i,frame in enumerate(samples):
     sc.frame_set(frame)
     if stage=='b':
-        pos=[(3,-10,4.1),(0,-11,4.0),(10,0,4.1)][i]
-        sc.camera.location=pos
-        sc.camera.rotation_euler=(Vector((.19,0,1.65))-sc.camera.location).to_track_quat('-Z','Y').to_euler()
+        if i:
+            sc.camera.location=[(0,-11,4.0),(10,0,4.1)][i-1]
+            sc.camera.rotation_euler=(Vector((.19,0,1.65))-sc.camera.location).to_track_quat('-Z','Y').to_euler()
+            sc.camera.data.ortho_scale=4.6
     target=out/f'{i:02}.png'
     if stage=='e-death' and i==len(samples)-1:
         shutil.copyfile(out/f'{i-1:02}.png',target)

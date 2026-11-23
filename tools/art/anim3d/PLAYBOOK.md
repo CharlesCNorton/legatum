@@ -132,3 +132,40 @@ serialized host GPU, packs, validates and creates `war-elephant-round1.mp4`.
 It uses the shared Blender gate, background mode and disabled autoexec. See the
 unit README for short CPU stages and the full reproduction order. No PASS marker
 is warranted until the rest comparison and all five clips meet the painting bar.
+
+### War Elephant round 2: finished surfaces and contact
+
+`units/war-elephant/project.py` restarts from the external `sculpt-input.blend`.
+It freezes the current MPFB macro mix, finishes static geometry, and fits the
+complete elephant, blanket, howdah, tusks and riders in the painting's view.
+Weighted anatomy is fitted through inverse skin transforms, retaining its
+topology and original weights. Depth is retained; this is neither a cutout nor
+a per-frame image warp. The fitted landmarks and sole corrections are recorded
+in `masters/war-elephant/registration.json`. Camera registration remains an
+approximation, and the riders and trunk still need visual refinement.
+
+Finish subdivision and thickness before projection. Subdivide timber faces
+linearly to sample their visible interiors: corners hidden inside neighbouring
+posts cannot supply the visible panel's projection weight. A scene ray test and
+normal-facing mask exclude occluded backsides. Frozen painting UVs supply 96%
+camera-only painted illumination, with physical materials on non-camera rays
+and the existing generated skin/textile/wood/linen fills on unseen surfaces.
+Standard/None avoids applying AgX to the source pigment a second time. The
+physical cream stone has restrained camera-only pigment and live AO, no copied
+feet or painted shadows. One rest histogram grade is reused across all clips.
+
+Sole contact is corrected separately for each lower limb before projection.
+Death rolls farther onto the flank and tucks the near limbs instead of allowing
+their feet to prop up the torso. The audit checks finished-surface UV agreement,
+both native human rigs, stationary camera/base, loop closure, ground clearance
+and terminal torso height. It is not a full human/howdah collision solver.
+
+`ROUND=2 tools/art/anim3d/units/war-elephant/gpu.sh` is the complete no-argument
+host handoff. It checks Metal, repeats projection/animation/audit, renders plain,
+rest/details, poses and all 40 frames at GPU512, exports 512/256 copies, packs,
+validates and probes the eight-second H.264/yuv420p round movie. It retains a
+round log and stage-status file. Every Blender invocation is plain `blender`
+on PATH. CPU previews use `deliver.py pack --preview` and are labelled; the
+final master gate rejects them. Bicubic token reduction preserves full 8-bit
+alpha, independently checked against each decoded trimmed frame. No technical
+stage writes an art PASS marker.

@@ -67,12 +67,16 @@ for clip, (count, fps, loop) in CLIPS.items():
         else:
             # Knees fold, torso settles onto its side; final two samples held.
             u = min(1,max(0,(t-.12)/.72)); ease=u*u*(3-2*u)
-            roll = ease*1.12
-            rise = -.84*ease
+            roll = ease*1.48
+            rise = -.98*ease
             pitch = -.10*math.sin(math.pi*u)
             for name in ['front.near','front.far','back.near','back.far']:
-                rotate(rig.pose.bones[name], (0,1,0), .36*ease)
-                rotate(rig.pose.bones[name+'.lower'], (0,1,0), -.85*ease)
+                rotate(rig.pose.bones[name], (0,1,0), .65*ease)
+                rotate(rig.pose.bones[name+'.lower'], (0,1,0), -1.35*ease)
+                if name.endswith('near'):
+                    leg=rig.pose.bones[name]
+                    local=leg.bone.matrix_local.to_quaternion()
+                    leg.rotation_quaternion @= local.inverted() @ Quaternion((1,0,0),.30*ease) @ local
             rotate(rig.pose.bones['head'], (0,1,0), .18*ease)
         rotate(body, (1,0,0), roll)
         basis=body.bone.matrix_local.to_quaternion()
@@ -89,6 +93,13 @@ for clip, (count, fps, loop) in CLIPS.items():
             rider.rotation_mode = 'XYZ'
             rider.rotation_euler.x = .45*math.sin(math.pi*t)
             rider.keyframe_insert('rotation_euler', frame=i)
+        elif clip == 'death':
+            for role in ['Officer','Mahout']:
+                rider=bpy.data.objects[f'RIG-{role} MPFB'].pose.bones['spine_02']
+                rider.rotation_mode='XYZ'
+                rider.rotation_euler.x=.42*ease
+                rider.rotation_euler.y=-.18*ease
+                rider.keyframe_insert('rotation_euler',frame=i)
         bpy.context.view_layer.update()
         # Every stance must land above the base; this is not a physics solver.
         ev=bpy.data.objects['GEO-Elephant continuous sculpt'].evaluated_get(bpy.context.evaluated_depsgraph_get())
