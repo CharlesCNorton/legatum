@@ -95,3 +95,6 @@
 - e-move: 8 frames reviewed at 256/64; CYCLES GPU, 64 samples, source 512px.
 - e-attack: 10 frames reviewed at 256/64; CYCLES GPU, 64 samples, source 512px.
 - e-hit: 4 frames reviewed at 256/64; CYCLES GPU, 64 samples, source 512px.
+- e-death: 10 frames reviewed at 256/64; CYCLES GPU, 64 samples, source 512px.
+- Packed 40 frames, trimmed 160px cells, WebP quality 90, 173282 bytes.
+- Wrote 8 second five-clip H.264 yuv420p review barbarian-crossbowman-round2.mp4
