@@ -195,3 +195,33 @@ quality below 75. Decode validation checks exact alpha reconstruction, crop
 bounds/gutters, source/scene/grade hashes, all clip counts, motion and held death.
 The existing static painting remains the runtime art until the lead approves the
 candidate; this lane does not change the runtime renderer.
+
+### Landship driver round 2: inspect hidden projection and pivots
+
+Incoming GPU round1 completed at quality90 / 188748 bytes, but that technical pass
+hid art defects. Archive GPU evidence before replacing previews. The cab and far
+upper track were overlaid by convincing pigment despite incorrect geometry; a
+lower camera elevation, full-depth cab corner registration, fitted near nose,
+smaller grousers and a flatter cream disc improve the physical match.
+
+Generate occlusion fills where motion uncovers baked-in objects. The original
+stone texture included a second chassis, and the sponson included a second gun.
+Round2 uses a generated clean-stone top on the actual disc (original lower rim
+retained), plus a small feathered generated gun-port patch on the actual sponson.
+All other visible surfaces retain the painting. Both original generated outputs,
+exact prompts and hashes are retained. Alpha controls pigment confidence only;
+it never cuts the geometry. Real AO supplies changing stone contact shading.
+
+Removing the false painted gun exposed an almost camera-facing geometric barrel.
+Its actual axis now reproduces the painting's visible length, with the recoil
+pivot at the mantlet. Never use a projection match as proof of mechanical fit.
+The flash is a closed tapered gas jet; smoke uses nonzero, closed irregular volume
+meshes instead of opaque stacked balls. Death opens the hatch and holds the wreck.
+No cloth, straps or human/animal motion is appropriate to this crewless painting.
+
+`animate` seals source scripts, immutable painting/fills, six bakes and all saved
+masters in external `build-inputs.json`. `gpu.sh` checks that seal and the geometry
+before rendering, then verifies every stage really used GPU512, the retained
+512/256 painted masters, the trimmed atlas and decoded eight-second MP4. Changing
+build inputs requires build/bake/animate again. Do not edit an executing shell
+entrypoint: bash can read its changed tail mid-invocation. No script grants art PASS.

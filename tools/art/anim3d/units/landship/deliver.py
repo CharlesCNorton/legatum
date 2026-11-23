@@ -56,6 +56,16 @@ def review(stage):
         sheet([painting]+[read(folder/f'{n}.png') for n in ('hero','front','side')],['Painting','Plain hero','Plain front','Plain side'],REV/'landship-b-plain.png')
     elif stage=='c':
         hero=read(folder/'hero.png');sheet([painting,hero],['Painting','Textured / lit'],REV/'landship-c-textured-lit.png')
+        measurements={}
+        for size in (256,64):
+            a=painting.resize((size,size),Image.Resampling.LANCZOS)
+            b=hero.resize((size,size),Image.Resampling.LANCZOS)
+            aa=a.getchannel('A').point(lambda x:255 if x>=128 else 0)
+            ab=b.getchannel('A').point(lambda x:255 if x>=128 else 0)
+            union=ImageChops.lighter(aa,ab);intersection=ImageChops.darker(aa,ab)
+            count=lambda im:sum(im.histogram()[1:])
+            measurements[str(size)]={'silhouette_iou':count(intersection)/count(union),'painting_bounds':aa.getbbox(),'render_bounds':ab.getbbox()}
+        (REV/'landship-rest-measurements.json').write_text(json.dumps({'measurements':measurements,'art_approval':False},indent=2))
         sheet([painting,hero,Image.blend(painting,hero,.5)],['Painting','3D rest','50/50 crossfade'],REV/'landship-f-restpose-compare.png')
         # Details are actual 256/512 pixels enlarged for inspection, not fabricated detail.
         crops=[(57,87,127,145),(138,95,198,166),(24,151,159,187)]
@@ -81,6 +91,8 @@ def review(stage):
 def restore(atlas,r):
     im=Image.new('RGBA',(160,160));im.paste(atlas.crop((r['x'],r['y'],r['x']+r['w'],r['y']+r['h'])),(r['ox'],r['oy']));return im
 def pack():
+    from preflight import check
+    check()
     meta={'version':2,'trimmed':True,'frame':{'w':160,'h':160,'ax':77.5,'ay':119.375},'clips':{}};rows=[];y=2;width=0;receipts={};sourcehash={}
     for row,(clip,(count,fps,loop)) in enumerate(CLIPS.items()):
         folder=M/'renders'/f'e-{clip}';receipt=json.loads((folder/'render.json').read_text());assert receipt['resolution']>=256
@@ -122,6 +134,21 @@ def validate():
     assert restored['death'][-1].tobytes()==restored['death'][-2].tobytes();assert not ImageChops.multiply(atlas.getchannel('A'),ImageChops.invert(occupied)).getbbox()
     result={'contract':'PASS','frames':40,'quality':report['quality'],'bytes':report['bytes'],'atlas_size':atlas.size,'alpha_reconstruction':'exact','held_death':True,'art_approval':False};(REV/'landship-validation.json').write_text(json.dumps(result,indent=2));print(json.dumps(result));return restored
 
+def gpu_check():
+    """Do not mistake retained CPU masters for a completed lead-side pass."""
+    validate()
+    stages=['b','c','d','e-idle','e-move','e-attack','e-hit','e-death','g']
+    for stage in stages:
+        receipt=json.loads((M/'renders'/stage/'render.json').read_text())
+        assert receipt['device']=='GPU' and receipt['resolution']==512, stage
+        if stage not in ('b','g'):
+            for p in (M/'renders'/stage).glob('*.png'):
+                for size in (256,512):
+                    master=M/str(size)/stage/p.name
+                    assert Image.open(master).size==(size,size), master
+    log('GPU handoff complete: all nine stages GPU512; 512/256 painted masters, atlas validation and decoded MP4 verified. Art approval remains manual.')
+    print('GPU DELIVERY PASS (not art approval)')
+
 def video():
     frames={n:[im.resize((320,320),Image.Resampling.LANCZOS) for im in ims] for n,ims in validate().items()};label=os.environ.get('ROUND','1-cpu');assert all(c.isalnum() or c in '-_' for c in label);path=REV/f'landship-round{label}.mp4'
     p=subprocess.Popen(['ffmpeg','-y','-loglevel','error','-f','rawvideo','-pixel_format','rgb24','-video_size','1600x348','-framerate','30','-i','pipe:0','-an','-c:v','libx264','-threads','3','-pix_fmt','yuv420p','-crf','18','-movflags','+faststart',str(path)],stdin=subprocess.PIPE)
@@ -142,3 +169,4 @@ if __name__=='__main__':
     elif sys.argv[1]=='pack':pack()
     elif sys.argv[1]=='validate':validate()
     elif sys.argv[1]=='video':video()
+    elif sys.argv[1]=='gpu-check':gpu_check()

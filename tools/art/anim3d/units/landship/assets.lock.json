@@ -9,8 +9,24 @@
       "sha256": "6abccdcaf35f2288543ca2fcffec2c7b589fff873c332db056ffdf7345575a41"
     },
     {
+      "path": "assets/landship/stone-fill-source.png",
+      "sha256": "a33037f1354098a8fee5eda00c1c2a15ff4addbaa54d6600721b37444f2a7545"
+    },
+    {
+      "path": "assets/landship/gun-fill-source.png",
+      "sha256": "6e499036525724a512c2d46e418c9489ebfa92fba91c793dce2a02015093ccd1"
+    },
+    {
+      "path": "masters/landship/textures/sponson.png",
+      "sha256": "9123ff481aebc2db28f8e063ab15de421636444638303a8f3cd2ac409f19d235"
+    },
+    {
       "path": "masters/landship/textures/painting.png",
       "sha256": "eb6e22721e7a0e2c8be45f0c37e9c880764e73ce49fde8fca35dbc2963f9d193"
+    },
+    {
+      "path": "masters/landship/textures/stone.png",
+      "sha256": "c972339c6fa7837f06ba874295ca18e18e79cb8da88650cd514b0c7d46583861"
     }
   ]
 }

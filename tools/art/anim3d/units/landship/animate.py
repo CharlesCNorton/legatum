@@ -9,7 +9,7 @@ def curves(action):
     return [fc for layer in action.layers for strip in layer.strips if hasattr(strip,'channelbags') for bag in strip.channelbags for fc in bag.fcurves]
 for clip,(count,fps,loop) in CLIPS.items():
     bpy.ops.wm.open_mainfile(filepath=str(M/'landship.blend'));sc=bpy.context.scene;sc.render.fps=fps;sc.frame_start=1;sc.frame_end=count
-    root=bpy.data.objects['RIG-chassis'];gun=bpy.data.objects['RIG-sponson_recoil'];hatch=bpy.data.objects['RIG-roof_hatch'];hatch_rest=hatch.location.copy()
+    root=bpy.data.objects['RIG-chassis'];gun=bpy.data.objects['RIG-sponson_recoil'];hatch=bpy.data.objects['RIG-roof_hatch'];hatch_rest=hatch.location.copy();gun_rest=gun.location.copy();gun_axis=Vector(sc['barrel_axis'])
     smoke_rest={o.name:o.location.copy() for o in sc.objects if o.get('effect')}
     soot=[]
     if clip=='death':
@@ -30,7 +30,7 @@ for clip,(count,fps,loop) in CLIPS.items():
                 a,b=route[i],route[(i+1)%len(route)];p=a.lerp(b,(d-lens[i])/(lens[i+1]-lens[i]));p.y=y;return p,-math.atan2(b.z-a.z,b.x-a.x)
     for f in range(1,count+2 if loop else count+1):
         t=(f-1)/count;phase=t*math.tau;u=min((f-1)/8,1)
-        root.location=(0,0,0);root.rotation_euler=(0,0,0);gun.location=(0,0,0);hatch.location=hatch_rest;hatch.rotation_euler=(0,0,0)
+        root.location=(0,0,0);root.rotation_euler=(0,0,0);gun.location=gun_rest;gun.rotation_euler=(0,0,0);hatch.location=hatch_rest;hatch.rotation_euler=(0,0,0)
         if clip=='idle':root.location.z=.007*math.sin(phase);root.rotation_euler.x=.002*math.sin(phase)
         if clip=='move':
             root.location.z=.008*(1-math.cos(phase*2))
@@ -38,12 +38,12 @@ for clip,(count,fps,loop) in CLIPS.items():
                 # Route is clockwise: bottom shoes move backward for +X travel.
                 p,ang=at(o['track_distance']+pitch*4*t,o['track_y']);o.location=p;o.rotation_euler.y=ang;o.keyframe_insert('location',frame=f);o.keyframe_insert('rotation_euler',frame=f)
         if clip=='attack':
-            recoil=[0,.0,.025,.15,.08,.03,0,0,0,0][f-1];gun.location=Vector((-.54,.84,-.02))*recoil;root.rotation_euler.x=-.018*(recoil/.15)
+            recoil=[0,0,.018,.23,.16,.08,.035,.01,0,0][f-1];gun.location=gun_rest-gun_axis*recoil;root.rotation_euler.x=-.025*(recoil/.23)
         if clip=='hit':root.rotation_euler.x=[0,-.03,.018,0][f-1];root.rotation_euler.z=[0,.018,-.008,0][f-1]
         if clip=='death':
             # A disabled vehicle stays grounded; sag upper cab/hatch, open and smoke.
-            hatch.location.z=hatch_rest.z+.04*min(u*3,1);hatch.rotation_euler.y=.65*min(u*2,1)
-            gun.rotation_euler.x=.035*min(u*2,1);root.rotation_euler.z=.012*math.sin(u*math.pi*4)*(1-u)
+            hatch.location.z=hatch_rest.z+.04*min(u*3,1);hatch.rotation_euler.y=1.15*min(u*2,1)
+            gun.rotation_euler.x=.065*min(u*2,1);root.rotation_euler.z=.012*math.sin(u*math.pi*4)*(1-u)
         # Keep the lowest physical track point on or above the stone under recoil/hit.
         bpy.context.view_layer.update()
         contact=min((o.matrix_world@Vector(v)).z for o in shoes for v in o.bound_box)
@@ -54,7 +54,7 @@ for clip,(count,fps,loop) in CLIPS.items():
             mix.inputs[0].default_value=.70*u;mix.inputs[0].keyframe_insert('default_value',frame=f)
         for o in effects:
             o.location=smoke_rest[o.name]
-            if clip=='death' and 'smoke' in o.name:o.location.z+=.20*u;o.location.x+=.06*math.sin(u*math.pi)
+            if clip=='death' and 'smoke' in o.name:o.location.z+=.24*u;o.location.x+=.12*u
             o.keyframe_insert('location',frame=f)
             o.hide_render=not ((clip=='attack' and 'flash' in o.name and f==4) or (clip=='death' and 'smoke' in o.name and f>=4))
             o.keyframe_insert('hide_render',frame=f)
