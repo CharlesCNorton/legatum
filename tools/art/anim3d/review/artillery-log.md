@@ -17,3 +17,11 @@
 - Published e-death: 10 actual rendered frames, 10 fps; CPU 512px 8 samples.
 - Completed all five clips and geometry audit; delivery pack may now run.
 - Fixed flash parent-space bug in build and all saved clips; rerendered visible firing sample, republished attack/pose reviews.
+- Inspected rest compare at 256/64 and idle/move/attack/hit/death strips. Same-unit identity at 64; not painting parity at 256: far wheel perspective, shield silhouette, hub projection registration and surface richness still differ. Death reads as disabled/slumped, not a fully destroyed wreck.
+- Measured alpha silhouette IoU 0.8366 at 256 (painting bbox 13,46–243,210; render 12,43–244,209); this includes the shared base and is not an art approval metric.
+- Python compilation, shell syntax and git diff whitespace checks passed. Git staging failed because sandbox denied .git/worktrees/lane-18/index.lock; leave commit to runner with requested Co-Authored-By trailer. No push or PR.
+- Final delivery PASS: 40 frames, 1545×560 trimmed atlas, 160px logical cells, 183,530 bytes at WebP quality 80. All decoded alpha masks reconstruct exactly; margins, motion, hashes and held death passed.
+- Video PASS: artillery-round1.mp4 is 240 frames, 8 seconds, 1600×348, H.264 yuv420p, all five decoded clips at 2× on cream. Inspected a decoded video frame after encoding.
+- Inventory PASS: all 40 512px masters and 40 256px masters, editable model plus five clips, six AO/curvature maps, plain/textured/details/rig-pose reviews, five strips/WebPs and rest-pose comparison exist. Python/shell syntax and whitespace checks passed. origin/master has zero commits ahead of this branch's HEAD.
+- GPU not run in sandbox; lead runs ROUND=1 tools/art/anim3d/units/artillery/gpu.sh. No artillery-PASS written: far-wheel perspective, shield shape, projected hub wear and overall painterly richness still require round 2. No game runtime or Rust/UI rules changed.
+- Runner commit trailer: Co-Authored-By: gpt-6-astra (Codex) <noreply@openai.com>

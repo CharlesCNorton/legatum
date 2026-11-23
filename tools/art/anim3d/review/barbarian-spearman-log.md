@@ -21,3 +21,7 @@
 - Inspected idle and move strips: visible skeletal breathing/march, fixed stone base; gait is restrained and needs more weight transfer.
 - Attack pose review caught a downward weapon dip. Corrected authoring to use an arm reach and stable hand orientation; rerender queued after the current sequential batch.
 - Added explicit lasted footwear and independent shield release; original first plain review retained as b-plain-initial.png.
+- Published e-attack review from CPU render.
+- Enabled Cycles persistent render data for later stage batches to reuse scene compilation across frames; no visual settings or frame counts changed.
+- Published e-hit review from CPU render.
+- Published e-death review from CPU render.

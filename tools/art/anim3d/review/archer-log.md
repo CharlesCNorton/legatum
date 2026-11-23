@@ -67,3 +67,9 @@
 - Published e-hit native 256/64 comparison; render device CPU.
 - Rendered e-death: 512px CYCLES CPU, 12 samples.
 - Published e-death native 256/64 comparison; render device CPU.
+- Authored attack: 10 frames, 14 fps; real rig keys, bow flex and nock keys, stationary base.
+- Geometry audit passed: anatomy, fixed base, nonzero scales, bow/nock contact and loop closure.
+- Rendered d: 512px CYCLES CPU, 12 samples.
+- Published d native 256/64 comparison; render device CPU.
+- Rendered e-attack: 512px CYCLES CPU, 12 samples.
+- Published e-attack native 256/64 comparison; render device CPU.

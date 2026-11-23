@@ -29,3 +29,5 @@
 - Packing correctly rejected clipped terminal death (right edge at 160). Corrected body fall translation, bent the knees, grounded the evaluated anatomy, and rerendered only death; no frames or quality were dropped.
 - Published c review from 512px CPU renders.
 - Published e-death review from 512px CPU renders.
+- Published e-death review from 512px CPU renders.
+- Packed all 40 frames, WebP quality 80, 193974 bytes; validation passed.
