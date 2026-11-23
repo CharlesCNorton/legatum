@@ -135,6 +135,7 @@ function connectStaging() {
 it('shows a guest’s chosen faction as text in the seat row', async () => {
   const state = connectStaging();
   state.occupants[1] = { ...state.occupants[1]!, faction: 'Byzantium' };
+  sockets[0].push({ type: 'staging', state });
   await act(async () => root.render(<StagingSeats guest />));
   const row = container.querySelectorAll('.seat-row')[2];
   expect(row.textContent).toContain('Byzantium');
