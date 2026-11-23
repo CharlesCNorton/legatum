@@ -95,3 +95,12 @@ Round 2 final CPU checks: 40/40 real 512px masters plus 256px copies, 40 trim re
 Round 2 motion review: opened all five strips and rig poses. Idle retains the raised knee; move has alternating steps, attack is a restrained staff shove, hit recoils and returns, death is held. The hovering raised sandal and stiff attack/collapse remain visible; fixed paint stretches on the falling torso. Not five artistically clean clips and not painting parity. Silhouette IoU 0.7665 vs round1 0.6299. No PASS marker.
 Round 2 handoff checks: executable gpu.sh, 12 Python syntax checks, 3 shell syntax checks, missing-input transcript/no-receipt rejection and CPU-master rejection PASS. CPU decoded-atlas MP4 verified H.264/yuv420p 1600x348, 240 frames/8s. Actual Cycles Metal GPU64 execution remains host-only and unverified here. No new scout-specific feedback file appeared.
 Round 2 final review: inspected the decoded H.264 contact sheet and all five strips. CPU movie and review files are present. Git add/commit both failed: cannot create legatum/.git/worktrees/lane-11/index.lock (Operation not permitted). Leave changes for runner commit with requested co-author trailer; no push/PR/merge attempted. origin/master is already an ancestor (0 commits ahead). Commit-based repository gates were not run against stale HEAD. Whitespace checks PASS.
+Rendered b 512 px CYCLES/GPU
+Rendered c 512 px CYCLES/GPU
+Rendered c-details 512 px CYCLES/GPU
+Rendered d 512 px CYCLES/GPU
+Rendered e-idle 512 px CYCLES/GPU
+Rendered e-move 512 px CYCLES/GPU
+Rendered e-attack 512 px CYCLES/GPU
+Rendered e-hit 512 px CYCLES/GPU
+Rendered e-death 512 px CYCLES/GPU
