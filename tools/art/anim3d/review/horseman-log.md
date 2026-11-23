@@ -24,3 +24,4 @@
 - Atlas compression required 16 alpha levels and WebP quality 58 in the preceding pass (198,986 bytes); all 40 256 px cells retained, no RGB posterization or spatial downscaling.
 - Corrected white pastern markings to all four legs as painted; final all-clip refresh queued behind the machine-wide Blender owner. This pass also refreshes every grade/hash together.
 - origin/master advanced to b93d4dd; requested merge failed because the sandbox denied ORIG_HEAD.lock in .git/worktrees/lane-4. Runner must merge and run post-merge determinism/pin checks.
+- Git staging also failed: index.lock creation is denied under .git/worktrees/lane-4. Changes remain uncommitted for the runner; horseman-commit-message.txt includes the requested co-author footer.

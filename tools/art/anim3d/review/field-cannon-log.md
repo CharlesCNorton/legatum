@@ -59,3 +59,6 @@
 - FINAL: 40-frame 2560x1280 atlas, 193396 bytes, WebP quality 40, 32 alpha levels. Contract/bounds/motion/held death PASS; 53-bone MPFB/rolling/base/ground audit PASS; terminal matrix delta 0; Python and shell syntax and git diff --check PASS.
 - FINAL ART: recognizable at 64 px, below painting richness at 256 px. Upright pose, simplified face/cloth and weak aged wear remain; compression softens detail and cream base is still peach. GPU host render and art approval pending. All stage sheets, five animated previews and rest crossfade exist.
 - GIT: origin/master advanced to b93d4dd; merge denied ORIG_HEAD.lock, staging denied index.lock. No commit, push, PR or master merge. Runner must merge and commit.
+- Posted field-cannon-c-textured-lit.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-d-rig-poses.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-idle-strip.png; actual CYCLES render, visual review pending.
