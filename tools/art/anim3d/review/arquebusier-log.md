@@ -176,3 +176,21 @@
 - Posted c-textured-lit review (CPU, 256 px).
 - Retargeted CC0 and saved move action (8 output frames).
 - Posted e-move review (CPU, 256 px).
+- Finished-surface camera projection with camera-only pigment; generated hidden fills retained.
+- Posted b-plain review (CPU, 256 px).
+- Posted c-textured-lit review (CPU, 256 px).
+- Retargeted CC0 and saved idle action (8 output frames).
+- Retargeted CC0 and saved move action (8 output frames).
+- Authored and saved attack action (10 output frames).
+- Retargeted CC0 and saved hit action (4 output frames).
+- Retargeted CC0 and saved death action (10 output frames).
+- Corrected inward stock normals, fitted its lower contour and swept the morion brim; the first new CPU comparison shows warm painted wood replacing the dark wedge. All 3D projection and physical fills remain editable.
+- Reused hash-pinned CC0 Quaternius Idle_Loop/Walk_Loop/Hit_Chest/Death01, rest/roll-compensated Blender constraints and an idle carrying-arm layer. Published provenance in unit SOURCES.md and external assets/SOURCES.md.
+- Rejected first mocap preview: foot-bone metrics passed (1.44mm stance error) while actual shoes detached. Prior screen fitting had moved shoes 0.2-0.4m behind ankle pivots. Added bind_fit.py to connect stocking/shoe depth and recalibrate the rest skeleton before motion; moved disc/shoes together along camera rays to preserve rest framing and anatomical leg length. No post-retarget foot rotations.
+- Masked duplicate anatomical toes beneath closed clothing without deleting native topology. Added a folded, thick, continuously weighted knee connector because the rigid breeches/stocking segments opened during flexion. Foot review now includes all eight top/front samples; actual surfaces still need visual inspection.
+- Posted d-rig-poses review (CPU, 256 px).
+- Posted e-idle review (CPU, 256 px).
+- Posted e-move review (CPU, 256 px).
+- Posted e-attack review (CPU, 256 px).
+- Posted e-hit review (CPU, 256 px).
+- Posted e-death review (CPU, 256 px).
