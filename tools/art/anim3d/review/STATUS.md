@@ -1,60 +1,60 @@
 # Animated units status
 
-Updated 2026-11-23T11:54:32Z. Round = finished rounds (driver count). Pass = the lane declared the bar met (`<slug>-PASS`); the lead and Sam still review.
+Updated 2026-11-23T13:35:39Z. Round = finished rounds (driver count). Pass = the lane declared the bar met (`<slug>-PASS`); the lead and Sam still review.
 
 | Unit | Branch | State | Rounds done | Atlas KB | Pass | Latest note |
 | --- | --- | --- | --- | --- | --- | --- |
-| archer | `astra/unit-anim-3d-archer` | idle | 0 | 184 | no | - GPU handoff wrapper saved at tools/art/anim3d/units/archer/gpu-round.sh. No unit-specific feedback file was present at final check. |
-| arquebusier | `astra/unit-anim-3d-arquebusier` | idle | 0 | 195 | no | - Commit attempted with required Co-Authored-By trailer; sandbox denied .git/worktrees/lane-15/index.lock. Changes are uncommitted for the runner; nothing pushe |
-| artillery | `astra/unit-anim-3d-artillery` | idle | 1 | 179 | no | - Published painted rest pose and 50/50 comparison; real AO shader, micrograin, edge geometry and hidden-surface fill. |
-| autonomous-armour | `astra/unit-anim-3d-autonomous-armour` | idle | 0 | 192 | no | Round 1 final CPU checks PASS: 40 x 256 clip masters, 16 required review artifacts, current master hashes, geometry audit, trim/alpha reconstruction, motion/loo |
-| barbarian-archer | `astra/unit-anim-3d-barbarian-archer` | idle | 0 | 185 | no | Commit attempt blocked by sandbox: cannot create .git/worktrees/lane-2/index.lock. Work left uncommitted for runner. origin/master advanced by two commits durin |
-| barbarian-crossbowman | `astra/unit-anim-3d-barbarian-crossbowman` | idle | 0 | 164 | no | - Git add/commit blocked: sandbox denies .git/worktrees/lane-20/index.lock. Changes left uncommitted for runner; commit-based repository gates deferred. No push |
-| barbarian-musketman | `astra/unit-anim-3d-barbarian-musketman` | idle | 0 | 190 | no | - Commit attempt blocked by sandbox index.lock permission; left focused changes for the runner. origin/master is already an ancestor of HEAD. Commit-based repos |
-| barbarian-pikeman | `astra/unit-anim-3d-barbarian-pikeman` | idle | 0 | 179 | no | - Independent rig audit found attack wrist-to-shaft distance 18.1 cm: the depth thrust exceeded the rear arm's reach. Replacing it with a shorter diagonal thrus |
-| barbarian-scout | `astra/unit-anim-3d-barbarian-scout` | idle | 0 | 179 | no | Git commit and origin/master merge blocked by sandbox index.lock / ORIG_HEAD.lock permission denial; changes left for runner. Post-merge determinism and pin tes |
-| barbarian-spearman | `astra/unit-anim-3d-barbarian-spearman` | idle | 0 | 181 | no | - HEAD-based hygiene/public-claims gate passed, but HEAD excludes this uncommitted work; this is NOT claimed as a gate pass for the new files. Browser art gate/ |
-| biplane | `astra/unit-anim-3d-biplane` | idle | 0 | 185 | no | - Git add blocked by .git/worktrees/lane-19/index.lock denial. Runner must commit and merge upstream; no push/PR performed. |
-| bomber | `astra/unit-anim-3d-bomber` | idle | 0 | 189 | no | Final verification: H.264/yuv420p MP4 1600x348, 240 frames, 8.000 s; 48 masters each at 512 and 256; all 16 review files present. Git commit blocked by sandbox  |
-| byzantine-heir | `astra/unit-anim-3d-byzantine-heir` | idle | 0 | - | no | - Rebuild exposed a Blender UV-layer handle invalidated by edit-mode unwrap; bake stopped before saving. Fixed by retaining the UV name as a string, added nonze |
-| cataphract | `astra/unit-anim-3d-cataphract` | idle | 0 | 183 | no | Packed and decoded 40 trimmed frames, quality 80, 187204 bytes; wrote cataphract-round1.mp4. Warnings: [] |
-| cavalry | `astra/unit-anim-3d-cavalry` | idle | 0 | - | no | e-death: review emitted from CYCLES frames; no art-pass claim. |
-| composite-archer | `astra/unit-anim-3d-composite-archer` | idle | 0 | 176 | no | - Git add/commit blocked: cannot create .git/worktrees/lane-9/index.lock (Operation not permitted). Left all changes uncommitted for the runner; do not push or  |
-| crossbowman | `astra/unit-anim-3d-crossbowman` | idle | 0 | - | no | - Started render e-attack (CPU). |
-| cuirassier | `astra/unit-anim-3d-cuirassier` | idle | 0 | - | no | - Emitted c-details: 1 frames, 256 px CYCLES/CPU, 8 samples. |
-| drone-swarm | `astra/unit-anim-3d-drone-swarm` | idle | 0 | 187 | no | e-hit: 4 frames at 256/64 from 512px CYCLES/CPU, 12 samples. |
-| eagle-warrior | `astra/unit-anim-3d-eagle-warrior` | idle | 0 | - | no | - Authored idle, move, attack, hit and terminal death on the MPFB skeleton; no mocap or cloth simulation claimed. |
-| field-cannon | `astra/unit-anim-3d-siege` | idle | 8 | 178 | no | - ROUND 8 GIT: origin/master remains an ancestor; no fetch/merge needed. git add denied at .git/worktrees/siege-round2/index.lock (Operation not permitted), so  |
-| fighter | `astra/unit-anim-3d-fighter` | idle | 0 | 193 | no | - Rendered e-death: 512px, CYCLES; review published. |
-| gaesatae | `astra/unit-anim-3d-gaesatae` | idle | 0 | - | no | - Adjusted head width/position, grip, ankle stance and cloth fold frequency before clip authoring. No quality PASS claimed. |
-| horseman | `astra/unit-anim-3d-mounted` | idle | 1 | 195 | no | - Commit attempt failed: sandbox denied .git/worktrees/lane-6/index.lock. Changes remain uncommitted for the runner, with exact message and requested co-author  |
-| howitzer | `astra/unit-anim-3d-howitzer` | not started | 0 | - | no |  |
-| hunter-killer | `astra/unit-anim-3d-hunter-killer` | not started | 0 | - | no |  |
-| infantry | `astra/unit-anim-3d-infantry` | not started | 0 | - | no |  |
-| jet-bomber | `astra/unit-anim-3d-jet-bomber` | not started | 0 | - | no |  |
-| jet-fighter | `astra/unit-anim-3d-jet-fighter` | not started | 0 | - | no |  |
-| keshig | `astra/unit-anim-3d-keshig` | not started | 0 | - | no |  |
-| knight | `astra/unit-anim-3d-knight` | not started | 0 | - | no |  |
-| landship | `astra/unit-anim-3d-landship` | not started | 0 | - | no |  |
-| legionary | `astra/unit-anim-3d-legionary` | idle | 0 | 187 | no | - Python syntax (10 scripts), shell syntax and git diff whitespace check PASS. Commit attempted with required co-author line, but sandbox denied `.git/worktrees |
-| main-battle-tank | `astra/unit-anim-3d-main-battle-tank` | not started | 0 | - | no |  |
-| mechanised-infantry | `astra/unit-anim-3d-mechanised-infantry` | not started | 0 | - | no |  |
-| medjay | `astra/unit-anim-3d-medjay` | idle | 0 | 164 | no | Visual review: recognizable Medjay at 64px, below painting parity at 256px. Improve head/headband/feather registration, facial geometry, body proportions and at |
-| musketman | `astra/unit-anim-3d-musketman` | not started | 0 | - | no |  |
-| panzer | `astra/unit-anim-3d-panzer` | not started | 0 | - | no |  |
-| peltast | `astra/unit-anim-3d-peltast` | idle | 0 | 166 | no | - Round1 verdict: recognizable as peltast at64px, below painting at256px (face/cap, narrow torso, regular cloth folds, boot laces and abrupt rearm). No PASS mar |
-| phalangite | `astra/unit-anim-3d-phalangite` | idle | 0 | 189 | no | - Existing-HEAD repository gate: hygiene/public-claims passed; art render-sets.mjs exited 1. Because the commit was blocked, that gate does not cover this uncom |
-| pikeman | `astra/unit-anim-3d-pikeman` | not started | 0 | - | no |  |
-| reislaufer | `astra/unit-anim-3d-reislaufer` | not started | 0 | - | no |  |
-| rifleman | `astra/unit-anim-3d-rifleman` | not started | 0 | - | no |  |
-| rocket-artillery | `astra/unit-anim-3d-rocket-artillery` | not started | 0 | - | no |  |
-| scout | `astra/unit-anim-3d-scout` | idle | 0 | 195 | no | Final verdict: genuine 3D and recognizable scout at 64px; below painting parity at 256px. Next pass should match raised-knee stance, larger expressive face/bear |
-| settler | `astra/unit-anim-3d-settler` | idle | 0 | - | no | - Saved 3D audit passed: source hashes, 53 bones, actual motion, exact loop closing keys and held death; ground/bounds recorded; collision limits explicit. |
-| spartan-hoplite | `astra/unit-anim-3d-spartan-hoplite` | idle | 0 | 169 | no | Commit attempt blocked: Git could not create .git/worktrees/lane-5/index.lock (Operation not permitted); changes left for the runner to commit with the requeste |
-| spearman | `astra/unit-anim-3d-v2` | idle | 8 | 178 | no | - Final handoff: git add/commit blocked by sandbox denial creating .git/worktrees/spearman-round2/index.lock (exit 128). Changes remain scoped and uncommitted.  |
-| stealth-bomber | `astra/unit-anim-3d-stealth-bomber` | not started | 0 | - | no |  |
-| stealth-fighter | `astra/unit-anim-3d-stealth-fighter` | not started | 0 | - | no |  |
-| tagmatic-soldier | `astra/unit-anim-3d-tagmatic-soldier` | idle | 0 | 186 | no | - GPU handoff: from repo root, tools/art/anim3d/units/tagmatic-soldier/gpu.sh (no arguments; uses ROUND from driver). This performs geometry audit, all GPU stag |
-| tank | `astra/unit-anim-3d-vehicles` | idle | 1 | 194 | no | - Commit attempt blocked by filesystem denial creating .git/worktrees/lane-5/index.lock; no escalation or workaround. Changes left unstaged for runner, exact co |
-| trench-infantry | `astra/unit-anim-3d-trench-infantry` | not started | 0 | - | no |  |
-| war-elephant | `astra/unit-anim-3d-war-elephant` | idle | 0 | 179 | no | - Final MP4 verified with ffprobe: H.264, yuv420p, 1600x348, 30 fps, 240 frames, 8.000 seconds. Decoded frame inspected for all five trimmed-atlas reconstructio |
+| archer | `astra/unit-anim-3d-archer` | idle | 0 | 187 | no | - Commit attempted and blocked: sandbox cannot create .git/worktrees/lane-10/index.lock. Changes left for runner to commit with requested co-author trailer. ori |
+| arquebusier | `astra/unit-anim-3d-arquebusier` | idle | 0 | 163 | no | - Commit attempted with the required Co-Authored-By trailer; sandbox denied .git/worktrees/lane-10/index.lock. Changes remain uncommitted for the runner; no pus |
+| artillery | `astra/unit-anim-3d-artillery` | idle | 1 | 174 | no | - Commit attempted; sandbox denied .git/worktrees/lane-17/index.lock (Operation not permitted). Changes remain uncommitted for runner. Requested message: Refine |
+| autonomous-armour | `astra/unit-anim-3d-autonomous-armour` | idle | 0 | 194 | no | Round 2 closeout: archived exact reviewed masters, renders, atlas and review evidence in masters/autonomous-armour/round2-cpu before host replacement. No 512 di |
+| barbarian-archer | `astra/unit-anim-3d-barbarian-archer` | idle | 0 | 187 | no | Final round2 checks: all13 Python files compile, both shell scripts pass bash -n, gpu.sh is executable, git diff --check passes, and HEAD contains origin/master |
+| barbarian-crossbowman | `astra/unit-anim-3d-barbarian-crossbowman` | idle | 0 | 135 | no | - Final round-2 checks repeated after the death fix: both regression tests, atlas validation, all12 Python compilation, both shell syntax checks and whitespace  |
+| barbarian-musketman | `astra/unit-anim-3d-barbarian-musketman` | idle | 0 | 179 | no | - Committed completion on astra/unit-anim-3d-barbarian-musketman: b409be4c delivery/review and 207d6ac4 hygiene-safe matrix formatting/gate report; runner WIP 3 |
+| barbarian-pikeman | `astra/unit-anim-3d-barbarian-pikeman` | idle | 0 | 155 | no | - Final committed hygiene and public-claims checks pass; origin/master already contained (0 commits behind). Browser art gate is specifically blocked by Chromiu |
+| barbarian-scout | `astra/unit-anim-3d-barbarian-scout` | idle | 0 | 169 | no | Committed round 2 as becb4bf3 on astra/unit-anim-3d-barbarian-scout in .worktrees/barbarian-scout-round2; worktree clean, gpu.sh mode100755. No push, PR, merge  |
+| barbarian-spearman | `astra/unit-anim-3d-barbarian-spearman` | idle | 0 | 181 | no | - Runner reassigned lane 8 to fighter during final reporting, after saving WIP 50232c41 on astra/unit-anim-3d-barbarian-spearman. Verified saved atlas/JSON hash |
+| biplane | `astra/unit-anim-3d-biplane` | idle | 0 | 174 | no | - origin/master is already an ancestor of HEAD; no merge needed. git add/commit blocked by sandbox denial creating .git/worktrees/lane-5/index.lock. Runner must |
+| bomber | `astra/unit-anim-3d-bomber` | idle | 0 | 188 | no | Round 2 verdict: close same-unit reading at64, still visibly different at256. Canopy/nacelles and propeller tip finish remain simplified; stone rim is too flat; |
+| byzantine-heir | `astra/unit-anim-3d-byzantine-heir` | idle | 0 | 195 | no | - Final checks: eight Python files parsed; all unit JSON parsed; two Bash scripts syntax-checked; executable GPU entry point checked; git diff --check passed; g |
+| cataphract | `astra/unit-anim-3d-cataphract` | idle | 0 | 184 | no | Commit attempted with required gpt-6-astra coauthor; sandbox denied .git/worktrees/lane-4/index.lock. Changes remain uncommitted for runner; nothing pushed. ori |
+| cavalry | `astra/unit-anim-3d-cavalry` | idle | 0 | 186 | no | Committed a553ab6d on astra/unit-anim-3d-cavalry; clean isolated worktree. Final committed hygiene check: 0 findings. Inspected decoded MP4 contact frame; no ar |
+| composite-archer | `astra/unit-anim-3d-composite-archer` | idle | 0 | 174 | no | - Final feedback check: no composite-archer-FEEDBACK.md exists. No composite-archer-PASS created. Lead command from repo root: tools/art/anim3d/units/composite- |
+| crossbowman | `astra/unit-anim-3d-crossbowman` | idle | 0 | 175 | no | - Git add and commit attempted with required co-author footer; both blocked by Operation not permitted creating .git/worktrees/lane-21/index.lock. Changes remai |
+| cuirassier | `astra/unit-anim-3d-cuirassier` | idle | 0 | 193 | no | - CPU evidence archived under masters/cuirassier/round2-cpu, including raw/graded frames, review images, validation, decoded movie and hashes. Lead: ROUND=2 too |
+| drone-swarm | `astra/unit-anim-3d-drone-swarm` | idle | 0 | 172 | no | Commit attempted with required coauthor, but git add failed creating .git/worktrees/lane-1/index.lock: Operation not permitted. All round-2 changes are left unc |
+| eagle-warrior | `astra/unit-anim-3d-eagle-warrior` | idle | 0 | 191 | no | - gpu.sh exists and is executable; Bash syntax, missing-input failure/status logging and CPU-rejection gate verified. Actual Metal execution is unavailable in t |
+| field-cannon | `astra/unit-anim-3d-siege` | idle | 8 | 191 | no | - Posted field-cannon-e-death-strip.png; actual CYCLES render, visual review pending. |
+| fighter | `astra/unit-anim-3d-fighter` | idle | 0 | 168 | no | - Git add/commit denied index.lock by sandbox; changes left for runner, no push. Intended commit: Refine fighter painted surfaces and verify animation delivery; |
+| gaesatae | `astra/unit-anim-3d-gaesatae` | idle | 0 | - | no | - Archived complete CPU round evidence under masters/gaesatae/round2-cpu before the host overwrites current outputs. Verified gaesatae-round2.patch applies clea |
+| horseman | `astra/unit-anim-3d-mounted` | idle | 1 | 169 | no | - Already-fetched origin/master is an ancestor of HEAD; no merge needed. Final git add/commit attempt failed creating .git/worktrees/lane-6/index.lock (Operatio |
+| howitzer | `astra/unit-anim-3d-howitzer` | idle | 0 | 184 | no | - Visual verdict: NOT PASS. At256 wheels are too plain/clean, carriage/trail registration and stone surface richness still differ; at64 identity reads but paint |
+| hunter-killer | `astra/unit-anim-3d-hunter-killer` | idle | 0 | 178 | no | Git staging/commit attempted; sandbox refused index.lock. Runner must commit. origin/master already ancestor of starting HEAD. Python AST, shell syntax, whitesp |
+| infantry | `astra/unit-anim-3d-infantry` | idle | 0 | 164 | no | - Commit attempt blocked: sandbox denied .git/worktrees/lane-18/index.lock. All changes left for runner; no push/PR. origin/master already ancestor; no merge ne |
+| jet-bomber | `astra/unit-anim-3d-jet-bomber` | idle | 0 | 174 | no | Learning: use finished-vertex visibility for projected pigment; centroids of nonplanar wing quads can lie under tessellated surfaces and falsely mask the painti |
+| jet-fighter | `astra/unit-anim-3d-jet-fighter` | idle | 0 | 174 | no | Commit attempted with required gpt-6-astra co-author footer; sandbox denied .git/worktrees/lane-6/index.lock. Changes left for runner commit; no push. Already-f |
+| keshig | `astra/unit-anim-3d-keshig` | idle | 0 | 182 | no | Final source syntax/whitespace checks and 92 master dimension checks passed. Git add failed: lane-12/index.lock Operation not permitted; left all changes uncomm |
+| knight | `astra/unit-anim-3d-knight` | idle | 0 | 193 | no | Repository HEAD gates: hygiene and public-claims passed; art renderer exited1 (wrapper gave no specific cause). Git index.lock denied staging; runner commit mes |
+| landship | `astra/unit-anim-3d-landship` | idle | 0 | 165 | no | Final CPU checks: atlas quality90, 168682 bytes, 1370x520, forty 160px logical frames. Exact alpha/crop reconstruction, source/grade hashes, motion, held death  |
+| legionary | `astra/unit-anim-3d-legionary` | idle | 0 | 193 | no | - Final visual readback: current rest comparison, decoded Q85 atlas and representative MP4 frames inspected. Richer paint and cleaner shoulders/cream stone; fin |
+| main-battle-tank | `astra/unit-anim-3d-main-battle-tank` | idle | 0 | 172 | no | - Commit attempted; sandbox denied .git/worktrees/lane-16/index.lock. Changes remain uncommitted for the runner, with the requested co-author trailer recorded i |
+| mechanised-infantry | `astra/unit-anim-3d-mechanised-infantry` | idle | 0 | 172 | no | - Honest verdict: same APC-plus-dismount identity at 64px; below painting at 256px. Soldier rest-pose/face/boots/grip, heavy rubber finish, rear cabin joins, cr |
+| medjay | `astra/unit-anim-3d-medjay` | idle | 0 | 154 | no | Commit attempt blocked by sandbox: cannot create .git/worktrees/lane-18/index.lock (Operation not permitted). All changes remain uncommitted for the runner; med |
+| musketman | `astra/unit-anim-3d-musketman` | running | 0 | - | no | - Audit passed: five clips, source hashes, 53-bone rig, fixed base and positive object scales. |
+| panzer | `astra/unit-anim-3d-panzer` | idle | 0 | 191 | no | - Repository art gate attempted on HEAD (not the uncommitted candidate): failed because node tools/art/render-sets.mjs exited 1. No repository-wide art-gate pas |
+| peltast | `astra/unit-anim-3d-peltast` | idle | 0 | 191 | no | - Git staging/commit attempted after verifying origin/master is already an ancestor; blocked by .git/worktrees/lane-20/index.lock Operation not permitted. Chang |
+| phalangite | `astra/unit-anim-3d-phalangite` | idle | 0 | 177 | no | - Commit attempted with required co-author trailer; sandbox denied .git/worktrees/lane-14/index.lock. All changes remain uncommitted for the runner. No push, PR |
+| pikeman | `astra/unit-anim-3d-pikeman` | idle | 0 | 171 | no | - Git staging denied: index.lock Operation not permitted. All changes left for runner; suggested commit message saved externally. No push, PR or PASS. |
+| reislaufer | `astra/unit-anim-3d-reislaufer` | idle | 0 | 153 | no | - Final working-file hygiene: zero findings; Python/Bash syntax and whitespace checks pass. All 17 required review artifacts present, 40 CPU256 masters retained |
+| rifleman | `astra/unit-anim-3d-rifleman` | idle | 0 | 175 | no | - Git add/commit attempted with the requested co-author footer, but sandbox denied .git/worktrees/lane-17/index.lock. Changes remain uncommitted for the runner. |
+| rocket-artillery | `astra/unit-anim-3d-rocket-artillery` | idle | 0 | 189 | no | - Art verdict: recognizable rocket truck at 64px; at 256px over-bright far wheels, tire proportions, tube rim registration, cab/fender fitting and plain stone r |
+| scout | `astra/unit-anim-3d-scout` | idle | 0 | 195 | no | Round 2 final review: inspected the decoded H.264 contact sheet and all five strips. CPU movie and review files are present. Git add/commit both failed: cannot  |
+| settler | `astra/unit-anim-3d-settler` | idle | 0 | 168 | no | - Required executable gpu.sh exists; all constituent stages were exercised on CPU, its missing-input and CPU-evidence rejection were exercised, and its decoded- |
+| spartan-hoplite | `astra/unit-anim-3d-spartan-hoplite` | running | 1 | 195 | no | Baked clip death |
+| spearman | `astra/unit-anim-3d-v2` | idle | 7 | 178 | no | - Final handoff: git add/commit blocked by sandbox denial creating .git/worktrees/spearman-round2/index.lock (exit 128). Changes remain scoped and uncommitted.  |
+| stealth-bomber | `astra/unit-anim-3d-stealth-bomber` | idle | 0 | 190 | no | Commit attempt blocked: git could not create .git/worktrees/lane-1/index.lock (Operation not permitted). Changes left uncommitted for runner; requested commit m |
+| stealth-fighter | `astra/unit-anim-3d-stealth-fighter` | idle | 0 | 160 | no | Git staging denied creating .git/worktrees/lane-19/index.lock; left requested scoped changes for runner commit. No push, PR, upload or deployment. |
+| tagmatic-soldier | `astra/unit-anim-3d-tagmatic-soldier` | running | 1 | 178 | no | - Tightened geometry floor threshold to the stone top tolerance, excluding only the stone itself. Caught stitched-sole penetration in four walk samples; groundi |
+| tank | `astra/unit-anim-3d-vehicles` | running | 2 | 186 | no | - Emitted tank-c-textured-lit.png from actual c renders; visual review pending. |
+| trench-infantry | `astra/unit-anim-3d-trench-infantry` | idle | 0 | 179 | no | - Delivery inventory passed: 17 review artifacts, 40 animation frames at each of 512/256, editable plain/final/five clip blends. Git add blocked by index.lock p |
+| war-elephant | `astra/unit-anim-3d-war-elephant` | queued | 1 | 176 | no | - Lead command: ROUND=2 tools/art/anim3d/units/war-elephant/gpu.sh. It is executable; all render/review/packing/video stages were exercised with explicitly labe |

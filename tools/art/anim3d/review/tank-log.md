@@ -149,3 +149,4 @@
 - Loaded all six Sam Blender skills plus complete playbook/common feedback/tank feedback/art direction and provenance; this pass targets full-depth contour registration before rebaking/rest-camera projection, retaining generated hidden fill, bevels, thick straps/folded canvas, product lights and one frozen automatic histogram grade.
 - Emitted tank-c-textured-lit.png from actual c renders; visual review pending.
 - Emitted tank-c-textured-lit.png from actual c renders; visual review pending.
+- Emitted tank-c-textured-lit.png from actual c renders; visual review pending.
