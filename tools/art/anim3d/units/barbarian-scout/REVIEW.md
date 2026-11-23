@@ -1,65 +1,56 @@
-# Round 2 evidence
+# Driver round 2 evidence
 
-Candidate only; **no PASS marker**. Refit the actual MPFB bind meshes and 53-bone
-skeleton, finish static surfaces before frozen camera UVs, correct the axe normals
-and its clearance from the shirt, fit the saluting hand, widen the rear pelt,
-add visibility/source-object masks, and retain generated fur/linen fills. Six
-real AO/Pointiness bakes, modeled cloth/straps/hair, product lights and one fixed
-automatic histogram grade remain. Camera-only pigment prevents painted lighting
-from illuminating other surfaces. No runtime or rules code changed.
+**Candidate; no PASS.** The lead's prior GPU run succeeded: 40 native GPU512
+frames, Q80, 179,574 bytes. That complete evidence is preserved externally in
+`masters/barbarian-scout/driver-r1-gpu/`.
 
-Final CPU evidence, native 256 px / Cycles / 8 samples:
+This pass fixes trousers accidentally containing hand/finger geometry, refits the
+right hand and its bind bones, restores grazing-surface paint, projects stone
+grain/rim onto the beveled disc, and adds pinned generated skin/hair/leather fills.
+Quaternius CC0 crouch idle/move, hit and death replace the previous authored clips;
+only the axe attack remains authored. Kneeling support constrains the retarget.
+Contact-driven cape/tunic folds let the fallen body settle on the stone. These
+are geometric morphs, not simulated cloth. All six Sam Blender skills were used.
 
-- All 40 frames, counts 8/8/10/4/10. Trimmed 160 px atlas **172,840 bytes at Q80**.
-- Atlas validation passes: offsets, bounds, exact decoded quantized alpha,
-  source/clip/grade/frame hashes, uniform render settings, actual motion and held
-  death. Quality stays at least 75; the size cap remains 200,000 bytes.
-- Blender audit passes: anatomy, 53 bones, bakes, source freshness, positive scale,
-  stationary base, closed idle/move endpoints, held death, and axe grip within
-  2 mm of the palm during striking frames. Major-limb lengths remain between
-  0.916 and 1.179 times their input lengths; local fitting residual is 0.54 px.
-  These checks do not establish collision-free motion or painting parity.
-- Three delivery regression tests pass. Ten Python files parse; three shell
-  scripts pass Bash syntax; `git diff --check` passes.
-- Decoded-atlas MP4 verified: **8.000 seconds, 240 frames, 1600x348,
-  H.264/yuv420p**, five clips side by side at 2x on cream. Reviewed its contact
-  sheet, all clip strips, plain views, detail sheet, and rest comparisons.
+Current CPU evidence (native 256 px, Cycles, 8 samples):
 
-At 256 px the painting is still substantially richer. The broad crouch, face
-registration and equipment placement improved, but hand/brow anatomy,
-hand-to-cloth joins, exposed fill seams, knee/boot contact, and flat stone finish
-remain wrong. At 64 px the fur/horn/scarf/lookout identity reads; it is still
-clearly distinguishable. Move and attack remain restrained/stiff. Death reveals
-paint/fill seams and needs better choreography. **Five generated clips are not
-five visually approved clips.**
+- All 40 frames, 8/8/10/4/10; trimmed 160 px atlas **180,678 bytes, quality 80**.
+- Full atlas validation passes: source/clip/grade/frame hashes, uniform settings,
+  rectangles/offsets, alpha reconstruction, margins, motion and held death.
+- Blender audit passes: 53 bones, anatomy, garment exclusions, open-motion
+  provenance, six AO/Pointiness bakes, source freshness, positive object scales,
+  stationary base, closed loops and axe grip within 2 mm during the strike.
+- Both terminal death frames rendered independently. Root, skeleton, object
+  transforms and cloth morphs hold. Final native PNGs are byte-identical. An earlier render differed by four
+  one-LSB RGB values; a bounded noise guard now covers that case while preserving
+  raw evidence.
+- Three delivery regressions pass. Twelve Python scripts parse; three Bash
+  scripts pass syntax; whitespace check passes.
+- MP4 verified: H.264/yuv420p, 1600x348, 240 frames, 8.000 seconds, all five clips
+  at 2x on cream. Its decoded contact sheet, all strips, rest/detail comparisons,
+  plain geometry and actual eight-frame top/front feet sheet were opened.
 
-Important findings: per-vertex floor fitting stretched feet, and a calf-only
-correction stretched the torso. Both were rejected after side-view inspection;
-shared full-figure depth translations preserve proportions. Visibility masking
-revealed a buried axe that source paint on the shirt had been concealing. Fix the
-actual support geometry before preserving a flattering projected silhouette.
+At **256 px**, stone finish, garment correctness and death contact improve, but
+hand/finger anatomy, raised-arm/face joins, hair/pelt silhouette and revealed
+skin/cloth still differ clearly from the painting. At **64 px**, the same
+horn/fur/red-scarf lookout identity reads, but the silhouette/base differ.
+The feet sheet exposes excessive sole rotation; the constrained shuffle and axe
+attack remain stiff. Death settles but reveals fallback texture seams. These
+are not five visually approved clips. No PASS marker is warranted.
 
-`gpu.sh` is executable and resolves its checkout. Missing-input preflight and
-actual device preflight both fail with recorded stages. Running the real script
-in the sandbox exits 1 at `gpu-device`: **No Metal GPU; refusing CPU fallback**.
-The complete host pass is therefore still unverified here. It rebuilds, audits,
-renders every stage at GPU512, verifies native 512/256 masters, tests delivery,
-packs/validates and writes `barbarian-scout-round${ROUND}.mp4`. Run from this
-branch's checkout:
+`driver-r2-cpu/` preserves current CPU evidence. Previous GPU512 files were moved
+out of the live 512 folder so CPU256 cannot masquerade as fresh512. No runtime,
+UI or rules code changed; engine tests do not apply. `origin/master` has no
+commits ahead of this branch. No push, PR or merge into master.
+
+The executable no-argument handoff rebuilds, audits, renders every stage and
+feet on Metal Cycles, checks native GPU512/256 freshness, packs/validates and
+writes the decoded-atlas eight-second MP4. This round's script invocation was
+cancelled (exit 130) while waiting at the shared device gate, before its probe or
+rebuild ran. The earlier sandbox check found no Metal; this round's host GPU
+pass remains unverified. Commit was blocked by sandbox `index.lock` permissions;
+changes remain on the requested branch for the runner. Lead command:
 
 ```sh
 ROUND=2 tools/art/anim3d/units/barbarian-scout/gpu.sh
 ```
-
-CPU previews cannot manufacture 512 px masters. Prior native CPU512 evidence is
-preserved in `masters/barbarian-scout/round1-cpu/`; current round-two CPU evidence
-is in `round2-cpu/`. Fresh GPU512 masters remain pending.
-
-The repository art gate could not run: Playwright Chromium failed its macOS
-MachPortRendezvous bootstrap check in the sandbox. The lead still owes the host
-browser/art gate and visual review. The fetched `origin/master` is already an
-ancestor of this branch, so no merge or determinism re-run was needed.
-
-The supplied lane-21 was on crossbowman and denied branch switching. It remains
-unchanged. Scout work resumed from c9464430 in the Git-managed
-`.worktrees/barbarian-scout-round2` checkout on the requested scout branch.

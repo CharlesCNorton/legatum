@@ -6,13 +6,14 @@ trimmed-atlas contract. Uses the shared MPFB install and the painting/fur inputs
 under `~/LegatumRuns/anim-pilot/assets/barbarian-scout/`.
 
 - `rebuild.sh`: build the crouched MPFB bind pose and original kit, fit finished bind geometry/skeleton, apply frozen
-  camera UVs/generated fur, bake AO/curvature, and save five keyed clip masters.
+  camera UVs/generated fur, bake AO/curvature, and save five clip masters using pinned CC0 crouched motion and the original axe attack.
 - `render.sh b|c|d|e-idle|e-move|e-attack|e-hit|e-death|all`: gated Cycles render,
   default CPU / 512 px / 8 samples (use RESOLUTION=256 for previews); immediate review publication for each stage.
 - `gpu.sh`: the complete no-argument lead pass. Metal Cycles, 512/256 masters,
-  every stage review, trimmed 160 px atlas, validation and `round${ROUND}.mp4`.
+  every stage review plus actual top/front feet, trimmed 160 px atlas, validation and `round${ROUND}.mp4`.
   Rebuilds from existing external inputs; no downloads. Defaults to 64 samples.
   Retains a round transcript/status and rejects missing Metal or non-native masters.
+- `feet.py`: actual eight-frame top/front boot review and contact/direction measurements.
 - `post.py pack|validate|video`: source/grade-checked delivery and trim-aware video.
 - `audit.py`: Blender-side anatomy, bones, bakes, source hashes, base, scales,
   actual motion, loop closure and held death checks, plus diagnostic bounds.

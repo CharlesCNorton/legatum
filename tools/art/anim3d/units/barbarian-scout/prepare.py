@@ -3,6 +3,8 @@ from pathlib import Path
 from PIL import Image
 import hashlib,json,os
 R=Path(os.environ.get('ANIM_ROOT',Path.home()/'LegatumRuns/anim-pilot'));A=R/'assets/barbarian-scout'
+for name,digest in json.loads((Path(__file__).parent/'assets.lock.json').read_text()).items():
+    assert hashlib.sha256((A/name).read_bytes()).hexdigest()==digest, 'Changed unit input: '+name
 ref=Image.open('app/src/assets/units/barbarian-scout-256.png').convert('RGBA')
 src=Image.open(A/'painting-source.png').convert('RGBA');box=src.getchannel('A').getbbox();s=src.crop(box)
 # Use the committed token's alpha extent as the exact projection canvas reference.
@@ -14,4 +16,8 @@ print('projection extent',target)
 p=A/'sources.json'
 records=json.loads(p.read_text())
 records['painted-linen']={'source':'Existing mounted-family generated fill, assets/horseman/fill-linen.png; prompt and generator provenance in assets/SOURCES.md','licence':'Project CC BY 4.0','sha256':hashlib.sha256((A/'painted-linen.png').read_bytes()).hexdigest()}
+p.write_text(json.dumps(records,indent=2))
+
+for kind,source in [('skin','medjay/fill-skin.png'),('hair','barbarian-archer/fill-hair.png'),('leather','barbarian-archer/fill-leather.png')]:
+    records['painted-'+kind]={'source':'Existing original generated '+source+'; generation provenance in unit SOURCES.md and assets/SOURCES.md','licence':'Project CC BY 4.0','sha256':hashlib.sha256((A/('painted-'+kind+'.png')).read_bytes()).hexdigest()}
 p.write_text(json.dumps(records,indent=2))

@@ -9,6 +9,9 @@ sc=bpy.context.scene;cam=sc.camera
 paint=bpy.data.images.load(str(A/'painting-aligned.png'));paint.pack()
 fur=bpy.data.images.load(str(A/'painted-fur.png'));fur.pack()
 linen=bpy.data.images.load(str(A/'painted-linen.png'));linen.pack()
+fills={}
+for kind in ('skin','hair','leather'):
+    fills[kind]=bpy.data.images.load(str(A/('painted-'+kind+'.png')));fills[kind].pack()
 # Convert kit curves to genuine mesh surfaces so UVs are frozen in bind space.
 for o in list(sc.objects):
     if o.type=='CURVE':
@@ -38,16 +41,19 @@ for o in list(sc.objects):
         visible[vertex.index]=0 if hit else 1
     for poly in o.data.polygons:
         n=(o.matrix_world.to_3x3()@poly.normal).normalized()
-        facing=max(0,min(1,(n.dot(view)+.18)/.55)) if not base else 0
+        facing=max(0,min(1,(n.dot(view)+.15)/.30))
         for li in poly.loop_indices:
             co=o.matrix_world@o.data.vertices[o.data.loops[li].vertex_index].co
             p=world_to_camera_view(sc,cam,co)
             uv.data[li].uv=(p.x,p.y)
             index=o.data.loops[li].vertex_index
-            coverage=facing*visible[index]
+            coverage=visible[index]  # visibility, not grazing angle, determines rest paint
+            # Overlapping locks move with the same head: masking each by its
+            # neighbour creates alternating bare stripes, not useful occlusion.
+            if o.name.startswith(('GEO-sculpted-hair','GEO-beard','GEO-sculpted-scalp')):coverage=facing
             right_hand=False
             if o.name=='GEO-anatomy':
-                groups=[o.vertex_groups[g.group].name for g in o.data.vertices[index].groups if g.weight>.25]
+                groups=[o.vertex_groups[g.group].name for g in o.data.vertices[index].groups if g.weight>.02]
                 right_hand=any(n.endswith('_r') and n.startswith(('hand','index','middle','ring','pinky','thumb')) for n in groups)
                 raised=any(n.endswith('_l') and n.startswith(('hand','index','middle','ring','pinky','thumb')) for n in groups)
                 if raised and not (p.x*256>153 and (1-p.y)*256<43):coverage=0
@@ -55,7 +61,7 @@ for o in list(sc.objects):
             # painted on the torso when the actual weapon is drawn.
             px=p.x*256;py=(1-p.y)*256
             if o.name not in ('GEO-forged-axe-head','GEO-axe-haft') and ((px-117)/10)**2+((py-119)/14)**2<1:coverage=0
-            if not right_hand and ((px-104)/13)**2+((py-149)/13)**2<1:coverage=0
+            if o.name!='GEO-anatomy' and ((px-104)/10)**2+((py-149)/11)**2<1:coverage=0
             weights.data[li].color=(coverage,)*3+(1,)
     for idx,old in enumerate(list(o.data.materials)):
         mat=old.copy();mat.name=old.name+' • '+o.name;o.data.materials[idx]=mat
@@ -77,14 +83,19 @@ for o in list(sc.objects):
             tint=ns.new('ShaderNodeMixRGB');tint.blend_type='MULTIPLY';tint.inputs[0].default_value=.72
             tint.inputs[2].default_value=bs.inputs['Base Color'].default_value
             ls.new(tex.outputs['Color'],tint.inputs[1]);fallback=tint.outputs[0]
+        for kind,img in fills.items():
+            if kind in old.name:
+                tex=ns.new('ShaderNodeTexImage');tex.image=img;tex.projection='BOX';tex.projection_blend=.4
+                coord=ns.new('ShaderNodeTexCoord');ls.new(coord.outputs['Generated'],tex.inputs['Vector']);fallback=tex.outputs['Color']
         if base:
-            # Camera-only cream pigment opens stone without casting emissive light.
-            pigment=ns.new('ShaderNodeEmission');pigment.inputs['Color'].default_value=(.65,.44,.22,1) if 'rim' in old.name else (.78,.62,.39,1)
-            camera=ns.new('ShaderNodeLightPath');amount=ns.new('ShaderNodeMath');amount.operation='MULTIPLY';amount.inputs[1].default_value=.65
-            ls.new(camera.outputs['Is Camera Ray'],amount.inputs[0])
-            shade=ns.new('ShaderNodeMixShader');ls.new(amount.outputs[0],shade.inputs[0]);ls.new(bs.outputs[0],shade.inputs[1]);ls.new(pigment.outputs[0],shade.inputs[2]);ls.new(shade.outputs[0],ns.get('Material Output').inputs['Surface'])
-            bump.inputs['Distance'].default_value=.001
-            continue
+            # Freeze the painting's stone grain/rim onto the real beveled disc.
+            # Exclude source boots above y=213; they must never stick to the base.
+            for poly in o.data.polygons:
+                for li in poly.loop_indices:
+                    py=(1-uv.data[li].uv.y)*256
+                    amount=max(0,min(1,(py-210)/5))
+                    weights.data[li].color=(amount,)*3+(1,)
+            bump.inputs['Distance'].default_value=.0015
         tex=ns.new('ShaderNodeTexImage');tex.image=paint;tex.extension='CLIP'
         u=ns.new('ShaderNodeUVMap');u.uv_map='PaintingRest';ls.new(u.outputs['UV'],tex.inputs['Vector'])
         cov=ns.new('ShaderNodeVertexColor');cov.layer_name='ProjectionCoverage'
@@ -98,7 +109,7 @@ for o in list(sc.objects):
         ls.new(mix.outputs[0],pigment.inputs['Color'])
         camera=ns.new('ShaderNodeLightPath')
         amount=ns.new('ShaderNodeMath');amount.operation='MULTIPLY'
-        strength=ns.new('ShaderNodeMapRange');strength.inputs['To Min'].default_value=.50;strength.inputs['To Max'].default_value=.94
+        strength=ns.new('ShaderNodeMapRange');strength.inputs['To Min'].default_value=.20 if base else .38;strength.inputs['To Max'].default_value=.94
         ls.new(mult.outputs[0],strength.inputs['Value'])
         ls.new(camera.outputs['Is Camera Ray'],amount.inputs[0]);ls.new(strength.outputs[0],amount.inputs[1])
         shade=ns.new('ShaderNodeMixShader');ls.new(amount.outputs[0],shade.inputs[0])

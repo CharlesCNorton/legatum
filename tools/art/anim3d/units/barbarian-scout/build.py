@@ -37,7 +37,16 @@ body.data.materials.clear();body.data.materials.append(skin)
 for p in body.data.polygons:p.use_smooth=True
 # Body-derived garment shells preserve MPFB deformation weights.
 def shell(name,predicate,mat,inflate):
-    ids=[v.index for v in body.data.vertices if predicate(v.co)]
+    def garment_vertex(v):
+        if not predicate(v.co):return False
+        # Anatomical hands hang beside the hips in MPFB's initial pose. A
+        # height-only trouser selection also clothes their palms and fingers.
+        if name=='GEO-wool-trousers':
+            return not any(body.vertex_groups[g.group].name.startswith(
+                ('clavicle','upperarm','lowerarm','hand','index','middle','ring','pinky','thumb'))
+                and g.weight>.001 for g in v.groups)
+        return True
+    ids=[v.index for v in body.data.vertices if garment_vertex(v)]
     valid=set(ids); faces=[p for p in body.data.polygons if all(i in valid for i in p.vertices)]
     ids=sorted({i for p in faces for i in p.vertices}); mp={v:i for i,v in enumerate(ids)}
     vs=[]

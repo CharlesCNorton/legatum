@@ -14,6 +14,11 @@ for name,count in counts.items():
     assert sc['source_sha256']==source and sc['clip_count']==count
     assert sc.get('actual_bakes') and (M/'bakes.json').exists()
     assert len(bpy.data.objects['GEO-anatomy'].data.vertices)>10000
+    trousers=bpy.data.objects['GEO-wool-trousers']
+    assert not any(trousers.vertex_groups[g.group].name.startswith(('hand','index','middle','ring','pinky','thumb','lowerarm','upperarm')) and g.weight>.001 for v in trousers.data.vertices for g in v.groups),'Trousers contain hand/arm vertices'
+    if name!='attack':
+        meta=json.loads((M/'clips'/name/'clip.json').read_text())
+        assert meta['motion']['provider']=='Quaternius Universal Animation Library Standard'
     rest=base.matrix_world.copy();poses=[];bounds=[]
     for frame in range(1,count+1):
         sc.frame_set(frame);bpy.context.view_layer.update()
@@ -25,7 +30,7 @@ for name,count in counts.items():
             grip=haft.matrix_world@Vector(haft['grip_local'])
             palm=rig.matrix_world@rig.pose.bones['hand_r'].matrix@Vector((0,.035,0))
             assert (grip-palm).length<.002,(frame,'axe grip misses palm',(grip-palm).length)
-        poses.append([v for p in rig.pose.bones for row in p.matrix for v in row])
+        poses.append([v for row in rig.matrix_world for v in row]+[v for p in rig.pose.bones for row in p.matrix for v in row])
         points=[]
         for o in sc.objects:
             if o.type=='MESH' and o!=base and not o.hide_render:
@@ -35,7 +40,7 @@ for name,count in counts.items():
     assert any(max(abs(a-b) for a,b in zip(poses[0],p))>.001 for p in poses[1:]),'No skeletal motion'
     if name=='death':assert max(abs(a-b) for a,b in zip(poses[-1],poses[-2]))<1e-6
     if name in ('idle','move'):
-        sc.frame_set(count+1);end=[v for p in rig.pose.bones for row in p.matrix for v in row]
+        sc.frame_set(count+1);end=[v for row in rig.matrix_world for v in row]+[v for p in rig.pose.bones for row in p.matrix for v in row]
         assert max(abs(a-b) for a,b in zip(poses[0],end))<1e-5,'Loop does not close'
     report[name]={'bones':len(rig.data.bones),'frames':count,'bounds':bounds,'stationary_base':True,'positive_scales':True}
 (M/'audit.json').write_text(json.dumps({'technical_checks':'passed','art_approved':False,'notes':'Bounding boxes are conservative diagnostics, not a skin/cloth collision solver. Grounding, projection seams and hand grip require visual review.','clips':report},indent=2))

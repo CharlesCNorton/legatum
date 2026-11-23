@@ -244,3 +244,45 @@ lead-side requirement.
 Scout projection now includes rest-view ray visibility and source-object masks: the stowed axe must not remain on underlying cloth after the actual axe moves. Raised-hand vertices cannot inherit the painted face. Hidden surfaces retain half physical shading and the existing generated fills; projected pigment remains 94% camera-only. Review the unpainted model and exposed death surfaces as well as the rest match.
 
 The round-two visibility pass exposed an axe head buried in the shirt. Seat the actual weapon 85mm toward the rest camera before projection; never preserve its painted silhouette on the cloth as a substitute. The saluting hand and its finger bones are fitted together. These fixes improve model honesty, but exposed hand/cloth fill seams and crouched/death motion remain below the art bar.
+
+
+### Barbarian scout: driver round 2 after GPU receipt
+
+The driver round-1 GPU pass succeeded: 40 native GPU512 frames, Q80 atlas at
+179,574 bytes. Preserve the complete source/render/review evidence under
+`masters/barbarian-scout/driver-r1-gpu/` before touching the live masters.
+
+A height-only MPFB garment selection includes the hands hanging beside the hips.
+Those unwanted trouser vertices follow the hands into the salute and onto the
+knee. Exclude arm/hand/finger weights before generating garment faces. An
+unlit object-ID preview exposed this; another painted texture would conceal it.
+The audit now checks this invariant. Fit palm/fingers and bind bones together.
+
+Use frozen rest UVs on the finished, full-depth meshes. Visibility selects paint;
+grazing-angle fading alone can erase visible brushwork. The real beveled stone
+now receives the source's grain/rim below the source boot mask, retaining physical
+shading and contact shadow on its upper surface. Existing generated fur, linen,
+skin, hair and leather fill newly exposed surfaces. All inputs are hash-pinned.
+The same automatic rest histogram LUT is applied throughout each clip.
+
+Feedback 23 motion standard applies: use proven open motion for human idle,
+move, hit and death; keep only weapon-specific attacks authored. The scout uses
+Quaternius CC0 Crouch_Idle_Loop, Crouch_Fwd_Loop, Hit_Chest and Death01, sampled
+with complete source hierarchy and reference-pose roll cancellation. Its kneeling
+support requires contact adaptation; the lead step is source-driven, and no foot
+yaw is patched after retargeting. This is a constrained retarget, not full-body
+mocap reproduction. A rigid hanging cape must not hold a fallen torso above the
+stone: contact-driven shape folds settle the pelt/tunic against the body support
+plane. These are geometric folds, not a cloth simulation claim.
+
+Every round renders the actual boots from top and front over all eight move
+samples to `<slug>-g-feet-check.png`, alongside numeric ankle/toe/contact data.
+Review foot direction against -Y travel, sole contact and sliding. A produced
+sheet is evidence, not gait approval. `gpu.sh` now includes this stage and rejects
+stale/non-GPU feet evidence. It retains all prior master, atlas and MP4 checks.
+Both held death frames are rendered independently, with root transforms checked
+as well as the skeleton, so mismatched cloth/root motion cannot be hidden by
+copying the preceding frame. Only negligible RGB render noise (at most three
+levels, mean below .05, identical alpha) is deduplicated in graded delivery after
+the geometry-state check; original independently rendered PNGs remain. Source licences/hashes are in unit `SOURCES.md`,
+`assets.lock.json` and `motion.lock.json`.

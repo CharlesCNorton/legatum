@@ -15,7 +15,7 @@ printf 'Checkout: %s\n' "$PWD"
 git rev-parse HEAD
 git status --short
 command -v blender
-for asset in painting-source.png painted-fur.png painted-linen.png; do
+for asset in painting-source.png painted-fur.png painted-linen.png painted-skin.png painted-hair.png painted-leather.png; do
   test -s "$ANIM_ROOT/assets/barbarian-scout/$asset"
 done
 # Check the actual host device before touching any preserved editable masters.
@@ -27,6 +27,8 @@ stage=audit
 blender -b --disable-autoexec --python-exit-code 1 --python "$HERE/audit.py"
 stage=render-all
 blender -b --disable-autoexec --python-exit-code 1 --python "$HERE/render.py" -- all
+stage=feet
+blender -b --disable-autoexec --python-exit-code 1 --python "$HERE/feet.py"
 stage=masters
 "$ANIM_ROOT/venv/bin/python" "$HERE/post.py" gpu-check
 stage=delivery-tests

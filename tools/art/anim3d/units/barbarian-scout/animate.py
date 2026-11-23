@@ -1,8 +1,11 @@
-"""Five authored scouting clips on the crouched MPFB bind pose."""
-import bpy,os,math,json,hashlib
+"""Open crouched motion on the MPFB rig, plus original axe attack."""
+import bpy,os,math,json,hashlib,sys
 from pathlib import Path
 from mathutils import Vector,Matrix
 R=Path(os.environ['ANIM_ROOT']);M=R/'masters/barbarian-scout'
+sys.path.insert(0,str(Path(__file__).resolve().parent))
+from motion import Motion,MAP
+motion=Motion(R)
 CLIPS={'idle':(8,10,True),'move':(8,12,True),'attack':(10,14,False),'hit':(4,12,False),'death':(10,10,False)}
 source=M/'barbarian-scout.blend';sha=hashlib.sha256(source.read_bytes()).hexdigest()
 for clip,(count,fps,loop) in CLIPS.items():
@@ -10,6 +13,9 @@ for clip,(count,fps,loop) in CLIPS.items():
     bpy.ops.wm.open_mainfile(filepath=str(source));sc=bpy.context.scene;rig=bpy.data.objects['Scout • MPFB rig'];loc=rig.location.copy()
     axe=[o for o in sc.objects if o.name in ('GEO-axe-haft','GEO-forged-axe-head')]
     rest={p.name:p.matrix_basis.copy() for p in rig.pose.bones}
+    neutral={p.name:(rig.matrix_world@p.matrix).copy() for p in rig.pose.bones}
+    reference=motion.sample(clip,0) if clip!='attack' else None
+    provenance=motion.provenance(clip) if clip!='attack' else {'method':'original weapon-specific axe attack'}
     hand0=(rig.matrix_world@rig.pose.bones['hand_r'].matrix).copy()
     axe0={o.name:o.matrix_world.copy() for o in axe}
     haft=bpy.data.objects['GEO-axe-haft']
@@ -34,19 +40,14 @@ for clip,(count,fps,loop) in CLIPS.items():
         aim(upper,joint-start);aim(lower,target-joint)
     def turn(name,axis,angle):
         p=rig.pose.bones[name];p.rotation_mode='XYZ';p.rotation_euler[axis]+=angle
-    for i in range(count+int(loop)):
+    for i in range(count+int(loop)-int(clip=='death')):
         t=i/count if loop else min(i/(count-1),1)
         for p in rig.pose.bones:p.matrix_basis=rest[p.name]
         rig.location=loc;rig.rotation_euler=(0,0,0)
-        if clip=='idle':
-            v=math.sin(t*2*math.pi);turn('spine_03',0,.018*v);turn('head',2,.035*v);turn('lowerarm_l',0,.018*v)
-        elif clip=='move':
-            v=math.sin(t*2*math.pi)
-            # Crouched reconnaissance shuffle; alternating support, small travel.
-            turn('thigh_l',0,.13*v);turn('calf_l',0,-.13*v)
-            turn('thigh_r',0,-.12*v);turn('calf_r',0,.12*v)
-            turn('spine_03',2,.05*v);turn('upperarm_r',0,-.10*v);rig.location.z+=.012*(1-math.cos(t*4*math.pi))
-        elif clip=='attack':
+        for ob in sc.objects:
+            if ob.type=='MESH' and ob.data.shape_keys:
+                for key in ob.data.shape_keys.key_blocks:key.value=0
+        if clip=='attack':
             a=[0,.15,.55,1,.78,.32,-.12,-.06,0,0][i]
             turn('spine_03',2,-.15*a);turn('upperarm_r',0,-1.1*a);turn('lowerarm_r',0,-.45*a)
             turn('upperarm_l',0,.22*a);turn('head',2,-.08*a)
@@ -65,33 +66,80 @@ for clip,(count,fps,loop) in CLIPS.items():
                 original.translation+=(palm0-grip0)*draw
                 o.matrix_world=hand@hand0.inverted()@original
                 o.keyframe_insert('location',frame=i+1);o.keyframe_insert('rotation_euler',frame=i+1)
-        elif clip=='hit':
-            a=[0,1,.45,0][i];turn('spine_03',0,-.18*a);turn('head',0,-.13*a);turn('upperarm_l',2,-.20*a)
         else:
-            # Sideways collapse around pelvis; settle fully for final two frames.
-            a=min(1,t/.78);a=a*a*(3-2*a)
-            turn('pelvis',2,1.48*a);turn('spine_03',2,.18*a);turn('head',0,.2*a)
-            turn('upperarm_l',0,1.65*a);turn('lowerarm_l',0,-.8*a)
-            turn('thigh_l',0,-.3*a);turn('calf_l',0,.6*a)
-            rig.location+=Vector((.08*a,.015*a,-.28*a))
-            bpy.context.view_layer.update()
-            if a>0:
-                for side,target,pole in [('l',(.40,-.10,.16),(.24,-.30,.30)),('r',(.18,.20,.16),(.02,-.30,.28))]:
-                    limb('thigh_'+side,'calf_'+side,targets0['foot_'+side].lerp(Vector(target),a),targets0['calf_'+side].lerp(Vector(pole),a))
-                for side,target,pole in [('l',(-.25,-.25,.20),(-.38,-.08,.30)),('r',(-.05,-.32,.20),(-.25,-.32,.28))]:
-                    limb('upperarm_'+side,'lowerarm_'+side,targets0['hand_'+side].lerp(Vector(target),a),targets0['lowerarm_'+side].lerp(Vector(pole),a))
-                # Ground actual anatomy, rather than rotating a bounding box into
-                # the base. Correct root only; the cream disc never moves.
-                bpy.context.view_layer.update();ob=bpy.data.objects['GEO-anatomy'];ev=ob.evaluated_get(bpy.context.evaluated_depsgraph_get());me=ev.to_mesh()
-                zmin=min((ev.matrix_world@v.co).z for v in me.vertices);ev.to_mesh_clear()
-                rig.location.z+=max(0,.105-zmin)
+            # Source world rotations contain complete source hierarchy/roll.
+            # Delta cancellation maps onto the kneeling bind without any foot
+            # yaw edits. This is a reference-pose retarget with contact adaptation.
+            phase=(i%count)/count if loop else min(1,t/.82) if clip=='death' else [0,.38,.66,0][i]
+            sample=motion.sample(clip,phase)
+            for p in rig.pose.bones:
+                if p.name not in MAP:continue
+                origin=MAP[p.name]
+                delta=sample[origin].to_quaternion()@reference[origin].to_quaternion().inverted()
+                baseq=neutral[p.name].to_quaternion()
+                if clip=='death' and p.name.startswith(('thigh_','calf_','foot_','ball_','upperarm_','lowerarm_','hand_')):
+                    # Blend out the kneeling support pose into the open fall's
+                    # limb axes, preserving target roll and full source delta.
+                    axis=baseq@Vector((0,1,0));srcaxis=reference[origin].to_quaternion()@Vector((0,1,0))
+                    aligned=axis.rotation_difference(srcaxis)@baseq
+                    baseq=baseq.slerp(aligned,min(1,phase*2))
+                rotation=delta@baseq
+                mat=rotation.to_matrix().to_4x4()
+                mat.translation=rig.matrix_world@p.head
+                p.matrix=rig.matrix_world.inverted()@mat
                 bpy.context.view_layer.update()
-                # Preserve the fixed camera while containing the horn and pelt.
-                xs=[]
+            hip=sample['DEF-hips'].translation-reference['DEF-hips'].translation
+            if clip in ('idle','move','hit'):
+                # Kneeling support is a contact constraint. Captured ankle
+                # positions drive the lead step; source rotations remain intact.
+                feet_rotation={side:rig.pose.bones['foot_'+side].matrix.to_quaternion().copy() for side in ('l','r')}
+                for side,suffix in (('l','L'),('r','R')):
+                    target=targets0['foot_'+side].copy()
+                    if clip=='move':
+                        d=sample['DEF-foot.'+suffix].translation-reference['DEF-foot.'+suffix].translation
+                        lift=max(0,d.z)*.45
+                        gate=min(1,lift/.015)
+                        # The rear knee remains the primary support. Translation
+                        # is applied only while the lead foot is airborne.
+                        if side=='l':target+=Vector((d.x*.15*gate,d.y*.25*gate,lift))
+                    limb('thigh_'+side,'calf_'+side,target,targets0['calf_'+side])
+                    pb=rig.pose.bones['foot_'+side];mat=feet_rotation[side].to_matrix().to_4x4();mat.translation=pb.head;pb.matrix=mat
+                    bpy.context.view_layer.update()
+            else:
+                rig.location+=Vector((hip.x*.5,hip.y*.5,hip.z*.5))
+                bpy.context.view_layer.update()
+                # Let the cape and tunic fold against the body's support plane,
+                # instead of propping the fallen torso up on rigid fur spikes.
+                body=bpy.data.objects['GEO-anatomy'];ev=body.evaluated_get(bpy.context.evaluated_depsgraph_get());me=ev.to_mesh()
+                floor=min((ev.matrix_world@v.co).z for v in me.vertices)-.012;ev.to_mesh_clear()
+                if phase>0:
+                    for ob in sc.objects:
+                        if ob.name not in ('GEO-folded-pelt-cape','GEO-layered-fur-tufts.001','GEO-folded-tunic-hem','GEO-wolf-pelt-cowl','GEO-layered-fur-tufts'):continue
+                        if not ob.data.shape_keys:ob.shape_key_add(name='Basis')
+                        key=ob.shape_key_add(name=f'Contact fold {i}');inv=ob.matrix_world.inverted()
+                        for v,outv in zip(ob.data.vertices,key.data):
+                            world=ob.matrix_world@v.co
+                            if world.z<floor:
+                                world.z=floor-.008+.008*math.exp((world.z-floor)/.05)
+                                outv.co=inv@world
+                        for frame,value in ((1,0),(max(1,i),0),(i+1,1),(i+2,0)):
+                            key.value=value;key.keyframe_insert('value',frame=frame)
+                        if i==count-2:
+                            key.value=1;key.keyframe_insert('value',frame=count)
+                        key.value=1
+                    bpy.context.view_layer.update()
+                # Ground the visible whole sculpture and centre its fall over
+                # the disc; anatomy hidden inside a boot is not a contact point.
+                points=[]
                 for ob in sc.objects:
-                    if ob.type=='MESH' and ob.name!='GEO-stationary-cream-base':
-                        ev=ob.evaluated_get(bpy.context.evaluated_depsgraph_get());xs.extend((ev.matrix_world@Vector(v)).x for v in ev.bound_box)
-                if min(xs)<-.76:rig.location.x+=-.76-min(xs)
+                    if ob.type=='MESH' and ob.name!='GEO-stationary-cream-base' and not ob.hide_render:
+                        ev=ob.evaluated_get(bpy.context.evaluated_depsgraph_get());me=ev.to_mesh()
+                        points.extend(ev.matrix_world@v.co for v in me.vertices);ev.to_mesh_clear()
+                a=min(1,phase*2)
+                cx=(min(v.x for v in points)+max(v.x for v in points))*.5
+                cy=(min(v.y for v in points)+max(v.y for v in points))*.5
+                rig.location+=Vector((-cx*a,(.12-cy)*a,(.105-min(v.z for v in points))*a))
+                bpy.context.view_layer.update()
 
         rig.keyframe_insert('location',frame=i+1)
         for p in rig.pose.bones:
@@ -106,5 +154,5 @@ for clip,(count,fps,loop) in CLIPS.items():
     sc['clip_count']=count;sc['loop']=loop;sc.frame_set(1)
     out=M/'clips'/clip;out.mkdir(parents=True,exist_ok=True)
     bpy.ops.wm.save_as_mainfile(filepath=str(out/(clip+'.blend')))
-    (out/'clip.json').write_text(json.dumps({'frames':count,'fps':fps,'loop':loop,'source_sha256':sha},indent=2))
+    (out/'clip.json').write_text(json.dumps({'frames':count,'fps':fps,'loop':loop,'source_sha256':sha,'motion':provenance},indent=2))
 print('CLIPS_READY',os.environ.get('CLIP','idle move attack hit death'))

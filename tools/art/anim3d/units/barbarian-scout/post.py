@@ -1,7 +1,7 @@
 """Review sheets, fixed temporal grade, trimmed atlas, validation and MP4."""
 import os,sys,json,hashlib,subprocess,io,math
 from pathlib import Path
-from PIL import Image,ImageDraw,ImageStat
+from PIL import Image,ImageDraw,ImageStat,ImageChops
 R=Path(os.environ.get('ANIM_ROOT',Path.home()/'LegatumRuns/anim-pilot'));M=R/'masters/barbarian-scout';V=R/'review/3d-v2';SLUG='barbarian-scout'
 HERE=Path(__file__).resolve().parent
 REPO=HERE.parents[4]
@@ -58,11 +58,21 @@ def stage(name):
     if name=='c':luts=grade_lut(raws[0])
     else:luts=json.loads((M/'grade.json').read_text())['luts']
     frames=[graded(im,luts) for im in raws]
+    held_difference=None
+    if name=='e-death':
+        # Both native frames were rendered after a full geometry-state check.
+        # Cycles can differ by a few LSBs at an identical terminal pose. Preserve
+        # raw evidence, then deduplicate only negligible render noise in delivery.
+        diff=ImageChops.difference(raws[-2],raws[-1])
+        held_difference=max(v[1] for v in diff.getextrema())
+        assert raws[-2].getchannel('A').tobytes()==raws[-1].getchannel('A').tobytes(),'Held death alpha changes'
+        assert held_difference<=3 and max(ImageStat.Stat(diff).mean)<.05,'Held death renders differ visibly'
+        frames[-1]=frames[-2].copy()
     for size in (512,256):
         if size>raws[0].width:continue  # Never manufacture masters by upscaling previews.
         out=M/str(size)/name;out.mkdir(parents=True,exist_ok=True)
         for i,im in enumerate(frames):im.resize((size,size),Image.Resampling.LANCZOS).save(out/f'{i:02}.png')
-    manifest=json.loads((rawdir/'render.json').read_text());manifest['grade_sha256']=hashlib.sha256((M/'grade.json').read_bytes()).hexdigest();(M/'256'/name/'render.json').write_text(json.dumps(manifest,indent=2))
+    manifest=json.loads((rawdir/'render.json').read_text());manifest['held_render_max_difference']=held_difference;manifest['grade_sha256']=hashlib.sha256((M/'grade.json').read_bytes()).hexdigest();(M/'256'/name/'render.json').write_text(json.dumps(manifest,indent=2))
     if raws[0].width>=512:(M/'512'/name/'render.json').write_text(json.dumps(manifest,indent=2))
     if name=='c':
         im=frames[0].resize((256,256),Image.Resampling.LANCZOS)
@@ -182,6 +192,11 @@ def gpu_check():
                 saved=json.loads((M/str(size)/stage_name/'render.json').read_text())
                 assert saved['blend_sha256']==manifest['blend_sha256']
                 assert saved['grade_sha256']==hashlib.sha256((M/'grade.json').read_bytes()).hexdigest()
+    feet=json.loads((M/'feet.json').read_text())
+    assert feet['device']=='GPU' and feet['resolution']==512,'Feet review is not GPU512'
+    assert feet['clip_sha256']==hashlib.sha256((M/'clips/move/move.blend').read_bytes()).hexdigest(),'Stale feet review'
+    for view in ('top','front'):
+        for i in range(8):assert Image.open(M/'renders/g-feet'/f'{view}-{i:02}.png').size==(512,512)
     print('GPU512_MASTER_GATE_OK')
 
 def video():
@@ -204,9 +219,20 @@ def video():
     for p in directory.glob('*.png'):p.unlink()
     log('Published five-clip, 2x, cream-background H.264 review: '+out.name)
 
+def feet_sheet():
+    out=Image.new('RGBA',(8*192,2*220),CREAM);d=ImageDraw.Draw(out)
+    for row,view in enumerate(('top','front')):
+        for i in range(8):
+            im=Image.open(M/'renders/g-feet'/f'{view}-{i:02}.png').convert('RGBA')
+            out.alpha_composite(im.resize((192,192),Image.Resampling.LANCZOS),(i*192,row*220+28))
+            d.text((i*192+5,row*220+7),f'{view} {i+1}; travel -Y',fill=(50,40,30))
+    out.save(V/f'{SLUG}-g-feet-check.png')
+    log('Published actual top/front boot cycle; contact/direction measurements in feet.json; diagnostic, not gait approval.')
+
 if __name__=='__main__':
     cmd=sys.argv[1]
-    if cmd=='pack':pack()
+    if cmd=='feet':feet_sheet()
+    elif cmd=='pack':pack()
     elif cmd=='validate':validate()
     elif cmd=='video':video()
     elif cmd=='gpu-check':gpu_check()

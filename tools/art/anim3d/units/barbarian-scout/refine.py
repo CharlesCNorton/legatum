@@ -103,6 +103,38 @@ for o in s.objects:
  if o.type=='LIGHT':o.data.energy*=.55
 ratios={b.name:b.length/original_lengths[b.name] for b in rig.data.bones if b.name.startswith(('thigh_','calf_','upperarm_','lowerarm_'))}
 assert all(.5<v<1.75 for v in ratios.values()),('Unnatural limb stretch',ratios)
+# The first projection hid a forty-pixel hand in the trousers. Fit actual
+# palm/fingers and their bind bones together, with a weighted wrist transition.
+hand_origin=rig.matrix_world@rig.data.bones['hand_r'].head_local
+view=-ray
+
+def right_hand_fit(point):
+ d=point-hand_origin
+ return (hand_origin-right*4*scale+up*5*scale+view*.035
+         +right*(.88*d.dot(right)-.19*d.dot(up))
+         +up*(.48*d.dot(up))+view*(.75*d.dot(view)))
+
+def right_hand_bone(name):
+ return name.endswith('_r') and name.startswith(('hand','index','middle','ring','pinky','thumb'))
+kit_worlds={o.name:o.matrix_world.copy() for o in s.objects if o.type=='MESH'}
+for o in s.objects:
+ if o.type!='MESH' or not o.vertex_groups:continue
+ inv=o.matrix_world.inverted()
+ for v in o.data.vertices:
+  weight=min(1,sum(g.weight for g in v.groups if right_hand_bone(o.vertex_groups[g.group].name)))
+  if weight:
+   point=o.matrix_world@v.co
+   v.co=inv@point.lerp(right_hand_fit(point),weight)
+ o.data.update()
+bpy.context.view_layer.objects.active=rig
+bpy.ops.object.mode_set(mode='EDIT')
+for b in rig.data.edit_bones:
+ if right_hand_bone(b.name):
+  b.head=rig.matrix_world.inverted()@right_hand_fit(rig.matrix_world@b.head)
+  b.tail=rig.matrix_world.inverted()@right_hand_fit(rig.matrix_world@b.tail)
+rig.data.edit_bones['lowerarm_r'].tail=rig.data.edit_bones['hand_r'].head
+bpy.ops.object.mode_set(mode='OBJECT');bpy.context.view_layer.update()
+for name,matrix in kit_worlds.items():bpy.data.objects[name].matrix_world=matrix
 s['round2_registered']=True
 (M/'registration.json').write_text(json.dumps({'method':'full-depth bind mesh and skeleton fit before UV projection','controls':controls,'depth_offsets':foot_depth,'limb_length_ratios':ratios,'max_landmark_residual_px':float(np.max(np.linalg.norm(K@weights-delta,axis=1)))},indent=2))
 bpy.ops.wm.save_as_mainfile(filepath=str(M/'registered.blend'))
