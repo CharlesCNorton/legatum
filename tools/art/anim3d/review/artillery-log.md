@@ -25,3 +25,5 @@
 - Inventory PASS: all 40 512px masters and 40 256px masters, editable model plus five clips, six AO/curvature maps, plain/textured/details/rig-pose reviews, five strips/WebPs and rest-pose comparison exist. Python/shell syntax and whitespace checks passed. origin/master has zero commits ahead of this branch's HEAD.
 - GPU not run in sandbox; lead runs ROUND=1 tools/art/anim3d/units/artillery/gpu.sh. No artillery-PASS written: far-wheel perspective, shield shape, projected hub wear and overall painterly richness still require round 2. No game runtime or Rust/UI rules changed.
 - Runner commit trailer: Co-Authored-By: gpt-6-astra (Codex) <noreply@openai.com>
+- Published b-plain CPU/GPU geometry stage before texture work.
+- Baked 256px AO and curvature maps on GEO-Shield wing -1, GEO-Shield wing 1, GEO-Hollow tapered barrel

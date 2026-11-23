@@ -52,3 +52,5 @@
 - Published e-death-strip: CYCLES CPU, 512 px, 8 samples; not GPU approval.
 - Published b-plain: CYCLES CPU, 256 px, 8 samples; not GPU approval.
 - Saved 3D audit passed: source hashes, 53 bones, actual motion, exact loop closing keys and held death; ground/bounds recorded; collision limits explicit.
+- Saved death: 10 frames at 10 fps, editable MPFB rig, stationary base; authored keys.
+- Published death-check-strip: CYCLES CPU, 512 px, 8 samples; not GPU approval.

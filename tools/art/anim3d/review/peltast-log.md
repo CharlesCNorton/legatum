@@ -33,3 +33,4 @@
 - Published e-death review immediately: CYCLES/CPU, 512 px, 10 frame(s).
 - Authored idle/move/attack/hit/death on MPFB rig: 8/8/10/4/10 samples; looping breathing/steps, thrown-javelin visibility, hit recovery, independent equipment release and held death. Cloth uses authored secondary deformation, not a cloth simulation.
 - Published e-death review immediately: CYCLES/CPU, 512 px, 10 frame(s).
+- Published e-death review immediately: CYCLES/CPU, 512 px, 10 frame(s).

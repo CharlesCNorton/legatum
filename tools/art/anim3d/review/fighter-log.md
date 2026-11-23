@@ -3,3 +3,10 @@
 - Downloaded the original CC BY 4.0 fighter master; no third-party aircraft or motion asset.
 - Rendered b: 256px, CYCLES; review published.
 - Rendered c: 256px, CYCLES; review published.
+- Rendered b: 256px, CYCLES; review published.
+- Rendered c: 256px, CYCLES; review published.
+- Rendered e-idle: 256px, CYCLES; review published.
+- Rendered e-move: 256px, CYCLES; review published.
+- Rendered e-attack: 256px, CYCLES; review published.
+- Rendered e-hit: 256px, CYCLES; review published.
+- Rendered e-death: 256px, CYCLES; review published.
