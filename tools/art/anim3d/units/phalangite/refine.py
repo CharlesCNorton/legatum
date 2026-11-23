@@ -57,6 +57,11 @@ def refine(sc):
                 q.x += (x-108)*.40*min(1, (y-169)/37)
             if y > 211:
                 q.y -= 2.0*min(1, (y-211)/10)
+        if 171 < y < 211:
+            center = (58+(198-y)*.28) if x < 82 else (108+(y-190)*.10)
+            q.x = center+(q.x-center)*(1+.16*math.sin(math.pi*(y-171)/40))
+        if y > 211 and x > 92:
+            q.x = 113+(q.x-113)*1.28
         return q
 
     for ob in list(sc.objects):
@@ -86,11 +91,21 @@ def refine(sc):
                 w += view*.14*math.exp(-((p.x-108)/20)**2-((p.y-118)/24)**2)
             v.co = skin.inverted_safe() @ (world.inverted() @ w)
         ob.data.update()
+    # Match the painting's shallower stone ellipse with a full-depth solid disc.
+    base = bpy.data.objects['GEO-stationary-cream-base']
+    for vertex in base.data.vertices:
+        vertex.co.x *= 1.02
+        vertex.co.y *= .82
+        vertex.co.z = .045+(vertex.co.z-.045)*.91
+        # Top remains at the same supporting height; deepen only the lower rim
+        # to match the painting's base bounds after flattening the top ellipse.
+        vertex.co.z -= .04*(.045-vertex.co.z)/.09
+    base.location.x -= .018
     # Short nape locks have actual round volume and follow the head bone.
     hair=bpy.data.materials.new('Chestnut nape hair');hair.use_nodes=True
     shader=hair.node_tree.nodes.get('Principled BSDF');shader.inputs['Base Color'].default_value=(.18,.08,.022,1);shader.inputs['Roughness'].default_value=.68
-    head_world=rig.matrix_world@rig.pose.bones['head'].head
-    view=sc.camera.matrix_world.to_quaternion()@Vector((0,0,1))
+    head_world=rig.matrix_world @ rig.pose.bones['head'].head
+    view=sc.camera.matrix_world.to_quaternion() @ Vector((0,0,1))
     for k in range(6):
         data=bpy.data.curves.new('Nape lock','CURVE');data.dimensions='3D';data.bevel_depth=.005;data.bevel_resolution=2
         spline=data.splines.new('POLY');spline.points.add(6)

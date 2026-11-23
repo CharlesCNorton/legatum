@@ -8,6 +8,8 @@ if [[ "$stage" == build ]]; then
   blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python "$unit_dir/build.py"
 elif [[ "$stage" == finish ]]; then
   blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python "$unit_dir/finish.py"
+elif [[ "$stage" == feet ]]; then
+  blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python "$unit_dir/feet.py"
 elif [[ "$stage" == audit ]]; then
   blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python "$unit_dir/audit.py"
 elif [[ "$stage" == animate ]]; then

@@ -222,11 +222,11 @@ for side in ['l','r']:
     for digit in ['index','middle','ring','pinky']:
         for k in range(1,4):
             p=rig.pose.bones[f'{digit}_{k:02d}_{side}'];p.rotation_mode='XYZ';p.rotation_euler.x=1.15
-p=rig.pose.bones['head'];mat=p.matrix.copy();pivot=p.head.copy();p.matrix=Matrix.Translation(pivot)@Matrix.Rotation(.65,4,'Z')@Matrix.Translation(-pivot)@mat
+p=rig.pose.bones['head'];mat=p.matrix.copy();pivot=p.head.copy();p.matrix=Matrix.Translation(pivot) @ Matrix.Rotation(.65,4,'Z') @ Matrix.Translation(-pivot) @ mat
 bpy.context.view_layer.update()
 # One continuous shaft controlled separately; hands will be solved to its grips each frame.
-gr=rig.matrix_world@rig.pose.bones['hand_r'].head+Vector((.015,-.025,.035))
-gl=rig.matrix_world@rig.pose.bones['hand_l'].head+Vector((.015,-.025,.035))
+gr=rig.matrix_world @ rig.pose.bones['hand_r'].head+Vector((.015,-.025,.035))
+gl=rig.matrix_world @ rig.pose.bones['hand_l'].head+Vector((.015,-.025,.035))
 direction=(gl-gr).normalized();start=gr-direction*.70;end=gl+direction*1.48
 weapon=bpy.data.objects.new('CTRL-sarissa',None);bpy.context.collection.objects.link(weapon);weapon.location=gr
 weapon['grip_r']=list(gr);weapon['grip_l']=list(gl);weapon['start']=list(start);weapon['end']=list(end)
@@ -265,7 +265,7 @@ for name,loc,power,size,col in [('LGT-warm-key',(-3,-4,6),600,2,(1,.90,.74)),('L
     bpy.ops.object.light_add(type='AREA',location=loc);ob=bpy.context.object;ob.name=name;ob.data.energy=power;ob.data.size=size;ob.data.color=col;ob.rotation_euler=(Vector((0,0,1))-ob.location).to_track_quat('-Z','Y').to_euler()
 # Register the continuous sarissa to the painting after the orthographic camera is fixed.
 bpy.context.view_layer.update()
-right=sc.camera.matrix_world.to_quaternion()@Vector((1,0,0));up=sc.camera.matrix_world.to_quaternion()@Vector((0,1,0));forward=sc.camera.matrix_world.to_quaternion()@Vector((0,0,-1))
+right=sc.camera.matrix_world.to_quaternion() @ Vector((1,0,0));up=sc.camera.matrix_world.to_quaternion() @ Vector((0,1,0));forward=sc.camera.matrix_world.to_quaternion() @ Vector((0,0,-1))
 def screen_point(x,y,world_y):
     p=look+right*((x/256-.5)*2.55)+up*((.5-y/256)*2.55)
     return p+forward*((world_y-p.y)/forward.y)
@@ -279,7 +279,7 @@ verts=[end+u,end+v,end-u,end-v,end+direction*.12]
 weapon_parent(mesh('GEO-sarissa-iron-point',verts,[(i,(i+1)%4,4) for i in range(4)]+[(3,2,1,0)],iron,False))
 weapon_parent(curve('GEO-iron-butt',[start,start+direction*.07],.012,iron))
 for side,g in [('r',gr),('l',gl)]:
-    target=rig.matrix_world.inverted()@(g-Vector((.015,-.025,.035)))
+    target=rig.matrix_world.inverted() @ (g-Vector((.015,-.025,.035)))
     limb('upperarm_'+side,'lowerarm_'+side,target,(-.49,-.26,1.12) if side=='r' else (.15,-.28,.85))
     aim_bone('hand_'+side,(.04,-.02,.10))
 bpy.context.view_layer.update()

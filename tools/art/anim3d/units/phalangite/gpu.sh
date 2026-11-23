@@ -25,12 +25,16 @@ test -x "$unit_dir/run.sh"
 test -x "$ANIM_ROOT/venv/bin/python"
 test -f "$unit_master/phalangite.blend"
 test -f "$unit_master/fitted-plain.blend"
+stage=inputs
+"$ANIM_ROOT/venv/bin/python" "$unit_dir/prepare.py"
 stage=animate
 "$unit_dir/run.sh" animate
 stage=audit
 "$unit_dir/run.sh" audit
 stage=render
 "$unit_dir/run.sh" all
+stage=feet
+"$unit_dir/run.sh" feet
 stage=gpu-master-check
 "$ANIM_ROOT/venv/bin/python" "$unit_dir/deliver.py" gpu-check
 stage=pack

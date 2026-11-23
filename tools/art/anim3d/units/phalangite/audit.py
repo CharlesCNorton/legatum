@@ -4,6 +4,13 @@ from pathlib import Path
 from mathutils import Matrix
 from bpy_extras.object_utils import world_to_camera_view
 R=Path(os.environ['ANIM_ROOT']);M=R/'masters/phalangite';master=M/'phalangite.blend';checks={}
+inputs=json.loads((M/'animation-inputs.json').read_text())
+for filename,digest in inputs.items():
+    assert hashlib.sha256(Path(__file__).with_name(filename).read_bytes()).hexdigest()==digest, 'Animation scripts changed; rebuild clips'
+motions=json.loads((M/'animation-audit.json').read_text())
+for name in ['idle','move','hit','death']:
+    assert motions[name]['motion']['license']=='CC0-1.0'
+    assert motions[name]['motion']['provider']=='Quaternius Universal Animation Library Standard'
 bpy.ops.wm.open_mainfile(filepath=str(master));sc=bpy.context.scene;rig=bpy.data.objects['Phalangite MPFB game_engine'];body=bpy.data.objects['MPFB anatomical male • original topology']
 assert len(body.data.vertices)>19000 and len(rig.data.bones)==53
 assert 'Painting frozen rest' in body.data.uv_layers
@@ -16,7 +23,7 @@ for name in ['GEO-linothorax','GEO-helmet-bowl','GEO-small-bronze-shield']:
     uv=ob.data.uv_layers['Painting frozen rest']
     for i,loop in enumerate(ob.data.loops):
         if i%17:continue
-        q=world_to_camera_view(sc,sc.camera,ob.matrix_world@ob.data.vertices[loop.vertex_index].co)
+        q=world_to_camera_view(sc,sc.camera,ob.matrix_world @ ob.data.vertices[loop.vertex_index].co)
         assert max(abs(q.x-uv.data[i].uv.x),abs(q.y-uv.data[i].uv.y))*256<.01, 'Frozen UV drift: '+name
 assert 'Painting frozen rest' not in bpy.data.objects['GEO-stationary-cream-base'].data.uv_layers
 assert sc.get('projection') and len(json.loads((M/'textures/baked/manifest.json').read_text()))==3
@@ -26,7 +33,14 @@ for name,count in [('idle',8),('move',8),('attack',10),('hit',4),('death',10)]:
     c=json.loads(sc['clip']);assert c['frames']==count and sc.frame_end==count
     base_matrices=[];poses=[]
     for i in range(1,count+1):
-        sc.frame_set(i);base_matrices.append(tuple(v for row in base.matrix_world for v in row));poses.append(tuple(v for p in rig.pose.bones for row in p.matrix for v in row)+tuple(v for row in weapon.matrix_world for v in row)+tuple(v for row in rig.matrix_world for v in row))
+        sc.frame_set(i)
+        if name=='move':
+            from mathutils import Quaternion
+            for side in ['l','r']:
+                expected=Quaternion(motions[name]['motion']['target_foot_rotations'][i-1][side])
+                actual=rig.pose.bones['foot_'+side].matrix.to_quaternion()
+                assert actual.rotation_difference(expected).angle<.002, 'Captured foot rotation overwritten'
+        base_matrices.append(tuple(v for row in base.matrix_world for v in row));poses.append(tuple(v for p in rig.pose.bones for row in p.matrix for v in row)+tuple(v for row in weapon.matrix_world for v in row)+tuple(v for row in rig.matrix_world for v in row))
     assert len(set(base_matrices))==1,name+' moved base';assert poses[0]!=poses[count//2],name+' is static'
     if name=='death':assert max(abs(x-y) for x,y in zip(poses[-1],poses[-2]))<1e-5,'death does not settle'
     if name in ['idle','move']:

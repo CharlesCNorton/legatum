@@ -1,83 +1,92 @@
-# Phalangite round 2
+# Phalangite: driver round 2
 
-Candidate, not approved for runtime use. No `phalangite-PASS` marker: painting
-parity and clean finger/equipment contact have not been established.
+Candidate only. No `phalangite-PASS`: the rest pose and five clips do not yet
+meet the painting parity / clean motion bar.
 
-The editable scene is `~/LegatumRuns/anim-pilot/masters/phalangite/phalangite.blend`.
-`plain.blend` preserves the original morphable MPFB source; `fitted-plain.blend`
-contains the revised full-depth fit; five articulated scenes live in `clips/`.
-All masters, bakes, source textures, raw frames and provenance remain outside git.
-Round-1 blend checkpoints and review sheets are preserved externally.
+## What changed
 
-## Changes and visual verdict
+The round-one GPU receipt confirms Cycles Metal 512/64, all 40 clip samples,
+181,270 bytes at Q90, and the eight-second H.264 movie. Its original review
+images, movie and scene checkpoints are preserved outside git. The outer driver
+log was empty because `gpu.sh` redirects to its own unit transcript.
 
-Round 2 fits the real arm/sleeve, helmet, complete shield, greave and sandal
-geometry through inverse skin transforms. The MPFB macro mix is frozen on the
-working copy, preserving all 19,158 vertices, original skin weights and 53 bones.
-Rigid thickness/bevels are finished before frozen UV projection. Camera-only
-painted pigment avoids lighting the source illumination twice, while generated
-linen/bronze fills, real AO/curvature and product lights remain. Short nape locks
-have round physical volume. The stone has a warm top, darker rim and live contact
-shade, without painted feet. A source-paint exclusion removes the duplicate spear
-line from the armour. One automatic rest grade is reused across all clips.
+This iteration keeps the MPFB anatomy, original 19,158 vertices and 53 bones,
+full-depth inverse-skinned fitting, painting-projected pigment, generated bronze
+and linen fills, six AO/curvature bakes, physical straps/folds/bevels, product
+lights and automatic frozen histogram grade. Calves and the right sandal are
+broader. The stone has a revised ellipse/rim and a new image-generated clean
+plate with no painted feet; real geometry supplies silhouette and contact shade.
+Transparent plate texels blend into the underlying stone pigment, never black
+or mesh transparency. Shield source-view visibility limits projection onto its
+hidden reverse side. Whole-body occlusion remains unresolved around overlapping
+armour, so that broader experimental mask was not retained.
 
-At 256 px, the arm volume, shield wear, low helmet and cream stone are substantially
-closer than round 1. The face, shoulder contour, hands, greaves and stone rim are
-still simpler or differently shaped than the painting. At 64 px, the same unit
-reads clearly, but the pose and highlights remain distinguishable. A histogram
-match is not art approval, and the unchanged camera plus local geometry fitting
-is not an exact camera solution.
+Idle, move, hit and death now derive from the pinned CC0 Quaternius Standard
+library. The Medjay retargeter is adapted locally; full rotations are calibrated
+against source/target rest or reference poses, including bone roll. Source foot
+rotations remain unchanged after retargeting. Carrying arms and a continuous
+sarissa are layered on source motion. Attack is authored, with a stronger thrust
+and compensating weight transfer. Death releases the sarissa at the first
+falling sample. The stationary base never follows the character.
 
-Death folds both legs before grounding, removing the old ankle-supported hover.
-The five clips remain authored skeletal animation, with modelled cloth folds.
-The thrust is restrained and hands need further work: the existing palm proxy
-reports up to 7.1 cm error and does not measure fitted finger contact. Shield/arm
-and cloth/skin intersections are not exhaustively checked. No cloth simulation
-or new motion capture is claimed.
+## Visual verdict
 
-## Delivery and verification
+At 256 px the torso brushwork and material identity are close, but face/cheek,
+fingers, shoulder contour, greave geometry and stone contour still differ.
+At 64 px it reads as the same phalangite; it is still distinguishable at rest.
+The unchanged camera is an approximate calibration, not a solved exact camera.
+The new walk transfers through alternating stance/swing instead of shuffling.
+Source foot rotations and the eight front/top diagnostic frames are checked;
+sandal/greave silhouette and contact still need visual refinement. The captured
+death articulates better but exposes simplified hidden surfaces and equipment
+fit. No comprehensive skin/cloth/shield collision proof is claimed.
 
-The executable, no-argument host entry point is:
+## Lead handoff
+
+Run from this checkout's root:
 
 ```sh
 ROUND=2 tools/art/anim3d/units/phalangite/gpu.sh
 ```
 
-It regenerates clips, audits, renders every stage at Cycles Metal/512, verifies
-all 48 GPU masters and their 256px copies, packs/validates the trimmed 160px atlas,
-and encodes the decoded atlas into an eight-second five-column review movie.
-It records a transcript, failure status and round-specific completion receipt;
-that receipt explicitly leaves visual approval false. Metal rendering cannot run
-inside this sandbox. CPU-labelled files are previews, even when 512px.
+This executable needs no arguments. It verifies external inputs, rebuilds clips,
+audits, renders all stages with Cycles Metal at 512 px, retains 512/256 masters,
+renders all 16 front/top foot views, packs/validates the trimmed 160 px atlas,
+and writes `phalangite-round${ROUND}.mp4` from the decoded trimmed atlas.
+It verifies source/frame/grade hashes, alpha reconstruction, counts, padding,
+size, Q75 minimum, loop/hold and movie format. GPU evidence checks reject CPU
+masters and stale foot diagnostics. The completion receipt explicitly leaves
+visual approval false. Inspect the fresh GPU comparison, strips and movie before
+considering PASS. Source and generated-fill licences are in `SOURCES.md`.
 
-Bicubic reduction preserves lossless alpha. Validation reconstructs all 40 frames
-at their trim offsets and compares alpha byte-for-byte; it checks hashes, bounds,
-padding, frame counts, timing, size and Q75 floor. Identical adjacent samples share
-an atlas rectangle, making the held death identical in decoded RGB as well.
-The geometry audit verifies native topology, finished-surface frozen UVs,
-camera-only pigment, six actual bake images, source hashes, stationary base,
-loop boundary poses and held death. It is not a full collision solver.
+## Verification
 
-GPU missing-input and CPU-master rejection checks passed. Python/Bash syntax and
-whitespace checks passed. Fresh GPU output still needs visual review before PASS.
+CPU previews are not GPU acceptance. Prior GPU results remain in `gpu-r1-preserved` under the
+master directory and `phalangite-gpu-r1-preserved` under the review directory.
+No game rules or UI implementation changed.
 
-## Recorded final CPU checks
+- All 48 stage/clip masters at 512 px and matching 256 px copies: Cycles CPU,
+  8 samples. All five strips, animated WebPs, rest split/crossfade and details exist.
+- Trimmed 160 px atlas: **194,762 bytes at Q90**, all 40 samples (8/8/10/4/10).
+  Decoded alpha reconstruction, offsets, padding, source/frame/grade hashes,
+  motion and identical final death rectangle passed.
+- Saved-scene audit passed: original topology, 53 bones, six real bakes, frozen
+  UVs, source motion, unchanged source foot rotations, stationary base, exact
+  loop endpoints and held death. Largest wrist/palm proxy error is 7.58 cm in
+  attack; this is not proof of clean fitted finger contact.
+- All 16 foot views are current. Python/Bash syntax, input SHA256 and whitespace
+  checks passed. GPU evidence validation correctly rejected CPU512 masters.
+- Movie verified by ffprobe: H.264/yuv420p, 1600x360, 192 frames, eight seconds.
+  Four decoded movie frames and all motion strips inspected.
+- Rest silhouette IoU at alpha128: 0.805602; a registration measurement, not approval.
+- Remaining prominent motion defect: the reverse shield/kit looks like a broad,
+  stretched fan during death; hidden-side finish and contact need another round.
+  Face, fingers, base perspective and footwear still miss the painting. No PASS.
 
-- All 48 stage/master PNGs at 512 px and 48 matching 256 px copies exist;
-  all 40 clip frames use Cycles CPU, 512 px, 8 samples.
-- Trimmed atlas: **181,278 bytes at Q90**, 1600×800, 160px logical cells,
-  unchanged 8/8/10/4/10 playback samples. Full decoded-alpha, offset, padding,
-  source/frame/grade hash, motion and held-death validation passed.
-- Final saved-scene audit passed, including finished-surface UV alignment,
-  original topology/weights, stationary base and root transforms at loop/hold.
-- MP4: **H.264/yuv420p, 1600×360, 192 frames, 8 seconds**; ffprobe passed.
-  Decoded movie contact frames and all five PNG strips were visually inspected.
-- Pinned painting/generated-fill hashes, eight Python syntax checks, both Bash
-  scripts and whitespace checks passed. GPU preflight rejection checks passed.
-- Rest silhouette IoU at alpha128: 0.802801. This does not establish art parity.
-
-No Rust, WASM or UI code changed. GPU rendering and final art acceptance remain
-outstanding; neither CPU validation nor this review creates a PASS marker.
-
-Commit creation was attempted with the required co-author trailer, but the sandbox
-denied `.git/worktrees/lane-14/index.lock`. Changes remain for the runner to commit.
+Commit attempt was blocked by sandbox denial of the worktree index.lock. The
+runner must commit the working changes with the requested co-author trailer.
+The existing-HEAD repository gate passed public-claims but failed hygiene on
+unspaced matrix operators and failed art in render-sets.mjs. Matrix spacing is
+fixed in this working tree and direct unit Python/Bash hygiene line checks pass;
+the commit-based gate cannot cover these uncommitted changes. Art-set rendering
+and the new GPU pass remain unverified.

@@ -1,0 +1,8 @@
+# Phalangite sources
+
+- Original phalangite painting, CC BY 4.0: https://pub-fb5c281dd12d4ea4bbd38d657cdeb907.r2.dev/app/src/assets/units/phalangite-source.png ; SHA256 in assets.lock.json. Camera-projected on full-depth weighted meshes.
+- MPFB 2.0.18 / MakeHuman system anatomy, weights and eyes: CC0 output, GPL software; https://github.com/makehumancommunity/mpfb2/releases/tag/v2.0.18 . Existing isolated installation.
+- Mounted-family generated linen and bronze fills: original project CC BY 4.0; hashes and reuse paths in assets.lock.json. Existing recorded imagegen outputs.
+- Clean stone plate: original built-in ImageGen edit, CC BY 4.0; generation 01a209d4-250b-7b11-98eb-84d0e335c4f0/exec-63d22831-df2d-427e-8224-d5317a4aa4b1.png, no public URL. Prompt in stone-fill.prompt.txt; hash in assets.lock.json; external assets/phalangite/stone-fill-source.png. Applied to real solid disc, no painted footwear.
+- Quaternius Universal Animation Library Standard 2025-06-10, CC0-1.0: https://quaternius.com/packs/universalanimationlibrary.html . Immutable mirror https://raw.githubusercontent.com/J-Ponzo/gltf-universal-animation-library/e24c23cf2a1323488a3faa226ea7ea21f644b73e/glTF/AnimationLibrary_Godot_Standard.gltf and adjacent .bin. Existing local LICENSE, glTF and binary hashes checked before import in retarget.py. Idle_Loop, Walk_Loop, Hit_Chest, Death01; full rotations calibrated in reference/rest space with bone roll. Weapon carrying and release layered on the source; attack authored. No post-retarget foot orientation correction.
+- Retarget and foot-diagnostic helpers adapted from project Medjay lane (MIT). Original unit geometry/rig/material/pipeline scripts MIT; rendered artwork CC BY 4.0. Masters and downloads outside git.

@@ -149,7 +149,13 @@ def gpu_check():
             paths=sorted((M/str(size)/stage).glob('[0-9][0-9].png'))
             assert len(paths)==count, (stage,size,'missing masters')
             assert all(Image.open(p).size==(size,size) for p in paths)
-    print('PASS: all 48 current GPU512 masters and matching 256 copies')
+    feet=json.loads((M/'feet.json').read_text())
+    assert feet['device']=='GPU', 'Feet diagnostic must use GPU'
+    assert feet['source_sha256']==hashlib.sha256((M/'clips/move.blend').read_bytes()).hexdigest(), 'Stale feet diagnostic'
+    assert len(feet['files'])==16
+    for item in feet['files']:
+        assert hashlib.sha256((M/item['path']).read_bytes()).hexdigest()==item['sha256']
+    print('PASS: all 48 current GPU512 masters, matching 256 copies and 16 GPU feet views')
 
 def receipt():
     gpu_check()

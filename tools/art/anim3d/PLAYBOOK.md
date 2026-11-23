@@ -238,3 +238,38 @@ external log, status and round-specific completion receipt distinguish a failed
 stage from an unverified pass. Missing-input and CPU-master rejection checks run
 without a GPU. The receipt explicitly leaves visual approval false. Never write
 PASS based on these technical checks; inspect the fresh GPU images and clips.
+
+### Phalangite driver round 2: open motion and clean stone projection
+
+The previous work already used the round-3 projection/geometry/light/grade method.
+The driver's GPU round 1 is preserved separately; its receipt confirms Cycles
+Metal 512/64, Q90 at 181,270 bytes. The old outer driver log is empty because
+`gpu.sh` records its transcript in `ANIM_ROOT/phalangite-gpu-round${ROUND}.log`.
+Do not infer a failure or approval from an empty outer log.
+
+The clean stone image is an original generated edit of this unit's painting,
+with the figure, feet and their shadows removed. It maps onto the real bevelled
+disc; image alpha blends pigment with the underlying stone, never mesh opacity.
+This prevents black transparent texture texels and permanent painted feet.
+The physical disc has a shallower ellipse; rest-view calf and sandal fitting
+retains the full MPFB topology and skin weights. Original generated bronze/linen
+fills, physical straps/folds, six bakes, product lighting and automatic frozen
+grade remain. The camera is still a calibrated approximation, not a proven exact
+solution; source-space fitting alone cannot establish painting parity.
+
+Motion now uses the pinned CC0 Quaternius Standard Idle_Loop, Walk_Loop,
+Hit_Chest and Death01. `retarget.py`, adapted from the Medjay lane, checks all
+three source hashes, matches reference/rest poses including bone roll, and
+samples Blender WORLD rotation constraints. Locomotion feet use the anatomical
+rest frame; never repair orientation after retargeting. A translation-only
+virtual-ground stance correction accompanies the in-place walk; the stone stays
+stationary. The sarissa remains one continuous object, with a carrying-arm layer,
+an authored attack, and intentional release during death. This is source motion
+with equipment adaptation, not an untouched mocap claim.
+
+Run `run.sh feet` for eight front and eight top views of the actual lower legs,
+sandals and greaves. `phalangite-g-feet-check.png` is required each round. The saved
+scene audit checks that baked foot rotations equal the retargeted source samples.
+The GPU handoff includes these views and refuses stale or CPU feet evidence in
+its completion receipt. Inspect contact, toe direction, stride and equipment in
+motion as well as the checks; no numerical pass grants visual approval.

@@ -52,7 +52,7 @@ for ob in list(sc.objects):
     if ob.type=='CURVE':
         bpy.ops.object.select_all(action='DESELECT');ob.select_set(True);bpy.context.view_layer.objects.active=ob;bpy.ops.object.convert(target='MESH')
 painting=bpy.data.images.load(str(A/'painting-aligned.png'));projected=[]
-view=(sc.camera.location-Vector((0,0,1))).normalized()
+view=sc.camera.matrix_world.to_quaternion() @ Vector((0,0,1))
 for ob in list(sc.objects):
     if ob.type!='MESH' or 'base' in ob.name or 'sarissa' in ob.name or 'iron-butt' in ob.name or 'eyes' in ob.name.lower():continue
     # Only armature is evaluated so loop/vertex indexes remain those of editable geometry.
@@ -62,7 +62,16 @@ for ob in list(sc.objects):
     bpy.context.view_layer.update();ev=ob.evaluated_get(bpy.context.evaluated_depsgraph_get());me=ev.to_mesh();assert len(me.vertices)==len(ob.data.vertices),ob.name
     coords=[];inc=[]
     for v in me.vertices:
-        world=ev.matrix_world@v.co;q=world_to_camera_view(sc,sc.camera,world);coords.append((q.x,q.y));normal=(ev.matrix_world.to_3x3().inverted().transposed()@v.normal).normalized();facing=abs(normal.dot(view)) if 'shield' in ob.name else normal.dot(view);inc.append(max(0,min(1,(facing-.02)/.35)))
+        world=ev.matrix_world @ v.co;q=world_to_camera_view(sc,sc.camera,world);coords.append((q.x,q.y))
+        normal=(ev.matrix_world.to_3x3().inverted().transposed() @ v.normal).normalized()
+        facing=normal.dot(view)
+        # Shield back faces must not inherit the overlying torso/cloth pixels.
+        # Body visibility remains limited by the fitted overlapping armour.
+        visible=True
+        if 'shield' in ob.name:
+            hit,location,_,_,_,_=sc.ray_cast(bpy.context.evaluated_depsgraph_get(),world+view*5,-view,distance=5.03)
+            visible=not hit or (location-world).length<.018
+        inc.append(max(0,min(1,(facing-.02)/.35)) if visible else 0)
     ev.to_mesh_clear()
     for mod,state in states:mod.show_viewport=state
     uv=ob.data.uv_layers.new(name='Painting frozen rest');att=ob.data.color_attributes.new(name='Painting confidence',type='FLOAT_COLOR',domain='CORNER')
@@ -93,6 +102,14 @@ for ob in list(sc.objects):
 # Warm limestone has physical contact shade, with camera-only painted pigment.
 # No figure painting (and therefore no permanent painted feet) enters this material.
 base=bpy.data.objects['GEO-stationary-cream-base'];base.data.materials.clear()
+# Clean image-generated stone plate: no permanent feet or source contact shadow.
+stone=bpy.data.images.load(str(A/'stone-fill-source.png'))
+uv=base.data.uv_layers.new(name='Clean stone projection')
+for i,loop in enumerate(base.data.loops):
+    q=world_to_camera_view(sc,sc.camera,base.matrix_world @ base.data.vertices[loop.vertex_index].co)
+    # Register generated clean plate bounds to the original token base bounds.
+    x=q.x*256;y=(1-q.y)*256
+    uv.data[i].uv=(.100+(x-26)/117*.450, 1-(.813+(y-212)/31*.118))
 def linear(v):
     v=v/255
     return v/12.92 if v<=.04045 else ((v+.055)/1.055)**2.4
@@ -104,6 +121,11 @@ for label,rgb in [('top',(249,224,188)),('rim',(223,177,124))]:
     bump=n.new('ShaderNodeBump');bump.inputs['Strength'].default_value=.045;bump.inputs['Distance'].default_value=.001;l.new(noise.outputs['Fac'],bump.inputs['Height']);l.new(bump.outputs[0],s.inputs['Normal'])
     ao=n.new('ShaderNodeAmbientOcclusion');ao.inputs['Distance'].default_value=.18
     shade=n.new('ShaderNodeMixRGB');shade.blend_type='MULTIPLY';shade.inputs[0].default_value=.60;shade.inputs[1].default_value=color;l.new(ao.outputs['AO'],shade.inputs[2])
+    tex=n.new('ShaderNodeTexImage');tex.image=stone;tex.extension='EXTEND'
+    uvnode=n.new('ShaderNodeUVMap');uvnode.uv_map='Clean stone projection';l.new(uvnode.outputs[0],tex.inputs['Vector'])
+    pigment=n.new('ShaderNodeMixRGB');pigment.inputs[1].default_value=color
+    l.new(tex.outputs['Alpha'],pigment.inputs[0]);l.new(tex.outputs['Color'],pigment.inputs[2])
+    l.new(pigment.outputs[0],shade.inputs[1]);l.new(pigment.outputs[0],s.inputs['Base Color'])
     em=n.new('ShaderNodeEmission');l.new(shade.outputs[0],em.inputs['Color'])
     path=n.new('ShaderNodeLightPath');strength=n.new('ShaderNodeMath');strength.operation='MULTIPLY';strength.inputs[1].default_value=.78;l.new(path.outputs['Is Camera Ray'],strength.inputs[0])
     mix=n.new('ShaderNodeMixShader');l.new(strength.outputs[0],mix.inputs[0]);l.new(s.outputs[0],mix.inputs[1]);l.new(em.outputs[0],mix.inputs[2]);l.new(mix.outputs[0],n.get('Material Output').inputs['Surface'])

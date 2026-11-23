@@ -13,5 +13,10 @@
     "sha256": "20233d35d680a1ee510719befd841db3899371d0e9f5821b99400162a8c39720",
     "licence": "CC BY 4.0, original Legatum project artwork",
     "reuse": "assets/horseman/fill-bronze.png"
+  },
+  "stone-fill-source.png": {
+    "sha256": "36e9da2ed6b8e8bd796f8f594cd1de5f147d767faed3f7414f0f2c34212e2362",
+    "licence": "CC BY 4.0, original Legatum generated artwork",
+    "generation": "01a209d4-250b-7b11-98eb-84d0e335c4f0/exec-63d22831-df2d-427e-8224-d5317a4aa4b1.png"
   }
 }
