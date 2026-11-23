@@ -101,3 +101,28 @@
 - Published e-death review immediately: CYCLES/CPU, 256 px, 10 frame(s).
 - Quaternius CC0 idle/walk/hit/death plus authored weapon-specific attack on MPFB rig: 8/8/10/4/10 samples; rest/roll-calibrated source motion, thrown-javelin visibility, hit recovery, independent equipment release and held death. Cloth uses authored secondary deformation, not a cloth simulation.
 - Quaternius CC0 idle/walk/hit/death plus authored weapon-specific attack on MPFB rig: 8/8/10/4/10 samples; rest/roll-calibrated source motion, thrown-javelin visibility, hit recovery, independent equipment release and held death. Cloth uses authored secondary deformation, not a cloth simulation.
+- Quaternius CC0 idle/walk/hit/death plus authored weapon-specific attack on MPFB rig: 8/8/10/4/10 samples; rest/roll-calibrated source motion, thrown-javelin visibility, hit recovery, independent equipment release and held death. Cloth uses authored secondary deformation, not a cloth simulation.
+- Published b review immediately: CYCLES/CPU, 512 px, 2 frame(s).
+- Published c review immediately: CYCLES/CPU, 512 px, 1 frame(s).
+- Published d review immediately: CYCLES/CPU, 512 px, 4 frame(s).
+- Open-motion preview caught torso sinking through stone: grounded complete anatomy for death and added keyed cloth plane-contact correction (not simulation). Feet sheet caught animated equipment reappearing: apply diagnostic mask after frame evaluation. Source swing toes legitimately rotate past vertical; travel-direction check applies to planted stance. Saved/baked foot quaternions preserve source mapping; calibrated reference matrices include bone roll.
+- Final skeletal audit PASS:53bones, finished-rigid projection0px, both loop matrix errors0, fixed attack guard endpoints/stone/held death, baked-foot rotation error0, planted foot forward dot0.99939, virtual-ground toe slip7.68e-9m after <=1.73cm root-only baked contact correction. Full-body collision quality remains manual. Starting all-stage CPU512/16 render set.
+- Published e-idle review immediately: CYCLES/CPU, 512 px, 8 frame(s).
+- Published e-move review immediately: CYCLES/CPU, 512 px, 8 frame(s).
+- Published e-attack review immediately: CYCLES/CPU, 512 px, 10 frame(s).
+- Published e-hit review immediately: CYCLES/CPU, 512 px, 4 frame(s).
+- Published e-death review immediately: CYCLES/CPU, 512 px, 10 frame(s).
+- Opened CPU512/16 rest/detail/plain/attack and idle/move strips. Stone now has painted cream grain and soft contact rather than a peach slab; remaining cap too low/rounded and beard too long. Added full-depth crown apex/backward correction and inverse-skinned beard shortening before projection. Walk calibration now restores native equal foot sizes before constraints; no post-retarget rotation edits. GPU preflight missing-master trap and CPU-master rejection both passed.
+- Built MPFB anatomy, painted rest stance, red chiton, blue cloak, fox-skin cap, woven crescent pelta and three iron-tipped javelins; plain review pending.
+- Driver round2 geometry: full-depth thigh volume, finer iron tips, tapered/beveled stone with generated clean-stone camera UV and live contact AO. Existing thick folds, straps/buckle, generated fills and product lights retained; projection/bakes rebuilt next.
+- Applied original-painting camera projection to full anatomy and physical clothing/equipment; unseen faces use painted fills and surface shaders. No billboard or relief image plane.
+- Baked real 512 px AO and curvature on anatomy, red chiton and pelta; AO drives recesses and curvature drives surface roughness. Solidify disabled only during baking.
+- Quaternius CC0 idle/walk/hit/death plus authored weapon-specific attack on MPFB rig: 8/8/10/4/10 samples; rest/roll-calibrated source motion, thrown-javelin visibility, hit recovery, independent equipment release and held death. Cloth uses authored secondary deformation, not a cloth simulation.
+- Published c review immediately: CYCLES/CPU, 512 px, 1 frame(s).
+- Published b review immediately: CYCLES/CPU, 512 px, 2 frame(s).
+- Published d review immediately: CYCLES/CPU, 512 px, 4 frame(s).
+- Published e-idle review immediately: CYCLES/CPU, 512 px, 8 frame(s).
+- Published e-move review immediately: CYCLES/CPU, 512 px, 8 frame(s).
+- Published e-attack review immediately: CYCLES/CPU, 512 px, 10 frame(s).
+- Published e-hit review immediately: CYCLES/CPU, 512 px, 4 frame(s).
+- Published e-death review immediately: CYCLES/CPU, 512 px, 10 frame(s).
