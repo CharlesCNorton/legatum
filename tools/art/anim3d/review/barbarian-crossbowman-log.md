@@ -46,3 +46,5 @@
 - d: 4 frames reviewed at 256/64; CYCLES GPU, 64 samples, source 512px.
 - e-idle: 8 frames reviewed at 256/64; CYCLES GPU, 64 samples, source 512px.
 - e-move: 8 frames reviewed at 256/64; CYCLES GPU, 64 samples, source 512px.
+- e-attack: 10 frames reviewed at 256/64; CYCLES GPU, 64 samples, source 512px.
+- e-hit: 4 frames reviewed at 256/64; CYCLES GPU, 64 samples, source 512px.
