@@ -104,3 +104,21 @@
 - Posted field-cannon-c-textured-lit.png; actual CYCLES render, visual review pending.
 - Posted field-cannon-c-textured-lit.png; actual CYCLES render, visual review pending.
 - Posted field-cannon-c-textured-lit.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-c-textured-lit.png; actual CYCLES render, visual review pending.
+- ROUND 3 REGISTRATION: Rebuilt camera elevation, narrower axle track/yaw, barrel proportions and head height; screen-landmark IK bends the rammer arm against the chest. Maintained native MPFB depth/skinning, thick stitched straps, buckle, beveled gun and folded cloth; softened over-regular sleeve ridges. Replaced independently stretched face/shako/barrel UVs with one frozen-camera projection across meshes, ray-tested for hidden surfaces, blended to existing generated wool/scanned fills. Product lighting and one alpha-masked histogram grade retained. Three contact iterations caught/repaired unreachable palm targets without relaxing the 2mm check; 40-sample geometry audit now passes.
+- Posted field-cannon-b-plain.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-c-textured-lit.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-c-details.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-d-rig-poses.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-idle-strip.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-move-strip.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-attack-strip.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-hit-strip.png; actual CYCLES render, visual review pending.
+- ROUND 3 MOTION REVIEW: Opened updated idle/move strips. All-front colour projection introduced a ghost painted rammer on the moving uniform; restored navy/ivory semantic alpha masks while retaining the single frozen camera UV mapping. Replaced opaque smoke pellets with full-depth radial-density volume lobes (minimum physical scale .02, keyed hide_render). Regenerating the affected full set so provenance cannot mix old/new masters.
+- Posted field-cannon-e-death-strip.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-b-plain.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-c-textured-lit.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-c-details.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-d-rig-poses.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-idle-strip.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-move-strip.png; actual CYCLES render, visual review pending.
