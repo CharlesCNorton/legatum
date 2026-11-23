@@ -1,6 +1,6 @@
 import { CALENDAR_NOTE, calendarLabel } from '../data';
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
-import { parseAutosave, useGame, type SaveFile } from '../store';
+import { needsOnlineHost, parseAutosave, useGame, type SaveFile } from '../store';
 import { listAutosaves, type AutosaveRecord } from '../platform/autosaveStore';
 import { ReplaceGameDialog } from '../ui/ReplaceGameDialog';
 import { pickSaveFile } from '../ui/GameMenu';
@@ -31,7 +31,7 @@ const unreadableAutosaves = new Set<string>();
 /** The launch another build opened this page with (platform/versions.ts) is acted on once. */
 let launchHandled = false;
 
-/** Main menu: Single Player, Multiplayer (Hot Seat, Host Game, Join Game), Continue, Load Game. */
+/** Main menu: Single Player, online Multiplayer, Continue, Load Game. */
 export function TitleScreen() {
   const [menu, setMenu] = useState<'main' | 'multi'>(() => {
     const launch = pageLaunch();
@@ -115,7 +115,7 @@ function MainMenu({ onMultiplayer }: { onMultiplayer: () => void }) {
     await continueAutosave(record, save);
     const failure = useGame.getState().error;
     if (isOlderVersionMessage(failure)) olderAutosaves.add(save.savedAt);
-    else if (failure) {
+    else if (failure && !needsOnlineHost(save)) {
       unreadableAutosaves.add(record.id);
       if (slots.some((slot) => slot.save && !unreadableAutosaves.has(slot.record.id))) set({ error: null });
     }
@@ -171,9 +171,9 @@ function MainMenu({ onMultiplayer }: { onMultiplayer: () => void }) {
           Single Player
           <span className="btn-sub">{behind ? 'New games start on the newest version' : `You against ${MIN_SEATS - 1} to ${MAX_PLAYERS - 1} AI empires`}</span>
         </button>
-        <button className="btn big" onClick={openMultiplayer}>
+        <button className="btn big" disabled={!online?.relay} onClick={openMultiplayer}>
           Multiplayer
-          <span className="btn-sub">{online?.relay ? 'Hot seat on this computer, or a game online' : 'Hot seat on this computer'}</span>
+          <span className="btn-sub">{online?.relay ? 'Host or join a game online' : 'Online play is unavailable in this version'}</span>
 
         </button>
         <button className={`btn big ${continuePrimary ? 'primary' : ''}`} disabled={!auto || !!busy || olderAuto || unreadableAuto} onClick={() => auto && usable[0] && continueAuto(usable[0].record, auto)}>
@@ -203,12 +203,10 @@ function MainMenu({ onMultiplayer }: { onMultiplayer: () => void }) {
 function MultiplayerMenu({ onBack }: { onBack: () => void }) {
   const views = useGame((s) => s.views);
   const goto = useGame((s) => s.goto);
-  const openSetup = useGame((s) => s.openSetup);
   const error = useGame((s) => s.error);
   const online = useGame((s) => s.online);
   const refusal = useGame((s) => s.hostRefusal);
-  // Online play: Host Game runs the game in this tab and opens its game room. A build with no relay has
-  // no game list, so it offers hot seat only.
+  // Host Game runs the game in this tab and opens its online room.
   const [hosting, setHosting] = useState<'idle' | 'starting' | 'failed'>('idle');
   // Host from a save has its own busy and failed state, so a retry stays on the button the player pressed.
   const [resuming, setResuming] = useState<'idle' | 'starting' | 'failed'>('idle');
@@ -261,10 +259,6 @@ function MultiplayerMenu({ onBack }: { onBack: () => void }) {
       <TitleNotice error={error ?? hostError} />
       <div className="title-actions">
         <ResumeButton />
-        <button className="btn big" onClick={() => openSetup('hotseat')}>
-          Hot Seat
-          <span className="btn-sub">Several players take turns planning on this computer</span>
-        </button>
         {online?.relay ? (
           <>
             <div className="host-fields">
@@ -320,7 +314,7 @@ function MultiplayerMenu({ onBack }: { onBack: () => void }) {
             </button>
           </>
         ) : (
-          <p className="title-hosted-note">This version has no online play. Hot seat still works.</p>
+          <p className="title-hosted-note">Online play is unavailable in this version.</p>
         )}
         <button className="btn quiet" onClick={onBack}>
           ← Back
