@@ -1,5 +1,10 @@
 # Classical era living-painting pilot
 
+**Superseded direction:** the owner rejected camera drift as "just a still image".
+The new genuine 3D VFX test is documented in [harbour/README.md](harbour/README.md).
+Shared delivery tools now accept `FRAMES=144 SIZE=960x540`; their existing defaults
+and the historical living-painting workflow below remain available.
+
 Seven seconds, 1920×1080, 24 fps, 168 PNG frames. No title or other text is rendered.
 All code is in this directory; all generated masters and delivery files are outside git.
 This is a render-ready pilot, **not a visually approved video**: the sandbox can build

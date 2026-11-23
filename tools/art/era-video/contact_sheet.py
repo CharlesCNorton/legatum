@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Six evenly spaced rendered frames, including endpoints; labels only on this QA sheet."""
 import argparse
+import os
 from pathlib import Path
 from PIL import Image, ImageDraw
 
@@ -10,17 +11,35 @@ def main():
     parser.add_argument('frames', type=Path)
     parser.add_argument('out', type=Path)
     args = parser.parse_args()
+    # Unset overrides retain the existing contiguous-preview behaviour.
+    expected_count = os.environ.get('FRAMES')
+    expected_size = os.environ.get('SIZE')
+    try:
+        if expected_count is not None:
+            expected_count = int(expected_count)
+            if expected_count < 6:
+                raise ValueError
+        if expected_size is not None:
+            expected_size = tuple(map(int, expected_size.split('x')))
+            if len(expected_size) != 2 or min(expected_size) < 1:
+                raise ValueError
+    except ValueError:
+        parser.error('FRAMES must be an integer >= 6; SIZE must be WIDTHxHEIGHT.')
     paths = sorted(args.frames.glob('frame_[0-9][0-9][0-9][0-9].png'))
     if len(paths) < 6:
         parser.error('Need at least six rendered frames.')
     numbers = [int(path.stem.split('_')[-1]) for path in paths]
     if numbers != list(range(numbers[0], numbers[-1] + 1)):
         parser.error('Frames contain gaps; use a contiguous range.')
+    if expected_count is not None and numbers != list(range(1, expected_count + 1)):
+        parser.error(f'Expected the complete 1-{expected_count} sequence.')
     chosen = [paths[round(i * (len(paths) - 1) / 5)] for i in range(6)]
     sheet = Image.new('RGB', (1440, 592), (30, 29, 26))
     draw = ImageDraw.Draw(sheet)
     for i, path in enumerate(chosen):
         with Image.open(path) as source:
+            if expected_size is not None and source.size != expected_size:
+                parser.error(f'Expected {expected_size}, found {source.size}: {path}')
             if source.width * 9 != source.height * 16:
                 parser.error(f'Not 16:9: {path}')
             tile = source.convert('RGB').resize((480, 270), Image.Resampling.LANCZOS)
