@@ -4,7 +4,7 @@ import { advisorOrders } from '../automation';
 import { buildingStatsFor, itemKey, itemName, TECH_NAME } from '../data';
 import { isThreat } from '../diplomacy';
 import { distance, hexEq } from '../hex';
-import { effectiveResearchQueue } from '../orders';
+import { effectiveResearchQueue, pendingResearchQueue } from '../orders';
 import { pendingDecisions } from '../turnFlow';
 import { HOLD_TURNS } from '../victoryHold';
 import { techCardUnlocks } from './techCardUnlocks';
@@ -156,8 +156,10 @@ export function advisorSuggestion(ctx: AdvisorContext, seen: readonly string[], 
   const orders = validOrders(ctx);
   const decisions = pendingDecisions(v, orders, ctx.errors ?? [], ctx.local);
   // Research is chosen but its panel is still open: closing it is the next step, since the rest of the turn is behind it.
-  if (ctx.techOpen && effectiveResearchQueue(orders, v.research).length) {
-    const tech = TECH_NAME[effectiveResearchQueue(orders, v.research)[0]];
+  // Only after a choice made this turn, so opening Research later to browse isn't nagged; "Not now" dismisses it.
+  const chosen = pendingResearchQueue(orders);
+  if (ctx.techOpen && chosen?.length && !skipped.includes('closeResearch')) {
+    const tech = TECH_NAME[chosen[0]];
     return { id: 'closeResearch', title: 'Close Research', why: tech ? `${tech} is chosen. Your other decisions are on the map.` : 'Your research is chosen. Your other decisions are on the map.',
       steps: [{ instruction: `${ctx.touch ? 'Tap' : 'Click'} Close.`, key: ctx.touch ? undefined : 'Esc', target: control('closeResearch') }], current: 0 };
   }
