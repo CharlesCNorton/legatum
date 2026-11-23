@@ -266,3 +266,43 @@ Authored hit: 4 output samples at 12 fps; 150 mechanical controls; loop=False.
 Authored death: 10 output samples at 10 fps; 150 mechanical controls; loop=False.
 Rendered c: 1 PNGs, 256 px, CYCLES CPU, 8 samples.
 Published c review immediately; frozen grade bb931e70ad71, 256 masters retained.
+Prepared full-source projection; read all six Blender skills, vehicle chapter, art skill and standing feedback 12–22.
+Built true 3D hard-surface geometry and rigid rig: 1079 objects; bevels, open muzzle, sensors, six wheels per side, 128 articulated tracks.
+Finished materials: three actual AO/curvature bake pairs, generated unseen paint, 920 genuine projected meshes; all textures packed.
+Authored idle: 8 output samples at 10 fps; 150 mechanical controls; loop=True.
+Authored move: 8 output samples at 12 fps; 150 mechanical controls; loop=True.
+Authored attack: 10 output samples at 14 fps; 150 mechanical controls; loop=False.
+Authored hit: 4 output samples at 12 fps; 150 mechanical controls; loop=False.
+Authored death: 10 output samples at 10 fps; 150 mechanical controls; loop=False.
+Rendered c: 1 PNGs, 256 px, CYCLES CPU, 8 samples.
+Published c review immediately; frozen grade 0e59137a29ff, 256 masters retained.
+Finished materials: three actual AO/curvature bake pairs, generated unseen paint, 920 genuine projected meshes; all textures packed.
+Authored idle: 8 output samples at 10 fps; 150 mechanical controls; loop=True.
+Authored move: 8 output samples at 12 fps; 150 mechanical controls; loop=True.
+Authored attack: 10 output samples at 14 fps; 150 mechanical controls; loop=False.
+Authored hit: 4 output samples at 12 fps; 150 mechanical controls; loop=False.
+Authored death: 10 output samples at 10 fps; 150 mechanical controls; loop=False.
+Rendered b: 3 PNGs, 256 px, CYCLES CPU, 8 samples.
+Rendered c: 1 PNGs, 256 px, CYCLES CPU, 8 samples.
+Published c review immediately; frozen grade b817780dba60, 256 masters retained.
+Rendered details: 2 PNGs, 256 px, CYCLES CPU, 8 samples.
+Published details review immediately; frozen grade b817780dba60, 256 masters retained.
+Rendered d: 4 PNGs, 256 px, CYCLES CPU, 8 samples.
+Published d review immediately; frozen grade b817780dba60, 256 masters retained.
+Rendered g: 16 PNGs, 256 px, CYCLES CPU, 8 samples.
+Published g review immediately; frozen grade b817780dba60, 256 masters retained.
+Rendered e-idle: 8 PNGs, 256 px, CYCLES CPU, 8 samples.
+Published e-idle review immediately; frozen grade b817780dba60, 256 masters retained.
+Rendered e-move: 8 PNGs, 256 px, CYCLES CPU, 8 samples.
+Published e-move review immediately; frozen grade b817780dba60, 256 masters retained.
+Rendered e-attack: 10 PNGs, 256 px, CYCLES CPU, 8 samples.
+Published e-attack review immediately; frozen grade b817780dba60, 256 masters retained.
+Rendered e-hit: 4 PNGs, 256 px, CYCLES CPU, 8 samples.
+Published e-hit review immediately; frozen grade b817780dba60, 256 masters retained.
+Rendered e-death: 10 PNGs, 256 px, CYCLES CPU, 8 samples.
+Published e-death review immediately; frozen grade b817780dba60, 256 masters retained.
+Saved-scene audit PASS: current source hashes, 128 track links, 16 wheels, stationary base, nonzero scales, loop closure keys and held death.
+Packed 40 trimmed 160 px frames: 197080 bytes, WebP quality 90.
+Validation PASS: counts, RGBA, rect bounds, transparent margins, five moving clips, held death, quality and size. Art approval remains separate.
+Encoded and ffprobe-verified autonomous-armour-round2.mp4: 8 s, 240 frames, 1600x348 H.264 yuv420p; decoded trimmed atlas.
+Published details review immediately; frozen grade b817780dba60, 256 masters retained.
