@@ -217,3 +217,16 @@ Rendered d: 4 frames, 512px, CYCLES/GPU.
 Published d-rig-poses review immediately; source CYCLES/GPU, 512px.
 Rendered e-idle: 8 frames, 512px, CYCLES/GPU.
 Published e-idle-strip review immediately; source CYCLES/GPU, 512px.
+Rendered e-move: 8 frames, 512px, CYCLES/GPU.
+Published e-move-strip review immediately; source CYCLES/GPU, 512px.
+Rendered e-attack: 10 frames, 512px, CYCLES/GPU.
+Published e-attack-strip review immediately; source CYCLES/GPU, 512px.
+Rendered e-hit: 4 frames, 512px, CYCLES/GPU.
+Published e-hit-strip review immediately; source CYCLES/GPU, 512px.
+Rendered e-death: 10 frames, 512px, CYCLES/GPU.
+Published e-death-strip review immediately; source CYCLES/GPU, 512px.
+Structural audit passed: genuine weighted anatomy, 53 bones, fixed projection UVs, stationary base and sane scales across every clip sample.
+Packed 40 trimmed 160px frames at quality 90: 168218 bytes.
+Validation passed: 40 frames, motion in five clips, held death, transparent trimmed geometry, >=75 quality and <=200 KB. Art parity remains a visual judgment.
+Validation passed: 40 frames, motion in five clips, held death, transparent trimmed geometry, >=75 quality and <=200 KB. Art parity remains a visual judgment.
+Encoded medjay-round1.mp4: all five clips, 1600x348, H.264 yuv420p, 240 frames / 8 seconds.
