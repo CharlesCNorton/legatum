@@ -6,9 +6,7 @@ use legatum_core::{
     AiDifficulty, AlongsideAttack, AttackMode, Order, UnitId, UnitKind,
     view::{CityView, UnitView},
 };
-#[cfg(test)]
-use std::collections::BTreeSet;
-use std::collections::{BTreeMap, VecDeque};
+use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
 /// Earliest arrival after a possible declaration, through known terrain and legal
 /// third-party borders. A fresh turn refills movement; the engine also permits one
@@ -156,39 +154,36 @@ impl Planner<'_> {
     /// Bring a garrison and reserves to the threatened city before the enemy can hit it.
     /// No forecast assumes a peaceful rival's unsubmitted orders; this only stages visible
     /// defenders against a legal declaration or an army already at war.
-    fn stage_supported_defence(&mut self, city: &CityView, attackers: &[&UnitView]) {
+    fn stage_supported_defence(
+        &mut self,
+        city: &CityView,
+        attackers: &[&UnitView],
+        staged: &mut BTreeSet<UnitId>,
+    ) {
         let terrain = self
             .view()
             .tile(city.pos)
             .and_then(|t| t.terrain)
             .unwrap_or(legatum_core::Terrain::Plains);
-        let garrison = self
-            .ctx
-            .own_units
-            .iter()
-            .copied()
-            .find(|u| u.military && u.pos == city.pos);
-        let mut assigned = garrison.map(|u| u.id);
-        if let Some(u) = garrison
-            && self.orders.iter().any(|o| {
-                legatum_core::rules::units::order_unit(o) == Some(u.id)
-                    && matches!(o, Order::MoveUnit { .. } | Order::MoveUnitPath { .. })
-            })
-        {
-            let order = (u.ranged > 0)
-                .then(|| self.best_shot_automatic(u, &BTreeMap::new()))
-                .flatten()
-                .map(|target| Order::RangedAttack { unit: u.id, target })
-                .unwrap_or(Order::SkipUnit { unit: u.id });
-            self.replace_supported_order(u.id, order);
-        }
+        let mut assigned = self.hold_supported_garrison(city);
         if assigned.is_none() {
             let candidate = self
                 .ctx
                 .own_units
                 .iter()
                 .copied()
-                .filter(|u| u.military && !self.ctx.own_cities.iter().any(|c| c.pos == u.pos))
+                .filter(|u| {
+                    u.military
+                        && (self.decisions.reserve_staging_stable == 0
+                            || (u.kind != UnitKind::Scout
+                                && !staged.contains(&u.id)
+                                && !self
+                                    .ctx
+                                    .own_cities
+                                    .iter()
+                                    .any(|c| c.pos != city.pos && c.pos.distance(u.pos) <= 1)))
+                        && !self.ctx.own_cities.iter().any(|c| c.pos == u.pos)
+                })
                 // Gene `roman_found_first`: a stand staged against a neighbour's visible
                 // units does not recall the veteran founding a city this turn (or walking
                 // to its site); the site's own danger gates already priced them.
@@ -202,6 +197,9 @@ impl Planner<'_> {
                     )
                 });
             if let Some(u) = candidate {
+                if self.decisions.reserve_staging_stable > 0 {
+                    staged.insert(u.id);
+                }
                 self.replace_supported_order(
                     u.id,
                     Order::MoveUnit {
@@ -219,7 +217,19 @@ impl Planner<'_> {
                 .own_units
                 .iter()
                 .copied()
-                .filter(|u| u.military && u.ranged == 0 && u.pos != city.pos)
+                .filter(|u| {
+                    u.military
+                        && u.ranged == 0
+                        && u.pos != city.pos
+                        && (self.decisions.reserve_staging_stable == 0
+                            || (u.kind != UnitKind::Scout
+                                && !staged.contains(&u.id)
+                                && !self
+                                    .ctx
+                                    .own_cities
+                                    .iter()
+                                    .any(|c| c.pos != city.pos && c.pos.distance(u.pos) <= 1)))
+                })
                 .filter(|u| Some(u.id) != assigned && !staging.contains(&u.id))
                 .filter(|u| Some(u.id) != self.roman_founder && Some(u.id) != self.colonia_founder)
                 .filter(|u| !self.ctx.own_cities.iter().any(|c| c.pos == u.pos))
@@ -249,6 +259,9 @@ impl Planner<'_> {
                 });
             let Some((u, dest)) = choice else { break };
             staging.push(u.id);
+            if self.decisions.reserve_staging_stable > 0 {
+                staged.insert(u.id);
+            }
             self.replace_supported_order(
                 u.id,
                 Order::MoveUnit {
@@ -257,6 +270,40 @@ impl Planner<'_> {
                 },
             );
         }
+    }
+
+    fn hold_supported_garrison(&mut self, city: &CityView) -> Option<UnitId> {
+        let garrison = self
+            .ctx
+            .own_units
+            .iter()
+            .copied()
+            .find(|u| u.military && u.pos == city.pos);
+        if let Some(u) = garrison
+            && self.orders.iter().any(|o| {
+                legatum_core::rules::units::order_unit(o) == Some(u.id)
+                    && matches!(o, Order::MoveUnit { .. } | Order::MoveUnitPath { .. })
+            })
+        {
+            let order = (u.ranged > 0)
+                .then(|| self.best_shot_automatic(u, &BTreeMap::new()))
+                .flatten()
+                .map(|target| Order::RangedAttack { unit: u.id, target })
+                .unwrap_or(Order::SkipUnit { unit: u.id });
+            self.replace_supported_order(u.id, order);
+        }
+        garrison.map(|u| u.id)
+    }
+
+    fn departing_supported_garrison(&self, city: &CityView) -> bool {
+        self.ctx.own_units.iter().any(|u| {
+            u.military
+                && u.pos == city.pos
+                && self.orders.iter().any(|order| {
+                    legatum_core::rules::units::order_unit(order) == Some(u.id)
+                        && matches!(order, Order::MoveUnit { .. } | Order::MoveUnitPath { .. })
+                })
+        })
     }
 
     /// Forecast the visible melee assault from our fogged view, with the opponent temporarily
@@ -274,6 +321,27 @@ impl Planner<'_> {
         let mut view = self.view().clone();
         view.me = first.owner;
         view.team = view.team_of(first.owner);
+        // Peace-time staging prices a legal surprise declaration with the same
+        // assault forecast as an ongoing war; the cloned view is never resolved.
+        if !view.at_war(first.owner, city.owner) {
+            let pair =
+                legatum_core::diplomacy::pair(view.team_of(first.owner), view.team_of(city.owner));
+            if let Some(relation) = view
+                .diplomacy
+                .relations
+                .iter_mut()
+                .find(|r| (r.a, r.b) == pair)
+            {
+                relation.state = legatum_core::diplomacy::RelationState::War;
+            } else {
+                let mut relation =
+                    legatum_core::diplomacy::DiplomacyState::new([pair.0, pair.1].into_iter())
+                        .relations
+                        .pop()?;
+                relation.state = legatum_core::diplomacy::RelationState::War;
+                view.diplomacy.relations.push(relation);
+            }
+        }
         if let Some((old, new)) = swap {
             let from = view.units.iter().find(|u| u.id == new)?.pos;
             view.units.iter_mut().find(|u| u.id == old)?.pos = from;
@@ -324,6 +392,7 @@ impl Planner<'_> {
         if !self.hard_defense() || self.decisions.supported_defence == 0 {
             return;
         }
+        let mut staged = BTreeSet::new();
         for city in self.ctx.own_cities.clone() {
             let imminent: Vec<_> = self
                 .view()
@@ -362,9 +431,43 @@ impl Planner<'_> {
                 })
                 .collect();
             if attackers.is_empty() {
-                if imminent
+                let all_peace = imminent
                     .iter()
-                    .all(|e| !self.view().at_war(self.view().me, e.owner))
+                    .all(|e| !self.view().at_war(self.view().me, e.owner));
+                // A Peace guard must not count a garrison its current orders take away.
+                // Let the ordinary staging gate decide whether to recall that unit.
+                let garrison_departing = self.departing_supported_garrison(city);
+                let guarded = city.hp == city.max_hp
+                    && !garrison_departing
+                    && self.ctx.own_units.iter().any(|u| {
+                        u.military
+                            && u.kind != UnitKind::Scout
+                            && u.pos == city.pos
+                            && u.hp == legatum_core::data::UNIT_HP
+                    });
+                let forecast_capture_risk = all_peace
+                    && self.decisions.peace_stage_guard_all >= 2
+                    && (garrison_departing || {
+                        let mut by_owner = BTreeMap::new();
+                        for enemy in &imminent {
+                            by_owner
+                                .entry(enemy.owner)
+                                .or_insert_with(Vec::new)
+                                .push(*enemy);
+                        }
+                        by_owner.values().any(|own_side| {
+                            self.supported_forecast(city, own_side, &[], None)
+                                .is_some_and(|forecast| forecast.capture_chance > 0)
+                        })
+                    });
+                let peace_guard = all_peace
+                    && ((self.decisions.peace_scout_stage_guard > 0
+                        && imminent.iter().all(|e| e.kind == UnitKind::Scout)
+                        && guarded)
+                        || (self.decisions.peace_stage_guard_all == 1 && guarded)
+                        || (self.decisions.peace_stage_guard_all >= 2 && !forecast_capture_risk));
+                if all_peace
+                    && !peace_guard
                     && self
                         .ctx
                         .own_units
@@ -383,7 +486,7 @@ impl Planner<'_> {
                     ) && (self.ctx.own_cities.len() > 1
                         || imminent.iter().all(|e| e.kind == UnitKind::Scout)))
                 {
-                    self.stage_supported_defence(city, &imminent);
+                    self.stage_supported_defence(city, &imminent, &mut staged);
                 }
                 continue;
             }
@@ -885,6 +988,51 @@ impl Planner<'_> {
             moves = (moves - cost).max(0);
         }
         Some(arrival)
+    }
+
+    /// Keep a city-sheltered Settler home when the first planned movement phase would
+    /// immediately trigger the same exposure or escort response as a trip in progress.
+    pub(crate) fn hold_unsafe_settler_stepout(&mut self, s: &UnitView) {
+        if !self.hard_defense()
+            || self.decisions.settler_stepout_check == 0
+            || self.settlement_timed_out(s)
+            || !self.ctx.own_cities.iter().any(|city| city.pos == s.pos)
+        {
+            return;
+        }
+        let Some(arrival) = self.settler_arrival(s) else {
+            return;
+        };
+        if arrival == s.pos {
+            return;
+        }
+        let threatened = self.unit_exposure_key(s, arrival).0 > 0
+            || self.settler_route_exposed(s)
+            || self.settler_trip_risk(s.pos, arrival) >= self.decisions.settler_risk_escort
+            || self.settler_capturable_this_turn(arrival);
+        if !threatened {
+            return;
+        }
+        let army: Vec<_> = self
+            .ctx
+            .own_units
+            .iter()
+            .copied()
+            .filter(|u| u.military && u.kind != UnitKind::Scout)
+            .collect();
+        let escorted = self.free(&army).into_iter().any(|u| {
+            u.hp >= self.decisions.recover_hp
+                && self.free_tile_for(u, s.pos)
+                && self.reaches_this_turn(u, s.pos)
+                && self.reaches_this_turn(u, arrival)
+        });
+        if !escorted
+            && let Some(order) = self.orders.iter_mut().find(|order| {
+                matches!(order, Order::MoveUnit { unit, .. } | Order::MoveUnitPath { unit, .. } if *unit == s.id)
+            })
+        {
+            *order = Order::SkipUnit { unit: s.id };
+        }
     }
 
     /// A fast raider can intercept an intermediate step even when the Settler
@@ -3080,10 +3228,175 @@ mod tests {
                 "{:?}",
                 p.orders
             );
-            p.stage_supported_defence(&city, &[&enemy]);
+            p.stage_supported_defence(&city, &[&enemy], &mut BTreeSet::new());
             p.orders.contains(&Order::FoundCity { unit: UnitId(1) })
         };
         assert!(!run(0), "the control arm reproduces the recall");
         assert!(run(1));
+    }
+
+    #[test]
+    fn peace_guards_do_not_assume_a_departing_garrison_stays() {
+        let home = Hex::new(9, 8);
+        let field_goal = Hex::new(5, 9);
+        for (scout_guard, all_guard, threat) in [
+            (1, 0, UnitKind::Scout),
+            (0, 1, UnitKind::Spearman),
+            (0, 2, UnitKind::Scout),
+        ] {
+            let view = declarable(
+                ViewBuilder::new(24, 16)
+                    .city(1, ME, home, 3)
+                    .unit(1, ME, UnitKind::Spearman, home)
+                    .unit(2, ME, UnitKind::Spearman, Hex::new(6, 9))
+                    .unit(3, ME, UnitKind::Spearman, Hex::new(20, 10))
+                    .unit(4, ENEMY, threat, Hex::new(8, 8))
+                    .build(),
+            );
+            let plan = |departing| {
+                let mut p = planner(&view);
+                p.decisions.peace_scout_stage_guard = scout_guard;
+                p.decisions.peace_stage_guard_all = all_guard;
+                if departing {
+                    p.orders.push(Order::MoveUnit {
+                        unit: UnitId(1),
+                        to: Hex::new(10, 8),
+                    });
+                }
+                p.orders.push(Order::MoveUnit {
+                    unit: UnitId(2),
+                    to: field_goal,
+                });
+                p.supported_defence_orders();
+                p.orders
+            };
+            assert!(plan(false).contains(&Order::MoveUnit {
+                unit: UnitId(2),
+                to: field_goal,
+            }));
+            let orders = plan(true);
+            assert!(orders.contains(&Order::SkipUnit { unit: UnitId(1) }));
+            assert!(!orders.contains(&Order::MoveUnit {
+                unit: UnitId(2),
+                to: field_goal,
+            }));
+        }
+    }
+
+    #[test]
+    fn stable_reserves_do_not_stage_scouts_or_pull_another_city_guard() {
+        let first = Hex::new(6, 6);
+        let second = Hex::new(10, 6);
+        let near_first = Hex::new(7, 6);
+        let run = |kind: UnitKind, stable: i32| {
+            let v = ViewBuilder::new(24, 16)
+                .city(1, ME, first, 3)
+                .city(2, ME, second, 3)
+                .unit(1, ME, UnitKind::Spearman, first)
+                .unit(2, ME, UnitKind::Spearman, second)
+                .unit(3, ME, kind, near_first)
+                .unit(4, ENEMY, UnitKind::Spearman, Hex::new(14, 6))
+                .build();
+            let mut p = planner(&v);
+            p.decisions.reserve_staging_stable = stable;
+            let city = (**p.ctx.own_cities.iter().find(|c| c.pos == second).unwrap()).clone();
+            let enemy = p
+                .view()
+                .units
+                .iter()
+                .find(|u| u.owner == ENEMY)
+                .unwrap()
+                .clone();
+            p.stage_supported_defence(&city, &[&enemy], &mut BTreeSet::new());
+            p.orders
+                .into_iter()
+                .any(|o| legatum_core::rules::units::order_unit(&o) == Some(UnitId(3)))
+        };
+        assert!(run(UnitKind::Spearman, 0));
+        assert!(!run(UnitKind::Spearman, 1));
+        assert!(run(UnitKind::Scout, 0));
+        assert!(!run(UnitKind::Scout, 1));
+    }
+
+    #[test]
+    fn settler_stepout_waits_without_a_reachable_escort() {
+        let home = Hex::new(6, 6);
+        let arrival = Hex::new(7, 6);
+        let run = |gene: i32, escort: bool| {
+            let mut builder = ViewBuilder::new(24, 16)
+                .city(1, ME, home, 3)
+                .unit(1, ME, UnitKind::Settler, home)
+                .unit(3, ENEMY, UnitKind::Spearman, Hex::new(9, 6));
+            if escort {
+                builder = builder.unit(2, ME, UnitKind::Spearman, home);
+            }
+            let v = declarable(builder.build());
+            let mut p = planner(&v);
+            p.decisions.settler_stepout_check = gene;
+            let settler = (**p.ctx.own_units.iter().find(|u| u.id == UnitId(1)).unwrap()).clone();
+            p.orders.push(Order::MoveUnit {
+                unit: settler.id,
+                to: arrival,
+            });
+            p.hold_unsafe_settler_stepout(&settler);
+            p.orders[0].clone()
+        };
+        assert_eq!(
+            run(0, false),
+            Order::MoveUnit {
+                unit: UnitId(1),
+                to: arrival
+            }
+        );
+        assert_eq!(run(1, false), Order::SkipUnit { unit: UnitId(1) });
+        assert_eq!(
+            run(1, true),
+            Order::MoveUnit {
+                unit: UnitId(1),
+                to: arrival
+            }
+        );
+    }
+
+    #[test]
+    fn settler_stepout_keeps_safe_and_timed_out_moves() {
+        let home = Hex::new(6, 6);
+        let arrival = Hex::new(7, 6);
+        let run = |threat: bool, timed_out: bool| {
+            let mut builder =
+                ViewBuilder::new(24, 16)
+                    .city(1, ME, home, 3)
+                    .unit(1, ME, UnitKind::Settler, home);
+            if threat {
+                builder = builder.unit(2, ENEMY, UnitKind::Spearman, Hex::new(9, 6));
+            }
+            let mut view = declarable(builder.build());
+            if timed_out {
+                view.turn = 30;
+                view.units[0].created_turn = Some(1);
+            }
+            let mut planner = planner(&view);
+            planner.decisions.settler_stepout_check = 1;
+            let settler = (**planner
+                .ctx
+                .own_units
+                .iter()
+                .find(|unit| unit.id == UnitId(1))
+                .unwrap())
+            .clone();
+            assert_eq!(planner.settlement_timed_out(&settler), timed_out);
+            planner.orders.push(Order::MoveUnit {
+                unit: settler.id,
+                to: arrival,
+            });
+            planner.hold_unsafe_settler_stepout(&settler);
+            planner.orders[0].clone()
+        };
+        let advance = Order::MoveUnit {
+            unit: UnitId(1),
+            to: arrival,
+        };
+        assert_eq!(run(false, false), advance);
+        assert_eq!(run(true, true), advance);
     }
 }

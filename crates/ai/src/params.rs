@@ -133,6 +133,10 @@ decision_params! {
     hold_exchange_percent: 100, 50, 175, "Incoming damage tolerated relative to retaliation when defending";
     garrison_doom_percent: 100, 50, 150, "Retreat when certain incoming damage reaches this percent of garrison HP";
     supported_defence: 1, 0, 1, "Hard: hold a threatened city and order useful melee supporters into it (0: former orders)";
+    peace_scout_stage_guard: 1, 0, 1, "Keep a field assignment when a full-health city with a full-health non-Scout garrison faces only peaceful Scouts (0: former reserve staging)";
+    reserve_staging_stable: 1, 0, 1, "Hard: do not stage Scouts or pull a reserve already beside another own city, and stage each unit at most once per turn";
+    peace_stage_guard_all: 1, 0, 2, "Hard: 1 keeps field assignments at a full-health city with a full-health non-Scout garrison against any all-Peace threat; 2 stages at Peace only for a positive supported-defence capture forecast";
+    settler_stepout_check: 1, 0, 1, "Hard: hold a Settler in its city when this turn's step-out would fail the exposure, capture, or escort check; timed-out Settlers proceed";
     war_commit_ratio: 100, 100, 250, "Campaign commitment multiplier on the personality power ratio, hundredths (100 = 1.0)";
     attack_ratio_percent: 100, 70, 150, "Multiplier on personality-derived local attack power ratio";
     counterattack_loss_percent: 25, 0, 60, "Maximum forecast loss chance for a counterattack or garrison sortie";

@@ -152,6 +152,7 @@ impl ScriptedBrain {
         p.plan_siege_buys();
         p.plan_military();
         p.dedupe_first_steps();
+        p.pass("supported_defence_orders");
         p.supported_defence_orders();
         self.finish(view, p)
     }
@@ -394,6 +395,7 @@ impl ScriptedBrain {
         p.tag_buys("after_cities");
         p.pass("dedupe_first_steps");
         p.dedupe_first_steps();
+        p.pass("supported_defence_orders");
         p.supported_defence_orders();
         p.pass("enforce_levy");
         p.enforce_levy();

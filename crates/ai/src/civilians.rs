@@ -1015,6 +1015,7 @@ impl Planner<'_> {
                 }
             }
         }
+        self.hold_unsafe_settler_stepout(s);
         if let Some(trace) = &self.decision_trace {
             let selected_order = self
                 .orders
