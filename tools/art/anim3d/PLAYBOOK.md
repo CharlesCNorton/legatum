@@ -238,6 +238,23 @@ option matrix with `python tools/art/anim3d/siege/pack.py --measure`; `--renders
 an archived render folder and separate report. The original GPU evidence is retained in
 `masters/field-cannon/round1-backup/renders/` and `field-cannon-atlas-options-round1-gpu.json`.
 
+### Round-two candidate delivery
+
+The revised **512 px / Cycles CPU / 8-sample** preview set packs to **184,654 bytes at Q80**,
+640 × 1233 atlas pixels. All 40 playback samples remain, referencing 37 unique rectangles; the
+three exact duplicate images are stored once. Q85 was 207,096 bytes or more, so the Q80 result is
+intentional. This is a measured CPU candidate, not the pending 64-sample GPU delivery. All 40 PNG
+masters are 512 px and all 40 gallery copies are 256 px. `field-cannon-g-delivery.png` compares the
+source painting, render and decoded atlas at 256/64; `field-cannon-g-decoded-atlas.png` shows every
+reconstructed logical frame. The 512 px detail sheet uses the full painting, not an enlarged thumbnail.
+
+Verdict: improved leaning/palm contact, distinct scuffed iron tyres, dark aged barrel, cream base and
+cloth relief. At 64 px it remains recognizably the same field cannon. At 256 px the gunner is still
+slimmer than the reference; face, tailoring and belt drape remain simpler, and the camera/pose are not
+an exact match (silhouette overlap about 72%). Final sampled luminance spread is 65.39 vs painting
+65.54, and mean HSV saturation 85.51 vs 84.66. Matching those statistics does not establish art quality.
+GPU64 rendering and the lead's art judgment remain required.
+
 ### Trimmed JSON format, version 2
 
 ```json
