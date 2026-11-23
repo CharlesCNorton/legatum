@@ -1,49 +1,43 @@
-# Arquebusier round 1
+# Arquebusier animation candidate
 
-Editable MPFB human, original three-dimensional Renaissance kit and five authored
-skeletal clips. The existing painting remains the in-game unit. This is a review
-candidate, not an approved replacement.
+True 3D MPFB anatomy, original Renaissance kit and five authored skeletal clips.
+The existing painting remains in the game. This candidate is not art-approved.
+The arquebusier chapter of `../../PLAYBOOK.md` records the method and atlas format.
 
-The infantry / arquebusier chapter in `../../PLAYBOOK.md` documents construction,
-projection, bakes, clip timings and the version-2 atlas rectangle format.
-
-- `scene.py`: reproducible anatomy, model, materials, rig, frozen-camera projection,
-  action keys and stage rendering. `touchup` reapplies the final shoe/base fix to an
-  existing master; the normal `build` already includes those fixes.
-- `prepare.py`: full-resolution source registration and generated-fill extraction.
-- `bake.py`: six actual 256 px AO/Pointiness maps.
-- `finish.py`: fixed measured colour grade, review sheets, 160 px trimmed atlas,
-  decoded validation and eight-second five-clip H.264 MP4.
-- `audit.py`: anatomical topology, bones, nondegenerate scales, stationary base,
-  motion, loop endpoints and held terminal death. It does not prove collisions.
-- `render.sh`: sequential CPU stages. All Blender invocations use the PATH gate.
-- `gpu.sh`: no-argument GPU handoff, run from the repository root with `ROUND` set.
-
-External assets: `~/LegatumRuns/anim-pilot/assets/arquebusier/` (including the
-built-in-imagegen `painted-fills.png`, prompt in `fills.prompt.txt`). Licences and
-original output ID are in `assets/SOURCES.md`. Masters and raw/graded renders:
-`~/LegatumRuns/anim-pilot/masters/arquebusier/`. Reviews and honest iteration log:
-`~/LegatumRuns/anim-pilot/review/3d-v2/arquebusier-*`.
-
-GPU handoff:
+Run CPU stages sequentially from the repository root:
 
 ```sh
-ROUND=1 tools/art/anim3d/units/arquebusier/gpu.sh
+for stage in refine project bake b c animate preview pack; do
+  tools/art/anim3d/units/arquebusier/render.sh "$stage"
+done
 ```
 
-The host pass creates native 512 px masters and 256 px derivatives, replaces all
-stage reviews, repacks the candidate atlas, validates it and writes the round MP4.
-GPU appearance must be judged again. This script never writes a PASS marker.
+`refine.py` preserves an unmodified external input checkpoint, fits full-depth
+geometry and finishes rigid surfaces before frozen camera projection. `scene.py`
+owns projection, editable clips and rendering; `bake.py` produces actual AO and
+Pointiness maps. Original generated unseen-surface fills remain in use.
+`finish.py` owns the fixed rest grade, reviews, trimmed atlas, independent decoded
+validation and MP4. `test_delivery.py` exercises the alpha/grade contracts.
+`audit.py` checks topology, transforms, stationary stone, motion and held poses;
+it does not establish full garment or hand/weapon collision clearance.
 
-Round 1's main remaining visual gaps are facial likeness and morion shape,
-projection registration on slashed cloth, synthetic folds, and shoulder/weapon
-contact during the attack. The death reaches a held sideways pose but its contact
-and body mechanics still need refinement. At 64 px the red/cream costume and upright
-matchlock identify the unit; at 256 px the painting remains visibly richer.
+Host GPU handoff, no arguments:
 
-Implementation notes: MPFB's eye import may purge unused materials, so create kit
-materials after importing eyes. Set explicit Euler modes before applying authored
-Euler deltas to MPFB pose bones, preserving their rest matrices. Keep low-alpha
-Lanczos fringes intact and validate visible coverage separately. WebP method 5
-fit this round at 199,554 bytes/q75; method 4 missed the cap by 1,954 bytes. The
-packer records its encoding attempts and never lowers quality below 75.
+```sh
+ROUND=2 tools/art/anim3d/units/arquebusier/gpu.sh
+```
+
+The pass regenerates clips, audits, renders every stage at native 512 px with
+Cycles GPU, retains 256 px derivatives, verifies device/blend provenance, then
+packs, validates and encodes all five decoded clips. `ROUND` is supplied by the
+driver. It records its own transcript and failed-stage status; a success receipt
+still requires visual review. No script writes the art PASS marker.
+
+External assets: `~/LegatumRuns/anim-pilot/assets/arquebusier/`, with provenance
+in `assets/SOURCES.md` and the original fill prompt beside these scripts.
+Masters/checkpoints/bakes/raw frames: `~/LegatumRuns/anim-pilot/masters/arquebusier/`.
+Reviews and the honest round log: `~/LegatumRuns/anim-pilot/review/3d-v2/arquebusier-*`.
+
+Known art risks remain the morion outline, foot/ankle fitting, tailoring at bent
+joints, firing shoulder pose and the mechanics of the fall. Judge actual 256/64 px
+comparisons and the movie; successful packing does not establish painting parity.

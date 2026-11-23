@@ -53,7 +53,7 @@ def attach(o,bone):
  bpy.context.view_layer.update();w=o.matrix_world.copy();o.parent=rig;o.parent_type='BONE';o.parent_bone=bone;bpy.context.view_layer.update();o.matrix_world=w;return o
 
 def aim(name,direction):
- p=rig.pose.bones[name];q=p.bone.matrix_local.to_quaternion();v=q@Vector((0,1,0));rot=(v.rotation_difference(Vector(direction).normalized())@q).to_matrix().to_4x4();rot.translation=p.head;p.matrix=rot;bpy.context.view_layer.update()
+ p=rig.pose.bones[name];q=p.bone.matrix_local.to_quaternion();v=q @ Vector((0,1,0));rot=(v.rotation_difference(Vector(direction).normalized()) @ q).to_matrix().to_4x4();rot.translation=p.head;p.matrix=rot;bpy.context.view_layer.update()
 
 def limb(upper,lower,target,pole):
  a=rig.pose.bones[upper].head.copy();t=Vector(target);axis=t-a;l1=rig.data.bones[upper].length;l2=rig.data.bones[lower].length;d=min(axis.length,l1+l2-.0001);axis.normalize();along=(l1*l1-l2*l2+d*d)/(2*d);h=max(0,l1*l1-along*along)**.5;side=Vector(pole)-a;side=(side-axis*side.dot(axis)).normalized();elbow=a+axis*along+side*h;aim(upper,elbow-a);aim(lower,t-elbow)
@@ -84,7 +84,7 @@ def configure():
   for d in prefs.devices:d.use=d.type=='METAL';found|=d.use
   if not found:raise RuntimeError('Metal GPU required; refusing CPU fallback')
  sc.render.threads_mode='FIXED';sc.render.threads=3;sc.render.resolution_x=sc.render.resolution_y=int(os.environ.get('RESOLUTION','256'));sc.render.resolution_percentage=100;sc.render.film_transparent=True;sc.render.image_settings.file_format='PNG';sc.render.image_settings.color_mode='RGBA';sc.render.use_file_extension=True
- sc.view_settings.view_transform='AgX';sc.view_settings.look='AgX - Medium High Contrast';sc.view_settings.exposure=.1
+ # Preserve the saved painted-pigment display calibration.
  return sc
 
 def build():
@@ -125,17 +125,17 @@ def build():
  # Tailored sleeves follow posed anatomical joints; no primitive body replacement.
  for side in ('r','l'):
   for upper in ('upperarm','lowerarm'):
-   p=rig.pose.bones[upper+'_'+side];a=rig.matrix_world@p.head;b=rig.matrix_world@p.tail
+   p=rig.pose.bones[upper+'_'+side];a=rig.matrix_world @ p.head;b=rig.matrix_world @ p.tail
    tube('slashed '+upper+' '+side,a,b,(.072,.065,.037 if upper=='upperarm' else .018),red,upper+'_'+side,True)
-  p=rig.pose.bones['lowerarm_'+side];end=rig.matrix_world@p.tail
-  tube('gathered ivory cuff '+side,end+(rig.matrix_world@p.head-end)*.13,end,(.073,.067,.008),linen,'lowerarm_'+side)
-  p=rig.pose.bones['thigh_'+side];a=rig.matrix_world@p.head;b=rig.matrix_world@p.tail
+  p=rig.pose.bones['lowerarm_'+side];end=rig.matrix_world @ p.tail
+  tube('gathered ivory cuff '+side,end+(rig.matrix_world @ p.head-end)*.13,end,(.073,.067,.008),linen,'lowerarm_'+side)
+  p=rig.pose.bones['thigh_'+side];a=rig.matrix_world @ p.head;b=rig.matrix_world @ p.tail
   tube('puffed slashed breeches '+side,a,b*.9+a*.1,(.115,.082,.075),red,'thigh_'+side,True)
-  p=rig.pose.bones['calf_'+side];a=rig.matrix_world@p.head;b=rig.matrix_world@p.tail
+  p=rig.pose.bones['calf_'+side];a=rig.matrix_world @ p.head;b=rig.matrix_world @ p.tail
   tube('ivory stocking '+side,a,b,(.075,.04,.012),linen,'calf_'+side)
   tube('red knee garter '+side,a,a+(b-a)*.17,(.083,.077,.005),red,'calf_'+side)
   # Shoes are closed lofts over real anatomical feet, broad rounded toes.
-  fp=rig.matrix_world@rig.pose.bones['foot_'+side].head
+  fp=rig.matrix_world @ rig.pose.bones['foot_'+side].head
   shoe=sphere('latchet shoe '+side,(fp.x,fp.y-.075,.145),(.074,.145,.065),leather);attach(shoe,'foot_'+side)
   for z in range(3):
    yy=fp.y-.14+.052*z;pts=[(fp.x+.068*cos(a),yy,.148+.056*sin(a)) for a in [pi*i/20 for i in range(21)]];attach(curve('shoe welt strap '+side,pts,.009,leather),'foot_'+side)
@@ -153,7 +153,7 @@ def build():
  for i in range(40):
   a=2*pi*i/40;attach(sphere('ruff pleat',(.084*sin(a),-.078*cos(a),1.65+.006*(i%2)),(.012,.016,.025),linen),'neck_01')
  # Morion: bowl, swept boat brim and real high comb ridge, fitted to head.
- head=rig.pose.bones['head'];hc=rig.matrix_world@((head.head+head.tail)*.5);cx,cy,cz=hc
+ head=rig.pose.bones['head'];hc=rig.matrix_world @ ((head.head+head.tail)*.5);cx,cy,cz=hc
  vs=[];fs=[]
  for j in range(17):
   t=(j/16)*pi/2
@@ -182,7 +182,7 @@ def build():
  # Turn the complete morion to expose its broad comb, matching the painting.
  pivot=Vector((cx,cy,cz))
  for o in list(bpy.context.scene.objects):
-  if 'morion' in o.name or 'comb bright' in o.name:o.matrix_world=Matrix.Translation(pivot)@Matrix.Rotation(-.65,4,'Z')@Matrix.Translation(-pivot)@o.matrix_world
+  if 'morion' in o.name or 'comb bright' in o.name:o.matrix_world=Matrix.Translation(pivot) @ Matrix.Rotation(-.65,4,'Z') @ Matrix.Translation(-pivot) @ o.matrix_world
  # Facial hair follows anatomical face rather than being painted on an empty sphere.
  attach(curve('trimmed moustache',[(cx-.045,cy-.094,cz-.075),(cx-.02,cy-.108,cz-.068),(cx,cy-.113,cz-.074),(cx+.024,cy-.109,cz-.069),(cx+.049,cy-.097,cz-.076)],.008,dark),'head')
  attach(sphere('short pointed beard',(cx,cy-.073,cz-.116),(.043,.024,.031),dark),'head')
@@ -216,29 +216,44 @@ def build():
 
 
 def project():
- """Frozen evaluated rest coordinates deform with the real skin/kit geometry."""
+ """Freeze finished-surface UVs; camera-only pigment avoids double illumination."""
  sc=bpy.context.scene;cam=sc.camera;im=bpy.data.images.load(str(A/'projection.png'),check_existing=True);records=[]
  for o in list(sc.objects):
-  if o.type!='MESH' or any(x in o.name for x in ('base','muzzle','eyes','latchet shoe')):continue
-  mods=[]
-  for m in o.modifiers:
-   if m.type!='ARMATURE' and m.show_viewport:mods.append(m);m.show_viewport=False
+  if o.type!='MESH' or any(x in o.name for x in ('base','muzzle','eyes')):continue
+  mods=[m for m in o.modifiers if m.type!='ARMATURE' and m.show_viewport]
+  for m in mods:m.show_viewport=False
   bpy.context.view_layer.update();ev=o.evaluated_get(bpy.context.evaluated_depsgraph_get());me=ev.to_mesh();assert len(me.vertices)==len(o.data.vertices)
+  normalmat=ev.matrix_world.to_3x3().inverted().transposed()
+  vertices=[(ev.matrix_world @ v.co,(normalmat @ v.normal).normalized()) for v in me.vertices];ev.to_mesh_clear()
+  # Restore helper masks before ray casting: hidden MPFB helpers are not occluders.
+  for m in mods:m.show_viewport=True
+  bpy.context.view_layer.update()
+  coords=[world_to_camera_view(sc,cam,w) for w,n in vertices]
   uv=o.data.uv_layers.get('Painting') or o.data.uv_layers.new(name='Painting');col=o.data.color_attributes.new(name='Projection facing',type='FLOAT_COLOR',domain='CORNER')
-  coords=[world_to_camera_view(sc,cam,ev.matrix_world@v.co) for v in me.vertices]
-  normalmat=ev.matrix_world.to_3x3().inverted().transposed();facing=[max(0,min(1,((normalmat@v.normal).normalized().dot((cam.location-ev.matrix_world@v.co).normalized())-.10)/.45)) for v in me.vertices]
+  facing=[]
+  deps=bpy.context.evaluated_depsgraph_get()
+  for w,normal in vertices:
+   direction=(cam.location-w).normalized()
+   f=max(0,min(1,(normal.dot(direction)+.05)/.3))
+   hit,loc,n,idx,obj,matr=sc.ray_cast(deps,w+direction*.002,direction,distance=(cam.location-w).length)
+   if hit and (obj!=o or (loc-w).length>.015):f=0
+   facing.append(f)
   for loop in o.data.loops:
    i=loop.vertex_index;uv.data[loop.index].uv=(coords[i].x,coords[i].y);f=facing[i];col.data[loop.index].color=(f,f,f,1)
-  ev.to_mesh_clear()
   for m in mods:m.show_viewport=True
   for slot in o.material_slots:
    if not slot.material:continue
-   ma=slot.material.copy();slot.material=ma;n=ma.node_tree.nodes;l=ma.node_tree.links;p=n.get('Principled BSDF')
-   old=p.inputs['Base Color'].links[0].from_socket if p.inputs['Base Color'].is_linked else None
-   if not old:rgb=n.new('ShaderNodeRGB');rgb.outputs[0].default_value=p.inputs['Base Color'].default_value;old=rgb.outputs[0]
-   tc=n.new('ShaderNodeUVMap');tc.uv_map='Painting';tex=n.new('ShaderNodeTexImage');tex.image=im;tex.extension='CLIP';l.new(tc.outputs[0],tex.inputs[0]);attr=n.new('ShaderNodeVertexColor');attr.layer_name=col.name;mul=n.new('ShaderNodeMath');mul.operation='MULTIPLY';l.new(attr.outputs[0],mul.inputs[0]);l.new(tex.outputs['Alpha'],mul.inputs[1]);weight=n.new('ShaderNodeMath');weight.operation='MULTIPLY';weight.inputs[1].default_value=.86;l.new(mul.outputs[0],weight.inputs[0]);mix=n.new('ShaderNodeMixRGB');l.new(weight.outputs[0],mix.inputs[0]);l.new(old,mix.inputs[1]);l.new(tex.outputs[0],mix.inputs[2]);l.new(mix.outputs[0],p.inputs['Base Color'])
+   ma=slot.material.copy();slot.material=ma;n=ma.node_tree.nodes;l=ma.node_tree.links;p=n.get('Principled BSDF');out=n.get('Material Output')
+   if p is None:continue
+   tc=n.new('ShaderNodeUVMap');tc.uv_map='Painting';tex=n.new('ShaderNodeTexImage');tex.image=im;tex.extension='CLIP';l.new(tc.outputs[0],tex.inputs[0])
+   attr=n.new('ShaderNodeVertexColor');attr.layer_name=col.name
+   alpha=n.new('ShaderNodeMath');alpha.operation='MULTIPLY';l.new(attr.outputs[0],alpha.inputs[0]);l.new(tex.outputs['Alpha'],alpha.inputs[1])
+   camera=n.new('ShaderNodeLightPath');weight=n.new('ShaderNodeMath');weight.operation='MULTIPLY';l.new(alpha.outputs[0],weight.inputs[0]);l.new(camera.outputs['Is Camera Ray'],weight.inputs[1])
+   strength=n.new('ShaderNodeMath');strength.operation='MULTIPLY';strength.inputs[1].default_value=.98;l.new(weight.outputs[0],strength.inputs[0])
+   pigment=n.new('ShaderNodeEmission');pigment.name='Camera painted illumination';l.new(tex.outputs['Color'],pigment.inputs['Color'])
+   mix=n.new('ShaderNodeMixShader');l.new(strength.outputs[0],mix.inputs[0]);l.new(p.outputs[0],mix.inputs[1]);l.new(pigment.outputs[0],mix.inputs[2]);l.new(mix.outputs[0],out.inputs['Surface'])
   records.append(o.name)
- bpy.ops.file.pack_all();bpy.ops.wm.save_as_mainfile(filepath=str(M/'arquebusier.blend'));(M/'projection.json').write_text(json.dumps({'objects':records,'method':'frozen rest-camera UV plus facing/alpha blend','weight':.86,'hidden_surfaces':'original generated painted fills'},indent=2));log('Camera projection applied to real meshes; hidden surfaces retain generated painted fills.')
+ bpy.ops.file.pack_all();bpy.ops.wm.save_as_mainfile(filepath=str(M/'arquebusier.blend'));(M/'projection.json').write_text(json.dumps({'objects':records,'method':'finished rest-camera UV, ray visibility/facing/source-alpha, camera-only painted illumination','weight':.98,'hidden_surfaces':'original generated painted fills'},indent=2));log('Finished-surface camera projection with camera-only pigment; generated hidden fills retained.')
 
 
 def animate(clip):
@@ -246,14 +261,18 @@ def animate(clip):
  bpy.ops.wm.open_mainfile(filepath=str(M/'arquebusier.blend'));rig=bpy.data.objects['RIG-Arquebusier MPFB'];gun=bpy.data.objects['CTRL-matchlock'];sc=configure();count,fps,loop=CLIPS[clip];sc.render.fps=fps;sc.frame_start=1;sc.frame_end=count
  rest={n:Matrix(m) for n,m in json.loads(rig['rest_pose']).items()}
  for p in rig.pose.bones:p.rotation_mode='XYZ';p.matrix_basis=rest[p.name].copy()
- loc=Vector(rig['rest_location']);gw=gun.matrix_world.copy();lhand=rig.pose.bones['hand_l'];left=lhand.head.copy();gb=gun.matrix_basis.copy();gun_up=gw.to_3x3().inverted()@Vector((0,0,1))
- if clip=='death':gun.parent=None;gun.matrix_world=gw
+ loc=Vector(rig['rest_location']);gw=gun.matrix_world.copy();gb=gun.matrix_basis.copy()
+ if clip in ('attack','death'):gun.parent=None;gun.matrix_world=gw
+ right_wrist=rig.matrix_world @ rig.pose.bones['hand_r'].head
+ left_wrist=rig.matrix_world @ rig.pose.bones['hand_l'].head
+ right_hand=rig.pose.bones['hand_r'].matrix.copy();left_hand=rig.pose.bones['hand_l'].matrix.copy()
+ stock=bpy.data.objects['GEO-walnut matchlock butt and fore-end'];points=[stock.matrix_world @ v.co for v in stock.data.vertices];zmin=min(v.z for v in points);bottom=[v for v in points if v.z<zmin+.04];butt=sum(bottom,Vector())/len(bottom)
  # Weapon rests against the right palm. During aim both arms solve toward the weapon.
  frames=count+1 if loop else count
  for idx in range(frames):
   sc.frame_set(idx+1)
   for p in rig.pose.bones:p.matrix_basis=rest[p.name].copy()
-  rig.location=loc.copy();rig.rotation_euler=(0,0,0);gun.matrix_basis=gb.copy() if clip!='death' else gw.copy();bpy.context.view_layer.update();t=idx/count if loop else idx/(count-1);s=sin(2*pi*t)
+  rig.location=loc.copy();rig.rotation_euler=(0,0,0);gun.matrix_basis=gb.copy() if clip not in ('attack','death') else gw.copy();bpy.context.view_layer.update();t=idx/count if loop else idx/(count-1);s=sin(2*pi*t)
   if clip=='idle':
    rig.pose.bones['spine_03'].rotation_mode='XYZ';rig.pose.bones['spine_03'].rotation_euler.x+=.012*s
   elif clip=='move':
@@ -262,22 +281,47 @@ def animate(clip):
     phase=s*sign;target=(sign*.20,-.10*phase,.085+.065*max(0,phase));limb('thigh_'+side,'calf_'+side,target,(sign*.22,-.38,.48))
    rig.pose.bones['spine_03'].rotation_euler.z+=.025*s
   elif clip=='attack':
-   # Raise from upright to shoulder, recoil, recover; left palm meets forestock.
-   aimamount=[0,.28,.72,1,1,1,.92,.65,.27,0][idx];recoil=.045 if idx==5 else 0
-   # Rotate the hand/weapon about the grip; barrel points camera-right.
-   p=rig.pose.bones['hand_r'];pm=p.matrix.copy();pivot=p.head.copy();p.matrix=Matrix.Translation(pivot)@Matrix.Rotation(-aimamount*.40,4,'Z')@Matrix.Rotation(aimamount*1.30,4,'Y')@Matrix.Translation(-pivot)@pm
-   rig.pose.bones['spine_03'].rotation_euler.x-=recoil
-   bpy.context.view_layer.update();direction=(gun.matrix_world.to_3x3()@gun_up).normalized();gun.matrix_world=Matrix.Translation(direction*.95*aimamount)@gun.matrix_world
-   target=left.lerp(Vector((.24,-.42,1.45)),aimamount);limb('upperarm_l','lowerarm_l',target,(.46,-.10,1.18))
+   # Weapon is a rigid body; hands solve to its trigger and fore-end.
+   amount=[0,.28,.72,1,1,1,.92,.65,.27,0][idx]
+   direction=Vector((.72,-.69,.05)).normalized()
+   q=Vector((0,0,1)).rotation_difference(direction)
+   from mathutils import Quaternion
+   rot=Quaternion().slerp(q,amount).to_matrix().to_4x4()
+   target_butt=butt.lerp(Vector((-.32,-.05,1.42)),amount)
+   if idx==5:target_butt-=direction*.035
+   transform=Matrix.Translation(target_butt) @ rot @ Matrix.Translation(-butt)
+   gun.matrix_world=transform @ gw
+   if amount>0:
+    # Regrip along the barrel while raising; all coordinates share the gun transform.
+    rw=transform @ right_wrist.lerp(butt+Vector((0,-.03,.50)),amount)
+    lw=left_wrist.lerp(transform @ (butt+Vector((0,-.03,.78))),amount)
+    inv=rig.matrix_world.inverted()
+    for side,target,pole,hand in [('r',rw,(-.50,-.10,1.15),right_hand),('l',lw,(.46,-.12,1.18),left_hand)]:
+     limb('upperarm_'+side,'lowerarm_'+side,inv @ target,pole)
+     p=rig.pose.bones['hand_'+side];pose=hand.copy();orientation=rot.to_3x3() @ hand.to_3x3();pose=orientation.to_4x4();pose.translation=p.head;p.matrix=pose
+    bpy.context.view_layer.update()
   elif clip=='hit':
    a=[0,.20,-.08,0][idx];rig.pose.bones['spine_03'].rotation_euler.x-=a;rig.pose.bones['head'].rotation_euler.x+=a*.45
   elif clip=='death':
-   u=min(1,t/.78);ease=u*u*(3-2*u);rig.rotation_euler.y=-1.50*ease;rig.location.x=.93*ease;rig.location.z=loc.z+.18*ease
-   rig.pose.bones['thigh_l'].rotation_euler.x+=.45*sin(pi*u);rig.pose.bones['calf_l'].rotation_euler.x-=.7*sin(pi*u)
-   fall=max(0,min(1,(u-.15)/.85));pivot=Vector((-.305,-.25,.17));gun.matrix_world=Matrix.Translation((-.48*fall,0,.01*fall))@Matrix.Translation(pivot)@Matrix.Rotation(1.57*fall,4,'Y')@Matrix.Translation(-pivot)@gw
+   u=min(1,t/.78);ease=u*u*(3-2*u);rig.rotation_euler.y=-1.50*ease;rig.rotation_euler.z=.45*ease;rig.location.x=.86*ease;rig.location.y=loc.y+.15*ease;rig.location.z=loc.z+.18*ease
+   rig.pose.bones['thigh_l'].rotation_euler.x+=.75*ease;rig.pose.bones['calf_l'].rotation_euler.x-=1.35*ease
+   rig.pose.bones['thigh_r'].rotation_euler.x+=.20*ease;rig.pose.bones['calf_r'].rotation_euler.x-=.55*ease
+   fall=max(0,min(1,(u-.15)/.85));pivot=Vector((-.305,-.25,.17));gun.matrix_world=Matrix.Translation((-.48*fall,0,.01*fall)) @ Matrix.Translation(pivot) @ Matrix.Rotation(1.57*fall,4,'Y') @ Matrix.Translation(-pivot) @ gw
    for digit in ('index','middle','ring','pinky'):
     for k in range(1,4):rig.pose.bones[f'{digit}_{k:02d}_r'].rotation_euler.x*=1-fall
   bpy.context.view_layer.update()
+  if clip=='death' and t>0:
+   # Settle the evaluated figure on the actual offset disc/world ground.
+   base=bpy.data.objects['GEO-stationary cream base'];invbase=base.matrix_world.inverted();deps=bpy.context.evaluated_depsgraph_get();lift=-10
+   for obj in sc.objects:
+    if obj.type!='MESH' or obj==base or 'muzzle' in obj.name or obj.parent==gun:continue
+    ev=obj.evaluated_get(deps);me=ev.to_mesh()
+    for v in me.vertices:
+     w=ev.matrix_world @ v.co;local=invbase @ w;floor=.085 if local.x**2+local.y**2<.48**2 else .01
+     lift=max(lift,floor-w.z)
+    ev.to_mesh_clear()
+   rig.location.z+=lift*min(1,t/.5)
+   bpy.context.view_layer.update()
   for p in rig.pose.bones:
    p.keyframe_insert('location',frame=idx+1)
    p.keyframe_insert('rotation_quaternion' if p.rotation_mode=='QUATERNION' else 'rotation_euler',frame=idx+1);p.keyframe_insert('scale',frame=idx+1)
@@ -307,12 +351,10 @@ def render(stage,blend,frames):
 mode=sys.argv[sys.argv.index('--')+1] if '--' in sys.argv else 'build'
 if mode=='build':
  build();render('b-plain',M/'plain.blend',[1]);bpy.ops.wm.open_mainfile(filepath=str(M/'plain.blend'));project();render('c-textured-lit',M/'arquebusier.blend',[1])
-elif mode=='touchup':
- bpy.ops.wm.open_mainfile(filepath=str(M/'arquebusier.blend'))
- for o in bpy.context.scene.objects:
-  if 'latchet shoe' in o.name:o.data.materials.clear();o.data.materials.append(bpy.data.materials['MAT-worn leather'])
- p=bpy.data.materials['MAT-cream limestone E9CFA0'].node_tree.nodes.get('Principled BSDF');p.inputs['Base Color'].default_value=(.95,.70,.32,1)
- bpy.ops.wm.save_as_mainfile(filepath=str(M/'arquebusier.blend'))
+elif mode=='project':
+ bpy.ops.wm.open_mainfile(filepath=str(M/'plain.blend'));project()
+elif mode=='b':
+ render('b-plain',M/'plain.blend',[1])
 elif mode=='c':
  render('c-textured-lit',M/'arquebusier.blend',[1])
 elif mode=='animate':

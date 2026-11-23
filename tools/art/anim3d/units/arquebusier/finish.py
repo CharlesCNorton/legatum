@@ -11,13 +11,31 @@ def canvas(im,size=256):
  out=Image.new('RGBA',(size,size),CREAM);out.alpha_composite(im.resize((size,size),Image.Resampling.LANCZOS));return out
 
 def grade_params(im):
- src=ImageStat.Stat(ref.convert('RGB'),ref.getchannel('A').point(lambda x:255 if x>200 else 0));dst=ImageStat.Stat(im.convert('RGB'),im.getchannel('A').point(lambda x:255 if x>200 else 0))
- gains=[max(.9,min(1.12,a/max(b,1))) for a,b in zip(src.mean,dst.mean)]
- return {'gains':gains,'contrast':max(.95,min(1.10,sum(src.stddev)/max(1,sum(dst.stddev)))),'source_mean':src.mean,'render_mean':dst.mean}
+ # Alpha-masked, monotone quantile matching, calibrated once at rest.
+ def quantiles(img,c):
+  hist=img.getchannel(c).histogram(mask=img.getchannel('A').point(lambda v:255 if v>200 else 0));total=sum(hist);result=[]
+  for q in (0,.01,.05,.25,.5,.75,.95,.99,1):
+   acc=0
+   for i,count in enumerate(hist):
+    acc+=count
+    if acc>=q*total:result.append(i);break
+  return result
+ luts=[]
+ for c in 'RGB':
+  src=quantiles(ref,c);dst=quantiles(im,c);pairs={0:0,255:255}
+  for x,y in zip(dst[1:-1],src[1:-1]):pairs[x]=max(0,min(255,x+max(-20,min(20,y-x))))
+  knots=sorted(pairs.items());ys=[];last=0
+  for x,y in knots:last=max(last,y);ys.append((x,last))
+  lut=[]
+  for v in range(256):
+   j=next((j for j in range(len(ys)-1) if ys[j][0]<=v<=ys[j+1][0]),len(ys)-2);x0,y0=ys[j];x1,y1=ys[j+1];lut.append(round(y0+(y1-y0)*(v-x0)/max(1,x1-x0)))
+  luts.append(lut)
+ return {'luts':luts,'method':'bounded monotone opaque-pixel RGB quantiles, frozen across clips','source_sha256':digest(Path('app/src/assets/units/arquebusier-256.png')),'master_sha256':digest(M/'arquebusier.blend'),'rest_sha256':digest(M/'renders/c-textured-lit/00.png')}
 def grade(im,p):
- channels=[]
- for c,g in zip(im.convert('RGB').split(),p['gains']):channels.append(c.point(lambda v:round(max(0,min(255,((v-128)*p['contrast']+128)*g)))))
- return Image.merge('RGBA',(*channels,im.getchannel('A')))
+ if 'luts' not in p:return im.copy()
+ return Image.merge('RGBA',(*(c.point(lut) for c,lut in zip(im.convert('RGB').split(),p['luts'])),im.getchannel('A')))
+def reduced(im,p):
+ return grade(im,p).convert('RGBa').resize((160,160),Image.Resampling.BICUBIC).convert('RGBA')
 def review(stage):
  directory=M/'renders'/stage;paths=sorted(directory.glob('[0-9][0-9].png'));raw=[Image.open(p).convert('RGBA') for p in paths]
  gp=M/'grade.json'
@@ -50,21 +68,30 @@ def review(stage):
  print('Review written:',stage,flush=True)
 
 def pack():
+ (V/'arquebusier-validation.json').unlink(missing_ok=True)
  entries=[];rowheights=[];rows=[];sources={};p=json.loads((M/'grade.json').read_text())
+ assert p['master_sha256']==digest(M/'arquebusier.blend'),'Stale grade'
+ rest=json.loads((M/'renders/c-textured-lit/render.json').read_text())
  for row,(clip,(n,fps,loop)) in enumerate(CLIPS.items()):
   folder=M/'renders'/('e-'+clip);manifest=json.loads((folder/'render.json').read_text());blend=M/'clips'/f'{clip}.blend'
   assert manifest['frames']==n and manifest['blend_sha256']==digest(blend),f'Stale {clip} render'
   assert json.loads(blend.with_suffix('.json').read_text())['source_sha256']==digest(M/'arquebusier.blend'),f'Stale {clip} action'
-  sources[clip]=manifest;items=[]
+  assert all(manifest[k]==rest[k] for k in ('engine','device','samples','resolution')),'Mixed render settings'
+  sources[clip]=dict(manifest,png_sha256=[digest(folder/f'{i:02}.png') for i in range(n)]);items=[]
   for i in range(n):
-   im=grade(Image.open(folder/f'{i:02}.png').convert('RGBA'),p).resize((160,160),Image.Resampling.LANCZOS);box=im.getchannel('A').getbbox();assert box,'Empty frame';items.append((im,box))
+   im=reduced(Image.open(folder/f'{i:02}.png').convert('RGBA'),p);box=im.getchannel('A').getbbox();assert box,'Empty frame'
+   visible=im.getchannel('A').point(lambda v:255 if v>8 else 0).getbbox()
+   assert visible and min(visible[0],visible[1],160-visible[2],160-visible[3])>=1,(clip,i,'Visible clipping; delivery not replaced')
+   items.append((im,box))
   rows.append(items);rowheights.append(max(b[3]-b[1] for _,b in items)+2)
  width=max(sum(b[2]-b[0]+2 for _,b in row) for row in rows);atlas=Image.new('RGBA',(width,sum(rowheights)))
  meta={'version':2,'atlas':{'w':width,'h':atlas.height},'frame':{'w':160,'h':160,'ax':80,'ay':140},'clips':{}};y=0
  for row,((clip,(n,fps,loop)),items) in enumerate(zip(CLIPS.items(),rows)):
-  rects=[];x=0
+  rects=[];x=0;seen={}
   for im,b in items:
-   crop=im.crop(b);atlas.paste(crop,(x+1,y+1));rects.append(dict(x=x+1,y=y+1,w=crop.width,h=crop.height,ox=b[0],oy=b[1]));x+=crop.width+2
+   key=hashlib.sha256(im.tobytes()).hexdigest()
+   if key in seen:rects.append(seen[key]);continue
+   crop=im.crop(b);atlas.paste(crop,(x+1,y+1));r=dict(x=x+1,y=y+1,w=crop.width,h=crop.height,ox=b[0],oy=b[1]);rects.append(r);seen[key]=r;x+=crop.width+2
   meta['clips'][clip]=dict(row=row,frames=n,fps=fps,loop=loop,rects=rects);y+=rowheights[row]
  atlas.paste((0,0,0,0),mask=atlas.getchannel('A').point(lambda x:255 if x==0 else 0))
  attempts=[]
@@ -73,26 +100,37 @@ def pack():
   if len(data)<=200000:break
  else:raise RuntimeError(f'All 40 frames exceed cap at quality 75: {attempts}')
  OUT.mkdir(parents=True,exist_ok=True);(OUT/'arquebusier.webp').write_bytes(data);(OUT/'arquebusier.json').write_text(json.dumps(meta,separators=(',',':'))+'\n')
- report={'quality':quality,'method':method,'bytes':len(data),'frames':40,'attempts':attempts,'sources':sources,'sha256':digest(OUT/'arquebusier.webp'),'alpha':'lossless 8-bit'};(V/'arquebusier-pack.json').write_text(json.dumps(report,indent=2));validate(atlas);print(json.dumps(report),flush=True)
+ report={'quality':quality,'method':method,'bytes':len(data),'frames':40,'attempts':attempts,'sources':sources,'sha256':digest(OUT/'arquebusier.webp'),'alpha':'lossless 8-bit','resampler':'premultiplied bicubic','grade_sha256':digest(M/'grade.json')};(V/'arquebusier-pack.json').write_text(json.dumps(report,indent=2));validate(atlas);print(json.dumps(report),flush=True)
 
 def validate(original=None):
  ap=OUT/'arquebusier.webp';meta=json.loads(ap.with_suffix('.json').read_text());im=Image.open(ap).convert('RGBA');report=json.loads((V/'arquebusier-pack.json').read_text());assert ap.stat().st_size<=200000 and report['quality']>=75
  assert im.size==(meta['atlas']['w'],meta['atlas']['h']);assert meta['frame']['w']==meta['frame']['h']==160
  if original:assert im.getchannel('A').tobytes()==original.getchannel('A').tobytes(),'WebP alpha changed'
- clipping=[]
+ assert report['sha256']==digest(ap),'Atlas hash mismatch'
+ assert report['grade_sha256']==digest(M/'grade.json'),'Grade hash mismatch'
+ p=json.loads((M/'grade.json').read_text());clipping=[]
+ assert p['master_sha256']==digest(M/'arquebusier.blend'),'Stale grade master'
+ assert p['rest_sha256']==digest(M/'renders/c-textured-lit/00.png'),'Stale grade calibration'
  for clip,(n,fps,loop) in CLIPS.items():
+  source=report['sources'][clip];blend=M/'clips'/f'{clip}.blend'
+  assert source['blend_sha256']==digest(blend),'Stale rendered clip'
+  assert json.loads(blend.with_suffix('.json').read_text())['source_sha256']==digest(M/'arquebusier.blend'),'Stale action master'
+  assert source['png_sha256']==[digest(M/'renders'/('e-'+clip)/f'{i:02}.png') for i in range(n)],'Stale frame bytes'
   c=meta['clips'][clip];assert (c['frames'],c['fps'],c['loop'])==(n,fps,loop);assert len(c['rects'])==n
   hashes=[]
   for j,r in enumerate(c['rects']):
    assert 0<=r['ox']<160 and 0<=r['oy']<160 and r['ox']+r['w']<=160 and r['oy']+r['h']<=160
    assert r['x']+r['w']<im.width and r['y']+r['h']<im.height
    frame=Image.new('RGBA',(160,160));frame.paste(im.crop((r['x'],r['y'],r['x']+r['w'],r['y']+r['h'])),(r['ox'],r['oy']));hashes.append(hashlib.sha256(frame.tobytes()).hexdigest())
-   # Lanczos can extend alpha 1-3 to the cell edge despite clear raw margins.
+   expected=reduced(Image.open(M/'renders'/('e-'+clip)/f'{j:02}.png').convert('RGBA'),p)
+   assert frame.getchannel('A').tobytes()==expected.getchannel('A').tobytes(),(clip,j,'decoded alpha mismatch')
+   # Preserve low-opacity perimeter samples; visible coverage must retain a margin.
    # Preserve those alpha values; reject clipping of visible coverage instead.
    visible=frame.getchannel('A').point(lambda x:255 if x>8 else 0).getbbox()
    if visible and min(visible[0],visible[1],160-visible[2],160-visible[3])<1:clipping.append(f'{clip}/{j}')
   assert len(set(hashes))>1,clip+' is static'
- # Decode can differ slightly between compressed rectangles; raw held death must match exactly.
+ if clip=='death':assert hashes[-1]==hashes[-2],'Decoded death hold changed'
+ # Raw held death must match exactly too.
  assert digest(M/'renders/e-death/08.png')==digest(M/'renders/e-death/09.png'),'Death not held'
  assert not clipping,('Frames touch cell edge',clipping)
  result={'status':'pass','frames':40,'size':ap.stat().st_size,'quality':report['quality'],'checks':['bounds','trim offsets','lossless alpha','motion in all clips','held death','size/quality cap'],'visual_approval':False};(V/'arquebusier-validation.json').write_text(json.dumps(result,indent=2));print('VALIDATION PASS',result)
@@ -104,15 +142,15 @@ def video():
   for r in c['rects']:
    im=Image.new('RGBA',(160,160));im.paste(atlas.crop((r['x'],r['y'],r['x']+r['w'],r['y']+r['h'])),(r['ox'],r['oy']));frames.append(im.resize((320,320),Image.Resampling.LANCZOS))
   groups.append((clip,c,frames))
- out=V/f"arquebusier-round{os.environ.get('ROUND','1')}.mp4"
- proc=subprocess.Popen(['ffmpeg','-y','-loglevel','error','-f','rawvideo','-pix_fmt','rgb24','-s','1600x348','-r','30','-i','-','-an','-c:v','libx264','-pix_fmt','yuv420p','-crf','20','-movflags','+faststart',str(out)],stdin=subprocess.PIPE)
+ out=V/f"arquebusier-round{os.environ.get('ROUND','2')}.mp4"
+ proc=subprocess.Popen(['ffmpeg','-y','-loglevel','error','-f','rawvideo','-pix_fmt','rgb24','-s','1600x348','-r','30','-i','-','-an','-c:v','libx264','-threads','3','-pix_fmt','yuv420p','-crf','20','-movflags','+faststart',str(out)],stdin=subprocess.PIPE)
  for t in range(240):
   im=Image.new('RGBA',(1600,348),CREAM);d=ImageDraw.Draw(im)
   for k,(name,c,frames) in enumerate(groups):
    index=int(t/30*c['fps'])%c['frames'] if c['loop'] else min(int((t%60)/30*c['fps']),c['frames']-1);im.alpha_composite(frames[index],(k*320,28));d.text((k*320+8,8),name,fill='#3c3025')
   proc.stdin.write(im.convert('RGB').tobytes())
  proc.stdin.close();assert proc.wait()==0
- probe=json.loads(subprocess.check_output(['ffprobe','-v','error','-show_streams','-of','json',str(out)]));s=probe['streams'][0];assert s['codec_name']=='h264' and s['pix_fmt']=='yuv420p' and int(s['nb_frames'])==240
+ probe=json.loads(subprocess.check_output(['ffprobe','-v','error','-show_streams','-of','json',str(out)]));s=probe['streams'][0];assert s['codec_name']=='h264' and s['pix_fmt']=='yuv420p' and int(s['nb_frames'])==240 and (s['width'],s['height'])==(1600,348) and abs(float(s['duration'])-8)<.01
  print('MP4 verified:',out)
 
 if __name__=='__main__':

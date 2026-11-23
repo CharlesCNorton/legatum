@@ -176,3 +176,59 @@ anything over 200,000 bytes. No frame removal or lower quality fallback is allow
 Validation checks source hashes, counts, offsets, alpha, cell margins, motion,
 terminal death hold and size/quality. Masters are never committed. Only write a
 PASS marker after visual comparison and clean motion establish the full art bar.
+
+
+### Arquebusier resumed round 2: finished surfaces and painted light
+
+`units/arquebusier/refine.py` starts from the preserved external
+`refinement-input.blend` (seeded from round one's plain checkpoint). Repeat runs
+never accumulate fitting. It freezes MPFB macro shape keys while retaining the
+19,158 native vertices and skin weights, converts solid curve details to meshes,
+and applies rigid bevel/thickness before camera projection. Long kit edges get
+interior samples for visibility tests: endpoint-only samples on a barrel can
+reject its whole visible middle when one endpoint is behind a hand.
+
+The rest fit edits actual mesh coordinates at measured screen landmarks, keeping
+depth and articulation. Native anatomy uses inverse blended skin transforms;
+rigid kit uses its parent/object matrix. Footwear moves along camera rays back
+onto the ground after fitting. The camera remains fixed; this is a local geometry
+fit with recorded controls, not a claim of an exact viewpoint. The rounded stone
+is moved back on the ground to fit the source ellipse and remains stationary.
+
+Projection now combines frozen UVs with source alpha, facing and ray visibility.
+Camera rays receive 98 percent of the painting's existing illumination; other
+rays and unseen areas keep physical materials and the original generated fills.
+Standard/None is intentional for this painted pigment, avoiding a second AgX
+compression. Physical product lights retain their ratios at reduced energy.
+The stone has its own warm camera pigment, real grain and live contact AO; the
+figure painting is never projected onto it. Actual AO/Pointiness maps are rebaked.
+One bounded monotone RGB quantile grade is fitted at rest and frozen for all clips.
+
+The attack uses a rigid gun transform and solves both arms toward the trigger and
+fore-end while raising/regripping. Death folds the legs, turns the fall within the
+cell and settles the evaluated figure against the actual offset stone footprint.
+Smoke is a bounded volume with radial density, not an opaque sphere. These changes
+still require visual review; the matrix audit is not a full collision solver.
+
+CPU iteration, sequentially:
+
+```sh
+for stage in refine project bake b c animate preview pack; do
+  tools/art/anim3d/units/arquebusier/render.sh "$stage"
+done
+```
+
+The executable `ROUND=2 tools/art/anim3d/units/arquebusier/gpu.sh` regenerates clips,
+audits geometry, renders all stages at GPU512/64 samples, retains 512/256 masters,
+checks actual blend hashes and device provenance, packs/validates and writes the
+8-second five-clip MP4. It retains a transcript, failed-stage status and a success
+receipt; none means visual PASS. Missing-input and CPU-provenance rejection are
+checked locally; the sandbox cannot verify Metal rendering.
+
+Packing now downsamples premultiplied RGBA with bicubic filtering, retaining all
+8-bit alpha values. Identical frames within a row share one rectangle, including
+the final death hold. Independent validation reconstructs alpha from every source
+frame, verifies the atlas/grade hashes and exact decoded death hold. The 160 px
+logical frame, per-frame offsets, five logical rows, frame counts, Q75 floor and
+200,000-byte cap are unchanged. Three delivery tests cover monotone grades, alpha
+preservation, premultiplied edge colour and WebP trim reconstruction.

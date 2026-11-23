@@ -1,10 +1,15 @@
 """Audit editable geometry and sampled clip matrices, independently of raster packing."""
-import bpy,json,os,math
+import bpy,json,os,math,hashlib
 from pathlib import Path
 R=Path(os.environ.get('ANIM_ROOT',Path.home()/'LegatumRuns/anim-pilot'));M=R/'masters/arquebusier';V=R/'review/3d-v2'
+(V/'arquebusier-geometry-audit.json').unlink(missing_ok=True)
 counts={'idle':8,'move':8,'attack':10,'hit':4,'death':10};results={}
 for clip,n in counts.items():
- bpy.ops.wm.open_mainfile(filepath=str(M/'clips'/f'{clip}.blend'));sc=bpy.context.scene;rig=bpy.data.objects['RIG-Arquebusier MPFB'];body=bpy.data.objects['GEO-MPFB arquebusier anatomy'];base=bpy.data.objects['GEO-stationary cream base'];assert len(rig.data.bones)==53;assert len(body.data.vertices)>10000;assert sc.camera
+ bpy.ops.wm.open_mainfile(filepath=str(M/'clips'/f'{clip}.blend'));sc=bpy.context.scene;rig=bpy.data.objects['RIG-Arquebusier MPFB'];body=bpy.data.objects['GEO-MPFB arquebusier anatomy'];base=bpy.data.objects['GEO-stationary cream base'];assert len(rig.data.bones)==53;assert len(body.data.vertices)==19158;assert not body.data.shape_keys;assert sc.camera
+ assert json.loads((M/'clips'/f'{clip}.json').read_text())['source_sha256']==hashlib.sha256((M/'arquebusier.blend').read_bytes()).hexdigest(),'Stale clip'
+ assert any(n.name.startswith('Camera painted illumination') for ma in bpy.data.materials if ma.use_nodes for n in ma.node_tree.nodes),'Missing painted pigment'
+ for image in bpy.data.images:
+  if image.source=='FILE':assert image.packed_file or Path(bpy.path.abspath(image.filepath)).exists(),image.name
  snapshots=[];bm=None;minscale=1.
  for frame in range(1,n+1):
   sc.frame_set(frame);bpy.context.view_layer.update();snap=[]
