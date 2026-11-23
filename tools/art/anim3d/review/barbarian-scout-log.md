@@ -105,3 +105,12 @@ Published five-clip, 2x, cream-background H.264 review: barbarian-scout-round1.m
 Driver round 2: opened GPU c/rest comparison, all five e strips, and eight decoded round1 MP4 frames before edits. GPU pass succeeded (40 native GPU512 frames, Q80 179574 bytes). At 256px the hand has missing skin paint and a rectangular cloth gap, raised shoulder has a dark triangular patch, scalp is lumpy, lower tunic is flat, stone has no painted grain, and death exposes stretched flat fills. At 64px identity is clear but the rim, kneel and head differ; motion is too restrained and death is propped. No PASS. Preserved GPU evidence in driver-r1-gpu.
 Loaded all six Sam Blender skills and all PLAYBOOK chapters, full shared FEEDBACK through 23 and source provenance. Unit FEEDBACK file does not exist. Applying real surface finish, rest UVs with generated fills, painted stone and product light, fixed histogram grade, open-source motion and top/front feet review.
 Published c review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Published c review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Published b-plain geometry checkpoint.
+Published c review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Published d review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Published e-idle review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Published e-move review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Published e-attack review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Published e-hit review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Published e-death review: CPU 256 px, 8 samples; fixed rest-derived grade.
