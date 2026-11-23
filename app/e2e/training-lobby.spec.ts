@@ -1,3 +1,4 @@
+import { newestAutosave } from './autosave';
 import type { Page } from '@playwright/test';
 import { test, expect } from './fixtures';
 
@@ -46,7 +47,7 @@ for (const stored of ['Training', 'HardSearch']) {
     await page.getByRole('radiogroup', { name: 'Map size', exact: true }).getByRole('radio', { name: /^Small/ }).click();
     await page.getByRole('button', { name: /^Start game/ }).click();
     await expect(page.getByTestId('turn-number')).toHaveText('1');
-    const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('legatum.autosave.v1') ?? 'null'));
+    const saved = (await newestAutosave(page))!;
     expect(JSON.parse(saved.game).setup.players.filter((p: { search?: boolean }) => p.search)).toHaveLength(0);
     expect(errors).toEqual([]);
   });
