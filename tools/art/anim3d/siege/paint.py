@@ -9,6 +9,9 @@ sc=bpy.context.scene;cam=sc.camera;source=R/'assets/field-cannon/painting-source
 regions=[('Tailored blue coat body',(295,265,524,524),.72),('Folded blue sleeve upperarm r',(215,272,357,412),.70),('Folded blue sleeve lowerarm r',(179,345,282,461),.65),('Folded blue sleeve upperarm l',(518,307,615,469),.70),('Folded blue sleeve lowerarm l',(558,435,672,567),.65),('White wool breeches',(205,516,501,814),.62),('Hollow bronze barrel',(654,607,1115,749),.72),('Black felt shako',(372,55,552,190),.70),('MPFB artillery gunner anatomy',(367,172,517,277),.74)]
 navy=bpy.data.images.load(str(R/'assets/field-cannon/projection-navy.png'),check_existing=True)
 ivory=bpy.data.images.load(str(R/'assets/field-cannon/projection-ivory.png'),check_existing=True)
+# The 1254px source is fitted into the shipped 256px painting with this alpha-bounds transform.
+# One orthographic camera projection across the clothing; no independent box stretching.
+registration={'source_bbox':[81,7,1172,1247],'reference_bbox':[26,12,230,244]}
 records=[]
 for name,rect,strength in regions:
  obj=bpy.data.objects.get(name)
@@ -33,7 +36,12 @@ for name,rect,strength in regions:
  l,t,r,b=rect
  for loop in obj.data.loops:
   i=loop.vertex_index;c=coords[i];u=(c.x-xmin)/max(.001,xmax-xmin);v=(c.y-ymin)/max(.001,ymax-ymin)
-  uv.data[loop.index].uv=((l+u*(r-l))/image.size[0],1-(b-v*(b-t))/image.size[1])
+  if 'coat body' in name or 'blue sleeve' in name or 'breeches' in name:
+   sx=81+(c.x*256-26)*(1172-81)/(230-26)
+   sy=7+((1-c.y)*256-12)*(1247-7)/(244-12)
+   uv.data[loop.index].uv=(sx/image.size[0],1-sy/image.size[1])
+  else:
+   uv.data[loop.index].uv=((l+u*(r-l))/image.size[0],1-(b-v*(b-t))/image.size[1])
   f=facing[i] if i in selected else 0;mask.data[loop.index].color=(f,f,f,1)
  # Keep original UVs active for skin maps and AO. Projection is explicitly named in its shader.
  obj.data.uv_layers.active_index=0;obj.data.uv_layers[0].active_render=True
@@ -47,6 +55,6 @@ for name,rect,strength in regions:
   tc=n.new('ShaderNodeUVMap');tc.uv_map=uv.name;tex=n.new('ShaderNodeTexImage');tex.image=navy if ('coat body' in name or 'blue sleeve' in name) else ivory if 'breeches' in name else image;tex.extension='CLIP';links.new(tc.outputs[0],tex.inputs[0])
   attr=n.new('ShaderNodeVertexColor');attr.layer_name=mask.name;mult=n.new('ShaderNodeMath');mult.operation='MULTIPLY';links.new(attr.outputs['Color'],mult.inputs[0]);links.new(tex.outputs['Alpha'],mult.inputs[1]);weight=n.new('ShaderNodeMath');weight.operation='MULTIPLY';weight.inputs[1].default_value=strength;links.new(mult.outputs[0],weight.inputs[0])
   mix=n.new('ShaderNodeMixRGB');links.new(weight.outputs[0],mix.inputs[0]);links.new(old,mix.inputs[1]);links.new(tex.outputs[0],mix.inputs[2]);links.new(mix.outputs[0],p.inputs['Base Color'])
- records.append({'object':name,'source_rect':rect,'strength':strength})
+ records.append({'object':name,'source_rect':rect,'strength':strength,'mapping':'shared camera' if ('coat body' in name or 'blue sleeve' in name or 'breeches' in name) else 'local landmark correction'})
 sc['painted_projection']='Own CC BY 4.0 field cannon painting, region-calibrated rest camera UVs with facing/alpha blend; unseen surfaces retain scanned or generated material.'
-bpy.ops.file.pack_all();bpy.ops.wm.save_as_mainfile(filepath=str(M/'field-cannon.blend'));(M/'projection.json').write_text(json.dumps(records,indent=2))
+bpy.ops.file.pack_all();bpy.ops.wm.save_as_mainfile(filepath=str(M/'field-cannon.blend'));(M/'projection.json').write_text(json.dumps({'registration':registration,'regions':records,'note':'Camera-projected cloth; face/barrel retain local landmark corrections. Viewpoint is approximate; compare residuals visually.'},indent=2))

@@ -6,13 +6,13 @@ stage="${1:-c}"
 export RENDER_ENGINE="${RENDER_ENGINE:-BLENDER_EEVEE}"
 args=(-b --disable-autoexec --factory-startup --python-exit-code 1)
 if [[ "$stage" == build ]]; then
-  "$ANIM_ROOT/bin/blender-slot" "${args[@]}" --python tools/art/anim3d/siege/scene.py
+  blender "${args[@]}" --python tools/art/anim3d/siege/scene.py
 elif [[ "$stage" == finish || "$stage" == paint || "$stage" == materials || "$stage" == bake || "$stage" == animate || "$stage" == audit ]]; then
-  "$ANIM_ROOT/bin/blender-slot" "${args[@]}" --python "tools/art/anim3d/siege/$stage.py"
+  blender "${args[@]}" --python "tools/art/anim3d/siege/$stage.py"
 elif [[ "$stage" == pack || "$stage" == validate ]]; then
   "$ANIM_ROOT/venv/bin/python" "tools/art/anim3d/siege/$stage.py"
 else
   if [[ "$RENDER_ENGINE" == BLENDER_EEVEE ]]; then args+=(--gpu-backend metal); fi
-  "$ANIM_ROOT/bin/blender-slot" "${args[@]}" --python tools/art/anim3d/siege/render.py -- "$stage"
+  blender "${args[@]}" --python tools/art/anim3d/siege/render.py -- "$stage"
   "$ANIM_ROOT/venv/bin/python" tools/art/anim3d/siege/review.py "$stage"
 fi

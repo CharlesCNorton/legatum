@@ -7,6 +7,8 @@ files=sorted(folder.glob('*.png'));source=Image.open('app/src/assets/units/field
 if stage!='b':
  from grade import apply
  apply(folder,source)
+gallery=m/'gallery256'/stage;gallery.mkdir(parents=True,exist_ok=True)
+for path in files:Image.open(path).convert('RGBA').resize((256,256),Image.Resampling.LANCZOS).save(gallery/path.name)
 images=[('Painting',source)]+[(p.stem,Image.open(p).convert('RGBA').resize((256,256),Image.Resampling.LANCZOS)) for p in files]
 sheet=Image.new('RGB',(272*len(images),380),(224,215,191));d=ImageDraw.Draw(sheet)
 for i,(name,im) in enumerate(images):

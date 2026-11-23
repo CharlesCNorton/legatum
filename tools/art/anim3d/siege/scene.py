@@ -93,7 +93,7 @@ gun=empty('Gun travel and recoil');gun['wheel_radius']=.48
 ax=.08;wz=.585;radius=.48
 rod('Iron axle',(ax,-.61,wz),(ax,.61,wz),.052,iron,gun)
 for sy in [-1,1]:
- y=sy*.55;wheel=empty('Wheel '+str(sy),(ax,y,wz));parent(wheel,gun)
+ y=sy*.61;wheel=empty('Wheel '+str(sy),(ax,y,wz));parent(wheel,gun)
  # Broad wooden felloe and iron tyre, with genuine spoke openings.
  for off in [-.037,.037]:
   ring('Oak felloe',(ax,y+off,wz),radius-.035,.029,wood,p=wheel)
@@ -204,10 +204,15 @@ vs=[];fs=[]
 for j in range(21):
  t=j/20;z=.94+t*.44;rx=.145+.06*sin(t*pi*.68);ry=.150+.025*sin(t*pi)
  for i in range(64):
-  a=i*2*pi/64;fold=.004*sin(a*13+t*6)*sin(t*pi);vs.append(((rx+fold)*sin(a),-(ry+fold)*cos(a),z))
+  a=i*2*pi/64
+  # Compression folds radiate from the belt and loaded shoulder, rather than regular ribs.
+  fold=(.009*sin(a*9+t*19)+.005*sin(a*17-t*11))*sin(t*pi)
+  fold+=.008*sin(t*37+a*3)*max(0,cos(a))*(1-t)
+  vs.append(((rx+fold)*sin(a),-(ry+fold)*cos(a),z))
 for j in range(20):
  for i in range(64):a=j*64+i;b=j*64+(i+1)%64;fs.append((a,b,b+64,a+64))
-attach(solid(mesh('Tailored blue coat body',vs,fs,navy)),'spine_02')
+coat=attach(solid(mesh('Tailored blue coat body',vs,fs,navy)),'spine_02')
+su=coat.modifiers.new('Supple tailored folds','SUBSURF');su.levels=1
 # Cloth coat tails: real folded mesh, weighted to pelvis.
 for sg in [-1,1]:
  vs=[]
@@ -226,7 +231,7 @@ for side in ['l','r']:
   for j in range(25):
    t=j/24;center=a.lerp(b,t)
    for k in range(40):
-    angle=2*pi*k/40;wrinkle=.006*sin(t*32+1.7*sin(angle*2))*sin(pi*t)**.6
+    angle=2*pi*k/40;wrinkle=(.010*sin(t*27+2.2*sin(angle*2))+.003*sin(t*51-angle*3))*sin(pi*t)**.6
     radius=r0*(1-t)+r1*t+wrinkle;vs.append(tuple(center+radius*(u*cos(angle)+v*sin(angle))))
   for j in range(24):
    for k in range(40):q=j*40+k;z=j*40+(k+1)%40;fs.append((q,z,z+40,q+40))
@@ -254,15 +259,16 @@ def ribbon(name,pts,width,m,bone):
  fs=[(2*i,2*i+1,2*i+3,2*i+2) for i in range(len(pts)-1)]
  return attach(bevel(solid(mesh(name,vs,fs,m),.006),.002),bone)
 for sg in [-1,1]:
- ribbon('Ivory cross belt',[(sg*(-.14+.27*t),-.125-.029*sin(t*pi),1.39-.40*t) for t in [i/16 for i in range(17)]],.045,linen,'spine_02')
- for z in [1.02,1.09,1.16,1.23,1.30]:attach(ball('Brass uniform button',(sg*.055,coat_front(sg*.055,z)-.013,z),(.009,.007,.009),edge),'spine_02')
+ ribbon('Ivory cross belt',[(sg*(-.14+.27*t),-.125-.029*sin(t*pi),1.39-.40*t) for t in [i/16 for i in range(17)]],.053,linen,'spine_02')
+ for z in [1.02,1.09,1.16,1.23,1.30]:attach(ball('Brass uniform button',(sg*.055,coat_front(sg*.055,z)-.013,z),(.011,.008,.011),edge),'spine_02')
 # Raised belt plate, central pin and fine stitches: physical detail, not projected substitutes.
-attach(ring('Crossbelt brass buckle',(.112,-.160,1.11),.025,.004,edge,axis='Y'),'spine_02')
-attach(rod('Crossbelt buckle pin',(.088,-.162,1.11),(.136,-.162,1.11),.0025,edge),'spine_02')
+attach(curve('Crossbelt brass buckle',[(x,coat_front(x,z)-.027,z) for x,z in [(.077,1.086),(.124,1.086),(.124,1.138),(.077,1.138),(.077,1.086)]],.004,edge),'spine_02')
+attach(rod('Crossbelt buckle pin',(.078,coat_front(.10,1.11)-.029,1.11),(.124,coat_front(.10,1.11)-.029,1.11),.0025,edge),'spine_02')
 for sg in [-1,1]:
- for j in range(18):
-  t=(j+.4)/18;x=sg*(-.14+.27*t)+.018;y=-.125-.029*sin(t*pi)-.004;z=1.39-.40*t;y=coat_front(x,z)-.017
-  attach(curve('Ivory belt hand stitching',[(x-.002,y,z+.002),(x+.002,y,z-.002)],.0012,rawwood),'spine_02')
+ for edge_side in [-1,1]:
+  for j in range(26):
+   t=(j+.4)/26;x=sg*(-.14+.27*t)+edge_side*.020;z=1.39-.40*t;y=coat_front(x,z)-.020
+   attach(curve('Ivory belt hand stitching',[(x-.002,y,z+.002),(x+.002,y,z-.002)],.0013,rawwood),'spine_02')
 attach(curve('Red standing collar',[(.073*sin(a),-.061*cos(a),1.415) for a in [i*2*pi/48 for i in range(49)]],.018,red),'neck_01')
 for sg in [-1,1]:
  attach(cube('Red shoulder board',(sg*.185,-.015,1.385),(.105,.07,.018),red),'upperarm_'+('l' if sg>0 else 'r'))
@@ -308,8 +314,10 @@ def aim(name,d):
 def limb(up,low,t,pole):
  a=rig.pose.bones[up].head.copy();delta=Vector(t)-a;l1=rig.data.bones[up].length;l2=rig.data.bones[low].length;d=min(delta.length,l1+l2-.0001);delta.normalize();along=(l1*l1-l2*l2+d*d)/(2*d);h=max(0,l1*l1-along*along)**.5
  side=Vector(pole)-a;side=(side-delta*side.dot(delta)).normalized();el=a+delta*along+side*h;aim(up,el-a);aim(low,Vector(t)-el)
-limb('thigh_r','calf_r',(-.24,-.055,.07),(-.25,-.3,.5));limb('thigh_l','calf_l',(.20,.015,.07),(.23,-.3,.5))
-limb('upperarm_r','lowerarm_r',(-.30,-.23,1.13),(-.48,-.15,1.12));limb('upperarm_l','lowerarm_l',(.40,.16,.82),(.46,-.03,1.10))
+limb('thigh_r','calf_r',(-.32,-.055,.07),(-.32,-.3,.5));limb('thigh_l','calf_l',(.22,.015,.07),(.23,-.3,.5))
+p=rig.pose.bones['spine_01'];pivot=p.head.copy();p.matrix=Matrix.Translation(pivot)@Matrix.Rotation(.18,4,'Y')@Matrix.Translation(-pivot)@p.matrix
+bpy.context.view_layer.update()
+limb('upperarm_r','lowerarm_r',(-.26,-.23,1.13),(-.44,-.18,1.10));limb('upperarm_l','lowerarm_l',(.40,.16,.82),(.46,-.03,1.10))
 aim('hand_r',(0,-.08,.015));aim('hand_l',(.10,0,-.025))
 for side in ['r','l']:
  for digit in ['index','middle','ring','pinky']:
@@ -320,10 +328,8 @@ grip=rig.pose.bones['hand_r'].head+Vector((0,-.055,.015))
 rammer=empty('Rammer hand control',grip);attach(rammer,'hand_r')
 rod('Wooden rammer',grip+Vector((.08,0,-1.11)),grip+Vector((-.05,0,.34)),.013,rawwood,rammer)
 rod('Rammer sponge',grip+Vector((-.05,0,.32)),grip+Vector((-.065,0,.48)),.037,dark,rammer)
-p=rig.pose.bones['spine_01'];p.matrix_basis=p.matrix_basis@Matrix.Rotation(.12,4,'Y')
 p=rig.pose.bones['head'];p.matrix_basis=p.matrix_basis@Matrix.Rotation(-.14,4,'Z')
 rig.pose.bones['head'].scale=(1.12,1.12,1.12)
-rig['neutral_pose']=json.dumps({p.name:[list(row) for row in p.matrix_basis] for p in rig.pose.bones})
 rig.location=(-.60,.06,.105);rig.scale=(1.16,1.03,1.0)
 # Stationary cream stone base, matched to the painting's low plain disc.
 bpy.ops.mesh.primitive_cylinder_add(vertices=128,radius=1.05,depth=.095,location=(0,0,.0475));base=bpy.context.object;base.name='Stationary cream base';base.data.materials.append(stone);bevel(base,.022)
@@ -335,8 +341,16 @@ bpy.ops.object.camera_add(location=(3,-7,3.0));sc.camera=bpy.context.object;sc.c
 sc.camera.rotation_euler=(Vector((0,0,.95))-sc.camera.location).to_track_quat('-Z','Y').to_euler()
 for name,loc,power,size,col in [('Warm left key',(-3,-4,6),520,3,(1,.82,.62)),('Cool fill',(4,-2,4),180,4,(.75,.84,1)),('Gold rim',(-2,3,4),280,3,(1,.78,.52))]:
  bpy.ops.object.light_add(type='AREA',location=loc);o=bpy.context.object;o.name=name;o.data.energy=power;o.data.shape='DISK';o.data.size=size;o.data.color=col;o.rotation_euler=(Vector((0,0,.8))-o.location).to_track_quat('-Z','Y').to_euler()
-gun.rotation_euler.z=-.70;gun.location.x=.14;gun['rest_location']=[.14,0,0];gun['rest_yaw']=-.70
-barrel.scale.x=1.60;barrel.rotation_euler.y=-.10
+gun.rotation_euler.z=-.55;gun.location.x=.12;gun['rest_location']=[.12,0,0];gun['rest_yaw']=-.55
+barrel.scale.x=1.40;barrel.location.x+=.10;barrel.rotation_euler.y=-.10
+# Solve the weight-bearing wrist against the final transformed barrel crown.
+bpy.context.view_layer.update()
+contact=barrel.matrix_world@Vector((-.23,-.025,.171))
+target=rig.matrix_world.inverted()@contact
+limb('upperarm_l','lowerarm_l',target,(.56,-.24,1.14))
+aim('hand_l',(.11,-.015,-.03))
+rig['barrel_contact_local']=list(barrel.matrix_world.inverted()@(rig.matrix_world@rig.pose.bones['hand_l'].head))
+rig['neutral_pose']=json.dumps({p.name:[list(row) for row in p.matrix_basis] for p in rig.pose.bones})
 sc['source']='Field cannon painting: one visible MPFB gunner, original hard surface artillery';sc['wheel_radius']=radius
 bpy.ops.wm.save_as_mainfile(filepath=str(MASTER/'field-cannon-plain.blend'))
 bpy.ops.wm.save_as_mainfile(filepath=str(MASTER/'field-cannon.blend'))

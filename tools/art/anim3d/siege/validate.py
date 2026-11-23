@@ -1,28 +1,69 @@
-"""Check decoded delivery contract and pixel bounds; not a substitute for art review."""
+"""Validate v2 atlas by reconstructing logical frames and comparing source alpha."""
+import hashlib
+import json
 from pathlib import Path
-import json,os
-from PIL import Image,ImageChops
-p=Path('app/src/assets/units/anim');meta=json.loads((p/'field-cannon.json').read_text());im=Image.open(p/'field-cannon.webp').convert('RGBA')
-assert im.size==(2560,1280);assert (p/'field-cannon.webp').stat().st_size<=200000
-assert meta['frame']=={'w':256,'h':256,'ax':127,'ay':221}
-expected={'idle':(8,10,True),'move':(8,12,True),'attack':(10,14,False),'hit':(4,12,False),'death':(10,10,False)}
-findings=[];boxes={}
-for row,(clip,(count,fps,loop)) in enumerate(expected.items()):
- assert meta['clips'][clip]=={'row':row,'frames':count,'fps':fps,'loop':loop}
- frames=[]
- for i in range(10):
-  f=im.crop((i*256,row*256,(i+1)*256,(row+1)*256));a=f.getchannel('A')
-  if i>=count:assert not a.getbbox(),f'{clip} padding nontransparent';continue
-  assert all(a.getpixel(c)==0 for c in [(0,0),(255,0),(0,255),(255,255)]),f'{clip}/{i} corner alpha'
-  box=a.point(lambda x:255 if x>16 else 0).getbbox();assert box,f'{clip}/{i} empty';boxes[f'{clip}/{i}']=box
-  if box[0]<2 or box[1]<2 or box[2]>254 or box[3]>254:findings.append(f'{clip}/{i}: clipping margin {box}')
-  frames.append(f)
- assert any(ImageChops.difference(frames[0],f).getbbox(alpha_only=False) for f in frames[1:]),f'{clip} has no motion'
- if clip=='death' and ImageChops.difference(frames[-1].getchannel('A'),frames[-2].getchannel('A')).getbbox():findings.append('death terminal silhouettes are not held')
-root=Path(os.environ.get('ANIM_ROOT',str(Path.home()/'LegatumRuns/anim-pilot')))
-terminal=root/'masters/field-cannon/renders/e-death'
-assert Image.open(terminal/'08.png').convert('RGBA').tobytes()==Image.open(terminal/'09.png').convert('RGBA').tobytes(), 'Death terminal source pixels differ'
-(root/'review/3d-v2/field-cannon-validation.json').write_text(json.dumps({'contract':'PASS','bounds':boxes,'findings':findings},indent=2))
-print('PASS: dimensions, metadata, all 40 frames, alpha, transparent padding, motion, byte cap')
-for f in findings:print('FAIL:',f)
-raise SystemExit(bool(findings))
+from PIL import Image, ImageChops, ImageDraw
+from pack import CLIPS, LIMIT, MASTER, REVIEW, load_frames
+
+
+def reconstruct(atlas, rect, cell):
+    x, y, w, h, ox, oy = [rect[k] for k in ('x', 'y', 'w', 'h', 'ox', 'oy')]
+    assert all(isinstance(v, int) for v in (x, y, w, h, ox, oy))
+    assert w > 0 and h > 0 and 0 <= x <= atlas.width - w and 0 <= y <= atlas.height - h
+    assert 0 <= ox <= cell - w and 0 <= oy <= cell - h
+    frame = Image.new('RGBA', (cell, cell))
+    # No alpha mask in paste: alpha is copied, never multiplied a second time.
+    frame.paste(atlas.crop((x, y, x+w, y+h)), (ox, oy))
+    return frame
+
+
+def main():
+    out = Path('app/src/assets/units/anim')
+    data = (out / 'field-cannon.webp').read_bytes()
+    meta = json.loads((out / 'field-cannon.json').read_text())
+    report = json.loads((REVIEW / 'field-cannon-pack.json').read_text())
+    atlas = Image.open(out / 'field-cannon.webp').convert('RGBA')
+    assert meta['version'] == 2 and atlas.size == (meta['atlas']['w'], meta['atlas']['h'])
+    assert len(data) <= LIMIT and report['quality'] >= 75 and report['alpha'] == 'lossless 8-bit'
+    assert hashlib.sha256(data).hexdigest() == report['atlas_sha256']
+    assert meta['frame'] == dict(w=160, h=160, ax=79.375, ay=138.125)
+    source, _, hashes = load_frames(MASTER / 'renders')
+    assert hashes == report['source_sha256'], 'Source frames changed since pack'
+    occupied = Image.new('L', atlas.size); draw = ImageDraw.Draw(occupied)
+    boxes, findings = {}, []
+    sheet = Image.new('RGB', (10*160, 5*160), '#ddd3ba')
+    for row, (clip, (count, fps, loop)) in enumerate(CLIPS.items()):
+        info = meta['clips'][clip]
+        assert (info['frames'], info['fps'], info['loop']) == (count, fps, loop)
+        assert len(info['rects']) == count
+        frames = []
+        for i, rect in enumerate(info['rects']):
+            frame = reconstruct(atlas, rect, 160)
+            x, y, w, h = [rect[k] for k in ('x', 'y', 'w', 'h')]
+            assert not occupied.crop((x, y, x+w, y+h)).getbbox(), 'Overlapping atlas rectangles'
+            draw.rectangle((x, y, x+w-1, y+h-1), fill=255)
+            expected = source[(clip, i)].resize((160, 160), Image.Resampling.LANCZOS)
+            assert frame.getchannel('A').tobytes() == expected.getchannel('A').tobytes(), f'{clip}/{i}: alpha or offset drift'
+            box = frame.getchannel('A').point(lambda a: 255 if a > 16 else 0).getbbox()
+            assert box
+            boxes[f'{clip}/{i}'] = box
+            if min(box[:2]) < 1 or max(box[2:]) > 159:
+                findings.append(f'{clip}/{i}: clipping margin {box}')
+            sheet.paste(frame, (i*160, row*160), frame)
+            frames.append(frame)
+        assert any(ImageChops.difference(frames[0], f).getbbox(alpha_only=False) for f in frames[1:]), f'{clip}: no motion'
+        if clip == 'death':
+            assert frames[-1].getchannel('A').tobytes() == frames[-2].getchannel('A').tobytes(), 'Death silhouette moved'
+    outside = ImageChops.multiply(atlas.getchannel('A'), ImageChops.invert(occupied))
+    assert not outside.getbbox(), 'Nontransparent atlas padding'
+    assert source[('death', 8)].tobytes() == source[('death', 9)].tobytes(), 'Terminal source pixels differ'
+    sheet.save(REVIEW / 'field-cannon-g-decoded-atlas.png')
+    (REVIEW / 'field-cannon-validation.json').write_text(json.dumps(dict(contract='PASS' if not findings else 'FAIL', bounds=boxes, findings=findings), indent=2))
+    print('PASS: v2 rectangles/offsets, all 40 frames, exact alpha, anchor, padding, motion, held death, provenance, quality and byte cap')
+    for finding in findings:
+        print('FAIL:', finding)
+    raise SystemExit(bool(findings))
+
+
+if __name__ == '__main__':
+    main()
