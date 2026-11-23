@@ -62,3 +62,9 @@
 - Posted e-move review (CPU, 256 px).
 - Posted g-feet-top review (CPU, 256 px).
 - Posted g-feet-front review (CPU, 256 px).
+- Final round-1 contact constraint removed 0.02865 m sampled foot drift without changing foot yaw; scene audit passed (190 finished meshes, 53 bones, grip error below 0.000001 m).
+- Final CPU256 pack: 156902 bytes, quality 90, 40/40 frames; exact alpha/trim/source validation and six corruption/GPU-receipt regression tests passed.
+- Eight-second H.264/yuv420p 1600x348 movie verified, 240 frames; all five clips decoded from trimmed atlas at 2x on cream.
+- Round 1 remains below painting parity at 256; recognizable at 64. Head/feather/skirt contour, exposed-material transitions, cuffs and fall overhang remain. No PASS. Host GPU/512 pass pending; executable gpu.sh handles every stage and receipt.
+- Audit passed: five clips, source hashes, 53-bone rig, fixed base and positive object scales.
+- Final working-file hygiene: zero findings; Python/Bash syntax and whitespace checks pass. All 17 required review artifacts present, 40 CPU256 masters retained. Git staging denied at index.lock; runner must commit. No push, PR or PASS.
