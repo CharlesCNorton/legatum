@@ -106,3 +106,89 @@ tools/art/anim3d/render.sh audit
 ```
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
+
+## Infantry chapter: pikeman round 1
+
+Pikeman is isolated in `tools/art/anim3d/units/pikeman/`; it reuses the MPFB
+installation and reviewed newer infantry helpers, with an original steel harness
+instead of hoplite or barbarian kit. Full-depth breastplate, limb plates, fluted
+tassets, kettle helmet, leather belts and two-handed pike retain real thickness,
+bevelled edges and the MPFB 53-bone skeleton. External assets and editable masters
+live in `ANIM_ROOT/assets/pikeman` and `ANIM_ROOT/masters/pikeman`.
+
+This chapter supersedes the older fixed-grid/authored-motion instructions above
+for this unit. All Blender calls are plain `blender -b --disable-autoexec` on PATH;
+the shared gate owns slots and threads. Never call an application binary directly,
+create another heavy-process lock, or hide an object with near-zero scale.
+
+The four quality levers are mandatory: align physical geometry and camera before
+freezing painting UVs; finish surfaces with thickness, bevels, folds and detail;
+use warm upper-left product lighting with soft fill/cool rim/contact AO; fit one
+automatic foreground histogram grade at rest and reuse it for every frame. The
+projected painting's illumination is camera-only, at 96% pigment/4% physical
+response where visible; unseen surfaces retain physical materials and generated
+linen/steel brushwork (the generated bronze fill is desaturated in the shader). Standard/None preserves the source pigment here, rather than double-toning
+it with AgX. Projection uses ray visibility and facing masks and never changes
+geometry opacity or updates UVs per animation frame. Actual AO and Cycles
+Pointiness maps supply metal cavity/roughness variation. The stationary stone
+uses #E9CFA0 sRGB top pigment with a darker rim and fine grain; no painted feet or
+static foot shadows are projected onto it.
+
+At every round compare painting/render/half-split/50% crossfade, at 256 and 64 px,
+in `pikeman-f-restpose-compare.png`. It is a visual judgment, not a claim that
+matching a histogram or passing an audit establishes art approval.
+
+### Open motion and foot check standard
+
+Humans use CMU free-use mocap or Quaternius CC0 motion for idle, move, hit and
+death. Pikeman uses Quaternius Standard `Idle_Loop`, `Walk_Loop`, `Hit_Chest` and
+`Death01`, with Blender world-space COPY_ROTATION constraints calibrated using
+reference/rest matrices and bone rolls. Locomotion leg axes are matched in the
+calibration pose. Never hand-correct foot rotations after retargeting. Two-hand
+weapon carrying uses IK constraints over the captured body motion; only the pike
+thrust is authored. A source-derived root correction stabilizes planted walking
+feet against virtual travel; vertical contact moves the root, not foot rotation.
+Animals in other chapters must use CC0 animated quadruped motion as their default.
+
+Every round renders top-down and front views across all eight move samples into
+`pikeman-g-feet-check.png`. Check that feet point along the rig's -Y travel axis,
+roll naturally, and keep a constant stance speed relative to virtual ground.
+An in-place walk has rearward stance travel in the token's coordinate system.
+The diagnostic records ankle/toe coordinates and forward-axis dot products.
+Licences and pinned external hashes are unit-local and in `assets/SOURCES.md`.
+
+### Rebuild, preview and complete GPU handoff
+
+```sh
+source tools/art/anim3d/env.sh
+unit=tools/art/anim3d/units/pikeman
+"$ANIM_ROOT/venv/bin/python" "$unit/prepare.py"
+blender -b --disable-autoexec --python-exit-code 1 --python "$unit/anatomy.py"
+blender -b --disable-autoexec --python-exit-code 1 --python "$unit/build.py"
+blender -b --disable-autoexec --python-exit-code 1 --python "$unit/bake.py"
+blender -b --disable-autoexec --python-exit-code 1 --python "$unit/animate.py"
+STAGES=b-plain,c-textured-lit,c-details,d-rig-poses,e-idle,e-move,e-attack,e-hit,e-death \
+  CYCLES_DEVICE=CPU RESOLUTION=256 SAMPLES=8 "$unit/render.sh"
+CYCLES_DEVICE=CPU blender -b --disable-autoexec --python-exit-code 1 --python "$unit/feet.py"
+"$ANIM_ROOT/venv/bin/python" "$unit/deliver.py" --resolution 256
+"$ANIM_ROOT/venv/bin/python" "$unit/validate.py"
+```
+
+The host/overnight driver runs exactly `ROUND=1 tools/art/anim3d/units/pikeman/gpu.sh`
+from the repository root. It checks Metal explicitly, rebuilds all five clips,
+audits them, renders all stages and 40 transparent frames in Cycles GPU at 512,
+renders the feet diagnostic, exports native 512/downsampled 256 masters under
+`graded/`, packs/validates 160 px delivery, and writes an eight-second five-column
+H.264 yuv420p `pikeman-round${ROUND}.mp4`. It records status, log and a GPU-only
+receipt, and fails rather than pretending a CPU render was a GPU pass. It never
+writes PASS automatically; that needs visual confirmation against the painting.
+
+### Trimmed atlas format
+
+`pikeman.webp` uses logical 160 × 160 cells, WebP quality >=75 and <=200,000 bytes.
+JSON version 2 keeps `frame:{w,h,ax,ay}` and clips in idle/move/attack/hit/death row
+order, with counts 8/8/10/4/10. Each clip has `row,frames,fps,loop,rects`; each rect
+is `{x,y,w,h,ox,oy}`. Crop that atlas rect, place at `(ox,oy)` in the logical cell,
+then anchor by `(ax,ay)`. Duplicate terminal death frames share one rect to ensure
+identical decoded pixels. Source/master/render hashes reject stale or mixed
+outputs. The existing runtime is unchanged; this is an animation candidate.
