@@ -31,7 +31,13 @@ if __name__=='__main__':
         review=root/'review/3d-v2';rnd=os.environ.get('ROUND','2')
         validation=json.loads((review/'eagle-warrior-validation.json').read_text());audit=json.loads((review/'eagle-warrior-audit.json').read_text())
         assert validation['ok'] and validation['gpu'] and audit['ok']
+        feet=json.loads((root/'masters/eagle-warrior/feet.json').read_text())
+        assert feet['source_sha256']==sha(root/'masters/eagle-warrior/clips/move.blend'),'stale foot review'
+        assert feet['device']=='GPU' and len(feet['files'])==16
+        for entry in feet['files']:
+            assert sha(root/'masters/eagle-warrior'/entry['path'])==entry['sha256'],'stale foot frame'
+        assert (review/'eagle-warrior-g-feet-check.png').stat().st_size>0
         movie=review/f'eagle-warrior-round{rnd}.mp4';assert movie.stat().st_size>0
-        result.update(validation=validation,audit_ok=True,movie_sha256=sha(movie),round=rnd,art_approved=False)
+        result.update(validation=validation,audit_ok=True,feet_device=feet['device'],movie_sha256=sha(movie),round=rnd,art_approved=False)
         (review/f'eagle-warrior-gpu-round{rnd}.json').write_text(json.dumps(result,indent=2)+'\n')
     print(json.dumps(result,indent=2))

@@ -229,6 +229,58 @@ remain in `round1-cpu` and `round2-cpu`. Silhouette IoU improves from .8094 to
 still differ; these technical results are **not art PASS**. Fresh GPU512/64
 masters and visual acceptance remain the lead-side handoff.
 
+### Eagle warrior driver round 2 after the verified GPU pass
+
+The lead's round-1 pass succeeded at GPU512/64: forty frames, 182,566 bytes at
+Q80, validated MP4. Its masters and review evidence are preserved externally in
+`masters/eagle-warrior/driver-r1-gpu/`. The apparent pre-existing "round 2" log
+is historical CPU evidence, not a substitute for opening the driver's GPU files.
+
+`refine.py` fits individual hanging feather tips and tapers the complete curved
+vanes before projection. A blanket extension created an unwanted wrist curtain.
+The cream stone's camera pigment now includes fine grain and actual scene AO,
+with the same warm product key and fixed rest-derived histogram grade. Existing
+image-generated feather fills and physical thickness, cloth folds, bindings,
+beveled equipment and baked maps are retained. Camera UVs are frozen on finished
+geometry, not live-projected during motion.
+
+The new common motion standard is licensed open human motion (CMU permissive or
+Quaternius CC0), with matched reference/rest poses and bone rolls; only the
+weapon attack is authored. This unit uses the installed CC0 Quaternius Universal
+Animation Library Standard's Idle_Loop, Walk_Loop, Hit_Chest and Death01.
+`retarget.py` verifies the glTF, binary and licence hashes before import, samples
+Blender world-rotation constraints, layers source idle arms over the walk's legs,
+and removes the source mannequin. A constant lowered carrying guard keeps the
+club in the cell. All attribution is in the unit's `SOURCES.md`. No motion asset
+is downloaded during the GPU pass.
+
+The original foot reference aimed the bones down through horizontal sandals.
+Calibrate actual ankle-to-toe axes before retargeting, preserve sandal transforms,
+and fit the native weighted heel/arch/toes into the real sandal volumes before
+projection. Bounds come from the masked visible mesh; topology and weights stay
+intact. Rebuild the three thin strap arches along the actual sole length so they
+follow the foot surface instead of floating above the toes. Inspect the complete source cycle. Do not hand-correct foot rotations after
+retargeting. `feet.py` renders every move sample from the front and overhead;
+`feet_sheet.py` immediately writes `eagle-warrior-g-feet-check.png`. The GPU
+receipt requires all sixteen fresh diagnostic images and their hashes.
+
+Armature-deformed clothing must also follow rig root travel. The underlayer's
+missing object parent left a floating ring during the first retargeted death;
+`refine.py` repairs it and the audit now rejects that missing relationship. The
+source collapse turns across the stone, with a whole-club release and separate
+shield release. No zero scaling or visibility trick hides a failed pose.
+Geometry/contact, framing, source-motion provenance and decoded delivery checks
+remain distinct from visual approval. No script writes an art PASS marker.
+
+Final driver-round-2 CPU result: **190,306 bytes at Q85**, all forty samples,
+nine review stages at Cycles CPU256/8, sixteen front/top foot views, exact trim
+and alpha reconstruction, and H.264/yuv420p eight-second review movie. All forty
+geometry/contact/framing samples, five delivery tests and syntax checks pass.
+Compared with preserved GPU output, rest silhouette IoU is .82541 -> .82697 at
+256 and .83624 -> .83849 at64; this small mixed-render comparison is not approval.
+Wing layering, feet, stone finish and terminal death overlaps/fills still differ.
+**No PASS marker.** The complete GPU512/64 pass and visual verdict remain pending.
+
 ## Infantry chapter: Gaesatae, round 1
 
 The Gaesatae unit lives exclusively in `units/gaesatae/`; it does not replace the

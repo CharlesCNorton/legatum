@@ -26,6 +26,8 @@ stage=audit
 blender -b --disable-autoexec --python-exit-code 1 --python "$UNIT_DIR/audit.py"
 stage=render
 "$UNIT_DIR/render.sh"
+stage=feet
+blender -b --disable-autoexec --gpu-backend metal --python-exit-code 1 --python "$UNIT_DIR/feet.py"
 stage=master-check
 "$ANIM_ROOT/venv/bin/python" "$UNIT_DIR/check_delivery.py" --gpu
 stage=pack

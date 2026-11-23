@@ -51,7 +51,8 @@ def bind_posed(o,rig,weights):
   deform=Matrix([[sum(w*m[r][c] for w,m in mats) for c in range(4)] for r in range(4)])
   v.co=deform.inverted()@v.co
   for name,w in ww.items():o.vertex_groups[name].add([v.index],w,'REPLACE')
- mod=o.modifiers.new('Eagle warrior skinning','ARMATURE');mod.object=rig;return o
+ mod=o.modifiers.new('Eagle warrior skinning','ARMATURE');mod.object=rig
+ o.parent=rig;o.matrix_parent_inverse=rig.matrix_world.inverted();return o
 # Orthographic source calibration: 2.35 m square, 10-degree down view.
 ELEV=math.radians(12);SCALE=2.50;TARGET=Vector((0,0,1.13))
 def P(x,y,depth=0):return Vector(((x-128)*SCALE/256,depth,1.13+((128-y)*SCALE/256-depth*sin(ELEV))/cos(ELEV)))

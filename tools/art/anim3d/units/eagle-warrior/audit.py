@@ -13,6 +13,10 @@ for clip,n in [('idle',8),('move',8),('attack',10),('hit',4),('death',10)]:
  rig=bpy.data.objects['RIG-eagle-warrior'];body=bpy.data.objects['GEO-MPFB-anatomy']
  assert len(rig.data.bones)==53 and len(body.data.vertices)==19158
  assert body.data.shape_keys is None
+ assert bpy.data.objects['GEO-Feather garment underlayer'].parent==rig,'clothing must follow root motion'
+ if clip!='attack':
+  motion=json.loads((M/'clips'/f'{clip}-motion.json').read_text())
+  assert motion['license']=='CC0-1.0' and motion['provider']=='Quaternius Universal Animation Library Standard'
  assert any(m.type=='ARMATURE' and m.object==rig for m in body.modifiers)
  assert sc['no_billboards'] and sc['refinement_round']==2
  assert all(not any(m.type in {'BEVEL','SOLIDIFY','SUBSURF'} for m in o.modifiers) for o in sc.objects if o.type=='MESH'),'unfinished projection surface'
