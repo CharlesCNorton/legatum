@@ -252,3 +252,40 @@ Driver round3: opened GPU c/f/all five strips and round2 MP4 contact frames befo
 Finished 358 solid projected meshes; actual AO/curvature bakes on 4 principal surfaces; generated hidden-side fills packed.
 Rendered c: 256px, Cycles CPU, 8 samples; raw frames preserved.
 Published c review immediately; CPU preview, not art approval.
+Finished 358 solid projected meshes; actual AO/curvature bakes on 4 principal surfaces; generated hidden-side fills packed.
+Rendered c: 256px, Cycles CPU, 8 samples; raw frames preserved.
+Published c review immediately; CPU preview, not art approval.
+Built idle (Quaternius CC0): 8 frames at 10 fps; dynamic bow/string, grip and stationary base checked, loop closure keyed.
+Built move (Quaternius CC0): 8 frames at 12 fps; dynamic bow/string, grip and stationary base checked, loop closure keyed.
+Built attack (authored bow attack): 10 frames at 14 fps; dynamic bow/string, grip and stationary base checked, terminal keys retained.
+Built hit (Quaternius CC0): 4 frames at 12 fps; dynamic bow/string, grip and stationary base checked, terminal keys retained.
+Built death (Quaternius CC0): 10 frames at 10 fps; dynamic bow/string, grip and stationary base checked, terminal keys retained.
+Rendered e-move: 256px, Cycles CPU, 8 samples; raw frames preserved.
+Published e-move review immediately; CPU preview, not art approval.
+Rendered e-death: 256px, Cycles CPU, 8 samples; raw frames preserved.
+Published e-death review immediately; CPU preview, not art approval.
+Finished 358 solid projected meshes; actual AO/curvature bakes on 4 principal surfaces; generated hidden-side fills packed.
+Rendered c: 256px, Cycles CPU, 8 samples; raw frames preserved.
+Published c review immediately; CPU preview, not art approval.
+Built idle (Quaternius CC0): 8 frames at 10 fps; dynamic bow/string, grip and stationary base checked, loop closure keyed.
+Built move (Quaternius CC0): 8 frames at 12 fps; dynamic bow/string, grip and stationary base checked, loop closure keyed.
+Built attack (authored bow attack): 10 frames at 14 fps; dynamic bow/string, grip and stationary base checked, terminal keys retained.
+Built hit (Quaternius CC0): 4 frames at 12 fps; dynamic bow/string, grip and stationary base checked, terminal keys retained.
+Built death (Quaternius CC0): 10 frames at 10 fps; dynamic bow/string, grip and stationary base checked, terminal keys retained.
+Rendered e-move: 256px, Cycles CPU, 8 samples; raw frames preserved.
+Published e-move review immediately; CPU preview, not art approval.
+Rendered e-death: 256px, Cycles CPU, 8 samples; raw frames preserved.
+Published e-death review immediately; CPU preview, not art approval.
+Rendered b: 256px, Cycles CPU, 8 samples; raw frames preserved.
+Published b review immediately; CPU preview, not art approval.
+Rendered d: 256px, Cycles CPU, 8 samples; raw frames preserved.
+Published d review immediately; CPU preview, not art approval.
+Rendered e-idle: 256px, Cycles CPU, 8 samples; raw frames preserved.
+Published e-idle review immediately; CPU preview, not art approval.
+Rendered e-attack: 256px, Cycles CPU, 8 samples; raw frames preserved.
+Published e-attack review immediately; CPU preview, not art approval.
+Rendered e-hit: 256px, Cycles CPU, 8 samples; raw frames preserved.
+Published e-hit review immediately; CPU preview, not art approval.
+Rendered all eight move feet from front and top; upper-body cutaway.
+Published g-feet review immediately; CPU preview, not art approval.
+Packed 40 frames at 160px, trimmed offsets, quality 85, 184314 bytes.

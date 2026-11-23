@@ -354,3 +354,86 @@ Round 3 construction: replaced the capsule belt with a convex closed wrap around
 Rendered c: 1 PNGs, 256 px, CYCLES CPU, 8 samples.
 Published c review immediately; frozen grade 823d620c5772, 256 masters retained.
 Saved-scene audit PASS: current source hashes, 128 track links, 16 wheels, stationary base, nonzero scales, loop closure keys and held death.
+Prepared full-source projection; read all six Blender skills, vehicle chapter, art skill and standing feedback 12–22.
+Built true 3D hard-surface geometry and rigid rig: 1335 objects; bevels, open muzzle, sensors, six wheels per side, 128 articulated tracks.
+Finished materials: three actual AO/curvature bake pairs, generated unseen paint, 1176 genuine projected meshes; all textures packed.
+Authored idle: 8 output samples at 10 fps; 150 mechanical controls; loop=True.
+Authored move: 8 output samples at 12 fps; 150 mechanical controls; loop=True.
+Authored attack: 10 output samples at 14 fps; 150 mechanical controls; loop=False.
+Authored hit: 4 output samples at 12 fps; 150 mechanical controls; loop=False.
+Authored death: 10 output samples at 10 fps; 150 mechanical controls; loop=False.
+Rendered c: 1 PNGs, 256 px, CYCLES CPU, 8 samples.
+Published c review immediately; frozen grade 68386fd3c49c, 256 masters retained.
+Rendered details: 2 PNGs, 256 px, CYCLES CPU, 8 samples.
+Published details review immediately; frozen grade 68386fd3c49c, 256 masters retained.
+Prepared full-source projection; read all six Blender skills, vehicle chapter, art skill and standing feedback 12–22.
+Built true 3D hard-surface geometry and rigid rig: 1335 objects; bevels, open muzzle, sensors, six wheels per side, 128 articulated tracks.
+Finished materials: three actual AO/curvature bake pairs, generated unseen paint, 1176 genuine projected meshes; all textures packed.
+Authored idle: 8 output samples at 10 fps; 150 mechanical controls; loop=True.
+Authored move: 8 output samples at 12 fps; 150 mechanical controls; loop=True.
+Authored attack: 10 output samples at 14 fps; 150 mechanical controls; loop=False.
+Authored hit: 4 output samples at 12 fps; 150 mechanical controls; loop=False.
+Authored death: 10 output samples at 10 fps; 150 mechanical controls; loop=False.
+Rendered c: 1 PNGs, 256 px, CYCLES CPU, 8 samples.
+Published c review immediately; frozen grade bb64ad2e6a99, 256 masters retained.
+Rendered b: 3 PNGs, 256 px, CYCLES CPU, 8 samples.
+Rendered c: 1 PNGs, 256 px, CYCLES CPU, 8 samples.
+Published c review immediately; frozen grade bb64ad2e6a99, 256 masters retained.
+Rendered details: 2 PNGs, 256 px, CYCLES CPU, 8 samples.
+Published details review immediately; frozen grade bb64ad2e6a99, 256 masters retained.
+Rendered d: 4 PNGs, 256 px, CYCLES CPU, 8 samples.
+Published d review immediately; frozen grade bb64ad2e6a99, 256 masters retained.
+Rendered g: 16 PNGs, 256 px, CYCLES CPU, 8 samples.
+Published g review immediately; frozen grade bb64ad2e6a99, 256 masters retained.
+Rendered e-idle: 8 PNGs, 256 px, CYCLES CPU, 8 samples.
+Published e-idle review immediately; frozen grade bb64ad2e6a99, 256 masters retained.
+Rendered e-move: 8 PNGs, 256 px, CYCLES CPU, 8 samples.
+Published e-move review immediately; frozen grade bb64ad2e6a99, 256 masters retained.
+Rendered e-attack: 10 PNGs, 256 px, CYCLES CPU, 8 samples.
+Published e-attack review immediately; frozen grade bb64ad2e6a99, 256 masters retained.
+Rendered e-hit: 4 PNGs, 256 px, CYCLES CPU, 8 samples.
+Published e-hit review immediately; frozen grade bb64ad2e6a99, 256 masters retained.
+Rendered e-death: 10 PNGs, 256 px, CYCLES CPU, 8 samples.
+Published e-death review immediately; frozen grade bb64ad2e6a99, 256 masters retained.
+Saved-scene audit PASS: current source hashes, 128 track links, 16 wheels, stationary base, nonzero scales, loop closure keys and held death.
+Packed 40 trimmed 160 px frames: 196350 bytes, WebP quality 90.
+Validation PASS: counts, RGBA, rect bounds, transparent margins, five moving clips, held death, quality and size. Art approval remains separate.
+Encoded and ffprobe-verified autonomous-armour-round3.mp4: 8 s, 240 frames, 1600x348 H.264 yuv420p; decoded trimmed atlas.
+Prepared full-source projection; read all six Blender skills, vehicle chapter, art skill and standing feedback 12–22.
+Built true 3D hard-surface geometry and rigid rig: 1335 objects; bevels, open muzzle, sensors, six wheels per side, 128 articulated tracks.
+Finished materials: three actual AO/curvature bake pairs, generated unseen paint, 1176 genuine projected meshes; all textures packed.
+Authored idle: 8 output samples at 10 fps; 150 mechanical controls; loop=True.
+Authored move: 8 output samples at 12 fps; 150 mechanical controls; loop=True.
+Authored attack: 10 output samples at 14 fps; 150 mechanical controls; loop=False.
+Authored hit: 4 output samples at 12 fps; 150 mechanical controls; loop=False.
+Authored death: 10 output samples at 10 fps; 150 mechanical controls; loop=False.
+Saved-scene audit PASS: current source hashes, 128 track links, 16 wheels, stationary base, nonzero scales, loop closure keys and held death.
+Rendered b: 3 PNGs, 256 px, CYCLES CPU, 8 samples.
+Rendered c: 1 PNGs, 256 px, CYCLES CPU, 8 samples.
+Published c review immediately; frozen grade 60831993b438, 256 masters retained.
+Rendered details: 2 PNGs, 256 px, CYCLES CPU, 8 samples.
+Published details review immediately; frozen grade 60831993b438, 256 masters retained.
+Rendered d: 4 PNGs, 256 px, CYCLES CPU, 8 samples.
+Published d review immediately; frozen grade 60831993b438, 256 masters retained.
+Rendered g: 16 PNGs, 256 px, CYCLES CPU, 8 samples.
+Published g review immediately; frozen grade 60831993b438, 256 masters retained.
+Rendered e-idle: 8 PNGs, 256 px, CYCLES CPU, 8 samples.
+Published e-idle review immediately; frozen grade 60831993b438, 256 masters retained.
+Rendered e-move: 8 PNGs, 256 px, CYCLES CPU, 8 samples.
+Published e-move review immediately; frozen grade 60831993b438, 256 masters retained.
+Rendered e-attack: 10 PNGs, 256 px, CYCLES CPU, 8 samples.
+Published e-attack review immediately; frozen grade 60831993b438, 256 masters retained.
+Rendered e-hit: 4 PNGs, 256 px, CYCLES CPU, 8 samples.
+Published e-hit review immediately; frozen grade 60831993b438, 256 masters retained.
+Rendered e-death: 10 PNGs, 256 px, CYCLES CPU, 8 samples.
+Published e-death review immediately; frozen grade 60831993b438, 256 masters retained.
+Saved-scene audit PASS: current source hashes, 128 track links, 16 wheels, stationary base, nonzero scales, loop closure keys and held death.
+Packed 40 trimmed 160 px frames: 197852 bytes, WebP quality 90.
+Validation PASS: counts, RGBA, rect bounds, transparent margins, five moving clips, held death, quality and size. Art approval remains separate.
+Encoded and ffprobe-verified autonomous-armour-round3.mp4: 8 s, 240 frames, 1600x348 H.264 yuv420p; decoded trimmed atlas.
+Round 3 final construction: retained close orthographic framing, moved lower carriage by (-.25,.08,0)m, solved raised-sprocket belt and rolling radii, aligned front armour in full depth; source tread-only pigment moves with actual beveled shoes, new twelve-fold generated wheel pigment uses live AO/physical lighting. Final g views expose running gear rather than hiding it under the hull. Existing warm product lights and automatic frozen grade retained. All six Blender skills applied; no cloth/straps exist on this machine.
+Round 3 final visual review: opened current c/f at 256 and64, detail crops, every e strip, exposed g top/front track diagnostic and decoded round3 movie frames 0/.33/.73/1.5 seconds. Upper armour and tread silhouette improve, but wheel diameter perspective and dish depth remain too uniform/flat, some fender edges double the painting and masked stone lighting remains even; CPU aerial edges are noisy. At64 same identity, still distinguishable. No visible frame clipping/base drift or terminal death jump, mechanical motion restrained. No PASS; fresh GPU visual review remains required.
+Round 3 measured oldGPU96/512 versus newCPU8/256 (not equal render conditions): silhouette IoU .938916 -> .948480; opaque RGB MAE 15.0481 -> 13.3438; gear MAE 19.6063 -> 16.3347. Metrics are supporting evidence, not art approval.
+Round 3 final CPU checks PASS: all40 RGBA256 samples 8/8/10/4/10; trimmed160 atlas197852 bytes Q90; exact alpha reconstruction, bounds, hashes, five moving clips; seam ratios idle .997025/move1.060665 and pixel-identical held death. Saved-scene audit128 links/16 wheels passes distance/direction/closure/safe scales/restUVs/stationarybase; contactz .236888-.240000m and maxradius2.342375m inside2.36m disc. MP4 ffprobe verified1600x348,240frames,8seconds,H.264/yuv420p.
+Round 3 handoff checks PASS:8 Python ASTs/2 Bash scripts/executable gpu.sh/diff whitespace; current source/asset/scene hashes. Isolated missing-scene trial rejects default round3 preflight with failure status/no receipt, stale-generator trial rejects scene.py, independent GPU verifier rejects CPU stageb. CPU evidence preserved in driver-round3-cpu; incomingGPU evidence in driver-round2-gpu; no new512 GPU master or art PASS claimed. Lead command: ROUND=3 tools/art/anim3d/units/autonomous-armour/gpu.sh.
+Round 3 commit attempt blocked by sandbox: git add cannot create .git/worktrees/lane-17/index.lock (Operation not permitted). Scoped changes left uncommitted for runner; requested commit trailer: Co-Authored-By: gpt-6-astra (Codex) <noreply@openai.com>. origin/master is already an ancestor; no fetch, push, PR or merge to master.

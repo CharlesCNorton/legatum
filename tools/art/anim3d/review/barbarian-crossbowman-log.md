@@ -88,3 +88,10 @@
 - GPU handoff now includes sixteen actual top/front feet renders and fresh hashed GPU64/512 evidence in the final-master gate. The gate correctly rejects current CPU previews. No revised GPU render is claimed; lead runs ROUND=2 tools/art/anim3d/units/barbarian-crossbowman/gpu.sh. Prior GPU pass was successful and archived.
 - Git staging denied: cannot create .git/worktrees/lane-19/index.lock. Runner must commit with requested co-author trailer. origin/master already contained; no fetch/merge/push/PR. Unit feedback file remains absent.
 - Final current checks repeated after all edits: two regression tests, all15 Python compiles, both shell syntax checks, diff whitespace, atlas validation and MP4 probe pass. Archived current CPU evidence under masters/barbarian-crossbowman/driver-r2-cpu. No visual PASS marker.
+- b: genuine front, three-quarter and side geometry views.
+- c: 1 frames reviewed at 256/64; CYCLES GPU, 64 samples, source 512px.
+- d: 4 frames reviewed at 256/64; CYCLES GPU, 64 samples, source 512px.
+- e-idle: 8 frames reviewed at 256/64; CYCLES GPU, 64 samples, source 512px.
+- e-move: 8 frames reviewed at 256/64; CYCLES GPU, 64 samples, source 512px.
+- e-attack: 10 frames reviewed at 256/64; CYCLES GPU, 64 samples, source 512px.
+- e-hit: 4 frames reviewed at 256/64; CYCLES GPU, 64 samples, source 512px.
