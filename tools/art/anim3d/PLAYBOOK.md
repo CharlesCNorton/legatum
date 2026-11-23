@@ -106,3 +106,84 @@ tools/art/anim3d/render.sh audit
 ```
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
+
+## Infantry chapter: barbarian spearman, round 1
+
+This unit owns `units/barbarian-spearman/`; it reuses the infantry lead's MPFB and
+posing helpers without changing those shared scripts. Its separate external root
+is `masters/barbarian-spearman/`. The kit is a folded linen tunic, thick fur mantle
+and solid tapered hair locks, leather wraps and belt/buckle, a low ash spear with
+iron head, and a convex oval rawhide shield with rim lacing and iron boss. The
+full MPFB body and 53-bone skeleton remain editable. The original painting is the
+reference, not a claim of equivalence: the face, fur silhouette and draping need
+more sculpting and registration in later rounds.
+
+The standard quality method for infantry follows feedback 18–21:
+
+1. Match the painting camera and rest-pose landmarks before projecting its full
+   master into frozen UV coordinates on real 3D surfaces. Never project from the
+   animated camera every frame. Blend the painting by alpha and surface incidence
+   into the project's generated linen/hair fill textures on unseen surfaces.
+   Inspect occluded parts and cloth/skin boundaries: source lighting and imperfect
+   registration can produce projection spill; texture cannot repair anatomy.
+   Mask the source spear out of non-weapon UVs so it does not become a second
+   painted weapon when the real spear moves; fill the excluded strip with the
+   underlying surface material.
+2. Finish geometry: subdivided MPFB anatomy, physical cloth thickness and folds,
+   beveled hard edges, thick straps, buckle and lacing, shaped metal edges. Actual
+   AO and Cycles Pointiness maps are baked at 256 for skin, linen, shield and boss;
+   AO darkens cavities and curvature modulates iron roughness.
+3. Use a warm upper-left product key, soft fill, cool rim, AO/contact shading and
+   denoising. The one stationary low stone disc uses the shared cream target
+   **sRGB #E9CFA0**, entered as linear pigment `(0.815, 0.624, 0.352)` before lighting.
+4. Sample the painting's foreground RGB quantiles and derive one restrained,
+   monotonic LUT from the rest render. Reuse that exact LUT for every frame; never
+   independently grade frames. Keep raw renders. Judge the native 256 and 64 px
+   evidence and `barbarian-spearman-f-restpose-compare.png` (painting, render, half
+   split, 50/50 crossfade) honestly.
+
+Run from repository root, sequentially. Every Blender invocation is plain
+`blender -b --disable-autoexec --python-exit-code 1 ...` through the PATH gate;
+no direct application path, thread override, zero-scale hiding or second heavy
+process. Local previews default to Cycles CPU. Rebuild downstream files after
+changing geometry or materials:
+
+```sh
+source tools/art/anim3d/env.sh
+TASK=tools/art/anim3d/units/barbarian-spearman
+"$ANIM_ROOT/venv/bin/python" "$TASK/prepare.py"
+"$TASK/render.sh" build
+"$TASK/render.sh" b
+"$ANIM_ROOT/venv/bin/python" "$TASK/review.py" b
+"$TASK/render.sh" paint
+"$TASK/render.sh" bake
+"$TASK/render.sh" animate
+# Host-only, no arguments: all GPU reviews, 512/256 masters, atlas and checks.
+"$TASK/gpu.sh"
+```
+
+The GPU handoff requires the external masters and packed inputs produced above.
+It explicitly selects Cycles Metal GPU at 512 px / 64 samples and refuses a CPU
+fallback. It renders every stage and all 40 clip frames, writes all named review
+images and animated WebPs, packs and validates delivery, and audits saved rigs.
+No upload, push, runtime integration or art approval is implied.
+
+### Trimmed atlas v2 (160 px infantry delivery)
+
+`app/src/assets/units/anim/barbarian-spearman.{webp,json}` is a transparent
+1600×800 atlas with five ordered rows (idle/move/attack/hit/death) and ten 160 px
+slots per row. Frame counts remain **8/8/10/4/10**. Each frame's transparent margins
+are removed and the cropped pixels stored at the slot's upper-left; unused slot
+pixels remain transparent. JSON retains `frame:{w:160,h:160,ax:80,ay:137}` and
+`clips:{name:{row,frames,fps,loop}}`, and adds `version:2` and per-clip `rects`:
+`{x,y,w,h,ox,oy}` gives the source atlas rectangle and its offset inside the
+original 160 px cell. To draw at an anchor, destination top-left is
+`anchor + (ox-ax, oy-ay)` scaled to display size. This extension needs a consumer
+that supports per-frame rectangles; this art lane does not modify the runtime.
+
+Keep all rendered 512 px masters and downsampled 256 px masters in external
+`masters/barbarian-spearman/{512,256}/<clip>/`. Packing permits quality 90, 85, 80
+or 75 only, enforces 200,000 bytes, and refuses stale source/clip/grade hashes.
+Validation checks decoded dimensions, transparency, clipping margins, offsets,
+all frame counts, actual pixel motion and the identical terminal death hold.
+Technical checks do not establish painting-level quality.
