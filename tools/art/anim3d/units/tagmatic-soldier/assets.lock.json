@@ -20,5 +20,23 @@
   "software": {
     "Blender": "5.3.0 build 02f0899d78e3",
     "Pillow": "13.0.0"
+  },
+  "motion": {
+    "provider": "Quaternius Universal Animation Library Standard",
+    "version": "2025-06-10",
+    "url": "https://quaternius.com/packs/universalanimationlibrary.html",
+    "license": "CC0-1.0",
+    "mirror_commit": "e24c23cf2a1323488a3faa226ea7ea21f644b73e",
+    "actions": [
+      "Idle_Loop",
+      "Walk_Loop",
+      "Hit_Chest",
+      "Death01"
+    ],
+    "files": {
+      "AnimationLibrary_Godot_Standard.gltf": "0ff075c7ad6855c5c2c37a171592ee8f0d6ab2f58259e2be77a9b63dd8027765",
+      "AnimationLibrary_Godot_Standard.bin": "6e65377d81558333c4093dbb144a48fd19019343d82b1a3a7992a98ec0e0543c",
+      "LICENSE": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499"
+    }
   }
 }

@@ -1,11 +1,11 @@
-# Tagmatic Soldier — round 1 candidate
+# Tagmatic Soldier — round 2 candidate
 
 This folder owns this unit's build, rendering, review and atlas delivery. See its
 infantry chapter in `../../PLAYBOOK.md`. Run commands from the repository root.
 
 The sole GPU entry point is `tools/art/anim3d/units/tagmatic-soldier/gpu.sh`.
-It requires the built/baked external masters in
-`~/LegatumRuns/anim-pilot/masters/tagmatic-soldier/`. `ROUND` defaults to 1.
+It writes the editable external masters in
+`~/LegatumRuns/anim-pilot/masters/tagmatic-soldier/`. `ROUND` defaults to 2. It rebuilds and rebakes from pinned inputs before rendering.
 
 Inputs stay in `~/LegatumRuns/anim-pilot/assets/tagmatic-soldier/`:
 
@@ -19,7 +19,7 @@ Inputs stay in `~/LegatumRuns/anim-pilot/assets/tagmatic-soldier/`:
 quadrants and records their hashes. `build.py` creates MPFB anatomy and full 3D
 kit; `bake.py` adds real AO/Pointiness; `animate.py` saves independent clip masters.
 Changing the model requires rebuilding the clips. `render.sh` exposes build,
-bake, animate, audit and b/c/d/e-clip stages and always calls plain gated Blender.
+bake, animate, audit and b/c/d/e-clip/g stages and always calls plain gated Blender.
 
 `deliver.py` writes interim reviews, 512/256 masters, trimmed 160 cells, validation
 and a trim-aware 8-second H.264 review video. Atlas version 2 stores each clip's
@@ -31,13 +31,47 @@ rest alignment, surfaces and all motion against the painting. Bone-attached
 cloth, view-specific projected lighting and approximate contact/collision
 solutions are explicit round-1 limitations.
 
-Round-1 CPU result: 40 frames at both 512 and 256, trimmed atlas 190,916 bytes
-at quality 75; all alpha/offset, frame-count, bounds, motion and held-death checks
-passed. Review MP4: H.264/yuv420p, 1600x348, 30 fps, 240 frames / 8 seconds.
-The minimum shipped-cell margin is 5 pixels. GPU renders are still pending.
-At 64 px the identity reads; at 256 the face, armour brushwork, shield gloss and
-base brightness remain below the painting. Death remains stiff. No PASS marker.
+Round-one GPU rendering succeeded at 512 px: the previous 160 px atlas was
+182,516 bytes at Q75. This round replaces its scripts and motion; inspect the
+new CPU sheets, then run the complete GPU entry point. Technical delivery is
+separate from the visual verdict. No PASS marker has been written.
 
 Implementation detail: MPFB's system-eye import can purge unused materials;
 create task materials after that import. Terminal death explicitly repeats the
 settled rendered frame, avoiding tiny render differences in an intended hold.
+
+
+Round 2 finishes solidify/bevel geometry before frozen projection, seats the
+subdivided shield cross on the evaluated dome, and separates camera-visible
+painted illumination from physical lighting rays. Hidden surfaces retain the
+original image-generated fills and real AO/Pointiness bakes. Standard/None is
+intentional for the existing painted illumination, not a photographic preset.
+The cream disc has a finer bevel, smaller footprint and camera-only limestone
+pigment with live AO; no figure or static foot shadow is painted onto it.
+
+The weapon hand has a folded thumb and reduced anatomical palm scale (0.8,
+with the spear attached afterward at full size). Combat now has a stronger
+forward/downward overhand thrust. Guard elbow/knee poles come from the actual
+neutral pose; death now follows the sourced fall.
+
+The host script retains a transcript, failure stage/status and a round-specific
+receipt. It checks for Metal before rebuilding. `deliver.py gpu-masters` rejects
+CPU, undersized or stale exports; all 64 stage images must exist at 512 and 256.
+One hashed rest grade applies to every frame. The video is decoded from the
+trimmed atlas and ffprobe verifies codec, format, dimensions, count and duration.
+Neither this receipt nor the technical validator writes an art PASS marker.
+
+
+## GPU follow-up motion
+
+Idle/move/hit/death now retarget CC0 Quaternius actions; attack remains an
+original overhand spear thrust. See SOURCES.md and assets.lock.json. Rest/roll
+calibration matches the fitted boot soles before sampling, with no post-retarget
+foot orientation correction. Evaluated geometry determines vertical root contact.
+The death uses the source fall and accelerating released equipment; cloth remains
+modelled folds with authored contact keys.
+
+`render.sh g` produces the required top/front foot-cycle sheet. `gpu.sh` includes
+this stage and validates all 64 GPU512/48 images and their 256 derivatives. Its
+render receipt is technical evidence, not an art approval. CPU previews retain
+their device labels and must not be called GPU finals.

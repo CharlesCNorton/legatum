@@ -81,7 +81,7 @@ eyes=HumanService.add_mhclo_asset(str(system_data/'eyes/high-poly/high-poly.mhcl
 skin=mat('warm painted skin',(.48,.27,.14),0,.65)
 red=mat('crimson woven wool',(.32,.025,.014),0,.86,'cloth')
 steel=mat('worn bright lamellar steel',(.58,.52,.39),1,.38,'steel')
-gold=mat('polished brass borders',(.72,.43,.13),1,.31,'gold')
+gold=mat('polished brass borders',(.72,.43,.13),1,.48,'gold')
 leather=mat('scuffed brown leather',(.13,.060,.026),0,.7,'leather')
 wood=mat('ash spear shaft',(.18,.070,.022),0,.62,'leather')
 mail=mat('dark iron mail',(.19,.18,.14),1,.6,'steel')
@@ -97,6 +97,9 @@ for s in ['l','r']:aim('foot_'+s,(0,-1,-.12));aim('ball_'+s,(0,-1,0))
 limb('upperarm_r','lowerarm_r',screen(68,28,.12),screen(63,57,.08))
 limb('upperarm_l','lowerarm_l',screen(142,112,.08),screen(151,91,-.03))
 aim('hand_r',(.04,-.01,.13));aim('hand_l',(.08,-.06,.05))
+rig.pose.bones['hand_r'].scale=(.80,.80,.80)
+for name in ['thumb_01_r','thumb_02_r','thumb_03_r']:
+ p=rig.pose.bones[name];p.rotation_mode='XYZ';p.rotation_euler.x=.7
 # Close fingers around the overhand spear; anatomical finger chains, not spheres.
 for p in rig.pose.bones:
  if p.name.endswith('_r') and any(p.name.startswith(n) for n in ['index','middle','ring','pinky']):
@@ -134,7 +137,7 @@ for s in ['r','l']:
  for bn in ['calf','foot']:
   p=rig.pose.bones[bn+'_'+s];a=rig.matrix_world@p.head;b=rig.matrix_world@p.tail
   if bn=='calf':
-   a=a.lerp(b,.35);sleeve('leather wrapped boot '+s,a,b,.070,.052,leather,bn+'_'+s,.003)
+   a=a.lerp(b,.35);sleeve('leather wrapped boot '+s,a,b,.080,.060,leather,bn+'_'+s,.003)
    for k in range(7):
     t=k/7;center=a.lerp(b,t);pts=[center+Vector((.072*cos(th),.068*sin(th),.013*sin(th))) for th in [i*2*pi/32 for i in range(33)]];attach(curve('boot winding '+s,pts,.006,leather),bn+'_'+s)
 # Closed leather shoes are real equipment volumes around the anatomical feet.
@@ -280,18 +283,52 @@ attach(bevel(mesh('forged iron spear leaf',v,f,steel,False),.001),'hand_r')
 attach(curve('leather scabbard',[screen(91,118,.15),screen(73,156,.13)],.027,leather),'pelvis')
 attach(curve('sword brass throat',[screen(88,122,.17),screen(93,113,.17)],.020,gold),'pelvis')
 # Stationary warm cream disc, matching source projected size and foot contact.
-bpy.ops.mesh.primitive_cylinder_add(vertices=128,radius=.535,depth=.085,location=(-.105,0,.1325));base=bpy.context.object;base.name='GEO-stationary cream stone';base.data.materials.append(stone);bevel(base,.012)
+bpy.ops.mesh.primitive_cylinder_add(vertices=128,radius=.52,depth=.105,location=(-.105,0,.1225));base=bpy.context.object;base.name='GEO-stationary cream stone';base.data.materials.append(stone);bevel(base,.018);base.modifiers[-1].segments=5
 for p in base.data.polygons:p.use_smooth=abs(p.normal.z)<.5
 # Orthographic product shot; no DOF blur on atlas silhouettes.
 bpy.ops.object.camera_add(location=TARGET+D*8);sc.camera=bpy.context.object;sc.camera.name='CAM-painting';sc.camera.rotation_euler=(-D).to_track_quat('-Z','Y').to_euler();sc.camera.data.type='ORTHO';sc.camera.data.ortho_scale=SPAN
 sc.world.use_nodes=True;bg=sc.world.node_tree.nodes.get('Background');bg.inputs['Color'].default_value=(.5,.48,.43,1);bg.inputs['Strength'].default_value=.45
-for name,loc,power,size,color in [('warm key',(-3,-4,6),500,3,(1,.90,.75)),('soft fill',(4,-3,3),130,4,(.87,.92,1)),('cool rim',(-1,3,4),350,2,(.76,.85,1))]:
+for name,loc,power,size,color in [('warm key',(-3,-4,6),340,3,(1,.97,.90)),('soft fill',(4,-3,3),85,4,(.92,.96,1)),('cool rim',(-1,3,4),145,3,(.86,.92,1))]:
  bpy.ops.object.light_add(type='AREA',location=loc);o=bpy.context.object;o.name='LGT-'+name;o.data.energy=power;o.data.shape='DISK';o.data.size=size;o.data.color=color;o.rotation_euler=(Vector((0,0,1))-o.location).to_track_quat('-Z','Y').to_euler()
 sc.render.engine='CYCLES';sc.cycles.device='CPU';sc.cycles.samples=8;sc.cycles.use_denoising=True
 sc.render.resolution_x=sc.render.resolution_y=256;sc.render.resolution_percentage=100;sc.render.film_transparent=True;sc.render.image_settings.file_format='PNG';sc.render.image_settings.color_mode='RGBA'
-sc.view_settings.view_transform='AgX';sc.view_settings.look='AgX - Medium High Contrast';sc.view_settings.exposure=.15
+sc.view_settings.view_transform='Standard';sc.view_settings.look='None';sc.view_settings.exposure=0
 rig['neutral_pose']=json.dumps({p.name:[list(row) for row in p.matrix_basis] for p in rig.pose.bones});rig['source']='MPFB 2.0.18 CC0 anatomy and game_engine rig'
-sc['cream_target_srgb']='#E9CFA0';sc['unit_slug']='tagmatic-soldier';sc['round']=1
+sc['cream_target_srgb']='#E9CFA0';sc['unit_slug']='tagmatic-soldier';sc['round']=2
+# The physical stone keeps live contact shadows. Pigment is camera-only: it is
+# not a lamp and contains none of the source's feet or baked cast shadows.
+n=stone.node_tree.nodes;l=stone.node_tree.links;bs=n.get('Principled BSDF')
+noise=n.new('ShaderNodeTexNoise');noise.inputs['Scale'].default_value=155
+pig=n.new('ShaderNodeMixRGB');pig.inputs[1].default_value=tuple(linear(x/255) for x in (255,237,199))+(1,);pig.inputs[2].default_value=tuple(linear(x/255) for x in (252,225,174))+(1,);l.new(noise.outputs['Fac'],pig.inputs[0])
+ao=n.new('ShaderNodeAmbientOcclusion');ao.inputs['Distance'].default_value=.16;ao.inputs['Color'].default_value=(1,1,1,1)
+# Distinct darker vertical stone rim; live AO still supplies moving contacts.
+geom=n.new('ShaderNodeNewGeometry');sep=n.new('ShaderNodeSeparateXYZ');l.new(geom.outputs['Normal'],sep.inputs[0])
+rimshade=n.new('ShaderNodeMapRange');rimshade.inputs['From Min'].default_value=0;rimshade.inputs['From Max'].default_value=1;rimshade.inputs['To Min'].default_value=.85;rimshade.inputs['To Max'].default_value=1;l.new(sep.outputs['Z'],rimshade.inputs['Value'])
+stonecolor=n.new('ShaderNodeMixRGB');stonecolor.blend_type='MULTIPLY';stonecolor.inputs[0].default_value=1;l.new(pig.outputs[0],stonecolor.inputs[1]);l.new(rimshade.outputs[0],stonecolor.inputs[2])
+shade=n.new('ShaderNodeMixRGB');shade.blend_type='MULTIPLY';shade.inputs[0].default_value=.28;l.new(stonecolor.outputs[0],shade.inputs[1]);l.new(ao.outputs['Color'],shade.inputs[2])
+emit=n.new('ShaderNodeEmission');l.new(shade.outputs[0],emit.inputs['Color'])
+lightpath=n.new('ShaderNodeLightPath');weight=n.new('ShaderNodeMath');weight.operation='MULTIPLY';weight.inputs[1].default_value=.75;l.new(lightpath.outputs['Is Camera Ray'],weight.inputs[0])
+mixshader=n.new('ShaderNodeMixShader');l.new(weight.outputs[0],mixshader.inputs[0]);l.new(bs.outputs[0],mixshader.inputs[1]);l.new(emit.outputs[0],mixshader.inputs[2]);l.new(mixshader.outputs[0],n.get('Material Output').inputs['Surface'])
+# Seat every ornament sample on the evaluated convex shield, rather than
+# connecting a few endpoints by planes that cut through its dome.
+from mathutils.bvhtree import BVHTree
+bpy.context.view_layer.update();ev=shield.evaluated_get(bpy.context.evaluated_depsgraph_get());me=ev.to_mesh()
+shield_tree=BVHTree.FromPolygons([ev.matrix_world@v.co for v in me.vertices],[tuple(p.vertices) for p in me.polygons]);ev.to_mesh_clear()
+for o in list(sc.objects):
+ if not o.name.startswith(('GEO-vertical cross','GEO-horizontal cross')):continue
+ bm=bmesh.new();bm.from_mesh(o.data);bmesh.ops.triangulate(bm,faces=list(bm.faces));bmesh.ops.subdivide_edges(bm,edges=list(bm.edges),cuts=5,use_grid_fill=True);bm.to_mesh(o.data);bm.free()
+ inv=o.matrix_world.inverted()
+ for v in o.data.vertices:
+  world=o.matrix_world@v.co;hit,_,_,_=shield_tree.ray_cast(world+D*3,-D,6)
+  if hit is None:raise RuntimeError('Shield relief has no support: '+o.name)
+  v.co=inv@(hit+D*.004)
+# Finish rigid surfaces before projection; bone parenting retains articulation.
+for o in list(sc.objects):
+ if o.type!='MESH' or any(m.type=='ARMATURE' for m in o.modifiers):continue
+ bpy.ops.object.select_all(action='DESELECT');o.select_set(True);bpy.context.view_layer.objects.active=o
+ for mod in list(o.modifiers):
+  if mod.type in {'BEVEL','SOLIDIFY','SUBSURF'}:bpy.ops.object.modifier_apply(modifier=mod.name)
+sc['finished_surface_projection']=True
 bpy.ops.wm.save_as_mainfile(filepath=str(M/'unpainted.blend'))
 # Freeze projected UVs at rest. Facing and ray visibility weights reject occluded/back surfaces.
 # Convert curves to meshes before projection, preserving real cross section.
@@ -331,10 +368,12 @@ for o in list(sc.objects):
   ma=old.copy();ma.name=old.name+' projected '+o.name;o.data.materials[idx]=ma;n=ma.node_tree.nodes;l=ma.node_tree.links;s=n.get('Principled BSDF')
   uvn=n.new('ShaderNodeUVMap');uvn.uv_map='PaintingRestUV';t=n.new('ShaderNodeTexImage');t.image=painting;t.extension='CLIP';l.new(uvn.outputs[0],t.inputs['Vector'])
   attr=n.new('ShaderNodeVertexColor');attr.layer_name='PaintFacing';alpha=n.new('ShaderNodeMath');alpha.operation='MULTIPLY';l.new(attr.outputs[0],alpha.inputs[0]);l.new(t.outputs['Alpha'],alpha.inputs[1])
-  strength=n.new('ShaderNodeMath');strength.operation='MULTIPLY';strength.inputs[1].default_value=o.get('projection_weight',.90);l.new(alpha.outputs[0],strength.inputs[0]);mix=n.new('ShaderNodeMixRGB');l.new(strength.outputs[0],mix.inputs[0])
-  if s.inputs['Base Color'].is_linked:l.new(s.inputs['Base Color'].links[0].from_socket,mix.inputs[1])
-  else:mix.inputs[1].default_value=s.inputs['Base Color'].default_value
-  l.new(t.outputs['Color'],mix.inputs[2]);l.new(mix.outputs[0],s.inputs['Base Color']);l.new(mix.outputs[0],s.inputs['Emission Color']);s.inputs['Emission Strength'].default_value=.20
+  strength=n.new('ShaderNodeMath');strength.name='Frozen pigment coverage';strength.operation='MULTIPLY';strength.inputs[1].default_value=.97;l.new(alpha.outputs[0],strength.inputs[0])
+  # The painting already contains illumination. Preserve it for camera rays;
+  # physical rays and unpainted backs keep the generated fill/PBR material.
+  emit=n.new('ShaderNodeEmission');emit.name='Source painted illumination';l.new(t.outputs['Color'],emit.inputs['Color'])
+  lightpath=n.new('ShaderNodeLightPath');weight=n.new('ShaderNodeMath');weight.name='Camera only painted pigment';weight.operation='MULTIPLY';l.new(lightpath.outputs['Is Camera Ray'],weight.inputs[0]);l.new(strength.outputs[0],weight.inputs[1])
+  mixshader=n.new('ShaderNodeMixShader');l.new(weight.outputs[0],mixshader.inputs[0]);l.new(s.outputs[0],mixshader.inputs[1]);l.new(emit.outputs[0],mixshader.inputs[2]);l.new(mixshader.outputs[0],n.get('Material Output').inputs['Surface'])
  records.append({'name':o.name,'vertices':len(o.data.vertices)})
 sc['projection_method']='Frozen rest UVs on MPFB and true volumetric equipment; incidence/alpha blend into generated hidden-surface fills'
 bpy.ops.file.pack_all();bpy.ops.wm.save_as_mainfile(filepath=str(M/'tagmatic-soldier.blend'))

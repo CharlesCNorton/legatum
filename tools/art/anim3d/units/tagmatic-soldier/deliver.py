@@ -33,7 +33,7 @@ def grade_fit():
     k=next(k for k in range(16) if a[k]<=x<=a[k+1]);t=(x-a[k])/max(1,a[k+1]-a[k]);target=b[k]+t*(b[k+1]-b[k])
    lut.append(round(max(0,min(255,x*.55+target*.45))))
   stats[ch]={'painting':b,'render':a};luts.append(lut)
- (M/'grade.json').write_text(json.dumps({'method':'one rest-derived 17-quantile LUT, 45% transfer; identical across every clip','luts':luts,'stats':stats},indent=2))
+ (M/'grade.json').write_text(json.dumps({'method':'one rest-derived 17-quantile LUT, 45% transfer; identical across every clip','luts':luts,'stats':stats,'rest_render_sha256':sha(M/'renders/c/render.json'),'rest_frame_sha256':sha(M/'renders/c/00.png'),'model_sha256':sha(M/f'{SLUG}.blend')},indent=2))
 
 def graded(im):
  luts=json.loads((M/'grade.json').read_text())['luts'];return Image.merge('RGBA',[im.getchannel(c).point(l) for c,l in zip('RGB',luts)]+[im.getchannel('A')])
@@ -65,6 +65,12 @@ def review(stage):
     for j,im in enumerate([ref,ims[0]]):
      patch=im.crop(box);scale=min(124/patch.width,280/patch.height);patch=patch.resize((round(patch.width*scale),round(patch.height*scale)),Image.Resampling.LANCZOS);paste(detail,patch,k*256+j*128,30)
    detail.save(REV/f'{SLUG}-c-details.png')
+ elif stage=='g':
+  sheet=Image.new('RGBA',(128*8,318),BG);dr=ImageDraw.Draw(sheet)
+  dr.text((8,4),label+' | top: travel down; front: travel toward viewer',fill='black')
+  for i,im in enumerate(ims):
+   x=(i%8)*128;y=28+(i//8)*144;paste(sheet,shrink(im,128),x,y);dr.text((x+4,y+126),f'{"Top" if i<8 else "Front"} {i%8+1}',fill='black')
+  sheet.save(REV/f'{SLUG}-g-feet-check.png')
  else:
   sheet=Image.new('RGBA',(256*len(ims),370),BG);dr=ImageDraw.Draw(sheet);dr.text((8,8),label,fill='black')
   for i,im in enumerate(ims):paste(sheet,im,i*256,30);paste(sheet,shrink(im,64),i*256+96,296)
@@ -76,20 +82,29 @@ def review(stage):
  print('REVIEW_READY',stage)
 
 def pack():
- frames={};manifest={};packed=[];rowheights=[]
+ grade=json.loads((M/'grade.json').read_text())
+ assert grade['model_sha256']==sha(M/f'{SLUG}.blend'),'Stale grade model'
+ assert grade['rest_render_sha256']==sha(M/'renders/c/render.json'),'Stale rest render'
+ assert grade['rest_frame_sha256']==sha(M/'renders/c/00.png'),'Changed rest frame'
+ rest=json.loads((M/'renders/c/render.json').read_text())
+ frames={};manifest={};packed=[];rowheights=[];rowwidths=[]
  for row,(clip,(n,fps,loop)) in enumerate(CLIPS.items()):
   stage='e-'+clip;meta=json.loads((M/'renders'/stage/'render.json').read_text());assert meta['frames']==n;assert meta['blend_sha256']==sha(M/'clips'/f'{clip}.blend'),'Stale clip render'
+  assert all(meta[k]==rest[k] for k in ['resolution','engine','device','samples']),'Mixed render settings'
   cm=json.loads((M/'clips'/f'{clip}.json').read_text());assert cm['source_sha256']==sha(M/f'{SLUG}.blend'),'Stale animation master'
   review_meta=json.loads((M/'renders'/stage/'review.json').read_text());assert review_meta['render_sha256']==sha(M/'renders'/stage/'render.json'),'Stale review';assert review_meta['grade_sha256']==sha(M/'grade.json'),'Stale grade'
   for filename,digest in review_meta['frames256'].items():assert digest==sha(M/'256'/stage/filename),'Changed frame'
-  entries=[];x=0;height=0
+  entries=[];x=0;height=0;unique={}
   for i in range(n):
    p=M/'256'/stage/f'{i:02}.png';im=shrink(read(p),160);box=im.getchannel('A').getbbox();assert box,'Empty frame'
    # Preserve antialiasing and all alpha, with one-pixel trim gutter.
    l,t,r,b=box;l=max(0,l-1);t=max(0,t-1);r=min(160,r+1);b=min(160,b+1);patch=im.crop((l,t,r,b));w,h=patch.size
-   entries.append({'x':x,'y':0,'w':w,'h':h,'ox':l,'oy':t});packed.append((row,patch,x));x+=w+2;height=max(height,h)
-  frames[clip]={'row':row,'frames':n,'fps':fps,'loop':loop,'rects':entries};rowheights.append(height+2);manifest[clip]=meta
- width=max(sum(e['w']+2 for e in v['rects']) for v in frames.values());height=sum(rowheights);atlas=Image.new('RGBA',(width,height));yoffset=[sum(rowheights[:r]) for r in range(5)]
+   key=(patch.size,patch.tobytes())
+   if key not in unique:
+    unique[key]=x;packed.append((row,patch,x));x+=w+2
+   entries.append({'x':unique[key],'y':0,'w':w,'h':h,'ox':l,'oy':t});height=max(height,h)
+  frames[clip]={'row':row,'frames':n,'fps':fps,'loop':loop,'rects':entries};rowheights.append(height+2);rowwidths.append(x);manifest[clip]=meta
+ width=max(rowwidths);height=sum(rowheights);atlas=Image.new('RGBA',(width,height));yoffset=[sum(rowheights[:r]) for r in range(5)]
  for row,patch,x in packed:paste(atlas,patch,x,yoffset[row])
  for clip,v in frames.items():
   for e in v['rects']:e['y']=yoffset[v['row']]
@@ -100,7 +115,7 @@ def pack():
  assert chosen,'Atlas exceeds 200 KB at quality 75; do not silently reduce quality'
  meta={'version':2,'unit':SLUG,'layout':'trimmed-rows','frame':{'w':160,'h':160,'ax':74,'ay':142},'clips':frames,'quality':chosen[0]}
  OUT.mkdir(exist_ok=True,parents=True);(OUT/f'{SLUG}.webp').write_bytes(chosen[1]);(OUT/f'{SLUG}.json').write_text(json.dumps(meta,indent=2)+'\n')
- (M/'pack.json').write_text(json.dumps({'bytes':len(chosen[1]),'quality':chosen[0],'atlas_sha256':sha(OUT/f'{SLUG}.webp'),'renders':manifest,'grade_sha256':sha(M/'grade.json')},indent=2))
+ (M/'pack.json').write_text(json.dumps({'bytes':len(chosen[1]),'quality':chosen[0],'atlas_sha256':sha(OUT/f'{SLUG}.webp'),'metadata_sha256':sha(OUT/f'{SLUG}.json'),'renders':manifest,'grade_sha256':sha(M/'grade.json')},indent=2))
  print('PACKED',len(chosen[1]),'bytes, quality',chosen[0])
 def unpack(meta,atlas,clip):
  result=[]
@@ -110,6 +125,7 @@ def unpack(meta,atlas,clip):
 
 def validate():
  p=OUT/f'{SLUG}.webp';meta=json.loads(p.with_suffix('.json').read_text());atlas=read(p);assert p.stat().st_size<=200000;assert meta['quality']>=75;assert meta['frame']['w']==meta['frame']['h']==160
+ proof=json.loads((M/'pack.json').read_text());assert proof['atlas_sha256']==sha(p);assert proof['metadata_sha256']==sha(p.with_suffix('.json'));assert proof['grade_sha256']==sha(M/'grade.json')
  report={'bytes':p.stat().st_size,'quality':meta['quality'],'clips':{}}
  for name,(n,fps,loop) in CLIPS.items():
   c=meta['clips'][name];assert c['frames']==n and len(c['rects'])==n and c['fps']==fps and c['loop']==loop
@@ -126,14 +142,15 @@ def validate():
    box=im.getchannel('A').point(lambda x:255 if x>32 else 0).getbbox();margins.append(min(box[0],box[1],160-box[2],160-box[3]))
   assert min(margins)>=1,(name,'frame clipping',margins)
   if name=='death':
-   # Compare lossless masters because separate lossy atlas regions need not decode identically.
+   # Duplicate crops share one atlas rectangle: the decoded hold is exact too.
+   assert ims[-1].tobytes()==ims[-2].tobytes(),'Decoded death hold changed'
    assert read(M/'256/e-death/08.png').tobytes()==read(M/'256/e-death/09.png').tobytes(),'Death not held'
   report['clips'][name]={'frames':n,'minimum_margin':min(margins),'motion':True}
  (M/'validation.json').write_text(json.dumps(report,indent=2));print('VALIDATED',json.dumps(report))
 
 def video():
  meta=json.loads((OUT/f'{SLUG}.json').read_text());atlas=read(OUT/f'{SLUG}.webp');frames={c:[shrink(im,320) for im in unpack(meta,atlas,c)] for c in CLIPS}
- out=REV/f'{SLUG}-round{os.environ.get("ROUND","1")}.mp4'
+ out=REV/f'{SLUG}-round{os.environ.get("ROUND","2")}.mp4'
  proc=subprocess.Popen(['ffmpeg','-y','-loglevel','error','-f','rawvideo','-pix_fmt','rgb24','-s','1600x348','-r','30','-i','-','-an','-c:v','libx264','-threads','2','-pix_fmt','yuv420p','-crf','20','-movflags','+faststart',str(out)],stdin=subprocess.PIPE)
  for t in range(240):
   canvas=Image.new('RGBA',(1600,348),CREAM);d=ImageDraw.Draw(canvas)
@@ -141,10 +158,38 @@ def video():
    i=int(t/30*fps)%n if loop else min(int((t%60)/30*fps),n-1);paste(canvas,frames[name][i],k*320,28);d.text((k*320+8,8),name,fill=(60,45,25,255))
   proc.stdin.write(canvas.convert('RGB').tobytes())
  proc.stdin.close();assert proc.wait()==0
- print('VIDEO_READY',out)
+ probe=json.loads(subprocess.check_output(['ffprobe','-v','error','-select_streams','v:0','-show_entries','stream=codec_name,pix_fmt,width,height,nb_frames,duration,r_frame_rate','-of','json',str(out)],text=True))['streams'][0]
+ assert probe['codec_name']=='h264' and probe['pix_fmt']=='yuv420p'
+ assert (probe['width'],probe['height'],int(probe['nb_frames']))==(1600,348,240)
+ assert abs(float(probe['duration'])-8)<.001 and probe['r_frame_rate']=='30/1'
+ (M/'video-validation.json').write_text(json.dumps({'file':str(out),'sha256':sha(out),'stream':probe},indent=2))
+ print('VIDEO_READY',out,probe)
+
+def gpu_masters():
+ for stage,count in [('b',3),('c',1),('d',4),('g',16)]+[('e-'+c,n) for c,(n,_,_) in CLIPS.items()]:
+  folder=M/'renders'/stage;meta=json.loads((folder/'render.json').read_text())
+  assert (meta['device'],meta['engine'],meta['resolution'],meta['samples'],meta['frames'])==('GPU','CYCLES',512,48,count),(stage,'not GPU512/48')
+  blend=M/'clips'/f'{stage[2:]}.blend' if stage.startswith('e-') else M/'clips/attack.blend' if stage=='d' else M/'clips/move.blend' if stage=='g' else M/('unpainted.blend' if stage=='b' else f'{SLUG}.blend')
+  assert meta['blend_sha256']==sha(blend),(stage,'stale model')
+  reviewed=json.loads((folder/'review.json').read_text());assert reviewed['render_sha256']==sha(folder/'render.json')
+  if stage!='b':assert reviewed['grade_sha256']==sha(M/'grade.json')
+  for i in range(count):
+   raw=read(folder/f'{i:02}.png');assert raw.size==(512,512)
+   expected=raw if stage=='b' else graded(raw)
+   assert read(M/'512'/stage/f'{i:02}.png').tobytes()==expected.tobytes(),(stage,i,'stale 512 master')
+   assert read(M/'256'/stage/f'{i:02}.png').tobytes()==shrink(expected,256).tobytes(),(stage,i,'stale 256 master')
+ print('GPU_MASTERS_VERIFIED',64,'images at both sizes')
+
+def receipt():
+ gpu_masters();validate()
+ proof={'round':os.environ.get('ROUND','2'),'model_sha256':sha(M/f'{SLUG}.blend'),'atlas_sha256':sha(OUT/f'{SLUG}.webp'),'validation':json.loads((M/'validation.json').read_text()),'geometry':json.loads((M/'geometry-audit.json').read_text()),'video':json.loads((M/'video-validation.json').read_text()),'art_approved':False}
+ (REV/f'{SLUG}-gpu-round{proof["round"]}.json').write_text(json.dumps(proof,indent=2))
+
 if __name__=='__main__':
  command=sys.argv[1]
  if command=='review':review(sys.argv[2])
  elif command=='pack':pack()
  elif command=='validate':validate()
  elif command=='video':video()
+ elif command=='gpu-masters':gpu_masters()
+ elif command=='receipt':receipt()

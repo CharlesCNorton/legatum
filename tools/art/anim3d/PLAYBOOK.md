@@ -166,8 +166,7 @@ The complete lead-side command is executable `units/tagmatic-soldier/gpu.sh`
 stage, keeps 512 and 256 masters in `masters/tagmatic-soldier/`, packs and validates
 the 160 atlas, and writes all review PNGs, animated WebPs, the rest split-screen
 and `tagmatic-soldier-round${ROUND}.mp4`. It refuses a requested GPU pass if no
-Metal device is available. It consumes the baked model and clip masters; rebuild
-and rebake before handing off changed geometry. It never writes a PASS marker:
+Metal device is available. Round 2 rebuilds the model, bakes and clips from pinned inputs before rendering. It never writes a PASS marker:
 visual approval requires an actual review.
 
 Five clips are authored on the MPFB skeleton: idle 8, move 8, attack 10, hit 4,
@@ -196,3 +195,72 @@ and refuses oversized output at quality 75. Validation reconstructs each cell,
 checks bounds, alpha, motion and the held death. The MP4 uses that same trim-aware
 reconstruction: five clips side by side, 2x on cream, 8 seconds, H.264 yuv420p.
 Technical validation does not establish painting parity or collision-free motion.
+
+
+### Tagmatic round 2: finished projection and stable clip entry
+
+Apply the rigid kit's solidify/bevel modifiers before computing frozen UVs.
+Otherwise the rendered surface shifts away from the source even when cage UVs
+are correct. Triangulate/subdivide the raised cross and seat every sample on
+the evaluated convex shield; endpoints alone cut through the dome. Keep the
+original full-volume shield, rim and ornament, MPFB anatomy and bone parenting.
+
+Painted source illumination is a 97-percent camera-ray-only pigment layer where
+source alpha, facing and visibility allow it. Other rays and unseen surfaces
+retain physical materials and the recorded generated cloth/steel/leather/brass
+fills. Standard/None avoids compressing the source a second time. Real AO and
+Pointiness maps remain on the physical branch. Refit one hashed automatic rest
+grade after any such change, never one per frame. The stone has its own fine
+cream pigment and live contact AO, no projected feet or static source shadows.
+
+A compact anatomical palm and folded thumb fix the stray finger beside the
+shaft; equipment is attached after the palm adjustment so the spear keeps its
+full dimensions. Attack now extends farther forward and down. Read elbow and
+knee poles from the actual neutral rig to avoid a pose pop at clip entry; death
+interpolates these toward its landing poles. This remains authored motion and
+bone-attached folded cloth, not simulated cloth or a full collision solution.
+
+The sole no-argument GPU entry point remains
+`tools/art/anim3d/units/tagmatic-soldier/gpu.sh`, now defaulting to ROUND=2.
+It preflights Metal, rebuilds/bakes/animates/audits, renders every stage at
+GPU512/48, verifies every 512/256 export against the current scene and grade,
+packs/validates the trimmed 160 atlas and probes the eight-second decoded MP4.
+It retains a transcript and explicit failure stage. Its round receipt sets
+`art_approved: false`; technical success never creates the visual PASS marker.
+
+Identical crops within each Tagmatic clip share a rectangle, retaining all forty
+playback entries and their original offsets. The held death must be byte-identical
+in both the lossless source frames and decoded atlas cells.
+
+### Tagmatic GPU follow-up: sourced motion and reproducible rebuild
+
+The round-one GPU pass was successful (182,516 bytes, Q75), but consumed an
+external master ahead of the checked-in build scripts. The recovered unit-owned
+round-two changes now reproduce finished-surface projection and the rest grade.
+The stone has a thicker bevelled rim, normal-driven side shading, measured warmer
+pigment and live AO; the visible calf has a fuller fitted boot.
+
+Use proven open motion as the default for human units: this lane now uses the
+CC0 Quaternius Universal Animation Library Standard's Idle_Loop, Walk_Loop,
+Hit_Chest and Death01. `retarget.py` samples Blender world-space rotation
+constraints with full reference matrices and bone-roll compensation. Locomotion
+legs use the anatomical calibration rather than the painting's braced stance;
+boots map their flat neutral soles to the source T-pose. Aligning foot-bone axes
+alone pitches the fitted soles down. Never patch foot rotation after retargeting.
+The spear-carrying arm has a clearance constraint; only attack and released
+props are authored. Death blends out of the guard before following the sourced
+fall. Vertical root contact uses evaluated geometry; cloth is still modelled
+folds with contact shape keys, not simulation.
+
+Render `render.sh g` each round. `tagmatic-soldier-g-feet-check.png` shows all eight
+move samples from top and front; the geometry audit records sole heights and
+forward yaw. Inspect travel direction, contact and slide in motion; a bounds or
+alpha pass cannot certify foot planting. Source action names, samples, licence
+and hashes are stored in clip metadata and the unit's `SOURCES.md` and lockfile.
+
+The no-argument `gpu.sh` now rebuilds from pinned inputs and includes the g stage
+in its GPU512/48 master gate (64 review images at both 512 and 256). It creates
+the trimmed 160 atlas, validates exact alpha/offset reconstruction and held death,
+encodes the trim-aware round MP4, verifies ffprobe output, and writes a receipt
+with `art_approved: false`. It never creates PASS automatically. Inspect the
+GPU result at 256 and 64 before art approval.

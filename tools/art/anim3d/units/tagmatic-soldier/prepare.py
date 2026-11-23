@@ -8,6 +8,8 @@ lock=json.loads(Path(__file__).with_name('assets.lock.json').read_text())
 for key in ['painting','painted_fills']:
  entry=lock[key];path=A/entry['file']
  assert hashlib.sha256(path.read_bytes()).hexdigest()==entry['sha256'],f'Changed input: {path}'
+for name,digest in lock['motion']['files'].items():
+ assert hashlib.sha256((ROOT/'assets/quaternius-ual'/name).read_bytes()).hexdigest()==digest,f'Changed motion input: {name}'
 src=Image.open(A/'painting-source.png').convert('RGBA')
 ref=Image.open('app/src/assets/units/tagmatic-soldier-256.png').convert('RGBA')
 b=ref.getchannel('A').getbbox(); p=src.crop(src.getchannel('A').getbbox())
