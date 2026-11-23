@@ -54,3 +54,16 @@
 - Resumed WIP 39d259de; opened latest f-restpose and g-delivery before edits. At 256px turret is too round/tall, mantlet/gun registration is off, rear boxes are oversized and wheels lack painted depth; at 64px WWII identity is clear but proportions remain distinguishable. Old atlas quality 54 fails the new quality floor. No PASS. Applying all six Blender skills and testing the WIP full-surface projection, generated olive fill, folded canvas/straps and trimmed delivery.
 - Emitted tank-b-plain.png from actual b renders; visual review pending.
 - Emitted tank-c-textured-lit.png from actual c renders; visual review pending.
+- Emitted tank-b-plain.png from actual b renders; visual review pending.
+- Emitted tank-c-textured-lit.png from actual c renders; visual review pending.
+- Fresh WIP c render is substantially richer: full-surface projection restores wheel/bogie brushwork and cream stone. Crossfade exposed the gun 10px too low and a tall, narrow cast silhouette. Added measured full-depth camera-axis vertex registration (no cards or output-image warps), moved/reshaped cupola, mantlet, gun and rear stowage, shortened jerricans; rebuilt six actual bakes and projected again. Gun-line crossfade is now nearly registered, but rear shoulder/stowage silhouette and front fender still differ.
+- Emitted tank-b-plain.png from actual b renders; visual review pending.
+- Emitted tank-c-textured-lit.png from actual c renders; visual review pending.
+- Emitted tank-c-textured-lit.png from actual c renders; visual review pending.
+- Emitted tank-c-details.png from actual details renders; visual review pending.
+- Emitted tank-d-rig-poses.png from actual d renders; visual review pending.
+- Emitted tank-e-idle-strip.png from actual e-idle renders; visual review pending.
+- Emitted tank-e-move-strip.png from actual e-move renders; visual review pending.
+- Emitted tank-e-attack-strip.png from actual e-attack renders; visual review pending.
+- Emitted tank-e-hit-strip.png from actual e-hit renders; visual review pending.
+- Emitted tank-e-death-strip.png from actual e-death renders; visual review pending.
