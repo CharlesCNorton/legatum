@@ -54,3 +54,4 @@
 - Opened all sixteen initial front/top foot frames: feet were pointed down through horizontal sandals in the original painting-reference rig. Recalibrating actual ankle-to-toe axes before retargeting, preserving sandal placement and source rotations afterward.
 - Froze painting camera UVs and ray-tested visibility, with generated feather backfill on unseen surfaces.
 - Retargeted CC0 Quaternius idle/walk/hit/death with calibrated bone rolls; retained authored macuahuitl attack and rigid club release. No cloth simulation claimed.
+- Finished actual solid/beveled surfaces before projection, compacted the weighted weapon fist, and calibrated the physical circular stone and broad product key; retained original MPFB weights and generated feather fill.

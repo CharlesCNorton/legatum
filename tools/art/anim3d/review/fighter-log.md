@@ -62,3 +62,11 @@
 - Honest critique at 256: source-painted fuselage and canopy are close, but far wing has flat triangular/exclusion patches, near wing is too sharply polygonal, propeller tips/width differ, and the base is uniformly shaded rather than engraved cream stone. Motion: idle/move propeller strobes between two apparent orientations; crash retains an implausibly intact airframe. At 64: clearly same aircraft, scale and palette; base edge and propeller still differ. Not PASS.
 - Read full local PLAYBOOK, standing FEEDBACK 1–23, fighter log and all six Blender skills; fighter-FEEDBACK.md remains absent. Use modeling for curved closed airfoils and bevels, cameras for source-landmark fitting, materials/imagegen for occluded brushwork, lighting for live stone shadow, animation for mechanical spin, rendering for CPU previews and explicit GPU provenance. No cloth/straps or humanoid retargeting apply to the aircraft.
 - Rendered c: 256px, CYCLES; review published.
+- Rendered c: 256px, CYCLES; review published.
+- Rendered e-idle: 256px, CYCLES; review published.
+- Rendered b: 256px, CYCLES; review published.
+- Rendered e-move: 256px, CYCLES; review published.
+- Rendered e-attack: 256px, CYCLES; review published.
+- Rendered e-hit: 256px, CYCLES; review published.
+- Rendered e-death: 256px, CYCLES; review published.
+- Rendered g: 256px, CYCLES; review published.
