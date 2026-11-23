@@ -90,3 +90,35 @@
 - Published feet: CYCLES/CPU, 256 px, 8 samples; visual review pending.
 - Published e-move: CYCLES/CPU, 256 px, 8 samples; visual review pending.
 - Published e-death: CYCLES/CPU, 256 px, 8 samples; visual review pending.
+- Published c: CYCLES/CPU, 256 px, 8 samples; visual review pending.
+- Published feet: CYCLES/CPU, 256 px, 8 samples; visual review pending.
+- Published c: CYCLES/CPU, 256 px, 8 samples; visual review pending.
+- Published feet: CYCLES/CPU, 256 px, 8 samples; visual review pending.
+- Published b: CYCLES/CPU, 512 px, 8 samples; visual review pending.
+- Published c: CYCLES/CPU, 512 px, 8 samples; visual review pending.
+- Published d: CYCLES/CPU, 512 px, 8 samples; visual review pending.
+- Published e-idle: CYCLES/CPU, 512 px, 8 samples; visual review pending.
+- Published e-move: CYCLES/CPU, 512 px, 8 samples; visual review pending.
+- Published e-attack: CYCLES/CPU, 512 px, 8 samples; visual review pending.
+- Published e-hit: CYCLES/CPU, 512 px, 8 samples; visual review pending.
+- Published e-death: CYCLES/CPU, 512 px, 8 samples; visual review pending.
+- Published feet: CYCLES/CPU, 512 px, 8 samples; visual review pending.
+- Published c: CYCLES/CPU, 256 px, 8 samples; visual review pending.
+- Rebuilt rounded/narrower scutum and smaller cream base; moved spear wrist toward painted landmark, opposed thumb, brightened/thickened ash shaft. Fixed skin projection alpha (multiply source alpha, never replace) and pinned original generated skin fill for newly exposed surfaces.
+- Replaced authored idle/march/hit/folded death with Quaternius CC0 full-rotation retarget, anatomical rest/roll calibration, idle carrying arms and original shield attack. Added explicit loop closing keys, source-designated stance root translation and front/top foot renders. First40-sample geometry audit passed; foot audit reports0.02051deg max stance heading,0.00000052m ankleXY slip relative to implied map travel and0.01814m max root correction (not a full sole solver).
+- Foot sheet exposed floating straps despite successful centreline/collision checks. Snapped straps to posed anatomical surface, reduced tube width, and inverse-bound soles/straps to nearby calf/foot/toe skin weights. Full-rest render exposed incorrect sleeve weights from nearest unmorphed body vertices; switched shell weight transfer to evaluated mesh groups and corrected elbow pole. Regenerating every dependent master.
+- Published b: CYCLES/CPU, 512 px, 8 samples; visual review pending.
+- Published c: CYCLES/CPU, 512 px, 8 samples; visual review pending.
+- Published d: CYCLES/CPU, 512 px, 8 samples; visual review pending.
+- Published e-idle: CYCLES/CPU, 512 px, 8 samples; visual review pending.
+- Published e-move: CYCLES/CPU, 512 px, 8 samples; visual review pending.
+- Published e-attack: CYCLES/CPU, 512 px, 8 samples; visual review pending.
+- Published e-hit: CYCLES/CPU, 512 px, 8 samples; visual review pending.
+- Published e-death: CYCLES/CPU, 512 px, 8 samples; visual review pending.
+- Published feet: CYCLES/CPU, 512 px, 8 samples; visual review pending.
+- Published e-hit: CYCLES/CPU, 512 px, 8 samples; visual review pending.
+- Final full CPU8/512 delivery plus targeted captured-hit recovery correction:64 images at each512/256 size; source/grade/raw provenance PASS. All40 geometry samples PASS with no warnings; terminal body minimum0.10674m over0.085m stone. Foot audit PASS (heading0.02051deg, implied-travel ankle residual0.00000052m, root correction0.01814m).
+- Packed all40 trimmed160 samples into1046x754 at Q80,180914 bytes. Validator PASS for source margins, reconstructed offsets/alpha, hashes, motion and held death. MP4 ffprobe PASS:1600x348,H.264/yuv420p,240 frames,eight seconds. No unit-specific feedback file; common feedback remains1-23.
+- Opened final five strips, decoded Q80 atlas, final rest comparison and four representative MP4 frames. Honest verdict: at256 richer surfaces and better shield/base/wrist registration, but face/helmet, hand form and shoulder outline still differ; at64 same Roman identity but distinguishable stance. Captured death has a pronounced backward kick and exposed-surface/contact quality remains below painting. Rest silhouette IoU0.7449->0.7908 at256 and0.7588->0.8017 at64; no art acceptance inferred, no PASS marker.
+- Non-obvious findings: source-alpha replacement can project black background onto skin; fitting garment weights against unmorphed basis vertices can lift sleeves above shoulders; rigidly foot-parented sandals leave toe straps behind under captured roll. Fixes are in unit scripts and legionary playbook chapter. Python syntax15 scripts, Bash syntax2 scripts, executable gpu.sh and diff whitespace checks passed.
+- Final working-file hygiene PASS across18 changed/new text files; CPU-as-GPU rejection PASS. origin/master already contained. Working-tree art distinctness check blocked: Chromium MachPortRendezvous bootstrap_check_in Permission denied1100 (render-sets exits1); no art/browser approval claimed. Git add/commit attempted with required trailer, but sandbox denied .git/worktrees/lane-5/index.lock; runner must commit. Exact message retained in tmp/legionary/commit.txt. No push/PR. GPU handoff: ROUND=2 tools/art/anim3d/units/legionary/gpu.sh; new round2 GPU result remains unverified.

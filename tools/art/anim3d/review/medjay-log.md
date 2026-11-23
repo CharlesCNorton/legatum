@@ -207,3 +207,13 @@ Opened final rest/details/plain/rig review and all five strips, plus decoded-MP4
 GPU handoff is executable; missing-input failure produces log/status and no success receipt, and CPU-labelled masters are rejected. Full Metal execution is unavailable in this sandbox and remains for the lead: ROUND=2 tools/art/anim3d/units/medjay/gpu.sh. No PASS marker. No engine/rules/runtime changes; Rust/WASM/app suites are not relevant.
 Final syntax: 11 Python modules compile; both Bash entry points pass bash -n; git diff --check passes. origin/master is already an ancestor of HEAD. No new feedback file; common feedback still ends at item 22.
 Commit attempt blocked by sandbox: cannot create .git/worktrees/lane-18/index.lock (Operation not permitted). All changes remain uncommitted for the runner; medjay-commit-message.txt has the required co-author trailer. No push, PR or master merge. Browser art gate/reviewer and full Metal pass remain for the lead; technical CPU validation is not art approval.
+Rendered b: 1 frames, 512px, CYCLES/GPU.
+Published b-plain review immediately; source CYCLES/GPU, 512px.
+Rendered c: 1 frames, 512px, CYCLES/GPU.
+Published c-textured-lit review immediately; source CYCLES/GPU, 512px.
+Rendered c-details: 1 frames, 512px, CYCLES/GPU.
+Published c-details review immediately; source CYCLES/GPU, 512px.
+Rendered d: 4 frames, 512px, CYCLES/GPU.
+Published d-rig-poses review immediately; source CYCLES/GPU, 512px.
+Rendered e-idle: 8 frames, 512px, CYCLES/GPU.
+Published e-idle-strip review immediately; source CYCLES/GPU, 512px.
