@@ -44,3 +44,7 @@
 - Validation PASS: model/pipeline/clip/grade/frame hashes, six wheel travel/radius and exact loop, all geometry above stone, all forty reconstructed alpha masks, held death. Atlas 1368x595 / 193574 bytes / quality 78. MP4 1600x348, H.264 yuv420p, 240 frames, 8.0 seconds; decoded frame inspected.
 - gpu.sh exercised: expected explicit Metal unavailable at preflight; CPU evidence preserved, no GPU receipt claimed. Python compile, shell syntax and whitespace checks pass. Git index.lock denied; runner must commit.
 - Art verdict: recognizable rocket truck at 64px; at 256px over-bright far wheels, tire proportions, tube rim registration, cab/fender fitting and plain stone remain below the painting. Attack pulse needs more visual force. Oblique geometry and moving projected illumination need refinement. No PASS marker.
+- Published b-plain CPU/GPU geometry stage before texture work.
+- Baked 256px AO and curvature maps on GEO-Cab full shell, GEO-Hood engine enclosure, GEO-Launcher near side panel
+- Published painted rest pose and 50/50 comparison; real AO shader, micrograin, edge geometry and hidden-surface fill.
+- Published e-idle: 8 actual rendered frames, 10 fps; GPU 512px 64 samples.
