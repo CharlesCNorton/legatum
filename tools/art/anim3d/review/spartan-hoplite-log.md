@@ -155,3 +155,14 @@ Baked animate-death with Quaternius source motion or the weapon-specific attack,
 Baked clip idle
 Round3 follow-up full audit reduced43 findings to2 walking anatomical-toe/base intersections. Sandals were rigidly foot-parented while MPFB toes use the ball bones. Transferred nearest anatomical foot/ball weights to complete finished soles/straps through inverse neutral skin matrices, preserving rest geometry and source rotations. Rebuild required. Evaluated-sole solver correction0.05952m is below measured quarter-sole limit0.06974m; independent25mm slip and20deg yaw delivery gates remain strict.
 Baked clip move
+Baked clip attack
+Baked clip hit
+Baked clip death
+Review b: 256px CYCLES/CPU, 12 samples; 3 actual frames.
+Review c: 256px CYCLES/CPU, 12 samples; 1 actual frames.
+Review d: 256px CYCLES/CPU, 12 samples; 4 actual frames.
+Review e-idle: 256px CYCLES/CPU, 12 samples; 8 actual frames.
+Review e-move: 256px CYCLES/CPU, 12 samples; 8 actual frames.
+Review e-attack: 256px CYCLES/CPU, 12 samples; 10 actual frames.
+Review e-hit: 256px CYCLES/CPU, 12 samples; 4 actual frames.
+Review e-death: 256px CYCLES/CPU, 12 samples; 10 actual frames.

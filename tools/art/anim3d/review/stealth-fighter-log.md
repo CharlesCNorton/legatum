@@ -45,3 +45,24 @@ GPU round 1: all stages GPU512, verified 256 copies, trimmed atlas, geometry/alp
 Round 2: opened round-1 GPU c/f sheets, all five e strips and decoded movie frame before edits; full feedback 1–23 read; unit-specific FEEDBACK absent. GPU round1 receipt/status confirms complete pass (outer driver log empty).
 Honest GPU critique at 256px: airframe silhouette/panel pigment very close to painting, but disc is smooth flat caramel with weak grain and dark uniform rim; canopy/wing edges slightly softened; missile reads as a hairline; support disappears abruptly in death and touchdown is too gentle. At 64px identity/scale match well, but attack hardly reads. Not PASS. Preserved incoming GPU masters/reviews before rebuilding.
 Skills reloaded: modeling (beveled solid missile and support pivot), materials (generated stone pigment/live AO), cameras (retain exact fixed orthographic registration), lighting (warm key/cool rim/contact), animation (continuous support fall and release), rendering (CPU Cycles preview and GPU provenance). No cloth/straps apply to this aircraft.
+c: 1 frames at 256/64 from 256px CYCLES/CPU, 8 samples.
+e-attack: 10 frames at 256/64 from 256px CYCLES/CPU, 8 samples.
+e-death: 10 frames at 256/64 from 256px CYCLES/CPU, 8 samples.
+c: 1 frames at 256/64 from 512px CYCLES/CPU, 8 samples.
+b: 3 frames at 256/64 from 512px CYCLES/CPU, 8 samples.
+c: 1 frames at 256/64 from 512px CYCLES/CPU, 8 samples.
+d: 4 frames at 256/64 from 512px CYCLES/CPU, 8 samples.
+e-idle: 8 frames at 256/64 from 512px CYCLES/CPU, 8 samples.
+e-move: 8 frames at 256/64 from 512px CYCLES/CPU, 8 samples.
+e-attack: 10 frames at 256/64 from 512px CYCLES/CPU, 8 samples.
+e-hit: 4 frames at 256/64 from 512px CYCLES/CPU, 8 samples.
+e-death: 10 frames at 256/64 from 512px CYCLES/CPU, 8 samples.
+b: 3 frames at 256/64 from 256px CYCLES/CPU, 6 samples.
+b: 3 frames at 256/64 from 512px CYCLES/CPU, 8 samples.
+c: 1 frames at 256/64 from 512px CYCLES/CPU, 8 samples.
+d: 4 frames at 256/64 from 512px CYCLES/CPU, 8 samples.
+e-idle: 8 frames at 256/64 from 512px CYCLES/CPU, 8 samples.
+e-move: 8 frames at 256/64 from 512px CYCLES/CPU, 8 samples.
+e-attack: 10 frames at 256/64 from 512px CYCLES/CPU, 8 samples.
+e-hit: 4 frames at 256/64 from 512px CYCLES/CPU, 8 samples.
+e-death: 10 frames at 256/64 from 512px CYCLES/CPU, 8 samples.
