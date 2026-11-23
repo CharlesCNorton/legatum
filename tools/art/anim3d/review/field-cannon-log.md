@@ -20,3 +20,4 @@
 - Posted field-cannon-e-attack-strip.png; actual CYCLES render, visual review pending.
 - Posted field-cannon-e-hit-strip.png; actual CYCLES render, visual review pending.
 - Posted field-cannon-e-death-strip.png; actual CYCLES render, visual review pending.
+- First death strip revealed left-edge clipping during the fall and an arm-supported terminal pose. Reauthored a face-up fall with earlier root travel, tucked arms, evaluated back contact, and earlier rammer settling. Final round queued.
