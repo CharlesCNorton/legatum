@@ -9,3 +9,9 @@
 - Applied live reviewer feedback: flat iron tyres, folded sleeves, darker bronze pigment, surface-fitted moustache and eyebrows, warm painted skin, leaning torso, warmer cream base. Rebuilding queued at the machine-wide gate.
 - Posted field-cannon-d-rig-poses.png; actual CYCLES render, visual review pending.
 - Posted field-cannon-e-idle-strip.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-c-textured-lit.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-c-details.png; actual CYCLES render, visual review pending.
+- Posted first idle strip. The running shell encountered a dispatch-file edit during review; subsequent stages stopped (exit 127). Restarted from build using the stable dispatcher and complete projection/grade pipeline; no Blender crash occurred.
+- Posted field-cannon-d-rig-poses.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-idle-strip.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-move-strip.png; actual CYCLES render, visual review pending.
