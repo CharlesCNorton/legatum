@@ -177,3 +177,6 @@
 - Posted field-cannon-e-idle-strip.png; actual CYCLES render, visual review pending.
 - ROUND 4 CLIP REVIEW: Opened all five updated CPU strips. Idle, push/roll, recoil/smoke, hit and grounded held death remain readable; the newly fitted right hand follows the rammer. The first complete pass exposed an over-broad leather mask suppressing the shako's painted brass details. Restricted that mask to boot/body leather, restored the source on shako/visor, and am regenerating every affected frame with a single updated master hash. One interim Python indentation error was caught and fixed before this pass; no Blender crash occurred.
 - Posted field-cannon-e-move-strip.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-attack-strip.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-hit-strip.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-death-strip.png; actual CYCLES render, visual review pending.
