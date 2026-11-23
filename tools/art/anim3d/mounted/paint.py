@@ -10,7 +10,7 @@ from bpy_extras.object_utils import world_to_camera_view
 R=Path(os.environ['ANIM_ROOT']);M=R/'masters/horseman-3d';A=R/'assets/horseman'
 bpy.ops.wm.open_mainfile(filepath=str(M/'horseman-unpainted.blend'));sc=bpy.context.scene;hrig=bpy.data.objects['AnimalArmature'];rig=bpy.data.objects['Rider MPFB game_engine']
 for node in ast.parse(Path('tools/art/anim3d/scene.py').read_text()).body:
- if isinstance(node,ast.FunctionDef) and node.name in {'curve','mesh','solid','material'}:exec(compile(ast.Module(body=[node],type_ignores=[]),'<shared geometry>','exec'))
+ if isinstance(node,ast.FunctionDef) and node.name in {'curve','mesh','solid','material','aim_bone','limb'}:exec(compile(ast.Module(body=[node],type_ignores=[]),'<shared geometry>','exec'))
 # Match the painting's raised near forehoof with a real pose from the source walk.
 for a in bpy.data.actions:a.use_fake_user=True
 hrig.animation_data.action=bpy.data.actions['AnimalArmature|Walk'];hrig.animation_data.action_slot=hrig.animation_data.action.slots[0];sc.frame_set(19)
@@ -29,6 +29,31 @@ for v in horse.data.vertices:
  shoulder=math.exp(-((v.co.y+.026)/.006)**2-((v.co.z+.013)/.006)**2)
  if abs(v.co.x)>.001:v.co.x+=math.copysign(.00065*shoulder,v.co.x)
 horse.data.update()
+# Round 2: calibrate view and actual pose before freezing projection UVs.
+sc.camera.location=(-8,-6,3.55)
+sc.camera.rotation_euler=(Vector((0,0,1.4))-sc.camera.location).to_track_quat('-Z','Y').to_euler()
+sc.camera.data.shift_x=-.020
+base=bpy.data.objects['Stationary cream stone'];base.scale.x=base.scale.y=.795
+# Match the painting's lifted spear hand; keep the actual weighted MPFB arm.
+limb('upperarm_r','lowerarm_r',(-.43,-.30,1.53),(-.49,-.12,1.23))
+aim_bone('hand_r',(-.12,0,1))
+# Turn the face toward the horse's direction, retaining its anatomical depth.
+from mathutils import Quaternion
+head=rig.pose.bones['head'];head.rotation_mode='QUATERNION';head.rotation_quaternion=head.rotation_quaternion@Quaternion((0,1,0),-.12)
+bpy.context.view_layer.update()
+rig['seated_pose']=json.dumps({p.name:[list(row) for row in p.matrix_basis] for p in rig.pose.bones})
+# Sleeveless linen as painted; remove tubular fake folds and sculpt the cloth shell.
+import bmesh
+for o in list(sc.objects):
+ if o.name.startswith('Linen chest fold'):bpy.data.objects.remove(o,do_unlink=True)
+shirt=bpy.data.objects['Rider linen shirt and sleeves']
+bm=bmesh.new();bm.from_mesh(shirt.data)
+bmesh.ops.delete(bm,geom=[v for v in bm.verts if abs(v.co.x)>.205 and v.co.z>1.28],context='VERTS')
+bm.to_mesh(shirt.data);bm.free()
+for v in shirt.data.vertices:
+ if v.co.y<0:
+  v.co.y-=.004*math.sin(52*v.co.z+18*v.co.x)*math.sin(math.pi*max(0,min(1,(v.co.z-1.02)/.43)))
+shirt.data.update()
 # Work in native 256 px camera coordinates, mapping a handful of anatomical landmarks.
 # The source file is aligned to the committed token, not independently reframed.
 horse_pairs=[((82,118),(94,138)),((128,137),(133,152)),((149,112),(157,115)),((174,107),(182,100)),((186,137),(189,120)),((161,184),(163,184)),((168,229),(169,220)),((87,220),(96,222)),((112,190),(121,192))]
@@ -139,7 +164,8 @@ for link in list(s.inputs['Base Color'].links):l.remove(link)
 s.inputs['Base Color'].default_value=(.68,.47,.23,1);s.inputs['Roughness'].default_value=.85
 sc.view_settings.look='AgX - Very High Contrast';sc.view_settings.exposure=.30
 # Warmer, less front-lit studio treatment; do not flatten painted cavities.
-bpy.data.objects['Cool fill'].data.energy=160;bpy.data.objects['Warm key'].data.energy=600
+bpy.data.objects['Cool fill'].data.energy=120;bpy.data.objects['Warm key'].data.energy=550
+bpy.data.objects['Warm rim'].data.energy=220;bpy.data.objects['Warm rim'].data.color=(.78,.86,1)
 sc['painting_projection']='Original CC BY 4.0 painting, fixed UV on skinned geometry, landmark calibrated; generated unseen-surface fills'
 (M/'projection.json').write_text(json.dumps({'meshes':records,'horse_landmarks':horse_pairs,'rider_landmarks':rider_pairs,'cream_target_srgb':'#E9CFA0','limitation':'View-specific painted lighting; landmark alignment is approximate, not pixel parity.'},indent=2))
 bpy.ops.file.pack_all();bpy.ops.wm.save_as_mainfile(filepath=str(M/'horseman.blend'))

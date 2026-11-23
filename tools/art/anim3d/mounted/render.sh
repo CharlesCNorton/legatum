@@ -10,5 +10,5 @@ case "$stage" in
 esac
 gpu=()
 if [[ "$script" == */render.py && ( "$RENDER_ENGINE" == BLENDER_EEVEE || "${CYCLES_DEVICE:-CPU}" == GPU ) ]]; then gpu=(--gpu-backend metal); fi
-"$ANIM_ROOT/bin/blender-slot" -b --disable-autoexec --factory-startup --python-exit-code 1 "${gpu[@]}" --python "$script" "${args[@]}"
+blender -b --disable-autoexec --factory-startup --python-exit-code 1 "${gpu[@]}" --python "$script" "${args[@]}"
 if [[ "$script" == */render.py ]]; then "$ANIM_ROOT/venv/bin/python" tools/art/anim3d/mounted/grade.py "$stage"; "$ANIM_ROOT/venv/bin/python" tools/art/anim3d/mounted/review.py "$stage"; fi
