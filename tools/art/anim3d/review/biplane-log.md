@@ -77,3 +77,5 @@
 - Saved b review immediately; 1 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/b/render.json.
 - Saved c review immediately; 1 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/c/render.json.
 - Saved d review immediately; 4 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/d/render.json.
+- Saved g review immediately; 16 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/g/render.json.
+- Saved e-idle review immediately; 8 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/e-idle/render.json.

@@ -99,3 +99,8 @@
 - Published e-hit review from GPU render.
 - Published e-death review from GPU render.
 - Full GPU stage/master/atlas/movie pass completed; fresh visual judgment still required.
+
+# Driver round 2 after verified round-1 GPU pass, 2026-11-23
+- Opened GPU c, rest comparison, ALL five e strips and eight frames from round1.mp4 before changing code. GPU transcript completed successfully: 191422 bytes Q80; not a pipeline failure. Prior log round labels differ from driver round numbers. Archived GPU evidence under masters/barbarian-spearman/driver-r1-gpu.
+- Honest critique at native 256: frozen painting preserves face/linen detail, but dark interrupted wrist/shaft, jagged fur collar, narrow shield lower contour, smooth yellow stone, stiff move and hovering/propped-up terminal death remain conspicuous. At native 64: same oval-shield/low-spear identity and close overall scale; stance, shield and motion still distinguish it from the painting. No PASS.
+- Read complete PLAYBOOK, global feedback 1-23 and all six Blender skills; unit-specific FEEDBACK remains absent. Apply modeling/cameras to full-volume registration and contact folds, materials/lighting to generated unseen fills and cream stone, animation to CC0 retarget with roll calibration, rendering to CPU previews and provenance-backed GPU handoff.
