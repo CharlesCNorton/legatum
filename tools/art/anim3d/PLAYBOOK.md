@@ -107,7 +107,7 @@ tools/art/anim3d/render.sh audit
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
 
-## Infantry chapter: Medjay (round 1)
+## Infantry chapter: Medjay
 
 This unit's scripts are isolated under `tools/art/anim3d/units/medjay/`. The
 existing spearman chapter supplies MPFB installation and environment setup;
@@ -124,16 +124,21 @@ the painting, project the original painting as fixed UV colour on the actual
 skinned surfaces, finish geometry with physical thickness/rounded edges/folds,
 and light as a painted miniature with a warm upper-left key, cool rim and soft
 fill. Camera projection is the standard method, not a flat subject card.
-Normal-incidence and source-alpha masks blend into generated painted skin,
-linen, hide and wood fills on unseen sides. Actual geometry AO and Pointiness
-bakes supply cavity shading and roughness variation. Projection includes painted
-lighting, so large pose changes and texture registration need visual review.
+Normal-incidence and source-alpha masks blend into the existing generated painted
+skin, linen, hide and wood fills on unseen sides. Eight actual geometry AO and
+Pointiness bake pairs supply cavity shading and roughness variation, including
+the solid headband and anatomical eyes. The camera-only painted pigment retains the source's
+illumination at 96% confidence; non-camera rays use the physical material.
+Standard/None prevents a second display rolloff of that already painted light.
+This is specific to projected illustration, not a general photographic preset.
+The orthographic view is calibrated approximately; silhouette differences remain.
 
 The single stationary cream stone disc targets **sRGB #E9CFA0** with a darker
-rim and fine grain. Shader inputs are linear values, not that hex pasted into
-Blender. Medjay starts with linear pigment `(.98,.60,.30)` and a restrained warm
-emission contribution under its product lights. A 17-quantile foreground RGB transfer is calibrated against the painting
-at rest, bounded to 24 levels/channel and frozen for all clips; alpha is retained.
+rim and fine grain. The physical shader is tuned against rendered pixels, not
+only an albedo swatch. Its top remains at .085 m while the thinner underside and
+slightly smaller radius better fit the painting. No painted figure or feet are
+projected onto the base. A 17-quantile foreground RGB transfer is calibrated at
+rest, bounded to 24 levels/channel and frozen for all clips; alpha is retained.
 Raw frames remain ungraded. Never histogram-fit each frame independently.
 `medjay-f-restpose-compare.png` includes the painting, 3D, a half split and
 50/50 crossfade at 256 px with 64 px checks. File creation is not art approval.
@@ -186,3 +191,49 @@ coordinates from `row*160` or frame index. Two-pixel gutters separate crops.
 Quality tries 90/85/80/75, never below 75, and refuses >200,000 bytes. No frames
 are dropped. Blend hashes, source-frame hashes and the frozen grade bind the
 pack report to its source renders. The candidate is not wired into the runtime.
+
+### Medjay round-two findings
+
+Read the actual prior provenance: the supplied round-one output was CPU512/6,
+not verified GPU output. The original masters, all frames and reviews are
+preserved in `masters/medjay/round1-cpu/`. The unit-specific feedback file was
+absent; common feedback 1-22 was read in full.
+
+`register.py` fits the actual cranial vault, calves and toes in the fixed rest
+view through inverse skin transforms, retaining depth and the native weights.
+The tilted head is upright, the feather narrower, and the three headband tubes
+are replaced by a solid woven ribbon. The taller kilt closes a real waist gap;
+its matching anatomical coverage mask prevents skin showing through opaque cloth.
+The original 19,158-vertex MPFB cage is retained in the plain master. Registration freezes macro morphs; `finish.py` applies smoothing/thickness/bevels
+before UV calibration;
+the finished body's subdivision interpolates the native weights. It does not
+retain the original vertex count. The old coverage-only `refine.py` was removed
+because it could not safely transfer indices between these two topologies.
+
+Camera-only paint avoids double illumination and emission spill. Hidden surfaces
+retain the recorded image-generated fills, real AO/curvature and product lights.
+The audit verifies the finished UVs within .05 token pixels and exact rest entry
+for attack/hit/death, as well as the rig, stationary base and nonzero scales.
+Move compensates planted targets for root bob. These checks are not a full
+collision solver or an art PASS.
+
+The trimmed atlas now uses bicubic reduction with full 8-bit alpha, verified
+byte-for-byte after reconstruction. Identical samples reuse a rectangle, keeping
+the final death hold identical after lossy RGB encoding. Validation rejects
+stale retained 512/256 masters and mixed rest/clip render settings. A CPU preview
+is labelled explicitly; GPU delivery requires all nine stages at GPU512/64+.
+
+The executable `gpu.sh` defaults to ROUND=2, keeps a direct round log and failure
+status, removes its stale receipt before work, then renders every stage, verifies
+GPU provenance and retained masters, audits, packs, validates and encodes the
+five-clip MP4. Only successful completion writes a technical receipt with
+`art_approved:false`. Missing inputs and CPU-labelled renders are tested rejection
+paths. The sandbox has no Metal, so the host's GPU run remains required.
+
+Round-two CPU verification: all 40 frames retained at 512 and 256 px, Cycles
+CPU8; trimmed 160 px WebP **157,968 bytes at quality 90**, full lossless alpha.
+Atlas reconstruction, identical decoded death hold, current render/grade/master
+hashes, rig/finished-UV/combat-entry audit, Python/Bash syntax and whitespace
+checks pass. MP4 verified H.264/yuv420p, 1600 x 348, 30 fps, 240 frames, 8 seconds.
+Silhouette alpha IoU improves from .776736 to .802003. The painting remains
+visibly different; **no art PASS and no verified GPU render**.

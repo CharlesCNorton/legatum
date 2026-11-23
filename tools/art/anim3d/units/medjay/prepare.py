@@ -22,7 +22,7 @@ pixels=list(out.get_flattened_data());alpha=[]
 for i,(r,g,b,a) in enumerate(pixels):
  x,y=(i%1024)/4,(i//1024)/4
  region=(y<99 and x<153) or (145<y<219 and 108<x<162)
- valid=region and r>g*1.18 and g>max(1,b)*1.16
+ valid=region and ((y<53) or (r>g*1.18 and g>max(1,b)*1.16))
  alpha.append(a if valid else 0)
 mask=Image.new('L',out.size);mask.putdata(alpha)
 skin=out.copy();skin.putalpha(mask);skin.save(A/'projection-skin.png')

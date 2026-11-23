@@ -5,15 +5,33 @@ sys.path.insert(0,str(Path(__file__).resolve().parent))
 from common import *
 from bpy_extras.object_utils import world_to_camera_view
 bpy.ops.wm.open_mainfile(filepath=str(M/'medjay-plain.blend'));sc=configure();sc.cycles.samples=6
+# Freeze actual finished surfaces before calibrating UVs. The editable original
+# MPFB macro body remains in round1-cpu; the plain cage and weights survive.
+for obj in list(sc.objects):
+ if obj.type not in {'MESH','CURVE'}:continue
+ bpy.ops.object.select_all(action='DESELECT');obj.select_set(True);bpy.context.view_layer.objects.active=obj
+ if obj.type=='CURVE':bpy.ops.object.convert(target='MESH')
+ if obj.data.shape_keys:bpy.ops.object.shape_key_remove(all=True,apply_mix=True)
+ deform=[(m,m.show_viewport) for m in obj.modifiers if m.type in {'ARMATURE','MASK'}]
+ for m,_ in deform:m.show_viewport=False
+ for mod in list(obj.modifiers):
+  if mod.type in {'ARMATURE','MASK'}:continue
+  if mod.type=='SUBSURF' and mod.levels==0:obj.modifiers.remove(mod);continue
+  mod.show_viewport=True
+  bpy.ops.object.modifier_apply(modifier=mod.name)
+ for m,enabled in deform:m.show_viewport=enabled
+ bpy.context.view_layer.update()
 painting=bpy.data.images.load(str(A/'painting-aligned.png'),check_existing=True)
 # Work in stable rest camera coordinates. UVs are fixed to vertices before animation.
-objects=[o for o in sc.objects if o.type=='MESH' and o.name in ['Medjay MPFB anatomical body','Pleated linen kilt','Overlapping pleated apron','Convex painted oxhide shield','Faceted bronze spearhead','Ostrich feather vane']]
+objects=[o for o in sc.objects if o.type=='MESH' and o.name in ['Medjay MPFB anatomical body','Pleated linen kilt','Overlapping pleated apron','Convex painted oxhide shield','Faceted bronze spearhead','Ostrich feather vane','Woven headband','Medjay anatomical eyes']]
 records=[];baked=M/'textures/baked';baked.mkdir(parents=True,exist_ok=True)
 for obj in objects:
  bpy.ops.object.select_all(action='DESELECT');obj.select_set(True);bpy.context.view_layer.objects.active=obj
  if not obj.data.uv_layers:
   bpy.ops.object.mode_set(mode='EDIT');bpy.ops.mesh.select_all(action='SELECT');bpy.ops.uv.smart_project(angle_limit=1.15,island_margin=.025);bpy.ops.object.mode_set(mode='OBJECT')
  original_uv=obj.data.uv_layers.active.name
+
+ if obj.name=='Medjay anatomical eyes':obj.data.materials.clear();obj.data.materials.append(material('Brown eye fill',(.045,.018,.008),rough=.45))
  mat=obj.data.materials[0].copy();mat.name=obj.name+' painted material';obj.data.materials.clear();obj.data.materials.append(mat);n=mat.node_tree.nodes;l=mat.node_tree.links;s=n.get('Principled BSDF');out=n.get('Material Output')
  states=[(m,m.show_render,m.show_viewport) for m in obj.modifiers]
  for m,_,_ in states:
@@ -45,8 +63,24 @@ for obj in objects:
  for mod,render,viewport in states:mod.show_render=render;mod.show_viewport=viewport
  tex=n.new('ShaderNodeTexImage');tex.image=bpy.data.images.load(str(A/'projection-skin.png'),check_existing=True) if obj.name=='Medjay MPFB anatomical body' else painting;tex.extension='CLIP';tc=n.new('ShaderNodeUVMap');tc.uv_map=uv.name;l.new(tc.outputs[0],tex.inputs['Vector']);att=n.new('ShaderNodeVertexColor');att.layer_name=attr.name;factor=n.new('ShaderNodeMath');factor.operation='MULTIPLY';l.new(att.outputs[0],factor.inputs[0]);l.new(tex.outputs['Alpha'],factor.inputs[1])
  mix=n.new('ShaderNodeMixRGB');l.new(factor.outputs[0],mix.inputs[0]);l.new(ao.outputs[0],mix.inputs[1]);l.new(tex.outputs['Color'],mix.inputs[2]);l.new(mix.outputs[0],s.inputs['Base Color'])
- # Principled emission retains painting recesses without replacing 3D shading.
- l.new(mix.outputs[0],s.inputs['Emission Color']);s.inputs['Emission Strength'].default_value=.25
+ # The source includes painted illumination. Camera rays see that pigment;
+ # shadow/bounce rays and revealed surfaces retain the generated-fill BSDF.
+ # This avoids both double lighting and using the painted skin as a lamp.
+ pigment=n.new('ShaderNodeBsdfPrincipled');pigment.name='Camera painted pigment'
+ pigment.inputs['Base Color'].default_value=(0,0,0,1)
+ pigment.inputs['Specular IOR Level'].default_value=0
+ pigment.inputs['Emission Strength'].default_value=1
+ l.new(tex.outputs['Color'],pigment.inputs['Emission Color'])
+ physical=mix.inputs[1].links[0].from_socket
+ l.new(physical,s.inputs['Base Color'])
+ path=n.new('ShaderNodeLightPath');camera=n.new('ShaderNodeMath');camera.operation='MULTIPLY'
+ l.new(path.outputs['Is Camera Ray'],camera.inputs[0]);l.new(factor.outputs[0],camera.inputs[1])
+ strength=n.new('ShaderNodeMath');strength.operation='MULTIPLY';strength.inputs[1].default_value=.96;l.new(camera.outputs[0],strength.inputs[0])
+ fill_pigment=n.new('ShaderNodeBsdfPrincipled');fill_pigment.name='Camera unseen painted fill';fill_pigment.inputs['Base Color'].default_value=(0,0,0,1);fill_pigment.inputs['Specular IOR Level'].default_value=0;fill_pigment.inputs['Emission Strength'].default_value=1;l.new(ao.outputs[0],fill_pigment.inputs['Emission Color'])
+ fill_weight=n.new('ShaderNodeMath');fill_weight.operation='MULTIPLY';fill_weight.inputs[1].default_value=.55;l.new(path.outputs['Is Camera Ray'],fill_weight.inputs[0])
+ fill_shaders=n.new('ShaderNodeMixShader');l.new(fill_weight.outputs[0],fill_shaders.inputs[0]);l.new(s.outputs[0],fill_shaders.inputs[1]);l.new(fill_pigment.outputs[0],fill_shaders.inputs[2])
+ shaders=n.new('ShaderNodeMixShader');l.new(strength.outputs[0],shaders.inputs[0]);l.new(fill_shaders.outputs[0],shaders.inputs[1]);l.new(pigment.outputs[0],shaders.inputs[2]);l.new(shaders.outputs[0],out.inputs['Surface'])
  records.append({'object':obj.name,'vertices':len(obj.data.vertices),'AO':maps['AO'].image.filepath_raw,'curvature':maps['curvature'].image.filepath_raw,'projection':'rest-camera UV, normal incidence and source alpha, generated hidden-side fill'})
+sc['finished_surface_projection']=True
 sc['projection']='CC BY original painting on genuine meshes; fixed UV moves with rig; approximate camera registration'
-bpy.ops.file.pack_all();bpy.ops.wm.save_as_mainfile(filepath=str(M/'medjay.blend'));(M/'surface-manifest.json').write_text(json.dumps(records,indent=2));log('Finished six actual AO/curvature bake pairs and frozen-camera painting UVs with incidence blending into generated back-surface fills.')
+bpy.ops.file.pack_all();bpy.ops.wm.save_as_mainfile(filepath=str(M/'medjay.blend'));(M/'surface-manifest.json').write_text(json.dumps(records,indent=2));log('Finished eight actual AO/curvature bake pairs and frozen-camera painting UVs with incidence blending into generated back-surface fills.')

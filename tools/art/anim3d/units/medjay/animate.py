@@ -39,12 +39,12 @@ for clip,(count,fps,loop) in CLIPS.items():
   elif clip=='move':
    rig.location.z+=.018*(1-cos(phase*2));rig.location.x+=.015*sin(phase)
    for s,offset in [('r',0),('l',pi)]:
-    p=phase+offset;target=feet[s]+Vector((0,.17*cos(p),.075*max(0,sin(p))));limb(rig,'thigh_'+s,'calf_'+s,target,(target.x,-.45,.48))
+    p=phase+offset;target=feet[s]+Vector((0,.17*cos(p),.075*max(0,sin(p))))-(rig.location-loc);limb(rig,'thigh_'+s,'calf_'+s,target,(target.x,-.45,.48))
    rot('spine_02',(0,0,1),.035*sin(phase));rot('lowerarm_r',(1,0,0),.035*sin(phase));rot('head',(1,0,0),-.012*cos(phase*2))
   elif clip=='attack':
    # Anticipation, controlled lateral jab in screen space, then guard recovery.
    thrust=[0,-.12,-.20,.12,.40,.48,.35,.15,.04,0][i];rig.location.x+=thrust*.16;rig.location.z-=max(0,thrust)*.05
-   target=hand['r']+Vector((-thrust*.32,-thrust*.36,thrust*.08));limb(rig,'upperarm_r','lowerarm_r',target,(-.52,-.08,1.10));rot('hand_r',(0,0,1),thrust*.55);rot('spine_03',(0,0,1),-thrust*.20)
+   target=hand['r']+Vector((-thrust*.32,-thrust*.36,thrust*.08));limb(rig,'upperarm_r','lowerarm_r',target,Vector((-.33,-.05,1.11)).lerp(Vector((-.52,-.08,1.10)),min(1,abs(thrust)*2)));rot('hand_r',(0,0,1),thrust*.55);rot('spine_03',(0,0,1),-thrust*.20)
    # Legs stay planted while the front knee accepts the weight shift.
    for s in ['l','r']:limb(rig,'thigh_'+s,'calf_'+s,feet[s]-Vector((thrust*.16,0,-max(0,thrust)*.05)),(feet[s].x,-.4,.50))
   elif clip=='hit':
@@ -55,14 +55,15 @@ for clip,(count,fps,loop) in CLIPS.items():
    rig.rotation_euler.y=-1.54*fall;rig.rotation_euler.z=.30*fall;rig.location=loc+Vector((.87*fall,.03*fall,.145*fall));rot('head',(0,0,1),.20*fall)
    bpy.context.view_layer.update();inv=rig.matrix_world.inverted()
    # World-space IK curls both legs onto the disc instead of kicking upward.
-   for side,foot_end in [('r',(.35,-.04,.15)),('l',(.49,.13,.16))]:
+   for side,foot_end in ([('r',(.35,-.04,.15)),('l',(.49,.13,.16))] if fall else []):
     live=rig.matrix_world@rig.pose.bones['calf_'+side].tail
     target=live.lerp(Vector(foot_end),fall)
     limb(rig,'thigh_'+side,'calf_'+side,inv@target,inv@Vector((.50,.40,.48)))
     if fall>.8:aim(rig,'foot_'+side,inv.to_3x3()@Vector((.05,-.15,-.02)))
-   for side,end,pole in [('r',(-.45,-.22,.14),(-.55,-.31,.35)),('l',(-.15,.14,.25),(-.18,.36,.45))]:
+   for side,end,pole in ([('r',(-.45,-.22,.14),(-.55,-.31,.35)),('l',(-.15,.14,.25),(-.18,.36,.45))] if fall else []):
     live=rig.matrix_world@rig.pose.bones['hand_'+side].head
-    limb(rig,'upperarm_'+side,'lowerarm_'+side,inv@live.lerp(Vector(end),fall),inv@Vector(pole))
+    limb(rig,'upperarm_'+side,'lowerarm_'+side,inv@live.lerp(Vector(end),fall),inv@( (rig.matrix_world@Vector((-.33,-.05,1.11) if side=='r' else (.39,-.04,1.17))).lerp(Vector(pole),fall)))
+  if (i==0 and clip in {'attack','hit','death'}) or (clip=='attack' and i==count-1):reset()
   bpy.context.view_layer.update()
   if clip=='death':
    held=rig.matrix_world@rig.pose.bones['hand_r'].matrix@spear_offset

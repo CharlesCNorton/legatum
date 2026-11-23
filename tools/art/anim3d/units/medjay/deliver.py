@@ -73,13 +73,18 @@ def pack():
  grade_sha=digest(M/'grade.json');meta={'version':2,'format':'trimmed-rows','frame':{'w':160,'h':160,'ax':84,'ay':141},'clips':{}};allrows=[];report={'grade_sha256':grade_sha,'sources':{}};maxw=0;totalh=0
  for row,(clip,(count,fps,loop)) in enumerate(CLIPS.items()):
   folder=M/'renders'/('e-'+clip);manifest=json.loads((folder/'render.json').read_text());assert digest(Path(manifest['blend']))==manifest['blend_sha256'],'Stale clip render';clipdata=json.loads((M/f'{clip}.json').read_text());assert clipdata['master_sha256']==digest(M/'medjay.blend'),'Stale animation master';assert len(manifest['frames'])==count
+  rest=json.loads((M/'renders/c/render.json').read_text());assert rest['blend_sha256']==digest(M/'medjay.blend'),'Stale rest calibration'
+  assert all(manifest[k]==rest[k] for k in ('engine','device','resolution','samples')),'Mixed render settings'
   review_meta=json.loads((folder/'review.json').read_text());assert review_meta['grade_sha256']==grade_sha,'Stale clip grade';assert review_meta['raw_manifest_sha256']==digest(folder/'render.json'),'Stale review'
-  entries=[];x=0;rowh=0;frames=[]
+  entries=[];x=0;rowh=0;frames=[];unique={}
   for i in range(count):
    raw=folder/f'{i:02d}.png';assert digest(raw)==manifest['sha256'][raw.name]
    graded_path=folder/'graded'/f'{i:02d}.png';assert digest(graded_path)==review_meta['graded_sha256'][graded_path.name];im=read(graded_path);assert im.width>=256
-   im=im.resize((160,160),Image.Resampling.LANCZOS);alpha=im.getchannel('A').point(lambda v:round(v/8)*8 if v<248 else 255);im.putalpha(alpha);box=im.getchannel('A').getbbox();assert box;ox,oy,x1,y1=box;w=x1-ox;h=y1-oy;assert min(ox,oy)>=1 and x1<=159 and y1<=159,(clip,i,'clipped frame',box)
-   tile=im.crop(box);entries.append({'x':x,'y':totalh,'w':w,'h':h,'ox':ox,'oy':oy});frames.append(tile);x+=w+2;rowh=max(rowh,h)
+   im=im.resize((160,160),Image.Resampling.BICUBIC);box=im.getchannel('A').getbbox();assert box;ox,oy,x1,y1=box;w=x1-ox;h=y1-oy;assert min(ox,oy)>=1 and x1<=159 and y1<=159,(clip,i,'clipped frame',box)
+   tile=im.crop(box);key=im.tobytes()
+   if key in unique:
+    entries.append(unique[key].copy());frames.append(tile);continue
+   entry={'x':x,'y':totalh,'w':w,'h':h,'ox':ox,'oy':oy};unique[key]=entry;entries.append(entry);frames.append(tile);x+=w+2;rowh=max(rowh,h)
   meta['clips'][clip]={'row':row,'frames':count,'fps':fps,'loop':loop,'rects':entries};allrows.append((frames,entries));maxw=max(maxw,x);totalh+=rowh+2;report['sources'][clip]=manifest
  atlas=Image.new('RGBA',(maxw,totalh))
  for frames,entries in allrows:
@@ -101,15 +106,23 @@ def validate():
   for e in c['rects']:
    assert 0<=e['x']<e['x']+e['w']<=atlas.width and 0<=e['y']<e['y']+e['h']<=atlas.height;assert 0<=e['ox']<e['ox']+e['w']<=160 and 0<=e['oy']<e['oy']+e['h']<=160
   source=M/'renders'/('e-'+name);m=report['sources'][name];assert digest(Path(m['blend']))==m['blend_sha256'];frames=[read(source/'graded'/f'{i:02d}.png') for i in range(n)];assert len({im.tobytes() for im in frames})>=3
-  if name=='death':assert frames[-1].tobytes()==frames[-2].tobytes(),'Death not held'
-  for size in (256,512):
+  if name=='death':
+   assert frames[-1].tobytes()==frames[-2].tobytes(),'Death not held'
+   assert reconstruct(atlas,c,n-1).tobytes()==reconstruct(atlas,c,n-2).tobytes(),'Decoded death not held'
+  for size in (size for size in (256,512) if size<=m['resolution']):
    retained=[M/str(size)/('e-'+name)/f'{i:02d}.png' for i in range(n)]
    assert all(p.exists() and Image.open(p).size==(size,size) for p in retained),'Missing master size'
-  checks[name]={'frames':n,'moving':True,'trim_rectangles_valid':True}
- (M/'validation.json').write_text(json.dumps({'status':'pass','bytes':path.stat().st_size,'quality':report['quality'],'clips':checks,'art_approved':False},indent=2));log('Validation passed: 40 frames, motion in five clips, held death, transparent trimmed geometry, >=75 quality and <=200 KB. Art parity remains a visual judgment.')
+   for p,frame in zip(retained,frames):assert read(p).tobytes()==frame.resize((size,size),Image.Resampling.LANCZOS).tobytes(),'Stale retained master'
+  for i,frame in enumerate(frames):
+   expected=frame.resize((160,160),Image.Resampling.BICUBIC)
+   actual=reconstruct(atlas,c,i)
+   assert actual.getchannel('A').tobytes()==expected.getchannel('A').tobytes(),(name,i,'decoded alpha differs')
+   assert digest(source/'graded'/f'{i:02d}.png')==json.loads((source/'review.json').read_text())['graded_sha256'][f'{i:02d}.png']
+  checks[name]={'frames':n,'moving':True,'trim_rectangles_valid':True,'lossless_alpha':True}
+ (M/'validation.json').write_text(json.dumps({'status':'pass','bytes':path.stat().st_size,'quality':report['quality'],'clips':checks,'art_approved':False,'preview':any(x['device']!='GPU' for x in report['sources'].values())},indent=2));log('Validation passed: 40 frames, motion in five clips, held death, transparent trimmed geometry, >=75 quality and <=200 KB. Art parity remains a visual judgment.')
 
 def video():
- atlas=read(OUT/'medjay.webp');meta=json.loads((OUT/'medjay.json').read_text());out=R/f'medjay-round{os.environ.get("ROUND","1")}.mp4';frames={name:[reconstruct(atlas,meta['clips'][name],i).resize((320,320),Image.Resampling.LANCZOS) for i in range(n)] for name,(n,_,_) in CLIPS.items()}
+ atlas=read(OUT/'medjay.webp');meta=json.loads((OUT/'medjay.json').read_text());out=R/f'medjay-round{os.environ.get("ROUND","2")}.mp4';frames={name:[reconstruct(atlas,meta['clips'][name],i).resize((320,320),Image.Resampling.LANCZOS) for i in range(n)] for name,(n,_,_) in CLIPS.items()}
  with tempfile.TemporaryDirectory(dir=ROOT/'tmp',prefix='medjay-video-') as tmp:
   for t in range(240):
    canvas=Image.new('RGBA',(1600,348),CREAM);draw=ImageDraw.Draw(canvas)
