@@ -33,7 +33,7 @@ This file holds the current rules, one line each. The user's words, dates, as-bu
 - A held card's call to action follows live state when it shows, not the state when it was planned (PR #32, 2026-11-22).
 - Every new Age opens a score check for every player (user, 2026-11-22; `celebrate/ScoreCheck.tsx`): the VP track plus your sheet of ways to score, fitting 1000x600 whole; any VP you have is a filled box, held vs kept a second mark; a "how to score" line names the action; each box draws the thing that scores (Age numeral, capital star, wonder or goal icon). Premium is the default when Sam leaves polish to judgment ("use your judgment. remember that the game needs to feel premium", 2026-11-22): it tallies on opening (crests hop up the track, your boxes stamp in, ~2 s, skippable, none under reduced motion). A legend line for a state shared by several kinds of box must be true for all of them. Detail: `references/review-findings-2026-11.md`.
 - The hosted title screen (uploads on) has about 10px to spare at 1000x600: the upload notice stays 2 lines; any further hosted-only line needs a layout change. Shoot it separately from the standard tour build, which has uploads off (PR #33, 2026-11-22).
-- The advisor is on by default, explains the Hard plan from the seat's own view without acting for the player, and shows one card and one gilt ring at a time (`e2e/tour/first-run-advisor.spec.ts`). A floating advisor card never covers its target, the selection, a dialog's primary or the options' names; inside a dialog it is a one-line strip. Looping animations honour the Animations switch.
+- The advisor is on by default, explains the Hard plan from the seat's own view without acting for the player, and shows one card and one gilt ring at a time (`e2e/tour/first-run-advisor.spec.ts`). A floating advisor card never covers its target, the selection, a dialog's primary or the options' names, and moves clear of the map tools and your own cities when there is room (`ui/Advisor.tsx`); inside a dialog it is a one-line strip. The card is headed by your people's seal, with no "Advisor" eyebrow word. A target control that is off screen is scrolled to the centre. Looping animations honour the Animations switch.
 - A G17 decision notice is never covered by a dialog that opens from the same click: a build that replaces the current one does not advance to the next decision (2026-11-22, UI review of PR #78).
 - A choice that throws away progress says what is lost in words ("Turns 4 to 6 are played again"), and its selection is shown in ink, not red (2026-11-22).
 - Anything added to the title screen is checked at 1000x600 in both the standard and the hosted build; an action that shows only sometimes is one line with no sub-line (2026-11-22).
@@ -83,6 +83,7 @@ This file holds the current rules, one line each. The user's words, dates, as-bu
 - Eliminated empires leave active lists; the race panel always shows the race (extras shrink first) (user, 2026-10-06, 2026-10-17).
 - Lobby: Easy, Normal and Hard only; a new Single Player lobby starts at the map size's default count (6 on Standard); choosing a map size snaps the count; no game-type preset bar (2026-11-21, user 2026-11-03, 2026-10-06, 2026-10-27). Two settings never share a name (user, 2026-11-15).
 - No "coalition" in the UI; say the plain facts (user, 2026-11-11).
+- A select or chip gets a fixed width only when its longest option fits; when option labels change, check the longest at 1000x600. A reason line never repeats its heading or mentions a queue the city doesn't have. A banner icon that stands for a yield is drawn in that yield's colour, not ink (UI review, 2026-11-22, PR #98).
 
 ## Look and feel
 
@@ -159,7 +160,7 @@ Every word a player reads (sheets, cards, the Guide, tooltips, breakdowns, repor
 | at Peace, at War, Alliance | treaty states, capitalised | at peace, at war |
 | supply | the Iron or Coal your deposits give; each building or unit that needs it uses 1 while it exists ("Iron 5 / 6") | stockpile, stored Iron/Coal, Iron per turn, Coal per turn |
 | interest | Swiss Gold earned from the treasury | treasury bonus |
-| Gold project, Science project | what a city runs instead of building, turning part of its Production (Egypt: its Food-made build progress) into Gold or Science; every empire since 2026-11-22 | Industry project, Industry: Gold (a copy test bans "Industry project") |
+| Gold project, Science project, Food project | what a city runs instead of building, turning part of its Production (Egypt: its Food-made build progress) into Gold, Science or Food; every empire since 2026-11-22 (Food: rules 55, not Egypt). The automation menu names its stream focuses by these project names | Industry project, Industry: Gold (a copy test bans "Industry project") |
 | Grow | Egypt's project that grows a city with its surplus Food instead of building (2026-11-21); "surplus Food" is Food beyond 2 per population | growth project, grow mode |
 | tribute | Byzantium buying peace | bribe, peace payment |
 | level | a unit's promotion level ("level 4 or higher") | rank, promotion tier |

@@ -166,7 +166,7 @@ fn stopping_city_automation_keeps_current_build_and_drops_its_future_pick() {
         &[
             Order::SetCityAutomation {
                 city: id,
-                focus: Some(CityBuildFocus::Balanced),
+                focus: Some(CityBuildFocus::Economy),
                 picked: None,
             },
             Order::SetProductionQueue {
@@ -1247,15 +1247,62 @@ fn city_names_are_unique_deterministic_and_fall_back() {
     let rival = found(&mut a, P1, at(2, 10));
     assert!(names.insert(a.cities[&rival].name.clone()));
 
-    // Exhaust the list: rename existing cities to cover every name.
+    // Exhaust the list, then the "New" names: copies of one city carry every name.
     let mut s = two_players();
-    for (i, name) in city_names(Faction::Athens).iter().enumerate() {
-        let col = 2 + 4 * (i as i32 % 4);
-        let row = 2 + 4 * (i as i32 / 4);
-        let c = found(&mut s, P1, at(col, row));
-        city_mut(&mut s, c).name = name.to_string();
+    let athens = city_names(Faction::Athens);
+    let template = found(&mut s, P1, at(2, 2));
+    let give = |s: &mut GameState, name: String| {
+        let id = CityId(10_000 + s.cities.len() as u32);
+        let mut c = s.cities[&template].clone();
+        c.id = id;
+        c.name = name;
+        s.cities.insert(id, c);
+    };
+    for name in athens {
+        give(&mut s, name.to_string());
+    }
+    assert_eq!(next_city_name(&s, P0), format!("New {}", athens[0]));
+    for name in athens {
+        give(&mut s, format!("New {name}"));
     }
     assert_eq!(next_city_name(&s, P0), "Athens Colony 1");
+}
+
+#[test]
+fn the_capital_is_the_historic_capital() {
+    for (faction, capital) in [
+        (Faction::Rome, "Rome"),
+        (Faction::Athens, "Athens"),
+        (Faction::Sparta, "Sparta"),
+        (Faction::Egypt, "Memphis"),
+        (Faction::Mongols, "Karakorum"),
+        (Faction::Aztecs, "Tenochtitlan"),
+        (Faction::Byzantium, "Constantinople"),
+        (Faction::Germany, "Berlin"),
+        (Faction::Switzerland, "Bern"),
+        (Faction::India, "Agra"),
+    ] {
+        assert_eq!(city_names(faction)[0], capital);
+    }
+    let mut s = two_players();
+    let c = found(&mut s, P0, at(2, 2));
+    assert_eq!(s.cities[&c].name, city_names(s.player(P0).faction)[0]);
+}
+
+#[test]
+fn every_faction_has_60_unique_names_shared_with_no_other_faction() {
+    let mut seen = BTreeSet::new();
+    for faction in Faction::ALL {
+        let names = city_names(faction);
+        assert!(names.len() >= 60, "{faction:?} has {} names", names.len());
+        for name in names {
+            assert!(seen.insert(*name), "{name} is listed twice");
+            assert!(
+                !name.starts_with("New "),
+                "{name} would clash with the New fallback"
+            );
+        }
+    }
 }
 
 // ---------- growth ----------

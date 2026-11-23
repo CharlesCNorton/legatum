@@ -90,7 +90,7 @@ for (const tier of ['minor', 'notable', 'major', 'legendary']) {
 test('End Turn remains clickable while a card is visible and the gesture still commits', async ({ page }) => {
   await inject(page, 'notable');
   await expect(page.locator('.moment-card')).toBeVisible();
-  const endTurn = page.locator('.touch-turn-controls').getByRole('button', { name: 'End Turn', exact: true });
+  const endTurn = page.locator('.touch-turn-controls').getByRole('button', { name: 'End turn', exact: true });
   await expect(endTurn).toBeEnabled();
   await endTurn.click();
   // With decisions pending, End Turn asks once (B1); confirming still commits the gesture.

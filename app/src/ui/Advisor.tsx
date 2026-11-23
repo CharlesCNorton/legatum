@@ -69,7 +69,7 @@ function AdvisorRing({ target, still }: { target: AdvisorTarget; still: boolean 
     const scroll = window.setTimeout(() => {
       if (target.kind !== 'control') return;
       const el = targetElement(target), r = el?.getBoundingClientRect();
-      if (el && r && (r.top < 0 || r.bottom > innerHeight || !targetRect(target))) el.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      if (el && r && (r.top < 0 || r.bottom > innerHeight || !targetRect(target))) el.scrollIntoView({ block: 'center', inline: 'nearest' });
     }, 150);
     return () => { cancelAnimationFrame(frame); window.clearTimeout(scroll); };
   }, [target?.kind, target?.kind === 'tile' ? `${target.hex.q},${target.hex.r}` : target?.kind === 'control' ? `${target.name}:${target.value}` : '']);
@@ -150,14 +150,21 @@ export function Advisor() {
           const p = entity && tileOnScreen(entity.pos);
           if (p) selectedTile = new DOMRect(p.x - p.radius, p.y - p.radius, 2 * p.radius, 2 * p.radius);
         }
-        const blockers = [target, selectedTile].filter((r): r is DOMRect => !!r && r.right > box.left && r.left < box.right);
-        const clear = (top: number) => blockers.every((r) => top + box.height + 8 <= r.top || top >= r.bottom + 8);
+        // Also keep clear of the map tools and the player's own cities with their banners (drawn above the tile).
+        const tools = document.querySelector('.map-lenses')?.getBoundingClientRect() ?? null;
+        const ownCities = (view?.cities ?? []).filter((c) => c.owner === view?.me).map((c) => tileOnScreen(c.pos))
+          .filter((p): p is NonNullable<typeof p> => !!p).map((p) => new DOMRect(p.x - p.radius, p.y - 2 * p.radius, 2 * p.radius, 3 * p.radius));
+        const blockers = [target, selectedTile, tools, ...ownCities].filter((r): r is DOMRect => !!r && r.width > 0 && r.right > box.left && r.left < box.right);
+        const clearOf = (rects: DOMRect[]) => (top: number) => rects.every((r) => top + box.height + 8 <= r.top || top >= r.bottom + 8);
+        // The step's target and the selection must stay visible; the rest is avoided when there is room.
+        const must = blockers.filter((r) => r === target || r === selectedTile);
         const home = 76;
         const floor = innerHeight - box.height - 8;
         // Prefer the usual slot, then just below a blocker, then just above one.
         const options = [home, ...blockers.map((r) => r.bottom + 12), ...blockers.map((r) => r.top - 12 - box.height)]
           .filter((top) => top >= 64 && top <= floor);
-        const best = options.find(clear);
+        const cities = blockers.filter((r) => r !== tools);
+        const best = options.find(clearOf(blockers)) ?? options.find(clearOf(cities)) ?? options.find(clearOf(must));
         const next = best === undefined || best === home ? null : Math.round(best);
         if (next !== cardTop) setCardTop(next);
       }
@@ -179,14 +186,16 @@ export function Advisor() {
   const step = suggestion.steps[suggestion.current];
   const welcome = suggestion.id === 'welcome';
   const lesson = suggestion.acknowledge && !welcome;
+  // The player's own seal names the speaker; no eyebrow word.
+  const seal = view && <span className="advisor-seal" aria-hidden="true"><FactionMark faction={view.players.find((p) => p.id === view.me)?.faction ?? 'Switzerland'} size={20} /></span>;
   const content = <>
     <AdvisorRing target={step?.target ?? null} still={!animationsOn} />
     <aside ref={card} className={`advisor-card${welcome ? ' welcome' : ''}${modal ? ' in-dialog' : ''}`}
       style={modal && dialogRect ? { left: dialogRect.left, bottom: innerHeight - dialogRect.bottom, width: dialogRect.width } : cardTop !== null ? { top: cardTop, bottom: 'auto' } : undefined}
       data-overlay-slot="story-hint" data-testid="advisor" data-advisor-id={suggestion.id} aria-label="Advisor" onKeyDown={(e) => e.stopPropagation()}>
-      <span className="advisor-label">{!welcome && view && <FactionMark faction={view.players.find((p) => p.id === view.me)?.faction ?? 'Switzerland'} size={18} />}Advisor</span>
+      {modal && seal}
       <div className="advisor-copy" role="status" aria-live="polite" aria-atomic="true">
-        <h3>{suggestion.title}</h3>
+        <h3>{seal}<span>{suggestion.title}</span></h3>
         <p>{suggestion.why}</p>
       </div>
       {step && <div className="advisor-step">{suggestion.steps.length > 1 && <span className="advisor-count">Step {suggestion.current + 1} of {suggestion.steps.length}</span>}

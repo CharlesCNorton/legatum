@@ -366,7 +366,7 @@ export function SeatBar({ phoneDetails = false, onOpenDetails, race }: { phoneDe
     </button>
     <button className={`btn${cta.kind === 'todo' || stepBack ? '' : ' primary'}`} onClick={readyAndPass}
       disabled={!!busy || view.finished || disconnected || (eliminated && !observerCanAdvance) || resolvingToEnd}>
-      {ready[seat] ? 'Keep planning' : !remote && humans.length === 1 ? 'End Turn' : 'Ready'}
+      {ready[seat] ? 'Keep planning' : !remote && humans.length === 1 ? 'End turn' : 'Ready'}
     </button>
     <EndTurnConfirmation onConfirm={confirmEndTurn} />
   </div>;
@@ -405,7 +405,7 @@ export function SeatBar({ phoneDetails = false, onOpenDetails, race }: { phoneDe
       <div className="touch-turn-controls touch-only">
         <button className="btn" onClick={() => nextDecision()} disabled={!!busy || view.finished || eliminated || disconnected}>Next decision</button>
         <button className="btn primary" onClick={readyAndPass} disabled={!!busy || view.finished || disconnected || (eliminated && !observerCanAdvance) || resolvingToEnd}>
-          {ready[seat] ? 'Keep planning' : !remote && humans.length === 1 ? 'End Turn' : 'Ready'}
+          {ready[seat] ? 'Keep planning' : !remote && humans.length === 1 ? 'End turn' : 'Ready'}
         </button>
       </div>
     </div>
