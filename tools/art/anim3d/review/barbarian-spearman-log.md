@@ -155,3 +155,8 @@
 - Published d review from GPU render.
 - Published e-idle review from GPU render.
 - Published e-move review from GPU render.
+- Published e-attack review from GPU render.
+- Published e-hit review from GPU render.
+- Published e-death review from GPU render.
+- Published g-feet review from GPU render.
+- Full GPU stage/master/atlas/movie pass completed; fresh visual judgment still required.
