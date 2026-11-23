@@ -1,4 +1,4 @@
-"""Repeatable round-two fitting and frozen paint on finished 3D surfaces."""
+"""Repeatable third-pass fitting and frozen paint on finished 3D surfaces."""
 import bpy, json, os, math, runpy
 from pathlib import Path
 from mathutils import Vector, Matrix
@@ -32,9 +32,33 @@ def limb(u,l,target,pole):
  aim(u,elbow-a);aim(l,Vector(target)-elbow)
 weapons=[o for o in sc.objects if o.name.startswith(('Ash dory','Spear bronze','Leaf spearhead','Iron spear butt'))]
 weapon_world={o.name:o.matrix_world.copy() for o in weapons}
+# Calibrate the braced right ankle in the rest pose before any motion retarget.
+foot_orientation={n:rig.pose.bones[n].matrix.to_quaternion() for n in ['foot_r','ball_r']}
+limb('thigh_r','calf_r',(-.25,-.075,.082),(-.38,-.20,.48))
+for name,q in foot_orientation.items():
+ p=rig.pose.bones[name];mat=q.to_matrix().to_4x4();mat.translation=p.head;p.matrix=mat;bpy.context.view_layer.update()
 limb('upperarm_r','lowerarm_r',(-.37,-.31,1.43),(-.55,-.04,.95));aim('hand_r',(0,-.03,.09))
 for ob in weapons:ob.matrix_world=weapon_world[ob.name]
 bpy.context.view_layer.update()
+# Shape the existing full-thickness longitudinal tufts to the source plume's
+# swept inner/outer curves. Retain each vertex's camera depth and attachment.
+def cubic(points,t):
+ return sum((Vector(p)*w for p,w in zip(points,[(1-t)**3,3*(1-t)**2*t,3*(1-t)*t*t,t**3])),Vector((0,0)))
+inner=[(136,36),(123,31),(115,46),(108,67)]
+outer=[(143,26),(122,7),(103,34),(104,70)]
+tufts=sorted((o for o in sc.objects if o.name.startswith('Horsehair crest tuft')),key=lambda o:o.name)
+for i,ob in enumerate(tufts):
+ assert len(ob.data.vertices)==4,ob.name
+ t=i/(len(tufts)-1)
+ for indices,path in [([0,1],inner),([2,3],outer)]:
+  center=sum((pixel(ob,ob.data.vertices[j].co) for j in indices),Vector((0,0)))/2
+  for j in indices:
+   v=ob.data.vertices[j];target=cubic(path,t)+(pixel(ob,v.co)-center)*.65
+   v.co=sculpt(ob,v.co,target)
+ ob.data.update()
+saddle=bpy.data.objects['Crest bronze saddle']
+for spline in saddle.data.splines:
+ for i,p in enumerate(spline.points):p.co=(*sculpt(saddle,Vector(p.co[:3]),cubic(inner,i/(len(spline.points)-1))),1)
 # Curves become actual beveled solids before camera registration. The shaft stays
 # a curve because animation and grip audits use its exact two endpoints.
 for ob in list(sc.objects):
@@ -53,6 +77,8 @@ def skin(ob,v):
  if not any(m.type=='ARMATURE' for m in ob.modifiers):return Matrix.Identity(4)
  entries=[(transforms[ob.vertex_groups[g.group].name],g.weight) for g in v.groups if ob.vertex_groups[g.group].name in transforms];total=sum(w for _,w in entries)
  return sum((m*(w/total) for m,w in entries),Matrix(((0,)*4,)*4)) if total else Matrix.Identity(4)
+# One visible shoulder brooch, as in the painting; retain the rounded solid.
+bpy.data.objects['Cloak clasp.001'].hide_render=True
 records=[]
 for ob in list(sc.objects):
  if ob.type!='MESH' or ob.hide_render:continue
@@ -63,20 +89,25 @@ for ob in list(sc.objects):
  elif name.startswith(('Corinthian','Raised brow','Helmet')):kind='helmet'
  elif name=='MPFB anatomical male • original topology':kind='body'
  elif name.startswith('Crimson shoulder'):kind='mantle'
+ elif name=='Cloak clasp':kind='clasp'
  elif name.startswith('Cloak •'):kind='cloak'
  if not kind:continue
  pts=[]
+ if kind=='clasp':
+  center=sum((pixel(ob,v.co) for v in ob.data.vertices),Vector((0,0)))/len(ob.data.vertices)
  for v in ob.data.vertices:
   s=skin(ob,v);co=s @ v.co;p=pixel(ob,co);target=p.copy()
-  if kind=='crest':target=Vector((122+(p.x-126)*.66, p.y-1))
+  if kind=='crest':pass
+  elif kind=='clasp':target=Vector((113,74))+(p-center)*1.15
   elif kind=='helmet':target.y-=6
   elif kind=='body':
    w=max(0,min(1,(87-p.y)/15));target.y-=6*w
   elif kind=='shield':target=Vector((160+(p.x-153)*.83,127+(p.y-129)*.93))
   elif kind=='mantle':
    # Lower raised angular corners and follow the shoulder-to-shield drape.
-   target.y+=max(0,77-p.y)*.75
-   target.x=124+(p.x-124)*.93
+   target.y=p.y-5
+   if p.y<77:target.y=70+.16*(p.x-109)+.25*max(0,p.y-65)
+   target.x=124+(p.x-124)*1.04
   elif kind=='cloak':
    target.x=126+(p.x-126)*.82
    target.y+=max(0,79-p.y)*.85
@@ -87,7 +118,7 @@ for ob in list(sc.objects):
 base=bpy.data.objects['Stationary cream stone'];base.scale.x*=.97;base.scale.y*=.97
 # Stored source has a real beveled base. Finished mesh is retained, not a plane.
 rig['neutral_pose']=json.dumps({p.name:[list(row) for row in p.matrix_basis] for p in rig.pose.bones})
-sc['round']=2;sc['unit']='spartan-hoplite'
+sc['round']=3;sc['unit']='spartan-hoplite'
 bpy.ops.wm.save_as_mainfile(filepath=str(M/'plain.blend'))
 # A single rest camera for all parts. No per-part painting rectangle stretches.
 painting=bpy.data.images.load(str(R/'assets/spartan-hoplite/painting-aligned.png'),check_existing=True)
@@ -96,12 +127,12 @@ images['all']=painting
 for ob in list(sc.objects):
  if ob.type!='MESH' or ob.hide_render or ob==base:continue
  name=ob.name; kind=None
- if name.startswith(('Horsehair','Crimson','Cloak •')):kind='red'
+ if name.startswith(('Horsehair','Crimson','Cloak •','Cloak clasp')):kind='all'
  elif name.startswith(('Forged bronze muscle','Linen pteruges','Pteruges','Linen armour','Narrow linen','Leather baldric','Baldric')):kind='all'
  elif name.startswith(('Convex bronze','Aspis turned','Aspis oak')):kind='all'
  elif name.startswith(('Corinthian','Raised brow','Helmet','Crest bronze')):kind='all'
  elif name.startswith(('Contoured greave','Greave chased')):kind='bronze'
- elif ob==body:kind='skin'
+ elif ob==body:kind='all'
  elif name.startswith(('Leather sandal','Sandal')):kind='all'
  if not kind:continue
  states=[(m,m.show_viewport) for m in ob.modifiers]
@@ -143,14 +174,18 @@ for ob in list(sc.objects):
 sc.view_settings.view_transform='Standard';sc.view_settings.look='None';sc.view_settings.exposure=0
 for name,energy in [('Warm upper-left key',400),('Soft cool fill',90),('Warm back rim',160)]:bpy.data.objects[name].data.energy=energy
 key=bpy.data.objects['Warm upper-left key'];key.data.size=4;key.data.color=(1,.95,.87)
-stone=bpy.data.materials['Cream limestone'];s=stone.node_tree.nodes.get('Principled BSDF')
+# The rim is a separate material: grade it as well as the top, without baking
+# stationary painted feet/shadows onto the disc. Real grain and contact remain.
 def linear(v):return ((v/255+.055)/1.055)**2.4
-s.inputs['Base Color'].default_value=tuple(linear(v)*.85 for v in (233,207,160))+(1,);s.inputs['Roughness'].default_value=.86
-n=stone.node_tree.nodes;l=stone.node_tree.links
-pig=n.new('ShaderNodeBsdfPrincipled');pig.inputs['Base Color'].default_value=(0,0,0,1);pig.inputs['Specular IOR Level'].default_value=0;
-pig.inputs['Emission Color'].default_value=tuple(linear(v) for v in (233,207,160))+(1,);pig.inputs['Emission Strength'].default_value=1
-light=n.new('ShaderNodeLightPath');weight=n.new('ShaderNodeMath');weight.operation='MULTIPLY';weight.inputs[1].default_value=.48;l.new(light.outputs['Is Camera Ray'],weight.inputs[0])
-mix=n.new('ShaderNodeMixShader');l.new(weight.outputs[0],mix.inputs[0]);l.new(s.outputs[0],mix.inputs[1]);l.new(pig.outputs[0],mix.inputs[2]);l.new(mix.outputs[0],n.get('Material Output').inputs['Surface'])
+for name,rgb,amount in [('Cream limestone',(245,220,182),.55),('Cream limestone darker rim',(233,200,151),.72)]:
+ stone=bpy.data.materials[name];n=stone.node_tree.nodes;l=stone.node_tree.links;s=n.get('Principled BSDF')
+ for link in list(s.inputs['Base Color'].links):l.remove(link)
+ color=tuple(linear(v) for v in rgb)+(1,)
+ s.inputs['Base Color'].default_value=color;s.inputs['Roughness'].default_value=.86
+ pig=n.new('ShaderNodeBsdfPrincipled');pig.inputs['Base Color'].default_value=(0,0,0,1);pig.inputs['Specular IOR Level'].default_value=0
+ pig.inputs['Emission Color'].default_value=color;pig.inputs['Emission Strength'].default_value=1
+ light=n.new('ShaderNodeLightPath');weight=n.new('ShaderNodeMath');weight.operation='MULTIPLY';weight.inputs[1].default_value=amount;l.new(light.outputs['Is Camera Ray'],weight.inputs[0])
+ mix=n.new('ShaderNodeMixShader');l.new(weight.outputs[0],mix.inputs[0]);l.new(s.outputs[0],mix.inputs[1]);l.new(pig.outputs[0],mix.inputs[2]);l.new(mix.outputs[0],n.get('Material Output').inputs['Surface'])
 sc['projection_method']='Single frozen camera; finished solid kit; camera-only source pigment; original physical backs, AO and generated linen'
 (M/'registration.json').write_text(json.dumps({'camera':list(sc.camera.location),'target':[0,0,1.05],'objects':records,'limitations':'Measured contour fit; not an exact camera/pose match'},indent=2))
 cloth.modifiers['Cloth per clip'].show_viewport=True

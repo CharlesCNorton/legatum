@@ -263,3 +263,52 @@ the early diagonal pose unchanged avoids pushing its spearhead above the canvas.
 `attack-clearance` applies the same rigid-only correction to an existing attack
 cache; it asserts the weapon is not a cloth collider and preserves the cloth bake.
 The subsequent full forty-sample audit reports zero findings.
+
+### Hoplite resumed driver round 2: source contour and open motion
+
+The driver calls the previous completed GPU run `round1`; its source checkout
+already contained the earlier round-two work. Preserve that evidence under
+`review/3d-v2/spartan-hoplite-round1-gpu-preserved/`. This pass uses a new
+`masters/spartan-hoplite/round3-3d/` checkpoint; `unpainted.blend` is copied from
+the prior master directory and is always the repeatable input to `refine`.
+
+Fit the existing full-depth crest tufts to swept inner/outer curves in the
+painting's camera, retaining their depth, thickness and head attachment. Fit the
+shoulder mantle and single rounded brooch before freezing UVs. Pigment-only hue
+masks were rejecting legitimate painted highlights on skin/cloth; the finished
+surface visibility/alpha mask now carries those source pixels. Calibrate the
+stone's separate rim material as well as its top; changing only the top left a
+dark grey-brown rim. Existing bevels, straps, folds, scanned AO/curvature and
+generated unseen linen remain. The projection is still viewpoint-dependent;
+contour fitting is not evidence of exact viewpoint or rest parity.
+
+Motion follows common feedback 23: use proven open actions by default, and
+calibrate donor and target rest matrices including bone rolls. This unit now
+uses Quaternius CC0 `Idle_Loop`, `Walk_Loop`, `Hit_Chest`, `Death01`, with the
+unit-local `retarget.py` snapshot read from the trench-infantry lane. Walking
+arms use the open idle layer to retain the spear/shield guard. No post-retarget
+foot orientation patch is allowed. Root contact corrections preserve the donor
+rotations. Only the weapon-specific attack and equipment release are authored.
+Per-clip metadata names the action, source hashes, map and contact correction.
+Sources and licences live in the unit's `SOURCES.md` and external assets registry.
+The 8/8/10/4/10 samples remain; playback uses 4/6/14/8/5 fps for readable actions.
+
+Every round must render the entire move cycle from top and front, with the top
+camera clipped above the ankles so the body cannot conceal the feet. The `feet`
+stage writes actual Cycles frames and `spartan-hoplite-g-feet-check.png`, plus
+ankle/toe positions and yaw in `feet/evidence.json`. Review forward direction,
+plant/roll and virtual-ground slip in addition to the normal five strips. The
+GPU handoff includes these views and binds their evidence to the current move
+master. Full technical validation still does not confer art PASS.
+
+The first open-death retarget exposed a limitation of carrying the neutral
+weapon guard into every action: raised limbs propped the corpse up, even though
+the original `Death01` lies flat. Death now calibrates all limb chains in the
+anatomical reference and crossfades out of the held guard during its opening.
+No foot rotation is patched. `Hit_Chest` is sampled forward and back to return
+its four output frames to the starting guard. Inspect the original donor when a
+retarget looks wrong; a collision-free result can still be the wrong motion.
+A finite hidden collision slab catches simulated cloth beyond the base edge;
+released equipment stays inside the fixed camera and the spear's planted butt
+uses only an along-shaft contact correction. These are unit-specific contact
+constraints, not a claim that the original donor animation fits every weapon.

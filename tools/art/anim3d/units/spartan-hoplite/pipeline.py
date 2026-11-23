@@ -28,6 +28,7 @@ elif stage=='gpu-check':
  prefs=bpy.context.preferences.addons['cycles'].preferences;prefs.compute_device_type='METAL';prefs.get_devices()
  assert any(d.type=='METAL' for d in prefs.devices),'Metal unavailable; refusing CPU fallback'
  print('GPU PREFLIGHT: Metal device found')
+elif stage=='feet':run(UNIT/'feet.py')
 elif stage=='check-scene':run(UNIT/'check_scene.py')
 elif stage=='refine':run(UNIT/'refine.py')
 elif stage=='materials':
@@ -36,7 +37,7 @@ elif stage=='materials':
  log('Textured: CC0 scans, 512 AO/curvature bakes, fixed painting UVs, generated unseen linen/bronze fills, cream pigment and product lighting.')
 elif stage.startswith('animate-'):
  sys.argv=['animate.py','--',stage.removeprefix('animate-')];run(UNIT/'animate.py')
- log('Baked '+stage+' with authored combat/CMU locomotion and real cloth simulation.')
+ log('Baked '+stage+' with Quaternius source motion or the weapon-specific attack, and real cloth simulation.')
 elif stage=='all-clips':
  for clip in ['idle','move','attack','hit','death']:
   sys.argv=['animate.py','--',clip];run(UNIT/'animate.py');log('Baked clip '+clip)

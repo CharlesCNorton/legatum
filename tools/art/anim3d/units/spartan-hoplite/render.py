@@ -15,6 +15,10 @@ def render_stage(stage):
    prefs=bpy.context.preferences.addons['cycles'].preferences;prefs.compute_device_type='METAL';prefs.get_devices()
    assert any(d.type=='METAL' for d in prefs.devices),'Metal unavailable; refusing CPU fallback'
    for d in prefs.devices:d.use=d.type=='METAL'
+ if stage=='b':
+  clay=bpy.data.materials.new('Geometry review clay');clay.use_nodes=True
+  shader=clay.node_tree.nodes.get('Principled BSDF');shader.inputs['Base Color'].default_value=(.45,.42,.36,1);shader.inputs['Roughness'].default_value=.8
+  sc.view_layers[0].material_override=clay
  size=int(os.environ.get('RESOLUTION','256'));sc.render.resolution_x=sc.render.resolution_y=size;sc.render.resolution_percentage=100
  sc.render.threads_mode='FIXED';sc.render.threads=3;sc.render.image_settings.color_mode='RGBA';sc.render.film_transparent=True
  sc.cycles.max_bounces=5;sc.render.use_persistent_data=True

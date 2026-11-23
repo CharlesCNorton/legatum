@@ -19,6 +19,21 @@
       "path": "assets/cmu-77_02.bvh",
       "sha256": "d6eef8f4ab182bef1bb5db0c46cbec0261b81a63ce1720b8a19777b7e79887a9",
       "licence": "CMU permissive commercial/research"
+    },
+    {
+      "path": "assets/quaternius-ual/AnimationLibrary_Godot_Standard.gltf",
+      "sha256": "0ff075c7ad6855c5c2c37a171592ee8f0d6ab2f58259e2be77a9b63dd8027765",
+      "licence": "CC0-1.0"
+    },
+    {
+      "path": "assets/quaternius-ual/AnimationLibrary_Godot_Standard.bin",
+      "sha256": "6e65377d81558333c4093dbb144a48fd19019343d82b1a3a7992a98ec0e0543c",
+      "licence": "CC0-1.0"
+    },
+    {
+      "path": "assets/quaternius-ual/LICENSE",
+      "sha256": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499",
+      "licence": "CC0-1.0"
     }
   ],
   "shared": "../../assets.lock.json",

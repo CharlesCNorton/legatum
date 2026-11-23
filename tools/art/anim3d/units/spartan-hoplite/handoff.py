@@ -8,12 +8,24 @@ def verify_gpu():
  for stage,count in [('b',3),('c',1),('d',4)]+[('e-'+c,v[0]) for c,v in CLIPS.items()]:
   source=M/'clips'/stage[2:]/(stage[2:]+'.blend') if stage.startswith('e-') else M/'clips/attack/attack.blend' if stage=='d' else M/('plain.blend' if stage=='b' else 'spearman.blend')
   for size in [512,256]:
-   folder=M/str(size)/stage;meta=json.loads((folder/'render.json').read_text())
+   folder=M/str(size)/stage
+   assert (folder/'render.json').is_file(),('Missing fresh GPU master',stage,size)
+   meta=json.loads((folder/'render.json').read_text())
    assert (meta['engine'],meta['device'],meta['resolution'],meta['samples'])==('CYCLES','GPU',512,64),('Not final GPU512/64',stage,meta)
    assert meta['source_master_sha256']==sha(M/'spearman.blend')
    assert meta['blend_sha256']==sha(source)
    if stage!='b':assert meta['grade_sha256']==sha(M/'grade.json')
    for i in range(count):assert Image.open(folder/f'{i:02}.png').size==(size,size)
+ feet=json.loads((M/'feet/evidence.json').read_text())
+ assert feet['device']=='GPU' and feet['samples']==64
+ assert feet['clip_sha256']==sha(M/'clips/move/move.blend')
+ assert len(feet['records'])==8
+ assert feet['contact_check']['tested_stance_intervals']>0
+ assert feet['contact_check']['max_support_yaw_deg']<20
+ assert feet['contact_check']['max_virtual_ground_error_m']<.025
+ for view in ['top','front']:
+  for i in range(8):assert Image.open(M/f'feet/{view}-{i:02}.png').size==(256,256)
+ assert (REV/(SLUG+'-g-feet-check.png')).is_file()
  print('GPU MASTER GATE PASSED: every stage GPU512/64, current hashes, 256 derivatives')
 
 def video():

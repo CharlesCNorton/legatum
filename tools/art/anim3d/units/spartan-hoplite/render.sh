@@ -2,7 +2,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/../../../../.."
 source tools/art/anim3d/env.sh
-export ANIM_MASTER="${ANIM_MASTER:-$ANIM_ROOT/masters/spartan-hoplite/round2-3d}"
+export ANIM_MASTER="${ANIM_MASTER:-$ANIM_ROOT/masters/spartan-hoplite/round3-3d}"
 export ANIM_ATTACK_SLIDE=.43
 export ANIM_SHIELD_SETTLE=1
 export RENDER_ENGINE="${RENDER_ENGINE:-CYCLES}"

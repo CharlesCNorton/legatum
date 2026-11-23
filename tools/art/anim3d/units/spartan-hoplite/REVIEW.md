@@ -1,72 +1,75 @@
-# Spartan hoplite — round 2
+# Spartan hoplite — resumed driver round 2
 
-This remains an art candidate. At 256 px, the raised grip, narrower crest/shield
-and source-painted linen are closer to the painting. Helmet/gaze, plume sweep,
-shoulder drape, leg shading and the stone rim still differ. At 64 px the unit is
-recognizable and its contour is closer, but it is still distinguishable. No PASS
-marker is warranted. CPU previews are not evidence of a completed GPU pass.
+**No art PASS.** At 256 px the swept crest, stance and warm stone are closer,
+but helmet/gaze, neck/shoulder drape, linen layering and skin detail still differ
+from the painting. At 64 px the red crest, lambda shield and bronze/linen identity
+read correctly, but the silhouette and surface finish remain distinguishable.
+The five clips are now based on proven open actions plus the weapon attack;
+source-paint stretching during movement and the death landing's relation to the
+back of the disc still need GPU visual review. Technical success is not art approval.
 
-The new repeatable `refine.py` starts from the preserved unpainted checkpoint,
-finishes static geometry before UV calibration, and uses one frozen camera
-projection instead of stretching each part's painting independently. Original
-MPFB anatomy/weights, 53 bones, solid kit, cloth simulation, AO/curvature and the
-existing generated linen fill remain. Camera-only painted pigment preserves
-brushwork while non-camera rays retain PBR shading. One automatic rest histogram
-grade is reused across all clips. Unit-owned animation carries the raised guard
-through idle/move/combat; repeated held-death samples reuse identical PNG bytes.
+This pass reshapes the original solid crest tufts and saddle, fits the right
+ankle rest stance, mantle and single rounded brooch, preserves painted highlights
+through visibility/alpha masks, and grades both stone materials. It retains MPFB
+anatomy/weights, physical kit/bevels/straps/folds, AO/curvature bakes, generated
+unseen linen, product lights and the single automatic rest-derived RGB grade.
+Rest alpha-threshold silhouette overlap improved from **0.770109 to 0.787439**;
+this is a contour metric, not an exact-viewpoint or visual-parity claim.
 
-External artifacts remain under `~/LegatumRuns/anim-pilot/`:
+Quaternius CC0 Idle_Loop, Walk_Loop, Hit_Chest and Death01 now drive the body,
+with calibrated reference/rest matrices and bone rolls. Walking feet receive no
+post-retarget orientation edits. Death releases the held guard into anatomical
+source motion; hit samples the source reaction forward/back to recover. Worn-kit
+and cloth contact, an independent released-spear trajectory, and shaft support
+corrections keep the equipment inside the fixed camera. Only attack/release and
+contact constraints are authored. Unit SOURCES.md and assets.lock.json record
+provenance; the central art provenance row is updated.
 
-- Current editable master, clips/caches, raw previews, 256 gallery frames and
-  provenance: `masters/spartan-hoplite/round2-3d/`.
-- Previous 512 CPU masters: `masters/spartan-hoplite/round1-3d/`, retained intact.
-- Current review PNGs, WebPs, round MP4, checks and running log:
-  `review/3d-v2/spartan-hoplite-*`; previous images in the round1-history directory.
-- Original source painting and masks: `assets/spartan-hoplite/`.
+Final CPU evidence (Cycles, 256 px, 12 samples):
 
-The candidate atlas retains 160 px logical cells, per-frame trim offsets and all
-8/8/10/4/10 samples. Quality stays at least 75 and size at most 200,000 bytes.
-No runtime UI or rules change. Measurements and final checks are recorded below
-and in the external pack/validation reports.
+- All 40 RGBA frames, counts **8/8/10/4/10**, and all b/c/d/e/f review sheets.
+- Actual top/front eight-frame foot views. Four measured planted intervals:
+  maximum virtual-ground error **0.00000072 m**, support yaw **0.000053 degrees**.
+  Yaw labels on near-vertical swinging feet can flip 180 degrees; support samples
+  and the actual rendered soles are the relevant forward-direction evidence.
+- Trimmed **160 px**, **172,902-byte WebP at quality 85**, with per-frame offsets.
+  Count, alpha/RGB reconstruction, motion, margins, hashes and held-death checks pass.
+- Full forty-sample rig/equipment/cloth audit: **0 findings**. Scene/input checks:
+  **173 projected meshes, 19,158 anatomical vertices, 53 bones**, nonzero scales.
+- Decoded atlas movie: **H.264/yuv420p, 1600×348, 240 frames, 8 seconds**.
+  All five strips and extracted final movie frames were opened and inspected.
+- All **19 unit Python files** parse; both shell scripts pass `bash -n`; executable
+  GPU entry point and `git diff --check` pass. Current-file hygiene: **27 files,
+  0 findings**. Public-claims gate passes. No Rust/UI runtime changes were made.
+- The GPU master gate correctly rejects this CPU set as missing fresh 512 masters.
+  Fresh GPU output and the lead's art review remain outstanding.
 
-The complete host command is:
+External artifacts:
+
+- Editable master, clips/caches, raw renders, 256 gallery and reports:
+  `~/LegatumRuns/anim-pilot/masters/spartan-hoplite/round3-3d/`.
+- Previous completed GPU512/64 masters remain in `round2-3d/`; prior GPU review
+  images/movie are preserved under `review/3d-v2/spartan-hoplite-round1-gpu-preserved/`.
+- Updated PNG/WebP review sheets, feet check, round2.mp4 and running log:
+  `~/LegatumRuns/anim-pilot/review/3d-v2/spartan-hoplite-*`.
+
+The executable, no-argument lead handoff is:
 
 ```sh
 ROUND=2 tools/art/anim3d/units/spartan-hoplite/gpu.sh
 ```
 
-This executable no-argument entry point regenerates the model/cloth clips, audits
-geometry, renders every stage at GPU512/64, writes actual 512/256 masters, verifies
-provenance, packs/validates the atlas, and creates the decoded five-clip MP4. A
-retained transcript and status file identify the failing stage if interrupted.
-Unavailable Metal fails explicitly. Review the new images and motion before art
-acceptance; the script never writes PASS automatically.
+It rebuilds from the preserved unpainted checkpoint, checks inputs, bakes/audits
+all clips, renders all stages at Cycles GPU512/64, keeps actual 512/256 masters,
+renders the top/front feet checks, verifies GPU provenance, packs/validates the
+atlas and encodes/verifies the movie. Output is now teed into both the driver's
+log and its retained transcript; the earlier outer log was empty due to redirection.
+It fails explicitly without Metal and never creates PASS automatically.
 
-Round-two CPU results: all 40 RGBA frames at 256 px / Cycles CPU / 12 samples;
-160 px trimmed atlas **199,862 bytes at quality 90**. All five clip
-counts, trim/alpha/RGB reconstruction, motion, margins, current source hashes and
-identical terminal death validate. Full forty-sample rig audit: **0 findings**.
-Scene check: 172 projected meshes, original 19,158-vertex anatomy and 53 bones,
-camera-only pigment wiring, nonzero scales and input hashes passed. The decoded
-MP4 verifies H.264/yuv420p, 1600×348, 240 frames/eight seconds; a frame extracted
-from the actual movie was visually inspected alongside every clip strip.
+A useful retarget lesson: a carry-pose offset that works for walking can prop up
+a death pose. Compare the original donor and blend out of the weapon guard into
+anatomical calibration; passing intersection checks alone does not catch that error.
 
-The CPU-only output is correctly rejected by the GPU master gate because fresh
-512 masters are absent. Missing-input script preflight recorded the expected
-failure before Blender. A separate GPU device test was cancelled while waiting
-for the shared gate; no device result or host GPU pass is claimed. Fresh 512 GPU
-masters remain required. Previous round-one CPU512 masters are preserved.
-
-Visual verdict: no PASS. At 256, the plume is still too uniform, the neck/mantle
-forms a broad shelf, linen layers remain less crisp and stone shading differs.
-At 64 the identity/outline is closer but distinguishable. Death presents its
-shield more frontally at entry and settles stiffly; technical audit success does
-not establish five visually clean clips. The next round should address these.
-
-Code checks: 16 Python files parsed; both unit shell scripts passed syntax; GPU
-entry point is executable; whitespace passed. Current-file hygiene scanned 21
-files with zero findings after spacing the matrix operators. Baseline public-claims
-passed. Browser art-set gate failed in the sandbox Node renderer and needs host
-verification. Git add/commit were denied index.lock creation; changes remain
-uncommitted for the runner. The requested co-author commit message is retained
-in the external task tmp directory. No push or PR was attempted.
+Git staging was denied creating `.git/worktrees/lane-15/index.lock`; changes
+remain uncommitted for the runner. The requested co-author message is saved in
+`~/LegatumRuns/anim-pilot/tmp/spartan-driver-round2-commit.txt`. No push or PR.
