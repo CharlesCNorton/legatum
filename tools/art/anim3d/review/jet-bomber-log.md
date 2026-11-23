@@ -41,3 +41,11 @@ Geometry audit PASS (solid fuselage/wings/fin/intakes, 8 jets, 6 bakes, fixed ba
 MP4 decoded metadata PASS: H.264 yuv420p 1600x348, 240 frames, 8 seconds. round1.mp4 is the current CPU draft; round1-cpu.mp4 retained to distinguish it from the pending GPU overwrite.
 Honest visual verdict: same identity at 64; not painting parity at 256. Wings/pods/tailplane and stone shading differ; camouflage is less rich and camera-lit pigment is exposed during bank/crash. No PASS marker; lead GPU and further refinement required.
 Learning: use finished-vertex visibility for projected pigment; centroids of nonplanar wing quads can lie under tessellated surfaces and falsely mask the painting.
+b: 3 frames at 256/64 from 512px CYCLES/GPU, 96 samples.
+c: 1 frames at 256/64 from 512px CYCLES/GPU, 96 samples.
+d: 4 frames at 256/64 from 512px CYCLES/GPU, 96 samples.
+e-idle: 8 frames at 256/64 from 512px CYCLES/GPU, 96 samples.
+e-move: 8 frames at 256/64 from 512px CYCLES/GPU, 96 samples.
+e-attack: 10 frames at 256/64 from 512px CYCLES/GPU, 96 samples.
+e-hit: 4 frames at 256/64 from 512px CYCLES/GPU, 96 samples.
+e-death: 10 frames at 256/64 from 512px CYCLES/GPU, 96 samples.
