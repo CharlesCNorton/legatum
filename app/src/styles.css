@@ -1006,9 +1006,6 @@ dialog.settings-modal::backdrop {
   .topbar[data-compact~='tight'] .turn { padding-inline: 12px; }
   .topbar[data-compact~='erachip'] .turn-year { display: none; }
   .topbar[data-compact~='tight'] .brand { padding: 0 16px; }
-  /* The sidebar names the ledger too; free this label before shortening the research prompt. */
-  .topbar[data-compact~='score'] .vh-chip-label { display: none; }
-  .topbar[data-compact~='score'] .vh-chip { padding-inline: 8px; }
   .topbar[data-compact~='brand'] .brand { display: none; }
   /* The Switzerland' hoard readout is also in the race row and the Gold tooltip. */
   .topbar[data-compact~='hoard'] .gold-hoard-readout { display: none; }
@@ -1031,7 +1028,6 @@ dialog.settings-modal::backdrop {
   /* The city glyph is 15px wide; 4px gutters plus the border keep a 24px hit area. */
   .topbar[data-compact~='cities'] .tb-nav-cities { padding-inline: 4px; letter-spacing: 0; }
   .topbar[data-compact~='cities'] .tb-nav-cities .tb-label { display: none; }
-  .topbar[data-compact~='nav'] .tb-nav-tech { display: none; }
 }
 .supply-stat .icon { color: var(--supply-ink, #b4533f); }
 .supply-stat .supply-name { font-size: 13px; }

@@ -98,7 +98,7 @@ Moved verbatim from SKILL.md on 2026-11-22 (original order kept). The current ru
   - **Built as round-2 C + A** (user, 2026-10-06: "the cards are intuitive for people who have played board games... the summary version from the panel in C is great"):
     - The race panel shows each empire's holdings as tokens, plus a "Nobody yet" row.
     - A token opens its source card.
-    - A top-bar VP chip opens a sheet of TI4-style objective cards.
+    - A VP chip opened a sheet of TI4-style objective cards (the top-bar chip was removed 2026-11-23; the Victory race opens the sheet).
     - Visual states: yours is gilt; a rival's is in their colour with their crest; nobody's is dashed. Live points are outlined, permanent ones solid.
     - **Increment 1 built (2026-10-06, `claude/vp-holdings`; `ui/VpHoldings.tsx`, `ui/vpParts.tsx`, `vpModel.ts`):**
       - Rows keep the old height (one line each, about 29 px) so 8 empires still fit at 1440x900; at 1000x600 whole rows plus "N more".
