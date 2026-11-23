@@ -14,6 +14,7 @@ def check(require_gpu=False):
     inputs=json.loads((M/'inputs.json').read_text())
     assert inputs['source_sha256']==sha(R/'assets/artillery/painting-source.png'),'changed painting'
     assert inputs['fill_sha256']==sha(R/'assets/artillery/painted-olive.png'),'changed generated fill'
+    assert inputs['stone_sha256']==sha(R/'assets/artillery/stone-fill-source.png'),'changed stone fill'
     for name,value in man['pipeline_sha256'].items():assert sha(P/name)==value,'changed pipeline: '+name
     assert man['grade_sha256']==sha(M/'grade.json'),'changed grade'
     for name,value in man['gallery_sha256'].items():assert sha(M/'256'/name)==value,'changed gallery: '+name
@@ -24,7 +25,7 @@ def check(require_gpu=False):
         p=M/'renders'/name
         assert sha(p)==proof['sha256'],'changed render: '+name
         assert Image.open(p).size==(man['resolution'],)*2
-        assert all(proof[k]==man[k] for k in ['resolution','engine','device','samples'])
+        assert all(proof[k]==man[k] for k in ['resolution','engine','device','samples','denoising'])
         if require_gpu:assert sha(M/'512'/name)==sha(p),'stale 512 master: '+name
     for clip,count in CLIPS.items():
         assert sha(M/f'artillery-{clip}.blend')==man['clip_blends'][clip],'stale clip'
@@ -42,7 +43,7 @@ def check(require_gpu=False):
     assert len(contact['renders'])==16
     for name,value in contact['renders'].items():assert sha(M/name)==value,'changed contact view'
     assert contact['device']==man['device'] and contact['resolution']==man['resolution']
-    assert len(contact['samples'])==8 and all(s['parallel_axles'] for s in contact['samples'])
+    assert len(contact['samples'])==8 and all(s['parallel_axles'] and s['light_frames_follow_without_rolling'] for s in contact['samples'])
     for stage in ['b-plain','c-textured-lit','c-details','d-rig-poses','f-restpose-compare','g-feet-check']:
         assert (V/f'artillery-{stage}.png').is_file()
     print('PASS: pipeline/model/clip/grade/gallery hashes, 40 frames, ground clearance, held death'+('; GPU512 provenance' if require_gpu else '; CPU preview permitted'))

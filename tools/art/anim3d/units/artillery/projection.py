@@ -19,7 +19,9 @@ def project(scene, camera, base, assets, folder):
     tree=BVHTree.FromPolygons(verts,faces)
     records=[]
     for o in objects:
-        if o==base:continue  # Never paint stationary wheel shadows onto the stone.
+        # Stone and rubber own dedicated continuous materials. Projecting hidden
+        # rubber points picks up unrelated shield/axle colors that rotate into view.
+        if o==base or any(k in o.name for k in ['Pneumatic tire','Chevron tread','Rubber sidewall']):continue
         eligible=[m for m in o.data.materials if m and any(k in m.name for k in ['Olive','Dusty','Worn','baked finish','Exposed','Recess'])]
         if not eligible:continue
         uv=o.data.uv_layers.new(name='RestPainting')

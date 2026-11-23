@@ -3,7 +3,7 @@ One gated Blender process builds and publishes each stage immediately.
 """
 import bpy, math, os, json, sys, subprocess, hashlib, random
 from pathlib import Path
-from mathutils import Vector
+from mathutils import Vector, Matrix
 from bpy_extras.object_utils import world_to_camera_view
 from math import sin, cos, pi
 ROOT=Path(os.environ['ANIM_ROOT']); M=ROOT/'masters/artillery'; A=ROOT/'assets/artillery'; REVIEW=ROOT/'review/3d-v2'
@@ -93,8 +93,13 @@ for sign in [-1,1]:
  for j in range(36):
   a=2*pi*j/36
   for side in [-1,1]:
-   o=cube('Chevron tread',c+Vector((.401*cos(a),side*.056,.401*sin(a))),(.055,.105,.025),rubber,w)
-   o.rotation_euler=(0,pi/2-a,side*.25)
+   o=cube('Chevron tread',c+Vector((.405*cos(a),side*.056,.405*sin(a))),(.030,.105,.045),rubber,w)
+   radial=Vector((cos(a),0,sin(a)))
+   o.rotation_euler=(radial.to_track_quat('Z','Y').to_matrix().to_4x4() @ Matrix.Rotation(side*.28,4,'Z')).to_euler()
+   o.data.materials.append(rubber);o.modifiers[0].material=1
+ for sy in [-1,1]:
+  for rr,off in [(.315,.121),(.345,.123),(.372,.113)]:
+   ring('Rubber sidewall molding',(.32,y+sy*off,.53),rr,.0025,rubber,w)
  rod('Pressed wheel dish',c+Vector((0,-.098,0)),c+Vector((0,.098,0)),.279,olive,w)
  for sy in [-1,1]:
   yy=y+sy*.11;ring('Raised wheel rim',(.32,yy,.53),.265,.014,edge,w)
@@ -150,7 +155,7 @@ for yy,zz,rr in [(0,1.18,.058),(-.14,1.16,.038)]:
 beam('Recoil cradle',(.19,0,.99),(.92,0,.99),.14,.16,olive,pivot)
 pivot.rotation_euler.y=-.46
 # Fixed painting camera and product lights.
-sc=bpy.context.scene;sc.render.engine='CYCLES';sc.cycles.device=os.environ.get('CYCLES_DEVICE','CPU');sc.cycles.samples=SAMPLES;sc.cycles.use_denoising=True;sc.cycles.max_bounces=5
+sc=bpy.context.scene;sc.render.engine='CYCLES';sc.cycles.device=os.environ.get('CYCLES_DEVICE','CPU');sc.cycles.samples=SAMPLES;sc.cycles.use_denoising=os.environ.get('DENOISE','0')=='1';sc.cycles.max_bounces=5
 if sc.cycles.device=='GPU':
  prefs=bpy.context.preferences.addons['cycles'].preferences;prefs.compute_device_type='METAL';prefs.get_devices()
  devices=[d for d in prefs.devices if d.type=='METAL'];assert devices,'Metal GPU required; no silent CPU fallback'
@@ -171,7 +176,7 @@ def save(name):bpy.ops.wm.save_as_mainfile(filepath=str(M/name))
 def render(path):
  assert sc.camera and sc.camera.type=='CAMERA'
  path.parent.mkdir(parents=True,exist_ok=True);sc.render.filepath=str(path);bpy.ops.render.render(write_still=True)
- render_provenance[str(path.relative_to(M/'renders'))]={'sha256':hashlib.sha256(path.read_bytes()).hexdigest(),'resolution':RES,'engine':'CYCLES','device':sc.cycles.device,'samples':SAMPLES}
+ render_provenance[str(path.relative_to(M/'renders'))]={'sha256':hashlib.sha256(path.read_bytes()).hexdigest(),'resolution':RES,'engine':'CYCLES','device':sc.cycles.device,'samples':SAMPLES,'denoising':sc.cycles.use_denoising}
  if RES==512:
   import shutil
   dest=M/'512'/path.relative_to(M/'renders');dest.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(path,dest)
@@ -197,18 +202,8 @@ for m in [olive,edge,rubber,stone]:
   tex=n.new('ShaderNodeTexImage');tex.image=fill;tex.projection='BOX';tex.projection_blend=.25;l.new(tc.outputs['Generated'],tex.inputs['Vector']);source=tex.outputs['Color']
  ao=n.new('ShaderNodeAmbientOcclusion');ao.inputs['Distance'].default_value=.09
  mix=n.new('ShaderNodeMixRGB');mix.blend_type='MULTIPLY';mix.inputs[0].default_value=.32;l.new(source,mix.inputs[1]);l.new(ao.outputs['Color'],mix.inputs[2]);l.new(mix.outputs[0],s.inputs['Base Color'])
-# Warm stone pigment is camera-only, so real product lights still cast contact shadows.
-n=stone.node_tree.nodes;l=stone.node_tree.links;s=n.get('Principled BSDF')
-g=n.new('ShaderNodeNewGeometry');sep=n.new('ShaderNodeSeparateXYZ');l.new(g.outputs['Normal'],sep.inputs[0])
-ramp=n.new('ShaderNodeValToRGB');ramp.color_ramp.elements[0].position=.15;ramp.color_ramp.elements[0].color=(.81,.55,.31,1);ramp.color_ramp.elements[1].position=.8;ramp.color_ramp.elements[1].color=(.98,.78,.54,1);l.new(sep.outputs['Z'],ramp.inputs[0])
-pigment=n.new('ShaderNodeBsdfPrincipled');pigment.inputs['Base Color'].default_value=(0,0,0,1);pigment.inputs['Specular IOR Level'].default_value=0;ao=n.new('ShaderNodeAmbientOcclusion');ao.inputs['Distance'].default_value=.12
-contact=n.new('ShaderNodeMixRGB');contact.blend_type='MULTIPLY';contact.inputs[0].default_value=.32;l.new(ramp.outputs['Color'],contact.inputs[1]);l.new(ao.outputs['Color'],contact.inputs[2]);l.new(contact.outputs[0],pigment.inputs['Emission Color']);pigment.inputs['Emission Strength'].default_value=1
-# Fine stone pigment variation remains visible even on the camera pigment branch.
-stone_noise=n.new('ShaderNodeTexNoise');stone_noise.inputs['Scale'].default_value=120;stone_noise.inputs['Detail'].default_value=2
-stone_grain=n.new('ShaderNodeValToRGB');stone_grain.color_ramp.elements[0].color=(.94,.93,.91,1);stone_grain.color_ramp.elements[1].color=(1.03,1.02,1.0,1);l.new(stone_noise.outputs['Fac'],stone_grain.inputs[0])
-stone_mix=n.new('ShaderNodeMixRGB');stone_mix.blend_type='MULTIPLY';stone_mix.inputs[0].default_value=.65;l.new(contact.outputs[0],stone_mix.inputs[1]);l.new(stone_grain.outputs[0],stone_mix.inputs[2]);l.new(stone_mix.outputs[0],pigment.inputs['Emission Color'])
-ray=n.new('ShaderNodeLightPath');weight=n.new('ShaderNodeMath');weight.operation='MULTIPLY';weight.inputs[1].default_value=.72;l.new(ray.outputs['Is Camera Ray'],weight.inputs[0])
-mix=n.new('ShaderNodeMixShader');l.new(weight.outputs[0],mix.inputs[0]);l.new(s.outputs[0],mix.inputs[1]);l.new(pigment.outputs[0],mix.inputs[2]);l.new(mix.outputs[0],n.get('Material Output').inputs['Surface'])
+from surface_finish import stone_finish, wheel_finish, rubber_finish
+stone_finish(sc,cam,base,A,json.loads((M/'inputs.json').read_text())['stone_bounds'])
 # Genuine surface bakes supplement shader contact AO and physical worn edges.
 sys.path.insert(0,str(HERE))
 from bake import bake_finish
@@ -218,6 +213,8 @@ log('Baked 256px AO and curvature maps on '+', '.join(baked))
 # retain the generated fill and physical product-light response.
 from projection import project
 records=project(sc,cam,base,A,M)
+(M/'wheel-finish.json').write_text(json.dumps(wheel_finish(sc,cam,wheels,A),indent=2))
+rubber_finish(sc,A)
 save('artillery.blend');render(M/'renders/c-textured-lit.png');review('c-textured-lit');log('Published painted rest pose and 50/50 comparison; real AO shader, micrograin, edge geometry and hidden-surface fill.')
 review('c-details')
 if MODE=='stills':sys.exit(0)
@@ -225,8 +222,8 @@ if MODE=='stills':sys.exit(0)
 axle=bpy.data.objects['GEO-Axle']
 controls=[root,pivot,recoil,*wheels,*trails,axle];neutral={o.name:(o.location.copy(),o.rotation_euler.copy()) for o in controls}
 # Small solid flash, hidden with visibility rather than degenerate scale.
-flashmat=mat('Muzzle flash warm core',(1,.35,.025),0,.6);s=flashmat.node_tree.nodes.get('Principled BSDF');s.inputs['Emission Color'].default_value=(1,.35,.02,1);s.inputs['Emission Strength'].default_value=3
-flash=rod('Muzzle flash',recoil.matrix_world@Vector((1.35,0,0)),recoil.matrix_world@Vector((1.53,0,0)),.075,flashmat,recoil,r2=.008);flash.hide_render=True
+flashmat=mat('Muzzle flash warm core',(1,.35,.025),0,.6);s=flashmat.node_tree.nodes.get('Principled BSDF');s.inputs['Emission Color'].default_value=(1,.52,.16,1);s.inputs['Emission Strength'].default_value=1.4
+flash=rod('Muzzle flash',recoil.matrix_world@Vector((1.35,0,0)),recoil.matrix_world@Vector((1.49,0,0)),.045,flashmat,recoil,r2=.008);flash.hide_render=True
 
 ground_audit=[]
 def pose(clip,i,n):
@@ -274,7 +271,7 @@ def pose(clip,i,n):
  assert lowest>=.1279,(clip,i,lowest)
  ground_audit.append({'clip':clip,'sample':i,'minimum_z':lowest,'wheel_contact_z':wheel_floor})
 
-manifest={'engine':'CYCLES','device':sc.cycles.device,'samples':SAMPLES,'resolution':RES,'clips':{},'source_sha256':hashlib.sha256((M/'artillery.blend').read_bytes()).hexdigest(),'script_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),'pipeline_sha256':pipeline_hashes}
+manifest={'engine':'CYCLES','device':sc.cycles.device,'denoising':sc.cycles.use_denoising,'samples':SAMPLES,'resolution':RES,'clips':{},'source_sha256':hashlib.sha256((M/'artillery.blend').read_bytes()).hexdigest(),'script_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),'pipeline_sha256':pipeline_hashes}
 (M/'render-manifest.json').unlink(missing_ok=True)
 for clip,(count,fps,loop) in CLIPS.items():
  for o in controls+[flash]:o.animation_data_clear()

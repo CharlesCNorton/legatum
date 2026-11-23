@@ -39,6 +39,11 @@ for label,position in [('front',(5,0,1.1)),('top',(0,0,6))]:
         if label=='front':
             axes=[list(w.matrix_world.to_quaternion()@Vector((0,1,0))) for w in wheels]
             assert (Vector(axes[0])-Vector(axes[1])).length<1e-5
-            report.append({'sample':i,'parallel_axles':True,'rolling_axes':axes})
+            lights=[bpy.data.objects['RIG-fixed light '+w.name] for w in wheels]
+            carriage=bpy.data.objects['RIG-carriage']
+            for w,light in zip(wheels,lights):
+                assert (light.matrix_world.translation-w.matrix_world.translation).length<1e-5
+                assert abs(light.matrix_world.to_quaternion().dot(carriage.matrix_world.to_quaternion()))>1-1e-5
+            report.append({'sample':i,'parallel_axles':True,'rolling_axes':axes,'light_frames_follow_without_rolling':True})
 (master/'contact-review.json').write_text(json.dumps({'device':scene.cycles.device,'resolution':resolution,'samples':report,'clip_sha256':hashlib.sha256((master/'artillery-move.blend').read_bytes()).hexdigest(),'renders':{str(Path(p).relative_to(master)):hashlib.sha256(Path(p).read_bytes()).hexdigest() for p in frames},'scope':'in-place mechanical rolling, parallel wheel axes; no world-travel or human gait claim'},indent=2))
 subprocess.run([str(root/'venv/bin/python'),str(Path(__file__).with_name('review.py')),'g-feet-check'],check=True)

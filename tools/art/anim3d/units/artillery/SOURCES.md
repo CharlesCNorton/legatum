@@ -16,3 +16,13 @@
   review is the mechanical equivalent of the feet check; no world-space travel-speed claim.
 
 All assets, bakes and editable/512/256 masters remain under `~/LegatumRuns/anim-pilot/` outside git.
+
+## Round 4
+
+- Clean stone occlusion fill: built-in ImageGen 2026-11-23, original project CC BY 4.0,
+  no public URL; generation `01a20a8c-fd93-7560-980e-3b541e6c9fec/exec-ae6d9595-d453-48e2-ac78-709ad38f0c0e.png`.
+  Input: registered original artillery painting. External `assets/artillery/stone-fill-source.png`,
+  SHA256 `733ccc70d0888268e3b07c468e7119f2183576d05721f1c7450bbdd82c7d2c87`;
+  prompt in `stone-fill.prompt.txt`. Registered color on real beveled disc, with live contact AO.
+- Continuous rubber pigment and non-rolling broad illumination derive from the same pinned painting;
+  original MIT scripts, CC BY 4.0 renders. Existing olive fill reused; no third-party download.

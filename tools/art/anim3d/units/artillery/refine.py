@@ -38,10 +38,11 @@ def refine(scene, camera, wheels, base, folder, trails, builders, materials):
         report[t.name]={'beam_pixels':pixels,'foot_z':.1325,'method':'raised box beam, upright and diagonal brace'}
     # Both complete wheels stay round, with real tread/hubs and local rolling axes.
     # The painting includes modest perspective; physical mounting yaw accommodates it.
-    for wheel, target, size, yaw in zip(wheels, [(113, 148), (195, 139)], [.96, .88], [-22, -22]):
+    for wheel, target, size, yaw in zip(wheels, [(113, 148), (195, 139)], [.93, .855], [-22, -22]):
         center = wheel.matrix_world.translation.copy()
         new_center = center.copy()
-        new_center.z = .13 + .414 * size
+        raw_radius=max(center.z-(o.matrix_world@v.co).z for o in wheel.children_recursive if o.type=='MESH' for v in o.data.vertices)
+        new_center.z = .13 + raw_radius * size
         screen = world_to_camera_view(scene, camera, new_center)
         delta = right * (target[0] - screen.x * 256) * scale - up * (target[1] - (1-screen.y) * 256) * scale
         # Keep ground contact by continuing the camera ray to the same z plane.
@@ -57,7 +58,7 @@ def refine(scene, camera, wheels, base, folder, trails, builders, materials):
             o.matrix_world = matrices[o.name]
         bpy.context.view_layer.update()
         p = world_to_camera_view(scene, camera, new_center)
-        report[wheel.name] = {'target_px': target, 'actual_px': [p.x*256, (1-p.y)*256], 'radius': .414*size, 'mount_yaw_degrees': yaw}
+        report[wheel.name] = {'target_px': target, 'actual_px': [p.x*256, (1-p.y)*256], 'radius': raw_radius*size, 'mount_yaw_degrees': yaw}
     # Refit the full solid axle to the registered wheel hubs.
     axle = bpy.data.objects['GEO-Axle']
     a,b = [o.matrix_world.translation.copy() for o in wheels]

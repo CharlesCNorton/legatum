@@ -15,5 +15,7 @@ canvas=Image.new('RGBA',(1024,1024)); canvas.alpha_composite(crop.resize(((b[2]-
 mechanical=canvas.copy()
 mechanical.putdata([(r,g,b,0 if r>165 and g>140 and b>90 and r>g*1.05 else a) for r,g,b,a in canvas.getdata()])
 mechanical.save(A/'machine-projection.png')
-(M/'inputs.json').write_text(json.dumps({'source_sha256':hashlib.sha256((A/'painting-source.png').read_bytes()).hexdigest(),'painting_bounds_256':b,'projection':'full master fitted to shipped alpha bbox; no mesh replacement','fill_sha256':hashlib.sha256((A/'painted-olive.png').read_bytes()).hexdigest()},indent=2))
+stone=Image.open(A/'stone-fill-source.png').convert('RGBA')
+stone_bounds=stone.getchannel('A').point(lambda a:255 if a>240 else 0).getbbox()
+(M/'inputs.json').write_text(json.dumps({'stone_bounds':stone_bounds,'stone_sha256':hashlib.sha256((A/'stone-fill-source.png').read_bytes()).hexdigest(),'source_sha256':hashlib.sha256((A/'painting-source.png').read_bytes()).hexdigest(),'painting_bounds_256':b,'projection':'full master fitted to shipped alpha bbox; no mesh replacement','fill_sha256':hashlib.sha256((A/'painted-olive.png').read_bytes()).hexdigest()},indent=2))
 print('Painting bounds',b)

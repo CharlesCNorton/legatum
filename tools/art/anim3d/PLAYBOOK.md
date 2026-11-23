@@ -238,3 +238,36 @@ has no runtime travel-speed evidence, so the report does not claim a world-space
 Run the same no-argument `ROUND=3 tools/art/anim3d/units/artillery/gpu.sh` after CPU inspection.
 It includes the new front/top review as a sequential gated Blender process. Keep the source painting
 in-game and withhold `artillery-PASS` while the comparison or any clip still has visible defects.
+
+### Artillery round 4: continuous wheel pigment and clean stone
+
+Round-3 GPU delivery succeeded (176,450 bytes at Q80); its masters/reviews are retained in
+`masters/artillery/round3-gpu/` and `review/3d-v2/artillery-round3-gpu/`. The rest pose was close,
+but changing rubber coverage and rotating painted illumination remained conspicuous in move.
+
+`surface_finish.py` uses consistent physical rubber around the entire tire. The existing generated
+fill supplies desaturated pigment grain, with live product lighting and short-range cavity AO.
+Real tread bevels have lighter dusty pigment; radial tread frames keep the chevrons aligned around
+the wheel, and three thin raised sidewall moldings add depth. Extending painting UVs onto hidden
+tire surfaces was rejected: those source pixels include shield/axle colors that rotate into view.
+Vertex-color sampling was also rejected because it blurred detail. Hubs retain frozen painting UVs;
+a broad directional light estimate is divided out at rest and reapplied in a non-rolling frame that
+follows the wheel center. This is approximate lighting separation, not intrinsic-image recovery.
+The front/top sample audit verifies those frames follow the hubs without inheriting wheel spin.
+
+A new image-generated clean stone fill removes the gun and its shadows. Its exact prompt/hash/source
+are in unit `SOURCES.md`; color is registered onto the complete beveled disc. Fresh contact AO follows
+the wheels and trails. The generated image's silhouette never replaces the stone mesh. Product
+key/fill/rim, physical shading, AO/curvature bakes and the fixed source-measured histogram grade remain.
+A smaller warm muzzle flash uses a real solid with keyed visibility. No crew, cloth or belts are invented.
+
+The no-argument host handoff now defaults to round 4:
+`ROUND=4 tools/art/anim3d/units/artillery/gpu.sh`. It verifies the stone input as well as the painting
+and olive fill, rebuilds every stage and all GPU512 masters, and validates the trimmed atlas plus MP4.
+CPU checks use 256px/Cycles16. Their manifest must not be mistaken for GPU512 provenance; preserved
+old 512px output is explicitly stale. The GPU script never writes `artillery-PASS` automatically.
+
+Artillery round 4 also compares actual denoised/raw renders: denoising smoothed the projected
+brushwork and narrow tread relief. The GPU handoff defaults to 128 samples with denoising disabled;
+CPU16 inspection is correspondingly noisy. Manifests record and validate the denoising setting.
+This preserves painted detail, but clean GPU noise levels still require visual review.

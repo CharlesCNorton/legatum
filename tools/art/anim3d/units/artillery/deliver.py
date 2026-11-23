@@ -55,7 +55,7 @@ assert restored['death'][-1].tobytes()==restored['death'][-2].tobytes(),'decoded
 report={'status':'technical PASS, not art approval','bytes':len(buf.getvalue()),'quality':quality,'logical_cell':160,'frames':40,'atlas_size':atlas.size,'decoded_offsets':'all 40 alpha masks reconstruct exactly','held_death':True,'provenance':man}
 (V/'artillery-validation.json').write_text(json.dumps(report,indent=2))
 # 8 seconds, all clips together, decoded trimmed atlas, 2x logical scale on cream.
-mp4=V/f'artillery-round{os.environ.get("ROUND","2")}.mp4'
+mp4=V/f'artillery-round{os.environ.get("ROUND","4")}.mp4'
 with tempfile.TemporaryDirectory(prefix='artillery-video-',dir=R/'tmp') as tmp:
  for tick in range(240):
   canvas=Image.new('RGBA',(1600,348),(233,207,160,255));draw=ImageDraw.Draw(canvas)

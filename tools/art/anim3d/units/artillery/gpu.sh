@@ -3,7 +3,7 @@
 set -Eeuo pipefail
 cd "$(dirname "$0")/../../../../.."
 source tools/art/anim3d/env.sh
-export ROUND="${ROUND:-3}" CYCLES_DEVICE=GPU RENDER_ENGINE=CYCLES RESOLUTION=512 SAMPLES="${SAMPLES:-64}"
+export ROUND="${ROUND:-4}" CYCLES_DEVICE=GPU RENDER_ENGINE=CYCLES RESOLUTION=512 SAMPLES="${SAMPLES:-128}" DENOISE=0
 log="$ANIM_ROOT/artillery-gpu-pass-r${ROUND}.log"
 status="$ANIM_ROOT/review/3d-v2/artillery-gpu-status.txt"
 receipt="$ANIM_ROOT/review/3d-v2/artillery-gpu-receipt-r${ROUND}.json"
@@ -16,7 +16,7 @@ printf 'checkout: %s\n' "$PWD"
 git rev-parse HEAD
 git status --short
 command -v blender
-for file in painting-source.png painted-olive.png; do
+for file in painting-source.png painted-olive.png stone-fill-source.png; do
   test -s "$ANIM_ROOT/assets/artillery/$file"
 done
 stage=build-bake-render
