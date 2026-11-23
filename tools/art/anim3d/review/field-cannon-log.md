@@ -204,3 +204,4 @@
 - Posted field-cannon-e-attack-strip.png; actual CYCLES render, visual review pending.
 - Posted field-cannon-e-hit-strip.png; actual CYCLES render, visual review pending.
 - Posted field-cannon-e-death-strip.png; actual CYCLES render, visual review pending.
+- ROUND 5 COMPLETE CPU RENDER: Sequential Cycles CPU/8 at256 completed all stages and all40 samples in2m37s, exit0; no crash. Opened plain views, rest comparison, pose sheet and all five new strips. Curved belts and exposed cuffs stay attached; idle contact, push/roll, recoil/soft smoke, hit and held grounded death remain readable. No painted rammer or detached hand appeared on coat/gun in move/death. Movement and death remain visibly authored; tiny smoke and generic facial/tailoring detail still fall short of the painting. Final packing/decoded review follows.
