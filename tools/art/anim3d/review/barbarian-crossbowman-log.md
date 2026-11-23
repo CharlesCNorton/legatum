@@ -1,1 +1,3 @@
 - Round 1: read six Blender skills, art skill, family playbooks and standing feedback; source downloaded and aligned; building MPFB brigand and crossbow.
+- b: 1 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- c: 1 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.

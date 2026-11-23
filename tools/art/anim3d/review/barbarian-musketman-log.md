@@ -4,3 +4,7 @@
 - Posted b-plain review (CPU, 256 px).
 - Camera projection applied to real meshes; hidden surfaces retain generated painted fills.
 - Posted c-textured-lit review (CPU, 256 px).
+- Built kneeling MPFB human, tailored ragged kit, feather hat, bandolier and solid horizontal musket.
+- Posted b-plain review (CPU, 256 px).
+- Camera projection applied to real meshes; hidden surfaces retain generated painted fills.
+- Posted c-textured-lit review (CPU, 256 px).

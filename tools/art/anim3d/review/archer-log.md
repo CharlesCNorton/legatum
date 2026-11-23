@@ -20,3 +20,32 @@
 - Published c-details native 256/64 comparison; render device CPU.
 - Rendered e-death: 256px CYCLES CPU, 8 samples.
 - Published e-death native 256/64 comparison; render device CPU.
+- Built MPFB archer, thick folded garments, lacing, bronze helmet, pale crest, sandals, quiver and bow; rest needs visual review.
+- Applied generated painted fills, CC0 linen weave, skin map, cavity shading and warm cream base.
+- Baked actual AO and curvature maps for helmet and laced cuirass; no shared-UV Solidify contamination.
+- Projected source painting onto true meshes in rest pose, preserving physical back-surface fill and alpha.
+- Authored idle: 8 frames, 10 fps; real rig keys, bow flex and nock keys, stationary base.
+- Authored move: 8 frames, 12 fps; real rig keys, bow flex and nock keys, stationary base.
+- Authored attack: 10 frames, 14 fps; real rig keys, bow flex and nock keys, stationary base.
+- Authored hit: 4 frames, 12 fps; real rig keys, bow flex and nock keys, stationary base.
+- Authored death: 10 frames, 10 fps; real rig keys, bow flex and nock keys, stationary base.
+- Rendered c: 512px CYCLES CPU, 12 samples.
+- Published c native 256/64 comparison; render device CPU.
+- Rendered c-details: 512px CYCLES CPU, 12 samples.
+- Published c-details native 256/64 comparison; render device CPU.
+- Rendered e-death: 256px CYCLES CPU, 8 samples.
+- Published e-death native 256/64 comparison; render device CPU.
+- Built MPFB archer, thick folded garments, lacing, bronze helmet, pale crest, sandals, quiver and bow; rest needs visual review.
+- Applied generated painted fills, CC0 linen weave, skin map, cavity shading and warm cream base.
+- Baked actual AO and curvature maps for helmet and laced cuirass; no shared-UV Solidify contamination.
+- Projected source painting onto true meshes in rest pose, preserving physical back-surface fill and alpha.
+- Authored idle: 8 frames, 10 fps; real rig keys, bow flex and nock keys, stationary base.
+- Authored move: 8 frames, 12 fps; real rig keys, bow flex and nock keys, stationary base.
+- Authored attack: 10 frames, 14 fps; real rig keys, bow flex and nock keys, stationary base.
+- Authored hit: 4 frames, 12 fps; real rig keys, bow flex and nock keys, stationary base.
+- Authored death: 10 frames, 10 fps; real rig keys, bow flex and nock keys, stationary base.
+- Rendered c: 512px CYCLES CPU, 16 samples.
+- Published c native 256/64 comparison; render device CPU.
+- Rendered c-details: 512px CYCLES CPU, 12 samples.
+- Published c-details native 256/64 comparison; render device CPU.
+- Geometry audit passed: anatomy, fixed base, nonzero scales, bow/nock contact and loop closure.
