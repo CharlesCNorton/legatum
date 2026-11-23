@@ -1,0 +1,1 @@
+- Round 1: read project/art instructions, all six Blender skills, standing feedback, and newer vehicles/artillery family pipeline. Retrieved source painting; six-wheel truck, 40-tube raised launcher, no human/animal motion.

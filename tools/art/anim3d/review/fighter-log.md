@@ -22,3 +22,8 @@
 - First 256 CPU pack: 197406 bytes at quality 85; MP4 verified H.264/yuv420p, 240 frames/8 seconds. Superseded by final 512-source pack after propeller/projection fixes.
 - Visual verdict: recognizable matching fighter silhouette and palette at 64 px; still below painting richness at 256 px. Canopy join/profile, thinner propeller silhouette, base shadow and support disappearance in crash need another round. No fighter-PASS file warranted.
 - Rendered e-death: 512px, CYCLES; review published.
+
+# Fighter resumed round 2 — 2026-11-23
+- Opened prior rest 256/64, clay, details and every clip strip before edits. At 256: canopy is too low and has a stray front framing loop; propeller is shorter, wider and lacks the source ochre tips; upper wing has doubled diagonal source/geometry marks; base is flat grey cream and pedestal too pink. At 64: same aircraft identity and broad silhouette, but propeller/base differences remain visible. Crash hides the entire support abruptly; attack flashes barely read. Not painting parity; no PASS.
+- Read full standing feedback through 23; fighter-FEEDBACK.md absent. Read local playbook and current spearman/field-cannon branch chapters, source ledger and all six Blender skills. Applying finished-surface projection, camera-only pigment, physical cream stone, canopy/propeller fitting and retained crash support. Aircraft has no human/animal gait: mechanical flight motion applies; top/front move-cycle review will document no-feet exception.
+- Preserved prior editable masters, frames, grade, atlas receipts and reviews under masters/fighter/round1-preserved before rebuilding. Prior manifests are CPU, not verified GPU evidence.
