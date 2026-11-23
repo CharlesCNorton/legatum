@@ -128,3 +128,47 @@
 - Completed build  (CPU).
 - Started render c (CPU).
 - Completed render c (CPU).
+- c: 1 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- Started bake  (CPU).
+- Completed bake  (CPU).
+- Started animate  (CPU).
+- Completed animate  (CPU).
+- Started audit  (CPU).
+- Completed audit  (CPU).
+- Started build  (CPU).
+- Completed build  (CPU).
+- Started bake  (CPU).
+- Completed bake  (CPU).
+- Started animate  (CPU).
+- Completed animate  (CPU).
+- Started audit  (CPU).
+- Started audit  (CPU).
+- Completed audit  (CPU).
+- Started render b (CPU).
+- Completed render b (CPU).
+- b: genuine front, three-quarter and side geometry views.
+- Started render c (CPU).
+- Completed render c (CPU).
+- c: 1 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- Started render d (CPU).
+- Completed render d (CPU).
+- d: 4 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- Started render e-idle (CPU).
+- Completed render e-idle (CPU).
+- e-idle: 8 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- Started render e-move (CPU).
+- Completed render e-move (CPU).
+- e-move: 8 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- Started render e-attack (CPU).
+- Completed render e-attack (CPU).
+- e-attack: 10 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- Started render e-hit (CPU).
+- Completed render e-hit (CPU).
+- e-hit: 4 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- Started render e-death (CPU).
+- Driver round 2 changes: continuous inverse-skinned quilted sleeves replace independent elbow shells; narrowed prod 10% and raised it 35mm; clean lower stone rim alone receives feathered source pigment, top remains physical. Retargeted Quaternius CC0 Idle_Loop/Walk_Loop/Hit_Chest/Death01 with rest/roll calibration, source carrying layer, hand constraints and translation-only floor placement. Native foot rotations retained. Tested actual CPU move/death samples: fall settles on stone instead of floating; exposed attack shoulder fill remains plainer than painting. All stages being refreshed CPU256/8.
+- Completed render e-death (CPU).
+- e-death: 10 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- Started feet  (CPU).
+- Completed feet  (CPU).
+- Started audit  (CPU).
