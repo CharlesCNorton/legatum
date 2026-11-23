@@ -252,3 +252,8 @@
 - Posted e-attack review (GPU, 512 px).
 - Posted e-hit review (GPU, 512 px).
 - Posted e-death review (GPU, 512 px).
+
+# Driver round 3: actual round-2 GPU review
+- Opened c/f, all five e-strips and eight decoded MP4 frames first. GPU round2 succeeded: 40 frames, native GPU512/64, 182788 bytes at Q85. Preserved input evidence under masters/arquebusier/driver-r2-gpu.
+- Honest 256px critique: face, slashed cloth and powder flasks are close, but morion brim is a bright thin spike, outer stocking projects red outside its stripe, shoes are broad/rounded, and stone is uniformly smooth and banded. Move exposes hard knee seams and dark shoe soles; attack has a disconnected-looking upper arm; death exposes hollow shoulder/knee seams and overlarge soles. At 64px it reads as the same arquebusier but helmet, feet and rigid base still distinguish it. Not PASS.
+- Read complete playbook/common feedback and log; arquebusier-FEEDBACK.md absent. Loaded modeling, materials, lighting, cameras, animation and rendering skills: improve weighted cloth joins and hidden pigment, preserve calibrated camera projection/open motion, generated clean stone with live contact AO, retain frozen automatic histogram grade. Imagegen skill used for occluded stone fill.
