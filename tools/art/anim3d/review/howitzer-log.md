@@ -52,3 +52,11 @@
 - Published e-hit: 4 actual rendered frames, 12 fps; GPU 512px 64 samples.
 - Published e-death: 10 actual rendered frames, 10 fps; GPU 512px 64 samples.
 - Completed all five clips and geometry audit; delivery pack may now run.
+
+# Howitzer driver round 2
+- Opened GPU c/f, all five e strips and eight sampled round1 MP4 frames before editing. GPU receipt confirms 512px/64 samples, 187034 bytes at Q75; pass completed, art_approved=false. Preserved evidence in masters/howitzer/driver-r1-gpu. No howitzer-FEEDBACK.md exists; read all 23 shared feedback items.
+- Honest critique at 256px: barrel/shield retain painted detail, but wheels are too wide, clean and wire-like; wheel rings lack broad worn faces and bolts; carriage/trail placement differs, base is a uniformly ochre disc with almost no stone grain. Muzzle flash is a yellow sticker and death reads mainly as lowering the gun. At64 identity is clear, but clean wide wheels and simplified base prevent painting parity. Sampled clips show no obvious tears or clipping, not a complete motion sign-off. NOT PASS.
+- Loaded all six Sam Blender skills: modeling (full-depth bevels and rectangular spokes), materials (paint/grain/cavity wear), cameras (wheel/stone landmark registration), lighting (painted product key/fill/rim), animation (rigid local-axis recoil/rolling and visibility), rendering (low-sample CPU previews, separate verified GPU512 pass). Reuse licensed image-generated olive unseen fill; no cloth/straps/skin or human/animal motion applies to this uncrewed painting.
+- Published b-plain CPU/GPU geometry stage before texture work.
+- Baked 256px AO and curvature maps on GEO-Shield wing -1, GEO-Shield wing 1, GEO-Hollow tapered barrel
+- Published painted rest pose and 50/50 comparison; real AO shader, micrograin, edge geometry and hidden-surface fill.
