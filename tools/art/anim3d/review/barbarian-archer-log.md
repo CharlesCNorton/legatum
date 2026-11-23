@@ -64,3 +64,28 @@ Published c review immediately; CPU preview, not art approval.
 Finished 351 solid projected meshes; actual AO/curvature bakes on 4 principal surfaces; generated hidden-side fills packed.
 Rendered c: 256px, Cycles CPU, 8 samples; raw frames preserved.
 Published c review immediately; CPU preview, not art approval.
+Finished 351 solid projected meshes; actual AO/curvature bakes on 4 principal surfaces; generated hidden-side fills packed.
+Rendered c: 256px, Cycles CPU, 8 samples; raw frames preserved.
+Published c review immediately; CPU preview, not art approval.
+Rendered c: 256px, Cycles CPU, 8 samples; raw frames preserved.
+Published c review immediately; CPU preview, not art approval.
+Rendered b: 256px, Cycles CPU, 8 samples; raw frames preserved.
+Published b review immediately; CPU preview, not art approval.
+Authored idle: 8 frames at 10 fps; dynamic bow/string, grip and stationary base checked, loop closure keyed.
+Authored move: 8 frames at 12 fps; dynamic bow/string, grip and stationary base checked, loop closure keyed.
+Authored attack: 10 frames at 14 fps; dynamic bow/string, grip and stationary base checked, terminal keys retained.
+Authored hit: 4 frames at 12 fps; dynamic bow/string, grip and stationary base checked, terminal keys retained.
+Authored death: 10 frames at 10 fps; dynamic bow/string, grip and stationary base checked, terminal keys retained.
+Rendered d: 256px, Cycles CPU, 8 samples; raw frames preserved.
+Published d review immediately; CPU preview, not art approval.
+Rendered e-idle: 256px, Cycles CPU, 8 samples; raw frames preserved.
+Published e-idle review immediately; CPU preview, not art approval.
+Rendered e-move: 256px, Cycles CPU, 8 samples; raw frames preserved.
+Published e-move review immediately; CPU preview, not art approval.
+Rendered e-attack: 256px, Cycles CPU, 8 samples; raw frames preserved.
+Published e-attack review immediately; CPU preview, not art approval.
+Rendered e-hit: 256px, Cycles CPU, 8 samples; raw frames preserved.
+Published e-hit review immediately; CPU preview, not art approval.
+Rendered e-death: 256px, Cycles CPU, 8 samples; raw frames preserved.
+Published e-death review immediately; CPU preview, not art approval.
+Packed 40 frames at 160px, trimmed offsets, quality 90, 191798 bytes.

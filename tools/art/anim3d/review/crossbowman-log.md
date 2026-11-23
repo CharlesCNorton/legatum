@@ -66,3 +66,24 @@
 - Completed render e-hit (CPU).
 - e-hit: 4 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
 - Started render e-death (CPU).
+- Completed render e-death (CPU).
+- e-death: 10 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- Packed 40 frames, trimmed 160px cells, WebP quality 90, 184108 bytes.
+- Verified 8 second five-clip H.264 yuv420p review crossbowman-round2.mp4
+- Started animate  (CPU).
+- Completed animate  (CPU).
+- Started audit  (CPU).
+- Completed audit  (CPU).
+- Started render e-death (CPU).
+- First complete CPU candidate: 40 frames packed at Q90/184,108 bytes; atlas validation and 8-second MP4 probe passed. Visual death review caught the released bow rotating its prod vertical through the stone. Corrected the release with a stock-axis roll so the bow settles flat, use the actual base contact plane for the body, and clamp evaluated weapon geometry above that plane. Added an independent all-death-frame weapon-floor audit; rerendering death and repacking/video supersedes that first candidate.
+- Completed render e-death (CPU).
+- e-death: 10 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- Packed 40 frames, trimmed 160px cells, WebP quality 90, 178988 bytes.
+- Verified 8 second five-clip H.264 yuv420p review crossbowman-round2.mp4
+- Started audit  (CPU).
+- Round 2 final CPU256/8 candidate: all 40 frames, trimmed 160px atlas Q90 / 178,988 bytes. Validation passed source/model/grade hashes, real alpha and exact reconstructed offsets, motion and identical decoded held death. MP4 probe passed H.264/yuv420p, 1600x348, 240 frames / 8 seconds. Opened every new strip and the rest comparisons at 256/64. No crossbow-through-base after release fix, but death still looks stiff/suspended; raised sleeve joints, fingers/shoes and stone edge remain visibly below the painting. NO PASS marker; pending host GPU512/64 and fresh art review.
+- GPU low-sample guard tested with explicit failure branch (SAMPLES=1 rejected before asset preparation); missing-input log/status and CPU-final rejection also pass. All 10 Python scripts parse; both shell scripts and whitespace checks pass. No Rust, rules, runtime or UI changes, so no Rust/WASM build was run.
+- Completed audit  (CPU).
+- Final death-floor audit passed all ten samples; minimum evaluated crossbow clearance is 0.00399999m above the actual stone top. Final MP4 contact frames opened and inspected: all five decoded clips present; held death exact but visually suspended/stiff, so no art PASS.
+- Final checks: 4 delivery regression tests passed; all-five geometry audit passed; current 40-frame atlas/source/alpha/offset/death validation passed; final MP4 probe passed; 10 Python syntax / 2 Bash syntax / git diff --check passed; direct working-file hygiene scan passed 16 text files after matrix-operator spacing correction. Commit-based art gate remains blocked by Chromium sandbox permissions; no GPU512 evidence claimed.
+- Git add and commit attempted with required co-author footer; both blocked by Operation not permitted creating .git/worktrees/lane-21/index.lock. Changes remain uncommitted for the runner. origin/master is already an ancestor of HEAD; no merge needed and nothing pushed. Lead command: ROUND=2 tools/art/anim3d/units/crossbowman/gpu.sh. Executable script requires GPU, renders every stage/512/256, validates trimmed atlas, and produces round MP4; visual review is still required.

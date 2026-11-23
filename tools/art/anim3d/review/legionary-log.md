@@ -57,3 +57,13 @@
 - Published b: CYCLES/CPU, 256 px, 8 samples; visual review pending.
 - Full 512/CPU8 pass and original geometry audit passed, but visual details exposed skin protruding through scutum. Camera ray queries identified anatomical left fingers at token pixels 153-159/99-107. Retracted shield-side wrist 8cm in rest and authored guards/attack/death while preserving shield world placement; added actual skin/scutum BVH overlap check before release. Rebuilding previews/audit before dependent delivery.
 - Published c: CYCLES/CPU, 256 px, 8 samples; visual review pending.
+- Clearance regression measured 719 intersecting skin/scutum triangle pairs in the preserved pre-fix rest master, zero in corrected rest. Full new audit caught two remaining peak-attack thumb contacts; added a continuous backward wrist tilt during shield impact, preserving the neutral clip-entry orientation. No collision threshold was weakened.
+- Published b: CYCLES/CPU, 512 px, 8 samples; visual review pending.
+- Published c: CYCLES/CPU, 512 px, 8 samples; visual review pending.
+- Published d: CYCLES/CPU, 512 px, 8 samples; visual review pending.
+- Published e-idle: CYCLES/CPU, 512 px, 8 samples; visual review pending.
+- Published e-move: CYCLES/CPU, 512 px, 8 samples; visual review pending.
+- Published e-attack: CYCLES/CPU, 512 px, 8 samples; visual review pending.
+- Published e-hit: CYCLES/CPU, 512 px, 8 samples; visual review pending.
+- Published e-death: CYCLES/CPU, 512 px, 8 samples; visual review pending.
+- Final corrected CPU8/512 render set complete: 48 diagnostic/clip images at both native 512 and gallery256; provenance gate PASS. Stronger geometry audit PASS across 40 samples; remaining warning is terminal skin minimum .204m over dropped equipment. Packed 40 trimmed160 frames to 197,774 bytes at Q85 (1066x766), with full 8-bit alpha and identical-frame rectangle reuse. Decoded alpha/offset/hash/margin/motion/held-death validation PASS. MP4 ffprobe PASS: H.264/yuv420p, 1600x348, 240 frames/eight seconds.

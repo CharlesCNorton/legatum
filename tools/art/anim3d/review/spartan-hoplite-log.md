@@ -61,3 +61,5 @@ Review e-move: 256px CYCLES/CPU, 12 samples; 8 actual frames.
 Review e-attack: 256px CYCLES/CPU, 12 samples; 10 actual frames.
 Review e-hit: 256px CYCLES/CPU, 12 samples; 4 actual frames.
 Review e-death: 256px CYCLES/CPU, 12 samples; 10 actual frames.
+Round 2 final CPU: 40/40 frames at256/Cycles CPU12; atlas 199862 bytes Q90; full trim/motion/margin/hash/held-death validation passed. Full rig audit 0 findings. MP4 verified H264/yuv420p1600x348,240 frames,8s; inspected all five strips and decoded movie frame. GPU-only master gate rejects missing512 masters. Missing-input preflight passed; separate device test cancelled while queued at sharedGPU gate, no hardware result claimed.
+Round 2 visual verdict: improved contour and painted linen but NO PASS. At256 plume remains uniform, neck/mantle forms a broad shelf, linen needs crisper physical layers and stone rim is too dark. At64 identity and silhouette are closer but visibly different. Death shield changes presentation at entry and the terminal pose is stiff/perched; next round must reconcile death left-arm guard and contact, not call five clean clips from technical checks alone.
