@@ -106,3 +106,100 @@ tools/art/anim3d/render.sh audit
 ```
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
+
+## Infantry chapter: kneeling barbarian scout (round 1)
+
+The unit-scoped implementation is `units/barbarian-scout/`. This chapter supplements
+only this infantry variant; the older spearman commands and atlas contract above
+remain historical. Reuse MPFB's CC0 anatomical mesh and 53-bone game-engine rig,
+bake its morphs before changing the bind pose, and keep the kneeling lookout pose
+from the painting. The wolf pelt, folded tunic, hair/beard locks, scarf, boot and
+bracer wraps, belt buckle, hollow horn and beveled belt axe are actual geometry.
+The unit scripts do not replace another lane's scripts or editable masters.
+
+All six Blender skills were applied: organic subdivisions and thick kit surfaces;
+painted material variation; warm upper-left key, cool rim and soft fill; fixed
+orthographic painting camera; editable skeletal clips; and CPU preview / explicit
+Metal Cycles final rendering with denoising. Every invocation is plain `blender -b`
+through the PATH gate, with automatic script execution disabled. Never bypass the
+gate or start concurrent heavy jobs. The optional reference-calibration skill is
+not installed; foreground quantiles, native-size comparisons and the crossfade
+provide direct calibration evidence.
+
+### Painting-first finish
+
+1. Align geometry, crouched skeleton, camera and silhouette to the committed token.
+   Fit the full source painting into the token's alpha extent at 1024 px. Freeze
+   camera-projected UVs into the real rest mesh; the UVs deform with the character.
+   Blend camera-facing coverage into material backfill rather than making a card.
+   Generated painted wolf fur fills unseen cloak surfaces. Assets and provenance
+   stay under `assets/barbarian-scout/`, including source hashes and the prompt.
+2. Bake real Cycles AO and Pointiness at 256 px for anatomy, pelt cowl and axe.
+   Apply cavity darkening to base colour and curvature-driven roughness to iron.
+   Disable shell Solidify only during baking to prevent inside/outside UV overlap.
+   Keep actual cloth folds/thickness, tapered fur tufts and hair locks, thick leather
+   wraps, metal buckle and beveled axe edge. Projected paint supplies brushwork;
+   it cannot repair a misaligned silhouette or an incorrect hand pose.
+3. Use product lighting with contact shadows, Cycles denoising and stable sampling.
+   The base pigment is sRGB `#E9CFA0` converted to linear RGB, nonmetallic with
+   roughness .85, fine-grain bump and a rounded darker rim from real lighting.
+   Compare rendered pixels: sharing shader numbers alone does not match a painting.
+4. Measure 17 opaque-foreground quantiles in each RGB channel and apply a bounded
+   monotonic transfer blended at 30%. Freeze that rest-derived LUT for all frames
+   to avoid temporal colour pumping. Preserve raw renders separately.
+
+Each stage publishes immediately: `barbarian-scout-b-plain.png`,
+`-c-textured-lit.png`, `-c-details.png`, `-d-rig-poses.png`, all five
+`-e-<clip>-strip.png` and animated WebPs, and `-f-restpose-compare.png` (painting,
+render, half split and 50/50 crossfade), plus a native 64 px comparison. CPU and GPU
+render metadata are retained. A generated review sheet is not an art pass.
+
+### Rebuild and lead handoff
+
+From the repo root, with the existing shared MPFB install and downloaded source:
+
+```sh
+source tools/art/anim3d/env.sh
+"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/barbarian-scout/prepare.py
+tools/art/anim3d/units/barbarian-scout/render.sh build
+blender -b --disable-autoexec --python-exit-code 1 --python tools/art/anim3d/units/barbarian-scout/texture.py
+blender -b --disable-autoexec --python-exit-code 1 --python tools/art/anim3d/units/barbarian-scout/bake.py
+blender -b --disable-autoexec --python-exit-code 1 --python tools/art/anim3d/units/barbarian-scout/animate.py
+RESOLUTION=512 SAMPLES=8 tools/art/anim3d/units/barbarian-scout/render.sh all
+"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/barbarian-scout/post.py pack
+"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/barbarian-scout/post.py video
+```
+
+The complete GPU handoff, no arguments, is:
+
+```sh
+tools/art/anim3d/units/barbarian-scout/gpu.sh
+```
+
+It renders every stage serially using Metal Cycles at 512 px, keeps 512/256 masters,
+rebuilds reviews, packs and validates, and writes
+`review/3d-v2/barbarian-scout-round${ROUND}.mp4`: all five clips side by side,
+8 seconds, 2x scale on cream, H.264 yuv420p. It rejects missing GPU devices rather
+than silently falling back. `ROUND` defaults to 1 for a manual run. Source/grade
+hashes prevent a mixed-generation atlas. The GPU path rerenders saved models;
+rebuilding geometry or textures requires regenerating clips first.
+
+### Trimmed 160 px atlas contract, version 2
+
+Ship `app/src/assets/units/anim/barbarian-scout.{webp,json}` as a candidate without
+changing the runtime. `frame:{w:160,h:160,ax:80,ay:140}` defines the original cell
+and its shared base anchor. `clips` retains rows idle/move/attack/hit/death,
+counts 8/8/10/4/10, fps and loop flags. Each clip additionally has ordered `rects`:
+`{x,y,w,h,ox,oy}`. Crop `(x,y,w,h)` from the packed atlas; place it at `(ox,oy)` in
+the logical 160-square cell, then subtract `(ax,ay)` for world anchoring. Packed
+rows have variable heights and widths; consumers must use rectangles, not grid
+multiplication. Two transparent pixels separate packed rectangles/rows. Trimming
+must never recenter individual frames. `atlas:{w,h}` stores actual packed size.
+
+Keep all 40 frames and 512/256 masters outside git. Alpha is quantized to 16 levels;
+RGB is not posterized. The packer searches WebP quality 90/85/80/75 and refuses
+anything over 200,000 bytes at quality 75. Validation checks the format, actual
+alpha, margins, rectangle bounds, counts, source/grade freshness, clip motion and
+held terminal death. This is a technical contract, not painting parity. Only write
+`barbarian-scout-PASS` after visual review finds the rest pose hard to distinguish
+from the painting and all five clips clean. Round 1 is explicitly not a PASS.
