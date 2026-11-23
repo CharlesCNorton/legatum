@@ -116,6 +116,7 @@ macro_rules! decision_params {
 }
 
 decision_params! {
+    rome_opening_march: 1, 0, 1, "Hard Rome: train three opening melee, commit to the nearest reachable open rival city, declare once two melee are within three hexes, and keep the force marching; 0 preserves the ordinary plan";
     mongol_horde: 0, 0, 3, "Hard Mongols: 1 mounted war force and early counter plus Iron Working, 2 funded veteran Keshig upgrades and retreat, 3 ranged siege of walled cities before capture";
     walls_garrison_value: 0, 0, 200, "Shared Walls-as-garrison valuation, percent: compare expected city damage saved and dealt per Production with a troop's defence plus its offensive service under the current plan (0: legacy garrison floor)";
     modernization_value: 100, 0, 200, "Weight squared combat strength against observed opponents in unit production and purchases (0: old valuation)";
