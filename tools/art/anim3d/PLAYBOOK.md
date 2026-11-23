@@ -106,3 +106,100 @@ tools/art/anim3d/render.sh audit
 ```
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
+
+## Mounted / knight — round 1
+
+The knight-specific implementation is isolated in `units/knight/`. It reuses the
+mounted family's CC0 Quaternius Horse, original horse actions, MPFB CC0 anatomy,
+geometry helpers, reference-pose fitting and finished-surface projection. It adds
+fitted mail, greathelm, curved thick heater shield, upright striped lance,
+scalloped caparison and blue mantle. These are real curved 3D surfaces with
+physical thickness, not cards. Unseen surfaces use the mounted family's recorded
+original generated fills. Source hashes and licences are in `sources.lock.json`
+and `SOURCES.md`; assets, blends, textures and masters stay under `ANIM_ROOT`.
+
+All six Blender skills were used: modeling (bevel/thickness/subdivision),
+materials (paint, metal and cloth variation), lighting (warm key/cool rim/fill),
+cameras (orthographic painting registration), animation (source action sampling,
+reference pose and bone rolls) and rendering (serial Cycles, alpha, retained
+sequences and checked encoding). Always invoke plain `blender -b` through PATH;
+the machine gate owns thread counts and shared slots. Never run the app binary,
+start another heavy process of your own, or use zero scales to hide geometry.
+
+The four standing quality levers are the standard for this unit: first register
+full-depth geometry to the painting, then freeze its camera projection into UVs;
+finish edges/straps/cloth before projection; use product lighting with physical
+contact shading; fit one histogram grade from rest and reuse it for every frame.
+The cream stone target is sRGB **#E9CFA0**, converted to linear shader values.
+Camera-only painted illumination avoids lighting the painting twice, while the
+physical shader still casts shadows. Generated linen/metal/hair fills cover
+unseen surfaces. Current cavity shading uses live AO;
+round 1 does not claim fresh baked AO/curvature maps. The native 256/64 rest
+comparison, split and crossfade are the judge, not script completion.
+
+### Open motion and walk inspection standard
+
+Use licensed open motion by default: CC0 Quaternius or free-use CMU for humans;
+CC0 animated quadrupeds for horses and other animals. Match reference pose and
+bone rolls before retargeting. Never hand-rotate feet afterward to repair an
+axis mismatch. Only weapon-specific attacks are hand-keyed. Every round renders
+front and top views across the full move cycle to `<slug>-g-feet-check.png`;
+check travel direction, planted-foot contact and sliding before approval.
+
+The knight samples the horse's Idle, Walk, Gallop, Idle_HitReact_Left and Death.
+Its human torso uses Quaternius UAL Sitting_Idle_Loop, Hit_Chest and Death01,
+retargeted relative to each initial pose with bone-roll alignment. The seated
+pelvis, legs and equipment grip remain constrained; this is not full-body
+walking retargeting. The horse retains original foot rotations. A whole-horse
+floor correction and trajectory audit are present, but are not a proof of
+foot-slide-free gait. Caparison and cloak are bone-driven, not simulated cloth.
+
+```sh
+# Run serially from the repository root. CPU checks use small Cycles renders.
+source tools/art/anim3d/env.sh
+"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/knight/preflight.py
+"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/knight/prepare.py
+for stage in build kit paint motion animate; do
+  tools/art/anim3d/units/knight/run.sh "$stage"
+done
+CYCLES_DEVICE=CPU RESOLUTION=256 SAMPLES=8 \
+  STAGES=b,c,d,e-idle,e-move,e-attack,e-hit,e-death,g \
+  tools/art/anim3d/units/knight/run.sh render
+tools/art/anim3d/units/knight/run.sh audit
+"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/knight/delivery.py all --resolution 256
+
+# Complete lead-side GPU pass, no arguments; fails if Metal is unavailable.
+ROUND=1 tools/art/anim3d/units/knight/gpu.sh
+```
+
+The GPU entry point verifies sources and Metal first, rebuilds, renders all
+stages at 512 px with at least 64 Cycles GPU samples and denoising, retains raw
+and graded 512/256 masters, writes every review image, packs/validates the atlas,
+and writes `knight-round${ROUND}.mp4`. The movie decodes trimmed rectangles onto
+160 px canvases before 2x display: five clips side by side on cream, 240 frames,
+eight seconds, H.264 yuv420p. It never writes PASS. Failure/completion status and
+full logs are in `masters/knight/`; completion leaves `art_approved:false`.
+
+### Knight atlas v2 and validation
+
+`app/src/assets/units/anim/knight.{webp,json}` retains 8/8/10/4/10 frames in
+idle/move/attack/hit/death order, with 160 px untrimmed canvases, one-pixel empty
+gutters and per-frame alpha trimming. Quality is selected from 90/85/80/75 and
+the writer refuses anything over **200,000 bytes**. RGB is not quantized; alpha
+uses 32 levels (at most 5/255 rounding error).
+
+JSON has `version:2`, `layout:"trimmed-rows"`, `frame:{w:160,h:160,ax:79,ay:144}`,
+`atlas:{w,h}`, and `clips:{name:{row,frames,fps,loop,rects:[{x,y,w,h,ox,oy}]}}`.
+A rectangle is cropped from atlas `(x,y,w,h)` and pasted at `(ox,oy)` on its
+160 px canvas. Direct placement relative to the unit anchor is
+`(ox-ax,oy-ay)`. `row` identifies semantic clip order, not a fixed pixel stride.
+No runtime loader is enabled or changed by this candidate. The two terminal
+death entries share one identical rectangle to prevent lossy block compression
+from creating a false flicker; both frames remain present in the ten-frame clip.
+
+Validation requires current blend/frame/grade/atlas hashes, all forty frames,
+matching timing, exact decoded trimmed alpha, non-overlap/bounds, transparent
+margins, actual motion, held final death and size/quality limits. It cannot
+certify cloth collision freedom or painted parity. Keep `knight-PASS` absent
+until the rest pose is hard to distinguish from the painting and all clips are
+clean at both review sizes.
