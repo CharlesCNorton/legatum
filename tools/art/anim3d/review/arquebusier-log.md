@@ -155,3 +155,16 @@
 - Opened GPU c/f comparisons, all five e-strips, and decoded round1 MP4 frame before editing. GPU script succeeded: native GPU512/64 samples, 40 frames, 191478 bytes at q90; archived evidence under masters/arquebusier/driver-round1-gpu.
 - Honest 256px critique: painting brushwork now survives on face/doublet/breeches, but the stock is a flat dark wedge without the source warm wood; morion brim/comb outline and right stocking/shoe silhouette remain wrong. Base is close in colour but its contact/ellipse differs. The attack has a stiff shoulder and visible sleeve seams. Walk reveals red/cream surface mismatches and floating feet; death is an implausible rigid lateral tip. At 64px identity is clear, but stock width, leg stance and helmet still distinguish the render from the painting. Not PASS.
 - Read all PLAYBOOK chapters, all common feedback including new item 23, prior log and source provenance; unit feedback file does not exist. Loaded all six Blender skills. This round uses rest-calibrated open Quaternius motion with bone-roll compensation and front/top foot evidence, improves stock projection/geometry, and retains generated fills, bevels, cloth folds, product lights and the frozen histogram grade.
+- Finished-surface camera projection with camera-only pigment; generated hidden fills retained.
+- Posted c-textured-lit review (CPU, 256 px).
+- Retargeted CC0 and saved idle action (8 output frames).
+- Retargeted CC0 and saved move action (8 output frames).
+- Authored and saved attack action (10 output frames).
+- Retargeted CC0 and saved hit action (4 output frames).
+- Retargeted CC0 and saved death action (10 output frames).
+- Posted d-rig-poses review (CPU, 256 px).
+- Posted e-idle review (CPU, 256 px).
+- Posted e-move review (CPU, 256 px).
+- Posted e-attack review (CPU, 256 px).
+- Posted e-hit review (CPU, 256 px).
+- Posted e-death review (CPU, 256 px).
