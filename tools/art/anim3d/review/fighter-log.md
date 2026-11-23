@@ -70,3 +70,21 @@
 - Rendered e-hit: 256px, CYCLES; review published.
 - Rendered e-death: 256px, CYCLES; review published.
 - Rendered g: 256px, CYCLES; review published.
+- Rendered e-death: 256px, CYCLES; review published.
+- Rendered b: 256px, CYCLES; review published.
+- Rendered c: 256px, CYCLES; review published.
+- Rendered e-idle: 256px, CYCLES; review published.
+- Rendered e-move: 256px, CYCLES; review published.
+- Rendered e-attack: 256px, CYCLES; review published.
+- Rendered e-hit: 256px, CYCLES; review published.
+- Rendered e-death: 256px, CYCLES; review published.
+- Rendered g: 256px, CYCLES; review published.
+- Rendered e-death: 256px, CYCLES; review published.
+- Rendered g: 256px, CYCLES; review published.
+- Preserved verified GPU round1 inputs/masters/reviews under masters/fighter/driver-r1-gpu. Replaced wing triangle fans with closed rounded camber rings; added narrowly masked generated occlusion paint (CC BY 4.0, generation and input hashes recorded), retaining original paint elsewhere.
+- Matched solid propeller blade outlines to source landmarks in one shaft plane; added cyclic shaft curves and finite-shutter blur. Rest silhouette closer at 256/64. Low-sample blur showed noisy alpha, so final CPU checks use 32 samples. Lower-disc painting excludes support/shadow and multiplies source alpha; an initial black rim fringe was caught and fixed before clips.
+- Motion review caught propeller-floor correction lifting the wreck and an initial backwards fold crossing the cowling. Forward impact folds retain solid blades and avoid the visible cowling crossing; evaluated mesh contact checks pass. The crash still reads as a stylized intact airframe with bent propeller, not a realistic wreck.
+- Final CPU256/32 atlas: 187,518 bytes, Q85, 1470x770, all 8/8/10/4/10 samples. Validator passes exact alpha, gutters, trim offsets, current source/clip/grade provenance and held final death. MP4 H.264/yuv420p, 1600x348, 240 frames/8 seconds; decoded 0.3/0.7/1.43 s frames inspected beside round1.
+- Geometry/contact audit passes principal closed solids plus all propeller blades, safe scales, stationary base all 40 samples, closed flight and shaft loops, evaluated crash floor contact and held death. Actual top/front move review now auto-fits the full wings over every sample. Python AST, Bash syntax and whitespace checks pass.
+- GPU script now verifies a saved build-input seal (scripts, four licensed textures, two model masters, six bakes), clears partial-clip overrides, and records the seal in its receipt. Missing masters fail explicitly before Blender; GPU verification correctly rejects CPU output. Lead must run ROUND=2 tools/art/anim3d/units/fighter/gpu.sh for fresh GPU512/256 output.
+- Honest final critique: 256 px is closer in propeller outline, wing paint and stone rim; camber, canopy thickness, top stone shading and crash texture stretch remain distinguishable. At 64 px the same unit/composition/palette read closely, but this is not painting parity. GPU blur edges and final atlas remain to be reviewed. No fighter-PASS written. Standing feedback still ends at 23; fighter-FEEDBACK.md is absent.
