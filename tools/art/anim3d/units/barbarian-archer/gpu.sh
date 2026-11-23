@@ -20,7 +20,7 @@ stage=animate
 "$unit/run.sh" animate
 stage=audit
 "$unit/run.sh" audit
-for stage in b c d e-idle e-move e-attack e-hit e-death; do
+for stage in b c d e-idle e-move e-attack e-hit e-death g-feet; do
   "$unit/run.sh" "$stage"
 done
 stage=pack

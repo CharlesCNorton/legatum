@@ -24,6 +24,10 @@ for name,(count,_,_) in CLIPS.items():
     sc=bpy.context.scene
     assert sc['source_master_sha256']==digest
     rig=bpy.data.objects['RIG-barbarian-archer']
+    if name!='attack':
+        motion=json.loads((MASTER/(name+'-motion.json')).read_text())
+        assert motion['source_master_sha256']==digest
+        assert motion['license']=='CC0-1.0'
     bow=bpy.data.objects['GEO-Bow stave'];string=bpy.data.objects['GEO-Bowstring']
     base=bpy.data.objects['GEO-Stationary cream base'];origin=base.matrix_world.copy()
     for frame in range(1,count+1):
@@ -37,6 +41,19 @@ for name,(count,_,_) in CLIPS.items():
         assert all(abs(base.matrix_world[r][c]-origin[r][c])<1e-7 for r in range(4) for c in range(4))
         assert all(min(abs(v) for v in o.scale)>.001 for o in sc.objects)
         errors.append(error)
+    if name=='death':
+        def geometry(frame):
+            sc.frame_set(frame);bpy.context.view_layer.update()
+            deps=bpy.context.evaluated_depsgraph_get();points=[]
+            for o in sc.objects:
+                if o.type=='MESH' and not o.hide_render:
+                    ev=o.evaluated_get(deps);me=ev.to_mesh()
+                    points.extend(ev.matrix_world@v.co for v in me.vertices)
+                    ev.to_mesh_clear()
+            return points
+        before,after=geometry(9),geometry(10)
+        assert len(before)==len(after)
+        assert max((a-b).length for a,b in zip(before,after))<1e-5,'Death geometry is not held'
 (MASTER/'scene-audit.json').write_text(json.dumps({'source_master_sha256':digest,'frames':40,
     'max_string_endpoint_error_m':max(errors),'stationary_base':True,'safe_scales':True,
     'scope':'Saved rig, projection surface and weapon attachments; not a full collision solver'},indent=2))

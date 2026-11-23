@@ -13,6 +13,7 @@ def read(stage):
     res=int(os.environ.get('RESOLUTION','256'));p=M/'renders'/str(res)/stage
     manifest=json.loads((p/'manifest.json').read_text())
     source=M/('refined-plain.blend' if stage=='b' else 'attack.blend' if stage=='d' else stage[2:]+'.blend' if stage.startswith('e-') else 'master.blend')
+    if stage=='g-feet':source=M/'move.blend'
     assert manifest['blend_sha256']==hashlib.sha256(source.read_bytes()).hexdigest(), 'Stale render '+stage
     assert manifest['resolution']==res
     return [Image.open(f).convert('RGBA') for f in sorted(p.glob('*.png'))],manifest
@@ -45,13 +46,20 @@ def sheet(images,labels,path,small=True):
 def reviews(stage):
     ims,manifest=read(stage)
     if stage=='c':make_grade(ims[0])
-    if stage!='b':ims=[grade(im) for im in ims]
+    if stage not in ('b','g-feet'):ims=[grade(im) for im in ims]
     for i,im in enumerate(ims):
         for size in (256,512):
             if size>im.width:continue
             folder=M/str(size)/stage;folder.mkdir(parents=True,exist_ok=True)
             tile(im,size).save(folder/f'{i:02d}.png')
-    if stage in ('b','c'):
+    if stage=='g-feet':
+        canvas=Image.new('RGBA',(1024,300),BG);draw=ImageDraw.Draw(canvas)
+        for i,im in enumerate(ims):
+            x=(i%8)*128;y=(i//8)*150
+            draw.text((x+5,y+4),('Front ' if i<8 else 'Top ')+str(i%8+1),fill='white')
+            canvas.alpha_composite(tile(im,128),(x,y+20))
+        canvas.convert('RGB').save(R/f'{SLUG}-g-feet-check.png')
+    elif stage in ('b','c'):
         suffix='b-plain' if stage=='b' else 'c-textured-lit'
         sheet([REF]+ims,['Painting']+[f'3D {manifest["device"]} {i}' for i in range(len(ims))],R/f'{SLUG}-{suffix}.png')
         if stage=='c':

@@ -24,11 +24,17 @@ def refine(sc):
         dx = dy = 0
         for x, y, sx, sy, radius in [(149,175,-8,-7,25), (83,180,0,-7,21),
                                      (173,216,-5,-2,15), (105,77,-5,1,17),
-                                     (150,75,0,7,14), (183,62,-1,7,11)]:
+                                     (150,75,0,7,14), (183,62,-1,7,11), (73,221,-5,-8,11)]:
             weight = math.exp(-((p.x-x)**2+(p.y-y)**2)/(radius*radius))
             dx += sx*weight
             dy += sy*weight
         return v + pixel*(right*dx-up*dy)
+
+    # Curved quiver surfaces need the same frozen painting UVs as the clothing.
+    for o in list(sc.objects):
+        if o.type=='CURVE' and ('quiver' in o.name.lower() or 'Spare arrow' in o.name):
+            bpy.ops.object.select_all(action='DESELECT');o.select_set(True)
+            bpy.context.view_layer.objects.active=o;bpy.ops.object.convert(target='MESH')
 
     for o in list(sc.objects):
         if o.type != 'MESH' or 'Stationary' in o.name or 'Arrowhead' in o.name:
@@ -71,6 +77,16 @@ def refine(sc):
                 for p in spline.points:
                     p.co = (*(inverse @ fit(o.matrix_world @ Vector(p.co[:3]))), 1)
 
+    # Put the full-depth quiver and separate fletchings at the painted hip.
+    for o in sc.objects:
+        if 'Spare arrow' not in o.name and 'quiver' not in o.name.lower():
+            continue
+        inverse=o.matrix_world.inverted()
+        for v in o.data.vertices:
+            world=o.matrix_world@v.co;p=screen(world)
+            dx=(p.y-131)*-.28-10 if 'Spare arrow' in o.name else 0
+            v.co=inverse@(world+pixel*(right*dx-up*18))
+
     bow = bpy.data.objects['GEO-Bow stave']
     points = bow.data.splines[0].points
     grip = bow.matrix_world @ Vector(points[len(points)//2].co[:3])
@@ -94,11 +110,12 @@ def refine(sc):
     sync_weapon()
     # Standard preserves projected painted illumination. Physical lights are reduced
     # accordingly; this is a painted asset, not a photographic color preset.
-    for name,power in [('key',360),('fill',72),('rim',108)]:
+    for name,power in [('key',440),('fill',88),('rim',108)]:
         bpy.data.objects['LGT-'+name].data.energy = power
     bpy.data.objects['LGT-key'].data.color = (1,.95,.86)
     base = bpy.data.objects['GEO-Stationary cream base']
     base.modifiers['Rounded edges'].segments = 5
+    base.modifiers['Rounded edges'].width = .006
     sc['round2_finished_projection'] = True
     bpy.context.view_layer.update()
 

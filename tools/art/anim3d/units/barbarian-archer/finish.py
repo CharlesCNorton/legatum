@@ -9,6 +9,12 @@ sc=settings(256,8)
 from refine import refine
 refine(sc)
 bpy.ops.wm.save_as_mainfile(filepath=str(MASTER/'refined-plain.blend'))
+# The quiver's tiny vanes need bone-white pigment on both sides; their frozen
+# front projection otherwise samples empty painting pixels and reads as brown sticks.
+feather=mat('Painted ivory fletching',(.78,.64,.43),rough=.9)
+for o in sc.objects:
+    if 'Spare arrow feather' in o.name:
+        o.data.materials.clear();o.data.materials.append(feather)
 painting=bpy.data.images.load(str(ASSET/'painting-registered.png'));painting.pack()
 # Painted hidden-side fills use object-space triplanar sampling, never camera planes.
 for m in list(bpy.data.materials):
@@ -28,8 +34,11 @@ for m in list(bpy.data.materials):
     bump=n.new('ShaderNodeBump');bump.inputs['Strength'].default_value=.20;bump.inputs['Distance'].default_value=.002
     l.new(noise.outputs['Fac'],bump.inputs['Height']);l.new(bump.outputs['Normal'],b.inputs['Normal'])
     if 'stone' in name:
-        ramp=n.new('ShaderNodeValToRGB');ramp.color_ramp.elements[0].color=(.70,.49,.24,1);ramp.color_ramp.elements[1].color=(.92,.74,.47,1)
+        ramp=n.new('ShaderNodeValToRGB');ramp.color_ramp.elements[0].color=(.82,.55,.28,1);ramp.color_ramp.elements[1].color=(1.,.80,.52,1)
         l.new(noise.outputs['Fac'],ramp.inputs[0]);l.new(ramp.outputs[0],b.inputs['Base Color'])
+        noise.inputs['Scale'].default_value=125
+        bump.inputs['Distance'].default_value=.003
+        b.inputs['Specular IOR Level'].default_value=.18
 # Bake AO/curvature on principal meshes with separate UV from projected brushwork.
 baked=[]
 for name in ['GEO-Tunic chest','GEO-Ragged pleated skirt','GEO-Wolf hood','GEO-MPFB-anatomy']:
@@ -90,7 +99,7 @@ deps=bpy.context.evaluated_depsgraph_get()
 projected=[]
 projected_materials={}
 for o in list(sc.objects):
-    if o.type!='MESH' or 'Stationary' in o.name or 'eyes' in o.name or 'Arrow' in o.name:continue
+    if o.type!='MESH' or 'Stationary' in o.name or 'eyes' in o.name or 'Arrow' in o.name or 'Spare arrow feather' in o.name:continue
     if not o.data.materials:continue
     mods=[(m,m.show_viewport) for m in o.modifiers if m.type != 'ARMATURE']
     for m,_ in mods:m.show_viewport=False
@@ -102,7 +111,10 @@ for o in list(sc.objects):
     uv=o.data.uv_layers.new(name='PaintingUV');attr=o.data.attributes.new('PaintConfidence','FLOAT','POINT')
     coords=[]
     for v in me.vertices:
-        world=o.matrix_world@v.co;p=world_to_camera_view(sc,sc.camera,world);coords.append((p.x,p.y))
+        world=o.matrix_world@v.co;p=world_to_camera_view(sc,sc.camera,world);# Reject the painted plinth as a skin/boot sample at the left toe.
+        if o.name in ('GEO-Boots','GEO-MPFB-anatomy') and p.x<.36 and p.y<1-216/256:
+            p.y=1-216/256
+        coords.append((p.x,p.y))
         normal=(o.matrix_world.to_3x3()@v.normal).normalized();view=(sc.camera.location-world).normalized()
         direction=sc.camera.matrix_world.to_quaternion()@Vector((0,0,1))
         hit,point,*_=sc.ray_cast(deps,world+direction*4,-direction,distance=4.02)

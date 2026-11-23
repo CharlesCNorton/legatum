@@ -238,3 +238,43 @@ hashes, fixed grade, timing, offsets and held death. Stale master/clip/render or
 mixed engine/resolution/sample settings fail instead of packing old images.
 Remaining artistic defects and measured delivery results live in the unit log
 and `units/barbarian-archer/REVIEW.md`. No gameplay or runtime wiring changes.
+
+### Barbarian archer driver round 2: GPU review and open motion
+
+The driver called the first host pass round 1 even though earlier CPU iterations
+were labelled round 2. Preserve that actual GPU evidence under
+`masters/barbarian-archer/driver-r1-gpu/` before updating previews. The host pass
+succeeded; its technical receipt does not mean painting parity.
+
+Use open motion for this human unit: the existing CC0 Quaternius Universal
+Animation Library Standard supplies Idle_Loop, Walk_Loop, Hit_Chest and Death01.
+`retarget.py` verifies input hashes, maps full rotations with Blender constraints
+and calibrates reference/rest matrices including bone roll. Walk legs use the
+matched locomotion rest; upper-body motion layers the library's idle onto a lower
+bow-carrying pose. Do not rotate feet after retargeting to hide a wrong mapping.
+The attack remains weapon-specific authored motion. Unit `SOURCES.md` records
+URLs/licences; external per-clip motion JSON binds the action to the master.
+
+An in-place gait is measured against virtual forward ground speed. Small root
+translations stabilize sampled stance toes; actual boot geometry sets floor
+height. This is not a full heel/toe contact solver. Render all eight move samples
+from front and top every round with `run.sh g-feet`, including upper-body cutaway,
+and inspect `barbarian-archer-g-feet-check.png`. The GPU handoff now includes this
+stage and checks its source hash. Bow carrying height must be checked after
+locomotion straightens the legs: matching the rest-pose bounds alone misses
+clipping in the walk.
+
+The back pelt keeps its thickness and receives geometric contact-fold shape keys
+through the sourced fall. These are modelled folds, not a simulated cloth cache.
+Audit the actual evaluated terminal meshes as well as rig transforms before
+holding the last death frame. Source projection must exclude cream base pixels
+from boot/skin toe UVs. Quiver vanes use ivory pigment on both sides so unseen
+feathers do not become dark sticks. Finish and freeze geometry before projection;
+rebuild every clip and render after any master change.
+
+`ROUND=2 tools/art/anim3d/units/barbarian-archer/gpu.sh` remains the complete
+argument-free host pass: Metal Cycles512/64, all stage/clip/foot reviews, current
+512/256 masters, trimmed160 atlas at quality>=75 and <=200000 bytes, validation,
+and decoded five-clip eight-second H.264/yuv420p movie. CPU256 previews do not
+replace the archived GPU512 evidence or establish a new GPU result. No art PASS
+is created by technical checks.

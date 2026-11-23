@@ -14,7 +14,7 @@ for name in finish['baked']:
         im=Image.open(M/'textures'/f'{name}-{kind}.png');assert im.size==(256,256)
         assert im.convert('L').getextrema()[0]<im.convert('L').getextrema()[1],(name,kind,'constant bake')
 res=os.environ.get('RESOLUTION','256')
-for stage in ('b','c','d','e-idle','e-move','e-attack','e-hit','e-death'):
+for stage in ('b','c','d','e-idle','e-move','e-attack','e-hit','e-death','g-feet'):
     _,manifest=read(stage)
     assert manifest['device']==os.environ.get('CYCLES_DEVICE','CPU'),('wrong device',stage)
     assert manifest['resolution']==int(res)
@@ -32,7 +32,13 @@ for name,n in [('idle',8),('move',8),('attack',10),('hit',4),('death',10)]:
         raw,_=read('e-'+name)
         assert all(Image.open(p).convert('RGBA').tobytes()==tile(grade(frame),size).tobytes()
                    for p,frame in zip(paths,raw)), (size,name,'stale exported masters')
-for stage in ['b-plain','c-textured-lit','c-details','d-rig-poses','f-restpose-compare']:assert (R/f'{S}-{stage}.png').exists()
+for stage in ['b-plain','c-textured-lit','c-details','d-rig-poses','f-restpose-compare','g-feet-check']:assert (R/f'{S}-{stage}.png').exists()
+feet=json.loads((M/'feet-check.json').read_text())
+assert feet['source_sha256']==hashlib.sha256((M/'move.blend').read_bytes()).hexdigest()
+assert len(feet['samples'])==8
+for name in ('idle','move','hit','death'):
+    motion=json.loads((M/(name+'-motion.json')).read_text())
+    assert motion['source_master_sha256']==source and motion['license']=='CC0-1.0'
 sys.path.insert(0,str(Path(__file__).resolve().parent))
 from deliver import validate
 validate()
