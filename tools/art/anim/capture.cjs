@@ -36,9 +36,11 @@ const server = http.createServer((req,res) => {
   assert.equal(sizes.length,4,'All four rendered atlases must load');
   for(const a of sizes) assert(a.bytes<=200000,`${a.slug}: atlas exceeds 200 KB`);
   for(const a of sizes) for(const clip of ['idle','move','attack','hit','death']) {
-   const frame=clip==='death'?9:clip==='hit'?1:clip==='attack'?4:2;
+   const count=a.clips[clip].frames;
+   const frame=clip==='death'?count-1:clip==='hit'?1:clip==='attack'?(count===6?3:4):Math.min(2,count-1);
    await page.evaluate(({slug,clip,frame})=>window.reviewAPI.setFrame(slug,clip,frame),{slug:a.slug,clip,frame});
    const card=page.locator(`#${a.slug} [data-clip="${clip}"]`);
+   assert.deepEqual(await card.locator('.large').evaluate(el=>[el.getBoundingClientRect().width,el.getBoundingClientRect().height]),[256,256],'Inspection must display at native size');
    await card.locator('.large').screenshot({path:path.join(out,`${a.slug}-${clip}-256.png`)});
    await card.locator('.map').screenshot({path:path.join(out,`${a.slug}-${clip}-map.png`)});
   }

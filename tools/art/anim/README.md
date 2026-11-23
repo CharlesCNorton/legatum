@@ -1,7 +1,7 @@
 # Animated miniature pilot
 
-**Status: scaffold only; pass 1 is blocked before rendering. No atlas is delivered.**
-See [the blocking evidence](review/pass-1.md). Do not wire this into the game until
+**Status: pass 1 partially rendered; pass-2 fixes await host rendering.**
+See [the pass-1 critique](review/pass-1.md) and [setup history](review/pass-0-setup.md). Do not wire this into the game until
 rendering, visual review and the size/performance gates actually pass.
 
 Rebuild one unit end to end, with Blender and Pillow installed:
@@ -20,10 +20,10 @@ Serve the repository root with `python3 -m http.server`, then open
 `http://localhost:8000/tools/art/anim/gallery/`. The gallery is plain HTML, JavaScript
 and Canvas 2D; it has no build step, CDN, browser 3D or app runtime dependency.
 
-Run a complete render and browser capture pass:
+The lead runs a complete render and browser capture pass **outside the Codex sandbox**:
 
 ```sh
-tools/art/anim/pass.sh 1
+tools/art/anim/pass.sh 2
 ```
 
 `require('playwright')` and a downloaded Chromium must be available to Node. If the
@@ -43,7 +43,9 @@ and 600 tokens after 15 warmup draws. The 300-token mean must be below 4 ms. Tim
 covers terrain blit and token draw commands, not rAF intervals or GPU completion.
 This is a focused gallery benchmark, not a claim about the complete game renderer.
 
-After each pass, open **all** captures and the per-unit sheets. Write the critique,
+Codex does not render, capture, or try cloud/sandbox workarounds. It reviews the
+lead’s outputs, fixes scripts/rigs/gallery, runs CPU-only checks, writes pass notes,
+commits and stops. After each pass, open **all** available captures and the per-unit sheets. Write the critique,
 changes and measured results to `~/LegatumRuns/anim-pilot/review/pass-N.md`, copy the
 note and a few small PNGs into `tools/art/anim/review/`, then commit. Three successful
 render/review passes are the minimum; blocked setup is not a completed pass.
@@ -58,28 +60,53 @@ The runner handles pushing this branch under the final task instruction.
   and every frame on grey and parchment; `<slug>-<clip>.webp` is an animated preview.
 - Outside git: `review/pass-N/` holds browser screenshots and `metrics.json`.
 
-Atlases are 2560 × 1280: rows idle/move/attack/hit/death, respectively 8/8/10/4/10
-frames. The remaining columns are transparent. Base-centre anchors are explicit
-per unit in `units.py`. Packing starts at WebP quality 80, method 6; it lowers quality
-only to meet the strict 200,000-byte ceiling and refuses to go below 30.
-`validate.py` checks dimensions, metadata, alpha, clipping, transparent padding,
-held death pose and byte size. It does not replace visual review.
+Atlases remain 2560 × 1280, with 256 px cells and rows idle/move/attack/hit/death.
+JSON stays `{frame:{w,h,ax,ay}, clips:{name:{row,frames,fps,loop}}}`. Render 40
+poses (8/8/10/4/10); pack the first profile that fits at quality 60 or above:
+40, 34 (4/8/10/4/8), 27 (4/8/6/3/6), then 23 (4/4/6/3/6) frames. Prefer eight move
+frames; four is a last-resort budget fallback to review for cadence. Timing is
+adjusted to preserve the loop period or first-to-last duration. Reduced attack
+keeps anticipation, the first strike, peak and recovery; death keeps two settled
+frames. Padding remains transparent, and the gallery/capture use the metadata.
+
+WebP uses method 6 and qualities 80/70/60, with a strict 200,000-byte ceiling.
+Alpha is quantized to 32 coverage levels (at most 4/255 error), and invisible RGB
+is cleared. The packer probes size in memory and never replaces delivery with an
+oversized candidate. `review/<slug>-pack.json` records quality, bytes and source
+frame selection. `pass.sh` archives sheets, previews and packing reports into
+`review/pass-N/` as each unit completes, even if a later unit fails.
+
+`validate.py` checks dimensions, metadata/timing, alpha, clipping, padding, held
+death, bytes, the exposed stationary stone rim and neutral source framing. It
+requires prepared master base textures for the visual invariants. For diagnostic
+repacking of *old* frames without replacing deliverables:
+
+```sh
+venv="$HOME/LegatumRuns/anim-pilot/venv/bin/python"
+"$venv" tools/art/anim/pack.py horseman --output-dir /tmp/anim-repack/atlases --review-dir /tmp/anim-repack
+"$venv" tools/art/anim/validate.py horseman --assets-dir /tmp/anim-repack/atlases --contract-only
+```
+
+`--contract-only` explicitly skips the art invariants; never use it as the pass
+gate. No validation substitutes for visual review of the new renders.
 
 ## Modelling and limitations
 
 The shipped 256 painting is the texture and proportion reference. The higher
 resolution panel is inspected for identity, not substituted for the map painting.
 Hand-traced regions in `units.py` define anatomical/kit pivots and segmentation.
-`prepare.py` separates them and reconstructs the cream base from its painted stone.
+`prepare.py` separates them, reconstructs a continuous cream stone top,
+and preserves the unobstructed painted front rim.
 `render.py` builds subdivided shallow relief meshes, UV-projects the painting,
 skins each part to a Blender armature, and animates the named regions.
 
 This is **single-facing articulated relief**, not a volumetric character model.
 It preserves the painting's three-quarter camera and baked soft upper-left light;
 emission materials avoid relighting those highlights. The base has no animated
-transform. It has baked contact shading only and no outside ground plane.
-Seams, uncovered regions, wheel motion, death foreshortening and smoke are still
-unreviewed. Do not describe the current result as excellent or production-ready.
+transform. The camera preserves the 1:1 painting projection; its far plane includes
+the stone behind the figure. Inspection sheets compare source/render at equal size. It has baked contact shading only and no outside ground plane.
+Pass-2 seams, uncovered regions, wheel motion, death foreshortening and smoke
+still need host-render review. Do not describe the current result as excellent or production-ready.
 A full 3D turn would require new geometry and hidden-surface painting.
 
 The build uses `nice -n 10`, headless factory startup, Eevee, four Blender threads,
@@ -94,7 +121,7 @@ Claude art reviewer before merge; no review has been claimed here.
 
 For CPU-only checks of an already saved model, use
 `tools/art/anim/build.sh spearman 1 --audit-only`. This mode shares the build lock,
-checks the render configuration and projected opaque samples at all 40 poses, and
+checks camera depth, attached kit pivots, render configuration and projected opaque samples at all 40 poses, and
 writes `masters/spearman/rig-audit.json`. It does not certify the rendered alpha or
 quality. `venv/bin/python tools/art/anim/test_pipeline.py` exercises the packer with
 temporary synthetic images; none of those images becomes a delivered atlas.

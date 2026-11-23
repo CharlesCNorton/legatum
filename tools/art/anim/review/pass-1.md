@@ -1,108 +1,140 @@
-# Pass 1 — blocked before the first render
+# Pass 1 — partial render review and fixes for pass 2
 
-This is a setup record, **not one of the three required completed visual passes**.
-No atlas, rendered comparison sheet, gallery screenshot or performance result has
-been produced. Passes 2 and 3 have not started.
+The lead rendered Spearman and Horseman outside the sandbox. Spearman packed at
+192,634 bytes; Horseman failed at 239,582 bytes at the old quality floor of 30.
+Field Cannon, Spartan Hoplite and browser capture did not run. This is a critique
+of those available outputs, not a completed four-unit visual/performance pass.
+The old setup-only note is now `pass-0-setup.md` in both review directories.
 
-## Work prepared
+## What the outputs show
 
-- Four camera-projected, articulated relief rigs using the actual `-256.png`
-  paintings, with armature hierarchy and 40 keyed poses per unit: idle 8, move 8,
-  attack 10, hit 4, death 10. Blender masters are outside git.
-- Rebuild scripts for projection preparation, modelling, Eevee render, packing,
-  metadata, grey/parchment frame sheets and animated previews.
-- Standalone Canvas 2D gallery with source paintings, five clip viewers, 256 px
-  inspection, 80 px tokens on the game's ground palette/tuft strokes and shipped
-  terrain art, controls, mirror and 300/600-token benchmark.
-- Headless Chromium capture harness at deviceScaleFactor 1; strict 200,000-byte
-  atlas validation and under-4-ms mean draw assertion for 300 tokens.
-- Missing atlases are explicitly labelled unavailable in the gallery. No copied
-  static painting is passed off as an animated atlas.
+- Spearman keeps the bronze kit, red crest and sunburst shield. The thrust and
+  falling silhouette read clearly. Idle and move differ too little. The stone
+  disc is completely absent, leaving feet floating on both backdrops.
+- Horseman keeps the white rider, brown horse, tack and upright spear, but also
+  lacks the stone. Its trot is more legible than the infantry shuffle. The fall
+  reads as a compressed relief tipping over; it still needs a weight/contact
+  judgment after the base returns. It is not approved as finished animation.
+- The apparent half-height figure is a comparison-sheet bug: the old sheet
+  placed a 256 px source beside 100 px render thumbnails. At native size the
+  Spearman painting spans y=12..243; the baseless render spans y=11..222. The
+  figure itself already has the painting's scale. Enlarging the camera projection
+  would crop the spear, rather than fix the comparison. See the equal-size PNGs
+  beside this note (source / original render / quality-70 repack).
+- There is no rendered evidence for the other two units, and no `metrics.json`.
+  300/600-token average and p95 are **not measured**.
 
-## Evidence and blockers
+## Changes
 
-`tools/art/anim/build.sh spearman 1` failed during the first Eevee render:
+1. **Restore the stone and complete figure.** The camera sat at y=-1000 with its
+   default far plane at 1000; the base at y=15 was beyond that plane, and body
+   relief at y≈1 was partly clipped. Far distance is now 2000, with the same
+   256-unit orthographic scale and 256 px cell. The stone is unskinned and has no
+   animation. Its top is a continuous cream reconstruction; its unobstructed
+   front rim is copied from the painting with a short blend. Copying around foot
+   cutouts was inspected and rejected because it produced patches and retained
+   sole/wheel fragments. Final prepared base textures were visually inspected.
+2. **Improve motion without discarding the successful strike/fall.** Infantry
+   stride increases from 5° to 12°, with 5 px alternating foot lift; horse stride
+   increases from 9° to 13°. A twice-per-cycle body bob carries the spear. Idle
+   doubles the small breath and adds a gentle lateral shift. Attack/death angles
+   remain; independent attack translations of spear/shield were removed so their
+   pivots stay on their parent grip points. CPU checks assert this at every pose.
+   Larger motion can expose seams; the new renders must establish visual contact.
+3. **Control coverage and budget.** Transparent materials use hashed coverage;
+   Eevee samples increase from 16 to 64. Packing clears hidden RGB and quantizes
+   alpha to 32 coverage levels (maximum alpha error 4/255), retaining soft edges.
+   Method 6 probes quality 80/70/60 and refuses anything below 60 or above
+   200,000 bytes. Profiles retain 40, 34, 27 or finally 23 frames. All but the last
+   retain eight move frames; attack always retains anticipation, first strike,
+   peak and recovery, and death retains two settled poses. FPS preserves overall
+   clip duration, though reduced nonuniform samples change within-clip timing.
+   The last four-frame move fallback needs particular cadence review if selected.
+   No atlas dimensions, cell size, anchors or JSON fields changed.
+4. **Make review honest.** Source and frame sheets now use equal 256 px cells;
+   the gallery's source and inspection canvases display at 256 px. Frame counts,
+   FPS and capture selections follow metadata. Capture asserts native inspection
+   size. `pass.sh` archives each completed unit's sheet, previews and packing
+   report into `review/pass-N/`, preserving partial-pass evidence. The packer
+   probes in memory and never leaves an oversized failed atlas as delivery.
+5. **Catch this failure next time.** CPU rig audits check camera depth as well as
+   projected bounds and fixed grip pivots. Atlas validation checks the exposed
+   stationary front rim and neutral framing against the source, in addition to
+   metadata, size, alpha, transparent padding and the held death pose.
 
+## Measured sandbox results
+
+Repacked the existing pass-1 PNGs into `review/pass-1-repack/`, not into shipped
+assets. These remain the old baseless poses; they are not pass-2 renders.
+
+| Unit | Repacked bytes | Quality | Packed frames | Result |
+| --- | ---: | ---: | ---: | --- |
+| Spearman | 177,598 | 70 | 40 (8/8/10/4/10) | Contract validation passed |
+| Horseman | 195,520 | 70 | 34 (4/8/10/4/8) | Contract validation passed |
+| Field Cannon | — | — | — | No rendered frames available |
+| Spartan Hoplite | — | — | — | No rendered frames available |
+
+Pack reports record every attempted size/quality and selected source index.
+Full visual validation correctly rejects the old Spearman at idle frame 0 with
+`missing/moving stone rim`. The original partial app atlases are left untracked,
+unchanged, and excluded from this commit. `pass.sh 2` will replace them.
+
+- `venv/bin/python tools/art/anim/test_pipeline.py`: **5 tests passed**, including
+  all four contracts/160 synthetic frames, coverage error, timing and key poses,
+  budget fallback, failed-pack preservation, and missing-stone regression.
+- `build.sh <slug> 2 --model-only` and `--audit-only`: **all four passed**, 160
+  poses total. Final masters contain the revised textures/rigs. No rendering.
+- Python compilation, `node --check` for gallery/capture, `bash -n` for build/pass,
+  and `git diff --check`: **passed**.
+- `python3 tools/gates/check.py HEAD --base origin/master --checks-only --skip art`:
+  **exit 1**. `public-claims: PASS`; hygiene flagged the pre-existing unspaced
+  Python matrix expression `bone.matrix@bone.bone.matrix_local` as an email.
+  Added spaces around `@` in the working file. Direct hygiene line checks over
+  all 16 animation/skill text files then passed with **0 findings**. This is not
+  a replacement for the full gate: `check.py` reads committed git objects.
+  Browser art checks were skipped as required by the no-Chromium boundary.
+- After making the rim test ignore antialiased boundary pixels, reran the focused
+  four-unit contract/missing-base integration test: **1 test passed**.
+- Blender logged nonfatal sandbox thumbnail-write and `nice` permission warnings;
+  models saved and audits exited 0. No Metal, Chromium, AWS or cloud attempt made.
+
+## Expected effect and lead handoff
+
+| Unit | Expected pass-2 effect | Inspect especially |
+| --- | --- | --- |
+| Spearman | Stone returns at original scale; distinct breathing/marching; thrust/fall retained | Shield rim, wrist/spear grip, knee/hip seams, planted disc |
+| Horseman | Stone returns; clearer trot; bounded atlas at quality ≥60 | Hoof contact, rider/spear attachment, relief-like fall, selected packing profile |
+| Field Cannon | Stone and previously clipped body restored; common budget policy | First rendered wheel occlusion/rotation, crew hands, smoke, top/rim consistency |
+| Spartan Hoplite | Stone returns; stronger march and breath; unchanged thrust/fall angles | First rendered lambda shield, long spear bounds/grip and cloak seams |
+
+Run **`tools/art/anim/pass.sh 2` on the host from this worktree**, with the same
+working Blender/Playwright environment used for pass 1. No extra command or cloud
+setup is needed. It still renders 40 poses per unit before selecting packed
+frames. Inspect all sheets and decoded gallery captures and read the per-unit
+`*-pack.json` reports. Restoring the base changes entropy, so the measured pass-1
+repack sizes are not forecasts of final bytes. The packer enforces the budget for
+all units but new Cannon/Hoplite sizes cannot be measured until they render.
+If even the minimum profile exceeds the budget it stops without publishing an
+oversized asset; do not lower the floor. Review then continues in the next round.
+
+No pass-2 visual quality or performance approval is claimed. The relief method's
+hidden-surface limitations remain, and Claude art review is still owed before
+merge. No rules or app runtime files changed; no full Rust/app build was needed.
+
+## Commit handoff
+
+`git add` and `git commit` both failed with exit 128: the sandbox denied creating
+`.git/worktrees/lane-1/index.lock`. Per the task, changes are left uncommitted for
+the runner; no alternate index, permission workaround, push or merge was tried.
+`origin/master` is already an ancestor of HEAD (2 ahead / 0 behind), so no merge
+was needed. Stage `tools/art/anim` and `.claude/skills/legatum-art/SKILL.md`, **not**
+the pre-existing untracked `app/src/assets/units/anim/` pass-1 artifacts. Re-run
+the static gate after the runner commits so it sees the fixed matrix expression.
+
+Suggested commit:
+
+```text
+Fix animated unit bases, motion and atlas budget after pass 1
+
+Co-Authored-By: gpt-6-astra (Codex) <noreply@openai.com>
 ```
-gpu.metal | WARNING Could not initialize Metal: no default Metal device available.
-Abort trap: 6
-```
-
-Headless Playwright `chromium.launch()` also failed in this macOS sandbox:
-
-```
-bootstrap_check_in org.chromium.Chromium.MachPortRendezvousServer: Permission denied (1100)
-```
-
-The documented cloud fallback (`tools/cloud/remote.sh . --budget 600 ...`) failed
-before running its probe: it could not update its cached instance state in the
-sandbox. A direct AWS identity check returned `InvalidClientTokenId`, so no usable
-cloud session was established. No bucket upload was performed.
-
-`nice -n 10` was used as requested; the sandbox also printed `setpriority:
-Operation not permitted`. All Blender scene configurations use four fixed threads.
-Builds and the audit mode share an atomic lock. No long simulation or build ran.
-
-## Source review and changes
-
-The four map paintings and panel references were opened at original and enlarged
-sizes. Their kits are distinct: bronze sunburst shield/red crest for Spearman;
-white-clad rider on a brown horse; blue-coated gunner with bronze field gun; red
-cloak and lambda aspis for Spartan Hoplite. The projection preserves their colour,
-figure, facing and painted highlights. The models are shallow relief, not all-angle
-volumetric reconstructions; this remains a material limitation against the brief.
-
-An independent **Codex** art-scaffold reviewer inspected the sources and preparation
-textures. This was not the project's required Claude art review and supplied no
-final visual approval. It found:
-
-- Missing paint under separated parts: added six pixels of adjacent-pigment overlap
-  under joints and shield edges. Larger reveals still need hand painting.
-- Patchy bands on the first reconstructed base: replaced thresholded source copying
-  with a continuous cream low cylinder and soft contact shading. Opened the revised
-  base PNG and verified the conspicuous concentric band was gone.
-- Wheels rotating in screen space: changed to compressed axle space so rotating
-  spoke geometry retains the projected ellipse. Still needs rendered inspection.
-- Smoke close to the frame edge: reduced drift and radius.
-- Death was mostly a compressed root rotation: unresolved motion-quality risk,
-  especially for the horse. This is not excellent animation and is not approved.
-
-The CPU rig audit then caught clipping in Horseman death and Hoplite attack.
-Reduced the horse fall translation and Hoplite spear swing; both audits now pass.
-These checks sample projected opaque texels and cannot assess seams, jitter,
-alpha fringe, foot slip, contact weight or loop smoothness. Those remain unreviewed.
-
-## Results
-
-| Unit | Keyed poses | Rendered frames | Atlas KB | Visual fidelity |
-| --- | --- | --- | --- | --- |
-| Spearman | 8/8/10/4/10 | 0 | unavailable | unreviewed relief projection |
-| Horseman | 8/8/10/4/10 | 0 | unavailable | unreviewed; fall and trot need work |
-| Field cannon | 8/8/10/4/10 | 0 | unavailable | unreviewed; crew contact and wheel occlusion need work |
-| Spartan hoplite | 8/8/10/4/10 | 0 | unavailable | unreviewed; thrust/weapon grip need work |
-
-300-token average/p95: **not measured**. 600-token average/p95: **not measured**.
-No gallery screenshot has been captured or reviewed.
-
-Completed checks:
-
-- `build.sh <slug> 1 --model-only`: passed for all four units.
-- `build.sh <slug> 1 --audit-only`: final audits pass for all four. They verify
-  40 poses, a stationary base, fixed four-thread Eevee configuration, transparent
-  film and sampled projected bounds. They are not render validation.
-- `venv/bin/python tools/art/anim/test_pipeline.py`: **1 test passed**, exercising
-  all four unit contracts and 160 synthetic frames through PNG → WebP/JSON →
-  decoded validation. These temporary fixtures are not delivered art.
-- `node --check` for the inline gallery script and `capture.cjs`: passed.
-- `bash -n` for `build.sh` and `pass.sh`: passed.
-- Python `compileall` for the animation tools: passed.
-
-Full repository gate result is recorded in `checks.md` after the final invocation.
-
-## Resume
-
-Restore an environment where headless Eevee and Chromium can run (or usable cloud
-credentials), then run `tools/art/anim/pass.sh 1`. Open every screenshot and sheet,
-critique and fix, and complete at least three actual render/review passes. Do not
-count this blocked preparation record as a pass. Obtain Claude art review before
-merge. The final task instruction leaves pushing to the runner.

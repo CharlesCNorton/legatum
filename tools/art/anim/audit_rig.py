@@ -12,6 +12,16 @@ assert scene.render.engine=='BLENDER_EEVEE'
 assert scene.render.threads==4 and scene.render.threads_mode=='FIXED'
 assert scene.render.film_transparent and scene.frame_end==40
 assert not base.animation_data and len(base.modifiers)==0
+cam=scene.camera
+assert cam.data.type=='ORTHO' and cam.data.ortho_scale==256
+# Audit depth as well as x/y: the old audit passed a base beyond clip_end.
+for obj in scene.objects:
+ if obj.type!='MESH':continue
+ for corner in obj.bound_box:
+  depth=-(cam.matrix_world.inverted() @ obj.matrix_world @ Vector(corner)).z
+  assert cam.data.clip_start < depth < cam.data.clip_end,(obj.name,'camera depth',depth)
+assert all(obj.data.materials[0].blend_method=='HASHED' for obj in scene.objects
+           if obj.type=='MESH' and obj.name in ('base','body'))
 samples={}
 for obj in scene.objects:
  if obj.type!='MESH' or not obj.vertex_groups:continue
@@ -26,13 +36,16 @@ for obj in scene.objects:
     ratio=.44 if name=='wheel_l' else .50;cx=bone.bone.head_local.x;xx=cx+(x-cx)/ratio
    points.append(Vector((xx,0,y)))
  samples[name]=(bone,points)
-report={'slug':slug,'engine':scene.render.engine,'threads':scene.render.threads,'poses':40,'base_stationary':True,'rendered':False,'frames':[]}
+report={'slug':slug,'engine':scene.render.engine,'threads':scene.render.threads,'poses':40,'base_stationary':True,'camera_depth_checked':True,'kit_pivots_attached':True,'rendered':False,'frames':[]}
 frame=1
 for clip,(count,_,_) in CLIPS.items():
  for index in range(count):
   scene.frame_set(frame);bpy.context.view_layer.update();xs=[];ys=[]
+  for name in ('spear','shield'):
+   if name in rig.pose.bones:
+    assert rig.pose.bones[name].location.length < .0001,(clip,index,name,'detached grip')
   for bone,points in samples.values():
-   matrix=bone.matrix@bone.bone.matrix_local.inverted()
+   matrix=bone.matrix @ bone.bone.matrix_local.inverted()
    for point in points:
     p=matrix@point;xs.append(p.x);ys.append(256-p.z)
   bounds=[round(min(xs),2),round(min(ys),2),round(max(xs),2),round(max(ys),2)]

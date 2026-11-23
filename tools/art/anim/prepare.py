@@ -45,7 +45,18 @@ def main():
         sd.ellipse((fx-8,fy-2,fx+8,fy+2),fill=(85,65,38,48))
     shadow=shadow.filter(ImageFilter.GaussianBlur(1.4))
     shadow.putalpha(ImageChops.multiply(shadow.getchannel('A'),base.getchannel('A')))
-    base.alpha_composite(shadow);base.save(dest/'base.png')
+    base.alpha_composite(shadow)
+    # Preserve the actual painted front rim. The upper stone is a continuous
+    # reconstructed surface: copying around foot/wheel cutouts leaves obvious
+    # patches and can bake fragments of soles or tyres onto the stationary base.
+    # Blend below all contact points, where the source is unobstructed stone.
+    front=max(max(y for _,y in foot) for foot in cfg['feet'])+2
+    for y in range(front,256):
+        mix=min(1,(y-front)/5)
+        for x in range(256):
+            old=base.getpixel((x,y)); painted=src.getpixel((x,y))
+            base.putpixel((x,y),tuple(round(old[c]*(1-mix)+painted[c]*mix) for c in range(4)))
+    base.save(dest/'base.png')
     # Keep source contact points; all other base pixels are removed from figure.
     figuremask=polygon([(0,0),(256,0),(256,y0-1),(0,y0-1)])
     for foot in cfg['feet']: figuremask=ImageChops.lighter(figuremask,polygon(foot))

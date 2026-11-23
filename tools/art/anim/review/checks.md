@@ -1,7 +1,7 @@
-# Final checks and handoff
+# Historical setup checks and handoff
 
 The task is **incomplete**: there are no rendered atlases and zero completed visual
-passes. See `pass-1.md` for environment failures, limitations and the resume command.
+passes. See `pass-0-setup.md` for environment failures, limitations and the resume command.
 
 - `python3 tools/gates/check.py --checks-only`: exit **2**. This checkout requires
   the positional `branch` argument.

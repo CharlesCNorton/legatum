@@ -23,10 +23,13 @@ scene.render.image_settings.color_depth='8'; scene.render.fps=24
 scene.view_settings.view_transform='Standard'; scene.view_settings.look='None'
 scene.view_settings.exposure=0; scene.view_settings.gamma=1
 scene.world.color=(.6,.6,.6)
-if hasattr(scene,'eevee'): scene.eevee.taa_render_samples=16
+if hasattr(scene,'eevee'): scene.eevee.taa_render_samples=64
 bpy.ops.object.camera_add(location=(128,-1000,128))
 cam=bpy.context.object; cam.rotation_euler=(Vector((128,0,128))-cam.location).to_track_quat('-Z','Y').to_euler()
 cam.data.type='ORTHO'; cam.data.ortho_scale=256; scene.camera=cam
+# The default far plane is 1000: it cut off the stone at depth 1015 and
+# sliced the body relief. Keep the painting's exact 1:1 pixel framing.
+cam.data.clip_start=.1; cam.data.clip_end=2000
 # Light is available for sculpted additions. Original paint supplies the main
 # upper-left soft lighting, avoiding a second set of highlights on the texture.
 bpy.ops.object.light_add(type='AREA',location=(-180,-300,450)); bpy.context.object.data.energy=200; bpy.context.object.data.shape='DISK'; bpy.context.object.data.size=300
@@ -34,6 +37,8 @@ bpy.ops.object.light_add(type='AREA',location=(-180,-300,450)); bpy.context.obje
 def point(p,depth=0): return (p[0],depth,256-p[1])
 def material(name):
     mat=bpy.data.materials.new(name); mat.use_nodes=True
+    mat.blend_method='HASHED'; mat.use_screen_refraction=False
+    mat.use_transparent_shadow=False
     n=mat.node_tree.nodes; n.clear(); l=mat.node_tree.links
     out=n.new('ShaderNodeOutputMaterial'); mix=n.new('ShaderNodeMixShader'); trans=n.new('ShaderNodeBsdfTransparent'); emit=n.new('ShaderNodeEmission'); tex=n.new('ShaderNodeTexImage')
     tex.image=bpy.data.images.load(str(DEST/f'{name}.png')); tex.image.pack(); tex.interpolation='Linear'; tex.extension='CLIP'
@@ -113,18 +118,18 @@ def animate(clip,i,n):
     t=i/(n-1); cycle=math.tau*i/n; s=math.sin(cycle); c=math.cos(cycle)
     horse=slug=='horseman'; cannon=slug=='field-cannon'
     if clip=='idle':
-        pose('body',dy=-.7*s,angle=.35*s)
+        pose('body',dx=.65*s,dy=-1.4*s,angle=.6*s)
         pose('head',angle=.55*s); pose('rider',dy=-.5*s,angle=.5*s)
-        pose('spear',angle=.4*s); pose('tail',angle=2*s)
+        pose('spear',angle=.65*s); pose('tail',angle=2*s)
         if cannon: pose('crew',dy=-.6*s,angle=.3*s)
     elif clip=='move':
-        pose('body',dy=-1.1*(1-c),angle=1.3*s)
-        stride=9 if horse else 5
-        pose('leg_l',angle=stride*s,dy=-max(0,s)*2)
-        pose('leg_r',angle=-stride*s,dy=-max(0,-s)*2)
+        pose('body',dy=-1.8*(1-math.cos(2*cycle)),angle=1.3*s)
+        stride=13 if horse else 12
+        pose('leg_l',angle=stride*s,dy=-max(0,s)*5)
+        pose('leg_r',angle=-stride*s,dy=-max(0,-s)*5)
         pose('leg_back',angle=-stride*s); pose('leg_front',angle=stride*s)
         pose('rider',dy=-1.5*(1-c),angle=-2*s); pose('horse_head',angle=2*s); pose('tail',angle=5*s)
-        pose('shield',angle=-1.2*s); pose('spear',angle=1.5*s)
+        pose('shield',angle=-1.8*s); pose('spear',angle=2.4*s)
         if cannon:
             pose('crew',dx=1.3*s,dy=-(1-c),angle=3)
             pose('carriage',dx=1.2*s,dy=-.5*(1-c))
@@ -137,8 +142,8 @@ def animate(clip,i,n):
             pose('crew',angle=-4*max(0,a)); pose('ramrod',angle=-3*max(0,a))
         else:
             pose('body',dx=5*a,dy=2*a,angle=5*a)
-            pose('spear',angle=(38 if slug=='spartan-hoplite' else 48)*a,dx=3*a)
-            pose('shield',angle=-7*a,dx=2*a); pose('head',angle=-3*a)
+            pose('spear',angle=(38 if slug=='spartan-hoplite' else 48)*a)
+            pose('shield',angle=-7*a); pose('head',angle=-3*a)
             pose('leg_l',angle=-3*a); pose('leg_r',angle=4*a)
             if horse:
                 pose('rider',angle=9*a,dx=2*a); pose('horse_head',angle=6*a)
