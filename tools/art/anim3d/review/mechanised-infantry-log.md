@@ -29,3 +29,12 @@
 - Published e-hit: 4 actual rendered frames, 12 fps; CPU 256px 8 samples.
 - Published e-death: 10 actual rendered frames, 10 fps; CPU 256px 8 samples.
 - Completed all five clips and wheel contact audit; delivery pack may now run.
+- Published b-plain CPU/GPU geometry stage before texture work.
+- Baked 256px AO and curvature maps on GEO-Armoured hull, GEO-Lowered loading ramp, GEO-Turret shell
+- Published painted rest pose and 50/50 comparison; real AO shader, micrograin, edge geometry and hidden-surface fill.
+- Published e-idle: 8 actual rendered frames, 10 fps; CPU 256px 8 samples.
+- Published e-move: 8 actual rendered frames, 12 fps; CPU 256px 8 samples.
+- Published e-attack: 10 actual rendered frames, 14 fps; CPU 256px 8 samples.
+- Published e-hit: 4 actual rendered frames, 12 fps; CPU 256px 8 samples.
+- Published e-death: 10 actual rendered frames, 10 fps; CPU 256px 8 samples.
+- Completed all five clips and wheel contact audit; delivery pack may now run.
