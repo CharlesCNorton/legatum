@@ -172,3 +172,73 @@ margins, rectangles, offsets, motion and identical lossless terminal death frame
 The final death PNG is copied rather than rerendered. Raw, graded and derived
 masters remain outside Git. Render manifests name engine, device and samples;
 CPU preview masters are never labelled GPU output or upscaled to fake 512px.
+
+### Gaesatae resumed round 2: finished surfaces and planted feet
+
+Resume from the saved `plain.blend`; `project.py` starts from that checkpoint on
+every run. `refine.py` preserves the native rig, turns the feet independently of
+the braced calves, fits ankle depth and corrects the evaluated leather sole to
+`.103 m`. It freezes the current MPFB macro mix and applies surface modifiers
+before projection so paint is registered to the actual rendered surface. A
+zero-level subdivision modifier is removed instead of applied. Hair, clothes,
+shield and straps remain three-dimensional; this is not a cutout. The source
+pigment is camera-only, while physical shaders still receive shadows and light
+on the hidden surfaces. Existing original generated fills are reused.
+
+The base is still a round stationary disc; its radius, depth position and smaller
+bevel improve the footprint. Its camera elevation/ellipse and the hair/hand
+contours remain visible differences. The single automatic rest grade stays fixed
+for all clips. Do not call this an exact-viewpoint or art-quality pass.
+
+The driver-round-two continuation supersedes the authored idle/move/hit/death.
+They use pinned CC0 Quaternius Idle_Loop, Walk_Loop, Hit_Chest and Death01,
+retargeted through Blender constraints with full reference/rest and bone-roll
+compensation. Walk arms layer the library's idle guard. Calibrate ankle/toe
+orientation against anatomical rest before retargeting; never hand-rotate feet
+afterward. The painting's outward toe pose belongs only to the braced guard.
+Root translation grounds the support sole without changing captured rotations.
+Attack remains weapon-specific, with anticipation, extension and recovery.
+
+Every human unit should default to proven CMU or CC0 Quaternius source motion.
+Each round renders the actual feet from front and top across the full move
+cycle (`gaesatae-g-feet-check.png`). Inspect planted toe heading, support and
+sliding. A vertical swing foot may point backward in XY without being a yaw
+error; judge heading during stance and compare all rotations to source samples.
+This unit audits all 53 bones/40 samples, support contact, exact retargeted foot
+rotations, planted heading, virtual-ground stance slip, loop closure, held death,
+stationary base and safe scales. It is not a full collision or skin/cloth solver.
+
+Height-only clothing extraction can include the hands of an unposed MPFB body.
+Inspect connected components: the accidental finger shells can have more vertices
+than the real trousers. Retain the connected pelvis/leg shell by anatomy/evaluated
+height; audit against hand/finger weights. Front/top feet review caught four such
+islands that a valid atlas and ordinary rest view concealed.
+
+Hair-crown refinement moves the existing full-depth locks/scalp vertices to the
+painted silhouette, preserving depth and skin weights. It does not cut geometry
+with alpha. Bright generated fills blend as pigment instead of dark multiply;
+ash stays restrained. Fine limestone pigment variation supplements actual
+product lighting and grain. The frozen automatic rest grade applies to all clips.
+
+The packer uses bicubic 160px reduction, lossless alpha, two-pixel spacing and
+reuses identical death rectangles without dropping playback samples. JSON now
+includes explicit `atlas:{w,h}`. Validation reconstructs every logical frame and
+compares alpha against its source; decoded death frames must also match exactly.
+Three regression checks cover offsets/shared frames, grade/alpha preservation,
+and WebP alpha round-tripping. `check_delivery.py --gpu` requires GPU512
+provenance, both real 512/256 sets, all stage reviews and the eight-second MP4.
+CPU previews cannot satisfy that gate.
+
+`gpu.sh` remains executable and takes no arguments. It defaults to round 2,
+records its own transcript/status, preflights Metal before modifying masters,
+regenerates projection and all clips, audits, renders every stage at GPU512
+and the front/top foot diagnostics,
+packs/validates and writes the driver's ROUND-named MP4. It never writes PASS.
+Missing-input failure is tested without launching Blender. CPU checks do not
+prove Metal execution; the lead must run the script and inspect the fresh output.
+
+The prior recovery patch recorded 169,328 bytes at Q85 from authored clips;
+those results are historical, not evidence for the new source-motion revision.
+Current results are written to `masters/gaesatae/validation.json`,
+`geometry-audit.json` and the external Gaesatae log. CPU output is never a GPU
+sign-off. Only visual review of the fresh rest/clip images can authorize PASS.

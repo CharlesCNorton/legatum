@@ -1,13 +1,17 @@
 """Frozen camera colour on full-depth meshes; visibility masks and painted back fills.
 Adapted from infantry lead project.py; no billboards, alpha-cut geometry or per-frame reprojection.
 """
-import bpy, hashlib, json, os
+import bpy, hashlib, json, os, sys
 from pathlib import Path
 from mathutils import Vector
 from mathutils.bvhtree import BVHTree
 from bpy_extras.object_utils import world_to_camera_view
 ROOT=Path(os.environ['ANIM_ROOT']);M=ROOT/'masters/gaesatae';A=ROOT/'assets/gaesatae'
 bpy.ops.wm.open_mainfile(filepath=str(M/'plain.blend'));sc=bpy.context.scene
+sys.path.insert(0,str(Path(__file__).parent))
+from refine import refine
+refine(sc)
+bpy.ops.wm.save_as_mainfile(filepath=str(M/'finished-plain.blend'))
 # Curves become full tubular meshes so their UVs also follow motion.
 for ob in list(sc.objects):
     if ob.type=='CURVE':
@@ -19,6 +23,12 @@ for mat in list(bpy.data.materials):
     if not b:continue
     name=mat.name.lower();coord=n.new('ShaderNodeTexCoord');noise=n.new('ShaderNodeTexNoise');noise.inputs['Scale'].default_value=95;noise.inputs['Detail'].default_value=3;l.new(coord.outputs['Generated'],noise.inputs['Vector'])
     bump=n.new('ShaderNodeBump');bump.inputs['Strength'].default_value=.19;bump.inputs['Distance'].default_value=.0015;l.new(noise.outputs['Fac'],bump.inputs['Height']);l.new(bump.outputs['Normal'],b.inputs['Normal'])
+    if 'limestone' in name:
+        ramp=n.new('ShaderNodeValToRGB')
+        ramp.color_ramp.elements[0].color=(.62,.43,.23,1)
+        ramp.color_ramp.elements[1].color=(.95,.79,.52,1)
+        l.new(noise.outputs['Fac'],ramp.inputs[0]);l.new(ramp.outputs[0],b.inputs['Base Color'])
+        bump.inputs['Distance'].default_value=.0007
     if any(w in name for w in ('bronze','iron','gold')):
         b.inputs['Metallic'].default_value=1;b.inputs['Roughness'].default_value=.37
         geo=n.new('ShaderNodeNewGeometry');r=n.new('ShaderNodeValToRGB');r.color_ramp.elements[0].position=.42;r.color_ramp.elements[1].position=.56
@@ -28,7 +38,7 @@ for mat in list(bpy.data.materials):
     kind='skin' if 'skin' in name else 'linen' if 'woven' in name else 'hair' if 'hair' in name else 'wood' if 'shaft' in name else None
     if kind and (A/f'fill-{kind}.png').exists():
         tex=n.new('ShaderNodeTexImage');tex.image=bpy.data.images.load(str(A/f'fill-{kind}.png'),check_existing=True);tex.projection='BOX';tex.projection_blend=.3;l.new(coord.outputs['Generated'],tex.inputs['Vector'])
-        mix=n.new('ShaderNodeMixRGB');mix.blend_type='MULTIPLY';mix.inputs[0].default_value=.65;mix.inputs[1].default_value=b.inputs['Base Color'].default_value;l.new(tex.outputs['Color'],mix.inputs[2]);l.new(mix.outputs[0],b.inputs['Base Color'])
+        mix=n.new('ShaderNodeMixRGB');mix.blend_type='MIX';mix.inputs[0].default_value=.25 if kind=='wood' else .78;mix.inputs[1].default_value=b.inputs['Base Color'].default_value;l.new(tex.outputs['Color'],mix.inputs[2]);l.new(mix.outputs[0],b.inputs['Base Color'])
     ao=n.new('ShaderNodeAmbientOcclusion');ao.inputs['Distance'].default_value=.035;ao.samples=8
     mix=n.new('ShaderNodeMixRGB');mix.blend_type='MULTIPLY';mix.inputs[0].default_value=.33
     old=b.inputs['Base Color'].links
@@ -69,9 +79,9 @@ for ob in sc.objects:
         if not orig or not orig.use_nodes:continue
         mat=orig.copy();mat.name=orig.name+' | painted | '+ob.name;ob.data.materials[i]=mat;n=mat.node_tree.nodes;l=mat.node_tree.links;out=n.get('Material Output');physical=out.inputs['Surface'].links[0].from_socket
         coord=n.new('ShaderNodeUVMap');coord.uv_map=uv.name;tex=n.new('ShaderNodeTexImage');tex.image=im;tex.extension='CLIP';l.new(coord.outputs[0],tex.inputs['Vector'])
-        attr=n.new('ShaderNodeVertexColor');attr.layer_name=mask.name;mul=n.new('ShaderNodeMath');mul.operation='MULTIPLY';l.new(attr.outputs['Color'],mul.inputs[0]);l.new(tex.outputs['Alpha'],mul.inputs[1]);strength=n.new('ShaderNodeMath');strength.operation='MULTIPLY';l.new(mul.outputs[0],strength.inputs[0]);strength.inputs[1].default_value=.94
+        attr=n.new('ShaderNodeVertexColor');attr.layer_name=mask.name;mul=n.new('ShaderNodeMath');mul.operation='MULTIPLY';l.new(attr.outputs['Color'],mul.inputs[0]);l.new(tex.outputs['Alpha'],mul.inputs[1]);strength=n.new('ShaderNodeMath');strength.operation='MULTIPLY';l.new(mul.outputs[0],strength.inputs[0]);strength.inputs[1].default_value=.96
         pigment=n.new('ShaderNodeBsdfPrincipled');pigment.inputs['Base Color'].default_value=(0,0,0,1);pigment.inputs['Roughness'].default_value=1;pigment.inputs['Specular IOR Level'].default_value=0;l.new(tex.outputs['Color'],pigment.inputs['Emission Color']);pigment.inputs['Emission Strength'].default_value=1
-        blend=n.new('ShaderNodeMixShader');l.new(strength.outputs[0],blend.inputs[0]);l.new(physical,blend.inputs[1]);l.new(pigment.outputs[0],blend.inputs[2]);l.new(blend.outputs[0],out.inputs['Surface'])
+        blend=n.new('ShaderNodeMixShader');l.new(strength.outputs[0],blend.inputs[0]);l.new(physical,blend.inputs[1]);l.new(pigment.outputs[0],blend.inputs[2]);ray=n.new('ShaderNodeLightPath');camera_mix=n.new('ShaderNodeMixShader');l.new(ray.outputs['Is Camera Ray'],camera_mix.inputs[0]);l.new(physical,camera_mix.inputs[1]);l.new(blend.outputs[0],camera_mix.inputs[2]);l.new(camera_mix.outputs[0],out.inputs['Surface'])
 for mod,state in saved:mod.show_viewport=state
 sc['projection']='Frozen rest-camera UV; visibility/facing mask; generated hidden fills; genuine 3D anatomy'
 sc['projection_source_sha256']=hashlib.sha256((A/'painting-aligned.png').read_bytes()).hexdigest()

@@ -17,14 +17,15 @@ def sheet(images,labels,size=256):
 
 def raw(stage):
     # Highest completed resolution wins. Never upsample a preview into a master.
-    for size in (512,256,128):
+    sizes=(int(os.environ['RESOLUTION']),) if 'RESOLUTION' in os.environ else (512,256,128)
+    for size in sizes:
         p=M/'renders'/str(size)/stage
         if (p/'render.json').exists():
             meta=json.loads((p/'render.json').read_text())
             paths=[p/f'{i:02}.png' for i in range(len(meta['frames']))]
             assert all(sha(f)==h for f,h in zip(paths,meta['frames'])),f'Incomplete {stage}'
-            blend=M/'clips'/f'{stage[2:]}.blend' if stage.startswith('e-') else M/'clips/attack.blend' if stage=='d' else M/('plain.blend' if stage=='b' else 'gaesatae.blend')
-            assert sha(blend)==meta['blend_sha256'],f'Stale {stage} render'
+            blend=M/'clips'/f'{stage[2:]}.blend' if stage.startswith('e-') else M/'clips/attack.blend' if stage=='d' else M/('finished-plain.blend' if stage=='b' else 'gaesatae.blend')
+            if sha(blend)!=meta['blend_sha256']:continue
             return [Image.open(f).convert('RGBA') for f in paths],meta
     raise FileNotFoundError(stage)
 
@@ -50,12 +51,16 @@ def review(stage,g=None):
         sheet([REF,ims[0]],['Painting','Plain geometry | '+caption]).save(R/'gaesatae-b-plain.png')
     elif stage=='c':
         sheet([REF,ims[0],thumb(REF,64).resize((256,256)),thumb(ims[0],64).resize((256,256))],['Painting 256','Rest | '+caption,'Painting 64 x4','Rest 64 x4']).save(R/'gaesatae-c-textured-lit.png')
-        blend=Image.blend(REF,thumb(ims[0]),.5)
-        sheet([REF,ims[0],blend],['Painting','3D rest | '+caption,'50/50 crossfade']).save(R/'gaesatae-f-restpose-compare.png')
+        rendered=thumb(ims[0]);blend=Image.blend(REF,rendered,.5)
+        split=REF.copy();split.paste(rendered.crop((128,0,256,256)),(128,0))
+        compare=Image.new('RGBA',(1024,372),BG)
+        compare.alpha_composite(sheet([REF,rendered,split,blend],['Painting','3D rest | '+caption,'Half split','50/50 crossfade']),(0,0))
+        small=sheet([REF,rendered,split,blend],['Source','Rest','Split','50/50'],64)
+        compare.alpha_composite(small,(384,282));compare.save(R/'gaesatae-f-restpose-compare.png')
         crops=[];labels=[]
-        for name,box in [('head / torc',(118,28,169,81)),('tattooed torso',(103,65,175,126)),('shield',(163,55,213,206))]:
+        for name,box in [('head / torc',(118,28,169,81)),('tattooed torso',(103,65,175,126)),('shield',(163,55,213,206)),('boots / stone',(60,185,212,248))]:
             for label,im in [('painting',REF),('3D',thumb(ims[0]))]:
-                c=im.crop(box);c.thumbnail((256,256));pad=Image.new('RGBA',(256,256));pad.alpha_composite(c,((256-c.width)//2,(256-c.height)//2));crops.append(pad);labels.append(name+' '+label)
+                c=im.crop(box);c=c.resize((round(c.width*min(240/c.width,240/c.height)),round(c.height*min(240/c.width,240/c.height))),Image.Resampling.LANCZOS);pad=Image.new('RGBA',(256,256));pad.alpha_composite(c,((256-c.width)//2,(256-c.height)//2));crops.append(pad);labels.append(name+' '+label)
         sheet(crops,labels).save(R/'gaesatae-c-details.png')
     elif stage=='d':sheet(ims,[f'Attack pose {i}' for i in range(len(ims))]).save(R/'gaesatae-d-rig-poses.png')
     else:
@@ -76,15 +81,20 @@ def pack(sets,metas):
     meta={'version':2,'layout':'trimmed-rows','frame':{'w':160,'h':160,'ax':80,'ay':142},'clips':{},'provenance':{'master_sha256':sha(M/'gaesatae.blend'),'renders':metas}}
     rows=[];y=0;allframes={}
     for row,(name,(count,fps,loop)) in enumerate(CLIPS.items()):
-        crops=[];rects=[];x=0;rh=0;allframes[name]=[]
+        crops=[];rects=[];x=1;rh=0;allframes[name]=[];unique={}
         for im in sets[name]:
-            im=thumb(im,160);alpha=im.getchannel('A').point(lambda a:0 if a<4 else a);im.putalpha(alpha)
+            im=im.resize((160,160),Image.Resampling.BICUBIC)
             box=im.getbbox();assert box and box[0]>0 and box[1]>0 and box[2]<160 and box[3]<160,(name,'clipped',box)
-            crop=im.crop(box);w,h=crop.size;rects.append({'x':x,'y':y,'w':w,'h':h,'ox':box[0],'oy':box[1]});crops.append(crop);x+=w+2;rh=max(rh,h);allframes[name].append(im)
+            crop=im.crop(box);w,h=crop.size;key=hashlib.sha256(im.tobytes()).hexdigest()
+            if key in unique:r=dict(unique[key]);crops.append(None)
+            else:
+                r={'x':x,'y':y+1,'w':w,'h':h,'ox':box[0],'oy':box[1]};unique[key]=r;crops.append(crop);x+=w+2
+            rects.append(r);rh=max(rh,h);allframes[name].append(im)
         meta['clips'][name]={'row':row,'frames':count,'fps':fps,'loop':loop,'rects':rects};rows.append((crops,rects));y+=rh+2
-    width=max(sum(im.width+2 for im in crops) for crops,_ in rows);atlas=Image.new('RGBA',(width,y))
+    width=max(1+sum(im.width+2 for im in crops if im is not None) for crops,_ in rows);atlas=Image.new('RGBA',(width,y));meta['atlas']={'w':width,'h':y}
     for crops,rects in rows:
-        for im,r in zip(crops,rects):atlas.alpha_composite(im,(r['x'],r['y']))
+        for im,r in zip(crops,rects):
+            if im is not None:atlas.alpha_composite(im,(r['x'],r['y']))
     best=None
     for q in (90,85,80,75):
         b=io.BytesIO();atlas.save(b,'WEBP',quality=q,method=6,exact=True)
@@ -104,15 +114,24 @@ def unpack(path,meta):
     return result
 
 def validate(path):
-    m=json.loads(path.with_suffix('.json').read_text());assert path.stat().st_size<=200000 and m['quality']>=75
+    m=json.loads(path.with_suffix('.json').read_text());assert m['provenance']['master_sha256']==sha(M/'gaesatae.blend'),'Stale atlas master';assert path.stat().st_size<=200000 and m['quality']>=75
     assert sha(path)==m['atlas_sha256'];ims=unpack(path,m);atlas=Image.open(path)
     for name,(count,fps,loop) in CLIPS.items():
+        source,render_meta=raw('e-'+name);assert render_meta==m['provenance']['renders'][name],'Stale atlas frames'
+        for source_frame,decoded in zip(source,ims[name]):
+            alpha=source_frame.resize((160,160),Image.Resampling.BICUBIC).getchannel('A')
+            assert ImageChops.difference(alpha,decoded.getchannel('A')).getbbox() is None,'Alpha changed'
         c=m['clips'][name];assert c['frames']==count and len(c['rects'])==count and c['fps']==fps and c['loop']==loop
         for r in c['rects']:
             assert 0<=r['ox']<160 and 0<=r['oy']<160 and r['ox']+r['w']<=160 and r['oy']+r['h']<=160
             assert r['x']>=0 and r['y']>=0 and r['x']+r['w']<=atlas.width and r['y']+r['h']<=atlas.height
         assert any(ImageChops.difference(ims[name][0],f).convert('RGB').getbbox() for f in ims[name][1:]),name+' lacks motion'
-    # Exact hold is verified on lossless masters; lossy atlas blocks can differ.
+    assert ims['death'][-1].tobytes()==ims['death'][-2].tobytes(),'Decoded death must hold exactly'
+    assert atlas.size==(m['atlas']['w'],m['atlas']['h'])
+    decoded=Image.new('RGBA',(1600,5*186),BG)
+    for row,(name,frames) in enumerate(ims.items()):decoded.alpha_composite(sheet(frames,[name+' '+str(i+1) for i in range(len(frames))],160),(0,row*186))
+    decoded.save(R/'gaesatae-g-decoded-atlas.png')
+    # Also verify the lossless held source frame.
     assert sha(M/'renders'/str(m['provenance']['renders']['death']['resolution'])/'e-death/08.png')==sha(M/'renders'/str(m['provenance']['renders']['death']['resolution'])/'e-death/09.png')
     (M/'validation.json').write_text(json.dumps({'atlas_bytes':path.stat().st_size,'quality':m['quality'],'frames':40,'alpha':True,'rects_and_offsets':True,'motion':True,'lossless_held_death':True,'gpu':all(v['device']=='GPU' for v in m['provenance']['renders'].values())},indent=2)+'\n')
     print('VALIDATED',path.stat().st_size,'bytes, q',m['quality'],', 40 frames')
@@ -143,5 +162,8 @@ if __name__=='__main__':
             for stage in ('b','c','d'):review(stage,g)
             sets={};metas={}
             for name in CLIPS:sets[name],metas[name]=review('e-'+name,g)
+            _,restmeta=raw('c')
+            for meta in metas.values():
+                assert all(meta[k]==restmeta[k] for k in ('resolution','samples','device','source_sha256')),'Mixed render settings'
             pack(sets,metas)
             if a.movie:movie(Path('app/src/assets/units/anim/gaesatae.webp'))

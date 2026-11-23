@@ -15,68 +15,68 @@
       "loop": true,
       "rects": [
         {
-          "x": 0,
-          "y": 0,
-          "w": 112,
-          "h": 151,
-          "ox": 25,
-          "oy": 6
-        },
-        {
-          "x": 114,
-          "y": 0,
-          "w": 111,
-          "h": 151,
+          "x": 1,
+          "y": 1,
+          "w": 109,
+          "h": 149,
           "ox": 27,
-          "oy": 6
+          "oy": 7
         },
         {
-          "x": 227,
-          "y": 0,
-          "w": 112,
-          "h": 151,
+          "x": 112,
+          "y": 1,
+          "w": 108,
+          "h": 148,
+          "ox": 27,
+          "oy": 8
+        },
+        {
+          "x": 222,
+          "y": 1,
+          "w": 109,
+          "h": 147,
+          "ox": 26,
+          "oy": 9
+        },
+        {
+          "x": 333,
+          "y": 1,
+          "w": 109,
+          "h": 148,
+          "ox": 26,
+          "oy": 8
+        },
+        {
+          "x": 444,
+          "y": 1,
+          "w": 109,
+          "h": 150,
           "ox": 26,
           "oy": 6
         },
         {
-          "x": 341,
-          "y": 0,
-          "w": 111,
-          "h": 151,
-          "ox": 27,
-          "oy": 6
+          "x": 555,
+          "y": 1,
+          "w": 109,
+          "h": 149,
+          "ox": 26,
+          "oy": 7
         },
         {
-          "x": 454,
-          "y": 0,
-          "w": 112,
-          "h": 151,
-          "ox": 25,
-          "oy": 6
+          "x": 666,
+          "y": 1,
+          "w": 109,
+          "h": 147,
+          "ox": 26,
+          "oy": 9
         },
         {
-          "x": 568,
-          "y": 0,
-          "w": 110,
-          "h": 151,
-          "ox": 27,
-          "oy": 6
-        },
-        {
-          "x": 680,
-          "y": 0,
-          "w": 110,
-          "h": 152,
-          "ox": 27,
-          "oy": 5
-        },
-        {
-          "x": 792,
-          "y": 0,
-          "w": 110,
-          "h": 151,
-          "ox": 27,
-          "oy": 6
+          "x": 777,
+          "y": 1,
+          "w": 109,
+          "h": 147,
+          "ox": 26,
+          "oy": 9
         }
       ]
     },
@@ -87,68 +87,68 @@
       "loop": true,
       "rects": [
         {
-          "x": 0,
-          "y": 154,
-          "w": 112,
-          "h": 151,
-          "ox": 25,
-          "oy": 6
-        },
-        {
-          "x": 114,
-          "y": 154,
-          "w": 111,
+          "x": 1,
+          "y": 153,
+          "w": 109,
           "h": 152,
           "ox": 27,
+          "oy": 4
+        },
+        {
+          "x": 112,
+          "y": 153,
+          "w": 109,
+          "h": 151,
+          "ox": 28,
           "oy": 5
         },
         {
-          "x": 227,
-          "y": 154,
-          "w": 111,
-          "h": 153,
-          "ox": 27,
+          "x": 223,
+          "y": 153,
+          "w": 109,
+          "h": 152,
+          "ox": 28,
           "oy": 4
         },
         {
-          "x": 340,
-          "y": 154,
-          "w": 111,
-          "h": 152,
-          "ox": 27,
+          "x": 334,
+          "y": 153,
+          "w": 108,
+          "h": 151,
+          "ox": 28,
           "oy": 5
         },
         {
-          "x": 453,
-          "y": 154,
-          "w": 112,
+          "x": 444,
+          "y": 153,
+          "w": 108,
           "h": 151,
+          "ox": 26,
+          "oy": 5
+        },
+        {
+          "x": 554,
+          "y": 153,
+          "w": 108,
+          "h": 152,
           "ox": 25,
-          "oy": 6
-        },
-        {
-          "x": 567,
-          "y": 154,
-          "w": 110,
-          "h": 153,
-          "ox": 27,
           "oy": 4
         },
         {
-          "x": 679,
-          "y": 154,
-          "w": 110,
-          "h": 153,
-          "ox": 27,
-          "oy": 4
+          "x": 664,
+          "y": 153,
+          "w": 109,
+          "h": 155,
+          "ox": 24,
+          "oy": 1
         },
         {
-          "x": 791,
-          "y": 154,
-          "w": 110,
-          "h": 153,
-          "ox": 27,
-          "oy": 4
+          "x": 775,
+          "y": 153,
+          "w": 109,
+          "h": 155,
+          "ox": 25,
+          "oy": 1
         }
       ]
     },
@@ -159,84 +159,84 @@
       "loop": false,
       "rects": [
         {
-          "x": 0,
-          "y": 309,
-          "w": 112,
-          "h": 151,
-          "ox": 25,
-          "oy": 6
+          "x": 1,
+          "y": 310,
+          "w": 109,
+          "h": 149,
+          "ox": 27,
+          "oy": 7
         },
         {
-          "x": 114,
-          "y": 309,
-          "w": 116,
-          "h": 151,
+          "x": 112,
+          "y": 310,
+          "w": 114,
+          "h": 148,
           "ox": 22,
-          "oy": 6
+          "oy": 8
         },
         {
-          "x": 232,
-          "y": 309,
+          "x": 228,
+          "y": 310,
           "w": 112,
+          "h": 149,
+          "ox": 24,
+          "oy": 7
+        },
+        {
+          "x": 342,
+          "y": 310,
+          "w": 97,
           "h": 151,
-          "ox": 25,
+          "ox": 37,
+          "oy": 5
+        },
+        {
+          "x": 441,
+          "y": 310,
+          "w": 105,
+          "h": 151,
+          "ox": 37,
+          "oy": 5
+        },
+        {
+          "x": 441,
+          "y": 310,
+          "w": 105,
+          "h": 151,
+          "ox": 37,
+          "oy": 5
+        },
+        {
+          "x": 342,
+          "y": 310,
+          "w": 97,
+          "h": 151,
+          "ox": 37,
+          "oy": 5
+        },
+        {
+          "x": 548,
+          "y": 310,
+          "w": 104,
+          "h": 150,
+          "ox": 31,
           "oy": 6
         },
         {
-          "x": 346,
-          "y": 309,
-          "w": 100,
-          "h": 154,
-          "ox": 36,
-          "oy": 3
+          "x": 1,
+          "y": 310,
+          "w": 109,
+          "h": 149,
+          "ox": 27,
+          "oy": 7
         },
         {
-          "x": 448,
-          "y": 309,
-          "w": 107,
-          "h": 153,
-          "ox": 36,
-          "oy": 4
-        },
-        {
-          "x": 557,
-          "y": 309,
-          "w": 100,
-          "h": 154,
-          "ox": 36,
-          "oy": 3
-        },
-        {
-          "x": 659,
-          "y": 309,
-          "w": 102,
-          "h": 153,
-          "ox": 34,
-          "oy": 4
-        },
-        {
-          "x": 763,
-          "y": 309,
-          "w": 112,
-          "h": 151,
-          "ox": 25,
-          "oy": 6
-        },
-        {
-          "x": 877,
-          "y": 309,
-          "w": 112,
-          "h": 151,
-          "ox": 25,
-          "oy": 6
-        },
-        {
-          "x": 991,
-          "y": 309,
-          "w": 112,
-          "h": 151,
-          "ox": 25,
-          "oy": 6
+          "x": 1,
+          "y": 310,
+          "w": 109,
+          "h": 149,
+          "ox": 27,
+          "oy": 7
         }
       ]
     },
@@ -247,36 +247,36 @@
       "loop": false,
       "rects": [
         {
-          "x": 0,
-          "y": 465,
-          "w": 112,
-          "h": 151,
-          "ox": 25,
-          "oy": 6
-        },
-        {
-          "x": 114,
-          "y": 465,
-          "w": 110,
-          "h": 150,
+          "x": 1,
+          "y": 463,
+          "w": 109,
+          "h": 149,
           "ox": 27,
           "oy": 7
         },
         {
-          "x": 226,
-          "y": 465,
-          "w": 112,
-          "h": 151,
-          "ox": 25,
-          "oy": 6
+          "x": 112,
+          "y": 463,
+          "w": 108,
+          "h": 146,
+          "ox": 27,
+          "oy": 10
         },
         {
-          "x": 340,
-          "y": 465,
-          "w": 112,
-          "h": 151,
-          "ox": 25,
-          "oy": 6
+          "x": 222,
+          "y": 463,
+          "w": 109,
+          "h": 147,
+          "ox": 27,
+          "oy": 9
+        },
+        {
+          "x": 1,
+          "y": 463,
+          "w": 109,
+          "h": 149,
+          "ox": 27,
+          "oy": 7
         }
       ]
     },
@@ -287,189 +287,193 @@
       "loop": false,
       "rects": [
         {
-          "x": 0,
-          "y": 618,
-          "w": 112,
-          "h": 151,
-          "ox": 25,
-          "oy": 6
-        },
-        {
-          "x": 114,
-          "y": 618,
-          "w": 112,
-          "h": 151,
-          "ox": 25,
-          "oy": 6
-        },
-        {
-          "x": 228,
-          "y": 618,
-          "w": 110,
+          "x": 1,
+          "y": 614,
+          "w": 109,
           "h": 149,
           "ox": 27,
-          "oy": 8
+          "oy": 7
         },
         {
-          "x": 340,
-          "y": 618,
-          "w": 101,
-          "h": 148,
-          "ox": 31,
-          "oy": 9
-        },
-        {
-          "x": 443,
-          "y": 618,
-          "w": 96,
+          "x": 112,
+          "y": 614,
+          "w": 107,
           "h": 144,
-          "ox": 36,
-          "oy": 13
+          "ox": 28,
+          "oy": 12
         },
         {
-          "x": 541,
-          "y": 618,
-          "w": 96,
-          "h": 119,
-          "ox": 36,
-          "oy": 38
+          "x": 221,
+          "y": 614,
+          "w": 101,
+          "h": 127,
+          "ox": 31,
+          "oy": 29
         },
         {
-          "x": 639,
-          "y": 618,
-          "w": 96,
-          "h": 92,
-          "ox": 36,
-          "oy": 65
+          "x": 324,
+          "y": 614,
+          "w": 93,
+          "h": 100,
+          "ox": 37,
+          "oy": 56
         },
         {
-          "x": 737,
-          "y": 618,
-          "w": 96,
-          "h": 80,
-          "ox": 36,
-          "oy": 77
+          "x": 419,
+          "y": 614,
+          "w": 93,
+          "h": 73,
+          "ox": 37,
+          "oy": 83
         },
         {
-          "x": 835,
-          "y": 618,
-          "w": 96,
-          "h": 80,
-          "ox": 36,
-          "oy": 77
+          "x": 514,
+          "y": 614,
+          "w": 93,
+          "h": 70,
+          "ox": 37,
+          "oy": 86
         },
         {
-          "x": 933,
-          "y": 618,
-          "w": 96,
-          "h": 80,
-          "ox": 36,
-          "oy": 77
+          "x": 609,
+          "y": 614,
+          "w": 93,
+          "h": 70,
+          "ox": 37,
+          "oy": 86
+        },
+        {
+          "x": 704,
+          "y": 614,
+          "w": 93,
+          "h": 70,
+          "ox": 37,
+          "oy": 86
+        },
+        {
+          "x": 704,
+          "y": 614,
+          "w": 93,
+          "h": 70,
+          "ox": 37,
+          "oy": 86
+        },
+        {
+          "x": 704,
+          "y": 614,
+          "w": 93,
+          "h": 70,
+          "ox": 37,
+          "oy": 86
         }
       ]
     }
   },
   "provenance": {
-    "master_sha256": "df550997967c181b1a365e633819041bc275cf4c27c884198fb91e89dfcb0199",
+    "master_sha256": "15e98a390cf51ef49a2c684af5dc4926b063eea219a5bd5386a42c840b1d7340",
     "renders": {
       "idle": {
         "stage": "e-idle",
         "engine": "CYCLES",
-        "device": "GPU",
-        "samples": 48,
-        "resolution": 512,
-        "blend_sha256": "c2c55568d66161f9f7d05e422dcdc20325b6bdd1fe97a9cfc6285de4dbb6d67c",
-        "source_sha256": "df550997967c181b1a365e633819041bc275cf4c27c884198fb91e89dfcb0199",
+        "device": "CPU",
+        "samples": 8,
+        "resolution": 256,
+        "blend_sha256": "d89a350cf10d4074f3b3e83a8efdabb18de4e639b468404298aafb0456b101d4",
+        "source_sha256": "15e98a390cf51ef49a2c684af5dc4926b063eea219a5bd5386a42c840b1d7340",
         "frames": [
-          "4d761272a4bc7cb746a4420649d029928ee14d2a0486cdb2695422f0fd07245f",
-          "da580e88d6af6afed7d76b4f4948b5f7361c58032552e557641bd8f23cdd04e2",
-          "42516df59489a75fae5935b0867104df00f60cee45d639937a9026133828caf9",
-          "569bc65e4a62437daff1736d34b02fe688508797f21c29d353a1f413ebaf9f11",
-          "9ba0694ed5ca0641140341356e4a63cd6b2f8612d980c0b0b8dba6627374214c",
-          "e08f985004d334e3a1a5428f9630c370a265ef5c38d288cc5bc2481bdfa00cf9",
-          "c2248d510c55ce58d7d5b8936c54e93e211ade011c32b35ff9b17cd00753d42c",
-          "82163fadb24a58ce086252c830f2233ae46045454da9720ee3decc38f00275b8"
+          "833c7697d7abd1487ad9b57445f7512c2cb21cacad945a06c1dc4c20737572db",
+          "50ec5cd18df13e4c471cb07f384c82bcab7f5abc4c5e06981a6184854a8b1f9b",
+          "32b2e9586cd9b02b47a881aafa5bb1a39e0651ca0b7a2e6b8438542339b57b8d",
+          "940ad15c4649ee997b3fa282fb05f21c4df1e20fef7c79f097cd2e213e81e31d",
+          "755592863eaf02cd7d673962acdf470eb4bd97134823e01a348fad8cf97690a5",
+          "4c58076aae78e79aa3489043f2e2ecc46ea6eb715c251aeafc69bb8988065f10",
+          "390d14d4e4ce2c3c7161bc384101020acbeb2153e2a7bfffbe6d1081dc900e80",
+          "094f8e84ef73f4d45c14e149ede50e6c346eacc5d42a857ef44520e68a9f7f1b"
         ]
       },
       "move": {
         "stage": "e-move",
         "engine": "CYCLES",
-        "device": "GPU",
-        "samples": 48,
-        "resolution": 512,
-        "blend_sha256": "ba588f80bff37ed0b31692b5c17b97f21bec34d24a1e72408149ed4427074e5f",
-        "source_sha256": "df550997967c181b1a365e633819041bc275cf4c27c884198fb91e89dfcb0199",
+        "device": "CPU",
+        "samples": 8,
+        "resolution": 256,
+        "blend_sha256": "06a0c1eb31c0e809bdde2f66831cffcb836d251e6a8603088ba818aa4c3f9100",
+        "source_sha256": "15e98a390cf51ef49a2c684af5dc4926b063eea219a5bd5386a42c840b1d7340",
         "frames": [
-          "e94b350f619176661147b5f0d8dd976bcc62541a18bf2565d9605e84d1f83b72",
-          "eb0adfddce382723785d1c78ae419410725f22a4a55f4ee3865de58262d75306",
-          "a660287431e5b47aa155f9d2112380475ca4cb76edd6d554563b034b1cacfc00",
-          "3fa804e21ce3fda081a20e79cee0e11aa71351b912d144999a172d97bda0f5a9",
-          "33867b10d75e1d3a703dfc74d59265c7a9bf63744196aacddd9aabbf6bb827ad",
-          "f8f4845d75d1c3bed605e889bf38095fe1e3080845dbb63414d3b61fe922460f",
-          "53fc391d3034a0e22523c60c563f9fcb53c451e084fda109a951d93b7c8f5bdc",
-          "8ab106b5b29538c98895b437ac926ee65a4996bff5382e920b2d79731fa735e6"
+          "af874e7dcc9d49c7ce67fad9655f8ab22f61822cdccb2bc88fb816826b789a9c",
+          "ebcfdfcde9dc2b0c8397b4e5a4df1f07bbb812ce4140fd3a884710a4862fb9b3",
+          "ec1a034e2ccd436ec566716ad08ecd582670b62c05a49baccf872b4b2f70539b",
+          "018c59be299bbb206b34ff1d1233427e1db082ef0a1628ba3806dcc5c4f3db7b",
+          "6c2cd4c732b7c9cfc836df02362aa99080ca923eaa9b035be43247f29d8ec9ee",
+          "5ed4be4ac0dad8bb6bd8bdac5c4048af010d9c217bd8897ef4c53d8c32d8a658",
+          "8df93afd737f74147f3bae56abb478c3e5f086c2ddd99c40c576e1b8b6e7fbad",
+          "c002d2cc5feacde83b0e22e62e58c674a866429e92dd0331512832ec49a68bc6"
         ]
       },
       "attack": {
         "stage": "e-attack",
         "engine": "CYCLES",
-        "device": "GPU",
-        "samples": 48,
-        "resolution": 512,
-        "blend_sha256": "14fb5201751b54d2b640295f4f0dde310a532a1096be7714effa4fb9dbe2a5cb",
-        "source_sha256": "df550997967c181b1a365e633819041bc275cf4c27c884198fb91e89dfcb0199",
+        "device": "CPU",
+        "samples": 8,
+        "resolution": 256,
+        "blend_sha256": "8eec4192b45b0efae776ba96bef485262995cd235ad0cef35cdc47f36dc2ea66",
+        "source_sha256": "15e98a390cf51ef49a2c684af5dc4926b063eea219a5bd5386a42c840b1d7340",
         "frames": [
-          "d90b84a8421cf5c6f4144e39ecb46a4742d5b83adcf27bfc9f173518b9f946ff",
-          "cd2a0fef55a46deb80dc048bc3d3dc13c06eb03c28bbed7b46991f07951f8884",
-          "297ade8f00c7a375f823d2399a7c7009624a872ff833aa8f68b63a4cdaddab1f",
-          "0d20dca2b29b6b941a9a322d0fc0cd03fe09c8111609584b32fd3b522a36be23",
-          "3a147b97911a09a146cd2887135726f5db81663d7ca7da67bbd5180de9920d91",
-          "4b4677b3710e9c578d52d7a27b913f111300fd56fc6fa80646bf97da1202cf2a",
-          "11e3b791ba6b5df7d1b689a6aecfbc313151ce51803999d0a150ef5133b4038f",
-          "5abae6d9ec281d10ff5ba2538169f00d70c186c4f1d07bfd75ed1c1917e92d60",
-          "cb0b3015c9eb77a6490a133f40c7c33272c8e8dd374bd341fdc2ec20e3a4b677",
-          "7757e4bbe4de1118e0835023f995de88a0c917a42698eb875510cf88f1bc9c83"
+          "b586846f2e7e741108b8b01303101491c4f8d971052fe5529c3f7b6f8acf64dc",
+          "3f21c5cdc1c4cb89d3f2f622671664c458013fd3adfc26cc51a305e345628e13",
+          "154dddb95e7d96cfc9522e1376503ef598745d0b933c0c2b222d334b19651276",
+          "0a96164da87227a45e5f75b1d86872689af796c20a01b79d0809d315fc554a07",
+          "5be86604d116e8bc2fef1c49c9e46b093ec894ea7735f50359e3a7041e2fa370",
+          "8e86c12cfc4f05c5233d15535e5d4d7478f106746aa5bd8744e987e4bad71db2",
+          "212edad43815df5daffb3ab6b5f0ea8b6963622146a14a0e10710c7eeefd60ea",
+          "ad061b10e1e1af7605025aa3aeb94562cd10ba27b236977ac601713f3c4b5242",
+          "8faf9f5b8fad2c8c14ae5752e3868946c192d68cb6432499f819569cbabbfba1",
+          "57a6b079673fcadbe155290faed00c34769c740581361b933923ee7fdc726aa6"
         ]
       },
       "hit": {
         "stage": "e-hit",
         "engine": "CYCLES",
-        "device": "GPU",
-        "samples": 48,
-        "resolution": 512,
-        "blend_sha256": "32106989b535aa5edb2ccf4b1386fdba314d508227eb0a80a5ca01a521b0ba82",
-        "source_sha256": "df550997967c181b1a365e633819041bc275cf4c27c884198fb91e89dfcb0199",
+        "device": "CPU",
+        "samples": 8,
+        "resolution": 256,
+        "blend_sha256": "09b6973cfbec36c7905f6b57eb7bf8159d49316db4b3beee57e316ffffd5f3f3",
+        "source_sha256": "15e98a390cf51ef49a2c684af5dc4926b063eea219a5bd5386a42c840b1d7340",
         "frames": [
-          "ffb121ab45db10b8472ad059b482986a23223a35ed7c8b95545e4930eeeb8367",
-          "1fea165de5eccd2b7d4a72cb0177f49102ed05c54ab75896fff3c5990d93e979",
-          "6e70e007d8731d4691effc050b65eeeb9886e6395a1a791d000f6f041a01b976",
-          "5d6eec12e76ea378ec19f1732c32b754c30db9c60ab3fb572230311ffee0c6fe"
+          "26ffb6e2f47af9945a59e76a2417112a5eacc83806fd31e6f774bea1ee09e109",
+          "0c59bedd0abb112a3fde547175aaa4e5c87efe3d3017895fe2e9b021de11e12c",
+          "b495d591ade8f2159d9902167a2b89a57b09efa9b81c2c573511938887fe163a",
+          "1101018556e28d962e5d337f6e98717a92d993aa2b2af2c98264746e31329237"
         ]
       },
       "death": {
         "stage": "e-death",
         "engine": "CYCLES",
-        "device": "GPU",
-        "samples": 48,
-        "resolution": 512,
-        "blend_sha256": "f69ae768f9a0a452fcff43cbe13dfd7815bb01197a89c5f57a11ed28c77c7ad5",
-        "source_sha256": "df550997967c181b1a365e633819041bc275cf4c27c884198fb91e89dfcb0199",
+        "device": "CPU",
+        "samples": 8,
+        "resolution": 256,
+        "blend_sha256": "b41b6f17dc2033b81c3481ae99a14159b8831eb4978fca1d6ca5c0f5e88ffe3a",
+        "source_sha256": "15e98a390cf51ef49a2c684af5dc4926b063eea219a5bd5386a42c840b1d7340",
         "frames": [
-          "26b109c8eca104ec9108f4de798d0714c7099fb52a15fbea189edb8b3bb94599",
-          "d35266cad859e62ce9ed4cc053b96e3ec423702a0144e6f17578210e4781f979",
-          "8e776a2f256afb1d35e23e9f651b7ffb0ee38fb10f704c910b79f3e19ad92e11",
-          "33459cce4f571f4954c06c4af8994046c69b5a99394267bc6fb1c9bf603aa378",
-          "baf8dfb08ee8695c813e9cd03f0eea0cdf09f02e8b85bcc526075884b94b5ad6",
-          "ae662d589d8509b2a80fb39f888da8111ff7d0142be1ba5c7ebe1bec5f88a38f",
-          "5268d7a37321f7074023d2195cf0bac2571ec8333b96ac33c396f5553f93fbc1",
-          "b33f6aa57ebebc8fb0851e7a9fb2879496fac583a3f20cef9e3dece2d17eb2c1",
-          "958cbecfbb16723aadcb2bf3bfc42ef00a11d4cceab0ddf09197cf51cd373890",
-          "958cbecfbb16723aadcb2bf3bfc42ef00a11d4cceab0ddf09197cf51cd373890"
+          "2f95fd846b886bbc3d59e13bbc67adf22a835d5f09bf1bcbc4d4208d97e4ba1c",
+          "5e60da1c2dbfaa23ead1f243c0366a00a1d8872b85a730d92fba972bc8e70d1f",
+          "80f4bd6165a8af12444262c98d80e44a8dd55b3ad478ff71cbab67923ff74488",
+          "69faae4869d1964ce01a418c3f026078efe384d40ff272b5ca1d9d12daaaffd1",
+          "63fc59ebc7e420f4f0a27e6fb251a1ae595a7710ac9d3d0589a41b002ff21168",
+          "c40e6ef1fc3f9ddb971db49ac283a99c6697a76587e27c7cc8dfbd89516c6855",
+          "5291f9c6f024f0cec4006f54705bb5092700d5753021bba979b5341540baf31f",
+          "06e4e7f4ad2d265570e3406d0e7b47dd8a700610a4ebfb7abad98d079f13e737",
+          "058d853a3ec0d69e76b1100e6dca29da2a442cfc10aca6c7a303bb3c44708bc5",
+          "058d853a3ec0d69e76b1100e6dca29da2a442cfc10aca6c7a303bb3c44708bc5"
         ]
       }
     }
   },
-  "quality": 80,
-  "bytes": 185542,
-  "atlas_sha256": "29f24fd211098498a1ec0ac0bf2d5273bbaf713bb589e9c2e72fae75640a1778"
+  "atlas": {
+    "w": 888,
+    "h": 764
+  },
+  "quality": 90,
+  "bytes": 196268,
+  "atlas_sha256": "efe44a571ce6c828b4b47e63f6f055d0f5f70c0b1d26ee85b372699461b75908"
 }

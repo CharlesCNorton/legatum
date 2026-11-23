@@ -8,7 +8,7 @@ size=int(os.environ.get('RESOLUTION','256'));device=os.environ.get('CYCLES_DEVIC
 def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
 def render_stage(stage):
     clip=stage[2:] if stage.startswith('e-') else 'attack' if stage=='d' else None
-    path=M/'clips'/f'{clip}.blend' if clip else M/('plain.blend' if stage=='b' else 'gaesatae.blend')
+    path=M/'clips'/f'{clip}.blend' if clip else M/('finished-plain.blend' if stage=='b' else 'gaesatae.blend')
     bpy.ops.wm.open_mainfile(filepath=str(path));sc=bpy.context.scene
     sc.render.engine='CYCLES';sc.cycles.device=device;sc.cycles.samples=samples;sc.cycles.use_denoising=True
     if device=='GPU':

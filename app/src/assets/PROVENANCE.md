@@ -35,13 +35,15 @@ The date range is the range of dates the repository's own records give (prompt h
 ## Gaesatae animation candidate (2026-11-22)
 
 `units/anim/gaesatae.webp` is rendered from genuine Blender geometry by
-`tools/art/anim3d/units/gaesatae/`. Original kit and authored clips use MIT code;
+`tools/art/anim3d/units/gaesatae/`. Original kit and spear attack use MIT code;
 renders and the original Gaesatae painting are project CC BY 4.0. Anatomy, eyes
 and rig reuse MPFB 2.0.18 / MakeHuman CC0 assets. The original painting is frozen
 UV colour on the deforming surfaces; unseen sides reuse original generated
 Medjay skin/wood and horseman linen/hair fills. External sources, versions and
 licences are recorded in `~/LegatumRuns/anim-pilot/assets/SOURCES.md`; unit input
-hashes are in `assets/gaesatae/inputs.json`. This is a round-1 art candidate,
+hashes are in `assets/gaesatae/inputs.json`. The four general clips retarget
+Quaternius Universal Animation Library Standard (CC0-1.0); source URLs, licence
+and checked hashes are in the unit `SOURCES.md`. This is a round-2 art candidate,
 not a change to the runtime unit loader or an art approval.
 
 ## Gaps
