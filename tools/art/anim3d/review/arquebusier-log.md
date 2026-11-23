@@ -217,3 +217,18 @@
 - Posted e-attack review (CPU, 256 px).
 - Posted e-hit review (CPU, 256 px).
 - Posted e-death review (CPU, 256 px).
+- Finished-surface camera projection with camera-only pigment; generated hidden fills retained.
+- Posted b-plain review (CPU, 256 px).
+- Posted c-textured-lit review (CPU, 256 px).
+- Retargeted CC0 and saved idle action (8 output frames).
+- Retargeted CC0 and saved move action (8 output frames).
+- Authored and saved attack action (10 output frames).
+- Retargeted CC0 and saved hit action (4 output frames).
+- Retargeted CC0 and saved death action (10 output frames).
+- Final-rest review caught a disc-placement regression: bind calibration read matrix_world before flushing the prior base location/scale edits. Added an explicit dependency update before camera-ray depth changes, preserving the calibrated source ellipse; regenerated all dependent output.
+- Posted d-rig-poses review (CPU, 256 px).
+- Posted e-idle review (CPU, 256 px).
+- Posted e-move review (CPU, 256 px).
+- Posted e-attack review (CPU, 256 px).
+- Posted e-hit review (CPU, 256 px).
+- Posted e-death review (CPU, 256 px).
