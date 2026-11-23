@@ -1,5 +1,5 @@
 """Inspect saved animation geometry, immutable base and persistent cloth cache."""
-import bpy,os,json,sys
+import bpy,os,json,sys,hashlib
 from pathlib import Path
 from bpy_extras.object_utils import world_to_camera_view
 from mathutils import Vector
@@ -8,7 +8,9 @@ R=Path(os.environ['ANIM_ROOT']);M=R/'masters/spearman-3d-v2';report={};failures=
 clips=[os.environ['AUDIT_CLIP']] if os.environ.get('AUDIT_CLIP') else ['idle','move','attack','hit','death']
 for clip in clips:
  bpy.ops.wm.open_mainfile(filepath=str(M/'clips'/clip/(clip+'.blend')))
- sc=bpy.context.scene;base=bpy.data.objects['Stationary cream stone'];base_matrix=base.matrix_world.copy()
+ sc=bpy.context.scene
+ assert sc.get('source_master_sha256')==hashlib.sha256((M/'spearman.blend').read_bytes()).hexdigest(), f'{clip}: stale master; regenerate clip'
+ base=bpy.data.objects['Stationary cream stone'];base_matrix=base.matrix_world.copy()
  rig=bpy.data.objects['Spearman • MPFB game_engine'];body=bpy.data.objects['MPFB anatomical male • original topology']
  assert len(body.data.vertices)==19158 and len(rig.data.bones)==53
  cloth=bpy.data.objects['Cloak • simulated wool'].modifiers['Cloth per clip'];assert cloth.point_cache.is_baked
@@ -30,7 +32,8 @@ for clip in clips:
   axis=(end-start).normalized();length=(end-start).length
   hand=rig.matrix_world @ rig.pose.bones['hand_r'].head
   grip_distance=((hand-start)-axis*(hand-start).dot(axis)).length
-  if grip_distance>.10:failures.append(f'{clip}/{frame}: hand is {grip_distance:.3f} m from spear')
+  released=clip=='death' and (frame-25)/max(1,sc.frame_end-25)>sc.get('spear_release_start',1)
+  if not released and grip_distance>.10:failures.append(f'{clip}/{frame}: hand is {grip_distance:.3f} m from spear')
   crossings=[]
   for name in ['Forged bronze muscle cuirass','Convex bronze aspis','Corinthian helmet crown']:
    ob=bpy.data.objects[name];ev=ob.evaluated_get(dg);me=ev.to_mesh()
@@ -38,7 +41,7 @@ for clip in clips:
    if tree.ray_cast(start,axis,length)[0] is not None:crossings.append(name)
    ev.to_mesh_clear()
   if crossings:failures.append(f'{clip}/{frame}: spear intersects {", ".join(crossings)}')
-  row={'shaft_start':list(start),'shaft_end':list(end),'shaft_length':length,'grip_distance':grip_distance,'spear_crossings':crossings,'frame':frame,'camera_bounds':bounds,'min_z':minz,'lowest_object':lowest};rows.append(row)
+  row={'shaft_start':list(start),'shaft_end':list(end),'shaft_length':length,'spear_released':released,'grip_distance':grip_distance,'spear_crossings':crossings,'frame':frame,'camera_bounds':bounds,'min_z':minz,'lowest_object':lowest};rows.append(row)
   if min(bounds[:2])<0 or max(bounds[2:])>1:failures.append(f'{clip}/{frame}: geometry outside camera')
   if minz<.07:failures.append(f'{clip}/{frame}: {lowest} intersects base, z={minz:.4f}')
  report[clip]=rows

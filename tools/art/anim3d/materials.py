@@ -1,4 +1,4 @@
-"""CC0 PBR with restrained bronze patina and pigment-grade cloth."""
+"""CC0 PBR with bright worn bronze, cavity contrast and pigment-grade cloth."""
 import bpy,os
 from pathlib import Path
 ROOT=Path(os.environ['ANIM_ROOT']);A=ROOT/'assets';M=ROOT/'masters/spearman-3d-v2'

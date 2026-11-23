@@ -1,18 +1,22 @@
 """Retarget CMU standing/walk, layer weapon poses, bake real cloth per clip."""
-import bpy,os,sys,json,math
+import bpy,os,sys,json,math,hashlib
 from pathlib import Path
 from mathutils import Vector,Matrix,Quaternion
+from mathutils.bvhtree import BVHTree
 sys.path.insert(0,str(Path(__file__).parent))
 from mocap import BVH
 root=Path(os.environ['ANIM_ROOT']);M=root/'masters/spearman-3d-v2';A=root/'assets'
 CLIPS={'idle':(8,10),'move':(8,12),'attack':(10,14),'hit':(4,12),'death':(10,10)}
 walk=BVH(A/'cmu-02_01.bvh');stand=BVH(A/'cmu-77_02.bvh')
 clip=sys.argv[sys.argv.index('--')+1] if '--' in sys.argv else 'idle'
+out=M/'clips'/clip;out.mkdir(parents=True,exist_ok=True)
+(out/'clip.json').unlink(missing_ok=True)
 bpy.ops.wm.open_mainfile(filepath=str(M/'spearman.blend'))
 sc=bpy.context.scene;sc.render.threads_mode='FIXED';sc.render.threads=4;rig=bpy.data.objects['Spearman • MPFB game_engine'];neutral=json.loads(rig['neutral_pose'])
 base_loc=rig.location.copy()
 spear_objects=[o for o in sc.objects if any(o.name.startswith(n) for n in ['Ash dory shaft','Spear bronze ferrule','Leaf spearhead','Iron spear butt'])]
 spear_neutral={o.name:o.matrix_basis.copy() for o in spear_objects}
+for o in spear_objects:o.rotation_mode='QUATERNION'
 
 shield=bpy.data.objects.get('Aspis control');shield_neutral=shield.matrix_basis.copy() if shield else None
 if shield:shield.rotation_mode='QUATERNION'
@@ -62,7 +66,7 @@ def pose(t):
    aim('thigh_'+side,upper);aim('calf_'+side,lower)
    aim('foot_'+side,(0,-.12,-.04));aim('ball_'+side,(0,-1,0))
   floor=min(rig.pose.bones['foot_'+s].head.z for s in ['l','r'])
-  rig.location.z=base_loc.z+.075-floor
+  rig.location.z=base_loc.z+.09-floor
   guard(.08+.013*math.cos(4*math.pi*t));turn('spine_03','Z',.045*math.sin(2*math.pi*t))
  elif clip=='attack':
   # Raise outside the right shoulder, then drive forward above the shield rim.
@@ -84,13 +88,16 @@ def pose(t):
  elif clip=='death':
   # Side collapse onto the disc, folded legs; held terminal key pose.
   a=min(1,t/.72);smooth=a*a*(3-2*a)
-  rig.location=base_loc+Vector((-.27*smooth,.02*smooth,-.60*smooth))
+  rig.location=base_loc+Vector((-.27*smooth,.02*smooth,-.585*smooth))
   turn('pelvis','Y',1.25*smooth);turn('spine_03','Y',.22*smooth);turn('head','X',.28*smooth)
   for side,sgn in [('l',1),('r',-1)]:
-   limb('thigh_'+side,'calf_'+side,(-.22+sgn*.12,.02+sgn*.12,.75*smooth+.072*(1-smooth)),(-.45,-.30,.55))
+   # Begin in the same wide guard, then fold the ankles into the fall.
+   x=sgn*.32*(1-smooth)+(-.22+sgn*.12)*smooth
+   y=(.035 if side=='l' else -.075)*(1-smooth)+(.02+sgn*.12)*smooth
+   limb('thigh_'+side,'calf_'+side,(x,y,.75*smooth+.082*(1-smooth)),(-.45,-.30,.55))
   limb('upperarm_r','lowerarm_r',(-.37+.48*smooth,-.31+.10*smooth,1.19-.34*smooth),(-.35,-.32,.85))
   limb('upperarm_l','lowerarm_l',(.29+.14*smooth,-.34+.08*smooth,1.12-.30*smooth),(.4,-.15,.9))
-  aim('hand_r',(0,-.03,.09));hand_spear(Vector((.9,.3,.1))*math.sqrt(smooth)+Vector((0,0,1))*(1-math.sqrt(smooth)))
+  aim('hand_r',(0,-.03,.09));hand_spear(Vector((0,0,1)))
  bpy.context.view_layer.update()
  if clip in ['attack','death']:
   for side in ['l','r']:
@@ -101,11 +108,36 @@ def pose(t):
   shaft=bpy.data.objects['Ash dory shaft'];pts=shaft.data.splines[0].points
   direction=(shaft.matrix_world @ Vector(pts[-1].co[:3])-shaft.matrix_world @ Vector(pts[0].co[:3])).normalized()
   for o in spear_objects:
-   mat=o.matrix_world.copy();mat.translation+=direction*.12*raised;o.matrix_world=mat
+   mat=o.matrix_world.copy();mat.translation+=direction*.25*raised;o.matrix_world=mat
+  bpy.context.view_layer.update()
+ if clip=='death':
+  # Let go before the body rolls across the shaft. The rigid weapon lands across
+  # the front edge of the stone; it is never hidden or teleported out of frame.
+  release=max(0,min(1,(t-.04)/.44))
+  shaft=bpy.data.objects['Ash dory shaft'];pts=shaft.data.splines[0].points
+  start=shaft.matrix_world @ Vector(pts[0].co[:3]);end=shaft.matrix_world @ Vector(pts[-1].co[:3])
+  center=(start+end)*.5;direction=(end-start).normalized()
+  # Clear the shield in depth while upright, tip forward, then settle inward
+  # only after the shaft is horizontal and below the shield's lower edge.
+  depth=min(1,release/.20);depth=depth*depth*(3-2*depth)
+  tilt=max(0,min(1,(release-.20)/.55));tilt=tilt*tilt*(3-2*tilt)
+  rotation=Quaternion().slerp(direction.rotation_difference(Vector((.99,.08,.015)).normalized()),tilt)
+  target=center.lerp(Vector((-.05,-.57,.13)),release)
+  target.x+=.13*math.sin(math.pi*release)
+  target.y=center.y+(-.78-center.y)*depth
+  if release>.80:target.y=-.78+.21*(release-.80)/.20
+  drop=min(1,release/.75)
+  target.z=center.z*(1-drop)+.13*drop
+  if release>0:target.z=max(target.z,.11+(end-start).length*.5*abs((rotation @ direction).z))
+  transform=Matrix.Translation(target) @ rotation.to_matrix().to_4x4() @ Matrix.Translation(-center)
+  for o in spear_objects:o.matrix_world=transform @ o.matrix_world
+  for digit in ['index','middle','ring','pinky']:
+   for k in range(1,4):
+    p=rig.pose.bones[f'{digit}_{k:02d}_r'];p.rotation_quaternion=p.rotation_quaternion.slerp(Quaternion(),min(1,release*4))
   bpy.context.view_layer.update()
  if clip=='death' and shield:
   release=max(0,min(1,(t-.30)/.42));mat=shield.matrix_world.copy();q=mat.to_quaternion().slerp(Matrix.Rotation(-math.pi/2,4,'X').to_quaternion(),release)
-  pos=mat.translation.lerp(Vector((.14,-.12,.28)),release)
+  pos=mat.translation.lerp(Vector((.14,.02,.28)),release)
   mat=q.to_matrix().to_4x4();mat.translation=pos;shield.matrix_world=mat
   bpy.context.view_layer.update()
   # Contact correction for the released shield, using evaluated mesh geometry.
@@ -127,21 +159,34 @@ for f in range(1,end+1):
  if clip in ['idle','move']:t=max(0,(f-25))/(count*24/fps)
  pose(t)
  rig.keyframe_insert(data_path='location',frame=f)
- for o in spear_objects:o.keyframe_insert(data_path='location',frame=f)
+ for o in spear_objects:
+  o.keyframe_insert(data_path='location',frame=f);o.keyframe_insert(data_path='rotation_quaternion',frame=f)
  if shield:
   shield.keyframe_insert(data_path='location',frame=f);shield.keyframe_insert(data_path='rotation_quaternion',frame=f)
  for p in rig.pose.bones:
   p.rotation_mode='QUATERNION';p.keyframe_insert(data_path='location',frame=f);p.keyframe_insert(data_path='rotation_quaternion',frame=f);p.keyframe_insert(data_path='scale',frame=f)
+# Fail on rigid equipment crossings before spending time baking cloth.
+for frame in samples:
+ sc.frame_set(frame);dg=bpy.context.evaluated_depsgraph_get()
+ shaft=bpy.data.objects['Ash dory shaft'];pts=shaft.data.splines[0].points
+ start=shaft.matrix_world @ Vector(pts[0].co[:3]);shaft_end=shaft.matrix_world @ Vector(pts[-1].co[:3])
+ direction=shaft_end-start;length=direction.length;direction.normalize()
+ for name in ['Forged bronze muscle cuirass','Convex bronze aspis','Corinthian helmet crown']:
+  ob=bpy.data.objects[name];ev=ob.evaluated_get(dg);me=ev.to_mesh()
+  tree=BVHTree.FromPolygons([ob.matrix_world @ v.co for v in me.vertices],[list(poly.vertices) for poly in me.polygons])
+  crossing=tree.ray_cast(start,direction,length)[0];ev.to_mesh_clear()
+  assert crossing is None,f'{clip}/{frame}: spear intersects {name}; fix pose before cloth bake'
 cloth.show_viewport=True
 sc.frame_set(1)
 cloth=bpy.data.objects['Cloak • simulated wool'].modifiers['Cloth per clip'];pc=cloth.point_cache;pc.frame_start=1;pc.frame_end=end
 # Blender cache stored alongside each master, outside git.
-out=M/'clips'/clip;out.mkdir(parents=True,exist_ok=True)
 bpy.ops.wm.save_as_mainfile(filepath=str(out/(clip+'.blend')))
 with bpy.context.temp_override(point_cache=pc):bpy.ops.ptcache.bake(bake=True)
 assert pc.is_baked, 'Cloth bake did not complete'
 if clip=='death':samples[-2]=samples[-1]
+sc['source_master_sha256']=hashlib.sha256((M/'spearman.blend').read_bytes()).hexdigest()
+sc['spear_release_start']=.04 if clip=='death' else -1
 sc['clip']=clip;sc['sample_frames']=json.dumps(samples);sc['cloth_baked']=True
 sc.frame_set(samples[0]);bpy.ops.wm.save_as_mainfile(filepath=str(out/(clip+'.blend')))
-(out/'clip.json').write_text(json.dumps({'clip':clip,'frames':samples,'fps':fps,'cloth_baked':pc.is_baked,'mocap':{'idle':'CMU 77_02 standing, frames 80-320, torso deltas','move':'CMU 02_01 walk, frames 40-160, sagittal legs'}.get(clip,'hand keyed')},indent=2))
+(out/'clip.json').write_text(json.dumps({'source_master_sha256':sc['source_master_sha256'],'clip':clip,'frames':samples,'fps':fps,'cloth_baked':pc.is_baked,'mocap':{'idle':'CMU 77_02 standing, frames 80-320, torso deltas','move':'CMU 02_01 walk, frames 40-160, sagittal legs'}.get(clip,'hand keyed')},indent=2))
 print('CLIP_READY',clip, samples)

@@ -1,4 +1,4 @@
-"""Bake real geometry AO and Cycles curvature for metal, skin and cloth wear."""
+"""Bake real geometry AO and Cycles curvature for metal and skin."""
 import bpy,os,json
 from pathlib import Path
 R=Path(os.environ['ANIM_ROOT']);M=R/'masters/spearman-3d-v2';out=M/'textures/baked';out.mkdir(parents=True,exist_ok=True)

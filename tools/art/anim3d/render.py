@@ -12,6 +12,8 @@ if sc.render.engine=='CYCLES':sc.cycles.device='CPU';sc.cycles.samples=int(os.en
 sc.render.resolution_x=sc.render.resolution_y=int(os.environ.get('RESOLUTION','256'))
 sc.render.threads_mode='FIXED';sc.render.threads=4
 out=master/'renders'/stage;out.mkdir(parents=True,exist_ok=True)
+# A failed rerender must not leave a valid manifest beside a partial frame set.
+(out/'render.json').unlink(missing_ok=True)
 if clip:
  assert sc.get('cloth_baked'), 'Per-clip cloth must be baked before rendering'
  frames=json.loads(sc['sample_frames'])
