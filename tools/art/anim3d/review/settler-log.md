@@ -114,3 +114,18 @@
 - Opened decoded MP4 contact frame; all five offset-restored clips are present on cream. Python syntax (13 scripts), Bash syntax (2), whitespace pass. Repository browser art gate cannot complete: Chromium Mach-port bootstrap permission denied in sandbox; full stderr retained in masters/settler/art-gate-error.log. Matrix-operator whitespace fixes remove hygiene false positives.
 - Final working-tree hygiene line scan: 20 files pass; public-claims gate passes. Git add/commit denied writing .git/worktrees/lane-5/index.lock; changes intentionally left uncommitted for runner. Revision-based hygiene still sees old WIP matrix-operator false positives; rerun after runner commits. No origin/master merge needed (HEAD..origin/master count 0).
 - Required executable gpu.sh exists; all constituent stages were exercised on CPU, its missing-input and CPU-evidence rejection were exercised, and its decoded-atlas MP4 encoder/ffprobe validation passed. Actual Metal GPU64/512 still requires the host. No PASS marker written.
+- Published b-plain: CYCLES GPU, 512 px, 64 samples; not GPU approval.
+- Published c-textured-lit: CYCLES GPU, 512 px, 64 samples; not GPU approval.
+- Published c-details: CYCLES GPU, 512 px, 64 samples; not GPU approval.
+- Saved idle: 8 frames at 10 fps, editable MPFB rig, stationary base; authored keys.
+- Saved move: 8 frames at 12 fps, editable MPFB rig, stationary base; authored keys.
+- Saved attack: 10 frames at 14 fps, editable MPFB rig, stationary base; authored keys.
+- Saved hit: 4 frames at 12 fps, editable MPFB rig, stationary base; authored keys.
+- Saved death: 10 frames at 10 fps, editable MPFB rig, stationary base; authored keys.
+- Published d-rig-poses: CYCLES GPU, 512 px, 64 samples; not GPU approval.
+- Published e-idle-strip: CYCLES GPU, 512 px, 64 samples; not GPU approval.
+- Published e-move-strip: CYCLES GPU, 512 px, 64 samples; not GPU approval.
+- Published e-attack-strip: CYCLES GPU, 512 px, 64 samples; not GPU approval.
+- Published e-hit-strip: CYCLES GPU, 512 px, 64 samples; not GPU approval.
+- Published e-death-strip: CYCLES GPU, 512 px, 64 samples; not GPU approval.
+- Saved 3D audit passed: source hashes, 53 bones, actual motion, exact loop closing keys and held death; ground/bounds recorded; collision limits explicit.

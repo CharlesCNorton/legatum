@@ -84,3 +84,8 @@
 - Published e-hit: 4 actual rendered frames, 12 fps; CPU 512px 8 samples.
 - Published e-death: 10 actual rendered frames, 10 fps; CPU 512px 8 samples.
 - Completed all five clips and wheel contact audit; delivery pack may now run.
+- Final CPU check PASS: Cycles 512px / 8 samples, all 40 frames plus 256 masters and every b/c/d/e/f/g review stage. Pipeline/model/clip/grade/gallery hashes, travel/radius loop, stationary base, positive scales, ground height and disc contact pass; maximum contact radius 1.633674 < 1.76.
+- Delivery PASS: trimmed 160px atlas 1368x603, 186860 bytes at quality 75. All forty decoded alpha masks reconstruct exactly; death hold identical. round2 MP4 is H.264/yuv420p, 1600x348, 240 frames, 8.0 seconds. Inspected decoded frames at 0.3, 0.6 and 1.4 seconds plus all five strips and top/front cycle.
+- Python compile, bash syntax/executable gpu.sh, and git diff --check pass. origin/master is already contained (zero commits ahead), no fetch/merge needed. No engine/UI changes or engine/browser suite run. Round 2 GPU not available here; lead runs ROUND=2 tools/art/anim3d/units/rocket-artillery/gpu.sh.
+- Final visual verdict: closer at 256px and same unit at 64px, but not painting parity. Front tire volume/tread and mouth registration differ; rotating projected light is noticeable in move; death still resembles a lowered launcher more than a destroyed vehicle, and oblique geometry remains weak. No PASS marker written.
+- Git add/commit attempted and denied creating .git/worktrees/lane-10/index.lock (Operation not permitted). Changes remain uncommitted for runner; exact message with required Co-Authored-By line saved in rocket-artillery-commit-message.txt. No push, PR or master merge.
