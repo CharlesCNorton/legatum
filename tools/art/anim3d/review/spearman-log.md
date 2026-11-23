@@ -93,3 +93,5 @@
 - Final round7 master: rebuilt and CPU-rendered move, 256px / 12 samples, frozen rest grade.
 - Final round7 master: rebuilt and CPU-rendered attack, 256px / 12 samples, frozen rest grade.
 - Final round7 master: rebuilt and CPU-rendered hit, 256px / 12 samples, frozen rest grade.
+- Round7 motion review found an entry/exit pop: attack used its raised elbow pole even at zero raise, and death used its fallen pole at the initial guard. Interpolate both arms from the same neutral guard poles before rebuilding attack/death and their dependent evidence; earlier strips/atlas for those clips are superseded.
+- Final round7 master: rebuilt and CPU-rendered death, 256px / 12 samples, frozen rest grade.
