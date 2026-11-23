@@ -20,3 +20,5 @@ Review c: 512px CYCLES/CPU, 12 samples; 1 actual frames.
 Review d: 512px CYCLES/CPU, 12 samples; 4 actual frames.
 Review e-idle: 512px CYCLES/CPU, 12 samples; 8 actual frames.
 Review e-move: 512px CYCLES/CPU, 12 samples; 8 actual frames.
+Review e-attack: 512px CYCLES/CPU, 12 samples; 10 actual frames.
+Review e-hit: 512px CYCLES/CPU, 12 samples; 4 actual frames.

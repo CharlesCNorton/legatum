@@ -14,3 +14,5 @@
 - Published e-move: 8 actual rendered frames, 12 fps; CPU 512px 8 samples.
 - Published e-attack: 10 actual rendered frames, 14 fps; CPU 512px 8 samples.
 - Published e-hit: 4 actual rendered frames, 12 fps; CPU 512px 8 samples.
+- Published e-death: 10 actual rendered frames, 10 fps; CPU 512px 8 samples.
+- Completed all five clips and geometry audit; delivery pack may now run.

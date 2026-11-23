@@ -22,3 +22,6 @@
 - Authored all five clips. Grip proxy audit: idle 3.3 cm, move 5.4 cm, attack 7.0 cm, hit 2.5 cm, pre-release death 2.9 cm maximum; these are remaining craft issues, not perfect finger contact.
 - Started all-stage 512 px / 8-sample Cycles CPU preview render; GPU handoff uses 64 samples and explicit Metal. Art parity is not met, so no PASS marker.
 - Published e-move review from 512px CPU renders.
+- Published e-attack review from 512px CPU renders.
+- Published e-hit review from 512px CPU renders.
+- Published e-death review from 512px CPU renders.

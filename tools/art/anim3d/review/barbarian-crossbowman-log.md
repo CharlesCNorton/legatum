@@ -6,3 +6,4 @@
 - d: 4 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
 - e-idle: 8 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
 - e-move: 8 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- e-attack: 10 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.

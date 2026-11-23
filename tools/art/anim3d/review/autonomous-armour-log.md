@@ -23,3 +23,7 @@ Authored hit: 4 output samples at 12 fps; 152 mechanical controls; loop=False.
 Authored death: 10 output samples at 10 fps; 152 mechanical controls; loop=False.
 Rendered c: 1 PNGs, 256 px, CYCLES CPU, 8 samples.
 Published c review immediately; frozen grade dc1aef43ee3b, 256 masters retained.
+Rendered details: 2 PNGs, 256 px, CYCLES CPU, 8 samples.
+Published details review immediately; frozen grade dc1aef43ee3b, 256 masters retained.
+Rendered d: 4 PNGs, 256 px, CYCLES CPU, 8 samples.
+Published d review immediately; frozen grade dc1aef43ee3b, 256 masters retained.

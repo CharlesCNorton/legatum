@@ -10,3 +10,4 @@ First 512 CPU comparison: source-projected brushwork and corrected wing read as 
 Added actual 512 AO/Pointiness bake workflow for fuselage and both wings; final CPU round will use those maps and corrected periodic propeller keys.
 e-attack: 10 frames at 256/64 from 512px CYCLES/CPU, 8 samples.
 e-hit: 4 frames at 256/64 from 512px CYCLES/CPU, 8 samples.
+e-death: 10 frames at 256/64 from 512px CYCLES/CPU, 8 samples.

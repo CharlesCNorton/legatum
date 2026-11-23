@@ -32,3 +32,7 @@ Authored move: 8 frames at 12 fps; dynamic bow/string, grip and stationary base 
 Authored attack: 10 frames at 14 fps; dynamic bow/string, grip and stationary base checked, terminal keys retained.
 Authored hit: 4 frames at 12 fps; dynamic bow/string, grip and stationary base checked, terminal keys retained.
 Authored death: 10 frames at 10 fps; dynamic bow/string, grip and stationary base checked, terminal keys retained.
+Rendered b: 512px, Cycles CPU, 4 samples; raw frames preserved.
+Published b review immediately; CPU preview, not art approval.
+Rendered c: 512px, Cycles CPU, 4 samples; raw frames preserved.
+Published c review immediately; CPU preview, not art approval.

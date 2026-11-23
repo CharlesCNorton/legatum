@@ -14,3 +14,6 @@
 - Published d review immediately: CYCLES/CPU, 256 px, 4 frame(s).
 - Authored idle/move/attack/hit/death on MPFB rig: 8/8/10/4/10 samples; looping breathing/steps, thrown-javelin visibility, hit recovery, independent equipment release and held death. Cloth uses authored secondary deformation, not a cloth simulation.
 - Published d review immediately: CYCLES/CPU, 256 px, 4 frame(s).
+- Published e-idle review immediately: CYCLES/CPU, 512 px, 8 frame(s).
+- Loaded all six Sam Blender skills: modeling (real thick/beveled kit, anatomical subdivision), materials (paint projection, generated fills, AO/curvature), cameras (frozen orthographic landmarks), lighting (warm key/cool rim/soft fill), animation (skeletal keys, held death, secondary cloth), rendering (Cycles previews, retained masters, explicit GPU path).
+- First plain/textured reviews preserved before corrections; excluded MPFB helper geometry from boot shells, corrected shirt coverage and pelta normal direction, raised stone to meet boot soles, repaired attack weapon orientation after preview clipping.
