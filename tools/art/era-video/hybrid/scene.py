@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Hybrid Classical v4. Python --prepare; Blender 5.3 builds/bakes/renders under lead's lock."""
+"""Hybrid Classical v5. Python --prepare; Blender 5.3 builds/bakes/renders under lead's lock."""
 import os
 for _name in ('OMP_NUM_THREADS', 'MKL_NUM_THREADS', 'OPENBLAS_NUM_THREADS',
               'VECLIB_MAXIMUM_THREADS'):
@@ -24,7 +24,14 @@ DOLLY, DRIFT = .16, (12.0, 11.0)
 INPUTS = ('painting.png', 'background.png', 'depth-smooth16.png', 'relief.npz',
           'mask-water.png', 'mask-sky.png', 'mask-cloth.png')
 # Source-pixel coordinates, at 1920x1080. Keep the original painted ships.
-SHIP_START, SHIP_END, SHIP_Y = 470., 550., 407.
+SHIP_START, SHIP_END, SHIP_Y = 825., 400., 550.
+SHIP_SCALE, SHIP_Z = 3.65, 32.
+FLUID_RESOLUTION, FLUID_SIZE = 72, (24, 52, 16)
+BANNERS = (
+    ((1658, 445, 1710, 539), [(1664,450),(1687,464),(1700,460),(1702,529),(1666,535)]),
+    ((1655, 539, 1710, 634), [(1662,548),(1701,542),(1703,619),(1695,626),
+                             (1686,621),(1676,628),(1664,619)]),
+)
 bpy = Vector = base = None  # Imported only by the Blender path, never by preparation.
 
 
@@ -58,6 +65,22 @@ def ship_pixel(frame):
     return SHIP_START + (SHIP_END - SHIP_START) * t, SHIP_Y
 
 
+def water_contact_pixel(frame, z=4.):
+    """Intersect the current eye-to-ship ray with the shallow painted harbour.
+
+    The ship stands in front of the relief; reusing its original UV would detach
+    its wake and reflection during the dolly. No change to the camera itself.
+    """
+    px, py = ship_pixel(frame)
+    ship_xy = np.array(((px/1920-.5)*WIDTH, (.5-py/1080)*HEIGHT))*(CAMERA_Z-SHIP_Z)/CAMERA_Z
+    progress, _ = timing(frame)
+    camera_xy = np.array(DRIFT)*progress
+    camera_z = CAMERA_Z*(1-DOLLY*progress)
+    water_xy = camera_xy+(ship_xy-camera_xy)*(camera_z-z)/(camera_z-SHIP_Z)
+    uv = water_xy*CAMERA_Z/(CAMERA_Z-z)/np.array((WIDTH, HEIGHT))+.5
+    return float(uv[0]*1920), float((1-uv[1])*1080)
+
+
 def prepare(args):
     """Reproducible Pillow/OpenCV prep; no Blender import, model or network call."""
     from PIL import Image
@@ -71,6 +94,20 @@ def prepare(args):
     if rgb.shape != (1080, 1920, 3):
         raise ValueError('Authored placements require the 1920x1080 Classical painting')
     cloth = np.asarray(Image.open(plates / 'mask-cloth.png'), dtype=np.float32) / 255
+    # Two foreground blue banners need moving silhouettes, not just UV shimmer.
+    # Lift their actual painted pixels onto cloth meshes; repair only the hidden
+    # wall underneath. Original painting.png and all source plates stay intact.
+    banner_masks = []
+    repair = np.zeros((1080, 1920), np.uint8)
+    for _, polygon in BANNERS:
+        cut = np.zeros_like(repair)
+        cv2.fillPoly(cut, [np.array(polygon)], 255)
+        banner_masks.append(cut)
+        repair = np.maximum(repair, cut)
+    repair = cv2.dilate(repair, np.ones((5,5), np.uint8))
+    cloth[repair > 0] = 0
+    clean = cv2.inpaint(rgb, repair, 5, cv2.INPAINT_TELEA)
+    Image.fromarray(clean).save(plates / 'painting-cloth-clean.png')
     # Keep existing sails/banners. Add the right awning interior, pinning the roof,
     # fringe, poles and outer silhouette rather than dragging architecture with it.
     awning = np.zeros((1080, 1920), np.uint8)
@@ -84,8 +121,24 @@ def prepare(args):
     np.savez_compressed(plates / 'relief.npz', depth=depth,
                        cloth=cv2.resize(cloth, (depth.shape[1], depth.shape[0]),
                                         interpolation=cv2.INTER_AREA))
+    # Foreground shoreline/columns hide the galley; the distant lighthouse and
+    # hills must NOT hide its sail. This is a visibility matte, not a new plate.
+    visible = np.full((1080, 1920), 255, np.uint8)
+    shore = [(0, 495), (263, 495), (263, 523), (296, 536), (349, 540),
+             (359, 577), (452, 596), (499, 592), (509, 567), (539, 589),
+             (596, 574), (665, 574), (704, 580), (749, 576), (776, 548),
+             (802, 546), (817, 570), (846, 548), (874, 548), (874, 522),
+             (921, 514), (921, 480), (1920, 480), (1920, 1080), (0, 1080)]
+    cv2.fillPoly(visible, [np.array(shore)], 0)
+    visible[:, :255] = 0  # left foreground colonnade
+    visible = cv2.GaussianBlur(visible, (5, 5), .8)
+    Image.fromarray(visible).save(plates / 'mask-ship-visible.png')
     textures = args.masters / 'textures'
     textures.mkdir(exist_ok=True)
+    for index, ((box, _), mask) in enumerate(zip(BANNERS, banner_masks)):
+        # A half-pixel antialiased edge keeps the cutout's painted silhouette.
+        rgba = np.dstack((rgb, cv2.GaussianBlur(mask, (3,3), .45)))
+        Image.fromarray(rgba).crop(box).save(textures / f'banner-{index}.png')
     crops = {'sail': (609, 461, 656, 510), 'wood': (620, 545, 675, 553)}
     for name, box in crops.items():
         Image.fromarray(rgb).crop(box).save(textures / f'{name}.png')
@@ -100,7 +153,7 @@ def prepare(args):
                 {name: digest(args.source / name) for name in INPUTS},
                 'recipe': digest(__file__), 'files': files, 'crops': crops,
                 'provenance': 'Existing Legatum Classical painting; LICENSE-ART (CC BY 4.0).',
-                'painted_ships': 'Retained; new galley uses open water above their sails.'}
+                'painted_ships': 'Retained; hero galley crosses in front, behind near shore matte.'}
     (args.masters / 'prepared.json').write_text(json.dumps(manifest, indent=2) + '\n')
     print(f'Prepared {len(files)} files in {args.masters}; no Blender invoked.')
 
@@ -181,11 +234,21 @@ def plate_material(masters, background=False):
     """Hook for build_scene.relief: crisp, unlit paint, edge-aware repair reveal."""
     mat, tree = material('Crisp repaired plate' if background else 'Crisp source painting')
     uv = node(tree, 'ShaderNodeTexCoord', 'Rest projection').outputs['UV']
-    tex = image_node(tree, masters / ('background.png' if background else 'painting.png'), uv)
+    tex = image_node(tree, masters / ('background.png' if background else 'painting-cloth-clean.png'), uv)
     emission = node(tree, 'ShaderNodeEmission', 'Preserve original pigments')
     tree.links.new(tex.outputs['Color'], emission.inputs['Color'])
     alpha = None
     if not background:
+        cloth = image_node(tree, masters / 'mask-cloth.png', uv, True).outputs['Color']
+        xyz = node(tree, 'ShaderNodeSeparateXYZ', 'Cloth rest coordinates')
+        tree.links.new(uv, xyz.inputs[0])
+        phase = mathn(tree, 'SUBTRACT', mathn(tree, 'ADD',
+                      mathn(tree, 'MULTIPLY', xyz.outputs['X'], 145),
+                      mathn(tree, 'MULTIPLY', xyz.outputs['Y'], 65)),
+                      mathn(tree, 'MULTIPLY', clock_node(tree), 3.6))
+        fold = mathn(tree, 'MULTIPLY', mathn(tree, 'SINE', phase),
+                     mathn(tree, 'MULTIPLY', cloth, .24))
+        tree.links.new(mathn(tree, 'ADD', 1, fold), emission.inputs['Strength'])
         attr = node(tree, 'ShaderNodeAttribute', 'Stretch opacity')
         attr.attribute_name = 'stretch_opacity'
         amount = node(tree, 'ShaderNodeValue', 'Camera-dependent edge reveal')
@@ -255,41 +318,74 @@ def water(args, relief):
     u, v = sep.outputs['X'], sep.outputs['Y']
     # Moving ship centre drives thin interrupted Kelvin-like ripples and contact tone.
     centre = node(tree, 'ShaderNodeValue', 'Sailing ship U')
+    waterline = node(tree, 'ShaderNodeValue', 'Projected ship waterline V')
     for frame in range(1, FRAMES+1):
-        centre.outputs[0].default_value = ship_pixel(frame)[0]/1920
+        px, py = water_contact_pixel(frame)
+        centre.outputs[0].default_value = px/1920
+        waterline.outputs[0].default_value = 1-py/1080
+        waterline.outputs[0].keyframe_insert('default_value', frame=frame)
         centre.outputs[0].keyframe_insert('default_value', frame=frame)
-    dx = mathn(tree, 'SUBTRACT', centre.outputs[0], u)
-    dy = mathn(tree, 'ABSOLUTE', mathn(tree, 'SUBTRACT', v, 1-SHIP_Y/1080))
-    arm = mathn(tree, 'ABSOLUTE', mathn(tree, 'SUBTRACT', dy, mathn(tree, 'MULTIPLY', dx, .16)))
-    ridge = mathn(tree, 'MAXIMUM', 0, mathn(tree, 'SUBTRACT', 1, mathn(tree, 'MULTIPLY', arm, 1500)))
-    trail = mathn(tree, 'MULTIPLY', mathn(tree, 'GREATER_THAN', dx, .019),
-                  mathn(tree, 'LESS_THAN', dx, .065))
-    decay = mathn(tree, 'MAXIMUM', 0, mathn(tree, 'SUBTRACT', 1, mathn(tree, 'MULTIPLY', dx, 15)))
+    dx = mathn(tree, 'SUBTRACT', u, centre.outputs[0])
+    signed_dy = mathn(tree, 'SUBTRACT', waterline.outputs[0], v)
+    dy = mathn(tree, 'ABSOLUTE', signed_dy)
+    arm = mathn(tree, 'ABSOLUTE', mathn(tree, 'SUBTRACT', dy, mathn(tree, 'MULTIPLY', dx, .20)))
+    ridge = mathn(tree, 'MAXIMUM', 0, mathn(tree, 'SUBTRACT', 1, mathn(tree, 'MULTIPLY', arm, 500)))
+    trail = mathn(tree, 'MULTIPLY', mathn(tree, 'GREATER_THAN', dx, .065),
+                  mathn(tree, 'LESS_THAN', dx, .21))
+    decay = mathn(tree, 'MAXIMUM', 0, mathn(tree, 'SUBTRACT', 1, mathn(tree, 'MULTIPLY', dx, 4)))
     noise = node(tree, 'ShaderNodeTexNoise', 'Advected capillary ripples')
     noise.noise_dimensions = '4D'
-    setv(noise, 'Scale', 230.); setv(noise, 'Detail', 2.)
+    setv(noise, 'Scale', 90.); setv(noise, 'Detail', 2.)
     stretch = node(tree, 'ShaderNodeVectorMath', 'Long horizontal wavelets')
     stretch.operation = 'MULTIPLY'
-    tree.links.new(uv, stretch.inputs[0]); stretch.inputs[1].default_value = (1, 5, 1)
+    tree.links.new(uv, stretch.inputs[0]); stretch.inputs[1].default_value = (1, 3, 1)
     tree.links.new(stretch.outputs[0], noise.inputs['Vector'])
-    tree.links.new(mathn(tree, 'MULTIPLY', time_socket, .32), noise.inputs['W'])
+    tree.links.new(mathn(tree, 'MULTIPLY', time_socket, .85), noise.inputs['W'])
     wake = mathn(tree, 'MULTIPLY', mathn(tree, 'MULTIPLY', ridge, trail),
                  mathn(tree, 'MULTIPLY', decay, noise.outputs['Fac']))
     bump = node(tree, 'ShaderNodeBump', 'Real time-varying surface normal')
-    setv(bump, 'Strength', .23); setv(bump, 'Distance', .08)
+    setv(bump, 'Strength', .52); setv(bump, 'Distance', .20)
     tree.links.new(mathn(tree, 'ADD', noise.outputs['Fac'], wake), bump.inputs['Height'])
     # Emission anchors albedo to the original linear pigment. Gloss adds a restrained
     # moving reflection only; a large diffuse contribution would double-light the art.
     emission = node(tree, 'ShaderNodeEmission', 'Painting water albedo')
-    tree.links.new(color, emission.inputs['Color'])
-    ellipse=mathn(tree,'ADD',mathn(tree,'POWER',mathn(tree,'MULTIPLY',dx,52),2),
-                  mathn(tree,'POWER',mathn(tree,'MULTIPLY',dy,500),2))
-    contact=mathn(tree,'MULTIPLY',mathn(tree,'EXPONENT',mathn(tree,'MULTIPLY',ellipse,-2)),.12)
-    luminance=mathn(tree,'ADD',mathn(tree,'SUBTRACT',1,contact),mathn(tree,'MULTIPLY',wake,.22))
-    tree.links.new(luminance, emission.inputs['Strength'])
+    # A deliberately broken painted reflection, anchored to the moving mast.
+    # A camera-facing relief sheet cannot produce a useful planar SSR reflection.
+    # Mirror the linen silhouette below the waterline, with horizontal ripple gaps.
+    jitter = mathn(tree, 'MULTIPLY', mathn(tree, 'SUBTRACT', noise.outputs['Fac'], .5), .009)
+    reflection_x = mathn(tree, 'ABSOLUTE', mathn(tree, 'ADD', dx, jitter))
+    sail_width = mathn(tree, 'SUBTRACT', .047, mathn(tree, 'MULTIPLY', signed_dy, .3))
+    reflection = mathn(tree, 'MULTIPLY', mathn(tree, 'LESS_THAN', reflection_x, sail_width),
+                       mathn(tree, 'MULTIPLY', mathn(tree, 'GREATER_THAN', signed_dy, .006),
+                             mathn(tree, 'LESS_THAN', signed_dy, .052)))
+    ripple_phase = mathn(tree, 'ADD', mathn(tree, 'ADD', mathn(tree, 'MULTIPLY', v, 900),
+                        mathn(tree, 'MULTIPLY', noise.outputs['Fac'], 3)),
+                        mathn(tree, 'MULTIPLY', time_socket, -5))
+    ripple = mathn(tree, 'SINE', ripple_phase)
+    reflection = mathn(tree, 'MULTIPLY', reflection,
+                       mathn(tree, 'MULTIPLY', mathn(tree, 'GREATER_THAN', ripple, -.15), .36))
+    reflected = node(tree, 'ShaderNodeMixRGB', 'Broken ochre linen reflection')
+    tree.links.new(reflection, reflected.inputs[0]); tree.links.new(color, reflected.inputs[1])
+    reflected.inputs[2].default_value = (.40, .34, .23, 1)
+    foam = node(tree, 'ShaderNodeMixRGB', 'Interrupted ivory foam wake')
+    tree.links.new(mathn(tree, 'MULTIPLY', wake, 1.3), foam.inputs[0])
+    tree.links.new(reflected.outputs[0], foam.inputs[1])
+    foam.inputs[2].default_value=(.65,.66,.53,1)
+    tree.links.new(foam.outputs[0], emission.inputs['Color'])
+    # Broad, moving bands are visible at 960 wide; high-frequency normals alone
+    # mostly disappear in antialiasing. Modulate only water, never the painting.
+    moving = mathn(tree, 'MULTIPLY', ripple, .13)
+    sparkle = mathn(tree, 'MULTIPLY', mathn(tree, 'GREATER_THAN', noise.outputs['Fac'], .64),
+                    mathn(tree, 'MULTIPLY', mathn(tree, 'MAXIMUM', ripple, 0), .65))
+    ellipse=mathn(tree,'ADD',mathn(tree,'POWER',mathn(tree,'MULTIPLY',dx,13),2),
+                  mathn(tree,'POWER',mathn(tree,'MULTIPLY',dy,145),2))
+    contact=mathn(tree,'MULTIPLY',mathn(tree,'EXPONENT',mathn(tree,'MULTIPLY',ellipse,-2)),.25)
+    luminance=mathn(tree,'ADD',mathn(tree,'SUBTRACT',1,contact),mathn(tree,'MULTIPLY',wake,1.8))
+    tree.links.new(mathn(tree, 'ADD', luminance, mathn(tree, 'ADD', moving, sparkle)),
+                   emission.inputs['Strength'])
     gloss = node(tree, 'ShaderNodeBsdfGlossy', 'Warm moving sun glints')
-    gloss.inputs['Color'].default_value = (.055, .060, .058, 1)
-    gloss.inputs['Roughness'].default_value = .29
+    gloss.inputs['Color'].default_value = (.16, .17, .15, 1)
+    gloss.inputs['Roughness'].default_value = .22
     tree.links.new(bump.outputs['Normal'], gloss.inputs['Normal'])
     add = node(tree, 'ShaderNodeAddShader', 'Pigment plus glints')
     tree.links.new(emission.outputs[0], add.inputs[0]); tree.links.new(gloss.outputs[0], add.inputs[1])
@@ -302,6 +398,33 @@ def water(args, relief):
     return ob
 
 
+def ship_visibility(args, tree):
+    # Ray-project onto the relief at its mean foreground depth. This tracks the
+    # shoreline during the push, unlike an unchanging front-projection mask.
+    pos = node(tree, 'ShaderNodeNewGeometry', 'World position for shoreline occlusion')
+    xyz = node(tree, 'ShaderNodeSeparateXYZ', 'World axes')
+    tree.links.new(pos.outputs['Position'], xyz.inputs[0])
+    camera = [node(tree, 'ShaderNodeValue', 'Camera '+axis) for axis in 'XYZ']
+    for frame in range(1, FRAMES+1):
+        progress, _ = timing(frame)
+        for n, value in zip(camera, (DRIFT[0]*progress, DRIFT[1]*progress,
+                                    CAMERA_Z*(1-DOLLY*progress))):
+            n.outputs[0].default_value=value
+            n.outputs[0].keyframe_insert('default_value', frame=frame)
+    plane_z = 4.
+    ratio = mathn(tree, 'DIVIDE', mathn(tree, 'SUBTRACT', camera[2].outputs[0], plane_z),
+                  mathn(tree, 'SUBTRACT', camera[2].outputs[0], xyz.outputs['Z']))
+    uv = node(tree, 'ShaderNodeCombineXYZ', 'Foreground painting projection')
+    for axis, extent, eye in zip('XY', (WIDTH, HEIGHT), camera):
+        hit = mathn(tree, 'ADD', eye.outputs[0], mathn(tree, 'MULTIPLY', ratio,
+                    mathn(tree, 'SUBTRACT', xyz.outputs[axis], eye.outputs[0])))
+        value = mathn(tree, 'ADD', .5,
+                      mathn(tree, 'MULTIPLY', hit, CAMERA_Z/(extent*(CAMERA_Z-plane_z))))
+        tree.links.new(value, uv.inputs[axis])
+    return image_node(tree, args.masters/'plates/mask-ship-visible.png',
+                      uv.outputs[0], True).outputs['Color']
+
+
 def painted_cg(args, name, crop):
     mat, tree = material(name)
     uv = node(tree, 'ShaderNodeTexCoord', 'Rest texture UV').outputs['UV']
@@ -311,7 +434,8 @@ def painted_cg(args, name, crop):
     tree.links.new(color, p.inputs['Emission Color'])
     setv(p, 'Emission Strength', .32); setv(p, 'Roughness', .83)
     setv(p, 'Specular IOR Level', .18)
-    aov(tree); finish_surface(mat, p.outputs[0])
+    alpha = ship_visibility(args, tree)
+    aov(tree, alpha); finish_surface(mat, p.outputs[0], alpha)
     return mat
 
 
@@ -349,6 +473,10 @@ def ship(args, depth):
     wood = painted_cg(args, 'Ship timber sampled from painted hull', 'wood')
     canvas = painted_cg(args, 'Sail sampled from painted linen', 'sail')
     root = empty('GEO-sailing-galley')
+    root.scale = (SHIP_SCALE,) * 3
+    hull_root = empty('GEO-galley-leftward-heading')
+    hull_root.parent = root
+    hull_root.rotation_euler.z = math.pi
     # Local X bow/stern, local Y beam, local Z up. A slim rounded hull with a real keel.
     verts, uv, faces = [], [], []
     sections, rings = 28, 12
@@ -364,16 +492,16 @@ def ship(args, depth):
         for j in range(rings):
             k = i*(rings+1)+j
             faces.append((k,k+1,k+rings+2,k+rings+1))
-    hull = mesh('GEO-rounded-planked-hull', verts, faces, wood, uv, root)
+    hull = mesh('GEO-rounded-planked-hull', verts, faces, wood, uv, hull_root)
     solid = hull.modifiers.new('Real hull thickness', 'SOLIDIFY'); solid.thickness = .10
     for poly in hull.data.polygons:
         poly.use_smooth = True
     mesh('GEO-deck', [(-5,-.85,.18),(5,-.85,.18),(6,0,.30),(5,.85,.18),
-                     (-5,.85,.18),(-6,0,.30)], [(0,1,2,3,4,5)], wood, parent=root)
-    rod('GEO-mast', (0,0,.20), (0,0,8.0), .10, wood, root)
-    rod('GEO-yard', (-4.4,0,7.3), (4.4,0,7.3), .08, wood, root)
-    rod('GEO-bow-stay', (6,0,.7), (0,0,7.8), .022, wood, root)
-    rod('GEO-stern-stay', (-6,0,.7), (0,0,7.8), .022, wood, root)
+                     (-5,.85,.18),(-6,0,.30)], [(0,1,2,3,4,5)], wood, parent=hull_root)
+    rod('GEO-mast', (0,0,.20), (0,0,8.0), .10, wood, hull_root)
+    rod('GEO-yard', (-4.4,0,7.3), (4.4,0,7.3), .08, wood, hull_root)
+    rod('GEO-bow-stay', (6,0,.7), (0,0,7.8), .022, wood, hull_root)
+    rod('GEO-stern-stay', (-6,0,.7), (0,0,7.8), .022, wood, hull_root)
     verts, uv, faces = [], [], []
     nx, ny = 24, 16
     for j in range(ny+1):
@@ -386,15 +514,15 @@ def ship(args, depth):
         for i in range(nx):
             a = j*(nx+1)+i
             faces.append((a,a+1,a+nx+2,a+nx+1))
-    sail = mesh('GEO-billowing-linen-sail', verts, faces, canvas, uv, root)
+    sail = mesh('GEO-billowing-linen-sail', verts, faces, canvas, uv, hull_root)
     sail.shape_key_add(name='Basis')
     for mode in range(2):
         key = sail.shape_key_add(name=f'Wind fold {mode+1}'); key.slider_min = -1
         for index, point in enumerate(key.data):
             u, v = uv[index][0], 1-uv[index][1]
             pin = math.sin(math.pi*u) * v
-            point.co.y += pin * .34 * math.sin(u*math.pi*(mode+2)+v*4)
-            point.co.z += pin * .10 * math.sin(u*5+mode)
+            point.co.y += pin * 1.05 * math.sin(u*math.pi*(mode+2)+v*4)
+            point.co.z += pin * .36 * math.sin(u*5+mode)
         for frame in range(1, FRAMES+1):
             key.value = math.sin((frame-1)/FPS*(1.9+mode*.7)+mode*1.4)
             key.keyframe_insert('value', frame=frame)
@@ -403,7 +531,7 @@ def ship(args, depth):
     for side in (-1,1):
         for index in range(9):
             pivot = empty(f'GEO-oar-pivot-{side}-{index}')
-            pivot.parent = root; pivot.location = (-4.2+index*.95, side*.95, .18)
+            pivot.parent = hull_root; pivot.location = (-4.2+index*.95, side*.95, .18)
             rod('GEO-round-oar-shaft', (0,0,0), (0,side*2.5,-.20), .045, wood, pivot)
             blade = mesh('GEO-solid-oar-blade', [(-.11,side*1.95,-.20),(.11,side*1.95,-.20),
                         (.17,side*2.85,-.24),(-.17,side*2.85,-.24)], [(0,1,2,3)], wood, parent=pivot)
@@ -413,9 +541,10 @@ def ship(args, depth):
                 phase=(frame-1)/FPS*3.4+index*.045
                 pivot.rotation_euler=(side*.15*math.cos(phase),0,side*.36*math.sin(phase))
                 pivot.keyframe_insert('rotation_euler',frame=frame)
+    ship_splashes(args, hull_root)
     for frame in range(1, FRAMES+1):
         px, py = ship_pixel(frame)
-        z = sample_depth(depth, px, py) + .80
+        z = SHIP_Z
         root.location = projected(px, py, z)
         root.rotation_euler = (math.radians(-68)+.008*math.sin(frame*.13),
                                .012*math.sin(frame*.10), .018)
@@ -424,41 +553,136 @@ def ship(args, depth):
     return root
 
 
+def ship_splashes(args, parent):
+    """Small reusable brush-shaped meshes; no expensive liquid/particle solve."""
+    mat, tree = material('Warm ivory bow spray and rowing foam')
+    e = node(tree, 'ShaderNodeEmission', 'Sunlit foam pigment')
+    setv(e, 'Color', (.70, .69, .56, 1)); setv(e, 'Strength', 1.15)
+    alpha = ship_visibility(args, tree)
+    aov(tree, alpha); finish_surface(mat, e.outputs[0], alpha)
+    # Each oar enters on the same phase as its shaft; short fans lift and fall.
+    for side in (-1, 1):
+        for index in range(9):
+            fan = mesh(f'GEO-oar-splash-{side}-{index}',
+                       [(-.45,0,0),(.40,0,0),(.23,side*.22,.32),
+                        (0,side*.08,.13),(-.20,side*.16,.24)],
+                       [(0,1,2,3,4)], mat, parent=parent)
+            for frame in range(1, FRAMES+1):
+                phase = (frame-1)/FPS*3.4+index*.045
+                pulse = max(0., -math.cos(phase)) ** 3
+                fan.location = (-4.2+index*.95-.9*math.sin(phase), side*3.65, -.18)
+                fan.scale = (max(.025, pulse),)*3
+                fan.keyframe_insert('location', frame=frame)
+                fan.keyframe_insert('scale', frame=frame)
+    # Droplets peel aft from the bow, not stationary glowing dots. Staggered
+    # ballistic arcs form two continuous low fans with a lively broken silhouette.
+    rng = np.random.default_rng(52)
+    for index in range(36):
+        side = (-1, 1)[index % 2]
+        spread = float(rng.uniform(.4, 1.2))
+        droplet = mesh(f'GEO-bow-spray-{index}',
+                       [(-.08,0,0),(.09,0,0),(0,0,.18)], [(0,1,2)], mat, parent=parent)
+        for frame in range(1, FRAMES+1):
+            age = ((frame-1)/FPS*1.8+index/36) % 1
+            droplet.location = (6.7-age*2.5, side*(.3+age*spread),
+                                -.12+1.7*age*(1-age))
+            size = max(.025, math.sin(math.pi*age))
+            droplet.scale = (size,)*3
+            droplet.keyframe_insert('location', frame=frame)
+            droplet.keyframe_insert('scale', frame=frame)
+
+
 def cloth_motion(relief):
-    # Reuse the original masked shape modes, magnified with the scene's 100x units.
-    # Only cloth pixels move. The new mask also covers the right awning interior.
+    # Keep v4's verified geometric displacement. Faster travelling highlight/shadow
+    # folds in plate_material make the blue banners and awning visibly breathe
+    # without pulling masonry or exceeding the inherited strain/fold checks.
     keys = relief.data.shape_keys.key_blocks
-    for key in list(keys)[1:]:
+    for mode, key in enumerate(list(keys)[1:]):
         for point, original in zip(key.data, keys[0].data):
             point.co = original.co + (point.co-original.co)*100
+        for frame in range(1, FRAMES+1):
+            key.value = .90*math.sin((frame-1)/FPS*2.8+mode*1.7)
+            key.keyframe_insert('value', frame=frame)
     return [key.name for key in list(keys)[1:]]
+
+
+def banners(args, depth):
+    """Painted cloth cutouts, pinned at the top with freely waving lower edges."""
+    for index, (bounds, _) in enumerate(BANNERS):
+        x0,y0,x1,y1=bounds
+        mat,tree=material(f'Original blue banner pigment {index}')
+        uv_socket=node(tree,'ShaderNodeTexCoord','Cloth UV').outputs['UV']
+        tex=image_node(tree,args.masters/f'textures/banner-{index}.png',uv_socket)
+        e=node(tree,'ShaderNodeEmission','Preserved blue and gold paint')
+        tree.links.new(tex.outputs['Color'],e.inputs['Color'])
+        aov(tree,tex.outputs['Alpha']); finish_surface(mat,e.outputs[0],tex.outputs['Alpha'])
+        verts,uv,faces=[],[],[]
+        nx,ny=12,24
+        for j in range(ny+1):
+            for i in range(nx+1):
+                u,v=i/nx,j/ny
+                px,py=x0+(x1-x0)*u,y0+(y1-y0)*v
+                verts.append(tuple(projected(px,py,sample_depth(depth,px,py)+1.2)))
+                uv.append((u,1-v))
+        for j in range(ny):
+            for i in range(nx):
+                a=j*(nx+1)+i; faces.append((a,a+1,a+nx+2,a+nx+1))
+        ob=mesh(f'GEO-free-edge-blue-banner-{index}',verts,faces,mat,uv)
+        ob.shape_key_add(name='Basis')
+        for mode in range(2):
+            key=ob.shape_key_add(name=f'Top-pinned wind {mode}'); key.slider_min=-1
+            for k,point in enumerate(key.data):
+                u,v=uv[k][0],1-uv[k][1]
+                pin=v**1.3
+                phase=v*4+u*2+mode*1.8
+                point.co.x+=pin*(.72 if mode==0 else .30)*math.sin(phase)
+                point.co.y+=pin*.12*math.sin(phase+1)
+                point.co.z+=pin*.30*math.cos(phase)
+            for frame in range(1,FRAMES+1):
+                key.value=math.sin((frame-1)/FPS*(3.1+mode*.8)+index+mode*1.6)
+                key.keyframe_insert('value',frame=frame)
+        for frame in range(1,FRAMES+1):
+            e.inputs['Strength'].default_value=1+.13*math.sin((frame-1)/FPS*3.1+index)
+            e.inputs['Strength'].keyframe_insert('default_value',frame=frame)
 
 
 def gulls():
     mat, tree = material('Warm charcoal gull strokes')
     e = node(tree, 'ShaderNodeEmission', 'Distant umber')
-    e.inputs['Color'].default_value = (.085,.077,.060,1)
+    setv(e, 'Color', (.085,.077,.060,1))
     aov(tree); finish_surface(mat,e.outputs[0])
-    # Shared left/right wing mesh, tapered like a brush stroke. Roots move in 3D;
-    # each instance's two wings flap around the body, with different phases.
-    wing = mesh('GEO-gull-wing-prototype',[(0,0,0),(.50,.16,0),(1.3,.06,.03),
-                 (.65,-.04,0)],[(0,1,2,3)],mat)
+    wing = mesh('GEO-gull-wing-prototype', [(0,0,0),(.5,.22,0),
+                (1.3,.06,.03),(.80,-.10,0),(.35,-.06,0)], [(0,1,2,3,4)], mat)
     wing.hide_render = True
-    for index in range(5):
+    # Source coordinates and world-space sizes, ~11-24px projected wingspans.
+    # The seventh gull crosses near the camera at z=160; others cross sky/harbour.
+    paths = [(520,130,1180,205,18,1.65), (660,220,1300,155,24,1.8),
+             (1260,270,610,210,30,1.65), (410,365,1030,320,22,1.8),
+             (1030,390,520,350,35,1.65), (780,115,1480,180,26,2.0),
+             (1450,300,480,245,160,2.2)]
+    for index, (x0,y0,x1,y1,z,size) in enumerate(paths):
         root=empty(f'GEO-gull-{index}')
+        mesh(f'GEO-gull-body-{index}', [(-.12,0,0),(0,.33,0),(.12,0,0),
+             (.06,-.33,0),(-.06,-.33,0)], [(0,1,2,3,4)], mat, parent=root)
         for side in (-1,1):
             ob=bpy.data.objects.new(f'GEO-gull-wing-{index}-{side}',wing.data)
             bpy.context.collection.objects.link(ob); ob.parent=root
             ob.scale.x=side
             for frame in range(1,FRAMES+1):
-                ob.rotation_euler[1]=side*.50*math.sin(frame*.29+index*1.7)
-                ob.rotation_euler[2]=side*.20*math.sin(frame*.29+index*1.7)
+                seconds=(frame-1)/FPS
+                # Flap in short bursts, then hold wings open in a readable glide.
+                burst=smooth((math.sin(seconds*1.7+index)-.05)*3)
+                flap=burst*math.sin(seconds*10.5+index*1.7)
+                ob.rotation_euler[1]=side*.70*flap
+                ob.rotation_euler[2]=side*(.10+.48*flap)
                 ob.keyframe_insert('rotation_euler',frame=frame)
         for frame in range(1,FRAMES+1):
-            t=(frame-1)/FPS
-            root.location=projected(680+index*29+t*38,170+index*11-4*math.sin(t+index), 14+index)
-            root.scale=(.65+index*.06,)*3
+            t=(frame-1)/(FRAMES-1)
+            root.location=projected(x0+(x1-x0)*t,y0+(y1-y0)*t+12*math.sin(t*5+index),z)
+            root.scale=(size,)*3
+            root.rotation_euler.z=.12*math.sin(t*6+index)
             root.keyframe_insert('location',frame=frame)
+            root.keyframe_insert('rotation_euler',frame=frame)
 
 
 def active(ob):
@@ -474,55 +698,65 @@ def box(name, location, size):
 
 
 def fire(args, depth):
-    source=projected(365,676,sample_depth(depth,365,676)+2.0)
+    source=projected(390,676,17.0)
     bpy.ops.mesh.primitive_uv_sphere_add(segments=16,ring_count=8,radius=1,location=source)
     flow=bpy.context.object; flow.name='GEO-brazier-fire-emitter'
-    flow.scale=(1.10,.85,.95)
+    flow.scale=(1.8,1.2,1.6)
     bpy.ops.object.transform_apply(location=False,rotation=False,scale=True)
     mod=flow.modifiers.new('Real fire and smoke inflow','FLUID'); mod.fluid_type='FLOW'
     fs=mod.flow_settings
     fs.flow_type='BOTH'; fs.flow_behavior='INFLOW'; fs.surface_distance=1.5
-    fs.fuel_amount=1.1; fs.temperature=1.5; fs.density=1
-    fs.use_initial_velocity=True; fs.velocity_coord=(.35,2.0,.10)
+    fs.fuel_amount=1.6; fs.temperature=2.0; fs.density=2.2
+    fs.use_initial_velocity=True; fs.velocity_coord=(1.2,6.0,0)
     transparent, tree=material('Invisible closed fluid emitter')
     tr=node(tree,'ShaderNodeBsdfTransparent','Emitter surface hidden')
     finish_surface(transparent,tr.outputs[0]); flow.data.materials.append(transparent)
-    domain=box('GEO-brazier-Mantaflow-domain',source+Vector((1,10,1)),(10,24,10))
-    mod=domain.modifiers.new('64 voxel billowing smoke plus 2x noise','FLUID'); mod.fluid_type='DOMAIN'
-    ds=mod.domain_settings; ds.domain_type='GAS'; ds.resolution_max=64
+    domain=box('GEO-brazier-Mantaflow-domain',source+Vector((5,23,0)),FLUID_SIZE)
+    mod=domain.modifiers.new('72 voxel billowing smoke plus 2x noise','FLUID'); mod.fluid_type='DOMAIN'
+    ds=mod.domain_settings; ds.domain_type='GAS'; ds.resolution_max=FLUID_RESOLUTION
     ds.cache_frame_start=SIM_START; ds.cache_frame_end=FRAMES
     ds.cache_type='ALL'; ds.cache_directory=str(args.masters/'cache/fluid')
     ds.cache_data_format='UNI'; ds.cache_noise_format='UNI'
-    ds.use_noise=True; ds.noise_scale=2; ds.noise_strength=.65
-    ds.use_adaptive_domain=False; ds.vorticity=1.6; ds.flame_vorticity=1.5
-    ds.alpha=1.3; ds.beta=1.6; ds.burning_rate=1.15; ds.flame_smoke=1.7
-    ds.use_dissolve_smoke=True; ds.dissolve_speed=70; ds.timesteps_max=3
+    ds.use_noise=True; ds.noise_scale=2; ds.noise_strength=1.0
+    ds.use_adaptive_domain=False; ds.vorticity=2.5; ds.flame_vorticity=2.0
+    ds.alpha=2.0; ds.beta=3.0; ds.burning_rate=.85; ds.flame_smoke=2.2
+    ds.use_dissolve_smoke=True; ds.dissolve_speed=110; ds.timesteps_max=3
+    # Animate inflow quantities, never domain or emitter transforms. Pulsing
+    # density/fuel injects separated billows before the first delivery frame.
+    for frame in range(SIM_START, FRAMES+1):
+        fs.fuel_amount=1.55+.35*math.sin(frame*.43)+.16*math.sin(frame*1.13)
+        fs.density=2.1+.55*math.sin(frame*.17)
+        fs.velocity_coord=(1.2+.65*math.sin(frame*.09),6+.9*math.sin(frame*.21),0)
+        for prop in ('fuel_amount','density','velocity_coord'):
+            fs.keyframe_insert(prop,frame=frame)
     # The set is in camera-projection coordinates: +Y is picture-up. Scene gravity
     # below makes buoyancy rise +Y. Open every side; fade before the +Y boundary.
     for face in ('front','back','left','right','top','bottom'):
         setattr(ds,f'use_collision_border_{face}',False)
     mat,tree=material('Daylit smoke density and blackbody flame grids')
     p=node(tree,'ShaderNodeVolumePrincipled','Smoke is non-emissive except actual flame')
-    setv(p,'Color',(.29,.275,.25,1)); setv(p,'Color Attribute','')
-    setv(p,'Density Attribute','density'); setv(p,'Anisotropy',.18)
+    setv(p,'Color',(.43,.40,.33,1)); setv(p,'Color Attribute','')
+    setv(p,'Density Attribute',''); setv(p,'Anisotropy',.18)
     coord=node(tree,'ShaderNodeTexCoord','Local domain position')
     xyz=node(tree,'ShaderNodeSeparateXYZ','Fade before plume ceiling')
     tree.links.new(coord.outputs['Generated'],xyz.inputs[0])
     ceiling=node(tree,'ShaderNodeMapRange','No rectangular smoke cutoff'); ceiling.clamp=True
     setv(ceiling,'From Min',.72); setv(ceiling,'From Max',.98)
-    setv(ceiling,'To Min',1.15); setv(ceiling,'To Max',0)
+    setv(ceiling,'To Min',1.8); setv(ceiling,'To Max',0)
     tree.links.new(xyz.outputs['Y'],ceiling.inputs['Value'])
-    tree.links.new(ceiling.outputs[0],socket(p,'Density'))
+    density=node(tree,'ShaderNodeAttribute','Smoke density grid'); density.attribute_name='density'
+    tree.links.new(mathn(tree,'MULTIPLY',density.outputs['Fac'],ceiling.outputs[0]),
+                   socket(p,'Density'))
     flame=node(tree,'ShaderNodeAttribute','Flame grid'); flame.attribute_name='flame'
     heat=node(tree,'ShaderNodeAttribute','Heat grid'); heat.attribute_name='temperature'
     temp=node(tree,'ShaderNodeMapRange','Heat to kelvin'); temp.clamp=True
     setv(temp,'From Min',0); setv(temp,'From Max',1)
-    setv(temp,'To Min',1100); setv(temp,'To Max',1800)
+    setv(temp,'To Min',1250); setv(temp,'To Max',2050)
     tree.links.new(heat.outputs['Fac'],temp.inputs['Value'])
     bb=node(tree,'ShaderNodeBlackbody','Warm blackbody fire')
     tree.links.new(temp.outputs[0],bb.inputs[0]); tree.links.new(bb.outputs[0],socket(p,'Emission Color'))
     setv(p,'Blackbody Intensity',0)
-    power=mathn(tree,'MULTIPLY',mathn(tree,'POWER',flame.outputs['Fac'],1.5),5)
+    power=mathn(tree,'MULTIPLY',mathn(tree,'POWER',flame.outputs['Fac'],1.2),14)
     tree.links.new(power,socket(p,'Emission Strength'))
     out=node(tree,'ShaderNodeOutputMaterial','Volume only')
     tree.links.new(p.outputs['Volume'],out.inputs['Volume']); domain.data.materials.append(mat)
@@ -531,11 +765,16 @@ def fire(args, depth):
     ob=bpy.data.objects.new(light.name,light); bpy.context.collection.objects.link(ob)
     ob.location=source+Vector((0,1,2))
     for frame in range(1,FRAMES+1):
-        light.energy=95+14*math.sin(frame*.6)+9*math.sin(frame*1.27)
+        light.energy=1800+320*math.sin(frame*.6)+180*math.sin(frame*1.27)
         light.keyframe_insert('energy',frame=frame)
     for ob in (domain,flow):
         assert min(ob.dimensions)>1 and all(abs(s-1)<1e-6 for s in ob.scale)
-        assert ob.animation_data is None, 'Never animate fluid scale or transforms'
+        if ob.animation_data and ob.animation_data.action:
+            for layer in ob.animation_data.action.layers:
+                for strip in layer.strips:
+                    for bag in strip.channelbags:
+                        assert all(fc.data_path not in ('scale','location','rotation_euler')
+                                   for fc in bag.fcurves), 'Never animate fluid transforms'
     return domain
 
 
@@ -589,10 +828,30 @@ def compositor(scene,args):
     # never flattened into opaque Kuwahara patches. HDR fire and sun glints bloom.
     glare=node(tree,'CompositorNodeGlare','Restrained fire and sun-glint glare')
     setv(glare,'Type','Fog Glow'); setv(glare,'Quality','High')
-    setv(glare,'Threshold',1.2); setv(glare,'Strength',.12); setv(glare,'Size',.18)
+    setv(glare,'Threshold',1.2); setv(glare,'Strength',.24); setv(glare,'Size',.18)
     tree.links.new(beauty,glare.inputs['Image'])
     out=node(tree,'NodeGroupOutput','Finished image')
     tree.links.new(glare.outputs['Image'],out.inputs['Image'])
+
+
+def validate_vfx(scene):
+    """Lead-side measurement in the actual built scene, before any fluid bake."""
+    from bpy_extras.object_utils import world_to_camera_view
+    hull=bpy.data.objects['GEO-rounded-planked-hull']
+    root=bpy.data.objects['GEO-sailing-galley']
+    samples=[]
+    for frame in (1,72,144):
+        scene.frame_set(frame); bpy.context.view_layer.update()
+        points=[world_to_camera_view(scene,scene.camera,hull.matrix_world @ Vector(p))
+                for p in hull.bound_box]
+        centre=world_to_camera_view(scene,scene.camera,root.matrix_world.translation)
+        samples.append({'frame':frame,'hull_width_px':(max(p.x for p in points)-min(p.x for p in points))*960,
+                        'centre_px':[centre.x*960,(1-centre.y)*540]})
+    travel=samples[0]['centre_px'][0]-samples[-1]['centre_px'][0]
+    assert 144 <= samples[-1]['hull_width_px'] <= 192, samples
+    assert 240 <= travel <= 384, samples
+    return {'hero_ship_projection':samples,'hero_ship_travel_px':travel,'gulls':7,
+            'blue_banner_cutouts':2}
 
 
 def build(args):
@@ -630,16 +889,17 @@ def build(args):
     water(args,relief)
     with np.load(args.masters/'plates/relief.npz') as data:
         depth=data['depth'].copy()
-    ship(args,depth); gulls(); domain=fire(args,depth)
+    ship(args,depth); banners(args,depth); gulls(); domain=fire(args,depth)
     lighting_camera(scene); compositor(scene,args)
     # Original builder hardcodes its old sample frame 145. The last key extrapolates
     # constantly, so this also checks our 144 endpoint with the same geometry.
     stats.update(base.validate_deformation(scene))
+    stats.update(validate_vfx(scene))
     scene.frame_set(1); bpy.context.view_layer.update()
     bpy.ops.file.pack_all()
     stats.update({'resolution':[960,540],'frames':FRAMES,'fps':FPS,'threads':6,
                   'camera_dolly':DOLLY,'camera_drift':DRIFT,'relief':RELIEF,
-                  'simulation_frames':[SIM_START,FRAMES],'fluid_resolution':64,
+                  'simulation_frames':[SIM_START,FRAMES],'fluid_resolution':FLUID_RESOLUTION,
                   'fluid_noise_scale':2,'fluid_dimensions':list(domain.dimensions),
                   'status':'built; not baked or rendered'})
     return scene,domain,stats
@@ -675,10 +935,23 @@ def verify_smoke(scene):
         dg=bpy.context.evaluated_depsgraph_get(); dg.update()
         domain=bpy.data.objects['GEO-brazier-Mantaflow-domain'].evaluated_get(dg)
         ds=domain.modifiers[0].domain_settings
-        maximum=max(ds.density_grid,default=0)
+        density=np.asarray(ds.density_grid[:],dtype=np.float32)
+        maximum=float(density.max()) if density.size else 0.
         if maximum<=0:
             raise RuntimeError(f'Empty smoke cache at delivery frame {frame}')
-        samples.append({'frame':frame,'maximum_density':maximum})
+        # RNA returns the noise grid when noise is enabled (not the base grid).
+        resolution=np.asarray(ds.domain_resolution,dtype=int)
+        if density.size != int(np.prod(resolution)):
+            resolution *= ds.noise_scale
+        if density.size != int(np.prod(resolution)):
+            raise RuntimeError(f'Unexpected density-grid dimensions: {resolution}, {density.size}')
+        grid=density.reshape(tuple(resolution[::-1]))  # Mantaflow X runs fastest.
+        occupied=np.flatnonzero(np.max(grid,axis=(0,2))>.04)
+        height=float((occupied[-1]-occupied[0])*FLUID_SIZE[1]/resolution[1]) if occupied.size else 0.
+        if height < (8 if frame==1 else 12):
+            raise RuntimeError(f'Smoke is only {height:.1f} units tall at frame {frame}; inspect buoyancy')
+        samples.append({'frame':frame,'maximum_density':maximum,
+                        'plume_height_units':height,'density_grid_resolution':resolution.tolist()})
     scene.frame_set(1)
     return samples
 
@@ -694,7 +967,7 @@ def bake(args,scene,domain,stamp,report):
     bpy.ops.wm.save_as_mainfile(filepath=str(cache/'baked.blend'))
     active(domain)
     started=time.monotonic()
-    print('BAKE: 64 voxels + 2x noise, -47..144, six threads; target <480 seconds',flush=True)
+    print('BAKE: 72 voxels + 2x noise, -47..144, six threads; target <480 seconds',flush=True)
     result=bpy.ops.fluid.bake_all()
     ds=domain.modifiers[0].domain_settings
     if 'FINISHED' not in result or not ds.has_cache_baked_data or not ds.has_cache_baked_noise:
