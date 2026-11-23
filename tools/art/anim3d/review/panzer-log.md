@@ -1,1 +1,2 @@
 - Round 1: read project instructions, painting prompts, standing feedback 1–23 and vehicles chapter. All six Blender skills applied: beveled closed meshes; worn pigment; key/fill/rim; orthographic registration; rigid mechanical curves; gated CPU/GPU rendering.
+- Emitted panzer-b-plain.png from actual b renders; visual review pending.

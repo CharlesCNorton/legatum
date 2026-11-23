@@ -13,3 +13,26 @@
 - Emitted main-battle-tank-e-hit-strip.png from actual e-hit renders; visual review pending.
 - Emitted main-battle-tank-e-death-strip.png from actual e-death renders; visual review pending.
 - Emitted main-battle-tank-g-feet-check.png from actual g renders; visual review pending.
+- Emitted main-battle-tank-c-textured-lit.png from actual c renders; visual review pending.
+- Applied all six Blender skills: closed/beveled hull and dome, generated fill + actual AO/curvature bakes, rest-camera projection, warm key/cool rim, rigid mechanical keys and low-sample Cycles CPU reviews.
+- Inspected first rest/three-view sheets: corrected turret width, rear stowage position and gun axis; first combined gun bounding-box fit made an oversized mantlet and was replaced.
+- Motion review found incorrect muzzle centroid from transform/division order and a turret bearing gap. Fixed centroid, modeled a real bearing collar, and separated stationary running gear from sprung chassis motion. No art PASS.
+- Emitted main-battle-tank-b-plain.png from actual b renders; visual review pending.
+- Emitted main-battle-tank-c-details.png from actual details renders; visual review pending.
+- Emitted main-battle-tank-d-rig-poses.png from actual d renders; visual review pending.
+- Emitted main-battle-tank-e-idle-strip.png from actual e-idle renders; visual review pending.
+- Emitted main-battle-tank-e-move-strip.png from actual e-move renders; visual review pending.
+- Emitted main-battle-tank-e-attack-strip.png from actual e-attack renders; visual review pending.
+- Emitted main-battle-tank-e-hit-strip.png from actual e-hit renders; visual review pending.
+- Emitted main-battle-tank-e-death-strip.png from actual e-death renders; visual review pending.
+- Emitted main-battle-tank-g-feet-check.png from actual g renders; visual review pending.
+- Emitted main-battle-tank-c-textured-lit.png from actual c renders; visual review pending.
+- Emitted main-battle-tank-b-plain.png from actual b renders; visual review pending.
+- Emitted main-battle-tank-c-details.png from actual details renders; visual review pending.
+- Emitted main-battle-tank-d-rig-poses.png from actual d renders; visual review pending.
+- Emitted main-battle-tank-e-idle-strip.png from actual e-idle renders; visual review pending.
+- Emitted main-battle-tank-e-move-strip.png from actual e-move renders; visual review pending.
+- Emitted main-battle-tank-e-attack-strip.png from actual e-attack renders; visual review pending.
+- Emitted main-battle-tank-e-hit-strip.png from actual e-hit renders; visual review pending.
+- Emitted main-battle-tank-e-death-strip.png from actual e-death renders; visual review pending.
+- Emitted main-battle-tank-g-feet-check.png from actual g renders; visual review pending.

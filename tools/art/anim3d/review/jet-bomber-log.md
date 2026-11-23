@@ -25,3 +25,14 @@ e-attack: 10 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
 e-hit: 4 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
 e-death: 10 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
 g: 16 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+b: 3 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+c: 1 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+d: 4 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+e-idle: 8 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+e-move: 8 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+GPU handoff test: cancelled own queued GPU startup while another lane owned the slot; added lightweight Metal discovery under a CPU startup slot. Full gpu.sh now fails at preflight with explicit Metal unavailable in this sandbox, before touching render outputs. Lead-side GPU rendering remains unverified.
+Git staging/commit blocked: cannot create .git/worktrees/lane-13/index.lock (Operation not permitted). Changes remain for the runner; prepared commit-message.txt in external masters with the requested co-author footer. No push or PR.
+e-attack: 10 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+e-hit: 4 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+e-death: 10 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+g: 16 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
