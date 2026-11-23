@@ -255,7 +255,7 @@ export function TurnReport({ embedded = false }: { embedded?: boolean }) {
                     {l.at && <button className="link rline-show-map" onClick={() => show(l)}>Show on map</button>}
                     {l.reopenTech && <button className="link rline-show-card" onClick={() => useGame.getState().reopenUnlock(l.reopenTech!)}>Show card</button>}
                     {l.reopenEra && <button className="link rline-show-card" onClick={() => useGame.getState().reopenEra(l.reopenEra!.era, l.reopenEra!.first, l.reopenEra!.age)}>{l.reopenEra.age != null ? 'Show score check' : 'Show card'}</button>}
-                    {l.openLedger && <button className="link rline-show-card" onClick={() => set({ vpExpanded: true })}>See how you win</button>}
+                    {l.openLedger && <button className="link rline-show-card" onClick={() => set({ vpExpanded: true })}>Score ledger</button>}
                     {l.reopenHold && <button className="link rline-show-card" onClick={() => set({ holdReopen: l.reopenHold! })}>Show card</button>}
                     {l.openInboxTeam !== undefined && <button className="btn primary" onClick={() => set({
                       diplomacyOpen: true, diplomacyTeam: l.openInboxTeam!, reportOpen: false,
