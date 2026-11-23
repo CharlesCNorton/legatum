@@ -33,3 +33,6 @@
 - Emitted tank-e-move-strip.png from actual e-move renders; visual review pending.
 - Final idle: 8 frames in 5.38 s, versus ~87 s with volumes. Final move also rendered in 5.38 s. Six 512px AO/curvature maps checked for nonconstant texels; pass.
 - A hot edit of render.sh while its process waited for a Blender slot made Bash resume at a changed file offset and fail after the completed move render. Fresh bash syntax check passes. Graded/reviewed the intact move frames and resumed attack/hit/death with the wrapper left unchanged.
+- Emitted tank-e-attack-strip.png from actual e-attack renders; visual review pending.
+- Emitted tank-e-hit-strip.png from actual e-hit renders; visual review pending.
+- Emitted tank-e-death-strip.png from actual e-death renders; visual review pending.
