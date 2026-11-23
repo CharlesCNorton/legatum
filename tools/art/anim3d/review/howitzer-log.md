@@ -78,3 +78,28 @@
 - Published e-hit: 4 actual rendered frames, 12 fps; CPU 512px 12 samples.
 - Published e-death: 10 actual rendered frames, 10 fps; CPU 512px 12 samples.
 - Completed all five clips and geometry audit; delivery pack may now run.
+- Full move strip exposed an overfitting regression: source ray/plane spoke endpoints exceeded the circular rim, making the suspension lift the wheel. Independent reopened audit rejected move frame2: rim bottom z=.243268 instead of .13. Clamped fitted sockets to physical wheel radius, added build/audit envelope assertions, matched hidden wheel paint brightness, and widened clay side/front cameras after finding the side muzzle crop. Rebuilding every dependent frame; prior failed set is not valid delivery.
+- Published b-plain CPU/GPU geometry stage before texture work.
+- Baked 256px AO and curvature maps on GEO-Shield wing -1, GEO-Shield wing 1, GEO-Hollow tapered barrel
+- Published painted rest pose and 50/50 comparison; real AO shader, micrograin, edge geometry and hidden-surface fill.
+- Published e-idle: 8 actual rendered frames, 10 fps; CPU 512px 8 samples.
+- Published e-move: 8 actual rendered frames, 12 fps; CPU 512px 8 samples.
+- Published e-attack: 10 actual rendered frames, 14 fps; CPU 512px 8 samples.
+- Published e-hit: 4 actual rendered frames, 12 fps; CPU 512px 8 samples.
+- Published e-death: 10 actual rendered frames, 10 fps; CPU 512px 8 samples.
+- Completed all five clips and geometry audit; delivery pack may now run.
+- Corrected move strip has round, grounded wheels, but source occlusions in projected wheel paint rotate into visible patchwork. Rejected that material experiment: all rotating wheel parts now use continuous object-space generated paint with physical shading; retained deeper rims, rivets, source-derived angular spoke placement and radius constraints. Fixed gun keeps camera projection. No clean-wheel claim from stills alone.
+- Published b-plain CPU/GPU geometry stage before texture work.
+- Baked 256px AO and curvature maps on GEO-Shield wing -1, GEO-Shield wing 1, GEO-Hollow tapered barrel
+- Published painted rest pose and 50/50 comparison; real AO shader, micrograin, edge geometry and hidden-surface fill.
+- Published e-idle: 8 actual rendered frames, 10 fps; CPU 512px 8 samples.
+- Published e-move: 8 actual rendered frames, 12 fps; CPU 512px 8 samples.
+- Published e-attack: 10 actual rendered frames, 14 fps; CPU 512px 8 samples.
+- Published e-hit: 4 actual rendered frames, 12 fps; CPU 512px 8 samples.
+- Published e-death: 10 actual rendered frames, 10 fps; CPU 512px 8 samples.
+- Completed all five clips and geometry audit; delivery pack may now run.
+- Published b-plain CPU/GPU geometry stage before texture work.
+- Baked 256px AO and curvature maps on GEO-Shield wing -1, GEO-Shield wing 1, GEO-Hollow tapered barrel
+- Published painted rest pose and 50/50 comparison; real AO shader, micrograin, edge geometry and hidden-surface fill.
+- Final material refinement replaces grey-green generated wheel pigment with continuous UV sampling of an unoccluded original shield-metal swatch; source paint grain/palette, Pointiness wear, AO and physical product shading, without frozen wheel holes/occlusions. Generated olive fill remains on unseen gun surfaces. Slightly narrowed tread depth and corrected hub-cap reach; no new asset/download. Full CPU512/8 rebuild underway.
+- Published e-idle: 8 actual rendered frames, 10 fps; CPU 512px 8 samples.

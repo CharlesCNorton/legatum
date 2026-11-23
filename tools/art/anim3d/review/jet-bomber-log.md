@@ -50,3 +50,4 @@ e-attack: 10 frames at 256/64 from 512px CYCLES/GPU, 96 samples.
 e-hit: 4 frames at 256/64 from 512px CYCLES/GPU, 96 samples.
 e-death: 10 frames at 256/64 from 512px CYCLES/GPU, 96 samples.
 g: 16 frames at 256/64 from 512px CYCLES/GPU, 96 samples.
+GPU round 1: all stages rendered at 512; 256 masters, validated 160 atlas and 8-second MP4. Visual review pending.
