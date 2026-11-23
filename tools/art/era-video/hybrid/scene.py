@@ -32,7 +32,7 @@ SHIP_WATERLINE = -.65
 FLUID_RESOLUTION, FLUID_SIZE = 96, (32, 88, 28)
 # Extinction is per world unit: the 28-unit-deep domain needs a small gain.
 # At 3.4 even dilute cached billows saturated into an apparently solid box.
-SMOKE_Z, SMOKE_DENSITY_GAIN = 24., .035
+SMOKE_Z, SMOKE_DENSITY_GAIN = 24., .3
 SMOKE_FADE = (.67, .84)
 FLUID_GRAVITY = (0., -9.81, 0.)  # +Y is picture-up; Z is camera depth.
 BANNERS = (
@@ -900,7 +900,7 @@ def fire(args, depth):
     setv(p,'Blackbody Intensity',0)
     flicker=node(tree,'ShaderNodeValue','Visible flame flicker')
     for frame in range(1,FRAMES+1):
-        flicker.outputs[0].default_value=12*fire_flicker(frame)
+        flicker.outputs[0].default_value=5*fire_flicker(frame)
         flicker.outputs[0].keyframe_insert('default_value',frame=frame)
     power=mathn(tree,'MULTIPLY',mathn(tree,'POWER',grids.outputs['Flame'],1.2),flicker.outputs[0])
     power=mathn(tree,'MULTIPLY',power,mathn(tree,'DIVIDE',envelope,SMOKE_DENSITY_GAIN))
