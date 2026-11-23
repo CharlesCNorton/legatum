@@ -24,7 +24,7 @@ it does not establish full garment or hand/weapon collision clearance.
 Host GPU handoff, no arguments:
 
 ```sh
-ROUND=2 tools/art/anim3d/units/arquebusier/gpu.sh
+ROUND=3 tools/art/anim3d/units/arquebusier/gpu.sh
 ```
 
 The pass regenerates clips, audits, renders every stage at native 512 px with
@@ -45,5 +45,14 @@ comparisons and the movie; successful packing does not establish painting parity
 `bind_fit.py` calibrates real ankle pivots and costume depth before retargeting.
 `retarget.py` verifies the installed CC0 library hashes and compensates rest pose
 and bone roll. `feet.py` renders all eight move samples from front and above,
-measures virtual-ground stance error and foot yaw, and publishes `g-feet-check`.
+measures virtual-ground stance error and bone/actual-shoe yaw, and publishes `g-feet-check`.
 These checks do not replace inspection of the actual shoe and cloth surfaces.
+
+Round 3 adds `round3.py`: full-depth silhouette finishing, weighted sleeve joins,
+thick folded elbow lining, generated clean stone pigment with live AO, and painted
+hidden-surface fill. `inputs.json` pins source assets; `prepare.py` verifies them.
+The exact generated plate prompt is `stone-fill.prompt.txt`.
+
+Heel/toe vertex landmarks calibrate the fitted shoe axes in the bind pose; no
+foot rotations are corrected after retargeting. Both bone and actual-shoe support
+yaw must stay below 20 degrees. Stone-edge alpha blends pigment over opaque cream.

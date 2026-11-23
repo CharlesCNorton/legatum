@@ -123,9 +123,11 @@ em=n.new('ShaderNodeEmission');l.new(ao.outputs['Color'],em.inputs['Color']);cam
 sys.path.insert(0,str(Path(__file__).resolve().parent))
 from bind_fit import calibrate
 bind_joints=calibrate(rig)
+from round3 import finish
+finish(rig,R)
 rig['rest_pose']=json.dumps({p.name:[list(row) for row in p.matrix_basis] for p in rig.pose.bones})
 (M/'bind-joints.json').write_text(json.dumps(bind_joints,indent=2))
 bpy.context.view_layer.update()
-sc['refinement']='round2 full-depth screen landmark fit; frozen MPFB macro mix and finished rigid surfaces'
+sc['refinement']='round3 continuous sleeves and generated stone; full-depth screen landmark fit; frozen MPFB macro mix and finished rigid surfaces'
 bpy.ops.wm.save_as_mainfile(filepath=str(M/'plain.blend'))
 (M/'registration.json').write_text(json.dumps({'controls':controls,'camera':list(cam.location),'method':'full-depth mesh coordinates; UVs recalibrated only after fitting','exact_viewpoint':False},indent=2))

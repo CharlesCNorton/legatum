@@ -221,7 +221,7 @@ def project():
  """Freeze finished-surface UVs; camera-only pigment avoids double illumination."""
  sc=bpy.context.scene;cam=sc.camera;im=bpy.data.images.load(str(A/'projection.png'),check_existing=True);records=[]
  for o in list(sc.objects):
-  if o.type!='MESH' or any(x in o.name for x in ('base','muzzle','eyes')):continue
+  if o.type!='MESH' or o.get('skip_painting_projection') or any(x in o.name for x in ('base','muzzle','eyes')):continue
   mods=[m for m in o.modifiers if m.type!='ARMATURE' and m.show_viewport]
   for m in mods:m.show_viewport=False
   bpy.context.view_layer.update();ev=o.evaluated_get(bpy.context.evaluated_depsgraph_get());me=ev.to_mesh();assert len(me.vertices)==len(o.data.vertices)
@@ -253,7 +253,7 @@ def project():
    camera=n.new('ShaderNodeLightPath');weight=n.new('ShaderNodeMath');weight.operation='MULTIPLY';l.new(alpha.outputs[0],weight.inputs[0]);l.new(camera.outputs['Is Camera Ray'],weight.inputs[1])
    strength=n.new('ShaderNodeMath');strength.operation='MULTIPLY';strength.inputs[1].default_value=.98;l.new(weight.outputs[0],strength.inputs[0])
    pigment=n.new('ShaderNodeEmission');pigment.name='Camera painted illumination';l.new(tex.outputs['Color'],pigment.inputs['Color'])
-   mix=n.new('ShaderNodeMixShader');l.new(strength.outputs[0],mix.inputs[0]);l.new(p.outputs[0],mix.inputs[1]);l.new(pigment.outputs[0],mix.inputs[2]);l.new(mix.outputs[0],out.inputs['Surface'])
+   mix=n.new('ShaderNodeMixShader');l.new(strength.outputs[0],mix.inputs[0]);l.new((n.get('Hidden fill surface') or p).outputs[0],mix.inputs[1]);l.new(pigment.outputs[0],mix.inputs[2]);l.new(mix.outputs[0],out.inputs['Surface'])
   records.append(o.name)
  bpy.ops.file.pack_all();bpy.ops.wm.save_as_mainfile(filepath=str(M/'arquebusier.blend'));(M/'projection.json').write_text(json.dumps({'objects':records,'method':'finished rest-camera UV, ray visibility/facing/source-alpha, camera-only painted illumination','weight':.98,'hidden_surfaces':'original generated painted fills'},indent=2));log('Finished-surface camera projection with camera-only pigment; generated hidden fills retained.')
 
@@ -294,7 +294,8 @@ def animate(clip):
    # Ground the finished soles, not anatomical ankle heads; keep source foot rotations.
    lows=[];deps=bpy.context.evaluated_depsgraph_get()
    for side in ('l','r'):
-    shoe=bpy.data.objects['GEO-latchet shoe '+side];ev=shoe.evaluated_get(deps);me=ev.to_mesh();lows.append(min((ev.matrix_world @ v.co).z for v in me.vertices));ev.to_mesh_clear()
+    for name in ('GEO-latchet shoe '+side,'GEO-shoe leather sole '+side):
+     shoe=bpy.data.objects[name];ev=shoe.evaluated_get(deps);me=ev.to_mesh();lows.append(min((ev.matrix_world @ v.co).z for v in me.vertices));ev.to_mesh_clear()
    base=bpy.data.objects['GEO-stationary cream base'];top=max((base.matrix_world @ Vector(c)).z for c in base.bound_box)
    rig.location.z+=top+.002-min(lows);bpy.context.view_layer.update()
   if clip=='attack':

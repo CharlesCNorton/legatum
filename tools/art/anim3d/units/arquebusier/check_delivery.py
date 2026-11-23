@@ -16,13 +16,14 @@ feet=json.loads((M/'feet/evidence.json').read_text())
 assert feet['device']=='GPU' and feet['clip_sha256']==digest(M/'clips/move.blend'),'Stale or CPU foot review'
 assert feet['resolution']==512 and feet['samples']>=48,'Foot review below final resolution/samples'
 assert feet['contact']['max_support_yaw_deg']<20 and feet['contact']['max_stance_error_m']<.025,'Foot path failed'
+assert feet['contact']['max_actual_shoe_yaw_deg']<20,'Actual shoe direction failed'
 assert (V/'arquebusier-g-feet-check.png').is_file()
 for view in ('top','front'):
  for i in range(8):
   for size in (256,512):assert Image.open(M/str(size)/'g-feet-check'/f'{view}-{i:02}.png').size==(size,size)
 if '--receipt' in sys.argv:
  report=json.loads((V/'arquebusier-validation.json').read_text());assert report['status']=='pass'
- movie=V/f"arquebusier-round{os.environ.get('ROUND','2')}.mp4";assert movie.stat().st_size>0
- receipt={'round':os.environ.get('ROUND','2'),'master_sha256':digest(M/'arquebusier.blend'),'video_sha256':digest(movie),'validation':report,'visual_approval':False}
- (V/f"arquebusier-gpu-round{os.environ.get('ROUND','2')}.json").write_text(json.dumps(receipt,indent=2))
+ movie=V/f"arquebusier-round{os.environ.get('ROUND','3')}.mp4";assert movie.stat().st_size>0
+ receipt={'round':os.environ.get('ROUND','3'),'master_sha256':digest(M/'arquebusier.blend'),'video_sha256':digest(movie),'validation':report,'visual_approval':False}
+ (V/f"arquebusier-gpu-round{os.environ.get('ROUND','3')}.json").write_text(json.dumps(receipt,indent=2))
 print('GPU512/256 provenance verified')

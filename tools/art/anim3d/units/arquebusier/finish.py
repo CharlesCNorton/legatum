@@ -142,7 +142,7 @@ def video():
   for r in c['rects']:
    im=Image.new('RGBA',(160,160));im.paste(atlas.crop((r['x'],r['y'],r['x']+r['w'],r['y']+r['h'])),(r['ox'],r['oy']));frames.append(im.resize((320,320),Image.Resampling.LANCZOS))
   groups.append((clip,c,frames))
- out=V/f"arquebusier-round{os.environ.get('ROUND','2')}.mp4"
+ out=V/f"arquebusier-round{os.environ.get('ROUND','3')}.mp4"
  proc=subprocess.Popen(['ffmpeg','-y','-loglevel','error','-f','rawvideo','-pix_fmt','rgb24','-s','1600x348','-r','30','-i','-','-an','-c:v','libx264','-threads','3','-pix_fmt','yuv420p','-crf','20','-movflags','+faststart',str(out)],stdin=subprocess.PIPE)
  for t in range(240):
   im=Image.new('RGBA',(1600,348),CREAM);d=ImageDraw.Draw(im)

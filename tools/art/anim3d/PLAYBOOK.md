@@ -270,3 +270,50 @@ connection too.
 The GPU handoff includes this stage and rejects stale or CPU-only foot evidence.
 The fixed rest histogram grade, image-generated hidden fills, genuine bevels and
 cloth folds, product lighting and 160 px/Q75/200,000-byte delivery contract remain.
+
+### Arquebusier driver round 3: moving seams and clean stone
+
+The actual round-two GPU pass completed at 512 px/64 samples with all 40 frames,
+182,788 bytes at Q85. It was technically valid but still showed a pointed bright
+morion brim, broad footwear, dark exposed fills and open sleeve seams in action.
+Original evidence is preserved under `masters/arquebusier/driver-r2-gpu/`.
+
+`round3.py` finishes the calibrated rest geometry before projection. Small measured
+screen corrections retain the helmet/stocking/shoe depth. The existing sleeves
+become skin-weighted across elbows and shoulders; thick folded elbow linings
+bridge their interiors. Their rest surfaces remain in place, while joint weights
+blend through motion. Generated hidden cloth/leather fills receive a restrained
+camera pigment layer with live contact AO, retaining physical BSDFs and weave.
+Do not compensate a black unprojected seam by grading the entire painted figure.
+
+The clean stone occlusion plate is original ImageGen output in the external asset
+folder. Alpha bounds register its pigment onto the actual rounded disc. It never
+provides opacity or geometry, and fresh AO supplies moving contact shadows. The
+source painting, original generated fabric fills and clean stone are SHA256-pinned
+in `inputs.json`; `prepare.py` checks them before preparing maps. The fixed rest
+histogram grade remains shared by all frames. Camera registration remains measured
+and approximate; the matched pigment is not evidence of an exact camera solve.
+
+Clear imported pose transforms before assigning sparse glTF actions; otherwise
+channels absent from an action can retain an unrelated imported pose. The open
+Quaternius motion, rest/roll mapping and foot rotations remain intact. Inspect
+actual top/front shoes and cloth as well as the numerical stance check.
+
+Run the sequential CPU stages documented above, then the lead runs:
+
+```sh
+ROUND=3 tools/art/anim3d/units/arquebusier/gpu.sh
+```
+
+The same 512/256 masters, 160px trimmed atlas, Q75 floor, 200,000-byte cap,
+provenance/geometry/alpha validation and eight-second five-clip movie are required.
+Successful checks still do not establish painting parity or authorize a PASS file.
+
+The round-three top view exposed a gap in the earlier foot check: a forward bone
+axis did not prove that its fitted shoe pointed forward. Bind calibration now
+measures heel/toe vertex landmarks on the actual shoe and aligns the ankle/toe
+bind axis before retargeting, preserving the painted rest silhouette. The foot
+review and GPU gate also check the actual shoe direction (20-degree limit).
+No sampled foot rotation is edited. Thin rounded leather soles and flattened
+undersides replace point-contact ellipsoids; ground placement includes the soles.
+Generated stone edge alpha blends pigment over cream and never cuts opacity.

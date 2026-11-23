@@ -3,7 +3,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/../../../../.."
 source tools/art/anim3d/env.sh
-export ROUND="${ROUND:-2}" CYCLES_DEVICE=GPU RESOLUTION=512 SAMPLES="${SAMPLES:-64}"
+export ROUND="${ROUND:-3}" CYCLES_DEVICE=GPU RESOLUTION=512 SAMPLES="${SAMPLES:-64}"
 unit=tools/art/anim3d/units/arquebusier
 status="$ANIM_ROOT/review/3d-v2/arquebusier-gpu-status.txt"
 receipt="$ANIM_ROOT/review/3d-v2/arquebusier-gpu-round${ROUND}.json"

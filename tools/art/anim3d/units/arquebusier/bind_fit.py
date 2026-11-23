@@ -65,7 +65,21 @@ def calibrate(rig):
         points = [shoe.matrix_world @ v.co for v in shoe.data.vertices]
         center = sum(points, Vector()) / len(points)
         ankle = center + Vector((-.025 if side == 'l' else 0, .025, .035))
-        toe = center + Vector((.06 if side == 'l' else 0, -.09, -.035))
+        # Calibrate the actual shoe's heel-to-toe direction, not a guessed yaw.
+        # The fitted rest silhouette stays fixed; source motion rotates this bind
+        # axis into travel direction without any post-retarget foot correction.
+        local_y = [v.co.y for v in shoe.data.vertices]
+        low_y, high_y = min(local_y), max(local_y)
+        toe_indices = [v.index for v in shoe.data.vertices if v.co.y < low_y+.20*(high_y-low_y)]
+        heel_indices = [v.index for v in shoe.data.vertices if v.co.y > high_y-.20*(high_y-low_y)]
+        toe_center = sum((points[i] for i in toe_indices), Vector())/len(toe_indices)
+        heel_center = sum((points[i] for i in heel_indices), Vector())/len(heel_indices)
+        axis = toe_center-heel_center
+        axis.z = 0
+        axis.normalize()
+        toe = ankle+axis*.14+Vector((0,0,-.07))
+        shoe['toe_vertices'] = toe_indices
+        shoe['heel_vertices'] = heel_indices
         stocking = bpy.data.objects['GEO-ivory stocking '+side]
         vertices = [stocking.matrix_world @ v.co for v in stocking.data.vertices]
         low, high = min(v.z for v in vertices), max(v.z for v in vertices)
