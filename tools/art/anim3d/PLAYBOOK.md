@@ -106,3 +106,129 @@ tools/art/anim3d/render.sh audit
 ```
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
+
+## Vehicles — main battle tank (`main-battle-tank`)
+
+This unit uses original full-depth hard-surface geometry: a low hull and cast dome,
+long elevated smoothbore, six road wheels per side, 124 separate track links, armoured
+skirts, rear fuel drum, rolled canvas, hatches and a small mounted gun. It is a rigid
+machine; no human or quadruped motion applies. No national markings or maker logos.
+All unit code lives under `tools/art/anim3d/units/main-battle-tank/`, adapted from
+`astra/unit-anim-3d-vehicles`; shared spearman scripts remain compatible.
+
+### Required quality and review method
+
+Apply feedback 12–23. Sam's encouragement is a direction, not final art acceptance.
+The four levers are standard: (1) freeze the rest-camera painting projection onto
+actual finished meshes; (2) finish geometry with bevels, real thickness and visible
+relief; (3) warm upper-left product key, soft fill, cool rim and contact shadows;
+(4) measure the painting's opaque RGB histogram and apply one bounded rest grade to
+all frames. Hidden faces use the recorded generated painted-olive fill, CC0 steel
+microstructure and procedural rubber/canvas. Bake actual AO and Pointiness maps for
+the two hull pieces and cast turret; do not fabricate those maps.
+
+`refine.py` fits component landmarks in the camera's horizontal/vertical axes while
+preserving depth. Wheel pivots remain circular and track paths remain in physical
+X/Z planes. The gun axis is fitted separately from the mantlet to avoid turning the
+mantlet into an oversized ball. The fixed camera is orthographic; native 256px
+painting coordinates guide fitting. It is an approximate registration, not a proof
+of painting parity or exact real-world proportions. Inspect front and side views.
+
+The shared base target is **sRGB #E9CFA0**, a plain warm cream stone disc with a darker
+rim and fine grain. Material RGB values are linear, so final rendered pixels, not
+shader swatches, decide the colour. Project the painting's actual base pigment and
+use the inherited Travertine micrograin/cream fallback. Base geometry never animates.
+Standard/None colour management preserves the already-lit projected pigment; it is
+an intentional painted-image workflow, not a photographic lighting preset. Projection
+is camera-ray-only so the painted light does not illuminate other objects.
+
+All six Blender skills are applied: modeling (closed beveled armour), materials
+(dielectric paint, real steel, grain and bakes), lighting (key/fill/rim), cameras
+(landmark registration), animation (rigid hierarchy and layered action curves), and
+rendering (CPU drafts, explicit GPU finals and decoded video checks). Optional
+reference-look-calibration is unavailable; landmarks and histogram measurements supply
+that comparison. No additional skill installation is needed.
+
+### Build and round-one previews
+
+Run from the repository root; each step is sequential. Rebuild invalidates bakes,
+projection, clips and downstream renders. Every Blender invocation is plain
+`blender -b --disable-autoexec` through the PATH gate. No application-path bypass,
+extra heavy process or zero-scale hiding. All effects are full-thickness translucent
+meshes with keyed `hide_render`; no volume grid conversion.
+
+```sh
+u=tools/art/anim3d/units/main-battle-tank
+"$u/render.sh" build
+"$u/render.sh" refine
+RENDER_ENGINE=CYCLES SAMPLES=8 "$u/render.sh" b
+"$u/render.sh" bake
+"$u/render.sh" paint
+RENDER_ENGINE=CYCLES SAMPLES=8 "$u/render.sh" c
+"$u/render.sh" animate
+for stage in details d e-idle e-move e-attack e-hit e-death g audit; do
+  RENDER_ENGINE=CYCLES SAMPLES=8 "$u/render.sh" "$stage"
+done
+```
+
+Masters, six 512px bake maps, source painting, packed textures, separate clip blends,
+render receipts and untouched ungraded images remain outside git under
+`$ANIM_ROOT/masters/main-battle-tank/`. Each stage immediately emits
+`main-battle-tank-b-plain.png`, `-c-textured-lit.png`, `-c-details.png`,
+`-d-rig-poses.png`, `-e-<clip>-strip.png` and `-e-<clip>.webp` in `review/3d-v2/`.
+`-f-restpose-compare.png` shows painting/render/50-50 crossfade at 256 and 64px.
+`-g-feet-check.png` shows top/front views of every move sample; for this unit these
+are track/wheel checks. Read incoming unit feedback and keep the unit log honest.
+
+### Motion standard
+
+For human lanes use CMU free-use or Quaternius CC0 captured motion by default for
+idle/walk/hit/death, retargeted with Blender or Rokoko and matched rest poses/bone
+rolls. Only weapon-specific attack overlays are authored. For animals use a CC0
+animated quadruped. Never correct foot direction after a broken retarget; fix the
+axis/rest mapping. Every round requires top/front gait views across one move cycle,
+forward-pointing feet and no sliding, with source URL/licence in both source logs.
+
+For this machine, track motion uses a closed convex circle-envelope sampled by arc
+length. Each road wheel rotates by the identical travelled distance divided by its
+radius. The root stays in place for map-driven locomotion; moving tracks indicate
+travel along +X. Idle is subtle engine vibration and turret scanning; attack has
+recoil and a brief muzzle effect at the fitted muzzle; hit jolts the chassis; death
+settles into a scorched stationary wreck with subdued smoke. Counts/fps are idle
+8/10, move 8/12, attack 10/14, hit 4/12, death 10/10. Only idle/move loop; final two
+death samples are identical. Numerical speed tests supplement visual contact checks;
+they cannot prove smooth motion or painting parity.
+
+### Complete GPU handoff and delivery
+
+```sh
+ROUND=1 tools/art/anim3d/units/main-battle-tank/gpu.sh
+```
+
+No arguments; defaults to Cycles Metal, 512px and 256 samples with denoising. It
+checks for Metal, audits saved masters, renders **every** review stage and all five
+clips, retains actual 512px and downsampled 256px masters, packs/validates delivery,
+and decodes the eight-second H.264/yuv420p `main-battle-tank-round${ROUND}.mp4`.
+All five clips appear side by side at 2x on cream; one-shot clips replay after a hold.
+The script logs its checkout, exact failure stage and final technical status. Missing
+Metal fails explicitly, with no silent CPU fallback or synthetic 512px upscaling.
+CPU review images are not GPU approval.
+
+Atlas contract: 160x160 logical cells; transparent per-frame crops in clip-row order
+idle/move/attack/hit/death. JSON has `version:2`, `trimmed:true`,
+`frame:{w:160,h:160,ax:73.75,ay:111.25}` and
+`clips:{name:{row,frames,fps,loop,rects:[{x,y,w,h,ox,oy},...]}}`.
+`x/y/w/h` address the atlas; `ox/oy` restore the crop into the logical frame. Draw at
+`(anchorX-ax+ox, anchorY-ay+oy)`, scaling every coordinate equally. `row` is ordering,
+not a fixed-height atlas coordinate. Duplicate death frames may share a rectangle.
+No runtime consumer is changed in this art lane; keep the static painting until the
+lead approves and a consumer supports the trimmed schema.
+
+The packer preserves all 40 samples, tests WebP Q95/90/85/80/75 and fails if none fits
+**200,000 bytes**. Validation checks trim bounds, exact reconstructed alpha, gutters,
+frame counts, actual motion, held death, grade/scene hashes and current masters.
+`test_runninggear.py` checks closure, tangent orientation and constant arc-length
+speed. `audit.py` checks geometry, pivots, scales, stationary base, recoil and bakes;
+its contact-distance diagnostic and the visual sheets remain review evidence.
+Scripts never create `main-battle-tank-PASS`: only write it after a human-quality
+judgment that rest is hard to distinguish, clips are clean and delivery passes.

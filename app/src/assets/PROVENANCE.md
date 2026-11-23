@@ -36,3 +36,12 @@ The date range is the range of dates the repository's own records give (prompt h
 
 - No prompt is stored for the map improvements, the six original resource medallions, the aircraft plan sprites or the parchment texture.
 - Where a set was generated from one shared prompt (terrain, city sets, camps and ruins), there is one prompt for the set, not one per file.
+
+### Main battle tank animation candidate (2026-11-23)
+
+Original articulated 3D model and mechanical clips, projected from the existing CC BY 4.0
+main-battle-tank painting. MIT pipeline scripts under `tools/art/anim3d/units/main-battle-tank/`;
+rendered art CC BY 4.0. Reuses recorded generated olive fill and ambientCG Metal034/Travertine001
+CC0 scans. Exact source URLs, licences and source hashes: unit `SOURCES.md` and `assets.lock.json`.
+External editable masters: `~/LegatumRuns/anim-pilot/masters/main-battle-tank/`. Candidate only;
+static art remains active until visual approval and trimmed-atlas runtime support.
