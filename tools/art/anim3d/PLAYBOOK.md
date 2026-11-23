@@ -238,3 +238,44 @@ now pins the actual sole patch during support, using captured ankle targets and
 preserving the capture's orientation. Inspect and record the measured residual
 and direction from `audit.json`; bone provenance alone does not prove clean
 motion. Never label a technical atlas pass as an animation/art PASS.
+
+### Heir driver round 2: continuous costume and captured fall arms
+
+After opening the actual round-1 GPU sheets and MP4 frames, preserve that evidence
+under `masters/byzantine-heir/driver-r1-gpu/`. `finish_geometry.py` runs inside
+`refine.py` before projection and binds finished costume vertices through the
+inverse blended pose matrices. The calf-to-foot boot skin keeps its lower cuff
+inside the closed shoe while preserving the original captured foot rotations.
+The skirt and hem blend into the thighs; the individual lamellae use constant
+per-plate weights. Dark woven breeches cover the leg anatomy revealed by a fall.
+These are real geometry/material changes, with no alpha cutout or hidden feet.
+
+Lower the rear neckline in every cloth shape key, fit the hair-cap top to the
+painting contour while retaining depth, and add limestone mineral variation.
+Existing generated silk/linen/leather/metal fills and AO/curvature remain in the
+shader. Projection is frozen after fitting; the fixed rest-derived histogram
+grade remains shared by all clips. `finish_version=3` guards the new checkpoint.
+
+The CMU fall now supplies arm rotations and released-hand position targets;
+keeping a weapon-carrying elbow offset through a fall made the earlier pose rigid.
+Idle uses a quieter 96-source-frame standing excerpt. Cloth settling remains
+an authored deformation with support folds, not a physics simulation. Audit the
+actual evaluated cuff vertices inside each shoe BVH for both legs in every pose,
+in addition to travel-compensated stance drift and foot direction.
+
+The required no-argument `gpu.sh` still renders GPU512/48 and gallery256, all
+review stages, the trimmed atlas, validation and the round MP4. It now checks for
+the baked projection checkpoint and tees its transcript to the driver as well as
+the retained per-round log. Run `ROUND=2 tools/art/anim3d/units/byzantine-heir/gpu.sh`.
+Fresh CPU previews are technical and visual iteration evidence, not GPU approval.
+
+Source projection also freezes camera-ray visibility so occluded boot tops and
+underlayers use their generated material fills instead of borrowing purple cloak
+pixels. Measure raw indexed UV positions first, then restore MPFB's helper mask
+before ray casting. Leaving that mask disabled turns non-rendered face helpers
+into false occluders and creates blotches in the visible painted face.
+
+The final fall samples CMU 90_18 through frame 360 of 395, holding that later
+settled pose twice; frame 200 was still mid-fall. The source list is recorded in
+clip metadata. Extending the capture does not by itself solve the skirt lining
+and cloth-shape limitations exposed in the fallen pose.

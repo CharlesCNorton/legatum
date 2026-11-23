@@ -64,9 +64,11 @@ def make_clips(selected=None):
     key=ob.shape_key_add(name='Settled death drape')
     inv=ob.matrix_world.inverted();rows=40;columns=29
     for index,vertex in enumerate(key.data):
-     fraction=(index//columns)/rows;weight=min(1,max(0,(fraction-.20)/.70))
+     fraction=(index//columns)/rows;weight=min(1,max(0,(fraction-.05)/.40))
+     across=(index%columns)/(columns-1)
      world=ob.matrix_world@vertex.co
-     world.z-=max(0,world.z-.18)*weight
+     support=.115+.012*math.sin(across*math.pi*8+fraction*3)*math.sin(fraction*math.pi)
+     world.z-=max(0,world.z-support)*weight
      vertex.co=inv@world
     for i in range(count):
      t=i/(count-1);a=min(1,t/.78);a=a*a*(3-2*a)

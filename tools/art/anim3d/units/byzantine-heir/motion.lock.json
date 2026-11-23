@@ -10,14 +10,14 @@
     "file": "cmu-77_02.bvh",
     "sha256": "d6eef8f4ab182bef1bb5db0c46cbec0261b81a63ce1720b8a19777b7e79887a9",
     "url": "https://raw.githubusercontent.com/una-dinosauria/cmu-mocap/master/data/077/77_02.bvh",
-    "use": "standing: 80-320",
+    "use": "standing: 80-176",
     "license": "CMU free commercial/research use; Bruce Hahne 2010 BVH conversion adds no restrictions"
   },
   {
     "file": "byzantine-heir/cmu-90_18.bvh",
     "sha256": "32a6bcf85820af466fb141f7e05a7131fbb7d0b76a4f7d407379c6f9457cac10",
     "url": "https://raw.githubusercontent.com/una-dinosauria/cmu-mocap/master/data/090/90_18.bvh",
-    "use": "rug-pull fall: 50-200; hit excerpt 65/90/78/65",
+    "use": "rug-pull fall: 50-360; hit excerpt 65/90/78/65",
     "license": "CMU free commercial/research use; Bruce Hahne 2010 BVH conversion adds no restrictions"
   },
   {

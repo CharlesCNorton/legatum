@@ -8,6 +8,8 @@ from mocap import BVH
 MAP={'pelvis':'Hips','spine_01':'LowerBack','spine_02':'Spine','spine_03':'Spine1','neck_01':'Neck','head':'Head',
      'thigh_l':'LeftUpLeg','calf_l':'LeftLeg','foot_l':'LeftFoot','ball_l':'LeftToeBase',
      'thigh_r':'RightUpLeg','calf_r':'RightLeg','foot_r':'RightFoot','ball_r':'RightToeBase'}
+ARMS={'upperarm_l':'LeftArm','lowerarm_l':'LeftForeArm','hand_l':'LeftHand',
+      'upperarm_r':'RightArm','lowerarm_r':'RightForeArm','hand_r':'RightHand'}
 
 class Capture(BVH):
  def __init__(self,path):
@@ -38,7 +40,8 @@ class Retarget:
   assert self.capture.hash==entry['sha256'],'Motion source changed: '+str(path)
   self.reference=self.capture.matrices(0 if clip=='move' else 80 if clip=='idle' else 50 if clip=='death' else 65)
   self.first=self.capture.matrices(1 if clip=='move' else 80 if clip=='idle' else 50 if clip=='death' else 65)
-  self.neutral={name:rig.pose.bones[name].matrix.to_quaternion() for name in MAP}
+  self.mapping={**MAP,**(ARMS if clip=='death' else {})}
+  self.neutral={name:rig.pose.bones[name].matrix.to_quaternion() for name in self.mapping}
   self.origin=rig.location.copy();self.travel=[]
   # Uniform anatomical scale measured from hip-to-ankle segment lengths.
   source=self.capture.matrices(0)
@@ -52,19 +55,31 @@ class Retarget:
   if self.clip=='move':
    frame=1+round((t%1)*132);blend=1
    if t>=1:self.locks={}
-  elif self.clip=='idle':frame=80+round(t*240);blend=math.sin(math.pi*t)**2
+  elif self.clip=='idle':frame=80+round(t*96);blend=math.sin(math.pi*t)**2
   elif self.clip=='hit':frame=[65,90,78,65][i];blend=1
-  else:frame=[50,65,80,95,110,125,145,170,200,200][i];blend=1
+  else:frame=[50,65,80,95,110,130,170,240,360,360][i];blend=1
   pose=self.capture.matrices(frame)
-  names=list(MAP) if self.clip in {'move','death'} else ['spine_01','spine_02','spine_03','neck_01','head']
+  names=list(self.mapping) if self.clip in {'move','death'} else ['spine_01','spine_02','spine_03','neck_01','head']
   # Set global orientations in hierarchy order. Bone-roll/rest offsets are
   # captured once in neutral; no constant post-retarget foot orientation.
   names.sort(key=lambda name:len(self.rig.pose.bones[name].parent_recursive))
   for name in names:
-   source=MAP[name];delta=pose[source].to_quaternion()@self.reference[source].to_quaternion().inverted()
+   source=self.mapping[name];delta=pose[source].to_quaternion()@self.reference[source].to_quaternion().inverted()
    delta=self.yaw@delta@self.yaw.inverted();delta=Quaternion().slerp(delta,blend)
    bone=self.rig.pose.bones[name];mat=(delta@self.neutral[name]).to_matrix().to_4x4();mat.translation=bone.head;bone.matrix=mat
    bpy.context.view_layer.update()
+  if self.clip=='death' and t>.1:
+   # Release the weapon-carrying rest pose into the capture's hand positions.
+   # Rotation deltas alone preserve the bent carrying elbows throughout a fall.
+   release=min(1,(t-.1)/.25);release=release*release*(3-2*release)
+   for side,prefix in [('l','Left'),('r','Right')]:
+    hand=self.rig.pose.bones['hand_'+side];orientation=hand.matrix.to_quaternion()
+    hip=self.rig.pose.bones['pelvis'].head
+    target=hip+self.yaw@(pose[prefix+'Hand'].translation-pose['Hips'].translation)*self.scale
+    pole=hip+self.yaw@(pose[prefix+'ForeArm'].translation-pose['Hips'].translation)*self.scale
+    self.solver('upperarm_'+side,'lowerarm_'+side,hand.head.lerp(target,release),pole)
+    hand=self.rig.pose.bones['hand_'+side];mat=orientation.to_matrix().to_4x4();mat.translation=hand.head;hand.matrix=mat
+    bpy.context.view_layer.update()
   travel=self.yaw@(pose['Hips'].translation-self.first['Hips'].translation)*self.scale
   if self.clip=='move':
    # End-effector positions come from the same capture as rotations. This
@@ -118,4 +133,4 @@ class Retarget:
    self.rig.location.z+=.09-lowest
   self.records.append({'source_frame':frame,'root_motion_m':list(travel),'source':self.capture.path.name})
  def provenance(self):
-  return {'cycle_displacement_m':list(self.yaw@(self.capture.matrices(133)['Hips'].translation-self.first['Hips'].translation)*self.scale) if self.clip=='move' else None,'source':str(self.capture.path),'sha256':self.capture.hash,'licence':'CMU free use; Bruce Hahne 2010 BVH conversion','samples':self.records,'method':'Rest-calibrated BVH rotation and captured ankle-target retarget; fixed Y-up to Z-up and forward alignment; no authored foot angles'}
+  return {'cycle_displacement_m':list(self.yaw@(self.capture.matrices(133)['Hips'].translation-self.first['Hips'].translation)*self.scale) if self.clip=='move' else None,'source':str(self.capture.path),'sha256':self.capture.hash,'licence':'CMU free use; Bruce Hahne 2010 BVH conversion','samples':self.records,'bone_map':self.mapping,'method':'Rest-calibrated BVH rotation and captured ankle-target retarget; fixed Y-up to Z-up and forward alignment; no authored foot angles'}

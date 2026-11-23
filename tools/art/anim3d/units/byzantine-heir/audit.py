@@ -1,11 +1,12 @@
 """Audit actual saved mesh/rig/clip data, not visual approval."""
 import bpy,os,json,math
 from mathutils import Vector
+from mathutils.bvhtree import BVHTree
 from bpy_extras.object_utils import world_to_camera_view
 from pathlib import Path
 R=Path(os.environ['ANIM_ROOT']);M=R/'masters/byzantine-heir';report={}
 bpy.ops.wm.open_mainfile(filepath=str(M/'byzantine-heir.blend'));rig=bpy.data.objects['Heir MPFB game_engine'];body=bpy.data.objects['Heir MPFB anatomy'];assert len(rig.data.bones)>=50;assert len(body.data.vertices)>10000
-assert bpy.context.scene.get('finish_version')==2,'Finished-surface refinement missing'
+assert bpy.context.scene.get('finish_version')==3,'Finished-surface refinement missing'
 assert body.data.shape_keys is None,'Active macro shapes override fitting'
 assert all(m.type not in {'BEVEL','SOLIDIFY','SUBSURF'} for ob in bpy.context.scene.objects if ob.type=='MESH' and not ob.data.shape_keys and ob.name!='Stationary cream stone' for m in ob.modifiers),'Unfinished rigid surface'
 sc=bpy.context.scene;deps=bpy.context.evaluated_depsgraph_get();max_error=0
@@ -24,6 +25,12 @@ assert max_error<.01,('Frozen UV registration',max_error)
 report['finished_projection_max_error_px']=max_error
 report['anatomy']={'vertices':len(body.data.vertices),'bones':len(rig.data.bones),'origin':rig['origin']};report['geometry']={'mesh_count':sum(o.type=='MESH' for o in bpy.context.scene.objects),'projection':json.loads((M/'projection.json').read_text())['method']};report['clips']={}
 neutral_staff=bpy.data.objects['Banner staff control'].matrix_world.copy()
+for side in ['l','r']:
+ boot=bpy.data.objects['Tall leather boot '+side]
+ assert boot.get('pose_bound_costume') and boot.modifiers.get('Continuous costume skin')
+ assert {'calf_'+side,'foot_'+side}=={g.name for g in boot.vertex_groups}
+assert 'Painted dark woven breeches' in body.data.materials
+ankle_overlap=[]
 for name,n in [('idle',8),('move',8),('attack',10),('hit',4),('death',10)]:
  bpy.ops.wm.open_mainfile(filepath=str(M/'clips'/name/'clip.blend'));sc=bpy.context.scene;base=bpy.data.objects['Stationary cream stone'];initial=base.matrix_world.copy();assert sc.frame_end==n
  sc.frame_set(1);bpy.context.view_layer.update()
@@ -31,6 +38,19 @@ for name,n in [('idle',8),('move',8),('attack',10),('hit',4),('death',10)]:
  assert name=='move' or max(abs(staff[r][c]-neutral_staff[r][c]) for r in range(4) for c in range(4))<.0001,(name,'Entry staff pop')
  for f in range(1,n+1):
   sc.frame_set(f);assert base.matrix_world==initial,'Base moved';assert not base.animation_data
+  bpy.context.view_layer.update();deps=bpy.context.evaluated_depsgraph_get()
+  for side in ['l','r']:
+   toe=bpy.data.objects['Leather toe '+side];te=toe.evaluated_get(deps);tm=te.to_mesh()
+   tree=BVHTree.FromPolygons([te.matrix_world@v.co for v in tm.vertices],[list(p.vertices) for p in tm.polygons])
+   boot=bpy.data.objects['Tall leather boot '+side];be=boot.evaluated_get(deps);bm=be.to_mesh()
+   group=boot.vertex_groups['foot_'+side].index;inside=0
+   for v in bm.vertices:
+    if not any(g.group==group and g.weight>.999 for g in v.groups):continue
+    point=be.matrix_world@v.co;near,normal,_,distance=tree.find_nearest(point)
+    if near is not None and (point-near).dot(normal)<0:inside+=1
+   be.to_mesh_clear();te.to_mesh_clear()
+   assert inside>=8,(name,f,side,'Boot cuff is not embedded in shoe',inside)
+   ankle_overlap.append(inside)
   if name=='move':
    soles=[]
    for side in ['r','l']:
@@ -59,5 +79,6 @@ for index in range(8):
   previous[side]=(centre,planted);feet.append({'frame':index+1,'side':side,'sole_z':low,'yaw_from_travel_degrees':angle,'planted':planted})
 assert max(slips,default=0)<.002,('Planted-foot slip exceeds 2mm',max(slips))
 assert max(x['yaw_from_travel_degrees'] for x in feet if x['planted'])<10,'Planted feet do not face travel'
+report['ankle_join']={'minimum_embedded_vertices':min(ankle_overlap),'samples':len(ankle_overlap),'method':'Evaluated lower boot vertices inside closed shoe BVH in all 40 poses, both legs'}
 report['feet']={'samples':feet,'max_stance_step_residual_m':max(slips,default=0),'max_yaw_degrees':max(x['yaw_from_travel_degrees'] for x in feet),'note':'Measured residuals are not an automatic art PASS; inspect g-feet-check.png'}
 report['limitations']=['Not a full cloth/body collision solver','Pixel bounds and held death are checked separately','Art verdict remains below painting'];(M/'audit.json').write_text(json.dumps(report,indent=2));print('AUDIT_OK',json.dumps(report))

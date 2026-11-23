@@ -1,5 +1,5 @@
 """Repeatable finish from the baked checkpoint; frozen UVs on finished 3D surfaces."""
-import bpy, os, json, math, shutil
+import bpy, os, json, math, shutil, sys
 from pathlib import Path
 from mathutils import Vector, Matrix
 from bpy_extras.object_utils import world_to_camera_view
@@ -82,6 +82,9 @@ for mod in list(body.modifiers):
  if mod.type=='SUBSURF':
   bpy.ops.object.modifier_move_up(modifier=mod.name)
   bpy.ops.object.modifier_apply(modifier=mod.name)
+sys.path.insert(0,str(Path(__file__).parent))
+from finish_geometry import finish
+stone_grain=finish(sc,rig)
 sc.view_settings.view_transform='Standard';sc.view_settings.look='None'
 for name,power,color in [('Warm key',270,(1,.96,.88)),('Soft fill',65,(.90,.95,1)),('Cool rim',135,(.82,.90,1))]:
  light=bpy.data.objects[name];light.data.energy=power;light.data.color=color
@@ -90,7 +93,7 @@ sc.world.node_tree.nodes.get('Background').inputs['Strength'].default_value=.25
 stone=base.data.materials[0];n=stone.node_tree.nodes;l=stone.node_tree.links;s=n.get('Principled BSDF')
 noise=next(x for x in n if x.type=='TEX_NOISE');noise.inputs['Scale'].default_value=210
 ramp=n.new('ShaderNodeValToRGB');ramp.color_ramp.elements[0].color=(.72,.53,.29,1);ramp.color_ramp.elements[1].color=(.90,.71,.44,1)
-l.new(noise.outputs['Fac'],ramp.inputs[0]);mix=next(x for x in n if x.type=='MIX_RGB');l.new(ramp.outputs[0],mix.inputs[1])
+l.new(stone_grain,ramp.inputs[0]);mix=next(x for x in n if x.type=='MIX_RGB');l.new(ramp.outputs[0],mix.inputs[1])
 for node in n:
  if node.type=='BUMP':node.inputs['Distance'].default_value=.0008;node.inputs['Strength'].default_value=.14
 # Camera-only stone pigment opens the cream without lighting the figure.
@@ -109,14 +112,26 @@ for ob in sc.objects:
  bpy.context.view_layer.update();ev=ob.evaluated_get(bpy.context.evaluated_depsgraph_get());me=ev.to_mesh()
  assert len(me.vertices)==len(ob.data.vertices),ob.name
  uv=ob.data.uv_layers.get('Rest painting');attr=ob.data.color_attributes.get('Projection facing');coords=[];weights=[]
- for v in me.vertices:
-  w=ev.matrix_world@v.co;q=world_to_camera_view(sc,cam,w);coords.append((q.x,q.y))
-  normal=(ev.matrix_world.to_3x3().inverted().transposed()@v.normal).normalized()
-  weights.append(max(0,min(1,(normal.dot(view)+.12)/.30)))
+ points=[ev.matrix_world@v.co for v in me.vertices]
+ normals=[(ev.matrix_world.to_3x3().inverted().transposed()@v.normal).normalized() for v in me.vertices]
+ ev.to_mesh_clear()
+ # The MPFB mask hides helper geometry around the face. Restore it before
+ # scene ray casting; measuring raw indexed UVs with the mask disabled must
+ # not make those non-rendered helpers into false occluders.
+ for mod,state in mods:mod.show_viewport=state
+ bpy.context.view_layer.update();ray_deps=bpy.context.evaluated_depsgraph_get()
+ for w,normal in zip(points,normals):
+  q=world_to_camera_view(sc,cam,w);coords.append((q.x,q.y))
+  facing=max(0,min(1,(normal.dot(view)+.12)/.30))
+  # Freeze source visibility too: a boot beneath the cloak must not borrow
+  # purple pixels just because its normal points toward the source camera.
+  if facing:
+   hit,location,_,_,_,_=sc.ray_cast(ray_deps,w+view*10,-view,distance=11)
+   visibility=max(0,min(1,(.035-(location-w).length)/.025)) if hit else 0
+  else:visibility=0
+  weights.append(facing*visibility)
  for loop in ob.data.loops:
   uv.data[loop.index].uv=coords[loop.vertex_index];attr.data[loop.index].color=(weights[loop.vertex_index],)*3+(1,)
- ev.to_mesh_clear()
- for mod,state in mods:mod.show_viewport=state
  for material in ob.data.materials:
   n=material.node_tree.nodes;l=material.node_tree.links;s=n.get('Principled BSDF');out=next(x for x in n if x.type=='OUTPUT_MATERIAL')
   tex=next(x for x in n if x.type=='TEX_IMAGE' and x.image and 'painting-aligned' in x.image.name)
@@ -137,8 +152,8 @@ for ob in sc.objects:
   strength=n.new('ShaderNodeMath');strength.operation='MULTIPLY';strength.inputs[1].default_value=.96;l.new(cam_mask.outputs[0],strength.inputs[0])
   blend=n.new('ShaderNodeMixShader');l.new(strength.outputs[0],blend.inputs[0]);l.new(s.outputs[0],blend.inputs[1]);l.new(paint.outputs[0],blend.inputs[2]);l.new(blend.outputs[0],out.inputs['Surface'])
  records.append({'mesh':ob.name,'vertices':len(ob.data.vertices)})
-sc['finish_version']=2
+sc['finish_version']=3
 bpy.ops.file.pack_all();bpy.ops.wm.save_as_mainfile(filepath=str(M/'byzantine-heir.blend'))
 bpy.ops.wm.save_as_mainfile(filepath=str(M/'plain.blend'))
-(M/'projection.json').write_text(json.dumps({'method':'Finished rigid surfaces and subdivided weighted anatomy, frozen rest-camera UVs; camera-only 96% pigment; retained generated fills and AO/curvature','meshes':records,'checkpoint':str(checkpoint)},indent=2))
+(M/'projection.json').write_text(json.dumps({'method':'Finished rigid surfaces and subdivided weighted anatomy, frozen rest-camera UVs; camera-ray visibility and camera-only 96% pigment; retained generated fills and AO/curvature','meshes':records,'checkpoint':str(checkpoint)},indent=2))
 print('REFINE_READY',len(records),'meshes')

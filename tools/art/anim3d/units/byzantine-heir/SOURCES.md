@@ -11,8 +11,8 @@ restrictions. Download URLs and SHA256 are pinned in `motion.lock.json`.
 | Recording | Use | Source |
 | --- | --- | --- |
 | CMU 02_01 | Walk, one captured cycle, frames 1–133 | [BVH](https://raw.githubusercontent.com/una-dinosauria/cmu-mocap/master/data/002/02_01.bvh) |
-| CMU 77_02 | Standing/idle, frames 80–320 | [BVH](https://raw.githubusercontent.com/una-dinosauria/cmu-mocap/master/data/077/77_02.bvh) |
-| CMU 90_18 | Rug-pull fall, death frames 50–200; early balance-loss excerpt resampled forward/back for hit | [BVH](https://raw.githubusercontent.com/una-dinosauria/cmu-mocap/master/data/090/90_18.bvh) |
+| CMU 77_02 | Standing/idle, frames 80–176 | [BVH](https://raw.githubusercontent.com/una-dinosauria/cmu-mocap/master/data/077/77_02.bvh) |
+| CMU 90_18 | Rug-pull fall, death frames 50–360; early balance-loss excerpt resampled forward/back for hit | [BVH](https://raw.githubusercontent.com/una-dinosauria/cmu-mocap/master/data/090/90_18.bvh) |
 | CMU 77_18 | Lying down/getting up, inspected but not used | [BVH](https://raw.githubusercontent.com/una-dinosauria/cmu-mocap/master/data/077/77_18.bvh) |
 
 [CMU database](https://mocap.cs.cmu.edu/) and
