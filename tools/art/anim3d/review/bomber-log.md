@@ -50,3 +50,5 @@ Round 2 verdict: close same-unit reading at64, still visibly different at256. Ca
 b: 3 frames at 256/64 from 512px CYCLES/GPU, 96 samples.
 c: 1 frames at 256/64 from 512px CYCLES/GPU, 96 samples.
 d: 4 frames at 256/64 from 512px CYCLES/GPU, 96 samples.
+e-idle: 8 frames at 256/64 from 512px CYCLES/GPU, 96 samples.
+e-move: 8 frames at 256/64 from 512px CYCLES/GPU, 96 samples.
