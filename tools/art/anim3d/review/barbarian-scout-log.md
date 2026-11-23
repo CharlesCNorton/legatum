@@ -164,3 +164,7 @@ Completed animate stage.
 Published b-plain geometry checkpoint.
 Published c review: GPU 512 px, 64 samples; fixed rest-derived grade.
 Published d review: GPU 512 px, 64 samples; fixed rest-derived grade.
+Published e-idle review: GPU 512 px, 64 samples; fixed rest-derived grade.
+Published e-move review: GPU 512 px, 64 samples; fixed rest-derived grade.
+Published e-attack review: GPU 512 px, 64 samples; fixed rest-derived grade.
+Published e-hit review: GPU 512 px, 64 samples; fixed rest-derived grade.
