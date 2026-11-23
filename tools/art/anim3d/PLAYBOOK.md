@@ -112,7 +112,7 @@ Run each heavy stage sequentially. Other unit lanes share the same lock; if one 
 This unit's scripts live in `tools/art/anim3d/units/autonomous-armour/`; they do not
 replace the tank lane's family scripts. The unmanned vehicle uses original closed
 hull and turret meshes, a genuinely open muzzle, separate optical housings, twin
-antennas, thick segmented skirts, seven road wheels per side, two sprockets per
+antennas, thick segmented skirts, six road wheels per side, two sprockets per
 side and 128 individually articulated track links. A rigid parent hierarchy owns
 chassis, turret traverse, gun recoil, sensor yaw, antennas, wheels and links.
 No infantry anatomy or MPFB installation is needed for a machine.
@@ -132,7 +132,7 @@ fill, ambient cavity shading, bevels and physical response finish the wheel dish
 Three real Cycles AO/Pointiness bake pairs remain on the main armour surfaces.
 
 The round-two hull and track gauge are 22% broader, the turret is 15% shorter with
-a raised mounting, and the camera is `(10,-7,4.8)` aimed at `(0,0,1.6)`, scale 5.25.
+a raised mounting, and the camera is `(10,-5.7,4.6)` aimed at `(0,0,1.6)`, scale 5.25.
 These are measured local visual improvements, **not an exact viewpoint claim**.
 The source/render/50-percent-crossfade sheet at 256 and 64 px remains the art gate;
 passing file checks alone is not approval. Remaining running-gear proportions,
@@ -145,12 +145,15 @@ revealed surfaces and source-object contamination in moving poses.
 
 The base retains the shared dielectric **#E9CFA0** albedo, fine grain, a real
 55mm five-segment bevel and .24m contact top. Camera-only top/rim pigment with live
-AO opens its shaded edge; no tank image or painted contact shadow enters the stone.
-The rim remains simpler than the painting. Judge actual lit/graded pixels, not
-material numeric values alone.
+AO opens its shaded edge; no tank image or dark painted contact shadow enters the stone.
+The driver-round-two finish also freezes source UVs on the real disc. Only
+bright cream source pixels below the vehicle may contribute; olive pixels and
+dark painted contact shadows are excluded. Physical/pigment stone remains
+underneath the vehicle and on unseen surfaces. Judge actual lit/graded pixels,
+not material numeric values alone.
 
 Mechanical motion uses shared constants in `common.py`: five track pitches per
-move loop, two six-stud wheel periods and three twelve-tooth sprocket periods.
+move loop, five twelve-stud wheel periods and three twelve-tooth sprocket periods.
 The rolling direction matches the tread, and angular travel times rolling radius
 equals track travel. The saved-scene audit checks those distances and maps closure
 links to their corresponding starting links. `g` renders all eight move samples
@@ -224,3 +227,27 @@ quality >=75; reject delivery over 200,000 bytes. Reduce tokens with premultipli
 RGBA bicubic sampling, preserving the exact resulting 8-bit alpha on decode.
 Raw and graded hashes are rechecked independently during validation. No runtime loader is changed
 by this art candidate, and fixed-grid consumers must not infer new crop positions.
+
+### Driver round 2 after the successful round-1 GPU pass
+
+The driver reused the earlier round-two CPU implementation for its round-one GPU
+pass. Its receipt verifies Cycles GPU96 at 512, a 192,900-byte Q85 atlas and an
+8-second H.264 movie. That exact evidence is preserved externally at
+`masters/autonomous-armour/driver-round1-gpu/`; it is not the current geometry.
+
+A less side-on orthographic camera shortens the excessive projected tread run.
+The turret shifts 0.15m toward the visible side, its gun mount shifts 0.13m forward,
+and the two antenna tips have independently corrected heights. Six separated
+road tyres replace seven overlapping tyres. Their radius is derived from the
+same five track pitches using 150 degrees of travel; twelve repeated studs close
+at five periods. Curved closed wheel dishes and rolled warm worn rims replace
+flat concentric cylinders. The audit now rejects intersecting road tyres as well
+as testing contact, travel, closure and frozen UV registration.
+
+`animate.py` records generator, source/fill and saved-scene SHA256 values in
+`build-inputs.json` once all five scenes exist. GPU preflight and the final receipt
+both verify these inputs, rejecting a script or texture change after the build.
+This extends the existing raw/graded/atlas hashes. Never treat an older 512 folder
+as current evidence after CPU iteration; only fresh GPU manifests establish that.
+The current CPU/GPU difference and remaining silhouette/paint gaps belong in the
+unit log, and only actual visual acceptance can write PASS.

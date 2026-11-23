@@ -107,12 +107,25 @@ for o in objects:
     if moving_gear and o.name.startswith(('GEO-wheel face','GEO-wheel dish','GEO-sprocket face')):
         ao=n.new('ShaderNodeAmbientOcclusion');ao.inputs['Distance'].default_value=.18
         shade=n.new('ShaderNodeMixRGB');shade.blend_type='MULTIPLY';shade.inputs[0].default_value=.65
-        neutral=n.new('ShaderNodeHueSaturation');neutral.inputs['Saturation'].default_value=.30
+        neutral=n.new('ShaderNodeHueSaturation');neutral.inputs['Saturation'].default_value=.65
         l.new(original,neutral.inputs['Color']);l.new(neutral.outputs['Color'],s.inputs['Base Color'])
         l.new(neutral.outputs['Color'],shade.inputs[1]);l.new(ao.outputs['Color'],shade.inputs[2])
         l.new(shade.outputs[0],pigment.inputs['Color'])
         l.new(lightpath.outputs['Is Camera Ray'],camera_weight.inputs[0])
         l.remove(camera_weight.inputs[1].links[0]);camera_weight.inputs[1].default_value=.25
+        if o.name.startswith('GEO-wheel dish'):
+            # Curved rolled edges catch a warm painted highlight; cavities keep
+            # the generated olive pigment. Radius is local, so the 12-fold
+            # geometry and pigment close at the same 150-degree loop sample.
+            tc=n.new('ShaderNodeTexCoord');sep=n.new('ShaderNodeSeparateXYZ');l.new(tc.outputs['Generated'],sep.inputs[0])
+            radial=[]
+            for axis in ('X','Z'):
+                sub=n.new('ShaderNodeMath');sub.operation='SUBTRACT';sub.inputs[1].default_value=.5;l.new(sep.outputs[axis],sub.inputs[0])
+                sq=n.new('ShaderNodeMath');sq.operation='MULTIPLY';l.new(sub.outputs[0],sq.inputs[0]);l.new(sub.outputs[0],sq.inputs[1]);radial.append(sq.outputs[0])
+            add=n.new('ShaderNodeMath');add.operation='ADD';l.new(radial[0],add.inputs[0]);l.new(radial[1],add.inputs[1])
+            rim=n.new('ShaderNodeMapRange');rim.inputs['From Min'].default_value=.18;rim.inputs['From Max'].default_value=.23;l.new(add.outputs[0],rim.inputs['Value'])
+            wear=n.new('ShaderNodeMixRGB');wear.inputs[2].default_value=(.34,.28,.19,1);l.new(rim.outputs[0],wear.inputs[0]);l.new(neutral.outputs[0],wear.inputs[1])
+            l.new(wear.outputs[0],s.inputs['Base Color']);l.new(wear.outputs[0],shade.inputs[1])
     projection.append(o.name)
 # Warm physical stone, with camera-only pigment to open the deep rim. The
 # pigment uses live AO; it contains neither a projected tank nor painted shadow.
@@ -129,6 +142,32 @@ pigment=n.new('ShaderNodeEmission');l.new(shade.outputs[0],pigment.inputs['Color
 path=n.new('ShaderNodeLightPath');path.name='Camera-only stone pigment'
 weight=n.new('ShaderNodeMath');weight.operation='MULTIPLY';weight.inputs[1].default_value=.72;l.new(path.outputs['Is Camera Ray'],weight.inputs[0])
 blend=n.new('ShaderNodeMixShader');l.new(weight.outputs[0],blend.inputs[0]);l.new(s.outputs[0],blend.inputs[1]);l.new(pigment.outputs[0],blend.inputs[2]);l.new(blend.outputs[0],n.get('Material Output').inputs['Surface'])
+# Preserve the painting's fine stone grain on the real beveled disc. Restrict
+# projection to bright cream pixels below the vehicle; olive armour, tread and
+# baked dark contact shadows cannot be copied onto revealed stone during motion.
+base=bpy.data.objects['BASE-stationary cream stone']
+uv=base.data.uv_layers.new(name='StonePainting')
+for index,loop in enumerate(base.data.loops):
+    p=world_to_camera_view(sc,sc.camera,base.matrix_world @ base.data.vertices[loop.vertex_index].co)
+    uv.data[index].uv=(p.x,p.y)
+coord=n.new('ShaderNodeUVMap');coord.uv_map='StonePainting'
+im=n.new('ShaderNodeTexImage');im.image=tex;im.extension='CLIP';l.new(coord.outputs[0],im.inputs['Vector'])
+rgb=n.new('ShaderNodeSeparateColor');rgb.mode='RGB';l.new(im.outputs['Color'],rgb.inputs[0])
+xy=n.new('ShaderNodeSeparateXYZ');l.new(coord.outputs[0],xy.inputs[0])
+def stone_math(operation,a,b):
+    node=n.new('ShaderNodeMath');node.operation=operation
+    for i,value in enumerate((a,b)):
+        if isinstance(value,(int,float)):node.inputs[i].default_value=value
+        else:l.new(value,node.inputs[i])
+    return node.outputs[0]
+cream=stone_math('GREATER_THAN',stone_math('SUBTRACT',rgb.outputs['Red'],rgb.outputs['Green']),.08)
+bright=stone_math('GREATER_THAN',rgb.outputs['Green'],.38)
+lower=stone_math('LESS_THAN',xy.outputs['Y'],.30)
+mask=stone_math('MULTIPLY',stone_math('MULTIPLY',cream,bright),lower)
+mask=stone_math('MULTIPLY',mask,im.outputs['Alpha'])
+mask=stone_math('MULTIPLY',mask,path.outputs['Is Camera Ray'])
+source=n.new('ShaderNodeEmission');l.new(im.outputs['Color'],source.inputs['Color'])
+stoneblend=n.new('ShaderNodeMixShader');l.new(mask,stoneblend.inputs[0]);l.new(blend.outputs[0],stoneblend.inputs[1]);l.new(source.outputs[0],stoneblend.inputs[2]);l.new(stoneblend.outputs[0],n.get('Material Output').inputs['Surface'])
 bpy.ops.file.pack_all();bpy.ops.wm.save_as_mainfile(filepath=str(M/'finished.blend'))
 (M/'projection.json').write_text(json.dumps({'meshes':projection,'strength':{'static':.97,'rotating_gear':0},'camera_only':True,'hidden_fill':'generated painted-fill.png, frozen-camera visibility and facing fade','source':'projection.png'},indent=2))
 log(f'Finished materials: three actual AO/curvature bake pairs, generated unseen paint, {len(projection)} genuine projected meshes; all textures packed.')

@@ -2,7 +2,7 @@
 import bpy, sys, math, json, hashlib
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parent))
-from common import MASTER, CLIPS, log, TRACK_H, TRACK_R, TRACK_Z, TRACK_LENGTH, MOVE_TRAVEL, ROAD_RADIUS
+from common import MASTER, HERE, ASSETS, CLIPS, log, TRACK_H, TRACK_R, TRACK_Z, TRACK_LENGTH, MOVE_TRAVEL, ROAD_RADIUS
 from math import pi,sin,cos
 R=TRACK_R;H=TRACK_H;Z=TRACK_Z;LENGTH=TRACK_LENGTH
 
@@ -78,4 +78,10 @@ for clip,(count,fps,loop) in CLIPS.items():
     bpy.ops.wm.save_as_mainfile(filepath=str(MASTER/'clips'/f'{clip}.blend'))
     log(f'Authored {clip}: {count} output samples at {fps} fps; {len(controls)} mechanical controls; loop={loop}.')
 
+def digest(path):return hashlib.sha256(path.read_bytes()).hexdigest()
+(MASTER/'build-inputs.json').write_text(json.dumps({
+    'scripts':{name:digest(HERE/name) for name in ('scene.py','finish.py','animate.py','common.py','prepare.py')},
+    'assets':{name:digest(ASSETS/name) for name in ('painting-source.png','projection.png','painted-fill.png')},
+    'scenes':{name:digest(MASTER/name) for name in ['model.blend','plain.blend','finished.blend']+[f'clips/{clip}.blend' for clip in CLIPS]},
+},indent=2))
 (MASTER/'build-pending').unlink(missing_ok=True)

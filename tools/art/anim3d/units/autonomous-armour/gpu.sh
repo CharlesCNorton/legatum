@@ -26,6 +26,7 @@ for file in model.blend plain.blend finished.blend clips/idle.blend clips/move.b
   test -s "$ANIM_ROOT/masters/autonomous-armour/$file"
 done
 test ! -e "$ANIM_ROOT/masters/autonomous-armour/build-pending"
+"$ANIM_ROOT/venv/bin/python" "$unit/deliver.py" verify-build
 stage=scene-audit
 "$unit/render.sh" audit
 stage=gpu-renders-and-delivery

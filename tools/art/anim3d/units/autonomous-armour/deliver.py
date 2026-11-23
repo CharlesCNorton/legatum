@@ -1,8 +1,8 @@
 """Review, frozen histogram grade, trimmed atlas, validation and decoded-atlas MP4."""
 import sys, os, json, hashlib, io, subprocess
 from pathlib import Path
-from PIL import Image, ImageDraw, ImageChops, ImageStat
-from common import MASTER, REVIEW, ASSETS, SLUG, CLIPS, log
+from PIL import Image, ImageDraw, ImageChops, ImageStat, ImageOps
+from common import MASTER, REVIEW, ASSETS, HERE, SLUG, CLIPS, log
 OUT=Path('app/src/assets/units/anim');OUT.mkdir(parents=True,exist_ok=True)
 CREAM=(240,232,214,255)
 def read(p):return Image.open(p).convert('RGBA')
@@ -62,7 +62,19 @@ def review(stage):
             canvas.alpha_composite(im,(256*i,28));token=read(Path(f'app/src/assets/units/{SLUG}-64.png')) if i==0 else small(im,64);canvas.alpha_composite(token,(256*i+96,302));d.text((256*i+8,8),label,fill='#423a30')
         canvas.convert('RGB').save(REVIEW/f'{SLUG}-f-restpose-compare.png')
     elif stage=='details':
-        sheet([read(ASSETS/'projection.png').crop((144,152,888,580)).resize((256,256),Image.Resampling.LANCZOS),images[-1]],['Painting turret crop','3D detail'],REVIEW/f'{SLUG}-c-details.png')
+        # Compare identical camera-space regions without changing aspect ratio.
+        # The separately rendered close view remains a master, but its camera
+        # cannot be used as a registration comparison against the painting.
+        canvas=Image.new('RGBA',(512,3*284),CREAM);draw=ImageDraw.Draw(canvas)
+        regions=[('Turret',(48,18,220,126)),('Running gear',(12,124,142,218)),('Stone',(10,180,246,239))]
+        reference=read(ASSETS/'projection.png')
+        for row,(label,box) in enumerate(regions):
+            for col,im in enumerate((reference,read(MASTER/'256'/'details'/'rest.png'))):
+                scale=im.width/256;crop=im.crop(tuple(round(v*scale) for v in box))
+                crop=ImageOps.contain(crop,(256,256),Image.Resampling.LANCZOS)
+                canvas.alpha_composite(crop,(col*256+(256-crop.width)//2,row*284+28+(256-crop.height)//2))
+                draw.text((col*256+8,row*284+8),f'{label}: {"Painting" if col==0 else "3D"}',fill='#423a30')
+        canvas.convert('RGB').save(REVIEW/f'{SLUG}-c-details.png')
     elif stage=='d':sheet(images,['Ready','Aim','Recoil','Recovery'],REVIEW/f'{SLUG}-d-rig-poses.png')
     elif stage=='g':
         canvas=Image.new('RGBA',(128*8,156*2),CREAM);draw=ImageDraw.Draw(canvas)
@@ -173,8 +185,17 @@ def movie():
     assert s['codec_name']=='h264' and s['pix_fmt']=='yuv420p' and s['nb_frames']=='240';assert float(s['duration'])==8
     (REVIEW/f'{SLUG}-video-validation.json').write_text(json.dumps({'path':str(dest),'width':s['width'],'height':s['height'],'frames':240,'duration':8,'codec':s['codec_name'],'pixel_format':s['pix_fmt']},indent=2));log(f'Encoded and ffprobe-verified {dest.name}: 8 s, 240 frames, 1600x348 H.264 yuv420p; decoded trimmed atlas.')
 
+def verify_build():
+    assert not (MASTER/'build-pending').exists(),'Interrupted build'
+    inputs=json.loads((MASTER/'build-inputs.json').read_text())
+    for section,root in [('scripts',HERE),('assets',ASSETS),('scenes',MASTER)]:
+        for name,expected in inputs[section].items():
+            assert sha(root/name)==expected,f'Rebuild required: {section}/{name} changed'
+    print('Current generator, asset and saved-scene hashes verified.')
+
 def verify_gpu():
     """Independently reject CPU, stale, incomplete or mismatched final evidence."""
+    verify_build()
     masterhash=sha(MASTER/'finished.blend');stages={'b':3,'c':1,'details':2,'d':4,'g':16}
     stages.update({f'e-{name}':count for name,(count,_,_) in CLIPS.items()})
     for stage,count in stages.items():
@@ -211,4 +232,4 @@ def verify_gpu():
 if __name__=='__main__':
     task=sys.argv[1]
     if task=='review':review(sys.argv[2])
-    else:{'pack':pack,'validate':validate,'movie':movie,'verify-gpu':verify_gpu}[task]()
+    else:{'pack':pack,'validate':validate,'movie':movie,'verify-build':verify_build,'verify-gpu':verify_gpu}[task]()

@@ -35,11 +35,11 @@ s=stone.node_tree.nodes.get('Principled BSDF');s.inputs['Emission Color'].defaul
 def empty(name, parent=None, loc=(0,0,0)):
     o=bpy.data.objects.new(name,None);bpy.context.collection.objects.link(o);o.parent=parent;o.location=loc;return o
 root=empty('RIG-chassis')
-turret=empty('RIG-turret',root,(-.25,0,1.94))
+turret=empty('RIG-turret',root,(-.25,-.15,1.94))
 turret.rotation_euler.z=.60
 turret.location.z+=.15
 turret.scale.z=.85
-gun=empty('RIG-gun',turret,(.72,0,.60))
+gun=empty('RIG-gun',turret,(.85,0,.60))
 sensor=empty('RIG-sensor',turret,(-.34,0,1.18))
 
 def finish(o,name,mat,parent,bevel=.012,smooth=False):
@@ -146,7 +146,7 @@ for y,r in [(-.10,.072),(.10,.052)]:
 cube('GEO-forward sensor',(.31,-.10,.93),(.29,.31,.21),paint,turret)
 cyl('GEO-forward optic',(.465,-.10,.93),.074,.018,black,turret,'X')
 cyl('GEO-forward lens',(.48,-.10,.93),.052,.016,glass,turret,'X')
-for i,(x,y,h) in enumerate([(-.86,-.40,.95),(-.62,.38,.84)]):
+for i,(x,y,h) in enumerate([(-.96,-.46,1.22),(-.68,.38,.85)]):
     a=empty('RIG-antenna-'+str(i),turret,(x,y,.82))
     cyl('GEO-antenna mount',(0,0,.06),.055,.12,paint,a)
     rod('GEO-antenna lower',(0,0,.10),(0,0,.43),.024,steel,a)
@@ -159,17 +159,31 @@ for y in [-.48,.48]:
     cube('GEO-periscope glass',(.79,y,1.915),(.015,.21,.042),black)
 for x in [-1.40,-1.05,-.65,-.25,.15,.55,1.10]:
     for side in [-1,1]:cube('GEO-deck fastener',(x,side*.87,1.895),(.07,.09,.035),edge,bevel=.009)
-# Seven road wheels each side; asymmetric small hub bolts make rotation visible.
+# Six separated road wheels each side; twelve repeated studs close the roll loop.
 for side in [-1,1]:
-    for i,x in enumerate([-1.22,-.83,-.44,-.05,.34,.73,1.12]):
+    for i,x in enumerate([-1.30,-.78,-.26,.26,.78,1.30]):
         w=empty(f'RIG-wheel-{side}-{i}',root,(x,side*1.03,.24+.041+.025/2+.065/2+ROAD_RADIUS));w['wheel']=True
         cyl('GEO-rubber wheel',(0,0,0),ROAD_RADIUS,.27,rubber,w,'Y')
-        cyl('GEO-wheel face',(0,side*.145,0),.265,.025,paint,w,'Y')
-        cyl('GEO-wheel inset',(0,side*.16,0),.205,.010,steel,w,'Y')
-        cyl('GEO-wheel dish',(0,side*.17,0),.175,.015,paint,w,'Y')
-        cyl('GEO-wheel hub',(0,side*.192,0),.065,.055,edge,w,'Y')
-        for j in range(6):
-            a=j*2*pi/6;cyl('GEO-hub stud',(.10*cos(a),side*.19,.10*sin(a)),.013,.014,edge,w,'Y',8)
+        # A rolled rim and deep curved dish replace the stack of flat washers.
+        # The closed profile has a real recessed well and a small central cap.
+        profile=[(.249,.140),(.249,.158),(.238,.174),(.222,.176),
+                 (.209,.160),(.191,.128),(.160,.112),(.096,.116),
+                 (.065,.145),(.045,.164),(0,.164),(0,.128)]
+        vs=[(r*cos(j*2*pi/48),side*d,r*sin(j*2*pi/48)) for r,d in profile for j in range(48)]
+        fs=[]
+        for k in range(len(profile)):
+            for j in range(48):
+                face=(k*48+j,k*48+(j+1)%48,((k+1)%len(profile))*48+(j+1)%48,((k+1)%len(profile))*48+j)
+                fs.append(face if side==1 else tuple(reversed(face)))
+        me=bpy.data.meshes.new('Closed wheel dish');me.from_pydata(vs,[],fs);me.update()
+        o=bpy.data.objects.new('GEO-wheel dish',me);bpy.context.collection.objects.link(o)
+        finish(o,o.name,paint,w,0,True)
+        bpy.context.view_layer.objects.active=o
+        bpy.ops.object.select_all(action='DESELECT');o.select_set(True)
+        bpy.ops.object.mode_set(mode='EDIT');bpy.ops.mesh.select_all(action='SELECT')
+        bpy.ops.mesh.remove_doubles(threshold=.0001);bpy.ops.mesh.normals_make_consistent(inside=False);bpy.ops.object.mode_set(mode='OBJECT')
+        for j in range(12):
+            a=j*2*pi/12;cyl('GEO-hub stud',(.09*cos(a),side*.128,.09*sin(a)),.010,.012,paint,w,'Y',8)
     for x in [-1.49,1.49]:
         w=empty(f'RIG-sprocket-{side}-{x}',root,(x,side*1.03,TRACK_Z));w['wheel']=True
         cyl('GEO-sprocket',(0,0,0),TRACK_R-.04,.28,steel,w,'Y')
@@ -212,7 +226,7 @@ sc.cycles.max_bounces=5;sc.render.threads_mode='FIXED';sc.render.threads=3
 sc.render.film_transparent=True;sc.render.resolution_x=sc.render.resolution_y=256;sc.render.resolution_percentage=100
 sc.render.image_settings.file_format='PNG';sc.render.image_settings.color_mode='RGBA'
 sc.world.color=(.15,.15,.15);sc.view_settings.view_transform='Standard';sc.view_settings.look='None';sc.view_settings.exposure=0
-bpy.ops.object.camera_add(location=(10,-7,4.8));cam=bpy.context.object;cam.name='CAM-painting';cam.rotation_euler=(Vector((0,0,1.60))-cam.location).to_track_quat('-Z','Y').to_euler();cam.data.type='ORTHO';cam.data.ortho_scale=5.25;sc.camera=cam
+bpy.ops.object.camera_add(location=(10,-5.7,4.60));cam=bpy.context.object;cam.name='CAM-painting';cam.rotation_euler=(Vector((0,0,1.60))-cam.location).to_track_quat('-Z','Y').to_euler();cam.data.type='ORTHO';cam.data.ortho_scale=5.25;sc.camera=cam
 for name,loc,power,size,col in [('LGT-warm key',(-3,-4,9),620,5,(1,.96,.88)),('LGT-soft fill',(5,-3,4),110,5,(.92,.96,1)),('LGT-cool rim',(-2,4,6),230,3,(.82,.90,1))]:
     bpy.ops.object.light_add(type='AREA',location=loc);o=bpy.context.object;o.name=name;o.data.energy=power;o.data.size=size;o.data.color=col;o.rotation_euler=(Vector((0,0,1))-o.location).to_track_quat('-Z','Y').to_euler()
 # Broader track gauge and hull, with circular road wheels retained.
@@ -237,4 +251,4 @@ clay=material('MAT-plain clay',(.25,.23,.20),(.46,.43,.37))
 for o in bpy.data.objects:
     if o.type=='MESH' and o.name.startswith('GEO-'):o.data.materials.clear();o.data.materials.append(clay)
 bpy.ops.wm.save_as_mainfile(filepath=str(MASTER/'plain.blend'))
-log(f'Built true 3D hard-surface geometry and rigid rig: {len(bpy.data.objects)} objects; bevels, open muzzle, sensors, seven wheels per side, 128 articulated tracks.')
+log(f'Built true 3D hard-surface geometry and rigid rig: {len(bpy.data.objects)} objects; bevels, open muzzle, sensors, six wheels per side, 128 articulated tracks.')

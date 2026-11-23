@@ -13,7 +13,12 @@ for name,(count,fps,loop) in CLIPS.items():
     base=bpy.data.objects['BASE-stationary cream stone'];assert base.parent is None
     assert not base.animation_data,'Base must not animate'
     meshes=[o for o in bpy.data.objects if o.type=='MESH'];tracks=[o for o in bpy.data.objects if 'phase' in o]
-    assert len(tracks)==128 and len([o for o in bpy.data.objects if 'wheel' in o])==18
+    assert len(tracks)==128 and len([o for o in bpy.data.objects if 'wheel' in o])==16
+    for side in (-1,1):
+        road=sorted([o for o in bpy.data.objects if o.name.startswith(f'RIG-wheel-{side}-')],key=lambda o:o.location.x)
+        assert len(road)==6
+        for a,b in zip(road,road[1:]):
+            assert b.location.x-a.location.x>=2*ROAD_RADIUS,'Road tyres intersect'
     assert len(meshes)>300 and 'GEO-open muzzle brake' in bpy.data.objects
     poses=[];contact=[]
     shoes=[child for track in tracks for child in track.children if child.type=='MESH']
@@ -67,5 +72,5 @@ for i in range(3):
     for mode in ['AO','curvature']:assert (MASTER/'textures/baked'/f'{i}-{mode}.png').exists()
 assert len(json.loads((MASTER/'projection.json').read_text())['meshes'])>300
 report={'contract':'PASS','master_sha256':masterhash,'clips':reports,'limits':'Geometry/keys audit, not a complete collision solver or visual art approval.'}
-(REVIEW/f'{SLUG}-audit.json').write_text(json.dumps(report,indent=2));log('Saved-scene audit PASS: current source hashes, 128 track links, 18 wheels, stationary base, nonzero scales, loop closure keys and held death.')
+(REVIEW/f'{SLUG}-audit.json').write_text(json.dumps(report,indent=2));log('Saved-scene audit PASS: current source hashes, 128 track links, 16 wheels, stationary base, nonzero scales, loop closure keys and held death.')
 print('AUDIT PASS')
