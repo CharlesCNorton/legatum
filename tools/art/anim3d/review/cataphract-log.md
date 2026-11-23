@@ -67,3 +67,4 @@ Rendered death: 10 frames, 256px, 8 samples, CPU.
 Packed and decoded 40 trimmed frames, quality 85, 193498 bytes; wrote cataphract-round2.mp4. Warnings: []
 Rendered four keyed attack rig poses.
 Rendered attack: 10 frames, 256px, 8 samples, CPU.
+Packed and decoded 40 trimmed frames, quality 85, 193924 bytes; wrote cataphract-round2.mp4. Warnings: []
