@@ -126,3 +126,8 @@ Rendered e-move 512 px CYCLES/CPU
 Rendered e-attack 512 px CYCLES/CPU
 Rendered e-hit 512 px CYCLES/CPU
 Rendered e-death 512 px CYCLES/CPU
+Rendered e-move 512 px CYCLES/CPU
+Driver round 2 geometry: narrowed/turned complete hat; reshaped the full-depth cowl to the source drape instead of a horizontal collar; fitted raised sleeve; lengthened raised calf 16% with foot scale inheritance disabled and moved ankle to painting/base edge. Added stone pigment grain. Preserved original bevels/straps/folds, real AO/curvature, generated fills and product lights.
+Driver round 2 pigment: hard colour masks were discarding warm cowl highlights; replaced with feathered spatial garment masks. Same frozen camera UVs and automatic rest histogram grade; no alpha cutout mesh, billboard or per-frame reprojection. First 512px CPU check removes major colour islands but face/hand/cowl tailoring still visibly differs at 256px. 64px scout identity improved, not identical.
+Driver round 2 motion: pinned/verified existing CC0 Quaternius Standard glTF/bin/LICENSE; idle, walk, hit and death retargeted with rest/reference/roll calibration. Authored staff attack and cloth-contact shapes retained. Inspected all five strips and front/top feet. Walk follows source toe tuck; translation-only virtual-ground stance residual under 0.000001m, lateral toe displacement 0.0032m, no post-retarget foot rotation.
+Driver round 2 full CPU pass first found move/0 staff clipping at y=0 despite fitting atlas budget (184920 bytes/Q75). Validator correctly rejected it. Lowered the staff-carrying arm reference before source sampling; rerendering only move, then feet/pack/validation.
