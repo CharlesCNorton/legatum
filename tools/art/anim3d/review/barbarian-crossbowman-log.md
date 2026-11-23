@@ -104,3 +104,6 @@
 - Round3 generated clean stone plate (ImageGen skill) and reused recorded CC BY painted skin/leather fills; all copied into the unit external assets and pinned. Closed convex anatomical shoe surfaces bridge toe clefts with native foot weights; sleeve extraction now uses upper/lower-arm skin membership instead of an X slice. Rest camera, real garment thickness/bevels/folds, physical key/fill/rim and one histogram grade retained.
 - c: 1 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
 - c: 1 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- c: 1 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- e-move: 8 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
+- e-death: 10 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
