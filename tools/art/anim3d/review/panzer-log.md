@@ -47,3 +47,5 @@
 - Emitted panzer-g-feet-check.png from actual g renders; visual review pending.
 - Round 2: opened GPU c/f, all five e strips and decoded round1 MP4 frames before edits. 256px critique: upper armour brushwork is close, but flat ochre road wheels erase the bright hubs/dark recesses; track outline is too low and front sprocket too large/dark; cupola is squat and turret roof silhouette too low; brake lacks the painted port contrast. Stone is reasonably warm, still slightly too large. 64px: same Panzer identity and sand/olive pattern, but running gear merges into a dark bar. Death smoke reads as a stack of translucent oval discs, not smoke. No painting parity, no PASS.
 - Round 2: read all PLAYBOOK chapters, complete shared FEEDBACK (1–23), prior log, project art skill and six Sam Blender skills. No panzer-FEEDBACK.md exists. GPU r1 succeeded: 188914 bytes at q75, 40 frames, 512/256 masters and valid H.264/yuv420p 8-second video. Preserved round-one review/master evidence in masters/panzer/driver-r1-gpu.
+- Emitted panzer-b-plain.png from actual b renders; visual review pending.
+- Emitted panzer-c-textured-lit.png from actual c renders; visual review pending.
