@@ -87,3 +87,12 @@ Final round-two CPU delivery: all 40 native256 / Cycles CPU8 frames; trimmed160 
 Actual gpu.sh invocation correctly exits 1 at gpu-device because Metal is unavailable in this sandbox, before touching source masters. Missing-input failure also recorded correctly. Host GPU512/256 rendering remains unverified; command ROUND=2 tools/art/anim3d/units/barbarian-scout/gpu.sh from scout checkout. No PASS written.
 Archived final CPU evidence in masters/barbarian-scout/round2-cpu. Supplied origin/master a099781d is already an ancestor; no merge or engine tests required for these art-only changes.
 Committed round 2 as becb4bf3 on astra/unit-anim-3d-barbarian-scout in .worktrees/barbarian-scout-round2; worktree clean, gpu.sh mode100755. No push, PR, merge into master or visual PASS.
+Completed build stage.
+Completed refine stage.
+Completed texture stage.
+Completed bake stage.
+Completed animate stage.
+Published b-plain geometry checkpoint.
+Published c review: GPU 512 px, 64 samples; fixed rest-derived grade.
+Published d review: GPU 512 px, 64 samples; fixed rest-derived grade.
+Published e-idle review: GPU 512 px, 64 samples; fixed rest-derived grade.
