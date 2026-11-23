@@ -52,3 +52,6 @@ Round 2: opened GPU c/f sheets, all five e strips and four extracted round1.mp4 
 Loaded all six Blender skills and full playbook/common feedback: use bone-chain pose registration before surface refinement, volume-preserving sculpture, thicker flowing tail, frozen camera pigment/generated backfill, upper-left product light and one rest-fitted histogram grade.
 Rendered c-textured-lit: 256px CYCLES CPU, 4 samples.
 Rendered c-textured-lit: 256px CYCLES CPU, 8 samples.
+Rendered move: 8 frames, 256px, 4 samples, CPU.
+Rendered death: 10 frames, 256px, 4 samples, CPU.
+Rendered move: 8 frames, 256px, 4 samples, CPU.
