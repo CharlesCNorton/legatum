@@ -42,3 +42,7 @@
 - Rendered e-death: 256px, CYCLES; review published.
 - Rendered g: 256px, CYCLES; review published.
 - Rendered e-death: 256px, CYCLES; review published.
+- Full motion review caught the first toppled-support direction crossing the fuselage. Changed its fall behind the airframe, rerendered death and re-audited all 40 poses. Support remains solid/visible; floor contact passes. The crash still reads too intact and fixed-view wing paint stretches in larger rotations.
+- Final round-2 CPU256/12 delivery: 172,446 bytes at Q90, 1310×770 trimmed atlas, all 8/8/10/4/10 frames, exact decoded alpha and held death. Geometry/contact audit, source/grade/render/atlas validation, Python/Bash syntax and whitespace checks pass. MP4 verified H.264/yuv420p, 1600×348, 240 frames/8 seconds; decoded video frame inspected.
+- GPU entry point is executable; missing-master preflight fails explicitly before Blender and CPU256 is rejected by its GPU512 provenance gate. Actual Metal pass remains host-only, not verified here. Repository art gate failed in render-sets.mjs locally; existing matrix-multiply/no-space hygiene false positives were corrected in unit scripts.
+- Final visual verdict: at 256, canopy, camera-only paint, propeller tips and cream stone improved; propeller shape, wing brushwork and base shading are still distinguishable from the painting. At 64, same unit identity/composition, still not indistinguishable. Silhouette IoU .8471 is diagnostic only. No fighter-PASS. Lead: ROUND=2 tools/art/anim3d/units/fighter/gpu.sh; then inspect actual GPU frames and motion.
