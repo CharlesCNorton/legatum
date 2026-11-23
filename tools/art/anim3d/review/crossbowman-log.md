@@ -19,3 +19,10 @@
 - Completed render e-move (CPU).
 - e-move: 8 frames reviewed at 256/64; CYCLES CPU, 4 samples, source 256px.
 - Started render e-attack (CPU).
+- Round 2 resumed from WIP: opened latest rest comparison and move strip before edits; prior evidence is CPU256, not a verified GPU pass. At 256px elbows flare wide, sleeves lose quilting in plain beige patches, face/helmet are misregistered and metallic, bow sits too high, shoes are narrow, and base rim is dark/shallow. At 64px red cowl/pavise identify the unit but bent arm outline and bow height differ; NOT PASS. Prior review preserved in masters/crossbowman/round1-review.
+- Read full local playbook plus spearman and siege branch chapters through round 8, full common feedback 1-22 (no unit-specific feedback file exists), source ledger, project art rules and all six Blender skills. Apply modeling/animation to pose and solid surfaces; materials/cameras to finished-surface frozen projection; lighting/rendering to camera-only pigment, product lighting and retained raw/graded previews.
+- Started build  (CPU).
+- Completed build  (CPU).
+- Started render c (CPU).
+- Completed render c (CPU).
+- c: 1 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.

@@ -21,3 +21,9 @@ c: review emitted from CYCLES frames; no art-pass claim.
 c: review emitted from CYCLES frames; no art-pass claim.
 c: review emitted from CYCLES frames; no art-pass claim.
 c: review emitted from CYCLES frames; no art-pass claim.
+b: review emitted from CYCLES frames; no art-pass claim.
+c: review emitted from CYCLES frames; no art-pass claim.
+c-details: review emitted from CYCLES frames; no art-pass claim.
+Round 2: runner switched lane-20 to peltast at 07:09; recovered WIP 84bb6e56 in legatum/.worktrees/cavalry-round2, original cavalry branch. Do not switch the shared lane back.
+Round 2 fixes: frozen MPFB morph plus inverse-skin rest fitting; rejected oscillating hindquarter trial; bounded horse corrections, rigid sabre fit, jacket hand cut, camera-only painted pigment, retained generated fills/physical detail, warm stone, live rein endpoints. GPU handoff now regenerates paint and clips with preflight, transcript and failed-stage receipt. Missing-input rejection test passed.
+d: review emitted from CYCLES frames; no art-pass claim.

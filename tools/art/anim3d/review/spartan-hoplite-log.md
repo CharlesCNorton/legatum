@@ -48,3 +48,4 @@ Baked clip idle
 Round 2 fitting: preserved round1 masters; new round2-3d checkpoint. Single frozen camera replaces per-part UV stretching, static kit modifiers finish before projection, MPFB mixed shape keys freeze while original 19158 vertices/53 bones/weights remain. Raised spear grip 24cm while preserving shaft world position, narrowed crest and shield, softened mantle corners, lifted helmet six token pixels. Camera-only painted pigment with Standard display avoids double shading; physical backs retain scans/generated linen. Rest silhouette IoU at alpha>128 improves .644822 -> .770323; this is contour evidence, not art parity.
 Round 2 GPU handoff: executable no-argument gpu.sh, sequential Cycles GPU512/64 stages, scene/rig audits, source/master/grade provenance gate, pack/validation and trimmed decoded 8s movie. Missing-input preflight correctly fails before Blender and records failed stage. Actual Metal run remains host-only.
 Baked clip move
+Baked clip attack
