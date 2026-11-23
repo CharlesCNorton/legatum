@@ -25,3 +25,16 @@ Rendered attack: 10 frames, 512px, 8 samples, CPU.
 Rendered hit: 4 frames, 512px, 8 samples, CPU.
 Rendered death: 10 frames, 512px, 8 samples, CPU.
 Rendered top/front views for all eight move samples; native -Y travel axis, no post-retarget foot rotation.
+Rendered b-plain: 512px CYCLES CPU, 8 samples.
+Rendered c-textured-lit: 512px CYCLES CPU, 8 samples.
+Rendered four keyed attack rig poses.
+Rendered idle: 8 frames, 512px, 8 samples, CPU.
+Rendered move: 8 frames, 512px, 8 samples, CPU.
+Rendered attack: 10 frames, 512px, 8 samples, CPU.
+Rendered hit: 4 frames, 512px, 8 samples, CPU.
+Rendered death: 10 frames, 512px, 8 samples, CPU.
+Rendered top/front views for all eight move samples; native -Y travel axis, no post-retarget foot rotation.
+Packed and decoded 40 trimmed frames, quality 80, 186820 bytes; wrote keshig-round1.mp4. Warnings: []
+Atlas validation caught left-edge clipping from duplicate authored tail. Removed extra tail, retained native weighted tail, corrected key light to camera upper-left, and rerendered every stage. Failed packing now preserves existing delivery.
+Final CPU512/8-sample round: 40 frames, quality 80, 186820 bytes, exact reconstructed alpha and held death; geometry audit and 8s/240-frame H.264 yuv420p video checks passed. Rest silhouette IoU 0.5697; not painting parity at 256 or 64. No PASS.
+Final source syntax/whitespace checks and 92 master dimension checks passed. Git add failed: lane-12/index.lock Operation not permitted; left all changes uncommitted for runner. GPU pass remains unrun in sandbox; no PASS marker.

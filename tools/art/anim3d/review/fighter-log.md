@@ -31,3 +31,13 @@
 - Rendered c: 256px, CYCLES; review published.
 - Rendered c: 256px, CYCLES; review published.
 - Rendered c: 256px, CYCLES; review published.
+- First revised preview exposed pinched glazing and insufficient base-rim separation; rejected those settings before full clips. Refit smooth glazing and seated ribs, lightened the physical rim, fitted a circular propeller plane with shaft-local quaternion spin and physical ochre tips.
+- Source pigment is now camera-only (96% on covered faces); unseen physical material retains generated brushwork and real AO/curvature. Warm product lights remain; one rest-fitted RGB histogram grade drives every clip. Base projection removed to prevent frozen cast shadows.
+- Replaced support visibility switch with solid support toppling around its foot and rigid airframe/support contact correction. Delivery now checks exact lossless alpha, current provenance, decoded terminal hold and transparent gutters; identical frames share rectangles. Missing-master GPU preflight now explicitly fails and writes a failed-stage status before Blender.
+- Rendered b: 256px, CYCLES; review published.
+- Rendered e-idle: 256px, CYCLES; review published.
+- Rendered e-move: 256px, CYCLES; review published.
+- Rendered e-attack: 256px, CYCLES; review published.
+- Rendered e-hit: 256px, CYCLES; review published.
+- Rendered e-death: 256px, CYCLES; review published.
+- Rendered g: 256px, CYCLES; review published.
