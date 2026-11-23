@@ -85,3 +85,7 @@
 # Archer round 2 (resumed 2026-11-23)
 - Opened latest rest comparison, attack strip and decoded-atlas check before edits. At 256 px the drawing arm is too thin/short, helmet crest is a blunt wedge, chest straps overpower the painted lacing, bow curve/tips differ, and stone has a dark rim and oversize shadow. At 64 px it reads as an archer but the tall straight bow and narrow shoulder/face are distinguishable from the painting; no PASS.
 - Read all shared feedback (1–22); archer-FEEDBACK.md is absent. Read both lead playbooks through round 8 and loaded all six Blender skills; prioritize finished-surface projection and actual silhouette geometry, retaining original generated fills and one frozen histogram grade.
+- Finished static solid/bevel/subdivision geometry before projection; froze MPFB macro mix with native skin weights; fitted drawing-arm contour and complete recurved bow in the fixed rest camera.
+- Projected painting onto finished surfaces with occlusion/facing masks and camera-only pigment; original generated fills, real AO/curvature and physical lighting remain.
+- Rendered c: 256px CYCLES CPU, 8 samples.
+- Published c native 256/64 comparison; render device CPU.

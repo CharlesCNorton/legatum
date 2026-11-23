@@ -19,3 +19,5 @@
 # Resumed round 2 — 2026-11-23
 - Opened the latest rest comparison, details and attack strip before editing. At 256 px the horse is narrow, long-legged and stiff; the hind feet float away from the disc, the rider is upright with a too-low pistol arm, silver glare replaces dark worn armour, and reins stray past the muzzle. At 64 px this reads as mounted cavalry but not the same silhouette, stance or premium miniature. No PASS.
 - Read all standing feedback; cuirassier-FEEDBACK.md does not currently exist. Read local playbook plus the eight-round spearman and field-cannon chapters. Loaded all six Blender skills: cameras/modeling for registration and finished surfaces; materials/lighting for camera-only painted illumination; animation/rendering for rebuilt clips and GPU provenance. Existing supplied images are CPU-labelled; no GPU success inferred.
+- Emitted c: 1 frames, 256 px CYCLES/CPU, 8 samples.
+- Emitted c-details: 1 frames, 256 px CYCLES/CPU, 8 samples.

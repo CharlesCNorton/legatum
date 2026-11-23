@@ -101,3 +101,5 @@
 - Opened latest rest-pose/crossfade and decoded-delivery sheets before changes. Honest 256px critique: hull/turret paint is much closer, but near track ends are too low/broad, rear fender is a square shelf, front fender overhang is thin and straight, wheel recesses are too black, base rim is too smooth. At 64px the same WWII tank reads but chassis mass and rear silhouette differ. No PASS.
 - Read all common/tank feedback, full local and advanced infantry/siege playbooks, source registry, and six Blender skills. Applying finished-surface projection, camera-only pigment, full-depth chassis fitting and mechanical motion review.
 - Runner switched lane-5 from vehicles to settler while reading. Preserved that checkout and created .worktrees/tank-round3 on astra/unit-anim-3d-vehicles; GPU driver must use the tank checkout. No tank source was deleted: gpu.sh exists on the correct branch.
+- Emitted tank-b-plain.png from actual b renders; visual review pending.
+- Emitted tank-c-textured-lit.png from actual c renders; visual review pending.
