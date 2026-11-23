@@ -75,14 +75,14 @@ describe('the levels a player is offered', () => {
     expect(trainingSwitch(true, '?training=1', null)).toBe(true);
   });
 
-  it('a stored Training or HardSearch preference reads as Hard, for the default and for a seat', () => {
+  it('a stored Training or HardSearch preference reads as Hard, ignoring old seat overrides', () => {
     for (const old of ['Training', 'HardSearch']) {
       const data = profile();
       data.set(LOBBY_DIFFICULTY_KEY, JSON.stringify({ level: old, seats: { 'solo:2': old, 'solo:3': 'Easy' } }));
-      expect(readDifficultyPreference()).toEqual({ level: 'Hard', seats: { 'solo:2': 'Hard', 'solo:3': 'Easy' } });
+      expect(readDifficultyPreference()).toEqual({ level: 'Hard' });
       const lobby = newLobby('solo', '9');
       expect(levelOf(lobby)).toBe('Hard');
-      expect(lobby.slots.map((s) => s.kind === 'ai' ? levelOf(s) : null)).toEqual([null, 'Hard', 'Hard', 'Easy', 'Hard', 'Hard']);
+      expect(lobby.slots.map((s) => s.kind === 'ai' ? levelOf(s) : null)).toEqual([null, 'Hard', 'Hard', 'Hard', 'Hard', 'Hard']);
       expect(buildSetup(lobby).players.some((p) => p.search)).toBe(false);
       // Opening the lobby rewrote the preference without the level that is not offered.
       expect(data.get(LOBBY_DIFFICULTY_KEY)).not.toMatch(/Training|HardSearch/);
@@ -111,7 +111,7 @@ describe('lobby', () => {
     expect(converted.slots[1].difficulty).toBe('Hard');
   });
 
-  it('keeps the all-AI choice and individual overrides across a version bump', () => {
+  it('keeps the game-wide choice and discards old individual overrides across a version bump', () => {
     const data = researchProfile();
     const chosen = setSlot(setDifficulty(newLobby('solo', '1'), 'Easy'), 2, levelFields('Training'));
     rememberDifficulty(chosen);
@@ -119,15 +119,15 @@ describe('lobby', () => {
     const reopened = newLobby('solo', '2');
     expect(levelOf(reopened)).toBe('Easy');
     expect(levelOf(reopened.slots[1])).toBe('Easy');
-    expect(levelOf(reopened.slots[2])).toBe('Training');
+    expect(levelOf(reopened.slots[2])).toBe('Easy');
     expect(LOBBY_DIFFICULTY_KEY).not.toMatch(/v\d/);
   });
 
-  it('keeps a solo seat override when another lobby mode opens', () => {
+  it('does not restore a solo seat override when another lobby mode opens', () => {
     profile();
     rememberDifficulty(setSlot(newLobby('solo', '1'), 1, levelFields('Normal')));
     newLobby('hotseat', '2');
-    expect(levelOf(newLobby('solo', '3').slots[1])).toBe('Normal');
+    expect(levelOf(newLobby('solo', '3').slots[1])).toBe('Hard');
   });
 
   it('reports when a chosen difficulty cannot be persisted', () => {
