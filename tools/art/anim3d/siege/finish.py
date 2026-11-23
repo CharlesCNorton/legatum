@@ -70,6 +70,23 @@ for obj in bpy.data.objects:
     roughness.inputs['To Min'].default_value = .48; roughness.inputs['To Max'].default_value = .82
     links.new(noise.outputs['Fac'], roughness.inputs[0]); links.new(roughness.outputs[0], p.inputs['Roughness'])
 
+# Source spoke edges cannot be transferred onto different radial geometry. Use
+# the existing scanned oak, cool its sunlit ochre cast, and keep actual bevel/AO.
+spoke_wood = bpy.data.materials['Siege olive painted oak'].copy()
+spoke_wood.name = 'Siege weathered spoke oak'
+nodes, links = spoke_wood.node_tree.nodes, spoke_wood.node_tree.links
+p = nodes.get('Principled BSDF')
+old = p.inputs['Base Color'].links[0].from_socket
+cool = nodes.new('ShaderNodeMixRGB'); cool.blend_type = 'MULTIPLY'
+cool.inputs[0].default_value = 1; cool.inputs[2].default_value = (.77, .80, .92, 1)
+links.new(old, cool.inputs[1]); links.new(cool.outputs[0], p.inputs['Base Color'])
+for obj in bpy.data.objects:
+    if obj.name.startswith('Tapered oak spoke'):
+        obj.data.materials[0] = spoke_wood
+    elif obj.name.startswith('Turned wheel hub'):
+        # The reference hub is almost entirely enclosed by a broad iron sleeve.
+        obj.data.materials[0] = bpy.data.objects['Flat wrought iron tyre'].data.materials[0]
+
 # Mouldings are worn bronze, not bright gold jewellery; buttons keep their glints.
 aged = bpy.data.objects['Hollow bronze barrel'].data.materials[0]
 for obj in bpy.data.objects:

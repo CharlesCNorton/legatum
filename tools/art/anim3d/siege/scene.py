@@ -100,14 +100,14 @@ for sy in [-1,1]:
  for off in [-.052,.052]:ring('Tyre polished edge',(ax,y+off,wz),radius-.003,.0025,brightiron,p=wheel)
  for i in range(12):
   a=2*pi*i/12;end=Vector((ax+(radius-.054)*cos(a),y,wz+(radius-.054)*sin(a)))
-  start=Vector((ax+.072*cos(a),y+sy*.065,wz+.072*sin(a)))
+  start=Vector((ax+.072*cos(a),y+sy*.105,wz+.072*sin(a)))
   o=cube('Tapered oak spoke',(start+end)*.5,(.041,.047,(end-start).length),wood,wheel);o.rotation_euler=(end-start).to_track_quat('Z','Y').to_euler()
   for vertex in o.data.vertices:
    vertex.co.x*=1-.22*vertex.co.z/((end-start).length*.5)
   ball('Felloe nail',tuple(end+Vector((0,sy*.035,0))),(.009,.005,.009),brightiron,wheel)
- rod('Turned wheel hub',(ax,y-.09,wz),(ax,y+.09,wz),.081,rawwood,wheel,r2=.069)
- for off in [-.073,.073]:ring('Hub iron binding',(ax,y+off,wz),.077,.010,iron,p=wheel)
- rod('Axle end',(ax,y+sy*.09,wz),(ax,y+sy*.13,wz),.042,brightiron,wheel)
+ rod('Turned wheel hub',(ax,y-.13,wz),(ax,y+.13,wz),.088,rawwood,wheel,r2=.069)
+ for off in [-.115,.115]:ring('Hub iron binding',(ax,y+off,wz),.077,.010,iron,p=wheel)
+ rod('Axle end',(ax,y+sy*.13,wz),(ax,y+sy*.18,wz),.042,brightiron,wheel)
 # Cheeks narrow at rear, tall around trunnions. Warm cut edges and iron fastenings.
 for sy in [-1,1]:
  y=sy*.22

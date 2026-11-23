@@ -188,7 +188,7 @@ The carriage stays close to wheel-supported height rather than levering the whol
 source PNGs are identical; the second terminal PNG is reused after asserting all transforms match.
 
 Lead's final host GPU pass, from this branch's checkout: run
-`ROUND=7 tools/art/anim3d/units/field-cannon/gpu.sh`. It audits geometry, renders every stage
+`ROUND=8 tools/art/anim3d/units/field-cannon/gpu.sh`. It audits geometry, renders every stage
 (including plain views) at 512 px / 64 samples, writes 256 px gallery copies, packs and validates the
 saved external master, and encodes the decoded atlas as the driver-requested round MP4. The old
 `siege/gpu-final.sh` delegates to this entry point. The equivalent individual stages are:
@@ -446,6 +446,42 @@ CPU evidence is archived under `round7-cpu`; all 40 prior512 GPU frames remain i
 Silhouette IoU is .859952 versus round6 .839677; this is not art acceptance. At256 face/tailoring,
 wheel wear and motion still fall short. At64 identity reads but the result remains distinguishable.
 **No PASS marker; fresh GPU512 rendering and visual acceptance remain outstanding.**
+
+### Round-eight wheel cleanup and stone calibration
+
+The named round-seven GPU driver log, unit transcript and receipt were absent, while the current
+render metadata remained CPU256/12. Opened the comparison, all five strips and round-seven MP4
+contact frames first; a separate CPU512 rest render confirmed that the muddy spokes were not only
+preview resolution. Do not call these verified round-seven GPU renders.
+
+The source's painted spoke edges do not coincide with the full-depth model's radial spokes.
+Projecting those edges produced doubled lines, even after excluding pale trouser pixels. The spokes
+now retain their scanned PBR materials, ambient cavity shading and bevel highlights; the original
+frozen source projection remains on the deeper iron hubs, rims, carriage, barrel and the gunner. Projection
+provenance records this exception per object. Cooler oak, a deeper iron-clad hub and more strongly
+dished spokes improve the visible construction. The existing image-generated navy-wool fill remains
+on hidden/revealed cloth, with actual cloth folds, solid straps, product lights and the one frozen
+automatic histogram grade.
+
+The stone remains a horizontal circular disc, with its diameter reduced 1.5% and centre moved
+2.4 token pixels left. Its top/contact height is unchanged. Reduced red in the projected pigment
+addresses the pink cast. Sampling subdivision now records completion on the mesh object: reopening
+`field-cannon-surface.blend` for another pigment trial must not subdivide it again. The geometry audit
+replays surface finishing and requires unchanged vertex counts before checking all forty poses.
+
+The executable GPU entry point defaults to round eight and keeps the existing direct transcript,
+error trap, GPU512/gallery256 provenance gate, trimmed packing/validation and decoded-atlas MP4.
+Its receipt includes the master SHA and geometry audit, requiring the unchanged-topology replay check.
+Its missing-input preflight reaches the transcript without launching Blender. No PASS marker is
+created by technical checks; the face, tailoring and animation still need visual acceptance.
+
+Round-eight CPU delivery: **182,552 bytes at Q85**, 917 × 680, all forty samples in 31 unique
+rectangles with lossless alpha. Atlas/video validation, six regression tests, geometry/UV/contact and
+surface-replay audits, syntax and GPU failure preflights pass. MP4: H.264/yuv420p, 1600 × 348,
+240 frames/eight seconds. Evidence is archived in `round8-cpu`; prior GPU512 frames remain in
+`round3-gpu`. Silhouette IoU is .858252 versus round-seven .859952, a small regression. The wheel
+is cleaner but flatter than the painted reference; face, tailoring, palm presentation and motion
+still fall short. **No PASS marker. Fresh GPU512 masters and visual acceptance remain outstanding.**
 
 ### Trimmed JSON format, version 2
 

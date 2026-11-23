@@ -5,7 +5,7 @@ cd "$(dirname "$0")/../../../../.."
 source tools/art/anim3d/env.sh
 export ANIM_FAMILY=siege RENDER_ENGINE=CYCLES CYCLES_DEVICE=GPU SAMPLES=64 RESOLUTION=512
 export SIEGE_REUSE_MASTER=1 SIEGE_STAGES=b,c,detail,d,e-idle,e-move,e-attack,e-hit,e-death
-export ROUND="${ROUND:-7}"
+export ROUND="${ROUND:-8}"
 # Keep a unit-owned transcript even when the driver's outer log path is missing.
 printf 'Full GPU transcript: %s\n' "$REVIEW/field-cannon-round${ROUND}-gpu.log"
 # Direct redirection also works when the caller cannot open /dev/fd process substitutions.
@@ -58,9 +58,12 @@ receipt = {
     'pack': json.loads((review / 'field-cannon-pack.json').read_text()),
     'validation': json.loads((review / 'field-cannon-validation.json').read_text()),
     'video': json.loads((review / f'field-cannon-round{round_id}-video.json').read_text()),
+    'geometry_audit': json.loads((review / 'field-cannon-audit.json').read_text()),
+    'master_sha256': hashlib.sha256((root / 'masters/field-cannon/field-cannon.blend').read_bytes()).hexdigest(),
     'art_approved': False,
 }
 assert receipt['validation']['contract'] == 'PASS'
+assert receipt['geometry_audit']['surface_replay_topology_unchanged'] is True
 assert receipt['video']['atlas_sha256'] == receipt['atlas_sha256']
 (review / f'field-cannon-round{round_id}-gpu-receipt.json').write_text(json.dumps(receipt, indent=2) + '\n')
 print('GPU pass complete; receipt saved. Visual art review remains required.')

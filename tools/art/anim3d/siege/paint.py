@@ -19,6 +19,7 @@ base=bpy.data.images.load(str(R/'assets/field-cannon/projection-base.png'),check
 coat=bpy.data.images.load(str(R/'assets/field-cannon/projection-coat.png'),check_existing=True)
 trousers=bpy.data.images.load(str(R/'assets/field-cannon/projection-trousers.png'),check_existing=True)
 gun_meshes=set(bpy.data.objects['Gun travel and recoil'].children_recursive)
+filled_wheel_parts=('Tapered oak spoke',)
 # Alpha-bounds registration of the original 1254px master to the 256px token.
 registration={'source_bbox':[81,7,1172,1247],'reference_bbox':[26,12,230,244]}
 toward=cam.matrix_world.to_quaternion() @ Vector((0,0,1));records=[]
@@ -54,6 +55,10 @@ for obj in list(sc.objects):
  obj.data.uv_layers.active_index=0;obj.data.uv_layers[0].active_render=True
  for slot in obj.material_slots:
   if not slot.material or 'bore soot' in slot.material.name:continue
+  # The painted wheel's spokes are not exactly radial in this camera. Projecting
+  # them onto different radial faces creates doubled spokes and figure ghosts.
+  # Keep their genuine wood grain, ambient cavity shading and beveled highlights.
+  if obj.name.startswith(filled_wheel_parts):continue
   mat=slot.material.copy();slot.material=mat;n=mat.node_tree.nodes;links=mat.node_tree.links;p=n.get('Principled BSDF')
   if not p:continue
   old=p.inputs['Base Color'].links[0].from_socket if p.inputs['Base Color'].is_linked else None
@@ -64,7 +69,7 @@ for obj in list(sc.objects):
   colour=tex.outputs['Color']
   if obj.name=='Stationary cream base':
    correction=n.new('ShaderNodeMixRGB');correction.name='Lit cream pigment calibration';correction.blend_type='MULTIPLY'
-   correction.inputs[0].default_value=1;correction.inputs[2].default_value=(1.04,1.0,.74,1)
+   correction.inputs[0].default_value=1;correction.inputs[2].default_value=(.92,1.025,.76,1)
    links.new(colour,correction.inputs[1]);colour=correction.outputs[0]
   attr=n.new('ShaderNodeVertexColor');attr.layer_name=mask.name
   mult=n.new('ShaderNodeMath');mult.operation='MULTIPLY';links.new(attr.outputs['Color'],mult.inputs[0]);links.new(tex.outputs['Alpha'],mult.inputs[1])
@@ -86,7 +91,7 @@ for obj in list(sc.objects):
   links.new(camera_weight.outputs[0],amount.inputs[0]);links.new(amount.outputs[0],blend.inputs[0])
   links.new(p.outputs[0],blend.inputs[1]);links.new(pigment.outputs[0],blend.inputs[2])
   links.new(blend.outputs[0],n.get('Material Output').inputs['Surface'])
- records.append({'object':obj.name,'visible_vertices':sum(w>0 for w in weights),'vertices':len(weights)})
+ records.append({'object':obj.name,'visible_vertices':sum(w>0 for w in weights),'vertices':len(weights),'shading':'scanned PBR fill; source spoke edges do not register' if obj.name.startswith(filled_wheel_parts) else 'frozen camera projection with filled hidden surfaces'})
 sc['painted_projection']='One frozen camera UV projection; native geometry and filled occluded/back surfaces. Registration residuals are in registration.json.'
 bpy.ops.file.pack_all();bpy.ops.wm.save_as_mainfile(filepath=str(M/'field-cannon.blend'))
 (M/'projection.json').write_text(json.dumps({'registration':registration,'source_sha256':hashlib.sha256(source.read_bytes()).hexdigest(),'objects':records,'finished_surfaces':surface_records,'mapping':'shared frozen camera, no local texture warps','note':'Camera/geometry residuals remain; visual comparison determines acceptance.'},indent=2))

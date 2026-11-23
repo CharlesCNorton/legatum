@@ -114,6 +114,11 @@ bpy.context.view_layer.update();contact=barrel.matrix_world @ Vector((-.20,-.025
 direction=Vector((.11,-.015,-.03)).normalized();target=r.matrix_world.inverted() @ contact-direction*r.data.bones['hand_l'].length
 limb('upperarm_l','lowerarm_l',target,(.56,-.24,1.14));aim('hand_l',direction)
 r['barrel_contact_local']=[-.20,-.025,.171]
+# Keep the disc horizontal and circular; match its width and centre without
+# changing the top height used for foot/wheel contact.
+base=bpy.data.objects['Stationary cream base']
+base.scale.x=base.scale.y=.985
+base.location+=c.matrix_world.to_quaternion() @ Vector((-.025,0,0))
 wheel_fit=runpy.run_path(str(Path(__file__).with_name('wheels.py')))['fit_wheels']()
 runpy.run_path(str(Path(__file__).with_name('tailoring.py')))['fit_crossbelts']()
 r['neutral_pose']=json.dumps({p.name:[list(row) for row in p.matrix_basis] for p in r.pose.bones})

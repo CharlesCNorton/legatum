@@ -1,9 +1,17 @@
 """Audit saved 3D geometry, stationary base, rolling ratios and settled death."""
-import bpy,os,json,math
+import bpy,os,json,math,runpy
 from pathlib import Path
 from mathutils import Vector
 from bpy_extras.object_utils import world_to_camera_view
 R=Path(os.environ['ANIM_ROOT']);M=R/'masters/field-cannon';records={}
+# Reopening the saved unprojected surface must not add another sampling level.
+# This matters when iterating pigment from this checkpoint instead of rebuilding.
+bpy.ops.wm.open_mainfile(filepath=str(M/'field-cannon-surface.blend'))
+before={o.name:len(o.data.vertices) for o in bpy.context.scene.objects if o.type=='MESH'}
+runpy.run_path(str(Path(__file__).with_name('surface.py')))['finish_surfaces']()
+after={o.name:len(o.data.vertices) for o in bpy.context.scene.objects if o.type=='MESH'}
+assert before==after,'Finished-surface replay changed topology'
+records['surface_replay_topology_unchanged']=True
 # Guard the original projection defect: the UVs must land on the finished,
 # posed surfaces, not an unsmoothed cage that changes again during rendering.
 bpy.ops.wm.open_mainfile(filepath=str(M/'field-cannon.blend'))

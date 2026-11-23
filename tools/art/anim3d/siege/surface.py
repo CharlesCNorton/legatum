@@ -28,10 +28,12 @@ def finish_surfaces():
         # Their whole visible middle therefore inherited zero projection visibility.
         # Linear subdivision adds samples without rounding or moving the surface.
         if (obj.name.startswith(('Tapered oak spoke', 'Iron cheek strap', 'Hollow bronze barrel'))
-                and not obj.data.color_attributes.get('Painting visibility')):
+                and not obj.data.color_attributes.get('Painting visibility')
+                and not obj.get('projection_sampling_finished', False)):
             sampling = obj.modifiers.new('Paint visibility surface samples', 'SUBSURF')
             sampling.subdivision_type = 'SIMPLE'
             sampling.levels = sampling.render_levels = 2
+            obj['projection_sampling_finished'] = True
         applied = []
         for mod in list(obj.modifiers):
             if mod.type == 'ARMATURE' or not mod.show_viewport:
