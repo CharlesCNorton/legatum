@@ -54,3 +54,5 @@
 - Round 2 materials: generated ochre brushwork fill via built-in imagegen (exact prompt and SHA256 committed, provenance in both ledgers), mapped to rotating wheel faces/rims; existing hidden olive fill retained. Conservative rest-camera occlusion checks now reject only wholly hidden polygons: centre-only checks incorrectly erased partially visible base/hull paint and were corrected before delivery. Warm key/cool rim retained, soft front fill lowered to reach wheel recesses.
 - Round 2 smoke: replaced six evenly stacked shells with nine irregular full-volume shells, staggered centres and normal/view falloff; visibility keyed, scales always >=1. No volumetric grid or zero-scale hiding. Animation and actual output still awaiting inspection.
 - Emitted panzer-c-textured-lit.png from actual c renders; visual review pending.
+- Emitted panzer-b-plain.png from actual b renders; visual review pending.
+- Emitted panzer-c-textured-lit.png from actual c renders; visual review pending.

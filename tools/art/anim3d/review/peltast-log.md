@@ -84,3 +84,5 @@
 - Published d review immediately: CYCLES/GPU, 512 px, 4 frame(s).
 - Published e-idle review immediately: CYCLES/GPU, 512 px, 8 frame(s).
 - Published e-move review immediately: CYCLES/GPU, 512 px, 8 frame(s).
+- Published e-attack review immediately: CYCLES/GPU, 512 px, 10 frame(s).
+- Published e-hit review immediately: CYCLES/GPU, 512 px, 4 frame(s).
