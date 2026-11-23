@@ -1,51 +1,69 @@
-# Barbarian archer, round 1
+# Barbarian archer, resumed round 2
 
-A true 3D review candidate built on MPFB's 19,158-vertex body and 53-bone rig.
-It has original wolf-head pelt geometry, layered fur locks, solid folded clothing,
-boots, stitched straps, buckles, quiver, a deforming bow and a hand-tracked string.
-The 40-frame set is idle 8, move 8, attack 10, hit 4, death 10. Only idle/move loop.
-The final two death samples hold exactly. No runtime integration or art approval.
+**Review candidate, not art-approved. No PASS marker.** At 256 px the frozen
+painted detail, cloth/belts, face position, arm pose and smooth bow curve improve
+substantially over round one. The face/fingers, fur outline and pale left boot tip
+remain visibly different. At 64 px it reads as the same wolf-pelt archer, but the
+upper-body proportions and silhouette still differ. Alpha silhouette overlap at
+256 px improves from 0.6873 to 0.7588 (threshold 32); this is not an art-quality score.
 
-The model, packed textures, eight real AO/curvature bakes, clip blends and genuine
-512/256 pixel CPU preview masters live in `~/LegatumRuns/anim-pilot/masters/barbarian-archer/`.
-Review sheets, animated WebPs, the split-screen/crossfade and the running log live
-in `~/LegatumRuns/anim-pilot/review/3d-v2/barbarian-archer-*`.
+The unit remains true 3D MPFB anatomy with its original skin weights and 53-bone
+rig, solid kit, generated hidden-surface fills and eight actual AO/curvature maps.
+Round two freezes macro shape keys, fits full-depth geometry through inverse skin
+transforms, applies surface modifiers before UV calibration, and uses camera-only
+painted pigment with physical non-camera shading. The warm product lights remain;
+Standard/None avoids compressing the source's painted illumination a second time.
+One automatically sampled rest grade is reused across every frame.
 
-At 64 px, the crouch, hood, red wrist binding and drawn bow carry the same broad
-identity. The painting remains richer and clearer. At 256 px, this is below the
-painting: the face and bow hand have projection artifacts, fur locks are coarse,
-the torso and bow curvature do not register exactly, and some cloth/boot surfaces
-look flat. Generated hidden-side fills preserve material identity during motion,
-but cannot repair those geometric differences. The cloak is bone-deformed with
-modelled folds, not simulated. Move is an authored in-place cycle; contact and
-weight transfer need further visual refinement. Death folds across the front edge
-of the base and needs a more natural fall in a later round.
+All five clips retain 8/8/10/4/10 samples. Saved-scene evaluation verifies all forty
+bow/string endpoints, nock tracking, stationary base and nonzero scales. The final
+two death PNGs are identical. These checks are not a complete collision solver:
+the walk is still stiff, the fall is mechanical and the folded pelt sticks upward
+in death. Motion and hidden fills require another artistic pass.
 
-The CPU images use four samples and denoising. They are provisional previews,
-not a claim about the final Metal image. Run this executable from repo root:
+## Artifacts and checks
+
+- New raw and graded CPU256 previews use Cycles, eight samples and denoising.
+  All stage sheets, details, rest split/crossfade, five strips/WebPs and decoded
+  atlas review are under `~/LegatumRuns/anim-pilot/review/3d-v2/barbarian-archer-*`.
+- The shipped candidate atlas is **191,798 bytes, WebP quality 90**, 160 px logical
+  cells with trim rectangles/offsets. Forty frames, clip timing, master/render/
+  grade/pixel hashes, decoded alpha byte equality, offsets and held death pass.
+- Four delivery tests pass: valid delivery accepted; displaced trim offset,
+  wrong atlas rectangle and changed clip timing rejected.
+- `barbarian-archer-round2.mp4` is decoded from that atlas, verified H.264/yuv420p,
+  1600x348, 240 frames/eight seconds, five clips at 2x on cream. Sampled decoded
+  movie frames were inspected in `barbarian-archer-round2-video-contact.png`.
+- Python syntax, Bash syntax, executable handoff, missing-input failure logging
+  and whitespace checks pass. No Rust/app code changed; no Rust/WASM/app build ran.
+- Prior genuine CPU512/256 masters and raw frames remain in
+  `masters/barbarian-archer/round1-cpu/`. Current previews are not upscaled into
+  final 512 masters. GPU512/64 rendering remains unverified in this sandbox.
+
+## Complete GPU handoff
+
+From the repository root, run the executable with no arguments:
 
 ```sh
-tools/art/anim3d/units/barbarian-archer/gpu.sh
+ROUND=2 tools/art/anim3d/units/barbarian-archer/gpu.sh
 ```
 
-It requires Metal Cycles, renders all stages at 512 px/64 samples, writes 512/256
-masters and all reviews, packs the trimmed 160 px atlas at quality >=75 and <=200 KB,
-and validates. The pipeline fails on missing/stale source masters, missing frames,
-clipped frame bounds, a detached bow grip, moving base, unsettled death or an
-oversized atlas. It is not a general body/cloth collision solver.
+It requires Metal, rebuilds clips from the saved finished master, audits actual
+poses, renders every stage and all forty frames at 512/64 samples, exports current
+512/256 masters, packs/validates the atlas and encodes the driver's round MP4.
+The script retains `gpu-logs-barbarian-archer-r${ROUND}.log` and a stage/status file.
+It refuses CPU fallback and does not create an art PASS marker. The sandbox probe
+queued behind the shared GPU gate and was cancelled without launching Blender;
+this is not evidence of either a GPU success or a GPU failure.
 
-The generated fill prompt and pinned input hashes are alongside these scripts;
-URLs/licences are recorded in the external `assets/SOURCES.md` and the repository's
-`app/src/assets/PROVENANCE.md`. New operational finding: MPFB eye import removes
-unused materials, so create the kit's materials after fitting the eyes. Garment
-weight transfer must account for evaluated topology rather than assuming identical
-vertex indices after subdivision.
+No new asset downloads or image service calls: source URLs, licences and original
+generated-fill identity remain in `assets/SOURCES.md` and unit `inputs.json`.
+No runtime animation integration, deployment, push or PR is included.
 
-Round-1 checks passed: Python compilation, shell syntax, whitespace diff check,
-source/master hashes, 53-bone/19,158-vertex anatomy, eight nonconstant AO/curvature
-maps, grip distance <=0.0453 m, stationary base, 40-frame counts and motion,
-transparent padding and trim bounds, exact terminal death hold, and all 512/256
-masters and review files. The atlas is **189,756 bytes at WebP quality 80**.
-`barbarian-archer-g-decoded-atlas.png` reconstructs sample frames with their trim
-offsets from the actual lossy atlas. Final Metal rendering and lead art review
-remain outstanding. The CPU base is also paler/less golden than the painting.
+Non-obvious findings: finish bevel/subdivision before freezing camera UVs; freeze
+MPFB macro shapes before inverse-skin edits; allow its named `Hide helpers` mask
+in the surface audit because it removes helper faces without displacing surfaces;
+remove zero-level subdivision rather than trying to apply it. Never edit a shell
+entry point while that same script is running: the current shell can resume at an
+invalid byte offset. One such iteration stopped after d; all remaining stages
+were rerun successfully from the completed script.

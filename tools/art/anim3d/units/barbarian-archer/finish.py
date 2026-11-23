@@ -5,7 +5,11 @@ sys.path.insert(0,str(Path(__file__).resolve().parent))
 from common import *
 from bpy_extras.object_utils import world_to_camera_view
 bpy.ops.wm.open_mainfile(filepath=str(MASTER/'plain.blend'))
-sc=settings(256,8);painting=bpy.data.images.load(str(ASSET/'painting-registered.png'));painting.pack()
+sc=settings(256,8)
+from refine import refine
+refine(sc)
+bpy.ops.wm.save_as_mainfile(filepath=str(MASTER/'refined-plain.blend'))
+painting=bpy.data.images.load(str(ASSET/'painting-registered.png'));painting.pack()
 # Painted hidden-side fills use object-space triplanar sampling, never camera planes.
 for m in list(bpy.data.materials):
     if not m.use_nodes:continue
@@ -63,7 +67,25 @@ for name in ['GEO-Tunic chest','GEO-Ragged pleated skirt','GEO-Wolf hood','GEO-M
         l.new(cv.outputs['Color'],ramp.inputs['Value']);l.new(ramp.outputs[0],b.inputs['Roughness'])
     for m,r,v in original_mods:m.show_render=r;m.show_viewport=v
     baked.append(name)
-# Frozen UVs are calculated from the posed evaluated surface before subdivision.
+# Finish every static surface before calibration; skin weights remain live.
+for o in list(sc.objects):
+    if o.type != 'MESH' or 'Stationary' in o.name:
+        continue
+    bpy.ops.object.select_all(action='DESELECT');o.select_set(True);bpy.context.view_layer.objects.active=o
+    arms=[(m,m.show_viewport) for m in o.modifiers if m.type=='ARMATURE']
+    for m,_ in arms:m.show_viewport=False
+    for m in list(o.modifiers):
+        if m.type in ('SOLIDIFY','BEVEL','SUBSURF'):
+            if m.type=='SUBSURF' and m.levels==0:
+                o.modifiers.remove(m)
+                continue
+            bpy.ops.object.modifier_apply(modifier=m.name)
+    for m,v in arms:m.show_viewport=v
+bpy.context.view_layer.update()
+# Frozen UVs are calculated from the finished, posed surface.
+view=sc.camera.matrix_world.to_quaternion()@Vector((0,0,1))
+deps=bpy.context.evaluated_depsgraph_get()
+
 # Incidence and source alpha fade into fills; geometry stays fully opaque.
 projected=[]
 projected_materials={}
@@ -82,7 +104,10 @@ for o in list(sc.objects):
     for v in me.vertices:
         world=o.matrix_world@v.co;p=world_to_camera_view(sc,sc.camera,world);coords.append((p.x,p.y))
         normal=(o.matrix_world.to_3x3()@v.normal).normalized();view=(sc.camera.location-world).normalized()
-        attr.data[v.index].value=max(0,min(1,(normal.dot(view)-.06)*2))*.82
+        direction=sc.camera.matrix_world.to_quaternion()@Vector((0,0,1))
+        hit,point,*_=sc.ray_cast(deps,world+direction*4,-direction,distance=4.02)
+        visible=not hit or (point-world).length<.018
+        attr.data[v.index].value=max(0,min(1,(normal.dot(direction)+.05)*5))*.97 if visible else 0
     for lp in o.data.loops:uv.data[lp.index].uv=coords[lp.vertex_index]
     ev.to_mesh_clear()
     for m,v in mods:m.show_viewport=v
@@ -95,12 +120,18 @@ for o in list(sc.objects):
         if not b:continue
         uvn=n.new('ShaderNodeUVMap');uvn.uv_map='PaintingUV';tex=n.new('ShaderNodeTexImage');tex.image=painting;tex.extension='CLIP';l.new(uvn.outputs[0],tex.inputs[0])
         at=n.new('ShaderNodeAttribute');at.attribute_name='PaintConfidence';fac=n.new('ShaderNodeMath');fac.operation='MULTIPLY';l.new(at.outputs['Fac'],fac.inputs[0]);l.new(tex.outputs['Alpha'],fac.inputs[1])
-        mix=n.new('ShaderNodeMixRGB');l.new(fac.outputs[0],mix.inputs[0])
-        if b.inputs['Base Color'].is_linked:l.new(b.inputs['Base Color'].links[0].from_socket,mix.inputs[1])
-        else:mix.inputs[1].default_value=b.inputs['Base Color'].default_value
-        l.new(tex.outputs['Color'],mix.inputs[2]);l.new(mix.outputs[0],b.inputs['Base Color'])
-        # Partially self-lit brushwork avoids lighting the painted highlights twice.
-        l.new(mix.outputs[0],b.inputs['Emission Color']);b.inputs['Emission Strength'].default_value=.18
+        # Camera rays see painted illumination; all other rays retain physical BSDF.
+        pigment=n.new('ShaderNodeBsdfPrincipled');pigment.label='Camera-only painted pigment'
+        pigment.inputs['Base Color'].default_value=(0,0,0,1)
+        pigment.inputs['Specular IOR Level'].default_value=0
+        pigment.inputs['Emission Strength'].default_value=1
+        l.new(tex.outputs['Color'],pigment.inputs['Emission Color'])
+        lightpath=n.new('ShaderNodeLightPath')
+        camera_fac=n.new('ShaderNodeMath');camera_fac.operation='MULTIPLY'
+        l.new(fac.outputs[0],camera_fac.inputs[0]);l.new(lightpath.outputs['Is Camera Ray'],camera_fac.inputs[1])
+        blend=n.new('ShaderNodeMixShader');l.new(camera_fac.outputs[0],blend.inputs[0])
+        l.new(b.outputs[0],blend.inputs[1]);l.new(pigment.outputs[0],blend.inputs[2])
+        l.new(blend.outputs[0],n.get('Material Output').inputs['Surface'])
     projected.append(o.name)
 bpy.ops.file.pack_all();bpy.ops.wm.save_as_mainfile(filepath=str(MASTER/'master.blend'))
 (MASTER/'finish-info.json').write_text(json.dumps({'baked':baked,'projected_meshes':projected,'source':'painting-registered.png','fills':'painted-fills.png'},indent=2))

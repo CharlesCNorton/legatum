@@ -12,6 +12,9 @@ def log(s):
 def read(stage):
     res=int(os.environ.get('RESOLUTION','256'));p=M/'renders'/str(res)/stage
     manifest=json.loads((p/'manifest.json').read_text())
+    source=M/('refined-plain.blend' if stage=='b' else 'attack.blend' if stage=='d' else stage[2:]+'.blend' if stage.startswith('e-') else 'master.blend')
+    assert manifest['blend_sha256']==hashlib.sha256(source.read_bytes()).hexdigest(), 'Stale render '+stage
+    assert manifest['resolution']==res
     return [Image.open(f).convert('RGBA') for f in sorted(p.glob('*.png'))],manifest
 
 def quantiles(im):
@@ -26,9 +29,11 @@ def make_grade(im):
             for (a,b),(c,d) in zip(pairs,pairs[1:]):
                 if a<=x<=c:lut.append(round(b+(d-b)*(x-a)/max(1,c-a)));break
         luts.append(lut)
-    (M/'grade.json').write_text(json.dumps({'method':'Fixed rest-derived 5-quantile RGB transfer, 45%, bounded 24 levels','source':src,'reference':ref,'luts':luts},indent=2))
+    (M/'grade.json').write_text(json.dumps({'method':'Fixed rest-derived 5-quantile RGB transfer, 45%, bounded 24 levels','source':src,'reference':ref,'luts':luts,'rest_sha256':hashlib.sha256(im.tobytes()).hexdigest(),'master_sha256':hashlib.sha256((M/'master.blend').read_bytes()).hexdigest()},indent=2))
 def grade(im):
-    g=json.loads((M/'grade.json').read_text())['luts'];bands=im.split()
+    record=json.loads((M/'grade.json').read_text())
+    assert record['master_sha256']==hashlib.sha256((M/'master.blend').read_bytes()).hexdigest(), 'Stale grade'
+    g=record['luts'];bands=im.split()
     return Image.merge('RGBA',tuple(bands[c].point(g[c]) for c in range(3))+(bands[3],))
 def tile(im,n=256):return im.resize((n,n),Image.Resampling.LANCZOS)
 def sheet(images,labels,path,small=True):
@@ -41,6 +46,11 @@ def reviews(stage):
     ims,manifest=read(stage)
     if stage=='c':make_grade(ims[0])
     if stage!='b':ims=[grade(im) for im in ims]
+    for i,im in enumerate(ims):
+        for size in (256,512):
+            if size>im.width:continue
+            folder=M/str(size)/stage;folder.mkdir(parents=True,exist_ok=True)
+            tile(im,size).save(folder/f'{i:02d}.png')
     if stage in ('b','c'):
         suffix='b-plain' if stage=='b' else 'c-textured-lit'
         sheet([REF]+ims,['Painting']+[f'3D {manifest["device"]} {i}' for i in range(len(ims))],R/f'{SLUG}-{suffix}.png')
@@ -60,12 +70,21 @@ def reviews(stage):
         frames=[tile(im) for im in ims];frames[0].save(R/f'{SLUG}-e-{clip}.webp',save_all=True,append_images=frames[1:],duration=round(1000/C[clip][1]),loop=0,quality=85,method=6)
     log(f'Published {stage} review immediately; {manifest["device"]} preview, not art approval.')
 
+def cell160(im):
+    return im.convert('RGBa').resize((160,160),Image.Resampling.BICUBIC).convert('RGBA')
+
 def pack():
+    rest,rest_manifest=read('c')
+    calibration=json.loads((M/'grade.json').read_text())
+    assert calibration['rest_sha256']==hashlib.sha256(rest[0].tobytes()).hexdigest(), 'Stale rest calibration'
     A.mkdir(parents=True,exist_ok=True);meta={'version':2,'frame':{'w':160,'h':160,'ax':75,'ay':143},'clips':{}};report={};can=Image.new('RGBA',(1600,800))
     for row,(name,(n,fps,loop)) in enumerate(C.items()):
         raw,manifest=read('e-'+name)
         assert len(raw)==n,(name,len(raw));expected=hashlib.sha256((M/(name+'.blend')).read_bytes()).hexdigest()
         assert manifest['blend_sha256']==expected,'Stale '+name
+        rest_manifest=read('c')[1]
+        assert all(manifest[k]==rest_manifest[k] for k in ('engine','device','samples','resolution')), 'Mixed render settings'
+        assert json.loads((M/(name+'-audit.json')).read_text())['source_master_sha256']==hashlib.sha256((M/'master.blend').read_bytes()).hexdigest(), 'Stale clip master'
         rects=[];hashes=[]
         for i,im in enumerate(raw):
             # Keep both master sizes without discarding the render source.
@@ -73,7 +92,7 @@ def pack():
             for size in (512,256):
                 if size>im.width:continue
                 folder=M/str(size)/name;folder.mkdir(parents=True,exist_ok=True);tile(g,size).save(folder/f'{i:02d}.png')
-            cell=tile(g,160);alpha=cell.getchannel('A');box=alpha.point(lambda v:255 if v>2 else 0).getbbox();assert box
+            cell=cell160(g);alpha=cell.getchannel('A');box=alpha.getbbox();assert box
             x,y,r,b=box;assert x>0 and y>0 and r<160 and b<160,(name,i,'clipped',box)
             crop=cell.crop(box);can.paste(crop,(i*160,row*160))
             rects.append({'x':i*160,'y':row*160,'w':r-x,'h':b-y,'ox':x,'oy':y})
@@ -100,11 +119,24 @@ def validate():
     meta=json.loads((A/f'{SLUG}.json').read_text());im=Image.open(A/f'{SLUG}.webp').convert('RGBA');report=json.loads((M/'pack.json').read_text())
     assert im.size==(1600,800);assert (A/f'{SLUG}.webp').stat().st_size<=200000;assert report['quality']>=75
     assert im.getchannel('A').getextrema()==(0,255)
+    assert report['grade_sha256']==hashlib.sha256((M/'grade.json').read_bytes()).hexdigest(), 'Changed grade'
+    rest,rest_manifest=read('c')
+    calibration=json.loads((M/'grade.json').read_text())
+    assert calibration['rest_sha256']==hashlib.sha256(rest[0].tobytes()).hexdigest(), 'Stale rest calibration'
     assert meta['frame']=={'w':160,'h':160,'ax':75,'ay':143}
     for name,(n,fps,loop) in C.items():
         c=meta['clips'][name];assert (c['frames'],c['fps'],c['loop'])==(n,fps,loop);assert len(c['rects'])==n
         hashes=report['clips'][name]['frame_hashes'];assert len(set(hashes))>=2,(name,'static')
-        for r in c['rects']:assert r['w']+r['ox']<=160 and r['h']+r['oy']<=160
+        raw,manifest=read('e-'+name)
+        assert manifest==report['clips'][name]['render']
+        assert all(manifest[k]==rest_manifest[k] for k in ('engine','device','samples','resolution'))
+        assert [hashlib.sha256(f.tobytes()).hexdigest() for f in raw]==hashes, 'Changed source pixels'
+        for index,r in enumerate(c['rects']):
+            assert 0<=r['x'] and 0<=r['y'] and r['x']+r['w']<=im.width and r['y']+r['h']<=im.height
+            assert 0<=r['ox'] and 0<=r['oy'] and r['w']+r['ox']<=160 and r['h']+r['oy']<=160
+            decoded=Image.new('RGBA',(160,160))
+            decoded.paste(im.crop((r['x'],r['y'],r['x']+r['w'],r['y']+r['h'])),(r['ox'],r['oy']))
+            assert decoded.getchannel('A').tobytes()==cell160(grade(raw[index])).getchannel('A').tobytes(),(name,index,'decoded alpha mismatch')
     raw,_=read('e-death');assert ImageChops.difference(raw[-1],raw[-2]).getbbox(alpha_only=False) is None,'Death not held'
     print('PASS: dimensions, size, quality, alpha, 40 frames, offsets, all clips move, held death')
 if __name__=='__main__':

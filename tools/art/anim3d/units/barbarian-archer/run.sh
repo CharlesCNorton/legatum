@@ -9,6 +9,8 @@ elif [[ "$stage" == finish ]]; then
   blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python "$unit/finish.py"
 elif [[ "$stage" == animate ]]; then
   blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python "$unit/animate.py"
+elif [[ "$stage" == audit ]]; then
+  blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python "$unit/audit.py"
 else
   blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python "$unit/render.py" -- "$stage"
   "$ANIM_ROOT/venv/bin/python" "$unit/deliver.py" "$stage"

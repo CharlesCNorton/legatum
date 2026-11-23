@@ -85,8 +85,10 @@ def pose(rig,phase=0,stride=0,draw=1):
     limb(rig,'thigh_r','calf_r',(-.36,-.02+stride,.18),(-.38,-.36,.53))
     limb(rig,'thigh_l','calf_l',(.41,.04-stride,.18),(.40,-.32,.54))
     aim(rig,'foot_r',(-.06,-.16,-.06));aim(rig,'foot_l',(.08,-.16,-.06))
-    limb(rig,'upperarm_l','lowerarm_l',(.52,-.15,1.43+phase),(.45,-.16,1.34))
-    limb(rig,'upperarm_r','lowerarm_r',(-.30+.33*(1-draw),-.235,1.27+phase),(-.55,-.15,1.17))
+    shoulder=rig.pose.bones['upperarm_l'];matrix=shoulder.matrix.copy();matrix.translation+=Vector((-.025,0,.08));shoulder.matrix=matrix
+    bpy.context.view_layer.update()
+    limb(rig,'upperarm_l','lowerarm_l',(.51,-.15,1.50+phase),(.45,-.16,1.55))
+    limb(rig,'upperarm_r','lowerarm_r',(-.265+.30*(1-draw),-.235,1.35+phase),(-.53,-.15,1.26))
     aim(rig,'hand_l',(.012,-.015,.085));aim(rig,'hand_r',(.075,0,.02))
     rig.pose.bones['head'].location.y=-.09
     bpy.context.view_layer.update()
@@ -110,7 +112,9 @@ def settings(res=256,samples=8):
     sc.render.film_transparent=True;sc.render.image_settings.file_format='PNG';sc.render.image_settings.color_mode='RGBA'
     sc.render.threads_mode='FIXED';sc.render.threads=3
     sc.render.use_persistent_data=True
-    sc.view_settings.view_transform='AgX';sc.view_settings.look='AgX - Medium High Contrast';sc.view_settings.exposure=0
+    sc.view_settings.view_transform='Standard' if sc.get('round2_finished_projection') else 'AgX'
+    sc.view_settings.look='None' if sc.get('round2_finished_projection') else 'AgX - Medium High Contrast'
+    sc.view_settings.exposure=0
     return sc
 
 def render(path):

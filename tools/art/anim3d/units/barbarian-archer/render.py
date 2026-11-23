@@ -5,7 +5,7 @@ sys.path.insert(0,str(Path(__file__).resolve().parent))
 from common import *
 stage=sys.argv[sys.argv.index('--')+1] if '--' in sys.argv else 'c'
 res=int(os.environ.get('RESOLUTION','256'));samples=int(os.environ.get('SAMPLES','8'))
-path=MASTER/('plain.blend' if stage=='b' else 'master.blend')
+path=MASTER/('refined-plain.blend' if stage=='b' else 'master.blend')
 if stage.startswith('e-'):path=MASTER/(stage[2:]+'.blend')
 if stage=='d':path=MASTER/'attack.blend'
 bpy.ops.wm.open_mainfile(filepath=str(path));sc=settings(res,samples)

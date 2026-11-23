@@ -191,3 +191,50 @@ Quality is selected from 90, 85, 80, 75 while enforcing 200,000 bytes. The packe
 refuses an oversized atlas at 75 instead of reducing quality or dropping frames.
 Master and raw-frame hashes, actual engine/device/samples and grade hash remain in
 `masters/barbarian-archer/pack.json`. No masters or source rasters belong in git.
+
+
+### Barbarian archer round 2: finished projection and GPU movie
+
+Resume from the preserved `plain.blend`; `finish.py` calls unit-local `refine.py`
+without accumulating edits. Freeze MPFB macro shape keys before inverse-skin
+fitting. Fit actual full-depth knees, head, raised arm and fingers in the rest
+camera; retain native weights and the live rig. The bow uses a smooth sampled
+curve fitted to the painted stave, with real tubular thickness and the original
+hand attachment. Synchronize the rest string/nock/arrow with the animation solver.
+The wolf muzzle/nose and ears move as real solid meshes, not texture patches.
+
+Apply static Solidify/Bevel/Subdivision to the working surfaces before freezing
+UVs, temporarily disabling the armature while applying garment modifiers. Remove
+zero-level subdivision explicitly: Blender rejects applying a disabled modifier.
+Actual AO/curvature bakes remain on four principal surfaces. Source projection
+uses rest-camera visibility and incidence on the finished geometry; unseen parts
+keep the original generated fur/linen/leather fills. Camera-only Principled pigment
+preserves the painting's existing illumination without lighting other surfaces.
+Standard/None and reduced 5:1 key/fill suit this painted layer; this is not a
+photographic preset. One automatic rest grade remains frozen across all clips.
+The physical cream disc still receives contact shadows and is never figure-projected.
+
+`refined-plain.blend` is the new plain review input. The original round-one CPU512
+frames and masters are preserved in `masters/barbarian-archer/round1-cpu/`.
+Current CPU256 previews are never upscaled and labelled as 512 masters. Final
+masters require the host pass. Run the executable, argument-free handoff:
+
+```sh
+ROUND=2 tools/art/anim3d/units/barbarian-archer/gpu.sh
+```
+
+It resolves its checkout, retains `gpu-logs-barbarian-archer-r${ROUND}.log`, records
+failure stages, requires Metal, rebuilds all five clip blends from the current
+master, renders all stages at GPU512/64 samples, exports 512/256 PNGs, packs and
+validates the trimmed atlas, and encodes the decoded five-clip MP4. The movie is
+H.264/yuv420p, 1600x348, 240 frames/eight seconds, 2x scale on cream. `ROUND` comes
+from the driver. A technical completion receipt never creates the art PASS marker.
+
+The atlas keeps the existing v2 1600x800 layout and per-clip `rects` contract.
+Premultiplied bicubic reduction preserves thin contours without Lanczos ringing;
+trim uses every nonzero alpha pixel. Validation compares reconstructed decoded
+alpha byte-for-byte with all forty reduced source frames, verifies blend/frame
+hashes, fixed grade, timing, offsets and held death. Stale master/clip/render or
+mixed engine/resolution/sample settings fail instead of packing old images.
+Remaining artistic defects and measured delivery results live in the unit log
+and `units/barbarian-archer/REVIEW.md`. No gameplay or runtime wiring changes.
