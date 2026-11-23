@@ -109,3 +109,5 @@ Open-motion update: copied/read unit-local Quaternius CC0 rest/roll constraint h
 Review e-attack: 256px CYCLES/CPU, 12 samples; 10 actual frames.
 Review e-hit: 256px CYCLES/CPU, 12 samples; 4 actual frames.
 Review e-death: 256px CYCLES/CPU, 12 samples; 10 actual frames.
+Baked animate-hit with authored combat/CMU locomotion and real cloth simulation.
+Baked animate-death with authored combat/CMU locomotion and real cloth simulation.
