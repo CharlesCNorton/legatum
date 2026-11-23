@@ -94,3 +94,38 @@ Rendered e-idle: 8 PNGs, 512 px, CYCLES GPU, 96 samples.
 Published e-idle review immediately; frozen grade de8547548b11, 256 masters retained.
 Rendered e-move: 8 PNGs, 512 px, CYCLES GPU, 96 samples.
 Published e-move review immediately; frozen grade de8547548b11, 256 masters retained.
+Rendered e-attack: 10 PNGs, 512 px, CYCLES GPU, 96 samples.
+Published e-attack review immediately; frozen grade de8547548b11, 256 masters retained.
+Rendered e-hit: 4 PNGs, 512 px, CYCLES GPU, 96 samples.
+Published e-hit review immediately; frozen grade de8547548b11, 256 masters retained.
+Rendered e-death: 10 PNGs, 512 px, CYCLES GPU, 96 samples.
+Published e-death review immediately; frozen grade de8547548b11, 256 masters retained.
+Geometry/contact audit PASS: closed volumes, four IK legs, fixed planted feet, constant segments, stationary disc, six bakes, no zero scales.
+Packed 40 trimmed 160 px frames: 187526 bytes, WebP quality 90.
+Validation PASS: counts, RGBA, rect bounds, transparent margins, five moving clips, held death, quality and size. Art approval remains separate.
+Encoded and ffprobe-verified hunter-killer-round1.mp4: 8 s, 240 frames, 1600x348 H.264 yuv420p; decoded trimmed atlas.
+Validation PASS: counts, RGBA, rect bounds, transparent margins, five moving clips, held death, quality and size. Art approval remains separate.
+Round 2 initial critique after OPENING GPU c/f, all five strips and sampled round1 MP4 frames: GPU round1 completed (187526 bytes Q90, GPU512 masters, valid eight-second MP4). At 256 px the hull brushwork is credible, but the smooth orange stone disc lacks the painting grain and bevel shading, the far-left shin/foot is boxy and too far left, near-right armour contour is too narrow, and the barrel tip is square. At 64 px identity and height match, but the plain bright base gives away the render. Move reads as alternating foot lifts rather than forward weight transfer; attack flash/recoil too subdued, death visibly folds and holds. Not painting parity; no PASS. Prior GPU evidence archived in masters/hunter-killer/driver-r1-gpu. No unit-specific FEEDBACK file exists. Read all standing feedback and all playbook chapters; all six Blender skills loaded, preserving painted view transform and authored mechanical motion exception.
+Prepared full-source projection; read all six Blender skills, vehicle chapter, art skill and standing feedback 12–22.
+Built original full-depth hull, turret, four mechanical two-link legs, broad feet, pistons, sensors, closed barrel, bevels, and stationary cream disc. All six Blender skills applied. Plain stage ready.
+Finished frozen camera projection on solid geometry; six actual AO/curvature bakes, generated olive hidden-surface fill, grain and chipped edges. No alpha clipping or painted base feet.
+Keyed idle: 8 output samples; fixed planted contacts, rigid IK segments; terminal death held.
+Keyed move: 8 output samples; fixed planted contacts, rigid IK segments; terminal death held.
+Keyed attack: 10 output samples; fixed planted contacts, rigid IK segments; terminal death held.
+Keyed hit: 4 output samples; fixed planted contacts, rigid IK segments; terminal death held.
+Keyed death: 10 output samples; fixed planted contacts, rigid IK segments; terminal death held.
+Rendered c: 1 PNGs, 256 px, CYCLES CPU, 8 samples.
+Published c review immediately; frozen grade 5f394aedfdae, 256 masters retained.
+Prepared full-source projection; read all six Blender skills, vehicle chapter, art skill and standing feedback 12–22.
+Built original full-depth hull, turret, four mechanical two-link legs, broad feet, pistons, sensors, closed barrel, bevels, and stationary cream disc. All six Blender skills applied. Plain stage ready.
+Finished frozen camera projection on solid geometry; six actual AO/curvature bakes, generated olive hidden-surface fill, grain and chipped edges. No alpha clipping or painted base feet.
+Keyed idle: 8 output samples; fixed planted contacts, rigid IK segments; terminal death held.
+Round 2 geometry/material iteration: refitted full-depth far-left and near-right armour, moved far-left shoe inward, widened stone bevel. First CPU c/f published immediately; procedural grain still looked generic. Generated clean stone occlusion fill with built-in ImageGen (prompt and hash recorded), retained original unobscured rim and real moving-foot AO; no projected reference feet. Strengthened recoil/weight transfer and lengthened foot swing from .25 to .375 cycle to avoid one-frame pops.
+Finished frozen camera projection on solid geometry; six actual AO/curvature bakes, generated olive hidden-surface fill, grain and chipped edges. No alpha clipping or painted base feet.
+Keyed idle: 8 output samples; fixed planted contacts, rigid IK segments; terminal death held.
+Keyed move: 8 output samples; fixed planted contacts, rigid IK segments; terminal death held.
+Keyed attack: 10 output samples; fixed planted contacts, rigid IK segments; terminal death held.
+Keyed hit: 4 output samples; fixed planted contacts, rigid IK segments; terminal death held.
+Keyed death: 10 output samples; fixed planted contacts, rigid IK segments; terminal death held.
+Rendered c: 1 PNGs, 256 px, CYCLES CPU, 16 samples.
+Published c review immediately; frozen grade 342d35426c0a, 256 masters retained.
