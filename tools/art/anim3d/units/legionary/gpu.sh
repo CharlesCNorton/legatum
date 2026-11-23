@@ -16,9 +16,11 @@ command -v blender
 test -s "$ANIM_ROOT/masters/legionary/legionary.blend"
 export UNIT=legionary RENDER_ENGINE=CYCLES CYCLES_DEVICE=GPU RESOLUTION=512 SAMPLES="${SAMPLES:-64}"
 unset CLIP
-export STAGES=animate,b,c,d,e-idle,e-move,e-attack,e-hit,e-death,audit
+export STAGES=animate,b,c,d,e-idle,e-move,e-attack,e-hit,e-death,feet,audit
 tools/art/anim3d/units/legionary/run.sh round
 "$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/legionary/check_delivery.py --gpu
+"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/legionary/feet_audit.py
+"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/legionary/compare.py
 tools/art/anim3d/units/legionary/run.sh pack
 tools/art/anim3d/units/legionary/run.sh validate
 "$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/legionary/video.py

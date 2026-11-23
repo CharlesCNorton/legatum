@@ -57,6 +57,13 @@ elif stage in ['c','c-details']:
     for name,box in zip(['Helmet','Armour','Shield'],crops):
         for label,picture in [('Painting',ref),('3D',im)]:ims.append(picture.crop(box).resize((256,256),Image.Resampling.LANCZOS));labels.append(name+' '+label)
     sheet(ims,labels,V/'legionary-c-details.png')
+elif stage=='feet':
+    canvas=Image.new('RGB',(8*192,2*216),(239,231,213));draw=ImageDraw.Draw(canvas)
+    for row,view in enumerate(['front','top']):
+        for i in range(8):
+            im=Image.open(folder/'256'/f'{view}-{i:02}.png').convert('RGBA').resize((192,192),Image.Resampling.LANCZOS)
+            canvas.paste(im,(i*192,row*216+24),im);draw.text((i*192+8,row*216+6),f'{view} {i+1}',fill=(50,40,30))
+    canvas.save(V/'legionary-g-feet-check.png')
 elif stage=='d':sheet(images,[f'Attack pose {i}' for i in range(len(images))],V/'legionary-d-rig-poses.png')
 elif stage.startswith('e-'):
     clip=stage[2:];sheet(images,[f'{clip} {i+1}' for i in range(len(images))],V/f'legionary-e-{clip}-strip.png')

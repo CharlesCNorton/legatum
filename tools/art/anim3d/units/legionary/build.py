@@ -106,7 +106,7 @@ red=material('Cinnabar wool',(.27,.018,.008),0,.83)
 linen=material('Warm ivory linen',(.72,.61,.42),0,.88)
 leather=material('Oxide leather',(.12,.040,.015),0,.7)
 iron=material('Forged iron',(.55,.58,.59),1,.32)
-wood=material('Ash spear shaft',(.19,.072,.018),0,.57)
+wood=material('Ash spear shaft',(.52,.25,.075),0,.57)
 stone=material('Cream limestone',(.80,.59,.32),0,.86)
 body.data.materials.clear(); body.data.materials.append(skin)
 sub=body.modifiers.new('Anatomical subdivision','SUBSURF'); sub.levels=1; sub.render_levels=1
@@ -118,16 +118,13 @@ def fitted_shell(name, predicate, mat, inflate=.009):
     ids=sorted(set(i for p in faces for i in p.vertices)); mapping={v:i for i,v in enumerate(ids)}
     vs=[tuple(me.vertices[i].co+me.vertices[i].normal*inflate) for i in ids]
     ob=mesh(name,vs,[[mapping[i] for i in p.vertices] for p in faces],mat)
-    # Spatially transfer original MPFB skinning before posing.
-    from mathutils.kdtree import KDTree
-    kd=KDTree(len(body.data.vertices))
-    for v in body.data.vertices:kd.insert(v.co,v.index)
-    kd.balance()
+    # Evaluated topology carries interpolated skin groups. Nearest *unmorphed*
+    # vertices assigned sleeves to the wrong segment and lifted red fabric over
+    # the shoulder when the weapon arm bent.
     for g in body.vertex_groups:
         if g.name in rig.data.bones: ob.vertex_groups.new(name=g.name)
     for j,i in enumerate(ids):
-        _, k, _=kd.find(me.vertices[i].co)
-        for g in body.data.vertices[k].groups:
+        for g in me.vertices[i].groups:
             name=body.vertex_groups[g.group].name
             if name in ob.vertex_groups:ob.vertex_groups[name].add([j],g.weight,'REPLACE')
     ev.to_mesh_clear(); ob.parent=rig
@@ -156,7 +153,7 @@ for j in range(7):
         attach(sphere('GEO-lorica brass fastener',(x,-ry-.010,z+.024),(.008,.005,.008),gold),'spine_03')
         attach(curve('GEO-lorica leather hinge',[(x,-ry-.005,z+.012),(x,-ry-.005,z+.040)],.010,leather),'spine_03')
 fitted_shell('GEO-lorica upper cuirass',lambda v: 1.32<v.z<1.46 and abs(v.x)<.255,iron,.018)
-fitted_shell('GEO-red tunic sleeves',lambda v: 1.32<v.z<1.61 and .18<abs(v.x)<.38,red,.012)
+fitted_shell('GEO-red tunic sleeves',lambda v: 1.32<v.z<1.49 and .18<abs(v.x)<.38,red,.012)
 # Layered shoulder lames: thick curved plates, rolled edges, distinct overlaps.
 for sg,side in [(-1,'r'),(1,'l')]:
     for j in range(4):
@@ -226,13 +223,13 @@ for sg,side in [(1,'l'),(-1,'r')]:
     o=solid(mesh('GEO-sandal sole '+side,outline,[tuple(range(48))],leather),.017);bevel(o,.005);attach(o,'foot_'+side)
     for yy in [-.16,-.12,-.08,-.025,.02]:
         pts=[(x+.057*cos(a),y+yy,.132+.052*sin(a)) for a in [i*pi/20 for i in range(21)]]
-        attach(curve('GEO-sandal strap '+side,pts,.007,leather),'foot_'+side)
-    for z in [.19,.23]:attach(curve('GEO-ankle strap '+side,[(x+.045*sin(a),y+.045*cos(a),z) for a in [i*2*pi/32 for i in range(33)]],.006,leather),'foot_'+side)
+        attach(curve('GEO-sandal strap '+side,pts,.005,leather),'foot_'+side)
+    for z in [.19,.23]:attach(curve('GEO-ankle strap '+side,[(x+.045*sin(a),y+.045*cos(a),z) for a in [i*2*pi/32 for i in range(33)]],.0045,leather),'foot_'+side)
 # Rest: planted feet and right hand holding the long pilum clear of the torso.
 rig.location.z=.085
 limb('thigh_r','calf_r',(-.16,-.06,.082),(-.22,-.31,.48))
 limb('thigh_l','calf_l',(.18,.035,.082),(.23,-.28,.48))
-limb('upperarm_r','lowerarm_r',(-.43,-.19,1.28),(-.38,-.12,1.02))
+limb('upperarm_r','lowerarm_r',(-.365,-.19,1.28),(-.60,0,.80))
 # The fingers need clearance behind the convex shell, not only a wrist behind it.
 limb('upperarm_l','lowerarm_l',(.30,-.24,1.10),(.44,-.02,1.12))
 for side in ['r','l']:
@@ -241,20 +238,26 @@ for side in ['r','l']:
         for k in range(1,4):
             p=rig.pose.bones[f'{digit}_{k:02d}_{side}'];p.rotation_mode='XYZ';p.rotation_euler.x=1.05
 bpy.context.view_layer.update()
-grip=rig.matrix_world @ rig.pose.bones['hand_r'].head+Vector((0,-.014,.048))
+# Oppose the thumb around the shaft; leaving the MPFB rest thumb made an open hand.
+for name,target in [('thumb_01_r',(-.357,-.224,1.351)),('thumb_02_r',(-.375,-.232,1.371)),('thumb_03_r',(-.379,-.214,1.374))]:
+    aim_bone(name,Vector(target)-rig.pose.bones[name].head)
+grip=rig.matrix_world @ rig.pose.bones['hand_r'].head+Vector((.020,-.044,.068))
 def control(name,loc,bone):
     o=bpy.data.objects.new(name,None);bpy.context.collection.objects.link(o);o.location=loc;attach(o,bone);return o
 def parent_world(o,parent):
     bpy.context.view_layer.update();m=o.matrix_world.copy();o.parent=parent;o.parent_type='OBJECT';o.matrix_world=m;return o
 pilum=control('Pilum control',grip,'hand_r')
-parent_world(curve('GEO-pilum ash shaft',[grip+Vector((.10,0,-1.26)),grip+Vector((-.035,0,.12))],.011,wood),pilum)
+parent_world(curve('GEO-pilum ash shaft',[grip+Vector((.10,0,-1.26)),grip+Vector((-.035,0,.12))],.014,wood),pilum)
 parent_world(curve('GEO-pilum long iron shank',[grip+Vector((-.035,0,.12)),grip+Vector((-.080,0,.50))],.0065,iron),pilum)
 parent_world(curve('GEO-pilum socket',[grip+Vector((-.028,0,.05)),grip+Vector((-.040,0,.18))],.017,bronze),pilum)
 sv=[grip+Vector(v) for v in [(-.092,-.01,.50),(-.068,-.01,.50),(-.08,.01,.50),(-.083,0,.57)]]
 parent_world(mesh('GEO-pilum pyramidal point',sv,[(0,1,3),(1,2,3),(2,0,3),(2,1,0)],iron,False),pilum)
 # Convex rectangular scutum, not a flat painted card.
 center=Vector((.40,-.36,1.20));shield=control('Scutum control',center,'lowerarm_l')
-def shield_point(x,z,depth=0):return center+Vector((x,-.085*(1-(x/.235)**2)-depth,z))
+def shield_point(x,z,depth=0):
+    # Rounded end grain and a narrower convex face match the painted scutum.
+    rounded=z-math.copysign(.060*(x/.235)**2*(abs(z)/.485)**8,z)
+    return center+Vector((x*.95,-.085*(1-(x/.235)**2)-depth,rounded))
 vs=[];fs=[];nx=64;nz=100
 for j in range(nz+1):
     for i in range(nx+1):
@@ -271,7 +274,7 @@ attach(curve('GEO-gladius leather scabbard',[(-.21,.04,1.09),(-.26,-.015,.69)],.
 attach(curve('GEO-gladius grip',[(-.20,.05,1.09),(-.19,.055,1.20)],.017,linen),'pelvis')
 attach(sphere('GEO-gladius pommel',(-.19,.055,1.20),(.029,.023,.024),gold),'pelvis')
 # Same warm cream disc across every frame, no podium or extra tier.
-bpy.ops.mesh.primitive_cylinder_add(vertices=128,radius=.50,depth=.085,location=(0,0,.0425))
+bpy.ops.mesh.primitive_cylinder_add(vertices=128,radius=.465,depth=.085,location=(-.018,0,.0425))
 base=bpy.context.object;base.name='Stationary cream stone';base.data.materials.append(stone);bevel(base,.012,3)
 sc=bpy.context.scene;sc.render.engine='CYCLES';sc.cycles.device='CPU';sc.cycles.samples=8;sc.cycles.use_denoising=True
 sc.render.resolution_x=sc.render.resolution_y=256;sc.render.resolution_percentage=100
@@ -290,6 +293,47 @@ for side in ['r','l']:
     aim_bone('foot_'+side,(0,-.12,-.025));aim_bone('ball_'+side,(0,-1,0))
 rig.location.z+=.018
 bpy.context.view_layer.update()
+# Fit straps to the actual posed skin rather than assumed anatomical coordinates.
+# Freeze their local mesh points after this fit; future motion remains skeletal.
+from mathutils.bvhtree import BVHTree
+dg=bpy.context.evaluated_depsgraph_get();ev=body.evaluated_get(dg);me=ev.to_mesh()
+verts=[ev.matrix_world @ v.co for v in me.vertices]
+tree=BVHTree.FromPolygons(verts,[list(p.vertices) for p in me.polygons])
+for ob in list(bpy.context.scene.objects):
+    if not ob.name.startswith(('GEO-sandal strap','GEO-ankle strap')):continue
+    inverse=ob.matrix_world.inverted()
+    for spline in ob.data.splines:
+        for point in spline.points:
+            world=ob.matrix_world @ Vector(point.co[:3]);hit,normal,_,distance=tree.find_nearest(world)
+            if hit is not None:
+                local=inverse @ (hit+normal*.004);point.co=(*local,1)
+# Sandal leather follows the same calf/foot/toe skin weights as the anatomy.
+# A rigid foot-parent left toe straps floating as the captured toes rolled.
+from mathutils.kdtree import KDTree
+kd=KDTree(len(verts))
+for i,v in enumerate(verts):kd.insert(v,i)
+kd.balance()
+for ob in list(bpy.context.scene.objects):
+    if not ob.name.startswith(('GEO-sandal','GEO-ankle strap')):continue
+    bpy.ops.object.select_all(action='DESELECT');ob.select_set(True);bpy.context.view_layer.objects.active=ob
+    if ob.type=='CURVE':bpy.ops.object.convert(target='MESH');ob=bpy.context.object
+    for mod in list(ob.modifiers):bpy.ops.object.modifier_apply(modifier=mod.name)
+    world=ob.matrix_world.copy();positions=[world @ v.co for v in ob.data.vertices]
+    weights=[]
+    for position in positions:
+        _,idx,_=kd.find(position)
+        w={body.vertex_groups[g.group].name:g.weight for g in me.vertices[idx].groups if body.vertex_groups[g.group].name in rig.data.bones and g.weight>1e-5}
+        total=sum(w.values());assert total>0,'Missing anatomical sandal weights';weights.append({n:v/total for n,v in w.items()})
+    ob.parent=rig;ob.parent_type='OBJECT';ob.matrix_parent_inverse=Matrix.Identity(4);ob.matrix_basis=Matrix.Identity(4)
+    for name in sorted({n for w in weights for n in w}):ob.vertex_groups.new(name=name)
+    for v,position,w in zip(ob.data.vertices,positions,weights):
+        transform=Matrix([[0.0]*4 for _ in range(4)])
+        for name,weight in w.items():
+            transform+=(rig.pose.bones[name].matrix @ rig.data.bones[name].matrix_local.inverted())*weight
+            ob.vertex_groups[name].add([v.index],weight,'REPLACE')
+        v.co=transform.inverted() @ (rig.matrix_world.inverted() @ position)
+    mod=ob.modifiers.new('Anatomical sandal toe and ankle weights','ARMATURE');mod.object=rig
+body.evaluated_get(dg).to_mesh_clear()
 rig['neutral_pose']=json.dumps({p.name:[list(row) for row in p.matrix_basis] for p in rig.pose.bones})
 sc['unit']='legionary';sc['source']='MPFB 2.0.18 CC0 anatomy; original Roman kit; project painting'
 (MASTER/'model-info.json').write_text(json.dumps({'body_vertices':len(body.data.vertices),'bones':len(rig.data.bones),'objects':len(sc.objects),'head_center':[cx,cy,cz]},indent=2))

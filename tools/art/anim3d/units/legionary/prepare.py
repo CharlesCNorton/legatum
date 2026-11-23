@@ -1,7 +1,7 @@
 """Prepare external painting and generated material fills; retain pinned inputs."""
 import os, json, hashlib
 from pathlib import Path
-from PIL import Image, ImageDraw, ImageFilter
+from PIL import Image, ImageDraw, ImageFilter, ImageChops
 ROOT=Path(os.environ.get('ANIM_ROOT',Path.home()/'LegatumRuns/anim-pilot'))
 A=ROOT/'assets/legionary'; M=ROOT/'masters/legionary'; M.mkdir(parents=True,exist_ok=True)
 lock=json.loads((Path(__file__).parent/'assets.lock.json').read_text())
@@ -19,6 +19,6 @@ for kind,box in [('cloth',(0,0,w//2,h//2)),('leather',(w//2,0,w,h//2)),('iron',(
 # Skin masking stops shield/metal colours spilling onto the anatomical mesh.
 mask=Image.new('L',out.size); d=ImageDraw.Draw(mask)
 for poly in [[(114,31),(137,31),(143,51),(127,60),(112,48)],[(66,65),(81,65),(93,88),(108,77),(113,87),(95,103),(78,98),(67,82)],[(105,150),(123,150),(121,198),(115,219),(104,220),(108,192)],[(128,150),(147,149),(151,217),(137,221),(132,195)]]:d.polygon([(x*4,y*4) for x,y in poly],fill=255)
-mask=mask.filter(ImageFilter.GaussianBlur(3)); skin=out.copy();skin.putalpha(mask);skin.save(A/'projection-skin.png')
-(M/'inputs.json').write_text(json.dumps({str(p.relative_to(ROOT)):hashlib.sha256(p.read_bytes()).hexdigest() for p in [A/'painting-source.png',A/'painted-fills.png']},indent=2))
+mask=mask.filter(ImageFilter.GaussianBlur(3)); skin=out.copy();skin.putalpha(ImageChops.multiply(mask,out.getchannel('A')));skin.save(A/'projection-skin.png')
+(M/'inputs.json').write_text(json.dumps({str(p.relative_to(ROOT)):hashlib.sha256(p.read_bytes()).hexdigest() for p in [A/'painting-source.png',A/'painted-fills.png',A/'fill-skin.png']},indent=2))
 print('PREPARED legionary inputs',src.size)

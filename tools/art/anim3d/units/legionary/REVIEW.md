@@ -1,61 +1,78 @@
-# Legionary round 2
+# Legionary driver round 2
 
-Improved review candidate; **not art-approved, no PASS marker**. The game still
-uses the existing painting. The unit-local source and complete host command are
-in the Infantry: legionary chapter of `../../PLAYBOOK.md`.
+Improved candidate; **not art-approved, no PASS marker**. The existing painting
+remains in the game. No runtime rendering or game mechanics changed.
 
-At **256 px**, the fitted shoulder yoke no longer sticks up around the neck.
-Finished-surface projection preserves much more of the source metal, skin and
-cloth shading; measured cream stone is close to the painting. The face/helmet
-outline, pilum grip, arm proportions and oversized rectangular shield silhouette
-still differ. At **64 px**, Roman identity is strong, but pose and silhouette are
-still distinguishable. Silhouette overlap improved from .713 to .745; that is
-not a visual acceptance threshold. Attack remains restrained; death remains a
-stiff folded pose with conspicuous newly exposed skin and projected seams.
+The lead's round-1 GPU pass succeeded through atlas/video validation. Its actual
+rest, details, five strips and movie frames were inspected before edits, and its
+masters/reviews are retained in external `masters/legionary/driver-r1-gpu/`.
 
-The left fingers previously protruded through the scutum. A regression check on
-preserved geometry found 719 intersecting triangle pairs before the fix and zero
-afterward. Retracting the wrist and gradually tilting it back during peak attack
-cleared the stronger held skin/scutum audit across all 40 samples. The audit also
-passes stationary base, original body/rig counts, scale, floor and pilum/rigid-kit
-checks. It still warns that terminal skin is at .204 m; the body rests over the
-dropped shield and worn kit. This is not a full body/cloth collision solver.
+At **256 px**, the narrower rounded scutum and smaller cream base better match the
+painting. The pilum wrist/thumb and shaft visibility improved. Multiplying the
+skin mask by source alpha removes projected black background; a pinned original
+generated skin fill covers newly exposed areas. Sleeves now use evaluated anatomy
+weights, and fitted sandal leather follows the calf, foot and toe bones. Painted
+armour and shield remain rich, but face/helmet contour, shoulder fit, hand shape
+and newly revealed surfaces remain distinguishable. At **64 px**, this reads as
+the same Roman unit, with a still-different stance and outline. No parity claim.
 
-Verified **Cycles CPU / 8-sample** delivery:
+Silhouette IoU increased from the GPU baseline **0.7449 to 0.7908 at 256**, and
+**0.7588 to 0.8017 at 64** in the latest CPU preview. Foreground colour error is
+similar; these metrics are supplementary evidence, not acceptance thresholds.
+The camera is calibrated approximately, not claimed to be an exact reconstruction.
 
-- All 40 clip frames and eight diagnostic images retained at genuine 512 px,
-  with matching 256 px copies and current model/clip/grade/raw-image hashes.
-- 160 px trimmed atlas: **197,774 bytes, Q85, 1066 x 766**. All 8/8/10/4/10
-  playback samples remain. Premultiplied bicubic reduction retains 8-bit alpha;
-  identical logical frames share storage within their clip row.
-- Validator passes source margins, exact decoded alpha at reconstructed offsets,
-  transparent padding, source hashes, motion and identical decoded held death.
-- Decoded review MP4: **1600 x 348, H.264/yuv420p, 240 frames, eight seconds**.
-- Python syntax (12 scripts), Bash syntax (2 scripts), executable GPU entry point,
-  missing-master failure/status preflight and CPU-as-GPU rejection pass.
+Idle, walk, hit and death now use pinned **CC0 Quaternius** actions retargeted with
+reference/rest and bone-roll compensation. The walking carrying arms use the
+open idle; the shield attack, equipment release and tunic follow-through remain
+explicit original adaptations. Source-designated stance gets a small root
+translation correction. There is no post-retarget foot rotation patch. The death
+no longer uses the original rigid authored fold, but source-painted skin and
+released-equipment contact still need close GPU review. This is not a general
+cloth/skin/sole collision solver.
 
-External files live under `~/LegatumRuns/anim-pilot/`: editable rest/clip masters,
-raw and graded frames in `masters/legionary/`; review strips, animated WebPs,
-rest comparison, decoded atlas, round MP4 and validation reports in `review/3d-v2/`.
-Prior evidence is retained in `masters/legionary/round1-cpu/`; the diagnosed
-pre-clearance scene is `masters/legionary/round2-before-hand-clearance.blend`.
+Verified Cycles CPU / 8-sample delivery:
 
-The required executable no-argument host handoff is:
+- All 40 clip samples plus 24 diagnostic/foot views at native 512 px, with 256 px
+  gallery copies and current model/clip/grade/raw-image hashes.
+- Geometry audit: 40 samples pass, no failures or warnings; terminal body minimum
+  0.10674 m above scene origin over the 0.085 m stone.
+- Stance audit: maximum heading 0.02051 degrees; ankle XY residual 0.00000052 m
+  against implied travel; maximum root correction 0.01814 m.
+- Trimmed 160 px atlas: **180,914 bytes, WebP Q80, 1046 x 754**; all 8/8/10/4/10
+  samples retained. Reconstruction, alpha, source margins, hashes and death hold pass.
+- MP4: **1600 x 348, H.264/yuv420p, 240 frames, eight seconds**, ffprobe verified.
+- Python syntax (15 scripts), Bash syntax (2 scripts), executable handoff and
+  `git diff --check` pass.
+
+The full CPU check results are recorded in the external `legionary-log.md`,
+`legionary-audit.json`, `legionary-feet-audit.json`, `legionary-validation.json`,
+`legionary-video-validation.json` and `legionary-comparison.json`.
+The foot sheet shows all eight move samples from the front and top.
+
+External editable masters, raw/graded 512 px frames and 256 px copies are under
+`~/LegatumRuns/anim-pilot/masters/legionary/`. Interim comparisons, details,
+strips, animated WebPs, decoded atlas and movie are under `review/3d-v2/`.
+Provenance and the repeatable pipeline are in `SOURCES.md` and the legionary
+chapter of `../../PLAYBOOK.md`.
+
+The lead runs from this branch's repository root:
 
 ```sh
 ROUND=2 tools/art/anim3d/units/legionary/gpu.sh
 ```
 
-It rebuilds all clips, renders every stage using Cycles GPU at 512 px, exports
-256 px copies, audits, checks provenance, packs/validates, and encodes the trimmed
-atlas MP4. It retains a transcript and failed-command/status receipt. It rejects
-missing Metal and never silently substitutes CPU. Actual GPU rendering and the
-lead's visual review remain outstanding; CPU success is not a GPU or art pass.
+This executable needs no arguments. It regenerates clips, renders every stage
+and the foot review on Cycles GPU at native 512 px, retains 512/256 px
+masters, checks geometry and provenance, packs/validates all 40 trimmed 160 px samples
+at quality >=75 and <=200,000 bytes, and writes the eight-second H.264/yuv420p
+`legionary-round${ROUND}.mp4`. It fails on missing Metal or stale/CPU provenance,
+records status/transcript, and never writes a PASS marker automatically.
 
-Working-file hygiene line checks pass across all 14 changed/new files, and
-`git diff --check` passes. The baseline HEAD gate identified matrix multiplication
-without spaces as false email addresses; operator spacing is now corrected with
-identical Python ASTs. Its art-set Chromium renderer still exits 1 in the sandbox.
-Revision-based gates must run on the runner's new commit. Git staging/commit was
-blocked by `.git/worktrees/lane-7/index.lock` permission; changes are left for the
-runner to commit with the requested co-author trailer. No push or PR was made.
+Working-file hygiene passed across all 18 changed/new text files; the GPU-only
+provenance check correctly rejects CPU masters. `origin/master` is already
+contained. The working-tree art distinctness render was blocked by Chromium's
+macOS MachPortRendezvous permission error (1100); no browser/art approval is
+claimed. Git staging/commit was blocked by the sandbox's denial of
+`.git/worktrees/lane-5/index.lock`. Changes remain uncommitted for the runner;
+the required co-author commit message is retained externally in
+`tmp/legionary/commit.txt`. Nothing was pushed and no PR was created.

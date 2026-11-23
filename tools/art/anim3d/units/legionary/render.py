@@ -4,7 +4,7 @@ from pathlib import Path
 from mathutils import Vector
 R=Path(os.environ['ANIM_ROOT']);M=R/'masters/legionary'
 stage=sys.argv[sys.argv.index('--')+1] if '--' in sys.argv else 'c'
-clip=stage[2:] if stage.startswith('e-') else 'attack' if stage=='d' else None
+clip=stage[2:] if stage.startswith('e-') else 'attack' if stage=='d' else 'move' if stage=='feet' else None
 path=M/'clips'/f'{clip}.blend' if clip else M/('legionary-plain.blend' if stage=='b' else 'legionary.blend')
 bpy.ops.wm.open_mainfile(filepath=str(path));sc=bpy.context.scene
 assert sc.camera,'Missing camera'
@@ -19,7 +19,13 @@ res=int(os.environ.get('RESOLUTION','256' if stage=='b' else '512'))
 sc.render.resolution_x=sc.render.resolution_y=res;sc.render.resolution_percentage=100
 sc.render.use_persistent_data=True
 out=M/'renders'/stage/'raw';out.mkdir(parents=True,exist_ok=True);manifest=out.parent/'render.json';manifest.unlink(missing_ok=True)
-if clip:
+if stage=='feet':
+    frames=json.loads(sc['sample_frames'])
+    for view,pos,target,near in [('front',(0,-4,.23),(0,0,.23),.1),('top',(0,0,3),(0,0,0),2.62)]:
+        sc.camera.location=pos;sc.camera.rotation_euler=(Vector(target)-sc.camera.location).to_track_quat('-Z','Y').to_euler();sc.camera.data.ortho_scale=1.12 if view=='top' else .95;sc.camera.data.clip_start=near
+        for i,f in enumerate(frames):
+            sc.frame_set(f);sc.render.filepath=str(out/f'{view}-{i:02}.png');bpy.ops.render.render(write_still=True)
+elif clip:
     frames=json.loads(sc['sample_frames']);frames=[frames[i] for i in [0,2,4,9]] if stage=='d' else frames
     for i,f in enumerate(frames):
         sc.frame_set(f);sc.render.filepath=str(out/f'{i:02}.png')

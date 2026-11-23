@@ -287,3 +287,61 @@ pose and all authored guards; the scutum keeps its original rest world transform
 The audit now checks actual skin/scutum triangle intersections in held poses as
 well as the existing pilum centreline/kit test. It does not claim a general
 skin/cloth solver, and the released shield/body contact in death still needs review.
+
+### Legionary driver round 2: source motion, skin alpha and foot review
+
+The driver's round-1 GPU pass completed successfully. Its masters and review
+sheets are preserved in external `masters/legionary/driver-r1-gpu/`; subsequent
+CPU previews must not be mistaken for that GPU evidence.
+
+The round-3 finish method remains frozen camera projection onto weighted, thick
+3D surfaces, image-generated fills for hidden areas, beveled equipment/folded
+cloth, product lighting, and one automatic rest-derived histogram grade. This
+round narrows/rounds the curved scutum, matches the cream base diameter, moves the
+pilum wrist toward its painted landmark, opposes the thumb and brightens the ash
+shaft. The skin mask now **multiplies** the painting alpha; replacing alpha had
+projected black background into the hand/arm. Hidden skin reuses the original
+project-generated Medjay fill with its own pinned hash. Registration is still
+approximate, especially the face and hand; these changes do not establish parity.
+
+Per common feedback 23, human idle/walk/hit/death use proven open motion by
+default. Legionary retargets Quaternius CC0 `Idle_Loop`, `Walk_Loop`, `Hit_Chest`
+and `Death01` through Blender world-rotation constraints. Helpers calibrate
+source/target reference poses and bone rolls; anatomical rest aligns locomotion
+legs. Walking layers the open idle's carrying arms; only the weapon-specific
+shield attack remains fully authored. Hit timing traverses the captured reaction then reverses through it to recover
+the guard within four samples. A short guard-to-death source blend,
+equipment release and authored tunic follow-through remain explicit adaptations.
+No imported mannequin is rendered. Unit `SOURCES.md` and the external source
+register record the exact library URL, version, licence and verified hashes.
+
+Never fix a retarget by rotating the feet afterward. A small root XY correction
+locks source-designated stance ankles to one virtual map-travel speed, preserving
+captured toe/foot rotations. Loop closing poses are keyed explicitly. Root Z
+keeps sandals in contact; this is not a general whole-body contact solver. Sandal
+straps are fitted to actual posed skin, then inverse-bound to nearby anatomical
+calf/foot/toe weights so toe roll no longer leaves rigid straps behind.
+
+Every round now renders **`legionary-g-feet-check.png`**, front and top views of
+all eight move samples. `feet_audit.py` checks stance toe heading and ankle XY
+slip relative to implied travel; it explicitly does not certify the entire sole.
+Inspect strap contact, roll and foot sliding visually as well. `compare.py`
+records silhouette IoU and foreground RGB error at 256/64, with no art-pass
+threshold. Do not replace a visual judgment with these measurements.
+
+```sh
+UNIT=legionary RESOLUTION=512 SAMPLES=8 CYCLES_DEVICE=CPU \
+  tools/art/anim3d/render.sh round
+source tools/art/anim3d/env.sh
+"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/legionary/check_delivery.py
+"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/legionary/feet_audit.py
+"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/legionary/compare.py
+UNIT=legionary tools/art/anim3d/render.sh pack
+UNIT=legionary tools/art/anim3d/render.sh validate
+ROUND=2 "$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/legionary/video.py
+```
+
+The no-argument executable `units/legionary/gpu.sh` includes the foot renders and
+checks alongside every previous stage, 512/256 masters, trimmed160 packing,
+validation, rest crossfade and eight-second H.264 movie. The driver supplies
+`ROUND`; the script never writes an art PASS automatically.

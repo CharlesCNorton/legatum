@@ -8,5 +8,10 @@
     "sha256": "dbea1fe305d14f2960d94e2e6829a5c0c72c2e92c5f5325bb2bfce43ff54c41c",
     "source": "Built-in imagegen 01a2066e-ff83-7250-bec6-14c5f46f1f73/exec-d6de0de4-bc9d-4927-be04-fbc6b4bbe7e4",
     "licence": "CC BY 4.0 project art"
+  },
+  "fill-skin.png": {
+    "sha256": "e9699dccd35965546bb5973ecb349cd695ab01bc7d06528b6aaee48b7070d9a9",
+    "source": "Reused original Medjay imagegen 01a20671-5037-7490-a90a-decacb274446/exec-401b9b3e-9eef-48db-b965-0d53769ebddc; painted warm skin fill",
+    "licence": "CC BY 4.0 project art"
   }
 }

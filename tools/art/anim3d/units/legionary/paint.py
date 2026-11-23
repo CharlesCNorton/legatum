@@ -8,7 +8,7 @@ bpy.ops.wm.open_mainfile(filepath=str(M/'legionary-plain.blend'));sc=bpy.context
 sc.render.engine='CYCLES';sc.cycles.device='CPU';sc.cycles.samples=4;sc.render.bake.margin=6
 painting=bpy.data.images.load(str(A/'painting-aligned.png'),check_existing=True)
 skinpainting=bpy.data.images.load(str(A/'projection-skin.png'),check_existing=True)
-fills={k:bpy.data.images.load(str(A/f'fill-{k}.png'),check_existing=True) for k in ['cloth','leather','iron','bronze']}
+fills={k:bpy.data.images.load(str(A/f'fill-{k}.png'),check_existing=True) for k in ['cloth','leather','iron','bronze','skin']}
 # Freeze macro morphs on this working copy, retaining original skin topology/weights.
 # Finish rigid surfaces before UV calibration: generated bevel vertices otherwise
 # move the visible pigment away from its reference-camera sample.
@@ -35,11 +35,11 @@ for mat in list(bpy.data.materials):
     if not mat.use_nodes:continue
     n=mat.node_tree.nodes;l=mat.node_tree.links;s=n.get('Principled BSDF')
     if not s:continue
-    kind='cloth' if 'wool' in mat.name else 'leather' if 'leather' in mat.name else 'iron' if 'iron' in mat.name else 'bronze' if 'Bronze' in mat.name else None
+    kind='skin' if mat.name.startswith('Skin') else 'cloth' if 'wool' in mat.name else 'leather' if 'leather' in mat.name else 'iron' if 'iron' in mat.name else 'bronze' if 'Bronze' in mat.name else None
     if kind:
         tex=n.new('ShaderNodeTexImage');tex.image=fills[kind];tex.projection='BOX';tex.projection_blend=.3
         coord=n.new('ShaderNodeTexCoord');l.new(coord.outputs['Generated'],tex.inputs['Vector'])
-        mix=n.new('ShaderNodeMixRGB');mix.inputs[0].default_value=.65 if kind in ['cloth','leather'] else .35;mix.inputs[1].default_value=s.inputs['Base Color'].default_value;l.new(tex.outputs['Color'],mix.inputs[2]);l.new(mix.outputs[0],s.inputs['Base Color'])
+        mix=n.new('ShaderNodeMixRGB');mix.inputs[0].default_value=.5 if kind=='skin' else .65 if kind in ['cloth','leather'] else .35;mix.inputs[1].default_value=s.inputs['Base Color'].default_value;l.new(tex.outputs['Color'],mix.inputs[2]);l.new(mix.outputs[0],s.inputs['Base Color'])
         noise=n.new('ShaderNodeTexNoise');noise.inputs['Scale'].default_value=170 if kind=='cloth' else 85;noise.inputs['Detail'].default_value=3
         l.new(coord.outputs['Generated'],noise.inputs['Vector']);bump=n.new('ShaderNodeBump');bump.inputs['Strength'].default_value=.18;bump.inputs['Distance'].default_value=.0015;l.new(noise.outputs['Fac'],bump.inputs['Height']);l.new(bump.outputs[0],s.inputs['Normal'])
         if kind=='cloth':s.inputs['Sheen Weight'].default_value=.28

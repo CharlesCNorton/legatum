@@ -12,7 +12,7 @@ sha = lambda p: hashlib.sha256(p.read_bytes()).hexdigest()
 source = sha(master / 'legionary.blend')
 grade = sha(master / 'grade.json')
 counts = {'b': 3, 'c': 1, 'd': 4, 'e-idle': 8, 'e-move': 8,
-          'e-attack': 10, 'e-hit': 4, 'e-death': 10}
+          'e-attack': 10, 'e-hit': 4, 'e-death': 10, 'feet': 16}
 baseline = None
 for stage, count in counts.items():
     folder = master / 'renders' / stage
@@ -24,7 +24,7 @@ for stage, count in counts.items():
     if baseline is None:
         baseline = settings
     assert settings == baseline, (stage, 'mixed render settings')
-    clip = stage[2:] if stage.startswith('e-') else 'attack' if stage == 'd' else None
+    clip = stage[2:] if stage.startswith('e-') else 'attack' if stage == 'd' else 'move' if stage == 'feet' else None
     blend = master / 'clips' / f'{clip}.blend' if clip else master / ('legionary-plain.blend' if stage == 'b' else 'legionary.blend')
     assert meta['blend_sha256'] == sha(blend), (stage, 'stale blend')
     if clip:
