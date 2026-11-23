@@ -49,3 +49,6 @@
 - Published e-move-strip: CYCLES CPU, 512 px, 8 samples; not GPU approval.
 - Published e-attack-strip: CYCLES CPU, 512 px, 8 samples; not GPU approval.
 - Published e-hit-strip: CYCLES CPU, 512 px, 8 samples; not GPU approval.
+- Published e-death-strip: CYCLES CPU, 512 px, 8 samples; not GPU approval.
+- Published b-plain: CYCLES CPU, 256 px, 8 samples; not GPU approval.
+- Saved 3D audit passed: source hashes, 53 bones, actual motion, exact loop closing keys and held death; ground/bounds recorded; collision limits explicit.

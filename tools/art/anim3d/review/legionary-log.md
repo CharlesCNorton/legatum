@@ -33,3 +33,5 @@
 - Published e-death: CYCLES/CPU, 512 px, 8 samples; visual review pending.
 - Final-pass audit: idle/move/attack/hit clear; death pilum/scutum crossings fixed, but late folded knees reached -0.064 m and penetrated stone. Raised knee poles, tucked ankles inward, and added evaluated worn-geometry contact correction while preserving released equipment world transforms. Rebuilding death only; other four clips retain verified source bindings.
 - Published e-death: CYCLES/CPU, 512 px, 8 samples; visual review pending.
+- Final geometry audit PASS across 40 samples: stationary base, nondegenerate geometry, grip distance, no below-base geometry and no pilum/rigid-kit crossings. One warning remains: death skin minimum 0.256 m vs worn geometry 0.090 m; body sits over dropped shield, stiff fold/contact requires art review.
+- Packed 40 trimmed 160 px frames at WebP quality 75: 191,830 bytes, 1193×757 atlas. Validator PASS: offsets/reconstruction, hashes for raw/512/256 inputs, transparent padding, >=2 px source margins, motion and held death. Decoded atlas review saved as legionary-g-atlas-check.png.

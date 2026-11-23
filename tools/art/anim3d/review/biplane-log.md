@@ -29,3 +29,8 @@
 - Saved e-death review immediately; 10 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/e-death/render.json.
 - Saved e-death review immediately; 10 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/e-death/render.json.
 - Upstream origin/master advanced by CI/browser-test commits 9902f014 and 27fa4cb0. Requested merge attempted, blocked by sandbox denial creating .git/worktrees/lane-19/ORIG_HEAD.lock; no merge occurred. Runner must merge. No Rust/rules changed.
+- Saved e-death review immediately; 10 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/e-death/render.json.
+- Packed/decoded/validated 40 trimmed 160 px frames: 189246 bytes, WebP q85; exact alpha offsets and held death. Encoded and ffprobe-verified 240-frame 8 s H.264 yuv420p MP4.
+- Final artifact PASS: 40 frames, native 512/256 masters, 1486×724 trimmed atlas, 189246 bytes at q85. Alpha quantized to 32 levels for delivery only; exact decoded offsets. Terminal transforms verified; last two death samples share one rectangle and decode identically. 8 s / 240 frame H.264 yuv420p MP4 verified.
+- Syntax, shell parsing and diff whitespace pass. Eight bake maps/all stage reviews checked. Cycles CPU 8-sample previews only; host GPU pass outstanding. At 256 painting parity is NOT reached (fuselage/wing registration, propeller length, support width and surface richness); at 64 identity reads. No biplane-PASS marker.
+- Git add blocked by .git/worktrees/lane-19/index.lock denial. Runner must commit and merge upstream; no push/PR performed.
