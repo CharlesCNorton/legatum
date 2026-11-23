@@ -3,3 +3,12 @@ Reused bomber-family solid loft/render/delivery helpers and original generated o
 b: 3 frames at 256/64 from 256px CYCLES/CPU, 8 samples.
 c: 1 frames at 256/64 from 256px CYCLES/CPU, 8 samples.
 c: 1 frames at 256/64 from 256px CYCLES/CPU, 8 samples.
+b: 3 frames at 256/64 from 256px CYCLES/CPU, 8 samples.
+c: 1 frames at 256/64 from 256px CYCLES/CPU, 8 samples.
+d: 4 frames at 256/64 from 256px CYCLES/CPU, 8 samples.
+e-idle: 8 frames at 256/64 from 256px CYCLES/CPU, 8 samples.
+e-move: 8 frames at 256/64 from 256px CYCLES/CPU, 8 samples.
+e-attack: 10 frames at 256/64 from 256px CYCLES/CPU, 8 samples.
+e-hit: 4 frames at 256/64 from 256px CYCLES/CPU, 8 samples.
+e-death: 10 frames at 256/64 from 256px CYCLES/CPU, 8 samples.
+g: 16 frames at 256/64 from 256px CYCLES/CPU, 8 samples.
