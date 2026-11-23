@@ -22,3 +22,13 @@ Round 2 opening critique: supplied rest comparison and move strip are CPU256 evi
 Loaded all six Blender skills: modeling (finished solids), materials (camera-only painted illumination), cameras (landmark registration), lighting (product softboxes/cream calibration), animation (guard continuity), rendering (CPU previews and GPU provenance). Read all standing feedback and latest spearman/field-cannon playbooks through round8.
 Rendered c-textured-lit: 256px CYCLES CPU, 8 samples.
 Rendered c-textured-lit: 256px CYCLES CPU, 8 samples.
+Rendered b-plain: 256px CYCLES CPU, 8 samples.
+Rendered c-textured-lit: 256px CYCLES CPU, 8 samples.
+Rendered four keyed attack rig poses.
+Rendered idle: 8 frames, 256px, 8 samples, CPU.
+Rendered move: 8 frames, 256px, 8 samples, CPU.
+Rendered attack: 10 frames, 256px, 8 samples, CPU.
+Rendered hit: 4 frames, 256px, 8 samples, CPU.
+Rendered death: 10 frames, 256px, 8 samples, CPU.
+Round2 changes: froze active MPFB macro mix and finished solidify/bevel/subdivision before inverse-skinned fitting and projection; added ray visibility and base-pigment exclusion, lowered rein palm, broadened shoulder/neck, removed inherited ivory markings, camera-only painted illumination and calibrated cream stone under product lights. Reused recorded generated unseen fills, thick straps/folded cloak and volumetric mane/tail. Rebuilt actual helmet AO/Pointiness.
+Packed and decoded 40 trimmed frames, quality 85, 188488 bytes; wrote cataphract-round2.mp4. Warnings: []

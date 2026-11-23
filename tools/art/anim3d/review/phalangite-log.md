@@ -41,3 +41,4 @@
 - Opened latest rest comparison, detail sheet, 512px rest and death strip before editing. Honest 256px critique: raised/narrow helmet, exposed bald neckline, thin straight weapon arm, absent shield hand/forearm, smooth gold shield, doubled painted straps, and tapered greaves differ substantially from the painting. At 64px the red/ivory identity and long sarissa read, but narrow upright torso/arms and helmet contour remain different. Death appears suspended and stiff. No PASS.
 - Latest supplied render provenance is CPU; no GPU execution inferred from gallery filenames. Preserved round-1 masters and review evidence before rebuilding. Read all standing feedback (1–22); phalangite-FEEDBACK.md is absent. Loaded six Blender skills and advanced spearman/siege playbooks.
 - Published c review from 256px CPU renders.
+- Published c review from 256px CPU renders.
