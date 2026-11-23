@@ -192,3 +192,37 @@ for idle/attack/hit and move. Death starts from the guard elbow pole and lowers
 the held pistol during the fall to retain fixed-camera margins. Its terminal
 body grounding still needs visual refinement; a floor minimum is not a contact
 solver. Keep that limitation separate from the atlas validation result.
+
+### Cuirassier driver round 2 after the completed GPU pass
+
+Archive GPU evidence before CPU previews replace the shared gallery. A successful
+GPU receipt (round 1: 199,170 bytes, Q85, all 40 samples) is a delivery check, not
+painting parity. The supplied round still had a narrow/different head, wrong hind
+stance, shoulder holes, patchy tack and a visibly floating terminal collapse.
+
+Hue rejection on a dark horse removes the painting's warm bridle and highlights.
+Use actual ray visibility and source alpha on frozen full-depth mesh UVs, reserving
+semantic pigment masks for surfaces that must exclude unrelated objects. The
+stationary stone specifically rejects painted hooves/contact shadows; projecting
+the entire reference onto the base leaves ghost feet when the mount moves.
+Keep generated hidden-surface fills, physical thickness/bevels, warm product
+lighting and one automatically fitted rest histogram grade.
+
+Motion standard: use licensed source actions. This unit keeps Quaternius's native
+horse Idle/Walk/hit/Death and adds Sitting_Idle_Loop, Hit_Chest and Death01 upper
+body deltas for the MPFB rider. Reference pose and bone rolls are compensated;
+the saddle constrains pelvis/legs and pistol/reins constrain the arms. Only the
+weapon performance is authored. All source/licence hashes are checked before
+rider import and URLs/licences are in the unit SOURCES.md. No foot-yaw patch.
+Render every move sample from above and in front using evaluated lower-leg
+cutaways; `feet.py` and `feet_sheet.py` write the shared `g-feet-check.png` and
+sole positions. In-place playback does not itself prove no sliding in world
+travel; distinguish measured support and native axes from a full gait solver.
+The GPU entry point now includes this diagnostic and rejects a stale foot receipt.
+
+The fitted horse's source Death initially left its torso 0.57 m above its lowest
+hoof. A measured whole-mount roll/pitch adaptation lowers the terminal pose while
+retaining source limb rotations; this is contact retargeting, not untouched
+source playback. The audit now measures torso-to-lowest-surface separation and
+rejects a terminal gap over 0.20 m. This partial support check still does not
+prove full rider/tack contact or absence of intersections.

@@ -1,9 +1,11 @@
-# Cuirassier resumed round 2
+# Cuirassier GPU follow-up, driver round 2
 
 True Blender geometry: a CC0 Quaternius skinned horse, a CC0 MPFB anatomical rider,
 original steel armour with rolled gilt edges, perforated visor, thick tack,
 stirrups and a wheellock pistol. The horse retains its source skeletal actions;
-the rider has authored aim, recoil, breathing, hit and death keys. Smoke is actual
+the rider uses CC0 Quaternius seated/hit/death torso and head deltas with
+reference-pose and bone-roll compensation. Pistol aim/recoil is authored; legs
+and reins stay constrained to the saddle. Smoke is actual
 opaque mesh volume with keyed render visibility. There are no billboards.
 
 ## Rebuild and CPU review
@@ -19,6 +21,8 @@ tools/art/anim3d/units/cuirassier/render.sh paint
 tools/art/anim3d/units/cuirassier/render.sh animate
 tools/art/anim3d/units/cuirassier/render.sh audit
 RENDER_ENGINE=CYCLES CYCLES_DEVICE=CPU SAMPLES=4 RESOLUTION=256 tools/art/anim3d/units/cuirassier/render.sh render
+CYCLES_DEVICE=CPU RESOLUTION=192 SAMPLES=4 tools/art/anim3d/units/cuirassier/render.sh feet
+"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/cuirassier/feet_sheet.py
 "$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/cuirassier/pack.py
 "$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/cuirassier/validate.py
 "$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/cuirassier/video.py
@@ -35,7 +39,7 @@ It calls `refine.py` to finish rigid surfaces, freeze MPFB macro keys and fit
 full-depth anatomy through inverse skin matrices before freezing the UVs.
 The full original painting is registered to the token, projected to frozen UVs
 on the actual deformed rest mesh, then carried by the skin weights through motion.
-Incidence/alpha and pigment masks blend into generated painted fills on hidden
+Ray visibility, incidence and source alpha blend into generated painted fills on hidden
 surfaces. The reused fill sources and their original generation are recorded in
 `assets/SOURCES.md`. One rest-derived histogram grade applies to every clip.
 
@@ -50,7 +54,8 @@ It uses Cycles Metal GPU, refuses CPU fallback, renders all review stages and
 40 clip samples at 512 px, retains 512 and 256 masters, writes the trimmed 160 px
 atlas and JSON, validates them, and writes `cuirassier-round${ROUND}.mp4` (eight
 seconds, all five clips side by side at 2x, H.264 yuv420p on cream). It also emits
-the rest comparison, detail crops and animated WebP reviews. GPU quality still
+the rest comparison, detail crops, animated WebP reviews and a full eight-sample
+top/front hoof sheet (`cuirassier-g-feet-check.png`). GPU quality still
 needs visual review; no PASS marker is generated automatically.
 The script retains `gpu-logs-cuirassier-r${ROUND}.log`, updates
 `review/3d-v2/cuirassier-gpu-status.txt`, and writes a round receipt only after
@@ -71,10 +76,23 @@ share a rectangle. Source and decoded death holds must both be pixel-identical.
 This is a candidate asset. The app's static painting remains in use; no runtime
 loader was changed. A legacy fixed-grid reader cannot interpret this format.
 
-Round-2 CPU preview result: all 40 frames at Cycles CPU8 / 256 px pack to
-198,044 bytes at quality 85 (1281 x 749 atlas). Geometry, source/decoded alpha,
-bounds, held death and eight-second video checks pass. Four delivery regression
-tests pass. This is not a GPU512 result or art approval: horse head/leg anatomy,
-shoulder coverage, paint reveals and the propped terminal collapse still differ
-from the painting. No PASS marker. GPU preflight rejects this sandbox's missing
-Metal device; run the executable host entry point above for the final masters.
+The preceding GPU round passed technical delivery (199,170 bytes, Q85,
+Cycles GPU64 at 512 px), but visibly missed the painting and had a floating
+terminal collapse. That evidence is archived under `masters/cuirassier/driver-r1-gpu`.
+Current CPU/GPU measurements and candid visual verdicts are in the external
+`review/3d-v2/cuirassier-log.md`. Successful validation is not painting parity.
+No art PASS is produced by any script.
+
+The revised projection preserves warm bridle paint instead of rejecting it by
+hue. Only cream stone pixels project onto the base, so standing hooves cannot
+appear after the mount moves. Source pigment is frozen in mesh UVs, with actual
+full-depth residual fitting of head, hind legs, withers and axilla. This remains
+an approximate anatomical registration to a single painting, not proof of exact
+camera recovery. Native horse foot rotations are retained.
+
+Driver round-2 CPU delivery: all 40 samples at Cycles CPU8 / 256 px, trimmed
+160 px atlas 185,984 bytes at Q80 (1281 x 751). Geometry/alpha/bounds/hash/motion/
+held-death checks pass; terminal torso separation is 0.114 m. The eight-second
+H.264/yuv420p movie has 192 frames; four delivery regressions pass. This is still
+below the art bar: head/leg shape, foot support, motion texture reveals and the
+rider terminal pose need further work. Fresh GPU512 rendering remains pending.

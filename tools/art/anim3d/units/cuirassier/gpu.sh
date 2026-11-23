@@ -19,10 +19,12 @@ test -s "$ANIM_ROOT/masters/cuirassier/cuirassier-plain.blend"
 export RENDER_ENGINE=CYCLES CYCLES_DEVICE=GPU SAMPLES="${SAMPLES:-64}" RESOLUTION=512
 export STAGES=b,c,c-details,d,e-idle,e-move,e-attack,e-hit,e-death
 unit=tools/art/anim3d/units/cuirassier
+stage=prepare
+"$ANIM_ROOT/venv/bin/python" "$unit/prepare.py"
 stage=gpu-check
 "$unit/render.sh" gpu_check
-for stage in paint animate audit render; do "$unit/render.sh" "$stage"; done
-for stage in pack validate video; do "$ANIM_ROOT/venv/bin/python" "$unit/$stage.py"; done
+for stage in paint animate audit render feet; do "$unit/render.sh" "$stage"; done
+for stage in feet_sheet pack validate video; do "$ANIM_ROOT/venv/bin/python" "$unit/$stage.py"; done
 stage=receipt
 "$ANIM_ROOT/venv/bin/python" "$unit/gpu_receipt.py"
 echo "complete round $ROUND; visual review pending, no art PASS" > "$status"

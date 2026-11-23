@@ -56,9 +56,10 @@ names=['Tail'+str(i) for i in range(1,8)];bpy.context.view_layer.update();points
 for j in range(24):
  a=j*2*math.pi/24
  right=sc.camera.matrix_world.to_quaternion() @ Vector((1,0,0));up=sc.camera.matrix_world.to_quaternion() @ Vector((0,1,0));view=sc.camera.matrix_world.to_quaternion() @ Vector((0,0,1))
- targets=[(114,107),(105,119),(102,131),(96,143),(91,153),(88,165),(94,174)]
+ targets=[(114,107),(105,119),(102,131),(96,143),(91,153),(89,166),(96,177)]
  pts=[]
  for k,(p,xy) in enumerate(zip(points,targets)):
+  if k==6:xy=(xy[0]+2*math.sin(j*2.3),xy[1]+3*math.sin(j*1.7))
   q=world_to_camera_view(sc,sc.camera,p);width=[.07,.10,.13,.15,.15,.12,.04][k]
   pts.append(p+right*((xy[0]/256-q.x)*sc.camera.data.ortho_scale+width*math.sin(a))+up*((1-xy[1]/256-q.y)*sc.camera.data.ortho_scale)+view*(.06*math.cos(a)))
  ob=curve('Skinned tail hair',pts,.021,hair);bpy.ops.object.select_all(action='DESELECT');ob.select_set(True);bpy.context.view_layer.objects.active=ob;bpy.ops.object.convert(target='MESH');ob=bpy.context.object
@@ -80,9 +81,9 @@ sys.path.insert(0,str(Path(__file__).parent))
 from refine import refine
 refine(M)
 bpy.ops.wm.save_as_mainfile(filepath=str(M/'cuirassier-refined-plain.blend'))
-painting=bpy.data.images.load(str(A/'painting-aligned.png'));masked={k:bpy.data.images.load(str(A/f'projection-{k}.png')) for k in ['coat','steel']};view=(sc.camera.location-Vector((0,0,1.3))).normalized();records=[]
+painting=bpy.data.images.load(str(A/'painting-aligned.png'));stone_paint=bpy.data.images.load(str(A/'projection-stone.png')); view=sc.camera.matrix_world.to_quaternion() @ Vector((0,0,1));records=[]
 for obj in list(sc.objects):
- if obj.type!='MESH' or obj.name=='Stationary cream stone':continue
+ if obj.type!='MESH':continue
  # Evaluate only the armature, retaining exact one-to-one correspondence to base vertices.
  mods=[(m,m.show_viewport) for m in obj.modifiers]
  for m,_ in mods:
@@ -91,7 +92,7 @@ for obj in list(sc.objects):
  coords=[];weights=[]
  for v in me.vertices:
   q=world_to_camera_view(sc,sc.camera,ev.matrix_world @ v.co);coords.append((q.x,q.y));normal=(ev.matrix_world.to_3x3().inverted().transposed() @ v.normal).normalized();
-  facing=max(0,min(1,(normal.dot(view)-.02)/.28))
+  facing=max(0,min(1,(normal.dot(view)+.03)/.12))
   world=ev.matrix_world @ v.co
   hit,location,_,_,_,_=sc.ray_cast(bpy.context.evaluated_depsgraph_get(),world+view*8,-view)
   visible=not hit or (location-world).length<.025
@@ -105,7 +106,7 @@ for obj in list(sc.objects):
   if not old or not old.use_nodes:continue
   mat=old.copy();mat.name=obj.name+' painting '+old.name;obj.data.materials[j]=mat;n=mat.node_tree.nodes;l=mat.node_tree.links;bs=n.get('Principled BSDF')
   if not bs:continue
-  tc=n.new('ShaderNodeUVMap');tc.uv_map='Painting projection';tex=n.new('ShaderNodeTexImage');tex.image=masked['coat'] if obj.name=='Horse' else painting;tex.extension='CLIP';l.new(tc.outputs[0],tex.inputs['Vector'])
+  tc=n.new('ShaderNodeUVMap');tc.uv_map='Painting projection';tex=n.new('ShaderNodeTexImage');tex.image=stone_paint if obj.name=='Stationary cream stone' else painting;tex.extension='CLIP';l.new(tc.outputs[0],tex.inputs['Vector'])
   att=n.new('ShaderNodeVertexColor');att.layer_name='Projection incidence';factor=n.new('ShaderNodeMath');factor.operation='MULTIPLY';l.new(att.outputs[0],factor.inputs[0]);l.new(tex.outputs['Alpha'],factor.inputs[1])
   # Preserve the painting's existing illumination only for camera rays.
   # Shadow/reflection rays retain the real PBR shader and generated backfill.

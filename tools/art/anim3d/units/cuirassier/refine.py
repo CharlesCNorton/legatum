@@ -8,6 +8,7 @@ import bpy
 import numpy as np
 import json
 import bmesh
+import math
 from mathutils import Vector, Matrix
 from bpy_extras.object_utils import world_to_camera_view
 
@@ -83,6 +84,13 @@ def refine(master):
             bm = bmesh.new(); bm.from_mesh(obj.data); bm.verts.ensure_lookup_table()
             bmesh.ops.delete(bm, geom=[v for v in bm.verts if v.index in tail_vertices], context='VERTS')
             bm.to_mesh(obj.data); bm.free()
+        if obj.name == 'Ivory woven saddle blanket':
+            # Coherent cloth troughs in real geometry, deepest at the hanging
+            # hem; source pigment and the generated linen follow the folds.
+            for v in obj.data.vertices:
+                hem=max(0,min(1,(abs(v.co.x)-.14)/.22))
+                v.co.z += .010*hem*math.sin(v.co.y*39+abs(v.co.x)*13)
+                v.co.x += math.copysign(.006*hem*math.sin(v.co.y*39),v.co.x)
         if obj.data.shape_keys:
             bpy.ops.object.shape_key_add(from_mix=True)
             bpy.ops.object.shape_key_remove(all=True, apply_mix=True)
@@ -132,6 +140,39 @@ def refine(master):
             posed = world @ deform @ vertex.co
             fitted_world = fitted(posed, kind)
             undo = deform.inverted() @ inv
+            # Residual anatomical registration measured on the completed GPU
+            # surface. Keep depth and source foot orientation; move real volume.
+            if obj.name == 'Horse':
+                groups = {obj.vertex_groups[g.group].name:g.weight for g in vertex.groups}
+                def weight(prefixes):
+                    return sum(w for n,w in groups.items() if n.startswith(prefixes))
+                q = world_to_camera_view(scene,camera,fitted_world)
+                x,y = q.x*256,(1-q.y)*256
+                head_weight=weight(('Head','Ear','Neck3'))
+                dx=head_weight * (5.5*max(0,min(1,(100-y)/45)))
+                dy=head_weight * (3*max(0,min(1,(y-65)/35)))
+                # Fill the anatomically narrow withers behind the rein hand.
+                neck=weight(('Neck1','Neck2','Neck3'))
+                dx-=neck*5*math.exp(-((x-179)/10)**2-((y-88)/19)**2)
+                far=weight(('BackUpperLeg.L','BackLowerLeg.L','IKBackLeg.L','FFB.L'))
+                near=weight(('BackUpperLeg.R','BackLowerLeg.R','IKBackLeg.R','FFB.R'))
+                dx-=far*min(10,max(0,(y-135)*.3)) + near*min(9,max(0,(y-177)*.3))
+                dy+=far*min(7,max(0,(y-140)*.2)) + near*min(2,max(0,(y-180)*.1))
+                # The far hoof was only three pixels wide. Sculpture expands
+                # its actual cross-section, never rotating the animated foot.
+                hoof=weight(('FFB.L','IKBackLeg.L'))
+                dx+=hoof*(x-155.5)*3.0
+                dy+=hoof*2
+                front=weight(('FrontLowerLeg.L','IKFrontLeg.L','FF.L'))
+                dx-=front*3;dy+=front*1.5
+                fitted_world += right*(dx*scale)-up*(dy*scale)
+            if obj.name in ('Rider MPFB CC0 anatomy','GEO-leather arming suit'):
+                q=world_to_camera_view(scene,camera,fitted_world)
+                # Fit the exposed axilla into the cuirass opening. This moves
+                # anatomy in depth-preserving camera space, not alpha clipping.
+                x,y=q.x*256,(1-q.y)*256
+                dx=12*math.exp(-((x-137)/11)**2-((y-70)/14)**2)
+                fitted_world+=right*(dx*scale)
             vertex.co = undo @ fitted_world
             if obj.name == 'Horse' and posed.z < .65:
                 foot_fits.append((vertex, posed, fitted_world, undo, (posed.x>0, posed.y>.2)))

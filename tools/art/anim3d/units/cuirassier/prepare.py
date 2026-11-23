@@ -10,14 +10,12 @@ for kind in ['hair','bronze','linen']:shutil.copyfile(R/f'assets/horseman/fill-{
 files=[A/'painting-source.png',A/'painting-aligned.png',R/'assets/horseman/Horse.glb']+list(A.glob('fill-*.png'))
 
 
-for kind in ['coat','steel']:
- image=canvas.copy();pixels=image.load()
- for y in range(image.height):
-  for x in range(image.width):
-   r,g,b,a=pixels[x,y];hi=max(r,g,b);lo=min(r,g,b)
-   valid=(hi-lo<max(20,hi*.32)) and (kind=='steel' or (hi<165 and y>300))
-   pixels[x,y]=(r,g,b,a if valid else 0)
- image.save(A/f'projection-{kind}.png')
-
-files+=list(A.glob("projection-*.png"))
+# Only cream pigment belongs on the stone. Exclude standing hooves and their
+# contact shadows so they cannot remain painted on the disc during movement.
+stone=canvas.copy();pixels=stone.load()
+for y in range(stone.height):
+ for x in range(stone.width):
+  r,g,b,a=pixels[x,y]
+  pixels[x,y]=(r,g,b,a if y>196*4 and r>190 and g>155 and b>100 else 0)
+stone.save(A/'projection-stone.png');files.append(A/'projection-stone.png')
 (M/'inputs.json').write_text(json.dumps({str(p.relative_to(R)):hashlib.sha256(p.read_bytes()).hexdigest() for p in files},indent=2))

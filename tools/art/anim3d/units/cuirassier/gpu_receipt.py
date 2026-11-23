@@ -25,12 +25,16 @@ for stage in stages:
             assert Image.open(image).size == (size, size)
             expected = Image.open(source).resize((size,size),Image.Resampling.LANCZOS)
             assert Image.open(image).tobytes() == expected.tobytes(), f'Stale {image}'
+feet=json.loads((master/'feet/manifest.json').read_text())
+assert feet['device']=='GPU' and feet['frames']==8
+assert feet['clip_sha256']==sha(master/'clips/move.blend')
+assert (review/'cuirassier-g-feet-check.png').is_file()
 round_number = os.environ['ROUND']
 video = review/f'cuirassier-round{round_number}.mp4'
 assert video.is_file()
 receipt = {
     'round': round_number, 'master_sha256': sha(master/'cuirassier.blend'),
-    'gpu512_gallery256': True,
+    'gpu512_gallery256': True, 'feet':feet,
     'atlas': json.loads((review/'cuirassier-validation.json').read_text()),
     'geometry': json.loads((review/'cuirassier-audit.json').read_text()),
     'video': json.loads(video.with_suffix('.json').read_text()),
