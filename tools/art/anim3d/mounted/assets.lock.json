@@ -1,0 +1,14 @@
+{
+  "name": "Quaternius Horse",
+  "pack": "Ultimate Animated Animal Pack",
+  "version": "July 2021; mirror commit 5b491b755c6d2aaa263aaaf8671b30b559a380a4",
+  "licence": "CC0-1.0",
+  "licence_url": "https://quaternius.com/packs/ultimateanimatedanimals.html",
+  "download": "https://raw.githubusercontent.com/trebeljahr/quaternius-showcase/5b491b755c6d2aaa263aaaf8671b30b559a380a4/public/glb/animals_pack/Horse.glb",
+  "sha256": "fbddb2c97179eca896ec69c985cd9cc74540484510776c400df64e088e9f2414",
+  "git_blob": "c93b598005fd4a6163f12782eeb31b10b6e4bc48",
+  "paint_assets_sha256": {
+    "painting-source.png": "2ac821809abe4459ebca61431afe0b42cf8b692f695dd0ecb4a3d4228c2e6117",
+    "painted-fills.png": "b2334292e0bb8873f336f130eea50188f849d73b5a91b3415ee30d24ddc4c748"
+  }
+}
