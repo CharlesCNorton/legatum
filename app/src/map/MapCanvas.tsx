@@ -14,6 +14,7 @@ import { distance, hexEq, hexToPixel, pixelToHex, tileIndex, within } from '../h
 import { planTurns, previewRoute, roadBonusNote, routeTurnsText, routeRiskText, routeDangerText, isCalmRouteNote, type PathStep, type RouteRisk } from '../path';
 import { draw, HEX_SIZE, perf, screenToWorld, terrainStats, worldBounds, ambientClipRects, hoverClipBoxes, idleClipBoxes, type Camera, type SelectionRing, type ImproveOverlay, type PendingMark, type TerritoryOverlay } from './render';
 import { fontEpoch } from './sprites';
+import { isFar } from './grid';
 import { onIconLoad } from '../icons';
 import { onMapFeatureLoad } from './mapFeatures';
 import { onCityArtLoad } from './cityArt';
@@ -51,6 +52,8 @@ import { useReducedMotion } from '../ui/useReducedMotion';
 import { usePhoneLayout } from '../ui/usePhoneLayout';
 import { motionStill } from '../ui/motion';
 import { feel, useCombatFx } from '../feel';
+import { loadedUnitAtlas } from '../unitArt';
+import { animatedUnitsEnabled, unitFrameDelay } from '../unitAnimation';
 import { captureTime, fxLive, fxUnits, stepPos, type FxGhost } from './combatFx';
 import { IDLE_FPS } from './idleLife';
 import { hasVisibleSmoulder } from './smoulder';
@@ -75,7 +78,8 @@ export function frameChanged<T extends Record<string, unknown>>(prev: T, next: T
   for (const key of Object.keys(next)) {
     const a = prev[key], b = next[key];
     if (key === 'combatFx') {
-      if ((a as { enabled: boolean } | undefined)?.enabled !== (b as { enabled: boolean }).enabled) return true;
+      if ((a as { enabled: boolean; animatedUnits?: boolean } | undefined)?.enabled !== (b as { enabled: boolean }).enabled ||
+        (a as { animatedUnits?: boolean } | undefined)?.animatedUnits !== (b as { animatedUnits?: boolean }).animatedUnits) return true;
     } else if (!Object.is(a, b)) return true;
   }
   return false;
@@ -124,7 +128,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
         const target = document.querySelector(`[data-celebration-counter="${counter}"]`)?.getBoundingClientRect();
         if (target?.width && target.height) celebrationTargets.current[counter] = { x: target.x + target.width / 2 - rect.x, y: target.y + target.height / 2 - rect.y };
       }
-      dirty.current = true;
+      markDirty();
     };
     measure();
     const observer = new ResizeObserver(measure);
@@ -142,6 +146,9 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
   const size = useRef({ w: 800, h: 600, dpr: 1 });
   const dirty = useRef(true);
   const hoverDirty = useRef(false);
+  const wake = useRef<() => void>(() => {});
+  const markDirty = () => { dirty.current = true; wake.current(); };
+  const markHoverDirty = () => { hoverDirty.current = true; wake.current(); };
   const focusAnimation = useRef(0);
   const [hover, setHover] = useState<Hover | null>(null);
   const [dragTarget, setDragTarget] = useState<Hex | null>(null);
@@ -625,16 +632,16 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
     anim,
     seat,
     reducedMotion,
-    combatFx: { enabled: combatFx.enabled },
+    combatFx: { enabled: combatFx.enabled, animatedUnits: combatFx.animatedUnits },
     celebration,
     scenarioTargets,
     siege,
   });
-  const nextFrame = { anchoringPreview: !!activePreview, lens, lensTiles, overlays, yieldTiles: overlayTiles.yields, borderTiles: overlayTiles.borders, view, selUnit, selection, pathInfo, pathAttack, pendingLines, pendingMarks, cityFocuses, cityBuilds, rangedTiles, goalPreview, territoryOverlay, tileBuys, improveOverlay, placeOverlay, airOverlay, hover, hoverSelect: intent === 'select', pingArmed: pingMode, cues, arrow, pings: livePings, anim, seat, reducedMotion, combatFx: { enabled: combatFx.enabled }, celebration, scenarioTargets, siege };
+  const nextFrame = { anchoringPreview: !!activePreview, lens, lensTiles, overlays, yieldTiles: overlayTiles.yields, borderTiles: overlayTiles.borders, view, selUnit, selection, pathInfo, pathAttack, pendingLines, pendingMarks, cityFocuses, cityBuilds, rangedTiles, goalPreview, territoryOverlay, tileBuys, improveOverlay, placeOverlay, airOverlay, hover, hoverSelect: intent === 'select', pingArmed: pingMode, cues, arrow, pings: livePings, anim, seat, reducedMotion, combatFx: { enabled: combatFx.enabled, animatedUnits: combatFx.animatedUnits }, celebration, scenarioTargets, siege };
   // Redraw only when something the map draws changed: a render for a card or a panel leaves the canvas alone.
   // A change of the tile under the pointer alone repaints only the hover mark and the route (hoverClipBoxes).
-  if (hoverOnlyChange(frame.current, nextFrame)) hoverDirty.current = true;
-  else if (frameChanged(frame.current, nextFrame)) dirty.current = true;
+  if (hoverOnlyChange(frame.current, nextFrame)) markHoverDirty();
+  else if (frameChanged(frame.current, nextFrame)) markDirty();
   frame.current = nextFrame;
 
   // The panels that can cover a tile: a tile the player is sent to must be left clear of them.
@@ -666,14 +673,14 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
       const e = 1 - Math.pow(1 - k, 3);
       cam.current.x = start.x + (p.x - start.x) * e;
       cam.current.y = start.y + (p.y - start.y) * e;
-      dirty.current = true;
+      markDirty();
       if (k < 1) focusAnimation.current = requestAnimationFrame(step);
     };
     // First focus of a game snaps instead of flying across the planet.
     if (still || focus.seq <= 1 || (start.x === 0 && start.y === 0)) {
       cam.current.x = p.x;
       cam.current.y = p.y;
-      dirty.current = true;
+      markDirty();
     } else focusAnimation.current = requestAnimationFrame(step);
     return () => cancelAnimationFrame(focusAnimation.current);
   }, [focus, still]);
@@ -702,7 +709,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
       if (!visible) return;
       camera.x += (origin.x - visible.x) / camera.zoom;
       camera.y += (origin.y - visible.y) / camera.zoom;
-      dirty.current = true;
+      markDirty();
     };
     const schedule = () => { clearTimeout(timer); timer = setTimeout(reveal, 420); };
     const observer = new ResizeObserver(schedule);
@@ -756,7 +763,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
         const ease = 1 - (1 - k) ** 3;
         cam.current.x = start.x + (target.x - start.x) * ease;
         cam.current.y = start.y + (target.y - start.y) * ease;
-        dirty.current = true;
+        markDirty();
         if (k < 1) focusAnimation.current = requestAnimationFrame(step);
       };
       step(t0);
@@ -790,7 +797,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
         if (layer.style.width !== `${bounds.width}px`) layer.style.width = `${bounds.width}px`;
         if (layer.style.height !== `${bounds.height}px`) layer.style.height = `${bounds.height}px`;
       }
-      dirty.current = true;
+      markDirty();
     };
     // Canvas dimensions notify descendant observers. Write them on the next frame,
     // never while the sheet/lens/map ResizeObservers are delivering notifications.
@@ -839,7 +846,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
       camera: cam.current,
       redraw: () => (dirty.current = true),
       /** Dev switch for the territory border look (`current`, `a`, `b`, `c`); also `?borders=` in the URL. */
-      setBorderVariant: (v: BorderVariant) => { setBorderVariant(v); dirty.current = true; },
+      setBorderVariant: (v: BorderVariant) => { setBorderVariant(v); markDirty(); },
     };
     // A look change swaps the map palette: redraw.
     const unregister = registerMapCamera({
@@ -848,7 +855,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
         cancelAnimationFrame(focusAnimation.current);
         cam.current.x = x;
         cam.current.y = y;
-        dirty.current = true;
+        markDirty();
       },
     });
     return () => {
@@ -894,13 +901,22 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
     const canvas = canvasRef.current!;
     const ctx = canvas.getContext('2d')!;
     let raf = 0;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const schedule = (delay: number | null) => {
+      if (delay === null) return;
+      if (delay <= 0) raf = requestAnimationFrame(loop);
+      else timer = setTimeout(() => { raf = requestAnimationFrame(loop); }, delay);
+    };
+    wake.current = () => { if (timer) { clearTimeout(timer); timer = undefined; } if (!raf) raf = requestAnimationFrame(loop); };
     let lastPulse = 0;
     let lastSmoulder = 0;
     let lastFonts = -1;
     let reported = '';
     let lastCam = { x: NaN, y: NaN, zoom: NaN };
     let heldMoments = false;
+    let wasFxRunning = false;
     let lastIdle = -Infinity;
+    let lastUnitIdle = -Infinity;
     // The selection ring as the last frame drew it, and the clock of the last frame that drew more than the ring.
     let lastRing: SelectionRing | null = null;
     // The smoke and siege-ring boxes the last full frame drew: what an ambient-only frame repaints.
@@ -915,7 +931,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
     // Whether the last drawn frame had anything for idle life to move (smoke, water) in view.
     let idleInView = true;
     const loop = (t: number) => {
-      raf = requestAnimationFrame(loop);
+      raf = 0; timer = undefined;
       const f = frame.current;
       if (!f.view) return;
       // Combat playback (combatFx.ts) replaces the plain glide while it runs: it moves units round by round after the volley.
@@ -923,6 +939,8 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
       const plan = !still ? f.anim?.plan ?? null : null;
       const fxT = plan && f.anim ? (t - f.anim.start) : -1;
       const fxRunning = !!plan && fxLive(plan, fxT);
+      const fxEnding = !fxRunning && wasFxRunning;
+      wasFxRunning = fxRunning;
       // Map animations Off is the reduced-motion map: units step straight to where they ended.
       // Payoff moments (momentFx.ts) on the same speed-scaled clock as the combat playback.
       const mplan = !still ? f.anim?.moments ?? null : null;
@@ -931,7 +949,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
       // One more frame after the last moment, so the map lets go of everything it held back.
       const momentsEnding = !momentsRunning && heldMoments;
       heldMoments = momentsRunning;
-      const animating = fxRunning || momentsRunning || momentsEnding || (!plan && !still && !!f.anim && f.anim.paths.size > 0 && t - f.anim.start < f.anim.duration + 50);
+      const animating = fxRunning || fxEnding || momentsRunning || momentsEnding || (!plan && !still && !!f.anim && f.anim.paths.size > 0 && t - f.anim.start < f.anim.duration + 50);
       const pulse = !still && !!f.selection && t - lastPulse > 33;
       const cueDelay = plan ? (hex: Hex) => plan.cueDelay.get(`${hex.q},${hex.r}`) ?? 0 : undefined;
       const cueSpan = CUE_HOLD_MS + CUE_FADE_MS + 100 + (plan ? Math.max(0, ...plan.cueDelay.values()) : 0);
@@ -959,17 +977,25 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
       const idleLife = !still;
       const idleTick = idleLife && idleInView && t - lastIdle > 1000 / IDLE_FPS;
       if (idleTick) lastIdle = t;
+      const unitOn = animatedUnitsEnabled(f.combatFx.animatedUnits, f.combatFx.enabled, f.reducedMotion);
+      const selected = unitOn && f.selection?.kind === 'unit' ? f.view.units.find(u => u.id === f.selection!.id) : null;
+      const faction = selected?.origin ?? f.view.players.find(p => p.id === selected?.owner)?.faction;
+      const sp = selected ? hexToPixel(selected.pos, HEX_SIZE) : null;
+      const selectedVisible = !!sp && Math.abs((sp.x - cam.current.x) * cam.current.zoom) < size.current.w / 2 + 60 && Math.abs((sp.y - cam.current.y) * cam.current.zoom) < size.current.h / 2 + 60;
+      const idleFps = selectedVisible && !isFar(HEX_SIZE * cam.current.zoom) ? loadedUnitAtlas(selected!.kind, faction)?.spec.clips.idle.fps ?? null : null;
+      const unitIdleTick = !!idleFps && !animating && t - lastUnitIdle >= 1000 / idleFps;
+      if (unitIdleTick) lastUnitIdle = t;
       // Damaged cities smoulder while Map animations are on (about 20 frames a second is enough for smoke).
       const smoulder = !still && hasVisibleSmoulder(f.view.cities, cam.current, size.current.w, size.current.h);
       const smoulderTick = smoulder && t - lastSmoulder > 50;
       const hoverMoved = hoverDirty.current && !dirty.current;
-      if (!dirty.current && !hoverMoved && !animating && !pulse && !cueLive && !arrowLive && !pingLive && !celebrating && !siegePulse && !smoulderTick && !idleTick) return;
+      if (!dirty.current && !hoverMoved && !animating && !pulse && !cueLive && !arrowLive && !pingLive && !celebrating && !siegePulse && !smoulderTick && !idleTick && !unitIdleTick) { schedule(f.selection || f.siege.size ? 33 : smoulder ? 50 : idleInView ? 1000 / IDLE_FPS : null); return; }
       if (pulse || siegePulse) lastPulse = t;
       // Nothing but the ambient motion wants a frame (the selection pulse, a siege ring breathing, a damaged city's
       // smoke, idle life): repaint just their boxes, with the rest of the map's clock held. A full redraw of a crowded
       // late-game map 20 to 30 times a second only for these kept the main thread busy and made hover and clicks lag.
       // The pointer reaching a new tile is the same kind of frame: the old and new hover marks and routes are a few boxes.
-      const pulseOnly = (pulse || siegePulse || smoulderTick || idleTick || hoverMoved) && !dirty.current && !animating && !cueLive && !arrowLive && !pingLive && !celebrating
+      const pulseOnly = (pulse || siegePulse || smoulderTick || idleTick || hoverMoved) && !dirty.current && !unitIdleTick && !animating && !cueLive && !arrowLive && !pingLive && !celebrating
         && !f.scenarioTargets?.length && (!pulse || !!lastRing) && (!(siegePulse || smoulderTick) || lastAmbient.length > 0);
       const drawT = pulseOnly ? lastFullT : t;
       if (!pulseOnly) lastFullT = t;
@@ -1103,6 +1129,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
         scenarioTargets: f.scenarioTargets,
         siege: f.siege,
         reducedMotion: still,
+        animatedUnits: animatedUnitsEnabled(f.combatFx.animatedUnits, f.combatFx.enabled, f.reducedMotion),
       });
       if (pulseOnly) ctx.restore();
       lastRing = ring ?? null;
@@ -1142,9 +1169,13 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
       // Terrain chunks still rendering, or fonts and icons arriving: keep drawing.
       if (pending || fontEpoch() !== lastFonts) dirty.current = true;
       lastFonts = fontEpoch();
+      const otherMotion = animating || cueLive || arrowLive || pingLive || celebrating || pending || dirty.current;
+      const delay = unitFrameDelay(idleFps, otherMotion);
+      const ambientDelay = f.selection || f.siege.size ? 33 : smoulder ? 50 : idleSeen ? 1000 / IDLE_FPS : null;
+      schedule(delay === 0 ? 0 : delay !== null && ambientDelay !== null ? Math.min(delay, ambientDelay) : delay ?? ambientDelay);
     };
     raf = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(raf);
+    return () => { wake.current = () => {}; cancelAnimationFrame(raf); if (timer) clearTimeout(timer); };
   }, []);
 
   // Keyboard panning.
@@ -1163,7 +1194,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
       if (keys.has('s') || keys.has('arrowdown')) cam.current.y += sp;
       if (keys.has('a') || keys.has('arrowleft')) cam.current.x -= sp;
       if (keys.has('d') || keys.has('arrowright')) cam.current.x += sp;
-      dirty.current = true;
+      markDirty();
       if (keys.size) raf = requestAnimationFrame(tick);
     };
     const panKeys = ['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'];
@@ -1223,7 +1254,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
 
   const zoomAt = (sx: number, sy: number, factor: number) => {
     Object.assign(cam.current, zoomCamera(cam.current, size.current, { x: sx, y: sy }, { x: sx, y: sy }, factor));
-    dirty.current = true;
+    markDirty();
   };
 
   const clickHex = (h: Hex, allowRanged = true) => {
@@ -1366,7 +1397,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
     gesture.current = result.state;
     // Only a camera that moved needs a redraw: a plain mouse move over the map changes nothing drawn by itself.
     const c = cam.current;
-    if (result.camera.x !== c.x || result.camera.y !== c.y || result.camera.zoom !== c.zoom) dirty.current = true;
+    if (result.camera.x !== c.x || result.camera.y !== c.y || result.camera.zoom !== c.zoom) markDirty();
     Object.assign(c, result.camera);
     if (result.state.phase !== 'pending' || result.state.contacts.length !== 1) {
       if (holdTimer.current) clearTimeout(holdTimer.current);

@@ -5,7 +5,8 @@ import type { CapitalStar } from '../capitalMark';
 import type { LookId } from '../brand/look';
 import { iconEpoch, tintedIcon } from '../icons';
 import { unitIconName } from '../data';
-import { barbarianMiniatureImage, miniatureImage, roundelImage } from '../unitArt';
+import { barbarianMiniatureImage, miniatureImage, roundelImage, unitAtlas } from '../unitArt';
+import { clipFrame, type UnitClip } from '../unitAnimation';
 import { healthColor, playerInk, rgba } from '../theme';
 import { ATLAS, mapPlayerColor, mapPlayerTint } from './style';
 import type { Rect } from './compass';
@@ -88,6 +89,7 @@ function smallCaps(g: CanvasRenderingContext2D, text: string, x: number, y: numb
  * whose Heir it is (the rim and the numeral say who holds him).
  */
 export interface HeirMark { crestColor?: string }
+export interface UnitAnimationFrame { clip: UnitClip; elapsed: number }
 
 /** The gilt of the Heir's rim and the pip's ring: the chevron gold, drawn over an ink hairline so it holds on parchment. */
 const heirGilt = () => ATLAS.tone.chevron;
@@ -107,20 +109,27 @@ export function drawToken(
   alpha = 1,
   faction?: Faction,
   heir?: HeirMark,
+  animation?: UnitAnimationFrame,
 ) {
   const q = Math.round(w * 2) / 2;
   const icon = unitIconName(kind, faction);
   // Normal zoom: the painted miniature on a base washed in the owner's colour; the engraved glyph counter until its image loads.
+  const atlas = animation ? unitAtlas(kind, faction) : null;
+  const frame = atlas && animation ? clipFrame(atlas.spec, animation.clip, animation.elapsed) : null;
   const art = miniatureImage(kind, faction);
-  const sp = art
+  const sp = atlas && animation && frame !== null
+    ? cached(`anim|${look}|${kind}|${faction ?? ''}|${color}|${q}|${dpr}|${animation.clip}|${frame}|${heir ? `heir${heir.crestColor ?? ''}` : ''}`,
+      () => miniatureToken(atlas.image, color, q, dpr, heir, color, undefined, { spec: atlas.spec, clip: animation.clip, frame }))
+    : art
     ? cached(`mini|${look}|${kind}|${faction ?? ''}|${color}|${q}|${dpr}|${heir ? `heir${heir.crestColor ?? ''}` : ''}`, () => miniatureToken(art, color, q, dpr, heir))
     : cached(`tok|${look}|${icon}|${color}|${military}|${q}|${dpr}|${heir ? `heir${heir.crestColor ?? ''}` : ''}`, () =>
       atlasToken(icon, color, military, q, dpr, heir),
     );
-  ctx.globalAlpha = alpha;
+  const previousAlpha = ctx.globalAlpha;
+  ctx.globalAlpha = previousAlpha * alpha;
   ctx.drawImage(sp.c, x - sp.ax, y - sp.ay, sp.w, sp.h);
   drawPlayerNumber(ctx, look, owner, x - w * 0.9, y - w * 0.85, faction);
-  ctx.globalAlpha = 1;
+  ctx.globalAlpha = previousAlpha;
 }
 
 /**
@@ -147,7 +156,7 @@ export function miniatureGeometry(w: number) {
  * rim, and a rival's hold shows Byzantium's crest, as on the engraved counter. `stone` washes the base in another colour than the
  * ring and `notch` marks the ring's left end (barbarians: charred ink stone in an ink ring with a blood-red notch).
  */
-function miniatureToken(art: HTMLImageElement, color: string, w: number, dpr: number, heir?: HeirMark, stone = color, notch?: string): Sprite {
+function miniatureToken(art: HTMLImageElement, color: string, w: number, dpr: number, heir?: HeirMark, stone = color, notch?: string, animation?: { spec: import('../unitAnimation').AtlasSpec; clip: UnitClip; frame: number }): Sprite {
   const S = miniSide(w);
   const pad = Math.max(4, Math.ceil(S * (MINI.haloR - 0.5)) + 3);
   const size = S + 2 * pad;
@@ -188,7 +197,13 @@ function miniatureToken(art: HTMLImageElement, color: string, w: number, dpr: nu
   }
   // The painting itself, its base washed in the owner's colour (multiplied so the highlights stay).
   const [p, pg] = canvas(S, S, dpr);
-  pg.drawImage(art, 0, 0, S, S);
+  if (animation) {
+    const { w: fw, h: fh, ax, ay } = animation.spec.frame;
+    // Match the static painting's centre and stone-base foot, regardless of atlas whitespace.
+    const scale = S / fw;
+    pg.drawImage(art, animation.frame * fw, animation.spec.clips[animation.clip].row * fh, fw, fh,
+      S / 2 - ax * scale, S * 0.9 - ay * scale, fw * scale, fh * scale);
+  } else pg.drawImage(art, 0, 0, S, S);
   pg.globalCompositeOperation = 'source-atop';
   pg.beginPath(); pg.ellipse(S / 2, S * 0.9 - 0 + 0, baseRx, baseRy * 1.15, 0, 0, Math.PI * 2);
   pg.fillStyle = rgba(stone, 0.52); pg.fill();

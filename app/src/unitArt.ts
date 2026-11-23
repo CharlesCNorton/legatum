@@ -3,6 +3,7 @@
 // the far zoom. Everything falls back to the engraved glyph token while an image loads.
 import type { Faction, UnitKind } from './types';
 import { iconLoaded } from './icons';
+import { parseAtlas, type AtlasSpec } from './unitAnimation';
 
 const miniatureUrls = import.meta.glob<string>('./assets/units/*-256.png', { eager: true, query: '?url', import: 'default' });
 const panelUrls = import.meta.glob<string>('./assets/units/*-panel.png', { eager: true, query: '?url', import: 'default' });
@@ -127,3 +128,35 @@ export function airPlanImage(name: AirPlanName): HTMLImageElement | null {
 export function warmAirArt(names: AirPlanName[]) {
   for (const n of new Set(names)) airPlanImage(n);
 }
+
+// Vite leaves these importers lazy; a missing pair is an ordinary static-only kind.
+const atlasImages = import.meta.glob<string>('./assets/units/anim/*.webp', { query: '?url', import: 'default' });
+const atlasSpecs = import.meta.glob<{ default: unknown }>('./assets/units/anim/*.json');
+export interface UnitAtlas { image: HTMLImageElement; spec: AtlasSpec }
+const atlasCache = new Map<string, UnitAtlas | null>();
+const atlasPending = new Set<string>();
+
+/** Called only for a piece the renderer actually visits at close zoom. Returns immediately. */
+export function unitAtlas(kind: UnitKind, faction?: Faction): UnitAtlas | null {
+  const slug = unitArtSlug(kind, faction);
+  if (atlasCache.has(slug)) return atlasCache.get(slug)!;
+  if (atlasPending.has(slug)) return null;
+  const imageImport = atlasImages[`./assets/units/anim/${slug}.webp`];
+  const specImport = atlasSpecs[`./assets/units/anim/${slug}.json`];
+  if (!imageImport || !specImport || typeof Image === 'undefined') { atlasCache.set(slug, null); return null; }
+  atlasPending.add(slug);
+  void Promise.all([imageImport(), specImport()]).then(([url, module]) => {
+    const spec = parseAtlas(module.default);
+    if (!spec) return;
+    const image = new Image();
+    image.onload = () => {
+      if (image.naturalWidth < spec.frame.w * Math.max(...Object.values(spec.clips).map(c => c.frames)) || image.naturalHeight < spec.frame.h * 5) return;
+      atlasCache.set(slug, { image, spec }); iconLoaded();
+    };
+    image.src = url;
+  }).catch(() => {}).finally(() => { atlasPending.delete(slug); atlasCache.set(slug, atlasCache.get(slug) ?? null); });
+  return null;
+}
+
+/** Read cached atlas metadata without starting a load. */
+export function loadedUnitAtlas(kind: UnitKind, faction?: Faction): UnitAtlas | null { return atlasCache.get(unitArtSlug(kind, faction)) ?? null; }

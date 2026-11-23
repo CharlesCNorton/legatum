@@ -719,3 +719,12 @@ it('the unit card movement picker accepts a left-click through the existing vali
   expect(useGame.getState().errors[0]).toEqual([]);
   expect(useGame.getState().mode).toBe('normal');
 });
+
+it('does not keep requesting animation frames on an unanimated map', () => {
+  act(() => {
+    useCombatFx.getState().update({ enabled: false, animatedUnits: false });
+    useGame.setState({ selection: null, focus: null });
+  });
+  frame(performance.now() + 2000);
+  expect(frames.size).toBe(0);
+});

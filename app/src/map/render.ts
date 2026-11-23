@@ -32,6 +32,7 @@ import { attackableEnemies, drawEraPlaque, drawStrengthChip, matchupStrength, pl
 import { contractLeft } from '../company';
 import { heirTag } from '../heir';
 import { rankLevel } from '../rankInsignia';
+import type { UnitAnimationFrame } from './sprites';
 import { FONTS, type BannerSpec, type GoalSeal, bannerMetersSize, bannerRect, drawBadge, drawBanner, drawBannerMeters, type BannerMeter, barbarianMiniature, drawBarbarianToken, drawContractPip, drawContractTag, drawHeirHalo, drawLabel, drawPip, drawPromotion, drawRankInsignia, drawSprite, drawTag, drawToken, drawTokenHealth, miniatureGeometry, nameSprite, sealSprite, TOKEN_INK, capitalSealRadius, CAPITAL_GILT } from './sprites';
 import { mapFeatureImage } from './mapFeatures';
 import { BARBARIAN, isBarbarian } from '../barbarians';
@@ -124,6 +125,7 @@ export interface RenderInput {
   /** Ping is armed: no move preview, and the hovered tile shows a ghost ping ring. */
   pingArmed?: boolean;
   selectedUnit: number | null;
+  animatedUnits?: boolean;
   selectedAir?: number | null;
   selectedCity: number | null;
   path: PathStep[] | null;
@@ -944,7 +946,8 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
       continue;
     }
     if (u.occupation_lock != null) lockMarks.push({ x, y, w: tw });
-    drawUnit(ctx, look, u, x, y, tw, dpr, u.owner === view.me, inp.pendingMarks.get(u.id), u.origin ?? factionOf.get(u.owner), strengthCue, siegePropFor(view, u), hexBox, contractLeft(u, view), heirTag(view, u), u.owner === view.me && isColoniaFounder(view, u.id));
+    const animation = inp.animatedUnits ? unitAnimationAt(inp, u.id) : undefined;
+    drawUnit(ctx, look, u, x, y, tw, dpr, u.owner === view.me, inp.pendingMarks.get(u.id), u.origin ?? factionOf.get(u.owner), strengthCue, siegePropFor(view, u), hexBox, contractLeft(u, view), heirTag(view, u), u.owner === view.me && isColoniaFounder(view, u.id), animation);
     if (stack.length > 2 && stack[0].id === u.id) drawBadge(ctx, look, x - tw, y - tw, tw * 0.45, String(stack.length), true);
   }
 
@@ -960,7 +963,9 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
     if (g.tilt) { const fy = y + tw; ctx.translate(x, fy); ctx.rotate(g.tilt); ctx.translate(-x, -fy); }
     if (far) drawPip(ctx, look, g.unit.owner, g.unit.military, x, y, tw, dpr, false, g.unit.kind as UnitKind, factionOf.get(g.unit.owner));
     else if (isBarbarian(g.unit.owner)) drawBarbarianToken(ctx, look, g.unit.kind as UnitKind, g.unit.military, x, y, tw, dpr);
-    else drawToken(ctx, look, g.unit.kind as UnitKind, mapPlayerColor(g.unit.owner), g.unit.military, x, y, tw, dpr, g.unit.owner, 1, factionOf.get(g.unit.owner));
+    else drawToken(ctx, look, g.unit.kind as UnitKind, mapPlayerColor(g.unit.owner), g.unit.military, x, y, tw, dpr, g.unit.owner, 1, factionOf.get(g.unit.owner), undefined,
+      inp.animatedUnits && inp.fx && inp.fx.t >= (inp.fx.plan.deaths.find(d => d.unit.id === g.unit.id)?.t ?? Infinity)
+        ? { clip: 'death', elapsed: inp.fx.t - (inp.fx.plan.deaths.find(d => d.unit.id === g.unit.id)?.t ?? 0) } : undefined);
     ctx.restore();
   }
 
@@ -1598,9 +1603,9 @@ function drawLockMark(ctx: CanvasRenderingContext2D, look: LookId, x: number, y:
   drawBadge(ctx, look, x - w * 0.95, y - w * 0.85, w * 0.55, '', false, 'mark-lock');
 }
 
-function drawUnit(ctx: CanvasRenderingContext2D, look: LookId, u: UnitView, x: number, y: number, w: number, dpr: number, mine: boolean, mark: PendingMark | undefined, faction?: Faction, cue?: StrengthCue | null, prop?: SiegeProp | null, hexBox?: { cx: number; half: number }, contract?: number | null, heirLabel?: string | null, colonia = false) {
+function drawUnit(ctx: CanvasRenderingContext2D, look: LookId, u: UnitView, x: number, y: number, w: number, dpr: number, mine: boolean, mark: PendingMark | undefined, faction?: Faction, cue?: StrengthCue | null, prop?: SiegeProp | null, hexBox?: { cx: number; half: number }, contract?: number | null, heirLabel?: string | null, colonia = false, animation?: UnitAnimationFrame) {
   if (isBarbarian(u.owner)) drawBarbarianToken(ctx, look, u.kind as UnitKind, u.military, x, y, w, dpr);
-  else drawToken(ctx, look, u.kind as UnitKind, mapPlayerColor(u.owner), u.military, x, y, w, dpr, u.owner, 1, faction, u.heir_of == null ? undefined : { crestColor: u.heir_of === u.owner ? undefined : mapPlayerColor(u.heir_of) });
+  else drawToken(ctx, look, u.kind as UnitKind, mapPlayerColor(u.owner), u.military, x, y, w, dpr, u.owner, 1, faction, u.heir_of == null ? undefined : { crestColor: u.heir_of === u.owner ? undefined : mapPlayerColor(u.heir_of) }, animation);
   // A unit an Engineer covers wears its siege gear in front of its feet, on the hex's right side and always inside the hex: the
   // stack already fills the hex, so the gear overlaps its own figure rather than the unit on the next hex (user, 2026-10-19).
   const gear = prop && hexBox ? siegePropImage(prop) : null;
@@ -1749,4 +1754,26 @@ function drawRoute(
   const xs = pts.map((p) => p.x), ys = pts.map((p) => p.y);
   const x0 = Math.min(...xs) - pad, y0 = Math.min(...ys) - pad;
   return { x: x0, y: y0, w: Math.max(...xs) + pad - x0, h: Math.max(...ys) + pad - y0 };
+}
+
+/** The plan owns timing; the renderer only chooses the visible clip at this instant. */
+function unitAnimationAt(inp: RenderInput, id: number): UnitAnimationFrame | undefined {
+  const fx = inp.fx;
+  if (fx) {
+    const { plan, t } = fx;
+    for (const c of plan.clashes) {
+      if (c.attacker === id && t >= c.t - 180 && t < c.t + 900) return { clip: 'attack', elapsed: t - (c.t - 180) };
+      if (c.defender === id && c.hit && t >= c.t && t < c.t + 600) return { clip: 'hit', elapsed: t - c.t };
+    }
+    for (const shot of plan.shots) {
+      if (shot.shooter === id && t >= shot.launch && t < shot.launch + 720) return { clip: 'attack', elapsed: t - shot.launch };
+      if (shot.target === id && shot.hit && t >= shot.launch + shot.flight && t < shot.launch + shot.flight + 400)
+        return { clip: 'hit', elapsed: t - shot.launch - shot.flight };
+    }
+    const steps = plan.moves.get(id);
+    const active = steps?.find(step => t >= step.t0 && t < step.t1);
+    if (active) return { clip: 'move', elapsed: t - active.t0 };
+  }
+  if (!fx && inp.unitPos.has(id)) return { clip: 'move', elapsed: inp.time };
+  return inp.selectedUnit === id ? { clip: 'idle', elapsed: inp.time } : undefined;
 }
