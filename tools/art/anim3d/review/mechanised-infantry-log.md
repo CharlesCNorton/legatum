@@ -1,0 +1,10 @@
+- Round 1: read current painting, current and superseded prompts, art skill, PLAYBOOK and feedback items 12–23. Current subject is eight-wheel APC plus exactly one modern soldier.
+- Loaded all six Blender skills: modeling for full-depth armour, hollow cabin, bevels and thick straps; materials for cloth/rubber/steel and painted skin; cameras for frozen rest registration; lighting for warm key/cool rim/fill; animation for captured human action and rigid mechanical controls; rendering for gated Cycles CPU checks and explicit GPU handoff.
+- Reused isolated vehicle review/delivery helpers and infantry MPFB/Quaternius rest-space retarget. Human idle/walk/hit/death are CC0 donor actions; only attack is authored. No copied subject mesh or camera-facing image card.
+- Downloaded painting and recorded external asset hashes/licences. First plain build running at CPU256/4 samples; no art approval or PASS claim.
+- Published painted rest pose and 50/50 comparison; real AO shader, micrograin, edge geometry and hidden-surface fill.
+- Published b-plain CPU/GPU geometry stage before texture work.
+- Baked 256px AO and curvature maps on GEO-Armoured hull, GEO-Lowered loading ramp, GEO-Turret shell
+- First b/c stages published immediately. Inspection found the base ellipse too deep, wheels too buried and soldier occluded by the ramp; lowering camera elevation, trimming lower armour and correcting the soldier placement before full motion render.
+- Added separate vehicle projection mask to prevent the painted soldier appearing a second time on cabin/ramp surfaces. This changes pigment confidence only, never geometry alpha.
+- Published painted rest pose and 50/50 comparison; real AO shader, micrograin, edge geometry and hidden-surface fill.

@@ -12,3 +12,16 @@
 - Baked real 256px Cycles AO and Pointiness curvature for helmet and jacket; physical recess grime and edge roughness applied.
 - Finished-surface camera projection with camera-only pigment; generated hidden fills retained.
 - Posted c-textured-lit review (CPU, 256 px).
+- Retargeted CC0 / weapon-layer and saved idle action (8 output frames).
+- Retargeted CC0 / weapon-layer and saved move action (8 output frames).
+- Retargeted CC0 / weapon-layer and saved attack action (10 output frames).
+- Retargeted CC0 / weapon-layer and saved hit action (4 output frames).
+- Retargeted CC0 / weapon-layer and saved death action (10 output frames).
+- Posted d-rig-poses review (CPU, 256 px).
+- Posted e-idle review (CPU, 256 px).
+- Posted e-move review (CPU, 256 px).
+- Posted e-attack review (CPU, 256 px).
+- Posted e-hit review (CPU, 256 px).
+- Posted e-death review (CPU, 256 px).
+- First clay and painted previews posted immediately; inspected beside the painting at 256/64. Camera placement, head direction and weapon endpoints corrected before clips. Rest still differs in coat silhouette, boot contact and rifle stock registration; no PASS claim.
+- Saved five editable actions: Quaternius idle/walk/hit/death plus original rifle attack. First pose review exposed an incorrect attack pitch sign (rifle tilted upright); correcting that before delivery.

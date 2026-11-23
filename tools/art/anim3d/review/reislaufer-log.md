@@ -57,3 +57,8 @@
 - Retargeted Quaternius standing idle/walk/hit/death with reference matrices, two-hand weapon constraints and source-aligned feet; posted all interim clip strips and front/top foot views.
 - First pack validated 40 frames, 159634 bytes at quality 90, exact trimmed alpha reconstruction and held death. Final motion revision in progress.
 - Audit passed: five clips, source hashes, 53-bone rig, fixed base and positive object scales.
+- Saved move skeletal action, 8 samples.
+- Audit passed: five clips, source hashes, 53-bone rig, fixed base and positive object scales.
+- Posted e-move review (CPU, 256 px).
+- Posted g-feet-top review (CPU, 256 px).
+- Posted g-feet-front review (CPU, 256 px).

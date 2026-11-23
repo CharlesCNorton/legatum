@@ -12,3 +12,10 @@
 - Visual death check caught braced guard legs persisting into collapse; fixed reference-space retarget for death and blended entry.
 - Added generated hidden metal brushwork, desaturated in the shader, with camera-only pigment plus physical response; rebuilding to keep all outputs on one master.
 - Feet diagnostic now checks planted direction separately from airborne toe-off and measures stance residual against virtual travel.
+- Final geometry fit narrowed the real brim and near shoulder before frozen projection; all downstream clips/renders regenerated.
+- Improved visible pike depth thrust and used captured reference for hit recovery; combat poses rerendered.
+- Final CPU atlas: 174736 bytes, WebP quality 90, all 40 frames; independent validation and 8-second H.264 MP4 passed.
+- Feet check passed planted forward alignment and sampled virtual-ground stance residual 0.000001103 m.
+- Python/shell syntax and whitespace checks passed. Repository hygiene/public-claims passed; art browser renderer exited 1.
+- Visual verdict: recognizable at64, below painting craft at256; grip/shoulder/edge registration and revealed surfaces need another round. No PASS. GPU handoff ready; native512 output pending host execution.
+- Git staging denied: index.lock Operation not permitted. All changes left for runner; suggested commit message saved externally. No push, PR or PASS.
