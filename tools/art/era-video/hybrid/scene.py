@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Hybrid Classical v10. Python --prepare; Blender 5.3 builds/renders under lead's lock."""
+"""Hybrid Classical v11. Python --prepare; Blender 5.3 builds/renders under lead's lock."""
 import os
 for _name in ('OMP_NUM_THREADS', 'MKL_NUM_THREADS', 'OPENBLAS_NUM_THREADS',
               'VECLIB_MAXIMUM_THREADS'):
@@ -25,13 +25,18 @@ DOLLY, DRIFT = .16, (12.0, 11.0)
 INPUTS = ('painting.png', 'background.png', 'depth-smooth16.png', 'relief.npz',
           'mask-water.png', 'mask-sky.png', 'mask-cloth.png')
 # Source-pixel coordinates, at 1920x1080. Keep the original painted ships.
-SHIP_START, SHIP_END, SHIP_Y = 528., 517., 550.
+# Open water above the mole, west of the large galley's yard. The camera adds
+# travel: report source-relative voyage separately from on-screen displacement.
+SHIP_START, SHIP_END, SHIP_Y = 560., 464., 418.
+MIN_SHIP_CLEARANCE_1080 = 8.
+OAR_RATE, OAR_LIFT, OAR_SWEEP = math.tau / 1.35, .24, .52
 SHIP_Z = 8.  # Visibility lift only; size/contact come from the sampled water depth.
 SHIP_RATIO = 1.10
-# Hull widths, not sail/mast bounding boxes. The two small ships bound the lane's
-# depth. The larger merchant galley is logged separately: different vessel sizes
+# Hull widths, not sail/mast bounding boxes. Three small ships bound the lane's
+# depth, including the far square-sail so this route never clamps to a nearer size. The larger merchant galley is logged separately: different vessel sizes
 # coexist at the same y, so one universal width-vs-y curve would be misleading.
 SHIP_REFERENCES = (
+    ('horizon-square-sail', (337., 389.), 28.),
     ('west-square-sail', (345., 501.), 44.),
     ('near-square-sail', (412., 568.), 56.),
 )
@@ -48,12 +53,16 @@ PAINTED_SHIPS = {
     'near-square-sail': (378, 498, 450, 580),
     'central-small-sail': (490, 462, 544, 504),
     'central-docked-boat': (551, 476, 585, 501),
-    'painted-galley': (566, 413, 727, 567),
+    # Separate the thin mast from the yard/sail/hull envelope: the old combined
+    # rectangle incorrectly labelled the open water left of the mast occupied.
+    'painted-galley-mast': (628, 413, 644, 438),
+    'painted-galley': (566, 434, 727, 567),
     'east-docked-masts': (716, 451, 795, 520),
     'east-harbour-boats': (723, 496, 866, 543),
 }
 HARBOUR_OBSTACLES = {
-    'lighthouse-mole': (374, 384, 487, 484),
+    'lighthouse-tower': (398, 384, 433, 458),
+    'lighthouse-mole': (374, 442, 487, 484),
     'central-quay': (434, 442, 572, 480),
     'near-shore-west': (255, 548, 377, 610),
     'near-shore-lane': (450, 592, 558, 632),
@@ -61,9 +70,9 @@ HARBOUR_OBSTACLES = {
 # Clip the lower keel; position the root from this exact immersed contact.
 SHIP_WATERLINE = -.22
 FIRE_Z = 24.
-FLAME_LAYERS, SPARK_POOL = 6, 60
+FLAME_LAYERS, SPARK_POOL = 6, 28
 BEACON_PIXEL = (680, 350)
-BEACON_WIDTH, BEACON_HEIGHT = 9., 25.
+BEACON_WIDTH, BEACON_HEIGHT = 12.5, 25.
 BANNERS = (
     ((1658, 445, 1710, 539), [(1664,450),(1687,464),(1700,460),(1702,529),(1666,535)]),
     ((1655, 539, 1710, 634), [(1662,548),(1701,542),(1703,619),(1695,626),
@@ -243,9 +252,9 @@ def prepare(args):
         'flame_cards': FLAME_LAYERS, 'brazier_spark_pool': SPARK_POOL,
         'spark_alive_range': spark_alive_range(),
         'beacon_source_pixel': BEACON_PIXEL,
-        'beacon_projection': beacon_report(depth),
-        'spark_streak_px_960': [2.8, 4.0],
-        'spark_width_px_960': [1.0, 1.35]}, indent=2)+'\n')
+        'beacon_projection': beacon_report(depth,args.masters/'textures'),
+        'spark_streak_px_960': [1.2, 2.2],
+        'spark_width_px_960': [.45, .75]}, indent=2)+'\n')
     files = {str(p.relative_to(args.masters)): digest(p)
              for folder in (plates, textures) for p in sorted(folder.iterdir()) if p.is_file()}
     manifest = {'source': str(args.source), 'source_hashes':
@@ -297,17 +306,22 @@ def prepare_fire_textures(textures):
     for i in range(17):
         t=.04+i*.049
         x=.40+.23*t+.065*math.sin(t*16)
-        rx=.045+.105*t; ry=.045+.025*t
+        rx=.075+.15*t; ry=.052+.032*t
         lobe=np.exp(-2*((u-x)/rx)**2-2*((v-t)/ry)**2)
         body+=lobe*(.25+.15*math.sin(i*2)**2)
         light+=lobe*(u-x)/rx
     edge=smooth(u/.12)*smooth((1-u)/.12)*smooth(v/.04)*(1-smooth((v-.70)/.27))
-    alpha=np.clip(body,0,.66)*edge
-    # Cool grey-ochre is already mixed towards distant sky haze, not charcoal.
-    rgb=np.empty((h,w,3)); rgb[:]=(.87,.86,.80)
-    rgb+=np.clip(light,-.3,.3)[...,None]*.17
+    # Broader overlapping lobes, soft edges and an increasingly transparent top.
+    alpha=cv2.GaussianBlur(np.clip(body,0,.58)*edge*(1-.55*v),(0,0),2.2)
+    # Warm grey remains darker than the haze: v10's pale pigment read as a line.
+    rgb=np.empty((h,w,3)); rgb[:]=(.67,.64,.57)
+    rgb+=np.clip(light,-.3,.3)[...,None]*.10
     rgb+=(.015*np.sin(u*110+v*27)*np.sin(v*85))[...,None]
     Image.fromarray(np.uint8(np.dstack((np.clip(rgb,0,1),alpha))*255),'RGBA').save(textures/'beacon-plume.png')
+    visible_rows=np.flatnonzero((np.uint8(alpha*255)/255*.72).max(axis=1)>.08)
+    # Readable by Blender's Python without adding a Pillow dependency there.
+    (textures/'beacon-envelope.json').write_text(json.dumps({
+        'height_fraction':1-float(visible_rows.min())/(h-1)})+'\n')
 
 
 def rotation_matrix(frame):
@@ -378,14 +392,31 @@ def ship_scale_report(depth):
                      'waterline_px_1080':screen_array([water],frame,1920)[0].tolist(),
                      'hull_width_px_1080':width,'depth_matched_painted_width_px_1080':reference,
                      'relative_ship_scale':ratio,
-                     'near_painted_sailboat_width_px_1080':painted_width(*SHIP_REFERENCES[1][1:]),
-                     'ratio_to_near_painted_sailboat':width/painted_width(*SHIP_REFERENCES[1][1:]),
+                     'near_painted_sailboat_width_px_1080':painted_width(*SHIP_REFERENCES[-1][1:]),
+                     'ratio_to_near_painted_sailboat':width/painted_width(*SHIP_REFERENCES[-1][1:]),
                      'large_painted_galley_width_px_1080':painted_width(*PAINTED_GALLEY),
                      'water_contact_error_px_1080':error})
     return {'method':'small painted hull widths interpolated by sampled relief depth',
             'references':SHIP_REFERENCES,'target_ratio':SHIP_RATIO,
+            'travel':ship_travel_report(depth),
             'ratio_range':[min(r['relative_ship_scale'] for r in rows),max(r['relative_ship_scale'] for r in rows)],
             'samples':[rows[f-1] for f in (1,72,144)],'per_frame':rows}
+
+
+def ship_travel_report(depth):
+    water=[ship_placement(depth,f)[3] for f in (1,FRAMES)]
+    screen=np.array([screen_array([point],f,1920)[0] for point,f in zip(water,(1,FRAMES))])
+    delta=screen[1]-screen[0]
+    # Freeze the first camera to distinguish voyage from the approved dolly.
+    fixed=screen_array(water,1,1920)
+    horizontal=abs(float(delta[0]))
+    if not .12*1920 <= horizontal <= .18*1920:
+        raise RuntimeError(f'Hero voyage outside 12–18 percent of output width: {horizontal}')
+    return {'source_pixels':abs(SHIP_END-SHIP_START),
+            'horizontal_px_1080':horizontal,'frame_width_fraction':horizontal/1920,
+            'distance_px_1080':float(np.linalg.norm(delta)),
+            'fixed_camera_horizontal_px_1080':abs(float(fixed[1,0]-fixed[0,0])),
+            'waterline_endpoints_px_1080':screen.tolist()}
 
 
 def beacon_depth(depth):
@@ -396,14 +427,14 @@ def beacon_depth(depth):
                for py in np.linspace(y-155,y,20))+.7
 
 
-def beacon_report(depth):
+def beacon_report(depth, textures):
+    fraction=json.loads((textures/'beacon-envelope.json').read_text())['height_fraction']
     anchor=project_array(BEACON_PIXEL,beacon_depth(depth))
     rows=[]
     for frame in (1,72,144):
-        # Prepared texture spans 82.8% of its card above effective alpha .08.
-        points=screen_array([anchor,anchor+np.array((0,BEACON_HEIGHT*.828,0))],frame)
+        points=screen_array([anchor,anchor+np.array((0,BEACON_HEIGHT*fraction,0))],frame)
         rows.append({'frame':frame,'plume_height_px_960':float(abs(points[1,1]-points[0,1]))})
-    return {'method':'82.8 percent texture alpha envelope at opacity > .08; visual read pending render','samples':rows}
+    return {'method':'prepared texture alpha > .08 at material opacity .72; visual read pending render','samples':rows}
 
 
 def verify_water_contact(depth, water_mask):
@@ -442,9 +473,9 @@ def offline_ship_clearance(depth):
         rows.append({'frame':frame,'clearance_px_960':round(distance,3),
                      'nearest_painted_ship':name,'hero_bounds_px_960':box})
     worst=min(rows,key=lambda row:row['clearance_px_960'])
-    if worst['clearance_px_960']<3:
+    if worst['clearance_px_960']<MIN_SHIP_CLEARANCE_1080/2:
         raise RuntimeError(f'Unsafe middle-harbour galley path: {worst}')
-    return {'method':'conservative full-ship box vs 12 painted ships, lighthouse mole, quay and near shore; relief and camera projection',
+    return {'method':'conservative full-ship box vs painted ship envelopes, separate mast/tower/mole, quay and near shore; relief and camera projection',
             'frames_checked':FRAMES,'minimum_clearance_px_960':worst['clearance_px_960'],
             'minimum_clearance_px_1080':2*worst['clearance_px_960'],
             'worst_frame':worst['frame'],'nearest_painted_ship':worst['nearest_painted_ship'],
@@ -452,9 +483,12 @@ def offline_ship_clearance(depth):
 
 
 def spark_state(index,frame):
-    age=((frame-1)/FPS+index/SPARK_POOL*1.9)%1.9
-    t=min(age/1.6,1.)
-    fade=float(smooth(t/.06)*(1-smooth((t-.84)/.16))) if age<1.6 else 0.
+    # Varied lifetimes make fewer particles reach the top; cooling and shrinkage
+    # begin early instead of maintaining a field of equally bright white dashes.
+    life=1.05+.55*((index*17 % SPARK_POOL)/SPARK_POOL)
+    age=((frame-1)/FPS+index/SPARK_POOL*2.1)%2.1
+    t=min(age/life,1.)
+    fade=float(smooth(t/.09)*(1-smooth((t-.24)/.76))) if age<life else 0.
     return age,t,fade
 
 
@@ -696,24 +730,40 @@ def water(args, relief):
     tree.links.new(reflected.outputs[0], foam.inputs[1])
     foam.inputs[2].default_value=(.65,.66,.53,1)
     tree.links.new(foam.outputs[0], emission.inputs['Color'])
-    # Broad, moving bands are visible at 960 wide; high-frequency normals alone
-    # mostly disappear in antialiasing. Modulate only water, never the painting.
-    moving = mathn(tree, 'MULTIPLY', ripple, .21)
+    # Forty percent of v10's modulation; painted mineral blue stays dominant.
+    moving = mathn(tree, 'MULTIPLY', ripple, .084)
     # Soft thresholds keep bright horizontal crests readable without binary popping.
     crest = node(tree, 'ShaderNodeMapRange', 'Rolling sunlit ripple crests'); crest.clamp=True
-    setv(crest, 'From Min', .55); setv(crest, 'From Max', .82)
+    setv(crest, 'From Min', .70); setv(crest, 'From Max', .96)
+    crest.interpolation_type='SMOOTHSTEP'
     tree.links.new(ripple, crest.inputs['Value'])
     breakup = node(tree, 'ShaderNodeMapRange', 'Sparse glint breakup'); breakup.clamp=True
-    setv(breakup, 'From Min', .54); setv(breakup, 'From Max', .73)
-    tree.links.new(noise.outputs['Fac'], breakup.inputs['Value'])
-    sparkle = mathn(tree, 'MULTIPLY', crest.outputs[0], breakup.outputs[0])
+    setv(breakup, 'From Min', .61); setv(breakup, 'From Max', .78)
+    breakup.interpolation_type='SMOOTHSTEP'
+    flecks=node(tree,'ShaderNodeTexNoise','Short soft sparkle islands')
+    flecks.noise_dimensions='4D'; setv(flecks,'Scale',210.); setv(flecks,'Detail',1.)
+    fleck_uv=node(tree,'ShaderNodeVectorMath','Short horizontal sparkle aspect')
+    fleck_uv.operation='MULTIPLY'
+    tree.links.new(uv,fleck_uv.inputs[0]); fleck_uv.inputs[1].default_value=(1,2,1)
+    tree.links.new(fleck_uv.outputs[0],flecks.inputs['Vector'])
+    tree.links.new(mathn(tree,'MULTIPLY',time_socket,.65),flecks.inputs['W'])
+    tree.links.new(flecks.outputs['Fac'], breakup.inputs['Value'])
+    # The upper-left sun reflects in a soft diagonal corridor.
+    water_y=mathn(tree,'SUBTRACT',1,v)
+    path_x=mathn(tree,'ADD',.16,mathn(tree,'MULTIPLY',mathn(tree,'SUBTRACT',water_y,.32),.33))
+    path_dx=mathn(tree,'DIVIDE',mathn(tree,'SUBTRACT',u,path_x),.065)
+    path_dy=mathn(tree,'DIVIDE',mathn(tree,'SUBTRACT',water_y,.405),.14)
+    envelope=mathn(tree,'EXPONENT',mathn(tree,'MULTIPLY',mathn(tree,'ADD',
+        mathn(tree,'POWER',path_dx,2),mathn(tree,'POWER',path_dy,2)),-1.5))
+    sparkle = mathn(tree, 'MULTIPLY', mathn(tree,'MULTIPLY',crest.outputs[0],breakup.outputs[0]),envelope)
+    moving=mathn(tree,'MULTIPLY',moving,envelope)
     glints = node(tree, 'ShaderNodeMixRGB', 'Ivory light on painted wave crests')
     glints.blend_type = 'ADD'
-    tree.links.new(mathn(tree, 'MULTIPLY', sparkle, .48), glints.inputs[0])
+    tree.links.new(mathn(tree, 'MULTIPLY', sparkle, .192), glints.inputs[0])
     tree.links.new(foam.outputs[0], glints.inputs[1])
     glints.inputs[2].default_value = (.62, .59, .43, 1)
     tree.links.new(glints.outputs[0], emission.inputs['Color'])
-    sparkle = mathn(tree, 'MULTIPLY', sparkle, .90)
+    sparkle = mathn(tree, 'MULTIPLY', sparkle, .36)
     ellipse=mathn(tree,'ADD',mathn(tree,'POWER',mathn(tree,'MULTIPLY',dx,13),2),
                   mathn(tree,'POWER',mathn(tree,'MULTIPLY',dy,145),2))
     contact=mathn(tree,'MULTIPLY',mathn(tree,'EXPONENT',mathn(tree,'MULTIPLY',ellipse,-2)),.62)
@@ -721,8 +771,11 @@ def water(args, relief):
     tree.links.new(mathn(tree, 'ADD', luminance, mathn(tree, 'ADD', moving, sparkle)),
                    emission.inputs['Strength'])
     gloss = node(tree, 'ShaderNodeBsdfGlossy', 'Warm moving sun glints')
-    setv(gloss, 'Color', (.23, .24, .21, 1))
-    setv(gloss, 'Roughness', .19)
+    tint=node(tree,'ShaderNodeMixRGB','Reflection path gloss coverage')
+    tree.links.new(envelope,tint.inputs[0]); tint.inputs[1].default_value=(0,0,0,1)
+    tint.inputs[2].default_value=(.092,.096,.084,1)
+    tree.links.new(tint.outputs[0],gloss.inputs['Color'])
+    setv(gloss, 'Roughness', .31)
     tree.links.new(bump.outputs['Normal'], gloss.inputs['Normal'])
     add = node(tree, 'ShaderNodeAddShader', 'Pigment plus glints')
     tree.links.new(emission.outputs[0], add.inputs[0]); tree.links.new(gloss.outputs[0], add.inputs[1])
@@ -922,8 +975,8 @@ def ship(args, depth):
             thick = blade.modifiers.new('Solid blade thickness', 'SOLIDIFY'); thick.thickness = .07
             bevel = blade.modifiers.new('Soft blade edge', 'BEVEL'); bevel.width=.025; bevel.segments=2
             for frame in range(1,FRAMES+1):
-                phase=(frame-1)/FPS*3.4+index*.045
-                pivot.rotation_euler=(side*.15*math.cos(phase),0,side*.36*math.sin(phase))
+                phase=(frame-1)/FPS*OAR_RATE+index*.025
+                pivot.rotation_euler=(side*OAR_LIFT*math.cos(phase),0,side*OAR_SWEEP*math.sin(phase))
                 pivot.keyframe_insert('rotation_euler',frame=frame)
     ship_splashes(args, hull_root)
     for frame in range(1, FRAMES+1):
@@ -945,9 +998,9 @@ def ship_splashes(args, parent):
     alpha = ship_visibility(args, tree)
     aov(tree, alpha); finish_surface(mat, e.outputs[0], alpha)
     # Project the actual rotated blade tip onto the water. The existing shaft
-    # sweep is unchanged; cos(phase)<0 is its downstroke, deepest at phase=pi.
+    # sweep shares the pivot constants; cos(phase)<0 is the downstroke.
     def tip(side, index, phase):
-        rx, rz = side*.15*math.cos(phase), side*.36*math.sin(phase)
+        rx, rz = side*OAR_LIFT*math.cos(phase), side*OAR_SWEEP*math.sin(phase)
         reach = math.cos(rx)*side*2.85 + math.sin(rx)*.24
         return (-4.2+index*.95-math.sin(rz)*reach,
                 side*.95+math.cos(rz)*reach, SHIP_WATERLINE+.04)
@@ -970,22 +1023,22 @@ def ship_splashes(args, parent):
                 faces.append(tuple(range(start,start+4)))
             foam = mesh(f'GEO-oar-whitewater-{side}-{index}', verts, faces, mat, parent=parent)
             for frame in range(1, FRAMES+1):
-                phase = (frame-1)/FPS*3.4+index*.045
+                phase = (frame-1)/FPS*OAR_RATE+index*.025
                 pulse = max(0., -math.cos(phase)) ** 2
                 fan.location = tip(side,index,phase)
                 fan.scale = (pulse,)*3
                 fan.keyframe_insert('location', frame=frame)
                 fan.keyframe_insert('scale', frame=frame)
                 foam.location = fan.location
-                foam.scale = (pulse*1.6, pulse*1.4, 1)
+                foam.scale = (pulse*1.35, pulse*1.2, 1)
                 foam.keyframe_insert('location', frame=frame)
                 foam.keyframe_insert('scale', frame=frame)
             for particle in range(4):
                 drop = mesh(f'GEO-oar-droplet-{side}-{index}-{particle}',
                             [(-.13,0,0),(.13,0,0),(0,0,.29)], [(0,1,2)], mat, parent=parent)
                 for frame in range(1,FRAMES+1):
-                    phase = (frame-1)/FPS*3.4+index*.045
-                    age = ((phase-2.05-particle*.12) % math.tau)/3.4
+                    phase = (frame-1)/FPS*OAR_RATE+index*.025
+                    age = ((phase-2.05-particle*.12) % math.tau)/OAR_RATE
                     life = .48
                     age_visible = min(age,life)
                     origin = np.array(tip(side,index,2.05+particle*.12))
@@ -1117,14 +1170,23 @@ def fire_sparks(source):
         glow = node(tree, 'ShaderNodeEmission', 'Hot ember radiance')
         alpha = node(tree, 'ShaderNodeValue', 'Particle lifetime fade')
         aov(tree,0)
-        finish_surface(mat, glow.outputs[0], alpha.outputs[0])
-        # Dimensions are compensated per frame to remain 2-4px long at 960.
+        uv=node(tree,'ShaderNodeTexCoord','Ember soft edge UV').outputs['UV']
+        distance=node(tree,'ShaderNodeVectorMath','Distance from hot ember core')
+        distance.operation='DISTANCE'; tree.links.new(uv,distance.inputs[0])
+        distance.inputs[1].default_value=(.5,.5,0)
+        edge=node(tree,'ShaderNodeMapRange','Soft ember edge and halo'); edge.clamp=True
+        edge.interpolation_type='SMOOTHSTEP'
+        setv(edge,'From Min',.08); setv(edge,'From Max',.5)
+        setv(edge,'To Min',1.); setv(edge,'To Max',0.)
+        tree.links.new(distance.outputs['Value'],edge.inputs['Value'])
+        finish_surface(mat,glow.outputs[0],mathn(tree,'MULTIPLY',alpha.outputs[0],edge.outputs[0]))
+        # Soft edges plus restrained HDR cores give warm glow without white clipping.
         radius = .5
         spark = mesh(f'GEO-brazier-spark-{index:02d}',
-                     [(-radius,-.28,0),(0,-radius,0),(radius,.28,0),(0,radius,0)],
-                     [(0,1,2,3)], mat)
-        length_px = float(rng.uniform(2.8,4.0))
-        width_px = float(rng.uniform(1.0,1.35))
+                     [(-radius,-radius,0),(radius,-radius,0),(radius,radius,0),(-radius,radius,0)],
+                     [(0,1,2,3)], mat, [(0,0),(1,0),(1,1),(0,1)])
+        length_px = float(rng.uniform(1.2,2.2))
+        width_px = float(rng.uniform(.45,.75))
         # Emerge at the taller flame tips: v9 spent most of the bright lifetime
         # hidden inside the flames, then faded to subpixel orange in the sky.
         origin = np.array((rng.uniform(-3,3),rng.uniform(18,23),rng.uniform(2.5,4)))
@@ -1138,13 +1200,16 @@ def fire_sparks(source):
             progress,_=timing(frame)
             units_per_px=(CAMERA_Z*(1-DOLLY*progress)-spark.location.z)/(960*CAMERA_Z/WIDTH*1.015)
             streak=length_px*units_per_px
-            spark.scale = (width_px*units_per_px,streak,1)
+            shrink=1-.58*t
+            spark.scale = (width_px*units_per_px*shrink,streak*shrink,1)
             spark.rotation_euler.z=-.12-.10*math.sin(age*4+index)
             spark.keyframe_insert('rotation_euler',frame=frame)
             spark.keyframe_insert('location',frame=frame)
             spark.keyframe_insert('scale',frame=frame)
-            setv(glow,'Color',(1., .35*(1-t)+.42, .25*(1-t)+.12, 1))
-            setv(glow,'Strength',(5.5+.6*fire_flicker(frame))*(1-.20*t))
+            hot=np.array((1.,.42,.025)); cold=np.array((.30,.014,.002))
+            pigment=hot*(1-t)+cold*t
+            setv(glow,'Color',(*pigment,1))
+            setv(glow,'Strength',(1.7+.12*fire_flicker(frame))*(1-.60*t))
             socket(glow,'Color').keyframe_insert('default_value',frame=frame)
             socket(glow,'Strength').keyframe_insert('default_value',frame=frame)
             alpha.outputs[0].default_value=fade
@@ -1235,7 +1300,7 @@ def fire(args, depth):
     z=beacon_depth(depth)
     anchor=projected(x,y,z)
     plume=painted_fx_card(args,'GEO-distant-beacon-plume','beacon-plume.png',
-                          BEACON_WIDTH,BEACON_HEIGHT,anchor,1.,.92)
+                          BEACON_WIDTH,BEACON_HEIGHT,anchor,1.,.72)
     for frame in range(1,FRAMES+1):
         plume.rotation_euler.z=-.05-.025*math.sin(frame*.035)
         plume.keyframe_insert('rotation_euler',frame=frame)
@@ -1301,7 +1366,7 @@ def compositor(scene,args):
     tree.links.new(glare.outputs['Image'],out.inputs['Image'])
 
 
-def validate_vfx(scene, depth):
+def validate_vfx(scene, depth, args):
     """Every delivery frame: evaluated meshes vs painted ships under the real camera."""
     from bpy_extras.object_utils import world_to_camera_view
     hull=bpy.data.objects['GEO-rounded-planked-hull']
@@ -1337,8 +1402,8 @@ def validate_vfx(scene, depth):
         distance,name=min(checks)
         clearances.append({'frame':frame,'minimum_clearance_px':round(distance,3),
                            'nearest_painted_ship':name,'hero_bounds_px':hero_box})
-        if distance<3*pixel_scale:
-            raise RuntimeError(f'Galley clearance below 3 preview pixels at {frame}: {distance}px vs {name}')
+        if distance<MIN_SHIP_CLEARANCE_1080/2*pixel_scale:
+            raise RuntimeError(f'Galley clearance below 8 full-resolution pixels at {frame}: {distance}px vs {name}')
         points=screen([hull.matrix_world @ Vector(p) for p in hull.bound_box])
         hull_width=float(np.ptp(points[:,0]))
         reference_width=scale_report['per_frame'][frame-1]['depth_matched_painted_width_px_1080']*width/1920
@@ -1361,17 +1426,17 @@ def validate_vfx(scene, depth):
     return {'hero_ship_projection':samples,
             'depth_scale_calibration':scale_report,
             'water_contact_error_px':contact_error,
-            'hero_ship_travel_px':samples[0]['centre_px'][0]-samples[-1]['centre_px'][0],
+            'hero_ship_travel':ship_travel_report(depth),
             'ship_clearance':{'method':'evaluated descendant mesh boxes vs painted ship boxes',
                               'frames_checked':FRAMES,'resolution':[width,height],
                               'minimum_clearance_px':worst['minimum_clearance_px'],
                               'worst_frame':worst['frame'],'nearest_painted_ship':worst['nearest_painted_ship'],
                               'projection_error_px':projection_error,'per_frame':clearances},
             'gulls':7,'blue_banner_cutouts':2,'brazier_spark_pool':SPARK_POOL,
-            'spark_alive_range':spark_alive_range(),'spark_streak_px_960':[2.8,4.0],
-            'spark_width_px_960':[1.0,1.35],
+            'spark_alive_range':spark_alive_range(),'spark_streak_px_960':[1.2,2.2],
+            'spark_width_px_960':[.45,.75],
             'flame_cards':FLAME_LAYERS,'beacon_source_pixel':BEACON_PIXEL,
-            'beacon_projection':beacon_report(depth),
+            'beacon_projection':beacon_report(depth,args.masters/'textures'),
             'oar_spray_particles':72}
 
 
@@ -1426,7 +1491,7 @@ def build(args):
     # Original builder hardcodes its old sample frame 145. The last key extrapolates
     # constantly, so this also checks our 144 endpoint with the same geometry.
     stats.update(base.validate_deformation(scene))
-    stats.update(validate_vfx(scene,depth))
+    stats.update(validate_vfx(scene,depth,args))
     scene.frame_set(1); bpy.context.view_layer.update()
     bpy.ops.file.pack_all()
     stats.update({'resolution':[args.width,args.height],'frames':FRAMES,'fps':FPS,'threads':6,

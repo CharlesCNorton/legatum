@@ -1,54 +1,49 @@
-# Classical harbour: hybrid v10
+# Classical harbour: hybrid v11
 
-The v9 painted flame cards remain. The galley moves into the middle harbour,
-source x=528→517 at y=550, between the smaller foreground sailboat and the large
-painted galley. The camera, painting, gulls, water glints, banners, oar foam,
-144 frames, six threads and `--full` framing are unchanged. No simulation or bake.
-
-The relief map is artistic disparity, not metric distance. Hull size is calibrated
-from two measured smaller painted boats (44 and 56 source pixels), interpolated by
-sampled relief depth. The large merchant galley's 145-pixel hull is a separate
-comparison, not the size target for this narrow lane.
+The galley sails left through the water above the lighthouse mole, west of the
+large painted galley's yard: source x=560→464 at y=418. All 144 frames retain the
+approved camera, painting, flame tongues, gulls, banners, immersion and reflection.
+The oars sweep on a 1.35-second cycle with synchronized small foam pulses.
+No simulation or bake is required.
 
 Python projection measurements at 1920×1080:
 
-| Frame | Moving hull | Depth-adjusted reference | Ratio | Nearby painted sailboat | Large painted galley |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| 1 | 53.3 px | 47.5 px | 1.123 | 56.8 px | 147.2 px |
-| 72 | 58.1 px | 51.5 px | 1.127 | 61.7 px | 159.9 px |
-| 144 | 64.1 px | 56.5 px | 1.134 | 67.7 px | 175.2 px |
+- Horizontal screen travel: **271.672 px (14.15% of frame width)**. This includes
+  the approved camera move. Actual voyage relative to the painting is **96 source
+  pixels**, or **97.44 px with the first camera held fixed**, versus 11 source
+  pixels in v10. Do not describe all 272 pixels as independent boat motion.
+- Conservative full-ship clearance: **8.720 px minimum**, at frame 1 against the
+  distant eastern lateen sail. Every frame checks the sail, rigging and full oar
+  envelope against all painted ships and harbour obstacles. The large galley's
+  thin mast and the lighthouse tower have separate envelopes from their wider
+  bases, preserving the open water beside them. Both Python and Blender enforce
+  the 8-pixel full-resolution minimum.
+- Depth-matched size ratio: **1.121–1.137**. The 28-pixel far square-sail hull joins
+  the existing 44- and 56-pixel hull references, so this farther lane interpolates
+  within measured depth instead of clamping to a nearer boat's size. Projected
+  hull widths at frames 1/72/144 are **34.8 / 38.2 / 42.8 px**.
+- The hull-contact strip and reflection centre remain fully inside the water mask
+  in every frame; waterline projection error is below 0.01 px.
 
-- All 144 frames pass the 0.9–1.2 depth/scale ratio. The ratio to the actual nearby
-  sailboat is 0.938–0.947 at the sampled frames.
-- Conservative full-ship clearance from 12 painted ships plus the lighthouse
-  mole, quay and near shore is at least **4.168 px at 960 / 8.336 px at 1080**,
-  at frame 1 against the large galley. The Blender build independently validates
-  actual evaluated meshes and camera projection.
-- The immersed local waterline at z=-0.22 clips a keel extending to z=-0.95.
-  Its centre is ray-aligned with the sampled water surface; projection error is
-  below 0.01 px. The entire contact strip and reflection centre have water-mask
-  coverage 1.0 in every frame. The dark contact, directly attached reflection,
-  wake and foam follow the same placement and depth-scaled size.
-- The distant beacon uses a pale plume, with a projected alpha envelope about
-  57–68 px tall at 960, and a small warm base point. Its visibility depth covers
-  the entire plume footprint, not just the anchor.
-- Six flame cards retain their textures, tongues and transparent edges, at 1.5×
-  width/height and emission 1.85 (was 1.35); scholar spill is unchanged.
-- The 60-spark pool has 46–47 particles above alpha 0.25 per frame. Streaks are
-  2.8–4 px long and 1–1.35 px wide at 960, with brighter ivory-orange emission,
-  a longer bright lifetime and origins at the flame tips. They bypass brush blur.
+Water highlight amplitudes are 40% of v10, with sparse short soft sparkles and
+gloss confined to the upper-left sun's diagonal reflection path. The painted
+water colour remains the base. The ember pool drops from 60 to 28: 11–13 particles
+are above alpha 0.25, with 1.2–2.2 px initial lengths at 960, soft edges, slight
+rising drift, shrinking silhouettes and orange-yellow to deep-red cooling.
+The beacon retains its visible 57–68 px height at 960, with a wider warm-grey
+profile, overlapping soft lobes and a thinning top. Its tiny warm base is unchanged.
 
 `scene-report.json` records all-frame measurements; `prepared.json` hashes the
 recipe and assets. These are preparation checks, not rendered visibility claims.
-The lead still owns Blender API validation and visual review under the lock.
-Original masters and v9 artifacts are untouched. No commit is made by this pass.
+The lead owns Blender API validation and visual review under the lock. Original
+masters and v10 artifacts are untouched. This pass does not commit.
 
 ## Commands
 
-From the repository root, preparation and compilation only:
+From the repository root, preparation and compilation only (both passed):
 
 ```sh
-export ERA_HYBRID=/Users/samcorcos/LegatumRuns/era-video-pilot/masters/hybrid-v10
+export ERA_HYBRID=/Users/samcorcos/LegatumRuns/era-video-pilot/masters/hybrid-v11
 export ERA_PYTHON=/Users/samcorcos/LegatumRuns/era-video-pilot/venv/bin/python
 "$ERA_PYTHON" tools/art/era-video/hybrid/scene.py \
   --masters "$ERA_HYBRID" --out "$ERA_HYBRID/frames-960" --prepare
@@ -58,12 +53,12 @@ export ERA_PYTHON=/Users/samcorcos/LegatumRuns/era-video-pilot/venv/bin/python
 Lead only, while holding the existing Blender lock (not run by the editing agent):
 
 ```sh
-hybrid_v10() {
+hybrid_v11() {
   /opt/homebrew/bin/blender -b --factory-startup --disable-autoexec -t 6 \
     --python-exit-code 1 -P tools/art/era-video/hybrid/scene.py -- \
     --masters "$ERA_HYBRID" "$@"
 }
-hybrid_v10 --out "$ERA_HYBRID/frames-960" --dry-run
-hybrid_v10 --out "$ERA_HYBRID/frames-960" --frames 1-144
-hybrid_v10 --full --out "$ERA_HYBRID/frames-1080" --frames 1-144
+hybrid_v11 --out "$ERA_HYBRID/frames-960" --dry-run
+hybrid_v11 --out "$ERA_HYBRID/frames-960" --frames 1-144
+hybrid_v11 --full --out "$ERA_HYBRID/frames-1080" --frames 1-144
 ```
