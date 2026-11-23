@@ -67,3 +67,61 @@
 - Round 2 initial GPU critique: opened c-textured-lit, rest comparison, all five strips and round1 MP4 frame. At 256px the painted face/webbing are convincing but left sleeve extends about 10px beyond the painting; pack and roll are squared and oversized, helmet too glossy, skirt hem too straight. Attack reveals flat blue patches and displaced hand/rifle pigment; death shows ghost boots on the stationary base, stiff coat panels and an upright leg. At 64px identity and height read correctly but the shoulders are too broad and pose too stiff. Not hard to distinguish from the painting; no PASS.
 - Round 2 intake: all PLAYBOOK chapters and standing FEEDBACK read; no trench-infantry-FEEDBACK.md exists. Loaded all six Sam Blender skills: modeling for full-depth contour/cloth finish, materials for semantic pigment/fills, lighting for live contact/product shot, cameras for orthographic alignment, animation for source-action reset and clip recovery, rendering for CPU previews/GPU provenance. Original GPU evidence preserved externally.
 - GPU round 1 succeeded: internal gpu-round1.log and receipt verified, Cycles GPU 48 samples at 512px; 40 frames, 192242 bytes at quality 90. Driver log was empty due to internal redirection, not render failure.
+- Built MPFB anatomical body, 53-bone rig, folded greatcoat, puttees, helmet, webbing and bayonet rifle; plain.blend saved.
+- Posted b-plain review (CPU, 256 px).
+- Finished-surface camera projection with camera-only pigment; generated hidden fills retained.
+- Posted c-textured-lit review (CPU, 256 px).
+- Retargeted CC0 / weapon-layer and saved idle action (8 output frames).
+- Retargeted CC0 / weapon-layer and saved move action (8 output frames).
+- Retargeted CC0 / weapon-layer and saved attack action (10 output frames).
+- Retargeted CC0 / weapon-layer and saved hit action (4 output frames).
+- Retargeted CC0 / weapon-layer and saved death action (10 output frames).
+- Posted d-rig-poses review (CPU, 256 px).
+- Posted e-idle review (CPU, 256 px).
+- Posted e-move review (CPU, 256 px).
+- Posted e-attack review (CPU, 256 px).
+- Posted e-hit review (CPU, 256 px).
+- Posted e-death review (CPU, 256 px).
+- Built MPFB anatomical body, 53-bone rig, folded greatcoat, puttees, helmet, webbing and bayonet rifle; plain.blend saved.
+- Posted b-plain review (CPU, 256 px).
+- Finished-surface camera projection with camera-only pigment; generated hidden fills retained.
+- Posted c-textured-lit review (CPU, 256 px).
+- Retargeted CC0 / weapon-layer and saved idle action (8 output frames).
+- Retargeted CC0 / weapon-layer and saved move action (8 output frames).
+- Retargeted CC0 / weapon-layer and saved attack action (10 output frames).
+- Retargeted CC0 / weapon-layer and saved hit action (4 output frames).
+- Retargeted CC0 / weapon-layer and saved death action (10 output frames).
+- Posted d-rig-poses review (CPU, 256 px).
+- Posted e-idle review (CPU, 256 px).
+- Posted e-move review (CPU, 256 px).
+- Posted e-attack review (CPU, 256 px).
+- Posted e-hit review (CPU, 256 px).
+- Posted e-death review (CPU, 256 px).
+- Built MPFB anatomical body, 53-bone rig, folded greatcoat, puttees, helmet, webbing and bayonet rifle; plain.blend saved.
+- Posted b-plain review (CPU, 512 px).
+- Finished-surface camera projection with camera-only pigment; generated hidden fills retained.
+- Posted c-textured-lit review (CPU, 512 px).
+- Retargeted CC0 / weapon-layer and saved idle action (8 output frames).
+- Retargeted CC0 / weapon-layer and saved move action (8 output frames).
+- Retargeted CC0 / weapon-layer and saved attack action (10 output frames).
+- Retargeted CC0 / weapon-layer and saved hit action (4 output frames).
+- Retargeted CC0 / weapon-layer and saved death action (10 output frames).
+- Round 2 iterations: continuous weighted folded sleeves replace intersecting tubes; full-depth shoulder/coat/helmet/boot/pack contours fitted before UV freeze; blanket spiral seams and brass buckles added. Orthographic projection rays now match the actual camera, with consistent normals and finished topology.
+- Generated occlusion fill accepted for clean stone and feathered garment underlayers; original painting remains primary pigment. Clean stone uses fresh AO so moved feet leave no painted duplicates. Hidden cloth reuses generated coat brushwork and retains live product light.
+- Quaternius sparse source channels reset per sample. Death arms/legs calibrated from anatomical reference and blended out of carrying stance; no foot rotation patch. Hit explicitly recovers. Rifle aim raised to shoulder level. First CPU checks show improved rest silhouette and cleaner fall, but raised/falling garment surfaces and contact still need scrutiny.
+- Posted d-rig-poses review (CPU, 512 px).
+- Posted e-idle review (CPU, 512 px).
+- Posted e-move review (CPU, 512 px).
+- Posted e-attack review (CPU, 512 px).
+- Posted e-hit review (CPU, 512 px).
+- Posted e-death review (CPU, 512 px).
+- Retargeted CC0 / weapon-layer and saved attack action (10 output frames).
+- Posted e-attack review (CPU, 512 px).
+- Posted d-rig-poses review (CPU, 512 px).
+- CPU final round 2: Cycles CPU / 8 samples, all b/c/d/e stages at 512px, 40 animation masters at each of 512/256. Rest comparison, details, rig poses, five strips/WebPs, front/top feet and round2 MP4 refreshed. Opened final rest/attack/hit/death/feet sheets and decoded movie frames; revisited round1 settled movie frame.
+- Validator caught bayonet clipping in attack samples 2/9 after raising the firing position. Fixed by tilting before lifting; rerendered only attack and d poses. Final bounds/alpha/offset/source-hash/motion/held-death checks PASS: 40 frames, 1174x742 packed sheet with trimmed 160px logical cells, 182300 bytes at quality 90.
+- Structural audit PASS: 53-bone MPFB rig, stationary base, no near-zero object scales, all five clip source hashes, explicit hit recovery, feet within 9.94 degrees of forward. Max virtual-ground planted-interval slip 0.000000708m; max root XY contact correction 0.020533m. These metrics do not prove cloth or equipment collision freedom.
+- Delivery inventory PASS: 17 review artifacts, editable plain/final/five clip blends, 40 current frames at each of 512/256. Decoded atlas MP4 H.264 yuv420p, 1600x348, 240 frames, 8 seconds. GPU receipt verifier correctly rejected these CPU renders; no round2 GPU receipt and no PASS written.
+- Checks: Python AST, Bash syntax, git diff whitespace and working-file hygiene line checks PASS. Public-claims gate PASS. HEAD hygiene initially flagged unspaced Python matrix @ as email addresses; spacing corrected in working files and rescanned successfully. Art gate failed launching render-sets/Chromium in the sandbox; browser art sign-off remains unavailable. No Rust/gameplay/UI edits; no unrelated build suite run.
+- Final round2 verdict: closer to painting at 256px, with corrected pack/roll/helmet widths, continuous sleeves, richer hidden cloth and no painted ghost boots. Still distinguishable: left shoulder/hand geometry and drape are less natural; fall opens a stiff coat and leaves feet apparently elevated over the base. At 64px same unit/height/palette. Five clips are technically valid, not all artistically clean; no PASS. Lead: ROUND=2 tools/art/anim3d/units/trench-infantry/gpu.sh.
+- Commit attempt blocked: git add could not create .git/worktrees/lane-19/index.lock (Operation not permitted); runner must commit. origin/master already contained in branch (0 commits behind); no fetch, merge, push or PR. Suggested commit: Refine trench infantry painting match and motion, with required gpt-6-astra Co-Authored-By trailer.
