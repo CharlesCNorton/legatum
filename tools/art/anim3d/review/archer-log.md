@@ -285,3 +285,19 @@
 - Projected painting onto finished surfaces with occlusion/facing masks and camera-only pigment; original generated fills, real AO/curvature and physical lighting remain.
 - Rendered c: 256px CYCLES CPU, 12 samples.
 - Published c native 256/64 comparison; render device CPU.
+- Finished static solid/bevel/subdivision geometry before projection; froze MPFB macro mix with native skin weights; fitted drawing-arm contour and complete recurved bow in the fixed rest camera.
+- Projected painting onto finished surfaces with occlusion/facing masks and camera-only pigment; original generated fills, real AO/curvature and physical lighting remain.
+- Rendered c: 256px CYCLES CPU, 24 samples.
+- Published c native 256/64 comparison; render device CPU.
+- Finished static solid/bevel/subdivision geometry before projection; froze MPFB macro mix with native skin weights; fitted drawing-arm contour and complete recurved bow in the fixed rest camera.
+- Projected painting onto finished surfaces with occlusion/facing masks and camera-only pigment; original generated fills, real AO/curvature and physical lighting remain.
+- Authored idle: 8 frames, 10 fps; real rig keys, bow flex and nock keys, stationary base.
+- Authored move: 8 frames, 12 fps; real rig keys, bow flex and nock keys, stationary base.
+- Authored attack: 10 frames, 14 fps; real rig keys, bow flex and nock keys, stationary base.
+- Authored hit: 4 frames, 12 fps; real rig keys, bow flex and nock keys, stationary base.
+- Authored death: 10 frames, 10 fps; real rig keys, bow flex and nock keys, stationary base.
+- Geometry audit passed: anatomy, fixed base, nonzero scales, bow/nock contact and loop closure.
+- Rendered c: 256px CYCLES CPU, 24 samples.
+- Published c native 256/64 comparison; render device CPU.
+- Rendered e-death: 256px CYCLES CPU, 24 samples.
+- Published e-death native 256/64 comparison; render device CPU.
