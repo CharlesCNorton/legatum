@@ -42,3 +42,27 @@ Loaded all six Blender skills: modeling for beveled full-depth stone and aircraf
 c: 1 frames at 256/64 from 256px CYCLES/CPU, 8 samples.
 e-death: 10 frames at 256/64 from 256px CYCLES/CPU, 8 samples.
 c: 1 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+Round2 first previews: base grain/rim materially closer; falling support removes visibility pop. Independent top/front review exposed a deeper round1 flaw: airframe plane was too steep in world space, like a broad board. Corrected camera-ray depths to a broad nearly-horizontal flying-wing planform, maintaining exact painting projection and aligning the belly with support tip. Orbit/top diagnostics reframed for the actual span; rest camera unchanged.
+c: 1 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+b: 3 frames at 256/64 from 256px CYCLES/CPU, 12 samples.
+e-death: 10 frames at 256/64 from 256px CYCLES/CPU, 12 samples.
+c: 1 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+c: 1 frames at 256/64 from 256px CYCLES/CPU, 16 samples.
+b: 3 frames at 256/64 from 256px CYCLES/CPU, 16 samples.
+e-death: 10 frames at 256/64 from 256px CYCLES/CPU, 16 samples.
+e-attack: 10 frames at 256/64 from 256px CYCLES/CPU, 16 samples.
+d: 4 frames at 256/64 from 256px CYCLES/CPU, 16 samples.
+e-idle: 8 frames at 256/64 from 256px CYCLES/CPU, 16 samples.
+e-move: 8 frames at 256/64 from 256px CYCLES/CPU, 16 samples.
+e-hit: 4 frames at 256/64 from 256px CYCLES/CPU, 16 samples.
+e-death: 10 frames at 256/64 from 256px CYCLES/CPU, 16 samples.
+Round2 clip review found stand/wing intersection after correcting flight-plane depth. Added a separate evaluated-BVH vertical stand/wing clearance constraint across the crash; stand falls earlier and the wreck settles on the fallen stand. Original first-frame mount insertion is retained (bounded 0.12 units) so death begins at the exact rest pose. No keyed hiding or zero scales. Larger projectiles now have two solid tail fins.
+Seven delivery regression tests pass, including new stale build-input and stale motion-signature rejection; shell syntax and diff whitespace checks pass. Final CPU512/12 pass started after low-resolution reviews exposed and resolved these geometry issues; all stages publish immediately.
+c: 1 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+b: 3 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+d: 4 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+e-idle: 8 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+e-move: 8 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+e-attack: 10 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+e-hit: 4 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+e-death: 10 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
