@@ -33,3 +33,6 @@ All five clip geometry audits pass: 23 meshes, manifold principal volumes, corre
 Movie verified H.264/yuv420p 1600x348, 240 frames, 8 seconds; decoded samples inspected. Rest alpha IoU .972768, RGB MAE 5.69469. 64px identity strong; 256px stone/panel craft, off-axis joins and crash impact remain weaker than painting. No PASS.
 GPU pass not run in sandbox; complete executable handoff is tools/art/anim3d/units/stealth-fighter/gpu.sh with ROUND supplied by driver. CPU receipts do not claim GPU success.
 Git staging denied creating .git/worktrees/lane-19/index.lock; left requested scoped changes for runner commit. No push, PR, upload or deployment.
+b: 3 frames at 256/64 from 512px CYCLES/GPU, 96 samples.
+c: 1 frames at 256/64 from 512px CYCLES/GPU, 96 samples.
+d: 4 frames at 256/64 from 512px CYCLES/GPU, 96 samples.
