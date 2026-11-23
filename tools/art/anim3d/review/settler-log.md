@@ -129,3 +129,19 @@
 - Published e-hit-strip: CYCLES GPU, 512 px, 64 samples; not GPU approval.
 - Published e-death-strip: CYCLES GPU, 512 px, 64 samples; not GPU approval.
 - Saved 3D audit passed: source hashes, 53 bones, actual motion, exact loop closing keys and held death; ground/bounds recorded; collision limits explicit.
+
+# Driver round 2: reviewed round-1 GPU, 2026-11-23
+- Opened GPU c, f, all five e strips and decoded round1 MP4 frame before edits. At 256: torn/patchy face and hood, oversized hanging robe folds, dark featureless sandals, narrow leg stance, straight dark staff, flat brown base; painted colour is recognizable but not parity. At 64: correct civilian identity and palette, wrong stance and mass. Move floats/skates; death is a rigid plank suspended over the base. PASS withheld.
+- Read complete PLAYBOOK, own log, common feedback 1–23; settler-FEEDBACK.md is absent. Loaded all six Sam Blender skills (modeling, materials, cameras, lighting, animation, rendering). Retain full-depth meshes, finish before projection, frozen view/grade, warm product lights; replace manual gait/fall with CC0 motion and inspect top/front feet.
+- Round1 GPU pass succeeded, receipt confirms GPU64/512, forty 512/256 masters, 175038-byte Q85 atlas, 192-frame H264/yuv420p movie. Driver log empty because gpu.sh redirected stdout; its internal log/receipt prove completion. Preserved all original GPU evidence under driver-r1-gpu before CPU changes.
+- Applied frozen-camera painting, generated unseen linen/olive/rust/leather, fine bump, warm product lights, physical AO and ten actual AO/curvature maps.
+- Published c-textured-lit: CYCLES CPU, 256 px, 8 samples; not GPU approval.
+- Saved idle: 8 frames at 10 fps, editable MPFB rig, stationary base; CC0 library motion or authored staff attack.
+- Saved move: 8 frames at 12 fps, editable MPFB rig, stationary base; CC0 library motion or authored staff attack.
+- Saved attack: 10 frames at 14 fps, editable MPFB rig, stationary base; CC0 library motion or authored staff attack.
+- Saved hit: 4 frames at 12 fps, editable MPFB rig, stationary base; CC0 library motion or authored staff attack.
+- Saved death: 10 frames at 10 fps, editable MPFB rig, stationary base; CC0 library motion or authored staff attack.
+- Saved move: 8 frames at 12 fps, editable MPFB rig, stationary base; CC0 library motion or authored staff attack.
+- Published e-move-strip: CYCLES CPU, 256 px, 8 samples; not GPU approval.
+- Saved death: 10 frames at 10 fps, editable MPFB rig, stationary base; CC0 library motion or authored staff attack.
+- Published death-check-strip: CYCLES CPU, 256 px, 8 samples; not GPU approval.

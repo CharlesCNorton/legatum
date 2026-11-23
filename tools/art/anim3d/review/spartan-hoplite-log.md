@@ -122,3 +122,4 @@ Final visual verdict NO PASS: at256 crest/stance/cream improve, but helmet/gaze,
 Final code checks:19 Python files parse; shellsyntax/executable/whitespace pass; currentfilehygiene27files/0 findings; publicclaims PASS. GPU provenance gate correctly rejects absent fresh512 output. origin/master is already ancestor of HEAD (0 commits to merge). No engine/UI changes; no PASS, upload, push or PR.
 Commit attempt: git add denied creating .git/worktrees/lane-15/index.lock (Operation not permitted). Changes left uncommitted for runner; exact requested coauthor message saved in tmp/spartan-driver-round2-commit.txt. No commit/push/PR occurred.
 Baked clip idle
+Baked clip move
