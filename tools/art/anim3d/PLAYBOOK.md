@@ -106,3 +106,93 @@ tools/art/anim3d/render.sh audit
 ```
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
+
+## Siege chapter — howitzer, round 1
+
+The howitzer painting depicts a gun with no crew. Use a rigid mechanical hierarchy
+instead of adding people absent from its composition. This unit's isolated scripts
+are in `tools/art/anim3d/units/howitzer/`; newer siege and vehicle chapters and the
+artillery lane supplied reusable projection/bake/review/delivery code. Shared
+spearman entry points are unchanged.
+
+Build a genuinely hollow, short elevated barrel, recuperators, thick bevelled
+shield plates, dished twelve-spoke steel wheels, stepped hubs, thick carriage
+cheeks, handwheel, bolted trails and a single stationary stone disc. The hierarchy
+has carriage, elevation, recoil, wheel and trail controls. Preserve full depth
+when matching the painting, and render clay side/front views as well as the hero
+view. Key effect visibility, never zero or near-zero scale. Every Blender command
+uses plain `blender -b --disable-autoexec` through the PATH gate, sequentially.
+
+Apply all four quality levers: (1) finish bevels and geometry before freezing one
+rest-camera projection from the full painting; ray-test visibility and blend
+occluded/back faces into the recorded generated painted-metal fill; (2) use real
+thickness, bright edges, bolts, hollow muzzle and actual AO/curvature bakes;
+(3) warm upper-left product key, soft fill, cool rim and live contact AO;
+(4) measure the painting/rest opaque-subject RGB mean and spread, then freeze one
+bounded grade for all frames. Standard/None preserves painted pigment already
+containing light; this is not the photographic default. Non-camera rays retain the
+physical shader. Spokes use physical worn-metal fill because projected spoke lines
+otherwise double. Camera/geometry registration remains approximate.
+
+The common stone target is warm cream **#E9CFA0**, with a darker warm rim and fine
+grain. Convert sRGB pigment to linear shader values (approximately .815/.624/.352)
+before lighting; do not pass those byte-normalized sRGB values as linear. Review
+actual rendered colour after grade. Do not project stationary source wheel shadows
+onto the disc: contact shading must follow the gun. At every round write
+`howitzer-f-restpose-compare.png`: painting, rest render and 50/50 crossfade at
+256 and 64px. The target remains hard-to-distinguish painting parity, not merely a
+technically valid atlas. No automatic PASS marker.
+
+Idle/move/attack/hit/death have 8/8/10/4/10 frames at 10/12/14/12/10fps. Idle and move
+loop; combat clips are one-shot with an exact final death hold. The move is an
+in-place tow cycle: runtime world travel must match wheel radius times angular
+speed. Ground checks keep both rims on z=.13 while the carriage reacts; the base
+never moves. Read the contact sheet and animation, not just the numerical audit.
+
+**Open-motion standard for crew/animals:** humans use CMU free-use or Quaternius
+CC0 idle/walk/hit/death, with matching rest poses and bone rolls during retargeting;
+only weapon-specific attacks are authored on top. Quadrupeds use a licensed CC0
+animated animal source. Never repair foot direction after retargeting; fix the
+forward/rest-axis mapping. Record URLs/licences locally and in external SOURCES.
+Every round includes top/front views across the move cycle, `<slug>-g-feet-check.png`,
+checking planted contact and forward-facing feet. The uncrewed howitzer has no gait
+asset; its actual top/front move renders document wheel contact instead.
+
+Complete host handoff (executable, no arguments, from repo root):
+
+```sh
+ROUND=1 tools/art/anim3d/units/howitzer/gpu.sh
+```
+
+The script explicitly requires Metal Cycles, rebuilds/bakes and renders every
+stage at actual 512px/64 samples, preserves 512 masters and graded 256 derivatives
+under `ANIM_ROOT/masters/howitzer/`, publishes all interim reviews, validates
+pipeline/model/clip/input/grade/frame hashes and wheel contact, then packs and
+checks the atlas and encodes `howitzer-round${ROUND}.mp4`. The movie reconstructs
+the decoded trimmed atlas: all five clips, 2x logical scale on cream, 8 seconds,
+240 frames, 1600x348, H.264/yuv420p. GPU receipts require actual GPU512 provenance;
+CPU512 previews cannot pass that gate. Technical success still requires visual review.
+
+### Howitzer trimmed atlas contract (v2)
+
+`app/src/assets/units/anim/howitzer.webp` uses logical 160px cells, quality >=75,
+and <=200,000 bytes. All forty frames remain. Master files never enter git.
+The JSON has `version:2`, `layout:"trimmed-rows"`,
+`frame:{w:160,h:160,ax:79.375,ay:138.125}`, and five `clips` in
+idle/move/attack/hit/death order. Each clip has `row`, `frames`, `fps`, `loop`, and
+`rects`: one `{x,y,w,h,ox,oy}` per frame. Rectangles locate cropped atlas pixels;
+offsets reconstruct the original logical cell. At display scale s and anchor
+(X,Y), draw at `(X+(ox-ax)*s,Y+(oy-ay)*s)`. `row` is ordering, not a fixed cell grid.
+Identical held frames share a rectangle. Packing checks exact decoded alpha
+reconstruction, every count/offset, motion, quality/size, non-clipping and held death.
+This is an unwired art candidate; a v1 fixed-grid runtime cannot read this schema.
+
+Howitzer round-one delivery uses 32-level alpha on the 160px candidate only, with
+full alpha retained in 512/256 masters. This matches the existing shared packing
+approach and reduces size without dropping any frame or RGB quality below the floor.
+The final CPU candidate is 188,042 bytes at Q80; all forty quantized alpha masks
+reconstruct exactly. No PASS: moving wheels retain simpler worn-metal surfaces,
+carriage/trail and stone still differ from the painting. Never infer GPU success
+from the actual CPU512 preview set. Rendering-script hashes protect frames;
+postprocessing versions have separate delivery/check receipts so a packing change
+does not falsely invalidate or claim a new render of otherwise unchanged masters.
