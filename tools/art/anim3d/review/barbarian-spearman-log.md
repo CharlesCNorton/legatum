@@ -160,3 +160,8 @@
 - Published e-death review from GPU render.
 - Published g-feet review from GPU render.
 - Full GPU stage/master/atlas/movie pass completed; fresh visual judgment still required.
+
+# Driver round 3, 2026-11-23
+- Opened actual GPU c/rest, all five e strips and eight decoded round2.mp4 frames FIRST. GPU pass succeeded: 196162 bytes Q80, GPU512/64, all 40 samples, valid H264/yuv420p eight-second movie. Archived evidence in driver-r2-gpu.
+- Honest 256px critique: recognizable painted face and cloth, close overall registration, but thin/dark gripping hand and spear, smooth shaded stone top, jagged mantle edge, disconnected calf/shoe silhouettes in move, and rigid piled cloth with raised arms in death. At 64px identity and scale are close but spear/stance/base and motion remain distinguishable. Not PASS.
+- Read all PLAYBOOK chapters, global feedback 1-23, project art instructions and all six Blender skills. Unit-specific FEEDBACK is absent. Modeling/animation: continuous weighted footwear and clothing; materials/cameras: frozen projection and generated occlusion fills; lighting/rendering: live contact AO, product lights, fixed histogram grade and sequential CPU verification.
