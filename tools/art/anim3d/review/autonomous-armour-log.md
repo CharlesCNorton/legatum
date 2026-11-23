@@ -323,3 +323,13 @@ Rendered details: 2 PNGs, 512 px, CYCLES GPU, 96 samples.
 Published details review immediately; frozen grade 222b91b21f3f, 256 masters retained.
 Rendered d: 4 PNGs, 512 px, CYCLES GPU, 96 samples.
 Published d review immediately; frozen grade 222b91b21f3f, 256 masters retained.
+Rendered g: 16 PNGs, 512 px, CYCLES GPU, 96 samples.
+Published g review immediately; frozen grade 222b91b21f3f, 256 masters retained.
+Rendered e-idle: 8 PNGs, 512 px, CYCLES GPU, 96 samples.
+Published e-idle review immediately; frozen grade 222b91b21f3f, 256 masters retained.
+Rendered e-move: 8 PNGs, 512 px, CYCLES GPU, 96 samples.
+Published e-move review immediately; frozen grade 222b91b21f3f, 256 masters retained.
+Rendered e-attack: 10 PNGs, 512 px, CYCLES GPU, 96 samples.
+Published e-attack review immediately; frozen grade 222b91b21f3f, 256 masters retained.
+Rendered e-hit: 4 PNGs, 512 px, CYCLES GPU, 96 samples.
+Published e-hit review immediately; frozen grade 222b91b21f3f, 256 masters retained.

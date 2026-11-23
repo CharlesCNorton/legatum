@@ -149,3 +149,19 @@
 - Opened GPU c/f, all five e strips and round3 MP4 contact frames first. GPU pass succeeded: 176,450 bytes Q80, 40 GPU512/Cycles64 masters, eight-second H264. Preserved masters/reviews under round3-gpu. No artillery-FEEDBACK.md exists. Read all common feedback 1-23 and every local PLAYBOOK chapter.
 - Honest critique before edits: at 256px overall silhouette is close, but tire hubs/tread look dark and blurred, wheel paint/illumination rotates into flat black patches during move, support detail differs, and the base has a flat ochre rim rather than the painting's fine warm stone. At 64px identity is clear but base and wheel tonal structure remain distinguishable. Attack flash is a hard yellow wedge; death reads as disabled. No art PASS.
 - Loaded all six Blender skills: modeling for finished full-depth meshes/bevels; materials for stable rubber pigment; lighting for fixed world light direction; cameras for registered rest UVs; animation for linear mechanical rotation; rendering for CPU previews and GPU provenance. Imagegen skill used for clean stone occlusion fill. No crew/cloth/straps exist in this painting.
+- Published b-plain CPU/GPU geometry stage before texture work.
+- Baked 256px AO and curvature maps on GEO-Shield wing -1, GEO-Shield wing 1, GEO-Hollow tapered barrel
+- Published painted rest pose and 50/50 comparison; real AO shader, micrograin, edge geometry and hidden-surface fill.
+- Published b-plain CPU/GPU geometry stage before texture work.
+- Baked 256px AO and curvature maps on GEO-Shield wing -1, GEO-Shield wing 1, GEO-Hollow tapered barrel
+- Published painted rest pose and 50/50 comparison; real AO shader, micrograin, edge geometry and hidden-surface fill.
+- Generated clean stone plate with built-in ImageGen; pinned source/prompt in unit SOURCES.md and external assets/SOURCES.md. It textures the actual rounded disc with new contact AO. First tire vertex-color preview smeared detail and was rejected; full image sampling now extends rubber UVs to inner faces, removes confidence holes, and separates a broad rest-light field from rotating pigment. Added non-rolling illumination frames that follow wheel centers. Smaller warm muzzle flash replaces the oversized yellow wedge. CPU stills exit 0; complete motion check next.
+- Published b-plain CPU/GPU geometry stage before texture work.
+- Baked 256px AO and curvature maps on GEO-Shield wing -1, GEO-Shield wing 1, GEO-Hollow tapered barrel
+- Published painted rest pose and 50/50 comparison; real AO shader, micrograin, edge geometry and hidden-surface fill.
+- Published e-idle: 8 actual rendered frames, 10 fps; CPU 256px 16 samples.
+- Published e-move: 8 actual rendered frames, 12 fps; CPU 256px 16 samples.
+- Published e-attack: 10 actual rendered frames, 14 fps; CPU 256px 16 samples.
+- Published e-hit: 4 actual rendered frames, 12 fps; CPU 256px 16 samples.
+- Published e-death: 10 actual rendered frames, 10 fps; CPU 256px 16 samples.
+- Completed all five clips and geometry audit; delivery pack may now run.

@@ -277,3 +277,40 @@
 - Posted e-attack review (CPU, 256 px).
 - Posted e-hit review (CPU, 256 px).
 - Posted e-death review (CPU, 256 px).
+- Finished-surface camera projection with camera-only pigment; generated hidden fills retained.
+- Posted b-plain review (CPU, 256 px).
+- Posted c-textured-lit review (CPU, 256 px).
+- Retargeted CC0 and saved idle action (8 output frames).
+- Retargeted CC0 and saved move action (8 output frames).
+- Authored and saved attack action (10 output frames).
+- Retargeted CC0 and saved hit action (4 output frames).
+- Retargeted CC0 and saved death action (10 output frames).
+- Posted d-rig-poses review (CPU, 256 px).
+- Posted e-idle review (CPU, 256 px).
+- First full CPU pass technically passed: 178568 bytes/Q85, 40 frames, decoded alpha and clip bounds valid. Rejected as final after top/front review: actual shoe direction was offset from the foot bone despite the old yaw metric passing. Revised bind calibration to measure actual heel/toe vertices before retargeting, added actual-shoe yaw to CPU/GPU gates, modeled thin leather soles/flat contact, and removed generated-stone dark edge pigment. Open motion rotations remain unmodified. Regenerating all dependent output.
+- Posted e-move review (CPU, 256 px).
+- Posted e-attack review (CPU, 256 px).
+- Posted e-hit review (CPU, 256 px).
+- Posted e-death review (CPU, 256 px).
+- Finished-surface camera projection with camera-only pigment; generated hidden fills retained.
+- Posted b-plain review (CPU, 256 px).
+- Posted c-textured-lit review (CPU, 256 px).
+- Retargeted CC0 and saved idle action (8 output frames).
+- Retargeted CC0 and saved move action (8 output frames).
+- Authored and saved attack action (10 output frames).
+- Retargeted CC0 and saved hit action (4 output frames).
+- Retargeted CC0 and saved death action (10 output frames).
+- Posted d-rig-poses review (CPU, 256 px).
+- During iteration, the stronger foot diagnostic correctly refused an older master without heel/toe landmarks; rebuilt the bind data. A shell stage was interrupted after its successful bake when its live wrapper was edited; current bash syntax passed and execution resumed from b, retaining all six completed bakes.
+- Final foot evidence passes six support intervals: actual shoe yaw 0.613648 degrees, bone yaw 0.033133 degrees, virtual stance error 0.00129617m. Inspected top/front renders: both shoes now follow travel direction instead of inheriting a guessed bind yaw. All four open clips retain their source rotations.
+- Posted e-idle review (CPU, 256 px).
+- Posted e-move review (CPU, 256 px).
+- Posted e-attack review (CPU, 256 px).
+- Posted e-hit review (CPU, 256 px).
+- Posted e-death review (CPU, 256 px).
+- Final CPU256/8-sample render, six refreshed AO/curvature maps, b/c/details/d/all five e/f/g reviews and editable masters updated. All five strips and eight decoded round3 MP4 frames opened and inspected. 512/256 round2 GPU evidence remains preserved; round3 native512 requires the lead GPU pass.
+- Final atlas validation PASS: 40 frames, 160px logical cells with trim offsets, 179204 bytes at Q85, lossless 8-bit alpha, source/master/grade hashes, margins, nonstatic motion, and exact terminal death hold. Geometry PASS: all five clips, original 19158 vertices/53 bones, stationary stone, finite/nonzero transforms, loops and held death; maximum ankle-to-shoe surface distance 0.026053m.
+- MP4 PASS: H.264 yuv420p, 1600x348, 240 frames, 8 seconds. Three delivery tests, 12 Python AST checks, both shell syntax checks, executable GPU entry point, working-file hygiene (18 changed/new files), corrupt-input rejection, CPU-provenance rejection and git diff --check PASS. Existing HEAD hygiene/public-claims pass; browser art gate still fails in node render-sets.mjs (exit 1); no browser art approval claimed. No Rust or runtime changes.
+- Honest final verdict: at 256px the stone finish, sleeve continuity and real shoe alignment improve; painted face/cloth/wood remain rich, but morion shading/profile, broad shoe anatomy, exposed stocking/cloth registration seams and final death pose remain visibly different. At 64px this is clearly the arquebusier, but helmet/leg contours still distinguish it. Captured walk is straighter; attack remains stiff and fall/sole presentation needs more craft. NOT PASS; no PASS marker written.
+- Lead handoff: ROUND=3 tools/art/anim3d/units/arquebusier/gpu.sh. No arguments; full GPU512 stage/clip/foot renders, retained 512/256 masters, provenance and stronger actual-shoe direction checks, 160px trimmed atlas/JSON, validation, f comparison and round3 MP4. Final Metal render and GPU visual sign-off remain pending. Unit feedback file remains absent; origin/master is already an ancestor of HEAD.
+- Commit attempted with required Co-Authored-By trailer; sandbox denied .git/worktrees/lane-20/index.lock. All changes remain uncommitted for the runner; exact message saved at masters/arquebusier/commit-message-r3.txt. Nothing pushed, no PR, no master merge.
