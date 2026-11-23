@@ -83,7 +83,7 @@ def empty(name,loc):
  o=bpy.data.objects.new(name,None);bpy.context.collection.objects.link(o);o.location=loc;return o
 
 def configure():
- sc=bpy.context.scene;sc.render.engine='CYCLES';sc.cycles.device=os.environ.get('CYCLES_DEVICE','CPU');sc.cycles.samples=int(os.environ.get('SAMPLES','6'));sc.cycles.use_denoising=True;sc.cycles.max_bounces=4;sc.cycles.diffuse_bounces=2;sc.render.use_persistent_data=True
+ sc=bpy.context.scene;sc.render.engine='CYCLES';sc.cycles.device=os.environ.get('CYCLES_DEVICE','CPU');sc.cycles.samples=int(os.environ.get('SAMPLES','6'));sc.cycles.use_denoising=True;sc.cycles.max_bounces=4;sc.cycles.diffuse_bounces=2;sc.render.use_persistent_data=False
  if sc.cycles.device=='GPU':
   prefs=bpy.context.preferences.addons['cycles'].preferences;prefs.compute_device_type='METAL';prefs.get_devices();found=False
   for d in prefs.devices:d.use=d.type=='METAL';found|=d.use
@@ -94,8 +94,8 @@ def configure():
  return sc
 
 # Camera coordinates in the original 256-pixel token. Positive depth is away from camera.
-UP=Vector((0,math.sin(math.radians(10)),math.cos(math.radians(10))))
-VIEW=Vector((0,-math.cos(math.radians(10)),math.sin(math.radians(10))))
+UP=Vector((0,math.sin(math.radians(8)),math.cos(math.radians(8))))
+VIEW=Vector((0,-math.cos(math.radians(8)),math.sin(math.radians(8))))
 CENTER=Vector((.30,0,.81));SPAN=2.0
 
 def P(x,y,depth=0):return CENTER+Vector(((x-128)*SPAN/256,0,0))+UP*((128-y)*SPAN/256)-VIEW*depth
@@ -192,10 +192,11 @@ def build():
  for x in (93,103):ribbon('linen collar',[P(x,60,-.10),P(x-3,68,-.12),P(x+2,75,-.13)],.024,linen,'spine_03')
  # Full-depth turned felt brim and crown, red feather with physical vanes/barbs.
  hc=P(102,35,.04);vs=[];fs=[]
+ outline=[(139,34),(133,39),(115,42),(98,48),(84,50),(76,47),(75,44),(81,39),(95,33),(108,30),(117,32),(129,35)]
  for j in range(8):
   t=j/7
   for k in range(96):
-   a=2*pi*k/96;rad=.095+.19*t;vs.append(hc+Vector((rad*sin(a),rad*.62*cos(a),.012*sin(a*2)*t+.032*t**3*cos(a))))
+   a=2*pi*k/96;u=k*len(outline)/96;i=int(u);f=u-i;outer=Vector(outline[i]).lerp(Vector(outline[(i+1)%len(outline)]),f);inner=Vector((103+10*cos(a),35+3*sin(a)));xy=inner.lerp(outer,t);vs.append(P(xy.x,xy.y,.04-(.045+.09*t)*sin(a)))
  for j in range(7):
   for k in range(96):i=j*96+k;n=j*96+(k+1)%96;fs.append((i,n,n+96,i+96))
  attach(bevel(solid(mesh('broad felt hat brim',vs,fs,dark),.008),.003),'head');attach(curve('hat worn rolled rim',vs[-96:]+[vs[-96]],.004,leather),'head')
@@ -210,7 +211,7 @@ def build():
  attach(curve('hat leather band',[hc+Vector((.110*sin(a),.088*cos(a),.028)) for a in [2*pi*k/96 for k in range(97)]],.010,leather),'head')
  feather=[P(94-29*t,28-10*sin(pi*t)+6*t**3,.055) for t in [k/32 for k in range(33)]];attach(curve('swept feather quill',feather,.002,linen),'head');vs=[];fs=[]
  for k,p in enumerate(feather):
-  t=k/32;width=.038*sin(pi*t)**.6
+  t=k/32;width=.070*sin(pi*t)**.6
   for side in (-1,0,1):vs.append(p+Vector((-.008*abs(side),.008*abs(side),side*width)))
  for k in range(32):
   for j in range(2):i=k*3+j;fs.append((i,i+1,i+4,i+3))
@@ -218,35 +219,43 @@ def build():
  for k in range(1,31):
   t=k/32
   for sg in (-1,1):attach(curve('red feather barb',[feather[k],feather[k]+Vector((-.025,-.003,sg*.040*sin(pi*t)**.5))],.0018,red),'head')
+ # A second layered ivory plume fills the painting's pale lower feather.
+ vs=[];fs=[]
+ for k in range(25):
+  t=k/24;c=P(97-25*t,29-4*sin(pi*t)+7*t*t,-.025);width=.028*sin(pi*t)**.55
+  for side in (-1,0,1):vs.append(c+UP*(side*width)-VIEW*(.009*(1-abs(side))))
+ for k in range(24):
+  for j in range(2):i=k*3+j;fs.append((i,i+1,i+4,i+3))
+ attach(solid(mesh('ivory plume vanes',vs,fs,linen),.002),'head')
  for k in range(18):
   a=-1.2+k*2.4/17;c=P(99,44,.1);attach(curve('hair lock',[c+Vector((.085*sin(a)+.005*sin(j+k),.075*cos(a),-.012*j)) for j in range(9)],.005,dark),'head')
  attach(curve('moustache',[P(111,53,-.10),P(116,54,-.1),P(119,56,-.1)],.005,dark),'head')
  # Carved solid stock, long cylindrical barrel, flintlock, trigger and socket bayonet.
  gun=empty('CTRL-musket',P(82,104,-.18));attach(gun,'hand_r')
- profile=[(64,110),(83,110),(96,106),(190,106),(190,101),(95,101),(83,103),(64,104)]
+ profile=[(33,121),(59,114),(83,110),(96,106),(190,106),(190,101),(95,101),(83,103),(33,104)]
  vs=[P(x,y,dep) for dep in (-.145,-.195) for x,y in profile];n=len(profile);fs=[tuple(range(n-1,-1,-1)),tuple(range(n,2*n))]+[(i,(i+1)%n,(i+1)%n+n,i+n) for i in range(n)]
  parent(bevel(mesh('carved walnut musket stock',vs,fs,wood),.003),gun)
- parent(curve('long steel barrel',[P(88,101,-.18),P(218,103,-.18)],.010,steel),gun)
- parent(curve('underbarrel ramrod',[P(96,108,-.19),P(212,109,-.19)],.003,steel),gun)
- for x in (97,160,191,211):parent(curve('steel barrel band',[P(x,102,-.18),P(x+1.5,102,-.18)],.013,steel),gun)
- parent(curve('dark muzzle bore',[P(218,103,-.18),P(219,103,-.18)],.006,dark),gun)
+ parent(curve('long steel barrel',[P(88,101,-.18),P(199,103,-.18)],.010,steel),gun)
+ parent(curve('underbarrel ramrod',[P(96,106,-.155),P(208,106,-.155)],.003,steel),gun)
+ for x in (97,191,197):parent(curve('steel barrel band',[P(x,102,-.18),P(x+1.5,102,-.18)],.013,steel),gun)
+ parent(curve('dark muzzle bore',[P(199,103,-.18),P(200,103,-.18)],.006,dark),gun)
  parent(curve('trigger guard',[P(81,107,-.23),P(83,113,-.23),P(89,113,-.23),P(91,107,-.23)],.0035,steel),gun)
  parent(curve('flintlock hammer',[P(88,103,-.23),P(86,96,-.23),P(91,95,-.23)],.004,steel),gun)
  parent(sphere('flintlock plate',P(85,104,-.23),(.025,.007,.013),steel),gun)
- parent(curve('bayonet socket',[P(211,103,-.18),P(211,108,-.18),P(219,108,-.18)],.005,steel),gun)
- v=[P(216,106,-.18),P(216,110,-.18),P(244,108,-.18),P(216,108,-.192)];parent(bevel(mesh('triangular steel bayonet',v,[(0,1,2),(0,2,3),(1,3,2),(0,3,1)],steel),.0005),gun)
- flash=sphere('muzzle flash',P(223,103,-.18),(.035,.020,.022),mat('flash amber',(.9,.4,.03)));parent(flash,gun);flash.hide_render=True
+ parent(curve('bayonet socket',[P(196,103,-.18),P(196,106,-.18),P(204,106,-.18)],.005,steel),gun)
+ v=[P(199,104,-.18),P(199,108,-.18),P(242,106,-.18),P(199,106,-.192)];parent(bevel(mesh('triangular steel bayonet',v,[(0,1,2),(0,2,3),(1,3,2),(0,3,1)],steel),.0005),gun)
+ flash=sphere('muzzle flash',P(203,103,-.18),(.035,.020,.022),mat('flash amber',(.9,.4,.03)));parent(flash,gun);flash.hide_render=True
  for i in range(4):
-  smoke=sphere('muzzle smoke '+str(i),P(225+(i%2)*2,101+(i-2)*2,-.17+i*.01),(.025,.026,.035),mat('smoke '+str(i),(.55,.54,.50)));parent(smoke,gun);smoke.hide_render=True
+  smoke=sphere('muzzle smoke '+str(i),P(205+(i%2)*2,101+(i-2)*2,-.17+i*.01),(.025,.026,.035),mat('smoke '+str(i),(.55,.54,.50)));parent(smoke,gun);smoke.hide_render=True
   nodes=smoke.active_material.node_tree.nodes;links=smoke.active_material.node_tree.links;output=nodes.get('Material Output')
   for link in list(output.inputs['Surface'].links):links.remove(link)
   volume=nodes.new('ShaderNodeVolumePrincipled');volume.inputs['Color'].default_value=(.68,.72,.78,1);volume.inputs['Density'].default_value=9;links.new(volume.outputs['Volume'],output.inputs['Volume'])
- bpy.ops.mesh.primitive_cylinder_add(vertices=96,radius=.57,depth=.065,location=(-.015,.04,.0675));base=bpy.context.object;base.name='GEO-stationary cream base';base.data.materials.append(stone);bevel(base,.012)
+ bpy.ops.mesh.primitive_cylinder_add(vertices=96,radius=.575,depth=.085,location=(-.025,-.07,.0575));base=bpy.context.object;base.name='GEO-stationary cream base';base.data.materials.append(stone);bevel(base,.012)
  nodes=stone.node_tree.nodes;links=stone.node_tree.links;bs=nodes.get('Principled BSDF');output=nodes.get('Material Output')
  ao=nodes.new('ShaderNodeAmbientOcclusion');ao.inputs['Distance'].default_value=.09
  geo=nodes.new('ShaderNodeNewGeometry');separate=nodes.new('ShaderNodeSeparateXYZ');links.new(geo.outputs['Normal'],separate.inputs[0])
- colors=nodes.new('ShaderNodeMixRGB');colors.inputs[1].default_value=(.65,.43,.23,1);colors.inputs[2].default_value=(.815,.624,.352,1);links.new(separate.outputs['Z'],colors.inputs[0]);links.new(colors.outputs[0],ao.inputs['Color'])
- pigment=nodes.new('ShaderNodeEmission');links.new(ao.outputs['Color'],pigment.inputs['Color']);camray=nodes.new('ShaderNodeLightPath');strength=nodes.new('ShaderNodeMath');strength.operation='MULTIPLY';strength.inputs[1].default_value=.65;links.new(camray.outputs['Is Camera Ray'],strength.inputs[0]);mix=nodes.new('ShaderNodeMixShader');links.new(strength.outputs[0],mix.inputs[0]);links.new(bs.outputs[0],mix.inputs[1]);links.new(pigment.outputs[0],mix.inputs[2]);links.new(mix.outputs[0],output.inputs['Surface'])
+ colors=nodes.new('ShaderNodeMixRGB');colors.inputs[1].default_value=(.86,.535,.29,1);colors.inputs[2].default_value=(1.,.725,.47,1);links.new(separate.outputs['Z'],colors.inputs[0]);grain=nodes.new('ShaderNodeMixRGB');grain.blend_type='MULTIPLY';grain.inputs[0].default_value=.065;links.new(colors.outputs[0],grain.inputs[1]);noise=next(n for n in nodes if n.type=='TEX_NOISE');links.new(noise.outputs['Fac'],grain.inputs[2]);links.new(grain.outputs[0],ao.inputs['Color'])
+ pigment=nodes.new('ShaderNodeEmission');links.new(ao.outputs['Color'],pigment.inputs['Color']);camray=nodes.new('ShaderNodeLightPath');strength=nodes.new('ShaderNodeMath');strength.operation='MULTIPLY';strength.inputs[1].default_value=.88;links.new(camray.outputs['Is Camera Ray'],strength.inputs[0]);mix=nodes.new('ShaderNodeMixShader');links.new(strength.outputs[0],mix.inputs[0]);links.new(bs.outputs[0],mix.inputs[1]);links.new(pigment.outputs[0],mix.inputs[2]);links.new(mix.outputs[0],output.inputs['Surface'])
  sc=configure();sc.world.use_nodes=True;sc.world.node_tree.nodes.get('Background').inputs[0].default_value=(.65,.70,.8,1);sc.world.node_tree.nodes.get('Background').inputs[1].default_value=.3
  bpy.ops.object.camera_add(location=CENTER+VIEW*8);cam=bpy.context.object;cam.name='CAM-painting';cam.rotation_euler=(-VIEW).to_track_quat('-Z','Y').to_euler();cam.data.type='ORTHO';cam.data.ortho_scale=SPAN;sc.camera=cam
  for name,loc,power,size,color in [('key',(-3,-4,5),280,2.8,(1,.96,.88)),('fill',(3,-3,3),56,3.,(.90,.94,1)),('rim',(1,2,4),84,2.,(.84,.91,1))]:
@@ -360,7 +369,7 @@ def animate(clip):
   for p in rig.pose.bones:p.matrix_basis=rest[p.name]
   bpy.context.view_layer.update()
   if motion:
-   phase=([0,.45,.8,1][i] if clip=='hit' else t)
+   phase=([0,.65,.35,0][i] if clip=='hit' else t)
    source=motion.sample(clip,phase);hipdelta=source['DEF-hips'].to_quaternion() @ source0['DEF-hips'].to_quaternion().inverted()
    carry=motion.sample('idle',phase) if clip=='move' else source;carry0=motion.sample('idle',0) if clip=='move' else source0
    for name,origin in MAP.items():
@@ -478,6 +487,13 @@ if mode=='preflight':
  configure();print('GPU preflight passed',flush=True)
 elif mode=='build':
  build();render('b-plain',M/'plain.blend',[1]);bpy.ops.wm.open_mainfile(filepath=str(M/'plain.blend'));configure();from bake import bake;bake();project();render('c-textured-lit',M/'musketman.blend',[1])
+elif mode=='geometry':build()
+elif mode=='project':
+ bpy.ops.wm.open_mainfile(filepath=str(M/'plain.blend'));configure();from bake import bake;bake();project()
+elif mode=='d':render('d-rig-poses',M/'clips/attack.blend',[1,3,5,7])
+elif mode=='frame':
+ from frame_jobs import render_one
+ render_one(configure)
 elif mode=='rest':
  render('b-plain',M/'plain.blend',[1]);render('c-textured-lit',M/'musketman.blend',[1])
 elif mode.startswith('animate-'):animate(mode[8:])

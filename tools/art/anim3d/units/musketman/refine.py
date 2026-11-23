@@ -1,6 +1,6 @@
 """Finish full-depth surfaces before freezing their rest-camera UV coordinates."""
 import bpy
-from mathutils import Vector
+from mathutils import Vector, Matrix
 from bpy_extras.object_utils import world_to_camera_view
 
 
@@ -30,8 +30,8 @@ def finish_surfaces():
     # Register complete hat meshes in the rest view; retain every vertex's depth.
     # This is a physical-coordinate fit, never texture warping or alpha clipping.
     for names, target, slope in [
-        (('broad felt hat brim', 'hat worn rolled rim'), (74, 28, 140, 47), -.10),
-        (('pinched felt hat crown', 'hat leather band'), (87, 18, 120, 37), -.10),
+        (('pinched felt hat crown', 'hat leather band'), (88, 18, 123, 36), -.10),
+        (('feather',), (60, 16, 100, 42), 0),
     ]:
         objects = [o for o in scene.objects if any(n in o.name for n in names)]
         entries = []
@@ -53,6 +53,37 @@ def finish_surfaces():
             vertex.co = obj.matrix_world.inverted() @ world
         for obj in objects:
             obj.data.update()
+    bpy.context.view_layer.update()
+    # Fit the outstretched support fingers in evaluated space. MPFB finger bones
+    # extend beyond the hand bone; fitting only the wrist produced a second hand
+    # beyond the painted grip. Inverse linear skinning preserves real anatomy.
+    body = bpy.data.objects['GEO-MPFB anatomical musketeer']
+    rig = bpy.data.objects['RIG-Musketman MPFB']
+    deps = bpy.context.evaluated_depsgraph_get()
+    evaluated = body.evaluated_get(deps)
+    surface = evaluated.to_mesh()
+    right = camera.matrix_world.to_quaternion() @ Vector((1, 0, 0))
+    for vertex in body.data.vertices:
+        weights = [(body.vertex_groups[g.group].name, g.weight) for g in vertex.groups
+                   if body.vertex_groups[g.group].name in rig.pose.bones]
+        hand_weight = sum(w for name, w in weights if name.endswith('_l') and
+                          name.startswith(('hand', 'index', 'middle', 'ring', 'pinky', 'thumb')))
+        if hand_weight < .2:
+            continue
+        world = evaluated.matrix_world @ surface.vertices[vertex.index].co
+        co = world_to_camera_view(scene, camera, world)
+        x = co.x * 256
+        delta = -.52 * max(0, x-133) * min(1, hand_weight)
+        if not delta:
+            continue
+        total = sum(w for _, w in weights)
+        skin = Matrix(((0.,)*4,)*4)
+        for name, weight in weights:
+            skin += (rig.pose.bones[name].matrix @ rig.data.bones[name].matrix_local.inverted()) * (weight/total)
+        world_skin = rig.matrix_world @ skin @ rig.matrix_world.inverted() @ body.matrix_world
+        vertex.co += world_skin.to_3x3().inverted() @ (right * delta * camera.data.ortho_scale/256)
+    evaluated.to_mesh_clear()
+    body.data.update()
     bpy.context.view_layer.update()
 
 

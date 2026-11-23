@@ -9,7 +9,40 @@ from pathlib import Path
 import shutil
 import tempfile
 import unittest
+from unittest import mock
+import subprocess
+from PIL import Image
 import finish
+import frame_jobs
+
+
+class CheckpointChecks(unittest.TestCase):
+    def test_interrupted_stage_keeps_verified_frame_but_no_manifest(self):
+        with tempfile.TemporaryDirectory(prefix='musketman-checkpoint-') as directory:
+            root = Path(directory)
+            (root/'clips').mkdir()
+            (root/'clips/hit.blend').write_bytes(b'isolated source fixture')
+            out = root/'renders/e-hit'
+            out.mkdir(parents=True)
+            with mock.patch.object(frame_jobs, 'MASTER', root), mock.patch.dict(os.environ, {'RESOLUTION': '16'}):
+                expected = dict(frame_jobs.settings('e-hit'), index=0, frame=1)
+                path = out/'00.png'
+                Image.new('RGBA', (16, 16), (50, 30, 20, 255)).save(path)
+                path.with_suffix('.json').write_text(json.dumps(dict(expected, png_sha256=frame_jobs.sha(path))))
+                (out/'render.json').write_text('old completed stage')
+                # Frame 0 must resume without a Blender call. A trapped frame 1
+                # is retried once, and must not leave a completed-stage receipt.
+                failed = subprocess.CompletedProcess(['blender'], 133)
+                with mock.patch.object(frame_jobs.subprocess, 'run', return_value=failed) as execute:
+                    with self.assertRaises(subprocess.CalledProcessError):
+                        frame_jobs.run('e-hit')
+                    self.assertEqual(execute.call_count, 2)
+                    self.assertTrue(all(call.kwargs['env']['RENDER_INDEX'] == '1' for call in execute.call_args_list))
+                self.assertFalse((out/'render.json').exists())
+                self.assertTrue(frame_jobs.matches(path, expected))
+                self.assertFalse(frame_jobs.matches(path, dict(expected, device='other-device')))
+                path.write_bytes(path.read_bytes()+b'changed')
+                self.assertFalse(frame_jobs.matches(path, expected))
 
 
 class DeliveryChecks(unittest.TestCase):

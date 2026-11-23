@@ -1,75 +1,74 @@
-# Musketman round-one review
+# Musketman round-two review
 
-Candidate only. No PASS marker. The game continues to display its painting.
+Candidate only; no PASS. The painting remains the visual target. No game rules
+or runtime UI changed.
 
-Completed: full-depth MPFB model and 53-bone rig; buff coat, red breeches/sash,
-stockings, leather boots, feathered hat, bandolier, solid musket/bayonet;
-materials and six real 512px AO/curvature maps; all five skeletal clips;
-512/256 CPU masters; b/c/details/d/e/f/g review sheets and five animated WebPs;
-trimmed 160px atlas and eight-second side-by-side H.264 movie. External outputs
-are in `~/LegatumRuns/anim-pilot/masters/musketman/` and `review/3d-v2/musketman-*`.
-The final CPU render used Blender 5.3 Cycles, 512px, 8 samples and denoising.
-GPU output has not been run or approved in this sandbox.
+Inspected the lead's actual GPU c/rest/idle/move images, all available strips and
+round1 movie frames before editing. The round-one GPU log ended in SIGTRAP while
+rendering attack frame 8, with no complete GPU receipt. Later strips and movie
+were previous CPU evidence. Those mixed outputs are preserved outside git in
+`masters/musketman/driver-r1-gpu/` and `review/3d-v2/musketman-round1-preserved/`.
+The log does not identify the underlying Metal failure.
 
-At native 256px, much of the painting's cloth, face and bandolier brushwork is
-preserved. The rest pose is recognizably close, but not hard to distinguish:
-the hat/feather contours differ; the base is too smooth and less warm; the gun
-has brighter, simpler steel and less convincing wood volume. There are small
-silhouette differences around the sleeves and breeches. At native 64px it
-reads as the same buff-and-red musketeer with the long horizontal weapon.
+Changes: fuller red/ivory plume, asymmetric thick brim, inverse-skinned support
+finger fit, complete solid gunstock butt, corrected barrel/ramrod/socket/blade,
+warmer and thicker stone with grain, and an 8-degree orthographic camera.
+The existing frozen painting projection, generated hidden-surface fills,
+beveled straps/buckles, geometric cloth folds, AO/curvature bakes, warm key,
+soft fill, cool rim and automatically sampled histogram grade remain in use.
+Captured hit motion now returns to guard in its fourth sample.
 
-The open walk shows alternating capture-driven footfalls with +X boot heading.
-Every sampled move frame has a sole at the stone contact height. This does not
-establish perfectly matched travel speed/no sliding: contact timing and the
-transition from the braced idle to walking still need visual refinement.
-Attack retains a two-hand grip and modest recoil; the smoke has nonzero volume.
-The captured hit bends naturally but ends in a bent pose. Death is clipped from
-CC0 Death01 with a diagonal fall heading to fit the fixed camera, a rigid weapon
-release and held terminal frames. Its elevated legs, exposed skin/clothing
-seams and uneven hidden-surface finish still look rough. Cloth is thick folded
-geometry with death contact shape keys, not a physically simulated garment.
+At native 256 px, the rest is closer in hat silhouette, gun shape and stone
+color. Coat/face/bandolier brushwork remains rich. It is still distinguishable:
+the brim and feather are more regular, the support grip is small, the steel
+looks simpler, and the stone lacks the painting's subtle edge variation. At
+native 64 px it clearly reads as the same buff/red musketman, with a closer
+base and plume; that is identity matching, not indistinguishability.
 
-Verification:
+All five clips exist and were inspected in strips, decoded atlas and extracted
+movie frames. The walk has a stiff carried weapon and needs ground-speed/entry
+review despite passing heading/contact checks. Hit recovery is better. Death
+still exposes abrupt sleeve/wrist transitions, patchy undersides and suspended
+legs; it does not meet the clean-clips bar. Cloth remains thick folded geometry
+with contact shape keys rather than a cloth simulation. No PASS was written.
 
-- Scene audit passes: 53 bones, five animated clips, source hashes, fixed base,
-  positive object scales, bone-length bounds and held terminal skeletal pose.
-- 163 projected meshes match the finished rest camera UVs, maximum sampled
-  error 0.0px; stone has no projected feet.
-- All eight move samples pass boot heading (`forward.x > .70`; observed about
-  1.0) and planted-sole height within 3mm of 0.104m. Maximum support-hand grip
-  error across the four carried-weapon clips is under 0.001mm.
-- Delivery validation passes: 40 frames, exact decoded alpha/trim reconstruction,
-  fps/loops, real transparency, distinct motion, held death, master/clip/render/
-  grade hashes. Atlas **189,256 bytes, quality 85** (quality 90 exceeded cap).
-- Video probe passes: H.264, yuv420p, 1600×348, 240 frames, 8 seconds, all five
-  decoded trimmed clips at 2× on cream.
-- Six delivery regressions pass, including stale source/atlas/rest rejection,
-  corrupt trim detection independent of the metadata hash, and rejecting CPU
-  output as a GPU receipt. Python syntax, Bash syntax and whitespace pass.
+Verified CPU output (Blender 5.3 Cycles, 512 px, 8 samples, denoising):
 
-Lead command, run from repository root, no script arguments:
+- All 62 stage frames completed through isolated processes, with verified
+  per-frame checkpoints. Genuine 512 and downsampled 256 masters are retained
+  externally; there are 40 clip frames in the required 8/8/10/4/10 counts.
+- Scene audit passed: 53-bone rig, frozen camera UV agreement, source hashes,
+  positive scales, stationary base, bone lengths, boot heading/contact,
+  support-hand bone constraint and held terminal death. These are limited
+  geometry checks, not a collision-free animation certificate.
+- Trimmed 160 px atlas: **185,124 bytes at WebP quality 85**. Quality 90 was
+  218,866 bytes. All 40 frames, alpha/offset reconstruction, clip settings,
+  motion, held death and source/grade/delivery hashes passed validation.
+- Seven regression tests passed, including stale output rejection, corrupt
+  trim detection, refusal of a CPU GPU-receipt, and interrupted-stage handling:
+  a valid earlier frame is reused, SIGTRAP retries once, and no completion
+  manifest survives failure.
+- H.264/yuv420p movie probe passed: 1600×348, 240 frames, 8 seconds, five
+  reconstructed clips at 2× on cream. `musketman-round2.mp4` and an extracted
+  contact sheet are in external `review/3d-v2/`.
+- Python syntax, Bash syntax and `git diff --check` passed. No Rust/WASM/app
+  build is applicable to these asset-generation-only changes.
+
+The revised GPU handoff isolates every frame in a fresh plain `blender` process,
+disables persistent Cycles data, binds checkpoints to source/settings/renderer
+and PNG hashes, and refuses incomplete or stale manifests. This mitigation
+passed CPU rendering and failure-path tests; Metal recovery remains unverified.
+Run from repository root, without script arguments:
 
 ```sh
-ROUND=1 tools/art/anim3d/units/musketman/gpu.sh
+ROUND=2 tools/art/anim3d/units/musketman/gpu.sh
 ```
 
-The script rebuilds and GPU-renders all stages at 512px/48 samples, retains
-512/256 masters, repacks, validates, emits the movie and verifies a GPU receipt.
-Review actual GPU output and obtain the project's Claude art review before
-integration. No Rust, rules or runtime UI code changed; no Cargo/WASM/app build
-was needed for this asset-only lane.
+It rebuilds, bakes, retargets, GPU-renders every stage at 512 px/48 samples,
+keeps 512/256 masters, packs and validates, writes the round movie and then a
+hash-bound GPU receipt. Review the resulting images before any art approval.
 
-Non-obvious finding: an ankle-to-ball bone axis is not the boot's forward axis.
-Straightening that bone during T-pose calibration tilted an already flat boot,
-raised the entire figure under floor contact, and cropped the feather. Calibrate
-against the flat mesh contact pose before retargeting; never patch foot yaw in
-the sampled animation. A captured full-length fall can exceed a camera framed
-for a braced standing figure; a single diagonal fall heading preserves the
-articulation while fitting the token, without stretching the body.
-
-Commit handoff: Git staging was blocked by the sandbox (`index.lock`: Operation
-not permitted), so the runner must commit these files. The requested co-author
-message is in external `review/3d-v2/musketman-commit-message.txt`. Commit-based
-repository/art gates and Claude art review remain for the runner/lead; the
-checks above ran directly against the actual candidate. `HEAD..origin/master`
-has zero commits, so no integration merge was needed.
+Git staging was blocked by sandbox permission on `.git/worktrees/lane-9/index.lock`.
+The runner must commit; the requested co-authored message is saved externally
+as `review/3d-v2/musketman-commit-message.txt`. HEAD already contains the fetched
+`origin/master`, so no integration merge was needed.

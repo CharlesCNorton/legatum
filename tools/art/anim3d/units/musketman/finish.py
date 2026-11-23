@@ -64,6 +64,11 @@ def pack():
  for stage in ['b-plain','c-textured-lit','d-rig-poses','g-feet-top','g-feet-front']+['e-'+c for c in CLIPS]:
   data=json.loads((M/'renders'/stage/'render.json').read_text());size=data['resolution']
   assert data['blend_sha256']==sha(stage_blend(stage)),f'Stale stage {stage}'
+  if 'frame_sha256' in data:
+   assert data['renderer_sha256']==sha(HERE/'scene.py')+sha(HERE/'frame_jobs.py'),f'Stale renderer {stage}'
+   assert len(data['frame_sha256'])==data['frames'],f'Incomplete stage {stage}'
+   for name,digest in data['frame_sha256'].items():
+    assert sha(M/'renders'/stage/name)==digest,f'Changed checkpoint {stage}/{name}'
   restdata=json.loads((M/'renders/c-textured-lit/render.json').read_text())
   assert all(data[k]==restdata[k] for k in ('engine','device','resolution','samples')),f'Mixed stage settings {stage}'
   if size<512 and (M/'512'/stage).exists():
@@ -100,7 +105,7 @@ def pack():
   if len(output.getvalue())<=200000:break
  else:raise RuntimeError('Atlas exceeds 200000 bytes at quality 75; frame count and quality floor retained')
  out=Path('app/src/assets/units/anim');out.mkdir(exist_ok=True,parents=True);(out/f'{SLUG}.webp').write_bytes(output.getvalue());(out/f'{SLUG}.json').write_text(json.dumps(meta,separators=(',',':'))+'\n')
- report={'bytes':len(output.getvalue()),'quality':quality,'frames':40,'alpha_levels':32,'atlas_sha256':hashlib.sha256(output.getvalue()).hexdigest(),'source_sha256':hashes,'renders':renders,'grade':grade,'master_sha256':current,'rest_sha256':sha(M/'renders/c-textured-lit/00.png'),'metadata_sha256':sha(out/f'{SLUG}.json'),'approval':'round 1 candidate; no PASS'}
+ report={'bytes':len(output.getvalue()),'quality':quality,'frames':40,'alpha_levels':32,'atlas_sha256':hashlib.sha256(output.getvalue()).hexdigest(),'source_sha256':hashes,'renders':renders,'grade':grade,'master_sha256':current,'rest_sha256':sha(M/'renders/c-textured-lit/00.png'),'metadata_sha256':sha(out/f'{SLUG}.json'),'approval':'round '+os.environ.get('ROUND','2')+' candidate; no PASS'}
  (M/'pack.json').write_text(json.dumps(report,indent=2));(V/f'{SLUG}-pack.json').write_text(json.dumps(report,indent=2));print('PACK',len(output.getvalue()),'bytes quality',quality)
  # Regenerate review images from the graded masters, preserving raw render outputs.
  for stage in ['b-plain','c-textured-lit','d-rig-poses','g-feet-top','g-feet-front']+['e-'+c for c in CLIPS]:review(stage,True)
@@ -167,6 +172,10 @@ def gpu_receipt():
   data=json.loads((M/'renders'/stage/'render.json').read_text())
   assert data['device']=='GPU' and data['engine']=='CYCLES' and data['resolution']==512 and data['samples']>=48,(stage,'not final GPU output')
   assert data['blend_sha256']==sha(stage_blend(stage))
+  assert data['renderer_sha256']==sha(HERE/'scene.py')+sha(HERE/'frame_jobs.py')
+  assert len(data['frame_sha256'])==data['frames']
+  for name,digest in data['frame_sha256'].items():
+   assert sha(M/'renders'/stage/name)==digest
   for size in (512,256):
    files=list((M/str(size)/stage).glob('[0-9][0-9].png'));assert len(files)==data['frames']
    assert all(Image.open(f).size==(size,size) for f in files)

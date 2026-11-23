@@ -107,7 +107,7 @@ tools/art/anim3d/render.sh audit
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
 
-## Infantry / musketman round 1
+## Infantry / musketman rounds 1–2
 
 The unit-local chapter and scripts are `units/musketman/`. This standing unit
 uses MPFB anatomy, a 53-bone game_engine rig, tailored buff coat/red breeches,
@@ -142,7 +142,7 @@ shared gate, sequential within this lane. CPU previews use Cycles; GPU final
 uses Cycles with `CYCLES_DEVICE=GPU`, Metal discovery and failure if absent.
 Effects use keyed visibility and nonzero, real-thickness volumes.
 
-`ROUND=1 tools/art/anim3d/units/musketman/gpu.sh` is the complete no-argument
+`ROUND=2 tools/art/anim3d/units/musketman/gpu.sh` is the complete no-argument
 lead handoff: rebuild/bake/retarget, GPU render of every stage, 512 and 256
 masters outside git, review sheets/WebPs, rest comparison, feet check,
 trimmed atlas, validation and an 8-second 1600×348 H.264/yuv420p movie with all
@@ -159,3 +159,25 @@ WebP quality tries 90/85/80/75 and refuses output above 200,000 bytes. Validatio
 reconstructs all alpha at trim offsets and rejects stale masters/frames/grades,
 clipping, missing motion or an unheld death. GPU masters are never synthesized
 by upscaling CPU previews. No app rendering or game rules change in this lane.
+
+Round 2 inspected the actual GPU rest/idle/move frames before changing anything.
+The lead's first GPU pass trapped during attack frame 8; the remaining strips
+and movie were older CPU evidence, not a completed GPU pass. That mixed evidence
+is preserved externally. The log alone does not establish the crash cause.
+Final renders now use `frame_jobs.py`: one plain PATH-gated Blender process per
+frame, persistent render caches off, one bounded SIGTRAP retry, and checkpoints
+bound to the blend, renderer, settings and PNG hashes. A stage publishes its
+manifest only after every checkpoint verifies. To resume just interrupted
+rendering with the same masters/settings, run `render.sh render`; `gpu.sh`
+deliberately rebuilds sources before its complete pass. Do not claim a Metal
+fix until the lead's GPU receipt exists.
+
+The revised rest fit uses an 8-degree orthographic camera, a thicker warm stone
+rim, a manually traced asymmetric full-depth brim, a fuller red plume and a
+separate thick ivory plume. Support fingers are fitted in evaluated space using
+inverse linear skinning; fitting only MPFB's wrist/hand bone left distal fingers
+outside the painted grip. The solid stock now includes the entire butt, and
+barrel/socket/ramrod geometry follows the painting. Frozen camera pigment and
+generated unseen fills remain on real meshes. Captured hit motion returns to
+guard in its fourth sample. Residual silhouette, surface and fall defects are
+recorded in the unit's `REVIEW.md`; none of these changes imply art approval.

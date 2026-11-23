@@ -3,7 +3,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/../../../../.."
 source tools/art/anim3d/env.sh
-export ROUND="${ROUND:-1}" CYCLES_DEVICE=GPU RESOLUTION=512 SAMPLES="${SAMPLES:-48}"
+export ROUND="${ROUND:-2}" CYCLES_DEVICE=GPU RESOLUTION=512 SAMPLES="${SAMPLES:-48}"
 unit=tools/art/anim3d/units/musketman
 python="$ANIM_ROOT/venv/bin/python"
 status="$ANIM_ROOT/review/3d-v2/musketman-gpu-status.txt"
@@ -22,12 +22,18 @@ command -v blender
 "$unit/render.sh" preflight
 stage=prepare
 "$python" "$unit/prepare.py"
-stage=build
-"$unit/render.sh" build
+stage=geometry
+"$unit/render.sh" geometry
+stage=plain
+"$python" "$unit/frame_jobs.py" b-plain
+stage=project
+"$unit/render.sh" project
+stage=rest
+"$python" "$unit/frame_jobs.py" c-textured-lit
 stage=animate
 "$unit/render.sh" animate
 stage=render
-"$unit/render.sh" render
+"$python" "$unit/frame_jobs.py" d-rig-poses e-idle e-move e-attack e-hit e-death g-feet-top g-feet-front
 stage=audit
 "$unit/render.sh" audit
 stage=pack

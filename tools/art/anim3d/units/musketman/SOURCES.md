@@ -8,3 +8,8 @@
 - Original musketman costume, hat, feather, musket, bayonet and attack keys: MIT scripts / CC BY 4.0 renders. Unit-local projection, bake and delivery helpers adapted from `astra/unit-anim-3d-barbarian-musketman` at `207d6ac4`; infantry standard read from `astra/unit-anim-3d-v2` at `d1d60f6f`. Standing geometry and locomotion mapping are specific to this unit.
 
 Assets, bakes, editable blends and 512/256 masters stay under `~/LegatumRuns/anim-pilot/`. No paid service, account, Mixamo, model download or upload.
+
+Round 2 reuses these exact pinned paintings, generated fills, MPFB and Quaternius
+sources. No new asset download or image generation. Hat/feather geometry,
+inverse-skinned grip fitting, physical stone calibration and isolated-frame
+rendering are original MIT code; renders remain project CC BY 4.0.
