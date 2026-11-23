@@ -745,3 +745,34 @@ fn rome_routes_a_veteran_founder_as_a_soldier_not_a_settler() {
         "a Settler's route avoids it: {settler:?}"
     );
 }
+
+#[test]
+fn rome_drills_a_recruit_on_a_standing_city_without_a_capture_forecast() {
+    let target = Hex::new(14, 8);
+    let view = ViewBuilder::new(24, 16)
+        .faction(Faction::Rome)
+        .city(1, ME, Hex::new(4, 8), 3)
+        .city(9, ENEMY, target, 3)
+        .unit(4, ME, UnitKind::Spearman, Hex::new(4, 8))
+        .unit(1, ME, UnitKind::Spearman, Hex::new(13, 8))
+        .unit(50, ENEMY, UnitKind::Spearman, target)
+        .build();
+    let hits = |drill: i32| {
+        let mut p = rome_planner(&view);
+        p.decisions.rome_drill_assault = drill;
+        assert!(p.view().at_war(ME, ENEMY));
+        p.plan_military();
+        p.orders.contains(&Order::MoveUnit {
+            unit: UnitId(1),
+            to: target,
+        })
+    };
+    assert!(
+        !hits(0),
+        "one recruit forecasts no capture, so it holds off"
+    );
+    assert!(
+        hits(1),
+        "a survivable city hit is XP whether or not it wins"
+    );
+}

@@ -992,7 +992,16 @@ impl Planner<'_> {
                 .filter(|h| u.pos.distance(*h) <= u.max_moves.max(1))
                 .filter_map(|h| {
                     let f = self.melee_forecast(u, h)?;
-                    (f.win_chance >= (if roman { 50 } else { 60 })
+                    // Gene `rome_drill_assault`: a hit on a standing city at War pays XP
+                    // whether or not it wins, so only the unit's survival is tested.
+                    let drill = roman
+                        && self.decisions.rome_drill_assault > 0
+                        && self
+                            .ctx
+                            .enemy_cities
+                            .iter()
+                            .any(|c| c.pos == h && c.hp > 0 && v.at_war(v.me, c.owner));
+                    ((drill || f.win_chance >= (if roman { 50 } else { 60 }))
                         && f.loss_chance <= (if roman { 35 } else { 20 }))
                     .then_some((f.win_chance, h))
                 })
