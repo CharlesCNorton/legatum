@@ -48,3 +48,25 @@ Published e-death review: CPU 256 px, 8 samples; fixed rest-derived grade.
 Published b-plain geometry checkpoint.
 Published b-plain geometry checkpoint.
 Published b-plain geometry checkpoint.
+Published b-plain geometry checkpoint.
+Published c review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Published d review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Published e-idle review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Plain side-view review caught per-vertex contact fitting stretching the feet and then torso. Replaced it with smooth, shared per-side camera-depth translation of the full figure. Reopened front/three-quarter/side clay: proportions restored; measured major-limb ratios 0.916–1.179 of original. Auxiliary cameras widened to prevent diagnostic clipping.
+Delivery regressions: 3/3 passed (no synthetic 512 masters from CPU256, GPU gate rejects CPU512, grading preserves every alpha byte). Round-one native CPU512 masters preserved separately; stale current 512 folder archived and no current512 claimed.
+Published e-move review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Published e-attack review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Published e-hit review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Published e-death review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Packed 40 trimmed 160 px frames, WebP quality 80, 176426 bytes.
+Published five-clip, 2x, cream-background H.264 review: barbarian-scout-round2.mp4
+Published b-plain geometry checkpoint.
+Published c review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Published d review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Published e-idle review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Published e-move review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Published e-attack review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Published e-hit review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Published e-death review: CPU 256 px, 8 samples; fixed rest-derived grade.
+Packed 40 trimmed 160 px frames, WebP quality 85, 197932 bytes.
+Published five-clip, 2x, cream-background H.264 review: barbarian-scout-round2.mp4

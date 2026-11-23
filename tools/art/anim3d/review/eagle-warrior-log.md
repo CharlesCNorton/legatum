@@ -26,3 +26,7 @@
 - Authored idle, move, attack, hit and terminal death on the MPFB skeleton; no mocap or cloth simulation claimed.
 - Authored idle, move, attack, hit and terminal death on the MPFB skeleton; no mocap or cloth simulation claimed.
 - Authored idle, move, attack, hit and terminal death on the MPFB skeleton; no mocap or cloth simulation claimed.
+- Corrected the custom visibility-tree miss by using evaluated scene rays; restored continuous shield weave and feather brushwork. Batched attribute writes after visibility sampling to avoid repeated dependency-graph invalidation.
+- Reworked death: folded knees, shield turns flat, whole club releases lower and lands above the actual stone. The previously floating terminal head is now grounded.
+- Full contact audit exposed native foot undersides below the sandals. Fitted foot-weighted vertices through inverse skin transforms along camera rays, preserving painted screen coordinates and all 19,158 original body vertices/53 bones; hidden MPFB helper vertices are excluded. All 40 poses now pass contact/framing checks.
+- Measured base top before final calibration: graded RGB198/177/146 vs source245/211/167. Raised camera-only cream pigment and restored a warmer, darker rim; physical shading still supplies contact shadows.
