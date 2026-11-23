@@ -199,3 +199,9 @@
 - Audit passed: five clips, source hashes, 53-bone rig, fixed base and positive object scales.
 - Driver round 3 opening critique (2026-11-23): opened GPU c/f comparison, all five e strips and MP4 contact frames first. Round2 GPU succeeded: 178740 bytes Q80, 40 frames, receipt and recovery tests passed. At256px rest paint is close but feather is a smooth upright arc instead of ragged left sweep, base is smooth/round and shadow-heavy, face edge differs. Death exposes severe stretched/conflicting pigment on head, sleeves and coat, with raised limbs and cluttered silhouette. At64px same kneeling musketman, but base/feather differ and death reads as a crumpled collage. No PASS. Preserved incoming evidence in masters/barbarian-musketman/driver-r2-gpu.
 - Read complete playbook, shared feedback1-23, prior log and provenance; unit FEEDBACK absent. Loaded all six Blender skills; round3 uses calibrated full-depth feather geometry, continuous sleeve skinning, semantic generated pigment fills, view-dependent projection blending, warm studio light and one fixed automatic histogram grade.
+- Built kneeling MPFB human, tailored ragged kit, feather hat, bandolier and solid horizontal musket.
+- Posted b-plain review (CPU, 256 px).
+- Finished-surface camera-only projection applied; physical stone excluded and generated fills retained.
+- Posted c-textured-lit review (CPU, 256 px).
+- Authored death skeletal action, 10 samples.
+- Posted e-death review (CPU, 256 px).
