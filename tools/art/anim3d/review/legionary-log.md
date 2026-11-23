@@ -31,3 +31,4 @@
 - Published e-hit: CYCLES/CPU, 512 px, 8 samples; visual review pending.
 - Archive clarification: `b-interim` and `c-interim` preserve early corrected revisions, not the very first exports; `e-death-first-strip` is the initial death strip. Each original stage was published when it existed, before subsequent overwrite.
 - Published e-death: CYCLES/CPU, 512 px, 8 samples; visual review pending.
+- Final-pass audit: idle/move/attack/hit clear; death pilum/scutum crossings fixed, but late folded knees reached -0.064 m and penetrated stone. Raised knee poles, tucked ankles inward, and added evaluated worn-geometry contact correction while preserving released equipment world transforms. Rebuilding death only; other four clips retain verified source bindings.

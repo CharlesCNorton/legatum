@@ -27,3 +27,50 @@ Rendered details: 2 PNGs, 256 px, CYCLES CPU, 8 samples.
 Published details review immediately; frozen grade dc1aef43ee3b, 256 masters retained.
 Rendered d: 4 PNGs, 256 px, CYCLES CPU, 8 samples.
 Published d review immediately; frozen grade dc1aef43ee3b, 256 masters retained.
+Rendered e-idle: 8 PNGs, 256 px, CYCLES CPU, 8 samples.
+Published e-idle review immediately; frozen grade dc1aef43ee3b, 256 masters retained.
+Published c review immediately; frozen grade dc1aef43ee3b, 256 masters retained.
+Published details review immediately; frozen grade dc1aef43ee3b, 256 masters retained.
+Rendered e-move: 8 PNGs, 256 px, CYCLES CPU, 8 samples.
+Published e-move review immediately; frozen grade dc1aef43ee3b, 256 masters retained.
+Rendered e-attack: 10 PNGs, 256 px, CYCLES CPU, 8 samples.
+Published e-attack review immediately; frozen grade dc1aef43ee3b, 256 masters retained.
+Rendered e-hit: 4 PNGs, 256 px, CYCLES CPU, 8 samples.
+Published e-hit review immediately; frozen grade dc1aef43ee3b, 256 masters retained.
+Rendered e-death: 10 PNGs, 256 px, CYCLES CPU, 8 samples.
+Published e-death review immediately; frozen grade dc1aef43ee3b, 256 masters retained.
+Saved-scene audit PASS: current source hashes, 128 track links, 18 wheels, stationary base, nonzero scales, loop closure keys and held death.
+Packed 40 trimmed 160 px frames: 188952 bytes, WebP quality 75.
+Validation PASS: counts, RGBA, rect bounds, transparent margins, five moving clips, held death, quality and size. Art approval remains separate.
+Encoded and ffprobe-verified autonomous-armour-round1.mp4: 8 s, 240 frames, 1600x348 H.264 yuv420p; decoded trimmed atlas.
+Finished materials: three actual AO/curvature bake pairs, generated unseen paint, 906 genuine projected meshes; all textures packed.
+Authored idle: 8 output samples at 10 fps; 152 mechanical controls; loop=True.
+Authored move: 8 output samples at 12 fps; 152 mechanical controls; loop=True.
+Authored attack: 10 output samples at 14 fps; 152 mechanical controls; loop=False.
+Authored hit: 4 output samples at 12 fps; 152 mechanical controls; loop=False.
+Authored death: 10 output samples at 10 fps; 152 mechanical controls; loop=False.
+Rendered c: 1 PNGs, 256 px, CYCLES CPU, 8 samples.
+Published c review immediately; frozen grade 8406e3dda124, 256 masters retained.
+Rendered details: 2 PNGs, 256 px, CYCLES CPU, 8 samples.
+Published details review immediately; frozen grade 8406e3dda124, 256 masters retained.
+Rendered d: 4 PNGs, 256 px, CYCLES CPU, 8 samples.
+Published d review immediately; frozen grade 8406e3dda124, 256 masters retained.
+Visual review: reduced rotating-gear projection after warped wheel details in first move strip; two tread pitches / 60-degree wheel period now wrap by repeated geometry. Remaining gaps: hull width, wheel proportions/darkness, panel registration and base contact lighting. Not art PASS.
+Rendered e-idle: 8 PNGs, 256 px, CYCLES CPU, 8 samples.
+Published e-idle review immediately; frozen grade 8406e3dda124, 256 masters retained.
+Rendered e-move: 8 PNGs, 256 px, CYCLES CPU, 8 samples.
+Published e-move review immediately; frozen grade 8406e3dda124, 256 masters retained.
+Rendered e-attack: 10 PNGs, 256 px, CYCLES CPU, 8 samples.
+Published e-attack review immediately; frozen grade 8406e3dda124, 256 masters retained.
+Rendered e-hit: 4 PNGs, 256 px, CYCLES CPU, 8 samples.
+Published e-hit review immediately; frozen grade 8406e3dda124, 256 masters retained.
+Rendered e-death: 10 PNGs, 256 px, CYCLES CPU, 8 samples.
+Measured revised CPU loops at 256 px: idle boundary/largest internal step 0.988; move 1.074 (first move was 1.656). Pixel metric supports smoother closure but is not an art verdict.
+Git staging blocked: .git/worktrees/lane-23/index.lock creation denied by sandbox; leave changes uncommitted for runner. origin/master is already an ancestor of HEAD.
+Published e-death review immediately; frozen grade 8406e3dda124, 256 masters retained.
+Saved-scene audit PASS: current source hashes, 128 track links, 18 wheels, stationary base, nonzero scales, loop closure keys and held death.
+Skills applied: blender-modeling (closed/beveled plates, bore, wheels); blender-materials (dielectric paint, metal, AO/curvature wear and generated fill); blender-lighting (warm key/cool rim/fill); blender-cameras (painting registration); blender-animation (mechanical hierarchy, keyed visibility, loop periods); blender-rendering (CPU drafts, explicit Metal GPU handoff, sequences and verified encoding).
+Final strip inspection: no obvious frame-edge clipping or ground movement; hit is a readable turret jolt; death settles and holds but damage is too restrained. 256 px still below painting; 64 px identity matches but running gear and width remain weaker. No PASS marker.
+Packed 40 trimmed 160 px frames: 196720 bytes, WebP quality 80.
+Validation PASS: counts, RGBA, rect bounds, transparent margins, five moving clips, held death, quality and size. Art approval remains separate.
+Encoded and ffprobe-verified autonomous-armour-round1.mp4: 8 s, 240 frames, 1600x348 H.264 yuv420p; decoded trimmed atlas.
