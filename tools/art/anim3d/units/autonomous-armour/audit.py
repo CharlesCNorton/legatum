@@ -20,17 +20,21 @@ for name,(count,fps,loop) in CLIPS.items():
         for a,b in zip(road,road[1:]):
             assert b.location.x-a.location.x>=2*ROAD_RADIUS,'Road tyres intersect'
     assert len(meshes)>300 and 'GEO-open muzzle brake' in bpy.data.objects
-    poses=[];contact=[]
+    poses=[];contact=[];contact_radius=[]
     shoes=[child for track in tracks for child in track.children if child.type=='MESH']
     for f in frames:
         sc.frame_set(f);bpy.context.view_layer.update()
         for o in meshes:
             assert min(abs(v) for v in o.scale)>.001,f'Unsafe tiny mesh scale: {o.name}'
         for o in tracks:
-            assert .29<=o.location.z<=1.18,'Track escaped capsule'
-        lowest=min((o.matrix_world @ v.co).z for o in shoes for v in o.data.vertices)
+            assert .29<=o.location.z<=1.6,'Track escaped raised-sprocket belt'
+        shoe_vertices=[o.matrix_world @ v.co for o in shoes for v in o.data.vertices]
+        lowest=min(v.z for v in shoe_vertices)
         assert .235<=lowest<=.25,f'Track contact escaped stone top: {lowest}'
         contact.append(lowest)
+        radius=max(math.hypot(v.x,v.y) for v in shoe_vertices if v.z<=.245)
+        assert radius<=2.36,f'Contact tread extends beyond the stone disc: {radius}'
+        contact_radius.append(radius)
         root=bpy.data.objects['RIG-chassis'];assert tuple(root.location)==(0,0,0)
         poses.append({'frame':f,'turret':list(bpy.data.objects['RIG-turret'].rotation_euler),'gun':list(bpy.data.objects['RIG-gun'].location)})
     if loop:
@@ -67,7 +71,7 @@ for name,(count,fps,loop) in CLIPS.items():
             max_uv_error=max(max_uv_error,error)
     assert max_uv_error<.02,f'Frozen paint drifted {max_uv_error} pixels'
     if name=='death':assert frames[-1]==frames[-2]
-    reports[name]={'meshes':len(meshes),'track_links':len(tracks),'frames':count,'poses':poses,'stationary_base':True,'safe_scales':True,'rest_uv_error_px':max_uv_error,'track_contact_z':contact}
+    reports[name]={'meshes':len(meshes),'track_links':len(tracks),'frames':count,'poses':poses,'stationary_base':True,'safe_scales':True,'rest_uv_error_px':max_uv_error,'track_contact_z':contact,'track_contact_radius':contact_radius}
 for i in range(3):
     for mode in ['AO','curvature']:assert (MASTER/'textures/baked'/f'{i}-{mode}.png').exists()
 assert len(json.loads((MASTER/'projection.json').read_text())['meshes'])>300

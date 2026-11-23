@@ -4,7 +4,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import bpy
 from mathutils import Vector
-from common import MASTER, SLUG, log, TRACK_H, TRACK_R, TRACK_Z, TRACK_LENGTH, ROAD_RADIUS
+from common import MASTER, SLUG, log, TRACK_R, TRACK_LENGTH, ROAD_RADIUS, ROAD_X, SPROCKETS, GEAR_X, GEAR_Y, trackpoint
 from math import sin, cos, pi
 (MASTER/'build-pending').write_text('Model rebuild started; finish and all clip builds required.\n')
 random.seed(23)
@@ -161,14 +161,14 @@ for x in [-1.40,-1.05,-.65,-.25,.15,.55,1.10]:
     for side in [-1,1]:cube('GEO-deck fastener',(x,side*.87,1.895),(.07,.09,.035),edge,bevel=.009)
 # Six separated road wheels each side; twelve repeated studs close the roll loop.
 for side in [-1,1]:
-    for i,x in enumerate([-1.30,-.78,-.26,.26,.78,1.30]):
-        w=empty(f'RIG-wheel-{side}-{i}',root,(x,side*1.03,.24+.041+.025/2+.065/2+ROAD_RADIUS));w['wheel']=True
+    for i,x in enumerate(ROAD_X):
+        w=empty(f'RIG-wheel-{side}-{i}',root,(x+GEAR_X,side*1.03+GEAR_Y/1.22,.326+ROAD_RADIUS));w['wheel']=True
         cyl('GEO-rubber wheel',(0,0,0),ROAD_RADIUS,.27,rubber,w,'Y')
         # A rolled rim and deep curved dish replace the stack of flat washers.
         # The closed profile has a real recessed well and a small central cap.
         profile=[(.249,.140),(.249,.158),(.238,.174),(.222,.176),
                  (.209,.160),(.191,.128),(.160,.112),(.096,.116),
-                 (.065,.145),(.045,.164),(0,.164),(0,.128)]
+                 (.080,.145),(.067,.164),(0,.164),(0,.128)]
         vs=[(r*cos(j*2*pi/48),side*d,r*sin(j*2*pi/48)) for r,d in profile for j in range(48)]
         fs=[]
         for k in range(len(profile)):
@@ -184,32 +184,27 @@ for side in [-1,1]:
         bpy.ops.mesh.remove_doubles(threshold=.0001);bpy.ops.mesh.normals_make_consistent(inside=False);bpy.ops.object.mode_set(mode='OBJECT')
         for j in range(12):
             a=j*2*pi/12;cyl('GEO-hub stud',(.09*cos(a),side*.128,.09*sin(a)),.010,.012,paint,w,'Y',8)
-    for x in [-1.49,1.49]:
-        w=empty(f'RIG-sprocket-{side}-{x}',root,(x,side*1.03,TRACK_Z));w['wheel']=True
+    for x,z in SPROCKETS:
+        w=empty(f'RIG-sprocket-{side}-{x}',root,(x+GEAR_X,side*1.03+GEAR_Y/1.22,z));w['wheel']=True
         cyl('GEO-sprocket',(0,0,0),TRACK_R-.04,.28,steel,w,'Y')
         cyl('GEO-sprocket face',(0,side*.15,0),.24,.026,paint,w,'Y')
         cyl('GEO-sprocket hub',(0,side*.18,0),.11,.04,edge,w,'Y')
         for j in range(12):
             a=j*2*pi/12;o=cube('GEO-sprocket tooth',((TRACK_R-.025)*cos(a),0,(TRACK_R-.025)*sin(a)),(.067,.30,.06),edge,w,.006);o.rotation_euler.y=-a
 # Individually linked track shoes, capsule path shared with the animation script.
-R=TRACK_R;H=TRACK_H;Z=TRACK_Z;LENGTH=TRACK_LENGTH
+LENGTH=TRACK_LENGTH
 
-def trackpoint(t):
-    d=(t%1)*LENGTH
-    if d<2*H:return (-H+d,Z+R,0)
-    d-=2*H
-    if d<pi*R:
-        a=pi/2-d/R;return(H+R*cos(a),Z+R*sin(a),pi/2-a)
-    d-=pi*R
-    if d<2*H:return(H-d,Z-R,pi)
-    d-=2*H;a=-pi/2-d/R;return(-H+R*cos(a),Z+R*sin(a),pi/2-a)
 # Shoes are actual meshes; shared datablocks reduce scene size and render setup cost.
 prototype=None
 for side in [-1,1]:
     for i in range(64):
-        x,z,a=trackpoint(i/64);link=empty(f'RIG-track-{side}-{i}',root,(x,side*1.04,z));link.rotation_euler.y=a;link['phase']=i/64;link['side']=side
+        x,z,a=trackpoint(i/64);link=empty(f'RIG-track-{side}-{i}',root,(x,side*1.04+GEAR_Y/1.22,z));link.rotation_euler.y=a;link['phase']=i/64;link['side']=side
         if prototype is None:
-            parts=[cube('GEO-track shoe',(0,0,0),(.126,.43,.065),steel,link,.007),cube('GEO-track ridge',(0,0,.041),(.032,.42,.025),edge,link,.004)]
+            parts=[cube('GEO-track shoe',(0,0,0),(LENGTH/64*.91,.43,.065),steel,link,.009)]
+            # Two broad raised worn pads and hinge ears, rather than smooth ladder rungs.
+            for yy in [-.108,.108]:
+                parts.append(cube('GEO-track pad',(0,yy,.041),(LENGTH/64*.67,.185,.025),steel,link,.009))
+            parts.append(cube('GEO-track ridge',(-LENGTH/64*.40,0,.032),(.018,.42,.022),edge,link,.004))
             for yy in [-.22,.22]:parts.append(cyl('GEO-track pin',(.045,yy,0),.022,.028,edge,link,'Y',12))
             prototype=parts
         else:
@@ -243,6 +238,20 @@ for o in list(root.children):
                 if v.co.z > 1.1: v.co.z += .10
     if o.name.startswith('RIG-antenna'):
         o.location.z += .08
+# Register front armour in full depth against the two source headlight centers.
+# A smooth displacement across the entire closed mesh preserves its thickness;
+# the upper rear deck and the turret keep their already-close registration.
+bpy.context.view_layer.update()
+right=cam.rotation_euler.to_matrix() @ Vector((1,0,0))
+up=cam.rotation_euler.to_matrix() @ Vector((0,1,0))
+for o in list(root.children):
+    if o.type!='MESH' or not o.name.startswith('GEO-'):continue
+    inv=o.matrix_world.inverted()
+    for v in o.data.vertices:
+        world=o.matrix_world @ v.co
+        q=max(0,min(1,(world.x-1.0)/.65));q=q*q*(3-2*q)
+        world+=q*(right*.13+up*(-world.y*.085))
+        v.co=inv @ world
 sc['track_gauge']=1.04*1.22
 sc['asset']=SLUG;sc['track_length']=LENGTH;sc['rig']='rigid parent hierarchy, independent turret/gun/sensors/wheels/128 track links'
 bpy.ops.wm.save_as_mainfile(filepath=str(MASTER/'model.blend'))

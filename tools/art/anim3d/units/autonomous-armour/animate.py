@@ -2,19 +2,9 @@
 import bpy, sys, math, json, hashlib
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parent))
-from common import MASTER, HERE, ASSETS, CLIPS, log, TRACK_H, TRACK_R, TRACK_Z, TRACK_LENGTH, MOVE_TRAVEL, ROAD_RADIUS
+from common import MASTER, HERE, ASSETS, CLIPS, log, TRACK_R, TRACK_LENGTH, MOVE_TRAVEL, ROAD_RADIUS, GEAR_Y, trackpoint
 from math import pi,sin,cos
-R=TRACK_R;H=TRACK_H;Z=TRACK_Z;LENGTH=TRACK_LENGTH
-
-def trackpoint(t):
-    d=(t%1)*LENGTH
-    if d<2*H:return(-H+d,Z+R,0)
-    d-=2*H
-    if d<pi*R:
-        a=pi/2-d/R;return(H+R*cos(a),Z+R*sin(a),pi/2-a)
-    d-=pi*R
-    if d<2*H:return(H-d,Z-R,pi)
-    d-=2*H;a=-pi/2-d/R;return(-H+R*cos(a),Z+R*sin(a),pi/2-a)
+LENGTH=TRACK_LENGTH
 
 def curves(action):
     if hasattr(action,'fcurves'):return list(action.fcurves)
@@ -43,7 +33,7 @@ for clip,(count,fps,loop) in CLIPS.items():
             sensor.rotation_euler.z=.04*sin(p)
             for o in wheels:o.rotation_euler.y=t*MOVE_TRAVEL/(TRACK_R if o.name.startswith('RIG-sprocket') else ROAD_RADIUS)
             for o in tracks:
-                x,z,a=trackpoint(o['phase']+5*t/64);o.location=(x,o['side']*sc['track_gauge'],z);o.rotation_euler.y=a
+                x,z,a=trackpoint(o['phase']+5*t/64);o.location=(x,o['side']*sc['track_gauge']+GEAR_Y,z);o.rotation_euler.y=a
             for i,o in enumerate(aerials):o.rotation_euler.x=.04*(sin(p+i*.8)-sin(i*.8))
         elif clip=='attack':
             recoil=[0,0,0,.15,.10,.045,.015,0,0,0][f-1]
@@ -81,7 +71,7 @@ for clip,(count,fps,loop) in CLIPS.items():
 def digest(path):return hashlib.sha256(path.read_bytes()).hexdigest()
 (MASTER/'build-inputs.json').write_text(json.dumps({
     'scripts':{name:digest(HERE/name) for name in ('scene.py','finish.py','animate.py','common.py','prepare.py')},
-    'assets':{name:digest(ASSETS/name) for name in ('painting-source.png','projection.png','painted-fill.png')},
+    'assets':{name:digest(ASSETS/name) for name in ('painting-source.png','projection.png','painted-fill.png','wheel-fill-source.png','wheel-pigment.png','tread-projection-mask.png')},
     'scenes':{name:digest(MASTER/name) for name in ['model.blend','plain.blend','finished.blend']+[f'clips/{clip}.blend' for clip in CLIPS]},
 },indent=2))
 (MASTER/'build-pending').unlink(missing_ok=True)

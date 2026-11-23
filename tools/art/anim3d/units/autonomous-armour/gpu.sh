@@ -5,7 +5,7 @@ cd "$(dirname "$0")/../../../../.."
 source tools/art/anim3d/env.sh
 export RENDER_ENGINE=CYCLES CYCLES_DEVICE=GPU
 export SAMPLES="${SAMPLES:-96}" RESOLUTION=512
-export ROUND="${ROUND:-2}"
+export ROUND="${ROUND:-3}"
 unit=tools/art/anim3d/units/autonomous-armour
 status="$REVIEW/autonomous-armour-gpu-status.txt"
 receipt="$REVIEW/autonomous-armour-gpu-round${ROUND}.json"

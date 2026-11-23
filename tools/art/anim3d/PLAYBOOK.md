@@ -251,3 +251,50 @@ This extends the existing raw/graded/atlas hashes. Never treat an older 512 fold
 as current evidence after CPU iteration; only fresh GPU manifests establish that.
 The current CPU/GPU difference and remaining silhouette/paint gaps belong in the
 unit log, and only actual visual acceptance can write PASS.
+
+### Autonomous armour driver round 3
+
+Preserve each incoming GPU receipt, master, review and decoded movie frame before
+CPU iteration (`masters/autonomous-armour/driver-round2-gpu/` for this round).
+The round-2 handoff succeeded: Cycles GPU96/512, all stages, Q85/192,282-byte atlas
+and verified eight-second H.264 movie. Its technical success did not meet the art
+bar: the uniform low running gear remained visibly different from the painting.
+
+The belt now follows a closed convex path around raised end sprockets and grounded
+road tyres. `common.py` owns that one path for construction and animation. Its
+length solves the rolling radii: five track pitches per move loop, five twelve-stud
+road-wheel periods and four twelve-tooth sprocket periods. Each link has two thick
+beveled pads, a hinge ridge and side pins. The entire front armour receives a smooth
+full-depth registration adjustment against the two painted headlight centers.
+The close upper-body orthographic framing remains; a conventional perspective fit
+could not simultaneously explain the painting's upper and lower proportions.
+Do not describe this as an exact solved camera.
+
+A new original generated wheel face is a **pigment texture on solid geometry**.
+`prepare.py` averages twelve angular samples to suppress baked directional light
+and make the pigment periodic at the wheel's physical closure. UVs follow the axle;
+physical lighting and live AO remain world-space. The exact prompt, generator ID,
+licence and immutable source hashes live in the unit's provenance files. Existing
+generated olive fills, real AO/Pointiness bakes, warm key/cool rim/fill and frozen
+histogram grade remain. Cloth and straps are absent from this machine's painting.
+
+Tread-only painting masks now permit frozen source pigment on individual moving
+shoes, excluding source wheels, hull and stone. Unseen shoe surfaces retain the
+physical/generated finish. Inspect the move seam and newly exposed surfaces:
+semantic masking prevents copied wheel hubs, but arbitrary tread pigment is not
+mathematically periodic when shoes advance. The decoded loop-seam check and visual
+review are both required. The top/front `g` diagnostic hides the upper body to show
+the actual running gear; the audit additionally bounds every sampled contact tread
+inside the stone's radius, not merely at the stone's height.
+
+The no-argument executable handoff defaults to round 3:
+
+```sh
+ROUND=3 tools/art/anim3d/units/autonomous-armour/gpu.sh
+```
+
+It still makes every stage, fresh 512/256 masters, the trimmed160 atlas/JSON,
+validated decoded-atlas movie and independent GPU provenance receipt. CPU previews
+are never 512 masters or a GPU sign-off. Check the current unit `REVIEW.md` and
+external step log for exact measurements and remaining defects; no script writes
+PASS automatically.

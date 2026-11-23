@@ -6,3 +6,8 @@
 - Existing Blender 5.3.0, GPL software: https://www.blender.org/. Pillow 13.0.0, MIT-CMU: https://pypi.org/project/pillow/13.0.0/. External asset inventory is `~/LegatumRuns/anim-pilot/assets/SOURCES.md`.
 
 Driver round 2 reuses these exact assets. Source cream grain is now mapped onto the real beveled disc with a mask excluding the vehicle and dark contact shadows. No new generated or downloaded assets.
+
+## Driver round 3, 2026-11-23
+
+- Wheel pigment: original built-in ImageGen, project CC BY 4.0, no public URL. Generation `01a20a96-9b27-74c3-9eea-54d74014ead9/exec-f3a9c7d4-77fd-4afc-a71a-8a38739d859e.png`; external `assets/autonomous-armour/wheel-fill-source.png`. Exact prompt in `wheel-fill.prompt.txt`; SHA256 pins in `assets.lock.json`. A twelve-angle mean removes directional baked lighting and makes the derived `wheel-pigment.png` periodic with twelve studs; the map colors solid tires/dishes, never image geometry.
+- Reuses the recorded original painting and generated olive fill. Raised end sprockets, a convex closed track belt, thick separated tread pads and live cavity shading are original MIT scripts / CC BY 4.0 rendered art. No third-party download or motion; this is a mechanical rig. Previous GPU evidence preserved in `masters/autonomous-armour/driver-round2-gpu/`.

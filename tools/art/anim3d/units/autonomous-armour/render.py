@@ -26,6 +26,11 @@ outputs=[]
 def render(name):
     p=folder/f'{name}.png';sc.render.filepath=str(p);bpy.ops.render.render(write_still=True);outputs.append(p)
 if stage=='g':
+    # Expose the actual running gear; a top view through the opaque hull cannot
+    # establish tread direction, axle clearance or contact over the move cycle.
+    for obj in bpy.data.objects:
+        if obj.type in {'MESH','CURVE'} and not obj.name.startswith('BASE-'):
+            obj.hide_render=not bool(obj.get('moving_gear',False))
     sc.camera.data.ortho_scale=5.5
     for view,pos,target in [('top',(0,0,12),(0,0,0)),('front',(12,0,3),(0,0,.6))]:
         sc.camera.location=pos;sc.camera.rotation_euler=(Vector(target)-sc.camera.location).to_track_quat('-Z','Y').to_euler()

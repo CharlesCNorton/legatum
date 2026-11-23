@@ -1,66 +1,68 @@
-# Autonomous armour — round 2 candidate
+# Autonomous armour — driver round 3 candidate
 
-**Not art-approved; no PASS marker.** All current previews are Cycles CPU,
-256 px, eight samples. Fresh 512 px GPU masters remain the host-side handoff.
-The original painting remains in the game; this is an unwired animation candidate.
+**No art PASS.** The round-2 GPU pass succeeded and is preserved in
+`masters/autonomous-armour/driver-round2-gpu/`. Current evidence is a complete
+Cycles CPU8/256 pass; new GPU512/256 output remains the host handoff.
 
-The broader hull/track gauge, shorter turret, lower camera and finished-surface
-projection fit the painting more closely. Source pigment is now camera-only,
-with visibility/facing masks and Standard/None display colour. Existing generated
-olive fill and three actual AO/curvature bake pairs remain. Rotating gear excludes
-misregistered source wheel images; neutralized generated pigment, live AO and
-physical shading finish the wheels. The stone has a deeper rim and real bevel.
+The closed belt now wraps raised end sprockets and grounded road wheels, with two
+beveled pads per link. One shared path controls all construction and animation.
+Full-depth front armour registration brings the headlights closer to the painting.
+Generated wheel pigment follows the solid wheel geometry; twelve-angle averaging
+removes directional shading and makes its detail periodic at the move seam.
+Tread-only painting masks restore source wear without copying wheel hubs or stone.
+The existing generated olive fill, actual AO/curvature bakes, product lights and
+frozen histogram grade remain. Source originals are checked against immutable pins.
 
-At 256 px, running-gear size/spacing, panel registration, antenna placement and
-stone shading still differ visibly. Wheels remain too uniform, and the base is
-flatter than the source. At 64 px it reads as the same autonomous tracked vehicle,
-but its silhouette and surface richness remain distinguishable. Whole-image alpha
-IoU improves from .90558 to .92617; above row 190 it improves from .88114 to .90816.
-Those measurements do not establish artistic equivalence.
+At **256 px**, the tread silhouette and front armour are closer, but the road
+wheels still have overly uniform size and flatter dishes than the painting, and
+some fender edges and masked stone shading remain distinguishable. The CPU antenna
+edges are noisy. At **64 px**, the same unit reads clearly with the right twin-aerial
+identity, but the running gear still differs. The orthographic camera is a close
+upper-body fit, not an exact solution to the painting's stylized perspective.
 
-All five clips retain 8/8/10/4/10 samples. Wheel rotation now agrees with tread
-travel, with matching physical distances and periodic geometry at the move seam.
-The wider gauge and tread-ridge thickness enter contact calculations. The saved
-scene audit measures contact at .239903–.240000 m against the .24 m stone top.
-Death has a stronger turret cant, drooped gun, disabled optics and bent aerials;
-the last two source frames are identical. Inspected all strips and decoded-video
-contact frames: no obvious camera-edge clipping or base movement. Motion remains
-restrained, and this inspection is not a full interpenetration solver.
+Inspected the rest/crossfade at both sizes, detail crops, every clip strip, exposed
+running-gear top/front views and decoded movie frames. No obvious frame-edge clipping,
+base movement or terminal-death jump; motion is restrained. The tread pigment is
+not exactly periodic, so fresh GPU move/seam inspection remains necessary. These
+checks are not a complete interpenetration solver or art approval.
 
-Final CPU delivery:
+Final CPU checks:
 
-- Forty 256 px clip masters, plus plain/rest/details/pose/top/front review masters.
-- Trimmed 160 px atlas: **198,432 bytes at WebP quality 90**, exact decoded 8-bit alpha.
-- Atlas validation passes counts, offsets, bounds, hashes, motion, held death and
-  loop seams; seam/largest internal-step ratios are idle 1.00283 and move .98190.
-- Saved-scene audit passes geometry, stationary base, rolling direction/distance,
-  track closure/contact, safe scales and frozen UVs (maximum error .0000153 px).
-- Round-two MP4: **1600×348, H.264/yuv420p, 240 frames, eight seconds**, all clips
-  side by side on cream, reconstructed from trimmed atlas offsets.
-- Eight Python files, two Bash entry points and diff whitespace pass syntax checks.
-- GPU missing-input and interrupted-rebuild preflights fail as intended and record
-  their failing stage. Independent GPU verification rejects CPU-labelled masters.
+- Forty transparent 256 px clip samples, counts **8/8/10/4/10**.
+- Trimmed160 atlas **197,852 bytes, WebP quality 90**; exact decoded alpha,
+  offsets, bounds, source/scene/render hashes and all five moving clips pass.
+- Idle/move seam ratios **0.997025 / 1.060665**; terminal death is pixel-identical.
+- Saved-scene audit passes 128 links, 16 wheel/sprocket controls, six separated
+  road tyres per side, rolling distances/direction, closed track loop, safe scales,
+  stationary base and frozen source UVs. Contact z **0.236888–0.240000 m** against
+  the 0.24m stone top; maximum contact radius **2.342375m < 2.36m** stone radius.
+- Movie: **1600x348, 240 frames, 8 seconds, H.264/yuv420p**, all clips side by side
+  at 2x on cream, reconstructed from trimmed atlas rectangles.
+- Eight Python AST parses, two Bash syntax checks, executable GPU script and diff
+  whitespace pass. Missing scenes fail the default-round3 preflight with status/no
+  receipt; stale generator and CPU-as-GPU evidence are independently rejected.
 
-The executable, no-argument host entry point, from this checkout, is:
+Comparison measurements: silhouette IoU **0.938916 -> 0.948480**, opaque RGB MAE
+**15.0481 -> 13.3438**, running-gear MAE **19.6063 -> 16.3347**. These compare old
+GPU96/512-downsampled output with new CPU8/256, not identical render conditions.
+
+From this checkout, run the complete no-argument GPU handoff:
 
 ```sh
-ROUND=2 tools/art/anim3d/units/autonomous-armour/gpu.sh
+ROUND=3 tools/art/anim3d/units/autonomous-armour/gpu.sh
 ```
 
-It audits, renders every stage serially on Cycles Metal GPU at 512 px / 96 samples,
-retains 512/256 masters, fits the frozen rest grade, packs/validates the atlas,
-encodes the decoded-atlas movie, then independently verifies stage provenance,
-export hashes and video metadata. It retains a transcript, failure status and a
-round-specific success receipt. Missing Metal fails instead of falling back to CPU.
-A build-pending marker prevents a stopped model/clip rebuild from appearing ready.
-No script writes PASS; the GPU images still need visual review against the painting.
+It makes every review stage, fresh 512/256 masters, the trimmed atlas/JSON,
+validation, round3 MP4 and independently checked GPU receipt. No script writes
+PASS. Existing top-level 512 files are from round 2 until this handoff replaces
+them; CPU manifests never count them as current evidence. The painting remains
+the game's art; this candidate does not change the runtime loader.
 
-Masters remain under `~/LegatumRuns/anim-pilot/masters/autonomous-armour/`, with
-round-one CPU evidence preserved in `round1-cpu/` and this round in `round2-cpu/`.
-Review images, movie, measurements, validation receipts and the honest step log
-are under `~/LegatumRuns/anim-pilot/review/3d-v2/autonomous-armour-*`.
+New built-in-generated asset:
+`~/LegatumRuns/anim-pilot/assets/autonomous-armour/wheel-fill-source.png`;
+exact prompt `wheel-fill.prompt.txt`, provenance `SOURCES.md`, hashes
+`assets.lock.json`. Original images stay external and are never committed.
 
-Commit attempt was blocked by sandbox denial of
-`.git/worktrees/lane-2/index.lock`; the runner must commit these changes.
-`origin/master` was verified as an ancestor of HEAD; no merge was needed.
-The lead still owns the GPU render and visual/art gate before integration.
+Commit is pending the runner: sandbox denied creation of
+`.git/worktrees/lane-17/index.lock`. No push or PR was attempted; `origin/master`
+is already an ancestor of this branch.
