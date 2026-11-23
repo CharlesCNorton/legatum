@@ -77,3 +77,17 @@ e-attack: 10 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
 e-hit: 4 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
 e-death: 10 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
 g: 16 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+c: 1 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+c: 1 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+Round 2 close-up review found broad far-wing/tail pigment loss: occluded root vertices on sparse span quads faded the original painting over whole faces. Added two levels of Simple surface subdivision before ray visibility/projection (depth and silhouette unchanged), then used actual visibility rather than grazing smooth normals on thin airfoils. Hidden surfaces retain the pinned image-generated olive fill. No new image service or assets.
+b: 3 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+d: 4 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+e-idle: 8 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+e-move: 8 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+e-attack: 10 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+e-hit: 4 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+e-death: 10 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+g: 16 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+c: 1 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+Top/nose diagnostic caught a genuine support depth gap invisible in the hero projection. Sheared the closed bracket toward its near-pod attachment, preserving the painting-view outline; collapse also folds that depth toward the disc. Inspecting alternate views is necessary even when the rest projection looks close.
+Repository checks against the previous HEAD: public-claims passed; hygiene mistook unspaced Python matrix operators for email addresses (spacing fixed); browser distinctness failed to launch in this sandbox. This is separate from the unit render/atlas checks; no browser art approval claimed.

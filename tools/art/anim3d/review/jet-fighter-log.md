@@ -59,3 +59,8 @@ e-attack: 10 frames at 256/64 from 256px CYCLES/CPU, 16 samples.
 e-hit: 4 frames at 256/64 from 256px CYCLES/CPU, 16 samples.
 e-death: 10 frames at 256/64 from 256px CYCLES/CPU, 16 samples.
 g: 16 frames at 256/64 from 256px CYCLES/CPU, 16 samples.
+Full CPU pass packed 180310 bytes q85 and passed audit, but visual review caught hidden-wing fill bleeding into its rest silhouette and intake rings misaligned in the nose view. Refined intake to physically coaxial circular stations and subdivided far-wing projection sampling before accepting this candidate; rerender required.
+b: 3 frames at 256/64 from 256px CYCLES/CPU, 16 samples.
+c: 1 frames at 256/64 from 256px CYCLES/CPU, 16 samples.
+e-death: 10 frames at 256/64 from 256px CYCLES/CPU, 16 samples.
+g: 16 frames at 256/64 from 256px CYCLES/CPU, 16 samples.
