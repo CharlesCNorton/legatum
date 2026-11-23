@@ -361,3 +361,14 @@
 - Published g-feet-check native 256/64 comparison; render device CPU.
 - Rendered c-details: 512px CYCLES CPU, 24 samples.
 - Published c-details native 256/64 comparison; render device CPU.
+- Added generated clean stone pigment on the real rounded disc with live AO; pinned ImageGen source/prompt and retained old GPU evidence. No alpha cutout or static feet/shadows.
+- Rebuilt sleeves as thick folded full-depth cuffs, corrected opposite-side winding and inverse-bound chest/arm seams. Added generated linen underpaint to soften exposed folds; refitted quiver shafts and far cheek plate.
+- Close-up review still exposed comb-like crest edges; replaced overlapping tufts with one continuous curved closed 45mm-deep fan, then rebuilt all five clips and rerendered every stage.
+- Final CPU checks PASS: all40 transparent Cycles256/24 frames, actual512/24 detail master, all interim sheets and five animated WebPs. Scene/projection/foot audit PASS; silhouette IoU .818856 (previous .807612); sampled stance residual .00000115m.
+- Final trimmed160 preview atlas PASS: 197360 bytes, Q90, 1222x750, all40 frames. Source/clip/grade/frame hashes, exact alpha/offset reconstruction, gutters, bounds, motion and held death PASS.
+- Final round3 movie PASS: H264/yuv420p 1600x348, 240 frames/eight seconds. Opened all strips, plain/feet views,512 details, decoded atlas and MP4 sample contact sheet.
+- Python AST18, Bash syntax3 and whitespace PASS. Inputs pinned; missing-input GPU preflight, stale-craft rejection and CPU-master rejection PASS. GPU handoff now checks packed input/craft hashes and gallery-frame hashes; no silent CPU fallback.
+- Honest final verdict: base, shoulder coverage and crest improved at256; elbow pigment patches, face/gaze, calf lacing and quiver feathers still differ. At64 same unit identity but stance/proportions remain distinguishable. Fall exposes simplified skin/cloth and unconvincing quiver contact; drawn-bow gait stiff. No archer-PASS.
+- Lead must run ROUND=3 tools/art/anim3d/units/archer/gpu.sh for fresh512/256 GPU masters, atlas and MP4. All current CPU evidence is labeled; previous GPU success does not approve this revision.
+- Final feedback check: no archer-FEEDBACK.md; shared feedback remains1-23. origin/master is already an ancestor of HEAD, so no merge/fetch.
+- Commit staging blocked by sandbox: cannot create .git/worktrees/lane-24/index.lock. Changes left uncommitted for runner; requested body at anim-pilot/archer-round3-commit-message.txt ends with Co-Authored-By: gpt-6-astra (Codex) <noreply@openai.com>. No push or PR attempted.
