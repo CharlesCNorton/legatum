@@ -43,3 +43,5 @@ Rendered c-textured-lit: 512px CYCLES GPU, 64 samples.
 Rendered four keyed attack rig poses.
 Rendered idle: 8 frames, 512px, 64 samples, GPU.
 Rendered move: 8 frames, 512px, 64 samples, GPU.
+Rendered attack: 10 frames, 512px, 64 samples, GPU.
+Rendered hit: 4 frames, 512px, 64 samples, GPU.

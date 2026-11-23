@@ -46,3 +46,16 @@ GPU round 1: all stages rendered at 512; 256 masters, validated 160 atlas and 8-
 Round 2 GPU-first critique: opened c, rest-pose split/crossfade, all five e strips, details and four decoded round1.mp4 frames before edits. GPU pass succeeded (185264 bytes, q80, 40 samples); archived under masters/jet-fighter/driver-r1-gpu.
 At 256px: convincing shared silver brushwork and overall silhouette, but intake is a bright shallow metal cup with a visible closing wall, canopy has a spurious gold line and too little crown, near-wing edge too dark, far-wing revealed during crash is a pale blank rectangle. Cream disc loses the painted lower rim. At 64px: unmistakably same unit, but nose value and crash wing break identity. Idle/move loops subtle; attack barely reads, hit reads, death bends the wing like rubber. No PASS.
 Read all 134 PLAYBOOK lines, full shared feedback 1-23, previous log and GPU log; unit-specific feedback absent. Applied all six Blender skills: modeling closed intake/wing volumes, materials projection and unseen silver fill, lighting warm key/cool rim, cameras fixed source registration, animation impact timing, rendering CPU verification and guarded GPU handoff. Cloth/straps and animal/human retarget are not applicable to this aircraft.
+b: 3 frames at 256/64 from 256px CYCLES/CPU, 12 samples.
+c: 1 frames at 256/64 from 256px CYCLES/CPU, 12 samples.
+e-death: 10 frames at 256/64 from 256px CYCLES/CPU, 12 samples.
+First CPU revision inspected: intake no longer a chrome cup, canopy crown closer, wing damage has an angular crease. Far wing still too long/blank during bank; shortened its hidden span to near-wing depth and added a true span/chord UV carrying this aircraft panel pigment mixed with existing generated brushwork. Increased physical muzzle streak thickness/length for 64px attack readability.
+b: 3 frames at 256/64 from 256px CYCLES/CPU, 16 samples.
+c: 1 frames at 256/64 from 256px CYCLES/CPU, 16 samples.
+d: 4 frames at 256/64 from 256px CYCLES/CPU, 16 samples.
+e-idle: 8 frames at 256/64 from 256px CYCLES/CPU, 16 samples.
+e-move: 8 frames at 256/64 from 256px CYCLES/CPU, 16 samples.
+e-attack: 10 frames at 256/64 from 256px CYCLES/CPU, 16 samples.
+e-hit: 4 frames at 256/64 from 256px CYCLES/CPU, 16 samples.
+e-death: 10 frames at 256/64 from 256px CYCLES/CPU, 16 samples.
+g: 16 frames at 256/64 from 256px CYCLES/CPU, 16 samples.
