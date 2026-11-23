@@ -5,6 +5,16 @@ Trailer and tagline rulings, music, combat animations, construction rounds, wond
 Moved verbatim from SKILL.md on 2026-11-22 (original order kept). The current rules are in SKILL.md; where this file disagrees with SKILL.md, SKILL.md wins.
 
 ## Marketing: trailers, README media and taglines (user, 2026-10-24, after the first teaser)
+
+- **Classical harbour pilot v3 direction (user, 2026-11-22):** keep v2's water-level
+  ship-following crane, wide reveal, composition and blue sea. Reject the clean
+  city-builder/toy finish: sample the era painting's own strokes into material
+  maps and judge the frame grab beside that painting. Add lit rising smoke,
+  particle foam rather than dashed wakes, atmospheric painted mountains and
+  solid oar blades. Every Blender invocation, including dry-run and bake, goes
+  through the lead's machine-wide lock; the editing agent only prepares textures,
+  reads the script and runs Python syntax compilation.
+
 User verdict on teaser v1: "weird choices were made here. please do better."
 - **It must make you want to play:** "It should feel inspiring. it should show combat, it should feel cool." Never "here are some random images and some random and often not that important parts of gameplay".
 - **Lead with the exciting stuff:** combat, armies, sieges and captures, empires at scale, era-defining moments. Don't feature minor UI mechanics: a whole shot on "you can decline a call to arms" was called "not an interesting feature".

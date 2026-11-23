@@ -14,14 +14,16 @@ import time
 # Also cap Mantaflow/OpenMP, independently of the render thread setting.
 os.environ['OMP_NUM_THREADS'] = '6'
 import bpy
-from mathutils import Vector
+from mathutils import Euler, Matrix, Vector
 
 FRAMES = 144
-SIM_START = -23  # One second of wind/fire pre-roll, never delivered.
+SIM_START = -71  # Three seconds let a tall smoke column establish before delivery.
 ROOT = Path(__file__).resolve().parents[4]
 PAINTING = ROOT / 'app/src/assets/eras/classical-1920.jpg'
 RNG = random.Random(27)
 CLOTH = []
+TEXTURES = None
+GAS_RESOLUTION = 80
 IVORY = (0.76, 0.65, 0.45, 1)
 OCHRE = (0.43, 0.27, 0.10, 1)
 TERRA = (0.39, 0.12, 0.055, 1)
@@ -55,6 +57,8 @@ def mesh(name, verts, faces, mat=None):
     bpy.context.collection.objects.link(ob)
     if mat:
         data.materials.append(mat)
+        if 'paint_family' in mat:
+            stroke_uv(data)
     return ob
 
 
@@ -72,6 +76,8 @@ def cube(name, loc, size, mat=None, parent=None):
     bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
     if mat:
         ob.data.materials.append(mat)
+        if 'paint_family' in mat:
+            stroke_uv(ob.data)
     ob.parent = parent
     return ob
 
@@ -84,6 +90,8 @@ def sphere(name, loc, size, mat=None, parent=None):
     bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
     if mat:
         ob.data.materials.append(mat)
+        if 'paint_family' in mat:
+            stroke_uv(ob.data)
     ob.parent = parent
     return ob
 
@@ -97,6 +105,8 @@ def rod(name, a, b, radius, mat, parent=None, vertices=10):
     ob.name = name
     ob.rotation_euler = (b-a).to_track_quat('Z', 'Y').to_euler()
     ob.data.materials.append(mat)
+    if 'paint_family' in mat:
+        stroke_uv(ob.data)
     ob.parent = parent
     return ob
 
@@ -114,60 +124,71 @@ def drive(ob, path, index, expression):
     fc.driver.expression = expression
 
 
-def paint(name, color):
-    """Object-space pigment strokes and impasto; real lights still cast shadows.
+def stroke_uv(data):
+    """Rest-space planar UVs in metres, with consistent tangent handedness.
 
-    Principled preserves coloured fill/specular and also permits CPU look checks.
-    The normal ramp softly groups pigment values rather than flattening illumination
-    through Shader-to-RGB followed by emission (the v1 grey-card failure).
+    No Generated coordinates: those stretch with dimensions/deformation. A sail's
+    UVs stay attached to its cloth and a ship's brushwork follows its hull.
     """
+    uv = data.uv_layers.active or data.uv_layers.new(name='Pigment rest space')
+    for poly in data.polygons:
+        axis = max(range(3), key=lambda i: abs(poly.normal[i]))
+        sign = 1 if poly.normal[axis] >= 0 else -1
+        for li in poly.loop_indices:
+            x, y, z = data.vertices[data.loops[li].vertex_index].co
+            uv.data[li].uv = ((y, sign*z) if axis == 0 else
+                              (z, sign*x) if axis == 1 else (x, sign*y))
+
+
+def texture_image(filename, data=False):
+    image = bpy.data.images.load(str(TEXTURES / filename), check_existing=True)
+    image.colorspace_settings.name = 'Non-Color' if data else 'sRGB'
+    if not image.packed_file:
+        image.pack()
+    return image
+
+
+def paint(name, color, family='marble', tile_metres=3.6, tint=None):
+    """Albedo, tangent normals and roughness extracted from the era painting."""
     mat = bpy.data.materials.new(name)
     mat.diffuse_color = color
     mat.use_nodes = True
+    mat['paint_family'] = family
     t = mat.node_tree
     bsdf = t.nodes.get('Principled BSDF')
     bsdf.inputs['IOR'].default_value = 1.46
-    coord = node(t, 'ShaderNodeTexCoord', 'Stable object-space brushwork')
-    mapping = node(t, 'ShaderNodeVectorMath', 'Elongated pigment strokes')
-    mapping.operation = 'MULTIPLY'
-    mapping.inputs[1].default_value = (1.8, 7.0, 3.5)
-    t.links.new(coord.outputs['Object'], mapping.inputs[0])
-    noise = node(t, 'ShaderNodeTexNoise', 'Broken bristle marks')
-    noise.inputs['Scale'].default_value = 2.4
-    noise.inputs['Detail'].default_value = 3
-    noise.inputs['Roughness'].default_value = .72
-    t.links.new(mapping.outputs[0], noise.inputs['Vector'])
-    pigment = node(t, 'ShaderNodeValToRGB', 'Ochre and ivory pigment variation')
-    pigment.color_ramp.elements[0].position = .22
-    pigment.color_ramp.elements[0].color = tuple(c*.58 for c in color[:3])+(1,)
-    pigment.color_ramp.elements[1].position = .78
-    pigment.color_ramp.elements[1].color = tuple(min(1,c*1.24+.025) for c in color[:3])+(1,)
-    t.links.new(noise.outputs['Fac'], pigment.inputs[0])
-    geo = node(t, 'ShaderNodeNewGeometry', 'Paint plane orientation')
-    dot = node(t, 'ShaderNodeVectorMath', 'Sun-facing paint planes')
-    dot.operation = 'DOT_PRODUCT'
-    dot.inputs[1].default_value = (-.68, -.53, .50)
-    t.links.new(geo.outputs['Normal'], dot.inputs[0])
-    bands = node(t, 'ShaderNodeValToRGB', 'Soft grouped paint values')
-    bands.color_ramp.interpolation = 'EASE'
-    bands.color_ramp.elements[0].position = .05
-    bands.color_ramp.elements[0].color = (.65,.73,.84,1)
-    bands.color_ramp.elements[1].position = .65
-    bands.color_ramp.elements[1].color = (1,.97,.88,1)
-    mid = bands.color_ramp.elements.new(.36); mid.color=(.87,.88,.88,1)
-    t.links.new(dot.outputs['Value'], bands.inputs[0])
-    mix = node(t, 'ShaderNodeMixRGB', 'Pigment times soft bands')
-    mix.blend_type = 'MULTIPLY'; mix.inputs[0].default_value = .5
-    t.links.new(pigment.outputs[0],mix.inputs[1]); t.links.new(bands.outputs[0],mix.inputs[2])
-    t.links.new(mix.outputs[0],bsdf.inputs['Base Color'])
-    rough = node(t, 'ShaderNodeMapRange', 'Dry brush roughness')
-    rough.inputs['To Min'].default_value=.48; rough.inputs['To Max'].default_value=.91
-    t.links.new(noise.outputs['Fac'],rough.inputs['Value'])
-    t.links.new(rough.outputs[0],bsdf.inputs['Roughness'])
-    bump = node(t,'ShaderNodeBump','Subtle pigment relief')
-    bump.inputs['Strength'].default_value=.22; bump.inputs['Distance'].default_value=.045
-    t.links.new(noise.outputs['Fac'],bump.inputs['Height'])
-    t.links.new(bump.outputs[0],bsdf.inputs['Normal'])
+    bsdf.inputs['Metallic'].default_value = 0
+    bsdf.inputs['Specular IOR Level'].default_value = .24
+    coord = node(t, 'ShaderNodeTexCoord', 'Rest-space painted strokes')
+    mapping = node(t, 'ShaderNodeVectorMath', 'Brush size in world metres')
+    mapping.operation = 'SCALE'
+    mapping.inputs['Scale'].default_value = 1 / tile_metres
+    t.links.new(coord.outputs['UV'], mapping.inputs[0])
+    maps = {}
+    for suffix in ('albedo', 'normal', 'roughness'):
+        tex = node(t, 'ShaderNodeTexImage', f'Painting {family} {suffix}')
+        tex.image = texture_image(f'{family}-{suffix}.png', suffix != 'albedo')
+        tex.extension = 'REPEAT'
+        tex.interpolation = 'Linear'
+        t.links.new(mapping.outputs[0], tex.inputs['Vector'])
+        maps[suffix] = tex
+    albedo = maps['albedo'].outputs['Color']
+    if tint is not None:
+        mix = node(t, 'ShaderNodeMixRGB', 'Pigment glaze over sampled brushwork')
+        mix.blend_type = 'MULTIPLY'
+        mix.inputs[0].default_value = 1
+        mix.inputs[2].default_value = tint
+        t.links.new(albedo, mix.inputs[1])
+        albedo = mix.outputs[0]
+    t.links.new(albedo, bsdf.inputs['Base Color'])
+    t.links.new(maps['roughness'].outputs['Color'], bsdf.inputs['Roughness'])
+    normal = node(t, 'ShaderNodeNormalMap', 'Luminance-derived bristle relief')
+    normal.space = 'TANGENT'
+    normal.inputs['Strength'].default_value = .65
+    t.links.new(maps['normal'].outputs['Color'], normal.inputs['Color'])
+    t.links.new(normal.outputs['Normal'], bsdf.inputs['Normal'])
+    if family in ('cloth', 'blue_cloth'):
+        bsdf.inputs['Sheen Weight'].default_value = .18
     return mat
 
 
@@ -185,64 +206,54 @@ def emission(name, color, strength):
 
 
 def backdrop():
-    # Explicit crop: ONLY sky and far mountains left of the painted acropolis.
-    # Blender pixel rows are bottom-up. No painted boats, buildings or people survive.
-    source = bpy.data.images.load(str(PAINTING))
-    pixels = array('f', [0]) * (source.size[0]*source.size[1]*4)
-    source.pixels.foreach_get(pixels)
-    x0, x1, top, bottom = 460, 890, 15, 200
-    w, h = x1-x0, bottom-top
-    crop = array('f')
-    for y in range(source.size[1]-bottom, source.size[1]-top):
-        start = (y*source.size[0]+x0)*4
-        crop.extend(pixels[start:start+w*4])
-    image = bpy.data.images.new('Painting - sky and distant mountains ONLY', w, h)
-    image.pixels.foreach_set(crop)
-    image.pack()
-    bpy.data.images.remove(source)
-    mat = emission('Distant painted sky', (1, 1, 1, 1), .9)
-    t = mat.node_tree
-    tex = node(t, 'ShaderNodeTexImage', 'Upper-left skyline crop')
-    tex.image = image
+    """Painted sky and two alpha-cut mountain plates with aerial perspective."""
+    def card(name, radius, low, high, material, offset=0):
+        verts, faces = [], []
+        for i in range(97):
+            angle = math.radians(-100 + 200*i/96)
+            for z in (low, high):
+                verts.append((radius*math.sin(angle), radius*math.cos(angle), z))
+        for i in range(96):
+            faces.append((2*i, 2*i+1, 2*i+3, 2*i+2))
+        ob = mesh(name, verts, faces, material)
+        uv = ob.data.uv_layers.new()
+        for poly in ob.data.polygons:
+            for li in poly.loop_indices:
+                vi = ob.data.loops[li].vertex_index
+                uv.data[li].uv = (vi//2/96 + offset, vi % 2)
+        return ob
+
+    sky = emission('Distant painted sky', (1, 1, 1, 1), .9)
+    t = sky.node_tree
+    tex = node(t, 'ShaderNodeTexImage', 'Painting sky crop')
+    tex.image = texture_image('sky.png')
+    tex.extension = 'EXTEND'
     t.links.new(tex.outputs['Color'], t.nodes['Distant painted sky'].inputs[0])
     aov = node(t, 'ShaderNodeOutputAOV', 'Backdrop light wrap matte')
     aov.aov_name = 'BackdropMask'
     aov.inputs['Value'].default_value = 1
-    verts, faces = [], []
-    for i in range(81):
-        a = math.radians(-100+200*i/80)
-        for z in (-40, 260):
-            verts.append((200*math.sin(a), 200*math.cos(a), z))
-    for i in range(80):
-        faces.append((2*i, 2*i+1, 2*i+3, 2*i+2))
-    ob = mesh('GEO-curved-sky-and-mountain-card', verts, faces, mat)
-    uv = ob.data.uv_layers.new()
-    for poly in ob.data.polygons:
-        for li in poly.loop_indices:
-            vi = ob.data.loops[li].vertex_index
-            uv.data[li].uv = (vi//2/80, vi % 2)
-    ob.pass_index = 1
-    ob['source_crop_xy_top_origin'] = [x0, top, x1, bottom]
-    # Actual intervening ridges change parallax and occlusion during the crane.
-    for layer,(y,base,height,col) in enumerate(((112,-2,25,(.25,.35,.44,1)),
-                                               (88,-2,17,(.23,.31,.35,1)),
-                                               (67,-2,10,(.20,.27,.26,1)))):
-        ridge_mat=paint(f'Distant mountain pigment {layer}',col)
-        verts,faces=[],[]
-        nx,ny=129,13
-        for j in range(ny):
-            depth=j/(ny-1)
-            for i in range(nx):
-                x=-150+i*2.5
-                peak=height*(.60+.19*math.sin(i*.19+layer)+.10*math.sin(i*.51)+.05*math.sin(i*1.17))
-                z=base+peak*math.sin(math.pi*depth)**.8
-                verts.append((x,y-8+depth*32,z))
-        for j in range(ny-1):
-            for i in range(nx-1):
-                a=j*nx+i
-                faces.append((a,a+1,a+nx+1,a+nx))
-        ridge=mesh('GEO-parallax-mountain-ridge',verts,faces,ridge_mat)
-        for poly in ridge.data.polygons: poly.use_smooth=True
+    ob = card('GEO-curved-painted-sky', 200, -35, 155, sky)
+    for layer, (radius, low, high, haze, shift) in enumerate(
+            ((150, -12, 38, .42, 0), (122, -15, 25, .16, .22))):
+        mat = emission(f'Painted aerial mountain {layer}', (1, 1, 1, 1), .82)
+        mat.surface_render_method = 'DITHERED'
+        t = mat.node_tree
+        tex = node(t, 'ShaderNodeTexImage', 'Actual mountain brushwork and skyline')
+        tex.image = texture_image('mountains.png')
+        tex.extension = 'REPEAT'
+        tint = node(t, 'ShaderNodeMixRGB', 'Distance blue-grey pigment veil')
+        tint.inputs[0].default_value = haze
+        tint.inputs[2].default_value = (.36, .47, .59, 1)
+        t.links.new(tex.outputs['Color'], tint.inputs[1])
+        e = t.nodes[f'Painted aerial mountain {layer}']
+        t.links.new(tint.outputs[0], e.inputs[0])
+        tr = node(t, 'ShaderNodeBsdfTransparent', 'Soft painted skyline edge')
+        mix = node(t, 'ShaderNodeMixShader', 'Mountain silhouette alpha')
+        t.links.new(tex.outputs['Alpha'], mix.inputs[0])
+        t.links.new(tr.outputs[0], mix.inputs[1])
+        t.links.new(e.outputs[0], mix.inputs[2])
+        t.links.new(mix.outputs[0], t.nodes['Output'].inputs['Surface'])
+        card(f'GEO-painted-mountain-layer-{layer}', radius, low, high, mat, shift)
     return ob
 
 
@@ -380,43 +391,137 @@ def ship(mats, cache):
             pivot = empty('RIG-oar', (side*1.25,-3.5+j*.62,.65), rig)
             drive(pivot,'rotation_euler',2,f'{side}*(.22+.42*sin(frame*.24))')
             drive(pivot,'rotation_euler',1,f'{side}*(.14+.20*cos(frame*.24))')
-            rod('GEO-oar-shaft',(0,0,0),(side*2.5,0,-.15),.045,wood,pivot,8)
-            cube('GEO-oar-blade',(side*2.65,0,-.15),(.70,.23,.065),ivory,pivot)
+            shaft=rod('GEO-oar-shaft',(0,0,0),(side*2.55,0,-.15),.070,wood,pivot,12)
+            for poly in shaft.data.polygons: poly.use_smooth=True
+            # A solid tapered paddle with a shoulder and rounded tip, not a white strip.
+            outline=[(2.28,-.075),(2.52,-.19),(3.15,-.22),(3.35,-.12),
+                     (3.35,.12),(3.15,.22),(2.52,.19),(2.28,.075)]
+            vs=[(side*x,y,-.15+z) for z in (-.055,.055) for x,y in outline]
+            fs=[tuple(reversed(range(8))),tuple(range(8,16))]
+            fs += [(i,(i+1)%8,(i+1)%8+8,i+8) for i in range(8)]
+            if side<0: fs=[face[::-1] for face in fs]
+            blade=mesh('GEO-solid-timber-oar-blade',vs,fs,wood); blade.parent=pivot
+            bevel=blade.modifiers.new('Soft paddle edges','BEVEL'); bevel.width=.035; bevel.segments=2
     rod('GEO-mast',(0,.3,1),(0,.3,6.8),.13,wood,rig)
     rod('GEO-yard',(-2.6,.3,6.4),(2.6,.3,6.4),.085,wood,rig)
-    cloth('GEO-sail',4.9,2.5,(0,.38,6.35),ivory,cache,rig,pin_tacks=True)
+    cloth('GEO-sail',4.9,2.5,(0,.38,6.35),mats['cloth'],cache,rig,pin_tacks=True)
     for side in (-1,1):
         rod('GEO-sail-tack-rope',(side*2.45,.38,3.85),(side*1.2,2,1.2),.025,wood,rig,6)
     rod('GEO-bow-ram',(0,4.7,.1),(0,6.5,.1),.16,mats['ochre'],rig)
-    # A spatial foam wake, trailing the stern; analytic ribbons and flecks, not a fluid solve.
-    wake_mat = paint('Wake foam',(.30,.53,.49,1))
-    for side in (-1,1):
-        vs, fs = [], []
-        for j in range(30):
-            d=j/29
-            for edge in (-1,1):
-                vs.append((side*(.8+d*2.6)+edge*(.035+.09*d),-5-d*10,-.20))
-        for j in range(29):
-            if j % 5 in (2,4): continue
-            fs.append((2*j,2*j+1,2*j+3,2*j+2))
-        wake=mesh('GEO-foamy-wake-ribbon',vs,fs,wake_mat)
-        wake.parent=rig
-        wave=wake.modifiers.new('Wake undulation','WAVE')
-        wave.use_x=False
-        wave.use_y=True
-        wave.height=.10
-        wave.width=1.2
-        wave.speed=.14
-        wave.narrowness=2
-    for j in range(34):
-        side=RNG.choice((-1,1)); d=RNG.uniform(0,9)
-        fleck=sphere('GEO-wake-flecks',(side*(.8+d*.25),-5-d,-.15),(.065,.24,.012),wake_mat,rig)
-        drive(fleck,'location',2,f'-.15+.10*sin(frame*.24+{j})')
-    for ob in rig.children:
-        if ob.name.startswith(('GEO-foamy-wake','GEO-wake-flecks')):
-            wrap=ob.modifiers.new('Foam follows actual wave surface','SHRINKWRAP')
-            wrap.target=bpy.data.objects['GEO-ocean']; wrap.offset=.018
+    foam_particles()
     return rig
+
+
+def ship_transform(frame):
+    """The v2 ship drivers, sampled at particle birth, including pitch and roll."""
+    pos = Vector((-6+(frame-1)*.025, -5+(frame-1)*.045, .35+.16*math.sin(frame*.09)))
+    rot = Euler((.025*math.sin(frame*.09+.5), .045*math.sin(frame*.08),
+                 -.62+.025*math.sin(frame*.035)), 'XYZ').to_matrix().to_4x4()
+    return Matrix.Translation(pos) @ rot @ Matrix.Diagonal((1.35,1.35,1.35,1))
+
+
+def foam_particles():
+    """Deterministic birth/advection/lifetime particles, packed as shape keys.
+
+    Actual 3D foam instances are emitted in world space from the moving stern
+    and immersed oar blades. They drift after emission instead of following the
+    hull. No ribbon mesh, frame handler, external add-on or extra fluid bake.
+    """
+    rng = random.Random(431)  # Never perturb the town/figure layout RNG.
+    particles = []
+    for birth in range(-95, FRAMES+1, 2):
+        matrix = ship_transform(birth)
+        for side in (-1,1):
+            for _ in range(7):
+                local = Vector((side*rng.uniform(.2,1.05),rng.uniform(-5.7,-4.9),-.1))
+                pos = matrix @ local
+                drift = matrix.to_3x3() @ Vector((side*rng.uniform(.10,.32),-.08,0))
+                particles.append((birth,rng.uniform(65,100),pos,drift,rng.uniform(.065,.17)))
+            # Position and immersion come from the same rotation as the modeled oar.
+            rotation = Euler((0,side*(.14+.20*math.cos(birth*.24)),
+                              side*(.22+.42*math.sin(birth*.24))), 'XYZ').to_matrix()
+            for j in range(12):
+                tip = Vector((side*1.25,-3.5+j*.62,.65)) + rotation @ Vector((side*3.12,0,-.15))
+                pos = matrix @ tip
+                if pos.z > .22:  # Recovery stroke makes no new surface foam.
+                    continue
+                for _ in range(3):
+                    jitter = Vector((rng.uniform(-.14,.14),rng.uniform(-.16,.16),0))
+                    drift = matrix.to_3x3() @ Vector((side*rng.uniform(.14,.36),-.12,0))
+                    particles.append((birth,rng.uniform(24,48),pos+jitter,drift,rng.uniform(.045,.12)))
+    host = mesh('FX-world-space-foam-particles', [(0,0,0)]*len(particles), [])
+    host['method'] = 'Seeded surface particles: birth at stern/oars, drift, expansion, lifetime'
+    host['particle_count'] = len(particles)
+    host['simulation'] = 'Analytic advection, not a fluid or dynamic-paint solve'
+    for name, column in (('birth',0),('lifetime',1),('radius',4)):
+        attribute = host.data.attributes.new(name, 'FLOAT', 'POINT')
+        attribute.data.foreach_set('value', [p[column] for p in particles])
+    # Absolute shape keys interpolate the baked particle buffer, surviving .blend reload.
+    host.shape_key_add(name='Frame 001')
+    keys = host.data.shape_keys
+    keys.use_relative = False
+    for frame in range(1,FRAMES+1):
+        key = keys.key_blocks[0] if frame == 1 else host.shape_key_add(name=f'Frame {frame:03d}')
+        key.interpolation = 'KEY_LINEAR'
+        values = array('f')
+        for birth,life,pos,drift,radius in particles:
+            age = max(0,min(life,frame-birth))/24
+            x = pos.x + drift.x*age + .075*math.sin(age*2.2+birth)
+            y = pos.y + drift.y*age + .075*math.cos(age*1.7+birth)
+            values.extend((x,y,1.0))  # Project vertically onto the actual Ocean below.
+        key.data.foreach_set('co',values)
+    active(host)
+    bpy.ops.object.shape_key_retime()
+    step = keys.key_blocks[1].frame - keys.key_blocks[0].frame
+    start = keys.key_blocks[0].frame
+    if step <= 0:
+        raise RuntimeError('Absolute foam shape keys must have increasing sample times')
+    drive(keys,'eval_time',None,f'{start}+max(0,min(143,frame-1))*{step}')
+    wrap = host.modifiers.new('Particles ride the actual Ocean surface','SHRINKWRAP')
+    wrap.target = bpy.data.objects['GEO-ocean']
+    wrap.wrap_method = 'PROJECT'; wrap.use_project_z = True
+    wrap.use_negative_direction = True; wrap.use_positive_direction = True
+    wrap.offset = .025
+    ng = bpy.data.node_groups.new('Surface foam particle instancing','GeometryNodeTree')
+    ng.interface.new_socket(name='Geometry',in_out='INPUT',socket_type='NodeSocketGeometry')
+    ng.interface.new_socket(name='Geometry',in_out='OUTPUT',socket_type='NodeSocketGeometry')
+    mod = host.modifiers.new('Foam particle instances','NODES'); mod.node_group=ng
+    ni=node(ng,'NodeGroupInput','Advected particles'); no=node(ng,'NodeGroupOutput','Foam')
+    tm=node(ng,'GeometryNodeInputSceneTime','Particle clock')
+    def attr(name):
+        n=node(ng,'GeometryNodeInputNamedAttribute',name); n.data_type='FLOAT'
+        n.inputs['Name'].default_value=name
+        return n.outputs['Attribute']
+    def mathn(op,a,b):
+        n=node(ng,'ShaderNodeMath',op); n.operation=op
+        for value,sock in zip((a,b),n.inputs):
+            if isinstance(value,(int,float)): sock.default_value=value
+            else: ng.links.new(value,sock)
+        return n.outputs[0]
+    age=mathn('SUBTRACT',tm.outputs['Frame'],attr('birth'))
+    fraction=mathn('MINIMUM',mathn('MAXIMUM',mathn('DIVIDE',age,attr('lifetime')),0),1)
+    envelope=mathn('MAXIMUM',mathn('SINE',mathn('MULTIPLY',fraction,math.pi),0),0)
+    radius=mathn('MULTIPLY',attr('radius'),envelope)
+    shape=node(ng,'ShaderNodeCombineXYZ','Flat irregular foam globules')
+    ng.links.new(mathn('MULTIPLY',radius,1.4),shape.inputs['X'])
+    ng.links.new(radius,shape.inputs['Y'])
+    ng.links.new(mathn('MULTIPLY',radius,.20),shape.inputs['Z'])
+    ico=node(ng,'GeometryNodeMeshIcoSphere','Shared foam particle')
+    ico.inputs['Radius'].default_value=1; ico.inputs['Subdivisions'].default_value=1
+    mat=bpy.data.materials.new('Warm broken foam pigment'); mat.use_nodes=True
+    bsdf=mat.node_tree.nodes.get('Principled BSDF')
+    bsdf.inputs['Base Color'].default_value=(.42,.58,.54,1)
+    bsdf.inputs['Roughness'].default_value=.78
+    material=node(ng,'GeometryNodeSetMaterial','Foam pigment')
+    material.inputs['Material'].default_value=mat
+    ng.links.new(ico.outputs['Mesh'],material.inputs['Geometry'])
+    inst=node(ng,'GeometryNodeInstanceOnPoints','Lifetime foam particles')
+    alive=mathn('MULTIPLY',mathn('GREATER_THAN',fraction,0),mathn('LESS_THAN',fraction,1))
+    ng.links.new(alive,inst.inputs['Selection'])
+    ng.links.new(ni.outputs['Geometry'],inst.inputs['Points'])
+    ng.links.new(material.outputs['Geometry'],inst.inputs['Instance'])
+    ng.links.new(shape.outputs[0],inst.inputs['Scale'])
+    ng.links.new(inst.outputs[0],no.inputs['Geometry'])
 
 
 def architecture(m):
@@ -439,13 +544,13 @@ def architecture(m):
             a=ring*sectors+i; b=ring*sectors+(i+1)%sectors
             faces.extend(((a,b,b+sectors),(a,b+sectors,a+sectors)))
     faces.append(tuple(range(4*sectors,5*sectors)))
-    cliff=mesh('GEO-stratified-limestone-outcrop',verts,faces,m['stone'])
+    cliff=mesh('GEO-stratified-limestone-outcrop',verts,faces,m['rock'])
     for poly in cliff.data.polygons: poly.use_smooth=True
     for j in range(95):
         theta=RNG.uniform(0,math.tau); r=RNG.uniform(.78,1)
         x,y=5+18*r*math.cos(theta),34+16*r*math.sin(theta)
         rock=sphere('GEO-weathered-limestone-buttress',(x,y,RNG.uniform(1.3,4)),
-                    (RNG.uniform(.6,1.8),RNG.uniform(.7,2),RNG.uniform(1.2,3.7)),m['stone'])
+                    (RNG.uniform(.6,1.8),RNG.uniform(.7,2),RNG.uniform(1.2,3.7)),m['rock'])
         rock.rotation_euler=(RNG.uniform(-.3,.3),RNG.uniform(-.3,.3),RNG.random())
         texture=bpy.data.textures.get('Weathered limestone') or bpy.data.textures.new('Weathered limestone','CLOUDS')
         texture.noise_scale=.7
@@ -547,18 +652,18 @@ def fire(m, cache):
     rod('GEO-beacon-bowl',(-12,15,2.8),(-12,15,3.3),1.05,m['ochre'])
     for i in range(5):
         rod('GEO-burning-log',(-12.6,14.65+i*.16,3.25),(-11.4,15.35-i*.16,3.5),.12,m['wood'])
-    flow=sphere('GEO-fire-smoke-emitter',(-12,15,3.65),(1.05,.9,.55))
+    flow=sphere('GEO-fire-smoke-emitter',(-12,15,3.85),(1.2,1.05,.75))
     mod=flow.modifiers.new('Fire and smoke source','FLUID')
     mod.fluid_type='FLOW'
     fs=mod.flow_settings
     fs.flow_type='BOTH'
     fs.flow_behavior='INFLOW'
-    fs.surface_distance=1.0
-    fs.fuel_amount=.9
-    fs.temperature=2.2
-    fs.density=2.8
+    fs.surface_distance=1.5
+    fs.fuel_amount=1.4
+    fs.temperature=3.0
+    fs.density=1.0  # RNA maximum; larger source/longer emission supplies more smoke.
     fs.use_initial_velocity=True
-    fs.velocity_coord=(.35,.05,2.3)
+    fs.velocity_coord=(.30,.08,4.0)
     # Transparent surface, while the closed emitter remains present in the solver.
     transparent=bpy.data.materials.new('Invisible fluid emitter surface')
     transparent.use_nodes=True
@@ -568,62 +673,70 @@ def fire(m, cache):
     out=node(t,'ShaderNodeOutputMaterial','Output')
     t.links.new(tr.outputs[0],out.inputs['Surface'])
     flow.data.materials.append(transparent)
-    domain=cube('GEO-Mantaflow-fire-smoke-domain',(-10.7,15,10.5),(9,8,17))
-    mod=domain.modifiers.new('64 voxel real billowing gas','FLUID')
+    domain=cube('GEO-Mantaflow-fire-smoke-domain',(-9,16,18),(14,12,34))
+    mod=domain.modifiers.new('80 voxel gas plus 2x billow detail','FLUID')
     mod.fluid_type='DOMAIN'
     ds=mod.domain_settings
     ds.domain_type='GAS'
-    ds.resolution_max=64
+    ds.resolution_max=GAS_RESOLUTION
     ds.cache_frame_start,ds.cache_frame_end=SIM_START,FRAMES
     ds.cache_type='ALL'
     ds.cache_data_format='UNI'
+    ds.cache_noise_format='UNI'
     ds.cache_directory=str(cache/'fluid')
-    ds.use_noise=False
+    ds.use_noise=True
+    ds.noise_scale=2
+    ds.noise_strength=.75
+    ds.noise_pos_scale=2.0
     ds.use_adaptive_domain=False
-    ds.vorticity=1.3
-    ds.flame_vorticity=1.8
-    ds.burning_rate=1.1
-    ds.flame_smoke=2.0
+    ds.use_collision_border_top=False
+    ds.vorticity=2.1
+    ds.alpha=2.0
+    ds.beta=2.2
+    ds.flame_vorticity=2.2
+    ds.burning_rate=.85
+    ds.flame_smoke=2.6
     ds.use_dissolve_smoke=True
-    ds.dissolve_speed=85
+    ds.dissolve_speed=150
     ds.timesteps_max=3
-    ds.effector_weights.wind=.15
+    ds.effector_weights.wind=.025
     vol=bpy.data.materials.new('Real density and flame grids')
     vol.use_nodes=True
     t=vol.node_tree
     t.nodes.clear()
-    p=node(t,'ShaderNodeVolumePrincipled','Mantaflow density and blackbody')
-    setv(p,'Color',(.12,.105,.09,1))
-    setv(p,'Anisotropy',.18)
-    setv(p,'Density',6.0)
+    p=node(t,'ShaderNodeVolumePrincipled','Lit smoke with blackbody flame emission')
+    setv(p,'Color',(.34,.31,.27,1))
+    setv(p,'Color Attribute','')  # Do not multiply by the solver's dark smoke colour.
+    setv(p,'Anisotropy',.28)
+    setv(p,'Density',1.35)  # Allow key/fill into the billows instead of a black blob.
     setv(p,'Density Attribute','density')
-    setv(p,'Blackbody Intensity',0)  # Flame-grid emission only: smoke must not glow.
-    setv(p,'Temperature',1100)
-    setv(p,'Temperature Attribute','temperature')
-    attr=node(t,'ShaderNodeAttribute','Flame grid')
-    attr.attribute_name='flame'
-    power=node(t,'ShaderNodeMath','Flame emission strength')
-    power.operation='MULTIPLY'
-    power.inputs[1].default_value=70
-    hot=node(t,'ShaderNodeMath','Only the hot flame core emits'); hot.operation='POWER'
-    hot.inputs[1].default_value=3
-    t.links.new(attr.outputs['Fac'],hot.inputs[0])
-    geometry=node(t,'ShaderNodeNewGeometry','World-space flame height')
-    xyz=node(t,'ShaderNodeSeparateXYZ','Flame height')
+    geometry=node(t,'ShaderNodeNewGeometry','Smoke height in world space')
+    xyz=node(t,'ShaderNodeSeparateXYZ','Upper plume height')
     t.links.new(geometry.outputs['Position'],xyz.inputs[0])
-    fade=node(t,'ShaderNodeMapRange','Smoke above the flame is not emissive')
-    fade.clamp=True; fade.inputs['From Min'].default_value=4.1; fade.inputs['From Max'].default_value=5.8
-    fade.inputs['To Min'].default_value=1; fade.inputs['To Max'].default_value=0
-    t.links.new(xyz.outputs['Z'],fade.inputs['Value'])
-    density=node(t,'ShaderNodeMapRange','Open flame base and dense upper smoke')
-    density.clamp=True; density.inputs['From Min'].default_value=3.8; density.inputs['From Max'].default_value=6.0
-    density.inputs['To Min'].default_value=1.4; density.inputs['To Max'].default_value=6.0
-    t.links.new(xyz.outputs['Z'],density.inputs['Value']); t.links.new(density.outputs[0],inp(p,'Density'))
-    mask=node(t,'ShaderNodeMath','Temperature core times flame height'); mask.operation='MULTIPLY'
-    t.links.new(hot.outputs[0],mask.inputs[0]); t.links.new(fade.outputs[0],mask.inputs[1])
-    t.links.new(mask.outputs[0],power.inputs[0])
+    top=node(t,'ShaderNodeMapRange','Dissipate before the open domain ceiling')
+    top.clamp=True
+    top.inputs['From Min'].default_value=28; top.inputs['From Max'].default_value=34
+    top.inputs['To Min'].default_value=1.35; top.inputs['To Max'].default_value=0
+    t.links.new(xyz.outputs['Z'],top.inputs['Value'])
+    t.links.new(top.outputs[0],inp(p,'Density'))
+    setv(p,'Blackbody Intensity',0)  # Explicit blackbody node below, gated by flame.
+    flame=node(t,'ShaderNodeAttribute','Mantaflow flame grid'); flame.attribute_name='flame'
+    heat=node(t,'ShaderNodeAttribute','Mantaflow temperature grid'); heat.attribute_name='temperature'
+    kelvin=node(t,'ShaderNodeMapRange','Simulation heat to flame kelvin')
+    kelvin.clamp=True
+    kelvin.inputs['From Min'].default_value=0; kelvin.inputs['From Max'].default_value=1
+    kelvin.inputs['To Min'].default_value=1050; kelvin.inputs['To Max'].default_value=1850
+    t.links.new(heat.outputs['Fac'],kelvin.inputs['Value'])
+    blackbody=node(t,'ShaderNodeBlackbody','Real blackbody flame colour')
+    t.links.new(kelvin.outputs[0],blackbody.inputs['Temperature'])
+    t.links.new(blackbody.outputs['Color'],inp(p,'Emission Color'))
+    core=node(t,'ShaderNodeMath','Flame-grid emission only'); core.operation='POWER'
+    core.inputs[1].default_value=1.6
+    t.links.new(flame.outputs['Fac'],core.inputs[0])
+    power=node(t,'ShaderNodeMath','Restrained flame radiance'); power.operation='MULTIPLY'
+    power.inputs[1].default_value=8
+    t.links.new(core.outputs[0],power.inputs[0])
     t.links.new(power.outputs[0],inp(p,'Emission Strength'))
-    setv(p,'Emission Color',(1,.22,.025,1))
     out=node(t,'ShaderNodeOutputMaterial','Volume only output')
     t.links.new(p.outputs['Volume'],out.inputs['Volume'])
     domain.data.materials.append(vol)
@@ -636,10 +749,16 @@ def fire(m, cache):
     lob.location=(-12,15,4)
     drive(lamp,'energy',None,'650+160*sin(frame*.7)+80*sin(frame*1.73)')
     under=bpy.data.lights.new('LGT-warm-smoke-underside','AREA')
-    under.energy=300; under.color=(1,.40,.12); under.shape='DISK'; under.size=3
+    under.energy=650; under.color=(1,.40,.12); under.shape='DISK'; under.size=3
     uob=bpy.data.objects.new(under.name,under); bpy.context.collection.objects.link(uob)
     uob.location=(-12,13,3.7)
     uob.rotation_euler=(Vector((-11,15,8))-uob.location).to_track_quat('-Z','Y').to_euler()
+    rim=bpy.data.lights.new('LGT-smoke-daylight-volume-rim','AREA')
+    rim.energy=4200; rim.color=(.74,.83,1); rim.shape='DISK'; rim.size=9
+    rim.diffuse_factor=0; rim.specular_factor=0; rim.volume_factor=1
+    rob=bpy.data.objects.new(rim.name,rim); bpy.context.collection.objects.link(rob)
+    rob.location=(-17,23,19)
+    rob.rotation_euler=(Vector((-10,15,12))-rob.location).to_track_quat('-Z','Y').to_euler()
     return domain
 
 
@@ -840,19 +959,20 @@ def compositor(scene):
             if isinstance(value,(float,int)): sock.default_value=value
             else: link(value,sock)
         return n.outputs[0]
-    mist=mathn('Gentle depth haze','MULTIPLY',rl.outputs['Mist'],.35)
+    mask=rl.outputs['BackdropMask']
+    foreground=mathn('Foreground mask','SUBTRACT',1,mask)
+    mist=mathn('Gentle depth haze','MULTIPLY',rl.outputs['Mist'],.24)
+    mist=mathn('Keep painted sky colour','MULTIPLY',mist,foreground)
     beauty=mix('Blue parchment distance haze','MIX',rl.outputs['Image'],(.38,.51,.64,1),mist)
     # Shader AOV matte isolates the bright card, blurs its colour across silhouettes,
     # then removes the card itself: a real foreground-edge light wrap.
-    mask=rl.outputs['BackdropMask']
     isolated=mix('Isolate bright backdrop','MULTIPLY',rl.outputs['Image'],mask,1.0)
     blur=node(ng,'CompositorNodeBlur','Backdrop wrap radius'); setv(blur,'Size',(12,12))
     link(isolated,blur.inputs['Image'])
-    foreground=mathn('Foreground mask','SUBTRACT',1,mask)
     wrap=mix('Wrap restricted to foreground','MULTIPLY',blur.outputs[0],foreground,1.0)
     beauty=mix('Light wrap edge add','ADD',beauty,wrap,.055)
     glare=node(ng,'CompositorNodeGlare','Fire and sun bloom'); setv(glare,'Type','Fog Glow')
-    setv(glare,'Quality','High'); setv(glare,'Threshold',1.5); setv(glare,'Strength',1.1)
+    setv(glare,'Quality','High'); setv(glare,'Threshold',2.2); setv(glare,'Strength',.30)
     setv(glare,'Size',.25); link(beauty,glare.inputs['Image'])
     # Packed procedural dirt and vignette: no external image dependencies.
     specks=[(RNG.random(),RNG.random(),RNG.uniform(.002,.012),RNG.uniform(.15,.7)) for _ in range(65)]
@@ -869,9 +989,12 @@ def compositor(scene):
     setv(grade,'Lift',(.985,.995,1.01,1)); setv(grade,'Gamma',(1.035,1.0,.96,1))
     setv(grade,'Gain',(1.07,1.025,.94,1)); link(beauty,grade.inputs['Image'])
     kuw=node(ng,'CompositorNodeKuwahara','Anisotropic brush unification')
-    setv(kuw,'Type','Anisotropic'); setv(kuw,'Size',4)
-    setv(kuw,'Uniformity',2); link(grade.outputs[0],kuw.inputs['Image'])
-    beauty=mix('Retain detail under paint pass','MIX',grade.outputs[0],kuw.outputs[0],.78)
+    setv(kuw,'Type','Anisotropic'); setv(kuw,'Size',6)
+    setv(kuw,'Uniformity',3); link(grade.outputs[0],kuw.inputs['Image'])
+    beauty=mix('Retain detail under paint pass','MIX',grade.outputs[0],kuw.outputs[0],.90)
+    canvas=node(ng,'CompositorNodeImage','Canvas weave at delivery resolution')
+    canvas.image=texture_image('canvas.png',data=True)
+    beauty=mix('Canvas tooth multiply after oil pass','MULTIPLY',beauty,canvas.outputs['Image'],.70)
     vignette=node(ng,'CompositorNodeImage','Soft elliptical vignette')
     vignette.image=procedural_mask('Procedural vignette',960,540,
         lambda x,y: 1-.22*min(1,((x-.5)/.7)**2+((y-.5)/.7)**2))
@@ -906,9 +1029,18 @@ def build(args):
     scene.view_settings.look='AgX - Medium High Contrast'
     scene.view_settings.exposure=-.35
     scene.render.compositor_device='CPU'
-    mats={key:paint(key,col) for key,col in {
-        'ivory':IVORY,'ochre':OCHRE,'terra':TERRA,'blue':BLUE,'sage':SAGE,
-        'wood':(.12,.055,.021,1),'stone':(.42,.36,.25,1),'skin':(.49,.29,.15,1)}.items()}
+    mats = {
+        'ivory': paint('ivory', IVORY, 'marble', 3.8),
+        'ochre': paint('ochre', OCHRE, 'quay', 3.4, (.82,.64,.39,1)),
+        'terra': paint('terra', TERRA, 'terracotta', 4.8),
+        'blue': paint('blue', BLUE, 'blue_cloth', 1.5),
+        'sage': paint('sage', SAGE, 'foliage', 2.6),
+        'wood': paint('wood', (.12,.055,.021,1), 'timber', 3.2),
+        'stone': paint('stone', (.42,.36,.25,1), 'quay', 4.2),
+        'rock': paint('rock', (.42,.36,.25,1), 'rock', 5.5),
+        'cloth': paint('cloth', IVORY, 'cloth', 3.8),
+        'skin': paint('skin', (.49,.29,.15,1), 'cloth', 1.8, (.78,.55,.36,1)),
+    }
     backdrop(); sea(); architecture(mats); ship(mats,args.masters/'cache')
     for x in (-18,15):
         rod('GEO-banner-pole',(x,12.5,1.4),(x,12.5,6.3),.075,mats['wood'])
@@ -928,7 +1060,25 @@ def build(args):
 
 
 def signature():
-    return hashlib.sha256(Path(__file__).read_bytes()+PAINTING.read_bytes()+bpy.app.version_string.encode()).hexdigest()
+    return hashlib.sha256(Path(__file__).read_bytes()+PAINTING.read_bytes()+
+                          (TEXTURES/'manifest.json').read_bytes()+
+                          bpy.app.version_string.encode()).hexdigest()
+
+
+def verify_textures():
+    """Refuse missing/stale crops instead of silently falling back to toon paint."""
+    manifest=TEXTURES/'manifest.json'
+    if not manifest.is_file():
+        raise RuntimeError(f'Prepare paint_textures.py --out {TEXTURES} before running Blender')
+    info=json.loads(manifest.read_text())
+    prep=Path(__file__).with_name('paint_textures.py')
+    if (info['source_sha256']!=hashlib.sha256(PAINTING.read_bytes()).hexdigest() or
+            info['generator_sha256']!=hashlib.sha256(prep.read_bytes()).hexdigest()):
+        raise RuntimeError('Painting or texture recipe changed; rerun paint_textures.py')
+    for name,expected in info['files'].items():
+        path=TEXTURES/name
+        if not path.is_file() or hashlib.sha256(path.read_bytes()).hexdigest()!=expected:
+            raise RuntimeError(f'Missing/changed painting texture: {path}; rerun prep')
 
 
 def verify_cached_motion(scene, masters):
@@ -985,10 +1135,12 @@ def bake(args, scene, domain):
     # Packed cloth point caches and external Mantaflow grids both live under cache/.
     bpy.ops.wm.save_as_mainfile(filepath=str(cache/'baked.blend'))
     active(domain)
-    print('BAKE: Mantaflow 64 voxels, -23..144, six workers',flush=True)
+    print(f'BAKE: Mantaflow {GAS_RESOLUTION} voxels + 2x noise, {SIM_START}..144, six workers',flush=True)
     result=bpy.ops.fluid.bake_all()
     if 'FINISHED' not in result or not domain.modifiers[0].domain_settings.has_cache_baked_data:
         raise RuntimeError(f'Mantaflow bake failed: {result}; no completion marker written')
+    if not domain.modifiers[0].domain_settings.has_cache_baked_noise:
+        raise RuntimeError('Mantaflow noise bake missing; no completion marker written')
     for ob in CLOTH:
         active(ob)
         pc=ob.modifiers['Baked wind cloth'].point_cache
@@ -1006,11 +1158,12 @@ def bake(args, scene, domain):
            if p.is_file() and p.suffix in ('.uni','.vdb')}
     files['baked.blend']=(cache/'baked.blend').stat().st_size
     # Ensure actual frame coverage, not just Blender's bake flag.
-    fluid=list((cache/'fluid'/'data').glob('*'))
-    for f in range(SIM_START,FRAMES+1):
-        suffix=f'_{"-" if f<0 else ""}{abs(f):04d}.uni'
-        if not any(p.is_file() and p.stat().st_size>0 and p.name.endswith(suffix) for p in fluid):
-            raise RuntimeError(f'Missing Mantaflow cache frame {f}')
+    for kind in ('data','noise'):
+        fluid=list((cache/'fluid'/kind).glob('*'))
+        for f in range(SIM_START,FRAMES+1):
+            suffix=f'_{"-" if f<0 else ""}{abs(f):04d}.uni'
+            if not any(p.is_file() and p.stat().st_size>0 and p.name.endswith(suffix) for p in fluid):
+                raise RuntimeError(f'Missing Mantaflow {kind} cache frame {f}')
     marker.write_text(json.dumps({'signature':signature(),'files':files,
                                  'seconds':round(time.monotonic()-started,2)},indent=2)+'\n')
     # scene.blend remains the reproducible pre-bake scene.
@@ -1024,6 +1177,7 @@ def bake(args, scene, domain):
 
 
 def main():
+    global TEXTURES
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--masters',required=True,type=Path)
     parser.add_argument('--out',required=True,type=Path)
@@ -1038,6 +1192,8 @@ def main():
     except ValueError: parser.error('--frames must be an inclusive range within 1-144')
     args.masters=args.masters.resolve(); args.out=args.out.resolve()
     args.masters.mkdir(parents=True,exist_ok=True)
+    TEXTURES=args.masters/'textures'
+    verify_textures()
     if bpy.app.version < (5,3,0):
         raise RuntimeError('This pilot uses the Blender 5.3 compositor API; use the installed 5.3 build.')
     if not args.dry_run and cache_valid(args):
@@ -1050,7 +1206,9 @@ def main():
         bpy.ops.wm.save_as_mainfile(filepath=str(args.masters/'scene.blend'))
         report={'blender':bpy.app.version_string,'objects':len(scene.objects),
                 'resolution':[960,540],'frames':144,'samples':32,'threads':6,
-                'cloth':[ob.name for ob in CLOTH],'fluid_resolution':64,
+                'cloth':[ob.name for ob in CLOTH],'fluid_resolution':GAS_RESOLUTION,'fluid_noise_scale':2,
+                'texture_manifest':str(TEXTURES/'manifest.json'),
+                'foam_particles':bpy.data.objects['FX-world-space-foam-particles']['particle_count'],
                 'fluid_dimensions':list(domain.dimensions),'simulation_frames':[SIM_START,FRAMES],
                 'status':'built, not baked or rendered','source_signature':signature()}
         (args.masters/'scene-report.json').write_text(json.dumps(report,indent=2)+'\n')
@@ -1064,6 +1222,8 @@ def main():
     # The lead invokes this path outside the sandbox under the external render lock.
     args.out.mkdir(parents=True,exist_ok=True)
     scene.render.threads_mode='FIXED'; scene.render.threads=6
+    if scene.camera is None:
+        raise RuntimeError('Missing v2 harbour camera; refusing to render')
     for frame in range(first,last+1):
         scene.frame_set(frame)
         scene.render.filepath=str(args.out/f'frame_{frame:04d}.png')
