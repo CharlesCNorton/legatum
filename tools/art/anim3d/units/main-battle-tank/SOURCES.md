@@ -9,3 +9,8 @@
 - Motion: rigid tracked vehicle; no people or animals to retarget. Track arc-length travel and wheel travel/radius replace gait; turret traverse, recoil, impact and wreck are authored mechanical motion. No Mixamo or external motion asset.
 
 Vehicles reference revision inspected for this round: `0b2616f595e964a79641689ec26d31d2ed56cd28`.
+
+Round 2 (2026-11-23): reuses the same hash-locked painting, generated olive fill
+and CC0 scans; no new download. Original roof/deck fitting, folded canvas/webbing,
+stationary wheel-light coordinates and revised mechanical effects are MIT code;
+new renders remain CC BY 4.0.

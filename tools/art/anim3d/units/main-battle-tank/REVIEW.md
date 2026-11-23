@@ -1,64 +1,76 @@
-# Main battle tank — round 1
+# Main battle tank — round 2
 
-Candidate complete; **not art-approved**, no PASS marker. Static unit art remains active.
+Round-two CPU candidate, **not art-approved**; no PASS marker. The round-one GPU
+pass succeeded at 512px and Q90 / 191,884 bytes. Its images and movie are preserved
+in `masters/main-battle-tank/round1-gpu/`; the 512px archive is still round one until
+the lead runs the updated handoff. Current 256px masters, review sheets, atlas and
+`main-battle-tank-round2-cpu.mp4` are round-two CPU output.
 
-The editable, packed Blender model, rigid hierarchy and five clip blends are under
-`~/LegatumRuns/anim-pilot/masters/main-battle-tank/`. The scene has a low cast dome,
-beveled armour, separate skirts, six wheels per side, 124 independently animated
-track links, rear fuel drum/canvas stowage and a long elevated gun. Six actual 512px
-AO/Pointiness maps support camera-projected painted surfaces and generated hidden
-olive fill. Running gear is separate from sprung chassis motion. A real bearing
-collar closes the gap exposed by front-view review. The disc support plane follows
-the registered belt run; its bottom rim stays fixed.
+## Changes
 
-All requested b/c/details/d/e and rest crossfade/track-contact evidence exists under
-`review/3d-v2/main-battle-tank-*`. Full CPU 256px frame sets and ungraded originals
-are retained. `main-battle-tank-round1-cpu.mp4` shows all clips at 2x on cream.
-**True 512px rendered masters remain pending the host GPU pass**; no CPU preview was
-upscaled and labelled as a 512px original.
+Individually fitted cupola sights, upright machine gun, pintle, magazine and hatch
+restore more of the painting's roof silhouette. The upper deck extends farther
+forward, the far front sprocket sits lower, and the barrel/sleeve are thinner.
+Canvas has radial folds, pinched bands, thick webbing and beveled buckles. Actual
+AO/Pointiness bakes, painting projection and the automatic histogram grade were
+rebuilt using the existing generated hidden-surface fill and product lights.
 
-## Verified results
+Wheel meshes still rotate at belt travel/radius. Their painted illumination now
+uses stationary 3D coordinates, so projected highlights and neighbouring fender
+colour do not orbit with the wheel. This deliberately targets the fixed token
+camera; it is not a general all-view texture solution. Exhaust stays close to its
+outlet and muzzle haze is less opaque. A first smoke revision touched the atlas
+boundary; the crop validator caught it and the corrected attack was rerendered.
 
-- Three closed-route unit tests pass: length/closure, constant speed, shoe tangent.
-- Blender geometry/motion audit passes for all 40 samples: 124 links, 16 wheel
-  pivots, safe scales, stationary base, wheel travel/radius consistency, gun recoil,
-  source hashes, actual bakes and held death. Lowest shoe-to-support-plane distance
-  is -0.00674 scene units (slight contact penetration, under one native pixel).
-- Trimmed atlas validation passes: **176,488 bytes, WebP Q90, 1375x403**, 160x160
-  logical cells, all 40 samples. Per-frame offsets reconstruct alpha exactly;
-  transparent gutters and identical decoded terminal death samples pass.
-- FFprobe/decoded-frame validation passes: H.264, yuv420p, 1600x348, 240 frames,
-  eight seconds. Representative decoded frames were visually inspected.
-- Python compilation, shell syntax and `git diff --check` pass.
-- GPU entry point was exercised and correctly stopped at Metal preflight in the
-  sandbox. It preserved CPU output. GPU rendering itself has **not** been verified.
+The movie builder now validates the current atlas before encoding and records its
+SHA256 in the movie receipt. A deliberate stale-atlas run failed before encoding;
+a successful ffmpeg exit alone previously could certify an outdated movie.
 
-## Visual verdict
+## Checks
 
-At 64px the low tank, long elevated gun, rear stowage and cream disc read as the
-same unit. At 256px the rest pose is substantially closer after projection, but
-still distinguishable: cupola/MG silhouette is simplified, barrel sleeve/edge
-alignment needs refinement, drum ends and track contours differ, and low-sample
-smoke is grainy. Rotating wheels carry some of the painting's lighting; wider-angle
-views expose stretched projection and approximate hidden surfaces. These are
-round-two work, not a claim of premium parity. Native rest alpha IoU is 0.9091 and
-opaque-overlap RGB MAE 10.02; these are diagnostics, not acceptance criteria.
+- All 40 CPU frames rendered at 256px / 12 samples; rest at 8 samples. All b/c,
+  detail, rig, five clip strips/WebPs, top/front track views and crossfade updated.
+- Three closed-route tests pass: length/closure, constant arc speed, shoe tangent.
+- Blender audit passes all clips: 124 links, 16 wheel pivots, stationary support,
+  safe scales, matched wheel/belt travel, recoil, held death, current source hashes,
+  six actual 512px bake maps and stationary wheel-light coordinates.
+- Lowest shoe-to-base plane distance: -0.00674055 scene units, within 0.02 tolerance.
+- Trimmed 160px atlas: **171,950 bytes, Q90, 1364x403**, all 40 samples. Exact alpha
+  reconstruction, transparent gutters, padding, frame counts, motion and identical
+  terminal death frames pass. Final GPU size remains to be measured.
+- Movie validates and was decoded for inspection: H.264/yuv420p, 1600x348,
+  240 frames, eight seconds. The movie receipt binds it to the current atlas hash.
+- Python compilation, shell syntax and whitespace checks pass.
 
-The failed early gun fit is a useful lesson: fit the barrel axis independently of
-its mantlet, and average mesh vertices before applying the object's world transform
-when finding the muzzle. Otherwise translation gets divided by vertex count and
-puts firing effects under the chassis.
+## Visual judgment
 
-## Lead command
+At 64px it reads as the same unit, with a closer roof silhouette and calmer running
+gear. At 256px it remains distinguishable: the front hull contour and stowage/drum
+shape need closer registration, track edges are simplified, and the wreck smoke
+still reads as clustered shells. The grainy low-sample smoke must be rechecked on
+GPU. Top/front views expose stretched projected detail away from the hero camera.
+All five clip strips and decoded movie samples were inspected; technical motion
+checks do not establish premium animation quality or a perfectly invisible loop.
 
-From the repository root:
+Current rest alpha IoU is 0.90136 (threshold >128), opaque-overlap RGB MAE 9.68764
+(both alpha >240). These are diagnostics, not acceptance criteria; there is no
+claim of silhouette parity or improvement based on the metric alone.
+
+## Lead handoff
 
 ```sh
-ROUND=1 tools/art/anim3d/units/main-battle-tank/gpu.sh
+ROUND=2 tools/art/anim3d/units/main-battle-tank/gpu.sh
 ```
 
-It runs explicit Metal Cycles at 512px/256 samples, all stages and all clips,
-archives 512/256 masters, packs and validates the atlas, and makes the exact
-`main-battle-tank-round${ROUND}.mp4` required by the driver. Review the GPU rest
-comparison, contact sheet and movie before considering a PASS. The script never
-writes a PASS marker automatically.
+Executable, no arguments, from the repo root. Tests the belt, checks Metal, audits
+masters, renders every stage and all five clips at 512px / 256 samples, archives
+512/256 masters, packs and validates the atlas and writes the eight-second
+`main-battle-tank-round2.mp4`. Inspect the fresh GPU rest comparison and movie before
+considering PASS. No static art or runtime consumer was changed.
+
+Repository gate limitations: the HEAD-based gate initially flagged unspaced Python
+matrix multiplication as email addresses. Those expressions now have spaces, and
+all currently changed text files pass the gate's hygiene line checks. Public claims
+passed. The browser distinctness gate failed to execute `render-sets.mjs`; it is
+not a passed art review. Git staging is blocked by the sandbox's `index.lock`
+permission, so the runner must commit the work and rerun commit-based gates.

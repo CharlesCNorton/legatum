@@ -2,9 +2,10 @@
 import json, os, subprocess
 from pathlib import Path
 from PIL import Image, ImageDraw
-from deliver import CLIPS, restore, OUT, REVIEW, R
-meta=json.loads((OUT/'main-battle-tank.json').read_text());atlas=Image.open(OUT/'main-battle-tank.webp').convert('RGBA')
-frames={n:[restore(atlas,r).resize((320,320),Image.Resampling.LANCZOS) for r in c['rects']] for n,c in meta['clips'].items()}
+from deliver import CLIPS, validate, digest, OUT, REVIEW
+# Refuse a stale atlas before opening the movie output or launching ffmpeg.
+frames={name:[im.resize((320,320),Image.Resampling.LANCZOS) for im in samples]
+        for name,samples in validate().items()}
 round_label=os.environ.get('ROUND','1-cpu')
 assert all(c.isalnum() or c in '-_' for c in round_label)
 out=REVIEW/f'main-battle-tank-round{round_label}.mp4'
@@ -24,6 +25,7 @@ probe=json.loads(subprocess.check_output(['ffprobe','-v','error','-select_stream
 assert probe['codec_name']=='h264' and probe['pix_fmt']=='yuv420p'
 assert int(probe['nb_frames'])==240 and float(probe['duration'])==8
 assert (probe['width'],probe['height'])==(1600,348)
+probe['atlas_sha256']=digest(OUT/'main-battle-tank.webp')
 (out.with_suffix('.json')).write_text(json.dumps(probe,indent=2));print('VIDEO PASS',out,probe)
 # Representative decoded video frames for inspection; the MP4 is always decoded, never assumed.
 for t in (0,.3,.6,1.5):

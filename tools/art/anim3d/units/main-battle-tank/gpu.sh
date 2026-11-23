@@ -4,7 +4,7 @@ set -euo pipefail
 cd "$(dirname "$0")/../../../../.."
 source tools/art/anim3d/env.sh
 export RENDER_ENGINE=CYCLES CYCLES_DEVICE=GPU RESOLUTION=512
-export SAMPLES="${SAMPLES:-256}" ROUND="${ROUND:-1}"
+export SAMPLES="${SAMPLES:-256}" ROUND="${ROUND:-2}"
 [[ "$ROUND" =~ ^[a-zA-Z0-9_-]+$ ]] || { echo 'Invalid ROUND' >&2; exit 2; }
 review="$ANIM_ROOT/review/3d-v2"
 mkdir -p "$review"
@@ -22,6 +22,8 @@ command -v blender
 for file in main-battle-tank.blend main-battle-tank-plain.blend clips/idle.blend clips/move.blend clips/attack.blend clips/hit.blend clips/death.blend; do
   test -s "$ANIM_ROOT/masters/main-battle-tank/$file"
 done
+stage=mechanical-tests
+"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/main-battle-tank/test_runninggear.py
 stage=metal-preflight
 # Device discovery does no rendering; use a normal gated CPU startup.
 BLENDER_GPU=0 CYCLES_DEVICE=CPU blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python tools/art/anim3d/units/main-battle-tank/gpu-preflight.py

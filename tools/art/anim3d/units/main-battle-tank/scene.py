@@ -117,7 +117,7 @@ def ringmesh(name,rings,mat=paint,parent=root,n=64):
 base=cyl('Stationary cream stone base',(0,0,.12),2.20,.22,stone,None,verts=128)
 cube('Lower hull',(-.06,0,.71),(3.40,1.62,.55),paint)
 vs=[(-1.82,-.90,.88),(1.88,-.90,.88),(1.88,.90,.88),(-1.82,.90,.88),
-    (-1.64,-.81,1.24),(1.13,-.81,1.24),(1.13,.81,1.24),(-1.64,.81,1.24)]
+    (-1.82,-.94,1.24),(1.54,-.94,1.24),(1.54,.94,1.24),(-1.82,.94,1.24)]
 fs=[(0,3,2,1),(0,1,5,4),(1,2,6,5),(2,3,7,6),(3,0,4,7),(4,5,6,7)]
 me=bpy.data.meshes.new('Sloped armour');me.from_pydata(vs,[],fs);me.update()
 hull=bpy.data.objects.new('Sloped upper hull',me);bpy.context.collection.objects.link(hull);finish(hull,hull.name,paint,root,.035)
@@ -130,6 +130,8 @@ cyl('Cupola bevel',(-.27,-.12,.63),.22,.035,edge,turret)
 for j in range(6):
     a=j*2*pi/6
     o=cube('Periscope glass',(-.27+.216*cos(a),-.12+.216*sin(a),.57),(.095,.027,.043),black,turret,.004);o.rotation_euler[2]=a+pi/2
+for x in [-.42,-.12]:
+    cube('Cupola sight', (x,-.12,.69),(.045,.065,.10),paint,turret,.006)
 cube('Gunner hatch',(.05,.33,.49),(.34,.33,.065),paint,turret,.035)
 rod('Machine gun pintle',(.08,.33,.52),(.08,.33,.80),.027,steel,turret)
 cube('Machine gun receiver',(.14,.33,.80),(.25,.07,.075),steel,turret,.012)
@@ -183,7 +185,18 @@ cyl('Rear pale fuel drum',(-1.44,.16,1.49),.205,1.16,canvas,axis='Y')
 for y in [-.44,-.15,.24,.72]:
     tube('Fuel drum rolled hoop',[(-1.44+.208*cos(a*2*pi/48),y,1.49+.208*sin(a*2*pi/48)) for a in range(48)],.012,edge,closed=True)
 for y in [-.44,.72]:cyl('Drum end',(-1.44,y,1.49),.184,.01,canvas,axis='Y')
-cyl('Canvas roll',(-1.01,-.34,1.47),.15,.63,canvas,axis='Y')
+roll=cyl('Canvas roll',(-1.01,-.34,1.47),.15,.63,canvas,axis='Y')
+# Full-volume gathered canvas: radial folds, pinched at the two retaining straps.
+for vertex in roll.data.vertices:
+    x,y,z=vertex.co;angle=math.atan2(z,x)
+    gather=1-.035*math.exp(-((y+.23)/.035)**2)-.035*math.exp(-((y-.19)/.035)**2)
+    fold=1+.045*math.sin(11*angle+3*y)+.018*math.sin(23*angle-8*y)
+    vertex.co.x*=fold*gather;vertex.co.z*=fold*gather
+# Thin closed flattened bands, with buckles rather than round wire ties.
+for y in [-.57,-.15]:
+    band=ringmesh('Canvas thick webbing',[(0,0,0,.16,.16),(0,0,.045,.16,.16)],canvas,root,48)
+    band.rotation_euler[0]=pi/2;band.location=(-1.01,y,1.47)
+    cube('Canvas thick buckle',(-1.01,y-.025,1.625),(.085,.06,.025),edge,root,.005)
 for y in [-.57,-.15]:
     tube('Canvas thick retaining band',[(-1.01+.156*cos(a*2*pi/48),y,1.47+.156*sin(a*2*pi/48)) for a in range(48)],.018,edge,closed=True)
 for i in range(10):cube('Engine louvre',(-1.65+i*.055,.0,1.257),(.028,.66,.025),steel,bevel=.004)

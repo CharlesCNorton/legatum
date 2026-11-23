@@ -5,12 +5,21 @@ Baked AO UVs are explicitly retained; projection UVs follow the animated geometr
 import bpy,os,json
 from pathlib import Path
 from bpy_extras.object_utils import world_to_camera_view
-from mathutils import Vector
+from mathutils import Vector, Matrix
 R=Path(os.environ['ANIM_ROOT']);M=R/'masters/main-battle-tank'
 bpy.ops.wm.open_mainfile(filepath=str(M/'main-battle-tank.blend'));sc=bpy.context.scene;bpy.context.view_layer.update()
 tex=bpy.data.images.load(str(M/'textures/painting-projection.png'),check_existing=True)
 view=sc.camera.rotation_euler.to_matrix() @ Vector((0,0,1))
 records=[]
+# Rotating road wheels retain stationary painted illumination in the fixed camera.
+# Their round meshes, recessed holes and surface grain still physically rotate.
+# UV-attached lighting made strips of fender colour orbit the wheel in round 1.
+projector=bpy.data.objects.new('Wheel paint lighting coordinates',None)
+bpy.context.collection.objects.link(projector)
+basis=sc.camera.rotation_euler.to_matrix();scale=sc.camera.data.ortho_scale
+right=basis@Vector((1,0,0));up=basis@Vector((0,1,0))
+projector.matrix_world=Matrix.Translation(sc.camera.location-scale*.5*(right+up)) @ basis.to_4x4() @ Matrix.Diagonal((scale,scale,scale,1))
+
 # Track shoes pass through many rest-screen positions. Their own physical steel
 # texture must travel with them; camera paint would carry whole wheel/bogie
 # fragments around the belt. Recesses/spokes also retain their physical finish.
@@ -30,11 +39,14 @@ for name in names:
         uv.data[loop.index].uv=Vector((p.x,p.y))+shift
         facing=max(0,min(1,((normalmatrix @ v.normal).normalized().dot(view)+.08)/.22))
         weights.data[loop.index].color=(facing,facing,facing,1)
+    wheel_part=o.parent is not None and 'wheel' in o.parent
     original_material=o.data.materials[0]
-    if original_material.name in materials:
-        o.data.materials.clear();o.data.materials.append(materials[original_material.name]);continue
+    key=(original_material.name,wheel_part)
+    if key in materials:
+        o.data.materials.clear();o.data.materials.append(materials[key]);continue
     mat=original_material.copy();mat.name=original_material.name+' • painted projection'
-    materials[original_material.name]=mat
+    materials[key]=mat
+    if wheel_part:mat.name+=' • stationary light'
     o.data.materials.clear();o.data.materials.append(mat)
     n=mat.node_tree.nodes;l=mat.node_tree.links;s=n.get('Principled BSDF')
     if old:
@@ -43,7 +55,11 @@ for name in names:
             if node.type=='TEX_IMAGE' and not node.inputs['Vector'].is_linked:l.new(bakeuv.outputs[0],node.inputs['Vector'])
     original=s.inputs['Base Color'].links[0].from_socket
     coord=n.new('ShaderNodeUVMap');coord.uv_map='PaintingProjection'
-    image=n.new('ShaderNodeTexImage');image.image=tex;image.extension='CLIP';l.new(coord.outputs[0],image.inputs['Vector'])
+    image=n.new('ShaderNodeTexImage');image.image=tex;image.extension='CLIP'
+    if wheel_part:
+        fixed=n.new('ShaderNodeTexCoord');fixed.object=projector
+        l.new(fixed.outputs['Object'],image.inputs['Vector'])
+    else:l.new(coord.outputs[0],image.inputs['Vector'])
     confidence=n.new('ShaderNodeVertexColor');confidence.layer_name='Paint confidence'
     mask=n.new('ShaderNodeMath');mask.operation='MULTIPLY';l.new(confidence.outputs['Color'],mask.inputs[0]);l.new(image.outputs['Alpha'],mask.inputs[1])
     strength=n.new('ShaderNodeMath');strength.operation='MULTIPLY';strength.inputs[1].default_value=.98;l.new(mask.outputs[0],strength.inputs[0])

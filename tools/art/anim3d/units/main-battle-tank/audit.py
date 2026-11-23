@@ -12,6 +12,13 @@ for clip,count in [('idle',8),('move',8),('attack',10),('hit',4),('death',10)]:
     samples=json.loads(sc['sample_frames']);assert len(samples)==count
     base=bpy.data.objects['Stationary cream stone base'];base_matrix=base.matrix_world.copy()
     gear=bpy.data.objects['Running gear root'];gear_matrix=gear.matrix_world.copy()
+    projector=bpy.data.objects['Wheel paint lighting coordinates']
+    projector_matrix=projector.matrix_world.copy()
+    wheel_faces=[o for o in bpy.data.objects if o.name.startswith('Cast wheel dished face')]
+    assert len(wheel_faces)==12
+    for face in wheel_faces:
+        coordinates=[n for n in face.data.materials[0].node_tree.nodes if n.type=='TEX_COORD' and n.object==projector]
+        assert coordinates,'Wheel lost its stationary painted-light coordinates'
     links=[o for o in bpy.data.objects if 'track_phase' in o];wheels=[o for o in bpy.data.objects if 'wheel' in o]
     assert len(links)==124 and len(wheels)==16
     assert len([o for o in bpy.data.objects if o.type=='MESH'])>400
@@ -21,6 +28,7 @@ for clip,count in [('idle',8),('move',8),('attack',10),('hit',4),('death',10)]:
         sc.frame_set(frame);bpy.context.view_layer.update()
         assert base.matrix_world==base_matrix,'Base moves'
         assert gear.matrix_world==gear_matrix,'Running gear moves with sprung armour'
+        assert projector.matrix_world==projector_matrix,'Wheel paint lighting rotates with the wheel'
         for o in bpy.data.objects:
             if o.type=='MESH':
                 assert min(abs(v) for v in o.scale)>.001,(o.name,'unsafe scale')
@@ -35,19 +43,19 @@ for clip,count in [('idle',8),('move',8),('attack',10),('hit',4),('death',10)]:
         observed.append(tuple(bpy.data.objects['Gun recoil'].location))
     if clip=='attack':assert max(v[0] for v in observed)-min(v[0] for v in observed)>.1
     if clip=='death':assert samples[-1]==samples[-2]
-    records[clip]={'samples':count,'stationary_base':True,'safe_scales':True,'links':len(links),'wheels':len(wheels),'source_sha256':source}
+    records[clip]={'samples':count,'stationary_base':True,'safe_scales':True,'stationary_wheel_light':True,'links':len(links),'wheels':len(wheels),'source_sha256':source}
 for i in range(3):
     for kind in ['AO','curvature']:assert (M/'textures/baked'/f'{i}-{kind}.png').stat().st_size>100
 # Actual geometric grounding distances, reported separately from visual acceptance.
 bpy.ops.wm.open_mainfile(filepath=str(M/'clips/move.blend'));sc=bpy.context.scene;sc.frame_set(1);bpy.context.view_layer.update()
-base=bpy.data.objects['Stationary cream stone base'];normal=base.matrix_world.to_3x3()@base.data.polygons[max(range(len(base.data.polygons)),key=lambda i:base.data.polygons[i].normal.z)].normal
+base=bpy.data.objects['Stationary cream stone base'];normal=base.matrix_world.to_3x3() @ base.data.polygons[max(range(len(base.data.polygons)),key=lambda i:base.data.polygons[i].normal.z)].normal
 # The fitted mesh's dominant upper face carries the disc plane.
 faces=[p for p in base.data.polygons if p.normal.z>.9];face=max(faces,key=lambda p:p.area)
-normal=(base.matrix_world.to_3x3().inverted().transposed()@face.normal).normalized();plane=base.matrix_world@face.center
+normal=(base.matrix_world.to_3x3().inverted().transposed() @ face.normal).normalized();plane=base.matrix_world @ face.center
 contacts=[]
 for o in bpy.data.objects:
     if o.type=='MESH' and o.name.startswith('Forged track shoe'):
-        points=[o.matrix_world@v.co for v in o.data.vertices]
+        points=[o.matrix_world @ v.co for v in o.data.vertices]
         contacts.append(min((p-plane).dot(normal) for p in points))
 assert abs(min(contacts))<.02, 'Track contact exceeds tolerance'
 report={'technical_checks':'PASS','clips':records,'six_actual_bakes':True,'lowest_track_distance_to_base_plane':min(contacts),'note':'Grounding distance and contact sheets require visual review. No automatic art PASS.'}

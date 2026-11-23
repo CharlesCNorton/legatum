@@ -10,6 +10,7 @@ from runninggear import route
 R=Path(os.environ['ANIM_ROOT']);M=R/'masters/main-battle-tank';out=M/'clips';out.mkdir(exist_ok=True)
 CLIPS={'idle':(8,10,True),'move':(8,12,True),'attack':(10,14,False),'hit':(4,12,False),'death':(10,10,False)}
 for clip,(count,fps,loop) in CLIPS.items():
+    if os.environ.get('ANIMATE_CLIP') and clip!=os.environ['ANIMATE_CLIP']:continue
     bpy.ops.wm.open_mainfile(filepath=str(M/'main-battle-tank.blend'))
     sc=bpy.context.scene
     routes={int(side):route(circles) for side,circles in json.loads(sc['track_circles']).items()}
@@ -20,6 +21,17 @@ for clip,(count,fps,loop) in CLIPS.items():
     # Match the registered barrel muzzle, preserving local recoil/traverse motion.
     gun_effect_shift=Vector(sc['muzzle_local'])-Vector((2.14,0,0))
     wheels=[o for o in bpy.data.objects if 'wheel' in o];links=[o for o in bpy.data.objects if 'track_phase' in o];effects=[o for o in bpy.data.objects if 'effect' in o]
+    if clip=='attack':
+        # Lower optical density for the overlapping muzzle shells; the wreck
+        # smoke keeps its heavier material. No volume grids or zero scales.
+        haze=bpy.data.materials['Smoke • noise faded 3D shell'].copy()
+        haze.name='Dispersing muzzle haze'
+        for node in haze.node_tree.nodes:
+            if node.type=='MATH' and node.operation=='MULTIPLY' and not node.inputs[1].is_linked:
+                node.inputs[1].default_value=.12
+        for effect in effects:
+            if effect['effect']=='gun_smoke':
+                effect.data.materials.clear();effect.data.materials.append(haze)
     movers=[root,turret,gun]+wheels+links+effects
     burns=[]
     if clip=='death':
@@ -65,17 +77,17 @@ for clip,(count,fps,loop) in CLIPS.items():
         for o in effects:
             o.scale=(1,)*3;o.hide_render=True;kind=o['effect'];k=o['index']
             if kind=='exhaust' and clip in ['idle','move']:
-                o.hide_render=False
-                age=((i/count+k/9)%1);r=.035+.075*age
-                o.location=(-1.72-.20*age,-.56+.05*sin(k+phase),1.10+.75*age);o.scale=(r*1.5,r,r*1.4)
+                o.hide_render=k>=5
+                age=((i/count+k/9)%1);r=.025+.045*age
+                o.location=(-1.72-.20*age,-.56+.05*sin(k+phase),1.04+.32*age);o.scale=(r*1.5,r,r*1.4)
             if kind=='flash' and clip=='attack' and j==4:
                 o.hide_render=False
                 o.location=(2.14,0,0);o.scale=(.5,.35,.35) if k<2 else (.4,.3,.32)
                 o.rotation_euler=(k*.9,pi/2+.30*sin(k),.25*cos(k))
             if kind=='gun_smoke' and clip=='attack' and 4<=j<=8:
                 o.hide_render=False
-                age=(j-4)/5;r=.03+.04*age
-                o.location=(2.16+.02*age,.055*sin(k*2)*age,.02*k*age+.06*age);o.scale=(r*1.3,r,r)
+                age=(j-4)/5;r=.02+.04*age
+                o.location=(2.12+.04*age,.06*sin(k*2)*age,.02*k*age+.10*age);o.scale=(r*1.3,r,r)
             if kind=='spark' and ((clip=='hit' and j in [1,2]) or (clip=='death' and j in [1,2,3])):
                 o.hide_render=False
                 age=j/3;a=k*2.399

@@ -232,3 +232,38 @@ speed. `audit.py` checks geometry, pivots, scales, stationary base, recoil and b
 its contact-distance diagnostic and the visual sheets remain review evidence.
 Scripts never create `main-battle-tank-PASS`: only write it after a human-quality
 judgment that rest is hard to distinguish, clips are clean and delivery passes.
+
+### Main battle tank round 2 — roof landmarks and rotating paint
+
+The round-one host pass completed at 512px (Q90, 191,884-byte atlas); that is
+technical evidence, not art acceptance. Its review sheets/movie are preserved in
+`masters/main-battle-tank/round1-gpu/`. Round two fits the cupola sights, upright
+machine-gun receiver, pintle, magazine and hatch separately. Fitting their combined
+bounds had retained the wrong thin-bar silhouette. The upper deck now extends
+farther forward and the far front sprocket sits lower. The canvas roll has modeled
+radial folds, pinched straps, closed webbing and beveled buckles; the long barrel
+is thinner. All surface changes are rebaked and reprojected before animation.
+
+Projected highlights and pieces of neighbouring armour must not rotate around road
+wheels. `paint.py` gives wheel surfaces a separate material cache key and a fixed
+3D projection coordinate object. The wheels, hubs and recess geometry still rotate
+at belt travel/radius; the painting's illumination stays fixed. Other components
+retain frozen mesh UV projection and the existing generated hidden-face fills.
+This is a fixed-camera art technique, not a reusable all-view tank texture. The
+geometry audit checks that the wheel coordinate object stays stationary in every
+clip. Idle exhaust is smaller and remains close to its outlet; muzzle smoke spreads
+away from the barrel instead of stacking into a hard dark tip.
+
+Rebuild with `build`, `refine`, `bake`, `paint`, `c`, `animate`, then the remaining
+review stages and `audit`, using Cycles CPU for previews. Preserve one rest grade
+across the entire set. The next host command is
+`ROUND=2 tools/art/anim3d/units/main-battle-tank/gpu.sh`; it now also runs the three
+mechanical route tests before Metal preflight. Inspect fresh GPU results before
+writing PASS; CPU previews cannot certify the GPU result.
+
+Movie encoding first validates the atlas against current clip/render hashes, then
+records the atlas SHA256 in its receipt. This prevents an old atlas producing a
+technically valid but stale movie after a failed pack. The attack-only iteration
+path is `ANIMATE_CLIP=attack .../render.sh animate`; rerender `d` and `e-attack`, then
+run the full audit, archive, pack and movie checks. Smoke reaching a crop boundary
+must be fixed in 3D and rerendered; do not relax the atlas padding check.
