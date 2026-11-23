@@ -8,3 +8,6 @@
 - Saved d review immediately; 4 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/d/render.json.
 - Saved e-idle review immediately; 8 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/e-idle/render.json.
 - Saved e-move review immediately; 8 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/e-move/render.json.
+- Saved e-attack review immediately; 10 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/e-attack/render.json.
+- Saved e-hit review immediately; 4 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/e-hit/render.json.
+- Saved e-death review immediately; 10 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/e-death/render.json.

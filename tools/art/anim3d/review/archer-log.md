@@ -61,3 +61,5 @@
 - Rest review remains below painting parity. Measured alpha silhouette IoU 0.744; projection cannot fix the narrower drawing arm or simpler shoulder silhouette.
 - Death review exposed a floating torso and vertical released bow; lowered/folded the body and laid the bow flat, preserving the settled last two frames.
 - Pose review exposed an incorrect forward-following release hand; authored a cheek-side follow-through and independent string snap, pending final attack rerender.
+- Rendered e-attack: 512px CYCLES CPU, 12 samples.
+- Published e-attack native 256/64 comparison; render device CPU.

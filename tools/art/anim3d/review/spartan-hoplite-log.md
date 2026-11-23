@@ -16,3 +16,5 @@ Baked clip hit
 Baked clip death
 Review c: 256px CYCLES/CPU, 16 samples; 1 actual frames.
 Visual correction: inherited aspis quad rings had inward normals; repaired winding, preserved fixed projected UVs and removed duplicate lambda relief. Rest remains below painting quality, especially mantle and helmet profile.
+Review c: 512px CYCLES/CPU, 12 samples; 1 actual frames.
+Review d: 512px CYCLES/CPU, 12 samples; 4 actual frames.

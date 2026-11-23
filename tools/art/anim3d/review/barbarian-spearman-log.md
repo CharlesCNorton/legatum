@@ -11,3 +11,6 @@
 - Authored five skeletal clips with 8/8/10/4/10 samples, hand-mounted spear, a death release and repeated settled death frame; CPU death preview underway.
 - Quality remains below painting: face/hair registration, fur silhouette and cloth drape need further sculpting. GPU review is pending, not approved.
 - Published e-death review from CPU render.
+- Published b review from CPU render.
+- Published c review from CPU render.
+- Published c-details review from CPU render.

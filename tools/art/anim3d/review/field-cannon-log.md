@@ -91,3 +91,4 @@
 - Static gate attempt at the runner's WIP HEAD: public-claims PASS; hygiene falsely recognized unspaced Python matrix @ operators as email addresses (spacing corrected); art rendering failed in local Chromium. Final committed HEAD and cloud retry pending.
 - Posted field-cannon-e-idle-strip.png; actual CYCLES render, visual review pending.
 - Posted field-cannon-e-move-strip.png; actual CYCLES render, visual review pending.
+- Posted field-cannon-e-attack-strip.png; actual CYCLES render, visual review pending.

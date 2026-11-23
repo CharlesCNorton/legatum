@@ -16,3 +16,8 @@
 - Published b review from 512px CPU renders.
 - Published c review from 512px CPU renders.
 - Published d review from 512px CPU renders.
+- Published e-idle review from 512px CPU renders.
+- Corrected head turn, registered the sarissa to the painting, reduced shield width, and corrected its attachment after changing the arm pose.
+- Baked actual AO and curvature for chest, helmet and shield; projected the original painting with frozen UVs and incidence/alpha masks; reused generated linen/bronze fills on hidden surfaces.
+- Authored all five clips. Grip proxy audit: idle 3.3 cm, move 5.4 cm, attack 7.0 cm, hit 2.5 cm, pre-release death 2.9 cm maximum; these are remaining craft issues, not perfect finger contact.
+- Started all-stage 512 px / 8-sample Cycles CPU preview render; GPU handoff uses 64 samples and explicit Metal. Art parity is not met, so no PASS marker.

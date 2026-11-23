@@ -24,3 +24,13 @@ Using six Blender skills: MPFB anatomy, solid folded clothing/bevels, textured P
 Rendered b 256 px CYCLES/CPU
 Rendered c 512 px CYCLES/CPU
 Rendered c-details 512 px CYCLES/CPU
+Rendered d 512 px CYCLES/CPU
+Rendered e-idle 512 px CYCLES/CPU
+Corrected projection masks: olive cloak and cowl no longer receive the painting's bright skin/tunic patches; narrow fold ropes use their wool fill rather than repeating an entire image crop.
+All first-pass clips reviewed as strips; death is a held side collapse but still stiff, move is readable with alternating foot lift, and attack remains a small staff shove.
+Earlier projection sheets/animations preserved in masters/scout/review-iterations/first-projection before refreshing review files.
+Metadata decision: v2 keeps frame anchor and numeric clip counts, adds per-sample packed rectangle plus ox/oy; no v1 runtime loader changes in this art lane.
+Rendered e-move 512 px CYCLES/CPU
+Rendered e-attack 512 px CYCLES/CPU
+Rendered e-hit 512 px CYCLES/CPU
+Rendered e-death 512 px CYCLES/CPU
