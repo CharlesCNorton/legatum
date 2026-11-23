@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
+# Unit lanes dispatch before the inherited spearman lock/settings.
+if [[ "${UNIT:-}" == composite-archer ]]; then
+  exec "$(dirname "$0")/units/composite-archer/run.sh" "${1:-c}"
+fi
 cd "$(dirname "$0")/../../.."
 source tools/art/anim3d/env.sh
 stage="${1:-c}"

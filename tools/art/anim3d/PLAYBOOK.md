@@ -106,3 +106,106 @@ tools/art/anim3d/render.sh audit
 ```
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
+
+## Infantry family: composite archer, round 1
+
+This isolated unit uses `units/composite-archer/` and external
+`$ANIM_ROOT/masters/composite-archer/`. It reuses the infantry MPFB anatomy/rig fitting
+method, not the spearman kit. The 53-bone CC0 rig wears a red embroidered tunic,
+patterned trousers, felt cap, leather boots and quiver. The recurved composite bow,
+string, nocked arrow and spare arrows are real geometry. No billboard, relief-plane
+figure, account or paid model service is used. Original scripts are MIT; rendered
+art and the project painting are CC BY 4.0. Source URLs, generated-fill prompt and
+input hashes are recorded in the unit README and external input manifest.
+
+The six installed Blender skills informed thick clothing shells, bevelled hard
+edges, fully metallic gilding versus dielectric cloth/skin, a warm upper-left key
+with cool rim and soft fill, an orthographic painting camera, editable quaternion
+pose keys, and verified PNG sequences. Entry points invoke only plain `blender -b`
+on PATH, with `--disable-autoexec`, so the shared machine gate remains authoritative.
+The default is Cycles CPU at eight samples. Do not bypass that gate or scale hidden
+objects to zero; the arrow uses keyed render visibility.
+
+### Painting and surface standard
+
+The four quality levers from standing feedback apply to this foot-soldier lane:
+
+1. Align the real rest pose/camera, then project the full painting onto frozen mesh
+   UVs. An incidence/alpha mask fades to generated painted fills on unseen surfaces.
+   Alpha never replaces geometry. Landmark registration is approximate and carries
+   painted lighting; inspect the face, hands and seams in motion.
+2. Finish geometry: fitted MPFB clothing weights, physical cloth thickness and fold
+   displacement, gold piping, leather belt/baldric/buckle/stitches, layered horn bow
+   and binding geometry. Eight actual 256px AO/Pointiness maps on four main surfaces
+   darken cavities and vary roughness. Inner Solidify faces are disabled only for
+   baking to prevent overlapping-UV contamination. No simulated cloth is claimed:
+   these fitted cloth shells use skeletal deformation.
+3. Light as a painted miniature product shot, with contact shadows on one cream
+   disc. The shared visual target is sRGB **#E9CFA0**, with a darker warm rim. Here the
+   AgX shader uses linear pigment `(.82,.61,.32)`, roughness `.9`, emission `.12` to
+   retain warmth in shade; that is not an sRGB conversion or an exact pixel match.
+4. Derive one bounded RGB-quantile LUT from the rest render and painting, then freeze
+   it for all frames. Raw images remain unchanged. The grade is recorded by hash.
+
+`composite-archer-f-restpose-compare.png` contains painting, render, half split and
+50/50 crossfade at 256 and 64 px. It exposes mismatch rather than proving parity.
+Round 1 remains a review candidate: anatomy/pose, hands, face registration and
+motion-revealed projection seams need further work. GPU renders and the lead's art
+review decide adoption; no runtime registration changes in this lane.
+
+### Rebuild, interim reviews and GPU handoff
+
+Run sequentially from the repository root:
+
+```sh
+UNIT=composite-archer tools/art/anim3d/render.sh prepare
+UNIT=composite-archer tools/art/anim3d/render.sh build
+UNIT=composite-archer tools/art/anim3d/render.sh paint
+UNIT=composite-archer tools/art/anim3d/render.sh round
+UNIT=composite-archer tools/art/anim3d/render.sh audit
+```
+
+`prepare` requires the two original external images in `assets/composite-archer/`;
+`inputs.json` pins them. Build/paint invalidate the source hashes of old clips.
+`round` renders rest, authors all five clip masters and renders each sequentially.
+It posts b-plain, c-textured-lit, c-details, d-rig-poses and each e-clip strip/WebP
+under `review/3d-v2/composite-archer-*` as each stage exists. The running log and any
+unit-specific feedback live there too. Idle breathes; move is a guarded crouching
+advance; attack draws/releases/recovers; hit recoils; death folds and settles with a
+released bow and a two-frame terminal hold. These are original keys, not CMU motion.
+
+The lead rerenders the **saved** masters, without rebuilding materials or poses:
+
+```sh
+UNIT=composite-archer RENDER_ENGINE=CYCLES CYCLES_DEVICE=GPU SAMPLES=64 \
+  RESOLUTION=512 tools/art/anim3d/render.sh final
+```
+
+This explicitly requires Metal and fails instead of silently falling back to CPU.
+`final` renders rest first, all clips, audits saved geometry and repacks/validates.
+For targeted review use `c`, `d`, `e-idle`, `e-move`, `e-attack`, `e-hit`, `e-death`;
+`pack` and `validate` do not launch Blender. After a changed rest grade rerender all
+clips. Keep the 512px raw/graded frames and 256px gallery set outside git.
+
+### Trimmed 160px atlas extension (formatVersion 2)
+
+The candidate `app/src/assets/units/anim/composite-archer.{webp,json}` retains the
+five clip rows in idle/move/attack/hit/death order and lengths **8/8/10/4/10**.
+`frame` is `{w:160,h:160,ax:79,ay:138}` in the common untrimmed frame coordinates.
+`clips[name]` retains `{row,frames,fps,loop}` with numeric frame counts. The new
+`frames[name][index]` gives `{x,y,w,h,ox,oy}`: packed atlas rectangle plus its top-left
+offset inside the original 160px square. Draw the crop at `(ox-ax, oy-ay)` relative
+to the unit anchor. Rectangles have two pixels of transparent padding; row heights
+and packed x positions vary. `atlas` stores actual decoded dimensions. Consumers
+must honor the rectangles/offsets for version 2; do not interpret this as the old
+fixed grid. Runtime support is a separate integration task, not silently supplied
+by this art-only candidate.
+
+All 40 frames remain. Only alpha is quantized (16 levels). WebP quality searches
+90/85/80/75 and must stay at least 75 and at most 200,000 bytes; failure is reported,
+never hidden by dropping frames or lowering quality. The pack report binds raw
+frames, clip/master and grade hashes. Validation checks transparent bounds, original
+512/256 sets, native margins, actual motion, held death and trim reconstruction.
+The geometry audit checks MPFB topology, finite/nonzero scales, stationary base,
+source hashes and held terminal bones. It is not a full body/equipment collision
+solver or art approval.

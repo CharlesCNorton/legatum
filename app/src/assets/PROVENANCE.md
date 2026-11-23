@@ -31,6 +31,7 @@ The date range is the range of dates the repository's own records give (prompt h
 | Reward emblems | `app/src/assets/rewards/*.svg` | Code: `rewards/src/build-rewards.mjs` | Not applicable | Not recorded |
 | App icon and favicons | `app/public/favicon*`, `app/public/apple-touch-icon.png` | Composed by `tools/design/app-icon/build.mjs` from a code-drawn seal (`seal.svg`) over a parchment texture (`parchment.jpg`), which that script records as generated with Codex image generation | No prompt for the parchment texture | Not recorded |
 | Music and sound effects | `app/public/audio/` | Third-party recordings released under CC0 1.0 (Kenney, Breviceps, vitalezzz), trimmed and encoded by `tools/audio/build_audio.py` | Not applicable. Sources, authors and licences: `app/public/audio/CREDITS.md`, `manifest.json`, `licenses/` | See `CREDITS.md` |
+| Composite archer 3D round-1 candidate | `app/src/assets/units/anim/composite-archer.{webp,json}` | Blender 5.3 / MPFB 2.0.18 CC0 anatomy and eyes; original fitted kit and five keyed clips; project painting projected onto true geometry; original imagegen unseen-surface fills; Cycles CPU previews | Recipe, source URLs and fill prompt: `tools/art/anim3d/units/composite-archer/README.md`; external masters/input hashes under `~/LegatumRuns/anim-pilot/`; project CC BY 4.0 output, MIT scripts | 2026-11-22; candidate, not art-approved or runtime-wired |
 
 ## Gaps
 
