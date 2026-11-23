@@ -9,6 +9,6 @@ args=(-b --disable-autoexec --factory-startup --python-exit-code 1)
 if [[ "$RENDER_ENGINE" == BLENDER_EEVEE ]]; then args+=(--gpu-backend metal); fi
 case "$stage" in
  build) "$ANIM_ROOT/venv/bin/python" "$unit_dir/prepare.py"; blender "${args[@]}" --python "$unit_dir/build.py" ;;
- finish|animate|audit) blender "${args[@]}" --python "$unit_dir/$stage.py" ;;
+ finish|animate|audit|feet) blender "${args[@]}" --python "$unit_dir/$stage.py" ;;
  *) blender "${args[@]}" --python "$unit_dir/render.py" -- "$stage"; "$ANIM_ROOT/venv/bin/python" "$unit_dir/deliver.py" review "$stage" ;;
 esac

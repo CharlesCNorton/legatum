@@ -24,6 +24,8 @@ if (( SAMPLES < 64 )); then echo 'GPU finals require SAMPLES >= 64'; false; fi
 for stage in b c c-details d e-idle e-move e-attack e-hit e-death; do
  "$unit_dir/render.sh" "$stage"
 done
+stage=feet
+"$unit_dir/render.sh" feet
 stage=verify-gpu-masters
 "$ANIM_ROOT/venv/bin/python" "$unit_dir/gpu_check.py"
 stage=audit

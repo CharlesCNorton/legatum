@@ -56,7 +56,7 @@ for o in bpy.context.scene.objects:
  if o.name.startswith(('Pleated linen','Overlapping pleated','Twisted linen','Waist knot')):
   world=o.matrix_world.copy();world.translation.z+=.04;o.matrix_world=world
 # Hair cap fitted directly to anatomical scalp (real surface, not primitive head).
-bpy.context.view_layer.update();hc=rig.matrix_world@rig.pose.bones['head'].head; headtop=1.905
+bpy.context.view_layer.update();hc=rig.matrix_world @ rig.pose.bones['head'].head; headtop=1.905
 # band follows the skull; feather is a curved thin solid with a raised quill.
 vs=[];fs=[]
 for j in range(3):
@@ -80,7 +80,7 @@ for i in range(1,16):
  t=i/16;cx=-.055-.020*t;z=1.855+.155*t;w=.010*sin(pi*t)**.6
  for sign in [-1,1]:attach(curve('Feather barb',[(cx,.134,z),(cx+sign*w,.14,z-.009)],.0012,dark),rig,'head')
 # The long spear is centered on the palm and attached to the hand.
-grip=rig.matrix_world@rig.pose.bones['hand_r'].head+Vector((-.006,-.010,.035));direction=Vector((-.235,0,.972))
+grip=rig.matrix_world @ rig.pose.bones['hand_r'].head+Vector((-.006,-.010,.035));direction=Vector((-.235,0,.972))
 shaft=curve('Long ash spear',[(grip-direction*1.20),(grip+direction*.43)],.011,wood);attach(shaft,rig,'hand_r')
 center=grip+direction*.43;side=Vector((.972,0,.235));depth=Vector((0,.010,0));tip=center+direction*.205
 verts=[center-side*.034,center+side*.034,center-depth,center+depth,tip,center-direction*.055]
@@ -101,6 +101,10 @@ shield_objects=[o for o in bpy.context.scene.objects if o.name.startswith(('Conv
 shield_control=bpy.data.objects.new('Shield control',None);bpy.context.collection.objects.link(shield_control);shield_control.location=(cx,-.12,1.17);attach(shield_control,rig,'lowerarm_l')
 for o in shield_objects:
  bpy.context.view_layer.update();world=o.matrix_world.copy();o.parent=shield_control;o.parent_type='OBJECT';o.matrix_world=world
+# Thick leather grip straps on the shield reverse, following the forearm.
+for z in [1.10,1.23]:
+ strap=curve('Shield reverse grip strap',[(cx-.09,-.105,z),(cx-.05,-.045,z+.015),(cx+.04,-.04,z+.015),(cx+.09,-.105,z)],.009,hide)
+ bpy.context.view_layer.update();world=strap.matrix_world.copy();strap.parent=shield_control;strap.matrix_world=world
 # One hand-relative rigid spear control permits a physical release during death.
 spear_objects=[o for o in bpy.context.scene.objects if o.name.startswith(('Long ash spear','Faceted bronze spearhead','Spear socket binding'))]
 control=bpy.data.objects.new('Spear control',None);bpy.context.collection.objects.link(control);control.location=grip;attach(control,rig,'hand_r')

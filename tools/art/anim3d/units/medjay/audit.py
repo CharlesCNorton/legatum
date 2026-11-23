@@ -18,7 +18,7 @@ for obj in bpy.context.scene.objects:
  assert len(me.vertices)==len(obj.data.vertices),obj.name
  uv=obj.data.uv_layers['Rest painting projection']
  for loop in obj.data.loops:
-  q=world_to_camera_view(bpy.context.scene,bpy.context.scene.camera,ev.matrix_world@me.vertices[loop.vertex_index].co)
+  q=world_to_camera_view(bpy.context.scene,bpy.context.scene.camera,ev.matrix_world @ me.vertices[loop.vertex_index].co)
   uv_error=max(uv_error,(Vector((q.x,q.y))-uv.data[loop.index].uv).length*256)
  ev.to_mesh_clear()
  for m,show in mask_states:m.show_viewport=show
@@ -30,7 +30,9 @@ for clip,(count,_,_) in CLIPS.items():
   sc.frame_set(1);bpy.context.view_layer.update()
   error=max(abs(p.matrix[i][j]-rest_matrices[p.name][i][j]) for p in rig.pose.bones for i in range(4) for j in range(4))
   assert error<.0001,(clip,'Clip entry pose pop',error)
- matrices=[];bounds=[]
+ matrices=[];bounds=[];foot_error=0.0
+ motion=json.loads((M/f'{clip}.json').read_text())['motion']
+ if clip!='attack':assert motion['provider']=='Quaternius Universal Animation Library Standard' and motion['license']=='CC0-1.0'
  for i in range(count):
   sc.frame_set(i+1);bpy.context.view_layer.update();matrix=[list(row) for row in base.matrix_world]
   if base_matrix is None:base_matrix=matrix
@@ -39,11 +41,22 @@ for clip,(count,_,_) in CLIPS.items():
    assert all(abs(v)>.001 for v in o.scale),(clip,i,o.name,'near-zero scale')
    if o.type in ['MESH','CURVE'] and o.name!='Stationary warm cream stone':
     assert o.parent is not None or o.name=='Medjay anatomical eyes',(clip,o.name,'unattached equipment')
+  if clip=='move':
+   for side in ['l','r']:
+    expected=Quaternion(motion['target_foot_rotations'][i][side]);actual=rig.pose.bones['foot_'+side].matrix.to_quaternion()
+    foot_error=max(foot_error,expected.rotation_difference(actual).angle)
   matrices.append([list(row) for row in rig.matrix_world]);coords=[]
   for o in sc.objects:
    if o.type not in ['MESH','CURVE']:continue
    for v in o.bound_box:
-    q=world_to_camera_view(sc,sc.camera,o.matrix_world@Vector(v));coords.append((q.x,q.y))
+    q=world_to_camera_view(sc,sc.camera,o.matrix_world @ Vector(v));coords.append((q.x,q.y))
   bounds.append([min(x for x,y in coords),min(y for x,y in coords),max(x for x,y in coords),max(y for x,y in coords)])
- records[clip]={'samples':count,'stationary_base':True,'sane_scales':True,'equipment_attached':True,'bounds_conservative':bounds}
+ if clip=='move':assert foot_error<.002,('Post-retarget foot rotation changed',foot_error)
+ if CLIPS[clip][2]:
+  sc.frame_set(1);first={p.name:p.matrix.copy() for p in rig.pose.bones};root=rig.matrix_world.copy()
+  sc.frame_set(count+1)
+  seam=max(abs(p.matrix[a][b]-first[p.name][a][b]) for p in rig.pose.bones for a in range(4) for b in range(4))
+  assert seam<.0001,(clip,'Loop seam',seam)
+  assert max(abs(rig.matrix_world[a][b]-root[a][b]) for a in range(4) for b in range(4))<.0001
+ records[clip]={'max_source_foot_rotation_error_radians':foot_error,'samples':count,'stationary_base':True,'sane_scales':True,'equipment_attached':True,'bounds_conservative':bounds}
 (M/'audit.json').write_text(json.dumps({'status':'pass','body_vertices':vertex_count,'bones':53,'finished_projection_max_error_px':uv_error,'combat_entry_matches_rest':True,'clips':records,'limitations':'Structural audit does not prove absence of all skin/cloth/weapon intersections. Review silhouettes and held death.'},indent=2));log('Structural audit passed: genuine weighted anatomy, 53 bones, fixed projection UVs, stationary base and sane scales across every clip sample.')

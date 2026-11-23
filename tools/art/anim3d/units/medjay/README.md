@@ -1,13 +1,10 @@
-# Medjay, round 2
+# Medjay driver round 2
 
-True 3D MPFB anatomy and 53-bone skeleton, original folded linen kilt, solid
-headband, curved feather, convex hide shield and bronze spear. The original
-19,158-vertex body cage stays in the plain master; finished geometry freezes
-subdivision before projection and retains interpolated native skin weights.
-Eight actual AO/curvature bake pairs and generated hidden-surface fills remain
-outside git. No billboard or per-frame texture reprojection is used.
-
-Run from the repository root:
+True 3D MPFB anatomy, 53 bones, thick folded linen, headband/feather, convex hide
+shield with reverse straps and bronze spear. Fixed rest-camera painting UVs blend
+into the original generated unseen-surface fills. Eight AO/curvature bake pairs,
+product lighting and one frozen histogram grade remain. All sources and masters
+stay outside git; see [SOURCES.md](SOURCES.md).
 
 ```sh
 tools/art/anim3d/units/medjay/render.sh build
@@ -16,42 +13,30 @@ tools/art/anim3d/units/medjay/render.sh animate
 ROUND=2 tools/art/anim3d/units/medjay/gpu.sh
 ```
 
-The executable no-argument GPU handoff requires Cycles Metal, renders every stage
-at 512 px / at least 64 samples, retains matching 256 px copies, creates the
-rest comparison, strips and animated WebPs, audits the geometry, packs and
-validates the trimmed atlas, then writes the eight-second five-clip H.264/yuv420p
-`medjay-round${ROUND}.mp4`. It records a round log, failure status and successful
-technical receipt; it never writes an art PASS. CPU preview: use
-`RESOLUTION=256 SAMPLES=8 render.sh <stage>` with the full path above.
+The no-argument executable GPU script requires Cycles Metal and >=64 samples,
+renders all stages at 512 px with 256 px copies, publishes reviews/strips/WebPs,
+front/top feet checks and an eight-second five-clip H.264/yuv420p video, audits,
+packs and validates. Source/code hashes reject stale masters. Technical receipts
+never establish art approval. CPU previews use `SAMPLES=8 RESOLUTION=256`.
 
-External root: `~/LegatumRuns/anim-pilot`. Sources: `assets/medjay`; editable
-masters, raw/graded frames, bakes and checks: `masters/medjay`; reviews:
-`review/3d-v2/medjay-*`. The prior round is preserved in `masters/medjay/round1-cpu`.
-Source painting and generated fills are unchanged and pinned in `assets.lock.json`.
+This round fits complete calf and neck/shoulder surfaces, preserving depth and
+weights. Reference alpha runs distinguish calves from the nearby spear; MPFB
+hidden helpers are excluded from silhouette measurements. Stone has live contact
+shading, grain and source-painted unoccluded lower rim. The clay sheet shows the
+finished geometry. Original cage remains editable in the plain master.
 
-`app/src/assets/units/anim/medjay.{webp,json}` remains an unwired art candidate.
-Version 2 uses logical `frame:{w:160,h:160,ax:84,ay:141}` and ordered clip `rects`
-with `{x,y,w,h,ox,oy}`. Reconstruct crops at their offsets before applying the
-anchor; physical atlas rows have variable heights. Full alpha is retained,
-identical frames share rectangles, and all 8/8/10/4/10 samples remain. Quality
-never falls below 75; over 200,000 bytes fails without replacing the atlas.
+Idle/walk/hit/death use Quaternius CC0 motion with reference/rest/roll compensated
+Blender constraints. Carrying arms layer open idle; foot rotations are untouched
+after retargeting. Root/floor support adaptations are recorded. Only the weapon
+attack and equipment release are authored. Cloth is modeled, not simulated.
 
-Round-two changes: upright head and fitted cranial vault, narrow feather, solid
-headband, fitted calves/toes, closed linen waist gap, thinner cream base,
-finished-surface UVs and camera-only painted illumination. Generated fills,
-physical shading and product lights remain on revealed surfaces. Combat entries
-match the rest pose; planted move targets compensate root bob.
+`app/src/assets/units/anim/medjay.{webp,json}` is an unwired candidate. Version 2
+uses logical 160px cells, anchor (84,141), and per-frame `rects` with x/y/w/h/ox/oy.
+Reconstruct each trimmed frame before anchoring. All 8/8/10/4/10 frames remain,
+full alpha is preserved, quality >=75 and size <=200,000 bytes are enforced.
 
-The painting remains visibly richer at 256 px. At 64 px Medjay is recognizable,
-but the anatomy, gaze, base finish and silhouette still differ. No PASS marker.
-Full collision freedom and final GPU art quality are not established by the
-structural/UV audit. Exact round results are in `medjay-log.md` and the pack,
-validation and audit JSON reports under the external master directory.
-
-Round-two CPU verification: all 40 frames retained at 512 and 256 px, Cycles
-CPU8; trimmed 160 px WebP **157,968 bytes at quality 90**, full lossless alpha.
-Atlas reconstruction, identical decoded death hold, current render/grade/master
-hashes, rig/finished-UV/combat-entry audit, Python/Bash syntax and whitespace
-checks pass. MP4 verified H.264/yuv420p, 1600 x 348, 30 fps, 240 frames, 8 seconds.
-Silhouette alpha IoU improves from .776736 to .802003. The painting remains
-visibly different; **no art PASS and no verified GPU render**.
+External root: `~/LegatumRuns/anim-pilot`; sources `assets/medjay`, editable and
+512/256 masters `masters/medjay`, reviews `review/3d-v2/medjay-*`. Incoming GPU
+evidence is archived under `masters/medjay/driver-r1-gpu`. Exact results and
+limitations are in `medjay-log.md`, `audit.json`, `validation.json`, `pack.json`.
+No PASS until rest appearance and all five clips meet the painting's quality.

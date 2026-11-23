@@ -17,6 +17,15 @@ def check_inputs():
     for name in ['plain', 'idle', 'move', 'attack', 'hit', 'death']:
         assert (MASTER / f'medjay-{name}.blend').is_file(), f'Missing master: {name}'
     assert (MASTER / 'medjay.blend').is_file(), 'Missing finished master'
+    master_sha=sha(MASTER/'medjay.blend')
+    for clip in ['idle','move','attack','hit','death']:
+        assert json.loads((MASTER/f'{clip}.json').read_text())['master_sha256']==master_sha, f'Stale animation: {clip}'
+    for manifest in ['build-inputs.json','animation-inputs.json']:
+        for name,expected in json.loads((MASTER/manifest).read_text()).items():
+            assert sha(Path(__file__).parent/name)==expected, f'Stale master after code change: {name}'
+    assets=ROOT/'assets/medjay'
+    for name,expected in json.loads(Path(__file__).with_name('assets.lock.json').read_text())['sha256'].items():
+        assert sha(assets/name)==expected, f'Changed asset: {name}'
 
 
 def check_renders():
@@ -39,6 +48,10 @@ def check_renders():
                 retained = Image.open(MASTER / str(size) / stage / name).convert('RGBA')
                 expected = Image.open(folder / 'graded' / name).convert('RGBA').resize((size, size), Image.Resampling.LANCZOS)
                 assert retained.size == (size, size) and retained.tobytes() == expected.tobytes(), f'{stage}: stale {size} master'
+    feet=json.loads((MASTER/'feet.json').read_text())
+    assert feet['device']=='GPU' and feet['source_sha256']==sha(MASTER/'medjay-move.blend')
+    assert len(feet['files'])==16
+    for item in feet['files']:assert sha(MASTER/item['path'])==item['sha256']
     print('Verified every stage: current Cycles GPU64+/512 renders and matching 256 masters.')
 
 

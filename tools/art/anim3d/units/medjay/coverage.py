@@ -5,7 +5,7 @@ def covered_indices(body):
  for m,_ in states:
   if m.type!='ARMATURE':m.show_viewport=False
  bpy.context.view_layer.update();ev=body.evaluated_get(bpy.context.evaluated_depsgraph_get());me=ev.to_mesh();assert len(me.vertices)==len(body.data.vertices)
- visible=[v.index for v in me.vertices if not .775<(ev.matrix_world@v.co).z<1.235];ev.to_mesh_clear()
+ visible=[v.index for v in me.vertices if not .775<(ev.matrix_world @ v.co).z<1.235];ev.to_mesh_clear()
  for m,state in states:m.show_viewport=state
  return visible
 def apply_coverage(body,visible):

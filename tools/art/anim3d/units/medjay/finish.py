@@ -21,6 +21,8 @@ for obj in list(sc.objects):
   bpy.ops.object.modifier_apply(modifier=mod.name)
  for m,enabled in deform:m.show_viewport=enabled
  bpy.context.view_layer.update()
+from refine import refine,stone_finish
+refine(sc);stone_finish(sc)
 painting=bpy.data.images.load(str(A/'painting-aligned.png'),check_existing=True)
 # Work in stable rest camera coordinates. UVs are fixed to vertices before animation.
 objects=[o for o in sc.objects if o.type=='MESH' and o.name in ['Medjay MPFB anatomical body','Pleated linen kilt','Overlapping pleated apron','Convex painted oxhide shield','Faceted bronze spearhead','Ostrich feather vane','Woven headband','Medjay anatomical eyes']]
@@ -56,7 +58,7 @@ for obj in objects:
  ev=obj.evaluated_get(bpy.context.evaluated_depsgraph_get());me=ev.to_mesh();assert len(me.vertices)==len(obj.data.vertices),(obj.name,'topology changed')
  view=(sc.camera.location-Vector((0,0,1))).normalized();coords=[];weights=[]
  for v in me.vertices:
-  world=ev.matrix_world@v.co;q=world_to_camera_view(sc,sc.camera,world);coords.append((q.x,q.y));normal=(ev.matrix_world.to_3x3().inverted().transposed()@v.normal).normalized();weights.append(max(0,min(1,(normal.dot(view)-.01)/.40)))
+  world=ev.matrix_world @ v.co;q=world_to_camera_view(sc,sc.camera,world);coords.append((q.x,q.y));normal=(ev.matrix_world.to_3x3().inverted().transposed() @ v.normal).normalized();weights.append(max(0,min(1,(normal.dot(view)-.01)/.40)))
  ev.to_mesh_clear();uv=obj.data.uv_layers.new(name='Rest painting projection');attr=obj.data.color_attributes.new(name='Paint confidence',type='FLOAT_COLOR',domain='CORNER')
  for i,loop in enumerate(obj.data.loops):uv.data[i].uv=coords[loop.vertex_index];attr.data[i].color=(weights[loop.vertex_index],)*3+(1,)
  obj.data.uv_layers[original_uv].active_render=True
@@ -84,3 +86,6 @@ for obj in objects:
 sc['finished_surface_projection']=True
 sc['projection']='CC BY original painting on genuine meshes; fixed UV moves with rig; approximate camera registration'
 bpy.ops.file.pack_all();bpy.ops.wm.save_as_mainfile(filepath=str(M/'medjay.blend'));(M/'surface-manifest.json').write_text(json.dumps(records,indent=2));log('Finished eight actual AO/curvature bake pairs and frozen-camera painting UVs with incidence blending into generated back-surface fills.')
+
+import hashlib
+(M/'build-inputs.json').write_text(json.dumps({name:hashlib.sha256(Path(__file__).with_name(name).read_bytes()).hexdigest() for name in ['prepare.py','assets.lock.json','build.py','common.py','register.py','coverage.py','refine.py','finish.py']},indent=2))

@@ -4,7 +4,7 @@ from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parent))
 from common import *
 stage=sys.argv[sys.argv.index('--')+1];clip=stage[2:] if stage.startswith('e-') else None
-blend=M/('medjay-plain.blend' if stage=='b' else f'medjay-{clip}.blend' if clip else 'medjay-attack.blend' if stage=='d' else 'medjay.blend')
+blend=M/(f'medjay-{clip}.blend' if clip else 'medjay-attack.blend' if stage=='d' else 'medjay.blend')
 bpy.ops.wm.open_mainfile(filepath=str(blend));sc=configure();out=M/'renders'/stage;out.mkdir(parents=True,exist_ok=True);manifest=out/'render.json';manifest.unlink(missing_ok=True)
 if stage=='b':
  clay=material('Plain clay review',(.50,.45,.36),rough=.8);sc.view_layers[0].material_override=clay

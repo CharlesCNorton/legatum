@@ -109,131 +109,105 @@ Run each heavy stage sequentially. Other unit lanes share the same lock; if one 
 
 ## Infantry chapter: Medjay
 
-This unit's scripts are isolated under `tools/art/anim3d/units/medjay/`. The
-existing spearman chapter supplies MPFB installation and environment setup;
-Medjay uses its own 53-bone MPFB body and original kit, not hoplite armour.
-The reference has a bare torso, pleated ivory kilt, feathered headband, long
-bronze-tipped spear and round-topped oxhide shield. All are true 3D surfaces.
-Masters, source painting, generated fill textures and bakes remain outside git
-under `ANIM_ROOT/assets/medjay` and `ANIM_ROOT/masters/medjay`.
+Medjay scripts are isolated under `tools/art/anim3d/units/medjay/`. The shared
+installation/environment above supplies MPFB 2.0.18. This unit has its own
+53-bone weighted anatomical body, thick folded ivory linen, woven headband,
+feather, convex oxhide shield with real reverse grip straps and bronze spear.
+All original/generated source art, bakes, editable blends and rendered masters
+remain under `ANIM_ROOT/assets/medjay` and `ANIM_ROOT/masters/medjay`.
 
-### Standard finish and review method
+### Standard finish and review
 
-Apply all four quality levers together: align the rest camera and geometry to
-the painting, project the original painting as fixed UV colour on the actual
-skinned surfaces, finish geometry with physical thickness/rounded edges/folds,
-and light as a painted miniature with a warm upper-left key, cool rim and soft
-fill. Camera projection is the standard method, not a flat subject card.
-Normal-incidence and source-alpha masks blend into the existing generated painted
-skin, linen, hide and wood fills on unseen sides. Eight actual geometry AO and
-Pointiness bake pairs supply cavity shading and roughness variation, including
-the solid headband and anatomical eyes. The camera-only painted pigment retains the source's
-illumination at 96% confidence; non-camera rays use the physical material.
-Standard/None prevents a second display rolloff of that already painted light.
-This is specific to projected illustration, not a general photographic preset.
-The orthographic view is calibrated approximately; silhouette differences remain.
+Use all four levers together: match the reference viewpoint and silhouette,
+project the painting onto actual skinned surfaces, finish edges/straps/folds
+with real geometry, and use warm upper-left key/cool rim/soft fill lighting.
+Existing image-generated skin/linen/hide/wood fills cover unseen surfaces.
+Eight genuine AO/Pointiness bake pairs supply cavity/roughness variation.
+Finished surfaces are frozen before projection; camera-only source pigment
+avoids lighting the painted illumination twice or illuminating adjacent objects.
+Standard/None is specific to this illustration workflow, not photographic output.
 
-The single stationary cream stone disc targets **sRGB #E9CFA0** with a darker
-rim and fine grain. The physical shader is tuned against rendered pixels, not
-only an albedo swatch. Its top remains at .085 m while the thinner underside and
-slightly smaller radius better fit the painting. No painted figure or feet are
-projected onto the base. A 17-quantile foreground RGB transfer is calibrated at
-rest, bounded to 24 levels/channel and frozen for all clips; alpha is retained.
-Raw frames remain ungraded. Never histogram-fit each frame independently.
-`medjay-f-restpose-compare.png` includes the painting, 3D, a half split and
-50/50 crossfade at 256 px with 64 px checks. File creation is not art approval.
+`register.py` fits the initial MPFB cage; `refine.py` fits finished calf and
+neck/shoulder contours through inverse skin transforms. Native depth and weights
+remain. Sample only the body group: hidden MPFB helpers are not visible anatomy.
+Segment reference alpha into connected runs before measuring a limb: the spear
+shares several leg scanlines and otherwise produces a triangular calf fin.
+The final plain review uses the finished master with a clay material override;
+the original editable cage is retained in `medjay-plain.blend`.
 
-All six installed Blender skills inform the pipeline: organic subdivision and
-bevels; dielectric cloth/skin versus bronze; aimed key/fill/rim; orthographic
-reference framing; clamped skeletal keys; Cycles previews and image-sequence
-verification. All Blender calls are plain `blender -b --disable-autoexec` through
-the machine-wide gate. Never bypass PATH or launch concurrent heavy processes.
+One stationary stone disc retains its support plane. Real grain and live AO
+shade the top; the unobstructed lower rim uses source pigment below y220 with a
+four-pixel per-pixel UV blend. No feet are painted onto the base. Evaluate the exclusion in the shader from
+UV coordinates: corner weights on a large disc n-gon interpolate too broadly
+and can leak painted toes into otherwise clean stone. A bounded 17-quantile RGB
+histogram transfer is calibrated at rest and frozen across all clips; alpha is
+untouched. Never fit a different grade per frame. The `f-restpose-compare` sheet
+shows painting/render/half-split/crossfade at 256 and 64 px.
+
+All six installed Blender skills guide modeling, materials, lighting, camera
+calibration, motion and render/encoding checks. Every invocation is plain
+`blender -b --disable-autoexec` through PATH; one heavy process at a time.
 
 ```sh
 tools/art/anim3d/units/medjay/render.sh build
-SAMPLES=8 tools/art/anim3d/units/medjay/render.sh b
 tools/art/anim3d/units/medjay/render.sh finish
-SAMPLES=8 tools/art/anim3d/units/medjay/render.sh c
 tools/art/anim3d/units/medjay/render.sh animate
-for stage in c-details d e-idle e-move e-attack e-hit e-death; do
-  SAMPLES=8 tools/art/anim3d/units/medjay/render.sh "$stage"
+for stage in b c c-details d e-idle e-move e-attack e-hit e-death feet; do
+  RESOLUTION=512 SAMPLES=8 tools/art/anim3d/units/medjay/render.sh "$stage"
 done
+tools/art/anim3d/units/medjay/render.sh audit
 ```
 
-The five authored actions are idle 8, move 8, attack 10, hit 4 and death 10.
-Idle/move have an extra keyed seam pose beyond the exported range. Death releases the spear and shield, curls the legs with world-space IK and ends
-with a held pose. Motion is authored on the MPFB skeleton; it is not represented
-as motion capture. Kit follows hands, forearm, head and pelvis. The kilt has
-modeled folds and thickness; it is not a cloth simulation.
+### Open motion and feet standard
 
-### GPU handoff and atlas extension
+Humans use licensed open motion as the default, with the weapon-specific attack
+authored separately. Medjay retargets Quaternius UAL Standard CC0 `Idle_Loop`,
+`Walk_Loop`, `Hit_Chest`, `Death01` with Blender world-space constraints calibrated
+against source/target reference poses and complete bone rolls. The walk's arms
+layer the open idle for spear/shield carrying. There is no post-retarget foot
+orientation edit. Root translation stabilizes virtual-ground stance; vertical
+support uses evaluated anatomy. These adaptations are recorded per clip; source
+hashes and licence are checked before import. Full URLs and attribution are in
+the unit `SOURCES.md` and external `assets/SOURCES.md`.
 
-Run from the repo root, no arguments:
+Keep 8/8/10/4/10 frames for idle/move/attack/hit/death. Looping actions include
+an extra unsampled seam key; death releases equipment and holds its last pose.
+The linen has real folds and thickness but no cloth simulation. Every round,
+render all eight walk samples from the front and top into
+`medjay-g-feet-check.png`. Inspect sole contact, travel direction and slipping;
+source motion alone is not evidence of correct retargeting. Audit checks the
+stationary base, nonzero scales, finished UV residual, combat entry, loop seams,
+and unchanged source-mapped foot rotations. It is not a full collision solver.
+
+### GPU handoff and atlas
 
 ```sh
-ROUND=1 tools/art/anim3d/units/medjay/gpu.sh
+ROUND=2 tools/art/anim3d/units/medjay/gpu.sh
 ```
 
-This serial script selects Cycles Metal explicitly, refuses CPU fallback, renders
-every stage and all five clips at 512 px, retains 512/256 masters, writes all
-review images/WebPs, packs and validates the candidate, audits the rig and writes
-`medjay-round${ROUND}.mp4`. The video reconstructs trimmed frames, shows all five
-clips side by side at 2x on cream, and verifies 240 frames of H.264 yuv420p (8 s).
-GPU results still need visual review. The script never writes a PASS marker.
+Executable, no arguments, repo root. It selects Cycles Metal and refuses CPU
+fallback; renders all stages and all clips at 512 px / >=64 samples; retains
+matching 256 px masters; produces all reviews including top/front feet; audits,
+packs and validates; then writes `medjay-round${ROUND}.mp4`. The video reconstructs
+trimmed frames, shows five clips side by side at 2x on cream, and verifies H.264,
+yuv420p, 240 frames/8 seconds. Code/input hashes reject changed build or animation
+sources. The GPU check rejects stale frames/grades/masters/feet or CPU provenance.
+A round log, failure status and technical receipt are written. The script never
+writes art PASS; the receipt explicitly says `art_approved:false`.
 
-Medjay uses the **version 2 trimmed-rows format**. `frame:{w:160,h:160,ax:84,ay:141}`
-defines the original logical frame and stationary anchor. `clips` retains
-`row,frames,fps,loop`; each clip also has `rects`, one entry per frame with
-`{x,y,w,h,ox,oy}`. `(x,y,w,h)` locates a cropped rectangle in the WebP; paste it
-at `(ox,oy)` in a transparent 160px logical frame before drawing at `(ax,ay)`.
-Physical atlas rows have variable heights and widths; never derive pixel
-coordinates from `row*160` or frame index. Two-pixel gutters separate crops.
-Quality tries 90/85/80/75, never below 75, and refuses >200,000 bytes. No frames
-are dropped. Blend hashes, source-frame hashes and the frozen grade bind the
-pack report to its source renders. The candidate is not wired into the runtime.
+Version 2 trimmed-rows JSON uses `frame:{w:160,h:160,ax:84,ay:141}`. Each clip keeps
+`row,frames,fps,loop` and a `rects` array of `{x,y,w,h,ox,oy}`: crop the WebP at
+x/y/w/h and paste into a transparent logical 160px cell at ox/oy before anchoring.
+Physical rows have variable heights; do not derive pixel positions from `row`.
+Two-pixel gutters separate crops. All 40 frames remain; identical samples reuse
+a rectangle. Full lossless alpha is checked after reconstruction. Quality tries
+90/85/80/75, never lower, and packing refuses >200,000 bytes. The candidate is not
+wired into the game. Technical validation never implies painting parity.
 
-### Medjay round-two findings
+### Driver round-two evidence
 
-Read the actual prior provenance: the supplied round-one output was CPU512/6,
-not verified GPU output. The original masters, all frames and reviews are
-preserved in `masters/medjay/round1-cpu/`. The unit-specific feedback file was
-absent; common feedback 1-22 was read in full.
-
-`register.py` fits the actual cranial vault, calves and toes in the fixed rest
-view through inverse skin transforms, retaining depth and the native weights.
-The tilted head is upright, the feather narrower, and the three headband tubes
-are replaced by a solid woven ribbon. The taller kilt closes a real waist gap;
-its matching anatomical coverage mask prevents skin showing through opaque cloth.
-The original 19,158-vertex MPFB cage is retained in the plain master. Registration freezes macro morphs; `finish.py` applies smoothing/thickness/bevels
-before UV calibration;
-the finished body's subdivision interpolates the native weights. It does not
-retain the original vertex count. The old coverage-only `refine.py` was removed
-because it could not safely transfer indices between these two topologies.
-
-Camera-only paint avoids double illumination and emission spill. Hidden surfaces
-retain the recorded image-generated fills, real AO/curvature and product lights.
-The audit verifies the finished UVs within .05 token pixels and exact rest entry
-for attack/hit/death, as well as the rig, stationary base and nonzero scales.
-Move compensates planted targets for root bob. These checks are not a full
-collision solver or an art PASS.
-
-The trimmed atlas now uses bicubic reduction with full 8-bit alpha, verified
-byte-for-byte after reconstruction. Identical samples reuse a rectangle, keeping
-the final death hold identical after lossy RGB encoding. Validation rejects
-stale retained 512/256 masters and mixed rest/clip render settings. A CPU preview
-is labelled explicitly; GPU delivery requires all nine stages at GPU512/64+.
-
-The executable `gpu.sh` defaults to ROUND=2, keeps a direct round log and failure
-status, removes its stale receipt before work, then renders every stage, verifies
-GPU provenance and retained masters, audits, packs, validates and encodes the
-five-clip MP4. Only successful completion writes a technical receipt with
-`art_approved:false`. Missing inputs and CPU-labelled renders are tested rejection
-paths. The sandbox has no Metal, so the host's GPU run remains required.
-
-Round-two CPU verification: all 40 frames retained at 512 and 256 px, Cycles
-CPU8; trimmed 160 px WebP **157,968 bytes at quality 90**, full lossless alpha.
-Atlas reconstruction, identical decoded death hold, current render/grade/master
-hashes, rig/finished-UV/combat-entry audit, Python/Bash syntax and whitespace
-checks pass. MP4 verified H.264/yuv420p, 1600 x 348, 30 fps, 240 frames, 8 seconds.
-Silhouette alpha IoU improves from .776736 to .802003. The painting remains
-visibly different; **no art PASS and no verified GPU render**.
+The supplied GPU round-one pass succeeded: Cycles GPU512/64, 168,218 bytes at
+quality 90 and a valid five-clip video. It is preserved under
+`masters/medjay/driver-r1-gpu/`, separate from older CPU rounds. Common feedback
+1-23 was read; unit-specific feedback was absent. Current results and honest
+256/64 px critiques are appended to the external `medjay-log.md`.
