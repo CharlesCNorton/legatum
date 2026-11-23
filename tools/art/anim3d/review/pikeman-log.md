@@ -2,3 +2,9 @@
 - Read project/art instructions, standing feedback 1–23 and newer infantry playbook.
 - Loaded all six Blender skills: full-depth MPFB anatomy, bevelled armour, frozen painting UVs, product lighting, open clip retarget and CPU preview/GPU delivery separation.
 - Reusing isolated barbarian-pikeman pipeline utilities; replacing kit and authored locomotion.
+- Built true MPFB 53-bone anatomy, original breastplate/limb armour/tassets/helmet and long uniform pike; first plain and projected CPU comparisons published immediately.
+- Compared first split-screen: foot/arm registration and stone too dark; widened the braced rear ankle, raised rear wrist and brightened/resized cream stone.
+- Baked six actual Cycles AO/Pointiness maps on breastplate and helmet.
+- Retargeted Quaternius CC0 Idle_Loop, Walk_Loop, Hit_Chest and Death01 with reference-space/bone-roll alignment; authored only two-hand thrust.
+- Scene audit passed: finished volumetric surfaces, frozen camera UVs, 53 bones, safe scales and unprojected stationary base.
+- Five-clip rig audit passed: finite transforms, held death and maximum wrist-axis distance 0.0821 m (wrist metric, not a finger-contact guarantee).
