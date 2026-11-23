@@ -61,3 +61,5 @@
 - Finished actual solid/beveled surfaces before projection, compacted the weighted weapon fist, and calibrated the physical circular stone and broad product key; retained original MPFB weights and generated feather fill.
 - Full first source-motion delivery passed all forty geometry/contact/framing checks, all nine render stages, trim/alpha/hash checks and H264 eight-second video checks; 195774 bytes Q85 at CPU256/8. Decoded atlas and movie frames inspected. Technical success is not art approval.
 - Quantitative rest check found blanket wing extension added 109 extra silhouette pixels while recovering 58 missing pixels; full IoU fell .82541 -> .81885 at256 (64px .83624 -> .83650). Replaced blanket extension with individually fitted tapered tips, and moved the left sandal 4px inward before the native foot fit. Re-running affected model/animation/delivery checks.
+- Froze painting camera UVs and ray-tested visibility, with generated feather backfill on unseen surfaces.
+- Retargeted CC0 Quaternius idle/walk/hit/death with calibrated bone rolls; retained authored macuahuitl attack and rigid club release. No cloth simulation claimed.
