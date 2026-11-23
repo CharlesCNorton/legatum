@@ -1,6 +1,6 @@
 # Animated units status
 
-Updated 2026-11-23T08:23:44Z. Round = finished rounds (driver count). Pass = the lane declared the bar met (`<slug>-PASS`); the lead and Sam still review.
+Updated 2026-11-23T08:53:51Z. Round = finished rounds (driver count). Pass = the lane declared the bar met (`<slug>-PASS`); the lead and Sam still review.
 
 | Unit | Branch | State | Rounds done | Atlas KB | Pass | Latest note |
 | --- | --- | --- | --- | --- | --- | --- |
