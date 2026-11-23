@@ -257,3 +257,34 @@ Published e-death-strip review immediately; source CYCLES/CPU, 256px.
 Finished eight actual AO/curvature bake pairs and frozen-camera painting UVs with incidence blending into generated back-surface fills.
 Rendered c: 1 frames, 256px, CYCLES/CPU.
 Published c-textured-lit review immediately; source CYCLES/CPU, 256px.
+Finished eight actual AO/curvature bake pairs and frozen-camera painting UVs with incidence blending into generated back-surface fills.
+Rendered c: 1 frames, 512px, CYCLES/CPU.
+Published c-textured-lit review immediately; source CYCLES/CPU, 512px.
+Saved idle: 8 frames at 10 fps; saved editable rig action and equipment attachments.
+Saved move: 8 frames at 12 fps; saved editable rig action and equipment attachments.
+Saved attack: 10 frames at 14 fps; saved editable rig action and equipment attachments.
+Saved hit: 4 frames at 12 fps; saved editable rig action and equipment attachments.
+Saved death: 10 frames at 10 fps; saved editable rig action and equipment attachments.
+Rendered e-move: 8 frames, 512px, CYCLES/CPU.
+Published e-move-strip review immediately; source CYCLES/CPU, 512px.
+Structural audit passed: genuine weighted anatomy, 53 bones, fixed projection UVs, stationary base and sane scales across every clip sample.
+Rendered b: 1 frames, 512px, CYCLES/CPU.
+Published b-plain review immediately; source CYCLES/CPU, 512px.
+Rendered c-details: 1 frames, 512px, CYCLES/CPU.
+Published c-details review immediately; source CYCLES/CPU, 512px.
+Rendered d: 4 frames, 512px, CYCLES/CPU.
+Published d-rig-poses review immediately; source CYCLES/CPU, 512px.
+Rendered e-idle: 8 frames, 512px, CYCLES/CPU.
+Published e-idle-strip review immediately; source CYCLES/CPU, 512px.
+Rendered e-attack: 10 frames, 512px, CYCLES/CPU.
+Published e-attack-strip review immediately; source CYCLES/CPU, 512px.
+Rendered e-hit: 4 frames, 512px, CYCLES/CPU.
+Published e-hit-strip review immediately; source CYCLES/CPU, 512px.
+Rendered e-death: 10 frames, 512px, CYCLES/CPU.
+Published e-death-strip review immediately; source CYCLES/CPU, 512px.
+Finished eight actual AO/curvature bake pairs and frozen-camera painting UVs with incidence blending into generated back-surface fills.
+Rendered c: 1 frames, 512px, CYCLES/CPU.
+Published c-textured-lit review immediately; source CYCLES/CPU, 512px.
+Finished eight actual AO/curvature bake pairs and frozen-camera painting UVs with incidence blending into generated back-surface fills.
+Rendered c: 1 frames, 512px, CYCLES/CPU.
+Published c-textured-lit review immediately; source CYCLES/CPU, 512px.
