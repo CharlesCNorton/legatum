@@ -128,3 +128,24 @@
 - Published g-feet review from CPU render.
 - Published e-move review from CPU render.
 - Published g-feet review from CPU render.
+- Published c review from CPU render.
+- Published c-details review from CPU render.
+- Published d review from CPU render.
+- Published e-idle review from CPU render.
+- Published e-move review from CPU render.
+- Published e-attack review from CPU render.
+- Published e-hit review from CPU render.
+- Published e-death review from CPU render.
+- Published g-feet review from CPU render.
+- Published e-move review from CPU render.
+- Published g-feet review from CPU render.
+- The luminance-only stone mask still left a pale boot-shaped pigment hole in the top/front review. Replaced it with front-lip-only projection; the physical top now shows only real moving contact shadows. Full downstream rerender completed.
+- Full CPU packing correctly refused move/0 with alpha bounds (23,0,236,245): the upright source stride reached the top edge. Added a 65mm hip-lowering two-bone knee solve to keep the guard walk inside the fixed camera, preserving captured ankle positions and foot world rotations; targeted move/feet rerender and independent audits running.
+- Final saved-scene audit PASSED all 40 samples: source hashes, 19158 skin vertices, 53 bones, stationary base, safe scales, maximum grip gap 0.0236m, planted sole error below 0.00001m, source foot rotations unchanged, horizontal virtual-ground stance error below 0.000001m. Not a full collision solver.
+- Final preview pack and independent validation PASSED: 40 CPU256/8 frames, trimmed 160px logical cells, full alpha/offset reconstruction, identical terminal death hold, 185920 bytes at WebP Q80. GPU-only provenance gate correctly rejects this preview. Previous genuine GPU512 exports are archived and labelled 512-driver-r1; no upscaled 512 claims.
+- Final movie validation PASSED H.264/yuv420p, 1600x348, 240 frames, 8.000 seconds, all five clips at 2x on cream. All interim sheets/animated WebPs, rest split/crossfade and top/front feet evidence updated.
+- Rest silhouette IoU at 256 (alpha >32) improved from archived GPU .838310 to current CPU .865106; this is geometry-registration evidence across different render settings, not art approval. Repeated rest grading is byte-identical. Seventeen Python scripts parse, both Bash scripts pass syntax, six image-input hashes match and git diff --check passes.
+- Honest final visual verdict: 256px remains below the painting (thin/dark hand and shaft, simplified shoulder fur, smooth stone top, shin/boot joins and rigid-looking compressed death cloth); 64px clearly reads as the same unit with closer rest silhouette, not interchangeable. Source motion and contact checks improve reliability but five clips are not yet artistically clean. NO PASS marker. Lead must run ROUND=2 tools/art/anim3d/units/barbarian-spearman/gpu.sh, then inspect actual GPU512-derived evidence.
+- Non-obvious learning: fitting visible skin without moving its joint field creates offsets that become floor-contact errors in a rotated pose. Rebinding fitted skin/joints while preserving weights and attached kit is necessary. Base projection must exclude the figure spatially; colour-only masks leave pale foot-shaped pigment holes. Recorded here and in this unit's PLAYBOOK chapter, not docs/learnings/.
+- Inspected frames decoded from the actual round2.mp4; confirms the remaining death-cloth and boot-join issues. No art PASS.
+- Git add/commit blocked by sandbox denial of .git/worktrees/lane-22/index.lock. Work remains uncommitted for the runner. Requested commit: Refine barbarian spearman surfaces and retarget open motion; final trailer Co-Authored-By: gpt-6-astra (Codex) <noreply@openai.com>. No push/PR/master merge. origin/master already contained in HEAD.
