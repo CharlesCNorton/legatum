@@ -171,9 +171,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await expect(page.getByTestId('turn-number')).toHaveText('2', { timeout: 60_000 });
 
     // A routine first turn has no founding celebration, but its report remains available.
-    await page.getByRole('button', { name: 'Menu', exact: true }).click();
-    await page.keyboard.press('Escape');
-  await page.keyboard.press('l');
+    await page.locator('button.last-turn').first().click();
     await expect(page.getByRole('complementary', { name: 'Turn report' })).toBeVisible();
     await shot(page, size, '09-turn-report');
     await closeReportIfOpen(page);
