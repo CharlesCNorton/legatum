@@ -85,3 +85,12 @@
 - Nine Python syntax checks, two shell syntax checks, executable GPU entry point, missing-input failure preflight, actual CPU-master rejection and git whitespace checks passed. No Rust or UI/runtime code changed. origin/master is zero commits ahead; no merge needed.
 - Non-obvious delivery finding: separate lossy atlas copies of identical held frames can decode differently. Reuse their rectangle and assert decoded RGBA equality.
 - Commit attempted; sandbox denied .git/worktrees/lane-17/index.lock (Operation not permitted). Changes remain uncommitted for runner. Requested message: Refine artillery projection and wheel contact for round two; trailer: Co-Authored-By: gpt-6-astra (Codex) <noreply@openai.com>. No push or PR. Lead: ROUND=2 tools/art/anim3d/units/artillery/gpu.sh.
+- Published b-plain CPU/GPU geometry stage before texture work.
+- Baked 256px AO and curvature maps on GEO-Shield wing -1, GEO-Shield wing 1, GEO-Hollow tapered barrel
+- Published painted rest pose and 50/50 comparison; real AO shader, micrograin, edge geometry and hidden-surface fill.
+- Published e-idle: 8 actual rendered frames, 10 fps; GPU 512px 64 samples.
+- Published e-move: 8 actual rendered frames, 12 fps; GPU 512px 64 samples.
+- Published e-attack: 10 actual rendered frames, 14 fps; GPU 512px 64 samples.
+- Published e-hit: 4 actual rendered frames, 12 fps; GPU 512px 64 samples.
+- Published e-death: 10 actual rendered frames, 10 fps; GPU 512px 64 samples.
+- Completed all five clips and geometry audit; delivery pack may now run.
