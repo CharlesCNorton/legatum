@@ -32,21 +32,12 @@ for idx,name in enumerate(['Fuselage • elliptical riveted monocoque','Port win
     ramp=n.new('ShaderNodeValToRGB');ramp.color_ramp.elements[0].position=.49;ramp.color_ramp.elements[0].color=(0,0,0,1);ramp.color_ramp.elements[1].position=.58;ramp.color_ramp.elements[1].color=(.35,.35,.35,1);l.new(maps['curvature'].outputs[0],ramp.inputs[0])
     wear=n.new('ShaderNodeMixRGB');wear.inputs[2].default_value=(.65,.61,.48,1);l.new(ramp.outputs[0],wear.inputs[0]);l.new(grime.outputs[0],wear.inputs[1]);l.new(wear.outputs[0],projection.inputs[1])
     records.append({'object':name,'resolution':512,'AO':maps['AO'].image.filepath_raw,'curvature':maps['curvature'].image.filepath_raw,'method':'Cycles AO / Geometry Pointiness emission; hidden fill cavity grime and edge polish'})
-# Do not freeze the painting's foreground propeller onto the wing underneath it.
-# A material-space exclusion on the two painted blade segments reveals painted fill.
-o=bpy.data.objects['Starboard wing • thick tapered airfoil'];n=o.data.materials[0].node_tree.nodes;l=o.data.materials[0].node_tree.links
-projection=n['Frozen source pigment'];oldmask=projection.inputs[0].links[0].from_socket
-uv=next(x for x in n if x.type=='UVMAP' and x.uv_map=='Frozen rest-camera')
-for p0,p1 in [((210,106),(190,66)),((211,104),(237,56))]:
-    a=Vector((p0[0]/256,1-p0[1]/256,0));b=Vector((p1[0]/256,1-p1[1]/256,0));ab=b-a
-    delta=n.new('ShaderNodeVectorMath');delta.operation='SUBTRACT';l.new(uv.outputs[0],delta.inputs[0]);delta.inputs[1].default_value=a
-    dot=n.new('ShaderNodeVectorMath');dot.operation='DOT_PRODUCT';l.new(delta.outputs[0],dot.inputs[0]);dot.inputs[1].default_value=ab/ab.length_squared
-    clamp=n.new('ShaderNodeClamp');l.new(dot.outputs['Value'],clamp.inputs[0])
-    scaled=n.new('ShaderNodeVectorMath');scaled.operation='SCALE';scaled.inputs[0].default_value=ab;l.new(clamp.outputs[0],scaled.inputs['Scale'])
-    dist=n.new('ShaderNodeVectorMath');dist.operation='DISTANCE';l.new(delta.outputs[0],dist.inputs[0]);l.new(scaled.outputs[0],dist.inputs[1])
-    outside=n.new('ShaderNodeMath');outside.operation='GREATER_THAN';outside.inputs[1].default_value=.012;l.new(dist.outputs['Value'],outside.inputs[0])
-    multiply=n.new('ShaderNodeMath');multiply.operation='MULTIPLY';l.new(oldmask,multiply.inputs[0]);l.new(outside.outputs[0],multiply.inputs[1]);oldmask=multiply.outputs[0]
-l.new(oldmask,projection.inputs[0]);l.new(oldmask,n['Paint coverage'].inputs[0])
+# Locally fill occluded wing paint and restore lower-disc grain without freezing
+# a pedestal shadow into the live-lit upper stone surface.
+import sys
+sys.path.insert(0,str(Path(__file__).parent))
+from surfaces import finish_surfaces
+finish_surfaces(R/'assets/fighter')
 # Physical unseen surfaces retain the generated fill and baked AO/curvature.
 for o in bpy.data.objects:
     if o.type!='MESH':continue

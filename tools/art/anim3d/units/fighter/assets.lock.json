@@ -5,6 +5,7 @@
   "files": {
     "painting-source.png": "163fba3d423c807a57a072149f360a3dba56decba99d34c32275f61cbdfc5686",
     "projection.png": "a96599f9ad9697dbab216befd5ae5c7ca4d50beba106ff72ff891cedbc3279a9",
-    "painted-fill.png": "217e22e1368d4a8ea643cc086492f68b20eb6df05d28079862b8e22b75cb5044"
+    "painted-fill.png": "217e22e1368d4a8ea643cc086492f68b20eb6df05d28079862b8e22b75cb5044",
+    "occlusion-fill-source.png": "ddccec41d9ff927f5a9036cb0077200f7751b1b41b043efb87c4d65d8b036064"
   }
 }

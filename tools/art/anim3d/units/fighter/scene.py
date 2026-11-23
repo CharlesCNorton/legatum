@@ -81,14 +81,21 @@ fuselage=mesh('Fuselage • elliptical riveted monocoque',verts,faces,silver,bev
 sub=fuselage.modifiers.new('Loft smoothing','SUBSURF');sub.levels=sub.render_levels=2
 # Airfoil wings are closed solids, not planes; outline follows source planform.
 def wing(name,outline,z):
-    perimeter=[plane(x,y,z) for x,y in outline];center=sum(perimeter,Vector())/len(perimeter);v=[]
-    # Convex top/bottom airfoil skin with thickness and edge roundover.
-    for height in (.0,.075,-.035):
-        if height==0:v.extend(perimeter)
-        else:v.append(center+Vector((0,0,height)))
-    n=len(perimeter);f=[]
-    for j in range(n):f.extend([(j,(j+1)%n,n),(j,n+1,(j+1)%n)])
-    o=mesh(name,v,f,olive,bevel=.022);return o
+    # Rounded perimeter and concentric camber rings avoid a triangular roof.
+    # Keep a closed lower skin and real edge thickness at every station.
+    perimeter=[plane(x,y,z) for x,y in outline]
+    for _ in range(2):
+        perimeter=[p.lerp(perimeter[(i+1)%len(perimeter)],t)
+                   for i,p in enumerate(perimeter) for t in (.10,.90)]
+    center=sum(perimeter,Vector())/len(perimeter);v=[];n=len(perimeter)
+    rings=[(.12,-.032),(.55,-.029),(1,-.006),(1,.006),(.70,.045),(.35,.068),(.12,.074)]
+    for radius,height in rings:
+        v.extend(center+(p-center)*radius+Vector((0,0,height)) for p in perimeter)
+    f=[tuple(range(n-1,-1,-1))]
+    for k in range(len(rings)-1):
+        for j in range(n):f.append((k*n+j,k*n+(j+1)%n,(k+1)*n+(j+1)%n,(k+1)*n+j))
+    f.append(tuple((len(rings)-1)*n+j for j in range(n)))
+    return mesh(name,v,f,olive,bevel=0)
 near=wing('Port wing • thick tapered airfoil',[(153,117),(130,113),(90,121),(19,148),(17,151),(31,155),(74,147),(135,131),(153,125)],2.03)
 far=wing('Starboard wing • thick tapered airfoil',[(147,104),(169,88),(214,64),(237,57),(242,60),(227,83),(198,107),(162,121)],2.10)
 wing('Port tailplane',[(66,79),(47,81),(14,91),(16,94),(49,91),(75,85)],2.23)
@@ -118,18 +125,33 @@ prop=empty('RIG-propeller',center,root);bpy.context.view_layer.update()
 prop.matrix_world=Matrix.Translation(center) @ Matrix((axis,u,v)).transposed().to_4x4()
 prop.rotation_mode='QUATERNION'
 spinner=ellipsoid('Spinner • olive ogive',at(217,106),(.34,.19,.19),olive)
-for j in range(4):
-    t=j*math.pi/2;radial=u*math.cos(t)+v*math.sin(t);tangent=-u*math.sin(t)+v*math.cos(t)
-    pts=[center+radial*r+tangent*w+axis*dx for r,w,dx in [(.13,-.025,0),(.70,-.075,.01),(radius*.96,-.035,.03),(radius,.0,.04),(.80,.08,.03),(.13,.025,0)]]
+# Four sculpted blade outlines fit the painter's slight asymmetry. Every blade
+# lies in the same shaft plane and has a closed .022-unit solid thickness.
+# This preserves a real rotating assembly instead of a projected propeller card.
+blade_outlines=[
+    [(212,102),(226,76),(236,56),(237,59),(233,73),(215,103)],
+    [(210,102),(194,78),(189,66),(191,67),(200,79),(213,100)],
+    [(210,109),(202,134),(198,150),(200,149),(208,132),(214,109)],
+    [(217,110),(231,122),(239,131),(239,128),(231,118),(219,107)],
+]
+# Invert the fitted plane's two projected basis vectors.
+ux,vx=right.dot(u),right.dot(v);uy,vy=up.dot(u),up.dot(v)
+determinant=ux*vy-vx*uy
+center_screen=world_to_camera_view(sc,cam,center)
+def blade_point(px,py):
+    dx=(px-center_screen.x*256)/PP;dy=((1-center_screen.y)*256-py)/PP
+    return center+u*((dx*vy-vx*dy)/determinant)+v*((ux*dy-dx*uy)/determinant)
+for outline in blade_outlines:
+    pts=[blade_point(px,py) for px,py in outline]
+    radial=(pts[2]-center).normalized();radius=(pts[2]-center).length
     verts=pts+[p+axis*.022 for p in pts];n=len(pts)
     blade=mesh('Propeller blade',verts,[tuple(range(n-1,-1,-1)),tuple(range(n,2*n))]+[(k,(k+1)%n,(k+1)%n+n,k+n) for k in range(n)],black,parent=None,bevel=.008)
-    # Distinct ochre-painted tips are part of the manufactured blade surface.
     blade.data.materials.append(yellow)
     bm=bmesh.new();bm.from_mesh(blade.data)
     bmesh.ops.bisect_plane(bm,geom=list(bm.verts)+list(bm.edges)+list(bm.faces),dist=.000001,
-                          plane_co=center+radial*radius*.88,plane_no=radial,clear_inner=False,clear_outer=False)
+                          plane_co=center+radial*radius*.93,plane_no=radial,clear_inner=False,clear_outer=False)
     for face in bm.faces:
-        if (face.calc_center_median()-center).dot(radial)>radius*.88:face.material_index=1
+        if (face.calc_center_median()-center).dot(radial)>radius*.93:face.material_index=1
     bm.to_mesh(blade.data);bm.free()
     world=blade.matrix_world.copy();blade.parent=prop;blade.matrix_world=world
 # Exhaust stubs, tiny hollow mouths (no national markings).

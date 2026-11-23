@@ -251,3 +251,34 @@ five-clip 1600×348 eight-second H.264/yuv420p MP4. It retains a round log, stat
 hash-bound receipt with `art_approved:false`. Explicit failure guards prevent a
 missing input or failed stage from falling through. A CPU preview cannot satisfy
 its GPU512 gate. Neither the script nor the technical validator writes art PASS.
+
+
+### Fighter driver round 2 after the verified GPU pass
+
+The lead's round1 receipt is GPU512/64, with a 179,432-byte Q90 atlas; its full
+inputs, masters and sheets are retained in `masters/fighter/driver-r1-gpu/`.
+The outer driver log is empty because `gpu.sh` owns a separate round log.
+
+Closed camber rings replace triangular wing roofs. Narrow feathered shader
+patches use a new generated occlusion painting behind the two foreground blades;
+source paint remains elsewhere. The blade outlines reproduce the painting's
+small asymmetry, on one common shaft plane with solid thickness and ochre tips.
+This is an authored miniature, not an aeronautical engineering model. Shaft
+quaternions complete full revolutions with cyclic curves; a finite .65-frame
+shutter softens temporal aliasing. The non-looping attack uses slower shaft
+sampling. Inspect alpha-edge noise at final samples; CPU12 blur is insufficient
+for a quality verdict.
+
+Only the lower stone disc uses source projection, fading out above image y=195
+and multiplying by source alpha. This avoids black transparent-image fringes
+and excludes the pedestal's painted shadow. The upper stone remains live-lit
+with subtle grain. The four solid propeller blades fold forward on impact; crash
+contact and held-frame reuse include evaluated shape keys. No disappearing
+support, zero scales or smoke volumes are used.
+
+`inputs.py` seals the current build scripts, licensed images, two editable master
+files and six actual AO/Pointiness bakes after `finish`; `gpu.sh` verifies that
+seal before refreshing clips. Rebuild/finish after geometry or surface changes.
+The driver still produces all b/c/d/e/f/g reviews, genuine 512/256 masters,
+trimmed 160 px atlas/offsets, validation and the eight-second round MP4.
+The GPU receipt includes the build seal. It does not grant art PASS.

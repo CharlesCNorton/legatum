@@ -11,6 +11,24 @@ for clip,(count,fps,loop) in CLIPS.items():
     if os.environ.get('ANIMATE_CLIP') and os.environ['ANIMATE_CLIP']!=clip:continue
     bpy.ops.wm.open_mainfile(filepath=str(M/'fighter.blend'));sc=bpy.context.scene;root=bpy.data.objects['RIG-flight'];prop=bpy.data.objects['RIG-propeller'];support=bpy.data.objects['DISPLAY • curved stone pedestal']
     rest=root.location.copy();prop_rest=prop.rotation_quaternion.copy();support_rest=support.location.copy();sc.render.fps=fps;sc.frame_start=1;sc.frame_end=count
+    bends=[]
+    if clip=='death':
+        # Retain solid blades, folding their outer sections forward on impact.
+        # Evaluate this deformation for contact rather than checking the rest mesh.
+        center=prop.matrix_world.translation.copy()
+        axis=prop.matrix_world.to_3x3().col[0].normalized()
+        for blade in [o for o in sc.objects if o.name.startswith('Propeller blade')]:
+            blade.shape_key_add(name='Basis');bend=blade.shape_key_add(name='Impact fold')
+            inverse=blade.matrix_world.inverted()
+            points=[blade.matrix_world @ v.co for v in blade.data.vertices]
+            radial=(max(points,key=lambda p:(p-center).length_squared)-center).normalized()
+            tangent=radial.cross(axis).normalized()
+            for target,point in zip(bend.data,points):
+                distance=(point-center).dot(radial)
+                weight=max(0,min(1,(distance-.22)/.30))
+                pivot=center+radial*.22
+                target.co=inverse @ (pivot+Quaternion(tangent,1.25*weight) @ (point-pivot))
+            bends.append(bend)
     # One extra sample closes periodic curves; not duplicated into output atlas.
     for i in range(count+int(loop)):
         sc.frame_set(i+1);t=i/count if loop else i/(count-1);s=math.sin(t*2*math.pi);c=math.cos(t*2*math.pi)
@@ -25,19 +43,25 @@ for clip,(count,fps,loop) in CLIPS.items():
             # Stall, nose drop, impact, then held wreck. No shrinking geometry.
             phases=[(0,0,0),(.05,-.04,.02),(.20,.07,.06),(.42,.18,.10),(.70,.28,.08),(.90,.34,.05),(1,.31,.02),(1,.30,.02),(1,.30,.02),(1,.30,.02)]
             fall,pitch,bank=phases[i];root.location.z-=1.33*fall;root.location.x-=.22*fall;root.rotation_euler=(bank,pitch,0);support.rotation_euler=(-1.48*fall,0,0)
-        spin=(i*2*math.pi/count if clip!='death' else min(i,6)*math.pi/9)
+        spin=(i*2*math.pi/count if clip in ('idle','move') else i*.31 if clip!='death' else min(i,6)*math.pi/9)
         prop.rotation_quaternion=prop_rest @ Quaternion((1,0,0),spin)
+        for bend in bends:
+            bend.value=[0,0,0,.12,.6,1,1,1,1,1][i]
+            bend.keyframe_insert('value',frame=i+1)
         if clip=='death':
             # Solid geometry stays above the actual stone footprint/world ground.
             # Contact correction is on the rigid assemblies, never a zero-scale hide.
             bpy.context.view_layer.update()
             def floor_gap(objects):
                 gap=0.0
+                deps=bpy.context.evaluated_depsgraph_get()
                 for obj in objects:
-                    for vertex in obj.data.vertices:
-                        point=obj.matrix_world @ vertex.co
+                    evaluated=obj.evaluated_get(deps);mesh=evaluated.to_mesh()
+                    for vertex in mesh.vertices:
+                        point=evaluated.matrix_world @ vertex.co
                         floor=.22 if (point.x+.02)**2+point.y**2<1.00**2 else .04
                         gap=max(gap,floor-point.z)
+                    evaluated.to_mesh_clear()
                 return gap
             support.location.z+=floor_gap([support])
             root.location.z+=floor_gap([o for o in bpy.data.objects if o.type=='MESH' and not o.name.startswith(('BASE','DISPLAY','FX-'))])
@@ -50,6 +74,7 @@ for clip,(count,fps,loop) in CLIPS.items():
         if obj.animation_data and obj.animation_data.action:
             obj.animation_data.action.name=clip+' • '+obj.name
             for fc in curves(obj.animation_data.action):
+                if obj==prop and loop:fc.modifiers.new('CYCLES')
                 for k in fc.keyframe_points:k.interpolation='CONSTANT' if fc.data_path=='hide_render' else ('LINEAR' if obj==prop else 'BEZIER')
     sc.frame_set(1);bpy.ops.wm.save_as_mainfile(filepath=str(M/(clip+'.blend')))
 (M/'clips.json').write_text(json.dumps({'source_sha256':hashlib.sha256((M/'fighter.blend').read_bytes()).hexdigest(),'clips':{n:{'frames':v[0],'fps':v[1],'loop':v[2]} for n,v in CLIPS.items()}},indent=2))

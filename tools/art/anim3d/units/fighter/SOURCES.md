@@ -10,3 +10,10 @@ there are no human feet or quadruped limbs. Motion uses a rigid airframe, an
 orthonormal propeller basis with shaft-local rotation, and a stationary display
 base. The required `fighter-g-feet-check.png` contains actual top/front renders
 of the eight-frame move cycle, explicitly labelled as a mechanical/no-feet check.
+
+Driver round 2 adds original built-in ImageGen occlusion paint,
+`01a20947-16e3-7b33-9a3c-7ef7536ee369/exec-48979cef-d5dc-4687-b975-2b4c4dc6267a.png`,
+2026-11-23, project CC BY 4.0, no public URL. The edit target is the original
+painting above; prompt in `occlusion-fill.prompt.txt`, external asset
+`assets/fighter/occlusion-fill-source.png`, hash in `assets.lock.json`.
+Only feathered patches behind the moving blades are used, on solid wing meshes.

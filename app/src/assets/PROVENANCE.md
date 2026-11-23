@@ -37,7 +37,7 @@ The date range is the range of dates the repository's own records give (prompt h
 - No prompt is stored for the map improvements, the six original resource medallions, the aircraft plan sprites or the parchment texture.
 - Where a set was generated from one shared prompt (terrain, city sets, camps and ruins), there is one prompt for the set, not one per file.
 
-### Fighter 3D animation candidate (round 1)
+### Fighter 3D animation candidate (round 2)
 
 `units/anim/fighter.webp` and its metadata are original Blender renders (CC BY 4.0),
 from `tools/art/anim3d/units/fighter/` (MIT). The existing fighter painting supplies
@@ -45,6 +45,10 @@ frozen rest-camera UV colour; its full master is hash-pinned in the unit's
 `assets.lock.json`. Hidden surfaces reuse the bomber lane's original generated paint
 fill, CC BY 4.0 (OpenAI imagegen output
 `01a20674-cc7c-7391-9ed5-eaf3529562ff/exec-71c71165-4b96-4204-bead-5802066e70f1.png`).
+Narrow patches behind the propeller use an original CC BY 4.0 generated occlusion
+edit (`01a20947-16e3-7b33-9a3c-7ef7536ee369/exec-48979cef-d5dc-4687-b975-2b4c4dc6267a.png`),
+with prompt and input hashes in the unit directory. The source painting is retained
+everywhere outside those feathered wing patches.
 All original and generated texture files, editable masters and bakes remain under
 `~/LegatumRuns/anim-pilot/`, with licence/source records in `assets/SOURCES.md`.
 No third-party aircraft mesh or motion data. Candidate only; static painting remains

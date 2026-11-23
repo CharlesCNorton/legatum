@@ -44,6 +44,9 @@ sc.render.resolution_percentage = 100
 sc.render.image_settings.color_mode = 'RGBA'
 sc.render.image_settings.color_depth = '8'
 sc.render.film_transparent = True
+# Finite shutter softens propeller aliasing without replacing solid blades with a disc.
+sc.render.use_motion_blur = stage.startswith('e-') and clip in ('idle', 'move', 'attack')
+sc.render.motion_blur_shutter = .65
 if stage == 'b':
     clay = bpy.data.materials.new('Plain clay')
     clay.use_nodes = True
@@ -66,7 +69,17 @@ for view in views:
         offset = Vector((0, 0, 10)) if view == 'top' else Vector((10, 0, .2))
         sc.camera.location = target + offset
         sc.camera.rotation_euler = (-offset).to_track_quat('-Z', 'Y').to_euler()
-        sc.camera.data.ortho_scale = 6.6
+        horizontal=sc.camera.rotation_euler.to_matrix() @ Vector((1,0,0))
+        vertical=sc.camera.rotation_euler.to_matrix() @ Vector((0,1,0))
+        extent=0.0
+        for sample in frames:
+            sc.frame_set(sample)
+            for obj in sc.objects:
+                if obj.type!='MESH' or obj.hide_render:continue
+                for corner in obj.bound_box:
+                    point=obj.matrix_world @ Vector(corner)-target
+                    extent=max(extent,abs(point.dot(horizontal)),abs(point.dot(vertical)))
+        sc.camera.data.ortho_scale=2*extent*1.08
     previous_state = None
     for i, f in enumerate(frames):
         sc.frame_set(f)
@@ -75,6 +88,8 @@ for view in views:
         # Check every rendered object's full transform/visibility before copying a hold.
         state = [(o.name, tuple(v for row in o.matrix_world for v in row), o.hide_render)
                  for o in sc.objects if o.type in ('MESH', 'LIGHT', 'CAMERA')]
+        state += [(o.name, tuple(k.value for k in o.data.shape_keys.key_blocks))
+                  for o in sc.objects if o.type == 'MESH' and o.data.shape_keys]
         if clip == 'death' and i >= 8 and state == previous_state:
             shutil.copyfile(folder / outputs[-1], path)
         else:
@@ -86,6 +101,8 @@ manifest.write_text(json.dumps({
     'stage': stage, 'resolution': size, 'engine': engine,
     'device': sc.cycles.device if engine == 'CYCLES' else 'GPU',
     'samples': sc.cycles.samples,
+    'motion_blur': sc.render.use_motion_blur,
+    'shutter': sc.render.motion_blur_shutter,
     'blend_sha256': hashlib.sha256(blend.read_bytes()).hexdigest(),
     'source_sha256': hashlib.sha256((M / 'fighter.blend').read_bytes()).hexdigest(),
     'frames': {n: hashlib.sha256((folder / n).read_bytes()).hexdigest() for n in outputs},

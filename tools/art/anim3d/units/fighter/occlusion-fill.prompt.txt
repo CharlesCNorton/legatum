@@ -1,0 +1,11 @@
+Edit target: assets/fighter/projection.png. Remove all four charcoal propeller
+blades and their yellow tips, leaving the olive spinner intact. Reconstruct
+olive metal wing behind the upper blades with continuous silver panel seams,
+rivets, worn olive brushwork and adjacent painted illumination. Replace blades
+outside the aircraft with transparency. Preserve exact composition, viewpoint,
+aircraft outline, cockpit, fuselage, exhaust, near wing, pedestal and base.
+No text, markings, new objects or redesign. Transparent background.
+Built-in ImageGen output: 01a20947-16e3-7b33-9a3c-7ef7536ee369/
+exec-48979cef-d5dc-4687-b975-2b4c4dc6267a.png (2026-11-23), CC BY 4.0.
+Only narrow feathered blade-occlusion regions enter the 3D wing shader;
+original source pixels remain elsewhere. Generated geometry is not used.

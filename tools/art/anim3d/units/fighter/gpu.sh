@@ -6,6 +6,7 @@ source tools/art/anim3d/env.sh
 export ROUND="${ROUND:-2}" RESOLUTION=512
 export RENDER_ENGINE=CYCLES CYCLES_DEVICE=GPU CYCLES_BACKEND="${CYCLES_BACKEND:-METAL}"
 export SAMPLES="${SAMPLES:-64}"
+unset ANIMATE_CLIP
 if [[ "$CYCLES_BACKEND" == METAL ]]; then export GPU_ARGS='--gpu-backend metal'; fi
 UNIT=tools/art/anim3d/units/fighter
 MASTER="$ANIM_ROOT/masters/fighter"
@@ -28,6 +29,8 @@ if [[ $# -ne 0 || ! -s "$MASTER/fighter.blend" || ! -s "$MASTER/plain.blend" ]];
   printf 'Missing saved fighter/plain master, or unexpected arguments\n'
   fail 1
 fi
+stage=verify-inputs
+"$ANIM_ROOT/venv/bin/python" "$UNIT/inputs.py" verify || fail $?
 # Saved final master is the reviewed input; rebuild clips so stale WIP clips cannot pass.
 stage=animate
 "$UNIT/render.sh" animate || fail $?
@@ -47,7 +50,7 @@ stage=receipt
 import hashlib,json,os
 from pathlib import Path
 r=Path(os.environ['ANIM_ROOT']);m=r/'masters/fighter';v=r/'review/3d-v2'
-receipt={'round':os.environ['ROUND'],'source_sha256':hashlib.sha256((m/'fighter.blend').read_bytes()).hexdigest(),'validation':json.loads((m/'validation.json').read_text()),'audit':json.loads((m/'audit.json').read_text()),'movie_sha256':hashlib.sha256((v/f'fighter-round{os.environ["ROUND"]}.mp4').read_bytes()).hexdigest(),'art_approved':False}
+receipt={'round':os.environ['ROUND'],'source_sha256':hashlib.sha256((m/'fighter.blend').read_bytes()).hexdigest(),'validation':json.loads((m/'validation.json').read_text()),'audit':json.loads((m/'audit.json').read_text()),'movie_sha256':hashlib.sha256((v/f'fighter-round{os.environ["ROUND"]}.mp4').read_bytes()).hexdigest(),'build_inputs':json.loads((m/'build-inputs.json').read_text()),'art_approved':False}
 (v/f'fighter-gpu-round{os.environ["ROUND"]}.json').write_text(json.dumps(receipt,indent=2)+'\n')
 PY
 printf 'complete round=%s; pending visual review\n' "$ROUND" > "$STATUS"
