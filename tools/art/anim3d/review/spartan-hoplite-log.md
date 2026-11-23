@@ -67,3 +67,4 @@ Final code checks: 16 unit Python files parse; render.sh and executable gpu.sh p
 Baked clip idle
 Baked clip move
 Baked clip attack
+Baked clip hit
