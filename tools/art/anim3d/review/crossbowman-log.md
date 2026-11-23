@@ -119,3 +119,12 @@
 - Completed render e-hit (GPU).
 - e-hit: 4 frames reviewed at 256/64; CYCLES GPU, 64 samples, source 512px.
 - Started render e-death (GPU).
+- Completed render e-death (GPU).
+- e-death: 10 frames reviewed at 256/64; CYCLES GPU, 64 samples, source 512px.
+- Packed 40 frames, trimmed 160px cells, WebP quality 85, 177626 bytes.
+- Verified 8 second five-clip H.264 yuv420p review crossbowman-round1.mp4
+- Driver round 2: opened supplied GPU c/f comparisons, all five strips and decoded round1 MP4 frames before edits. GPU pass succeeded (512/64, Q85 177626 bytes). Honest 256px critique: painted torso and pavise are close but right grip is dark and bulky, bow too wide/low, stone rim too dark, shoulder/elbow shells separate during attack; held death is suspended behind pavise with unsupported legs. At 64px identity/height match, but bow span, base tone and motion silhouette remain visibly different. NOT PASS. Preserved evidence under masters/crossbowman/driver-r1-gpu. Unit-specific feedback absent; common feedback now includes item 23: open motion and top/front feet check. Loaded all six Blender skills; apply continuous weighted cloth, source-retargeted motion, exact-view projection, existing generated fills, product lighting and stable histogram grade.
+- Started build  (CPU).
+- Completed build  (CPU).
+- Started render c (CPU).
+- Completed render c (CPU).
