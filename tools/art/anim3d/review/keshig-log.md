@@ -87,3 +87,5 @@ Rendered attack: 10 frames, 256px, 8 samples, CPU.
 Rendered hit: 4 frames, 256px, 8 samples, CPU.
 Rendered death: 10 frames, 256px, 8 samples, CPU.
 Rendered top/front views for all eight move samples; native -Y travel axis, no post-retarget foot rotation.
+Rendered death: 10 frames, 256px, 8 samples, CPU.
+Packed and decoded 40 trimmed frames, quality 80, 196016 bytes; wrote keshig-round2.mp4. Warnings: []
