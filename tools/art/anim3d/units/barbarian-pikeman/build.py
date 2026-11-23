@@ -66,7 +66,7 @@ def shell(name,pred,material,inflation):
  for md in disabled:md.show_viewport=True
  weighted(o,weights);finish(o);sub=o.modifiers.new('Tailored smoothing','SUBSURF');sub.levels=1;sub.render_levels=1;return o
 shell('padded-sleeves',lambda v:1.03<v.z<1.43 and abs(v.x)>.16,cloth,.026)
-shell('wrinkled-trousers',lambda v:.08<v.z<.98,pants,.028)
+shell('wrinkled-trousers',lambda v:.08<v.z<.98 and abs(v.x)<.30,pants,.028)
 shell('leather-boots',lambda v:v.z<.19,leather,.025)
 # Fitted coat with real quilt displacement, open neckline and flared skirt.
 vs=[];fs=[];N=64;J=32
@@ -134,10 +134,10 @@ def limb(up,lo,target,pole):
  a=rig.pose.bones[up].head.copy();t=Vector(target);axis=t-a;l1=rig.data.bones[up].length;l2=rig.data.bones[lo].length;d=min(axis.length,l1+l2-.0001);axis.normalize();along=(l1*l1-l2*l2+d*d)/(2*d);h=max(0,l1*l1-along*along)**.5;side=Vector(pole)-a;side=(side-axis*side.dot(axis)).normalized();elbow=a+axis*along+side*h;aim(up,elbow-a);aim(lo,t-elbow)
 rig.location=(-.17,0,.10)
 p=rig.pose.bones['pelvis'];m=p.matrix.copy();m.translation.z-=.14;p.matrix=m;bpy.context.view_layer.update()
-for side,x,y in [('r',-.32,-.01),('l',.43,.02)]:
- limb('thigh_'+side,'calf_'+side,(x,y,.08),(x,-.38,.48));aim('foot_'+side,((-.035 if side=='r' else .10),-.16,-.065))
+for side,x,y in [('r',-.36,-.01),('l',.35,.02)]:
+ limb('thigh_'+side,'calf_'+side,(x,y,.08),((-.40 if side=='r' else .23),-.30,.48));aim('foot_'+side,((-.065 if side=='r' else .16),-.16,-.065))
 limb('upperarm_r','lowerarm_r',(-.34,-.22,.72),(-.48,-.16,1.05))
-limb('upperarm_l','lowerarm_l',(.22,-.24,1.17),(.40,-.15,1.03))
+limb('upperarm_l','lowerarm_l',(.165,-.24,1.085),(.14,-.18,.85))
 for side in ['r','l']:
  aim('hand_'+side,(.06,-.01,.065))
  for finger in ['index','middle','ring','pinky']:
@@ -148,7 +148,7 @@ p=rig.pose.bones['head'];m=p.matrix.copy();pos=p.head.copy();m=Matrix.Rotation(.
 start=Vector((-1.17,-.26,.20));end=Vector((1.17,-.26,2.34))
 grip=Vector((-.24,-.26,1.06))
 pike=bpy.data.objects.new('CTRL-pike',None);sc.collection.objects.link(pike);pike.location=grip;bpy.context.view_layer.update()
-shaft=curve('ash-pike-shaft',[start,end-(end-start).normalized()*.085],.010,wood);shaft.parent=pike;shaft.matrix_parent_inverse=pike.matrix_world.inverted()
+shaft=curve('ash-pike-shaft',[start,end-(end-start).normalized()*.085],.0055,wood);shaft.parent=pike;shaft.matrix_parent_inverse=pike.matrix_world.inverted()
 d=(end-start).normalized();a=end-d*.10;u=Vector((0,1,0))*.011;v=d.cross(Vector((0,1,0)))*.018
 head=mesh('iron-pike-point',[a+u,a+v,a-u,a-v,end],[(0,1,4),(1,2,4),(2,3,4),(3,0,4),(3,2,1,0)],steel,False);finish(head,0,.001);head.parent=pike;head.matrix_parent_inverse=pike.matrix_world.inverted()
 # Red arm tie at the visible upper sleeve, with substantial ribbon surfaces.
@@ -162,43 +162,37 @@ for off in [-.03,.02]:
   for s in [-1,1]:vs.append(center+Vector((off+.013*s+.015*math.sin(t*8),-.08+.025*math.sin(t*5),-.23*t)))
  attach(finish(mesh('red-tie-tail',vs,[(2*i,2*i+1,2*i+3,2*i+2) for i in range(12)],red),.004,.001),'upperarm_r')
 # Stationary one-step warm cream base.
-bpy.ops.mesh.primitive_cylinder_add(vertices=96,radius=.60,depth=.075,location=(-.14,0,.052));base=bpy.context.object;base.name='GEO-cream-stone-base';base.data.materials.append(stone);finish(base,0,.018)
-for p in base.data.polygons:p.use_smooth=True
+bpy.ops.mesh.primitive_cylinder_add(vertices=96,radius=.59,depth=.075,location=(-.14,.20,.052));base=bpy.context.object;base.name='GEO-cream-stone-base';base.data.materials.append(stone);finish(base,0,.018)
+for p in base.data.polygons:p.use_smooth=abs(p.normal.z)<.5
+base.modifiers['Rounded edges'].segments=5
+stone.node_tree.nodes.get('Bump').inputs['Distance'].default_value=.001
+stone.node_tree.nodes.get('Bump').inputs['Strength'].default_value=.08
+# A camera-only cream pigment opens the stone without painted boot shadows.
+n=stone.node_tree.nodes;l=stone.node_tree.links;p=n.get('Principled BSDF');out=n.get('Material Output')
+g=n.new('ShaderNodeNewGeometry');xyz=n.new('ShaderNodeSeparateXYZ');l.new(g.outputs['Normal'],xyz.inputs[0])
+palette=n.new('ShaderNodeMixRGB');palette.inputs[1].default_value=(.47,.285,.12,1);palette.inputs[2].default_value=(.815,.624,.352,1);l.new(xyz.outputs['Z'],palette.inputs[0])
+ao=n.new('ShaderNodeAmbientOcclusion');ao.inputs['Distance'].default_value=.06
+pigment=n.new('ShaderNodeMixRGB');pigment.blend_type='MULTIPLY';pigment.inputs[0].default_value=.45;l.new(palette.outputs[0],pigment.inputs[1]);l.new(ao.outputs['Color'],pigment.inputs[2])
+em=n.new('ShaderNodeEmission');l.new(pigment.outputs[0],em.inputs['Color'])
+path=n.new('ShaderNodeLightPath');fac=n.new('ShaderNodeMath');fac.operation='MULTIPLY';fac.inputs[1].default_value=.70;l.new(path.outputs['Is Camera Ray'],fac.inputs[0])
+mix=n.new('ShaderNodeMixShader');l.new(fac.outputs[0],mix.inputs[0]);l.new(p.outputs[0],mix.inputs[1]);l.new(em.outputs[0],mix.inputs[2]);l.new(mix.outputs[0],out.inputs['Surface'])
 bpy.ops.object.camera_add(location=(0,-8,1.105+8*math.tan(.22)));cam=bpy.context.object;cam.name='CAM-painting';cam.rotation_euler=(Vector((0,0,1.105))-cam.location).to_track_quat('-Z','Y').to_euler();cam.data.type='ORTHO';cam.data.ortho_scale=2.6;sc.camera=cam
-for name,loc,power,color,size in [('key',(-3,-4,6),440,(1,.87,.68),4),('fill',(3,-2,3),100,(.83,.89,1),3),('rim',(1,3,4),260,(.73,.84,1),2)]:
+for name,loc,power,color,size in [('key',(-3,-4,6),300,(1,.95,.85),4),('fill',(3,-2,3),60,(.90,.94,1),3),('rim',(1,3,4),95,(.85,.91,1),2)]:
  d=bpy.data.lights.new('LGT-'+name,'AREA');d.energy=power;d.color=color;d.shape='DISK';d.size=size;o=bpy.data.objects.new(d.name,d);sc.collection.objects.link(o);o.location=loc;o.rotation_euler=(Vector((0,0,1))-o.location).to_track_quat('-Z','Y').to_euler()
-sc.world.color=(.16,.16,.16);sc.render.film_transparent=True;sc.view_settings.view_transform='AgX';sc.view_settings.look='AgX - Medium High Contrast'
+sc.world.color=(.16,.16,.16);sc.render.film_transparent=True;sc.view_settings.view_transform='Standard';sc.view_settings.look='None'
 sc.render.resolution_x=sc.render.resolution_y=256;sc.render.resolution_percentage=100
 bpy.context.view_layer.update()
 # Convert original curve fittings into meshes before freezing UVs; all retain bone parenting.
 for o in list(sc.objects):
  if o.type=='CURVE':
   bpy.ops.object.select_all(action='DESELECT');o.select_set(True);bpy.context.view_layer.objects.active=o;bpy.ops.object.convert(target='MESH')
+sys.path.insert(0,str(Path(__file__).resolve().parent))
+from surface import finish_surfaces
+finish_surfaces()
 rig['rest_basis']=json.dumps({p.name:[list(row) for row in p.matrix_basis] for p in rig.pose.bones})
 sc['unit']='barbarian-pikeman';sc['source']='MPFB 2.0.18 CC0, original quilted kit, project painting projection'
 bpy.ops.wm.save_as_mainfile(filepath=str(M/'plain.blend'))
-# Fixed rest-camera UVs on topology before subdivision, incidence and alpha fade to hidden fills.
-painting=bpy.data.images.load(str(A/'painting-aligned.png'))
-records=[]
-for o in list(sc.objects):
- if o.type!='MESH':continue
- disabled=[]
- for md in o.modifiers:
-  if md.type!='ARMATURE' and md.show_viewport:disabled.append(md);md.show_viewport=False
- bpy.context.view_layer.update();ev=o.evaluated_get(bpy.context.evaluated_depsgraph_get());me=ev.to_mesh();assert len(me.vertices)==len(o.data.vertices)
- uv=o.data.uv_layers.new(name='PaintingCamera');mask=o.data.color_attributes.new(name='PaintingFacing',type='FLOAT_COLOR',domain='CORNER')
- coords=[];facing=[]
- for v in me.vertices:
-  w=ev.matrix_world@v.co;c=world_to_camera_view(sc,cam,w);coords.append((c.x,c.y));normal=(ev.matrix_world.to_3x3()@v.normal).normalized();facing.append(max(0,min(1,(normal.dot((cam.location-w).normalized())-.05)/.55)))
- for lp in o.data.loops:uv.data[lp.index].uv=coords[lp.vertex_index];f=facing[lp.vertex_index];mask.data[lp.index].color=(f,f,f,1)
- ev.to_mesh_clear()
- for md in disabled:md.show_viewport=True
- for slot in o.material_slots:
-  material=slot.material.copy();slot.material=material;n=material.node_tree.nodes;l=material.node_tree.links;p=n.get('Principled BSDF');old=p.inputs['Base Color'].links[0].from_socket if p.inputs['Base Color'].is_linked else None
-  if not old:rgb=n.new('ShaderNodeRGB');rgb.outputs[0].default_value=p.inputs['Base Color'].default_value;old=rgb.outputs[0]
-  tc=n.new('ShaderNodeUVMap');tc.uv_map=uv.name;tex=n.new('ShaderNodeTexImage');tex.image=painting;tex.extension='CLIP';l.new(tc.outputs[0],tex.inputs[0]);attr=n.new('ShaderNodeVertexColor');attr.layer_name=mask.name;mul=n.new('ShaderNodeMath');mul.operation='MULTIPLY';l.new(attr.outputs['Color'],mul.inputs[0]);l.new(tex.outputs['Alpha'],mul.inputs[1]);mix=n.new('ShaderNodeMixRGB');l.new(mul.outputs[0],mix.inputs[0]);l.new(old,mix.inputs[1]);l.new(tex.outputs['Color'],mix.inputs[2]);l.new(mix.outputs[0],p.inputs['Base Color'])
-  # Small self-lit pigment contribution preserves painted cavity colour under soft product lights.
-  l.new(mix.outputs[0],p.inputs['Emission Color']);p.inputs['Emission Strength'].default_value=.15
- records.append({'mesh':o.name,'vertices':len(o.data.vertices),'uv':'PaintingCamera'})
+from projection import project
+project()
 bpy.ops.file.pack_all();bpy.ops.wm.save_as_mainfile(filepath=str(M/'barbarian-pikeman.blend'))
-(M/'projection.json').write_text(json.dumps(records,indent=2));print('BUILD_OK',len(records),'meshes',len(rig.data.bones),'bones')
+print('BUILD_OK',len(rig.data.bones),'bones')

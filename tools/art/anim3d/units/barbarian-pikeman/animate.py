@@ -42,12 +42,12 @@ for clip,(count,fps,loop) in CLIPS.items():
    if lowest<.12:pike.location.z+=.12-lowest
   bpy.context.view_layer.update()
   if clip!='death':
-   for side,x,y,phase in [('r',-.32,-.01,0),('l',.43,.02,math.pi)]:
+   for side,x,y,phase in [('r',-.36,-.01,0),('l',.35,.02,math.pi)]:
     step=math.sin(t*math.tau+phase) if clip=='move' else 0
     target=(x+.055*step-(rig.location.x-rpos.x),y+.09*step-(rig.location.y-rpos.y),.08+(.07*max(0,step) if clip=='move' else 0)-(rig.location.z-rpos.z))
-    limb(rig,'thigh_'+side,'calf_'+side,target,(x,-.38,.48));aim(rig,'foot_'+side,((-.035 if side=='r' else .10),-.16,-.065))
+    limb(rig,'thigh_'+side,'calf_'+side,target,((-.40 if side=='r' else .23),-.30,.48));aim(rig,'foot_'+side,((-.065 if side=='r' else .16),-.16,-.065))
    for side in ['r','l']:
-    target=rig.matrix_world.inverted()@(pike.matrix_world@hand_local[side]);pole=(-.48,-.16,1.05) if side=='r' else (.40,-.15,1.03)
+    target=rig.matrix_world.inverted()@(pike.matrix_world@hand_local[side]);pole=(-.48,-.16,1.05) if side=='r' else (.14,-.18,.85)
     limb(rig,'upperarm_'+side,'lowerarm_'+side,target,pole);aim(rig,'hand_'+side,(.06,-.01,.065))
   else:
    # Release both hands after impact starts; articulated limbs collapse with the body.

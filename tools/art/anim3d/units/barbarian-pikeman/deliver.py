@@ -35,14 +35,23 @@ def panel(ims,labels,size=256):
 def main():
  ap=argparse.ArgumentParser();ap.add_argument('--resolution',type=int,default=256);ap.add_argument('--review-only',action='store_true');args=ap.parse_args();raw=M/'renders'/str(args.resolution)
  ref=Image.open('app/src/assets/units/barbarian-pikeman-256.png').convert('RGBA');rest=Image.open(raw/'c-textured-lit/00.png').convert('RGBA');luts=grade_lut(rest.resize((256,256)),ref)
- (M/'grade.json').write_text(json.dumps({'method':'50 percent monotonic 17-quantile foreground RGB transfer; fixed for all clips','lut':luts},indent=2))
+ rest_manifest=json.loads((raw/'c-textured-lit/render.json').read_text())
+ if args.review_only and rest_manifest['blend_sha256']!=sha(M/f'{SLUG}.blend'):return
+ assert rest_manifest['blend_sha256']==sha(M/f'{SLUG}.blend'),'stale rest calibration'
+ (M/'grade.json').write_text(json.dumps({'method':'50 percent monotonic 17-quantile foreground RGB transfer; fixed for all clips','rest_sha256':sha(raw/'c-textured-lit/00.png'),'reference_sha256':sha(Path('app/src/assets/units/barbarian-pikeman-256.png')),'master_sha256':sha(M/f'{SLUG}.blend'),'lut':luts},indent=2))
  graded={};sources={}
  for folder in sorted(raw.iterdir()):
   if not (folder/'render.json').exists():continue
   manifest=json.loads((folder/'render.json').read_text());stage=folder.name
   source=M/'clips'/f'{stage[2:]}.blend' if stage.startswith('e-') else M/'clips/attack.blend' if stage=='d-rig-poses' else M/('plain.blend' if stage=='b-plain' else SLUG+'.blend')
   if args.review_only and manifest['blend_sha256']!=sha(source):continue
+  if args.review_only and any(manifest[k]!=rest_manifest[k] for k in ['engine','device','samples','resolution']):continue
+  if source.parent.name=='clips':
+   info=json.loads(source.with_suffix('.json').read_text())
+   if args.review_only and info['source_master_sha256']!=sha(M/f'{SLUG}.blend'):continue
+   assert info['source_master_sha256']==sha(M/f'{SLUG}.blend'),(stage,'stale clip')
   assert manifest['blend_sha256']==sha(source),(stage,'stale render')
+  assert all(manifest[k]==rest_manifest[k] for k in ['engine','device','samples','resolution']),(stage,'mixed render settings')
   sources[stage]=manifest;ims=[]
   for i in range(manifest['frames']):
    im=Image.open(folder/f'{i:02}.png').convert('RGBA');im=im if stage=='b-plain' else grade(im,luts)
@@ -60,7 +69,10 @@ def main():
    top=panel([ref,ims[0]],['painting','3D '+manifest['device']]);sheet=Image.new('RGBA',(512,370),CREAM);sheet.alpha_composite(top);sheet.alpha_composite(ref.resize((64,64)),(96,294));sheet.alpha_composite(ims[0].resize((64,64)),(352,294));sheet.save(V/f'{SLUG}-{stage}.png')
  if 'c-textured-lit' in graded:
   rest=graded['c-textured-lit'][0];half=ref.copy();half.paste(rest.crop((128,0,256,256)),(128,0));cross=Image.blend(ref,rest,.5)
-  panel([ref,rest,half,cross],['painting','3D rest','half split','50/50 crossfade']).save(V/f'{SLUG}-f-restpose-compare.png')
+  comparison=panel([ref,rest,half,cross],['painting','3D rest','half split','50/50 crossfade'])
+  sheet=Image.new('RGBA',(comparison.width,370),CREAM);sheet.alpha_composite(comparison)
+  for i,im in enumerate([ref,rest,half,cross]):sheet.alpha_composite(im.resize((64,64),Image.Resampling.LANCZOS),(i*256+96,294))
+  sheet.save(V/f'{SLUG}-f-restpose-compare.png')
   boxes=[(82,64,130,111),(66,94,143,173),(65,170,166,228)]
   details=[];labels=[]
   detail=graded.get('c-details',[rest])[0]
@@ -70,10 +82,14 @@ def main():
  frames={};rows=[];rects={};y=1;maxw=0
  for row,(clip,(n,fps,loop)) in enumerate(CLIPS.items()):
   info=json.loads((M/'clips'/f'{clip}.json').read_text());assert info['source_master_sha256']==sha(M/f'{SLUG}.blend'),'stale animation'
-  x=1;height=0;rowitems=[]
+  x=1;height=0;rowitems=[];unique={}
   for i,im in enumerate(graded['e-'+clip]):
-   im=im.resize((160,160),Image.Resampling.LANCZOS);alpha=im.getchannel('A');im.paste((0,0,0,0),mask=alpha.point(lambda a:255 if a==0 else 0));box=alpha.getbbox();assert box
+   im=im.resize((160,160),Image.Resampling.BICUBIC);alpha=im.getchannel('A');im.paste((0,0,0,0),mask=alpha.point(lambda a:255 if a==0 else 0));box=alpha.getbbox();assert box
+   key=hashlib.sha256(im.tobytes()).hexdigest()
+   if key in unique:
+    rects[clip,i]=unique[key];frames[clip,i]=im;continue
    crop=im.crop(box);rects[clip,i]={'x':x,'y':y,'w':crop.width,'h':crop.height,'ox':box[0],'oy':box[1]};rowitems.append((crop,x,y));x+=crop.width+2;height=max(height,crop.height);frames[clip,i]=im
+   unique[key]=rects[clip,i]
   rows+=rowitems;maxw=max(maxw,x);y+=height+2
  atlas=Image.new('RGBA',(maxw,y))
  for crop,x,y in rows:atlas.paste(crop,(x,y))

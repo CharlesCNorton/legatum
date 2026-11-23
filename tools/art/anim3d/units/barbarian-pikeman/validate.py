@@ -8,17 +8,20 @@ assert hashlib.sha256((M/f'{slug}.blend').read_bytes()).hexdigest()==report['mas
 assert hashlib.sha256((M/'grade.json').read_bytes()).hexdigest()==report['grade_sha256'],'Stale grade'
 checks=[]
 for row,(clip,n) in enumerate([('idle',8),('move',8),('attack',10),('hit',4),('death',10)]):
- c=meta['clips'][clip];assert c['frames']==len(c['rects'])==n;assert c['row']==row;hashes=[]
+ c=meta['clips'][clip];assert c['frames']==len(c['rects'])==n;assert c['row']==row;hashes=[];decoded_hashes=[]
  for i,r in enumerate(c['rects']):
   x,y,w,h,ox,oy=[r[k] for k in ['x','y','w','h','ox','oy']];assert 0<=x<x+w<=atlas.width and 0<=y<y+h<=atlas.height;assert 0<=ox<ox+w<=160 and 0<=oy<oy+h<=160
   reconstructed=Image.new('RGBA',(160,160));reconstructed.paste(atlas.crop((x,y,x+w,y+h)),(ox,oy));assert reconstructed.getchannel('A').getextrema()==(0,255)
   source_path=M/'graded/256'/('e-'+clip)/f'{i:02}.png'
   assert hashlib.sha256(source_path.read_bytes()).hexdigest()==report['frames_sha256'][f'{clip}/{i}'],'Stale frame'
-  source=Image.open(source_path).convert('RGBA').resize((160,160),Image.Resampling.LANCZOS)
+  decoded_hashes.append(hashlib.sha256(reconstructed.tobytes()).hexdigest())
+  source=Image.open(source_path).convert('RGBA').resize((160,160),Image.Resampling.BICUBIC)
   assert ImageChops.difference(source.getchannel('A'),reconstructed.getchannel('A')).getbbox() is None,'Trim reconstruction alpha mismatch'
   hashes.append(hashlib.sha256(source.tobytes()).hexdigest());bbox=source.getchannel('A').point(lambda a:255 if a>24 else 0).getbbox();assert bbox[0]>0 and bbox[1]>0 and bbox[2]<160 and bbox[3]<160,(clip,i,'clipping',bbox)
  assert len(set(hashes))>1,(clip,'no motion')
- if clip=='death':assert hashes[-1]==hashes[-2],'death must settle'
+ if clip=='death':
+  assert hashes[-1]==hashes[-2],'death must settle'
+  assert decoded_hashes[-1]==decoded_hashes[-2],'decoded death must also settle'
  checks.append(f'{clip}: {n} frames; alpha/trim/margins/motion valid')
 result={'ok':True,'checks':checks,'bytes':report['bytes'],'quality':report['quality'],'source_resolution':report['source_resolution'],'gpu':all(v['device']=='GPU' for v in report['render_sources'].values()),'art_approved':False}
 (V/f'{slug}-validation.json').write_text(json.dumps(result,indent=2));print(json.dumps(result,indent=2))
