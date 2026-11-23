@@ -6,7 +6,7 @@ import bpy
 from mathutils import Vector
 from common import MASTER, CLIPS, SLUG, log
 stage=sys.argv[sys.argv.index('--')+1]
-clip=stage[2:] if stage.startswith('e-') else 'attack' if stage=='d' else None
+clip=stage[2:] if stage.startswith('e-') else 'attack' if stage=='d' else 'move' if stage=='g' else None
 path=MASTER/'clips'/f'{clip}.blend' if clip else MASTER/('plain.blend' if stage=='b' else 'finished.blend')
 bpy.ops.wm.open_mainfile(filepath=str(path));sc=bpy.context.scene
 assert sc.camera and sc.camera.type=='CAMERA'
@@ -25,7 +25,13 @@ folder=MASTER/'renders'/stage;folder.mkdir(parents=True,exist_ok=True)
 outputs=[]
 def render(name):
     p=folder/f'{name}.png';sc.render.filepath=str(p);bpy.ops.render.render(write_still=True);outputs.append(p)
-if clip:
+if stage=='g':
+    sc.camera.data.ortho_scale=5.5
+    for view,pos,target in [('top',(0,0,12),(0,0,0)),('front',(12,0,3),(0,0,.6))]:
+        sc.camera.location=pos;sc.camera.rotation_euler=(Vector(target)-sc.camera.location).to_track_quat('-Z','Y').to_euler()
+        for i,frame in enumerate(json.loads(sc['sample_frames'])):
+            sc.frame_set(frame);render(f'{view}-{i:02}')
+elif clip:
     frames=json.loads(sc['sample_frames'])
     if stage=='d':frames=[frames[i] for i in [0,2,3,7]]
     for i,frame in enumerate(frames):

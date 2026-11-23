@@ -107,7 +107,7 @@ tools/art/anim3d/render.sh audit
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
 
-## Vehicles / autonomous armour — round 1
+## Vehicles / autonomous armour — round 2
 
 This unit's scripts live in `tools/art/anim3d/units/autonomous-armour/`; they do not
 replace the tank lane's family scripts. The unmanned vehicle uses original closed
@@ -119,21 +119,46 @@ No infantry anatomy or MPFB installation is needed for a machine.
 
 Standard finish follows feedback 18–21: first align the camera and true rest
 geometry to the painting, then freeze full-source camera UVs on those meshes.
-Camera-facing confidence blends to an original image-generated olive-painted
-steel fill on unseen faces. Rotating running gear uses a reduced 28% projection
-blend and 20% emission because full rest-camera projection distorted wheel
-features in motion; stationary armour uses 94% colour and 64% emission. Real bevels and three Cycles AO/Pointiness bake pairs
-supply recess dirt and edge wear. A warm upper-left area key, soft fill and cool
-rim light the miniature. A bounded RGB percentile grade is measured from the
-rest render and frozen for every clip, never fitted separately to moving frames.
-The painting/render/50-percent-crossfade sheet at 256 and 64 px is the art gate;
-passing file checks alone is not approval. Projection retains painted lighting,
-so broad changes of view and exposed UV seams still need visual review.
+Finished static surfaces receive shape-preserving subdivision before UV freezing.
+A frozen world-space BVH supplies visibility samples and normal-facing confidence;
+it avoids rebuilding Blender's dependency graph after every material assignment.
+Camera-only pigment preserves 97% of the source illumination on visible static
+armour, with physical PBR retained for other rays and revealed surfaces. Standard /
+None avoids a second filmic compression of already painted illumination. This is a
+source-painting workflow, not a general photographic colour-management preset.
+Rotating gear excludes source projection entirely: painted source hubs otherwise
+rotate across the independently modeled wheel faces. Neutralized generated olive
+fill, ambient cavity shading, bevels and physical response finish the wheel dishes.
+Three real Cycles AO/Pointiness bake pairs remain on the main armour surfaces.
 
-The base uses a dielectric fine-grain material targeting sRGB **#E9CFA0**
-(linear approximately `.815, .624, .352`), with a modest warm emission component
-and beveled rim. Sample actual rendered pixels after the lighting/grade pass;
-shader numeric values alone do not prove a match to the painting.
+The round-two hull and track gauge are 22% broader, the turret is 15% shorter with
+a raised mounting, and the camera is `(10,-7,4.8)` aimed at `(0,0,1.6)`, scale 5.25.
+These are measured local visual improvements, **not an exact viewpoint claim**.
+The source/render/50-percent-crossfade sheet at 256 and 64 px remains the art gate;
+passing file checks alone is not approval. Remaining running-gear proportions,
+paint registration and stone shading are recorded honestly in the unit log.
+
+A warm high area key, soft fill and cool rim light the miniature. A bounded RGB
+percentile grade is measured at rest and frozen across every clip. Projected and
+stone pigment are camera-only, so they cannot light nearby geometry. Review newly
+revealed surfaces and source-object contamination in moving poses.
+
+The base retains the shared dielectric **#E9CFA0** albedo, fine grain, a real
+55mm five-segment bevel and .24m contact top. Camera-only top/rim pigment with live
+AO opens its shaded edge; no tank image or painted contact shadow enters the stone.
+The rim remains simpler than the painting. Judge actual lit/graded pixels, not
+material numeric values alone.
+
+Mechanical motion uses shared constants in `common.py`: five track pitches per
+move loop, two six-stud wheel periods and three twelve-tooth sprocket periods.
+The rolling direction matches the tread, and angular travel times rolling radius
+equals track travel. The saved-scene audit checks those distances and maps closure
+links to their corresponding starting links. `g` renders all eight move samples
+from above and in front as `autonomous-armour-g-feet-check.png`; for this vehicle
+it checks track direction/contact instead of human feet. Runtime supplies forward
+map travel; the base stays fixed for the in-place animation preview. Idle/move
+controls and combat clips start at the same rest transform. Death cants and lowers
+the turret, gun, optics and aerials, then reuses the terminal render exactly.
 
 All six Blender skills informed this implementation: modeling (closed beveled
 plates and bore), materials (dielectric paint versus exposed metal, real AO and
@@ -158,17 +183,31 @@ for clip in idle move attack hit death; do "$unit/render.sh" "e-$clip"; done
 "$unit/render.sh" validate
 "$unit/render.sh" movie
 # Complete host pass from repository root; no arguments:
-ROUND=1 tools/art/anim3d/units/autonomous-armour/gpu.sh
+ROUND=2 tools/art/anim3d/units/autonomous-armour/gpu.sh
 ```
 
-`gpu.sh` renders every stage sequentially with Cycles Metal GPU (96 samples by
-default), retains 512 and 256 PNG masters under `masters/autonomous-armour/`,
-packs and validates the atlas, and writes all review sheets and animated WebPs.
-It also decodes the shipped trimmed atlas to make
-`autonomous-armour-round${ROUND}.mp4`: five clips side by side, 2x scale on cream,
-8 seconds, H.264/yuv420p, verified using ffprobe. It fails rather than silently
-falling back to CPU. A rebuild invalidates downstream clips; source and render
-hashes prevent stale packing. CPU previews at 256 never masquerade as 512 masters.
+`gpu.sh` is executable, resolves its checkout, takes no arguments and defaults
+ROUND to 2. It checks all saved scenes, audits, then renders every stage serially
+with Cycles Metal GPU (96 samples by default). It retains 512/256 PNG masters,
+all review sheets/WebPs and the rest comparison; packs and validates the atlas;
+and encodes `autonomous-armour-round${ROUND}.mp4` from decoded trimmed frames:
+five clips side by side, 2x on cream, eight seconds, H.264/yuv420p, 1600x348,
+240 frames. It independently probes that movie and verifies every stage's GPU,
+sample count, resolution, master/blend/raw/graded-image hashes before writing
+`autonomous-armour-gpu-round${ROUND}.json`. The receipt leaves art approval false.
+
+The direct transcript is `ANIM_ROOT/gpu-logs-autonomous-armour-r${ROUND}.log`;
+`autonomous-armour-gpu-status.txt` records running, failed stage/exit, or complete
+pending visual review. Missing inputs and CPU-labelled evidence are tested rejection
+paths. Unavailable Metal fails explicitly; no CPU fallback is called a GPU pass.
+Do not edit an executing shell script: its open file offset can resume mid-token.
+The round-two audit passed but its shell caller failed after an in-place script
+edit; the complete final run was repeated from stable scripts.
+
+CPU previews at 256 never masquerade as 512 masters. Prior round-one CPU evidence
+is preserved in `masters/autonomous-armour/round1-cpu`. No GPU pass is inferred from
+old files, a technical validation or a missing driver log. The script never writes
+PASS; only visual acceptance against the painting can authorize that marker.
 
 ### Autonomous armour trimmed atlas extension
 
@@ -181,5 +220,7 @@ width/height. `clips` retains rows in idle/move/attack/hit/death order and exact
 `(ox-ax, oy-ay)`. Identical held frames can share a rectangle within their clip without reducing
 the logical frame count. Each clip occupies one variable-height shelf, so `row` is an
 ordinal, not a fixed-cell multiplication. Preserve full alpha, all frames and
-quality >=75; reject delivery over 200,000 bytes. No runtime loader is changed
+quality >=75; reject delivery over 200,000 bytes. Reduce tokens with premultiplied
+RGBA bicubic sampling, preserving the exact resulting 8-bit alpha on decode.
+Raw and graded hashes are rechecked independently during validation. No runtime loader is changed
 by this art candidate, and fixed-grid consumers must not infer new crop positions.

@@ -44,24 +44,43 @@ bpy.ops.file.pack_all();bpy.ops.wm.save_as_mainfile(filepath=str(M/'finished.ble
 from bpy_extras.object_utils import world_to_camera_view
 from mathutils import Vector
 bpy.context.view_layer.update();tex=bpy.data.images.load(str(ASSETS/'projection.png'))
-view=sc.camera.rotation_euler.to_matrix() @ Vector((0,0,1));projection=[]
-for o in list(bpy.data.objects):
-    if o.type!='MESH' or not o.name.startswith('GEO-'):continue
-    # Shared tread geometry must receive independent camera UVs in its own rest position.
+from mathutils.bvhtree import BVHTree
+# Finish all static geometry first, then freeze one visibility BVH. Rebuilding
+# Blender's dependency graph after every material assignment is unnecessary.
+objects=[o for o in bpy.data.objects if o.type=='MESH' and o.name.startswith('GEO-')]
+for o in objects:
     if o.data.users>1:o.data=o.data.copy()
-    parent=o.parent
-    moving_gear=False
+    parent=o.parent;moving_gear=False
     while parent:
         moving_gear=moving_gear or 'phase' in parent or 'wheel' in parent
         parent=parent.parent
+    o['moving_gear']=moving_gear
+    if not moving_gear and max(o.dimensions)>.45:
+        bpy.context.view_layer.objects.active=o
+        sub=o.modifiers.new('Finished surface paint samples','SUBSURF')
+        sub.subdivision_type='SIMPLE';sub.levels=2
+        bpy.ops.object.modifier_apply(modifier=sub.name)
+bpy.context.view_layer.update()
+vertices=[];polygons=[]
+for o in objects:
+    offset=len(vertices)
+    vertices.extend(o.matrix_world @ v.co for v in o.data.vertices)
+    polygons.extend(tuple(offset+i for i in p.vertices) for p in o.data.polygons)
+visibility=BVHTree.FromPolygons(vertices,polygons)
+view=sc.camera.rotation_euler.to_matrix() @ Vector((0,0,1));projection=[]
+for o in objects:
+    moving_gear=o['moving_gear']
     mesh=o.data;old=mesh.uv_layers.active.name if mesh.uv_layers.active else None
     uv=mesh.uv_layers.new(name='PaintingProjection');confidence=mesh.color_attributes.new(name='Projection confidence',type='FLOAT_COLOR',domain='CORNER')
     nm=o.matrix_world.to_3x3().inverted().transposed()
+    visible=[visibility.ray_cast(o.matrix_world @ v.co+view*.008,view,100)[0] is None for v in mesh.vertices]
     for poly in mesh.polygons:
         facing=max(0,min(1,((nm @ poly.normal).normalized().dot(view)-.02)/.35))
         for index in poly.loop_indices:
-            v=mesh.vertices[mesh.loops[index].vertex_index];p=world_to_camera_view(sc,sc.camera,o.matrix_world @ v.co)
-            uv.data[index].uv=(p.x,p.y);confidence.data[index].color=(facing,facing,facing,1)
+            v=mesh.vertices[mesh.loops[index].vertex_index];world=o.matrix_world @ v.co
+            p=world_to_camera_view(sc,sc.camera,world)
+            hidden=not visible[v.index]
+            uv.data[index].uv=(p.x,p.y);confidence.data[index].color=((0,0,0,1) if hidden else (facing,facing,facing,1))
     mat=mesh.materials[0].copy();mat.name=o.name+' projected';mesh.materials.clear();mesh.materials.append(mat)
     n=mat.node_tree.nodes;l=mat.node_tree.links;s=n.get('Principled BSDF')
     if old:
@@ -73,13 +92,43 @@ for o in list(bpy.data.objects):
     im=n.new('ShaderNodeTexImage');im.image=tex;im.extension='CLIP';l.new(coord.outputs[0],im.inputs['Vector'])
     conf=n.new('ShaderNodeVertexColor');conf.layer_name='Projection confidence'
     mask=n.new('ShaderNodeMath');mask.operation='MULTIPLY';l.new(conf.outputs['Color'],mask.inputs[0]);l.new(im.outputs['Alpha'],mask.inputs[1])
-    weight=n.new('ShaderNodeMath');weight.operation='MULTIPLY';weight.inputs[1].default_value=.28 if moving_gear else .94;l.new(mask.outputs[0],weight.inputs[0])
-    mix=n.new('ShaderNodeMixRGB');l.new(weight.outputs[0],mix.inputs[0]);l.new(original,mix.inputs[1]);l.new(im.outputs['Color'],mix.inputs[2]);l.new(mix.outputs[0],s.inputs['Base Color'])
-    # A painting includes baked light: preserve it using a partial emission mixture.
-    emit=n.new('ShaderNodeEmission');l.new(mix.outputs[0],emit.inputs['Color'])
-    fac=n.new('ShaderNodeMath');fac.operation='MULTIPLY';fac.inputs[1].default_value=.20 if moving_gear else .64;l.new(mask.outputs[0],fac.inputs[0])
-    blend=n.new('ShaderNodeMixShader');l.new(fac.outputs[0],blend.inputs[0]);l.new(s.outputs[0],blend.inputs[1]);l.new(emit.outputs[0],blend.inputs[2]);l.new(blend.outputs[0],n.get('Material Output').inputs['Surface'])
+    # The source already carries illumination. Keep pigment camera-only so it
+    # neither lights the stone nor receives a second complete physical light pass.
+    # Rotating gear deliberately retains its physical/generated fill: frozen
+    # projected wheel detail rotates into doubled hubs and cannot close cleanly.
+    weight=n.new('ShaderNodeMath');weight.operation='MULTIPLY'
+    weight.inputs[1].default_value=0 if moving_gear else .97
+    l.new(mask.outputs[0],weight.inputs[0])
+    pigment=n.new('ShaderNodeEmission');l.new(im.outputs['Color'],pigment.inputs['Color'])
+    lightpath=n.new('ShaderNodeLightPath');lightpath.name='Camera-only painted illumination'
+    camera_weight=n.new('ShaderNodeMath');camera_weight.operation='MULTIPLY'
+    l.new(lightpath.outputs['Is Camera Ray'],camera_weight.inputs[0]);l.new(weight.outputs[0],camera_weight.inputs[1])
+    blend=n.new('ShaderNodeMixShader');l.new(camera_weight.outputs[0],blend.inputs[0]);l.new(s.outputs[0],blend.inputs[1]);l.new(pigment.outputs[0],blend.inputs[2]);l.new(blend.outputs[0],n.get('Material Output').inputs['Surface'])
+    if moving_gear and o.name.startswith(('GEO-wheel face','GEO-wheel dish','GEO-sprocket face')):
+        ao=n.new('ShaderNodeAmbientOcclusion');ao.inputs['Distance'].default_value=.18
+        shade=n.new('ShaderNodeMixRGB');shade.blend_type='MULTIPLY';shade.inputs[0].default_value=.65
+        neutral=n.new('ShaderNodeHueSaturation');neutral.inputs['Saturation'].default_value=.30
+        l.new(original,neutral.inputs['Color']);l.new(neutral.outputs['Color'],s.inputs['Base Color'])
+        l.new(neutral.outputs['Color'],shade.inputs[1]);l.new(ao.outputs['Color'],shade.inputs[2])
+        l.new(shade.outputs[0],pigment.inputs['Color'])
+        l.new(lightpath.outputs['Is Camera Ray'],camera_weight.inputs[0])
+        l.remove(camera_weight.inputs[1].links[0]);camera_weight.inputs[1].default_value=.25
     projection.append(o.name)
+# Warm physical stone, with camera-only pigment to open the deep rim. The
+# pigment uses live AO; it contains neither a projected tank nor painted shadow.
+stone=bpy.data.materials['MAT-warm cream stone #E9CFA0']
+n=stone.node_tree.nodes;l=stone.node_tree.links;s=n.get('Principled BSDF')
+s.inputs['Emission Strength'].default_value=0
+geo=n.new('ShaderNodeNewGeometry');xyz=n.new('ShaderNodeSeparateXYZ');l.new(geo.outputs['Normal'],xyz.inputs[0])
+ramp=n.new('ShaderNodeValToRGB');ramp.color_ramp.elements[0].position=.15;ramp.color_ramp.elements[0].color=(.78,.56,.33,1)
+ramp.color_ramp.elements[1].position=.85;ramp.color_ramp.elements[1].color=(.97,.78,.53,1);l.new(xyz.outputs['Z'],ramp.inputs[0])
+ao=n.new('ShaderNodeAmbientOcclusion');ao.inputs['Distance'].default_value=.22
+shade=n.new('ShaderNodeMixRGB');shade.blend_type='MULTIPLY';shade.inputs[0].default_value=.50
+l.new(ramp.outputs[0],shade.inputs[1]);l.new(ao.outputs['Color'],shade.inputs[2])
+pigment=n.new('ShaderNodeEmission');l.new(shade.outputs[0],pigment.inputs['Color'])
+path=n.new('ShaderNodeLightPath');path.name='Camera-only stone pigment'
+weight=n.new('ShaderNodeMath');weight.operation='MULTIPLY';weight.inputs[1].default_value=.72;l.new(path.outputs['Is Camera Ray'],weight.inputs[0])
+blend=n.new('ShaderNodeMixShader');l.new(weight.outputs[0],blend.inputs[0]);l.new(s.outputs[0],blend.inputs[1]);l.new(pigment.outputs[0],blend.inputs[2]);l.new(blend.outputs[0],n.get('Material Output').inputs['Surface'])
 bpy.ops.file.pack_all();bpy.ops.wm.save_as_mainfile(filepath=str(M/'finished.blend'))
-(M/'projection.json').write_text(json.dumps({'meshes':projection,'strength':{'static':.94,'rotating_gear':.28},'emission_fraction':{'static':.64,'rotating_gear':.20},'hidden_fill':'generated painted-fill.png, frozen-camera facing fade','source':'projection.png'},indent=2))
+(M/'projection.json').write_text(json.dumps({'meshes':projection,'strength':{'static':.97,'rotating_gear':0},'camera_only':True,'hidden_fill':'generated painted-fill.png, frozen-camera visibility and facing fade','source':'projection.png'},indent=2))
 log(f'Finished materials: three actual AO/curvature bake pairs, generated unseen paint, {len(projection)} genuine projected meshes; all textures packed.')

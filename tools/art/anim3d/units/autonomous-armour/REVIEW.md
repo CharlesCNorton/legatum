@@ -1,63 +1,66 @@
-# Autonomous armour — round 1 candidate
+# Autonomous armour — round 2 candidate
 
-The external master is `~/LegatumRuns/anim-pilot/masters/autonomous-armour/`.
-`model.blend` retains the authored materials and geometry before baking/projection;
-`plain.blend` is neutral-clay evidence; `finished.blend` has packed textures, real
-AO/curvature bakes and rest-camera projection. `clips/` contains five independently
-editable mechanical animation files. Inputs and sources are recorded externally
-in `inputs.json` and `assets/SOURCES.md`; the generated fill prompt is committed.
+**Not art-approved; no PASS marker.** All current previews are Cycles CPU,
+256 px, eight samples. Fresh 512 px GPU masters remain the host-side handoff.
+The original painting remains in the game; this is an unwired animation candidate.
 
-The first plain, first projected and first move comparisons are retained in the master folder.
-The latest required review sheets and clips use the `autonomous-armour-` prefix
-in `~/LegatumRuns/anim-pilot/review/3d-v2/`. The log records each stage honestly.
-CPU previews use Cycles, 256 px, eight samples, denoising. They are preview evidence,
-not GPU approval or purported 512 px renders.
+The broader hull/track gauge, shorter turret, lower camera and finished-surface
+projection fit the painting more closely. Source pigment is now camera-only,
+with visibility/facing masks and Standard/None display colour. Existing generated
+olive fill and three actual AO/curvature bake pairs remain. Rotating gear excludes
+misregistered source wheel images; neutralized generated pigment, live AO and
+physical shading finish the wheels. The stone has a deeper rim and real bevel.
 
-At 256 px the projection recovers much of the original brushwork and the turret,
-sensors and gun are substantially aligned. The hull remains narrower than the
-painting; front/side panel geometry and some projected seams do not yet match.
-The base is warm cream but its lighting and contact shadow remain less convincing.
-Reducing projected colour on the running gear avoids the most obvious moving
-texture distortion, but exposes wheels that are too small/dark and a track profile
-that needs closer modeling against the painting.
-At 64 px it reads as the same compact olive tracked unmanned vehicle with twin
-aerials, but its width and front mass are still weaker than the painting.
-No PASS marker should be written for this round.
+At 256 px, running-gear size/spacing, panel registration, antenna placement and
+stone shading still differ visibly. Wheels remain too uniform, and the base is
+flatter than the source. At 64 px it reads as the same autonomous tracked vehicle,
+but its silhouette and surface richness remain distinguishable. Whole-image alpha
+IoU improves from .90558 to .92617; above row 190 it improves from .88114 to .90816.
+Those measurements do not establish artistic equivalence.
 
-The five clips use independent turret/sensor idle, cycling track links and wheels
-for move (two shoe pitches and a six-stud wheel period per loop), aim/recoil/flash/recovery for attack, a mechanical jolt for hit, and a
-settled damaged turret/gun/sensor for death. Death holds its final two samples.
-This first wreck motion is restrained; it needs review for stronger damage/readability.
-The first move review exposed warped projected wheel details; running gear now
-uses 28% painting colour and 20% painted-light emission, while the stationary
-armour retains 94%/64%. This preserves physical wheel/tread forms in motion.
-Projection is designed for this fixed camera, and is not suitable as-is for a
-free-orbit viewer. The generated hidden-surface paint provides a fallback, not a
-complete unseen-side painted asset.
+All five clips retain 8/8/10/4/10 samples. Wheel rotation now agrees with tread
+travel, with matching physical distances and periodic geometry at the move seam.
+The wider gauge and tread-ridge thickness enter contact calculations. The saved
+scene audit measures contact at .239903–.240000 m against the .24 m stone top.
+Death has a stronger turret cant, drooped gun, disabled optics and bent aerials;
+the last two source frames are identical. Inspected all strips and decoded-video
+contact frames: no obvious camera-edge clipping or base movement. Motion remains
+restrained, and this inspection is not a full interpenetration solver.
 
-Run the complete host pass from the repository root with no positional arguments:
+Final CPU delivery:
+
+- Forty 256 px clip masters, plus plain/rest/details/pose/top/front review masters.
+- Trimmed 160 px atlas: **198,432 bytes at WebP quality 90**, exact decoded 8-bit alpha.
+- Atlas validation passes counts, offsets, bounds, hashes, motion, held death and
+  loop seams; seam/largest internal-step ratios are idle 1.00283 and move .98190.
+- Saved-scene audit passes geometry, stationary base, rolling direction/distance,
+  track closure/contact, safe scales and frozen UVs (maximum error .0000153 px).
+- Round-two MP4: **1600×348, H.264/yuv420p, 240 frames, eight seconds**, all clips
+  side by side on cream, reconstructed from trimmed atlas offsets.
+- Eight Python files, two Bash entry points and diff whitespace pass syntax checks.
+- GPU missing-input and interrupted-rebuild preflights fail as intended and record
+  their failing stage. Independent GPU verification rejects CPU-labelled masters.
+
+The executable, no-argument host entry point, from this checkout, is:
 
 ```sh
-ROUND=1 tools/art/anim3d/units/autonomous-armour/gpu.sh
+ROUND=2 tools/art/anim3d/units/autonomous-armour/gpu.sh
 ```
 
-This requests Cycles Metal GPU explicitly, renders all stages at 512 px, keeps the
-512 and 256 masters, freezes one grade, creates review images and animated WebPs,
-checks the saved rig, packs/validates the trimmed 160 px atlas, then makes the
-8-second H.264/yuv420p five-clip MP4 by decoding that atlas. It fails if GPU is
-unavailable, a render is stale, or quality >=75 cannot fit 200,000 bytes.
-The current atlas is a candidate; no runtime loader has been changed.
+It audits, renders every stage serially on Cycles Metal GPU at 512 px / 96 samples,
+retains 512/256 masters, fits the frozen rest grade, packs/validates the atlas,
+encodes the decoded-atlas movie, then independently verifies stage provenance,
+export hashes and video metadata. It retains a transcript, failure status and a
+round-specific success receipt. Missing Metal fails instead of falling back to CPU.
+A build-pending marker prevents a stopped model/clip rebuild from appearing ready.
+No script writes PASS; the GPU images still need visual review against the painting.
 
-The unit's `-validation.json`, `-audit.json`, `-pack.json` and
-`-video-validation.json` under the external review folder are the exact technical
-results. These are separate from the human art verdict. No game rules or Rust/UI
-logic changed; only the art pipeline and candidate assets are in scope.
+Masters remain under `~/LegatumRuns/anim-pilot/masters/autonomous-armour/`, with
+round-one CPU evidence preserved in `round1-cpu/` and this round in `round2-cpu/`.
+Review images, movie, measurements, validation receipts and the honest step log
+are under `~/LegatumRuns/anim-pilot/review/3d-v2/autonomous-armour-*`.
 
-Final CPU check results: saved-scene audit PASS; all 40 frames and exact alpha/trim
-reconstruction PASS; atlas 196,720 bytes at WebP quality 80; held death and loop
-boundary checks PASS. MP4 verified: 240 frames, 8 seconds, 1600x348, H.264
-yuv420p. All 16 required review images/animations/video exist. Python syntax
-(8 files), Bash syntax (2 entry points), and git diff --check pass. GPU rendering
-and the 512 px master set are pending the lead command above. Staging/commit
-was blocked by sandbox denial of `.git/worktrees/lane-23/index.lock`; the runner
-must commit the work. The current origin/master is already included in HEAD.
+Commit attempt was blocked by sandbox denial of
+`.git/worktrees/lane-2/index.lock`; the runner must commit these changes.
+`origin/master` was verified as an ancestor of HEAD; no merge was needed.
+The lead still owns the GPU render and visual/art gate before integration.

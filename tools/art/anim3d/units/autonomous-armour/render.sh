@@ -9,10 +9,10 @@ run() { blender -b --disable-autoexec --python-exit-code 1 --python "$unit/$1.py
 case "${1:-}" in
   build) "$py" "$unit/prepare.py"; run scene ;;
   finish) run finish; run animate ;;
-  b|c|details|d|e-idle|e-move|e-attack|e-hit|e-death)
+  b|c|details|d|g|e-idle|e-move|e-attack|e-hit|e-death)
     run render "$1"; "$py" "$unit/deliver.py" review "$1" ;;
   final)
-    for stage in b c details d e-idle e-move e-attack e-hit e-death; do
+    for stage in b c details d g e-idle e-move e-attack e-hit e-death; do
       run render "$stage"
       "$py" "$unit/deliver.py" review "$stage"
     done

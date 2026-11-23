@@ -4,8 +4,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import bpy
 from mathutils import Vector
-from common import MASTER, SLUG, log
+from common import MASTER, SLUG, log, TRACK_H, TRACK_R, TRACK_Z, TRACK_LENGTH, ROAD_RADIUS
 from math import sin, cos, pi
+(MASTER/'build-pending').write_text('Model rebuild started; finish and all clip builds required.\n')
 random.seed(23)
 bpy.ops.object.select_all(action='SELECT')
 bpy.ops.object.delete(use_global=False)
@@ -24,11 +25,11 @@ def material(name, dark, light, metal=0, rough=.7, grain=.003):
 paint=material('MAT-worn grey olive paint',(.105,.102,.075),(.27,.255,.19))
 edge=material('MAT-exposed bright steel',(.28,.255,.20),(.56,.53,.43),1,.48)
 steel=material('MAT-dark track steel',(.07,.065,.052),(.24,.215,.17),1,.72)
-rubber=material('MAT-dusty wheel rubber',(.025,.024,.020),(.09,.08,.063),0,.9)
+rubber=material('MAT-dusty wheel rubber',(.038,.035,.028),(.12,.105,.08),0,.9)
 black=material('MAT-recess grime',(.009,.011,.01),(.035,.037,.03),0,.88)
 glass=material('MAT-blue sensor glass',(.008,.018,.025),(.06,.15,.20),0,.18)
 # Linear values corresponding to #E9CFA0, modulated by fine stone grain.
-stone=material('MAT-warm cream stone #E9CFA0',(.73,.55,.32),(.89,.70,.43),0,.88,.002)
+stone=material('MAT-warm cream stone #E9CFA0',(.73,.55,.32),(.89,.70,.43),0,.88,.001)
 s=stone.node_tree.nodes.get('Principled BSDF');s.inputs['Emission Color'].default_value=(.815,.624,.352,1);s.inputs['Emission Strength'].default_value=.16
 
 def empty(name, parent=None, loc=(0,0,0)):
@@ -36,13 +37,15 @@ def empty(name, parent=None, loc=(0,0,0)):
 root=empty('RIG-chassis')
 turret=empty('RIG-turret',root,(-.25,0,1.94))
 turret.rotation_euler.z=.60
+turret.location.z+=.15
+turret.scale.z=.85
 gun=empty('RIG-gun',turret,(.72,0,.60))
 sensor=empty('RIG-sensor',turret,(-.34,0,1.18))
 
 def finish(o,name,mat,parent,bevel=.012,smooth=False):
     o.name=name;o.parent=parent;o.data.materials.append(mat)
     if bevel:
-        b=o.modifiers.new('Real worn edge bevel','BEVEL');b.width=bevel;b.segments=3
+        b=o.modifiers.new('Real worn edge bevel','BEVEL');b.width=bevel;b.segments=5 if name.startswith('BASE-') else 3
         bpy.context.view_layer.objects.active=o;bpy.ops.object.modifier_apply(modifier=b.name)
     if smooth:
         for p in o.data.polygons:p.use_smooth=True
@@ -58,7 +61,7 @@ def cyl(name,loc,r,depth,mat=paint,parent=root,axis='Z',verts=32):
     if axis=='X':o.rotation_euler.y=pi/2
     if axis=='Y':o.rotation_euler.x=pi/2
     bpy.ops.object.transform_apply(location=False,rotation=True,scale=True)
-    return finish(o,name,mat,parent,.007,True)
+    return finish(o,name,mat,parent,.055 if name.startswith('BASE-') else .007,True)
 
 def rod(name,a,b,r,mat=edge,parent=root):
     a,b=Vector(a),Vector(b);o=cyl(name,(a+b)/2,r,(b-a).length,mat,parent)
@@ -78,7 +81,7 @@ def armour(name,lo,hi,z0,z1,mat=paint,parent=root,bevel=.025):
     return finish(o,name,mat,parent,bevel)
 
 def rect(x0,x1,y):return [(x0,-y),(x1,-y),(x1,y),(x0,y)]
-base=cyl('BASE-stationary cream stone',(0,0,.12),2.38,.24,stone,None,verts=128)
+base=cyl('BASE-stationary cream stone',(0,0,.075),2.36,.33,stone,None,verts=128)
 cube('GEO-lower hull',(-.08,0,.95),(3.18,1.85,.93))
 armour('GEO-sloped hull',rect(-1.72,1.85,1.08),rect(-1.57,.94,.99),1.16,1.88)
 # Wide planar front plates and return lip.
@@ -159,23 +162,23 @@ for x in [-1.40,-1.05,-.65,-.25,.15,.55,1.10]:
 # Seven road wheels each side; asymmetric small hub bolts make rotation visible.
 for side in [-1,1]:
     for i,x in enumerate([-1.22,-.83,-.44,-.05,.34,.73,1.12]):
-        w=empty(f'RIG-wheel-{side}-{i}',root,(x,side*1.03,.57));w['wheel']=True
-        cyl('GEO-rubber wheel',(0,0,0),.29,.27,rubber,w,'Y')
-        cyl('GEO-wheel face',(0,side*.145,0),.235,.025,paint,w,'Y')
-        cyl('GEO-wheel inset',(0,side*.16,0),.18,.010,steel,w,'Y')
-        cyl('GEO-wheel dish',(0,side*.17,0),.15,.015,paint,w,'Y')
+        w=empty(f'RIG-wheel-{side}-{i}',root,(x,side*1.03,.24+.041+.025/2+.065/2+ROAD_RADIUS));w['wheel']=True
+        cyl('GEO-rubber wheel',(0,0,0),ROAD_RADIUS,.27,rubber,w,'Y')
+        cyl('GEO-wheel face',(0,side*.145,0),.265,.025,paint,w,'Y')
+        cyl('GEO-wheel inset',(0,side*.16,0),.205,.010,steel,w,'Y')
+        cyl('GEO-wheel dish',(0,side*.17,0),.175,.015,paint,w,'Y')
         cyl('GEO-wheel hub',(0,side*.192,0),.065,.055,edge,w,'Y')
         for j in range(6):
             a=j*2*pi/6;cyl('GEO-hub stud',(.10*cos(a),side*.19,.10*sin(a)),.013,.014,edge,w,'Y',8)
     for x in [-1.49,1.49]:
-        w=empty(f'RIG-sprocket-{side}-{x}',root,(x,side*1.03,.77));w['wheel']=True
-        cyl('GEO-sprocket',(0,0,0),.31,.28,steel,w,'Y')
+        w=empty(f'RIG-sprocket-{side}-{x}',root,(x,side*1.03,TRACK_Z));w['wheel']=True
+        cyl('GEO-sprocket',(0,0,0),TRACK_R-.04,.28,steel,w,'Y')
         cyl('GEO-sprocket face',(0,side*.15,0),.24,.026,paint,w,'Y')
         cyl('GEO-sprocket hub',(0,side*.18,0),.11,.04,edge,w,'Y')
         for j in range(12):
-            a=j*2*pi/12;o=cube('GEO-sprocket tooth',(.31*cos(a),0,.31*sin(a)),(.067,.30,.06),edge,w,.006);o.rotation_euler.y=-a
+            a=j*2*pi/12;o=cube('GEO-sprocket tooth',((TRACK_R-.025)*cos(a),0,(TRACK_R-.025)*sin(a)),(.067,.30,.06),edge,w,.006);o.rotation_euler.y=-a
 # Individually linked track shoes, capsule path shared with the animation script.
-R=.43;H=1.49;Z=.72;LENGTH=4*H+2*pi*R
+R=TRACK_R;H=TRACK_H;Z=TRACK_Z;LENGTH=TRACK_LENGTH
 
 def trackpoint(t):
     d=(t%1)*LENGTH
@@ -208,10 +211,25 @@ sc=bpy.context.scene;sc.render.engine='CYCLES';sc.cycles.device='CPU';sc.cycles.
 sc.cycles.max_bounces=5;sc.render.threads_mode='FIXED';sc.render.threads=3
 sc.render.film_transparent=True;sc.render.resolution_x=sc.render.resolution_y=256;sc.render.resolution_percentage=100
 sc.render.image_settings.file_format='PNG';sc.render.image_settings.color_mode='RGBA'
-sc.world.color=(.15,.15,.15);sc.view_settings.view_transform='AgX';sc.view_settings.look='AgX - Medium High Contrast';sc.view_settings.exposure=.15
-bpy.ops.object.camera_add(location=(10,-7,5.4));cam=bpy.context.object;cam.name='CAM-painting';cam.rotation_euler=(Vector((0,0,1.60))-cam.location).to_track_quat('-Z','Y').to_euler();cam.data.type='ORTHO';cam.data.ortho_scale=5.25;sc.camera=cam
-for name,loc,power,size,col in [('LGT-warm key',(-3,-4,7),850,4,(1,.88,.72)),('LGT-soft fill',(5,-3,4),200,5,(.88,.94,1)),('LGT-cool rim',(-2,4,6),420,3,(.75,.85,1))]:
+sc.world.color=(.15,.15,.15);sc.view_settings.view_transform='Standard';sc.view_settings.look='None';sc.view_settings.exposure=0
+bpy.ops.object.camera_add(location=(10,-7,4.8));cam=bpy.context.object;cam.name='CAM-painting';cam.rotation_euler=(Vector((0,0,1.60))-cam.location).to_track_quat('-Z','Y').to_euler();cam.data.type='ORTHO';cam.data.ortho_scale=5.25;sc.camera=cam
+for name,loc,power,size,col in [('LGT-warm key',(-3,-4,9),620,5,(1,.96,.88)),('LGT-soft fill',(5,-3,4),110,5,(.92,.96,1)),('LGT-cool rim',(-2,4,6),230,3,(.82,.90,1))]:
     bpy.ops.object.light_add(type='AREA',location=loc);o=bpy.context.object;o.name=name;o.data.energy=power;o.data.size=size;o.data.color=col;o.rotation_euler=(Vector((0,0,1))-o.location).to_track_quat('-Z','Y').to_euler()
+# Broader track gauge and hull, with circular road wheels retained.
+for o in list(root.children):
+    if o.name == 'RIG-turret' or o.name.startswith('GEO-turret bearing'):
+        continue
+    o.location.y *= 1.22
+    if o.type in {'MESH', 'CURVE'}:
+        o.scale.y *= 1.22
+        if o.name.startswith('GEO-') and o.location.z > 1.1:
+            o.location.z += .10
+        if o.name == 'GEO-sloped hull':
+            for v in o.data.vertices:
+                if v.co.z > 1.1: v.co.z += .10
+    if o.name.startswith('RIG-antenna'):
+        o.location.z += .08
+sc['track_gauge']=1.04*1.22
 sc['asset']=SLUG;sc['track_length']=LENGTH;sc['rig']='rigid parent hierarchy, independent turret/gun/sensors/wheels/128 track links'
 bpy.ops.wm.save_as_mainfile(filepath=str(MASTER/'model.blend'))
 # Plain evidence uses neutral clay for all vehicle meshes; base stays cream.
