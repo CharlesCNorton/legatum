@@ -25,3 +25,7 @@
 - Published e-attack review from 512px CPU renders.
 - Published e-hit review from 512px CPU renders.
 - Published e-death review from 512px CPU renders.
+- Saved-scene audit passed: true MPFB topology, frozen projection UVs, six bake images, five current clips, stationary base, loop boundaries and held death.
+- Packing correctly rejected clipped terminal death (right edge at 160). Corrected body fall translation, bent the knees, grounded the evaluated anatomy, and rerendered only death; no frames or quality were dropped.
+- Published c review from 512px CPU renders.
+- Published e-death review from 512px CPU renders.

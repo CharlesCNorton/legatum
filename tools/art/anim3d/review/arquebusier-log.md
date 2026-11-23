@@ -43,3 +43,5 @@
 - Posted e-attack review (CPU, 256 px).
 - Posted e-hit review (CPU, 256 px).
 - Posted e-death review (CPU, 256 px).
+- Authored and saved move action (8 output frames).
+- Posted e-move review (CPU, 256 px).

@@ -10,3 +10,4 @@
 - e-hit: 4 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.
 - Visual review: identity readable at 64px; 256px hood/face, boots, elbows and crossbow width remain below painting. Walk foot contact is weak. No quality PASS claimed.
 - Real 256px AO/curvature bakes completed for skin, gambeson, hood and tiller; all five actions rebuilt against the baked model.
+- e-death: 10 frames reviewed at 256/64; CYCLES CPU, 8 samples, source 256px.

@@ -19,3 +19,8 @@
 - Published e-attack: CYCLES/CPU, 512 px, 8 samples; visual review pending.
 - Published e-hit: CYCLES/CPU, 512 px, 8 samples; visual review pending.
 - Published e-death: CYCLES/CPU, 512 px, 8 samples; visual review pending.
+- First geometry audit failed: released pilum intersected scutum in death samples 5–9; terminal skin minimum was 0.204 m above origin (hovering over 0.085 m base). Moved dropped shield back/pilum forward, lowered collapsed root and retucked legs; standardized feet and raised standing sole contact.
+- Targeted finish correction: replaced upper cylinder bands with a body-fitted iron cuirass, lowered helmet/head, reduced skin projection weight and warmed limestone. Regenerating dependent masters and all reviews; first death/textured sheets retained.
+- Repository gate on starting HEAD: hygiene PASS, public-claims PASS; art distinctness failed when its Chromium renderer exited 1 in sandbox. No browser/art approval claimed.
+- Published b: CYCLES/CPU, 256 px, 8 samples; visual review pending.
+- Published c: CYCLES/CPU, 512 px, 8 samples; visual review pending.

@@ -11,3 +11,8 @@
 - Saved e-attack review immediately; 10 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/e-attack/render.json.
 - Saved e-hit review immediately; 4 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/e-hit/render.json.
 - Saved e-death review immediately; 10 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/e-death/render.json.
+- Saved b review immediately; 1 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/b/render.json.
+- First CPU clips exposed frame-edge clipping in move/attack/death. Reduced lateral travel and changed crash translation; final pass will enforce transparent margins before packing. Archived the initial review PNGs under biplane-round1-initial/.
+- Corrected front wheel centers, enlarged/tilted wooden propeller, excluded fast rotating parts and wheel faces from projection to avoid visibly misplaced brushwork. Rebuilding material/clip hashes and all stages; final CPU masters rendered at native 512, downsampled to 256. GPU final is still required.
+- Saved c review immediately; 1 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/c/render.json.
+- Saved d review immediately; 4 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/d/render.json.
