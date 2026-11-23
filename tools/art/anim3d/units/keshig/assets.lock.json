@@ -1,0 +1,23 @@
+{
+  "source_alpha_bbox": [
+    7,
+    28,
+    1247,
+    1226
+  ],
+  "token_alpha_bbox": [
+    12,
+    16,
+    244,
+    240
+  ],
+  "files": {
+    "assets/keshig/painting-source.png": "2bef79b824c92118bd1d84632608d373aeed5d1c4b92bc8850574961b1780723",
+    "assets/keshig/projection.png": "5c78afd84c2db6adc98416d7be8e511c65dcc189e0a624eb647d55392efc8c33",
+    "assets/horseman/Horse.glb": "fbddb2c97179eca896ec69c985cd9cc74540484510776c400df64e088e9f2414",
+    "assets/keshig/fill-hair.png": "f472a44cdc7ee21159636cfb3ab6b7ceaacae420510632164307f0b67245041a",
+    "assets/keshig/fill-coat.png": "202834d89526e95d00881d507d254c8f597199ccf1ec56ef8722e21f3a438ede",
+    "assets/keshig/fill-linen.png": "c71ed83e71404d76f318e2410e111c1ec6ecf00864d9730f13514f2f5c932da3",
+    "assets/keshig/fill-bronze.png": "20233d35d680a1ee510719befd841db3899371d0e9f5821b99400162a8c39720"
+  }
+}

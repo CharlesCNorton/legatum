@@ -106,3 +106,95 @@ tools/art/anim3d/render.sh audit
 ```
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
+
+## Mounted: keshig (round 1)
+
+Keshig is an isolated, unapproved candidate in `units/keshig/`. All entry points
+run from the repository root; shared scripts are unchanged. Read the mounted
+family branch with `git show astra/unit-anim-3d-mounted:tools/art/anim3d/PLAYBOOK.md`
+for the original horse pipeline. This unit reuses the CC0 Quaternius horse mesh,
+weighted skeleton and native actions, MPFB anatomy and existing generated fills.
+Source URLs, licences and hashes are in `units/keshig/SOURCES.md` and
+`assets.lock.json`; downloads and editable masters stay under `ANIM_ROOT`.
+
+The original painting shows a horse galloping right with its rider shooting back
+to the left. `build.py`/`kit.py` create the blue riding coat, buff trousers, boots,
+fur-rimmed cap, physical recurved bow/string/arrow, quiver and saddle/tack.
+`surface.py` finishes subdivision, solid thickness and bevels before adjusting
+full-depth rider vertices in the registered rest camera. Weighted adjustments are
+inverse-transformed through the skin matrix. They are geometry edits, not image
+warps, depth flattening or alpha-cut surfaces.
+
+The four standing quality levers are standard for this unit:
+
+1. Freeze camera UVs from the source painting on visible true 3D surfaces, with
+   incidence, occlusion and source-alpha blending into generated unseen-surface
+   fills. Camera rays retain painted illumination; physical materials still cast
+   shadows. This deliberately uses Standard colour management for already-lit
+   pigments, rather than applying AgX to the source a second time.
+2. Finish organic subdivision, cloth thickness, bevels, fur, tack and weapon
+   geometry first. `bake.py` produces actual helmet AO/Pointiness maps; procedural
+   grain and roughness supplement the projected brushwork.
+3. Use upper-left warm key, soft fill, cool rim and contact shading. The single
+   stationary base uses sRGB **#E9CFA0**, converted to linear shader colour, with
+   a warmer darker rim. Never project moving hoof pixels onto the base.
+4. Fit one 17-quantile RGB histogram grade from rest and reuse it for all frames.
+   `keshig-f-restpose-compare.png` shows painting/render/half split/50% crossfade
+   at 256 and 64 px. Large contour differences remain a failure.
+
+Use proven open motion by default. Keshig uses the horse's original Idle neck,
+Gallop, Idle_HitReact_Left and Death actions on its original rig. The idle holds
+the reference gallop leg silhouette. Rider torso/head motion comes from Quaternius
+UAL Sitting_Idle_Loop, Hit_Chest and Death01 with rest-basis/bone-roll compensation;
+seated legs remain saddle-constrained. Only archery release/recovery is authored.
+The string has a real mesh release morph and the departing arrow uses keyed
+visibility, never near-zero scale. No post-retarget hoof rotation is applied.
+Every round renders **all eight move samples from top and front**, saved as
+`keshig-g-feet-check.png`. Forward is the horse rig's -Y axis. Ground-height audits
+and source motion do not prove zero sliding: visually inspect hoof travel,
+support, suspension, skin deformation and the loop seam before acceptance.
+
+```sh
+source tools/art/anim3d/env.sh
+"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/keshig/prepare.py
+for stage in build finish bake animate; do
+  tools/art/anim3d/units/keshig/render.sh "$stage"
+done
+RESOLUTION=256 SAMPLES=8 tools/art/anim3d/units/keshig/render.sh all
+tools/art/anim3d/units/keshig/render.sh audit
+"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/keshig/deliver.py
+"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/keshig/verify.py
+```
+
+Every Blender invocation is plain `blender -b --disable-autoexec` through PATH's
+shared gate, sequentially. No direct application path, nested heavy process or
+zero-scale hiding. Low-sample CPU evidence is explicitly labelled. `all` writes
+plain, textured, detail, rig, five strips/WebPs and the feet sheet as they finish.
+
+The no-argument GPU handoff is:
+
+```sh
+ROUND=1 tools/art/anim3d/units/keshig/gpu.sh
+```
+
+It preflights Metal, rebuilds only when the saved model is absent, generates clips,
+renders Cycles GPU 512 at 64 denoised samples, preserves true 512/256 masters,
+creates every review, audits, packs and independently verifies the decoded atlas
+and `keshig-round${ROUND}.mp4` (five clips side by side, 1600x348, 240 frames,
+eight seconds, H.264 yuv420p). GPU failure never falls back to CPU. The script
+writes a status file and transcript; it never writes PASS.
+
+The shipped candidate is a **version 2 trimmed-rows** WebP/JSON pair. Logical
+`frame` is `{w:160,h:160,ax,ay}`; the anchor is projected from the stationary base.
+Clips retain row order idle/move/attack/hit/death, counts 8/8/10/4/10, timing and
+loop flags. Each `rects[i]` is `{x,y,w,h,ox,oy}`: crop the atlas at x/y/w/h and
+restore it at ox/oy on a transparent 160-square canvas. Draw relative to the
+map anchor at `(ox-ax, oy-ay)`. Rows have variable height; `row` is semantic,
+not a fixed stride. Identical held death samples share one rectangle. One-pixel
+transparent gutters, exact alpha reconstruction, hashes, motion, held death,
+quality >=75 and <=200,000 bytes are checked. No runtime activation is included.
+
+Keshig round-one motion review rejected an inverse-skin horse leg fit: it matched
+the rest silhouette better but stretched the hocks during the native gallop. The
+final round-one horse retains its original weighted anatomy and gait. Its narrower
+painted silhouette remains an explicit next-round quality issue.
