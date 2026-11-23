@@ -87,8 +87,9 @@ def pose(t):
   # Counter root travel in the ankle targets: soles remain on the disc.
   limb('thigh_l','calf_l',(.21+.10*strength,.15-.18*strength,.082+.12*strength),(.42,-.50,.48))
   limb('thigh_r','calf_r',(-.39-.05*strength,-.075+.16*strength,.082+.12*strength),(-.40,-.20,.48))
-  limb('upperarm_r','lowerarm_r',(guard_hand.x+(-.27-guard_hand.x)*strength,guard_hand.y+(-.41-guard_hand.y)*raised-.05*strength,guard_hand.z+(1.71-guard_hand.z)*raised),(-.65,.05,1.48))
-  limb('upperarm_l','lowerarm_l',(.29,-.34-.10*strength,1.12+.10*strength),(.55,-.12,1.20))
+  pole=Vector((-.48,-.12,1.08)).lerp(Vector((-.65,.05,1.48)),raised)
+  limb('upperarm_r','lowerarm_r',(guard_hand.x+(-.27-guard_hand.x)*strength,guard_hand.y+(-.41-guard_hand.y)*raised-.05*strength,guard_hand.z+(1.71-guard_hand.z)*raised),pole)
+  limb('upperarm_l','lowerarm_l',(.29,-.34-.10*strength,1.12+.10*strength),Vector((.53,-.10,1.13)).lerp(Vector((.55,-.12,1.20)),strength))
   aim('hand_r',(0,-.03,.09));hand_spear(Vector((.98,.17,.12))*raised+Vector((0,0,1))*(1-raised))
  elif clip=='hit':
   a=[0,1,.5,0][min(3,round(t*3))]
@@ -104,8 +105,8 @@ def pose(t):
    x=(.21 if side=='l' else -.39)*(1-smooth)+(-.22+sgn*.12)*smooth
    y=(.15 if side=='l' else -.075)*(1-smooth)+(.02+sgn*.12)*smooth
    limb('thigh_'+side,'calf_'+side,(x,y,.75*smooth+.082*(1-smooth)),(-.45,-.30,.55))
-  limb('upperarm_r','lowerarm_r',guard_hand.lerp(Vector((.11,-.21,.85)),smooth),(-.35,-.32,.85))
-  limb('upperarm_l','lowerarm_l',(.29+.14*smooth,-.34+.08*smooth,1.12-.30*smooth),(.4,-.15,.9))
+  limb('upperarm_r','lowerarm_r',guard_hand.lerp(Vector((.11,-.21,.85)),smooth),Vector((-.48,-.12,1.08)).lerp(Vector((-.35,-.32,.85)),smooth))
+  limb('upperarm_l','lowerarm_l',(.29+.14*smooth,-.34+.08*smooth,1.12-.30*smooth),Vector((.53,-.10,1.13)).lerp(Vector((.4,-.15,.9)),smooth))
   aim('hand_r',(0,-.03,.09));hand_spear(Vector((0,0,1)))
  bpy.context.view_layer.update()
  if clip in ['attack','death']:
@@ -175,6 +176,8 @@ for f in range(1,end+1):
  if sc.get('infantry_refinement',0)>=6:
   base=bpy.data.objects['Stationary cream stone']
   floor=max((base.matrix_world @ v.co).z for v in base.data.vertices)
+  base_inverse=base.matrix_world.inverted()
+  base_radius=max((v.co.x*v.co.x+v.co.y*v.co.y)**.5 for v in base.data.vertices)-.015
   if clip=='death':
    # Folded greaves can reach the disc before the released shield settles.
    # Correct the actual calf surface, then let the foot contact solve follow.
@@ -186,7 +189,8 @@ for f in range(1,end+1):
       ev=ob.evaluated_get(dg);me=ev.to_mesh()
       for v in me.vertices:
        w=ob.matrix_world @ v.co
-       if w.x*w.x+w.y*w.y<.585**2:lowest=min(lowest,w.z)
+       local=base_inverse @ w
+       if local.x*local.x+local.y*local.y<base_radius**2:lowest=min(lowest,w.z)
       ev.to_mesh_clear()
      if lowest>=floor+.002:break
      calf=rig.pose.bones['calf_'+side];mat=calf.matrix.copy()

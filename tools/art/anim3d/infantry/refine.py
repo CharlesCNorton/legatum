@@ -55,7 +55,16 @@ def refine(sc, aim, screen_sculpt):
 
     def fitted_pixel(p):
         shoulder = math.exp(-((p.x-111)/8)**2-((p.y-108)/10)**2)
-        target = p+Vector((5.0, 5.0))*shoulder
+        target = p+Vector((1.0, 2.0))*shoulder
+        # Fit the whole bent arm, not just the shoulder cap. The previous
+        # elbow sat too far toward the torso, leaving a gap where the painting
+        # has a muscular upper arm. Preserve camera depth and skin weights.
+        elbow = math.exp(-((p.x-108)/9)**2-((p.y-123)/7)**2)
+        target += Vector((-3.8, -1.3))*elbow
+        # The actual closed hand was a horizontal sliver. Broaden its vertical
+        # knuckle stack around the shaft without replacing fingers or the rig.
+        fist = math.exp(-((p.x-97)/8)**4-((p.y-115)/9)**4)
+        target += Vector((-.18*(p.x-97), .60*(p.y-115)+.3))*fist
         if p.x < 122:
             # Seat the spear-side shin/foot under the painted greave rather
             # than leaving an exposed sliver beyond the painted toe silhouette.
@@ -117,6 +126,28 @@ def refine(sc, aim, screen_sculpt):
             v.co = skin.inverted_safe() @ fitted_local(ob, posed, pixel(ob, posed))
         ob.data.update()
 
+    # Lower the squared rear neckline behind the helmet. Work on the actual
+    # folded collar and weighted cape, leaving pin weights and thickness intact.
+    for ob in sc.objects:
+        if ob.type != 'MESH' or not ob.name.startswith(('Crimson collar fold', 'Cloak •')):
+            continue
+        skinned = any(m.type == 'ARMATURE' for m in ob.modifiers)
+        for v in ob.data.vertices:
+            skin = Matrix.Identity(4)
+            if skinned:
+                influences = [(transforms[ob.vertex_groups[g.group].name], g.weight)
+                              for g in v.groups if ob.vertex_groups[g.group].name in transforms]
+                total = sum(w for _, w in influences)
+                if total > .001:
+                    skin = sum((m*(w/total) for m, w in influences), Matrix(((0,)*4,)*4))
+            posed = skin @ v.co
+            p = pixel(ob, posed)
+            right = max(0, min(1, (p.x-138)/7))
+            left = max(0, min(1, (127-p.x)/7))
+            down = max(0, 105-p.y)*.8*right + max(0, 100-p.y)*.8*left
+            v.co = skin.inverted_safe() @ screen_sculpt(ob, posed, p+Vector((0, down)))
+        ob.data.update()
+
     # Preserve the convex shell and its rim. Register the raised decoration to
     # the painted boss: its previous center sat seven pixels left of the paint.
     boss = bpy.data.objects['Aspis central omphalos']
@@ -175,6 +206,14 @@ def refine(sc, aim, screen_sculpt):
                 p = pixel(ob, v.co)
                 v.co = screen_sculpt(ob, v.co, Vector((131+(p.x-131)*.84, 91+(p.y-91)*.92)))
             ob.data.update()
+        if ob.name == 'Corinthian continuous faceplate':
+            # Recover the broad near cheek and eye surround of the painting;
+            # keep the nose at its registered position and retain real depth.
+            for v in ob.data.vertices:
+                p = pixel(ob, v.co)
+                weight = max(0, min(1, (141-p.x)/12))
+                v.co = screen_sculpt(ob, v.co, p+Vector((-2.8*weight, 0)))
+            ob.data.update()
     # Remove the obsolete secondary UV paint blend in the physical shader. The
     # current rest-camera layer already supplies the same art, correctly aligned.
     shield = bpy.data.objects['Convex bronze aspis']
@@ -188,14 +227,26 @@ def refine(sc, aim, screen_sculpt):
     # and footwear. Previously the top was .09m and its bottom hung too low.
     base_object = bpy.data.objects['Stationary cream stone']
     base_object.location.z += .015
+    # The painting has a shallower top ellipse and a taller stone edge. The
+    # lower camera sets the ellipse; move the ROUND disc back on the ground
+    # and deepen its underside while preserving the .105m contact surface.
+    back = sc.camera.matrix_world.to_quaternion() @ Vector((0, 0, -1))
+    back.z = 0
+    base_object.location += back.normalized()*.20
+    top = max(v.co.z for v in base_object.data.vertices)
+    for v in base_object.data.vertices:
+        if v.co.z < top-.001:
+            v.co.z -= .065
+        v.co.x *= .99
+        v.co.y *= .99
     # Fine limestone pigment grain; no painted feet or static contact shadows.
     for mat in base_object.data.materials:
         nodes, links = mat.node_tree.nodes, mat.node_tree.links
         bsdf = nodes.get('Principled BSDF')
-        grain = nodes.new('ShaderNodeTexNoise'); grain.inputs['Scale'].default_value = 210
+        grain = nodes.new('ShaderNodeTexNoise'); grain.inputs['Scale'].default_value = 450
         ramp = nodes.new('ShaderNodeValToRGB')
         base = tuple(bsdf.inputs['Base Color'].default_value)
-        for el, factor in zip(ramp.color_ramp.elements, (.94, 1.04)):
+        for el, factor in zip(ramp.color_ramp.elements, (.90, 1.06)):
             el.color = tuple(min(1, c*factor) for c in base[:3])+(1,)
         links.new(grain.outputs['Fac'], ramp.inputs[0])
         links.new(ramp.outputs['Color'], bsdf.inputs['Base Color'])
@@ -205,7 +256,7 @@ def refine(sc, aim, screen_sculpt):
         links.new(ramp.outputs['Color'], bsdf.inputs['Emission Color'])
         ray = nodes.new('ShaderNodeLightPath')
         pigment = nodes.new('ShaderNodeMath'); pigment.operation = 'MULTIPLY'
-        pigment.inputs[1].default_value = .95 if 'rim' in mat.name else .42
+        pigment.inputs[1].default_value = 1.12 if 'rim' in mat.name else .28
         links.new(ray.outputs['Is Camera Ray'], pigment.inputs[0])
         links.new(pigment.outputs[0], bsdf.inputs['Emission Strength'])
     # Painted illumination is already display-referred. AgX compressed it a
@@ -234,5 +285,5 @@ def refine(sc, aim, screen_sculpt):
         for mod in list(ob.modifiers):
             if mod.type in {'SOLIDIFY', 'BEVEL', 'SUBSURF'}:
                 bpy.ops.object.modifier_apply(modifier=mod.name)
-    sc['infantry_refinement'] = 6
+    sc['infantry_refinement'] = 7
     bpy.context.view_layer.update()

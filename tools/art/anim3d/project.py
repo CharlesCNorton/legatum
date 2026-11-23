@@ -65,7 +65,7 @@ def limb(u, l, target, pole):
 
 # Match the painted disc ellipse. Keep this exact camera in
 # rest, clips and final renders; render.py must not reset it after UV calibration.
-sc.camera.location = (2.5, -7, 3.25)
+sc.camera.location = (2.5, -7, 3.0)
 sc.camera.rotation_euler = (Vector((0, 0, 1.20))-sc.camera.location).to_track_quat('-Z', 'Y').to_euler()
 sc.camera.data.ortho_scale = 2.90
 sc.camera.data.dof.use_dof = False
@@ -284,6 +284,7 @@ for ob in list(sc.objects):
 # Family-local finishing runs before visibility and UV calibration.
 sys.path.insert(0, str(Path(__file__).parent/'infantry'))
 from refine import refine
+from paint_finish import painted_fill
 refine(sc, aim, screen_sculpt)
 rig['neutral_pose'] = json.dumps({p.name: [list(row) for row in p.matrix_basis] for p in rig.pose.bones})
 
@@ -348,7 +349,7 @@ for ob in list(sc.objects):
         # Ray visibility rejects hidden backs. Absolute facing also supports
         # double-sided cloth and open armour shells without painting through them.
         facing = abs(normal.dot(view))
-        weight = max(0, min(1, (facing-.04)/.32)) if visible else 0
+        weight = max(0, min(1, (facing-.02)/.18)) if visible else 0
         weights.append(weight)
     for loop in ob.data.loops:
         p = world_to_camera_view(sc, sc.camera, points[loop.vertex_index])
@@ -394,6 +395,9 @@ for ob in list(sc.objects):
             if old: links.new(old[0].from_socket, tint.inputs[1])
             else: tint.inputs[1].default_value = bsdf.inputs['Base Color'].default_value
             links.new(tint.outputs[0], bsdf.inputs['Base Color'])
+        if bsdf and (fill_kind or 'skin' in material_name):
+            physical = painted_fill(nodes, links, physical,
+                                    bsdf.inputs['Base Color'].links[0].from_socket)
         coord = nodes.new('ShaderNodeUVMap'); coord.uv_map = uv.name
         tex = nodes.new('ShaderNodeTexImage'); tex.image = image; tex.extension = 'CLIP'
         links.new(coord.outputs[0], tex.inputs['Vector'])

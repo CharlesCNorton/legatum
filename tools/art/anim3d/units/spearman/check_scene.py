@@ -1,4 +1,4 @@
-"""Verify the saved round-6 surface pipeline before rebuilding cloth/clips."""
+"""Verify the saved round-7 surface pipeline before rebuilding cloth/clips."""
 import json
 import os
 from pathlib import Path
@@ -10,13 +10,14 @@ from mathutils.bvhtree import BVHTree
 root = Path(os.environ['ANIM_ROOT'])
 bpy.ops.wm.open_mainfile(filepath=str(root/'masters/spearman-3d-v2/spearman.blend'))
 sc = bpy.context.scene
-assert sc['infantry_refinement'] == 6
+assert sc['infantry_refinement'] == 7
 assert len(bpy.data.objects['MPFB anatomical male • original topology'].data.vertices) == 19158
 assert bpy.data.objects['MPFB anatomical male • original topology'].data.shape_keys is None
 assert len(bpy.data.objects['Spearman • MPFB game_engine'].data.bones) == 53
 assert sc.camera is not None and not sc.camera.data.dof.use_dof
 
 painted = 0
+unseen_fills = 0
 for mat in bpy.data.materials:
     if not mat.use_nodes or ' | rest paint | ' not in mat.name:
         continue
@@ -27,8 +28,18 @@ for mat in bpy.data.materials:
     assert factor.type == 'MATH' and factor.operation == 'MULTIPLY', mat.name
     camera = factor.inputs[1].links[0].from_socket
     assert camera.node.type == 'LIGHT_PATH' and camera.name == 'Is Camera Ray', mat.name
+    for node in mat.node_tree.nodes:
+        if node.label != 'Painted unseen surface with physical response':
+            continue
+        strength = node.inputs[0].links[0].from_node
+        gate = strength.inputs[0].links[0].from_socket
+        assert strength.operation == 'MULTIPLY'
+        assert gate.node.type == 'LIGHT_PATH' and gate.name == 'Is Camera Ray'
+        assert any(n.type == 'AMBIENT_OCCLUSION' for n in mat.node_tree.nodes)
+        unseen_fills += 1
     painted += 1
 assert painted > 300, painted
+assert unseen_fills > 200, unseen_fills
 
 for ob in sc.objects:
     if ob.type != 'MESH' or ob.hide_render:
@@ -40,6 +51,9 @@ for ob in sc.objects:
 base = bpy.data.objects['Stationary cream stone']
 assert base.data.uv_layers.get('Painting camera rest') is None
 assert abs(max((base.matrix_world @ v.co).z for v in base.data.vertices)-.105) < .0001
+heights = [(base.matrix_world @ v.co).z for v in base.data.vertices]
+assert abs(max(heights)-min(heights)-.155) < .0001, 'Stone underside was not deepened'
+assert tuple(sc.camera.location) == (2.5, -7.0, 3.0)
 for side in ['l', 'r']:
     sole = bpy.data.objects['Leather sandal sole '+side]
     lowest = min((sole.matrix_world @ v.co).z for v in sole.data.vertices)
@@ -70,7 +84,8 @@ for ob in sc.objects:
     clearance[ob.name] = min(distances)
     assert min(distances) > .001, (ob.name, min(distances))
 assert len(clearance) == 12
-report = {'refinement': 6, 'painted_materials': painted, 'camera_only_pigment': True,
+report = {'refinement': 7, 'painted_materials': painted, 'camera_only_pigment': True,
+          'camera_only_unseen_fills': unseen_fills, 'base_thickness': max(heights)-min(heights),
           'rigid_finish_before_projection': True, 'body_vertices': 19158, 'bones': 53,
           'base_top': .105, 'camera': list(sc.camera.location),
           'shield_ray_min_face_clearance': clearance}

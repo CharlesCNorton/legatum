@@ -285,6 +285,40 @@ checkout, defaults ROUND to 6, and writes `spearman-gpu-status.txt` with running
 failed-stage/exit, or complete/pending-visual-review status, alongside the round
 log. Missing logs and CPU-labelled images are not evidence of a GPU pass.
 
+### Round 7 arm, neckline and unseen-surface finish
+
+The real spear-side knuckles now have a taller stack, and the whole bent arm
+is fitted through inverse skin transforms. The sleeve cap alone cannot fill a
+missing upper-arm silhouette. Lower the rear folded collar and weighted cape
+neckline behind the helmet instead of hiding its squared outline with alpha.
+The near helmet cheek is wider; all these edits retain camera depth and the
+original body topology, weights and articulation.
+
+The camera is `(2.5, -7, 3.0)` aimed at `(0, 0, 1.20)`, scale 2.90. The round
+stone disc moves 0.20m away from the camera on the ground, with a deeper underside
+and unchanged .105m contact top; its radius is reduced by one percent. This fits
+the painting's shallow top ellipse and taller edge without flattening the disc.
+The death calf contact solver uses the disc's actual local footprint, as the
+audit already did; origin-centered floor assumptions fail when a base moves.
+
+`infantry/paint_finish.py` blends the existing generated unseen bronze, wool,
+linen and leather, or original tinted MPFB skin, with live ambient occlusion
+and 35% physical surface response. Like the source-painted layer, this pigment
+is camera-only; non-camera rays retain the original physical BSDF. This reduces
+washed-out newly exposed surfaces under the display transform. Frozen source
+UVs still move with geometry; this is not per-frame reprojection. Review raised
+arms and the final death pose for remaining stretches and seams.
+
+Attack and death interpolate their IK elbow poles from the same guard poles
+as idle. Matching hand targets alone does not match the arm pose: a raised or
+fallen pole at phase zero produces a visible clip-entry pop.
+
+`ROUND=7 tools/art/anim3d/units/spearman/gpu.sh` is the complete host pass and
+now defaults to round 7. Missing round-6 GPU log plus CPU-labelled supplied
+images do not establish that a GPU render ran. The script retains its own round
+log and stage/status receipt; final 512/256 export and PASS still require actual
+GPU output and visual review. The CPU iteration report records measured results.
+
 ### Trimmed atlas v2 and checks
 
 `units/spearman/delivery.py` preserves 8/8/10/4/10 frames, real alpha, and the

@@ -4,7 +4,7 @@ from pathlib import Path
 from bpy_extras.object_utils import world_to_camera_view
 from mathutils import Vector
 from mathutils.bvhtree import BVHTree
-R=Path(os.environ['ANIM_ROOT']);M=R/'masters/spearman-3d-v2';report={};failures=[]
+R=Path(os.environ['ANIM_ROOT']);M=R/'masters/spearman-3d-v2';report={};failures=[];entry_arms={}
 clips=[os.environ['AUDIT_CLIP']] if os.environ.get('AUDIT_CLIP') else ['idle','move','attack','hit','death']
 for clip in clips:
  bpy.ops.wm.open_mainfile(filepath=str(M/'clips'/clip/(clip+'.blend')))
@@ -25,6 +25,12 @@ for clip in clips:
  rows=[]
  for frame in json.loads(sc['sample_frames']):
   sc.frame_set(frame);dg=bpy.context.evaluated_depsgraph_get();bounds=[1.,1.,0.,0.];minz=100;lowest=None;disc_minz=100;disc_lowest=None
+  if not rows:
+   entry_arms[clip]={name:rig.matrix_world @ rig.pose.bones[name].head
+                    for name in ['upperarm_r','lowerarm_r','hand_r','upperarm_l','lowerarm_l','hand_l']}
+  if clip=='attack' and frame==json.loads(sc['sample_frames'])[-1]:
+   entry_arms['attack exit']={name:rig.matrix_world @ rig.pose.bones[name].head
+                            for name in entry_arms[clip]}
   assert base.matrix_world==base_matrix
   for o in sc.objects:
    if o.type not in ['MESH','CURVE'] or o==base or o.hide_render:continue
@@ -56,6 +62,16 @@ for clip in clips:
   if disc_minz<floor-.01:failures.append(f'{clip}/{frame}: {disc_lowest} intersects base, z={disc_minz:.4f}, top={floor:.4f}')
   if minz<0:failures.append(f'{clip}/{frame}: {lowest} below ground, z={minz:.4f}')
  report[clip]=rows
+transition_errors={}
+if 'idle' in entry_arms:
+ for clip in ['attack','death','attack exit']:
+  if clip not in entry_arms:continue
+  transition_errors[clip]={}
+  for name,point in entry_arms[clip].items():
+   distance=(point-entry_arms['idle'][name]).length
+   transition_errors[clip][name]=distance
+   if distance>.002:failures.append(f'{clip}: {name} differs from idle by {distance:.4f}m')
+report['arm_transition_errors']=transition_errors
 report['failures']=failures;(R/'review/3d-v2'/('rig-audit-'+clips[0]+'.json' if len(clips)==1 else 'rig-audit.json')).write_text(json.dumps(report,indent=2))
 print('AUDIT',len(failures),'findings')
 for f in failures:print(f)

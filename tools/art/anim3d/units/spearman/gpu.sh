@@ -3,7 +3,7 @@
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/../../../../.."
 source tools/art/anim3d/env.sh
-export ROUND="${ROUND:-6}"
+export ROUND="${ROUND:-7}"
 [[ "$ROUND" =~ ^[0-9]+$ ]] || { echo 'ROUND must be an integer' >&2; exit 2; }
 # Keep the exact requested log even if the overnight driver's redirection changes.
 # Avoid a second writer when the driver already redirects to this exact file.
