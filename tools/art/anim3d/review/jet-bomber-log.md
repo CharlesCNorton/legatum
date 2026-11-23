@@ -91,3 +91,18 @@ g: 16 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
 c: 1 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
 Top/nose diagnostic caught a genuine support depth gap invisible in the hero projection. Sheared the closed bracket toward its near-pod attachment, preserving the painting-view outline; collapse also folds that depth toward the disc. Inspecting alternate views is necessary even when the rest projection looks close.
 Repository checks against the previous HEAD: public-claims passed; hygiene mistook unspaced Python matrix operators for email addresses (spacing fixed); browser distinctness failed to launch in this sandbox. This is separate from the unit render/atlas checks; no browser art approval claimed.
+b: 3 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+c: 1 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+d: 4 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+e-idle: 8 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+e-move: 8 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+e-attack: 10 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+e-hit: 4 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+e-death: 10 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+g: 16 frames at 256/64 from 512px CYCLES/CPU, 12 samples.
+Final round-two CPU512/12-sample run: every stage regenerated, 40 actual 512 masters + 40 derived 256 clip masters, all b/c/details/d/e/f/g reviews updated immediately. Geometry/motion audit PASS including physical support proximity, positive manifold collapsed support, accelerating three-bomb release, fixed base, closed idle/move and held terminal death.
+Final trimmed 160px atlas PASS: 180130 bytes at Q85, all 40 frames, exact alpha/offset reconstruction, transparent gutters, margins, source/grade hashes and identical decoded death hold. Input/build preflight PASS. CPU movie round2-cpu.mp4 PASS: H.264/yuv420p 1600x348, 240 frames, 8.000 seconds; decoded four timing samples and inspected all five strips, rest/detail and alternate move views.
+Final honest verdict: same identity as the shipped 64 token, closer at 256 but not indistinguishable. Final alpha IoU 0.889 at 256 / 0.900 at 64 (round-one GPU256 0.821); opaque RGB MAE 4.18 / 3.90. Bright intake rims, some wing/pod contours, overly dark support inner edge and prelit camouflage in banks still differ. No PASS marker. Lead must run ROUND=2 tools/art/anim3d/units/jet-bomber/gpu.sh and review the new GPU images/movie.
+Eight Python syntax checks and two shell syntax checks PASS; git diff --check PASS. No Rust/rules/UI runtime change, no unrelated build, upload, PR or push. gpu.sh executable and updated with round2 default, stage progress and post-delivery input verification; supplied round1 GPU pass was successful, round2 GPU not available in this sandbox.
+Commit attempt blocked by filesystem sandbox: cannot create .git/worktrees/lane-17/index.lock (Operation not permitted). Changes remain uncommitted for runner; exact requested commit message saved in masters/jet-bomber/commit-message.txt. No push or PR. origin/master already contained by HEAD (0 incoming commits); no fetch or merge needed.
+After the spacing fix, repository hygiene.line_checks scanned all 10 changed working-tree text files using origin/master export rules: 0 findings. The commit-based combined gate cannot inspect the uncommitted result until the runner commits; browser art gate remains unverified. Final unit feedback check: jet-bomber-FEEDBACK.md still absent.

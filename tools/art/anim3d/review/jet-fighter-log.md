@@ -64,3 +64,17 @@ b: 3 frames at 256/64 from 256px CYCLES/CPU, 16 samples.
 c: 1 frames at 256/64 from 256px CYCLES/CPU, 16 samples.
 e-death: 10 frames at 256/64 from 256px CYCLES/CPU, 16 samples.
 g: 16 frames at 256/64 from 256px CYCLES/CPU, 16 samples.
+Found the hidden-wing root cause with ray/normal probes: far-wing signed volume was -0.015719 despite consistent/manifold topology. Inward normals rejected visible camera pigment and exposed fill at rest. Corrected closed-shell signed orientation after modifiers; strengthened audit to require positive signed volume instead of absolute volume. This is a geometry fix, not a color workaround.
+b: 3 frames at 256/64 from 256px CYCLES/CPU, 16 samples.
+c: 1 frames at 256/64 from 256px CYCLES/CPU, 16 samples.
+d: 4 frames at 256/64 from 256px CYCLES/CPU, 16 samples.
+e-idle: 8 frames at 256/64 from 256px CYCLES/CPU, 16 samples.
+e-move: 8 frames at 256/64 from 256px CYCLES/CPU, 16 samples.
+e-attack: 10 frames at 256/64 from 256px CYCLES/CPU, 16 samples.
+e-hit: 4 frames at 256/64 from 256px CYCLES/CPU, 16 samples.
+e-death: 10 frames at 256/64 from 256px CYCLES/CPU, 16 samples.
+g: 16 frames at 256/64 from 256px CYCLES/CPU, 16 samples.
+Final round2 CPU validation PASS: native256 Cycles CPU16; all b/c/d/e/g stages current; 20 meshes/10645 vertices; six AO/Pointiness bakes; positive signed-volume geometry and clip audit; source/build preflight; 40-frame trimmed160 atlas 180018 bytes q85; exact alpha/transparent padding/no crop overlap/held decoded death; H264 yuv420p 1600x348 240frames 8seconds. AST8, Bash syntax and diff whitespace pass.
+Final visual review: inspected current rest/details/all five strips/top-front cycle and four decoded round2.mp4 frames. Same unit at64; closer at256, but canopy/wing-root contour, heavy intake transition, off-angle wing asymmetry and stylized support/wreck contact remain below parity. CPU detail softer than source; native512 GPU refresh pending. No PASS.
+Handoff: ROUND=2 tools/art/anim3d/units/jet-fighter/gpu.sh from repo root; all stages, native512/256 masters, trimmed160 atlas, validation/audit, reviews and 8second five-clip MP4. No new unit feedback file. Already-fetched origin/master has zero commits ahead; no merge necessary.
+Commit attempted with required gpt-6-astra co-author footer; sandbox denied .git/worktrees/lane-6/index.lock. All changes left uncommitted for runner; no push or PR.
