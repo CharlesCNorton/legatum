@@ -2,7 +2,29 @@
 import bpy,os,json,math
 from pathlib import Path
 from mathutils import Vector
+from bpy_extras.object_utils import world_to_camera_view
 R=Path(os.environ['ANIM_ROOT']);M=R/'masters/field-cannon';records={}
+# Guard the original projection defect: the UVs must land on the finished,
+# posed surfaces, not an unsmoothed cage that changes again during rendering.
+bpy.ops.wm.open_mainfile(filepath=str(M/'field-cannon.blend'))
+scene=bpy.context.scene;deps=bpy.context.evaluated_depsgraph_get()
+projection=json.loads((M/'projection.json').read_text())
+sx0,sy0,sx1,sy1=projection['registration']['source_bbox']
+rx0,ry0,rx1,ry1=projection['registration']['reference_bbox']
+errors={}
+for name in ['MPFB artillery gunner anatomy','Tailored blue coat body','White wool breeches','Black felt shako','Hollow bronze barrel','Stationary cream base']:
+ obj=bpy.data.objects[name]
+ assert all(mod.type=='ARMATURE' or not mod.show_render for mod in obj.modifiers),('Unfinished projection surface',name)
+ ev=obj.evaluated_get(deps);mesh=ev.to_mesh();uv=mesh.uv_layers['Painting projection']
+ worst=0
+ for loop in mesh.loops:
+  point=world_to_camera_view(scene,scene.camera,ev.matrix_world @ mesh.vertices[loop.vertex_index].co)
+  tex=uv.data[loop.index].uv
+  reference=Vector((rx0+(tex.x*1254-sx0)*(rx1-rx0)/(sx1-sx0),ry0+((1-tex.y)*1254-sy0)*(ry1-ry0)/(sy1-sy0)))
+  worst=max(worst,(Vector((point.x*256,(1-point.y)*256))-reference).length)
+ ev.to_mesh_clear();errors[name]=worst
+ assert worst<.01,('Finished surface UV registration drift',name,worst)
+records['finished_projection_error_px']=errors
 for clip,count in [('idle',8),('move',8),('attack',10),('hit',4),('death',10)]:
  bpy.ops.wm.open_mainfile(filepath=str(M/'clips'/f'{clip}.blend'));sc=bpy.context.scene;rig=bpy.data.objects['Gunner MPFB game_engine'];gun=bpy.data.objects['Gun travel and recoil'];base=bpy.data.objects['Stationary cream base'];body=bpy.data.objects['MPFB artillery gunner anatomy']
  assert abs(sc['wheel_radius']-.51)<1e-6 and abs(gun['wheel_radius']-.51)<1e-6,'Wheel radius metadata drifted from geometry'
@@ -14,7 +36,12 @@ for clip,count in [('idle',8),('move',8),('attack',10),('hit',4),('death',10)]:
   assert abs(radius-sc['wheel_radius'])<1e-5,('Rolling radius differs from real tyre geometry',wheel_name,radius)
  for belt in [o for o in sc.objects if o.name.startswith('Ivory cross belt')]:
   assert belt.parent.name=='Tailored blue coat body','Crossbelt detached from coat'
-  assert any(m.type=='SOLIDIFY' and m.thickness>=.005 for m in belt.modifiers),'Crossbelt lacks physical thickness'
+  assert belt.get('finished_thickness',0)>=.005 or any(m.type=='SOLIDIFY' and m.thickness>=.005 for m in belt.modifiers),'Crossbelt lacks physical thickness'
+  if belt.get('finished_thickness',0):
+   edges={}
+   for face in belt.data.polygons:
+    for edge in face.edge_keys:edges[edge]=edges.get(edge,0)+1
+   assert edges and all(n==2 for n in edges.values()),'Finished crossbelt is not a closed solid'
  assert len(body.data.vertices)>10000 and len(rig.data.bones)==53,'MPFB topology/rig missing'
  assert json.loads(sc['sample_frames'])==list(range(1,count+1));base_matrix=base.matrix_world.copy();samples=[];held_values=None
  for i in range(count):
@@ -25,6 +52,16 @@ for clip,count in [('idle',8),('move',8),('attack',10),('hit',4),('death',10)]:
    actual=rig.matrix_world @ rig.pose.bones['hand_l'].tail
    target=bpy.data.objects['Barrel elevation'].matrix_world @ Vector(rig['barrel_contact_local'])
    assert (actual-target).length<.002,('Resting palm lost barrel contact',(actual-target).length)
+  if clip=='move':
+   target=bpy.data.objects['Barrel elevation'].matrix_world @ Vector(rig['push_contact_local'])
+   actual=rig.matrix_world @ rig.pose.bones['hand_r'].tail
+   assert (actual-target).length<.002,('Pushing right palm lost barrel contact',(actual-target).length)
+   for side,offset in [('l',0),('r',.5)]:
+    cycle=(i/count+offset)%1
+    lift=0 if cycle<.5 else .045*math.sin(2*math.pi*(cycle-.5))
+    sole=bpy.data.objects['Boot sole '+side]
+    bottom=min((sole.matrix_world @ v.co).z for v in sole.data.vertices)
+    assert abs(bottom-(.098+lift))<.002,('Pushing boot lost authored ground contact',side,i,bottom,lift)
   if clip in ['move','attack','hit']:
    travel=.51*(2*math.pi/12)*(i/count) if clip=='move' else 0
    rest=gun['rest_location'];yaw=gun['rest_yaw'];localtravel=(gun.location.x-rest[0])*math.cos(yaw)+(gun.location.y-rest[1])*math.sin(yaw)
@@ -50,4 +87,4 @@ for clip,count in [('idle',8),('move',8),('attack',10),('hit',4),('death',10)]:
   records['terminal_ground']=grounds
  records[clip]=samples
 (R/'review/3d-v2/field-cannon-audit.json').write_text(json.dumps(records,indent=2))
-print('PASS: MPFB topology, 53-bone rig, 40 samples, idle/move palm contact, stationary base, rolling ratio, nondegenerate effects, held grounded death')
+print('PASS: MPFB topology, 53-bone rig, 40 samples, idle/move palm contact, two-handed push and planted boots, closed thick belts, stationary base, rolling ratio, nondegenerate effects, held grounded death')

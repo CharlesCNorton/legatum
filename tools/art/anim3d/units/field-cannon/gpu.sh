@@ -5,10 +5,14 @@ cd "$(dirname "$0")/../../../../.."
 source tools/art/anim3d/env.sh
 export ANIM_FAMILY=siege RENDER_ENGINE=CYCLES CYCLES_DEVICE=GPU SAMPLES=64 RESOLUTION=512
 export SIEGE_REUSE_MASTER=1 SIEGE_STAGES=b,c,detail,d,e-idle,e-move,e-attack,e-hit,e-death
-export ROUND="${ROUND:-5}"
-test -f "$ANIM_ROOT/masters/field-cannon/field-cannon.blend"
+export ROUND="${ROUND:-6}"
 # Keep a unit-owned transcript even when the driver's outer log path is missing.
-exec > >(tee "$REVIEW/field-cannon-round${ROUND}-gpu.log") 2>&1
+printf 'Full GPU transcript: %s\n' "$REVIEW/field-cannon-round${ROUND}-gpu.log"
+# Direct redirection also works when the caller cannot open /dev/fd process substitutions.
+exec > "$REVIEW/field-cannon-round${ROUND}-gpu.log" 2>&1
+trap 'status=$?; printf "GPU pass failed (exit %s) at line %s: %s\n" "$status" "$LINENO" "$BASH_COMMAND"; exit "$status"' ERR
+# Test only after opening the transcript, so missing input failures are reviewable.
+test -f "$ANIM_ROOT/masters/field-cannon/field-cannon.blend"
 printf 'Field cannon round %s: Cycles GPU64 at 512 px; begin %s\n' "$ROUND" "$(date -u +%FT%TZ)"
 blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python tools/art/anim3d/siege/round.py
 # Refuse to label preview-sized or stale files as the required GPU masters.

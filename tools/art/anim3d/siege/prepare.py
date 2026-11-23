@@ -1,7 +1,7 @@
 """Material-selective projection masks from the project's licensed source painting."""
 from pathlib import Path
 import os,json,hashlib
-from PIL import Image
+from PIL import Image, ImageDraw
 R=Path(os.environ.get('ANIM_ROOT',str(Path.home()/'LegatumRuns/anim-pilot')));A=R/'assets/field-cannon';im=Image.open(A/'painting-source.png').convert('RGBA')
 def clamp(x):return max(0,min(1,x))
 for material in ['navy','ivory','leather']:
@@ -29,4 +29,19 @@ for kind in ['machine','base','coat']:
    excluded|=kind=='base' and ty<214
    if excluded:px[x,y]=(red,green,blue,0)
  result.save(A/f'projection-{kind}.png')
+# Ivory trousers have deep warm painted shadows. A brightness-only mask discards
+# those folds; use their actual source silhouette and exclude the separate rammer.
+mask=Image.new('L',im.size);draw=ImageDraw.Draw(mask)
+outline=[(64,109),(105,109),(101,123),(94,144),(90,167),(80,169),(80,145),(65,149),(55,167),(44,163),(53,133)]
+def source_point(p):return (81+(p[0]-26)*(1172-81)/(230-26),7+(p[1]-12)*(1247-7)/(244-12))
+draw.polygon([source_point(p) for p in outline],fill=255)
+draw.line([source_point((54,58)),source_point((83,201))],fill=0,width=25)
+draw.line([source_point((63,105)),source_point((55,148))],fill=0,width=40)
+trousers=im.copy()
+from PIL import ImageChops
+# Reject almost-black neighbouring equipment while retaining midtone creases.
+pigment=Image.new('L',im.size)
+pigment.putdata([round(255*clamp((min(r,g,b)-65)/35)*clamp((75-(max(r,g,b)-min(r,g,b)))/25)) for r,g,b,a in im.getdata()])
+trousers.putalpha(ImageChops.multiply(ImageChops.multiply(mask,pigment),im.getchannel('A')))
+trousers.save(A/'projection-trousers.png')
 (A/'manifest.json').write_text(json.dumps({p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in A.glob('*.png')},indent=2))

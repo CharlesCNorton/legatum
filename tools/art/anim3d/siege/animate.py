@@ -77,11 +77,32 @@ for clip,(count,fps,loop) in CLIPS.items():
    distance=.51*(2*pi/12)*t;localtravel=.018*sin(phase);theta=(distance+localtravel)/.51
    for w in wheels:w.rotation_euler.y=theta
    gun.location=neutralgun+Vector((localtravel*cos(gunangle.z),localtravel*sin(gunangle.z),0))
-   rig.location.x+=.018*sin(phase);rotate(rig,'spine_01','X',.13);rotate(rig,'spine_02','Y',.12)
-   for side,offset in [('l',0),('r',pi)]:
-    stride=sin(phase+offset);lift=max(0,cos(phase+offset))*.045
-    limb(rig,'thigh_'+side,'calf_'+side,((.17 if side=='l' else -.19)+.055*stride,-.035+.075*stride,.07+lift),(.2 if side=='l' else -.2,-.35,.5))
-   limb(rig,'upperarm_r','lowerarm_r',(.28,.10,.94),(-.30,-.35,1.1))
+   rig.location.x+=.32+.018*sin(phase);rig.location.y+=.20;rig.location.z-=.04;rotate(rig,'spine_01','X',.13);rotate(rig,'spine_02','Y',.28)
+   # In-place push: feet travel along the gun heading, with a planted stance
+   # half and a lifted return half. Preserve the fitted boot orientation.
+   forward_local=rig.matrix_world.to_3x3().inverted() @ Vector((cos(gunangle.z),sin(gunangle.z),0))
+   for side,offset in [('l',0),('r',.5)]:
+    cycle=(t+offset)%1
+    stride=(.067-.268*cycle) if cycle<.5 else (-.067+.268*(cycle-.5))
+    lift=0 if cycle<.5 else .045*sin(2*pi*(cycle-.5))
+    foot=rig.pose.bones['foot_'+side]
+    target=foot.head.copy()+forward_local*stride
+    target.z+=lift
+    limb(rig,'thigh_'+side,'calf_'+side,target,(.2 if side=='l' else -.2,-.35,.5))
+    aim(rig,'foot_'+side,rig.data.bones['foot_'+side].tail_local-rig.data.bones['foot_'+side].head_local)
+    bpy.context.view_layer.update()
+    sole=bpy.data.objects['Boot sole '+side]
+    bottom=min((sole.matrix_world @ v.co).z for v in sole.data.vertices)
+    target=rig.pose.bones['foot_'+side].head.copy()
+    target.z+=(.098+lift-bottom)/rig.scale.z
+    limb(rig,'thigh_'+side,'calf_'+side,target,(.2 if side=='l' else -.2,-.35,.5))
+    aim(rig,'foot_'+side,rig.data.bones['foot_'+side].tail_local-rig.data.bones['foot_'+side].head_local)
+   # Both hands push real hardware; the free hand no longer floats behind the torso.
+   contact=barrel.matrix_world @ Vector((-.33,-.055,.12))
+   hand_direction=Vector((.12,.015,-.025)).normalized()
+   target=rig.matrix_world.inverted() @ contact-hand_direction*rig.data.bones['hand_r'].length
+   limb(rig,'upperarm_r','lowerarm_r',target,(-.30,-.35,1.1));aim(rig,'hand_r',hand_direction)
+   rig['push_contact_local']=[-.33,-.055,.12]
    bpy.context.view_layer.update()
    target=rig.matrix_world.inverted() @ (barrel.matrix_world @ Vector(rig['barrel_contact_local']))-Vector((.11,-.015,-.03)).normalized()*rig.data.bones['hand_l'].length
    limb(rig,'upperarm_l','lowerarm_l',target,(.56,-.24,1.14));aim(rig,'hand_l',(.11,-.015,-.03))

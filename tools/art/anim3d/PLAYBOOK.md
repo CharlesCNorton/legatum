@@ -188,7 +188,7 @@ The carriage stays close to wheel-supported height rather than levering the whol
 source PNGs are identical; the second terminal PNG is reused after asserting all transforms match.
 
 Lead's final host GPU pass, from this branch's checkout: run
-`ROUND=5 tools/art/anim3d/units/field-cannon/gpu.sh`. It audits geometry, renders every stage
+`ROUND=6 tools/art/anim3d/units/field-cannon/gpu.sh`. It audits geometry, renders every stage
 (including plain views) at 512 px / 64 samples, writes 256 px gallery copies, packs and validates the
 saved external master, and encodes the decoded atlas as the driver-requested round MP4. The old
 `siege/gpu-final.sh` delegates to this entry point. The equivalent individual stages are:
@@ -371,6 +371,42 @@ checks pass. The 8-second MP4 is H.264/yuv420p, 1600 × 348, 240 frames. CPU evi
 in `round5-cpu`. Silhouette IoU is .840; the figure and far wheel still differ, and the face/tailoring
 remain below the painting at 256 px. At 64 px the unit is recognizable, not indistinguishable.
 **No PASS marker; fresh GPU512 rendering and visual acceptance remain outstanding.**
+
+### Round-six finished surfaces and push contact
+
+`surface.py` finishes true geometry before `paint.py` records the frozen camera UVs: curve details
+become volumetric meshes, bevel/solidify/subdivision are applied, and static MPFB macro shape keys
+are frozen while retaining native skin weights and all 53 bones. Projection used to disable these
+modifiers and sample an unfinished cage; the final shaded surface could disagree with its paint.
+The geometry audit now measures the actual posed surface against the recorded UV registration and
+checks that the finished crossbelts remain closed solids with their recorded thickness. Zero-level
+subdivision is removed explicitly; applying it raises an error in this Blender version.
+
+A camera-ray-only Principled pigment branch preserves more of the painting's existing illumination.
+The ordinary PBR branch still shades uncovered/back surfaces and non-camera rays, retaining the
+original generated navy-wool fill, scanned materials, actual AO/curvature and product softboxes.
+This remains frozen UV colour on complete moving geometry, with no image plane or live screen-space
+mapping. Shallower modeled sleeve/coat folds reduce the ribbed appearance. A source-silhouette mask
+preserves dark trouser creases while excluding the separate rammer and coat tail; a calibrated stone
+pigment reduces excess blue in the lit cream. The one automatically fitted rest grade remains frozen
+across every clip. The original orthographic camera is retained.
+
+The move clip brings the gunner closer, bends him into a push stance, plants both palms on the barrel
+and gives each boot a planted half-cycle and a lifted return. The audit requires both palms within
+2 mm and checks each sole against its authored ground/lift height; it caught unreachable arm targets
+before rendering. All five clips keep their original frame counts and timing. Death stays grounded
+and held. The GPU script defaults to round 6 and opens its transcript before checking inputs, with
+an error trap that records the failing command. It uses direct file redirection because the old
+process-substitution logger can fail opening `/dev/fd` in a restricted caller. A missing-input
+preflight verifies the transcript without starting Blender. A successful GPU receipt still does not mean art PASS.
+
+Round-six CPU delivery: all 40 frames at 256 px / Cycles CPU12, **181,890 bytes at Q85**,
+640 × 1006 atlas, 31 unique rectangles and lossless alpha. Atlas/video validation, six regression
+tests, the geometry/contact/UV audit, syntax checks and both GPU preflight rejection tests pass.
+The MP4 is 1600 × 348, H.264/yuv420p, 240 frames/eight seconds. Current CPU evidence is archived
+under `round6-cpu`; prior 512 px GPU evidence remains under `round3-gpu`.
+**No art PASS:** face/tailoring, wheel perspective and motion still differ from the painting.
+No GPU pass is claimed from a missing driver log or CPU-labelled render provenance.
 
 ### Trimmed JSON format, version 2
 

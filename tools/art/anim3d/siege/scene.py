@@ -215,8 +215,8 @@ for j in range(21):
  for i in range(64):
   a=i*2*pi/64
   # Compression folds radiate from the belt and loaded shoulder, rather than regular ribs.
-  fold=(.009*sin(a*9+t*19)+.005*sin(a*17-t*11))*sin(t*pi)
-  fold+=.008*sin(t*37+a*3)*max(0,cos(a))*(1-t)
+  fold=(.0045*sin(a*9+t*19)+.0025*sin(a*17-t*11))*sin(t*pi)
+  fold+=.004*sin(t*37+a*3)*max(0,cos(a))*(1-t)
   vs.append(((rx+fold)*sin(a),-(ry+fold)*cos(a),z))
 for j in range(20):
  for i in range(64):a=j*64+i;b=j*64+(i+1)%64;fs.append((a,b,b+64,a+64))
@@ -242,7 +242,7 @@ for side in ['l','r']:
    sleeve_end=1-.080/(b-a).length if segment=='lowerarm' else 1
    center=a.lerp(b,t*sleeve_end)
    for k in range(40):
-    angle=2*pi*k/40;wrinkle=(.006*sin(t*22+2.2*sin(angle*2))+.002*sin(t*43-angle*3))*sin(pi*t)**.6
+    angle=2*pi*k/40;wrinkle=(.0028*sin(t*22+2.2*sin(angle*2))+.001*sin(t*43-angle*3))*sin(pi*t)**.6
     sleeve_radius=r0*(1-t)+r1*t+wrinkle;vs.append(tuple(center+sleeve_radius*(u*cos(angle)+v*sin(angle))))
   for j in range(24):
    for k in range(40):q=j*40+k;z=j*40+(k+1)%40;fs.append((q,z,z+40,q+40))
@@ -257,8 +257,8 @@ for side in ['l','r']:
 def coat_front(x,z):
  t=max(0,min(1,(z-1.005)/.475));rx=.185+.040*sin(t*pi*.68);ry=.150+.025*sin(t*pi)
  a=math.asin(max(-.99,min(.99,x/rx)))
- fold=(.009*sin(a*9+t*19)+.005*sin(a*17-t*11))*sin(t*pi)
- fold+=.008*sin(t*37+a*3)*max(0,cos(a))*(1-t)
+ fold=(.0045*sin(a*9+t*19)+.0025*sin(a*17-t*11))*sin(t*pi)
+ fold+=.004*sin(t*37+a*3)*max(0,cos(a))*(1-t)
  return -(ry+fold)*max(.05,1-(x/(rx+fold))**2)**.5
 # Flat cross belts, fitted over the actual coat surface, not round ropes. Ribbon surface follows the chest.
 def ribbon(name,pts,width,m,bone):
