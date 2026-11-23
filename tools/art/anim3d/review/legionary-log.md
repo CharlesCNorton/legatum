@@ -4,3 +4,6 @@
 - Downloaded CC BY 4.0 legionary painting; generated original four-material fill atlas with built-in imagegen and prepared external projection inputs.
 - Building original Roman segmented armour, curved scutum, pilum, helmet, folded tunic and sandals around MPFB anatomy/53-bone rig; waiting for gated Blender build. No quality verdict yet.
 - Published b: CYCLES/CPU, 256 px, 8 samples; visual review pending.
+- Published b: CYCLES/CPU, 256 px, 8 samples; visual review pending.
+- Inspected first plain render at 256/64: upper chest exposed; figure/base too low; shield too low and vertical. Preserved first sheet; extended iron coverage, raised shoulder lames/scutum, added thick linen scarf, turned head, and recalibrated camera/pilum height. Rest similarity still below target.
+- Published c: CYCLES/CPU, 512 px, 8 samples; visual review pending.
