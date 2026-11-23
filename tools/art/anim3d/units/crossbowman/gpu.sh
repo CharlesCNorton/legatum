@@ -29,6 +29,7 @@ for stage in b c d e-idle e-move e-attack e-hit e-death; do
   STAGE="$stage" "$unit/render.sh" render
   "$ANIM_ROOT/venv/bin/python" "$unit/post.py" review "$stage"
 done
+"$unit/render.sh" feet
 "$ANIM_ROOT/venv/bin/python" "$unit/check_final.py"
 "$ANIM_ROOT/venv/bin/python" "$unit/post.py" pack
 "$ANIM_ROOT/venv/bin/python" "$unit/post.py" validate
@@ -37,7 +38,7 @@ done
 import json, os
 from pathlib import Path
 r=Path(os.environ['ANIM_ROOT']); m=r/'masters/crossbowman'
-report={name:json.loads((m/(name+'.json')).read_text()) for name in ['validation','video-validation','audit']}
+report={name:json.loads((m/(name+'.json')).read_text()) for name in ['validation','video-validation','audit','feet']}
 report.update(round=os.environ['ROUND'],visual_pass=False)
 (r/'review/3d-v2'/f'crossbowman-gpu-round{os.environ["ROUND"]}.json').write_text(json.dumps(report,indent=2))
 PY

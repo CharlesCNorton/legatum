@@ -216,3 +216,51 @@ identity reads, but silhouette IoU remains about .84 at both sizes. Raised sleev
 joints, fingers/shoes, base edge and suspended-looking death limbs remain visible
 gaps. **No visual PASS.** Fresh GPU512 masters and the lead's art verdict remain
 outstanding; the Chromium art gate is blocked by sandbox Mach-port permissions.
+
+### Crossbowman driver round 2: GPU review and open motion
+
+The lead's driver round 1 completed GPU512/64, all eight stages, Q85 / 177,626
+bytes and an eight-second MP4. Those images are preserved externally in
+`masters/crossbowman/driver-r1-gpu/`. This supersedes the earlier paragraph's
+pending-GPU status; it does not grant art approval. The GPU review exposed rigid
+sleeve seams and a suspended death, along with hand, bow and stone differences.
+
+Sleeves are now continuous inverse-skinned quilted surfaces with blended elbow
+weights and solid thickness. They retain frozen painting UVs and the generated
+linen fill, so raising the weapon does not pull separate rigid shells apart.
+The prod is narrower and closer to the painted height. Only the clean lower
+stone rim receives a feathered painting projection; the top keeps physical
+lighting and live contact shadows, without projected feet or equipment.
+
+Feedback 23 is the motion standard: prefer proven CMU free-use or Quaternius CC0
+motion for human idle/walk/hit/death, calibrated in the source and target rest
+poses including bone rolls. Only the weapon-specific attack is authored. This
+unit reuses Quaternius Idle_Loop, Walk_Loop, Hit_Chest and Death01 through Blender
+world-space rotation constraints, with a carrying-hand layer and translation-only
+support correction. The source foot rotations are retained and independently
+audited. Source files and CC0 licence are hash-checked; exact attribution is in
+`units/crossbowman/SOURCES.md` and the external asset ledger.
+
+Every round renders a front and top feet cycle, `crossbowman-g-feet-check.png`,
+using the actual moving lower-body meshes. Inspect travel direction, stance and
+slide in that sheet; a valid rotation check alone cannot prove good foot contact.
+`gpu.sh` now includes this diagnostic and verifies all sixteen GPU files against
+the current move blend before writing its technical receipt. It still does not
+write PASS. A settled, grounded source fall replaces the old rigid sideways tip;
+weapon release stays independent and is checked against the stone support plane.
+
+A neutral-coordinate height cut can accidentally include MPFB hands in trousers.
+Constrain both height and lateral extent, and audit that the garment has no finger
+or hand weights. This removed the olive duplicate hand that made the grip look
+dark. Check retargeted stance points after Blender key decomposition too: root-only
+XY reconciliation preserves the source's virtual-ground stance without changing
+foot rotations. The audit measures stance displacement independently.
+
+Driver-round-two CPU256/8 delivery: all 40 frames, trimmed 160px atlas at Q90 /
+197,576 bytes; decoded H.264/yuv420p review is 1600x348, 240 frames, eight seconds.
+Five-clip audit, source/alpha/offset/held-death validation and four delivery
+regressions pass. Measured stance slip is below 0.000001m/sample on the virtual
+ground; source-foot rotation decomposition residual is 0.002448rad. The new GPU
+pass remains required. At 256px hand shape, exposed shoulder fill and fallen-arm
+pose still differ; at 64px identity/height read consistently but not identically.
+**No PASS marker.** Chromium's sandbox permission error blocks the art gate.

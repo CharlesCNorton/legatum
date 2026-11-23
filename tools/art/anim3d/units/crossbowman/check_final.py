@@ -22,3 +22,9 @@ for stage, count in {'b':3,'c':1,'d':4,'e-idle':8,'e-move':8,'e-attack':10,'e-hi
             with Image.open(folder/f'{index:02d}.png') as image:
                 assert image.size == (size,size) and image.mode == 'RGBA'
 print('FINAL_MASTER_PASS: GPU512/64+, gallery256, all eight stages current')
+
+feet=json.loads((master/'feet.json').read_text())
+assert feet['device']=='GPU' and feet['source_sha256']==digest(master/'clips/move.blend')
+assert len(feet['files'])==16
+for f in feet['files']:assert digest(master/f['path'])==f['sha256']
+print('FEET_MASTER_PASS: current GPU front/top cycle, 16 views')

@@ -51,7 +51,7 @@ def garment(name,pred,mat,inflate):
     ar=ob.modifiers.new('MPFB garment skin weights','ARMATURE');ar.object=rig
     solid(ob,.006);su=ob.modifiers.new('Tailored surface subdivision','SUBSURF');su.levels=1
     return ob
-trousers=garment('GEO-olive wool trousers',lambda v:.16<v.z<1.02,olive,.015)
+trousers=garment('GEO-olive wool trousers',lambda v:.16<v.z<1.02 and abs(v.x)<.30,olive,.015)
 boots=garment('GEO-leather boots',lambda v:v.z<.15,leather,.017)
 
 # Pose: upright rather than spearman guard. World points account for rig elevation.
@@ -71,25 +71,40 @@ limb('thigh_r','calf_r',(-.12,-.015,.10),(-.14,-.25,.48))
 limb('thigh_l','calf_l',(.17,.015,.10),(.17,-.20,.48))
 for side in ['l','r']:aim_bone('foot_'+side,(.04 if side=='l' else -.02,-1,0))
 bpy.context.view_layer.update()
-# Quilted articulated sleeves follow the posed MPFB arm segments.
-def sleeve(name,a,b,r0,r1,bone):
-    a=Vector(a);b=Vector(b);axis=(b-a).normalized();u=axis.cross(Vector((0,1,0))).normalized();v=axis.cross(u);vs=[];fs=[];N=40;J=24
-    for j in range(J+1):
-        t=j/J
-        for k in range(N):
-            ang=2*pi*k/N;r=(r0*(1-t)+r1*t)+.007*sin(pi*t)+.0035*cos(ang*10)*cos(t*pi*20)
-            vs.append(tuple(a+(b-a)*t+r*(u*cos(ang)+v*sin(ang))))
-    for j in range(J):
-        for k in range(N):i=j*N+k;n=j*N+(k+1)%N;fs.append((i,n,n+N,i+N))
-    ob=solid(mesh(name,vs,fs,linen),.007);attach(ob,bone)
-    for j in range(1,12):
-        t=j/12;r=r0*(1-t)+r1*t+.008
-        pts=[tuple(a+(b-a)*t+r*(u*cos(k*2*pi/64)+v*sin(k*2*pi/64))) for k in range(65)]
-        attach(curve('GEO-sleeve transverse quilting',pts,.0013,string),bone)
+# Continuous quilted sleeves: inverse skin the fitted rest surface, then let
+# both arm bones deform the elbow. No separate rigid shoulder/elbow tube seams.
 for side in ['l','r']:
-    for part in ['upperarm','lowerarm']:
-        bone=part+'_'+side;p=rig.pose.bones[bone]
-        sleeve('GEO-quilted '+bone,rig.matrix_world @ p.head,rig.matrix_world @ p.tail,.077 if part=='upperarm' else .067,.067 if part=='upperarm' else .046,bone)
+    names=['upperarm_'+side,'lowerarm_'+side]
+    bones=[rig.pose.bones[n] for n in names]
+    points=[bones[0].head.copy(),bones[0].tail.copy(),bones[1].tail.copy()]
+    deform=[p.matrix @ p.bone.matrix_local.inverted() for p in bones]
+    vs=[];fs=[];weights=[];N=40;J=48
+    for j in range(J+1):
+        t=j/J;section=min(1,int(t*2));local=t*2-section
+        center=points[section].lerp(points[section+1],local)
+        axis=(points[section+1]-points[section]).normalized()
+        # Blend the tangent around the elbow to keep one continuous ring grid.
+        if abs(t-.5)<.12:
+            blend=(t-.38)/.24
+            axis=(points[1]-points[0]).normalized().lerp((points[2]-points[1]).normalized(),blend).normalized()
+        u=axis.cross(Vector((0,1,0))).normalized();v=axis.cross(u)
+        w=max(0,min(1,(t-.38)/.24));w=w*w*(3-2*w)
+        inv=(deform[0]*(1-w)+deform[1]*w).inverted()
+        for k in range(N):
+            angle=2*pi*k/N
+            radius=(.079*(1-t)+.046*t)+.006*sin(pi*t)+.002*cos(angle*10)*cos(t*pi*38)
+            vs.append(tuple(inv @ (center+radius*(u*cos(angle)+v*sin(angle)))))
+            weights.append(w)
+    for j in range(J):
+        for k in range(N):
+            q=j*N+k;n=j*N+(k+1)%N;fs.append((q,n,n+N,q+N))
+    ob=mesh('GEO-continuous quilted sleeve '+side,vs,fs,linen);ob.parent=rig
+    groups=[ob.vertex_groups.new(name=n) for n in names]
+    for i,w in enumerate(weights):
+        groups[0].add([i],1-w,'REPLACE');groups[1].add([i],w,'REPLACE')
+    arm=ob.modifiers.new('Continuous MPFB sleeve weights','ARMATURE');arm.object=rig
+    solid(ob,.007)
+    sub=ob.modifiers.new('Soft quilt folds','SUBSURF');sub.levels=1
 for side in ['l','r']:
     fp=rig.matrix_world @ rig.pose.bones['foot_'+side].head
     shoe=sphere('GEO-rounded leather shoe '+side,(fp.x,fp.y-.065,.145),(.074,.12,.054),leather);attach(shoe,'foot_'+side)
@@ -174,7 +189,9 @@ for z in [.32,.72,1.02]:weaponize(box('GEO-stock steel band',(-.275,-.26,z),(.06
 for z in [.78,.81,.84,.87]:weaponize(curve('GEO-stock binding', [(-.305,-.30,z),(-.245,-.30,z)],.0025,string))
 # Register lower bow hardware to the painted shins without moving the grip.
 for part in list(weapon.children):
-    if any(key in part.name for key in ['bow prod','bowstring']):part.location.z-=.105
+    if any(key in part.name for key in ['bow prod','bowstring']):
+        part.location.z-=.070
+        for v in part.data.splines[0].points if part.type=='CURVE' and part.data.splines[0].type=='POLY' else []:v.co.x=-.275+(v.co.x+.275)*.90
     elif 'foot stirrup' in part.name:part.location.z-=.035
 weapon.location.x-=.05
 # Side bolt case, leather straps, brass studs.
@@ -206,7 +223,7 @@ for side in [0,N]:
 shieldize(curve('GEO-pavise rear grip',[(.37,-.12,.85),(.37,-.03,.85),(.44,-.03,.85),(.44,-.12,.85)],.012,leather))
 shield.location.z+=.045
 # Cream base is stationary for all poses.
-bpy.ops.mesh.primitive_cylinder_add(vertices=96,radius=.635,depth=.075,location=(.025,0,.0375));base=bpy.context.object;base.name='GEO-stationary cream stone';base.data.materials.append(stone);base.data.materials.append(material('Stone darker cream rim',(.59,.36,.15),0,.88));
+bpy.ops.mesh.primitive_cylinder_add(vertices=96,radius=.635,depth=.075,location=(.025,0,.0375));base=bpy.context.object;base.name='GEO-stationary cream stone';base.data.materials.append(stone);base.data.materials.append(material('Stone darker cream rim',(.72,.46,.23),0,.88));
 for poly in base.data.polygons:poly.material_index=0 if poly.normal.z>.5 else 1
 bevel(base,.020,5)
 sc=bpy.context.scene;sc.render.engine='CYCLES';sc.cycles.device='CPU';sc.cycles.samples=8;sc.cycles.use_denoising=True
@@ -265,7 +282,7 @@ painting=bpy.data.images.load(str(A/'painting-aligned.png'));view=(sc.camera.loc
 for obj in list(sc.objects):
     if obj.type=='CURVE':
         bpy.ops.object.select_all(action='DESELECT');obj.select_set(True);bpy.context.view_layer.objects.active=obj;bpy.ops.object.convert(target='MESH');obj=bpy.context.object
-    if obj.type!='MESH' or obj==base or obj==eyes:continue
+    if obj.type!='MESH' or obj==eyes:continue
     states=[(m,m.show_viewport) for m in obj.modifiers]
     for m,_ in states:
         if m.type!='ARMATURE':m.show_viewport=False
@@ -280,6 +297,12 @@ for obj in list(sc.objects):
     for i,old in enumerate(list(obj.data.materials)):
         mat=old.copy();obj.data.materials[i]=mat;n=mat.node_tree.nodes;l=mat.node_tree.links;s=n.get('Principled BSDF');tex=n.new('ShaderNodeTexImage');tex.image=painting;tex.extension='CLIP';u=n.new('ShaderNodeUVMap');u.uv_map=uv.name;l.new(u.outputs[0],tex.inputs[0]);attr=n.new('ShaderNodeVertexColor');attr.layer_name=att.name
         mult=n.new('ShaderNodeMath');mult.operation='MULTIPLY';l.new(attr.outputs[0],mult.inputs[0]);l.new(tex.outputs['Alpha'],mult.inputs[1])
+        if obj==base:
+            # Only the clean lower stone rim: no feet, weapon or painted contact
+            # shadows. Top keeps the physical product lighting and live AO.
+            split=n.new('ShaderNodeSeparateXYZ');l.new(u.outputs[0],split.inputs[0])
+            mask=n.new('ShaderNodeMapRange');mask.clamp=True;mask.inputs['From Min'].default_value=.105;mask.inputs['From Max'].default_value=.145;mask.inputs['To Min'].default_value=1;mask.inputs['To Max'].default_value=0;l.new(split.outputs['Y'],mask.inputs['Value'])
+            masked=n.new('ShaderNodeMath');masked.operation='MULTIPLY';l.new(mult.outputs[0],masked.inputs[0]);l.new(mask.outputs[0],masked.inputs[1]);mult=masked
         # The painting already has illumination. Camera-only pigment preserves
         # it without turning the character into a lamp for indirect rays.
         camera=n.new('ShaderNodeLightPath');factor=n.new('ShaderNodeMath');factor.operation='MULTIPLY';l.new(mult.outputs[0],factor.inputs[0]);l.new(camera.outputs['Is Camera Ray'],factor.inputs[1])

@@ -4,8 +4,10 @@ True 3D candidate built from MPFB anatomy and a 53-bone rig, with solid quilted
 clothing, red cowl, kettle helmet, convex pavise and functioning crossbow geometry.
 The original source painting is projected using frozen rest-camera UVs and
 facing/occlusion masks. Hidden cloth uses the mounted family's generated linen;
-materials include grain, worn roughness and actual AO/Pointiness bakes. Motion is
-authored skeletal animation with a keyed drawstring, not simulated cloth or mocap.
+materials include grain, worn roughness and actual AO/Pointiness bakes. Idle, walk, hit and death use the CC0 Quaternius library with rest/roll-calibrated
+Blender constraints and carrying-hand adjustments. The crossbow attack/drawstring
+and weapon release are authored. No simulated cloth or mocap is claimed. See
+`SOURCES.md` for exact motion hashes and licences.
 
 Use the existing isolated Blender/MPFB/Pillow install from the family playbook.
 From the repository root:
@@ -23,7 +25,8 @@ STAGE=c SAMPLES=6 tools/art/anim3d/units/crossbowman/render.sh render
 Render stages `b c d e-idle e-move e-attack e-hit e-death` serially, with `c`
 before other textured reviews so all frames use its one fixed histogram grade.
 Run `post.py review <stage>` immediately after each render. `post.py pack`,
-`post.py validate`, `post.py video`, and `render.sh audit` finish the candidate.
+`post.py validate`, `post.py video`, `render.sh audit` and `render.sh feet` finish
+the candidate. Feet emits actual front/top lower-body views across all eight steps.
 CPU previews are labelled as such in manifests and sheets. Frames and blends live
 under `$ANIM_ROOT/masters/crossbowman/`, never in git. Painting and fill input
 hashes are pinned in `inputs.json`; prepare refuses changed inputs.
