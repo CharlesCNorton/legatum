@@ -98,3 +98,14 @@ Baked clip idle
 Baked clip move
 Baked clip attack
 Baked clip hit
+Baked clip death
+Review b: 256px CYCLES/CPU, 12 samples; 3 actual frames.
+Review c: 256px CYCLES/CPU, 12 samples; 1 actual frames.
+Review d: 256px CYCLES/CPU, 12 samples; 4 actual frames.
+Review e-idle: 256px CYCLES/CPU, 12 samples; 8 actual frames.
+Review e-move: 256px CYCLES/CPU, 12 samples; 8 actual frames.
+Driver round2 improvements: reshaped original 63 solid crest tufts and saddle to swept source inner/outer curves while retaining depth/attachments; narrower right ankle rest stance, single rounded brooch, shoulder drape and continuous painted skin/cloth masks; calibrated separate cream top/rim. Source-contour IoU .770109 GPU prior -> .787439 CPU current (threshold128); rim sample RGB163/141/106 ->223/191/145 versus painting234/192/138. Metrics are not art parity.
+Open-motion update: copied/read unit-local Quaternius CC0 rest/roll constraint helper; retained8/8/10/4/10 frames and authored attack/release. First audit found12 contacts/framing issues; added along-shaft support correction, grounded source gait/root without foot rotation edits, release framing and finite hidden cloth ground collider. Rebuilt clips and full40-sample audit now0 findings; scene173 projected meshes,19158 body vertices,53 bones,input hashes passed. Final CPU previews/feet/atlas/movie running.
+Review e-attack: 256px CYCLES/CPU, 12 samples; 10 actual frames.
+Review e-hit: 256px CYCLES/CPU, 12 samples; 4 actual frames.
+Review e-death: 256px CYCLES/CPU, 12 samples; 10 actual frames.

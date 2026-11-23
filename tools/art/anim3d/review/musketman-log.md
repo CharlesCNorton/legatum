@@ -59,3 +59,6 @@
 - Posted g-feet-top review (CPU, 512 px).
 - Posted g-feet-front review (CPU, 512 px).
 - Audit passed: five clips, source hashes, 53-bone rig, fixed base and positive object scales.
+- Final CPU512 and 256 inventories: 62 PNGs each; all required review sheets, five animated WebPs and round1 MP4 exist. Atlas 189256 bytes at quality 85; 40 frames.
+- Scene audit, delivery validation, six regression tests, Python/Bash syntax and whitespace pass. GPU not run; no PASS.
+- Git add blocked: cannot create .git/worktrees/lane-9/index.lock (Operation not permitted). Runner must commit; exact co-authored message saved beside this log. HEAD already contains origin/master; no merge needed.
