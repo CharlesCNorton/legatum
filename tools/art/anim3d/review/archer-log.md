@@ -148,3 +148,7 @@
 - Published c-details native 256/64 comparison; render device GPU.
 - Rendered d: 512px CYCLES GPU, 64 samples.
 - Published d native 256/64 comparison; render device GPU.
+- Rendered e-idle: 512px CYCLES GPU, 64 samples.
+- Published e-idle native 256/64 comparison; render device GPU.
+- Rendered e-move: 512px CYCLES GPU, 64 samples.
+- Published e-move native 256/64 comparison; render device GPU.
