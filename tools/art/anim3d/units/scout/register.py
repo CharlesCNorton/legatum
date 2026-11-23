@@ -46,6 +46,7 @@ def aim(name, direction):
     delta = (q @ Vector((0, 1, 0))).rotation_difference(direction.normalized())
     mat = (delta @ q).to_matrix().to_4x4()
     if 'arm_' in name: mat = mat @ Matrix.Diagonal((1, 1.17, 1, 1))
+    if name=='calf_l': mat = mat @ Matrix.Diagonal((1, 1.16, 1, 1))
     mat.translation = p.head
     p.matrix = mat
     bpy.context.view_layer.update()
@@ -56,7 +57,7 @@ def limb(upper, lower, joint_xy, end_xy, prefer):
     candidates = []
     for joint in intersections(joint_xy, a, rig.data.bones[upper].length * (1.17 if 'arm_' in upper else 1)):
         try:
-            ends = intersections(end_xy, joint, rig.data.bones[lower].length * (1.17 if 'arm_' in lower else 1))
+            ends = intersections(end_xy, joint, rig.data.bones[lower].length * (1.17 if 'arm_' in lower else 1.16 if lower=='calf_l' else 1))
         except ValueError:
             continue
         for end in ends:
@@ -71,10 +72,10 @@ def limb(upper, lower, joint_xy, end_xy, prefer):
                     'end_actual': list(screen(rig.matrix_world @ rig.pose.bones[lower].tail))})
 
 for bone in rig.data.bones:
-    if any(s in bone.name for s in ('arm_', 'hand_')): bone.inherit_scale='NONE'
+    if any(s in bone.name for s in ('arm_', 'hand_', 'foot_', 'ball_')): bone.inherit_scale='NONE'
 
 # Pelvis remains fully three-dimensional; the raised knee folds forward in depth.
-limb('thigh_l', 'calf_l', (188, 135), (181, 182), (.51, -.05, .22))
+limb('thigh_l', 'calf_l', (188, 135), (184, 189), (.51, -.05, .22))
 limb('thigh_r', 'calf_r', (130, 162), (113, 204), (-.08, -.18, .18))
 aim('foot_l', Vector((.60, -.75, -.18)))
 aim('foot_r', Vector((.05, -.98, -.16)))
@@ -84,17 +85,17 @@ limb('upperarm_r', 'lowerarm_r', (112, 78), (80, 94), (-.48, -.15, 1.2))
 aim('hand_r', Vector((-.015, -.01, .09)))
 head = rig.pose.bones['head']
 head_matrix = head.matrix.copy()
-head_matrix.translation += rig.matrix_world.inverted().to_3x3() @ (right*.060 + up*.020)
+head_matrix.translation += rig.matrix_world.inverted().to_3x3() @ (right*.030 + up*.020)
 head.matrix = head_matrix
 bpy.context.view_layer.update()
 
 # Keep the hat a complete disc, but show its edge as in the source painting.
 brim = bpy.data.objects['GEO-Travellers felt hat brim']
 centre = brim.matrix_world.translation.copy()
-rotation = Matrix.Rotation(.95, 4, 'Z') @ Matrix.Rotation(-.35, 4, 'Y')
+rotation = Matrix.Rotation(1.20, 4, 'Z') @ Matrix.Rotation(-.35, 4, 'Y')
 for name in ['GEO-Travellers felt hat brim', 'GEO-Hat crown']:
     ob = bpy.data.objects[name]
-    ob.matrix_world = Matrix.Translation(-right*.12+up*.04) @ Matrix.Translation(centre) @ rotation @ Matrix.Translation(-centre) @ ob.matrix_world
+    ob.matrix_world = Matrix.Translation(-right*.095-up*.055) @ Matrix.Translation(centre) @ rotation @ Matrix.Translation(-centre) @ ob.matrix_world
 
 # Keep the staff's grip, and fit its true shaft and fork to the painted direction.
 hand = rig.pose.bones['hand_r']
@@ -156,8 +157,29 @@ y0, y1 = min(p.y for p in points), max(p.y for p in points)
 for vertex in cowl.data.vertices:
     world = cowl.matrix_world @ vertex.co
     p = screen(world)
-    target = (131+(p.x-x0)/(x1-x0)*61, 49+(p.y-y0)/(y1-y0)*31)
+    u=(p.x-x0)/(x1-x0);v=(p.y-y0)/(y1-y0)
+    # Scarf hangs deepest below the throat, not as a horizontal collar ring.
+    columns=[(0,57,61),(.20,51,64),(.42,49,70),(.62,58,80),(.80,60,82),(1,49,65)]
+    for (a,hi0,lo0),(b,hi1,lo1) in zip(columns,columns[1:]):
+        if a<=u<=b:
+            t=(u-a)/(b-a);hi=hi0+(hi1-hi0)*t;lo=lo0+(lo1-lo0)*t
+            break
+    target = (125+u*67, hi+v*(lo-hi))
     vertex.co = cowl.matrix_world.inverted() @ on_ray(target, world)
+# Tailor the raised-arm sleeve to the source shoulder, preserving its depth.
+sleeve=bpy.data.objects['GEO-Folded sleeve l']
+points=[screen(sleeve.matrix_world@v.co) for v in sleeve.data.vertices]
+x0,x1=min(p.x for p in points),max(p.x for p in points)
+y0,y1=min(p.y for p in points),max(p.y for p in points)
+for vertex in sleeve.data.vertices:
+    world=sleeve.matrix_world@vertex.co;p=screen(world)
+    target=(184+(p.x-x0)/(x1-x0)*15,54+(p.y-y0)/(y1-y0)*23)
+    vertex.co=sleeve.matrix_world.inverted()@on_ray(target,world)
+# Pigment variation remains visible at token scale, supplementing fine bump.
+stone=base.data.materials[0];n=stone.node_tree.nodes;l=stone.node_tree.links
+noise=n.new('ShaderNodeTexNoise');noise.inputs['Scale'].default_value=95
+ramp=n.new('ShaderNodeValToRGB');ramp.color_ramp.elements[0].color=(.71,.51,.28,1);ramp.color_ramp.elements[1].color=(.92,.72,.44,1)
+l.new(noise.outputs['Fac'],ramp.inputs[0]);l.new(ramp.outputs[0],n.get('Principled BSDF').inputs['Base Color'])
 rig['neutral_pose'] = json.dumps({p.name: [list(row) for row in p.matrix_basis] for p in rig.pose.bones})
 rig['registered_targets'] = json.dumps({name: list(rig.pose.bones[name].head) for name in
     ['hand_l', 'hand_r', 'foot_l', 'foot_r', 'lowerarm_l', 'lowerarm_r', 'calf_l', 'calf_r']})

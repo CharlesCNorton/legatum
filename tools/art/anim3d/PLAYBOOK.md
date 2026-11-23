@@ -110,11 +110,11 @@ Run each heavy stage sequentially. Other unit lanes share the same lock; if one 
 ## Infantry / scout
 
 The scout's isolated scripts are in `units/scout/`. Reuse the MPFB installation and
-`env.sh`; the scout adds no external model or motion dependency. Its MPFB body and
+`env.sh`; the scout reuses MPFB and the pinned CC0 Quaternius Standard motion library. Its MPFB body and
 53-bone game-engine rig wear original thick folded linen, a shoulder cowl and olive
 cloak, stitched leather straps/satchel, real buckles, sandals, curls/beard and a forked
 walking staff. The cape uses authored secondary shape keys, **not a claimed cloth
-simulation**. All five actions are authored on the anatomical rig. Masters and all
+simulation**. Idle, walk, hit and death use library actions on the anatomical rig; the staff attack is authored. Masters and all
 raw render sequences remain under `~/LegatumRuns/anim-pilot/masters/scout/`.
 
 The six Blender skills informed rounded edges and overlapping joins; dielectric
@@ -260,3 +260,32 @@ Round one remains in `masters/scout/round1-preserved/`. At 256px face/cloth brus
 pose are much closer, but cowl islands, hat/hand contours, raised sandal contact and
 motion remain below the painting. At 64px the scout reads more clearly, not identically.
 A passing technical check is not permission to write the art PASS marker.
+
+### Scout driver round 2: semantic pigment and open motion
+
+Preserve incoming GPU frames in `masters/scout/driver-r1-gpu/` before changing
+anything. That pass completed at quality 80 / 199,762 bytes; it was not art approval.
+Colour-key masks discarded warm cowl highlights and produced green/gold islands.
+`prepare.py` now uses feathered garment polygons, keeping the original brushwork.
+`register.py` fits the full-depth scarf profile and raised sleeve, turns and lowers the complete
+hat, and lengthens the raised calf 16% with child scale inheritance disabled. The
+ankle moves to the source base edge. Stone pigment now has real multiscale grain.
+Existing generated hidden-side fills, AO/curvature, bevels, straps, solid folds,
+product lights and the single automatically sampled histogram grade are retained.
+
+Motion standard: use proven open human motion. `retarget.py` pins the existing
+Quaternius Standard glTF/bin/licence before importing Idle_Loop, Walk_Loop,
+Hit_Chest and Death01. Rest/reference matrices include bone rolls; locomotion
+legs use anatomical rest, and the carrying arms use the open idle layer. Do not
+patch foot rotations after retargeting. Source toe tuck is retained in swing.
+`motion-*.json` records the actions, source phases, mapping and corrections. The
+staff attack and cloth follow-through/contact keys remain authored, not mocap or
+cloth simulation. All 8/8/10/4/10 delivered samples remain.
+
+Every walk pass renders actual front/top lower legs at 160px per sample to
+`scout-g-feet-check.png`. The check records lateral toe alignment and stance
+residual relative to the measured virtual ground speed of the in-place walk.
+`UNIT=scout SAMPLES=8 tools/art/anim3d/render.sh feet` reproduces it on CPU;
+`gpu.sh` includes it on GPU and refuses stale/CPU diagnostics in its receipt.
+The executable handoff remains `ROUND=2 tools/art/anim3d/units/scout/gpu.sh`.
+The script never grants art PASS: review the rest comparison and all five clips.

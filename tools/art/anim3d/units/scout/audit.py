@@ -3,6 +3,7 @@ import bpy,os,json,hashlib
 from pathlib import Path
 from mathutils import Vector
 R=Path(os.environ['ANIM_ROOT']);M=R/'masters/scout';V=R/'review/3d-v2';source=hashlib.sha256((M/'scout.blend').read_bytes()).hexdigest();results={}
+(V/'scout-audit.json').unlink(missing_ok=True)
 projection=json.loads((M/'projection.json').read_text())
 assert any(p['object']=='GEO-Scout MPFB anatomy' for p in projection),'Skin projection was skipped'
 assert all(p['source_box_256'] is None for p in projection),'Per-region texture stretching returned'
@@ -31,4 +32,4 @@ for clip in ['idle','move','attack','hit','death']:
  if clip=='death':
   sc.frame_set(9);a=matrices(sc);sc.frame_set(10);b=matrices(sc);assert max(abs(x-y) for k in a for x,y in zip(a[k],b[k]))<1e-5,'Death geometry does not hold'
  results[clip]=sampledata
-report={'status':'PASS','bones':53,'stationary_base':True,'body_floor_clearance':True,'nondegenerate_objects':True,'grip_threshold':.12,'samples':results,'limits':'Body minimum Z clears the base; this is not a full cloth/equipment collision solver. Art and detailed sandal contact require visual review.'};(V/'scout-audit.json').write_text(json.dumps(report,indent=2));print(json.dumps(report,indent=2))
+report={'status':'PASS','source_sha256':source,'bones':53,'stationary_base':True,'body_floor_clearance':True,'nondegenerate_objects':True,'grip_threshold':.12,'samples':results,'limits':'Body minimum Z clears the base; this is not a full cloth/equipment collision solver. Art and detailed sandal contact require visual review.'};(V/'scout-audit.json').write_text(json.dumps(report,indent=2));print(json.dumps(report,indent=2))

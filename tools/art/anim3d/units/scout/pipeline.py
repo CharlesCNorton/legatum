@@ -51,3 +51,5 @@ if stage=='refresh':
  render('e-'+clip);run('audit')
 
 if stage=='register':run('register');render('b')
+
+if stage=='feet':run('feet')

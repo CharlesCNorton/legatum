@@ -2,7 +2,7 @@
 import os,json,hashlib
 from pathlib import Path
 from PIL import Image,ImageChops,ImageStat
-R=Path(os.environ.get('ANIM_ROOT',Path.home()/'LegatumRuns/anim-pilot'));M=R/'masters/scout';V=R/'review/3d-v2';O=Path('app/src/assets/units/anim');meta=json.loads((O/'scout.json').read_text());atlas=Image.open(O/'scout.webp').convert('RGBA');report=json.loads((V/'scout-pack.json').read_text());sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
+R=Path(os.environ.get('ANIM_ROOT',Path.home()/'LegatumRuns/anim-pilot'));M=R/'masters/scout';V=R/'review/3d-v2';O=Path('app/src/assets/units/anim');(V/'scout-validation.json').unlink(missing_ok=True);meta=json.loads((O/'scout.json').read_text());atlas=Image.open(O/'scout.webp').convert('RGBA');report=json.loads((V/'scout-pack.json').read_text());sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
 assert report['grade_sha256']==sha(M/'grade.json')
 assert meta['formatVersion']==2 and meta['frame']=={'w':160,'h':160,'ax':80,'ay':142}
 assert (O/'scout.webp').stat().st_size<=200000 and report['quality']>=75
@@ -20,4 +20,4 @@ for row,(clip,n) in enumerate(expected.items()):
  if clip=='death':assert raw[-1].tobytes()==raw[-2].tobytes(),'Death must hold'
  diffs=[sum(ImageStat.Stat(ImageChops.difference(raw[i].convert('RGB'),raw[(i+1)%n].convert('RGB'))).mean) for i in range(n)]
  checks[clip]={'frames':n,'motion_delta_mean':sum(diffs)/n,'loop_seam_delta':diffs[-1] if info['loop'] else None,'margins':'pass'}
-sheet.save(V/'scout-atlas-decoded.png');result={'status':'PASS','bytes':report['bytes'],'quality':report['quality'],'clips':checks,'trim_rectangles':len(rects),'masters':'40 actual 512px and 40 256px','limits':'Image/metadata checks do not prove art parity or full mesh collision freedom.'};(V/'scout-validation.json').write_text(json.dumps(result,indent=2));print(json.dumps(result,indent=2))
+sheet.save(V/'scout-atlas-decoded.png');result={'status':'PASS','atlas_sha256':sha(O/'scout.webp'),'source_sha256':sha(M/'scout.blend'),'bytes':report['bytes'],'quality':report['quality'],'clips':checks,'trim_rectangles':len(rects),'masters':'40 actual 512px and 40 256px','limits':'Image/metadata checks do not prove art parity or full mesh collision freedom.'};(V/'scout-validation.json').write_text(json.dumps(result,indent=2));print(json.dumps(result,indent=2))

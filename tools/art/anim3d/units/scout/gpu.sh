@@ -3,6 +3,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/../../../../.."
 source tools/art/anim3d/env.sh
+unset CLIP
 export ROUND="${ROUND:-2}"
 export UNIT=scout RENDER_ENGINE=CYCLES CYCLES_DEVICE=GPU RESOLUTION=512 SAMPLES=64
 log="$ANIM_ROOT/review/3d-v2/scout-gpu-round${ROUND}.log"
@@ -17,6 +18,7 @@ test -s "$ANIM_ROOT/masters/scout/scout-unpainted.blend"
 tools/art/anim3d/render.sh animate
 tools/art/anim3d/render.sh b
 tools/art/anim3d/render.sh final
+tools/art/anim3d/render.sh feet
 "$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/scout/check_delivery.py
 tools/art/anim3d/render.sh pack
 tools/art/anim3d/render.sh validate

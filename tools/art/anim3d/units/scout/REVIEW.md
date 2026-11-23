@@ -1,61 +1,70 @@
-# Scout round 2 candidate
+# Scout driver round 2
 
-Unapproved art candidate; no PASS marker. The existing painting remains the game token.
+Unapproved art candidate; no `scout-PASS`. The painting remains the game token.
 
-The raised-knee stance, face and cloth brushwork are substantially closer at 256px.
-Silhouette intersection-over-union is 0.7665 versus round one's 0.6299 at alpha >24.
-At 64px the forked staff, ochre tunic, olive cloak and raised scouting pose identify
-the same unit, but the silhouette is still distinguishable. At 256px the cowl has
-unpainted islands, the hat/hand contours differ, the raised sandal floats above the
-rear disc, and the stone and motion remain simpler than the painting. No technical
-check establishes artistic acceptance or complete cloth/equipment collision freedom.
+Opened the incoming GPU rest comparison, all five strips and round-one MP4 frames
+before editing. That GPU pass completed: 40 frames, 199,762 bytes at quality 80.
+The initial surfaces still had broken green/gold chest patches, an oversized exposed
+hat and a floating raised sandal. The hand-keyed walk and collapse were stiff.
+The incoming evidence is retained in `masters/scout/driver-r1-gpu/` outside git.
 
-The physical pose now fits camera rays while preserving skeletal segment lengths;
-arms are lengthened 17% without compounding child scale. Tailored skirt/cape/cowl
-geometry retains depth, weights and real thickness. Grounding moves along the camera
-ray so it does not undo landmark registration. Registered targets initialize combat
-poses. Cloth follow-through/contact remains authored shape keys, not a cloth simulation.
+This round replaces colour-threshold garment masks with feathered spatial masks,
+preserving the painting's warm fold highlights. The full-depth scarf, raised sleeve,
+hat and raised calf are fitted more closely to the source; the calf is lengthened
+16% without compounding foot scale. The stone has pigment grain. Existing generated
+hidden-side fills, actual AO/curvature bakes, bevelled straps, folded thick cloth,
+product lighting and a single automatic rest histogram grade remain. The image is
+fixed UV pigment on real geometry, with no billboard or per-frame reprojection.
 
-One frozen projection replaces the former stretched per-part source boxes. The old
-projection skipped the body because MPFB helper masks changed the evaluated topology;
-freezing the macro mix and applying those masks now permits skin projection. The audit
-requires it. Finished rigid surfaces, existing generated fills, actual AO/curvature,
-beveled straps, hair and product lighting remain. Camera-only painted illumination
-avoids double shading; the original physical BSDF handles indirect rays. One measured
-rest grade is frozen for all clips. Detail crops use full-resolution painting/render
-pixels and disclose their actual source resolution.
+Idle, walk, hit and death now use the pinned CC0 Quaternius Standard actions through
+Blender rest/reference/roll-calibrated constraints. The walk layers source idle arms
+onto the staff-bearing reference, with a forward torso lean and lowered carrying arm.
+Foot rotations are not patched after retargeting. Translation-only stance stabilization
+uses one virtual ground speed for the in-place walk. Swing toe tuck is present in the
+source. The staff attack and cloth follow-through/contact corrections remain authored.
+The front/top feet sheet renders all eight samples and records numerical contact and
+lateral-alignment diagnostics. See `SOURCES.md` and `motion-*.json` in the masters.
 
-All outputs are under `~/LegatumRuns/anim-pilot/masters/scout/` and
-`~/LegatumRuns/anim-pilot/review/3d-v2/scout-*`; original round-one evidence is preserved
-in `masters/scout/round1-preserved/`. Masters stay outside git.
+At 256px the chest paint and rest pose are closer, but the face/raised hand are still
+less convincing, the cowl has a seam, and the figure remains narrower than the painting.
+At 64px it reads as the same scout; the silhouette and leg/hat proportions remain
+distinguishable. Rest silhouette IoU is 0.7811 at alpha >24 (incoming 0.7665), which
+is only a diagnostic. The library walk/death are better; attack is still restrained,
+and folding cloth reveals texture stretching. This does not meet painting parity or
+establish five artistically clean clips. No PASS marker is justified.
 
-The driver's single executable command, from the repo root, is:
+The CPU checks caught top clipping first in the staff, then in the slung hat during
+one walk sample. The carrying reference and physical hat placement were corrected;
+validation thresholds were retained. Validation now invalidates old success records,
+and the GPU receipt binds the current atlas, source, foot renders and video.
+
+The lead runs this executable from the repository root:
 
 ```sh
 ROUND=2 tools/art/anim3d/units/scout/gpu.sh
 ```
 
-It rebuilds all five clip masters, renders every stage with Cycles Metal GPU64/512,
-derives 256px gallery copies, audits the rig/projection, checks actual GPU provenance,
-packs the trimmed 160px atlas, validates it and writes the eight-second five-clip MP4
-from decoded atlas pixels. The output is H.264/yuv420p, 1600×348, 240 frames, 2× on cream.
-Its retained transcript and success-only JSON receipt distinguish a completed GPU pass
-from an absent/failed one. It never writes the art PASS marker. Missing-input rejection
-and CPU-master rejection were exercised; actual Metal rendering is host-only.
+It rebuilds all five clips, renders b/c/details/d/e stages with Cycles Metal GPU64/512,
+keeps real 512px masters and derived 256px frames, audits rig/projection, renders the
+front/top feet check, packs 40 trimmed 160px samples at quality >=75 / <=200,000 bytes,
+validates, and encodes the decoded atlas into the eight-second five-clip MP4. Video is
+H.264/yuv420p, 1600x348, 240 frames, 2x scale on cream. The script keeps a transcript,
+writes a success receipt only after checks pass, and never writes art PASS. The new
+GPU pass still requires host execution and visual review.
 
-The atlas retains the existing scout `formatVersion:2` contract with `trims` rectangles
-and offsets, all 8/8/10/4/10 samples and the quality >=75 / 200,000-byte cap. This lane
-does not activate the atlas in the game. The lead still needs to review fresh GPU art.
+All masters and review artifacts stay under `~/LegatumRuns/anim-pilot/`; no masters
+are committed, no game loader is changed, and no push, PR or merge is performed.
 
-Final CPU validation: all 40 frames and trim rectangles pass source hashes, reconstructed
-alpha, timing, motion, image margins and held-death checks. The atlas is **199,216 bytes
-at quality 80**, 1165×743, with 32 alpha levels. All 40 samples have actual 512px masters
-and derived 256px gallery copies. The rig/projection audit passes; body minima are
-Z=0.100 throughout. Twelve Python files and three shell scripts pass syntax checks;
-GPU missing-input and CPU-master rejection checks pass. The decoded MP4 is verified
-H.264/yuv420p, 1600×348, 240 frames/eight seconds. All five strips were inspected.
-Motion remains stiff and contact is not fully solved; no claim of five clean clips.
+Final CPU validation passes all 40 samples and trim rectangles: current source hashes,
+reconstructed alpha, timing, motion, margins and held death. Actual 512px masters
+and 256px copies are present. Atlas: **180,016 bytes at quality 75**, 1165x740.
+Rig audit: 53 bones, stationary base, body minimum Z=0.100, staff grip distance <=0.0426m.
+Foot stance residual is 1.94e-7m relative to virtual ground; lateral toe offset <=0.00306m.
+The decoded movie and contact sheet were opened; FFprobe verifies H.264/yuv420p,
+1600x348, 240 frames/eight seconds. Fifteen Python and three shell syntax checks,
+missing-master/no-receipt rejection, CPU-master receipt rejection and whitespace checks
+pass. These are CPU results; the new host GPU pass is outstanding.
 
-Git could not create this worktree's `index.lock`; changes remain uncommitted for
-the runner, with the requested co-author trailer. Whitespace checks pass. No
-commit-based repository gate result is claimed from stale HEAD. No push or merge.
+Git could not create lane-13/index.lock; leave these changes for the runner to commit
+with the requested gpt-6-astra co-author trailer. No commit-based gate is claimed
+against unchanged HEAD. origin/master is already an ancestor.

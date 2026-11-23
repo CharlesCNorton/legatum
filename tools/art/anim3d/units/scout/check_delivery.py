@@ -27,6 +27,15 @@ for stage, count in stages.items():
     for i in range(count):
         assert Image.open(folder / f'{i:02}.png').size == (512, 512)
         assert Image.open(M / '256' / stage / f'{i:02}.png').size == (256, 256)
+feet=json.loads((M/'feet.json').read_text())
+assert feet['source_sha256']==sha(M/'clips/move.blend') and feet['device']=='GPU','Stale/CPU feet diagnostic'
+assert len(feet['files'])==16
+assert feet['stance_max_residual_m']<.005 and feet['toe_lateral_max_m']<.02
+for item in feet['files']:assert sha(M/item['path'])==item['sha256']
+assert (V/'scout-g-feet-check.png').is_file()
+for clip in ['idle','move','hit','death']:
+    motion=json.loads((M/('motion-'+clip+'.json')).read_text())
+    assert motion['license']=='CC0-1.0' and motion['provider']=='Quaternius Universal Animation Library Standard'
 if '--receipt' in sys.argv:
     validation = json.loads((V / 'scout-validation.json').read_text())
     audit = json.loads((V / 'scout-audit.json').read_text())
@@ -35,6 +44,8 @@ if '--receipt' in sys.argv:
     assert movie.stat().st_size > 0 and movie.with_suffix('.json').exists()
     video = json.loads(movie.with_suffix('.json').read_text())
     atlas = Path('app/src/assets/units/anim/scout.webp')
+    assert audit['source_sha256']==validation['source_sha256']==sha(M/'scout.blend')
+    assert validation['atlas_sha256']==sha(atlas)
     assert video['atlas_sha256'] == sha(atlas)
     assert video['metadata_sha256'] == sha(atlas.with_suffix('.json'))
     (V / f"scout-gpu-round{os.environ['ROUND']}.json").write_text(json.dumps({
