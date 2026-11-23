@@ -76,3 +76,4 @@ Review e-idle: 512px CYCLES/GPU, 64 samples; 8 actual frames.
 Review e-move: 512px CYCLES/GPU, 64 samples; 8 actual frames.
 Review e-attack: 512px CYCLES/GPU, 64 samples; 10 actual frames.
 Review e-hit: 512px CYCLES/GPU, 64 samples; 4 actual frames.
+Review e-death: 512px CYCLES/GPU, 64 samples; 10 actual frames.
