@@ -6,3 +6,7 @@
 - Reused MIT jet-bomber pipeline helpers, read with `git show astra/unit-anim-3d-jet-bomber:tools/art/anim3d/units/jet-bomber/<file>`. Vehicles family chapter read from `astra/unit-anim-3d-vehicles`. New jet fighter model, rigid flight rig and clips are original MIT source; rendered artwork CC BY 4.0.
 
 No humans, riders or animals appear, so CMU/Quaternius gait retargeting does not apply. Mechanical bank/flight, gun run, hit and crash curves are authored. The top/front move-cycle review replaces the feet check, with the same `jet-fighter-g-feet-check.png` filename for the driver. Input hashes are pinned in `inputs.json`. Masters and downloaded assets remain outside git.
+
+## Driver round 2, 2026-11-23
+
+Reuses the unchanged source painting and generated silver fill above; no new download or image service. The far wing receives a conventional span/chord unwrap of this aircraft's existing near-wing panel painting, mixed with the generated fill on unseen faces. Original registered closed intake shell, canopy/wing refinements, impact crease and delivery changes: MIT scripts / CC BY 4.0 rendered art. Source hashes remain in inputs.json; scene and bake hashes are resealed by the build. Incoming GPU evidence retained under masters/jet-fighter/driver-r1-gpu/.

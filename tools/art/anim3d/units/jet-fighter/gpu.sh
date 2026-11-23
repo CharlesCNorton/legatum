@@ -4,13 +4,15 @@ set -euo pipefail
 source tools/art/anim3d/env.sh
 unit=tools/art/anim3d/units/jet-fighter
 export RENDER_ENGINE=CYCLES CYCLES_DEVICE=GPU RESOLUTION=512 REQUIRE_GPU=1
-export SAMPLES="${SAMPLES:-96}" ROUND="${ROUND:-1}"
+export SAMPLES="${SAMPLES:-96}" ROUND="${ROUND:-2}"
 status="$REVIEW/jet-fighter-gpu-status.txt"
 stage=preflight
+printf "RUNNING round %s stage preflight\n" "$ROUND" > "$status"
 trap 'printf "FAILED round %s stage %s\n" "$ROUND" "$stage" > "$status"' ERR
 "$ANIM_ROOT/venv/bin/python" "$unit/preflight.py"
 CYCLES_DEVICE=CPU blender -b --disable-autoexec --python-exit-code 1 --python "$unit/devices.py"
 for stage in b c d e-idle e-move e-attack e-hit e-death g; do
+  printf "RUNNING round %s stage %s\n" "$ROUND" "$stage" > "$status"
   "$unit/render.sh" "$stage"
   "$ANIM_ROOT/venv/bin/python" "$unit/deliver.py" "$stage"
 done

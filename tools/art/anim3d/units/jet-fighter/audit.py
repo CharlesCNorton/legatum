@@ -11,7 +11,7 @@ for o in meshes:
     assert all(abs(s)>.001 for s in o.scale),o.name
     if any(n in o.name for n in ('fuselage','wing','vertical fin','intake rim')):
         bm=bmesh.new();bm.from_mesh(o.data);assert all(e.is_manifold for e in bm.edges),o.name
-        assert abs(bm.calc_volume())>1e-6,o.name;solid.append(o.name);bm.free()
+        assert bm.calc_volume(signed=True)>1e-6,(o.name,'inward or degenerate shell');solid.append(o.name);bm.free()
 assert len(list((M/'textures/baked').glob('*.png')))==6
 clips={'idle':8,'move':8,'attack':10,'hit':4,'death':10};motion={}
 for clip,count in clips.items():

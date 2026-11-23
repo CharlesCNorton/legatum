@@ -15,7 +15,7 @@ def composite(im):
 
 def grade_luts(im):
     def quant(img):
-        ps=[p for p in img.getdata() if p[3]>240]
+        ps=[p for p in img.get_flattened_data() if p[3]>240]
         return [[sorted(p[c] for p in ps)[int((len(ps)-1)*q)] for q in (.1,.5,.9)] for c in range(3)]
     src,dst=quant(im),quant(REF);tables=[]
     for a,b in zip(src,dst):

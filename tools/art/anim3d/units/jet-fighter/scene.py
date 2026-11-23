@@ -19,7 +19,7 @@ sc.view_settings.view_transform='Standard';sc.view_settings.look='None'
 sc.world.color=(.15,.15,.15);sc.world.use_nodes=True;sc.world.node_tree.nodes['Background'].inputs['Strength'].default_value=.35
 cam=bpy.data.objects.new('CAM-painting',bpy.data.cameras.new('CAM-painting'));bpy.context.collection.objects.link(cam);cam.location=FRONT*15;cam.rotation_euler=(-cam.location).to_track_quat('-Z','Y').to_euler();cam.data.type='ORTHO';cam.data.ortho_scale=S;sc.camera=cam
 sc.render.resolution_x=sc.render.resolution_y=256;sc.render.resolution_percentage=100
-for name,loc,power,color,size in [('key',(-3,-5,7),850,(1,.89,.73),4),('fill',(4,-4,3),230,(.85,.91,1),5),('rim',(0,5,5),600,(.78,.87,1),3)]:
+for name,loc,power,color,size in [('key',(-3,-5,7),850,(1,.89,.73),4),('fill',(4,-4,3),230,(.85,.91,1),5),('rim',(0,5,5),420,(.78,.87,1),3)]:
     o=bpy.data.objects.new('LGT-'+name,bpy.data.lights.new(name,'AREA'));bpy.context.collection.objects.link(o);o.location=loc;o.rotation_euler=(-o.location).to_track_quat('-Z','Y').to_euler();o.data.energy=power;o.data.color=color;o.data.shape='DISK';o.data.size=size
 
 def material(name,color,metal=0,rough=.65):
@@ -83,23 +83,33 @@ def solid_profile(name,coords,depth,thickness,mat,parent=True):
 # Full-depth aluminium airframe registered to this painting's source pixels.
 body=loft('fuselage',[(202,482,-.35,24,.16),(210,484,-.34,41,.21),(235,487,-.31,47,.25),(315,483,-.23,49,.29),(435,448,-.12,86,.35),(580,426,0,90,.39),(730,398,.16,105,.42),(880,361,.29,98,.44),(1020,316,.42,96,.46),(1129,280,.53,84,.43),(1157,260,.56,71,.40)],olive)
 near=airfoil('near wing',[((792,388),(867,425),.62,.075),((623,433),(795,479),1.0,.07),((479,488),(655,557),1.42,.06),((320,616),(449,643),1.9,.045),((146,742),(232,733),2.28,.018),((130,757),(143,755),2.30,.008)],olive)
-far=airfoil('far wing',[((631,330),(806,279),-.3,.065),((643,233),(730,221),-3.10,.030),((647,233),(710,227),-3.15,.012)],olive)
+far=airfoil('far wing',[((631,330),(806,279),-.3,.065),((638,278),(770,248),-1.35,.045),((643,233),(730,221),-2.28,.025),((647,233),(710,227),-2.32,.012)],olive)
 solid_profile('vertical fin',[(231,440),(152,334),(50,170),(78,160),(107,158),(346,312),(432,359),(411,397)],-.42,.10,olive)
 airfoil('near tailplane',[((278,315),(309,333),-.08,.04),((127,370),(182,374),.40,.028),((8,418),(38,414),.80,.01)],olive)
 airfoil('far tailplane',[((348,309),(385,331),-.62,.03),((446,284),(453,286),-1.80,.009)],olive)
 # Bubble canopy is a smooth watertight loft with a raised aluminium frame.
-loft('canopy',[(773,278,.41,2,.05),(797,261,.43,21,.16),(847,237,.44,32,.23),(902,218,.45,31,.24),(944,211,.44,26,.21),(982,224,.44,22,.19),(1026,234,.42,10,.12),(1043,239,.41,2,.04)],glass)
+loft('canopy',[(773,278,.41,2,.05),(797,261,.43,21,.16),(847,237,.44,32,.23),(902,218,.45,36,.24),(944,211,.44,29,.21),(982,224,.44,22,.19),(1026,234,.42,10,.12),(1043,239,.41,2,.04)],glass)
 for pts in [[(776,276),(817,242),(864,210),(917,189),(954,193),(1001,213),(1035,234)],[(954,193),(945,224),(939,252)],[(777,278),(849,277),(925,258),(989,244),(1039,234)]]:
-    tube('canopy rim',[p(x,y,.67) for x,y in pts],.006,silver)
-# Ring-section mesh: front lip, inner tunnel and back wall are all physical.
-center=p(1206,261,.70);axis=(RIGHT*.84+FRONT*.50+UP*.20).normalized();v=(UP-axis*UP.dot(axis)).normalized();w=axis.cross(v).normalized();rad=.325
-verts=[];N=64
-for offset,radius in [(-.29,rad*1.04),(-.045,rad),(.015,rad*.97),(.025,rad*.81),(-.23,rad*.77)]:
-    for j in range(N):verts.append(center+axis*offset+(w*math.cos(j*math.tau/N)+v*math.sin(j*math.tau/N))*radius)
-faces=[(k*N+j,k*N+(j+1)%N,((k+1)%5)*N+(j+1)%N,((k+1)%5)*N+j) for k in range(5) for j in range(N)]
-intake=mesh('nose intake rim',verts,faces,silver);bevel=intake.modifiers.new('Rolled polished lip','BEVEL');bevel.width=.006;bevel.segments=3
-# Deep dark intake well seals the back, without a black flat card.
-well=ellipsoid('intake well',center-axis*.24,(.15,.18,.27),black)
+    tube('canopy rim',[p(x,y,.68) for x,y in pts],.0035,silver)
+# Registered circular-section intake shell. The front ellipse is tilted in the
+# painting; the rear outer ring flares into the fuselage. Dense axial stations
+# preserve the frozen pigment instead of interpolating visibility across a cup.
+center=p(1213,263,.80)
+axis=(RIGHT*.877+FRONT*.45+UP*.17).normalized()
+v=(UP-axis*UP.dot(axis)).normalized();w=axis.cross(v).normalized()
+verts=[];N=96
+rings=[(-.23,.378),(-.19,.363),(-.07,.310),(0,.285),
+       (.003,.257),(-.07,.253),(-.20,.245),(-.33,.240)]
+for offset,radius in rings:
+    for j in range(N):
+        t=math.tau*j/N
+        verts.append(center+axis*offset+(w*math.cos(t)+v*math.sin(t))*radius)
+faces=[(k*N+j,k*N+(j+1)%N,((k+1)%len(rings))*N+(j+1)%N,((k+1)%len(rings))*N+j)
+       for k in range(len(rings)) for j in range(N)]
+intake=mesh('nose intake rim',verts,faces,silver)
+# Rounded termination deep inside the tube; the complete shell stays coaxial
+# under bank and nose-view inspection, rather than only fitting its silhouette.
+well=ellipsoid('intake well',center-axis*.35,(.10,.07,.23),black)
 # Actual narrow panel seams / rivet relief along key fuselage stations.
 for x,y,r,dep in [(369,474,57,.31),(587,421,73,.39),(923,318,85,.44),(1053,283,84,.46)]:
     pts=[p(x,y+r*math.sin(t),dep*math.cos(t)+(.1 if x<600 else .32)) for t in [j*math.pi/24 for j in range(-9,11)]]
@@ -124,8 +134,23 @@ bpy.context.view_layer.update()
 flashmat=material('MAT-warm cannon flash',(.95,.61,.20),0,.5)
 bs=flashmat.node_tree.nodes.get('Principled BSDF');bs.inputs['Emission Color'].default_value=(1,.45,.08,1);bs.inputs['Emission Strength'].default_value=.6
 for i in range(2):
-    ob=tube('flash-'+str(i),[p(1040+i*38,376-i*10,.78),p(1112+i*38,361-i*10,.82)],.014,flashmat,False)
+    ob=tube('flash-'+str(i),[p(1040+i*38,376-i*10,.78),p(1170+i*38,349-i*10,.90)],.022,flashmat,False)
     ob.parent=root;ob.matrix_parent_inverse=root.matrix_world.inverted();ob.hide_render=True
+# Reuse this aircraft's panel pattern on the opposite wing. This is a conventional
+# span/chord unwrap, separate from the exact rest-camera projection. It prevents
+# the hidden surface becoming a blank rectangle as the aircraft banks.
+winguv=far.data.uv_layers.new(name='WingPanels')
+wingstations=[((792,394),(846,430)),((500,493),(649,548)),
+              ((180,720),(245,722)),((148,744),(172,742))]
+for loop in far.data.loops:
+    station,j=divmod(loop.vertex_index,32);u=(1-math.cos(math.tau*j/32))/2
+    a,b=wingstations[station];x=a[0]*(1-u)+b[0]*u;y=a[1]*(1-u)+b[1]*u
+    q=((x-reg['box'][0])*reg['scale']+reg['offset'][0])/1024
+    r=((y-reg['box'][1])*reg['scale']+reg['offset'][1])/1024
+    winguv.data[loop.index].uv=(q,1-r)
+# Visibility weights need interior samples on this partly occluded wing, not
+# just its silhouette vertices: otherwise hidden fill bleeds across the rest view.
+sub=far.modifiers.new('Projection visibility samples','SUBSURF');sub.subdivision_type='SIMPLE';sub.levels=2
 # Finish modifiers BEFORE projection so UVs register the actual rendered surface.
 for ob in list(bpy.data.objects):
     if ob.type=='CURVE':
@@ -133,6 +158,12 @@ for ob in list(bpy.data.objects):
     if ob.type=='MESH':
         bpy.context.view_layer.objects.active=ob
         for mod in list(ob.modifiers):bpy.ops.object.modifier_apply(modifier=mod.name)
+        # Mirrored span order can leave a consistently inward shell even after
+        # recalc_face_normals. Fix signed volume before the facing-mask bake.
+        bm=bmesh.new();bm.from_mesh(ob.data)
+        if all(e.is_manifold for e in bm.edges) and bm.calc_volume(signed=True)<0:
+            bmesh.ops.reverse_faces(bm,faces=list(bm.faces));bm.to_mesh(ob.data);ob.data.update()
+        bm.free()
 sc['unit']='jet-fighter';sc['projection_method']='frozen rest UV on finished closed volumes';sc['base_hex']='#E9CFA0'
 bpy.ops.wm.save_as_mainfile(filepath=str(M/'plain.blend'))
 texture=bpy.data.images.load(str(A/'projection.png'));fill=bpy.data.images.load(str(A/'painted-fill.png'))
@@ -147,19 +178,35 @@ for ob in list(bpy.data.objects):
         q=world_to_camera_view(sc,cam,point);uv.data[loop.index].uv=(q.x,q.y)
         hit,loc,_,_,hitob,_=sc.ray_cast(deps,point+FRONT*20,-FRONT,distance=20.02)
         visible=hit and (loc-point).length<.025
-        w=max(0,min(1,((normal@vert.normal).normalized().dot(FRONT)+.06)/.15)) if visible else 0
+        w=max(0,min(1,((normal@vert.normal).normalized().dot(FRONT)+.12)/.12)) if visible else 0
         weights.data[loop.index].color=(w,w,w,1)
     old=ob.data.materials[0];mat=old.copy();mat.name=ob.name+' painted';ob.data.materials[0]=mat;n=mat.node_tree.nodes;l=mat.node_tree.links;bs=n.get('Principled BSDF')
     uvnode=n.new('ShaderNodeUVMap');uvnode.uv_map='RestPainting';im=n.new('ShaderNodeTexImage');im.image=texture;im.extension='CLIP';l.new(uvnode.outputs[0],im.inputs[0])
     tx=n.new('ShaderNodeTexImage');tx.image=fill;tx.projection='BOX';tx.projection_blend=.3;coord=n.new('ShaderNodeTexCoord');l.new(coord.outputs['Generated'],tx.inputs[0])
     facing=n.new('ShaderNodeVertexColor');facing.layer_name='Facing';mult=n.new('ShaderNodeMath');mult.operation='MULTIPLY';l.new(facing.outputs['Color'],mult.inputs[0]);l.new(im.outputs['Alpha'],mult.inputs[1])
     mix=n.new('ShaderNodeMixRGB');l.new(mult.outputs[0],mix.inputs[0]);mix.inputs[1].default_value=old.diffuse_color
-    if old==olive:l.new(tx.outputs['Color'],mix.inputs[1])
+    if old==olive:
+        # Match hidden aluminium to the painting's cool silver mids; generated
+        # brushwork remains visible, with a broad softbox response rather than
+        # the white rectangle previously exposed on the far wing during death.
+        tint=n.new('ShaderNodeMixRGB');tint.inputs[0].default_value=.70
+        l.new(tx.outputs['Color'],tint.inputs[1]);tint.inputs[2].default_value=(.32,.39,.43,1)
+        l.new(tint.outputs[0],mix.inputs[1]);bs.inputs['Roughness'].default_value=.66
+        if ob==far:
+            paneluv=n.new('ShaderNodeUVMap');paneluv.uv_map='WingPanels'
+            panel=n.new('ShaderNodeTexImage');panel.image=texture;l.new(paneluv.outputs[0],panel.inputs[0])
+            panelmix=n.new('ShaderNodeMixRGB');panelmix.inputs[0].default_value=.84
+            l.new(tint.outputs[0],panelmix.inputs[1]);l.new(panel.outputs['Color'],panelmix.inputs[2])
+            l.new(panelmix.outputs[0],mix.inputs[1])
     l.new(im.outputs['Color'],mix.inputs[2]);l.new(mix.outputs[0],bs.inputs['Base Color'])
     # Camera-only painted pigment avoids double lighting, while non-camera rays
     # still interact with the physical material and cast real contact shadows.
     pigment=n.new('ShaderNodeEmission');l.new(mix.outputs[0],pigment.inputs['Color'])
-    camera=n.new('ShaderNodeLightPath');strength=n.new('ShaderNodeMath');strength.operation='MULTIPLY';strength.inputs[1].default_value=.97;l.new(mult.outputs[0],strength.inputs[0])
+    camera=n.new('ShaderNodeLightPath');strength=n.new('ShaderNodeMath');strength.operation='MULTIPLY';strength.inputs[1].default_value=.99;l.new(mult.outputs[0],strength.inputs[0])
+    if old==olive:
+        hidden=n.new('ShaderNodeMapRange');hidden.inputs['From Min'].default_value=0;hidden.inputs['From Max'].default_value=1
+        hidden.inputs['To Min'].default_value=.58;hidden.inputs['To Max'].default_value=.99
+        l.new(mult.outputs[0],hidden.inputs['Value']);l.new(hidden.outputs[0],strength.inputs[0]);strength.inputs[1].default_value=1
     gate=n.new('ShaderNodeMath');gate.operation='MULTIPLY';l.new(strength.outputs[0],gate.inputs[0]);l.new(camera.outputs['Is Camera Ray'],gate.inputs[1])
     shader=n.new('ShaderNodeMixShader');l.new(gate.outputs[0],shader.inputs[0]);l.new(bs.outputs[0],shader.inputs[1]);l.new(pigment.outputs[0],shader.inputs[2]);l.new(shader.outputs[0],n.get('Material Output').inputs['Surface'])
 bpy.ops.file.pack_all();bpy.ops.wm.save_as_mainfile(filepath=str(M/'jet-fighter.blend'))

@@ -8,7 +8,7 @@ CPU round:
 tools/art/anim3d/units/jet-fighter/render.sh build
 source tools/art/anim3d/env.sh
 for stage in b c d e-idle e-move e-attack e-hit e-death g; do
-  CYCLES_DEVICE=CPU RESOLUTION=256 SAMPLES=8 tools/art/anim3d/units/jet-fighter/render.sh "$stage"
+  CYCLES_DEVICE=CPU RESOLUTION=256 SAMPLES=16 tools/art/anim3d/units/jet-fighter/render.sh "$stage"
   "$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/jet-fighter/deliver.py "$stage"
 done
 blender -b --disable-autoexec --python-exit-code 1 --python tools/art/anim3d/units/jet-fighter/audit.py
@@ -20,7 +20,7 @@ The build command requires the original source and painted fill recorded in SOUR
 Host handoff, no arguments:
 
 ```sh
-ROUND=1 tools/art/anim3d/units/jet-fighter/gpu.sh
+ROUND=2 tools/art/anim3d/units/jet-fighter/gpu.sh
 ```
 
 The host script requires Metal, renders every review stage and all 40 frames at native 512px, exports 512/256 masters, grades once from the rest pose, packs/validates a trimmed 160px atlas at quality >=75 and <=200,000 bytes, and writes the eight-second five-clip H.264/yuv420p round video. It fails rather than silently falling back to CPU. CPU images are previews and never counted as 512px masters.

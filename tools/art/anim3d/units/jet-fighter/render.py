@@ -42,8 +42,13 @@ def animate(sc,clip):
         wing=bpy.data.objects['GEO-near wing'];wing.shape_key_add(name='Basis')
         damage=wing.shape_key_add(name='Impact folded wing')
         for v,k in zip(wing.data.vertices,damage.data):
-            weight=max(0,min(1,-v.co.x/2.3))**1.4
-            k.co+=UP*(1.65*weight)+RIGHT*(.58*weight)
+            # A fixed crease beyond the wing root: outer panels rotate as a
+            # rigid piece, with only a narrow transition at the impact line.
+            hinge=RIGHT*(-1.25)+UP*.02+FRONT*1.18
+            distance=max(0,-v.co.x-1.25)
+            blend=min(1,distance/.14)
+            fold=Quaternion((RIGHT*.63+UP*.32+FRONT*.70).normalized(),-.90)
+            k.co=v.co.lerp(hinge+fold@(v.co-hinge),blend)
     for j in range(n+1 if loop else n):
         t=j/n if loop else j/(n-1);phase=math.tau*t;sc.frame_set(j+1)
         root.location=rest.copy();bank=0;pitch=0
