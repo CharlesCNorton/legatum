@@ -1,0 +1,5 @@
+Create a square four-quadrant texture atlas for a premium hand-painted historical war elephant miniature. Flat albedo texture only, no objects, text, borders or lighting gradients. Upper left: warm grey elephant skin, dense fine intersecting wrinkles, ochre rubbed highlights in grey folds, sophisticated oil brushwork. Upper right: faded muted cinnabar red quilted woven textile, small diamond stitches and subdued antique gold thread. Lower left: warm worn honey-brown timber, close fine vertical grain, tiny scuffs. Lower right: warm pale ivory coarse linen, fine weave and subtle painted brushwork. Quadrants fill exactly one quarter each edge to edge. Restrained realistic pigment, fine detailed texture rather than cartoon, no national symbols.
+
+Generated with the built-in imagegen tool, 2026-11-22.
+Output: 01a20671-4f30-7850-a293-8e2824c58d80/exec-232b5181-0fa3-4d4d-beb2-9237ebf1b0ee.png
+Project artwork, CC BY 4.0. External master: assets/war-elephant/painted-fills.png.

@@ -106,3 +106,29 @@ tools/art/anim3d/render.sh audit
 ```
 
 Run each heavy stage sequentially. Other unit lanes share the same lock; if one owns it, let its job finish. Then review both sizes and motion, including the attack's grip/clearance, cloth, feet and held death, and run the project's browser/art gate against the committed branch. Keep the painting in the game until the lead approves the candidate.
+
+## War Elephant — original mounted-family candidate
+
+The unit-specific pipeline is documented in
+[`units/war-elephant/README.md`](units/war-elephant/README.md). It uses original
+volumetric elephant geometry, a 20-bone elephant rig and two CC0 MPFB humans,
+with the project painting projected onto real surfaces. Generated painted fills
+cover unseen surfaces; bevelled timber, thick quilted cloth and sculpted anatomy
+provide form. The camera and stationary cream base target the painting, including
+its warm #E9CFA0 stone. A single rest-derived grade preserves temporal colour.
+Review sheets include the original, render, half split and 50 percent crossfade.
+Technical validation does not establish painting parity.
+
+This unit uses the newer 160 px **trimmed v2** atlas contract: `frame` is the
+logical canvas and anchor; each clip's `rects` array stores atlas `x,y,w,h` and
+logical-canvas `ox,oy` per frame. See the unit README for reconstruction. All 40
+frames remain, WebP quality is at least 75 and the atlas is at most 200,000 bytes.
+Keep raw 512 px masters and graded 256 px gallery frames outside git. The existing
+fixed-cell runtime cannot sample this contract without a trim-aware loader;
+this branch does not wire the candidate into the game.
+
+The lead's `ROUND=1 tools/art/anim3d/units/war-elephant/gpu.sh` rerenders on the
+serialized host GPU, packs, validates and creates `war-elephant-round1.mp4`.
+It uses the shared Blender gate, background mode and disabled autoexec. See the
+unit README for short CPU stages and the full reproduction order. No PASS marker
+is warranted until the rest comparison and all five clips meet the painting bar.

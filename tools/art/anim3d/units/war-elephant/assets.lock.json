@@ -1,0 +1,11 @@
+{
+  "painting-source.png": {
+    "sha256": "ba648e2a651130dce9f6668f2bddc818c9ac3cb4f1764c967541dd8ad55ced82",
+    "licence": "CC-BY-4.0",
+    "url": "https://pub-fb5c281dd12d4ea4bbd38d657cdeb907.r2.dev/app/src/assets/units/war-elephant-source.png"
+  },
+  "painted-fills.png": {
+    "sha256": "bec1ded82925678184d5d97092f1a014db4eee7903642ccede92aede43f4bfc5",
+    "licence": "CC-BY-4.0"
+  }
+}
