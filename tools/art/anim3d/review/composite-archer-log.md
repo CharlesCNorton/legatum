@@ -89,3 +89,12 @@
 - Saved e-hit review, raw 512 px and graded sets at native resolution or smaller; CYCLES CPU 8 samples.
 - Saved e-death review, raw 512 px and graded sets at native resolution or smaller; CYCLES CPU 8 samples.
 - Saved c review, raw 256 px and graded sets at native resolution or smaller; CYCLES CPU 8 samples.
+- Unrestricted Quaternius crouch/fall preview rejected: neutral kneeling legs splayed and curled. Retained reference/roll-calibrated source motion with18% crouch deltas; death uses30% source torso/head reaction plus existing floor supports and bow release. Hit now recovers to neutral. This is constrained open-motion adaptation, not unmodified capture; no foot-rotation patches.
+- Camera recalibration to16deg retains a real circular disc and rigidly changes the registration basis before inverse skinning. Rest alpha IoU improved from.79318 supplied GPU to.82296 CPU256; this metric is silhouette only, not artistic approval. Boot ghosts removed by restricting stone projection to lower rim.
+- First new full512 CPU pass caught move frame3 boot penetration42.19mm: calf-weighted thick boot vertices escaped the foot-bone-only correction. Added full evaluated-shell root support, retaining12mm audit tolerance; rerun pending. No thresholds weakened.
+- Saved c review, raw 512 px and graded sets at native resolution or smaller; CYCLES CPU 8 samples.
+- Saved e-idle review, raw 512 px and graded sets at native resolution or smaller; CYCLES CPU 8 samples.
+- Saved e-move review, raw 512 px and graded sets at native resolution or smaller; CYCLES CPU 8 samples.
+- Saved e-attack review, raw 512 px and graded sets at native resolution or smaller; CYCLES CPU 8 samples.
+- Saved e-hit review, raw 512 px and graded sets at native resolution or smaller; CYCLES CPU 8 samples.
+- Saved e-death review, raw 512 px and graded sets at native resolution or smaller; CYCLES CPU 8 samples.
