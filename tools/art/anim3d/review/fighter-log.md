@@ -47,3 +47,7 @@
 - GPU entry point is executable; missing-master preflight fails explicitly before Blender and CPU256 is rejected by its GPU512 provenance gate. Actual Metal pass remains host-only, not verified here. Repository art gate failed in render-sets.mjs locally; existing matrix-multiply/no-space hygiene false positives were corrected in unit scripts.
 - Final visual verdict: at 256, canopy, camera-only paint, propeller tips and cream stone improved; propeller shape, wing brushwork and base shading are still distinguishable from the painting. At 64, same unit identity/composition, still not indistinguishable. Silhouette IoU .8471 is diagnostic only. No fighter-PASS. Lead: ROUND=2 tools/art/anim3d/units/fighter/gpu.sh; then inspect actual GPU frames and motion.
 - Git add/commit denied index.lock by sandbox; changes left for runner, no push. Intended commit: Refine fighter painted surfaces and verify animation delivery; final trailer Co-Authored-By: gpt-6-astra (Codex) <noreply@openai.com>. HEAD-based hygiene still sees old committed operator false positives; direct repository hygiene line checks over all 12 changed text files pass with zero findings. Public-claims HEAD check passes. Full browser art gate remains unverified.
+- Rendered b: 512px, CYCLES; review published.
+- Rendered c: 512px, CYCLES; review published.
+- Rendered e-idle: 512px, CYCLES; review published.
+- Rendered e-move: 512px, CYCLES; review published.

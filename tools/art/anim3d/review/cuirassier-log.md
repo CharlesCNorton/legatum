@@ -83,3 +83,12 @@
 - Rider now uses pinned CC0 UAL Sitting_Idle_Loop/Hit_Chest/Death01 torso/head deltas with reference/roll compensation; arms remain pistol/rein constrained, pelvis/legs saddle constrained. Removed hand-authored front-leg death bends; source foot rotations retained.
 - Measured old terminal torso-to-lowest-hoof gap 0.572 m. Evaluated whole-mount contact orientation before choosing -30 degree roll/+15 degree pitch, eased into the source fall. Preview now settles close to stone; audit adds a terminal gap <0.20 m check. Rider/horse intersections and backfill still need honest visual judgment.
 - Four delivery regression tests passed in 5.087 s; Bash syntax and whitespace passed before final full CPU rebuild.
+- Emitted b: 3 frames, 256 px CYCLES/CPU, 8 samples.
+- Emitted c: 1 frames, 256 px CYCLES/CPU, 8 samples.
+- Emitted c-details: 1 frames, 256 px CYCLES/CPU, 8 samples.
+- Emitted d: 4 frames, 256 px CYCLES/CPU, 8 samples.
+- Emitted e-idle: 8 frames, 256 px CYCLES/CPU, 8 samples.
+- Emitted e-move: 8 frames, 256 px CYCLES/CPU, 8 samples.
+- Emitted e-attack: 10 frames, 256 px CYCLES/CPU, 8 samples.
+- Emitted e-hit: 4 frames, 256 px CYCLES/CPU, 8 samples.
+- Emitted e-death: 10 frames, 256 px CYCLES/CPU, 8 samples.
