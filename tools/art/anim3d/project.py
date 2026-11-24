@@ -252,8 +252,8 @@ forward = cam.to_quaternion() @ Vector((0, 0, -1))
 scale = sc.camera.data.ortho_scale
 origin = cam.translation + right*((94/256-.5)*scale) + up*((.5-220/256)*scale)
 floor = origin + forward*((.105-origin.z)/forward.z)
-tip = floor + right*(5/256*scale) + Vector((0, 0, (207/256*scale)/up.z))
-grip = floor.lerp(tip, (220-115)/207)
+tip = floor + right*(5/256*scale) + Vector((0, 0, (208/256*scale)/up.z))
+grip = floor.lerp(tip, (220-116)/208)
 hand = rig.matrix_world.inverted() @ (grip-Vector((0, -.012, .047)))
 limb('upperarm_r', 'lowerarm_r', hand, (-.48, -.12, 1.08))
 aim('hand_r', (0, -.03, .09))
@@ -292,6 +292,8 @@ fit_silhouette(sc, screen_sculpt)
 from stance import bulk_legs, flare_cloak
 bulk_legs(sc)
 flare_cloak(sc, screen_sculpt)
+from stance import brace_feet
+brace_feet(sc)
 rig['neutral_pose'] = json.dumps({p.name: [list(row) for row in p.matrix_basis] for p in rig.pose.bones})
 
 # Evaluate deformation with original vertex indexing. UVs are written to the

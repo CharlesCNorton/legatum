@@ -15,6 +15,7 @@ from mathutils import Vector
 THIGH, KNEE, ANKLE = 1.16, 1.46, 1.26
 FOOT = Vector((1.50, 1.38, 1.22))
 SHAFT = 1.75
+BASE = .995
 SKIN = .8
 OUTER = 1.5
 
@@ -151,7 +152,7 @@ def flare_cloak(scene, screen_sculpt):
         p = Vector((camera.x*256, (1-camera.y)*256))
         smooth = lambda a, b, x: (lambda t: t*t*(3-2*t))(max(0., min(1., (x-a)/(b-a))))
         # Left (spear-side) edge: widest at hip height, fading at shoulder and hem.
-        edge = smooth(124, 104, p.x)*smooth(108, 140, p.y)*(1-.5*smooth(185, 215, p.y))
+        edge = smooth(124, 104, p.x)*smooth(108, 140, p.y)*(1-.6*smooth(198, 222, p.y))
         # Centre hem between the legs hangs about four pixels lower.
         hem = smooth(120, 135, p.x)*(1-smooth(150, 166, p.x))*smooth(170, 195, p.y)
         delta = Vector((-6.0*edge, 4.0*hem))
@@ -162,3 +163,24 @@ def flare_cloak(scene, screen_sculpt):
     ob.data.update()
     bpy.context.view_layer.update()
     print('CLOAK_FLARE_FABLE_B', count, 'vertices')
+
+
+def brace_feet(scene):
+    """Shield-side foot turned out, as painted: the two sandals diverge on the
+    stone. A yaw about the vertical through the ankle keeps the sole flat. Guard
+    pose only; the walk's feet come from the retarget and are not touched."""
+    import math
+    from mathutils import Matrix
+    rig = bpy.data.objects['Spearman • MPFB game_engine']
+    for name, angle in [('foot_l', math.radians(38)), ('foot_r', math.radians(-8))]:
+        bone = rig.pose.bones[name]
+        pivot = bone.head.copy()
+        bone.matrix = Matrix.Translation(pivot) @ Matrix.Rotation(angle, 4, 'Z') @ Matrix.Translation(-pivot) @ bone.matrix
+        bpy.context.view_layer.update()
+    # The painted disc is a little smaller than the modelled one.
+    base = bpy.data.objects['Stationary cream stone']
+    for v in base.data.vertices:
+        v.co.x *= BASE
+        v.co.y *= BASE
+    base.data.update()
+    bpy.context.view_layer.update()
