@@ -22,13 +22,28 @@ Branch `fable/unit-anim-3d-spearman-a`, cut from the round-9 candidate. Look onl
 | + painting registered to the frozen UVs | 0.9048 | 14.69* | 10.77* |
 | + display-space reduction, torso layers keep all paint | 0.9048 | 13.29 | 8.45 |
 | + sun calibrated (π), cast-only term, ordered ramps | 0.9048 | 12.62 | 7.10 |
-| + shaded stone, current | 0.9048 | **12.46** | **7.34** |
+| + shaded stone | 0.9048 | 12.46 | 7.34 |
+| + linen/feet fixes, painted shaft width (v3, current) | 0.9091 | **12.38** | **7.20** |
+| **v3 look on fable-b's form** (`fable-b-masters`, read-only) | **0.9204** | **6.80** (offset 0,0) | **6.80** |
 
 \* measured with the old linear-light reduction; not comparable with the rows below it.
 
 IoU is unchanged by design (no geometry edits). critique.py picks the offset that maximises silhouette overlap (+1 px down) and measures colour there; projected paint is registered at zero offset, so every painted edge then counts as colour error. Both numbers are reported. Per part at zero offset: shield 3.0, cuirass 3.2, belt 3.5, skirt 3.9, greaves 4.3–5.2, helmet 5.4, spear 5.8 (round 9: 21.3), cloak 10.9, skin 9.6, sandals 18–22, stone top 12.6. The high ones are where the 3D outline and the painting disagree (stance, feet, cloak extent, disc size): form-lane territory.
 
-Atlas preview: 195,048 bytes at quality 85, 40 frames, validation PASS (not written under `app/`).
+Tone error after a 2 px Gaussian (the cloud reviewer's proposed metric, target ≤ 6): **4.94** on the round-9 form, **4.41** on fable-b's form. Round 9 itself: not measured that way before this lane.
+
+On fable-b's form the silhouette search settles at zero offset, so the critique ΔE drops to 6.80 with no change to the look: about 5.5 of the 12.4 on the round-9 form is the +1 px shift, not colour.
+
+Atlas previews (not written under `app/`): 196,822 bytes at quality 85 on the round-9 form; 187,206 bytes at quality 80 on fable-b's form; 40 frames, validation PASS both.
+
+## After the art director's block on v1 (03:24Z)
+
+- Linen too dark: the thigh skin was rejecting painted linen and inpainting flesh. Skin now rejects only red. Skirt band (x 108-134, y 140-170) luminance 85 → about the painting's.
+- Shaft: render-time bevel to 21 mm (painted width), ferrules 28 mm. This is a form change made in the look because it is the first tell at 160 and 64; set `shaft_radius=0` once the master's shaft is right. IoU 0.9048 → 0.9091 from this alone.
+- Feet: toes inside the sandal zone take the sandal's leather paint; the dark lump was the cast shadow at 85% plus a wide AO, now a 7 cm contact shadow and a 16% cast shadow. Foot size and splay are untouched (form lane).
+- Shoulder patch in hit and death: the tunic mesh lies under the painted cloak collar. Where its continued paint is red its unseen surface now uses the cloak ramp, so the shoulder turns cloak-red instead of pale, pink or brown.
+- Base: shaded stone with the painted top, edge lip, side and shadow colours; no blotches from projected paint.
+- Not done: pale sliver under the spear hand (a sleeve vertex, geometry), calf slab and ring on the right greave (geometry), cloak width (geometry).
 
 ## What worked
 
@@ -48,6 +63,9 @@ Atlas preview: 195,048 bytes at quality 85, 40 frames, validation PASS (not writ
 - Eevee gotchas that each cost a round: an unlinked Normal socket ignores `default_value` (link a Combine XYZ); a sun of strength 1 returns 1/π on white diffuse; ColorRamp elements re-sort when positions are assigned in place; a script named `inspect.py` next to others shadows the stdlib and breaks numpy.
 
 ## For the merge
+
+- One command: `tools/art/anim3d/units/spearman/look.sh MASTER_DIR OUT_DIR [LOOK_DIR]`. Verified on the round-9 masters (83 s) and on `fable-b-masters` with the look data written to my own folder (`fable-a-masters/look-on-fable-b/`). Previews: `spearman-fable-a-look-on-fable-b-rest.png`, `-clips-160.png`, `.mp4`.
+- A coordinator message meant for fable-b (its death/hit clips and `spearman-fable-b-note.md`) reached this lane. I did not act on it beyond checking that fable-b's clips render with this look: they do, all five.
 
 - The look is render-time only: run `look.py` on whatever master and clips the form/motion lanes produce, after `look_textures.py` on the new master (ID pass → textures → ramp-input pass → ramps; 15 s).
 - Wants from the form lane, in order of colour cost: wider stance and larger sandals, cloak extent, stone disc size, greave tops reaching the knee.
