@@ -22,7 +22,7 @@ export const OVERLAY_LEGENDS: Record<Overlay, string> = {
 };
 /** Hover text for each toggle: what it adds, and that it stays on over any lens. */
 export const OVERLAY_HINTS: Record<Overlay, string> = {
-  yields: "Your faction's yields on every tile except city tiles, over any lens. Hover or tap a tile for exact values.",
+  yields: "Your faction's yields on every tile except each city's own tile, over any lens. Hover or tap a tile for exact values.",
   resources: 'Rings every known resource and shows whose borders it is in, over any lens.',
   borders: 'Marks each empire’s land with its colour and number, over any lens. Faded tiles are out of sight; borders still show their current owner.',
 };

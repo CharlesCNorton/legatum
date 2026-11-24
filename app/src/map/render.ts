@@ -316,7 +316,7 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
   else drawImprovements(ctx, view, cam, w, h, dpr, look);
   // Constructed wonders stand on their chosen tile (landmarks.ts); one being built this turn waits for its construction.
   const building = moments && CONSTRUCTION_ANIMATION ? moments.plan.builds.filter((b) => b.wonder && moments.t < b.t + buildPhases(b).done) : [];
-  drawLandmarks(ctx, view, toScreen, hexPx, w, h, dpr, building.length ? (l) => building.some((b) => b.city === l.city) : undefined, fixedLandmarkBoxes);
+  drawLandmarks(ctx, view, toScreen, hexPx, w, h, dpr, building.length ? (l) => building.some((b) => b.city === l.city) : undefined, fixedLandmarkBoxes, (g, near) => terrain.stampTowns(g, cam, w, h, dpr, near));
   // A completion removes the site from the after-view. Keep its old state until the finish begins,
   // then let the moment draw it alone; otherwise two semi-transparent cranes ghost over each other.
   const activeSites = !CONSTRUCTION_ANIMATION ? [] : moments?.plan.builds.filter((b) => (b.wonder || b.walls) && moments.t >= b.t && moments.t < b.t + buildPhases(b).done) ?? [];
@@ -346,7 +346,12 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
     : view;
   drawResourceIcons(ctx, iconView, cam, w, h, dpr, look, bannerCovers, overlays.resources, townCovers);
   // A natural wonder's bonus, on its tile: above the lens tint and yield icons, under units and banners.
-  drawWonderBadges(ctx, view, cam, w, h, dpr, overlays.yields, [...bannerCovers, ...townCovers]);
+  // A unit resting on the wonder's tile covers its middle: the pill keeps clear of its counter.
+  const tokenCovers = isFar(hexPx) ? [] : view.units.filter((u) => view.tiles[tileIndex(u.pos, view.width, view.height)]?.wonder).map((u) => {
+    const p = toScreen(inp.unitPos.get(u.id) ?? hexToPixel(u.pos, HEX_SIZE)), t = tokenHalf(hexPx);
+    return { x: p.x - t, y: p.y - t, w: t * 2, h: t * 2 };
+  });
+  drawWonderBadges(ctx, view, cam, w, h, dpr, overlays.yields, [...bannerCovers, ...townCovers, ...tokenCovers]);
 
   // World transform for vector overlays.
   const worldT = () => ctx.setTransform(dpr * z, 0, 0, dpr * z, dpr * (w / 2 - cam.x * z), dpr * (h / 2 - cam.y * z));

@@ -94,6 +94,28 @@ export function drawWonderArt(ctx: CanvasRenderingContext2D, view: PlayerView, c
 /** Draws the towns on the tiles `near` accepts, opaque, onto a screen canvas with the CSS px transform set (`TerrainCache.stampTowns`). */
 export type TownStamp = (g: CanvasRenderingContext2D, near: (tile: number) => boolean) => void;
 
+/**
+ * Runs `draw` (which sets its own transform) on a scratch canvas, cuts out the towns `near` accepts, and lays the result
+ * on `ctx`: art drawn after the terrain cache (a landmark's painting) then stands behind the town beside it. Without a
+ * canvas it draws straight onto `ctx`.
+ */
+export function drawBehindTowns(ctx: CanvasRenderingContext2D, w: number, h: number, dpr: number, towns: TownStamp, near: (tile: number) => boolean, draw: (g: CanvasRenderingContext2D) => void): void {
+  const g = scratch(ctx, w, h, dpr);
+  if (!g) { draw(ctx); return; }
+  draw(g);
+  g.save();
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.globalAlpha = 1;
+  g.globalCompositeOperation = 'destination-out';
+  towns(g, near);
+  g.restore();
+  ctx.save();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.globalAlpha = 1;
+  ctx.drawImage(g.canvas, 0, 0);
+  ctx.restore();
+}
+
 let scratchCanvas: HTMLCanvasElement | null = null;
 /** A cleared canvas the size of the map's backing store, reused across frames. */
 function scratch(ctx: CanvasRenderingContext2D, w: number, h: number, dpr: number): CanvasRenderingContext2D | null {
@@ -129,7 +151,10 @@ type Cover = { x: number; y: number; w: number; h: number };
  * altogether; slid sideways (at most a quarter of the radius `r`) off a cover it grazes. When every slot is covered, the least covered one.
  */
 export function wonderBadgeAt(x: number, cy: number, r: number, L: BadgeLayout, yieldsOn: boolean, covers: readonly Cover[]): { x: number; y: number } | undefined {
-  const slots = yieldsOn ? [L.dy, L.dy * 1.5, 0] : [L.dy, L.dy * 1.5, -L.dy, 0];
+  const slots = yieldsOn ? [L.dy, L.dy * 1.5, 0] : [L.dy, -L.dy, L.dy * 1.5, 0];
+  // A visible gap from every cover, so a pill under a banner never reads as one of its rows.
+  const pad = Math.max(4, r * 0.12);
+  covers = covers.map((c) => ({ x: c.x - pad, y: c.y - pad, w: c.w + pad * 2, h: c.h + pad * 2 }));
   const area = (a: Cover, b: Cover) => Math.max(0, Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x)) * Math.max(0, Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y));
   let best: { x: number; y: number; covered: number } | undefined;
   for (const dy of slots) {
