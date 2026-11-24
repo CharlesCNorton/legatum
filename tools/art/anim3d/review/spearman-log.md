@@ -156,3 +156,12 @@
 
 - Round 9 merge: read feedback and lane comparisons; used Legatum art and all six Blender skills. Ported scoped A/B/C changes, excluded unrelated node_modules link. Combined CPU validation pending.
 - Round 9 merged CPU rest: 256px/16 samples, silhouette IoU 0.8983; scene checks passed (314 painted materials, 280 unseen fills, both lane markers). Published rest comparison immediately; all clips rebuilding.
+- Round 9 combined CPU: b rendered at 256px/16 samples; published interim review.
+- Round 9 combined CPU: detail rendered at 256px/16 samples; published interim review.
+- Round 9 combined CPU: d rendered at 256px/16 samples; published interim review.
+- Round 9 combined CPU: e-idle rendered at 256px/16 samples; published interim review.
+- Round 9 combined CPU: e-move rendered at 256px/16 samples; published interim review.
+- Round 9 combined CPU: e-attack rendered at 256px/16 samples; published interim review.
+- Round 9 combined CPU: e-hit rendered at 256px/16 samples; published interim review.
+- Round 9 combined CPU: e-death rendered at 256px/16 samples; published interim review.
+- Round 9 visual rejection: loosened hit cloth produced a raised corner behind the shoulder at recovery. Drop only hit cloth pin/settings change; retain source timing and passive equipment response. Rebuilding hit and revalidating delivery.
