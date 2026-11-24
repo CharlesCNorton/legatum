@@ -1,28 +1,24 @@
 """The shared cream stone base every unit stands on.
 
-One stationary round disc: top #E9CFA0, side #B68A51 (sRGB), roughness 0.86,
-fine low-contrast grain, contact surface at z = 0.105 m. It keeps a physical
-BSDF so moving feet cast real contact shadows, plus camera-only pigment so the
-warm stone reads as painted without lighting the figure. The figure painting
-is never projected onto it (painted feet and shadows would stay behind).
+One stationary round disc: top #E9CFA0, side #B68A51 (sRGB), contact surface
+at z = 0.105 m. The figure painting is never projected onto it (painted feet
+and shadows would stay behind when the real feet move).
 
-Rebuilt from the Spearman's base as it stood after round 8 (scene.py,
-project.py and infantry/refine.py). The Spearman also layers a CC0 Travertine
-scan as faint bump; that asset is optional and not wired here.
+Dimensions are the Spearman's after its disc was measured against the painted
+one row by row (round 12/13): radius 0.573 m (0.594 x 0.965) and a 163 mm
+side band put rows 210-242 within 1 px of the painting at 256 px. A unit whose
+painting shows the disc from the same camera can keep them; measure first
+(`python -m kit.regions --rows`). The Spearman's disc also sits 0.20 m behind
+the origin along the camera's ground direction (`centre_behind`).
+
+Materials here are the Cycles fallback: a physical BSDF for real contact
+shadows plus camera-only pigment. Under the standard Eevee painted look the
+unit's look script replaces them at render time with a stone shaded from
+colours measured on the painted disc (light lip, sandier wall, ground shadow
+anchored to the ankles); see units/spearman/look.py `stone`.
+
 NOT YET RUN FROM THE KIT IN BLENDER: check `audit.check_base` and a rest
 render against the painting on first use, then update kit/README.md.
-
-Open review items on the shape (art director, Spearman round 10 GPU): the
-painting's base has a thin light lip at the rim and a side wall about 17 px
-tall at 256 px; this build renders a rounded edge with no lip and a 20 px
-wall, and its camera-only pigment may be washing out the figure's cast shadow
-on the top. Change the defaults here once the Spearman proves the fix.
-
-Open review item on colour (art director, Spearman round 10): the rendered top was
-(245,206,154) against the painting's (249,217,176) and the rim (219,172,114)
-against (226,181,126). Measure the rendered base with
-`python -m kit.regions --stats` and adjust `lift` rather than the shared hex
-values.
 """
 import bpy
 from mathutils import Vector
@@ -71,12 +67,12 @@ def _stone(name, hex_value, lift, camera_pigment, grain_scale=450):
     return mat
 
 
-def build(scene, radius=.594, thickness=.155, top_z=TOP_Z, centre=(0, 0),
+def build(scene, radius=.573, thickness=.163, top_z=TOP_Z, centre=(0, 0),
           top_lift=(1.03, 1.07, 1.14), rim_lift=(1, 1.05, 1.14),
           top_pigment=.50, rim_pigment=1.30):
     """Create the disc with its two materials and cloth collision.
 
-    Defaults are the Spearman's measured values. `centre` is the disc centre
+    Defaults are the Spearman's values after its disc was fitted to the painting. `centre` is the disc centre
     on the ground; the Spearman's sits 0.20 m behind the origin along the
     camera's ground direction (see `centre_behind`) so the top ellipse matches
     its painting.

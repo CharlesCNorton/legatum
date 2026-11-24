@@ -4,6 +4,19 @@ One section per unit. Add a row per round: what it cost (wall-clock, tokens, GPU
 
 Sources: `~/LegatumRuns/anim-pilot/legatum/.progress/astra.log` (task start/finish, runner local time, UTC−5), `.reviews/astra-<task>.md.log` (tokens), `~/LegatumRuns/anim-pilot/spearman-rounds.log` (merge and GPU pass), `review/3d-v2/spearman-log.md` and the round notes (metrics). Lane times overlap; a round's wall-clock is first start to GPU finish, not the sum.
 
+## What the next unit should cost (estimate, not yet measured)
+
+The Spearman took 13 rounds and about 31 hours of wall-clock (2026-11-22 20:13 to 2026-11-24 03:02 local) to pass both metric targets. Most of that was finding the method. The last 0.05 of IoU and the whole colour target came in the final 5 hours, from four moves that are now steps in the skill and code in the kit.
+
+For a second infantry unit starting from the kit, with two builders split by aspect and previews in Eevee:
+
+- Form builder: body, unit kit geometry, guard pose and outline fitted by measured spans. The unit-specific modelling is the long pole; allow 60–90 minutes.
+- Look builder: registration fit (20 s), ID pass, per-part textures and ramps (15 s per rebuild), look tuning on previews (55 s per full set). 30–45 minutes, mostly waiting for form.
+- Motion: idle and walk retargeted from the pinned donors with the 8.5 cm offset and walk shaping (kit); attack, hit and death keyed or from KayKit, authored on the one-minute quick-look loop. 45–60 minutes.
+- One merge and one GPU pass: about 20 + 38 minutes.
+
+That is roughly 3 hours of wall-clock per unit and two GPU launches if a gate fails, against 31 hours for the first. The bottleneck is the single Blender slot: a full GPU pass holds it for 38 minutes and starves every preview, so thirty units in parallel are limited by about 30 × 1 hour of Blender time, not by agents. Run GPU passes back to back when builders are between previews, or move final passes to a second machine. Record the real numbers here when the second unit runs; delete this estimate then.
+
 ## Spearman (first unit; metric targets passed in round 13, art PASS pending)
 
 ### Summary
