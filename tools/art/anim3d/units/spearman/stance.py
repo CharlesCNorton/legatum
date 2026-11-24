@@ -18,12 +18,13 @@ THIGH, KNEE, MID, ANKLE = 1.12, 1.18, 1.0, 1.42
 FOOT = Vector((1.50, 1.00, 1.18))  # R12a: original length passes contact; x1.42 failed.
 SHAFT = 1.75
 BASE = .965
-BAND = .0
-BASE_SHIFT = (.006, -.027)  # Fable C: disc 0.7 px left and 0.8 px down the screen (toward the camera)
+BAND = .008
+BASE_SHIFT = (-.0045, -.0142)  # Fable C: disc 1.6 px left and 0.2 px down the screen (toward the camera)
+BASE_DEPTH = .971  # Fable C: 3% shallower along the view: far rim 0.35 px lower, near foot 0.35 px higher
 FLARE = 3.2  # Fable C: 4.5 stood 1-2 px outside the painted cloak edge (rows 99-147)
 STRAP = .011
 # Fable C: where the painted figure stands on the disc (256 px, painting camera).
-DEEPEN = .075                                        # rig shift along the view ray, metres
+DEEPEN = .075                                        # pelvis shift along the view ray, metres
 ANKLE_PX = {'r': (1.0, -3.3), 'l': (-.7, -2.7)}      # ankle joint shift on screen
 KNEE_X = {'r': 112.5, 'l': 146.6}                   # knee joint column
 SKIN = .5
@@ -216,9 +217,12 @@ def brace_feet(scene):
     # The painted disc is a little smaller than the modelled one.
     base = bpy.data.objects['Stationary cream stone']
     top = max(v.co.z for v in base.data.vertices)
+    view = scene.camera.matrix_world.to_quaternion() @ Vector((0, 0, -1))
+    depth = (base.matrix_world.inverted().to_3x3() @ Vector((view.x, view.y, 0))).normalized()
     for v in base.data.vertices:
-        v.co.x = v.co.x*BASE+BASE_SHIFT[0]
-        v.co.y = v.co.y*BASE+BASE_SHIFT[1]
+        along = v.co.x*depth.x+v.co.y*depth.y
+        v.co.x = (v.co.x-(1-BASE_DEPTH)*along*depth.x)*BASE+BASE_SHIFT[0]
+        v.co.y = (v.co.y-(1-BASE_DEPTH)*along*depth.y)*BASE+BASE_SHIFT[1]
         if v.co.z < top-.001:
             v.co.z -= BAND
     base.data.update()
@@ -271,8 +275,9 @@ def plant_guard(scene):
 
     Measured at 256 px: the modelled soles lay 3 px below the painted ones and
     the shins ran from knee to ankle at a slant the painting does not have. An
-    orthographic view cannot tell depth, so the figure is moved back along the
-    view ray (its picture does not change), the ankles are set on the stone
+    orthographic view cannot tell depth, so the pelvis is moved back along the
+    view ray in the guard pose (its picture does not change; the rig object
+    stays, so the retargeted walk is not moved), the ankles are set on the stone
     under the painted feet and both legs are re-solved at their own lengths
     with the knee toward the camera at the painted knee column. The spear keeps
     its foot on the stone and its picture: its head follows the hand along the
@@ -301,16 +306,20 @@ def plant_guard(scene):
     points = [shaft.matrix_world @ Vector(p.co[:3]) for p in shaft.data.splines[0].points]
     butt, head = points[0], points[-1]
     originals = {o.name: o.matrix_world.copy() for o in weapons}
-    rig.location += forward*DEEPEN
-    bpy.context.view_layer.update()
     inverse = rig.matrix_world.inverted()
+    shift = inverse.to_3x3() @ (forward*DEEPEN)
+    pelvis = rig.pose.bones['pelvis']
+    assert pelvis.parent is None or not pelvis.parent.parent, 'expected pelvis at the top of the rig'
+    pelvis.matrix = Matrix.Translation(shift) @ pelvis.matrix
+    bpy.context.view_layer.update()
+    rig['guard_hand_target'] = list(Vector(rig['guard_hand_target'])+shift)
     report = {}
     for side in 'lr':
         upper, lower = rig.pose.bones['thigh_'+side], rig.pose.bones['calf_'+side]
         feet = [(rig.pose.bones[n+'_'+side], rig.pose.bones[n+'_'+side].matrix.copy()) for n in ('foot', 'ball')]
         target_world = on_height(px(ankles[side])+Vector(ANKLE_PX[side]), ankles[side].z)
         target = inverse @ target_world
-        shift = target-feet[0][1].translation
+        move = target-feet[0][1].translation
         origin = upper.head.copy()
         axis = target-origin
         length = axis.length
@@ -341,7 +350,7 @@ def plant_guard(scene):
             bone.matrix = matrix
             bpy.context.view_layer.update()
         for bone, matrix in feet:
-            matrix.translation += shift
+            matrix.translation += move
             bone.matrix = matrix
             bpy.context.view_layer.update()
         report[side] = {'reach': round(length/(a+b), 4), 'knee_px': [round(c, 1) for c in px(rig.matrix_world @ lower.head)],
