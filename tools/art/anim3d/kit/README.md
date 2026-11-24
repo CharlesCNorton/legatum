@@ -14,7 +14,7 @@ Work in `tools/art/anim3d/units/<slug>/`. Get a crude version through every stag
 4. **Clay check** (Blender). `ab.clay_override(scene)`, render, and compare the silhouette with the painting before any texture work.
 5. **Projection and fills** (Blender). `projection.freeze_projection(...)` at the fitted rest pose; `seams.underpaint(...)` for narrow unpainted wedges; `materials.painted_fill(...)` for unseen surfaces. If a pale patch shows up in a motion pose, run `ab.material_id_render(...)` on that pose first.
 6. **Motion** (Blender). `retarget.prepare(rig, root, clip, phases, motion)` for idle, move, hit and death from the pinned Quaternius actions; it locks the walk's feet. The unit supplies a `motion` module (walk influence, time remap, hit envelope, death blends: copy `units/spearman/motion.py`) and hand-keys only the attack. Each sole object needs `toe_vertex` and `heel_vertex` custom properties for `contact.landmarks`.
-7. **Checks** (Blender). `audit.check_bounds_and_contact`, `audit.check_shaft`, `audit.check_transition` on every delivered pose; `motion_metrics.sample` and `summarise` on death and hit.
+7. **Checks** (Blender). `audit.check_bounds_and_contact`, `audit.check_shaft`, `audit.check_transition` on every delivered pose; `feet.sample_dense` then `feet.measure`, `feet.failures`, `feet.step_width` on the walk; `motion_metrics.sample` and `summarise` on death and hit.
 8. **Grade and deliver** (venv Python). Fit one grade on the rest render with `grade.fit_file`, then:
 
    ```sh
@@ -41,6 +41,7 @@ Work in `tools/art/anim3d/units/<slug>/`. Get a crude version through every stag
 | `ab.py` | A/B preview settings (CPU, 256 px, 16 samples, seed 17), scene invariant hashes, clay override, material-ID render. | Copied from round-10 lane scripts that ran; **not yet run from the kit in Blender**. |
 | `audit.py` | Base contract, camera bounds, disc-footprint and ground contact, shaft crossings and grip, arm continuity with idle. | Generalised from Spearman `audit.py`; **not yet run from the kit in Blender**. |
 | `motion_metrics.py` | Head step, ankle height, equipment grip range and rotation step, late cloth travel on delivered samples. | Generalised from Spearman `motion_metrics.py`; **not yet run from the kit in Blender**. |
+| `feet.py` | Dense walk-cycle sampling of the real soles (Blender), then contact slip, floor error, heading, step width and swing lift with the enforced limits (plain Python). | Tests; `measure` reproduces the stored round-10 Spearman checks from its sampled rows (slip 0.0018 mm, floor 1.133 mm, heading 2.618°). `sample_dense` not yet run from the kit in Blender. |
 | `grade.py` | One monotone histogram grade fitted at rest (strength 0.80), bound to the master hash. | Tests, and reproduces the Spearman round-10 LUT and graded rest render exactly. |
 | `images.py` | Linear-light, premultiplied-alpha Lanczos resize. | Tests; used by Spearman `delivery.py`. |
 | `atlas.py`, `deliver.py` | Trimmed atlas v2 pack, decode, validate, five-clip movie; CLI over a frames folder. | Tests, and reproduces the Spearman round-10 preview atlas and JSON byte for byte (183,016 bytes, q80). |
@@ -50,7 +51,7 @@ Work in `tools/art/anim3d/units/<slug>/`. Get a crude version through every stag
 ## Tests
 
 ```sh
-$ANIM_ROOT/venv/bin/python tools/art/anim3d/kit/test_kit.py   # 14 tests, about 20 s, no Blender
+$ANIM_ROOT/venv/bin/python tools/art/anim3d/kit/test_kit.py   # 17 tests, about 20 s, no Blender
 ```
 
 `probe_human.py` runs in Blender through the gate with the pipeline's isolated MPFB resources.

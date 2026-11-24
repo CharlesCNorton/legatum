@@ -8,7 +8,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from kit.images import resize_rgba
 from kit.report import append_evidence
-from kit import atlas, grade, regions
+from kit import atlas, feet, grade, regions
 from PIL import Image, ImageDraw
 
 
@@ -163,6 +163,45 @@ class RegionTests(unittest.TestCase):
         teleport = regions.frame_steps(moving[:4]+[figure(shift=70+4*i) for i in range(4)])
         self.assertEqual(teleport['findings'], ['frames [4] jump more than 2.5x the median step'])
         self.assertEqual(regions.frame_steps([moving[0]]*4)['findings'], ['clip does not move'])
+
+
+def walk_rows(drift=0.0, speed=1.2):
+    """Left foot planted and sliding back at the virtual speed; right foot swinging."""
+    rows = []
+    for i in range(8):
+        y = speed*i/24
+        left = {'planted': True, 'ankle': [.12, y, .2], 'sole_z': .106, 'contact_mode': 'heel' if i < 4 else 'toe',
+                'contact_point': [.12+drift*i, y, .106], 'heading': 2.0, 'heading_projection_m': .25}
+        right = {'planted': False, 'ankle': [-.13, -y, .3], 'sole_z': .106+.02*i, 'contact_mode': 'toe',
+                 'contact_point': [-.13, -y, .2], 'heading': 30.0, 'heading_projection_m': .05}
+        rows.append({'frame': 25+i, 'feet': {'l': left, 'r': right}})
+    return rows
+
+
+class FeetTests(unittest.TestCase):
+    def test_planted_foot_moving_at_virtual_speed_has_no_slip(self):
+        checks = feet.measure(walk_rows(), 1.2, .106)
+        self.assertAlmostEqual(checks['max_sole_contact_slip_m'], 0, places=9)
+        self.assertEqual(checks['planted_samples'], 8)
+        self.assertEqual(checks['max_planted_heading_degrees'], 2.0)
+        self.assertEqual(checks['max_raw_foot_yaw_degrees'], 30.0)
+        self.assertEqual(checks['max_readable_heading_degrees'], 2.0)
+
+    def test_lateral_drift_is_slip_and_fails_the_limit(self):
+        checks = feet.measure(walk_rows(drift=.002), 1.2, .106)
+        self.assertAlmostEqual(checks['max_sole_contact_slip_m'], .006, places=6)
+        checks.update(loop_seam_m=0, max_root_xy_correction_m=.01, max_foot_ik_correction_m=.01, max_sole_translation_m=.01)
+        self.assertEqual(len(feet.failures(checks)), 1)
+        self.assertIn('max_sole_contact_slip_m', feet.failures(checks)[0])
+        self.assertEqual(len(feet.failures({})), len(feet.LIMITS))
+
+    def test_step_width_and_swing_lift(self):
+        width = feet.step_width(walk_rows(), rest_width=.5)
+        self.assertAlmostEqual(width['mean_m'], .25)
+        self.assertAlmostEqual(width['mean_over_rest'], .5)
+        lift = feet.swing_lift(walk_rows(), .106)
+        self.assertAlmostEqual(lift['r'], .14)
+        self.assertEqual(lift['l'], 0.0)
 
 
 if __name__ == '__main__':
