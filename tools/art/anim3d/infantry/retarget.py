@@ -12,6 +12,9 @@ from pathlib import Path
 import bpy
 from mathutils import Matrix, Vector
 from contact import landmarks
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]/'units/spearman'))
+from motion import source_phase, hit_envelope
 
 ACTIONS = {'idle': 'Idle_Loop', 'move': 'Walk_Loop',
            'hit': 'Hit_Chest', 'death': 'Death01'}
@@ -56,9 +59,12 @@ a foot planted across the loop boundary instead of resetting its contact.
             nxt=indices[(j+1)%count]
             ankle=frames[i]['source_feet'][side]; toe=frames[i]['source_toes'][side]
             na=frames[nxt]['source_feet'][side]; nt=frames[nxt]['source_toes'][side]
-            contact=(ankle[2]<ankle_min+.015 and na[1]>ankle[1]) or (toe[2]<toe_min+.006 and nt[1]>toe[1])
+            # Rest-space source blending introduces a small stance-height arc.
+            # Classify its near-floor interval, then solve the *actual* target
+            # sole to the unchanged 2mm floor / 1mm slip validation limits.
+            contact=(ankle[2]<ankle_min+.015 and na[1]>ankle[1]) or (toe[2]<toe_min+.012 and nt[1]>toe[1])
             flags[side].append(contact)
-            if contact and toe[2]<toe_min+.006 and nt[2]<toe_min+.006:
+            if contact and toe[2]<toe_min+.012 and nt[2]<toe_min+.012:
                 source_speeds.append((nt[1]-toe[1])*24*scale)
         starts=[j for j in range(count) if flags[side][j] and not flags[side][(j-1)%count]]
         assert len(starts)==1,(side,starts)
@@ -153,6 +159,18 @@ def prepare(rig, root, clip, phases):
     source.animation_data.action = action
     source.animation_data.action_slot = action.slots[0]
     first, last = action.frame_range
+    if clip == 'move':
+        # Attenuate the COMPLETE source action in its own rest space, before
+        # reference calibration/retargeting. This reduces the high stepping of
+        # the stylized donor without inventing a gait or editing target feet.
+        source.animation_data.action = None
+        track = source.animation_data.nla_tracks.new()
+        walk = track.strips.new('Restrained open walk', int(first), action)
+        walk.action_slot = action.slots[0]
+        walk.blend_type = 'REPLACE'
+        walk.use_animated_influence = True
+        walk.influence = .92
+        walk.keyframe_insert(data_path='influence', frame=first)
     carry = None
     if clip == 'move':
         # A spear/shield carrier cannot swing both arms as an unarmed walker.
@@ -219,11 +237,11 @@ def prepare(rig, root, clip, phases):
     scale = sum(rig.data.bones[n+'_l'].length for n in ['thigh', 'calf']) / sum(source.data.bones[n].length for n in ['DEF-thigh.L', 'DEF-shin.L'])
     frames = []
     for phase in phases:
-        motion_phase=min(1,phase*1.5) if clip=='hit' else phase
+        motion_phase=source_phase(clip, phase)
         frame = first+(last-first)*max(0, min(1, motion_phase))
         hit_weight=1
         if clip=='hit':
-            t=max(0,min(1,(phase-2/3)*3));hit_weight=1-t*t*(3-2*t)
+            hit_weight=hit_envelope(phase)
             for p,constraint in constraints:constraint.influence=hit_weight
         if clip=='death':
             blend=max(0,min(1,phase/.18));blend=blend*blend*(3-2*blend)
@@ -247,7 +265,9 @@ def prepare(rig, root, clip, phases):
     scene.frame_set(1)
     bpy.context.view_layer.update()
     return frames, {'provider': 'Quaternius Universal Animation Library Standard',
-                    'action': ACTIONS[clip], 'arm_layer': 'Idle_Loop via Blender NLA' if carry else None, 'entry_blend_fraction': .18 if clip=='death' else 0, 'exit_blend_fraction': 1/3 if clip=='hit' else 0, 'license': 'CC0-1.0',
+                    'action': ACTIONS[clip], 'source_action_influence': .92 if clip=='move' else 1,
+                    'timing': 'r9c impact then settle; source rotations retained',
+                    'arm_layer': 'Idle_Loop via Blender NLA' if carry else None, 'entry_blend_fraction': .18 if clip=='death' else 0, 'exit_blend_fraction': .70 if clip=='hit' else 0, 'license': 'CC0-1.0',
                     'method': 'Blender COPY_ROTATION WORLD, calibrated reference/rest matrices including roll',
                     'source_frames': [first, last], 'leg_scale': scale,
                     'sha256': hashlib.sha256(source_path.read_bytes()).hexdigest(),

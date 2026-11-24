@@ -1,4 +1,4 @@
-"""Verify the saved round-8 surface pipeline before rebuilding cloth/clips."""
+"""Verify the projected surface pipeline before rebuilding cloth/clips."""
 import json
 import os
 import sys
@@ -14,6 +14,14 @@ root = Path(os.environ['ANIM_ROOT'])
 bpy.ops.wm.open_mainfile(filepath=str(root/'masters/spearman-3d-v2/spearman.blend'))
 sc = bpy.context.scene
 assert sc['infantry_refinement'] == 8
+assert sc['spearman_silhouette_round'] == '9a'
+assert sc['spearman_surface_finish'] == 9
+assert sc['spearman_garment_coverage'] == 10
+for name in ['Linen tunic shoulder sleeves', 'Cloak • simulated wool',
+             'MPFB anatomical male • original topology']:
+    assert sc.objects[name].data.color_attributes.get('R10b garment coverage'), name
+assert any(ob.type == 'MESH' and ob.data.color_attributes.get('R9b seam underpaint')
+           for ob in sc.objects), 'Missing frozen seam underpainting'
 assert len(bpy.data.objects['MPFB anatomical male • original topology'].data.vertices) == 19158
 assert bpy.data.objects['MPFB anatomical male • original topology'].data.shape_keys is None
 assert len(bpy.data.objects['Spearman • MPFB game_engine'].data.bones) == 53
@@ -99,6 +107,8 @@ for ob in sc.objects:
     assert min(distances) > .001, (ob.name, min(distances))
 assert len(clearance) == 12
 report = {'refinement': 8, 'painted_materials': painted, 'camera_only_pigment': True,
+          'silhouette_round': sc['spearman_silhouette_round'],
+          'surface_finish': sc['spearman_surface_finish'],
           'camera_only_unseen_fills': unseen_fills, 'base_thickness': max(heights)-min(heights),
           'rigid_finish_before_projection': True, 'articulated_sandals': True, 'body_vertices': 19158, 'bones': 53,
           'base_top': .105, 'camera': list(sc.camera.location),

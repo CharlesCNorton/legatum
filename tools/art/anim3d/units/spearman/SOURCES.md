@@ -24,3 +24,15 @@ Pinned files in `assets/quaternius-ual/`:
 6e65377d81558333c4093dbb144a48fd19019343d82b1a3a7992a98ec0e0543c  AnimationLibrary_Godot_Standard.bin
 a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499  LICENSE
 ```
+
+Round 9c reuses these exact pinned CC0 files. `Walk_Loop` runs at 92% source
+NLA influence before rest/roll retargeting; idle arms remain the existing open
+layer. `Hit_Chest` and `Death01` are time-remapped with a guard recovery blend
+for hit. No new human joint motion is invented for those clips. Continuous
+weapon attack curves, passive crest/shield springs and cloth response are
+original MIT orchestration; no new asset download.
+
+Round 10b uses no new downloaded or generated asset. Frozen shoulder/back
+pigment, broad garment folds and region masks are original MIT code in
+`coverage.py`; output art is project CC BY 4.0. Reuses the original painting,
+CC0 MPFB anatomy/skin, recorded wool/linen fills and unchanged CC0 motion.
