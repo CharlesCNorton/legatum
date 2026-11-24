@@ -108,3 +108,13 @@
 - Reviewed final c/details/f, all e strips and top/front g. At256 improved strut width, hub restraint, amber varnish, lower stone brushwork and attack readability; cockpit/cowl contours, attachment marks, smoother stone and crash fill remain visibly different. At64 identity matches but silhouette/plinth differ. Abrupt support disappearance remains. No PASS. New GPU512 still required; old GPU512 archived and active stale 512 removed.
 - Twelve Python files and both shell scripts parse; diff whitespace clean. No Rust/rules/UI changes; no full application suites. origin/master has zero commits beyond HEAD. Lead command: ROUND=2 tools/art/anim3d/units/biplane/gpu.sh.
 - git add/commit blocked: Operation not permitted creating .git/worktrees/lane-5/index.lock. Runner must commit with requested gpt-6-astra trailer. No push/PR/master merge. Current CPU evidence preserved in masters/biplane/driver-r2-cpu.
+- Saved b review immediately; 1 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/b/render.json.
+- Saved c review immediately; 1 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/c/render.json.
+- Saved d review immediately; 4 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/d/render.json.
+- Saved g review immediately; 16 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/g/render.json.
+- Saved e-idle review immediately; 8 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/e-idle/render.json.
+- Saved e-move review immediately; 8 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/e-move/render.json.
+- Saved e-attack review immediately; 10 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/e-attack/render.json.
+- Saved e-hit review immediately; 4 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/e-hit/render.json.
+- Saved e-death review immediately; 10 frames; raw render manifest: /Users/samcorcos/LegatumRuns/anim-pilot/masters/biplane/raw/e-death/render.json.
+- Packed/decoded/validated 40 trimmed 160 px frames: 194118 bytes, WebP q80; exact alpha offsets and held death. Encoded and ffprobe-verified 240-frame 8 s H.264 yuv420p MP4.
