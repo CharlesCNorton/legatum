@@ -135,3 +135,4 @@
 
 - R9c motion lane: read project/art/playbook, feedback, round-8 critique and six Blender skills. Using animation and rendering workflows; material/proportion code untouched. Isolated masters under lanes/spearman-r9c; baseline GPU review preserved.
 - R9a: inspected round-8 rest split/crossfade, top/front feet sheet, all five strips and eight sampled movie frames. Main silhouette errors: high shield shoulder, oversize trailing cape, upper-arm gap; camera and total height already close. CPU baseline rendering at 256px/16 samples.
+- R9a first CPU comparison published: spearman-r9a-restpose-compare.png (256/64, GPU baseline plus same-settings CPU pair, split/crossfade). Whole alpha IoU 0.88044 -> 0.89825; figure above feet 0.86087 -> 0.88540. Scene checks pass, including shield relief clearance, camera and articulated sandal preservation. Not PASS; foot shape/stance and surface finish still differ.
