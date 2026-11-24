@@ -8,7 +8,7 @@ Code and presets only. Scene, rig, texture and render masters stay under `ANIM_R
 
 Work in `tools/art/anim3d/units/<slug>/`. Get a crude version through every stage before polishing any of them.
 
-1. **Preset.** Copy `presets/spearman.json` to `presets/<slug>.json`. Fit the camera and lights to the new painting (shadow direction with the key alone first); set `delivery.anchor` and the review `regions`.
+1. **Preset.** Copy `presets/spearman.json` to `presets/<slug>.json`. Fit the camera and lights to the new painting (shadow direction with the key alone first); set `delivery.anchor`, the A/B `regions` and the `critique_regions` boxes (head, torso, cloak, shield or weapon, legs, feet, base) at 256 px.
 2. **Body and rig** (Blender). `human.create_body(macro_overrides, name)` then `human.add_rig(body, name)` gives the MPFB body with its 53-bone `game_engine` rig and original weights. On the disposable projection copy call `human.freeze_macro_mix(body)` before fitting any vertices.
 3. **Camera, light, base** (Blender). `studio.match_camera(scene, '<slug>')`, `studio.match_lighting(scene, '<slug>')`. Build the shared cream disc with `base.build(scene)` (top #E9CFA0, side #B68A51, top at z = 0.105 m) and verify it with `audit.check_base`.
 4. **Clay check** (Blender). `ab.clay_override(scene)`, render, and compare the silhouette with the painting before any texture work.
@@ -47,12 +47,13 @@ Work in `tools/art/anim3d/units/<slug>/`. Get a crude version through every stag
 | `images.py` | Linear-light, premultiplied-alpha Lanczos resize. | Tests; used by Spearman `delivery.py`. |
 | `atlas.py`, `deliver.py` | Trimmed atlas v2 pack, decode, validate, five-clip movie; CLI over a frames folder. | Tests, and reproduces the Spearman round-10 preview atlas and JSON byte for byte (183,016 bytes, q80). |
 | `regions.py` | Region IoU, region RGB error, pale-pixel count, reviewer stats per box (pixels, mean RGB, luminance mean and p90), prop width on a row, wasted and jumping frames in a clip, native-size comparison sheet. CLI: `python -m kit.regions`. | Tests, and reproduces round-9/10 numbers from the real renders (whole IoU 0.8983 → 0.8989, lower legs 71.96% → 72.86%) and the art director's round-10 findings (feet luminance 187 vs 146; death frames 6–8 barely change). |
-| `critique.py`, `report.py` | Whole-image IoU (±3 px) and CIE76 ΔE, triptych, crossfade, 160 px contact sheet; inserts evidence above the FOCUS lines of a round note. | Tests (`../test_critique.py` on the pipeline branch); run every round through `../critique.py`. |
+| `critique.py`, `report.py` | Whole-image IoU (±3 px); colour as CIE76 ΔE on blurred images (2 px Gaussian at 256) with per-region values from `--preset` or `--region`, raw per-pixel ΔE for information; triptych, crossfade, heatmaps, 160 px contact sheet; inserts evidence above the FOCUS lines of a round note. | `../test_critique.py` (4 tests); run every round through `../critique.py`. Blurred and regional values added 2026-11-24 and measured on the round-9 and round-10 renders. |
 
 ## Tests
 
 ```sh
 $ANIM_ROOT/venv/bin/python tools/art/anim3d/kit/test_kit.py   # 17 tests, about 20 s, no Blender
+(cd tools/art/anim3d && $ANIM_ROOT/venv/bin/python test_critique.py)   # 4 tests
 ```
 
 `probe_human.py` runs in Blender through the gate with the pipeline's isolated MPFB resources.

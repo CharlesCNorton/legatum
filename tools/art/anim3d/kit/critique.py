@@ -5,6 +5,14 @@ Run with ~/LegatumRuns/anim-pilot/venv/bin/python (Pillow and numpy required).
 Both images are sampled on the same 256 x 256 canvas; the camera and framing
 must already match. The silhouette chooses an offset (±3 pixels); colour uses that same offset.
 The metrics include the base and are diagnostics, never art approval.
+
+Colour is judged on BLURRED images (Gaussian, sigma 2 px at 256, in linear
+light, inside the overlap). Per-pixel CIE76 on sharp images is dominated by
+fine-texture misregistration: on Spearman round 10 the heatmap was speckle
+everywhere and the raw number (13.8) could not reach the target of 6 even on a
+near-perfect match (cloud reviewer, 2026-11-24). The raw number is still
+reported, as information only. Named regions (--region or --preset) get their
+own blurred and raw values so a merge can see where the colour is off.
 """
 
 import argparse
@@ -23,7 +31,8 @@ SIZE = 256
 CREAM = (248, 244, 231, 255)
 CLIPS = ("idle", "move", "attack", "hit", "death")
 IOU_TARGET = 0.95
-DELTA_E_TARGET = 6.0
+DELTA_E_TARGET = 6.0  # applies to the blurred value
+BLUR_SIGMA = 2.0      # pixels at 256
 
 
 def load_image(path):
@@ -95,6 +104,60 @@ def rgb_to_lab(rgb):
                      200 * (f[..., 1] - f[..., 2])), axis=-1)
 
 
+def gaussian_blur(values, sigma):
+    """Separable Gaussian on a 2D float array, zero outside the image."""
+    radius = max(1, int(round(3 * sigma)))
+    x = np.arange(-radius, radius + 1)
+    kernel = np.exp(-(x * x) / (2 * sigma * sigma))
+    kernel /= kernel.sum()
+    rows = np.apply_along_axis(lambda line: np.convolve(line, kernel, mode="same"), 1, values)
+    return np.apply_along_axis(lambda line: np.convolve(line, kernel, mode="same"), 0, rows)
+
+
+def blurred_rgb(rgb, mask, sigma=BLUR_SIGMA):
+    """Blur sRGB (0-255) in linear light using only pixels inside `mask`.
+
+    Normalised convolution: pixels outside the mask contribute nothing, so the
+    background never bleeds into the figure. Returns sRGB 0-255 floats.
+    """
+    values = np.asarray(rgb, dtype=np.float64) / 255.0
+    linear = np.where(values <= 0.04045, values / 12.92, ((values + 0.055) / 1.055) ** 2.4)
+    weight = gaussian_blur(mask.astype(np.float64), sigma)
+    safe = np.maximum(weight, 1e-9)
+    blurred = np.stack([gaussian_blur(linear[..., i] * mask, sigma) / safe for i in range(3)], axis=-1)
+    blurred = np.clip(blurred, 0, 1)
+    return np.where(blurred <= 0.0031308, blurred * 12.92, 1.055 * blurred ** (1 / 2.4) - 0.055) * 255.0
+
+
+def region_delta_e(delta_raw, delta_blurred, overlap, regions):
+    """Mean raw and blurred delta-E inside each named (x0, y0, x1, y1) box."""
+    report = {}
+    for name, (x0, y0, x1, y1) in regions.items():
+        inside = overlap[y0:y1, x0:x1]
+        count = int(np.count_nonzero(inside))
+        report[name] = {"box": [x0, y0, x1, y1], "overlap_pixels": count}
+        if count:
+            report[name]["mean_delta_e_blurred"] = float(np.mean(delta_blurred[y0:y1, x0:x1][inside]))
+            report[name]["mean_delta_e_cie76"] = float(np.mean(delta_raw[y0:y1, x0:x1][inside]))
+    return report
+
+
+def load_regions(args):
+    """Regions from --region name=x0,y0,x1,y1 and/or a kit preset's `critique_regions`."""
+    regions = {}
+    preset = getattr(args, "preset", None)
+    if preset:
+        path = Path(__file__).parent / "presets" / f"{preset}.json"
+        regions.update({k: tuple(v) for k, v in json.loads(path.read_text()).get("critique_regions", {}).items()})
+    for item in getattr(args, "region", None) or []:
+        name, values = item.split("=")
+        box = tuple(int(v) for v in values.split(","))
+        if len(box) != 4:
+            raise ValueError("--region is name=x0,y0,x1,y1")
+        regions[name] = box
+    return regions
+
+
 def on_cream(image, mask):
     rgba = np.asarray(image).copy()
     rgba[:, :, 3] = np.where(mask, rgba[:, :, 3], 0)
@@ -158,6 +221,10 @@ def run(args):
     render_rgb = shift_array(np.asarray(render)[:, :, :3], dx, dy)
     delta = np.linalg.norm(rgb_to_lab(paint_rgb) - rgb_to_lab(render_rgb), axis=2)
     mean_delta = float(np.mean(delta[overlap]))
+    delta_blurred = np.linalg.norm(rgb_to_lab(blurred_rgb(paint_rgb, overlap))
+                                   - rgb_to_lab(blurred_rgb(render_rgb, overlap)), axis=2)
+    mean_blurred = float(np.mean(delta_blurred[overlap]))
+    regions = region_delta_e(delta, delta_blurred, overlap, load_regions(args))
     out = args.out
     out.mkdir(parents=True, exist_ok=True)
     stem = f"{slug}-round{args.round}"
@@ -183,6 +250,10 @@ def run(args):
     intensity = np.clip(delta / 30, 0, 1)
     heat[overlap] = np.stack((255 * intensity, 210 * (1 - intensity), 40 * (1 - intensity)), axis=-1)[overlap].astype(np.uint8)
     Image.fromarray(heat).save(out / f"{stem}-deltae-heatmap.png")
+    tone = np.full((SIZE, SIZE, 3), CREAM[:3], dtype=np.uint8)
+    intensity = np.clip(delta_blurred / 30, 0, 1)
+    tone[overlap] = np.stack((255 * intensity, 210 * (1 - intensity), 40 * (1 - intensity)), axis=-1)[overlap].astype(np.uint8)
+    Image.fromarray(tone).save(out / f"{stem}-deltae-blurred-heatmap.png")
     make_contact_sheet(frames, out / f"{stem}-contact-sheet.png")
     if args.feet:
         shutil.copyfile(args.feet, out / f"{stem}-feet-check.png")
@@ -193,8 +264,11 @@ def run(args):
         "silhouette_iou": float(iou), "silhouette_target": IOU_TARGET,
         "silhouette_pass": bool(iou >= IOU_TARGET),
         "iou_search_px": 3, "best_render_offset_px": {"x": dx, "y": dy},
+        "mean_delta_e_blurred": mean_blurred, "blur_sigma_px": BLUR_SIGMA,
         "mean_delta_e_cie76": mean_delta, "delta_e_target": DELTA_E_TARGET,
-        "colour_pass": bool(mean_delta <= DELTA_E_TARGET),
+        "colour_pass": bool(mean_blurred <= DELTA_E_TARGET),
+        "colour_metric": "mean_delta_e_blurred (raw per-pixel CIE76 is information only)",
+        "regions": regions,
         "overlap_pixels": int(np.count_nonzero(overlap)),
         "frame_counts": {clip: len(frames[clip]) for clip in CLIPS},
     }
@@ -203,8 +277,14 @@ def run(args):
                    f"### Automated critique: {stem} ({getattr(args, 'label', 'unspecified render')})\n\n"
                    f"- Silhouette IoU: **{iou:.4f}** (target ≥ {IOU_TARGET:.2f}; {'PASS' if metrics['silhouette_pass'] else 'FAIL'}). "
                    f"Best of ±3 px offsets: render x={dx:+d}, y={dy:+d}.\n"
-                   f"- Mean CIE76 ΔE: **{mean_delta:.2f}** (target ≤ {DELTA_E_TARGET:.0f}; {'PASS' if metrics['colour_pass'] else 'FAIL'}), "
-                   f"over {metrics['overlap_pixels']} overlapping pixels including base after that offset.\n"
+                   f"- Tone/colour ΔE on blurred images (sigma {BLUR_SIGMA:g} px, CIE76): **{mean_blurred:.2f}** "
+                   f"(target ≤ {DELTA_E_TARGET:.0f}; {'PASS' if metrics['colour_pass'] else 'FAIL'}), "
+                   f"over {metrics['overlap_pixels']} overlapping pixels including base after that offset. "
+                   f"Raw per-pixel ΔE, information only: {mean_delta:.2f}.\n"
+                   + ("- Regions (blurred ΔE): " + ", ".join(
+                       f"{name} {r['mean_delta_e_blurred']:.1f}" for name, r in regions.items() if "mean_delta_e_blurred" in r) + ".\n"
+                      if regions else "")
+                   +
                    f"- Painting mask: {mask_source}; frames: "
                    + ", ".join(f"{clip} {len(frames[clip])}" for clip in CLIPS) + ".\n"
                    + f"- Rest: `{args.rest}`. Contact sheet uses `{args.frames}`.\n")
@@ -221,6 +301,8 @@ def main():
     parser.add_argument("--feet", type=Path)
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--round", type=int, required=True)
+    parser.add_argument("--region", action="append", help="name=x0,y0,x1,y1 at 256 px; repeatable")
+    parser.add_argument("--preset", help="kit preset name whose critique_regions to report, e.g. spearman")
     args = parser.parse_args()
     try:
         print(json.dumps(run(args), indent=2))

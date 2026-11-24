@@ -40,6 +40,23 @@ Round-to-task mapping for rounds 1–3 is inferred from task order in `astra.log
 - Open motion (round 9) fixed the walk at a stroke after eight rounds of hand-built motion; contact checks have passed since (slip ≤ 0.0022 mm, floor error ≤ 1.14 mm, heading ≤ 2.62°).
 - Rounds 9 and 10 improved motion and revealed-surface coverage more than rest metrics: IoU has been flat at 0.90 for two rounds. The remaining rest gap is form (shoulder, lower legs) and value structure.
 
+### Colour on the blurred scale (added 2026-11-24)
+
+`critique.py` now judges colour on blurred images (2 px Gaussian at 256) and per region. Each round's own graded rest render, re-measured:
+
+| Render | IoU | Raw ΔE | Blurred ΔE | head/crest | torso | cloak (spear side) | shield | legs | feet | base |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Round 9 CPU | 0.9053 | 13.71 | 7.62 | 4.5 | 4.3 | 8.6 | 3.7 | 7.9 | 17.4 | 6.6 |
+| Round 10 CPU | 0.9022 | 13.81 | 7.36 | 4.4 | 4.1 | 8.9 | 3.3 | 7.6 | 17.4 | 6.0 |
+| Round 10 GPU | 0.9039 | 14.05 | 6.98 | 3.8 | 3.6 | 8.7 | 2.8 | 7.0 | 17.2 | 6.1 |
+
+Feet, the spear-side cloak and the legs carry the colour error; shield, torso and head are within target. The raw number moved the wrong way across the same three renders.
+
+### Fable builders (2026-11-24, in progress)
+
+- Fable A (look), `fable/unit-anim-3d-spearman-a`: commits `267b2c59` 22:02 and `2127e5ef` 22:22 local; first rest preview 22:23. Art director 03:24Z: better materials than Astra round 10 (shaft colour, cloak cavities, greave and shield highlights, base lip), linen too dark, form unchanged (IoU 0.900 vs 0.903). No clips yet.
+- Fable B (form and motion), `fable/unit-anim-3d-spearman-b`: commit `c74a6c2d` 22:16 local, an authored keyed death collapse plus quick-look tools. No preview or note yet.
+
 ### Round 10 detail (2026-11-23)
 
 | Task | Start | End | Wall time | Tokens |
