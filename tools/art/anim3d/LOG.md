@@ -17,7 +17,7 @@ For a second infantry unit starting from the kit, with two builders split by asp
 
 That is roughly 3 hours of wall-clock per unit and two GPU launches if a gate fails, against 31 hours for the first. The bottleneck is the single Blender slot: a full GPU pass holds it for 38 minutes and starves every preview, so thirty units in parallel are limited by about 30 × 1 hour of Blender time, not by agents. Run GPU passes back to back when builders are between previews, or move final passes to a second machine. Record the real numbers here when the second unit runs; delete this estimate then.
 
-## Spearman (first unit; metric targets passed in round 13, art PASS pending)
+## Spearman (first unit; metric targets passed in round 13; round 14 is the first full candidate for Sam)
 
 ### Summary
 
@@ -104,7 +104,7 @@ Lanes about 03:05–03:33 on the round-13 GPU candidate `d7798046`.
 - Lane a (death staging): Fable D's collapse compacted onto the base; crest and feet margins against the rim −28.1 / −13.7 px → +3.3 / +5.0 px. Rest on the CPU proxy unchanged in kind: IoU 0.9513, blurred ΔE 3.33.
 - Lane b (cloak in move and attack): cloak edge sweep 22.1 → 15.5 px (move) and 10.4 → 8.0 px (attack); cloth endpoint p95 182 → 133 mm. A 1.35× pin trial rejected (worst vertex 246 mm).
 - Lane c (loops and transitions): cloak loop gap 12.07 → 0.00003 px (move), 2.62 → 0.00003 px (idle); idle-to-move sole gap 23.0 → 14.4 px, move-to-idle 18.7 → 9.4 px by rotating the walk's eight samples.
-- Lanes done 03:33:00 (a 16 m, b 13 m, c 29 m in parallel). Merge 03:33–03:49 (16 m): lane b's cloth and lane c's loop closure, sample rotation, evaluated support surface and early parity gate; lane a's side-lying death dropped (contained, but the shield face is lost). Rest pixels identical to round 13 on the CPU proxy (IoU 0.9513, blurred ΔE 3.39); CPU preview atlas 192,682 bytes at q80; 36 tests, zero audit findings, walk slip 0.0042 mm. Worst free-cloth loop correction 273 mm (authored, not simulated). GPU pass 03:49:31–04:31:40 (42 m), first launch clean with the parity gate early, pushed as `9c35ac22`: rest unchanged at IoU **0.9537**, blurred ΔE **3.51** (regions head/crest 3.7, torso 2.9, cloak 4.8, shield 2.4, legs 3.2, feet 5.3, base 3.3); atlas 187,316 bytes at q80; walk slip 0.0042 mm, heading 5.142°. Round wall-clock from lanes to GPU result: 89 m. Visual review of the new clips pending; no PASS file.
+- Lanes done 03:33:00 (a 16 m, b 13 m, c 29 m in parallel). Merge 03:33–03:49 (16 m): lane b's cloth and lane c's loop closure, sample rotation, evaluated support surface and early parity gate; lane a's side-lying death dropped (contained, but the shield face is lost). Rest pixels identical to round 13 on the CPU proxy (IoU 0.9513, blurred ΔE 3.39); CPU preview atlas 192,682 bytes at q80; 36 tests, zero audit findings, walk slip 0.0042 mm. Worst free-cloth loop correction 273 mm (authored, not simulated). GPU pass 03:49:31–04:31:40 (42 m), first launch clean with the parity gate early, pushed as `9c35ac22`: rest unchanged at IoU **0.9537**, blurred ΔE **3.51** (regions head/crest 3.7, torso 2.9, cloak 4.8, shield 2.4, legs 3.2, feet 5.3, base 3.3); atlas 187,316 bytes at q80; walk slip 0.0042 mm, heading 5.142°. Round wall-clock from lanes to GPU result: 89 m. Reviewer, about 04:35 local: round 14 is the first full candidate to show Sam (rest matches the painting, all five clips read at 160 px). No PASS file; that is Sam's call.
 
 ### Fable C and D (2026-11-24, from round 12)
 

@@ -79,6 +79,10 @@ Eevee emission paint: sun pi at 24°, paint cast .22, fill cast .30, base cast
 
 Round 13 GPU (`d7798046`), after the parity gate was given a noise tolerance: **IoU 0.9537, blurred ΔE 3.51**, raw 6.36; regions head/crest 3.7, torso 2.9, cloak 4.8, shield 2.4, legs 3.2, feet 5.3, base 3.3; atlas 187,254 bytes at q80; walk slip 0.0042 mm, heading 5.142°. Both metric targets pass for the first time. Visual review pending; no PASS file.
 
+## Reviewer on round 14 (about 09:35Z)
+
+Round 14 is the **first full candidate to show Sam**: the rest pose matches the painting and all five clips read well at 160 px; round 13's shield-readable death stays. Round 15 finishes four items without disturbing anything that passes: sandal straps and toes; a stone shadow that moves with the walk; a softer guard-to-walk cut; the early-fall spear and the pale sliver under the spear hand. If anything regresses against round 14, round 14's version of that part is kept. After round 15 the loop holds until Sam has seen it.
+
 ## Round 14 GPU (added by the skill editor, 2026-11-24 09:32Z)
 
 Round 14 (`9c35ac22`) is round 13's rest with polished clips: cloak damped in move and attack, cloth loop seams closed, walk samples rotated to soften the idle cut, support queried on evaluated faces. GPU: IoU 0.9537, blurred ΔE 3.51 (unchanged), atlas 187,316 bytes at q80, walk slip 0.0042 mm. The pass ran clean on its first launch. Clip review pending. The polish list below still applies except the cloak flare in move and the loop seams.
