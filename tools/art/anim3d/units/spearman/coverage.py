@@ -165,4 +165,6 @@ def apply(scene, source):
                 links.new(factor.outputs[0], camera_gate.inputs[0])
             mat['spearman_garment_coverage'] = 10
     scene['spearman_garment_coverage'] = 10
+    from fold_paint import apply as finish_folds
+    report['fold_paint'] = finish_folds(scene)
     return report

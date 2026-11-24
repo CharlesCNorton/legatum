@@ -17,6 +17,7 @@ assert sc['infantry_refinement'] == 8
 assert sc['spearman_silhouette_round'] == '9a'
 assert sc['spearman_surface_finish'] == 9
 assert sc['spearman_garment_coverage'] == 10
+assert sc['spearman_lower_body_round'] == '10a'
 for name in ['Linen tunic shoulder sleeves', 'Cloak • simulated wool',
              'MPFB anatomical male • original topology']:
     assert sc.objects[name].data.color_attributes.get('R10b garment coverage'), name
@@ -46,7 +47,9 @@ for mat in bpy.data.materials:
         gate = strength.inputs[0].links[0].from_socket
         assert strength.operation == 'MULTIPLY'
         assert gate.node.type == 'LIGHT_PATH' and gate.name == 'Is Camera Ray'
-        assert any(n.type == 'AMBIENT_OCCLUSION' for n in mat.node_tree.nodes)
+        assert any(n.type == 'GROUP' and n.node_tree.name == 'Legatum painterly cavity pigment v1'
+                   and any(child.type == 'AMBIENT_OCCLUSION' for child in n.node_tree.nodes)
+                   for n in mat.node_tree.nodes)
         unseen_fills += 1
     painted += 1
 assert painted > 300, painted

@@ -6,6 +6,9 @@ second hand-keyed performance. Units are metres, seconds and radians.
 """
 import math
 
+# Complete donor-space attenuation; never alter target foot orientation.
+WALK_INFLUENCE = .90
+
 
 def curve(phase, values):
     """Bounded C1 Hermite interpolation, with zero slope only at extrema.
@@ -34,9 +37,10 @@ def source_phase(clip, phase):
     if clip == 'hit':
         return min(1., phase*3.)
     if clip == 'death':
-        # Preserve the open clip's poses; spend fewer samples on its slow squat
-        # and more on impact/settle. The final two delivered samples still hold.
-        return curve(phase, [0, .12, .31, .48, .66, .82, .93, .985, 1, 1])
+        # Sample the knee yield and torso descent separately, then traverse the
+        # donor's brief feet-up recoil between delivery samples. No new poses.
+        # Reserve the final quarter for contact settling and an exact hold.
+        return curve(phase, [0, .18, .29, .37, .44, .54, .78, .94, 1, 1])
     return phase
 
 
@@ -82,8 +86,10 @@ class EquipmentResponse:
         from mathutils import Vector
         self.rig, self.shield, self.clip = rig, shield, clip
         self.crest = []
-        self.hair_spring = Spring(4.2, .48, .7, .026)
-        self.shield_spring = Spring(3.0, .72, .06, math.radians(3))
+        self.hair_spring = (Spring(3.6, .95, .35, .016) if clip == 'death'
+                            else Spring(4.2, .48, .7, .026))
+        self.shield_spring = (Spring(3.0, 1., .025, math.radians(1)) if clip == 'death'
+                              else Spring(3.0, .72, .06, math.radians(3)))
         if clip in ['idle', 'move']:
             return
         anchors = []
@@ -146,3 +152,86 @@ class EquipmentResponse:
         return {'method': 'carrier acceleration, damped passive spring',
                 'max_crest_tip_deflection_m': self.hair_spring.maximum,
                 'max_shield_lag_radians': self.shield_spring.maximum}
+
+
+class ShieldContact:
+    """Ground-aware rotation about the carried grip; never detach or translate.
+
+Cache evaluated shield geometry in control space. Choose the nearer feasible
+flat orientation and the smallest additional hinge rotation that clears stone.
+"""
+    def __init__(self, rig, shield):
+        import bpy
+        self.rig, self.shield = rig, shield
+        self.points = []
+        inverse = shield.matrix_world.inverted()
+        depsgraph = bpy.context.evaluated_depsgraph_get()
+        for ob in shield.children:
+            evaluated = ob.evaluated_get(depsgraph)
+            mesh = evaluated.to_mesh()
+            self.points.extend(inverse @ ob.matrix_world @ v.co for v in mesh.vertices)
+            evaluated.to_mesh_clear()
+        self.max_angle = 0.
+
+    def solve(self):
+        from mathutils import Matrix, Vector, Quaternion
+        matrix = self.shield.matrix_world.copy()
+        pivot = self.rig.matrix_world @ self.rig.pose.bones['lowerarm_l'].tail
+        # The shell was authored in the control's XZ plane.
+        normal = matrix.to_quaternion() @ Vector((0, -1, 0))
+        world = [matrix @ point-pivot for point in self.points]
+        def lowest(rotation):
+            return min((rotation @ point).z+pivot.z for point in world)
+        if lowest(Quaternion()) >= .109:
+            return
+        choices = [normal.rotation_difference(Vector((0,0,sign))) for sign in [1,-1]]
+        rotation = max(choices, key=lowest)
+        assert lowest(rotation) >= .109, 'Attached shield has no floor-clear hinge pose'
+        lo, hi = 0., 1.
+        for _ in range(12):
+            mid = (lo+hi)*.5
+            if lowest(Quaternion().slerp(rotation, mid)) >= .109:
+                hi = mid
+            else:
+                lo = mid
+        rotation = Quaternion().slerp(rotation, hi)
+        self.max_angle = max(self.max_angle, rotation.angle)
+        self.shield.matrix_world = (Matrix.Translation(pivot)
+            @ rotation.to_matrix().to_4x4() @ Matrix.Translation(-pivot) @ matrix)
+
+
+def death_source_layers(source, action):
+    """Sample two existing open poses for source-local recoil/carry blending."""
+    import bpy
+    scene = bpy.context.scene
+    scene.frame_set(int(action.frame_range[1]))
+    settled = {p.name: p.rotation_quaternion.copy() for p in source.pose.bones
+               if p.name.startswith(('DEF-thigh.', 'DEF-shin.', 'DEF-foot.', 'DEF-toe.'))}
+    idle = bpy.data.actions['Idle_Loop']
+    source.animation_data.action = idle
+    source.animation_data.action_slot = idle.slots[0]
+    scene.frame_set(int(idle.frame_range[0]))
+    carried = {name: source.pose.bones[name].rotation_quaternion.copy()
+               for name in [f'DEF-{bone}.{side}' for side in ['L', 'R']
+                            for bone in ['upper_arm', 'forearm', 'hand']]}
+    source.animation_data.action = action
+    source.animation_data.action_slot = action.slots[0]
+    return settled, carried
+
+
+def blend_death_source(source, phase, layers):
+    """Blend open donor poses before world/rest-roll retargeting, never feet after.
+
+The terminal donor leg pose restrains its comedic impact recoil. Idle's local
+arm poses retain the carried shield and soften the free-arm recoil as the donor torso falls. Neither
+layer authors a human pose; the original source curves remain intact.
+"""
+    settled, carried = layers
+    recoil = curve(phase, [0, 0, 0, .25, .85, .90, .55, 0, 0, 0])
+    carry = min(1., max(0., phase/.45))
+    carry = carry*carry*(3-2*carry)*.85
+    for poses, weight in [(settled, recoil), (carried, carry)]:
+        for name, rotation in poses.items():
+            p = source.pose.bones[name]
+            p.rotation_quaternion = p.rotation_quaternion.slerp(
+                rotation, weight*(.65/.85 if poses is carried and name.endswith('.R') else 1.))

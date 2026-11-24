@@ -16,6 +16,10 @@ from mathutils import Matrix, Vector
 from mathutils.bvhtree import BVHTree
 from bpy_extras.object_utils import world_to_camera_view
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from kit.projection import freeze_projection
+from kit.studio import match_camera
+
 ROOT = Path(os.environ['ANIM_ROOT'])
 MASTER = ROOT / 'masters/spearman-3d-v2'
 fill_lock = json.loads((Path(__file__).parent/'fills.lock.json').read_text())
@@ -65,10 +69,7 @@ def limb(u, l, target, pole):
 
 # Match the painted disc ellipse. Keep this exact camera in
 # rest, clips and final renders; render.py must not reset it after UV calibration.
-sc.camera.location = (2.5, -7, 3.0)
-sc.camera.rotation_euler = (Vector((0, 0, 1.20))-sc.camera.location).to_track_quat('-Z', 'Y').to_euler()
-sc.camera.data.ortho_scale = 2.90
-sc.camera.data.dof.use_dof = False
+match_camera(sc, "spearman")
 rig.location.x = .065
 head = rig.pose.bones['head']
 pivot = head.head.copy()
@@ -339,30 +340,10 @@ for ob in list(sc.objects):
     if ob.name not in evaluated or ob.name == 'Stationary cream stone': continue
     points, normals = evaluated[ob.name]
     assert len(points) == len(ob.data.vertices), ob.name
-    uv = ob.data.uv_layers.get('Painting camera rest') or ob.data.uv_layers.new(name='Painting camera rest')
-    mask = ob.data.color_attributes.get('Painting visibility') or ob.data.color_attributes.new(name='Painting visibility', type='FLOAT_COLOR', domain='CORNER')
-    weights = []
-    for p, normal in zip(points, normals):
-        hit, _, _, distance = tree.ray_cast(p+view*10, -view, 10.02)
-        visible = hit is not None and (hit-p).length < .018
-        # Relief can occlude adjacent shield vertices. The whole front shell
-        # carries the same paint beneath it; do not punch PBR wedges into it.
-        if ob.name.startswith(('Convex bronze aspis', 'Sunburst raised ray', 'Aspis central omphalos')):
-            visible = hit is not None and (hit-p).length < .14
-        # Ray visibility rejects hidden backs. Absolute facing also supports
-        # double-sided cloth and open armour shells without painting through them.
-        facing = abs(normal.dot(view))
-        weight = max(0, min(1, (facing-.02)/.18)) if visible else 0
-        weights.append(weight)
-    for loop in ob.data.loops:
-        p = world_to_camera_view(sc, sc.camera, points[loop.vertex_index])
-        # Full-resolution painting -> the game's padded 256px reference canvas.
-        u = (349+(p.x*256-75)*556/105)/image.size[0]
-        v = 1-(9+((1-p.y)*256-12)*1236/232)/image.size[1]
-        uv.data[loop.index].uv = (u, v)
-        w = weights[loop.vertex_index]
-        mask.data[loop.index].color = (w, w, w, 1)
-    coverage[ob.name] = round(sum(weights)/max(1, len(weights)), 3)
+    uv, mask, coverage[ob.name] = freeze_projection(
+        ob, points, normals, sc, tree, image,
+        registration=(349, 9, 75, 12, 556/105, 1236/232, 256),
+        relief_prefixes=('Convex bronze aspis', 'Sunburst raised ray', 'Aspis central omphalos'))
     # Preserve AO/curvature UV as the active render UV. Painting uses its named UV.
     for layer in ob.data.uv_layers: layer.active_render = layer.name != uv.name
     ob.data.uv_layers.active_index = 0

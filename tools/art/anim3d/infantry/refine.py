@@ -5,6 +5,10 @@ All coordinates below are landmarks on the padded 256px reference painting.
 """
 import math
 import bmesh
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from kit.studio import match_lighting
 import bpy
 from mathutils import Matrix, Vector
 from mathutils.bvhtree import BVHTree
@@ -277,22 +281,7 @@ def refine(sc, aim, screen_sculpt):
     # second time, losing the source's bright bronze edges and dark engraving.
     # Standard preserves those pigment relationships; the fixed rest histogram
     # still calibrates the combined physical/projection result for every clip.
-    sc.view_settings.view_transform = 'Standard'
-    sc.view_settings.look = 'None'
-    sc.world.color = (.19, .19, .19)
-    bpy.data.objects['Warm upper-left key'].data.color = (1, .97, .93)
-    bpy.data.objects['Soft cool fill'].data.color = (.95, .97, 1)
-    # Standard does not roll off overexposure. Keep the product-light ratio but
-    # reduce incident energy so the cream pigment is not clipped to white.
-    for name in ['Warm upper-left key', 'Soft cool fill', 'Warm back rim']:
-        bpy.data.objects[name].data.energy *= .55
-    # A broader elevated softbox gives short soft contact shadows, closer to
-    # the painted base. Compensate for its greater distance; retain cool fill.
-    key = bpy.data.objects['Warm upper-left key']
-    key.location = (-3, -4, 8)
-    key.rotation_euler = (Vector((0, 0, 1))-key.location).to_track_quat('-Z', 'Y').to_euler()
-    key.data.size = 5.0
-    key.data.energy *= 1.55
+    match_lighting(sc, 'spearman')
     # Freeze the finished rigid kit surfaces BEFORE projecting. UVs made on
     # the raw shell were then offset by Solidify and Bevel, visibly displacing
     # the painted sunburst from its own raised rays. Keep all actual thickness

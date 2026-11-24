@@ -36,3 +36,10 @@ Round 10b uses no new downloaded or generated asset. Frozen shoulder/back
 pigment, broad garment folds and region masks are original MIT code in
 `coverage.py`; output art is project CC BY 4.0. Reuses the original painting,
 CC0 MPFB anatomy/skin, recorded wool/linen fills and unchanged CC0 motion.
+
+Round 10c reuses the same pinned CC0 `Walk_Loop` (90% source NLA influence),
+`Death01` (source phase remapping), idle and hit. No new asset or human joint
+keys. Death blends its own settled local leg pose into recoil and the existing
+Idle_Loop local arms (85% shield arm, 65% free arm) into the carrying pose
+before retargeting. It keeps the
+original arm-mounted shield, with damped crest and cape response. Original orchestration is MIT; renders are CC BY 4.0.
