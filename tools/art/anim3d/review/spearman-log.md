@@ -129,3 +129,9 @@
 - Round 9 delivery: git staging denied the worktree index.lock (Operation not permitted). Sixteen source/docs files remain uncommitted for the runner; exact requested commit text is in spearman-round9-commit-message.txt. No push, PR, merge or PASS.
 - GPU round 8 started: full Cycles GPU pass requested.
 - GPU round 8 finished: all stages, masters, atlas validation and movie complete; visual review pending.
+- R9b material lane: read round-8 evidence/feedback, art skill and all six Blender skills; isolated master under masters/spearman-r9b. Material/projection seams only; no geometry, camera, lights or animation edits.
+
+- R9a: read project/art instructions, playbook, shared/unit feedback and prior critique; loaded all six Blender skills. Isolated copied master/checkpoint and round-8 evidence under lanes/spearman-r9a; focus is geometry/camera only.
+
+- R9c motion lane: read project/art/playbook, feedback, round-8 critique and six Blender skills. Using animation and rendering workflows; material/proportion code untouched. Isolated masters under lanes/spearman-r9c; baseline GPU review preserved.
+- R9a: inspected round-8 rest split/crossfade, top/front feet sheet, all five strips and eight sampled movie frames. Main silhouette errors: high shield shoulder, oversize trailing cape, upper-arm gap; camera and total height already close. CPU baseline rendering at 256px/16 samples.
