@@ -96,6 +96,11 @@ pub struct CampaignMemory {
     /// Gene `rome_opening_finish` (`rome_finish.rs`): the rival the opening went to war with.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub rome_victim: Option<legatum_core::PlayerId>,
+    /// Gene `rome_second_war`: the soft city and its owner held after the first victim.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rome_second_target: Option<CityId>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rome_second_enemy: Option<TeamId>,
     /// Gene `rome_found_now` (`rome_found_now.rs`): the site each Roman veteran is walking to,
     /// kept until it founds there or the site stops being legal.
     #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]

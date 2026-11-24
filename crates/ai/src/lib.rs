@@ -89,6 +89,7 @@ mod rome_drill;
 mod rome_finish;
 mod rome_found_now;
 mod rome_opening;
+mod rome_second_war;
 mod runaway;
 mod scripted;
 pub mod search;
