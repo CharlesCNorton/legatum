@@ -93,6 +93,10 @@ pub struct CampaignMemory {
     /// within spacing), so it rescouts instead of ordering the same found again.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub found_tried: Vec<(UnitId, legatum_core::Hex, u32)>,
+    /// Gene `rome_found_now` (`rome_found_now.rs`): the site each Roman veteran is walking to,
+    /// kept until it founds there or the site stops being legal.
+    #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
+    pub rome_found_sites: std::collections::BTreeMap<UnitId, legatum_core::Hex>,
     /// Gene `rome_colonia` (`goal_colonia.rs::colonia_lock_guard`): enemy cities whose capture
     /// waited a turn so the Colonia's founder would not be locked in them (city tile, turn).
     /// A capture waits at most one turn in a row.

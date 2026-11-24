@@ -193,6 +193,7 @@ impl Planner<'_> {
                 // units does not recall the veteran founding a city this turn (or walking
                 // to its site); the site's own danger gates already priced them.
                 .filter(|u| Some(u.id) != self.roman_founder && Some(u.id) != self.colonia_founder)
+                .filter(|u| !self.rome_founders_now.contains(&u.id))
                 .filter(|u| self.support_path_this_turn(u, city.pos).is_some())
                 .max_by_key(|u| {
                     (
@@ -222,6 +223,7 @@ impl Planner<'_> {
                 .filter(|u| u.military && u.ranged == 0 && u.pos != city.pos)
                 .filter(|u| Some(u.id) != assigned && !staging.contains(&u.id))
                 .filter(|u| Some(u.id) != self.roman_founder && Some(u.id) != self.colonia_founder)
+                .filter(|u| !self.rome_founders_now.contains(&u.id))
                 .filter(|u| !self.ctx.own_cities.iter().any(|c| c.pos == u.pos))
                 .filter(|u| u.pos.distance(city.pos) > 1 && u.pos.distance(city.pos) <= 5)
                 .filter_map(|u| {
