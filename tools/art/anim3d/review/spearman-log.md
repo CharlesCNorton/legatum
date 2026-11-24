@@ -288,3 +288,5 @@
 - R15 CPU 2026-11-24T10:10:20Z critique
 - R15 CPU 2026-11-24T10:10:20Z complete
 - R15 final CPU: 36 tests; audit zero; 33 feet samples pass; IoU .9512536, blurred ΔE 3.29799, feet 4.71708; 192774-byte Q80 atlas and 8s movie verified. Matched A/B and 256/160/64 review complete; GPU pending, no PASS.
+- R15 final feedback 10:13Z incorporated: art director now sees straps/toes, accepts band at game size, ranks merge best CPU on every aspect; show Sam if GPU matches. No further art edit.
+- GPU round 15 started: full Eevee painted GPU pass requested; Cycles GPU feet inspection.

@@ -8,7 +8,7 @@ requested here. GPU handoff remains ready for the lead.
 ## Selection and provenance
 
 Baseline: `9c35ac22` (round 14 GPU). Read FEEDBACK.md and spearman-FEEDBACK.md,
-including the art director's final 09:59Z round-15 verdict. Compared the supplied
+including the art director's 09:59Z lane verdict and 10:13Z final merge review. Compared the supplied
 Fable A/B notes, native-size rest comparisons and five-clip contact sheets.
 
 - Skill branch `53773742`: imported updated SKILL, LOG, kit README and unit
@@ -17,9 +17,9 @@ Fable A/B notes, native-size rest comparisons and five-clip contact sheets.
   by the shared `kit/critique.py` and stable CLI: no downgrade imported.
 - Astra a `ba1dc841`: took recovered source pigment across the combined
   skin/leather footprint. Its matched CPU feet ΔE improves 5.45 → 4.72 and
-  global 3.39 → 3.30, with silhouette 0.9513 unchanged. The art director sees
-  no clear gain at native size: this is a modest pigment recovery, **not** a
-  claim that the straps/toes are fixed. Dropped its cloak trial: idle cloth
+  global 3.39 → 3.30, with silhouette 0.9513 unchanged. The preliminary lane review saw no clear gain; the final 10:13Z review of
+  this merge now sees strap bands and separate right toes. Some contrast polish
+  remains (reviewer requests straps 15% darker, skin unchanged). Dropped its cloak trial: idle cloth
   correction rose 71 → 99 mm without a convincing visible silhouette gain.
 - Astra b `798cca9d`: took move-only tilt shading of the lifted instep/straps
   and compact moving shadow pools following evaluated sole centers. The
@@ -63,31 +63,36 @@ recalibrated part paint, and rebuilt every clip. CPU uses Cycles analytic painte
 proxy at 256 px / 8 samples / seed 17, without Eevee cast shadows. Production
 512/256 masters and shipped atlas remain R14 until the host GPU pass.
 
-## Ranked visible gaps (merged CPU preview inspected)
+## Ranked visible gaps (merged CPU preview and final 10:13Z review)
 
-1. **256 px: sandal contrast/toes** (x 88–115 and 144–169, y 204–222).
-   Source recovery improves metric/detail slightly; the painting's three dark
-   strap bands against warm lighter skin and separate toes remain clearer.
-   At 160 this is small; at 64 it is not a useful improvement claim.
-2. **256 px: rest shadow band** (x 105–172, y 214–219). It is still too broad
-   and hard compared with the painting's soft local foot shadows. Move uses
-   tracking pools; rest awaits the documented visual/metric decision.
-3. **256 px: rest cloak** (x 98–112, y 120–175): narrower at hip height than
-   the painting; reviewer requests roughly 4 px flare. Behind the right leg
-   (x 140–165, y 175–195), the hem remains a diagonal instead of shallow
-   scallops. The cloth change was rejected for motion regression.
-4. **160 px motion:** the guard/walk hard cut retains measurable 14.41/9.44 px
-   sole displacement, even though R14's phase is visibly better than R13.
-   Rephasing alone cannot match a wide guard at both ends. Death retains a
-   quick kneel-to-prone step and three repeated held frames; do not trade the
-   readable shield/crest ending for containment alone.
-5. **256 px small tells:** pale sliver beneath spear hand around (106,123),
-   bronze cavities slightly shallow (reviewer: helmet p10 33 vs 26, cuirass
-   38 vs 31). These were not addressed by a passing lane and remain open.
+1. **256 px: spear-side rest cloak** (x 98–112, y 120–175): still narrower at
+   hip height than the painting; reviewer requests 4 px flare and lit folds
+   8–12% darker (their proxy p90 185 vs painting 158). This is now the leading
+   rest-pose gap. Do not reintroduce the rejected idle-cloth correction.
+2. **256 px: cloak hem** behind the right leg (x 140–165, y 175–195): the
+   diagonal edge should level near y 190 with three shallow scallops.
+3. **Motion:** one of the three held death frames could go to the quick
+   kneel-to-prone step. Guard/walk retains measured 14.41/9.44 px sole boundary
+   displacement, although all five clips read naturally at 160 to the director.
+   Rephasing alone cannot match a wide guard at both ends. Retain the readable
+   shield/crest ending and early-fall spear timing.
+4. **256 px small surface tells:** pale sliver beneath the spear hand around
+   (106,123), bronze cavities a little shallow (earlier reviewer helmet p10
+   33 vs 26, cuirass 38 vs 31), left greave about 2 px off its painted lean.
+5. **Feet and base polish, now accepted at game size:** the 10:13Z director
+   can see the recovered strap bands and separate right toes (x 152–166,
+   y 208–220). Feet are a little light by their measure (150 vs 141); darken
+   only straps 15%, leaving skin. They accept the weaker shadow band at 160
+   and 64 and clarify the pool preference was for the **base**, not changed
+   feet. If revisited after GPU review, preserve feet exactly and fade only
+   the inter-foot band (x 115–145, y 214–219). The stone side remains smoother
+   than the painted grain at 256.
 
 At 64 px the shield, crest, spear and stance preserve the painting's identity;
-no claim that this round materially improves the 64 px token. At 256 the render
-remains a close but visibly simpler painted miniature. Final GPU judgment pending.
+no claim of a material 64 px improvement. At 256 there are visible contour and
+surface differences. At 160 the director considers none of the remaining items
+noticeable in game. Their final ranking makes R15 the best CPU candidate on every
+aspect; **R14 GPU remains the best verified final build until R15 GPU exists**.
 
 ## Lead handoff
 
@@ -175,6 +180,20 @@ uncommitted on `astra/unit-anim-3d-v2`. Runner artifacts:
 `commit-message.txt` (required gpt-6-astra co-author included). The patch covers
 only this round's source changes against `9c35ac22`; no masters are in git.
 
-FOCUS a: After Sam's review, strengthen strap/skin contrast and toes; cloak flare/scalloped hem only if motion and silhouette do not regress.
-FOCUS b: Resolve soft rest pools versus regional error on matched GPU evidence; retain the accepted dark moving-foot pigment and test the hand sliver/cavity depth.
+## Final art-director feedback received during handoff — 10:13Z
+
+The director reviewed this merge's CPU comparison, contact sheet and note:
+strap bands and separate right toes now read at 256; the weaker band is acceptable
+at 160/64; all five clips read naturally at 160. R15 merge is ranked best for
+silhouette, materials/values, move, hit and death; idle/attack remain frozen.
+No Fable lane is ahead. Recommendation: if GPU matches this proxy, show Sam R15
+as the PASS candidate. No GPU frames have been reviewed and no PASS is issued.
+
+Their independent proxy IoU is 0.949 (also unchanged for R14); shared critique
+remains 0.9512536 at zero/best offset. These measurements are not interchangeable;
+use the shared tool for the numeric gate. The ranked gaps above were rewritten
+for this latest verdict; the earlier lane comments remain historical evidence.
+
+FOCUS a: After Sam's review, refine cloak flare and scalloped hem without worsening motion; the final director now sees recovered straps/toes.
+FOCUS b: Inspect GPU first; if revisiting shadow, preserve feet and fade only the inter-foot band; optional straps 15% darker, hand sliver and cavity depth.
 FOCUS c: Hold R14 donor walk/readable death; only revisit dedicated guard transitions and fall frame allocation after Sam has seen the candidate.
