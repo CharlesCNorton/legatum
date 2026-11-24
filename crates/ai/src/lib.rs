@@ -85,6 +85,7 @@ pub use purchase_defense::city_siege_times;
 mod random;
 mod raze;
 mod research;
+mod rome_drill;
 mod rome_found_now;
 mod rome_opening;
 mod runaway;
