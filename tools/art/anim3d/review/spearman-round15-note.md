@@ -1,6 +1,6 @@
 # Spearman round 15 — combined candidate, CPU review / GPU pending
 
-Delivery status: CPU verification in progress; GPU pass and final visual review pending.
+Delivery status: CPU verified; GPU pass and final visual review pending.
 No PASS issued. The cloud reviewer calls round 14 the first full candidate for
 Sam and asks for a hold after this round; no further automatic art changes are
 requested here. GPU handoff remains ready for the lead.
@@ -63,7 +63,7 @@ recalibrated part paint, and rebuilt every clip. CPU uses Cycles analytic painte
 proxy at 256 px / 8 samples / seed 17, without Eevee cast shadows. Production
 512/256 masters and shipped atlas remain R14 until the host GPU pass.
 
-## Ranked visible gaps (to be checked against the merged preview)
+## Ranked visible gaps (merged CPU preview inspected)
 
 1. **256 px: sandal contrast/toes** (x 88–115 and 144–169, y 204–222).
    Source recovery improves metric/detail slightly; the painting's three dark
@@ -98,6 +98,67 @@ clips; writes native 512/256 masters; packs/validates 160 px trimmed Q≥75 WebP
 painting/render/crossfade comparison, dense top/front feet sheet, decoded 160
 contact sheet, shared critique metrics, and appends numbers above these FOCUS
 lines. The optional rest-pool A/B remains a review alternative, not delivery.
+
+## Fresh combined verification — 2026-11-24
+
+- **36/36 tests pass:** kit 27, look 3, pipeline 2, critique 4. All 120 Python
+  files parse; zero unresolved local imports; gpu.sh syntax/executable checks
+  and git diff whitespace checks pass.
+- Fresh project/calibration and all five clips rebuilt. Scene check, evaluated
+  support regression and transition checks pass; **40-pose audit: zero findings**.
+  Frozen idle/attack hashes match. Independently compared R14/R15 CPU receipts:
+  **all actions match and all 41 alpha images are pixel-identical**, including
+  rest. No silhouette or choreography regression is hidden by the merge.
+- **33 dense foot samples pass every limit:** compensated slip 0.004234 mm,
+  floor error 0.000106 mm, planted heading 5.1424°, readable heading 9.1751°,
+  loop seam 0 mm. Top/front sheet visually inspected. This sheet uses geometry
+  diagnostic materials; inspect the final-look move strip for pigment.
+- Shared critique: **IoU 0.9512536 unchanged; blurred ΔE 3.3865986 → 3.2979887;
+  feet 5.4466455 → 4.7170817**. Both targets pass. Raw ΔE is 7.1487 (diagnostic,
+  not the colour gate). All regions remain below 6. The tiny legs-box increase
+  of 0.0016 is disclosed below: source recovery changes the blurred foot/leg
+  boundary. There is no visible leg change; this is not an assertion that
+  every floating-point metric improved.
+
+| Region | R14 CPU ΔE | R15 CPU ΔE |
+| --- | ---: | ---: |
+| head_crest | 3.7378 | 3.7378 |
+| torso | 2.6347 | 2.6347 |
+| cloak_spear_side | 5.0336 | 5.0336 |
+| shield | 2.2224 | 2.2224 |
+| legs | 2.7262 | 2.7278 |
+| feet | 5.4466 | 4.7171 |
+| base | 3.2322 | 3.2160 |
+
+- Decoded preview atlas validates: **40 frames, 160 px trimmed, 192,774 bytes,
+  Q80** (7,226 bytes below the decimal 200 KB limit). It lives in the isolated
+  lane atlas directory. The shipped atlas remains the R14 GPU artifact until
+  the host produces final masters.
+- Movie independently probed: H.264, yuv420p, 1600×352, 192 frames, exactly
+  8.000 seconds. Native 256/160/64 comparisons, decoded contact sheet and all
+  clip poses inspected. Dark lifted-foot dot suppressed, no altered silhouette;
+  rest sandal bands still softer than the painting. Shield/crest readable at
+  64 px through the retained ending. Rest stone side is smoother/less mottled
+  than the painted disc, especially at 256; at 160 the residual shadow stripe
+  is more noticeable than stone grain.
+- Fresh same-master foot-finish A/B with the recovered pigment confirms the
+  extracted kit leaves geometry, UVs, weights, rig poses and actions untouched.
+  Masked move foot luminance **91.87 → 59.12** and **79.15 → 55.22**; these are
+  the combined candidate's values, not the lane-b values quoted earlier.
+  Marker error to evaluated sole centers is exactly zero. Compact **rest**
+  pools remain worse numerically: global **3.298 → 3.957**, feet **4.717 →
+  10.279**, versus the visually cleaner pools. Their rejection still stands.
+- Setup correction: the first isolated project launch lacked spearman.blend;
+  copied the baseline master beside its preserved projection input and rebuilt
+  successfully. A later control-metric lookup used a nonexistent R14 JSON;
+  rescored the preserved R14 image with the same critique instead. Neither
+  failure was a render/contact defect or a relaxed gate.
+
+Canonical round-15 movie/images/metrics currently show the **CPU proxy**. Copies
+with `spearman-round15-cpu-*` preserve this evidence when the GPU driver replaces
+the canonical filenames. CPU sources, all 40 frames, atlas, receipts and logs:
+`~/LegatumRuns/anim-pilot/lanes/spearman-r15-merge/`. No GPU run or art PASS is
+claimed in this sandbox. No new third-party asset or licence was introduced.
 
 FOCUS a: After Sam's review, strengthen strap/skin contrast and toes; cloak flare/scalloped hem only if motion and silhouette do not regress.
 FOCUS b: Resolve soft rest pools versus regional error on matched GPU evidence; retain the accepted dark moving-foot pigment and test the hand sliver/cavity depth.
