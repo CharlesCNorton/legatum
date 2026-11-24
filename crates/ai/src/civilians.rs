@@ -679,13 +679,16 @@ impl Planner<'_> {
             // committed units; a captured city is worth more than a founded one.
             let siege = self.roman_live_siege();
             // Gene `rome_found_now`: a wounded veteran fights on only where
-            // `rome_wounded_fights_on` says so.
+            // `rome_wounded_fights_on` says so. Gene `rome_recruit_captures`: a badly hurt
+            // unit one fight from its promotion counts as one.
+            let wounded = |p: &Self, u: &UnitView| {
+                (u.level >= 1 && u.hp < legatum_core::data::UNIT_HP) || p.rome_near_veteran_hurt(u)
+            };
             let kept: Vec<UnitId> = if found_now {
                 self.ctx
                     .own_units
                     .iter()
-                    .filter(|u| u.level >= 1 && u.hp < legatum_core::data::UNIT_HP)
-                    .filter(|u| self.rome_wounded_fights_on(u))
+                    .filter(|u| wounded(self, u) && self.rome_wounded_fights_on(u))
                     .map(|u| u.id)
                     .collect()
             } else {
@@ -706,8 +709,7 @@ impl Planner<'_> {
                 .iter()
                 .copied()
                 .filter(|u| {
-                    u.level >= 1
-                        && u.hp < legatum_core::data::UNIT_HP
+                    wounded(self, u)
                         && legatum_core::data::unit_class(u.kind) == Some(UnitClass::Melee)
                         && !self.has_acted(u.id)
                         && self.exposure_at(u.pos) == 0
@@ -728,8 +730,7 @@ impl Planner<'_> {
                     .iter()
                     .copied()
                     .filter(|u| {
-                        u.level >= 1
-                            && u.hp < legatum_core::data::UNIT_HP
+                        wounded(self, u)
                             && legatum_core::data::unit_class(u.kind) == Some(UnitClass::Melee)
                             && !self.has_acted(u.id)
                             && self.exposure_at(u.pos) > 0
@@ -737,8 +738,18 @@ impl Planner<'_> {
                             && !in_siege(u)
                     })
                     .collect();
+                let walk_home = self.rome_recruit_captures();
                 for u in exposed {
-                    self.retreat(u);
+                    // Gene `rome_recruit_captures`: with no safer tile in one move, it walks
+                    // home instead of fighting on where it stands.
+                    if !self.retreat(u)
+                        && walk_home
+                        && let Some(home) = self.ctx.nearest_own_city(u.pos).map(|c| c.pos)
+                        && home != u.pos
+                        && self.move_or_hold(u, home)
+                    {
+                        self.retreats.insert(u.id);
+                    }
                 }
             }
         }

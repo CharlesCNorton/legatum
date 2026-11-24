@@ -23,6 +23,11 @@
 //! - **replacements**: melee is trained for the next founders at any city count
 //!   (`production.rs`).
 //!
+//! Gene `rome_recruit_captures` (with `rome_found_now`) keeps veterans out of the occupation
+//! lock: the move into a fallen city goes to a recruit when one can make it
+//! (`rome_capture_guard`), and a badly hurt unit one fight from its promotion is pulled back
+//! like a wounded veteran (`rome_near_veteran_hurt`).
+//!
 //! Only the fogged view enters: known tiles, known cities and visible units.
 
 use crate::analysis::UNREACHABLE;
@@ -38,6 +43,17 @@ const GARRISON_ALARM: i32 = 2;
 const MAX_FRESH_CITY_LOSS: i32 = 50;
 /// A wounded veteran below this many HP leaves even a siege that still needs it.
 const SIEGE_MIN_HP: i32 = 50;
+/// Gene `rome_recruit_captures`: a level-0 melee unit with this much XP (half of the 16 the
+/// first promotion needs) is too close to a city of its own to spend on the occupation lock.
+const NEAR_VETERAN_XP: i32 = 8;
+/// Gene `rome_recruit_captures`: one ordinary fight (3 to 5 XP) from the first promotion.
+const PROMOTION_EVE_XP: i32 = 13;
+/// Gene `rome_recruit_captures`: a recruit sent into a fallen city in a veteran's place has
+/// at least this many HP (the city may still hold a garrison).
+const RECRUIT_MIN_HP: i32 = 40;
+/// Gene `rome_recruit_captures`: against a visible garrison the recruit needs this percent of
+/// the veteran's forecast win chance to take the fight in its place.
+const RECRUIT_ODDS_PERCENT: i64 = 80;
 
 /// Why a veteran stays a soldier this turn (`Planner::rome_founder_kept`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -215,6 +231,180 @@ impl Planner<'_> {
                 );
             }
         }
+    }
+
+    /// Gene `rome_recruit_captures` is on (with `rome_found_now`).
+    pub(crate) fn rome_recruit_captures(&self) -> bool {
+        self.rome_found_now() && self.decisions.rome_recruit_captures > 0
+    }
+
+    /// A founder, or a melee unit at least half way to its first promotion: a unit the
+    /// occupation lock should not hold.
+    fn rome_lock_averse(u: &UnitView) -> bool {
+        data::unit_class(u.kind) == Some(UnitClass::Melee)
+            && (u.level >= 1 || u.xp.unwrap_or(0) as i32 >= NEAR_VETERAN_XP)
+    }
+
+    /// Gene `rome_recruit_captures`, called by `unit_order` for every move. The occupation
+    /// lock is the city's: whichever military unit ends its move in a captured city stays
+    /// there until Peace with the civ it was taken from, and no later unit can relieve it.
+    /// So the move that ends on a fallen (0 HP) enemy city, or on an own city still under the
+    /// lock, is not a veteran's when a lesser unit can make it.
+    ///
+    /// `None` lets the order stand. Otherwise the veteran stands aside (`Some` of whether an
+    /// order went in):
+    /// - a recruit (melee-capable, neither veteran nor near-veteran) already ordered onto an
+    ///   ungarrisoned city this turn takes it alone;
+    /// - else a recruit that reaches the city this turn takes the same move: a free one first,
+    ///   then one whose order so far is only a hold or a march (that order is taken back); a
+    ///   unit that cannot found first, then the least experienced. Against a visible garrison
+    ///   it needs `RECRUIT_ODDS_PERCENT` of the veteran's forecast win chance;
+    /// - else, for an ungarrisoned city, the capture waits a turn when a recruit is within two
+    ///   turns, once: a capture that waited last turn goes ahead.
+    ///
+    /// An own locked city is never entered. With no recruit the veteran captures: Rome does
+    /// not give up a city it would have taken.
+    pub(crate) fn rome_capture_guard(&mut self, unit: UnitId, order: &Order) -> Option<bool> {
+        if !self.rome_recruit_captures() {
+            return None;
+        }
+        let to = match order {
+            Order::MoveUnit { to, .. } | Order::MoveUnitPath { to, .. } => *to,
+            _ => return None,
+        };
+        let v = self.view();
+        let city = v
+            .cities
+            .iter()
+            .find(|c| c.pos == to && c.occupation_lock.is_some())?;
+        let enemy = !v.same_team(v.me, city.owner);
+        if enemy && !(city.visible && city.hp <= 0) {
+            return None;
+        }
+        let u = self.ctx.own_units.iter().find(|u| u.id == unit).copied()?;
+        if u.pos == to || u.occupation_lock.is_some() || !Self::rome_lock_averse(u) {
+            return None;
+        }
+        if !enemy || self.rome_capture_aside.contains(&to) {
+            return Some(false);
+        }
+        let u = u.clone();
+        // A recruit already ordered onto the city this turn takes it: the veteran stays out.
+        let ordered_in = self.orders.iter().any(|o| match o {
+            Order::MoveUnit { unit: id, to: at }
+            | Order::MoveUnitPath {
+                unit: id, to: at, ..
+            } => {
+                *at == to
+                    && *id != unit
+                    && self
+                        .ctx
+                        .own_units
+                        .iter()
+                        .any(|m| m.id == *id && !Self::rome_lock_averse(m))
+            }
+            _ => false,
+        });
+        // A visible garrison must be beaten first: the recruit takes the fight only when its
+        // forecast is close to the veteran's.
+        let garrisoned = v.units.iter().any(|e| e.pos == to && e.owner != v.me);
+        let odds = |p: &Self, m: &UnitView| {
+            p.melee_forecast(m, to)
+                .map_or(0, |f| i64::from(f.win_chance))
+        };
+        let needed = if garrisoned {
+            odds(self, &u) * RECRUIT_ODDS_PERCENT / 100
+        } else {
+            0
+        };
+        if ordered_in && !garrisoned {
+            self.rome_capture_aside.push(to);
+            return Some(false);
+        }
+        // A recruit whose order so far is only a hold or a march can be given the capture.
+        let passive = |p: &Self, id: UnitId| {
+            !p.retreats.contains(&id)
+                && p.orders
+                    .iter()
+                    .rev()
+                    .find(|o| legatum_core::rules::units::order_unit(o) == Some(id))
+                    .is_some_and(|o| match o {
+                        Order::SkipUnit { .. } => true,
+                        Order::MoveUnit { to: at, .. } | Order::MoveUnitPath { to: at, .. } => {
+                            !p.ctx.enemy_cities.iter().any(|c| c.pos == *at)
+                                && !p.ctx.enemy_units.iter().any(|e| e.pos == *at)
+                        }
+                        _ => false,
+                    })
+        };
+        let recruits: Vec<UnitView> = self
+            .ctx
+            .own_units
+            .iter()
+            .copied()
+            .filter(|m| {
+                m.id != unit
+                    && m.military
+                    && crate::composition::charges(m.kind)
+                    && !Self::rome_lock_averse(m)
+                    && (!self.has_acted(m.id) || passive(self, m.id))
+                    && m.occupation_lock.is_none()
+                    && m.hp >= RECRUIT_MIN_HP
+                    && self.ctx.reachable(m.pos, to)
+            })
+            .cloned()
+            .collect();
+        let substitute = recruits
+            .iter()
+            .filter(|m| m.pos.distance(to) <= m.max_moves.max(1) && self.reaches_this_turn(m, to))
+            .filter(|m| !garrisoned || odds(self, m) >= needed.max(1))
+            .min_by_key(|m| {
+                (
+                    self.has_acted(m.id),
+                    data::unit_class(m.kind) == Some(UnitClass::Melee),
+                    m.xp.unwrap_or(0),
+                    m.id,
+                )
+            })
+            .cloned();
+        if let Some(m) = substitute {
+            self.rome_capture_aside.push(to);
+            if self.has_acted(m.id) {
+                self.release_unit_order(m.id);
+            }
+            return Some(self.unit_order(m.id, Order::MoveUnit { unit: m.id, to }));
+        }
+        let turn = v.turn;
+        let waited = self
+            .campaigns
+            .rome_capture_waits
+            .iter()
+            .any(|&(at, t)| at == to && t + 1 == turn);
+        let near = recruits
+            .iter()
+            .any(|m| m.pos.distance(to) <= 2 * m.max_moves.max(1));
+        if near && !waited && !garrisoned {
+            self.campaigns
+                .rome_capture_waits
+                .retain(|&(_, t)| t + 1 >= turn);
+            if !self.campaigns.rome_capture_waits.contains(&(to, turn)) {
+                self.campaigns.rome_capture_waits.push((to, turn));
+            }
+            self.rome_capture_aside.push(to);
+            return Some(false);
+        }
+        None
+    }
+
+    /// Gene `rome_recruit_captures`: a melee unit one fight from its first promotion and
+    /// badly hurt is treated as a wounded veteran: the fight that promotes it must not be the
+    /// one that kills it.
+    pub(crate) fn rome_near_veteran_hurt(&self, u: &UnitView) -> bool {
+        self.rome_recruit_captures()
+            && u.level == 0
+            && data::unit_class(u.kind) == Some(UnitClass::Melee)
+            && u.xp.unwrap_or(0) as i32 >= PROMOTION_EVE_XP
+            && u.hp < SIEGE_MIN_HP
     }
 
     /// Percent chance a city founded at `h` this turn falls to the at-war units in view.
