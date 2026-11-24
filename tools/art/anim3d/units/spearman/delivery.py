@@ -8,7 +8,11 @@ from pathlib import Path
 import subprocess
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from kit.images import resize_rgba
+from kit.images import resize_rgba as _resize_rgba
+COLOUR_SPACE = "linear"
+
+def resize_rgba(image, size):
+    return _resize_rgba(image, size, space=COLOUR_SPACE)
 
 from PIL import Image, ImageChops, ImageDraw
 
@@ -28,9 +32,18 @@ def digest(path):
 def load_sources(preview=False):
     master_hash = digest(MASTER/'spearman.blend')
     grade = MASTER/'painting-grade.json'
-    grade_data = json.loads(grade.read_text())
-    assert grade_data['master_sha256'] == master_hash, 'Stale grade'
-    assert grade_data['reference_sha256'] == digest(Path('app/src/assets/units/spearman-256.png'))
+    global COLOUR_SPACE
+    rest = json.loads((MASTER/'renders/c/render.json').read_text())
+    painted = bool(rest.get('look_sha256'))
+    COLOUR_SPACE = 'display' if painted else 'linear'
+    if painted:
+        from look_receipt import verify
+        expected_look = verify(MASTER, MASTER/'look')
+        assert rest['look_sha256'] == expected_look, 'Stale painted rest'
+    else:
+        grade_data = json.loads(grade.read_text())
+        assert grade_data['master_sha256'] == master_hash, 'Stale grade'
+        assert grade_data['reference_sha256'] == digest(Path('app/src/assets/units/spearman-256.png'))
     frames, manifests, hashes = {}, {}, {}
     for clip, (count, _, _) in CLIPS.items():
         folder = MASTER/'renders'/('e-'+clip)
@@ -38,7 +51,10 @@ def load_sources(preview=False):
         blend = MASTER/'clips'/clip/(clip+'.blend')
         assert data['blend_sha256'] == digest(blend), f'{clip}: stale render'
         assert json.loads((blend.parent/'clip.json').read_text())['source_master_sha256'] == master_hash
-        assert data['grade_sha256'] == digest(grade), f'{clip}: stale grade'
+        if painted:
+            assert data.get('look_sha256') == expected_look and data.get('colour_space') == 'display', f'{clip}: stale painted look'
+        else:
+            assert data['grade_sha256'] == digest(grade), f'{clip}: stale grade'
         assert preview or (data['resolution'] == 512 and data['device'] == 'GPU'), 'Finals require 512px GPU masters'
         manifests[clip] = data
         frames[clip] = []
@@ -50,7 +66,8 @@ def load_sources(preview=False):
             hashes[f'{clip}/{i:02}'] = digest(path)
     assert len({(m['engine'], m['device'], m['resolution'], m['samples']) for m in manifests.values()}) == 1, 'Mixed rendering settings'
     rest = json.loads((MASTER/'renders/c/render.json').read_text())
-    assert rest['blend_sha256'] == master_hash and rest['grade_sha256'] == digest(grade)
+    assert rest['blend_sha256'] == master_hash
+    if not painted: assert rest['grade_sha256'] == digest(grade)
     assert (rest['engine'], rest['device'], rest['resolution'], rest['samples']) == tuple(manifests['idle'][k] for k in ['engine', 'device', 'resolution', 'samples']), 'Rest and clip settings differ'
     return frames, manifests, hashes
 
@@ -151,7 +168,8 @@ def validate():
             destination = REVIEW/'spearman-decoded-160'/clip
             destination.mkdir(parents=True, exist_ok=True)
             cell.save(destination/f'{i:02}.png')
-        assert any(ImageChops.difference(decoded[clip][0], im).getbbox(alpha_only=False) for im in decoded[clip][1:]), f'{clip}: no motion'
+        reduced = [resize_rgba(im, (CELL, CELL)) for im in source[clip]]
+        assert any(ImageChops.difference(reduced[0], im).getbbox(alpha_only=False) for im in reduced[1:]), f'{clip}: no source motion'
     assert not ImageChops.multiply(atlas.getchannel('A'), occupancy.convert('L').point(lambda v: 255-v)).getbbox(), 'Opaque padding'
     terminal = MASTER/'renders/e-death'
     assert (terminal/'08.png').read_bytes() == (terminal/'09.png').read_bytes(), 'Death source not held'

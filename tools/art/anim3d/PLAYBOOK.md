@@ -682,31 +682,55 @@ outside the app; the GPU entry point unsets it and writes the intended shipped
 atlas. No CPU upsample is exported as a 512 master. The five-column movie retains
 round 8's 1600×352 / 24 fps / 192-frame / eight-second cream layout.
 
-### Spearman round 11b: sewn folds and recessed lining values
+### Spearman round 11 merge: selected painted look, guarded motion
 
-`units/spearman/fold_paint.py` runs from the end of `coverage.apply`, after the
-round-10 pigment attributes exist. It adds broad sleeve folds gathered at the
-shoulder seam, deepens the existing modeled wool troughs, and paints the unseen
-pteruges lining with broad ochre planes and dark sewn edges. All paint is frozen
-in mesh coordinates. Keep the original coverage alpha: forcing it to one
-replaces the trusted transition colors and visibly darkens the hero cloak.
-No new noise, geometry, normal maps, light changes or animation are involved.
+The production GPU script now uses Fable A v3's Eevee emission-projection look
+with per-part registered paint, palette fills, cloak-red unseen shoulders,
+leather-coloured foot pigment, and short warm contact shadows. It runs an ID
+pass, texture build, ramp-input pass and final palette build before rendering.
+`look_receipt.py` rejects stale masters, textures, paintings or shader code.
+Finals use display-space premultiplied Lanczos and no grade; the previous
+Cycles camera-pigment hybrid is retained only as the labelled CPU fallback.
+All 40 frames, 512/256 masters, the decoded 160 atlas, eight-second five-column
+movie, 256 triptych, contact sheet, feet sheet and blurred/regional critique
+remain in the single no-argument `units/spearman/gpu.sh` entry point.
 
-A material-ID render identifies the pale patch below the skirt as cloak, not
-skin. The old linear red/green projection gate can admit tan linen; tightening
-that gate globally also rejects useful red paint. Instead, a small feathered
-mesh-space lining pocket restores the dark value below the hem. The shield's
-painted dark recesses use 99.5% pigment instead of 96%; the visibility, source
-alpha and camera-ray gates remain intact and bright pigment stays at 96%.
-This is a subtle value correction, not a replacement for the rim geometry.
+Form combines Astra A's greave/calf fit (without its regressing sleeve smoothing)
+and Fable B's spear-side cloak flare. Shaft thickness is changed on the master
+before UV projection, never secretly at render time. Astra C supplies the
+broader source-calibrated walk, iterative sole contact and donor-based death.
+Fable B's visually preferred death/hit are fully hand-keyed body performances;
+those are excluded under Sam's open-donor rule, which permits only the attack
+to be hand-keyed. Their visual verdict remains the target for a future donor.
+Astra B's localized lining/fold pigments are retained in the Cycles fallback;
+Fable's part-paint look supersedes them for final surfaces. Do not count those
+fallback changes as an independently verified Eevee material win.
 
-`fold_preview.py` asserts unchanged geometry, UVs, skinning, transforms, pose,
-actions, camera and lights on every tested pose. Its CPU A/B settings are
-256 px / 16 samples / seed 17, no adaptive sampling or denoising.
-`fold_review.py` uses one fixed round-10 LUT for both sides, writes native
-256/160/64 comparisons, and reports raw and sigma-2 blurred CIE76 plus regional
-values. The additional blurred diagnostic composites on cream before filtering;
-do not compare its numbers to a different blur/masking convention. All lane
-outputs live under `lanes/spearman-r11b/` and `review/3d-v2/spearman-r11b-*`.
-The existing complete `ROUND=11 tools/art/anim3d/units/spearman/gpu.sh` rebuilds
-projection, clips, masters, atlas, validation, feet views, critique and movie.
+Reuse: `kit/look.py`, `kit/part_paint.py`, configurable image reduction,
+plus the existing human/Rigify/corrective, projection, seams, studio, retarget
+and contact modules. Every walk still needs a dense top/front geometry sheet
+and measured sole slip, floor error and travel heading. Idle and attack action
+hashes are checked against round 10; geometry refinements can change pixels
+without changing their accepted performance.
+
+### Spearman round 12b: material continuity on the selected look
+
+`units/spearman/continuity.py` adds render-time corner masks in the undeformed
+mesh coordinates: brown leather on actual sole edges/undersides, warm shadowed
+linen on inward skirt faces, and cloak pigment on unseen rear shoulder cloth.
+The outer cream skirt and trusted shoulder/front pigment retain their frozen
+projection. No mesh, weights, UVs, camera, actions or registration are changed;
+the look receipt includes this module. `gpu.sh` still performs the complete
+Eevee pass with `GRADE=0`; texture registration remains the single correction.
+
+`continuity_preview.py` and `continuity_report.py` make isolated CPU A/Bs. Their
+explicit CPU proxy replaces Eevee-only Shader to RGB with an analytic sun term;
+it retains real Cycles AO but cannot verify Eevee cast shadows. Use the saved
+GPU result as a labelled reference, never as the matched CPU baseline. Native
+256/160/64 comparisons, material-ID masks and a contact-off control distinguish
+actual improvements from an engine difference. R12b's death-frame-4 skirt mean
+luminance falls 101.4 to 83.1; rest alpha is identical. Dense top/front feet
+checks still run every round. Final GPU acceptance remains the lead's job.
+Check saved rest contact separately from locomotion: the unchanged R11 rest
+soles sit 3.0 mm above the 0.105 m stone even though the dense move check passes.
+R12b reports this for the form lane; material darkening must not hide the gap.

@@ -18,6 +18,24 @@ def create_body(macro_overrides, name):
     return body
 
 
+def freeze_macro_mix(body):
+    """Bake MPFB's active macro/muscle shape keys into the mesh of a WORKING COPY.
+
+    MPFB keeps its macro targets as live shape keys. Editing `data.vertices`
+    while they are active does not change the rendered shape (Spearman round 6:
+    25 active keys silently discarded the foot fitting). Call this on the
+    disposable projection copy before any vertex fitting; keep the morphable
+    original in its own file. Topology, weights and the rig are unchanged.
+    Add new corrective keys only after this.
+    """
+    count = len(body.data.vertices)
+    if body.data.shape_keys:
+        bpy.context.view_layer.objects.active = body
+        bpy.ops.object.shape_key_remove(all=True, apply_mix=True)
+    assert len(body.data.vertices) == count and body.data.shape_keys is None
+    return body
+
+
 def add_rig(body, name, rigify=False):
     from bl_ext.user_default.mpfb.services.humanservice import HumanService
     if rigify:

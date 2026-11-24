@@ -165,3 +165,5 @@ def apply(scene):
     scene['spearman_lower_body_receipt'] = json.dumps({'calf_vertices': changed, 'stance': stance})
     bpy.context.view_layer.update()
     print('LOWER_BODY_10A', scene['spearman_lower_body_receipt'], flush=True)
+    from shell_fit import apply as fit_shells
+    fit_shells(scene)

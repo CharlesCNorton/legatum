@@ -67,6 +67,49 @@ class CritiqueTest(unittest.TestCase):
                     opaque.save(paint_path)
             self.assertEqual((out / "test-unit-round2-note.md").read_text().count("### Automated critique"), 2)
 
+    def test_blurred_delta_e_ignores_speckle_but_sees_a_tone_shift(self):
+        yy, xx = np.mgrid[0:256, 0:256]
+        mask = np.zeros((256, 256), dtype=bool)
+        mask[40:200, 60:180] = True
+        speckle = np.where(((xx + yy) % 2 == 0)[..., None], (150, 90, 50), (110, 60, 30)).astype(np.uint8)
+        shifted = np.roll(speckle, 1, axis=1)
+        raw = np.linalg.norm(critique.rgb_to_lab(speckle) - critique.rgb_to_lab(shifted), axis=2)[mask].mean()
+        blurred = np.linalg.norm(critique.rgb_to_lab(critique.blurred_rgb(speckle, mask))
+                                 - critique.rgb_to_lab(critique.blurred_rgb(shifted, mask)), axis=2)[mask].mean()
+        self.assertGreater(raw, 12)
+        self.assertLess(blurred, 1.5)
+        darker = (speckle * 0.8).astype(np.uint8)
+        tone = np.linalg.norm(critique.rgb_to_lab(critique.blurred_rgb(speckle, mask))
+                              - critique.rgb_to_lab(critique.blurred_rgb(darker, mask)), axis=2)[mask].mean()
+        self.assertGreater(tone, 6)
+        flat = np.full((256, 256, 3), 128, dtype=np.uint8)
+        np.testing.assert_allclose(critique.blurred_rgb(flat, mask)[mask], 128, atol=0.01)
+
+    def test_regions_report_where_the_colour_is_off(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            painting = Image.new("RGBA", (256, 256), (0, 0, 0, 0))
+            ImageDraw.Draw(painting).rectangle((50, 40, 149, 199), fill=(150, 90, 50, 255))
+            render = painting.copy()
+            ImageDraw.Draw(render).rectangle((50, 150, 149, 199), fill=(220, 200, 170, 255))
+            painting.save(root / "paint.png")
+            render.save(root / "rest.png")
+            for clip in critique.CLIPS:
+                (root / "frames" / clip).mkdir(parents=True)
+                render.save(root / "frames" / clip / "00.png")
+            args = argparse.Namespace(slug="test-unit", painting=root / "paint.png", rest=root / "rest.png",
+                                      frames=root / "frames", feet=None, out=root / "out", round=1,
+                                      region=["top=50,40,150,120", "feet=50,160,150,200", "empty=0,0,10,10"])
+            metrics = critique.run(args)
+            self.assertLess(metrics["regions"]["top"]["mean_delta_e_blurred"], 0.5)
+            self.assertGreater(metrics["regions"]["feet"]["mean_delta_e_blurred"], 30)
+            self.assertEqual(metrics["regions"]["empty"], {"box": [0, 0, 10, 10], "overlap_pixels": 0})
+            self.assertFalse(metrics["colour_pass"])
+            self.assertEqual(metrics["colour_metric"].split()[0], "mean_delta_e_blurred")
+            note = (root / "out" / "test-unit-round1-note.md").read_text()
+            self.assertIn("Regions (blurred ΔE): top 0.0, feet", note)
+            self.assertTrue((root / "out" / "test-unit-round1-deltae-blurred-heatmap.png").is_file())
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -25,6 +25,18 @@ if sc.render.engine=='CYCLES':
  sc.cycles.use_adaptive_sampling=True
  sc.cycles.adaptive_threshold=.025
  sc.cycles.seed=17
+painted = os.environ.get('SPEARMAN_LOOK') == 'painted' and stage != 'b'
+look_hash = None
+if painted:
+ assert sc.render.engine == 'BLENDER_EEVEE', 'Painted final look requires Eevee on the host'
+ sys.path.insert(0, str(Path(__file__).parent/'units/spearman'))
+ import look
+ from look_receipt import verify
+ look_dir = master/'look'
+ look_hash = verify(master, look_dir)
+ look.apply_scene(sc, 'beauty')
+ look.apply_materials(sc, 'beauty', look_dir, dict(look.LOOK))
+ sc.eevee.taa_render_samples = int(os.environ.get('SAMPLES', '64'))
 sc.render.resolution_x=sc.render.resolution_y=int(os.environ.get('RESOLUTION','256'))
 sc.render.threads_mode='FIXED';sc.render.threads=3
 assert sc.camera is not None, 'A saved calibrated camera is required'
@@ -51,5 +63,5 @@ else:
   if pos is not None:
    sc.camera.location=pos;sc.camera.rotation_euler=(Vector((0,0,1.25))-sc.camera.location).to_track_quat('-Z','Y').to_euler()
   sc.render.filepath=str(out/(name+'.png'));bpy.ops.render.render(write_still=True)
-(out/'render.json').write_text(json.dumps({'engine':sc.render.engine,'device':sc.cycles.device if sc.render.engine=='CYCLES' else 'GPU','resolution':sc.render.resolution_x,'samples':sc.cycles.samples if sc.render.engine=='CYCLES' else None,'blend_sha256':hashlib.sha256(path.read_bytes()).hexdigest(),'blender':bpy.app.version_string,'held_frames':{str(i):frame for i,frame in enumerate(frames)} if clip else {}},indent=2))
+(out/'render.json').write_text(json.dumps({'engine':sc.render.engine,'device':sc.cycles.device if sc.render.engine=='CYCLES' else 'GPU','resolution':sc.render.resolution_x,'samples':sc.cycles.samples if sc.render.engine=='CYCLES' else sc.eevee.taa_render_samples,'look_sha256':look_hash,'colour_space':'display' if painted else 'linear','blend_sha256':hashlib.sha256(path.read_bytes()).hexdigest(),'blender':bpy.app.version_string,'held_frames':{str(i):frame for i,frame in enumerate(frames)} if clip else {}},indent=2))
 print('RENDER_READY',out)

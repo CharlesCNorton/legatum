@@ -43,3 +43,10 @@ keys. Death blends its own settled local leg pose into recoil and the existing
 Idle_Loop local arms (85% shield arm, 65% free arm) into the carrying pose
 before retargeting. It keeps the
 original arm-mounted shield, with damped crest and cape response. Original orchestration is MIT; renders are CC BY 4.0.
+
+Round 11 merge adds no downloaded or generated asset. Fable A's registered
+part paint and palette fills derive from the existing project CC BY 4.0
+painting. Its Blender node builder and push/pull fill are original MIT project
+code, extracted into `kit/paint_graph.py` and `kit/paint_fill.py`. Astra C's
+walk/death still use the pinned Quaternius CC0 actions above; Fable B's authored
+body death/hit were not adopted under the donor-only requirement.
