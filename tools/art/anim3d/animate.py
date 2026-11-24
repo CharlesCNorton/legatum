@@ -109,7 +109,7 @@ def pose(t):
   turn('spine_03','X',.20*strength);turn('spine_03','Y',.15*strength)
   # Counter root travel in the ankle targets: soles remain on the disc.
   limb('thigh_l','calf_l',(.21+.10*strength,.15-.18*strength,.082+.12*strength),(.42,-.50,.48))
-  limb('thigh_r','calf_r',(-.34-.05*strength,-.075+.16*strength,.082+.12*strength),(-.40,-.20,.48))
+  limb('thigh_r','calf_r',(-.345-.05*strength,-.075+.16*strength,.082+.12*strength),(-.40,-.20,.48))
   pole=Vector((-.48,-.12,1.08)).lerp(Vector((-.65,.05,1.48)),raised)
   limb('upperarm_r','lowerarm_r',(guard_hand.x+(-.13-guard_hand.x)*strength,guard_hand.y+(-.41-guard_hand.y)*raised-.05*strength,guard_hand.z+(1.71-guard_hand.z)*raised),pole)
   limb('upperarm_l','lowerarm_l',(.29,-.34-.10*strength,1.12+.10*strength),Vector((.53,-.10,1.13)).lerp(Vector((.55,-.12,1.20)),strength))
@@ -145,7 +145,7 @@ def pose(t):
   depth=min(1,release/.20);depth=depth*depth*(3-2*depth)
   tilt=max(0,min(1,(release-.20)/.55));tilt=tilt*tilt*(3-2*tilt)
   rotation=Quaternion().slerp(direction.rotation_difference(Vector((.995,-.10,.0)).normalized()),tilt)
-  target=center.lerp(Vector((-.12,-.60,.075)),release)
+  target=center.lerp(Vector((-.30,-.60,.075)),release)
   # Keep a real pixel margin while the retimed fall crosses the horizontal
   # weapon pose; the endpoint and held landing stay exactly where authored.
   target.x+=.02*math.sin(math.pi*release)

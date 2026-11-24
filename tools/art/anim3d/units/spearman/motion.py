@@ -159,7 +159,7 @@ intervals of the same clip, so the layer cannot drift against the feet. The
 caller re-solves both ankles to their previous world positions, so planted
 contacts are unchanged. Metres and radians.
 """
-    DIP, SWAY, TWIST, LEAN, NOD = .022, .020, .085, .045, .03
+    DIP, SWAY, TWIST, LEAN, NOD = .022, .020, .045, .045, .03
     STEP_WIDTH = .085
     # The guard stands right of the disc centre; walk nearer the middle so
     # the wider steps stay on the stone.

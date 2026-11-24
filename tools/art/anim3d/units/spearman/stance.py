@@ -16,7 +16,7 @@ THIGH, KNEE, ANKLE = 1.16, 1.46, 1.26
 FOOT = Vector((1.50, 1.38, 1.22))
 SHAFT = 1.75
 BASE = .995
-SKIN = .8
+SKIN = .5
 OUTER = 1.5
 
 
@@ -172,7 +172,7 @@ def brace_feet(scene):
     import math
     from mathutils import Matrix
     rig = bpy.data.objects['Spearman • MPFB game_engine']
-    for name, angle in [('foot_l', math.radians(38)), ('foot_r', math.radians(-8))]:
+    for name, angle in [('foot_l', math.radians(38)), ('foot_r', math.radians(10))]:
         bone = rig.pose.bones[name]
         pivot = bone.head.copy()
         bone.matrix = Matrix.Translation(pivot) @ Matrix.Rotation(angle, 4, 'Z') @ Matrix.Translation(-pivot) @ bone.matrix

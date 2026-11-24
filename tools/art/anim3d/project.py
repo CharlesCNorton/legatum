@@ -74,7 +74,7 @@ head = rig.pose.bones['head']
 pivot = head.head.copy()
 head.matrix = Matrix.Translation(pivot) @ Matrix.Rotation(1.5, 4, 'Z') @ Matrix.Diagonal((1.10, 1.10, 1.10, 1)) @ Matrix.Translation(-pivot) @ head.matrix
 bpy.context.view_layer.update()
-limb('thigh_r', 'calf_r', (-.34, -.075, .082), (-.40, -.40, .48))
+limb('thigh_r', 'calf_r', (-.345, -.075, .082), (-.40, -.40, .48))
 limb('thigh_l', 'calf_l', (.21, .15, .082), (.36, -.36, .48))
 # Raised fist / bent elbow rather than a straight lowered forearm.
 limb('upperarm_r', 'lowerarm_r', (-.37, -.31, 1.34), (-.48, -.12, 1.08))
