@@ -1,8 +1,8 @@
 {
-  "round": 12,
-  "basis": "Rebuilt R12 form/guard, unchanged idle donor and attack choreography; CPU-reviewed actions for host repeatability",
+  "round": 13,
+  "basis": "Deliberately re-pinned after reviewing combined CPU idle/attack at 256/160/64. Fable C guard; guard-relative planted attack and knee poles; sole transition errors <0.001 mm. Choreography retained, guard rebase changes actions.",
   "actions": {
-    "idle": "5681aaa96e481c2f65ad8936c0a5f11a26fabb43f1906ef0422785d46b276db1",
-    "attack": "5925a6856308222b694f2051c55a10b77f7f4df7569514d6d9ec06850a9e3ecf"
+    "idle": "3d5967c57b7e42bfec76e9483c086360175e97d13973e6e444c92b1cd60066fd",
+    "attack": "d78edd5ce23bd3725d76f2e1f7ffad98fb4d43e8f3834982c0872800f0706ab3"
   }
 }

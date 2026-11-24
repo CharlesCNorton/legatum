@@ -19,5 +19,11 @@ append_evidence(review/f'spearman-round{round_number}-note.md',
     f"- Walk: planted slip {feet['max_sole_contact_slip_m']*1000:.4f} mm; floor error {feet['max_planted_floor_error_m']*1000:.3f} mm; heading {feet['max_planted_heading_degrees']:.3f}°.\n"
     f"- Movie: five clips, 1600×352, H.264 yuv420p, 192 frames / 8 seconds. No art PASS issued.")
 if not validation['preview']:
+    note = review/f'spearman-round{round_number}-note.md'
+    text = note.read_text().replace('combined candidate, CPU review / GPU pending',
+                                    'combined candidate, GPU rendered / visual review pending')
+    text = text.replace("Not a PASS. Final GPU rendering and the pixel-parity gate still require the lead's host. CPU evidence is isolated under `lanes/spearman-r13-merge`; the shipped atlas remains the previous GPU round until the host pass.",
+                        'Not a PASS. The GPU pass, pixel-parity gate and decoded atlas validation completed; final visual approval is pending. The CPU evidence below remains labelled separately from the appended GPU receipt.')
+    note.write_text(text)
     with Path('tools/art/anim3d/LOG.md').open('a') as log:
         log.write(f"\n- Spearman round {round_number} GPU receipt: IoU {metrics['silhouette_iou']:.4f}; blurred ΔE {metrics['mean_delta_e_blurred']:.2f}; raw ΔE {metrics['mean_delta_e_cie76']:.2f}; atlas {validation['bytes']} bytes / q{validation['quality']}; 40 frames. Visual review pending.\n")

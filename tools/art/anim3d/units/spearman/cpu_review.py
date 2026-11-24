@@ -34,7 +34,7 @@ for clip in clips:
     look.Graph = graph_for_sun(look.directions(scene)[1])
     look.apply_scene(scene, 'beauty')
     settings = preview_settings(scene, samples=8)
-    look.apply_materials(scene, 'beauty', look_dir, dict(look.LOOK, continuity=0 if clip == 'baseline' else 1, base_contact=1.0 if clip in ('baseline', 'contact-before') else .40))
+    look.apply_materials(scene, 'beauty', look_dir, dict(look.LOOK))
     scene.render.dither_intensity = 0
     samples = [1] if clip in ('rest', 'baseline', 'contact-before') else json.loads(scene['sample_frames'])
     directory = out/clip; directory.mkdir(parents=True, exist_ok=True)

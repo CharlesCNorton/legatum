@@ -4,7 +4,9 @@ The open Death01 clip flips onto its back along the camera's depth axis with
 both arms up and ends off the base (round 9/10 review). This choreography is
 therefore keyed: recoil, knees give, drop to the knees, topple onto the spear
 side and settle lying ACROSS the stone with the aspis still strapped to the
-forearm. Channels are plain numbers interpolated between keys; limbs are solved
+forearm. The final three keys register the pelvis 16 cm inward, turn the head
+toward the viewer and lower the carrying arm beside the torso (R13c).
+Channels are plain numbers interpolated between keys; limbs are solved
 with the same two-bone helper as the weapon attack. Metres and radians.
 
 Frames: body axes are armature-local (X = his left, -Y = forward, Z = up).
@@ -57,25 +59,25 @@ KEYS = [
                 hand_l=(.28, -.30, 1.02), elbow_l=(.60, -.10, 1.06),
                 hand_r=(-.42, -.24, 1.02), elbow_r=(-.62, .02, 1.12), ease='in')),
     # 5 shoulder and hip strike the stone
-    (0.66, dict(pelvis=(-.02, .08, .43), rot=(-.12, -1.32, 0), spine=(.18, .12, 0), head=(.10, .25, 0),
+    (0.66, dict(pelvis=(.07, .08, .43), rot=(-.12, -1.32, 0), spine=(.18, .12, 0), head=(.02, .05, -.10),
                 plant=0, ankle_l_w=(.26, .27, .215), ankle_r_w=(-.28, .25, .24),
                 ankle_l=(.10, .16, .62), ankle_r=(-.12, .16, .50),
                 knee_l=(-.20, -2.0, .70), knee_r=(-.35, -2.0, .50), foot=(2.0, 1.9),
-                hand_l=(.16, -.34, 1.06), elbow_l=(.60, -.30, 1.10),
+                hand_l=(.08, -.44, 1.00), elbow_l=(.48, -.36, 1.10),
                 hand_r=(-.40, -.30, 1.25), elbow_r=(-.60, -.30, 1.00), ease='out')),
     # 6 settles on his side behind the shield; head drops, legs slacken
-    (0.82, dict(pelvis=(-.04, .10, .40), rot=(-.20, -1.44, 0), spine=(.12, .0, 0), head=(.08, -.25, 0),
+    (0.82, dict(pelvis=(.12, .10, .40), rot=(-.20, -1.44, 0), spine=(.12, .0, 0), head=(-.10, -.25, -.20),
                 plant=0, ankle_l_w=(.26, .27, .215), ankle_r_w=(-.28, .25, .24),
                 ankle_l=(-.05, .12, .68), ankle_r=(-.05, .14, .54),
                 knee_l=(-.50, -2.0, .80), knee_r=(-.30, -2.0, .50), foot=(1.35, 1.25),
-                hand_l=(.02, -.36, 1.08), elbow_l=(.60, -.50, 1.10),
+                hand_l=(-.08, -.52, .94), elbow_l=(.40, -.50, 1.10),
                 hand_r=(-.42, -.35, 1.50), elbow_r=(-.50, -.60, 1.20), ease='out')),
     # 7 at rest (held)
-    (0.96, dict(pelvis=(-.04, .10, .40), rot=(-.22, -1.44, 0), spine=(.10, .0, 0), head=(.08, -.32, 0),
+    (0.96, dict(pelvis=(.12, .10, .40), rot=(-.22, -1.44, 0), spine=(.10, .0, 0), head=(-.10, -.32, -.20),
                 plant=0, ankle_l_w=(.26, .27, .215), ankle_r_w=(-.28, .25, .24),
                 ankle_l=(-.05, .12, .68), ankle_r=(-.05, .14, .54),
                 knee_l=(-.50, -2.0, .80), knee_r=(-.30, -2.0, .50), foot=(1.35, 1.25),
-                hand_l=(.00, -.36, 1.07), elbow_l=(.60, -.50, 1.10),
+                hand_l=(-.10, -.52, .93), elbow_l=(.40, -.50, 1.10),
                 hand_r=(-.42, -.35, 1.52), elbow_r=(-.50, -.60, 1.20), ease='out')),
 ]
 

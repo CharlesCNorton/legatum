@@ -8,7 +8,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from kit.images import resize_rgba
 from kit.report import append_evidence
-from kit import atlas, feet, grade, part_paint, regions, registration
+from kit import atlas, check_imports, feet, grade, part_paint, regions, registration
 from PIL import Image, ImageDraw
 
 
@@ -187,6 +187,13 @@ class RegionTests(unittest.TestCase):
         self.assertEqual(regions.span_differences(painting, painting, 0, 256), {})
         self.assertEqual(regions.spans(painting, 150, 151, axis='column')[150], (90, 255, 166))
 
+    def test_grid_crop_enlarges_a_box_for_pixel_counting(self):
+        image = figure(size=256)
+        sheet = regions.grid_crop([('Painting', image), ('Render', image)], (120, 200, 200, 232))
+        self.assertEqual(sheet.size, ((80*8+24)*2, 32*8+34))
+        self.assertEqual(sheet.getpixel((20+5*8+3, 16+3)), (224, 215, 191))   # x 125: outside the figure
+        self.assertEqual(sheet.getpixel((20+15*8+3, 16+3)), (180, 60, 40))    # x 135: the body
+
     def test_frame_steps_flags_wasted_and_teleporting_frames(self):
         moving = [figure(shift=4*i) for i in range(8)]
         self.assertEqual(regions.frame_steps(moving+[moving[-1]])['findings'], [])
@@ -288,6 +295,33 @@ class PartPaintTests(unittest.TestCase):
         distance = part_paint.grow_distance(mask, 3)
         self.assertEqual((distance[10, 10], distance[10, 13], distance[0, 0]), (0, 2, 4))
         self.assertEqual(int(part_paint.erode(mask, 1).sum()), 4)
+
+
+class ImportCheckTests(unittest.TestCase):
+    def test_blender_script_importing_a_sibling_without_path_setup_is_flagged(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)/'anim3d'
+            (root/'kit').mkdir(parents=True)
+            (root/'units'/'pike').mkdir(parents=True)
+            (root/'kit'/'__init__.py').write_text('')
+            (root/'kit'/'continuity.py').write_text('def prepare():\n    pass\n')
+            (root/'units'/'pike'/'continuity.py').write_text('from kit.continuity import prepare\n')
+            look = root/'units'/'pike'/'look.py'
+            header = 'import sys\nfrom pathlib import Path\nsys.path.insert(0, str(Path(__file__).resolve().parents[2]))\nimport bpy\n'
+            look.write_text(header+'def apply():\n    from continuity import prepare\n')
+            problems = check_imports.check([root])
+            self.assertEqual(len(problems), 1)
+            self.assertIn("look.py:6: cannot resolve import 'continuity'", problems[0])
+            self.assertIn('Blender does not add the script folder', problems[0])
+            look.write_text(header+'sys.path.insert(0, str(Path(__file__).resolve().parent))\n'
+                            'def apply():\n    from continuity import prepare\n')
+            self.assertEqual(check_imports.check([root]), [])
+            tool = root/'units'/'pike'/'sheet.py'
+            tool.write_text('import sys\nfrom continuity import prepare\nprint(sys.argv)\n')
+            self.assertEqual(check_imports.check([root]), [])
+
+    def test_the_kit_itself_resolves(self):
+        self.assertEqual(check_imports.check([Path(__file__).resolve().parents[1]]), [])
 
 
 if __name__ == '__main__':

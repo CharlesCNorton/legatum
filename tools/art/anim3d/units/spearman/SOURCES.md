@@ -70,3 +70,11 @@ Idle/move retain the pinned Quaternius CC0 sources. Hit uses KayKit Free 1.1
 Fable B's original project-authored collapse (`collapse.py`, MIT), as permitted
 by the 2026-11-24 motion decision. No third-party geometry is imported from the
 reaction donor and no new asset was downloaded by the merge.
+
+## Round 13 combined selection
+
+No new downloaded or generated asset. Retains MPFB anatomy and the pinned
+Quaternius CC0 Idle_Loop/Walk_Loop and KayKit CC0 Hit_B above. Fable C's fitted
+guard and registered paint derive from the existing project CC BY 4.0 painting.
+Astra c's original MIT collapse refinements and donor-preserving swing/weight
+layer are selected; Fable D's released-shield death and foot-yaw layer are not.
