@@ -5,8 +5,8 @@
 //! - **Who.** Any land military unit except a Scout (`data::can_have_siege`), once its owner knows
 //!   Mathematics (`data::siege_tier` > 0). The Mongols only from the Medieval era.
 //! - **What.** `battle::siege_cover`: the unit's attacks on a city fight as if the city had no
-//!   Walls up to the tier of its owner's technology (Mathematics Walls, Machinery also Castles,
-//!   Metallurgy also Star Forts). The tier follows the technology, so nothing is bought twice.
+//!   Walls up to the tier of its owner's technology (Mathematics level I, Machinery II,
+//!   Metallurgy III). The tier follows the technology, so nothing is bought twice.
 //! - **Price.** `data::siege_gold`, 160 Gold for an Ancient unit and scaled by era after that,
 //!   halved by Military Engineering like the other upgrades.
 //! - **Iron.** Each Siege unit uses 1 Iron supply while it exists (`data::SIEGE_USES_IRON`): the

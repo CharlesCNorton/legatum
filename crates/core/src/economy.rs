@@ -1275,10 +1275,20 @@ pub fn sparta_nonmilitary_premium(
 
 /// A purchased item's quoted cost stays fixed until it completes or the purchase is forfeited.
 pub fn city_production_cost(state: &GameState, city: &City, item: ProductionItem) -> i32 {
-    city.bought
-        .as_ref()
-        .filter(|b| b.item == item)
-        .map_or_else(|| production_cost(state, city.owner, item), |b| b.cost)
+    city.bought.as_ref().filter(|b| b.item == item).map_or_else(
+        || {
+            if item
+                == (ProductionItem::Building {
+                    building: BuildingKind::UpgradeWalls,
+                })
+            {
+                80 * (i32::from(city.wall_tier()) + 2)
+            } else {
+                production_cost(state, city.owner, item)
+            }
+        },
+        |b| b.cost,
+    )
 }
 
 /// The Gold a purchase costs this empire, in percent of the Production price: 175 for the Swiss
@@ -1296,7 +1306,7 @@ pub fn buy_percent(state: &GameState, owner: PlayerId) -> i32 {
     }
 }
 
-/// Items that can never be bought, only produced: the Heir, every Walls tier and world wonders.
+/// Items that can never be bought, only produced: the Heir, initial Walls and world wonders.
 pub fn is_unbuyable(item: ProductionItem) -> bool {
     item == (ProductionItem::Unit {
         unit: UnitKind::HeirToTheThrone,
@@ -1322,7 +1332,14 @@ pub fn buy_cost_for(state: &GameState, city: &City, item: ProductionItem) -> Opt
     // discount follows the faction-adjusted price.
     let player = state.player(city.owner);
     let trained = player.settlers_trained;
-    let full = undiscounted_production_cost(state, city.owner, item, trained);
+    let full = if item
+        == (ProductionItem::Building {
+            building: BuildingKind::UpgradeWalls,
+        }) {
+        city_production_cost(state, city, item)
+    } else {
+        undiscounted_production_cost(state, city.owner, item, trained)
+    };
     let total = full + first_settler_discount(item, trained, full);
     let percent = buy_percent(state, city.owner);
     let price = total * percent / 100;
@@ -1362,6 +1379,12 @@ pub fn buy_quote(state: &GameState, city: &City, item: ProductionItem) -> Option
         0
     };
     let (base, adjusted) = match item {
+        ProductionItem::Building {
+            building: BuildingKind::UpgradeWalls,
+        } => {
+            let cost = 80 * (i32::from(city.wall_tier()) + 2);
+            (cost, cost)
+        }
         ProductionItem::Unit { unit } => (
             data::unit_stats(unit).cost,
             state
@@ -1389,11 +1412,19 @@ pub fn buy_quote(state: &GameState, city: &City, item: ProductionItem) -> Option
     production.add("Faction adjustment", adjusted - base);
     production.add(
         "Balance override",
-        state
-            .setup
-            .rule_experiments
-            .base_production_cost(player.faction, item)
-            - adjusted,
+        if item
+            == (ProductionItem::Building {
+                building: BuildingKind::UpgradeWalls,
+            })
+        {
+            0
+        } else {
+            state
+                .setup
+                .rule_experiments
+                .base_production_cost(player.faction, item)
+                - adjusted
+        },
     );
     production.add(
         "Previously trained Settlers",
@@ -1899,6 +1930,14 @@ pub(crate) fn production_check_at_era<R: Reason>(
     starting: bool,
     era: u8,
 ) -> Option<R> {
+    if matches!(
+        item,
+        ProductionItem::Building {
+            building: BuildingKind::Castle | BuildingKind::StarFort
+        }
+    ) {
+        return Some(R::word(|| "Build Upgrade Walls instead.".into()));
+    }
     let player = state.player(city.owner);
     let faction = player.faction;
     let off = state.setup.rule_experiments.faction_rules_off;
@@ -1914,6 +1953,24 @@ pub(crate) fn production_check_at_era<R: Reason>(
         return Some(R::word(|| format!("Requires {}", data::tech_name(tech))));
     }
     match item {
+        ProductionItem::Building {
+            building: BuildingKind::UpgradeWalls,
+        } => {
+            let level = city.wall_tier();
+            if level == 0 {
+                Some(R::word(|| "Build Walls first.".into()))
+            } else if level >= era + 1 {
+                Some(R::word(|| {
+                    format!(
+                        "Walls are at level {}, the most the {} era allows.",
+                        data::wall_level_label(level),
+                        data::era_name(era + 1)
+                    )
+                }))
+            } else {
+                None
+            }
+        }
         ProductionItem::Building { building } => {
             if crate::landmarks::is_landmark(building) {
                 Some(R::word(|| "Choose a tile for this wonder".into()))
@@ -2070,6 +2127,7 @@ mod tests {
             wonder_lost: None,
             last_purchase_turn: None,
             buildings: Default::default(),
+            walls_level: 0,
             hp: CITY_HP,
             grown_tiles: Vec::new(),
             tiles_claimed: 0,
@@ -2121,6 +2179,7 @@ mod tests {
         let p = PlayerId(0);
         s.cities
             .insert(CityId(1), city(1, p, Hex::from_offset(4, 4), true));
+        s.player_mut(p).techs.insert(TechId::Chivalry);
         let before = player_income(&s, p);
         s.player_mut(p).techs.extend(TechId::ALL);
         let after = player_income(&s, p);

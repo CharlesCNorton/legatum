@@ -1086,11 +1086,7 @@ fn play(
                     }
                     Event::CityCaptured { city, to, .. } if *to == sparta_id => {
                         metrics.sparta.captures += 1;
-                        if state
-                            .cities
-                            .get(city)
-                            .is_some_and(|c| legatum_core::data::wall_tier(&c.buildings) > 0)
-                        {
+                        if state.cities.get(city).is_some_and(|c| c.wall_tier() > 0) {
                             metrics.sparta.walled_captures += 1;
                         }
                     }

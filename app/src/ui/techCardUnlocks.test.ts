@@ -56,9 +56,9 @@ describe('tech card effect icons', () => {
     expect(icons('Chivalry')).toEqual(['unit-cataphract']);
     expect(techCardUnlocks(research, 'Rifling', 'India').map((u) => u.label)).toEqual(['Musketmen can upgrade to Riflemen']);
     // The Mongols buy Siege from the Medieval era, so their cards carry the Siege lines too.
-    expect(techCardUnlocks(research, 'Metallurgy', 'Mongols').map((u) => u.label)).toEqual(['Siege units now ignore Star Forts', 'Knights can upgrade to Cuirassiers']);
-    expect(techCardUnlocks(research, 'Metallurgy', 'India').map((u) => u.label)).toEqual(['Siege units now ignore Star Forts', 'Knights can upgrade to Cuirassiers']);
-    expect(techCardUnlocks(research, 'Machinery', 'India').map((u) => u.label)).toEqual(['Siege units now ignore Castles', '+1 Production for each Workshop, Forge and Factory', 'Composite Archers can upgrade to Crossbowmen']);
+    expect(techCardUnlocks(research, 'Metallurgy', 'Mongols').map((u) => u.label)).toEqual(['Siege covers Walls through level III', 'Knights can upgrade to Cuirassiers']);
+    expect(techCardUnlocks(research, 'Metallurgy', 'India').map((u) => u.label)).toEqual(['Siege covers Walls through level III', 'Knights can upgrade to Cuirassiers']);
+    expect(techCardUnlocks(research, 'Machinery', 'India').map((u) => u.label)).toEqual(['Siege covers Walls through level II', '+1 Production for each Workshop, Forge and Factory', 'Composite Archers can upgrade to Crossbowmen']);
     expect(icons('Machinery')).toEqual(['ui-siege', 'building-workshop', 'unit-compositearcher']);
   });
 });

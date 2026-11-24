@@ -203,7 +203,6 @@ const NO_HOLD: TerrainHold = { towns: new Set(), walls: new Set(), pop: new Map(
 
 interface Wall {
   bastion: boolean;
-  citadel: boolean;
 }
 
 export class TerrainCache {
@@ -311,7 +310,7 @@ export class TerrainCache {
       cityAt.set(i, c);
       if (c.visible && c.walls) {
         const bastion = view.players.find((p) => p.id === c.owner)?.faction === 'Switzerland';
-        wallAt.set(i, { bastion, citadel: !!c.citadel });
+        wallAt.set(i, { bastion });
       }
     }
     let regions: Regions | null = null;
@@ -336,7 +335,6 @@ export class TerrainCache {
         (c?.visible && c.is_capital ? 1 << 17 : 0) |
         (wallAt.has(i) ? 1 << 18 : 0) |
         (wallAt.get(i)?.bastion ? 1 << 19 : 0) |
-        (wallAt.get(i)?.citadel ? 1 << 20 : 0) |
         (c ? (Math.min(7, ownerEra.get(c.owner) ?? 0) + 1) << 21 : 0) |
         (regions ? organicSig(regions, i) << 25 : 0);
       if (s === this.sig[i]) continue;

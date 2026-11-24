@@ -29,16 +29,16 @@ Moved verbatim from `game-rules.md` on 2026-11-22, in the original order; the or
 | Classical | Code of Laws (`CodeOfLaws`) | 62 | **Every existing city claims its best available ring-2 tile on research; later cities do so on founding** |
 | Classical | Philosophy | 68 | Great Library (world wonder); +1 Science in every city |
 | Medieval | Feudalism | 120 | Pikeman (`Pikeman`; Phalangites upgrade to it); Mill |
-| Medieval | Machinery | 126 | Crossbowman (`Crossbowman`; Composite Archers upgrade to it); Hagia Sophia (world wonder); Star Fort (Walls tier 3, Production only; rules 50, was Military Engineering); +1 Production per Workshop family |
-| Medieval | Chivalry | 132 | Knight (Cataphracts upgrade to it); Castle (Walls tier 2, Production only); War Shrine (Sparta) |
+| Medieval | Machinery | 126 | Crossbowman (`Crossbowman`; Composite Archers upgrade to it); Hagia Sophia (world wonder); +1 Production per Workshop family |
+| Medieval | Chivalry | 132 | Knight (Cataphracts upgrade to it); Agoge (Sparta) |
 | Medieval | Education | 136 | University |
 | Medieval | Crop Rotation | 140 | Farm/Pasture upgrade (Irrigated Farm, Ranch); +1 Food per Granary family |
 | Renaissance | Gunpowder | 216 | Musketman (`Musketman`; Pikemen upgrade to it); Arquebusier (Crossbowmen upgrade to it); Niter visible |
-| Renaissance | Metallurgy | 224 | Cuirassier (Knights upgrade to it); Siege reaches Star Forts (tier 3). Machinery (Medieval) is tier 2 (Castles) |
-| Renaissance | Military Engineering | 230 | **unit upgrades cost half** (the Star Fort moved to Machinery in rules 50) |
+| Renaissance | Metallurgy | 224 | Cuirassier (Knights upgrade to it); Siege covers Walls through level III; Machinery covers level II |
+| Renaissance | Military Engineering | 230 | **unit upgrades cost half**  |
 | Renaissance | Banking | 238 | Bank; Grand Bazaar (world wonder) |
 | Renaissance | Printing Press | 248 | **+1 Science per Library and +1 Gold per Market** |
-| Industrial | Rifling | 344 | Rifleman (Musketmen upgrade to it). Every Industrial or later land unit has **Siege built in** (ignores Walls, Castles and Star Forts; `data::built_in_siege`) |
+| Industrial | Rifling | 344 | Rifleman (Musketmen upgrade to it). Every Industrial or later land unit has **Siege built in** (covers Walls through the unit’s era tier; `data::built_in_siege`) |
 | Industrial | Military Science | 352 | Cavalry (Cuirassiers upgrade to it; Siege built in); land units cost 10% less Production |
 | Industrial | Ballistics (`Cannonry`) | 356 | Field Cannon (Arquebusiers upgrade to it; Siege built in); Royal Arsenal (world wonder) |
 | Industrial | Industrialization | 368 | Factory; Coal visible |

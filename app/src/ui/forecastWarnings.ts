@@ -1,6 +1,6 @@
 import type { BattleForecast, CityAssaultForecast, CityDetail, CityView, Faction, Hex, Order, PlayerView, UnitKind, UnitView } from '../types';
 import { damage } from '../combat';
-import { attacksInMelee, BUILT_IN_SIEGE_NOTE, isGreatWork, itemName, sameItem } from '../data';
+import { attacksInMelee, isGreatWork, itemName, sameItem } from '../data';
 import { wonderLostDecision, wonderRaceWarning } from '../wonderRace';
 import { Game } from '../wasm-pkg/legatum.js';
 import { effectiveProduction } from '../orders';
@@ -201,25 +201,20 @@ export function assaultSummary(a: CityAssaultForecast, cityName: string, garriso
 
 /**
  * What the city's Walls do to this attack (core `WallsForecast`): halve its damage to the city's HP, unless the attacking unit
- * has Siege. An Industrial or later unit has it built in and says so in core's words (`BUILT_IN_SIEGE_NOTE`). `siegeTier` is the viewer's own siege tier (core `data::siege_tier`), so the hint to buy Siege is shown only to a
+ * has Siege. An Industrial or later land unit has Siege built in at its own era tier. `siegeTier` is the viewer's own siege tier (core `data::siege_tier`), so the hint to buy Siege is shown only to a
  * player who knows Mathematics. Null when the target has no Walls.
  */
 export function wallsLine(f: BattleForecast, cityName: string, unitLabel: string, siegeTier: number, dealt = 0): { text: string; tone: 'good' | 'plain' } | null {
   const w = f.walls;
   if (!w) return null;
-  if (w.built_in) return { text: `Siege built in: your ${unitLabel} ${BUILT_IN_SIEGE_NOTE}.`, tone: 'good' };
-  if (w.covered >= w.tier) {
-    const ignored = ['', 'Walls', 'Walls and Castle', 'Walls, Castle and Star Fort'][w.tier];
-    return { text: `Siege: your ${unitLabel} ignores ${cityName}'s ${ignored}.`, tone: 'good' };
-  }
-  if (w.covered > 0) {
-    const defence = w.tier === 2 ? 'Castle' : 'Star Fort';
-    const tech = w.tier === 2 ? 'Machinery' : 'Metallurgy';
-    return { text: `Your Siege ignores Walls but not ${cityName}'s ${defence}: ${w.percent}% damage. ${tech} would reach it.`, tone: 'plain' };
-  }
+  const level = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'][w.tier] ?? String(w.tier);
+  const cover = w.covered > 0 ? `Siege covers levels I–${['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'][w.covered] ?? w.covered}` : 'No Siege coverage';
+  if (w.built_in) return { text: `Walls ${level}: ${unitLabel} has Siege built in; ${cover}; ${w.percent}% damage to ${cityName}.`, tone: w.percent === 100 ? 'good' : 'plain' };
+  if (w.covered >= w.tier) return { text: `Walls ${level}: ${cover}; full damage to ${cityName}.`, tone: 'good' };
+  if (w.covered > 0) return { text: `Walls ${level}: ${cover}; ${w.percent}% damage to ${cityName}.`, tone: 'plain' };
   const withSiege = w.percent > 0 && w.percent < 100 && dealt > 0 ? Math.round((dealt * 100) / w.percent) : 0;
   return {
-    text: `Walls halve this attack on ${cityName}${siegeTier > 0 && withSiege > 0 ? `: ${dealt} HP, or ${withSiege} with Siege` : ''}.`,
+    text: `Walls ${level} halve this attack on ${cityName}${siegeTier > 0 && withSiege > 0 ? `: ${dealt} HP, or ${withSiege} with Siege` : ''}.`,
     tone: 'plain',
   };
 }

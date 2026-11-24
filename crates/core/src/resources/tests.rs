@@ -984,7 +984,7 @@ fn siege_is_built_in_from_the_industrial_era_never_bought_and_dropped_on_upgrade
         .unwrap();
     assert!(
         reason.contains(
-            "Rifleman needs no Siege: it ignores Walls, Castles and Star Forts (Industrial-era guns)"
+            "Rifleman needs no Siege: it covers Walls through level IV in the Industrial era, one more level in each later era"
         ),
         "{reason}"
     );
