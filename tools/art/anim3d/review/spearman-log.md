@@ -142,3 +142,12 @@
 - R9b commit blocked by sandbox .git/worktrees/lane-2/index.lock permission. Five scoped repo files remain for runner; commit-message.txt saved in masters/spearman-r9b. No push/PR; existing gpu.sh unchanged and executable.
 
 - R9c CPU move strip available; review is provisional, Cycles CPU 256px/8 samples.
+
+- R9c CPU attack strip available; review is provisional, Cycles CPU 256px/8 samples.
+- R9a: rebuilt all five clips in isolated root; full saved-rig audit: 40 samples, zero findings. AST 33 scripts, two existing regression tests, both shell wrappers, whitespace and hygiene over four changed repo files pass. CPU motion/foot renders underway; no GPU or delivered-atlas claim.
+
+- R9c CPU hit strip available; review is provisional, Cycles CPU 256px/8 samples.
+- R9a final CPU evidence: rest comparison plus standalone native 256/64 sheets, all five e-strips/WebPs and top/front feet sheet saved as spearman-r9a-*. Scene checks PASS; 40-pose audit zero findings; 40 rendered frames have correct counts/resolution/transparent corners; held death images byte-identical; 38 planted-foot samples PASS (max heading 2.39655 deg, compensated slip 0.002168 mm, floor error 0.868784 mm). Inspected all strips and feet; no new cloak/shield failure seen. Foot/stance mismatch and exposed pigment seams remain; no PASS or atlas/GPU completion claim. No new downloads. Lead runs unchanged ROUND=9 tools/art/anim3d/units/spearman/gpu.sh after merging winners.
+- R9a commit blocked by sandbox: .git/worktrees/lane-3/index.lock Operation not permitted. Four scoped repo files remain uncommitted for runner; exact message saved in spearman-r9a-commit-message.txt. No push/PR; origin/master comparison 17 ahead / 0 behind.
+
+- R9c CPU death strip available; review is provisional, Cycles CPU 256px/8 samples.
