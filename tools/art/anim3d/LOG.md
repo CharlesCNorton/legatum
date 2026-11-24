@@ -70,6 +70,11 @@ Lanes started about 23:31 on the round-11 GPU candidate `01a69951`, with the res
 - GPU rerun 00:38:24–01:16:07 (38 m), pushed as `07643cd4`: IoU **0.9384**, blurred ΔE **4.72** (passes), raw 7.52; regions head/crest 3.7, torso 2.9, cloak 4.8, shield 2.4, legs 3.4, feet 12.9, base 4.8; atlas 186,556 bytes at q80; walk slip 0.0018 mm, floor error 0.000 mm, heading 5.142°. Round wall-clock from lanes to GPU result: about 105 m including the failed launch. No PASS.
 - Art director on the merge (CPU proxy, before the GPU frames): best Astra candidate on every aspect; feet are the only failing region; the base lost the lip round 11 had; walk lifts the trailing foot too high; hit frames 1 and 2 too alike; death's final frame reads at 64 px.
 
+### Fable C and D (2026-11-24, from round 12)
+
+- Fable C (rest stance, ground shadow, base band), `fable/unit-anim-3d-spearman-c`, note about 01:30 local: rest IoU 0.9394 → **0.9513** on the CPU proxy and **0.9534** in Eevee; blurred ΔE 4.55 → **3.35**; feet 13.35 → 5.4; base 4.75 → 3.3. First candidate to pass both targets. Walk numbers unchanged to the digit (slip 0.0016 mm, heading 5.14°, root 48.96 mm). Dropped: ankle targets without knee columns (0.936), an AO ground shadow (base 2.7 → 5.4), stronger sandal tones.
+- Reviewer's decision: one render path. Round 12's `gpu.sh` output differs from `look.py` on the same master (shield rim p10 50 vs 27 against the painting's 28–38).
+
 ### Colour on the blurred scale (added 2026-11-24)
 
 `critique.py` now scores colour on blurred images (2 px Gaussian at 256) at zero offset, with per-region values; the ±3 px search is for IoU only. Each round's own graded rest render, re-measured:
@@ -81,6 +86,7 @@ Lanes started about 23:31 on the round-11 GPU candidate `01a69951`, with the res
 | Round 10 GPU | 0.9039 | 6.47 | 9.91 | 3.1 | 2.3 | 8.2 | 2.4 | 6.4 | 16.5 | 6.6 |
 | Round 11 GPU (Eevee look) | 0.9275 | 4.59 | 7.30 | 3.8 | 2.9 | 3.3 | 2.4 | 3.3 | 13.4 | 3.9 |
 | Round 12 GPU (Eevee look, Fable B form) | 0.9384 | 4.72 | 7.52 | 3.7 | 2.9 | 4.8 | 2.4 | 3.4 | 12.9 | 4.8 |
+| Fable C, Eevee via look.py (its note) | 0.9534 | 3.35 | – | 3.4 | 2.5 | 4.8 | 2.0 | 3.0 | 5.4 | 3.3 |
 | Fable A look on Fable B form (look lane's own blur, not comparable) | 0.920 | 4.41 | 6.80 | – | – | – | – | – | – | – |
 
 Feet, the spear-side cloak and the legs carry the colour error on the Cycles rounds; shield, torso and head are within target. **Baseline as of 2026-11-24: Fable A's look on Fable B's form.** Colour is inside its target; the remaining gap is silhouette.

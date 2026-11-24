@@ -2,6 +2,13 @@
 
 Unit-specific status for the first unit through the pipeline. The rules these items produced are in `../SKILL.md`; numbers per round are in `../LOG.md`. Positions are pixels at 256 in the painting's frame. Latest reviews: `~/LegatumRuns/anim-pilot/review/3d-v2/spearman-FEEDBACK.md`.
 
+## Latest candidate (Fable C, 2026-11-24 about 06:30Z, awaiting merge and review)
+
+- `fable/unit-anim-3d-spearman-c`, cut from round 12: rest **IoU 0.9534, blurred ΔE 3.35** in Eevee through `look.py` (CPU proxy 0.9513 / 3.31); regions feet 5.4, base 3.3, legs 3.0, cloak 4.8, shield 2.0, torso 2.5, head 3.4. Passes the 0.95 and 6 targets and the bar for showing Sam; lower body IoU 0.965.
+- How: guard pose replanted on the painted feet (pelvis 5 cm back along the view ray, ankles at their painted positions, knees on columns 112.5 and 146.6), disc registered (1.6 px left, 3% shallower), cloak flare 4.5 → 3.2 px, ground shadow as two ankle-anchored blobs, side-band gradient, sandal tone.
+- For the merge: `check_frozen.py` fails on idle and attack until re-pinned (same choreography, new guard); the walk's height correction is 3.7 cm of 4; attack frame 0 places the feet about 3 px lower than the guard (make its targets relative to the guard ankles); run `prepare-look.sh` after any master rebuild.
+- The shield rim, cavity and greave-highlight items below are faults of the `gpu.sh` render path, not of `look.py`; deliver through one path.
+
 ## Status (round 12 GPU, 2026-11-24 06:16Z)
 
 - IoU 0.9384, blurred ΔE 4.72 (passes), raw 7.52, atlas 186,556 bytes at q80. No PASS.
