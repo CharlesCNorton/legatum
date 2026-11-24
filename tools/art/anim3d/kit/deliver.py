@@ -5,7 +5,8 @@
     $ANIM_ROOT/venv/bin/python -m kit.deliver --slug <slug> \
         --frames <dir with idle/ move/ attack/ hit/ death/ NN.png> \
         --anchor 79.375,138.125 --out <atlas dir> --review $ANIM_ROOT/review/3d-v2 \
-        --label 'CPU preview' [--grade grade.json --master unit.blend] [--round N]
+        --label 'CPU preview' [--grade grade.json --master unit.blend] [--round N] \
+        [--reduce display]
 
 Writes <out>/<slug>.webp and <slug>.json (atlas format v2), decoded cells to
 <review>/<slug>-decoded-160/ (the layout critique.py reads) and, with --round,
@@ -43,13 +44,13 @@ def run(args):
         assert args.master, '--grade needs --master so a stale grade is refused'
         tables = grade.load(args.grade, args.master)['luts']
     frames = load_frames(args.frames, tables=tables)
-    data, metadata, quality = atlas.pack(frames, args.anchor)
-    decoded = atlas.validate(data, metadata, frames)
+    data, metadata, quality = atlas.pack(frames, args.anchor, space=args.reduce)
+    decoded = atlas.validate(data, metadata, frames, space=args.reduce)
     args.out.mkdir(parents=True, exist_ok=True)
     (args.out/f'{args.slug}.webp').write_bytes(data)
     (args.out/f'{args.slug}.json').write_text(json.dumps(metadata, separators=(',', ':'))+'\n')
     atlas.save_decoded(decoded, args.review/f'{args.slug}-decoded-160')
-    report = {'slug': args.slug, 'label': args.label, 'bytes': len(data), 'quality': quality,
+    report = {'slug': args.slug, 'label': args.label, 'reduction': args.reduce, 'bytes': len(data), 'quality': quality,
               'frames': sum(len(v) for v in decoded.values()), 'source_px': frames['idle'][0].width,
               'validation': 'PASS (atlas contract only; not art approval)'}
     if args.round is not None:
@@ -76,6 +77,8 @@ def main():
     parser.add_argument('--grade', type=Path)
     parser.add_argument('--master', type=Path)
     parser.add_argument('--round', type=int)
+    parser.add_argument('--reduce', choices=['linear', 'display'], default='linear',
+                        help="how 160 px cells are reduced: 'display' matches how the painted tokens were made")
     print(json.dumps(run(parser.parse_args()), indent=2))
 
 

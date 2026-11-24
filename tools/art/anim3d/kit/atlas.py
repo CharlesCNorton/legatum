@@ -30,13 +30,14 @@ CREAM = (224, 215, 191)
 
 
 def pack(frames, anchor, clips=CLIPS, cell=CELL, pad=PAD, byte_limit=BYTE_LIMIT,
-         qualities=QUALITIES):
+         qualities=QUALITIES, space='linear'):
     """Return (webp_bytes, metadata, quality) for {clip: [RGBA frames]}.
 
     `anchor` is (ax, ay) in cell pixels: the point of the cell that sits on the
     hex centre, identical for every frame (Spearman: 127*160/256, 221*160/256).
     Tries qualities from high to low and raises if none fits the byte limit;
-    never drops frames to fit.
+    never drops frames to fit. `space` is the reduction passed to
+    `images.resize_rgba` ('linear' or 'display'); `validate` must get the same.
     """
     metadata = {'version': 2, 'frame': {'w': cell, 'h': cell, 'ax': anchor[0], 'ay': anchor[1]},
                 'clips': {}, 'frames': {}}
@@ -47,7 +48,7 @@ def pack(frames, anchor, clips=CLIPS, cell=CELL, pad=PAD, byte_limit=BYTE_LIMIT,
         metadata['clips'][clip] = {'row': row, 'frames': count, 'fps': fps, 'loop': loop}
         metadata['frames'][clip] = []
         for image in frames[clip]:
-            image = resize_rgba(image, (cell, cell))
+            image = resize_rgba(image, (cell, cell), space)
             box = image.getchannel('A').getbbox()
             assert box, f'{clip}: empty frame'
             tile = image.crop(box)
@@ -86,7 +87,7 @@ def decode_all(metadata, webp_bytes):
 
 
 def validate(webp_bytes, metadata, frames, clips=CLIPS, cell=CELL, pad=PAD,
-             byte_limit=BYTE_LIMIT, held=(('death', -2, -1),)):
+             byte_limit=BYTE_LIMIT, held=(('death', -2, -1),), space='linear'):
     """Check the decoded atlas against its source frames; return decoded cells.
 
     Raises AssertionError naming the first failed check: byte limit, atlas
@@ -114,7 +115,7 @@ def validate(webp_bytes, metadata, frames, clips=CLIPS, cell=CELL, pad=PAD,
             assert not occupancy.crop((x-pad, y-pad, x+w+pad, y+h+pad)).getbbox(), f'{clip}/{i}: overlapping crops or gutter'
             draw.rectangle((x, y, x+w-1, y+h-1), fill=1)
             tile = decode(metadata, atlas, clip, i)
-            expected = resize_rgba(frames[clip][i], (cell, cell))
+            expected = resize_rgba(frames[clip][i], (cell, cell), space)
             assert tile.getchannel('A').tobytes() == expected.getchannel('A').tobytes(), f'{clip}/{i}: alpha/offset mismatch'
             bounds = tile.getchannel('A').point(lambda v: 255 if v > 16 else 0).getbbox()
             assert bounds and min(bounds[:2]) >= 1 and max(bounds[2:]) <= cell-1, f'{clip}/{i}: figure clipped at cell edge {bounds}'

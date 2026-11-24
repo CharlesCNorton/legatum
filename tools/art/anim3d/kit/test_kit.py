@@ -41,6 +41,26 @@ class KitTests(unittest.TestCase):
             self.assertTrue(path.read_text().endswith(focus))
             self.assertLess(path.read_text().index('CPU metrics'), path.read_text().index('GPU metrics'))
 
+    def test_display_space_reduction_averages_encoded_values_without_fringes(self):
+        source = Image.new('RGBA', (2, 1), (0, 0, 0, 255))
+        source.putpixel((1, 0), (255, 255, 255, 255))
+        result = resize_rgba(source, (1, 1), space='display').getpixel((0, 0))
+        self.assertTrue(126 <= result[0] <= 129, result)
+        edge = Image.new('RGBA', (8, 2), (255, 0, 255, 0))
+        for y in range(2):
+            for x in range(4):
+                edge.putpixel((x, y), (255, 255, 255, 255))
+        for r, g, b, a in np.asarray(resize_rgba(edge, (4, 1), space='display')).reshape(-1, 4):
+            if a > 8:
+                self.assertTrue(min(r, g, b) >= 250, (r, g, b, a))
+
+    def test_atlas_round_trip_in_display_space(self):
+        frames = clip_frames()
+        data, meta, _ = atlas.pack(frames, anchor=(80, 138), space='display')
+        atlas.validate(data, meta, frames, space='display')
+        with self.assertRaisesRegex(AssertionError, 'alpha/offset mismatch'):
+            atlas.validate(data, meta, {c: [figure(shift=3*i+1) for i in range(n)] for c, (n, _, _) in atlas.CLIPS.items()}, space='display')
+
 
 def figure(shift=0, colour=(180, 60, 40, 255), size=320):
     """Synthetic sprite: a body, a thin spear and a base, on transparency."""

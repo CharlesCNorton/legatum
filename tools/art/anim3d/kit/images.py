@@ -3,10 +3,24 @@ import numpy as np
 from PIL import Image
 
 
-def resize_rgba(image, size):
-    rgba = np.asarray(image.convert('RGBA'), dtype=np.float32)/255
+def resize_rgba(image, size, space='linear'):
+    """Lanczos reduction with premultiplied alpha.
+
+    space='linear' averages light (physically right for compositing; the
+    Spearman delivery through round 10). space='display' averages encoded sRGB
+    values, which is how the game's painted tokens were reduced from their
+    masters: a render reduced this way can match the painting, while the same
+    pixels reduced in linear light sit about 3 CIE76 away (look lane,
+    2026-11-24). Use one space for a unit's delivery and for every image it is
+    compared with.
+    """
+    assert space in ('linear', 'display')
     if image.size == size:
         return image.convert('RGBA').copy()
+    if space == 'display':
+        # Pillow premultiplies RGBA internally when resampling.
+        return image.convert('RGBA').resize(size, Image.Resampling.LANCZOS)
+    rgba = np.asarray(image.convert('RGBA'), dtype=np.float32)/255
     rgb, alpha = rgba[..., :3], rgba[..., 3]
     linear = np.where(rgb <= .04045, rgb/12.92, ((rgb+.055)/1.055)**2.4)
     def resize(channel):

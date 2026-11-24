@@ -46,6 +46,10 @@ Lanes started 22:21:19–22:21:25 on the round-10 GPU candidate `aeacff7d`.
 
 - Lane a (sleeve and greave shell), note at 22:32: keep the lower-leg correction. Same-settings CPU A/B (256 px, 16 samples, seed 17, no denoising, fixed round-10 LUT): lower-leg overlap 78.31% → 83.02%; lower-leg RGB error 30.79 → 23.56/255; figure above base 88.98% → 89.87%; whole-image IoU 0.9035 → 0.9103; raw ΔE 13.75 → 13.61. Sleeve smoothing: shoulder overlap 88.75% → 88.64%, optional. Uniform calf-and-greave widening rejected (77.87% → 76.62%). Feet checks unchanged (slip 0.0018 mm, floor 1.133 mm, heading 2.618°; root correction 48.97 mm).
 
+- Lane b (folds and recessed values), note at 22:39: small, bounded surface gain. Inner cloak lining luminance 55.6 → 50.6 (painting 49.0), region blurred ΔE 6.31 → 5.41; death skirt-lining luminance 133 → 99; hit sleeve 109 → 104. Whole image unchanged (IoU 0.9035, raw ΔE 13.76 → 13.75). Rejected: palette replacement with rim darkening (13.76 → 14.00), a global red/green gate, forcing coverage alpha to 1. The lane itself defers to Fable A's look.
+- Lane c (motion), note at 22:36: death shield rotation step 83.0° → 34.4°, head step 0.655 → 0.420 m, peak ankle 0.355 → 0.423 m (worse), late cape travel 0.119 → 0.145 m; walk mean ankle spacing 0.246 → 0.344 m (42% → 58% of the rest stance), planted floor error 1.133 mm → under 0.0001 mm, slip 0.0023 mm, root correction 48.88 mm; idle, attack and hit byte-identical to round 10. Not judged against Fable B's keyed death.
+- Lanes done 22:40:22 (19 minutes for all three in parallel); merge task queued 22:40.
+
 ### Colour on the blurred scale (added 2026-11-24)
 
 `critique.py` now judges colour on blurred images (2 px Gaussian at 256) and per region. Each round's own graded rest render, re-measured:
@@ -71,7 +75,8 @@ Feet, the spear-side cloak and the legs carry the colour error; shield, torso an
   | + shaded stone (current) | 0.9048 | 12.46 | 7.34 |
 
   Per part at zero offset: shield 3.0, cuirass 3.2, belt 3.5, skirt 3.9, greaves 4.3–5.2, helmet 5.4, spear 5.8 (round 9: 21.3), skin 9.6, cloak 10.9, stone top 12.6, sandals 18–22. Render cost: rest plus 40 frames in about 55 s in Eevee, against a 30-minute Cycles GPU pass. Preview atlas 195,048 bytes at q85. `critique.py` on this branch reproduces the round-9 zero-offset figure (10.73) and gives round 10 GPU 9.91.
-- Fable B (form and motion), `fable/unit-anim-3d-spearman-b`: commit `c74a6c2d` 22:16 local, an authored keyed death collapse plus quick-look tools. No preview or note yet.
+- Fable B (form and motion), `fable/unit-anim-3d-spearman-b`, cut from the round-9 candidate: commits `c74a6c2d` 22:16 and `91e3031c` 22:3x local; note at 22:41. Rest-space leg and foot scaling, cloak flare, shaft ×1.75: rest IoU 0.894 → 0.918 (Cycles CPU, 256 px, 16 samples, round-9 grade). Keyed death and hit, walk weight shift with an 8.5 cm lateral ankle offset.
+- Verdicts, 03:36Z (cloud reviewer and art director). Look: Fable A, adopt as baseline with its registration fix and display-space reduction. Silhouette: Fable B. Death and hit: Fable B, adopt. Walk: no winner (feet on one line in both). Idle and attack: identical in all three, frozen. Next merge: A's look over B's death, hit and silhouette, the best walk and attack, plus the open shape fixes (shaft width, sandal volume, shield size and rim, base lip, spear arm).
 
 ### Round 10 detail (2026-11-23)
 
