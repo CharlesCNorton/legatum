@@ -55,6 +55,79 @@ are not interchangeable.
 - Painting mask: alpha; frames: idle 8, move 8, attack 10, hit 4, death 10.
 - Rest: `/Users/samcorcos/LegatumRuns/anim-pilot/lanes/spearman-r12-merge/preview/rest/00.png`. Contact sheet uses `/Users/samcorcos/LegatumRuns/anim-pilot/lanes/spearman-r12-merge/review/3d-v2/spearman-decoded-160`.
 
+## Final CPU evidence and honest verdict
+
+Same settings: Cycles CPU, 256 px, 8 samples, seed 17, no denoising/adaptive,
+painted-look proxy and display-space reduction. Matched R11 → R12:
+
+| Measure | R11 | R12 |
+| --- | ---: | ---: |
+| Silhouette IoU | 0.924358 | **0.939372** |
+| Blurred zero-offset ΔE | 4.4881 | **4.5530** |
+| Raw ΔE (information only) | 8.2024 | 8.3472 |
+| Feet regional blurred ΔE | 13.9604 | 13.3515 |
+| Cloak spear-side ΔE | 3.0501 | 4.3706 |
+| Base ΔE | 3.8784 | 4.7462 |
+
+Silhouette improves; colour slightly regresses. These are not the 512 px GPU
+numbers. The 0.95 IoU target still fails; the colour target passes. Do not round
+0.939372 up to claim the reviewer's 0.94 candidate threshold passed.
+
+The contact-strength-only A/B is a small win: 100% → 40% contact changes global
+blurred ΔE 4.5745 → 4.5530 and base ΔE 4.8554 → 4.7462. It does not fix sandal
+straps or establish that final Eevee shadow edges are correct.
+
+- **33 tests pass:** 24 kit, 4 critique, 2 pipeline, 3 look. Python compilation,
+  Bash syntax and whitespace checks pass. All source/license hashes verify.
+- Rebuilt master and all five baked clips; scene checks pass; all 40 poses
+  audit with **zero findings**. Rest sole clearance **1.000 mm** on both feet
+  (was 3.000 mm); the new 2 mm rest gate passes.
+- Walk: **33 dense samples**, all eight limits pass; compensated sole slip
+  **0.00179 mm**, floor error **0.000366 mm**, planted heading **5.142°**,
+  readable heading **9.175°**, seam **0**. Root correction **48.963 mm**,
+  foot IK **19.943 mm**, sole correction **28.186 mm**. Heading is a regression
+  from the smaller-foot lane C and near the 10° limit; no threshold was relaxed.
+- CPU preview atlas: **190,952 bytes, Q80**, 160 px trimmed cells and all
+  **8/8/10/4/10** frames; decoded alpha, offsets, gutters, bounds, motion and held
+  death validate. Shipped atlas was not overwritten.
+- Movie verified **1600×352, H.264 yuv420p, 192 frames, 8 seconds**. Viewed movie
+  samples, all 40 decoded cells, native 256/160/64 comparison and full feet sheet.
+- Rebased idle/attack action receipts verify. They are pinned for repeatability,
+  not represented as byte-identical to round 11. Existing choreography is kept.
+
+## Remaining visible gaps, ranked
+
+1. **Sandals/ankles (256: x 82–110 and 145–170, y 206–225).** Feet ΔE 13.35 is
+   still far above 6, while every other region is below 5. Instep/strap bands
+   remain soft and the sole edge heavy; the painting has three crisp dark bands
+   and a thin sole. At 160 the feet read as small brown masses rather than
+   articulated sandals. Original-length feet avoid the failed contact budget
+   but do not reproduce the painted toe footprint exactly.
+2. **Stone and contact (x 75–180, y 215–244).** Base ΔE rose 3.88 → 4.75 despite
+   the shadow-strength win. The top/rim shape fits better, but the side remains
+   uniform and the warm shadow behind the feet is weak in this CPU proxy.
+   At 160 it still reads flatter than the painting. GPU cast-shadow review is
+   required; no claim that the foot-slab issue is fully solved on Eevee.
+3. **Cloak (x 98–113, y 118–176; hem x 120–165, y 175–195).** Spear-side colour
+   regresses 3.05 → 4.37 after the form change; lit folds are not as rich as the
+   painting. The final Fable centre scallop is included, but side hem contours
+   still read cleaner and more geometric at 256. At 160 this is subtler than feet.
+4. **Motion.** Both legs separate and the pale sole flashes are reduced, but
+   the walk still lifts the trailing foot like a march. Hit frames 1 and 2 are
+   close in silhouette. Fable's early spear tip and shield-facing corrections
+   are included; its death is more recognizable than Astra C's low heap, though
+   the face-down torso/head remain partly hidden under the shield at 64.
+5. **Small residual form and paint seams.** Spear-hand sleeve sliver near
+   (106,123), some noisy/soft painted edges at 256, and modest stance mismatch.
+   At 64 the unit identity, crest, shield and spear read correctly and are close
+   to the token; the base/feet and motion still prevent painting-level approval.
+
+Artifacts: `spearman-round12-restpose-compare.png`, `spearman-round12-crossfade.png`,
+`spearman-round12-contact-sheet.png`, `spearman-r12-merge-sizes.png`,
+`spearman-g-feet-check.png`, `spearman-round12.mp4`; all current round-12 review
+pixels are explicitly CPU evidence until the lead's GPU handoff overwrites them.
+The 05:17Z art-director update was read during the merge; no PASS file was written.
+
 FOCUS a: Match sandal instep height, strap bands and remaining shin contour without lengthening feet beyond the contact budget.
 FOCUS b: Review final GPU foot shadows, sandal tone and cloak lit folds; preserve the lining/sole continuity wins.
-FOCUS c: Review death shield tilt and early spear release, and the hit peak at 160; keep the wider open-mocap walk contact-clean.
+FOCUS c: Reduce the march-like swing-foot lift and separate the hit peak/recovery at 160; preserve the readable death and contact-clean walk.
