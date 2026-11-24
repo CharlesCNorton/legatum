@@ -173,3 +173,18 @@
 - Published g-feet review from CPU render.
 - Published c review from CPU render.
 - Published e-death review from CPU render.
+- First continuous-footwear preview exposed MPFB helper geometry. Restricted shell extraction and weight lookup to the visible body group; rebuilt closed leather toe/sole volumes to the reviewed footprint, preserving native weights. Later preview removed the exposed helper shapes.
+- Added generated clean stone pigment with original rim and live AO. Projection alpha blends pigment only; it never cuts mesh geometry. Eight pinned image inputs and prompt/provenance retained externally.
+- Rebound calf laces and breeches to native anatomy; skirt now uses smooth pelvis/thigh weights rather than nearest-bone patches. All contact checks now use evaluated shoe surfaces, not undeformed vertices.
+- Corrected whole-body death calibration and sparse source action reset; release begins from the last held transform and clamps dropped equipment above support. Source CC0 motion retained.
+- Broadened hand and shaft geometry; registered the straight cylinder axis to the painting before freezing UVs. Full sequential CPU stage/clip/feet render and audit underway.
+- Published b review from CPU render.
+- Published c review from CPU render.
+- Published c-details review from CPU render.
+- Published d review from CPU render.
+- Published e-idle review from CPU render.
+- Published e-move review from CPU render.
+- Published e-attack review from CPU render.
+- Published e-hit review from CPU render.
+- Published e-death review from CPU render.
+- Published g-feet review from CPU render.
