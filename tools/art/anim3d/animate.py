@@ -165,7 +165,10 @@ else:retarget_frames,motion_source=prepare(rig,root,clip,phases)
 response=EquipmentResponse(rig,shield,clip)
 # A single complete source cycle, sampled before its duplicate endpoint.
 
+# Diagnostic only: MOTION_FRAMES=73,79 poses just those frames for a fast pose look.
+only=[int(v) for v in os.environ.get('MOTION_FRAMES','').split(',') if v] if os.environ.get('MOTION_DIAGNOSTIC')=='1' else []
 for f in range(1,end+1):
+ if only and f not in only:continue
  if f==1 or f%8==0:print('POSE',clip,f,'/',end,flush=True)
  sc.frame_set(f)
  t=max(0,min(1,(f-25)/max(1,end-25)))
@@ -207,7 +210,7 @@ for f in range(1,end+1):
    dg=bpy.context.evaluated_depsgraph_get();lift=0;culprit=''
    feet_zones=[(rig.matrix_world @ rig.pose.bones[n+side].head,r) for side in 'lr' for n,r in [('ball_',.17),('foot_',.12)]]
    for ob in (sc.objects if t>0 else []):
-    if ob.type!='MESH' or ob.hide_render or ob==base or ob.name.startswith(('Cloak •','Aspis','Sunburst','Convex bronze aspis','Shield','Leather shield','Leather sandal','Sandal strap')):continue
+    if ob.type!='MESH' or ob.hide_render or ob==base or ob.name.startswith(('Linen pteruges','Pteruges','Cloak •','Aspis','Sunburst','Convex bronze aspis','Shield','Leather shield','Leather sandal','Sandal strap')):continue
     if ob in spear_objects:continue
     # Only rig-carried body/clothes/armour; released equipment has its own solve.
     parent=ob.parent
@@ -225,6 +228,8 @@ for f in range(1,end+1):
     rig.location.z+=lift;bpy.context.view_layer.update()
     for ob,matrix in released.items():ob.matrix_world=matrix
     bpy.context.view_layer.update()
+    # The slipped shield rests in the world, not on the lifted arm.
+    shield.matrix_basis=shield_neutral;bpy.context.view_layer.update();collapse.place_shield(collapse.LAST,rig)
    motion_source['max_armoured_fall_root_lift_m']=max(motion_source.get('max_armoured_fall_root_lift_m',0),lift)
   for side in ['l','r']:
    sole=bpy.data.objects['Leather sandal sole '+side]

@@ -36,53 +36,69 @@ KEYS = [
                 hand_l=(.24, -.27, 1.20), elbow_l=(.56, -.02, 1.10),
                 hand_r=(-.50, -.10, 1.16), elbow_r=(-.56, .05, 1.05), ease='in')),
     # 2 knees give: pelvis drops, torso folds over the belt, head hangs
-    (0.21, dict(pelvis=(.045, -.02, .74), rot=(0, 0, 0), spine=(.34, -.06, 0), head=(.30, -.05, 0),
+    (0.21, dict(pelvis=(.10, -.02, .74), rot=(0, 0, 0), spine=(.34, -.06, 0), head=(.30, -.05, 0),
                 plant=1, ankle_l_w=(.25, .170, .25), ankle_r_w=(-.272, .020, .26),
                 ankle_l=(.185, .15, .106), ankle_r=(-.337, -.073, .106),
                 knee_l=(.42, -.80, .30), knee_r=(-.50, -.80, .30), foot=(.50, .55),
                 hand_l=(.30, -.33, 1.08), elbow_l=(.55, -.08, 1.10),
                 hand_r=(-.44, -.16, .96), elbow_r=(-.60, .05, 1.10), ease='in')),
     # 3 on the knees: shins down, toes dragged back, torso sagging to the spear side
-    (0.32, dict(pelvis=(.02, .00, .50), rot=(-.04, -.10, 0), spine=(.42, -.16, 0), head=(.42, -.18, 0),
+    (0.32, dict(pelvis=(.16, .02, .50), rot=(-.04, -.10, 0), spine=(.42, -.16, 0), head=(.42, -.18, 0),
                 plant=1, ankle_l_w=(.26, .27, .215), ankle_r_w=(-.28, .25, .24),
                 ankle_l=(.22, .26, .62), ankle_r=(-.32, .26, .645),
                 knee_l=(.30, -2.0, .30), knee_r=(-.40, -2.0, .30), foot=(2.6, 2.6),
                 hand_l=(.30, -.32, 1.06), elbow_l=(.56, -.08, 1.08),
                 hand_r=(-.40, -.14, .78), elbow_r=(-.58, .06, 1.08), ease='in')),
     # 4 toppling over the spear-side knee; head and shield lag behind the hips
-    (0.47, dict(pelvis=(-.02, .05, .50), rot=(-.05, -.62, 0), spine=(.30, .16, 0), head=(.25, .25, 0),
+    (0.50, dict(pelvis=(.22, .06, .46), rot=(-.15, -.62, 0), spine=(.30, .16, 0), head=(.25, .25, 0),
                 plant=0, ankle_l_w=(.26, .27, .215), ankle_r_w=(-.28, .25, .24),
                 ankle_l=(.18, .22, .62), ankle_r=(-.28, .24, .63),
                 knee_l=(.20, -2.0, .40), knee_r=(-.40, -2.0, .40), foot=(2.6, 2.6),
                 hand_l=(.28, -.30, 1.02), elbow_l=(.60, -.10, 1.06),
-                hand_r=(-.42, -.24, 1.02), elbow_r=(-.62, .02, 1.12), ease='in')),
-    # 5 shoulder and hip strike the stone
-    (0.66, dict(pelvis=(-.02, .08, .43), rot=(-.12, -1.32, 0), spine=(.18, .12, 0), head=(.10, .25, 0),
+                hand_r=(-.42, -.24, 1.02), elbow_r=(-.62, .02, 1.12),
+                arm_w=0, hand_l_w=(.28, -.02, .50), elbow_l_w=(.0, .30, .90),
+                hand_r_w=(-.25, -.45, .14), elbow_r_w=(-.55, -.25, .10),
+                shield_w=0, shield_arc=.06, ease='in')),
+    # 5 shoulder and hip strike the stone; the arm goes limp and the aspis slips off it
+    (0.70, dict(pelvis=(.28, .10, .34), rot=(-.35, -1.25, 0), spine=(.18, .12, 0), head=(.10, .20, -.2),
                 plant=0, ankle_l_w=(.26, .27, .215), ankle_r_w=(-.28, .25, .24),
-                ankle_l=(.10, .16, .62), ankle_r=(-.12, .16, .50),
-                knee_l=(-.20, -2.0, .70), knee_r=(-.35, -2.0, .50), foot=(2.0, 1.9),
+                ankle_l=(.06, .14, .60), ankle_r=(-.125, .06, .55),
+                knee_l=(.15, -2.0, .50), knee_r=(-.25, -2.0, .60), foot=(2.0, 1.9),
                 hand_l=(.16, -.34, 1.06), elbow_l=(.60, -.30, 1.10),
-                hand_r=(-.40, -.30, 1.25), elbow_r=(-.60, -.30, 1.00), ease='out')),
-    # 6 settles on his side behind the shield; head drops, legs slacken
-    (0.82, dict(pelvis=(-.04, .10, .40), rot=(-.20, -1.44, 0), spine=(.12, .0, 0), head=(.08, -.25, 0),
+                hand_r=(-.40, -.30, 1.25), elbow_r=(-.60, -.30, 1.00),
+                arm_w=.6, hand_l_w=(.28, -.02, .50), elbow_l_w=(.0, .30, .90),
+                hand_r_w=(-.25, -.45, .14), elbow_r_w=(-.55, -.25, .10),
+                shield_w=.5, shield_arc=.06, ease='out')),
+    # 6 settles on his side facing out, knees drawn up; the aspis tips back against them
+    (0.86, dict(pelvis=(.30, .12, .31), rot=(-.50, -1.40, 0), spine=(.15, .0, 0), head=(.05, -.10, -.45),
                 plant=0, ankle_l_w=(.26, .27, .215), ankle_r_w=(-.28, .25, .24),
-                ankle_l=(-.05, .12, .68), ankle_r=(-.05, .14, .54),
-                knee_l=(-.50, -2.0, .80), knee_r=(-.30, -2.0, .50), foot=(1.35, 1.25),
-                hand_l=(.02, -.36, 1.08), elbow_l=(.60, -.50, 1.10),
-                hand_r=(-.42, -.35, 1.50), elbow_r=(-.50, -.60, 1.20), ease='out')),
+                ankle_l=(-.02, .10, .56), ankle_r=(-.125, -.08, .58),
+                knee_l=(.125, -2.0, .60), knee_r=(-.125, -2.0, .80), foot=(1.4, 1.35),
+                hand_l=(-.12, -.32, .98), elbow_l=(.60, -.30, 1.10),
+                hand_r=(-.50, -.38, 1.20), elbow_r=(-.45, -.25, 1.60),
+                arm_w=1, hand_l_w=(.28, -.02, .50), elbow_l_w=(.0, .30, .90),
+                hand_r_w=(-.25, -.45, .14), elbow_r_w=(-.55, -.25, .10),
+                shield_w=.92, shield_arc=.06, ease='out')),
     # 7 at rest (held)
-    (0.96, dict(pelvis=(-.04, .10, .40), rot=(-.22, -1.44, 0), spine=(.10, .0, 0), head=(.08, -.32, 0),
+    (0.96, dict(pelvis=(.30, .12, .30), rot=(-.55, -1.40, 0), spine=(.15, .0, 0), head=(.0, .0, -.5),
                 plant=0, ankle_l_w=(.26, .27, .215), ankle_r_w=(-.28, .25, .24),
-                ankle_l=(-.05, .12, .68), ankle_r=(-.05, .14, .54),
-                knee_l=(-.50, -2.0, .80), knee_r=(-.30, -2.0, .50), foot=(1.35, 1.25),
-                hand_l=(.00, -.36, 1.07), elbow_l=(.60, -.50, 1.10),
-                hand_r=(-.42, -.35, 1.52), elbow_r=(-.50, -.60, 1.20), ease='out')),
+                ankle_l=(-.02, .10, .56), ankle_r=(-.125, -.08, .58),
+                knee_l=(.125, -2.0, .60), knee_r=(-.125, -2.0, .80), foot=(1.3, 1.3),
+                hand_l=(-.12, -.32, .98), elbow_l=(.60, -.30, 1.10),
+                hand_r=(-.50, -.38, 1.20), elbow_r=(-.45, -.25, 1.60),
+                arm_w=1, hand_l_w=(.28, -.02, .50), elbow_l_w=(.0, .30, .90),
+                hand_r_w=(-.25, -.45, .14), elbow_r_w=(-.55, -.25, .10),
+                shield_w=1, ease='out')),
 ]
 
 
 def quaternion(rot):
-    roll, fall, yaw = rot
-    return (Quaternion((1, 0, 0), roll) @ Quaternion((0, 1, 0), fall) @ Quaternion((0, 0, 1), yaw))
+    roll, fall, yaw = rot[:3]
+    # Optional fourth value: a turn about the world vertical after the fall
+    # (swings the lying body round on the stone).
+    spin = rot[3] if len(rot) > 3 else 0
+    return (Quaternion((0, 0, 1), spin) @ Quaternion((1, 0, 0), roll)
+            @ Quaternion((0, 1, 0), fall) @ Quaternion((0, 0, 1), yaw))
 
 
 GUARD = KEYS[0][1]
@@ -119,8 +135,11 @@ def sample(t, KEYS=KEYS):
     for name in set(a[1]) | set(b[1]):
         if name == 'ease':
             continue
-        value = a[1].get(name, (0, 0))
-        other = b[1].get(name, (0, 0))
+        # A channel missing from one key takes the other key's value; weights
+        # (`*_w`) and the hit's spear rock default to zero.
+        zero = 0. if name.endswith('_w') and name in ('arm_w', 'shield_w') else (0, 0) if name == 'spear' else None
+        value = a[1].get(name, zero if zero is not None else b[1].get(name))
+        other = b[1].get(name, zero if zero is not None else a[1].get(name))
         if name == 'rot':
             out[name] = quaternion(value).slerp(quaternion(other), u)
         elif isinstance(value, tuple):
@@ -128,6 +147,51 @@ def sample(t, KEYS=KEYS):
         else:
             out[name] = value+(other-value)*u
     return out
+
+
+# Where the aspis comes to rest once the dying arm slides out of the forearm
+# band: standing on its rim on the stone, leaning back against his drawn-up
+# knees with the face toward the camera. World space; centre of the shell and
+# the outward facing.
+SHIELD_REST = (Vector((.40, -.14, .53)), Vector((.39, -.77, .50)))
+_shield_points = {}
+
+
+def place_shield(c, rig):
+    """Blend the aspis from the forearm to SHIELD_REST by `shield_w` (0..1).
+
+    Call again after anything moves the rig (the floor fit), so the rest
+    stays where it was authored in the world."""
+    import bpy
+    weight = c.get('shield_w', 0.)
+    if weight <= 1e-4:
+        return
+    shield = bpy.data.objects['Aspis control']
+    if 'centre' not in _shield_points:
+        inverse = shield.matrix_world.inverted()
+        depsgraph = bpy.context.evaluated_depsgraph_get()
+        points = []
+        for ob in shield.children:
+            evaluated = ob.evaluated_get(depsgraph)
+            mesh = evaluated.to_mesh()
+            points.extend(inverse @ ob.matrix_world @ v.co for v in mesh.vertices)
+            evaluated.to_mesh_clear()
+        _shield_points['centre'] = sum(points, Vector())/len(points)
+    matrix = shield.matrix_world.copy()
+    location, rotation, scale = matrix.decompose()
+    centre = matrix @ _shield_points['centre']
+    normal = rotation @ Vector((0, -1, 0))
+    rest_centre, rest_normal = SHIELD_REST
+    turned = normal.rotation_difference(rest_normal.normalized()) @ rotation
+    rotation = rotation.slerp(turned, weight)
+    centre = centre.lerp(rest_centre, weight)
+    # Slipping off the arm it drops rim-first: a small arc keeps the rim out
+    # of his thigh on the way down.
+    centre.z += c.get('shield_arc', 0.)*math.sin(math.pi*weight)
+    matrix = Matrix.LocRotScale(Vector(), rotation, scale)
+    matrix.translation = centre-matrix.to_3x3() @ _shield_points['centre']
+    shield.matrix_world = matrix
+    bpy.context.view_layer.update()
 
 
 def apply(t, rig, neutral_world, limb, turn, keys=KEYS):
@@ -159,8 +223,16 @@ def apply(t, rig, neutral_world, limb, turn, keys=KEYS):
         foot.matrix = matrix
         bpy.context.view_layer.update()
     carry = rig.pose.bones['spine_03'].matrix @ neutral_world['spine_03'].inverted()
+    reach = c.get('arm_w', 0.)
     for side in ['l', 'r']:
-        limb('upperarm_'+side, 'lowerarm_'+side, carry @ c['hand_'+side], carry @ c['elbow_'+side])
+        hand, elbow = carry @ c['hand_'+side], carry @ c['elbow_'+side]
+        if reach > 0:
+            # Limp arms come to rest on things in the world (stone, hip), not
+            # at a place in the chest's frame.
+            hand = hand.lerp(inverse @ c['hand_'+side+'_w'], reach)
+            elbow = elbow.lerp(inverse @ c['elbow_'+side+'_w'], reach)
+        limb('upperarm_'+side, 'lowerarm_'+side, hand, elbow)
+    place_shield(c, rig)
     if 'spear' in c:
         # The grip keeps its guard orientation in armature space (the spear is
         # carried by the hand), plus a small rock about X/Y.
@@ -170,4 +242,6 @@ def apply(t, rig, neutral_world, limb, turn, keys=KEYS):
         matrix.translation = hand.head
         hand.matrix = matrix
     bpy.context.view_layer.update()
+    global LAST
+    LAST = c
     return c
