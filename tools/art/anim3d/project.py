@@ -292,7 +292,8 @@ fit_silhouette(sc, screen_sculpt)
 from stance import bulk_legs, flare_cloak
 bulk_legs(sc)
 flare_cloak(sc, screen_sculpt)
-from stance import brace_feet
+from stance import brace_feet, seat_straps
+seat_straps(sc)
 brace_feet(sc)
 rig['neutral_pose'] = json.dumps({p.name: [list(row) for row in p.matrix_basis] for p in rig.pose.bones})
 

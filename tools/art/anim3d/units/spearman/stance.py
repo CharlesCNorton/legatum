@@ -9,14 +9,17 @@ vertex's own skin weight, so every clip inherits it through normal skinning.
 No bone, weight, pose, sole plane or landmark index changes. Feet scale about
 the point under the ankle on the sole plane, so soles stay on the stone.
 """
+import math
+
 import bpy
 from mathutils import Vector
 
-THIGH, KNEE, MID, ANKLE = 1.12, 1.18, 1.0, 1.20
-FOOT = Vector((1.32, 1.30, 1.18))
+THIGH, KNEE, MID, ANKLE = 1.12, 1.18, 1.0, 1.42
+FOOT = Vector((1.50, 1.42, 1.18))
 SHAFT = 1.75
 BASE = .965
 BAND = .008
+STRAP = .011
 SKIN = .5
 SPEAR_SIDE_TRIM = .32
 OUTER = 1.5
@@ -24,12 +27,13 @@ OUTER = 1.5
 
 def calf_scale(t):
     # t: 0 at the knee joint, 1 at the ankle. Measured against the painting at
-    # 256 px: a 14 px knee cap, a 9 px shin, a slightly heavier ankle.
+    # 256 px: a 14 px knee cap, a 9 px shin at mid-calf, then the greave flares
+    # again to 11 px over the ankle.
     t = max(0., min(1., t))
-    if t < .5:
-        u = t/.5
+    if t < .4:
+        u = t/.4
         return KNEE+(MID-KNEE)*u*u*(3-2*u)
-    u = (t-.5)/.5
+    u = min(1., (t-.4)/.38)
     return MID+(ANKLE-MID)*u*u*(3-2*u)
 
 
@@ -86,13 +90,19 @@ def bulk_legs(scene):
                             # Both painted shins sit about 1.5 px toward the spear side of
                             # the modelled ones between knee and ankle (rows 190-202).
                             u = max(0., min(1., along/length))
-                            scale -= SPEAR_SIDE_TRIM*max(0., radial.normalized().x)*(4*u*(1-u))**.5
+                            scale -= SPEAR_SIDE_TRIM*max(0., radial.normalized().x)*math.exp(-((u-.38)/.24)**2)
                         move += radial*(scale-1)*g.weight
                     elif part in ('foot', 'ball'):
                         ankle = bones['foot_'+side].head_local
                         centre = Vector((ankle.x, ankle.y, sole_z[side]))
                         rel = p-centre
-                        move += Vector((rel.x*(FOOT.x-1), rel.y*(FOOT.y-1), rel.z*(FOOT.z-1)))*g.weight
+                        # Full size at the sole, tapering to the ankle's own girth: a
+                        # uniformly scaled ankle strap stood off the leg as a hoop.
+                        h = max(0., min(1., (rel.z-.10)/.06))
+                        h = h*h*(3-2*h)
+                        sx = FOOT.x+(1.10-FOOT.x)*h
+                        sy = FOOT.y+(1.10-FOOT.y)*h
+                        move += Vector((rel.x*(sx-1), rel.y*(sy-1), rel.z*(FOOT.z-1)))*g.weight
                 if move.length > 1e-7:
                     vertex.co = back @ (p+move)
                     count += 1
@@ -191,7 +201,7 @@ def brace_feet(scene):
     import math
     from mathutils import Matrix
     rig = bpy.data.objects['Spearman • MPFB game_engine']
-    for name, angle in [('foot_l', math.radians(38)), ('foot_r', math.radians(10))]:
+    for name, angle in [('foot_l', math.radians(45)), ('foot_r', math.radians(-24))]:
         bone = rig.pose.bones[name]
         pivot = bone.head.copy()
         bone.matrix = Matrix.Translation(pivot) @ Matrix.Rotation(angle, 4, 'Z') @ Matrix.Translation(-pivot) @ bone.matrix
@@ -206,3 +216,44 @@ def brace_feet(scene):
             v.co.z -= BAND
     base.data.update()
     bpy.context.view_layer.update()
+
+
+def seat_straps(scene):
+    """Lay the sandal straps on the foot. They were modelled as free arches up
+    to 5 cm above the instep and read as hoops beside the ankle at token size.
+    Each strap vertex is pulled to within a strap's thickness of the evaluated
+    foot surface in the guard pose and returned through its skin transform."""
+    from mathutils import Matrix
+    from mathutils.bvhtree import BVHTree
+    rig = bpy.data.objects['Spearman • MPFB game_engine']
+    body = bpy.data.objects['MPFB anatomical male • original topology']
+    dg = bpy.context.evaluated_depsgraph_get()
+    ev = body.evaluated_get(dg)
+    mesh = ev.to_mesh()
+    tree = BVHTree.FromPolygons([body.matrix_world @ v.co for v in mesh.vertices],
+                                [list(p.vertices) for p in mesh.polygons])
+    ev.to_mesh_clear()
+    transforms = {b.name: b.matrix @ b.bone.matrix_local.inverted() for b in rig.pose.bones}
+    moved = 0
+    for ob in scene.objects:
+        if ob.type != 'MESH' or not ob.name.startswith('Sandal strap'):
+            continue
+        world = ob.matrix_world
+        back = world.inverted()
+        for vertex in ob.data.vertices:
+            influences = [(transforms[ob.vertex_groups[g.group].name], g.weight) for g in vertex.groups
+                          if ob.vertex_groups[g.group].name in transforms]
+            total = sum(w for _, w in influences)
+            if total < .001:
+                continue
+            skin = sum((m*(w/total) for m, w in influences), Matrix(((0,)*4,)*4))
+            posed = world @ (skin @ vertex.co)
+            location, normal, index, distance = tree.find_nearest(posed)
+            if location is None or distance <= STRAP:
+                continue
+            target = location+(posed-location).normalized()*STRAP
+            vertex.co = skin.inverted_safe() @ (back @ target)
+            moved += 1
+        ob.data.update()
+    bpy.context.view_layer.update()
+    print('STRAPS_SEATED', moved, 'vertices')
