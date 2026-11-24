@@ -58,7 +58,7 @@ LOOK = {
     'ground_depth': .18,      # falloff away from the camera, metres
     'ground_width': .26,      # falloff across the view, metres
     'ground_r': .53, 'ground_g': .38, 'ground_b': .24,  # linear multiplier at full depth (painting, x 114-144 / y 212-214)
-    'sandal_r': 1.0, 'sandal_g': 1.0, 'sandal_b': 1.0,  # leather tone multiplier (linear)
+    'sandal_r': .90, 'sandal_g': .84, 'sandal_b': .76,  # leather tone multiplier (linear) on sandals and the strapped foot
     'side_drop': .06,         # side band: value lost from the lip down to the foot of the disc
     'side_foot': .18,         # extra darkening of the lowest tenth of the side band (the painted ground line)
     'stone_grain': .08,
