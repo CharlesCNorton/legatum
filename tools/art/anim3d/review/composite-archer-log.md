@@ -113,3 +113,4 @@
 - Saved e-move review, raw 512 px and graded sets at native resolution or smaller; CYCLES GPU 64 samples.
 - Saved e-attack review, raw 512 px and graded sets at native resolution or smaller; CYCLES GPU 64 samples.
 - Saved e-hit review, raw 512 px and graded sets at native resolution or smaller; CYCLES GPU 64 samples.
+- Saved e-death review, raw 512 px and graded sets at native resolution or smaller; CYCLES GPU 64 samples.
