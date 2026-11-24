@@ -271,3 +271,20 @@
 - R15 merge 2026-11-24: read general/unit feedback and Astra/Fable evidence; R14 baseline retained; skill branch updates ported; critique branch already superseded by shared kit. Git merge blocked by ORIG_HEAD.lock.
 - R15 merge: ported a sandal pigment recovery, b moving-foot finish, c timing assertions; dropped cloak/phase trials and default rest-pool regression. Used unit, Blender materials, animation and rendering skills.
 - R15 merge: extracted kit/foot_finish and refactored unit adapter; 36 Python tests pass, zero unresolved imports. Fresh isolated project and CPU look rebuilt; serial five-clip rebuild in progress.
+- R15 CPU 2026-11-24T10:02:43Z prepare-look
+- R15 CPU 2026-11-24T10:03:00Z animate-idle
+- R15 CPU 2026-11-24T10:03:35Z animate-move
+- R15 CPU 2026-11-24T10:04:34Z animate-attack
+- R15 CPU 2026-11-24T10:05:28Z animate-hit
+- R15 CPU 2026-11-24T10:05:46Z animate-death
+- R15 CPU 2026-11-24T10:07:48Z check_scene
+- R15 CPU 2026-11-24T10:07:49Z check_support
+- R15 CPU 2026-11-24T10:07:50Z check_transitions
+- R15 CPU 2026-11-24T10:07:55Z check_frozen
+- R15 CPU 2026-11-24T10:08:00Z audit
+- R15 CPU 2026-11-24T10:08:28Z feet
+- R15 CPU 2026-11-24T10:08:57Z cpu-review
+- R15 CPU 2026-11-24T10:10:02Z deliver
+- R15 CPU 2026-11-24T10:10:20Z critique
+- R15 CPU 2026-11-24T10:10:20Z complete
+- R15 final CPU: 36 tests; audit zero; 33 feet samples pass; IoU .9512536, blurred ΔE 3.29799, feet 4.71708; 192774-byte Q80 atlas and 8s movie verified. Matched A/B and 256/160/64 review complete; GPU pending, no PASS.

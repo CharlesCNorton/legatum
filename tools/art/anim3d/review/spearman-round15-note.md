@@ -160,6 +160,21 @@ the canonical filenames. CPU sources, all 40 frames, atlas, receipts and logs:
 `~/LegatumRuns/anim-pilot/lanes/spearman-r15-merge/`. No GPU run or art PASS is
 claimed in this sandbox. No new third-party asset or licence was introduced.
 
+## Cost record
+
+`.progress/astra.log`: lane a 20m38s, b 24m51s, c 8m40s; parallel lane wall
+24m53s. Merge began 04:59:33 America/New_York; verified through 2026-11-24T05:13:55.461126-05:00
+(14.37 minutes). Runner finish and GPU time are still pending; tokens are
+not measured. Exact parsed timestamps: `lanes/spearman-r15-merge/timing.json`.
+
+## Git handoff
+
+Final staging also failed on the sandbox's `index.lock`. Source changes remain
+uncommitted on `astra/unit-anim-3d-v2`. Runner artifacts:
+`lanes/spearman-r15-merge/round15-only.patch`, `changed-files.json`, and
+`commit-message.txt` (required gpt-6-astra co-author included). The patch covers
+only this round's source changes against `9c35ac22`; no masters are in git.
+
 FOCUS a: After Sam's review, strengthen strap/skin contrast and toes; cloak flare/scalloped hem only if motion and silhouette do not regress.
 FOCUS b: Resolve soft rest pools versus regional error on matched GPU evidence; retain the accepted dark moving-foot pigment and test the hand sliver/cavity depth.
 FOCUS c: Hold R14 donor walk/readable death; only revisit dedicated guard transitions and fall frame allocation after Sam has seen the candidate.
