@@ -52,15 +52,16 @@ Lanes started 22:21:19–22:21:25 on the round-10 GPU candidate `aeacff7d`.
 
 ### Colour on the blurred scale (added 2026-11-24)
 
-`critique.py` now judges colour on blurred images (2 px Gaussian at 256) and per region. Each round's own graded rest render, re-measured:
+`critique.py` now scores colour on blurred images (2 px Gaussian at 256) at zero offset, with per-region values; the ±3 px search is for IoU only. Each round's own graded rest render, re-measured:
 
-| Render | IoU | Raw ΔE | Blurred ΔE | head/crest | torso | cloak (spear side) | shield | legs | feet | base |
+| Render | IoU | Blurred ΔE | Raw ΔE (zero offset) | head/crest | torso | cloak (spear side) | shield | legs | feet | base |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Round 9 CPU | 0.9053 | 13.71 | 7.62 | 4.5 | 4.3 | 8.6 | 3.7 | 7.9 | 17.4 | 6.6 |
-| Round 10 CPU | 0.9022 | 13.81 | 7.36 | 4.4 | 4.1 | 8.9 | 3.3 | 7.6 | 17.4 | 6.0 |
-| Round 10 GPU | 0.9039 | 14.05 | 6.98 | 3.8 | 3.6 | 8.7 | 2.8 | 7.0 | 17.2 | 6.1 |
+| Round 9 CPU | 0.9053 | 7.29 | 10.73 | 4.1 | 3.4 | 8.3 | 3.6 | 7.5 | 16.9 | 7.1 |
+| Round 10 CPU | 0.9022 | 6.90 | 10.85 | 3.5 | 3.0 | 8.5 | 3.0 | 7.0 | 16.7 | 6.6 |
+| Round 10 GPU | 0.9039 | 6.47 | 9.91 | 3.1 | 2.3 | 8.2 | 2.4 | 6.4 | 16.5 | 6.6 |
+| Fable A look on Fable B form (lead's figures) | 0.920 | 4.41 | – | – | – | – | – | – | – | – |
 
-Feet, the spear-side cloak and the legs carry the colour error; shield, torso and head are within target. The raw number moved the wrong way across the same three renders.
+Feet, the spear-side cloak and the legs carry the colour error on the Cycles rounds; shield, torso and head are within target. **Baseline as of 2026-11-24: Fable A's look on Fable B's form.** Colour is inside its target; the remaining gap is silhouette.
 
 ### Fable builders (2026-11-24, in progress)
 

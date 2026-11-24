@@ -7,7 +7,7 @@ must already match. The silhouette chooses an offset (±3 pixels); colour uses t
 The metrics include the base and are diagnostics, never art approval.
 
 Colour is judged on BLURRED images (Gaussian, sigma 2 px at 256, in linear
-light, inside the overlap). Per-pixel CIE76 on sharp images is dominated by
+light, inside the overlap) at ZERO offset; the offset search is for IoU only. Per-pixel CIE76 on sharp images is dominated by
 fine-texture misregistration: on Spearman round 10 the heatmap was speckle
 everywhere and the raw number (13.8) could not reach the target of 6 even on a
 near-perfect match (cloud reviewer, 2026-11-24). The raw number is still
@@ -227,22 +227,28 @@ def run(args):
     if not np.any(overlap):
         raise ValueError("Painting and rest render have no overlapping figure pixels")
 
+    # Colour is scored at ZERO offset: projected paint is registered there, so
+    # at any other offset every painted edge counts as colour error. The +-3 px
+    # search serves the silhouette IoU only. The values at the IoU offset are
+    # kept as information.
     paint_rgb = np.asarray(painting)[:, :, :3]
-    render_rgb = shift_array(np.asarray(render)[:, :, :3], dx, dy)
-    delta = np.linalg.norm(rgb_to_lab(paint_rgb) - rgb_to_lab(render_rgb), axis=2)
-    mean_delta = float(np.mean(delta[overlap]))
-    delta_blurred = np.linalg.norm(rgb_to_lab(blurred_rgb(paint_rgb, overlap))
-                                   - rgb_to_lab(blurred_rgb(render_rgb, overlap)), axis=2)
-    mean_blurred = float(np.mean(delta_blurred[overlap]))
+    render_rgb = np.asarray(render)[:, :, :3]
+    overlap = paint_mask & render_mask
+    if not np.any(overlap):
+        raise ValueError("Painting and rest render do not overlap at zero offset")
+
+    def colour(rgb, mask):
+        raw = np.linalg.norm(rgb_to_lab(paint_rgb) - rgb_to_lab(rgb), axis=2)
+        blurred = np.linalg.norm(rgb_to_lab(blurred_rgb(paint_rgb, mask)) - rgb_to_lab(blurred_rgb(rgb, mask)), axis=2)
+        return raw, blurred
+
+    delta, delta_blurred = colour(render_rgb, overlap)
+    mean_delta, mean_blurred = float(np.mean(delta[overlap])), float(np.mean(delta_blurred[overlap]))
     regions = region_delta_e(delta, delta_blurred, overlap, load_regions(args))
-    # Projected paint is registered at zero offset. When the silhouette search
-    # picks another offset, every painted edge counts as colour error, so the
-    # unshifted values are reported too (Fable look lane, 2026-11-24).
-    unshifted = paint_mask & render_mask
-    raw_rgb = np.asarray(render)[:, :, :3]
-    zero_raw = float(np.mean(np.linalg.norm(rgb_to_lab(paint_rgb) - rgb_to_lab(raw_rgb), axis=2)[unshifted]))
-    zero_blurred = float(np.mean(np.linalg.norm(rgb_to_lab(blurred_rgb(paint_rgb, unshifted))
-                                                - rgb_to_lab(blurred_rgb(raw_rgb, unshifted)), axis=2)[unshifted]))
+    shifted_overlap = paint_mask & aligned_mask
+    shifted_raw, shifted_blurred = colour(shift_array(render_rgb, dx, dy), shifted_overlap)
+    at_offset = {"mean_delta_e_blurred": float(np.mean(shifted_blurred[shifted_overlap])),
+                 "mean_delta_e_cie76": float(np.mean(shifted_raw[shifted_overlap]))}
     out = args.out
     out.mkdir(parents=True, exist_ok=True)
     stem = f"{slug}-round{args.round}"
@@ -260,7 +266,7 @@ def run(args):
     triptych.save(out / f"{stem}-restpose-compare.png")
 
     difference = np.full((SIZE, SIZE, 3), CREAM[:3], dtype=np.uint8)
-    difference[overlap] = (48, 55, 50)
+    difference[paint_mask & aligned_mask] = (48, 55, 50)
     difference[paint_mask & ~aligned_mask] = (0, 170, 210)
     difference[aligned_mask & ~paint_mask] = (220, 65, 150)
     Image.fromarray(difference).save(out / f"{stem}-silhouette-difference.png")
@@ -286,7 +292,7 @@ def run(args):
         "mean_delta_e_cie76": mean_delta, "delta_e_target": DELTA_E_TARGET,
         "colour_pass": bool(mean_blurred <= DELTA_E_TARGET),
         "colour_metric": "mean_delta_e_blurred (raw per-pixel CIE76 is information only)",
-        "zero_offset": {"mean_delta_e_blurred": zero_blurred, "mean_delta_e_cie76": zero_raw},
+        "colour_offset_px": {"x": 0, "y": 0}, "at_iou_offset": at_offset,
         "regions": regions,
         "overlap_pixels": int(np.count_nonzero(overlap)),
         "frame_counts": {clip: len(frames[clip]) for clip in CLIPS},
@@ -298,9 +304,9 @@ def run(args):
                    f"Best of ±3 px offsets: render x={dx:+d}, y={dy:+d}.\n"
                    f"- Tone/colour ΔE on blurred images (sigma {BLUR_SIGMA:g} px, CIE76): **{mean_blurred:.2f}** "
                    f"(target ≤ {DELTA_E_TARGET:.0f}; {'PASS' if metrics['colour_pass'] else 'FAIL'}), "
-                   f"over {metrics['overlap_pixels']} overlapping pixels including base after that offset. "
-                   f"Raw per-pixel ΔE, information only: {mean_delta:.2f}. "
-                   f"At zero offset: blurred {zero_blurred:.2f}, raw {zero_raw:.2f}.\n"
+                   f"at zero offset over {metrics['overlap_pixels']} overlapping pixels including base. "
+                   f"Information only: raw per-pixel ΔE {mean_delta:.2f}; at the IoU offset blurred "
+                   f"{at_offset['mean_delta_e_blurred']:.2f}, raw {at_offset['mean_delta_e_cie76']:.2f}.\n"
                    + ("- Regions (blurred ΔE): " + ", ".join(
                        f"{name} {r['mean_delta_e_blurred']:.1f}" for name, r in regions.items() if "mean_delta_e_blurred" in r) + ".\n"
                       if regions else "")
