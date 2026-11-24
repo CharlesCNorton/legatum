@@ -177,7 +177,7 @@ impl Planner<'_> {
         self.pass("storm_fallen");
         self.storm_fallen(&army);
         self.pass("withdraw_failed_campaign");
-        if !self.rome_opening_active() {
+        if !self.rome_opening_active() && self.rome_war_city().is_none() {
             self.withdraw_failed_campaign(&army);
         }
         // Gene `door_defense`: strikes on the attackers at our cities, garrisons for empty
@@ -186,7 +186,13 @@ impl Planner<'_> {
         self.door_military(&army);
         // A Roman recruit adjacent to a favourable fight can earn its first
         // promotion now. Leave distant marches to the later field pass.
-        if self.faction == Faction::Rome && !self.rome_opening_active() {
+        // Gene `rome_endless_war`: the melee beside the open target strike it together.
+        self.pass("rome_storm");
+        self.rome_storm(&army);
+        if self.faction == Faction::Rome
+            && !self.rome_opening_active()
+            && self.rome_war_city().is_none()
+        {
             self.pass("drill_nearby_recruits");
             self.drill_veterans(&army, false);
         }
@@ -255,7 +261,7 @@ impl Planner<'_> {
         // Coordinated fire takes favourable kills first; surviving Roman recruits
         // then seek their own first promotion before routine garrisons park them.
         self.pass("drill_veterans");
-        if !self.rome_opening_active() {
+        if !self.rome_opening_active() && self.rome_war_city().is_none() {
             self.drill_veterans(&army, true);
         }
         self.pass("rush_siege");
@@ -286,6 +292,8 @@ impl Planner<'_> {
         self.answer_bombardment(&army);
         self.pass("rome_opening_march");
         self.march_rome_opening(&army);
+        self.pass("rome_war_march");
+        self.march_rome_war(&army);
         self.pass("avoid_free_damage");
         self.avoid_free_damage(&army);
         if !primitive_escorts

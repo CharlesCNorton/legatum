@@ -25,7 +25,7 @@ impl Planner<'_> {
             })
     }
 
-    fn rome_opening_melee(&self) -> Vec<&legatum_core::view::UnitView> {
+    pub(crate) fn rome_opening_melee(&self) -> Vec<&legatum_core::view::UnitView> {
         self.ctx
             .own_units
             .iter()
@@ -125,6 +125,12 @@ impl Planner<'_> {
         let Some(city) = selected else {
             return;
         };
+        self.commit_rome_target(city, "Roman opening march");
+    }
+
+    /// Hold `city` as Rome's one campaign target: remember it and route the plan to it.
+    pub(crate) fn commit_rome_target(&mut self, city: &CityView, label: &str) {
+        let v = self.view();
         self.campaigns.rome_opening_target = Some(city.id);
         let kind = PlanKind::Campaign {
             against: v.team_of(city.owner),
@@ -149,13 +155,13 @@ impl Planner<'_> {
             review_turn: v.turn + 1,
             reserve: 0,
             value: 0,
-            terms: vec![("Roman opening march".into(), 0)],
+            terms: vec![(label.into(), 0)],
             breach: false,
             misses: 0,
         });
     }
 
-    fn rome_opening_distance(&self, target: Hex) -> i32 {
+    pub(crate) fn rome_opening_distance(&self, target: Hex) -> i32 {
         self.ctx
             .own_cities
             .iter()

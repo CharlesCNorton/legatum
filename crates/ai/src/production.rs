@@ -2421,6 +2421,10 @@ impl Planner<'_> {
     /// Burn a captured city only when the visible counterattack outweighs the troops that can
     /// hold it. Compare the loot and denied recapture against its expected retained value.
     pub(crate) fn plan_raze(&mut self) {
+        // Gene `rome_endless_war`: Rome grows by the cities it takes; it keeps them.
+        if self.rome_endless_war() {
+            return;
+        }
         let mut raze = Vec::new();
         for (i, city) in self.ctx.own_cities.iter().enumerate() {
             let Some(detail) = &city.detail else { continue };
@@ -2886,6 +2890,7 @@ impl Planner<'_> {
         };
         let routine = door
             .or_else(|| self.rome_opening_build(c))
+            .or_else(|| self.rome_war_build(c))
             .or_else(|| self.choose_item_inner(ci, c, tally));
         let chosen = if door.is_some() {
             door

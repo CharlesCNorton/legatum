@@ -945,14 +945,14 @@ impl Planner<'_> {
                 decisions.push(order);
             }
         }
-        if let Some(city) = self.rome_opening_city() {
+        if let Some(city) = self.rome_march_city() {
             let against = v.team_of(city.owner);
             // Keep the opening's one target. The normal prospective siege forecast waits
             // for a complete assault; here the three melee are already at its door.
             decisions.retain(|order| !matches!(order, Order::DeclareWar { .. }));
             if !city.walls
                 && !v.teams_at_war(v.team, against)
-                && self.rome_opening_ready(city)
+                && self.rome_march_ready(city)
                 && let Some(order) = v.diplomacy.actions.iter().find(|action| {
                     action.blocked_reason.is_none()
                         && matches!(action.order, Order::DeclareWar { against: team, breach: false } if team == against)
@@ -2245,6 +2245,11 @@ impl Planner<'_> {
         // Gene `operations`: a committed strike on this team refuses Peace while it runs.
         if self.operation_refuses_peace(against) {
             return (false, "committed operation");
+        }
+        // Gene `rome_endless_war`: Rome neither offers nor accepts Peace with the enemy it
+        // marches on (level 2: with any enemy) unless it is losing that war.
+        if self.rome_war_holds(against) {
+            return (self.rome_war_losing(against), "Roman endless war");
         }
         // India playbook bit 4: keep the war against the strict public VP leader.
         if self.faction == legatum_core::Faction::India

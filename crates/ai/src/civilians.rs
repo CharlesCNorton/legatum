@@ -676,8 +676,18 @@ impl Planner<'_> {
             // Gene `roman_finish_siege`: a siege whose capture still forecasts keeps its
             // committed units; a captured city is worth more than a founded one.
             let siege = self.roman_live_siege();
-            let in_siege =
-                |u: &UnitView| siege.as_ref().is_some_and(|(_, ids)| ids.contains(&u.id));
+            // Gene `rome_endless_war`: so does this turn's storm of the open target.
+            let storming: Vec<UnitId> = self
+                .ctx
+                .own_units
+                .iter()
+                .filter(|u| self.rome_storming(u))
+                .map(|u| u.id)
+                .collect();
+            let in_siege = |u: &UnitView| {
+                siege.as_ref().is_some_and(|(_, ids)| ids.contains(&u.id))
+                    || storming.contains(&u.id)
+            };
             // A veteran cannot retire while wounded. Let a safe one recover before
             // ordinary military assignments spend another turn of its health.
             let healing: Vec<_> = self
@@ -749,6 +759,7 @@ impl Planner<'_> {
                         && legatum_core::data::unit_class(u.kind) == Some(UnitClass::Melee)
                         && !self.has_acted(u.id)
                         && self.roman_unit_can_leave(u)
+                        && !self.rome_storming(u)
                         // Gene `rome_colonia`: the Colonia's founder, and the veteran closest
                         // to becoming it, found no ordinary city.
                         && !self.colonia_reserved(u)
