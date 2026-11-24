@@ -80,41 +80,5 @@
         1
       ]
     }
-  ],
-  "delivery": {
-    "anchor": [
-      79.375,
-      138.125
-    ],
-    "cell": 160,
-    "painting": "app/src/assets/units/spearman-256.png"
-  },
-  "regions": {
-    "figure_above_base": [
-      85,
-      50,
-      190,
-      205
-    ],
-    "lower_legs_above_base": [
-      90,
-      180,
-      168,
-      205
-    ],
-    "rest_shoulder": [
-      93,
-      94,
-      130,
-      143
-    ]
-  },
-  "pale_regions": {
-    "hit-1_shoulder": [
-      138,
-      103,
-      162,
-      140
-    ]
-  }
+  ]
 }
