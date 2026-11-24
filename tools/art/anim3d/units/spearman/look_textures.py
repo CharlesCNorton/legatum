@@ -143,7 +143,7 @@ def blur_valid(colour, weight, cell):
     return np.dstack([resize_f(coarse[..., i], size, Image.Resampling.BICUBIC) for i in range(3)])
 
 
-QUANTILES = (2, 9, 22, 38, 54, 70, 84, 94, 99)
+QUANTILES = (10, 20, 32, 45, 58, 70, 84, 94, 99)  # from 10%: the darkest paint is outline, not shadow
 
 
 def palette(pixels, light=None):
@@ -191,15 +191,15 @@ def main():
         # Cream stone and bright bronze overlap in colour: the stone also needs its outline.
         stone_like = (lightness > 66) & (red < 14)
         flesh = (yellow < 2.1 * red) & (red > 9)
-        return is_red, is_pale, stone_like, flesh, {'red': is_red | (lightness < 22), 'pale': ~is_red & (chroma < 34), 'warm': ~is_red & ~is_pale}
+        return is_red, is_pale, stone_like, flesh, {'red': is_red | (lightness < 22), 'pale': ~is_red & (chroma < 34), 'warm': ~is_red & ~is_pale, 'not red': ~is_red}
 
     is_red, is_pale, stone_like, flesh, families = colour_masks(rgb)
     strict = {'cloak': 'red', 'crest': 'red', 'shield': 'warm', 'helmet': 'warm', 'greave_l': 'warm', 'greave_r': 'warm',
-              'sandal_l': 'warm', 'sandal_r': 'warm', 'spear': 'warm', 'skin': 'warm'}
+              'sandal_l': 'warm', 'sandal_r': 'warm', 'spear': 'warm', 'skin': 'not red'}
     owner = np.full((height, width), -1, dtype=np.int32)
     bronze_region = np.isin(ids, [PARTS.index(q) for q, m in MATERIAL.items() if m == 'bronze'])
     debug = np.zeros((height, width, 3), dtype=np.uint8)
-    palettes = {}
+    palettes, sandals = {}, []
     stone = np.isin(ids, [PARTS.index('base'), PARTS.index('rim')])
     figure = ((ids >= 0) & ~stone) | (opaque & stone & ~stone_like)
     for index, part in enumerate(PARTS):
@@ -224,6 +224,13 @@ def main():
         debug[valid] = ID_COLOURS[part]
         weight = valid.astype(np.float32)
         filled = push_pull(rgb, weight)
+        if part.startswith('sandal'): sandals.append((region, filled))
+        if part == 'skin':
+            # Feet inside the sandals read as strapped leather, as painted: the
+            # anatomical toes would otherwise take pale stone or stay flesh-light.
+            for sandal, leather in sandals:
+                near = np.clip(1 - grow_distance(sandal, 14) / 14, 0, 1)[..., None]
+                filled = filled * (1 - near) + leather * near
         Image.fromarray(np.clip(filled, 0, 255).round().astype(np.uint8)).save(out / f'front-{part}.png')
         low = blur_valid(rgb, weight, 48)
         Image.fromarray(np.clip(low, 0, 255).round().astype(np.uint8)).save(out / f'low-{part}.png')

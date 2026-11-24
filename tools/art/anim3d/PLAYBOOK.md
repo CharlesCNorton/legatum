@@ -555,3 +555,35 @@ The movie retains round 8's 1600x352, five-column, 2x-on-cream layout, 24 fps,
 192 frames, H.264/yuv420p. CPU merge checks use the isolated external root
 `lanes/spearman-r9-merge`; its atlas is preview-only, leaving the last GPU atlas
 intact until the lead's pass. Passing these checks is not a visual PASS.
+
+### Painted Eevee look (render-time; look lane, 2026-11-24)
+
+`units/spearman/look.sh MASTER_DIR OUT_DIR` renders the rest pose and all five
+clips with emission-only painted materials in Eevee (Standard view, no grade)
+and packs a validated preview atlas outside `app/`. It never saves a `.blend`:
+geometry, weights, UVs, cloth caches and actions are whatever the master holds,
+so it runs unchanged on any form or motion candidate. Rest plus 40 frames takes
+about a minute once the GPU lock is free.
+
+- Seen surface (stored rest visibility) shows the painting itself. Unseen
+  surface uses white Diffuse → Shader to RGB → a ramp whose stops are the
+  material's painted colours placed at the rest lighting quantiles
+  (`look_textures.py`, second pass with the `debug=6` ramp-input render).
+- `look_textures.py` first resamples the painting onto the frozen UVs.
+  `project.py`'s calibration is 0.9% narrow and 0.3% short against the true
+  fit (5.3425 source px per 256-canvas px about (627,627) ↔ (127.5,128)); fix
+  that constant before the next projection rebuild and drop `register()`.
+- Each kit part keeps paint only inside its own rest outline; the rest is
+  push-pull inpainted from its own pixels. Rigid and free-swinging parts also
+  reject another colour family's paint; torso layers keep everything.
+- Eevee facts: a sun of strength π returns 1.0 on white diffuse; an unlinked
+  Normal socket means the geometry normal (link a Combine XYZ for a constant);
+  a diffuse whose normal is the key direction returns the cast shadow alone;
+  ColorRamp elements re-sort when a position is assigned.
+- Judge against the game's 256 painting with a display-space Lanczos
+  reduction (that is how the painting was reduced); linear-light reduction
+  adds about 2.4 CIE76 of pure resampling difference. `look_compare.py`
+  reports the critique numbers, the colour error at zero offset and a
+  2 px-blurred tone error.
+- The spear shaft and ferrules get a render-time bevel (`shaft_radius`,
+  `ferrule_radius`); set them to 0 once the master's shaft matches the painting.

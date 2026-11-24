@@ -42,14 +42,17 @@ LOOK = {
     'paint_cast': .22,        # how far a live cast shadow darkens projected paint
     'paint_form': .0,         # live form shading on projected paint (0: painted light only)
     'fill_palette': .75,      # unseen surfaces: palette ramp vs local low-frequency paint
-    'fill_cast': .45,         # live cast shadow depth on unseen surfaces
+    'fill_cast': .30,         # live cast shadow depth on unseen surfaces
     'fill_light': .30,        # camera-right soft fill share of the ramp input
     'ao': .55,                # cavity share of the ramp input
     'stroke': .10,            # brush-patch offset of the ramp input
     'vis_lo': .08, 'vis_hi': .45,
-    'base_cast': .85,         # cast shadow depth on the stone
-    'base_contact': .9,      # soft contact (AO) shadow depth under the feet
+    'base_cast': .16,         # cast shadow depth on the stone
+    'base_contact': 1.0,     # soft contact (AO) shadow depth under the feet
+    'contact_reach': .07,     # metres: contact shadow is gone about 4 px (256) from the sole
     'stone_grain': .08,
+    'shaft_radius': .021,     # metres; the painted dory is 3.5-4 px wide at 256. 0 keeps the master's
+    'ferrule_radius': .028,
     'stone_radius': .594,     # metres, for the near-to-far tone of the top
     'shadow_r': .50, 'shadow_g': .36, 'shadow_b': .34,  # warm-dark shadow multiplier
     'debug': 0,               # 1 paint weight, 2 unseen layer only, 3 projected paint only
@@ -240,7 +243,7 @@ def stone(g, colours, cast, shadow_tint, key_dir, cfg):
         grain = layer if grain is None else g.math('MULTIPLY', grain, layer)
     colour = g.mix(1, colour, grain, 'MULTIPLY')
     ao = g.node('ShaderNodeAmbientOcclusion', samples=16)
-    ao.inputs['Distance'].default_value = .45
+    ao.inputs['Distance'].default_value = cfg['contact_reach']
     contact = g.math('MULTIPLY', g.math('SUBTRACT', 1, ao.outputs['AO']), cfg['base_contact'])
     depth = g.math('ADD', contact, g.math('MULTIPLY', g.math('SUBTRACT', 1, cast), cfg['base_cast']), clamp=True)
     # The painted stone's own shadow colour, as a linear multiplier of its lit top.
@@ -292,6 +295,18 @@ def build_material(ob, part, look_dir, palettes, key_dir, fill_dir, uv_world, re
     # Torso layers sit under other painted layers (the tunic under the cloak
     # collar): their unseen surface follows local paint more than their own ramp.
     unseen = g.mix(cfg['fill_palette'] * (.3 if part in LOCAL_FIRST else 1), local, ramp)
+    if part == 'tunic':
+        # The painted cloak lies over both shoulders of the tunic mesh. Where the
+        # tunic's own continued paint is red, its unseen surface is cloak, lit
+        # with the cloak's ramp; where it is pale it stays linen.
+        rgb = g.node('ShaderNodeSeparateColor')
+        g.l.new(paint, rgb.inputs[0])
+        redness = g.math('DIVIDE', g.math('SUBTRACT', rgb.outputs[0], rgb.outputs[1]), g.math('MAXIMUM', rgb.outputs[0], .02))
+        is_cloak = g.node('ShaderNodeMapRange', interpolation_type='SMOOTHSTEP')
+        g.l.new(redness, is_cloak.inputs['Value'])
+        is_cloak.inputs['From Min'].default_value, is_cloak.inputs['From Max'].default_value = .30, .55
+        cloak = palettes['cloak']
+        unseen = g.mix(is_cloak.outputs[0], unseen, g.ramp(t, [(p, lin3(c)) for p, c in zip(cloak['positions'], cloak['colours'])]))
     unseen = g.mix(g.math('MULTIPLY', g.math('SUBTRACT', 1, cast), cfg['fill_cast']), unseen, shadow_tint, 'MULTIPLY')
     seen = g.mix(g.math('MULTIPLY', g.math('SUBTRACT', 1, cast), cfg['paint_cast']), paint, shadow_tint, 'MULTIPLY')
     if cfg['paint_form'] > 0:
@@ -361,6 +376,14 @@ def apply_materials(scene, mode, look_dir, cfg):
             else:
                 material = build_material(ob, part, look_dir, palettes, tuple(to_key), tuple(fill_dir), uv_world, rest_matrices, cfg)
             ob.data.materials[i] = material
+    # The painted shaft is about 1.6x the modelled one and is the first thing the
+    # eye compares. A render-time bevel on the rigid curves; the master is untouched.
+    for ob in renderable:
+        if ob.type != 'CURVE': continue
+        name = ob.name.lower()
+        radius = cfg['shaft_radius'] if 'shaft' in name else cfg['ferrule_radius'] if 'ferrule' in name else 0
+        if radius: ob.data.bevel_depth = max(ob.data.bevel_depth, radius) if 'look_bevel' not in ob else radius
+        ob['look_bevel'] = 1
     sun = bpy.data.objects['LOOK upper-left key']
     sun.data.energy, sun.data.angle = cfg['sun_strength'], math.radians(cfg['sun_angle'])
 

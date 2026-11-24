@@ -13,7 +13,7 @@ import sys
 from pathlib import Path
 
 import numpy as np
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFilter
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 import critique  # noqa: E402
@@ -72,6 +72,14 @@ def metrics(painting, render, heat=None):
     # registered at zero offset, so also report the colour error unshifted.
     plain = np.linalg.norm(critique.rgb_to_lab(np.asarray(p)[:, :, :3]) - critique.rgb_to_lab(np.asarray(r)[:, :, :3]), axis=2)
     both = pm & rm
+    # Tone metric: the same comparison after a 2 px Gaussian, which removes
+    # fine-texture misregistration and keeps colour and value differences.
+    def soft(image):
+        rgba = np.asarray(image).astype(np.float32)
+        rgba[..., :3] *= rgba[..., 3:] / 255
+        bands = [np.asarray(Image.fromarray(np.ascontiguousarray(rgba[..., i]).astype(np.uint8)).filter(ImageFilter.GaussianBlur(2)), dtype=np.float32) for i in range(4)]
+        return np.clip(np.dstack(bands[:3]) * 255 / np.maximum(bands[3], 1)[..., None], 0, 255)
+    blurred = np.linalg.norm(critique.rgb_to_lab(soft(p)) - critique.rgb_to_lab(soft(r)), axis=2)
     if heat is not None:
         view = np.asarray(flat(r)).copy()
         level = np.clip(plain / 40, 0, 1)[..., None]
@@ -81,7 +89,7 @@ def metrics(painting, render, heat=None):
         Image.fromarray(view).resize((768, 768), Image.Resampling.NEAREST).save(heat)
     return {'iou': round(float(iou), 4), 'offset': [dx, dy], 'delta_e': round(float(delta[overlap].mean()), 2),
             'delta_e_no_offset': round(float(plain[both].mean()), 2),
-            'delta_e_no_offset_figure': round(float(plain[both & rows].mean()), 2),
+            'delta_e_blur2_no_offset': round(float(blurred[both].mean()), 2),
             'delta_e_p90': round(float(np.percentile(delta[overlap], 90)), 2), 'overlap_px': int(overlap.sum())}
 
 
