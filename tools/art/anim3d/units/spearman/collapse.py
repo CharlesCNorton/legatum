@@ -85,7 +85,25 @@ def quaternion(rot):
     return (Quaternion((1, 0, 0), roll) @ Quaternion((0, 1, 0), fall) @ Quaternion((0, 0, 1), yaw))
 
 
-def sample(t):
+GUARD = KEYS[0][1]
+# Hit reaction, four delivered samples at phases 0, 1/3, 2/3, 1. The open
+# Hit_Chest crouched forward and read as a shrug at 160 px; this is a keyed
+# blow to the shield: chest and head snap back over planted feet, the aspis is
+# driven up into the body and the spear rocks, then he catches himself low and
+# returns to the exact guard (entry and exit match idle for clean transitions).
+HIT_KEYS = [
+    (0.00, GUARD),
+    (0.30, dict(GUARD, pelvis=(.065, .085, .955), spine=(-.46, .06, .16), head=(-.50, 0, .12),
+                hand_l=(.17, -.22, 1.25), elbow_l=(.62, .02, 1.16),
+                hand_r=(-.50, -.02, 1.24), elbow_r=(-.60, .06, 1.06), spear=(-.16, .06), ease='out')),
+    (0.66, dict(GUARD, pelvis=(.065, .03, .93), spine=(.16, -.03, -.05), head=(.14, 0, 0),
+                hand_l=(.31, -.37, 1.07), elbow_l=(.55, -.10, 1.10),
+                hand_r=(-.44, -.05, 1.17), elbow_r=(-.50, -.10, 1.06), spear=(.07, -.02), ease='smooth')),
+    (1.00, dict(GUARD, ease='smooth')),
+]
+
+
+def sample(t, KEYS=KEYS):
     """Interpolated channel values at clip phase t (0..1)."""
     t = max(0., min(1., t))
     if t >= KEYS[-1][0]:
@@ -98,10 +116,11 @@ def sample(t):
         # 'in' accelerates like a fall; 'out' decelerates into a rest.
         u = u*u*(.4+.6*u) if ease == 'in' else 1-(1-u)**2 if ease == 'out' else u*u*(3-2*u)
     out = {}
-    for name, value in a[1].items():
+    for name in set(a[1]) | set(b[1]):
         if name == 'ease':
             continue
-        other = b[1][name]
+        value = a[1].get(name, (0, 0))
+        other = b[1].get(name, (0, 0))
         if name == 'rot':
             out[name] = quaternion(value).slerp(quaternion(other), u)
         elif isinstance(value, tuple):
@@ -111,10 +130,10 @@ def sample(t):
     return out
 
 
-def apply(t, rig, neutral_world, limb, turn):
+def apply(t, rig, neutral_world, limb, turn, keys=KEYS):
     """Pose the rig object and bones for phase t. Call after reset()."""
     import bpy
-    c = sample(t)
+    c = sample(t, keys)
     rig.rotation_mode = 'QUATERNION'
     rig.rotation_quaternion = c['rot']
     rig.location = c['pelvis']-c['rot'] @ PELVIS
@@ -142,5 +161,13 @@ def apply(t, rig, neutral_world, limb, turn):
     carry = rig.pose.bones['spine_03'].matrix @ neutral_world['spine_03'].inverted()
     for side in ['l', 'r']:
         limb('upperarm_'+side, 'lowerarm_'+side, carry @ c['hand_'+side], carry @ c['elbow_'+side])
+    if 'spear' in c:
+        # The grip keeps its guard orientation in armature space (the spear is
+        # carried by the hand), plus a small rock about X/Y.
+        hand = rig.pose.bones['hand_r']
+        matrix = (Matrix.Rotation(c['spear'][0], 4, 'X') @ Matrix.Rotation(c['spear'][1], 4, 'Y')
+                  @ neutral_world['hand_r'])
+        matrix.translation = hand.head
+        hand.matrix = matrix
     bpy.context.view_layer.update()
     return c

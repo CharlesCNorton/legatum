@@ -146,3 +146,34 @@ class EquipmentResponse:
         return {'method': 'carrier acceleration, damped passive spring',
                 'max_crest_tip_deflection_m': self.hair_spring.maximum,
                 'max_shield_lag_radians': self.shield_spring.maximum}
+
+
+class WalkWeight:
+    """Weight shift layered on the retargeted open walk; legs and feet untouched.
+
+The donor's legs carry the gait, but under a fixed spear-and-shield guard the
+torso was rigid, which is what made the in-place cycle read as a march. Real
+walking drops the pelvis at double support, carries it over the stance foot
+and counter-rotates the shoulders. Phase comes from the measured stance
+intervals of the same clip, so the layer cannot drift against the feet. The
+caller re-solves both ankles to their previous world positions, so planted
+contacts are unchanged. Metres and radians.
+"""
+    DIP, SWAY, TWIST, LEAN, NOD = .022, .020, .085, .045, .03
+
+    def __init__(self, planted, first, count):
+        import math
+        # Centre of the left stance interval, as a cycle phase.
+        frames = [first+i for i in range(count)]
+        flags = [bool(planted.get(str(f), {}).get('l')) for f in frames]
+        angle = [2*math.pi*i/count for i, on in enumerate(flags) if on]
+        self.left = math.atan2(sum(math.sin(a) for a in angle), sum(math.cos(a) for a in angle))/(2*math.pi) if angle else 0.
+        self.opposite = [bool(planted.get(str(f), {}).get('r')) for f in frames]
+
+    def channels(self, phase):
+        import math
+        a = 2*math.pi*(phase-self.left)
+        side = math.cos(a)                      # +1 over the left foot, -1 over the right
+        dip = (1-math.cos(2*a))/2               # 0 at mid-stance, 1 at double support
+        return {'sway': self.SWAY*side, 'dip': -self.DIP*dip,
+                'twist': self.TWIST*math.sin(a), 'lean': self.LEAN+self.NOD*dip}

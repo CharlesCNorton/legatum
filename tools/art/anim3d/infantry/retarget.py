@@ -16,7 +16,8 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]/'units/spearman'))
 from motion import source_phase, hit_envelope
 
-ACTIONS = {'idle': 'Idle_Loop', 'move': 'Walk_Loop',
+import os
+ACTIONS = {'idle': 'Idle_Loop', 'move': os.environ.get('MOVE_ACTION', 'Walk_Loop'),
            'hit': 'Hit_Chest', 'death': 'Death01'}
 MAP = {'pelvis': 'DEF-hips', 'spine_01': 'DEF-spine.001',
        'spine_02': 'DEF-spine.002', 'spine_03': 'DEF-spine.003',

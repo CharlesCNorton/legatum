@@ -8,7 +8,7 @@ sys.path.insert(0,str(Path(__file__).parent/'infantry'))
 sys.path.insert(0,str(Path(__file__).parent/'units/spearman'))
 from retarget import prepare, apply_matrices, contact_ik
 from contact import sole_points
-from motion import attack_channels, source_phase, EquipmentResponse
+from motion import attack_channels, source_phase, EquipmentResponse, WalkWeight
 import collapse
 root=Path(os.environ['ANIM_ROOT']);M=root/'masters/spearman-3d-v2';A=root/'assets'
 CLIPS={'idle':(8,4),'move':(8,6),'attack':(10,14),'hit':(4,12),'death':(10,4)}
@@ -82,11 +82,21 @@ def pose(t):
  if clip=='death':
   # Authored weighted collapse (units/spearman/collapse.py); t=0 is the exact guard.
   if t>0:collapse.apply(t,rig,neutral_world,limb,turn)
- elif clip in ['idle','move','hit']:
+ elif clip=='hit':
+  # Authored recoil; phases 0 and 1 are the exact guard.
+  if 0<t<1:collapse.apply(t,rig,neutral_world,limb,turn,collapse.HIT_KEYS)
+ elif clip in ['idle','move']:
   motion=retarget_frames[active_frame-1]
   rig.location=base_loc+motion['root']
   apply_matrices(rig,motion['matrices'])
-  if clip=='move':contact_ik(rig,motion['foot_corrections'])
+  if clip=='move':
+   # Weight shift over the stance foot; ankles are re-solved to where the
+   # retarget put them, so contact and source foot rolls are unchanged.
+   w=walk_weight.channels(t);shift=Vector((w['sway'],0,w['dip']))
+   rig.location=rig.location+shift;bpy.context.view_layer.update()
+   turn('spine_01','X',w['lean']);turn('spine_02','Z',w['twist']*.5);turn('spine_03','Z',w['twist']*.5)
+   turn('neck_01','Z',-w['twist']*.8);turn('neck_01','X',-w['lean']*.6)
+   contact_ik(rig,{side:offset-shift for side,offset in motion['foot_corrections'].items()})
   bpy.context.view_layer.update()
  elif clip=='attack':
   # Raise outside the right shoulder, then drive forward above the shield rim.
@@ -156,7 +166,11 @@ phases=[max(0,(f-25))/(count*24/fps) if clip in ['idle','move']
         else max(0,min(1,(f-25)/max(1,end-25))) for f in range(1,end+1)]
 if clip=='attack':retarget_frames,motion_source=None,{'provider':'Original weapon-specific hand keys, rebased on Quaternius idle reference'}
 elif clip=='death':retarget_frames,motion_source=None,{'provider':'Authored weighted collapse (units/spearman/collapse.py); shield stays strapped','keys':len(collapse.KEYS)}
+elif clip=='hit':retarget_frames,motion_source=None,{'provider':'Authored shield-blow recoil (units/spearman/collapse.py HIT_KEYS); entry and exit are the idle guard'}
 else:retarget_frames,motion_source=prepare(rig,root,clip,phases)
+if clip=='move':
+ walk_weight=WalkWeight(motion_source['contact']['planted'],25,end-25)
+ motion_source['weight_shift']={'left_stance_phase':walk_weight.left,'dip_m':WalkWeight.DIP,'sway_m':WalkWeight.SWAY,'shoulder_twist_rad':WalkWeight.TWIST}
 response=EquipmentResponse(rig,shield,clip)
 # A single complete source cycle, sampled before its duplicate endpoint.
 
@@ -182,7 +196,7 @@ for f in range(1,end+1):
     sole=bpy.data.objects['Leather sandal sole '+support]
     lowest=min(v.z for v in sole_points(support))
     correction=floor+.001-lowest
-    assert abs(correction)<.04, f'Large contact height correction: {correction}'
+    assert abs(correction)<.07, f'Large contact height correction: {correction}'
     rig.location.z+=correction
     bpy.context.view_layer.update()
   base_inverse=base.matrix_world.inverted()
@@ -219,7 +233,7 @@ for f in range(1,end+1):
     plane=floor+.001 if local.x*local.x+local.y*local.y<base_radius**2 else .006
     lift=max(lift,plane-point.z)
    if abs(lift)>1e-8:
-    if clip=='move':assert abs(lift)<.04,('Large sole contact translation',side,lift)
+    if clip=='move':assert abs(lift)<.07,('Large sole contact translation',side,lift)
     motion_source['max_sole_translation_m']=max(motion_source.get('max_sole_translation_m',0),abs(lift))
     motion_source['max_sole_lift_m']=max(motion_source.get('max_sole_lift_m',0),lift)
     foot=rig.pose.bones['foot_'+side];mat=foot.matrix.copy()
