@@ -240,3 +240,4 @@
 - GPU round 13 started: full Eevee painted GPU pass requested; Cycles GPU feet inspection.
 - GPU round 13 failed at render-parity (exit 1); inspect gpu-logs-spearman-r13.log before judging this pass.
 - GPU round 13 started: full Eevee painted GPU pass requested; Cycles GPU feet inspection.
+- GPU round 13 finished: all stages, masters, atlas validation and movie complete; visual review pending.

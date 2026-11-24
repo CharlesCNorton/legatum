@@ -259,3 +259,13 @@
   6. Pale-and-red sliver under the spear hand at (106,123).
   7. Darkest bronze cavities a touch light: helmet p10 33 vs 26, cuirass 38 vs 31. Deepen ~15%.
   Items 1 and 2 are the only ones a player could notice. Best per aspect: silhouette and materials/values = round 13 GPU. Move, hit, death = round 13 merge (CPU proxy reviewed above; GPU clips pending), with Fable D's death a close second. Idle, attack = frozen.
+- (Fable art director, 2026-11-24T08:03Z, on round 13 GPU final clips: spearman-round13.mp4 sampled at 5-6 fps, -contact-sheet.png; critique IoU 0.9537, blurred delta-E 3.51, feet 5.3, all regions under 5) Positions at 256 px unless noted.
+  Both numeric targets pass for the first time, and the clips hold up at 160 px: idle and attack as before; hit has a clear peak; the walk has two separate legs, a low swing foot and no march; the death falls forward onto the base and ends with crest, shield face and spear all readable at 64. Round 13 GPU is the best candidate on every aspect: silhouette, materials/values, move, hit, death. Fable D's death is the only alternative worth a look (shows more of the body; hand-keyed; feet still past the rim).
+  My view: this is ready to show Sam as a PASS candidate. The list below is polish, ranked; none of it blocks.
+  1. Sandal straps (rest and all clips): feet are smooth brown shapes. Paint three dark bands per instep and the toe line on the right foot.
+  2. Base shadow band behind the feet (y 214-219, x 105-172): half the strength, 3 px blur. In the walk the band stays put while the feet move, which shows at 160; either let it follow the feet or drop it during move.
+  3. Move, frames 5-6 (movie): the trailing foot still shows a pale sole for one frame; darken it. The cloak on the spear side flares ~6 px in frames 3-4; damp to 3-4 px.
+  4. Death, frames 2-3: the shaft still crosses the kneeling body. Let it fall 10 px nearer the viewer. Final three frames are identical; one could go to the kneel-to-prone drop.
+  5. Cloak, spear side at rest: 4 px flare at hip height; lit folds 8% darker.
+  6. Cloak hem behind the right leg: level, three scallops.
+  7. Sliver under the spear hand at (106,123); darkest bronze cavities 15% deeper.

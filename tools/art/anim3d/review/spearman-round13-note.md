@@ -1,6 +1,10 @@
-# Spearman round 13 — combined candidate, CPU review / GPU pending
+FOCUS a: (reviewer) Integrate Fable D's death (fable/unit-anim-3d-spearman-d, units/spearman/collapse.py: ends on his spear side facing the camera, shield behind him face-on, spear level) on top of round 13's guard: re-read collapse.py key 0 (GUARD) ankle and hand positions from the round-13 master so death frame 0 matches idle, and keep the held frames' feet and crest inside the base disc at 256 px (today the crest is a few px past the left rim and the feet past the right).
+FOCUS b: (reviewer) Walk: take whichever of Fable D's WalkLayer (motion.py; foot lift 35%, toe-out clamp 6°, hip sway, chest upright) and Astra round 13 lane c the art director ranks first in spearman-FEEDBACK.md, and add a light cloth pass on the cloak (flare and settle in the walk and attack). Keep the feet check passing.
+FOCUS c: (reviewer) Seams: the idle-to-move and attack-frame-0 foot jumps (2-3 px), loops and transitions seamless at 160 px, the frozen idle/attack fingerprints reviewed and re-pinned, and the one-render-path gate kept (gpu.sh and look.py). Fix kit/base: the base mesh's widest vertices are at 0.77 m against a stone top of ~0.58 m, so floor fits treat a ring of air as stone.
 
-Not a PASS. Final GPU rendering and the pixel-parity gate still require the lead's host. CPU evidence is isolated under `lanes/spearman-r13-merge`; the shipped atlas remains the previous GPU round until the host pass.
+# Spearman round 13 — combined candidate, GPU rendered / visual review pending
+
+Not a PASS. The GPU pass, pixel-parity gate and decoded atlas validation completed; final visual approval is pending. The CPU evidence below remains labelled separately from the appended GPU receipt.
 
 ## Selection by evidence and latest director verdict
 
@@ -47,6 +51,20 @@ The kit already contains MPFB/game rig, opt-in Rigify and corrective helpers, pa
 - Movie verified with ffprobe: **H.264, yuv420p, 1600×352, 24 fps, 192 frames, 8.000 s**, five clips side by side. Crossfade, 256 px triptych, 160 contact sheet and top/front feet sheet exist in this review folder.
 - GPU work is deliberately pending: the no-argument executable `tools/art/anim3d/units/spearman/gpu.sh` rebuilds, calibrates, renders all stages/512 and 256 masters, checks exact look/atlas-path pixel parity, validates the atlas, and regenerates critique/note/movie. Run from the repo root with `ROUND=13`. Numerical success is not art approval; no PASS file written.
 - Selection cutoff: the 06:40Z director verdict. Fable D continued committing after its evaluated `12c06372` version; those later unreviewed death variants were not silently substituted into this tested candidate.
+
+### Automated critique: spearman-round13 (Eevee painted GPU 512 masters / display-space decoded 160 atlas)
+
+- Silhouette IoU: **0.9537** (target ≥ 0.95; PASS). Best of ±3 px offsets: render x=+0, y=+0.
+- Tone/colour ΔE on blurred images (sigma 2 px, CIE76): **3.51** (target ≤ 6; PASS), at zero offset over 11570 overlapping pixels including base. Information only: raw per-pixel ΔE 6.36; at the IoU offset blurred 3.51, raw 6.36.
+- Regions (blurred ΔE): head_crest 3.7, torso 2.9, cloak_spear_side 4.8, shield 2.4, legs 3.2, feet 5.3, base 3.3.
+- Painting mask: alpha; frames: idle 8, move 8, attack 10, hit 4, death 10.
+- Rest: `/Users/samcorcos/LegatumRuns/anim-pilot/masters/spearman/256/rest.png`. Contact sheet uses `/Users/samcorcos/LegatumRuns/anim-pilot/review/3d-v2/spearman-decoded-160`.
+
+### Delivery receipt (GPU final render, visual review pending)
+
+- 40 frames; 160 px trimmed atlas: 187254 bytes, quality 80; decoded validation PASS.
+- Walk: planted slip 0.0042 mm; floor error 0.000 mm; heading 5.142°.
+- Movie: five clips, 1600×352, H.264 yuv420p, 192 frames / 8 seconds. No art PASS issued.
 
 FOCUS a: Measure a local cloak-flare A/B (arm to hip) on the new guard; preserve the feet, knee registration, shield and helmet that now match.
 FOCUS b: Soften the far ground-shadow edge, identify the forearm sliver by material ID, and compare skirt midtones without darkening already-correct sandals.
