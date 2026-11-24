@@ -54,8 +54,8 @@ function warTurn({ shots, clashes, movers, rounds, deaths, captures }: Case) {
 describe('combat playback pacing budget', () => {
   it.each([
     ['quiet turn', { shots: 1, clashes: 0, movers: 0, rounds: 0, deaths: 0, captures: 0 }, 2500],
-    ['typical war turn', { shots: 6, clashes: 4, movers: 6, rounds: 4, deaths: 2, captures: 0 }, 4500],
-    ['huge turn', { shots: 30, clashes: 20, movers: 25, rounds: 6, deaths: 8, captures: 2 }, 6000],
+    ['typical war turn', { shots: 6, clashes: 4, movers: 6, rounds: 4, deaths: 2, captures: 0 }, 5500],
+    ['huge turn', { shots: 30, clashes: 20, movers: 25, rounds: 6, deaths: 8, captures: 2 }, 7300],
   ] as const)('%s finishes within budget and leaves a readable tail', (_name, spec, budget) => {
     const { events, view } = warTurn(spec);
     const plan = buildCombatPlan(events, view, view)!;
@@ -69,7 +69,7 @@ describe('combat playback pacing budget', () => {
       ...plan.captures.map((c) => c.t),
       ...[...plan.moves.values()].flatMap((glides) => glides.map((g) => g.t1)));
     expect(lastAction).toBeLessThanOrEqual(plan.total - 600);
-    if (spec.rounds) expect(plan.stepMs * spec.rounds).toBeLessThanOrEqual(1400);
+    if (spec.rounds) expect(plan.stepMs * spec.rounds).toBeLessThanOrEqual(2400);
     for (const shot of plan.shots) expect(shot.flight).toBeGreaterThanOrEqual(FLIGHT_MS[shot.kind]);
     if (spec.shots === 6) {
       for (let i = 1; i < plan.shots.length; i++) {

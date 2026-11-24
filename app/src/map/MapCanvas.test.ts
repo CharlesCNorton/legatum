@@ -70,6 +70,16 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+it('has no pending animation frame when the map has no moving or idle element', () => {
+  act(() => useGame.setState({ selection: null }));
+  frame(performance.now() + 500);
+  expect(frames.size).toBe(0);
+  (window as unknown as { legatumMap: { redraw(): void } }).legatumMap.redraw();
+  expect(frames.size).toBe(1);
+  frame(performance.now() + 600);
+  expect(frames.size).toBe(0);
+});
+
 it.each([
   ['legendary', false], ['legendary', true], ['major', false],
 ] as const)('%s camera reveal respects reduced motion (%s) and leaves other tiers stationary', async (tier, reduced) => {

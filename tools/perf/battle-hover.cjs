@@ -15,12 +15,15 @@ const savePath = arg('save');
 const turn = Number(arg('turn'));
 const dpr = Number(arg('dpr', 2));
 const zoom = Number(arg('zoom', 2));
+const throttle = Number(arg('throttle', 1));
 const out = arg('out');
 if (!savePath || !turn) { console.error('usage: battle-hover.cjs --save <save.json> --turn <turn shown after Continue> [--url ...]'); process.exit(2); }
 
 (async () => {
   const browser = await chromium.launch({ channel: arg('channel'), headless: !flag('headed') });
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: dpr });
+  const throttleSession = await page.context().newCDPSession(page);
+  await throttleSession.send('Emulation.setCPUThrottlingRate', { rate: throttle });
   const game = fs.readFileSync(savePath, 'utf8');
   await page.addInitScript(({ game, turn }) => {
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn, names: ['Me'], savedAt: new Date().toISOString(), game }));
@@ -96,7 +99,7 @@ if (!savePath || !turn) { console.error('usage: battle-hover.cjs --save <save.js
       moveLatP50: q(moves, .5), moveLatP95: q(moves, .95), clickLatMax: Math.max(0, ...clicks),
       mapDraws: perf.frames, clippedDraws: perf.partialFrames ?? null, mapDrawMeanMs: perf.drawMs / (perf.frames || 1), mapDrawMaxMs: perf.maxMs };
   });
-  const result = { scene, dpr, zoom, forecastMs, wallMs, ...r };
+  const result = { scene, dpr, zoom, throttle, forecastMs, wallMs, ...r };
   if (cdp) { const { profile } = await cdp.send('Profiler.stop'); fs.writeFileSync((out ?? 'out/battle-hover.json').replace(/\.json$/, '.cpuprofile'), JSON.stringify(profile)); }
   if (out) fs.writeFileSync(out, JSON.stringify(result, null, 2));
   console.log(JSON.stringify(result, null, 2));

@@ -6,6 +6,7 @@ import type { LookId } from '../brand/look';
 import { iconEpoch, tintedIcon } from '../icons';
 import { unitIconName } from '../data';
 import { barbarianMiniatureImage, miniatureImage, roundelImage } from '../unitArt';
+import type { TokenPose } from './tokenMotion';
 import { healthColor, playerInk, rgba } from '../theme';
 import { ATLAS, mapPlayerColor, mapPlayerTint } from './style';
 import type { Rect } from './compass';
@@ -88,6 +89,10 @@ function smallCaps(g: CanvasRenderingContext2D, text: string, x: number, y: numb
  * whose Heir it is (the rim and the numeral say who holds him).
  */
 export interface HeirMark { crestColor?: string }
+let motionCanvas: HTMLCanvasElement | null = null;
+let motionCtx: CanvasRenderingContext2D | null = null;
+const BAND_ALPHA = [0.018, 0.036, 0.054, 0.072, 0.054, 0.036, 0.018];
+const GREY_FILTERS = Array.from({ length: 101 }, (_, i) => `grayscale(${i}%)`);
 
 /** The gilt of the Heir's rim and the pip's ring: the chevron gold, drawn over an ink hairline so it holds on parchment. */
 const heirGilt = () => ATLAS.tone.chevron;
@@ -107,6 +112,7 @@ export function drawToken(
   alpha = 1,
   faction?: Faction,
   heir?: HeirMark,
+  motion?: TokenPose,
 ) {
   const q = Math.round(w * 2) / 2;
   const icon = unitIconName(kind, faction);
@@ -117,10 +123,50 @@ export function drawToken(
     : cached(`tok|${look}|${icon}|${color}|${military}|${q}|${dpr}|${heir ? `heir${heir.crestColor ?? ''}` : ''}`, () =>
       atlasToken(icon, color, military, q, dpr, heir),
     );
-  ctx.globalAlpha = alpha;
-  ctx.drawImage(sp.c, x - sp.ax, y - sp.ay, sp.w, sp.h);
+  if (motion) {
+    ctx.save();
+    const g = miniatureGeometry(w);
+    const foot = y + g.baseDy;
+    const edge = motion.grey ? Math.sign(motion.rotation) * g.baseRx : 0;
+    ctx.translate(x + edge + motion.dx, foot + motion.dy);
+    ctx.rotate(motion.rotation);
+    ctx.scale(motion.sx, motion.sy);
+    ctx.translate(-x - edge, -foot);
+    ctx.globalAlpha = alpha * motion.alpha;
+    if (motion.grey) ctx.filter = GREY_FILTERS[Math.round(motion.grey * 100)];
+  } else ctx.globalAlpha = alpha;
+  let source = sp.c;
+  if (motion && (motion.red > 0 || motion.specular >= 0)) {
+    if (!motionCanvas) { motionCanvas = document.createElement('canvas'); motionCtx = motionCanvas.getContext('2d'); }
+    if (motionCanvas && motionCtx) {
+      if (motionCanvas.width !== sp.c.width) motionCanvas.width = sp.c.width;
+      if (motionCanvas.height !== sp.c.height) motionCanvas.height = sp.c.height;
+      motionCtx.clearRect(0, 0, motionCanvas.width, motionCanvas.height);
+      motionCtx.globalCompositeOperation = 'source-over';
+      motionCtx.drawImage(sp.c, 0, 0);
+      motionCtx.globalCompositeOperation = 'source-atop';
+      if (motion.red) {
+        motionCtx.globalAlpha = motion.red;
+        motionCtx.fillStyle = '#ac261c';
+        motionCtx.fillRect(0, 0, motionCanvas.width, motionCanvas.height);
+      }
+      if (motion.specular >= 0) {
+        const px = (motion.specular * 1.6 - 0.3) * motionCanvas.width;
+        motionCtx.fillStyle = '#ffe9b2';
+        for (let i = -3; i <= 3; i++) {
+          motionCtx.globalAlpha = BAND_ALPHA[i + 3];
+          motionCtx.fillRect(px + i * motionCanvas.width * 0.027, 0, motionCanvas.width * 0.027, motionCanvas.height);
+        }
+      }
+      motionCtx.globalAlpha = 1;
+      motionCtx.globalCompositeOperation = 'source-over';
+      source = motionCanvas;
+    }
+  }
+  ctx.drawImage(source, x - sp.ax, y - sp.ay, sp.w, sp.h);
   drawPlayerNumber(ctx, look, owner, x - w * 0.9, y - w * 0.85, faction);
-  ctx.globalAlpha = 1;
+  if (motion) ctx.restore();
+  else ctx.globalAlpha = 1;
 }
 
 /**

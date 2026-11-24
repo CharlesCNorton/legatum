@@ -107,10 +107,10 @@ export const ARC: Record<ShotKind, number> = { arrows: 0.34, bolts: 0.12, shot: 
 const STAGGER_MS = 190;
 const STAGGER_CAP_MS = 1100;
 const VOLLEY_TAIL_MS = 220;
-const STEP_MS = 280;
-const MOVE_BUDGET_MS = 1400;
+const STEP_MS = 600;
+const MOVE_BUDGET_MS = 2400;
 /** How long a fallen unit takes to go, and the longest after-effect (a capture). */
-export const DEATH_MS = 700;
+export const DEATH_MS = 1100;
 export const CAPTURE_MS = 1300;
 const TAIL_MS = 500;
 

@@ -38,23 +38,23 @@ step() {
 rust_group() {
   # shellcheck disable=SC2046
   if cargo nextest --version >/dev/null 2>&1; then
-    cargo nextest run --cargo-profile release $(python3 tools/ci/rust_test_groups.py args "$1") --no-fail-fast
+    tools/sim/build-slot.sh -- cargo nextest run --cargo-profile release $(python3 tools/ci/rust_test_groups.py args "$1") --no-fail-fast
   else
-    cargo test --release --no-fail-fast $(python3 tools/ci/rust_test_groups.py args "$1")
+    tools/sim/build-slot.sh -- cargo test --release --no-fail-fast $(python3 tools/ci/rust_test_groups.py args "$1")
   fi
 }
 
 step "Gates (check.py --checks-only)" python3 tools/gates/check.py HEAD --base "$base" --checks-only --skip art
 step "Test groups cover every target" python3 tools/ci/rust_test_groups.py check
 step "Rust format" cargo fmt --all --check
-step "Rust lint (clippy --all-targets)" cargo clippy --workspace --all-targets -- -D warnings
-step "Doctests" cargo test --workspace --doc
+step "Rust lint (clippy --all-targets)" tools/sim/build-slot.sh -- cargo clippy --workspace --all-targets -- -D warnings
+step "Doctests" tools/sim/build-slot.sh -- cargo test --workspace --doc
 for g in $(python3 tools/ci/rust_test_groups.py names | tr -d '[]",'); do
   step "Rust tests: $g" rust_group "$g"
 done
 if ! command -v wasm-pack >/dev/null 2>&1; then
   # Same version as CI; a fresh cloud container has none (about a minute to build).
-  step "Install wasm-pack 0.15.0" cargo install wasm-pack --version 0.15.0 --locked
+  step "Install wasm-pack 0.15.0" tools/sim/build-slot.sh -- cargo install wasm-pack --version 0.15.0 --locked
 fi
 step "WASM build (playtest profile)" env LEGATUM_PLAYTEST_PROFILE=1 scripts/build-wasm.sh
 step "App dependencies" bash -c 'cd app && npm ci'

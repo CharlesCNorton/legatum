@@ -7,7 +7,7 @@ import './CombatFxSettings.css';
  * is instant and units stand where they ended; the damage numbers still show. The system's reduced motion forces Off.
  */
 export function CombatFxSettings() {
-  const { enabled, update } = useCombatFx();
+  const { enabled, animatedUnits, update } = useCombatFx();
   const reduced = useReducedMotion();
   const on = enabled && !reduced;
   return <div className="hint-settings combat-fx-settings" onKeyDown={(e) => e.stopPropagation()}>
@@ -19,6 +19,14 @@ export function CombatFxSettings() {
       </div>
     </div>
     <p className="combat-fx-note">Off: instant moves; damage numbers still show.</p>
+    <div className="combat-fx-row">
+      <span id="animated-units-label" className="combat-fx-label">Animated units</span>
+      <div className="seg small fx-speed" role="group" aria-labelledby="animated-units-label">
+        <button type="button" className={animatedUnits && on ? 'on' : ''} aria-pressed={animatedUnits && on} disabled={!on} onClick={() => update({ animatedUnits: true })}>On</button>
+        <button type="button" className={!animatedUnits || !on ? 'on' : ''} aria-pressed={!animatedUnits || !on} onClick={() => update({ animatedUnits: false })}>Off</button>
+      </div>
+    </div>
+    <p className="combat-fx-note">Painted units move and react during turns. Your selected unit moves gently while waiting.</p>
     {reduced && <p className="combat-fx-note">Off while your system asks for reduced motion.</p>}
   </div>;
 }

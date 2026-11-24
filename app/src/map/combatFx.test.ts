@@ -83,7 +83,7 @@ describe('combat plan', () => {
     const d = plan.deaths[0];
     expect(d.t).toBeGreaterThanOrEqual(plan.clashes[0].t);
     expect(fxUnits(plan, d.t - 10).ghosts[0]).toMatchObject({ alpha: 1, sink: 0 });
-    expect(fxUnits(plan, d.t + 350).ghosts[0].alpha).toBeLessThan(1);
+    expect(fxUnits(plan, d.t + 700).ghosts[0].alpha).toBeLessThan(1);
     expect(fxUnits(plan, d.t + 2000).ghosts).toEqual([]);
     expect(plan.cueDelay.get('5,3')).toBe(plan.clashes[0].t);
   });

@@ -30,6 +30,8 @@ Every damage cue ("−31", "Destroyed") waits for its own blow, so cues appear i
 
 Settings (title screen and game menu) has **Map animations: On or Off** (user, 2026-10-24: On/Off only, no speed choice; a saved Fast reads as On). Off is the map without animations: every change is instant, units stand where they ended, and the damage numbers still show. Under the system's reduced-motion setting the choice shows Off and cannot be changed. The playback never blocks input or the next turn. If a new turn resolves, its playback replaces the old one.
 
+**Animated units** is a second On/Off setting, On by default. It moves each cached painted token as one piece: the selected unit breathes at close zoom; movement hops; attacks wind up and lunge; hits shake and redden; defeated units tip and fade. It works only when Map animations is On and the system does not request reduced motion. The map schedules animation frames only while an effect is active; selected-unit idle motion and other ambient map life use a slower timer. The token art stays in the existing sprite cache. The capture and dense-battle comparison are in `tools/art/token-motion/capture.mjs`.
+
 ## Clips and stills
 
 - `combat-fx-v2.mp4`: 16.6 s, 1080p60, frame-stepped from real saves, five real turns. Lugano (8.9.6, T190): the Swiss cannon volley, the Mongol arquebus answer, a kill, the cavalry riding up, Lugano smouldering at 0 HP. Aarau (8.9.2): crossbow bolts, a musket answer, a unit toppling, the capture. Lugano's capture (T200). Shells at Geneva (8.9.4). A bomber pass over Osaka (8.9.5).
@@ -38,11 +40,11 @@ Settings (title screen and game menu) has **Map animations: On or Off** (user, 2
 
 ## Pacing (user, 2026-10-24)
 
-A unit's steps in consecutive rounds run as one smooth glide, eased only at its ends with an even pace in the middle. A multi-hex charge is one charge, and units still meet where the rules had them meet. A unit that waits a round starts a new glide. A step lasts 280 ms, and all the moves fit in at most 1.4 s.
+A unit's steps in consecutive rounds keep a continuous route, eased only at its ends with an even pace in the middle. Animated units add a hop to each step without changing where units meet. A unit that waits a round starts a new route. A step takes up to 600 ms, and all the moves fit in at most 2.4 s. Very long routes compress each step to stay within that limit.
 
 Measured on busy real turns, with the human seat moved to the empire with the biggest army in contact (copies of 8.9.2 T221, 8.9.4 T234, 8.9.5 T172 and 8.9.6 T185: up to 13 movers, 5 clashes and 3 deaths): the playback lasts 3.1 to 3.9 s, with the last action at 1.3 to 2.3 s. The target is 4 to 6 s. Before and after clips: `~/LegatumRuns/combat-fx/before4/` and `after3/` (`battle185.mp4`, `battle172.mp4`).
 
-`app/src/map/combatFxPacing.test.ts` holds three deterministic synthetic budgets (total / last action): a quiet one-shot turn is **1.574 / 0.974 s** (limit 2.5 s); a typical war turn with 6 shots, 4 clashes, 6 movers over 4 rounds and 2 deaths is **4.274 / 2.997 s** (limit 4.5 s); a huge turn with 30 shots, 20 clashes, 25 movers over 6 rounds, 8 deaths and 2 captures is **5.878 / 4.078 s** (limit 6.0 s). Short volleys retain 150–300 ms gaps. Large volleys use an even gap, shrinking toward 60 ms; for 30 shots the 60 ms legibility floor spreads launches over 1.74 s, beyond the 1.1 s target span. Flights keep at least their kind's nominal duration, movement fits within 1.4 s, and the final effect gets a 500 ms tail (at least 600 ms after the volley marker on a shot-only turn).
+`app/src/map/combatFxPacing.test.ts` holds three deterministic synthetic budgets: a quiet one-shot turn stays within 2.5 s, a typical war turn within 5.5 s, and a huge turn within 7.3 s. Short volleys retain 150–300 ms gaps. Large volleys use an even gap, shrinking toward 60 ms; for 30 shots the 60 ms legibility floor spreads launches over 1.74 s, beyond the 1.1 s target span. Flights keep at least their kind's nominal duration, movement fits within 2.4 s, and the final effect gets a 500 ms tail (at least 600 ms after the volley marker on a shot-only turn).
 
 ## Frame cost
 

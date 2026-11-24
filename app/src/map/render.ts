@@ -47,6 +47,7 @@ import { drawClosedLand } from './sakokuLand';
 import { drawStationBadge, drawStationLand, stationBadgeAt, stationSites } from './yamRelayStation';
 import { drawWonderArt, drawWonderBadges } from './wonderArt';
 import { deathPos, hpAt, type CombatPlan, type FxGhost } from './combatFx';
+import { attackPose, deathPose, hasPlaybackMotion, hitPose, idlePose, makePose, movePose, playbackPose, resetPose, type TokenClip, type TokenPose } from './tokenMotion';
 import { aircraftPassProgress, drawCombatFx, drawSiegeAmbient, siegeAmbientBox } from './combatFxDraw';
 import { smoulderVisible } from './smoulder';
 import type { March, MomentHold, MomentPlan } from './momentFx';
@@ -165,7 +166,15 @@ export interface RenderInput {
   /** Own cities under attack (city id → how soon it falls): drawn alarmed (siegeMark.ts). */
   siege?: ReadonlyMap<number, SiegeLevel>;
   reducedMotion: boolean;
+  /** Painted-token motion is separate from the map playback switch. */
+  animatedUnits?: boolean;
+  tokenTime?: number;
+  tokenMove?: { paths: Map<number, Hex[]>; elapsed: number; duration: number } | null;
+  tokenPreview?: TokenClip & { id: number; elapsed: number } | null;
 }
+
+const tokenPose = makePose();
+const TOKEN_GREY_FILTERS = Array.from({ length: 101 }, (_, i) => `grayscale(${i}%)`);
 
 /** What the map marks for the city panel's Improvements group. */
 export interface ImproveOverlay {
@@ -900,10 +909,10 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
       const lift = liftOf(u, x, y);
       if (lift > 0) { y -= lift; liftedHits.push({ hex: u.pos, rect: { x: x - tw, y: y - tw * 1.3, w: tw * 2, h: tw * 2.6 } }); }
     }
-    const shift = inp.unitShift?.get(u.id);
+    const shift = !inp.animatedUnits ? inp.unitShift?.get(u.id) : undefined;
     if (shift) { x += shift.x * z; y += shift.y * z; }
     const stride = inp.march?.get(u.id);
-    if (stride) y += stride.lift * z;
+    if (stride && !inp.animatedUnits) y += stride.lift * z;
     const tile = tileIndex(u.pos, W, H);
     unitBottoms.set(tile, Math.max(unitBottoms.get(tile) ?? 0, y - S2(u.pos).y + tw + 4));
     // Byzantium's Heir is public wherever he stands: on a tile out of sight he wears a gilt halo.
@@ -935,7 +944,32 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
       continue;
     }
     if (u.occupation_lock != null) lockMarks.push({ x, y, w: tw });
-    drawUnit(ctx, look, u, x, y, tw, dpr, u.owner === view.me, inp.pendingMarks.get(u.id), u.origin ?? factionOf.get(u.owner), strengthCue, siegePropFor(view, u), hexBox, contractLeft(u, view), heirTag(view, u), u.owner === view.me && isColoniaFounder(view, u.id));
+    let pose: TokenPose | undefined;
+    const plainPath = inp.tokenMove?.paths.get(u.id);
+    const preview = inp.tokenPreview?.id === u.id ? inp.tokenPreview : null;
+    if (inp.animatedUnits && (preview || (inp.fx && hasPlaybackMotion(inp.fx.plan, u.id)) || (plainPath && plainPath.length > 1) || (u.id === inp.selectedUnit && z >= 1.25 && !inp.fx && !inp.tokenMove))) {
+      resetPose(tokenPose);
+      if (preview) {
+        if (preview.kind === 'idle') idlePose(preview.elapsed, tokenPose);
+        else if (preview.kind === 'move') { const k = preview.elapsed / 600; movePose(k, preview.direction, z, tokenPose); tokenPose.dx += Math.cos(preview.direction) * k * HEX_SIZE * z; tokenPose.dy += Math.sin(preview.direction) * k * HEX_SIZE * z; }
+        else if (preview.kind === 'attack') attackPose(preview.elapsed, preview.direction, z, tokenPose);
+        else if (preview.kind === 'hit') hitPose(preview.elapsed, preview.direction, z, tokenPose);
+        else deathPose(preview.elapsed, preview.direction, tokenPose);
+      }
+      else if (inp.fx) playbackPose(inp.fx.plan, u.id, inp.fx.t, z, tokenPose);
+      else if (plainPath && inp.tokenMove) {
+        const at = Math.max(0, Math.min(plainPath.length - 1, inp.tokenMove.elapsed / inp.tokenMove.duration * (plainPath.length - 1)));
+        const i = Math.min(plainPath.length - 2, Math.floor(at));
+        const a = plainPath[i], b = plainPath[i + 1];
+        const aw = hexToPixel(a, HEX_SIZE), bw = hexToPixel(b, HEX_SIZE);
+        movePose(at - i, Math.atan2(bw.y - aw.y, bw.x - aw.x), z, tokenPose);
+      }
+      else if (u.id === inp.selectedUnit) idlePose(inp.tokenTime ?? inp.time, tokenPose);
+      pose = tokenPose;
+      if (pose.shadow !== 1 || pose.dust) drawMotionGround(ctx, x, y, tw, pose);
+    }
+    drawUnit(ctx, look, u, x, y, tw, dpr, u.owner === view.me, inp.pendingMarks.get(u.id), u.origin ?? factionOf.get(u.owner), strengthCue, siegePropFor(view, u), hexBox, contractLeft(u, view), heirTag(view, u), u.owner === view.me && isColoniaFounder(view, u.id), pose);
+    if (pose?.spark) drawMotionSpark(ctx, x + pose.dx + pose.tipX * tw * 0.65, y + pose.dy - tw * 0.45 + pose.tipY * tw * 0.4, tw * 0.5, pose.spark);
     if (stack.length > 2 && stack[0].id === u.id) drawBadge(ctx, look, x - tw, y - tw, tw * 0.45, String(stack.length), true);
   }
 
@@ -946,12 +980,25 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
     if (cityTiles.has(`${g.unit.pos.q},${g.unit.pos.r}`) && !far) y += hexPx * CITY_UNIT_DROP;
     y += g.sink * z;
     ctx.save();
-    ctx.globalAlpha = g.alpha;
-    // It topples about its feet.
-    if (g.tilt) { const fy = y + tw; ctx.translate(x, fy); ctx.rotate(g.tilt); ctx.translate(-x, -fy); }
+    if (inp.animatedUnits && inp.fx) {
+      const d = inp.fx.plan.deaths.find((v) => v.unit.id === g.unit.id);
+      resetPose(tokenPose);
+      if (d) deathPose(inp.fx.t - d.t, d.seed % 2 ? 0 : Math.PI, tokenPose);
+      if (tokenPose.dust) drawMotionGround(ctx, x, y, tw, tokenPose);
+      ctx.globalAlpha = tokenPose.alpha;
+      const geom = miniatureGeometry(tw);
+      const edge = Math.sign(tokenPose.rotation) * geom.baseRx;
+      ctx.translate(x + edge, y + geom.baseDy);
+      ctx.rotate(tokenPose.rotation);
+      ctx.translate(-x - edge, -(y + geom.baseDy));
+      ctx.filter = TOKEN_GREY_FILTERS[Math.round(tokenPose.grey * 100)];
+    } else {
+      ctx.globalAlpha = g.alpha;
+      if (g.tilt) { const fy = y + tw; ctx.translate(x, fy); ctx.rotate(g.tilt); ctx.translate(-x, -fy); }
+    }
     if (far) drawPip(ctx, look, g.unit.owner, g.unit.military, x, y, tw, dpr, false, g.unit.kind as UnitKind, factionOf.get(g.unit.owner));
     else if (isBarbarian(g.unit.owner)) drawBarbarianToken(ctx, look, g.unit.kind as UnitKind, g.unit.military, x, y, tw, dpr);
-    else drawToken(ctx, look, g.unit.kind as UnitKind, mapPlayerColor(g.unit.owner), g.unit.military, x, y, tw, dpr, g.unit.owner, 1, factionOf.get(g.unit.owner));
+    else drawToken(ctx, look, g.unit.kind as UnitKind, mapPlayerColor(g.unit.owner), g.unit.military, x, y, tw, dpr, g.unit.owner, inp.animatedUnits && inp.fx ? tokenPose.alpha : 1, factionOf.get(g.unit.owner));
     ctx.restore();
   }
 
@@ -1517,9 +1564,43 @@ function drawLockMark(ctx: CanvasRenderingContext2D, look: LookId, x: number, y:
   drawBadge(ctx, look, x - w * 0.95, y - w * 0.85, w * 0.55, '', false, 'mark-lock');
 }
 
-function drawUnit(ctx: CanvasRenderingContext2D, look: LookId, u: UnitView, x: number, y: number, w: number, dpr: number, mine: boolean, mark: PendingMark | undefined, faction?: Faction, cue?: StrengthCue | null, prop?: SiegeProp | null, hexBox?: { cx: number; half: number }, contract?: number | null, heirLabel?: string | null, colonia = false) {
-  if (isBarbarian(u.owner)) drawBarbarianToken(ctx, look, u.kind as UnitKind, u.military, x, y, w, dpr);
-  else drawToken(ctx, look, u.kind as UnitKind, mapPlayerColor(u.owner), u.military, x, y, w, dpr, u.owner, 1, faction, u.heir_of == null ? undefined : { crestColor: u.heir_of === u.owner ? undefined : mapPlayerColor(u.heir_of) });
+function drawMotionGround(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, pose: TokenPose) {
+  ctx.save();
+  ctx.fillStyle = 'rgba(48,38,28,0.16)';
+  ctx.beginPath(); ctx.ellipse(x, y + w * 0.8, w * 0.8 * pose.shadow, w * 0.2 * pose.shadow, 0, 0, Math.PI * 2); ctx.fill();
+  if (pose.dust) {
+    ctx.globalAlpha = pose.dust * 0.32;
+    ctx.fillStyle = '#aa9472';
+    for (let i = 0; i < 3; i++) {
+      ctx.beginPath();
+      ctx.arc(x + (i - 1) * w * 0.46, y + w * (0.82 - i * 0.05), w * (0.09 + i * 0.035), 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  ctx.restore();
+}
+
+function drawMotionSpark(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, alpha: number) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.strokeStyle = '#f7e8bb'; ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  for (let i = 0; i < 8; i++) {
+    const a = i * Math.PI / 4;
+    ctx.moveTo(x + Math.cos(a) * r * 0.2, y + Math.sin(a) * r * 0.2);
+    ctx.lineTo(x + Math.cos(a) * r, y + Math.sin(a) * r);
+  }
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawUnit(ctx: CanvasRenderingContext2D, look: LookId, u: UnitView, x: number, y: number, w: number, dpr: number, mine: boolean, mark: PendingMark | undefined, faction?: Faction, cue?: StrengthCue | null, prop?: SiegeProp | null, hexBox?: { cx: number; half: number }, contract?: number | null, heirLabel?: string | null, colonia = false, motion?: TokenPose) {
+  if (isBarbarian(u.owner)) {
+    if (motion) { const edge = motion.grey ? Math.sign(motion.rotation) * w * 0.45 : 0; ctx.save(); ctx.translate(x + edge + motion.dx, y + motion.dy + w); ctx.rotate(motion.rotation); ctx.scale(motion.sx, motion.sy); ctx.translate(-x - edge, -y - w); }
+    drawBarbarianToken(ctx, look, u.kind as UnitKind, u.military, x, y, w, dpr);
+    if (motion) ctx.restore();
+  }
+  else drawToken(ctx, look, u.kind as UnitKind, mapPlayerColor(u.owner), u.military, x, y, w, dpr, u.owner, 1, faction, u.heir_of == null ? undefined : { crestColor: u.heir_of === u.owner ? undefined : mapPlayerColor(u.heir_of) }, motion);
   // A unit an Engineer covers wears its siege gear in front of its feet, on the hex's right side and always inside the hex: the
   // stack already fills the hex, so the gear overlaps its own figure rather than the unit on the next hex (user, 2026-10-19).
   const gear = prop && hexBox ? siegePropImage(prop) : null;
@@ -1534,7 +1615,17 @@ function drawUnit(ctx: CanvasRenderingContext2D, look: LookId, u: UnitView, x: n
   if (mini && u.military) {
     const g = miniatureGeometry(w);
     const py = y + g.baseDy + g.baseRy * 0.55;
+    if (motion) {
+      ctx.save();
+      const foot = y + g.baseDy;
+      const edge = motion.grey ? Math.sign(motion.rotation) * g.baseRx : 0;
+      ctx.translate(x + edge + motion.dx, foot + motion.dy);
+      ctx.rotate(motion.rotation);
+      ctx.scale(motion.sx, motion.sy);
+      ctx.translate(-x - edge, -foot);
+    }
     drawEraPlaque(ctx, unitEra(u.kind as UnitKind), x, py, w, FONTS[look].display);
+    if (motion) ctx.restore();
     drop = Math.max(drop, py + plaqueHeight(w) / 2 + 1.5 - (y + w * 1.04 + 3));
   }
   if (u.hp < 100) drawTokenHealth(ctx, look, u.hp, x, y, w, drop);

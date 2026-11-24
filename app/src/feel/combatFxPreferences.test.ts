@@ -5,17 +5,19 @@ import { COMBAT_FX_KEY, readCombatFxPrefs } from './combatFxPreferences';
 afterEach(() => localStorage.clear());
 
 it('is On by default', () => {
-  expect(readCombatFxPrefs()).toEqual({ enabled: true });
+  expect(readCombatFxPrefs()).toEqual({ enabled: true, animatedUnits: true });
 });
 
 it('a saved Fast (the removed third choice) reads as On, and Off stays Off', () => {
   localStorage.setItem(COMBAT_FX_KEY, JSON.stringify({ enabled: true, speed: 1.7 }));
-  expect(readCombatFxPrefs()).toEqual({ enabled: true });
+  expect(readCombatFxPrefs()).toEqual({ enabled: true, animatedUnits: true });
   localStorage.setItem(COMBAT_FX_KEY, JSON.stringify({ enabled: false, speed: 1 }));
-  expect(readCombatFxPrefs()).toEqual({ enabled: false });
+  expect(readCombatFxPrefs()).toEqual({ enabled: false, animatedUnits: true });
+  localStorage.setItem(COMBAT_FX_KEY, JSON.stringify({ enabled: true, animatedUnits: false }));
+  expect(readCombatFxPrefs()).toEqual({ enabled: true, animatedUnits: false });
 });
 
 it('corrupt storage falls back to On', () => {
   localStorage.setItem(COMBAT_FX_KEY, '{not json');
-  expect(readCombatFxPrefs()).toEqual({ enabled: true });
+  expect(readCombatFxPrefs()).toEqual({ enabled: true, animatedUnits: true });
 });

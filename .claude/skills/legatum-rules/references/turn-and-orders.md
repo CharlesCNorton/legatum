@@ -1,5 +1,7 @@
 # Turn structure and orders
 
+**Map presentation (no rule change):** Settings has Map animations and Animated units. Both are On by default. With both On, a unit's painted token moves during turn playback and the selected token idles at close zoom. Either switch Off, or the system's reduced-motion preference, stops token motion. Orders and their results are identical.
+
 Part of the Legatum rules reference (index: `index.md`). Answers: What orders exist, one order per unit, idle orders, automation, resolution phases, auto-fire, order UI?
 Moved verbatim from `game-rules.md` on 2026-11-22, in the original order; the original section headings are kept inside.
 
