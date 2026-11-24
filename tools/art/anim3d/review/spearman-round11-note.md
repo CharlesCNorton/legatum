@@ -161,6 +161,20 @@ Git's ORIG_HEAD and index locks were denied, so changes were ported by scoped so
 No push or master merge was performed. A full patch and commit message are in
 `lanes/spearman-r11-merge/` for the runner if its Git permissions differ.
 
+### Automated critique: spearman-round11 (Eevee painted GPU 512 masters / display-space decoded 160 atlas)
+
+- Silhouette IoU: **0.9275** (target ≥ 0.95; FAIL). Best of ±3 px offsets: render x=+1, y=+0.
+- Tone/colour ΔE on blurred images (sigma 2 px, CIE76): **4.59** (target ≤ 6; PASS), at zero offset over 11579 overlapping pixels including base. Information only: raw per-pixel ΔE 7.30; at the IoU offset blurred 5.69, raw 13.34.
+- Regions (blurred ΔE): head_crest 3.8, torso 2.9, cloak_spear_side 3.3, shield 2.4, legs 3.3, feet 13.4, base 3.9.
+- Painting mask: alpha; frames: idle 8, move 8, attack 10, hit 4, death 10.
+- Rest: `/Users/samcorcos/LegatumRuns/anim-pilot/masters/spearman/256/rest.png`. Contact sheet uses `/Users/samcorcos/LegatumRuns/anim-pilot/review/3d-v2/spearman-decoded-160`.
+
+### Delivery receipt (GPU final render, visual review pending)
+
+- 40 frames; 160 px trimmed atlas: 185380 bytes, quality 80; decoded validation PASS.
+- Walk: planted slip 0.0023 mm; floor error 0.000 mm; heading 2.618°.
+- Movie: five clips, 1600×352, H.264 yuv420p, 192 frames / 8 seconds. No art PASS issued.
+
 FOCUS a: Match real sandal/ankle volume, vertical shin and sleeve silhouette against 256/160 references; preserve original weights and revalidate every contact after any foot fitting.
 FOCUS b: Run and inspect the selected Fable A v3 GPU look on the combined master; fix sole/shoulder/lining continuity and verify base contact without a second grade or double registration.
 FOCUS c: Find/retarget a better CC0 death and hit matching Fable B's staged collapse/flinch, retaining only authored weapon attack; improve camera-visible step separation and preserve frozen idle/attack hashes.

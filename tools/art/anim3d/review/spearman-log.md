@@ -201,3 +201,4 @@
 - R11b verification: 41 material-only pose invariants; 40 CPU motion frames; byte-identical death hold; rebuilt projection and scene checks; top/front feet 33 samples, slip 0.001791 mm; 7 tests pass. GPU/production atlas remains for lead. Merge and commit locks denied; lane-only patch and commit-message.txt retained.
 - Round 11 merge: read live feedback and Astra/Fable evidence; used unit-3D and all six Blender skills. Skill/critique ported after ORIG_HEAD lock denied. Isolated rebuild scene check passed; all clips rebuilt from combined geometry. CPU rest preview available; painted Eevee final awaits host.
 - GPU round 11 started: full Eevee painted GPU pass requested; Cycles GPU feet inspection.
+- GPU round 11 finished: all stages, masters, atlas validation and movie complete; visual review pending.
