@@ -158,7 +158,7 @@ for pb in parent_first_bones:
         pb.keyframe_insert(channel, frame=frame)
 ```
 
-- [ ] Keep only the weapon-specific attack authored; start/end at the same guard as idle, including **elbow poles**, not just hands. Use constant documented guard offsets/upper-body layers where necessary. Preserve the source death body motion, separately author equipment release and ground contact. Retain the R9 complete-rotation/visual-bake fixes; do not revert to direction-only CMU reconstruction.
+- [ ] Keep only the weapon-specific attack authored; start/end at the same guard as idle, including **elbow poles**, not just hands. Use constant documented guard offsets/upper-body layers where necessary. Retain source-derived death motion; documented blends of existing donor poses before retargeting may suppress recoil. Do not invent replacement joint curves. Author equipment release and ground contact separately, retaining carried gear at its grip. Retain the R9 complete-rotation/visual-bake fixes; do not revert to direction-only CMU reconstruction.
 - [ ] **Foot locking:** detect heel/toe support from evaluated sole landmarks and velocity, inspect labels, and use hysteresis (starting thresholds: enter below **10 mm** and **0.04 m/s**, leave above **20 mm** or **0.08 m/s**). Calibrate to body scale and the actual disc contact plane. Correct global height first so detection is not fooled by bad grounding. Lock the stance landmark in world space with leg IK, stable knee pole and bounded pelvis adjustment; retain source foot/ball roll through heel strike/toe-off. Do not yaw foot meshes to hide mapping errors.
 - [ ] For in-place sprites, define virtual displacement `d(t)`. A stance foot should follow `p(t)=anchor-d(t)` in the sprite, so measure slip on `p(t)+d(t)`, **not** raw foot motion against the stationary disc. Fit one speed over supporting intervals; do not fit independent speeds per foot/frame. Blend IK over **2–4 source frames**, with cyclic contacts joined across the loop. Start a diagnostic limit of **2 mm** compensated sole slip/floor error and **5°** heading discrepancy from the donor; retain stricter existing checks. Flag root/IK corrections above **3 cm**, reject above the existing **5 cm** bound rather than silently stretching legs.
 - [ ] Inspect top/front **rendered feet**, support over ≥32 dense samples and the loop seam. Verify planted toe and heel geometry, not just ankle bones. Include transition into/out of idle and attack; a motion-source label is not a clean-walk pass.
@@ -223,3 +223,47 @@ Primary sources consulted for the mechanisms; presets and Legatum-specific recom
 - [Quaternius Universal Animation Library](https://quaternius.com/packs/universalanimationlibrary.html): CC0, use the free Standard subset only; the full Source/Pro offerings are unnecessary.
 - [CMU Graphics Lab](http://mocap.cs.cmu.edu/), [cgspeed conversion](https://sites.google.com/a/cgspeed.com/cgspeed/motion-capture): CMU custom free-use terms permit commercial products but forbid resale of the data itself, including converted data; **not CC0**. Credit CMU/NSF EIA-0196217 and identify conversion/version. Original capture is ASF/AMC; converted BVH can add an estimated T-pose and noisy toe channels. Retain the conversion README.
 - [ambientCG](https://docs.ambientcg.com/license/) and [Poly Haven](https://polyhaven.com/license): CC0 texture/HDRI assets. [Krita](https://krita.org/en/about/license/): GPLv3 software for original paintovers. Software licences do not automatically license unrelated artwork.
+
+
+## Learned (spearman round 10) — 2026-11-23
+
+- **Worked: guard orientation plus real calf/greave mass.** Lane A's controlled
+  lower-leg overlap rose **71.96% → 73.21%** and projected sole span
+  **68.98 → 77.03 px**, with unchanged foot geometry/weights/bind and walking
+  foot/ball transforms. The reviewer sees more grounded support at 256/160.
+  Larger flares and more outward knees worsened the contour and were rejected.
+  **Rule:** improve pose and surrounding anatomy before widening a foot mesh;
+  compare lower legs separately so a matching base cannot hide the error.
+- **Worked: identify the exposed material before painting it.** Lane B's hit
+  shoulder pale pixels fell **102 → 24 at 256**, **39 → 7 at 160**. Rest shoulder
+  RGB error slightly worsened **12.06 → 12.20/255**, so this is a motion-coverage
+  win, not a universal colour improvement. Cape-only paint failed because the
+  sleeve caused the large pale patch. **Rule:** inspect rest/hit/death region
+  masks, keep confident hero paint, and fill each revealed material coherently;
+  more noise does not fix a plain angular garment shell.
+- **Worked: source-pose blending before retarget.** Lane C's sampled death head
+  step fell **1.277 → 0.655 m**, ankle height **0.848 → 0.355 m**, and late cape
+  travel **0.419 → 0.146 m**. The combined scene retains the first two results;
+  its cape travel is **0.119 m**. Stronger walk attenuation broke contact and was
+  rejected. The attached shield still rotates **83.03° between two delivered
+  samples**; lower recoil alone is not natural motion. **Rule:** retain complete
+  source rotations/rest-roll calibration, blend existing donor poses explicitly,
+  and audit attached equipment motion as well as body/contact metrics.
+- **Reusable mechanism, not a new art style:** the kit extraction retains the
+  existing Cycles camera-only pigment contract and the tested 53-bone motion
+  rig. Painterly nodes are now a shared group; unit pigment stays editable at
+  each instance. Rigify and corrective helpers are opt-in, not proof that a
+  posed body has good anatomy. True rest-space corrective sculpture and unseen
+  multi-view paint remain deliberate unit work.
+- **Delivery rule:** downsample premultiplied linear-light RGBA before trimming;
+  compare decoded atlas cells, not only masters. Write GPU numbers before the
+  focus lines and label CPU/GPU provenance. A generated file or passing contact
+  audit never creates a unit PASS.
+
+- **Do not cherry-pick only favourable diagnostics.** Same-settings merged rest
+  IoU **0.903515 → 0.902229** and fixed-grade mean CIE76 ΔE
+  **13.735 → 13.905** slightly regressed; the final refitted grade is **13.814**.
+  The lane's lower-leg overlap and moving-shoulder/collapse gains still justify
+  retention, but this is not a whole-image metric win or a PASS. Record regional
+  and global results together; keep IoU **0.95** / ΔE **6** targets unchanged.
+  The CPU decoded atlas validates at **183,016 bytes / q80**, all 40 frames.
