@@ -222,3 +222,5 @@
 - GPU round 12 failed at painted-look (exit 1); inspect gpu-logs-spearman-r12.log before judging this pass.
 - GPU round 12 started: full Eevee painted GPU pass requested; Cycles GPU feet inspection.
 - GPU round 12 finished: all stages, masters, atlas validation and movie complete; visual review pending.
+- R13a: loaded cumulative unit skill and all six Blender skills; attempted merge 07643cd4 (ORIG_HEAD.lock denied), applied exact round-12 tree diff; isolated stance work in lanes/spearman-r13a.
+- R13c: skills and R12 review read; Git ORIG_HEAD.lock denied; applied exact 07643cd4 baseline content without index changes. Isolated R12 master and clips in lanes/spearman-r13c; scope death ending and walk lift/sway.
