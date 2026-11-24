@@ -385,3 +385,5 @@
 - Published e-idle native 256/64 comparison; render device GPU.
 - Rendered e-move: 512px CYCLES GPU, 64 samples.
 - Published e-move native 256/64 comparison; render device GPU.
+- Rendered e-attack: 512px CYCLES GPU, 64 samples.
+- Published e-attack native 256/64 comparison; render device GPU.
