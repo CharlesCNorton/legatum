@@ -24,6 +24,35 @@ CPU masters and clips are isolated in `~/LegatumRuns/anim-pilot/lanes/spearman-r
 
 Run from the repository root: `ROUND=10 tools/art/anim3d/units/spearman/gpu.sh`. No PASS file is justified or written.
 
+### Automated critique: spearman-round10 (CPU 256 px / 8 samples; decoded 160 atlas)
+
+- Silhouette IoU: **0.9022** (target ≥ 0.95; FAIL). Best of ±3 px offsets: render x=+0, y=+1.
+- Mean CIE76 ΔE: **13.81** (target ≤ 6; FAIL), over 11212 overlapping pixels including base after that offset.
+- Painting mask: alpha; frames: idle 8, move 8, attack 10, hit 4, death 10.
+- Rest: `/Users/samcorcos/LegatumRuns/anim-pilot/lanes/spearman-r10-merge/masters/spearman-3d-v2/renders/c/three-quarter.png`. Contact sheet uses `/Users/samcorcos/LegatumRuns/anim-pilot/lanes/spearman-r10-merge/review/3d-v2/spearman-decoded-160`.
+
+### Delivery receipt (CPU preview)
+
+- 40 frames; 160 px trimmed atlas: 183016 bytes, quality 80; decoded validation PASS.
+- Walk: planted slip 0.0018 mm; floor error 1.133 mm; heading 2.618°.
+- Movie: five clips, 1600×352, H.264 yuv420p, 192 frames / 8 seconds. No art PASS issued.
+
+### Combined CPU checks and honest comparison
+
+- Cycles CPU, 256 px / 8 samples, fixed seed 17: master plus all five clips rebuilt. **40-pose audit: zero findings.** Scene/material checks pass; the merged lower-body check preserves foot geometry, soles, bind matrices, weights, original body topology, upper pose, camera and lights. The walk uses lane C's 90% donor influence, so lane A's unchanged-walk comparison is not claimed for the combined clip.
+- **Matched rest A/B, same 8 samples and fixed round-9 grade:** IoU **0.903515 → 0.902229**; mean CIE76 ΔE **13.735 → 13.905**. This small global regression is disclosed. The broader support and much better revealed-shoulder/collapse behavior justify retention, but the round does **not** improve every metric. The final round-10 fitted grade gives ΔE **13.814**. Threshold >8 / ±3 px metrics are not interchangeable with the older >32 / unshifted silhouette score (current latter: 0.8989).
+- **Feet:** all checks pass, including 33 dense samples and zero loop seam. Measured slip **0.0018 mm**, floor error **1.133 mm**, planted heading **2.618°**. The actual top/front rendered geometry was inspected.
+- **Motion:** combined death head step **0.6553 m**, maximum ankle **0.3553 m**, late cape travel **0.1188 m**; final pose held exactly. The attached shield's maximum sampled rotation step remains **83.03°**. Grip distance variation is below **0.000001 m**; attachment continuity does not make the hinge look natural.
+- **Reusable human probe passed:** MPFB body **19,158 vertices**, game rig **53 bones**, native MPFB Rigify generation **930 bones**, both Armature and preserved-volume Armature PV retained. Synthetic corrective reaches **0.49999994** at half activation. This verifies code mechanics, not anatomical corrective sculpture.
+- **Seven regression tests passed:** pipeline 2, critique 2, kit image/note 3. Python/Bash syntax and whitespace passed. No Rust, game rules or UI changes; those build suites do not apply. GPU renders/atlas size remain unverified until the lead runs the handoff.
+- Reviewed merged 256/160/64 rest images, hit/death strips, all 40 decoded 160 cells, top/front feet, and encoded-movie metadata. This is not a claim of human real-time playback review.
+
+### Final handoff status
+
+- All stage previews now exist, including the plain three-view geometry, detail crops and attack rig poses. The decoded movie was sampled and inspected; its five columns and cream layout are correct. Comparison detail crops intentionally magnify 256 CPU pixels and are not 512 GPU detail evidence.
+- Final checks: **65 Python files parse**, three shell entry points pass Bash syntax, **7/7 regression tests**, `git diff --check`, executable GPU handoff, required CPU output files and final focus-line ordering all pass.
+- Git staging failed with `index.lock: Operation not permitted`; the runner must commit the source changes. Exact input refs and the required co-authored commit message are saved in `lanes/spearman-r10-merge/inputs.json` and `commit-message.txt`. No push or PR was performed. The checked-in app atlas was not replaced by the CPU preview.
+
 FOCUS a: Refine the shoulder/sleeve shell and the remaining ankle/greave mass against the painting at 256/160, preserving real foot geometry and the wider guard's contact.
 FOCUS b: Paint coherent shoulder/back/underside folds and restore dark cloak, inner-thigh and shield-rim values; preserve highlights and avoid orange saturation or finer noise as substitutes.
 FOCUS c: Smooth the arm-attached shield's floor hinge during collapse and improve walk weight using donor motion; retain clean contacts, attack/idle and restored hit pins.
