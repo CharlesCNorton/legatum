@@ -56,6 +56,15 @@ Lanes started 22:21:19–22:21:25 on the round-10 GPU candidate `aeacff7d`.
 
 - Reviewer's decision after the merge (about 04:00Z): death, hit and attack may be hand-keyed or donor-based, whichever reviews better; idle and walk stay on open mocap. Round 12 adopts Fable B's death and hit.
 
+### Round 12 (2026-11-23 local, in progress)
+
+Lanes started about 23:31 on the round-11 GPU candidate `01a69951`, with the restructured skill installed.
+
+- Lane a (sandals and shin), note at 23:48: foot width × 1.50 and height × 1.15, ankle 35 mm inward, guard turned 15°. Same-settings CPU A/B: IoU 0.9219 → 0.9229; blurred ΔE 6.42 → 6.29; lower-leg overlap 86.1% → 87.8%; lower-leg RGB error 21.1 → 19.2; feet RGB error 34.8 → 31.9; shin lean 8.7 → 4.2 px. Walk limits pass (slip 0.0020 mm, heading 3.38°, root 48.88 mm, sole translation 35.6 mm). Rejected: foot length × 1.35 (58.7 mm sole correction), 25° guard turn, 32 mm sleeve shortening. Preset feet region still 13.8.
+- Lane b (material continuity), note at 23:53: render-time paint for soles, skirt lining and rear shoulder on a CPU proxy of the Eevee look. Rest unchanged (IoU 0.9219, blurred 4.509 → 4.514); death frame 4 skirt luminance 101 → 83, sandals 88 → 70. Found a 3 mm gap between the rest soles and the stone.
+- Lane c (motion): previews judged by the art director at 04:47Z before its note: donor-based hit wins outright, walk ties Fable B, death is the best donor death so far but tents the cloak and ends unreadable.
+- Art director, 05:02Z: Fable B's form and clips under A's look are the best complete Spearman, rest IoU 0.935.
+
 ### Colour on the blurred scale (added 2026-11-24)
 
 `critique.py` now scores colour on blurred images (2 px Gaussian at 256) at zero offset, with per-region values; the ±3 px search is for IoU only. Each round's own graded rest render, re-measured:
