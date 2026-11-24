@@ -31,3 +31,9 @@ layer. `Hit_Chest` and `Death01` are time-remapped with a guard recovery blend
 for hit. No new human joint motion is invented for those clips. Continuous
 weapon attack curves, passive crest/shield springs and cloth response are
 original MIT orchestration; no new asset download.
+
+## Fable-b motion (2026-11-24)
+
+- **Death, hit:** original keyed motion in `collapse.py` (no donor clip). MIT code; CC BY 4.0 rendered artwork.
+- **Idle, move:** unchanged Quaternius Universal Animation Library `Idle_Loop` / `Walk_Loop` (CC0), with the procedural weight-shift layer in `motion.WalkWeight`.
+- **Attack:** unchanged original weapon keys.

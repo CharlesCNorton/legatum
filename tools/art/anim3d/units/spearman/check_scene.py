@@ -62,7 +62,8 @@ assert bpy.data.objects['Warm upper-left key'].data.size == 5.0
 assert base.data.uv_layers.get('Painting camera rest') is None
 assert abs(max((base.matrix_world @ v.co).z for v in base.data.vertices)-.105) < .0001
 heights = [(base.matrix_world @ v.co).z for v in base.data.vertices]
-assert abs(max(heights)-min(heights)-.155) < .0001, 'Stone underside was not deepened'
+# .155 from refine plus the 8 mm fable-b band fit (units/spearman/stance.py BAND).
+assert abs(max(heights)-min(heights)-.163) < .0001, 'Stone underside was not deepened'
 assert tuple(sc.camera.location) == (2.5, -7.0, 3.0)
 for side in ['l', 'r']:
     sole = bpy.data.objects['Leather sandal sole '+side]

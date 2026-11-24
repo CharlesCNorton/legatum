@@ -30,6 +30,9 @@ shield=bpy.data.objects.get('Aspis control');shield_neutral=shield.matrix_basis.
 if shield:shield.rotation_mode='QUATERNION'
 cloth=bpy.data.objects['Cloak • simulated wool'].modifiers['Cloth per clip']
 cloth.show_viewport=False
+if clip=='move':
+ # Heavier air drag: the spear-side edge swung 6-7 px with the weight shift.
+ cloth.settings.air_damping=3
 if clip=='attack':
  # Retain the shoulder attachment; free more of the lower wool to lag the
  # torso's acceleration, then damp it like a heavy cloak instead of a flag.
@@ -143,7 +146,7 @@ def pose(t):
   # Clear the shield in depth while upright, tip forward, then settle inward
   # only after the shaft is horizontal and below the shield's lower edge.
   depth=min(1,release/.20);depth=depth*depth*(3-2*depth)
-  tilt=max(0,min(1,(release-.20)/.55));tilt=tilt*tilt*(3-2*tilt)
+  tilt=max(0,min(1,(release-.02)/.73));tilt=tilt*tilt*(3-2*tilt)
   rotation=Quaternion().slerp(direction.rotation_difference(Vector((.995,-.10,.0)).normalized()),tilt)
   target=center.lerp(Vector((-.30,-.60,.075)),release)
   # Keep a real pixel margin while the retimed fall crosses the horizontal

@@ -176,12 +176,12 @@ def flare_cloak(scene, screen_sculpt):
         edge = smooth(124, 104, p.x)*smooth(108, 140, p.y)*(1-.6*smooth(198, 222, p.y))
         # Centre hem between the legs hangs about four pixels lower.
         hem = smooth(120, 135, p.x)*(1-smooth(150, 166, p.x))*smooth(170, 195, p.y)
-        delta = Vector((-4.5*edge, 5.0*hem))
+        # Centre scallop between the legs (painted hem y 190 at x 124-132, 186 either side).
+        delta = Vector((-4.5*edge, 5.0*hem+3.0*math.exp(-((p.x-128)/5)**2)*smooth(176, 186, p.y)))
         # Level hem behind the legs: the painted wool ends near y 190 in three
         # shallow scallops; the modelled tail sloped down past the shield-side
         # greave and widened both shins in silhouette.
-        import math
-        line = 191+2.0*math.cos((p.x-128)/27*2*math.pi)
+        line = 191+2.0*math.cos((p.x-128)/27*2*math.pi)+2.0*math.exp(-((p.x-128)/5)**2)
         over = p.y+delta.y-line
         if over > 0 and 99 < p.x < 172:
             delta.y -= over*.9

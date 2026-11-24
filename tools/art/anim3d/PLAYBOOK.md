@@ -555,3 +555,49 @@ The movie retains round 8's 1600x352, five-column, 2x-on-cream layout, 24 fps,
 192 frames, H.264/yuv420p. CPU merge checks use the isolated external root
 `lanes/spearman-r9-merge`; its atlas is preview-only, leaving the last GPU atlas
 intact until the lead's pass. Passing these checks is not a visual PASS.
+
+### Fable-b form and motion (host loop, renders looked at every step)
+
+Run outside the Codex sandbox, the fastest loop is: build poses without cloth
+(`MOTION_DIAGNOSTIC=1 render.sh animate-<clip>`), render the delivered samples
+from the painting camera plus top/front/side with `units/spearman/quicklook.py`,
+tile them with `quicksheet.py`, look, edit. About one minute a loop. Full cloth
+bake plus the standard render is two to three minutes a clip.
+
+**Form.** `units/spearman/stance.py` runs in `project.py` after the 9a silhouette
+pass and before the UV freeze. Fit lower-body form by measuring opaque row spans
+at 256 px against the painting, not by eye: fuller-looking legs measured 3-5 px
+too wide, and what read as "narrow stance" was knee cap, ankle, foot and cloak
+mass. Edit rest geometry with a radial scale about each bone's rest axis weighted
+by the vertex's skin weight; never pose-bone scale (the retarget, `limb()` and
+`reset()` all rebuild bone matrices without it). Keep the skin calf at half the
+greave's scale or it shows as a bare lobe behind the shell. Hide ornaments that no
+longer sit on a refitted surface by visibility. Seat straps on the evaluated foot
+surface. Ray-cast a pixel (`scene.ray_cast` from the orthographic camera) to name
+the object behind an unexplained contour before changing any scale.
+
+**Death and hit** are keyed in `units/spearman/collapse.py` (the 2026-11-24 motion
+rule allows hand-keyed death, hit and attack). Channels are plain numbers between
+keys: pelvis position and a roll/fall/yaw rotation on the rig OBJECT, spine and
+head bends in armature axes, ankle targets (world while planted, armature-space
+after), absolute foot pitch from the flat neutral sole, and arm targets carried
+by the bent chest. Limbs use the attack's two-bone helper. The shield stays
+parented to the forearm; the spear keeps its released trajectory. Lessons:
+- A fall along the camera's depth axis reads as a heap. Topple across the screen.
+- Lying on the side, hip and shoulder touch together only with the trunk tilted
+  about 7 degrees head-up; otherwise the floor solver lifts the body off the stone.
+- Foot pitch relative to the shin drives toes into the floor as the shin tilts.
+- Solve feet apart from the body in the floor fit, and include the sandal straps:
+  a fallen foot lies on its instep.
+- A 2.3 m spear only fits the frame lying level in front of the base.
+
+**Walk.** The donor's legs stay; `motion.WalkWeight` adds pelvis dip and sway,
+shoulder counter-rotation and spear sway phase-locked to the clip's own stance
+intervals, plus a constant step width. After any root shift, re-solve both ankles
+to their previous world positions. Sole height is solved per foot: the root
+follows the planted foot needing the lowest pelvis and leg IK raises the other.
+Skip the disc-footprint sole pass for planted walking feet: it pulls an
+overhanging toe below the stone top.
+
+Evidence sheets: `units/spearman/fable_review.py` writes `spearman-fable-b-*`.
+The lane note is `review/3d-v2/spearman-fable-b-note.md`.
