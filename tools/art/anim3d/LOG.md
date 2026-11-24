@@ -18,3 +18,5 @@ Lane timestamps and merge start read from `~/LegatumRuns/anim-pilot/legatum/.pro
 - 40-pose audit: zero findings. Feet: .0018 mm compensated slip, 1.133 mm floor error, 2.618° planted heading, zero loop seam. CPU preview delivery: 183016 bytes, q80, 160 px trim, 40 records; exact alpha/offset/gutter/hold checks pass. Eight-second five-column movie validated.
 - Human kit probe: MPFB 19158 vertices / 53-bone game rig; optional Rigify 930 bones with Armature PV; synthetic corrective .49999994 at half activation. Seven regression tests pass. These do not certify anatomical correctives or art approval.
 - Source evidence: `review/3d-v2/spearman-round10-note.md`, `spearman-round10-metrics.json`, `spearman-round10-matched-rest-metrics.json`, `lanes/spearman-r10-merge/inputs.json`. GPU receipt is appended below by the handoff after it actually runs.
+
+- Spearman round 10 GPU receipt: IoU 0.9039; mean CIE76 ΔE 14.05; atlas 197114 bytes / q85; 40 frames. Visual review pending.
