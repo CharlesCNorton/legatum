@@ -50,13 +50,13 @@ Work in `tools/art/anim3d/units/<slug>/`. Get a crude version through every stag
 | `grade.py` | One monotone histogram grade fitted at rest (strength 0.80), bound to the master hash. | Tests, and reproduces the Spearman round-10 LUT and graded rest render exactly. |
 | `images.py` | Premultiplied-alpha Lanczos resize, in linear light (default, the Spearman delivery through round 10) or display space (`space='display'`, how the painted tokens were reduced; adopted 2026-11-24). | Tests; used by Spearman `delivery.py`. |
 | `atlas.py`, `deliver.py` | Trimmed atlas v2 pack, decode, validate, five-clip movie; CLI over a frames folder, `--reduce linear|display`. | Tests, and reproduces the Spearman round-10 preview atlas and JSON byte for byte (183,016 bytes, q80, linear). The same frames in display space: 198,944 bytes at q85. |
-| `regions.py` | Region IoU, region RGB error, pale-pixel count, reviewer stats per box (pixels, mean RGB, luminance mean and p90), prop width on a row, wasted and jumping frames in a clip, native-size comparison sheet. CLI: `python -m kit.regions`. | Tests, and reproduces round-9/10 numbers from the real renders (whole IoU 0.8983 → 0.8989, lower legs 71.96% → 72.86%) and the art director's round-10 findings (feet luminance 187 vs 146; death frames 6–8 barely change). |
+| `regions.py` | Region IoU, region RGB error, pale-pixel count, reviewer stats per box (pixels, mean RGB, luminance mean and p90), prop width on a row, row and column outline spans against the painting (`--rows`, `--columns`), wasted and jumping frames in a clip, native-size comparison sheet. CLI: `python -m kit.regions`. | Tests, and reproduces round-9/10 numbers from the real renders (whole IoU 0.8983 → 0.8989, lower legs 71.96% → 72.86%) and the art director's round-10 findings (feet luminance 187 vs 146; death frames 6–8 barely change). |
 | `critique.py`, `report.py` | Whole-image IoU (±3 px); colour as CIE76 ΔE on blurred images (2 px Gaussian at 256) at zero offset with per-region values from `--preset` or `--region`, raw per-pixel ΔE for information; triptych, crossfade, heatmaps, 160 px contact sheet; inserts evidence above the FOCUS lines of a round note. | `../test_critique.py` (4 tests); run every round through `../critique.py`. Blurred and regional values added 2026-11-24 and measured on the round-9 and round-10 renders. |
 
 ## Tests
 
 ```sh
-$ANIM_ROOT/venv/bin/python tools/art/anim3d/kit/test_kit.py   # 23 tests, about 35 s, no Blender
+$ANIM_ROOT/venv/bin/python tools/art/anim3d/kit/test_kit.py   # 24 tests, about 35 s, no Blender
 (cd tools/art/anim3d && $ANIM_ROOT/venv/bin/python test_critique.py)   # 4 tests
 ```
 
