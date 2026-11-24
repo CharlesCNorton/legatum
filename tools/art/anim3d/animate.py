@@ -144,18 +144,18 @@ def pose(t):
   # only after the shaft is horizontal and below the shield's lower edge.
   depth=min(1,release/.20);depth=depth*depth*(3-2*depth)
   tilt=max(0,min(1,(release-.20)/.55));tilt=tilt*tilt*(3-2*tilt)
-  rotation=Quaternion().slerp(direction.rotation_difference(Vector((.80,-.60,.0)).normalized()),tilt)
-  target=center.lerp(Vector((-.12,-.72,.03)),release)
+  rotation=Quaternion().slerp(direction.rotation_difference(Vector((.995,-.10,.0)).normalized()),tilt)
+  target=center.lerp(Vector((-.12,-.60,.075)),release)
   # Keep a real pixel margin while the retimed fall crosses the horizontal
   # weapon pose; the endpoint and held landing stay exactly where authored.
   target.x+=.02*math.sin(math.pi*release)
   target.x+=.12*tilt
-  target.y=center.y+(-.95-center.y)*depth
-  if release>.80:target.y=-.95+.23*(release-.80)/.20
+  target.y=center.y+(-.82-center.y)*depth
+  if release>.80:target.y=-.82+.22*(release-.80)/.20
   drop=min(1,release/.75)
-  target.z=center.z*(1-drop)+.03*drop
+  target.z=center.z*(1-drop)+.075*drop
   # Over the stone the low end rides its top; past the front edge it drops to the ground.
-  off=max(0,min(1,(-.40-target.y)/.20));rest_z=.11-.08*off*off*(3-2*off)
+  off=max(0,min(1,(-.40-target.y)/.20));rest_z=.13-.055*off*off*(3-2*off)
   if release>0:target.z=max(target.z,rest_z+(end-start).length*.5*abs((rotation @ direction).z))
   transform=Matrix.Translation(target) @ rotation.to_matrix().to_4x4() @ Matrix.Translation(-center)
   for o in spear_objects:o.matrix_world=transform @ o.matrix_world
@@ -219,6 +219,7 @@ for f in range(1,end+1):
    # stone and thick armour, preserving every retargeted joint rotation.
    released={o:o.matrix_world.copy() for o in spear_objects}
    dg=bpy.context.evaluated_depsgraph_get();lift=0;culprit=''
+   feet_zones=[(rig.matrix_world @ rig.pose.bones[n+side].head,r) for side in 'lr' for n,r in [('ball_',.17),('foot_',.12)]]
    for ob in (sc.objects if t>0 else []):
     if ob.type!='MESH' or ob.hide_render or ob==base or ob.name.startswith(('Cloak •','Aspis','Sunburst','Convex bronze aspis','Shield','Leather shield','Leather sandal','Sandal strap')):continue
     if ob in spear_objects:continue
@@ -228,8 +229,10 @@ for f in range(1,end+1):
     ev=ob.evaluated_get(dg);me=ev.to_mesh()
     for v in me.vertices:
      w=ob.matrix_world @ v.co;local=base_inverse @ w
+     # Feet are solved separately below (sole, straps and their own pitch).
+     if any((w-c).length<r for c,r in feet_zones):continue
      plane=floor+.005 if local.x*local.x+local.y*local.y<base_radius**2 else .012
-     if plane-w.z>lift:lift=plane-w.z;culprit=ob.name
+     if plane-w.z>lift:lift=plane-w.z;culprit=ob.name+' at '+str([round(c,2) for c in w])+' groups '+str([ob.vertex_groups[g.group].name for g in ob.data.vertices[v.index].groups if g.weight>.3] if len(ob.data.vertices)==len(me.vertices) else '')
     ev.to_mesh_clear()
    if f in samples:print('DEATH_LIFT',f,round(lift,3),culprit if lift>0 else '',flush=True)
    if lift>0:
@@ -244,9 +247,18 @@ for f in range(1,end+1):
    # disc-footprint pass would pull an overhanging toe below the stone top.
    if planted:continue
    lift=0
-   for point in sole_points(side):
+   foot_points=sole_points(side)
+   if clip=='death':
+    # A fallen foot can lie on its instep: the straps are then its underside.
+    dg=bpy.context.evaluated_depsgraph_get()
+    for ob in sc.objects:
+     if ob.name.startswith('Sandal strap '+side):
+      ev=ob.evaluated_get(dg);me=ev.to_mesh();foot_points+=[ob.matrix_world @ v.co for v in me.vertices];ev.to_mesh_clear()
+   for point in foot_points:
     local=base_inverse @ point
-    plane=floor+.001 if local.x*local.x+local.y*local.y<base_radius**2 else .006
+    # A fallen foot that straddles the rim rests on the stone, not inside its side.
+    reach=base_radius+(.15 if clip=='death' else 0)
+    plane=floor+.001 if local.x*local.x+local.y*local.y<reach**2 else .006
     lift=max(lift,plane-point.z)
    if abs(lift)>1e-8:
     if clip=='move':assert abs(lift)<.07,('Large sole contact translation',side,lift)
