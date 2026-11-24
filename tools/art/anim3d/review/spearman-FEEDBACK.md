@@ -52,3 +52,15 @@
      c. Shield: the painting's is a bit larger, with a darker, thicker rim and a stronger bronze highlight on the upper-left edge.
      d. Base: the painting's base has a taller side band and a slightly larger diameter, sandy stone with a soft darker lower edge; ours is thinner and more orange.
      e. Spear arm: in the painting the hand is a bit lower and the spear stands further left of the body.
+- (Fable art director, 2026-11-24T03:24Z, on Fable A spearman-fable-a-rest-v1.png, rest pose only, compared with Astra r10 GPU) Positions at 256 px in the painting's frame. Fable A v1 is now the better look: take its materials in the next merge. IoU 0.900 (Astra 0.903), so form is unchanged.
+  What A fixed, keep: shaft is wood-coloured (155,116,77 vs painting 157,116,74); pale blob between the thighs is gone; cloak cavities are deeper; greave highlights now match (left greave p90 153 vs 150); shield rim and cuirass highlights match; base has the light rim lip.
+  Fixes for A v2, ranked:
+  1. Skirt/linen went too dark (x 108-134, y 140-170): luminance 85 vs the painting's 105, highlights 154 vs 200. It now reads as grey-brown leather. Lift the linen ~20% in value and keep the top highlights near white-cream (240,225,200); keep the fold shadows where they are.
+  2. Spear shaft still thin: ~2 px against 3.5-4 px (127 shaft pixels in the sample band against 200). Double the radius. Add the 6 px bronze collar under the head (y 46-52).
+  3. Feet (y 208-224). Each foot now sits on a dark lump wider than the foot, and the right foot has a pale wedge cut into it at about (150,221). Feet are still too light on top (luminance 172 vs 140). Wanted: dark-brown strapped sandal, ~20 px wide, 10 px tall, flat sole on the base, toes toward camera, with a soft 3-4 px contact shadow, no lump.
+  4. Left foot still splays out and the left shin leans (ankle at x 93 vs the painting's 98). Bring the left ankle 4-5 px right so the greave stands nearly vertical, as in the painting.
+  5. Right leg outer side (x 153-160, y 185-208): the brown calf slab and the ring artifact at (155,200) are still there. Tuck the calf inside the greave.
+  6. Cloak on the spear side is still narrow (433 px in x 98-112, y 120-175, painting 632) and a little brown (117,61,37 vs 133,62,36). Flare it 4-5 px left; add red.
+  7. Base top is slightly dark and uneven (p10 184 vs 199): the shading under the figure is blotchy. Even it out to the painting's flat cream with only a faint shadow behind the feet; side wall is a touch light (193 vs 186).
+  8. Spear arm: the pale sliver under the hand (x 103-110, y 120-126) is still visible.
+  Best per aspect now: materials/values = Fable A v1 (except the linen, where Astra r10 is right). Silhouette = tie, neither has fixed legs, feet or cloak width. Motion, death, hit = Astra r10 (only one with clips; death and hit still need the fixes in my r10 block).
