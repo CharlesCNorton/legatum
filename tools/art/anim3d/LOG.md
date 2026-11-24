@@ -119,3 +119,5 @@ The runner writes the merge task's finish only after the final response; this is
 - Full critique and ranked next focus: `review/3d-v2/spearman-round11-note.md`. Isolated master/checks/CPU atlas: `lanes/spearman-r11-merge/`.
 
 - Combined motion readback: death head step 0.41993 m, shield step 34.4144°, ankle height 0.42261 m, late cape travel 0.15734 m (lane C 0.145 m; broader cloak adds 12 mm of late travel). Kept for the rest silhouette win; remaining motion gap is explicit.
+
+- Spearman round 11 GPU receipt: IoU 0.9275; blurred ΔE 4.59; raw ΔE 7.30; atlas 185380 bytes / q80; 40 frames. Visual review pending.
