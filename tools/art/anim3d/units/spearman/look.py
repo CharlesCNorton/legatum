@@ -52,11 +52,11 @@ LOOK = {
     'base_cast': .16,         # cast shadow depth on the stone
     'base_contact': .40,     # soft contact (AO) shadow depth under the feet
     'contact_reach': .07,     # metres: contact shadow is gone about 4 px (256) from the sole
-    'ground_shadow': .9,      # painted warm shadow on the stone top behind and between the feet
-    'ground_back': .17,       # metres behind each ankle (away from the camera) ...
-    'ground_in': .17,         # ... and toward the other foot
-    'ground_depth': .12,      # falloff away from the camera, metres
-    'ground_width': .16,      # falloff across the view, metres
+    'ground_shadow': 1.0,     # painted warm shadow on the stone top behind and between the feet
+    'ground_back': .24,       # metres behind each ankle (away from the camera) ...
+    'ground_in': .10,         # ... and toward the other foot
+    'ground_depth': .18,      # falloff away from the camera, metres
+    'ground_width': .26,      # falloff across the view, metres
     'ground_r': .53, 'ground_g': .38, 'ground_b': .24,  # linear multiplier at full depth (painting, x 114-144 / y 212-214)
     'sandal_r': 1.0, 'sandal_g': 1.0, 'sandal_b': 1.0,  # leather tone multiplier (linear)
     'side_drop': .06,         # side band: value lost from the lip down to the foot of the disc
@@ -285,8 +285,13 @@ def build_material(ob, part, look_dir, palettes, key_dir, fill_dir, uv_world, re
         if cfg.get('continuity', 1):
             from continuity import pigment
             final = pigment(g, part, final, g.math('SUBTRACT', 1, weight.outputs[0]), t, lin3, palettes)
+        tone = (cfg['sandal_r'], cfg['sandal_g'], cfg['sandal_b'], 1)
         if part.startswith('sandal'):
-            final = g.mix(1, final, (cfg['sandal_r'], cfg['sandal_g'], cfg['sandal_b'], 1), 'MULTIPLY')
+            final = g.mix(1, final, tone, 'MULTIPLY')
+        elif part == 'skin' and cfg.get('continuity', 1) and tone != (1, 1, 1, 1):
+            # The strapped foot reads as part of the sandal: same tone, by the frozen foot mask.
+            from continuity import ATTRIBUTE
+            final = g.mix(g.node('ShaderNodeVertexColor', layer_name=ATTRIBUTE).outputs['Alpha'], final, tone, 'MULTIPLY')
         if cfg['debug'] == 1: final = g.mix(weight.outputs[0], (0, 0, 0, 1), (1, 1, 1, 1))
         if cfg['debug'] == 2: final = unseen
         if cfg['debug'] == 3: final = seen

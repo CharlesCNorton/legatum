@@ -24,7 +24,7 @@ BASE_DEPTH = .971  # Fable C: 3% shallower along the view: far rim 0.35 px lower
 FLARE = 3.2  # Fable C: 4.5 stood 1-2 px outside the painted cloak edge (rows 99-147)
 STRAP = .011
 # Fable C: where the painted figure stands on the disc (256 px, painting camera).
-DEEPEN = .075                                        # pelvis shift along the view ray, metres
+DEEPEN = .050                                        # pelvis shift along the view ray, metres
 ANKLE_PX = {'r': (1.0, -3.3), 'l': (-.7, -2.7)}      # ankle joint shift on screen
 KNEE_X = {'r': 112.5, 'l': 146.6}                   # knee joint column
 SKIN = .5
@@ -312,7 +312,8 @@ def plant_guard(scene):
     assert pelvis.parent is None or not pelvis.parent.parent, 'expected pelvis at the top of the rig'
     pelvis.matrix = Matrix.Translation(shift) @ pelvis.matrix
     bpy.context.view_layer.update()
-    rig['guard_hand_target'] = list(Vector(rig['guard_hand_target'])+shift)
+    # Arm targets authored in rig space (the attack) follow the body: animate.py adds this.
+    rig['guard_shift'] = list(shift)
     report = {}
     for side in 'lr':
         upper, lower = rig.pose.bones['thigh_'+side], rig.pose.bones['calf_'+side]

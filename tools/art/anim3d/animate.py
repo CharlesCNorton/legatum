@@ -101,8 +101,10 @@ def pose(t):
   limb('thigh_l','calf_l',(.21+.10*strength,.15-.18*strength,.082+.12*strength),(.42,-.50,.48))
   limb('thigh_r','calf_r',(-.39-.05*strength,-.075+.16*strength,.082+.12*strength),(-.40,-.20,.48))
   pole=Vector((-.48,-.12,1.08)).lerp(Vector((-.65,.05,1.48)),raised)
-  limb('upperarm_r','lowerarm_r',(guard_hand.x+(-.13-guard_hand.x)*strength,guard_hand.y+(-.41-guard_hand.y)*raised-.05*strength,guard_hand.z+(1.71-guard_hand.z)*raised),pole)
-  limb('upperarm_l','lowerarm_l',(.29,-.34-.10*strength,1.12+.10*strength),Vector((.53,-.10,1.13)).lerp(Vector((.55,-.12,1.20)),strength))
+  # Arm keys are authored about the round-12 pelvis; guard_shift is where the planted guard moved it (zero otherwise).
+  gs=Vector(rig.get('guard_shift',(0,0,0)))
+  limb('upperarm_r','lowerarm_r',Vector((guard_hand.x+(-.13-guard_hand.x)*strength,guard_hand.y+(-.41-guard_hand.y)*raised-.05*strength,guard_hand.z+(1.71-guard_hand.z)*raised))+gs,pole+gs)
+  limb('upperarm_l','lowerarm_l',Vector((.29,-.34-.10*strength,1.12+.10*strength))+gs,Vector((.53,-.10,1.13)).lerp(Vector((.55,-.12,1.20)),strength)+gs)
   aim('hand_r',(0,-.03,.09));hand_spear(Vector((.98,.17,.12))*raised+Vector((0,0,1))*(1-raised))
  bpy.context.view_layer.update()
  if clip=='attack':
