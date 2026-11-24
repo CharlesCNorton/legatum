@@ -1,6 +1,6 @@
-# Spearman round 15 — combined candidate, CPU review / GPU pending
+# Spearman round 15 — combined candidate, GPU rendered / visual review pending
 
-Delivery status: CPU verified; GPU pass and final visual review pending.
+Not a PASS. The GPU pass, pixel-parity gate and decoded atlas validation completed; final visual approval is pending. The CPU evidence below remains labelled separately from the appended GPU receipt.
 No PASS issued. The cloud reviewer calls round 14 the first full candidate for
 Sam and asks for a hold after this round; no further automatic art changes are
 requested here. GPU handoff remains ready for the lead.
@@ -193,6 +193,20 @@ Their independent proxy IoU is 0.949 (also unchanged for R14); shared critique
 remains 0.9512536 at zero/best offset. These measurements are not interchangeable;
 use the shared tool for the numeric gate. The ranked gaps above were rewritten
 for this latest verdict; the earlier lane comments remain historical evidence.
+
+### Automated critique: spearman-round15 (Eevee painted GPU 512 masters / display-space decoded 160 atlas)
+
+- Silhouette IoU: **0.9537** (target ≥ 0.95; PASS). Best of ±3 px offsets: render x=+0, y=+0.
+- Tone/colour ΔE on blurred images (sigma 2 px, CIE76): **3.42** (target ≤ 6; PASS), at zero offset over 11570 overlapping pixels including base. Information only: raw per-pixel ΔE 6.19; at the IoU offset blurred 3.42, raw 6.19.
+- Regions (blurred ΔE): head_crest 3.7, torso 2.9, cloak_spear_side 4.8, shield 2.4, legs 3.2, feet 4.6, base 3.2.
+- Painting mask: alpha; frames: idle 8, move 8, attack 10, hit 4, death 10.
+- Rest: `/Users/samcorcos/LegatumRuns/anim-pilot/masters/spearman/256/rest.png`. Contact sheet uses `/Users/samcorcos/LegatumRuns/anim-pilot/review/3d-v2/spearman-decoded-160`.
+
+### Delivery receipt (GPU final render, visual review pending)
+
+- 40 frames; 160 px trimmed atlas: 187440 bytes, quality 80; decoded validation PASS.
+- Walk: planted slip 0.0042 mm; floor error 0.000 mm; heading 5.142°.
+- Movie: five clips, 1600×352, H.264 yuv420p, 192 frames / 8 seconds. No art PASS issued.
 
 FOCUS a: After Sam's review, refine cloak flare and scalloped hem without worsening motion; the final director now sees recovered straps/toes.
 FOCUS b: Inspect GPU first; if revisiting shadow, preserve feet and fade only the inter-foot band; optional straps 15% darker, hand sliver and cavity depth.
