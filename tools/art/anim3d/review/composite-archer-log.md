@@ -109,3 +109,4 @@
 - Public-claims PASS. Browser art distinctness check attempted on working tree and blocked by Chromium MachPortRendezvous bootstrap permission denial (exit1); no browser approval claimed. No PASS file exists.
 - Git add/commit attempted with required gpt-6-astra Co-Authored-By trailer; both denied creating .git/worktrees/lane-7/index.lock. Changes remain uncommitted for runner. Lead GPU command: ROUND=2 tools/art/anim3d/units/composite-archer/gpu.sh (executable, no arguments). No push or merge.
 - Saved c review, raw 512 px and graded sets at native resolution or smaller; CYCLES GPU 64 samples.
+- Saved e-idle review, raw 512 px and graded sets at native resolution or smaller; CYCLES GPU 64 samples.
