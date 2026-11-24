@@ -50,6 +50,8 @@ Lanes started 22:21:19–22:21:25 on the round-10 GPU candidate `aeacff7d`.
 - Lane c (motion), note at 22:36: death shield rotation step 83.0° → 34.4°, head step 0.655 → 0.420 m, peak ankle 0.355 → 0.423 m (worse), late cape travel 0.119 → 0.145 m; walk mean ankle spacing 0.246 → 0.344 m (42% → 58% of the rest stance), planted floor error 1.133 mm → under 0.0001 mm, slip 0.0023 mm, root correction 48.88 mm; idle, attack and hit byte-identical to round 10. Not judged against Fable B's keyed death.
 - Lanes done 22:40:22 (19 minutes for all three in parallel); merge task queued 22:40.
 
+- Merge task 22:40–22:57 (17 minutes). Same-settings CPU A/B against round 10 (256 px, 16 samples, seed 17, fixed round-10 grade): IoU 0.9035 → **0.9219**; blurred ΔE at zero offset 6.63 → 6.42; raw 10.55 → 10.29. Production-style preview with a refitted grade: blurred 5.98 (7.23 on the previous shifted definition), feet region 15.7. Kept: lane a's greave fit, lane b's lining for the Cycles fallback, lane c's walk and shield, Fable A's look as the final path, Fable B's cloak flare and a shaft 1.8× thicker in the master. Not taken: lane a's sleeve folds, Fable B's leg and foot scaling (no matched contact A/B yet) and its keyed death and hit (the merge's instruction allows only a keyed attack). 40-pose audit zero findings; feet slip 0.0023 mm, floor error 0.00002 mm, root correction 48.88 mm of 50; idle and attack action hashes equal round 10; CPU preview atlas 188,730 bytes at q80; 32 tests pass (23 kit, 4 critique, 2 pipeline, 3 look). GPU pass started 22:57:52.
+
 ### Colour on the blurred scale (added 2026-11-24)
 
 `critique.py` now scores colour on blurred images (2 px Gaussian at 256) at zero offset, with per-region values; the ±3 px search is for IoU only. Each round's own graded rest render, re-measured:
@@ -59,7 +61,7 @@ Lanes started 22:21:19–22:21:25 on the round-10 GPU candidate `aeacff7d`.
 | Round 9 CPU | 0.9053 | 7.29 | 10.73 | 4.1 | 3.4 | 8.3 | 3.6 | 7.5 | 16.9 | 7.1 |
 | Round 10 CPU | 0.9022 | 6.90 | 10.85 | 3.5 | 3.0 | 8.5 | 3.0 | 7.0 | 16.7 | 6.6 |
 | Round 10 GPU | 0.9039 | 6.47 | 9.91 | 3.1 | 2.3 | 8.2 | 2.4 | 6.4 | 16.5 | 6.6 |
-| Fable A look on Fable B form (lead's figures) | 0.920 | 4.41 | – | – | – | – | – | – | – | – |
+| Fable A look on Fable B form (look lane's own blur, not comparable) | 0.920 | 4.41 | 6.80 | – | – | – | – | – | – | – |
 
 Feet, the spear-side cloak and the legs carry the colour error on the Cycles rounds; shield, torso and head are within target. **Baseline as of 2026-11-24: Fable A's look on Fable B's form.** Colour is inside its target; the remaining gap is silhouette.
 

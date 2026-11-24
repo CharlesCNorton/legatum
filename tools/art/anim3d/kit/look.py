@@ -19,7 +19,8 @@ Mechanisms, each of which cost the Spearman look lane a round to find:
 
 Graph is copied from units/spearman/look.py on fable/unit-anim-3d-spearman-a
 (239540b5), where it rendered the art director's preferred materials on
-2026-11-24 (rest plus 40 frames in about 55 s). NOT YET RUN FROM THE KIT.
+2026-11-24 (rest plus 40 frames in about 55 s). Constructed from the kit on the round-11 merged rest and all five clips;
+geometry/camera/action invariants passed. GPU pixels remain host-side.
 """
 import math
 
