@@ -119,3 +119,4 @@ e-death: review emitted from CYCLES frames; no art-pass claim.
 Round 2: GPU stages, 512/256 masters, trimmed atlas, validation and MP4 complete; visual approval still required.
 
 Driver round 3 opening: opened GPU c/f, all five e strips and round2 MP4 contact frames first. GPU log confirms successful pass, 184594 bytes Q80 and 40 frames; archived prior evidence under masters/cavalry/driver-r2-gpu. Cavalry-FEEDBACK.md absent. Read standing feedback and all playbook chapters; loaded six Blender skills. At 256px projected rider brushwork is close, but horse legs are thin/angular and detached-looking, hind stance wrong, tail sparse, blade weak and stone too plain. At 64px navy cavalry identity survives but stance and mass differ clearly. No PASS. Prior mesh-only support correctives and displaced joint centers are the first target; preserve proven CC0 source motion and fix geometry/rig registration together.
+c: review emitted from CYCLES frames; no art-pass claim.
