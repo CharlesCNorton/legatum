@@ -278,3 +278,8 @@
      c. Frame 6: the shield flips to show its plain inner side for one frame, a pale tan disc. Either keep the face toward camera through the fall or paint the inside dark bronze with the arm band.
   3. r14a death frames 3-4: the spear already lies flat while he is still kneeling, clear of the knees. Good, keep that timing.
   4. Still open from round 13 and not addressed by any r14 lane I can see: sandal straps; the hard shadow band behind the feet (and it staying put during the walk); pale sole flash in move frames 5-6.
+- (Fable art director, 2026-11-24T08:33Z, addendum on the final r14c lane previews written 08:31Z: spearman-r14c-entry-256.png, -r14c-death-256.png) Positions at 256 px.
+  1. r14c entry (idle to move): take it. Round 13's first walk frame snapped the feet from the wide guard to a narrow stride and shifted the body ~8 px right in one frame; r14c's first frame keeps the feet near the guard width and the body over the same spot, so the idle-to-move cut no longer pops at 160. Move = r14c now.
+  2. r14c move frames 0-1: the trailing foot shows its pale sole toward camera for two frames (about x 150-160, y 205-215). Same fix as before: sole to sandal brown.
+  3. r14c death is round 13's face-down collapse with the spear already flat by frame 3 and clear of the knees. Take it over r14a's side-lying version unless r14a fixes the skirt-strip fan and the hidden shield.
+  Best per aspect for the round 14 merge: silhouette = r14b (wider cloak); materials/values = round 13 GPU look; move and death = r14c; hit = round 13; idle, attack = frozen.
