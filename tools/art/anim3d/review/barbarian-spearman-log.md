@@ -188,3 +188,14 @@
 - Published e-hit review from CPU render.
 - Published e-death review from CPU render.
 - Published g-feet review from CPU render.
+- Published c review from CPU render.
+- Published c-details review from CPU render.
+- Published d review from CPU render.
+- Published e-idle review from CPU render.
+- Published e-move review from CPU render.
+- Full initial CPU scene audit passed. Detail review exposed a faint residual source spear; replaced adjacent-pixel fill with a generated cloth/shield underpainting masked to a 2.6-5.9px band. Inspected refreshed detail crop: the duplicate on the shield is removed. Ten pinned image inputs now retained.
+- Final CPU pass regenerates every clip/review/feet view from the revised source. Strengthened audit with evaluated footwear, exact loop closure and dropped-equipment support clearance. Prior GPU512 exports explicitly relabelled 512-driver-r2; no CPU256 upscaling presented as 512 masters.
+- Published e-attack review from CPU render.
+- Published e-hit review from CPU render.
+- Published e-death review from CPU render.
+- Published g-feet review from CPU render.
