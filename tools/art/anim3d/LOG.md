@@ -79,6 +79,9 @@ Feet, the spear-side cloak and the legs carry the colour error on the Cycles rou
 - Fable B (form and motion), `fable/unit-anim-3d-spearman-b`, cut from the round-9 candidate: commits `c74a6c2d` 22:16 and `91e3031c` 22:3x local; note at 22:41. Rest-space leg and foot scaling, cloak flare, shaft ×1.75: rest IoU 0.894 → 0.918 (Cycles CPU, 256 px, 16 samples, round-9 grade). Keyed death and hit, walk weight shift with an 8.5 cm lateral ankle offset.
 - Verdicts, 03:36Z (cloud reviewer and art director). Look: Fable A, adopt as baseline with its registration fix and display-space reduction. Silhouette: Fable B. Death and hit: Fable B, adopt. Walk: no winner (feet on one line in both). Idle and attack: identical in all three, frozen. Next merge: A's look over B's death, hit and silhouette, the best walk and attack, plus the open shape fixes (shaft width, sandal volume, shield size and rim, base lip, spear arm).
 
+- Verdict, 03:52Z (art director, on A's look over B's form and motion): the best Spearman so far, base of the next merge. Rest IoU 0.918–0.920 against Astra round 10's 0.904. Walk: Fable B v2. Death and hit: Fable B. From Astra round 11, "take nothing over the Fable pair" unless lane a's sandal welts turn out fuller than B's feet.
+- Cost comparison for the same evening: Astra round 10 (three lanes, a merge, a GPU pass) took 67 minutes and about 700,000 Codex tokens for IoU 0.9035 → 0.9039 on GPU and a blurred ΔE of 6.47. The two Fable builders, cut from the round-9 candidate and split by aspect (look; form and motion), reached IoU 0.920 and blurred ΔE 4.41 in about 100 minutes of wall-clock from their first commit (22:02) to the combined verdict, with previews in Eevee at 55 s per full set. Their token use is not in the Codex log.
+
 ### Round 10 detail (2026-11-23)
 
 | Task | Start | End | Wall time | Tokens |
