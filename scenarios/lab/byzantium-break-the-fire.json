@@ -71,11 +71,6 @@
     "win_percent": 0,
     "measured_at": "2026-11-09T02:03:42Z"
   },
-  "lab": {
-    "question": "Can Byzantium stop the Aztec win by taking empty, walled Solothurn in 9 turns?",
-    "blurb": "Turn 108. The Aztecs hold 11 of 10 VP and win in 9 turns. Solothurn, their Great Work city, has no military unit.",
-    "era": 4
-  },
   "state": {
     "encoding": "gzip-base64",
     "hash": "17158230057796013397",

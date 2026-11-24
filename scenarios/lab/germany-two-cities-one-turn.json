@@ -80,12 +80,6 @@
     "win_percent": 0,
     "measured_at": "2026-11-08T22:26:06Z"
   },
-  "lab": {
-    "question": "Can you take two Aztec cities with two Bombers, an Infantry and a Cavalry?",
-    "blurb": "Turn 142. Two Aztec cities lie five tiles east of Colony 7, and their army is away in the south.",
-    "era": 5,
-    "order": 3
-  },
   "state": {
     "encoding": "gzip-base64",
     "hash": "12610856012985525168",

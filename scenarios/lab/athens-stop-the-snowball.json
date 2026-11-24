@@ -54,11 +54,6 @@
     "median_turns": 18,
     "measured_at": "2026-11-12T01:37:28Z"
   },
-  "lab": {
-    "question": "Can Athens keep its cities once the Aztec army and Bomber arrive?",
-    "blurb": "Turn 156 of a recorded game. The Aztec army and a Bomber are at your gates, and every city they take gives them a free technology.",
-    "era": 5
-  },
   "state": {
     "encoding": "gzip-base64",
     "hash": "15531783913630989748",

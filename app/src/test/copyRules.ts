@@ -20,6 +20,7 @@ export interface CopyRule {
 
 /** Mechanics-speak and code terms: describe what the player gets, not the integer maths behind it. */
 export const BANNED: CopyRule[] = [
+  { pattern: /\bspare Food\b/i, reason: 'glossary: the Food beyond what a city eats is surplus Food (plain-language review, 2026-11-23)', instead: '"surplus Food"', source: true },
   { pattern: /\brace sidebar\b/i, reason: 'the panel is called the Victory race (master, 2026-11-22)', instead: '"Victory race"', source: true },
   { pattern: /\bresolve[sd]? when the turn ends\b/i, reason: 'code-speak (plain-language review, 2026-11-22)', instead: '"it happens when the turn ends"', source: true },
   { pattern: /\b(?:Gold|Science|Food|Production) (?:and (?:Gold|Science|Food|Production) )?go(?:es)? on\b/i, reason: 'vague (plain-language review, 2026-11-22)', instead: '"Gold and Science still come in."', source: true },
@@ -123,9 +124,6 @@ export const BANNED: CopyRule[] = [
   { pattern: /\ban (Coal|Stone|Copper|Niter|Silicon)\b/, reason: 'wrong article', instead: '"a Coal deposit"', source: true },
   { pattern: /\ban (?:Uni(?:versity|versal|on|form|que|ts?\b|fied|ty)|Eu)/, reason: 'wrong article: these vowel letters sound like "you" (2026-10-31 UI review: "an University")', instead: '"a University", "a European"', source: true },
   { pattern: /\ba (?!Uni|Eu|One\b)[AEIOU][a-z]/, reason: 'wrong article before a generated unit or building name (8.9.7 UI review, 2026-10-21: "a Infantry")', instead: 'an a/an helper: "an Infantry"' },
-  { pattern: /\bthe user[’']s\b|\b\d+\.\d+\.\d+\b/i, reason: 'developer voice or a build number in scenario text (8.9.7 UI review, 2026-10-21: "the user\'s 8.9.6 Switzerland game")', instead: '"In a real game, the AI India led most of the way"' },
-  { pattern: /\byour [A-Z][a-z]+ game\b|\btests whether\b|\bthe designer\b|\bshould be easy for a human\b/, reason: 'scenario text that speaks to the developer or one owner, not the player (pre-launch UX review, 2026-11-21: "Turn 133 of your Aztecs game", "it tests whether Hard sees and uses the chance")', instead: '"Turn 133 of a recorded game."; say what the situation is and what the player must do' },
-  { pattern: /\bscripted (opponent|rusher)\b|\bWhat Claude\b|\bon the host\b/i, reason: 'developer voice or storage detail in player text (Scenario Lab review, 2026-10-18)', instead: '"follows a fixed rush plan", "What we expected", "Your run is saved"' },
   { pattern: /\bper (?:Granary|Workshop|Library|Market) family\b/, reason: 'the code\'s grouping on a technology card (8.9.23 UI review: "+1 Food per Granary family")', instead: '"+1 Food for each Granary and Mill"' },
   { pattern: /\bring-2\b/, reason: 'a distance in rings (8.9.23 UI review: "claims ring-2 tile")', instead: '"its best tile 2 tiles out"' },
   { pattern: /\+1 VP \(permanent\)/, reason: '"permanent" in brackets for a point that is kept (8.9.23 UI review)', instead: '"+1 VP, kept for good"', source: true },

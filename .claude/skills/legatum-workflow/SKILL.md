@@ -12,7 +12,7 @@ Current rules only, one line each with the date and who. Detail, the user's full
 ## Source of truth, merging and gates
 
 - GitHub `samcorcos/legatum` is the source of truth, one line on `master`: branch from a freshly fetched `origin/master`, PR into `master`, CI, merge on GitHub; never push to `master` directly (user, 2026-11-21).
-- "CI is green" means the hosted GitHub Actions checks pass on the PR's head (Actions is back on since the repo went public, 2026-11-22). `tools/ci/local-ci.sh` runs the same steps (app tests with `CI=true`, as Actions sets it, so obsolete snapshots fail locally too) and stays the fallback when Actions is unavailable, with its summary table posted as a PR comment (user, 2026-11-21).
+- "CI is green" means the hosted GitHub Actions checks pass on the PR's head (Actions is back on since the repo went public, 2026-11-22). `tools/ci/local-ci.sh` runs the same steps (app tests with `CI=true`, as Actions sets it, so obsolete snapshots fail locally too, plus the browser smoke tests of `e2e-smoke`) and stays the fallback when Actions is unavailable, with its summary table posted as a PR comment (user, 2026-11-21).
 - Claude merges a PR it made at the user's request once CI is green and the reviewers its paths need have passed; never merge an outside contributor's PR without the user (user, 2026-11-21).
 - Reviewer gate: `tools/gates/check.py <branch> --base origin/master` runs the static checks and names the reviewers the changed paths need (`legatum-docs-reviewer` for code, `legatum-plain-language-reviewer` for player text, `legatum-ui-reviewer` for UI, `legatum-art-reviewer` for art and for code art depends on (names, kinds, art wiring), plus `tools/gates/art.py`; `legatum-advisor-reviewer` when the in-game advisor or the controls, turn flow, orders or rules it teaches change, so the advisor is updated before merge (`ADVISOR_IMPACT` in `check.py`; user, 2026-11-22)) (art reviewer: user, 2026-11-22). Each required reviewer posts its verdict as a PR comment that names the reviewer and the head commit SHA; the merger checks those comments are present for the PR's head before merging (2026-11-22; replaces the local marker files and the `merge-gates.sh` hook).
 - Pre-merge gates are static only; no simulations as a merge gate (user, 2026-11-07).
@@ -35,6 +35,7 @@ Current rules only, one line each with the date and who. Detail, the user's full
 - Playtest build: `tools/release/check.sh <worktree> <log> "Playtest N"`, then `LEGATUM_BUILD_LABEL="Playtest N" scripts/deploy-preview.sh playtest-n` publishes a Pages preview (2026-11-22). A redeploy to the same address keeps earlier builds' files (`LEGATUM_CARRY_ASSETS_FROM`; set it by hand for any other production deploy) so an open game keeps its art. Every deploy also keeps earlier builds playable at `v/<id>/` for 30 days and lists them in `versions.json` (`tools/release/keep-builds.mjs`), so an older-rules save opens in its own build and reloading is safe (user, 2026-11-22: deploy on every update without breaking games in flight). Never bump the autosave database's version: kept builds open it too.
 - Two-player online game: both open the web build, Multiplayer; the host's tab runs the game and must stay open; both need the same build (2026-11-22).
 - Local Playwright runs need a build made for the e2e relay: `LEGATUM_RELAY_URL=http://127.0.0.1:8787 scripts/build-web.sh` (`--skip-wasm` to reuse the engine); online tests start `infra/relay` under `wrangler dev` (2026-11-22).
+- Browser tests in CI (2026-11-23): every PR runs the `e2e-smoke` job (game, Exit to title, turn flow, contrast specs) and `ci-ok` waits for it; the full Playwright suite runs nightly on master (`.github/workflows/e2e-nightly.yml`, also on demand). A spec that touches a changed screen and is not in the smoke set: run it locally before pushing.
 - After every playtest he finishes, run `legatum-game-coach` on a copy of the save (user, 2026-10-17).
 - Uploaded web games (with his coach answers) are triaged automatically by `tools/games/analyse_games.py` (`tools/games/README.md`); `legatum-game-coach` still does the full review, starting from that report (user, 2026-11-22).
 
@@ -78,11 +79,10 @@ Current rules only, one line each with the date and who. Detail, the user's full
 - Rules first, then heavy simulation (user, 2026-10-06). Sims use Standard only; pass `--difficulty hard`.
 - WIP limit: no new Codex write tasks while more than 5 finished branches await review (user, 2026-11-06).
 
-## Scenarios
+## AI measurement positions
 
-- When a question needs a human's play or feel, make it a Scenario Lab scenario; pick ones where Hard fails and a human finds it easy (user, 2026-10-18, 2026-11-08).
-- Scenarios are for learning: delete ones that no longer teach anything and any Lab file that cannot be played on the current rules (user, 2026-11-07, 2026-11-14). Scenarios ship without a release (user, 2026-11-07).
-- Sanity-check every scenario: a perfect player can meet it, it is not decided on turn 1, its targets are marked from turn 1.
+- Keep `scenarios/lab/` and its IDs for AI measurement. A position-only branch runs the fast scenario gate; no player-facing Lab or required coach-review cut remains (Sam, 2026-11-22).
+- Delete positions that no longer measure a useful AI gap. Validate state hashes and objectives through the simulator.
 
 ## Public repository
 
@@ -106,6 +106,6 @@ Current rules only, one line each with the date and who. Detail, the user's full
 | `references/ai-quality-methods.md` | Choosing how to measure an AI change (benchmarks, scenarios, card loop, climbs, leagues) |
 | `references/pipeline-and-merge-gates.md` | Details of the static gates (hygiene, public claims, engine invariants, art, scenario), sim policy, playtest build rules, merge hotspots |
 | `references/cloud-box-and-test-gates.md` | Using the cloud build box, the verify profiles (fast, extended, release) and their failure policy, the AI-impact gate |
-| `references/coach-scenarios-and-discipline.md` | Coach reviews, Scenario Lab, keeping the project tight, landing discipline, the rules freeze history |
+| `references/coach-scenarios-and-discipline.md` | Coach reviews, AI measurement positions, keeping the project tight, landing discipline, the rules freeze history |
 | `references/gotchas-mac-era.md` | Diagnosing an old incident, or maintainer work on the Mac (battery rule, lanes, Terraform approvals) |
 | `references/training-and-supervisors.md` | Working on Training mode or on supervisor design |

@@ -172,7 +172,7 @@ it('explains Mercenary Companies from the generated numbers', () => {
   expect(turns).toContain('A Peace offer is between two teams');
   expect(turns).toContain('Making Peace on your own is not a betrayal');
   expect(turns).toContain('Thin levies (Byzantium)');
-  expect(turns).toContain('at most one military unit per city, plus one more, not counting Scouts');
+  expect(turns).toContain('at most one military unit per city, plus one more. Aircraft count');
   expect(turns).not.toContain('120%');
 });
 

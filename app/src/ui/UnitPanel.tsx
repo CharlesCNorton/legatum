@@ -7,7 +7,7 @@ import { UNSUPPLIED_STRENGTH_PERCENT } from '../resources';
 import { tileIndex } from '../hex';
 import { roadBonusText } from '../path';
 import { siegeCityBonus, siegeTier } from '../combat';
-import { ARTILLERY_RULE, BUILT_IN_SIEGE_NOTE, builtInSiege, canAutoExplore, firesIndirect, CLASS_NAME, CLASS_NOTE, attacksInMelee, eraName, minCityGap, RULES, SIEGE_USES_IRON, UNIT_STATS, ignoresWounds, itemName, unitClass, unitEraTier } from '../data';
+import { ARTILLERY_HEADLINE, BUILT_IN_SIEGE_NOTE, builtInSiege, canAutoExplore, firesIndirect, CLASS_NAME, CLASS_NOTE, attacksInMelee, eraName, minCityGap, RULES, SIEGE_USES_IRON, UNIT_STATS, ignoresWounds, itemName, unitClass, unitEraTier } from '../data';
 import { occupationLead, occupationNote } from './forecastWarnings';
 import { describeOrder, errorsWhere, orderUnit, pendingUnitOrder, sleepOrderText } from '../orders';
 import {
@@ -298,7 +298,7 @@ export function UnitPanel({ unit, view, peek = false }: { unit: UnitView; view: 
         {unit.kind === 'HeirToTheThrone' && <HeirNote unit={unit} view={view} />}
         {isCompany(unit) && <CompanyNote unit={unit} view={view} />}
         {(unit.siege || builtInSiege(unit.kind as UnitKind)) && <div className="hint" data-testid="siege-note">{siegeNote(view, unit)}</div>}
-        {firesIndirect(unit.kind) && <div className="hint">{ARTILLERY_RULE}</div>}
+        {firesIndirect(unit.kind) && <div className="hint">{ARTILLERY_HEADLINE}</div>}
         {closed && <p className="hint warn">Closed foreign territory: no attacks, healing or fortification. Every move must bring this unit closer to an exit.</p>}
         {mine && !closed && unit.resting_heal && unit.hp < 100 && <Tip as="div" className="hint" content={<BreakdownTable b={unit.resting_heal} title="Resting healing" unit="HP" />}>Rest here: heal up to {Math.min(unit.resting_heal.total, 100 - unit.hp)} HP this turn if you neither move nor fight.</Tip>}
         {siegeCityBonus(unit.kind) > 0 && <div className="hint">{siegeCityHint(siegeCityBonus(unit.kind))}</div>}

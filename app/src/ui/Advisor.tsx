@@ -18,7 +18,7 @@ export function targetElement(target: Exclude<NonNullable<AdvisorTarget>, { kind
   const action = (label: RegExp) => [...document.querySelectorAll<HTMLElement>('.unit-panel button, .phone-primary-actions button')]
     .find((e) => label.test(e.getAttribute('aria-label') ?? e.textContent?.trim() ?? '') && e.getClientRects().length) ?? null;
   switch (target.name) {
-    case 'research': return first('.topbar .research-chip', '.topbar .tb-nav-tech');
+    case 'research': return first('.topbar .research-chip');
     case 'turn': return target.value === 'end'
       ? first('.seatbar .cta', '.phone-turn-dock button:last-of-type')
       : first('.seatbar .cta', '.phone-turn-dock button[aria-label^="Next decision"]');
@@ -94,7 +94,7 @@ export function Advisor() {
   const techOpen = useGame((s) => s.techOpen);
   const client = useGame((s) => s.client);
   const animationsOn = useCombatFx((s) => s.enabled);
-  const paused = useGame((s) => !!s.scenario || !!s.busy || s.handoff !== null || !!s.endTurnConfirmation || s.reportOpen || s.diplomacyOpen || !!s.ready[s.seat] || !!s.place ||
+  const paused = useGame((s) => !!s.busy || s.handoff !== null || !!s.endTurnConfirmation || s.reportOpen || s.diplomacyOpen || !!s.ready[s.seat] || !!s.place ||
     (s.client?.kind === 'remote' && s.net?.conn !== 'open'));
   const [blockingOverlay, setBlockingOverlay] = useState(false);
   useEffect(() => {

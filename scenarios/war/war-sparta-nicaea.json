@@ -86,13 +86,6 @@
     "summary": "Sparta's capital had trained only Hoplites since turn 2. On turn 18 four of them stood one to three hexes from Byzantium's only city, Nicaea, eight hexes from home; he declared war, stole a Byzantine Settler on turn 20 and stormed Nicaea (no Walls: they had turned into an Archer on turn 20) on turn 22 without losing a unit. Byzantium was eliminated.",
     "game": "Playtest 8.9.2 (Sparta, Standard, 8 empires), engine 28be168b"
   },
-  "lab": {
-    "question": "Does taking Nicaea with four Hoplites feel too easy?",
-    "blurb": "Turn 18. Four Hoplites stand at the border of Byzantium's only city, and you are at Peace with it. Declare war and take it.",
-    "ask": "Was it too easy? What would have made it a real fight?",
-    "era": 0,
-    "order": 30
-  },
   "state": {
     "encoding": "gzip-base64",
     "hash": "1093818800950194304",

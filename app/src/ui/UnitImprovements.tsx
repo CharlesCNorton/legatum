@@ -1,7 +1,7 @@
 import { useId } from 'react';
 import type { ReactNode } from 'react';
 import type { Breakdown, Faction, PlayerView, Resource, UnitKind, UnitView } from '../types';
-import { builtInSiege, MONGOL_SIEGE_REASON, itemName, SIEGE_RULE, SIEGE_USES_IRON, TECH_NAME, UNIT_STATS, unitClass, unitStatsFor } from '../data';
+import { builtInSiege, MONGOL_SIEGE_REASON, itemName, SIEGE_HEADLINE, SIEGE_USES_IRON, TECH_NAME, UNIT_STATS, unitClass, unitStatsFor } from '../data';
 import { siegeTier } from '../combat';
 import { aWorks, fixClause, supplyPerMine, withArticle } from '../resources';
 import { strengthBonus } from '../promotion';
@@ -85,7 +85,7 @@ export function UnitImprovements({ unit, view, check, primary, pending, gold, si
     {offer && <ImproveRow label="Siege" effect={`Covers Walls through level ${['', 'I', 'II', 'III'][siegeTier(view.research.known)]}`}
       icon="ui-siege" cost={offer.price.total} resource={SIEGE_USES_IRON ? 'Iron' : null}
       closed={siegeClosed} primary={primary === 'siege'} active={pending === 'UpgradeSiege'} blocked={!!siegeBlocker} reasonId={siegeClosed ? `${id}-siege-closed` : siegeReasonId} onClick={siegeSelected}
-      tip={<><p>{SIEGE_RULE} The unit rests this turn.</p><p>{SIEGE_USES_IRON && 'Uses 1 Iron supply while it exists.'}</p>
+      tip={<><p>{SIEGE_HEADLINE} The unit rests this turn.</p><p>{SIEGE_USES_IRON && 'Uses 1 Iron supply while it exists.'}</p>
         <p>Treasury: <Amounts text={`${siegeGold} Gold → ${siegeGold - offer.price.total} Gold`} />.</p>
         <BreakdownTable b={offer.price} title="Siege cost" unit="Gold" /></>} />}
     {upgradeChecklist && check && <p className="act-reason improve-reason" id={upgradeReasonId}>

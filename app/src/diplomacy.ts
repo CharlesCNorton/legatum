@@ -1,10 +1,11 @@
+import { empireTitle } from './empires';
 import { isBarbarian } from './barbarians';
 import type { DiplomaticAction, Order, PlayerView, TeamId, TreatyKind, Hex, Event, UnitKind } from './types';
 import { hexAt, neighbors, tileIndex } from './hex';
 import { moveCost } from './data';
 
 export function teamName(view: PlayerView, team: TeamId): string {
-  return view.players.filter((p) => p.team === team).map((p) => p.name).join(' & ') || `Team ${team}`;
+  return empireTitle(view, team);
 }
 
 /** The teams fighting on `team`'s side: itself and everyone it is allied with (core `side_of`). */

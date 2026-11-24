@@ -16,6 +16,6 @@ Legatum is a static web app (served by Cloudflare Pages) with the Rust engine co
 
 ## Data kept on your computer
 
-The game keeps data only in your browser: autosaves and game histories (IndexedDB and local storage) and the files you choose to download (saves, exported game histories, scenario runs). Clearing site data removes them. Nothing is written elsewhere on your computer.
+The game keeps data only in your browser: autosaves and game histories (IndexedDB and local storage) and the files you choose to download (saves and exported game histories). Clearing site data removes them. Nothing is written elsewhere on your computer.
 
-In scope: the relay and upload Workers' request handling, the host's handling of guest messages, and save and scenario loading (malformed files must fail cleanly and never overwrite a good save). Out of scope: attacks that need control of the player's browser or machine.
+In scope: the relay and upload Workers' request handling, the host's handling of guest messages, and save loading (malformed files must fail cleanly and never overwrite a good save). Out of scope: attacks that need control of the player's browser or machine.
