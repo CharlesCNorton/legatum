@@ -1,269 +1,247 @@
 ---
 name: legatum-unit-3d
-description: Build and refine Legatum's painted 3D miniature units in Blender from an existing unit painting, using MPFB bodies, Rigify or the existing deform rig, frozen multi-view paint, open motion retargeting, and five sprite-atlas clips. Use for unit look development, deformation, motion, and render QA.
+description: Build and refine Legatum's painted 3D miniature units in Blender from an existing unit painting, using the anim3d kit (MPFB body and rig, frozen painting projection, camera-only pigment, open motion retargeting with foot locking, five sprite-atlas clips, critique). Use for unit look development, deformation, motion, render QA and round reviews.
 ---
 
 # Painted miniature units
 
-The painting is the art target. A good rest render must survive animation, and a passing mesh or atlas audit is not art approval. Work on copies of the body, rig and master; retain the painting in the game pending lead approval. Use free/open software and freely available, appropriately licensed assets. The numerical settings below are **starting presets**, except the established atlas contract. The verification section distinguishes tested mechanisms from proposed production work.
+The painting is the art target. The goal at rest: a viewer can barely tell the render from the painting at 256, 160 and 64 px. A passing audit, atlas or metric is never art approval; only the lead writes PASS.
 
-Read the unit's current playbook, sources and feedback, then inspect its latest rest comparison, details, attack/death strips and top/front feet sheet. In Legatum, resolve `tools/art/anim3d/PLAYBOOK.md` in the active pipeline checkout; the study baseline was `astra/unit-anim-3d-v2`. Do not copy historical round recipes over newer fixes. Load the relevant installed `blender-*` skills for general operations, but adapt their photographic/glTF presets to this sprite target: Shader-to-RGB is appropriate, depth of field is usually off, and Standard can be preferable to AgX.
+Every rule below is tagged:
 
-Run **every** Blender command through `blender` on PATH with `-b --disable-autoexec --python-exit-code 1`; keep previews short and CPU. Do not bypass the gate, replace its locks or supply thread overrides. The gate's current concurrency policy is authoritative. Preserve downloaded-file script restrictions; inspect rig UI scripts before explicitly running any required code. Store masters and review renders outside git, normally under `~/LegatumRuns/anim-pilot/`. This skill does not install itself, publish art, or enable the game's animation renderer.
+- **[proven]** used on a shipped Spearman round, with the evidence that kept it.
+- **[rejected]** tried and measured worse. Do not retry without a new reason.
+- **[review]** required by Sam, the reviewer or the art director on a named round; open until a later round shows it fixed. Then retag it [proven] with the numbers.
+- **[untested]** from the technique study or a probe only. Prove it with a same-settings A/B on one unit before relying on it.
+
+Settings are the Spearman's working values. Sample each new painting before copying a colour, camera or light.
+
+## Ground rules
+
+- [ ] Run every Blender command as `blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python <script>` through the `blender` on PATH (machine-wide gate: one process, 3 threads, retries crashes). Never call the app directly, pass `-t`, or touch the gate's locks. Source `tools/art/anim3d/env.sh` first (isolated Blender resources, `ANIM_ROOT`, `TMPDIR`).
+- [ ] Never hide an object by scaling it to 0 or near 0; key `hide_render` instead. **[proven]** zero-scaled smoke meshes crashed Cycles (OpenVDB ScaleMap, SIGABRT).
+- [ ] Heavy files (`.blend`, textures, caches, frames, `.glb`) stay under `ANIM_ROOT` (`~/LegatumRuns/anim-pilot`). Git holds code and small presets only.
+- [ ] Licences for this public repo: CC0 or CMU free-use motion only; no Mixamo, nothing paid. Record URL, version, hash, action and licence in `units/<slug>/SOURCES.md` and `assets/SOURCES.md`.
+- [ ] Work on copies. `project.py` keeps `projection-input.blend` and restarts from it, so repeat runs do not accumulate edits. Keep the painting in the game until the lead approves.
+- [ ] Load the installed `blender-*` skills for general operations; this skill overrides them where they differ (Standard view transform, no depth of field, unlit pigment).
+
+## Start a new unit (skateboard first)
+
+Get a crude unit through all five clips and the atlas before polishing any stage. Read `tools/art/anim3d/kit/README.md`, copy `kit/presets/spearman.json` to `<slug>.json`, and build in this order. Each increment ends with a render the lead can look at.
+
+1. Clay figure on the cream base, camera matched, compared with the painting (steps 1–2).
+2. Frozen projection plus flat fills for unseen surfaces (steps 3–5).
+3. Open motion on all four donor clips, plus a blocked attack; feet check (steps 7–8).
+4. CPU preview atlas, movie and `critique.py` numbers (steps 9–11).
+5. Only then iterate on the worst visible gap, one variable at a time.
 
 ## Checklist
 
-### 1. Lock the painting, camera and silhouette before adding texture
+### 1. Lock painting, camera, base and silhouette in clay
 
-- [ ] Record painting/master hashes, Blender build, camera matrix and orthographic scale, key direction, view transform, source actions and output settings in a per-iteration receipt. Keep identical settings in A/B comparisons.
-- [ ] Match base ellipse, overall height, helmet, knuckles, shield boss, knees and sole contacts. Start orthographic; use perspective only if the painting demands it. Keep a fixed camera and scale through all five clips. Fit all clip bounds with the same camera rather than zooming each frame.
-- [ ] Use clay and opaque silhouettes first. For Spearman, prioritize shoulder/hand shape, helmet cheek/crest, shield contour, stance and footwear over microtexture. The R9 comparisons still show these mismatches. Retain anatomical depth and articulation: no camera-facing relief body, foot widening or camera-ray foot displacement.
-- [ ] Review landmarks and crossfades at native 256, 160 and 64 px. A suggested registration target is important landmarks within 2 px at 256; this is a diagnostic, not a substitute for art review. Inspect figure and base separately; a large matching base can inflate silhouette IoU.
-- [ ] Finish rigid kit's silhouette, thickness, bevels and relief before projection. At a 1.7 m body scale, try 1–3 mm bevels on metal/straps with 2–3 segments; exaggerate only when a necessary edge disappears at 160. Keep organic joint topology stable. Check evaluated faces as well as vertices for shield relief sinking through its convex shell.
+- [ ] Write a receipt per iteration: painting and master hashes, Blender build, camera matrix and ortho scale, lights, view transform, source actions, samples, seed. A/B pairs must share all of it.
+- [ ] Camera: orthographic, fixed for all five clips, no per-frame fitting, depth of field off. Spearman: location `(2.5, -7, 3.0)`, target `(0, 0, 1.2)`, `ortho_scale 2.9` (`kit/studio.py: match_camera`). Give the figure the same frame height as the painting so 64 px tokens compare 1:1.
+- [ ] Base: one stationary cream stone disc for every unit, top **#E9CFA0**, side **#B68A51**, roughness **0.86**, fine low-contrast grain, top at **z = 0.105 m**. Convert sRGB to linear before setting shader values. Never project the figure painting onto the base (painted feet and shadows would stay when the real feet move); give it camera-only cream pigment with live physical contact shadows (`kit/base.py: build`, checked by `kit/audit.py: check_base`). **[proven]** R6 with this base and a re-fitted camera: IoU 0.8644 → 0.8772, RGB error 30.3 → 25.4. Then measure the **rendered** base against the painting: **[review]** R10 top `(245,206,154)` vs painting `(249,217,176)`, rim `(219,172,114)` vs `(226,181,126)`: desaturate about 15%, lift value about 5%. Contact shadows must be soft warm brown; a pale or green halo under a foot is a defect.
+- [ ] Match the silhouette in clay before any texture: base ellipse, height, helmet and crest, shield contour and boss, hands, knees, stance, footwear. Surface detail cannot repair a wrong pose or contour. **[proven]** every IoU gain so far came from geometry or pose (R4 0.8394 → 0.8511 shield and crest; R9a 0.880 → 0.898 shield top, cloak tails, shoulder).
+- [ ] Fix a narrow or thin lower body with **pose and surrounding anatomy first**: rotate the whole foot+ball pair about the vertical in the authored guard (Spearman: left 55°, right −12°), solve the leg chain to the real planted ankle at fixed bone lengths, and grow calf and greave mass radially in rest coordinates, excluding foot-weighted vertices. **[proven]** R10a: lower-leg IoU 71.96% → 73.21%, sole span 68.98 → 77.03 px, foot geometry, weights and bind hash-identical.
+- [ ] Never widen, splay, yaw or camera-ray-shift a foot mesh to imitate the painted footprint. **[rejected]** R1–R8 "duck feet" (Sam). Larger distal greave flare and a more outward knee pole are also **[rejected]** (R10a: both lowered overlap).
+- [ ] Rigid kit: finish silhouette, thickness, bevels (1–3 mm, 2–3 segments at 1.7 m body scale) and relief before projection. Check relief on the **evaluated** shell: every raised element needs positive face-centre clearance above its Solidify surface (Spearman minimum 6.59 mm over 12 shield rays). **[proven]** R5/R6: rays were buried 8.4 mm inside the shell until checked on evaluated faces.
+- [ ] Measure every thin prop and joint in painting pixels and match it: the painting draws them thicker than life. Anything under about 2 px wide at 160 renders dark and jagged. **[review]** R10 (art director's first tell at every size): spear shaft 1.5–2 px near-black vs the painting's 3.5–4 px warm wood `rgb(163,123,84)` with a bronze collar; ankles 5 px vs 8; forearm thin. `kit/regions.py: span_width` reads a width off a row.
+- [ ] Body under rigid armour must stay inside the armour's silhouette. **[review]** R10: the calf pokes 3–4 px outside each greave and reads as a double outline; pull the calf in or widen the greave so each greave is one clean shape (14–15 px at the knee, 11 px at the ankle on Spearman).
+- [ ] Check garment edges against the painting in pixels, not by eye: hem height (Spearman skirt hem 4 px high), cloak coverage beside the arm (441 px vs 634 px), stray slivers under a hand. These are silhouette errors the whole-image IoU barely moves on.
+- [ ] Review at native 256, 160 and 64 px with split and 50/50 crossfade. Judge figure and base separately: the matching base inflates whole-image IoU.
 
-### 2. Separate painted illumination from relightable pigment
+### 2. Body and rig
 
-- [ ] Choose and record the material contract **per region**. Existing projected paint already includes highlights/shadows: preserve it as a mostly unlit illustration layer. New back/underside paint can be authored as pigment and lit with the NPR shader in step 3. A single painting does not uniquely determine albedo, lighting or unseen surfaces.
-- [ ] Keep the established source-painted 96% / physical 4% blend as the Spearman A/B baseline, not a universal material recipe. Test 0%, 4% and 10% live response on that region. Do not multiply the painted image by a second full diffuse/AO pass. Also avoid treating a complete lit painting as the colour input to a lighting ramp.
-- [ ] In Cycles, route camera rays to painted Emission (strength 1) mixed with the restrained BSDF; route other rays to the physical BSDF using Light Path → Is Camera Ray → Mix Shader. This prevents painted highlights lighting neighbouring skin/base. Use a separate plain-emission material during texture baking: a camera-ray switch is not a valid pigment bake source.
-- [ ] Keep the base independent: cream top **#E9CFA0**, darker side **#B68A51**, roughness **0.86**, low-contrast grain. Never project painted feet or cast shadows onto it. Tune its real contact shadows against the painting, not the colour field alone.
+- [ ] Default body: MPFB 2 with macro overrides, `game_engine` skeleton, original MPFB weights (`kit/human.py: create_body`, `add_rig`). Spearman: 19,158 vertices, 53 bones. Do not re-weight the skin automatically.
+- [ ] Before fitting vertices on the projection copy, **bake the active macro shape-key mix** into that copy (`kit/human.py: freeze_macro_mix`). **[proven]** R6: 25 active macro/muscle keys silently overrode direct `data.vertices` edits, leaving feet below the sole through several "fixes". Keep the morphable original; add new shape keys only after the freeze.
+- [ ] Skin sandals and soles to foot **and** ball bones; an ankle-parented sandal cannot toe-off. New footwear geometry needs its own evaluated floor check (R10a welt minimum z 0.1069 m over the 0.105 m stone).
+- [ ] Bind rigid helmet, shield and weapon to one bone, preserving `matrix_world`. When rebuilding a released equipment transform from a quaternion, preserve its scale (R4).
+- [ ] MPFB may add `Armature` plus `Armature PV` (Multi Modifier, `mhmask-preserve-volume`). That pair is intended; do not delete it or require exactly one armature modifier.
+- [ ] **[untested]** Rigify (`add_rig(..., rigify=True)`, 930 bones via MPFB's own generator) is opt-in for a new unit. Never migrate a unit with working motion; no Rigify retarget map exists yet.
+- [ ] **[untested]** Correctives: `add_hinge_corrective` drives authored **rest-space** deltas from one local hinge axis (starts 45°, full ~105°). Shape keys evaluate before the armature, so never paste a posed sculpt into a key. No anatomical corrective has been sculpted yet; the Spearman shoulder shell in hit and death is the open case (R10 gap 1).
 
-### 3. Build a palette-controlled Eevee NPR material
+### 3. Freeze the painting projection at the fitted rest pose
 
-- [ ] For relightable fills, use **white Diffuse BSDF → Shader to RGB → RGB to BW → ColorRamp → Emission → Output**. White diffuse avoids mixing pigment colour into the lighting measurement. Use 3–5 sampled material colours, with warm highlights and chromatic shadows; start with EASE interpolation and transitions spread over 0.05–0.12 of the ramp. CONSTANT bands are a diagnostic/toon variant, not the default painted finish.
-- [ ] Example bronze ramp: positions **0.12 / 0.42 / 0.70 / 0.94**, sRGB **#432518 / #895121 / #CA9741 / #F4D893**. These are study colours; replace them with medians sampled inside the actual bronze, excluding alpha fringes and specular outliers. Tune illumination/ramp input so the whole sculpture does not collapse into one band.
-- [ ] Add elongated UV-space noise or a painted stroke-height map **before** the Diffuse normal input. Start Bump strength **0.15**, distance **0.003 m** for a metre-scale body; reduce if it looks hammered everywhere. Use Non-Color for height/normal/mask images, sRGB for paint. A tangent normal image uses Normal Map with the intended UV name; do not treat RGB normals as height.
-- [ ] Align strokes to form: cloth along folds, bronze around the shield/breastplate, short skin patches along muscles. Use UV → Mapping scale such as **(6, 36, 1)** → Noise scale **2**, detail **2** as a cheap prototype. Set stroke width to roughly **1–3 final pixels**, length **3–8**, then inspect motion. Subpixel weave mostly produces shimmer or disappears. Brushwork needs directional patches and designed edges; isotropic noise alone does not make painting.
-- [ ] Fix stroke seeds and UVs. Do not sample animated world coordinates, regenerate random strokes per frame, or use changing generated bounds on deforming anatomy. Bake the colour/stroke layer into PaintUV when stable. For stronger strokes, study Blender Studio's surface-associated curve/mesh-strip workflow (step 8); keep geometry sparse at this resolution.
+- [ ] Finish static geometry and the rest pose first, then `kit/projection.py: freeze_projection` writes the `Painting camera rest` UV layer and the `Painting visibility` corner attribute on original topology. Evaluated points must keep original vertex indexing. Never reproject per frame or on camera movement.
+- [ ] Decide visibility by **ray distance from the camera**, not normal direction: a point is visible when the first hit is within tolerance (Spearman 18 mm; 140 mm for relief sitting on a painted shell). **[proven]** R4: a normal-direction test blanked the shield because the shell winding was reversed.
+- [ ] Facing weight: `clamp((|N·V| − 0.02) / 0.18)`; absolute value so double-sided cloth and open armour shells are painted on their camera side only.
+- [ ] Register raised ornament laterally **and** on the curved support surface before projecting, or the painting's ornament doubles and smears (R3 shield, fixed R4 by aligning the boss to (163,139) on the 256 px painting).
+- [ ] Changing the master invalidates every clip, grade and atlas. Rebuild them; never relabel hashes. **[proven]** R10b's audit correctly rejected stale clips copied from the old master.
+
+### 4. Cover what the painting never shows
+
+- [ ] Before repainting a pale patch that appears in motion, render a **material-ID image** of that pose (`kit/ab.py: material_id_render`) and find which surface it is. **[proven]** R10b: the hit/death shoulder patch was the linen sleeve, not the cape; cape-only paint did nothing.
+- [ ] Fill by garment region with broad, coherent colour masses (rear shoulder facing, warm linen folds, skin, darker cloak folds). Keep trusted hero paint where visibility is high. **[proven]** R10b: pale shoulder pixels at peak hit 102 → 24 (256 px), 39 → 7 (160 px); rest shoulder error 12.06 → 12.20/255 (kept: a motion win at near-zero rest cost).
+- [ ] More noise, weave or micro-bump does not fix a plain or angular surface, and is not visible at 64 px. **[proven]** R9b: hammer/weave/grain gave a modest gain at 256 only. Spend the effort on shape and broad value first.
+- [ ] Seams: `kit/seams.py: underpaint` extends trusted paint up to **75 mm** along mesh edges (geodesic Dijkstra), never across a gap, and stores colour and weight in a corner attribute. It only softens transitions; it does not author missing back or underside art.
+- [ ] Generated fills for backs and undersides: record prompt and hashes (`fills.prompt.txt`, `fills.lock.json`), keep source PNGs under `masters/<slug>/textures/generated/`.
+- [ ] Image buffers: a byte-backed sRGB image read through bpy gives encoded values; linearise **once** before writing a `FLOAT_COLOR` attribute. **[proven]** R10b: skipping this overbrightened rest pigment. Cache rest normals before writing colour attributes.
+- [ ] **[rejected]** gating projection by grazing angle or sleeve area compression: worsened rest without reducing the hit patch (R10b).
+
+### 5. Materials: unlit painted pigment, physical secondary rays
+
+- [ ] The projected painting already contains its lighting. Show it to the camera as Emission and let other rays see the physical BSDF: Light Path → Is Camera Ray → Mix Shader. Spearman baseline: 96% painted, 4% physical on projected regions. Never multiply the painting by a second full diffuse or AO pass.
+- [ ] Unseen fills: `kit/materials.py: painted_fill` (camera-only pigment at amount **0.65**, shared `Legatum painterly cavity pigment v1` group, AO distance **0.08**, 8 samples, cavity amount **0.65**). Pigment and cavity amount stay editable per material.
+- [ ] Bake AO and curvature with Solidify **disabled** (its inside faces share UVs and overwrite the visible surface with darkness) and winding corrected first.
+- [ ] Value structure beats saturation. Reviewer on R9: render flatter and more orange than the painting. Add darkness where the painting has it (cloak folds, under the shield, inner thighs, shield rim) and keep bright metal edges; do not raise global saturation. Open on Spearman (R10 gap 4).
+- [ ] Compare luminance per region, mean and 90th percentile (`python -m kit.regions --stats name=x0,y0,x1,y1`), and correct the end that is off. **[review]** R10: feet region luminance 187 vs the painting's 146 (pale, bare-looking sandals: darken about 25% and add strap relief); shield p90 161 vs 174 and cuirass 154 vs 167 (raise only the top highlights about 8% on edges and boss, leave midtones and cavities); between the thighs a pale blob where the painting is dark cloak at luminance 50.
+- [ ] Hue drift on fills: sample the painting's garment colour and match hue at the same value. **[review]** R10 cloak `(124,72,49)` vs painting cinnabar `(135,64,39)`: more red, less green.
+- [ ] Look into every cavity for stray bright pixels (eye slits, mouth, gaps between plates): an interior or back face showing through. **[review]** R10 helmet eye slit has a bluish-white pixel at (143,90) at 256; the painting's slit is pure dark.
+- [ ] **[untested]** Eevee NPR ramp material (white Diffuse → Shader to RGB → ColorRamp → Emission) for relightable fills: graph built in the probe, never rendered on a unit. Recipe in "Options not yet proven".
+
+### 6. Light and grade
+
+- [ ] Light like a product shot of a painted miniature: `kit/studio.py: match_lighting` builds disk area lights from the preset. Spearman: warm key upper-left `(-3,-4,8)` 596.75 W size 5 colour `(1,.97,.93)`; cool fill `(4,-2,3)` 77 W size 3; back rim `(-2,3,4)` 132 W size 2 colour `(.7,.83,1)`; world 0.19 grey. Match the painting's shadow direction with the key alone before adding fill and rim.
+- [ ] Colour management for a painted source: **Standard**, Look None, exposure 0, gamma 1. **[proven]** probe: cream `(233,207,160)` round-trips exactly in Standard; AgX gives `(190,177,157)`, Filmic `(198,187,161)`.
+- [ ] Grade: fit one monotone per-channel histogram match on the **rest** render against the 256 px painting (opaque pixels, alpha > 240, strength **0.80**), bind it to the master hash, and apply the same LUT to every frame (`kit/grade.py: fit_file`, `load`, `apply`; a grade whose master hash is stale is refused). Never fit per frame: colour pumps. Keep raw renders.
+- [ ] Before changing the grade, compare raw and graded figure and base regions separately. **[proven]** R8: the grade already improved the figure; the fix was the physical stone, not the LUT.
+- [ ] Refit once after any camera, material, light or engine change, then rerender dependent clips.
+
+### 7. Motion: open donors, full rotations
+
+- [ ] Idle, move, hit and death come from **Quaternius Universal Animation Library Standard (CC0)**: `Idle_Loop`, `Walk_Loop`, `Hit_Chest`, `Death01` (`kit/retarget_presets.py`, hashes pinned in `kit/retarget.py`). Only the weapon-specific attack is hand-keyed. **[proven]** R9 replaced hand-built motion and a direction-only CMU reconstruction; Sam had called the old walk "duck feet".
+- [ ] Retarget with `kit/retarget.py: prepare`: calibrate `offset = inverse(source_ref) @ target_ref` per bone in the reference pose, **including roll**, parent a helper to each source bone, world-space Copy Rotation onto the target, sample the whole evaluated pose, then bake with `Bone.convert_local_to_pose` parent-first (`apply_matrices`). Joint directions alone lose roll; assigning `pose_bone.matrix` in a loop reads stale parents.
 
 ```python
-# New task-owned material only; linear() converts sampled sRGB to shader values.
+# kit/retarget.py: bake sampled armature-space matrices without stale parents.
+for p in rig.pose.bones:  # parent-first order
+    args = {'parent_matrix': matrices[p.parent.name],
+            'parent_matrix_local': p.parent.bone.matrix_local} if p.parent else {}
+    p.matrix_basis = p.bone.convert_local_to_pose(
+        matrices[p.name], p.bone.matrix_local, invert=True, **args)
+```
+
+- [ ] Locomotion legs calibrate from anatomical rest with the limb axis swung onto the donor's T-pose axis (target roll kept). Reset the guard's leg transforms to bind before mapping, so guard-only foot turns never leak into the walk. Upper body keeps the weapon guard with the donor delta layered on it.
+- [ ] A shield or spear carrier cannot swing both arms: layer the donor's `Idle_Loop` arms over the walk with an NLA strip on a copy of the source rig.
+- [ ] Tame a stylised donor by attenuating the **whole source action in its own rest space before retargeting** (NLA strip influence). Spearman walk: **0.90**. **[rejected]** 0.88 (root correction 54.8 mm, over the 50 mm bound) and 0.82 (stance split into two intervals). Contact quality is not monotonic in attenuation; reject a setting rather than loosen a check. Gain is modest (peak ankle 430.6 → 422.6 mm); a less stylised donor is the better fix if the walk still reads as a march.
+- [ ] Walk must keep the unit's stance and show life. **[review]** R10: step width collapses from the wide rest guard to feet almost touching (front feet view: about 3 px gap), knees knock, the lift barely reads and spear and shield are frozen. Targets at 256 px: step width about 60% of the rest stance, swing foot lifts 6–8 px, 2 px body bob, 2–3° spear sway and 2 px shield bob per step. Measure it with `kit/feet.py: step_width` and `swing_lift`: R10 mean ankle spacing 0.246 m, 42% of the 0.592 m rest stance; sole clearance in swing 95–114 mm. Note the tension with attenuating the donor: less lift was the R9/R10 goal for a marching donor, but the result must still read as a step at 160.
+- [ ] Death: remap donor time to separate knee yield from torso descent (`source_phase`), blend from the guard into the donor over the first **18%**, and blend the donor's **own** settled leg pose and `Idle_Loop` arms (85% shield arm, 65% free arm) in source space during recoil. No new joint keys. **[proven]** R10c: largest head step 1.277 → 0.655 m, peak ankle 0.848 → 0.355 m. Timing alone did not remove the feet-up recoil.
+- [ ] Death staging **[review]** (reviewer R9, art director R10: still the worst clip): knees give, then one knee, hip, shoulder, head go over sideways across frames 4–6; the body ends **inside the base footprint** (R10 ends with feet off the left edge: 15 px too far left at 256) with no pale underside facing the camera. The shield stays vertical on the arm and drops edge-first, never flat like a tray. The spear tips and falls over about 3 frames and lands on or beside the base. Register the donor's fall toward the disc centre (Spearman 0.40 m so far).
+- [ ] Spend the frame budget on motion: hold only the last 2 death frames, and let no pose teleport between two samples. Check with `python -m kit.regions --clips <decoded-160 dir>`. **[review]** R10 death: frames 6–8 barely change (decoded alpha steps 1.2, 0.03, 0.03 against a median of 8.2) while frame 3 → 4 jumps from a squat to lying down.
+- [ ] Death from the donor is still open. R10c's source-space blending halved the recoil, but the director still reads a squat and a jump. An authored, keyed collapse is being tried on `fable/unit-anim-3d-spearman-b` (`units/spearman/collapse.py`); adopt whichever wins a same-settings A/B and rewrite this step then.
+- [ ] Hit: sample the donor recoil over the first third (`phase*3`), then blend back to idle over the last 70% so four frames do not snap. **[review]** R10: show the hit with the torso leaning back 10–12° and the shield arm jerking in, not a crouch; the cloak must stay pinned at both shoulders (at most 4 px lift at 256; R10 balloons into a lump over the shoulder and swallows the neck) and the crest stays rigid on the helmet (R10 loses a third of its height).
+- [ ] Attack: start and end on the idle guard, **including elbow IK poles**, not only hand targets (R7). No weapon jump over about 35° in one frame; add an in-between if a frame is spare (**[review]** R10 attack frame 1).
+- [ ] Carried equipment stays parented at its grip; add a geometry-triggered hinge about the grip that rotates only enough to clear the floor. **[proven]** R10c: grip distance range 1.142 m → 0.0000002 m. Still open: the shield turns 83° between two delivered samples; measure equipment rotation per delivered frame (`kit/motion_metrics.py`), not just attachment.
+- [ ] Cloth: one second of pre-roll and a persistent bake per clip; full shoulder pins. Death keeps 35% partial pins, bending stiffness 0.8, air damping 4 (R10c: late cape travel 0.419 → 0.119 m). **[rejected]** loosened hit cloth pins: raised a cape corner behind the shoulder at recovery (R9).
+- [ ] Secondary motion (crest, shield sway) is a damped spring driven by carrier acceleration, capped (crest 16 mm), not a second keyed performance.
+- [ ] Clips: idle/move/attack/hit/death = **8/8/10/4/10** frames at **4/6/14/12/4 fps**; idle and move loop; move keeps the donor's 1.33 s cycle. Render the final death sample once and copy it byte-for-byte.
+
+### 8. Foot locking and the feet check
+
+- [ ] `kit/retarget.py: stabilize_walk` locks heel strike, flat stance and toe-off from evaluated **sole landmarks** (`kit/contact.py`, `toe_vertex` and `heel_vertex` custom properties on each sole object), fits **one** virtual forward speed over all support intervals (search 0.75–1.25× the donor's median stance speed), keeps support across the loop seam, and applies the correction as a shared root offset plus two-bone IK per foot with source foot rotation held by a world Copy Rotation (`contact_ik`). Foot rotation is never edited after the retarget.
+- [ ] Contact classification on the donor: ankle within 15 mm or toe within 12 mm of its cycle minimum while moving backward. Exactly one support interval per foot per cycle, or the gait is broken.
+- [ ] Enforced limits on the delivered walk (`kit/feet.py: measure`, `failures`, `LIMITS`): compensated sole slip ≤ **1 mm**, planted floor error ≤ **2 mm**, planted and readable heading ≤ **10°** from travel, loop seam ≤ **3 mm**, root and foot-IK correction ≤ **50 mm**, sole translation ≤ **40 mm**. Spearman R10: slip 0.0018 mm, floor 1.133 mm, heading 2.618°, seam 0, root 48.97 mm, IK 19.95 mm. Treat heading above 5° or a correction above 30 mm as a warning to investigate.
+- [ ] For an in-place sprite, measure slip on `foot(t) + virtual_displacement(t)`, not raw foot motion over the still disc. Heading is ill-conditioned when a raised foot projects under 8 cm on the ground; gate it to planted and readable footprints.
+- [ ] Every round: render the real lower legs from the top and front over the whole cycle to `<slug>-g-feet-check.png` (≥ 32 dense samples) and look at it. Bone positions and a passing metric do not prove sole contact.
+
+### 9. Render
+
+- [ ] CPU preview for every A/B: Cycles CPU, **256 px, 16 samples, seed 17**, denoising and adaptive sampling off (`kit/ab.py: preview_settings`), identical camera, lights and **one fixed LUT** on both sides. Stage renders (`render.py`) keep denoising on with adaptive threshold 0.025; never compare across the two. Label CPU and GPU evidence; never claim one from the other.
+- [ ] For a change that claims to touch only materials or only motion, hash everything else before and after (`kit/ab.py: invariant`: geometry, weights, UVs, pose, actions, camera, lights) and assert equality. **[proven]** R10a and R10b shipped with these invariants identical to R9.
+- [ ] Final: `RENDER_ENGINE=CYCLES CYCLES_DEVICE=GPU CYCLES_BACKEND=METAL RESOLUTION=512 SAMPLES=64 GRADE=1`, transparent RGBA. A preflight fails fast if no GPU is exposed rather than falling back to CPU.
+- [ ] Keep 512 px masters and a derived 256 px set under `masters/<slug>/{512,256}/`. Derive 256 and 160 from the 512 masters, never by upscaling.
+- [ ] Downsample in **linear light with premultiplied alpha**, before trimming (`kit/images.py: resize_rgba`, Lanczos). A straight sRGB RGBA resize fringes edges.
+- [ ] Motion blur, depth of field and bloom off; dither 0 for colour tests.
+
+### 10. Deliver and verify the decoded atlas
+
+- [ ] Atlas: 160 px logical cells, per-frame alpha trim with offsets, shared anchor (no per-crop recentring), 2 px gutters, WebP quality ≥ 75, **≤ 200,000 bytes**, all 40 records. Spearman R10: CPU preview 183,016 bytes at q80; GPU final 197,114 bytes at q85, under 3 KB of headroom. A unit with more on-screen area than the Spearman should expect q80 or q75. If it does not fit, report it; do not drop frames or quality silently.
+- [ ] Pack and validate with `python -m kit.deliver` (`kit/atlas.py`): it rebuilds logical cells from the **decoded** atlas and checks alpha, offsets, gutters, bounds, frame counts, timing, motion and the held death. The unit script adds the hash checks (master, grade, render manifests current). Write CPU previews to a lane folder, never to `app/src/assets/units/anim/`. **[proven]** the kit packer reproduces the Spearman R10 atlas byte for byte.
+- [ ] Judge "this clip moves" on the lossless reduced source frames. Lossy WebP makes identical tiles decode differently, so a decoded-pixel difference test passes a static clip (found while testing `kit/atlas.py`).
+- [ ] Movie: all five clips side by side on cream at 2×, 1600×352, H.264 yuv420p, 24 fps, 8 s, written to `review/3d-v2/<slug>-round<N>.mp4`.
+- [ ] Pose audit over all 40 saved poses (`kit/audit.py`): equipment crossings, camera bounds, contact against the real disc footprint plus world ground (not an infinite plane), arm joints within 2 mm of idle at clip entry and exit. Zero findings required. Tighten a check when it misses something; never loosen one to pass.
+
+### 11. Critique, A/B and stop rules
+
+- [ ] Run `critique.py` every round (it appends its numbers to the round note above the FOCUS lines):
+
+```sh
+$ANIM_ROOT/venv/bin/python tools/art/anim3d/critique.py --slug <slug> --round <N> \
+  --label 'CPU 256 px / 16 samples' --painting app/src/assets/units/<slug>-256.png \
+  --rest <rest.png> --frames <decoded-160-dir> --feet <feet-check.png> --out $ANIM_ROOT/review/3d-v2
+```
+
+- [ ] Targets: silhouette IoU ≥ **0.95** (best of ±3 px offsets, alpha > 8), mean CIE76 ΔE ≤ **6** over the overlap. Both include the base. Spearman R10: 0.9022 and 13.81 on the CPU preview, 0.9039 and 14.05 on the GPU masters, both fail. CPU and GPU numbers differ by a few thousandths of IoU and a few tenths of ΔE; compare like with like. These numbers are not comparable with the older unshifted, threshold-32 IoU (R10 on that scale: 0.8989).
+- [ ] Report regional and global numbers together, wins and losses (`python -m kit.regions --painting P --before A --after B --region name=x0,y0,x1,y1 --pale name=x0,y0,x1,y1`; the Spearman boxes are in `kit/presets/spearman.json`). **[proven]** R10 kept three regional wins while whole-image IoU fell 0.9035 → 0.9022 and fixed-grade ΔE rose 13.74 → 13.91; that was disclosed, not hidden.
+- [ ] One variable per A/B, so a win can be attributed. Port lane changes by scoped diff, not whole-branch merge.
+- [ ] Write the review the way the art director does: rank what the eye catches first at 160 px, and give each item a pixel box at 256, the measured value on both sides (width, coverage, mean RGB, luminance) and the change wanted. A note like "feet too pale" does not survive a round; "feet region luminance 187 vs 146, darken 25%" does.
+- [ ] Look at the images: rest at 256/160/64, hit and death strips, all 40 decoded cells, feet sheet, movie samples. Reject seam popping, swimming texture, doubled ornament, bright unpainted backs and foot drift even when every number passes.
+- [ ] Each round note ends with a ranked list of visible gaps and three FOCUS lines (a: form, b: surface, c: motion). Add the round to `tools/art/anim3d/LOG.md` with time spent and metric before/after.
+- [ ] Never write a PASS file because a render or audit completed.
+
+### 12. Lane hygiene (saves a round each time)
+
+- [ ] Codex sandboxes cannot take `index.lock` or `ORIG_HEAD.lock`: leave changes uncommitted with a `commit-message.txt` and a lane-only patch; the runner commits. Do not work around the lock.
+- [ ] Keep lane masters and CPU atlases in `lanes/<slug>-r<N><lane>/`; never overwrite the shared master or the checked-in atlas from a lane.
+- [ ] `critique.py` must exist in the lane checkout before the task asks for it (R10 lanes could not run it). Merge the skill branch first.
+- [ ] Record rejected experiments with their numbers in the lane note; they are as reusable as the wins.
+
+## Options not yet proven on a unit
+
+Try one at a time, on a copy, with a same-settings A/B. Move it into the checklist with its evidence if it wins; delete it if it loses.
+
+- **Eevee NPR fill material.** White Diffuse BSDF → Shader to RGB → RGB to BW → ColorRamp (EASE, 3–5 sampled colours) → Emission. Eevee only, needs a GPU context. Example bronze ramp positions 0.12/0.42/0.70/0.94, sRGB #432518/#895121/#CA9741/#F4D893 (replace with medians sampled from the painting). Stroke noise through Bump (strength 0.15, distance 0.003 m) on UV → Mapping scale (6, 36, 1) → Noise scale 2; strokes 1–3 final pixels wide or they shimmer. Fixed seeds and UVs only.
+
+```python
 import bpy
-
-def linear(c):
-    return c / 12.92 if c <= .04045 else ((c + .055) / 1.055) ** 2.4
-
-mat = bpy.data.materials.new('NPR-bronze-fill')
-mat.use_nodes = True
-n, links = mat.node_tree.nodes, mat.node_tree.links
-n.clear()
-diff = n.new('ShaderNodeBsdfDiffuse')
-diff.inputs['Color'].default_value = (1, 1, 1, 1)
-rgb = n.new('ShaderNodeShaderToRGB')
-bw = n.new('ShaderNodeRGBToBW')
-ramp = n.new('ShaderNodeValToRGB')
-ramp.color_ramp.interpolation = 'EASE'
-colors = [(0.12, (67, 37, 24)), (0.42, (137, 81, 33)),
-          (0.70, (202, 151, 65)), (0.94, (244, 216, 147))]
-for i, (position, color) in enumerate(colors):
-    el = ramp.color_ramp.elements[i] if i < 2 else ramp.color_ramp.elements.new(position)
-    el.position = position
-    el.color = tuple(linear(c / 255) for c in color) + (1,)
-emit = n.new('ShaderNodeEmission')
-out = n.new('ShaderNodeOutputMaterial')
-links.new(diff.outputs[0], rgb.inputs[0])
-links.new(rgb.outputs['Color'], bw.inputs[0])
-links.new(bw.outputs[0], ramp.inputs['Fac'])
-links.new(ramp.outputs['Color'], emit.inputs['Color'])
+def linear(c): return c / 12.92 if c <= .04045 else ((c + .055) / 1.055) ** 2.4
+mat = bpy.data.materials.new('NPR-bronze-fill'); mat.use_nodes = True
+n, links = mat.node_tree.nodes, mat.node_tree.links; n.clear()
+diff = n.new('ShaderNodeBsdfDiffuse'); diff.inputs['Color'].default_value = (1, 1, 1, 1)
+rgb = n.new('ShaderNodeShaderToRGB'); bw = n.new('ShaderNodeRGBToBW')
+ramp = n.new('ShaderNodeValToRGB'); ramp.color_ramp.interpolation = 'EASE'
+stops = [(.12, (67, 37, 24)), (.42, (137, 81, 33)), (.70, (202, 151, 65)), (.94, (244, 216, 147))]
+for i, (pos, col) in enumerate(stops):
+    el = ramp.color_ramp.elements[i] if i < 2 else ramp.color_ramp.elements.new(pos)
+    el.position = pos; el.color = tuple(linear(c / 255) for c in col) + (1,)
+emit = n.new('ShaderNodeEmission'); out = n.new('ShaderNodeOutputMaterial')
+links.new(diff.outputs[0], rgb.inputs[0]); links.new(rgb.outputs['Color'], bw.inputs[0])
+links.new(bw.outputs[0], ramp.inputs['Fac']); links.new(ramp.outputs['Color'], emit.inputs['Color'])
 links.new(emit.outputs[0], out.inputs['Surface'])
 ```
 
-**Check:** Shader-to-RGB is Eevee-only; changing this material's engine to Cycles is not a quality upgrade. Its lighting/pass limitations also mean AO, shadow and transparency combinations need rendered checks. On CPU, use a separate preview material with `dot(normal, normalized_key_direction)`, remapped from [-1,1] to [0,1], feeding the same ramp. That analytic version was rendered in the probe; it has no scene-light shadow response and does not verify the Eevee appearance.
+- **Per-part paint textures (in test, `fable/unit-anim-3d-spearman-a`).** The frozen projection samples the painting at each surface point's screen position, so wherever the 3D silhouette and the painting disagree by a few pixels a part picks up its neighbour's paint (cloak red on a shield rim, background on a shoulder). `units/spearman/look_textures.py` gives each kit part its own copy of the painting, keeps only that part's pixels (assigned from an ID render) and inpaints the rest from the part's own nearest pixels; `look.py` renders them as emission-only materials in Eevee with one camera-space key. No comparison numbers yet.
+- **Multi-view paintovers baked to a surface unwrap.** Keep a packed `PaintUV`; one projector, UV layer and image per view (`ProjectFront`, `ProjectSide`, `ProjectBack`), all registered to the same neutral pose; weight `visible * inside * alpha * smoothstep(.25,.65,N·V)^4`; blend low-frequency colour over 8–16 texels at 1024 and hand-author seams through eyes and ornament. Bake with Cycles CPU `bake(type='EMIT')`, 1–8 samples, margin 16 px at 1024, `margin_type='EXTEND'`, a plain-emission source material (a camera-ray switch is not a valid bake source), destination image selected but unconnected in every material. Do not project the hero painting from several directions or mirror insignia onto the back. Probe only: convex checker test, 0.80/255 error; no occlusion or deforming-seam proof.
+- **Selective rim.** Large area rim, or shader rim `(1−max(N·V,0))^4 * max(N·L_rim,0)` mixed at 0.03–0.08 on the lit silhouette only; keep it off painted highlights.
+- **Pose-space correctives.** Blender Studio's Pose Shape Keys extension (GPL) turns a posed sculpt into a rest-space key; start elbow and knee correction at 45°, full near 100–110°, separate left/right shapes. Corrective Smooth after the armature (factor 0.2, 5 iterations, joint mask) is cleanup, not volume.
+- **Other donors and tools.** CMU mocap (free-use, **not CC0**; credit CMU/NSF EIA-0196217, record the converter) for a less stylised walk. Rokoko's LGPL add-on for retargeting only if it runs locally without a login. Brushstroke Tools (GPL) for a small cloak patch. Rain, Snow and Einar rigs (CC-BY 4.0, Blender Studio) as study references only; credit if any data is reused.
+- **Cycles final settings to test.** Adaptive threshold 0.01, min 16 samples, bounces 6 (diffuse 2, glossy 2, transparent 8); compare OIDN on and off at 160 px, since denoising can smear painted strokes.
 
-### 4. Match light direction; add only a soft, selective rim
+## Probe
 
-- [ ] Define lights in **camera space**. Let `R`, `U`, `B` be camera-local +X, +Y, +Z transformed to world space; +Z points back toward the viewer. For a figure of height H centred at C, start key at `C - 1.5H*R + 2H*U + 2H*B`; aim -Z toward C. This is screen upper-left regardless of world orientation.
-- [ ] At H≈1.7 m, start an area key at **500 W, size 2H**, fill at **100 W, size 3H**, rim at **50 W, size 1.5H** behind/right. These are starting energies, not measured image ratios; distance, source size and shader all matter. Key colour `(1,.95,.85)`, fill `(.90,.94,1)`, rim `(.85,.92,1)` are restrained linear tints. Test key only, then fill, then rim. Match painted shadow direction first.
-- [ ] Use a large area rim, not a hard spotlight or a full Fresnel halo. If using a shader rim, mask `(1-max(N·V,0))^4` by `max(N·Lrim,0)` and mix at **0.03–0.08**, strongest on the lit silhouette only. Keep it out of source-painted highlights unless it improves an A/B. Avoid a new white outline on every edge.
-- [ ] Bake cavity AO/curvature as **editable masks**; keep the long-scale light shape independent. Start cavity influence 0.1–0.2, radius 0.01–0.03 m. Reserve brighter wear for authored exposed edges. Disable Solidify during a bake when its inside and outside share UVs, or give them separate islands. Do not bake the character's cast shadows into its pigment or the base.
-
-### 5. Project multiple views, then bake to ordinary surface UVs
-
-- [ ] Preserve `PaintUV`: a non-overlapping, well-packed surface unwrap, including backs/undersides. Keep source projections in separate named layers (`ProjectFront`, `ProjectSide`, `ProjectBack`). Applying a UV Project modifier freezes coordinates; it **does not bake an image**.
-- [ ] The hero painting supplies only the hero view. Make additional side/back/underarm **paintovers** in free Krita, GIMP or Blender Texture Paint: render neutral guide views from fitted geometry, paint broad sampled colour masses, continue cloth folds/edges and add deliberate warm/cool strokes. Do not project the same hero painting from several directions or mirror its face/insignia onto the back. CC0 surface swatches are underpaint, not finished illustration.
-- [ ] Use one projector/UV/image per view. Blender's multi-projector modifier selects a projector per face; it does not blend different paintings or solve visibility. Match each guide camera and aspect ratio; keep all source views registered to the **same neutral pose**.
-- [ ] For each surface sample, use `w_i = visible_i * inside_image_i * alpha_i * smoothstep(.25,.65,N·V_i)^4`. Perspective `V_i` points toward the camera; for orthographic use its fixed +Z direction. Determine visibility with a ray from that camera's ray origin to the evaluated surface: reject earlier occluders and mismatched objects/material regions. Use a scale-aware epsilon (~0.0001–0.001 m), not a large offset that jumps through a shield. Evaluate masks per texel or sufficiently tessellated face corners, not a few coarse vertices.
-- [ ] Preserve the best view in high-confidence regions. Blend low-frequency colour over **8–16 texels at 1024**, with normalized weights in overlaps; hand-author the seam around high-frequency eyes, sunburst rays and belt edges so two motifs are not ghosted together. Fill zero-coverage regions explicitly. Put seams under arms, inside thighs and beneath shield rims; still inspect them in attack and death.
-- [ ] Freeze projection at the **evaluated fitted rest pose**. On rigid kit, finish static geometry first. On skin, use a temporary evaluated copy with unchanged topology to calculate loop UVs/masks, then transfer them to matching original loops. If modifiers change topology, bake from the evaluated duplicate to the original surface unwrap with an explicit cage/distance instead; never zip unrelated vertex arrays. Keep the live armature on the production mesh.
-
-```python
-# Rigid, task-owned neutral mesh obj, fitted projector camera cam.
-# For skin use the evaluated-copy procedure above, not a live modifier after Armature.
-uv = obj.data.uv_layers.get('ProjectFront') or obj.data.uv_layers.new(name='ProjectFront')
-project = obj.modifiers.new('Freeze front projection', 'UV_PROJECT')
-project.uv_layer = uv.name
-project.projector_count = 1
-project.projectors[0].object = cam
-project.aspect_x, project.aspect_y = 1.0, 1.0  # square source; otherwise set width/height ratio
-bpy.ops.object.select_all(action='DESELECT')
-obj.select_set(True)
-bpy.context.view_layer.objects.active = obj
-bpy.context.view_layer.update()
-bpy.ops.object.modifier_apply(modifier=project.name)
-```
-
-- [ ] Wire each source Image Texture through its **explicit** projection UV node. Mix with saved masks and fills into an Emission shader. Create a new 1024²/2048² image, sRGB, for the destination. Set **PaintUV active and active_render**; select an unconnected Image Texture node holding the destination in **every participating material**. Never read from the bake destination while writing it.
-- [ ] Bake pigment with Cycles CPU, `bpy.ops.object.bake(type='EMIT')`, 1–8 samples, **16 px margin at 1024** / 32 at 2048, `margin_type='EXTEND'`; leave ≥2× margin separation between islands. Use `use_selected_to_active=False` for a same-mesh UV transfer. For a high→low duplicate, select source then active target, enable selected-to-active and calibrate a cage to avoid the next body part.
-- [ ] Save/pack the bake. Replace the projection network with PaintUV → baked image. Reproject neither on camera movement nor per animation frame. Check rest before/after, ±30° turn, raised arms, bent knees and death; inspect checker stretch and the actual painting. Bake preserves registration, not missing detail or correct deformation.
-
-### 6. Use Rigify through MPFB, with audited deformation weights
-
-- [ ] Keep a copy of the existing 53-bone Spearman rig and motion. Rigify is an optional **control/deformation upgrade** when needed, not a reason to discard working R9 retargeting. Prove it on one copy before converting every unit; changed bone counts require intentional audit/mapping changes, not relaxed checks.
-- [ ] Finish MPFB macro proportions first. For the projection/animation copy, freeze the chosen macro mix once if geometry fitting requires it; retain the original morphable body. New pose correctives come **after** that freeze. Do not subsequently erase all shape keys or edit base vertices underneath active macro keys.
-- [ ] Enable Rigify, add MPFB's fitted Rigify metarig with **import weights enabled**, and generate with **MPFB's own generation helper/operator**. It updates equipped assets, parenting and deformation groups. Generic automatic weights on the already skinned body can lose MPFB's shoulder/hand work. Retain the metarig and keep regeneration separate from skin edits.
-
-```python
-# Installed MPFB extension namespace on the tested machine; inspect it on another host.
-# body is a clean, fitted MPFB body copy without a second live skeleton attached.
-bpy.ops.preferences.addon_enable(module='rigify')
-bpy.ops.preferences.addon_enable(module='bl_ext.user_default.mpfb')
-from bl_ext.user_default.mpfb.services.humanservice import HumanService
-from bl_ext.user_default.mpfb.services.rigservice import RigService
-meta = HumanService.add_builtin_rig(body, 'rigify.human', import_weights=True)
-bpy.context.view_layer.update()
-rig = RigService.generate_rigify_rig(meta, name='Unit-rig', meta_rig_action='hide')
-assert rig is not None
-mods = [m for m in body.modifiers if m.type == 'ARMATURE']
-assert mods and all(m.object == rig for m in mods)
-```
-
-- [ ] **Do not require exactly one Armature modifier.** MPFB can intentionally create `Armature` plus `Armature PV`, the latter using Multi Modifier and `mhmask-preserve-volume` to blend preserved-volume deformation. Verify targets, masks, order and flags; do not delete it as a supposed double-transform bug.
-- [ ] Audit only groups corresponding to `use_deform` bones: every **rendered skin** vertex must have nonzero deform weight; sum should be 1 within 1e-4. Report unmapped/missing groups, negative/non-finite weights, left/right leakage, disconnected weight islands and unexpected distant influences. Exclude documented helpers and masks from both the sum and the visible-skin count. Do not normalize `mhmask-*`, cloth pins or material masks together with bone weights. Do not impose a four-influence game-engine limit on an offline sprite rig.
-- [ ] Bind rigid helmet/shield/weapon kit to the intended bone preserving `matrix_world`. Skin sandals to foot **and toe/ball**; ankle parenting alone prevents toe-off. Transfer garment weights only between corresponding nearby surfaces, then inspect skirt/cape independence. Avoid heat weighting armour onto the whole body.
-- [ ] Render clay and checker tests at shoulder elevation **0/45/90/120°**, shoulder twist **±45°**, elbow **0/45/90/130°**, knee **0/45/90/120°** and ankle/toe roll. Check shoulder cap volume, armpit collapse, elbow/knee crease, armour intersection, sole contact and texture stretch. A clean weight sum does not certify anatomy.
-
-### 7. Add pose-space correctives and preserve full motion rotations
-
-- [ ] Weight repair comes before corrective shapes. For shoulders, restore the deltoid/armpit at raised/twisted poses; elbows preserve olecranon volume and inner crease; knees preserve patella volume and front silhouette. Make separate left/right and bend/twist/combo shapes, with smooth regional falloff. Start activating elbow/knee correction at **45°**, full near **100–110°**; validate intermediate and combined poses.
-- [ ] Shape keys are evaluated **before** Armature. Do not copy a sculpted posed mesh directly into a rest-space key: it double-deforms. Use Blender Studio's free Pose Shape Keys workflow to transfer the posed sculpt into correctives, or invert the *actual* skin-deformation mapping. A simple inverse weighted bone matrix applies to linear blend skinning only; MPFB's preserved-volume/Multi Modifier stack and B-Bones require a matching solver or the add-on. Corrective Smooth after Armature (factor **0.2**, **5** iterations, masked to joints) is an optional cleanup, not a substitute for sculpted volume.
-- [ ] Drive a hinge corrective from a verified local rotation axis on an isolated bend mechanism bone, in radians. An illustrative driver is `min(1,max(0,(bend-0.785398)/1.047198))`. Check sign on each side. Shoulders need separate elevation/twist measurements or pose-space interpolation; a single Euler channel is insufficient for arbitrary swing. Review drivers; do not enable arbitrary downloaded scripts globally.
-- [ ] Use **Quaternius's free Standard subset (CC0)** or **CMU free-use** for idle, move, hit and death. CMU is **not CC0**: record its terms and the converter's terms. Import clips at their recorded fps/units; remove an added calibration T-pose from playback. Map pelvis, spine, clavicles, arms, hands, thighs, calves, feet and toes; record unsupported fingers rather than inventing captured motion.
-- [ ] Establish a common forward/up axis, unit scale and T/A reference pose. Preserve full 3×3 rotations including twist/roll. Head/tail direction alone loses one rotational degree of freedom. For matching skeleton motion in a shared world frame, calibrate `C = inverse(S_ref) @ T_ref`; use rotation of `S(t) @ C` on target helpers. Handle root translation and limb lengths separately rather than copying source joint positions into different proportions.
-- [ ] Native route: source pose → reference-offset helpers → world-space Copy Rotation on a target FK/retarget rig; Rigify controls/IK follow the solved targets. Do not key constrained DEF bones and expect them to override Rigify mechanisms. Optional Rokoko route: use the free LGPL add-on's retarget panel, inspect its bone map/rest pose, pin a compatible version, and bake locally. A login/service dependency or Blender-version break is a reason to use native constraints, not to buy Studio features.
-- [ ] Sample the **entire evaluated target pose** before modifying it. Bake visual transforms parent-first to a separate action/clean rig; include root, location, rotation and scale. Use quaternions with hemisphere continuity. For constrained Rigify controls, bake the controls or a clean deform duplicate; preserve the editable control rig.
-
-```python
-# P maps bone names to sampled matrices in TARGET ARMATURE space.
-# Work on a clean bake rig with the source constraints muted/removed.
-for pb in parent_first_bones:
-    kwargs = {}
-    if pb.parent:
-        kwargs = dict(parent_matrix=P[pb.parent.name],
-                      parent_matrix_local=pb.parent.bone.matrix_local)
-    pb.rotation_mode = 'QUATERNION'
-    pb.matrix_basis = pb.bone.convert_local_to_pose(
-        P[pb.name], pb.bone.matrix_local, invert=True, **kwargs)
-    # Flip quaternion sign if dot(previous_q, current_q) < 0 before keying.
-    for channel in ('location', 'rotation_quaternion', 'scale'):
-        pb.keyframe_insert(channel, frame=frame)
-```
-
-- [ ] Keep only the weapon-specific attack authored; start/end at the same guard as idle, including **elbow poles**, not just hands. Use constant documented guard offsets/upper-body layers where necessary. Retain source-derived death motion; documented blends of existing donor poses before retargeting may suppress recoil. Do not invent replacement joint curves. Author equipment release and ground contact separately, retaining carried gear at its grip. Retain the R9 complete-rotation/visual-bake fixes; do not revert to direction-only CMU reconstruction.
-- [ ] **Foot locking:** detect heel/toe support from evaluated sole landmarks and velocity, inspect labels, and use hysteresis (starting thresholds: enter below **10 mm** and **0.04 m/s**, leave above **20 mm** or **0.08 m/s**). Calibrate to body scale and the actual disc contact plane. Correct global height first so detection is not fooled by bad grounding. Lock the stance landmark in world space with leg IK, stable knee pole and bounded pelvis adjustment; retain source foot/ball roll through heel strike/toe-off. Do not yaw foot meshes to hide mapping errors.
-- [ ] For in-place sprites, define virtual displacement `d(t)`. A stance foot should follow `p(t)=anchor-d(t)` in the sprite, so measure slip on `p(t)+d(t)`, **not** raw foot motion against the stationary disc. Fit one speed over supporting intervals; do not fit independent speeds per foot/frame. Blend IK over **2–4 source frames**, with cyclic contacts joined across the loop. Start a diagnostic limit of **2 mm** compensated sole slip/floor error and **5°** heading discrepancy from the donor; retain stricter existing checks. Flag root/IK corrections above **3 cm**, reject above the existing **5 cm** bound rather than silently stretching legs.
-- [ ] Inspect top/front **rendered feet**, support over ≥32 dense samples and the loop seam. Verify planted toe and heel geometry, not just ankle bones. Include transition into/out of idle and attack; a motion-source label is not a clean-walk pass.
-
-### 8. Study open production assets selectively
-
-- [ ] **Rain v3 / Snow:** free Blender Studio CC-BY 4.0 rigs. Study IK/FK snapping, parent switching, limb stretch controls and pose correctives. They use Studio rig systems (CloudRig lineage); they are not drop-in MPFB Rigify templates. Keep their stylized proportions out of Spearman unless the painting calls for them.
-- [ ] **Brushstroke Tools**, Simon Thommes's free quick-start and the extension's bundled node assets: study stroke shape/opacity, layering and coherent colour masses. The lesson shows the CC-BY **Painterly Fishing Hut**, but its scene download currently requires a subscription; use the free lesson and extension, not that download. The GPL-3.0-or-later Brushstroke Tools extension creates textured strips from curves associated with surfaces; its deforming-surface workflow requires a rest-position attribute. Try a small cloak patch before covering an entire character. Dense transparent strokes can cost more than their 160 px contribution justifies; Cycles may need more transparent bounces.
-- [ ] **Einar v1** from Charge: free Blender Studio CC-BY 4.0 rig. Study the skin, layered worn clothing and material separation as a physical-material reference; simplify them toward the painting instead of copying photographic noise. Credit reused material/rig data as `Einar Rig (CC-BY) Blender Foundation | studio.blender.org`.
-- [ ] **Pose Shape Keys** (GPL-3.0-or-later extension): study the reversible posed-sculpt → rest-key workflow before writing a deformation inverse. Keep shape controls simple and independently testable.
-- [ ] Use only items actually marked free. Some Blender Studio production files and Quaternius Source/Pro tiers require payment even when the artwork licence is permissive; neither is required here. Record exact download, creator, licence/version, hash and modifications for anything reused. Credit a reused Rain asset as `Rain Rig (CC) Blender Foundation | studio.blender.org`, with its source/licence link; likewise Snow and Einar. Keep the asset's CC-BY notice, not just the repository's general licence. This study incorporates no Studio asset.
-
-### 9. Render and downscale for the sprite, not the viewport
-
-- [ ] Choose the renderer **with the shader**. Eevee suits the ramp/light-response path; Cycles suits the existing camera-only projection/physical hybrid, emit baking and richer physical contact. Compare the same three poses before switching. More samples cannot correct a wrong silhouette, stretched UVs or pale fill.
-- [ ] Eevee requires a graphics context even in background mode; `scene.cycles.device='CPU'` does not make Eevee a CPU renderer. On an authorized compatible host, use the gate's GPU route and label it accurately. Blender 5.3 accepts `BLENDER_EEVEE`; 4.x builds can use `BLENDER_EEVEE_NEXT`. Try the identifiers against the installed API rather than trusting a static enum listing.
-- [ ] Start Eevee final at **128 render samples**, previews **32**; shadows on, ray tracing off unless demonstrated necessary, motion blur/DOF/bloom off. Configure `scene.eevee.taa_render_samples` only if present; report missing settings. Do not silently pretend removed `use_gtao`/SSR switches work. Inspect band-edge and alpha shimmer across frames, not just a still.
-- [ ] Cycles CPU test: **160/256 px, 8–16 samples**, fixed seed, denoising off for comparisons. Final candidate: **512 px, 64–128 samples**, adaptive threshold **0.01**, minimum **16**, max bounces **6**, diffuse **2**, glossy **2**, transparent **8** (raise for actual layered strokes). Compare OIDN on/off at 160: denoising can smear painted strokes or flicker. `use_persistent_data` is a performance option, not temporal denoising.
-- [ ] For an already painted source: **sRGB display, Standard, Look None, exposure 0, gamma 1**. Decode sRGB images once; convert hexadecimal swatches to linear for node values. AgX is useful for newly lit HDR/PBR surfaces, but compresses/desaturates the source-painted palette; Filmic is the older alternative, not an automatic upgrade. Never use Raw as a display-ready export. Save linear EXR when preserving radiance; PNG export receives the chosen display transform once.
-- [ ] Render transparent **512²** RGBA masters and keep them; derive 256 and 160 from those masters, not a 256 preview upscaled to 512. Save 16-bit PNG masters when grading; use 8-bit RGBA for WebP. Disable DOF and motion blur so spear edges remain legible. Dither 0 for colour tests; optionally test very low dithering for final banding, frozen across the pipeline.
-- [ ] Downsample **linear-light, premultiplied RGBA**: decode sRGB RGB → linear; multiply RGB by alpha; resample RGB×alpha and alpha together (area or Lanczos); clamp ringing/alpha; divide only where alpha > epsilon; encode RGB to sRGB, store straight alpha. Never gamma-transform alpha. Verify on cream, black and saturated backgrounds for fringes. A direct straight-RGBA or gamma-space resize is not equivalent.
-- [ ] Keep one rest-calibrated monotone grade for every frame. Measure face/bronze/cloth/base separately; global histogram matching can improve statistics while shifting the wrong region. Preserve raw output and source hashes. Refit once after a camera/material/light/engine change, then rerender dependent clips.
-
-### 10. Verify decoded delivery and stop on evidence
-
-- [ ] Maintain the established Spearman clips: **idle/move/attack/hit/death**, **8/8/10/4/10** frames at **4/6/14/12/4 fps** respectively; idle/move loop. Work at donor sampling fps before final sampling. Change timing only with a reviewed motion reason. Render the terminal death sample once and copy it byte-for-byte.
-- [ ] Pack 160 px logical cells, per-frame alpha trim/offsets, **2 px gutters**, WebP **quality ≥75**, **≤200,000 bytes**, all 40 records. Keep the shared anchor; do not recenter each crop. Decode the final atlas, reconstruct logical cells and verify alpha, offsets, margins, bounds, frame counts, timing, held death and hashes. Preserve RGB edge padding as needed for filtering while keeping gutter alpha zero.
-- [ ] Review painting/raw/graded/decoded images at native 256/160/64, plus split and crossfade. Review motion playback and attack/death extremes. Separate geometry, projection, materials and motion A/B changes so a win can be attributed. Reject visible seam popping, swimming strokes, ghost ornament, bright unpainted backs or foot drift even when numerical checks pass.
-- [ ] Run the probe below when changing its mechanisms; run changed Python/Bash syntax, skill validation and repository hygiene/whitespace at completion. No Rust/WASM/UI build is needed for this skill-only change. A production adoption still needs the unit's full scene/rig/atlas tests and the lead's art review. Record unfinished checks; never write PASS solely because a render completed.
-
-## Verified probe and limits
-
-Run the bundled [scripts/technique_probe.py](scripts/technique_probe.py) in a fresh process:
+`scripts/technique_probe.py` (synthetic sphere and rig, Blender 5.3.0, Cycles CPU) checks mechanisms only: frozen UV Project layers stay byte-identical after camera movement; Standard round-trips cream exactly; reference-offset Copy Rotation plus `convert_local_to_pose` gives 0 rad error with a 0.7 rad rest-roll mismatch; a hinge driver evaluates 0.5 at half range; stock Rigify generates. `kit/probe_human.py` checks MPFB 19,158 vertices, 53-bone game rig and 930-bone Rigify with `Armature PV`. Neither certifies art. Details: `references/verification.md`.
 
 ```sh
 blender -b --disable-autoexec --factory-startup --python-exit-code 1 \
   --python tools/art/anim3d/scripts/technique_probe.py -- --output /tmp/legatum-unit-3d-probe
 ```
 
-When installed, resolve the script relative to this skill directory. Optional `--mpfb` tests an already installed MPFB; use the pipeline's isolated `BLENDER_USER_RESOURCES`, `BLENDER_USER_CONFIG`, `BLENDER_USER_SCRIPTS`, `BLENDER_USER_DATAFILES` and `XDG_CACHE_HOME`. It downloads nothing and never saves preferences. Copy `scripts/` with this skill when installing.
-
-Study date **2026-11-23**, Blender **5.3.0 / 02f0899d78e3**, gate-managed Cycles CPU, synthetic sphere/rig, 160 px/8 samples. Evidence remains under `~/LegatumRuns/anim-pilot/review/3d-v2/technique-study/`; the script recreates portable evidence rather than committing renders.
-
-- Constructed the Eevee Diffuse/Shader-to-RGB/ramp graph; **did not render Eevee** on CPU. Rendered the separate analytic normal/ramp/bump preview; the small bump is subtle, not proof of finished painterly style.
-- Applied two UV Project layers; UVs stayed byte-identical after camera movement. Baked their blended checker colours to a 256 px surface image with 8 px padding, then rendered at rest and rotated. Opaque RGB mean absolute before/after error: **0.801/255**. This convex test does **not** validate occlusion masks, hidden-area paintovers or deforming-body seams.
-- Rendered cream `(233,207,160)` through strength-1 emission: centre pixels **Standard (233,207,160)**, **AgX (190,177,157)**, **Filmic (198,187,161)**. This verifies an unlit swatch round trip, not every lit material.
-- Native reference-offset Copy Rotation plus `convert_local_to_pose`: **0 rad** reported error for three test rotations with a **0.7 rad** rest-roll mismatch. One bone only; real hierarchy/retarget action and foot audits remain necessary.
-- Corrective driver evaluated to **0.49999994** at 45° for a 0–90° ramp. This checks driver mechanics, not anatomically correct corrective sculpture.
-- Stock Rigify human generated **706 bones**. The optional MPFB test and synthetic IK result are described in the companion [verification record](references/verification.md), including the initial assertion error and its cause.
-
 ## Sources and licences
 
-Primary sources consulted for the mechanisms; presets and Legatum-specific recommendations above are adaptations, not vendor guarantees. Recheck downloaded artefacts' actual licence files.
+Recheck the licence file of anything downloaded.
 
-- Blender manual: [Shader to RGB](https://docs.blender.org/manual/en/4.5/render/shader_nodes/converter/shader_to_rgb.html), [UV Project](https://docs.blender.org/manual/en/latest/modeling/modifiers/modify/uv_project.html), [baking](https://docs.blender.org/manual/en/4.5/render/cycles/baking.html), [colour management](https://docs.blender.org/manual/en/4.5/render/color_management.html), [Corrective Smooth](https://docs.blender.org/manual/en/4.2/modeling/modifiers/deform/corrective_smooth.html). Manual: CC-BY-SA 4.0; Blender software: GPL. Version-specific API checked locally.
-- [Bone.convert_local_to_pose](https://docs.blender.org/api/current/bpy.types.Bone.html#bpy.types.Bone.convert_local_to_pose): official API reference; Blender GPL implementation. See sampled-parent conversion rather than direction-only rotation reconstruction.
-- [MPFB Rigify workflow](https://www.makehumancommunity.org/mpfb/docs/rigging_posing/rigify.html), [MPFB source and licences](https://github.com/makehumancommunity/mpfb2): code GPL-3.0-or-later, bundled body/assets CC0; community clothing can have separate terms.
-- [Brushstroke Tools](https://extensions.blender.org/add-ons/brushstroke-tools/) and [production documentation](https://studio.blender.org/tools/addons/brushstroke_tools): extension GPL-3.0-or-later. [Free quick-start lesson](https://studio.blender.org/training/stylized-rendering-with-brushstrokes/get-started-using-brushstroke-tools/): Simon Thommes / Blender Studio, CC-BY 4.0; fishing-hut scene download is subscription-gated and excluded.
-- [Rain v3](https://studio.blender.org/characters/rain/v3/), [Snow v2](https://studio.blender.org/characters/snow/v2/), [Einar v1](https://studio.blender.org/characters/einar/v1/): free Blender Foundation rigs, CC-BY 4.0, attribution required. Pin the selected version and its licence link.
-- [Pose Shape Keys](https://extensions.blender.org/add-ons/pose-shape-keys/) and [workflow](https://studio.blender.org/tools/addons/pose_shape_keys): GPL-3.0-or-later extension; posed corrective authoring with weight iteration.
-- [Rokoko Blender add-on](https://github.com/Rokoko/rokoko-studio-live-blender): LGPL-3.0; optional local retargeting code, distinct from Rokoko Studio/service terms. Not installed or exercised in this study.
-- [Quaternius Universal Animation Library](https://quaternius.com/packs/universalanimationlibrary.html): CC0, use the free Standard subset only; the full Source/Pro offerings are unnecessary.
-- [CMU Graphics Lab](http://mocap.cs.cmu.edu/), [cgspeed conversion](https://sites.google.com/a/cgspeed.com/cgspeed/motion-capture): CMU custom free-use terms permit commercial products but forbid resale of the data itself, including converted data; **not CC0**. Credit CMU/NSF EIA-0196217 and identify conversion/version. Original capture is ASF/AMC; converted BVH can add an estimated T-pose and noisy toe channels. Retain the conversion README.
-- [ambientCG](https://docs.ambientcg.com/license/) and [Poly Haven](https://polyhaven.com/license): CC0 texture/HDRI assets. [Krita](https://krita.org/en/about/license/): GPLv3 software for original paintovers. Software licences do not automatically license unrelated artwork.
+- Blender (GPL) and manual (CC-BY-SA 4.0): [Shader to RGB](https://docs.blender.org/manual/en/4.5/render/shader_nodes/converter/shader_to_rgb.html), [UV Project](https://docs.blender.org/manual/en/latest/modeling/modifiers/modify/uv_project.html), [baking](https://docs.blender.org/manual/en/4.5/render/cycles/baking.html), [colour management](https://docs.blender.org/manual/en/4.5/render/color_management.html), [Bone.convert_local_to_pose](https://docs.blender.org/api/current/bpy.types.Bone.html#bpy.types.Bone.convert_local_to_pose).
+- [MPFB](https://github.com/makehumancommunity/mpfb2): code GPL-3.0-or-later, bundled body and assets CC0; [Rigify workflow](https://www.makehumancommunity.org/mpfb/docs/rigging_posing/rigify.html).
+- [Quaternius Universal Animation Library](https://quaternius.com/packs/universalanimationlibrary.html): CC0, free Standard subset only.
+- [CMU Graphics Lab mocap](http://mocap.cs.cmu.edu/): free-use, no resale of the data, **not CC0**.
+- [ambientCG](https://docs.ambientcg.com/license/) and [Poly Haven](https://polyhaven.com/license): CC0 textures. Spearman uses Metal034, Fabric030, Travertine001, brown_leather, fine_grained_wood (pinned in `assets.lock.json`).
+- Study references: [Brushstroke Tools](https://extensions.blender.org/add-ons/brushstroke-tools/) and [Pose Shape Keys](https://extensions.blender.org/add-ons/pose-shape-keys/) (GPL-3.0-or-later); [Rain](https://studio.blender.org/characters/rain/v3/), [Snow](https://studio.blender.org/characters/snow/v2/), [Einar](https://studio.blender.org/characters/einar/v1/) (CC-BY 4.0, Blender Foundation); [Rokoko add-on](https://github.com/Rokoko/rokoko-studio-live-blender) (LGPL-3.0, not exercised).
 
+## Learned
 
-## Learned (spearman round 10) — 2026-11-23
+One line per finding, newest first; the rule itself lives in the step named in brackets. Full numbers are in `LOG.md` and the round notes. Round agents: add one dated line here, edit the step it changes, and delete any rule it contradicts rather than leaving both.
 
-- **Worked: guard orientation plus real calf/greave mass.** Lane A's controlled
-  lower-leg overlap rose **71.96% → 73.21%** and projected sole span
-  **68.98 → 77.03 px**, with unchanged foot geometry/weights/bind and walking
-  foot/ball transforms. The reviewer sees more grounded support at 256/160.
-  Larger flares and more outward knees worsened the contour and were rejected.
-  **Rule:** improve pose and surrounding anatomy before widening a foot mesh;
-  compare lower legs separately so a matching base cannot hide the error.
-- **Worked: identify the exposed material before painting it.** Lane B's hit
-  shoulder pale pixels fell **102 → 24 at 256**, **39 → 7 at 160**. Rest shoulder
-  RGB error slightly worsened **12.06 → 12.20/255**, so this is a motion-coverage
-  win, not a universal colour improvement. Cape-only paint failed because the
-  sleeve caused the large pale patch. **Rule:** inspect rest/hit/death region
-  masks, keep confident hero paint, and fill each revealed material coherently;
-  more noise does not fix a plain angular garment shell.
-- **Worked: source-pose blending before retarget.** Lane C's sampled death head
-  step fell **1.277 → 0.655 m**, ankle height **0.848 → 0.355 m**, and late cape
-  travel **0.419 → 0.146 m**. The combined scene retains the first two results;
-  its cape travel is **0.119 m**. Stronger walk attenuation broke contact and was
-  rejected. The attached shield still rotates **83.03° between two delivered
-  samples**; lower recoil alone is not natural motion. **Rule:** retain complete
-  source rotations/rest-roll calibration, blend existing donor poses explicitly,
-  and audit attached equipment motion as well as body/contact metrics.
-- **Reusable mechanism, not a new art style:** the kit extraction retains the
-  existing Cycles camera-only pigment contract and the tested 53-bone motion
-  rig. Painterly nodes are now a shared group; unit pigment stays editable at
-  each instance. Rigify and corrective helpers are opt-in, not proof that a
-  posed body has good anatomy. True rest-space corrective sculpture and unseen
-  multi-view paint remain deliberate unit work.
-- **Delivery rule:** downsample premultiplied linear-light RGBA before trimming;
-  compare decoded atlas cells, not only masters. Write GPU numbers before the
-  focus lines and label CPU/GPU provenance. A generated file or passing contact
-  audit never creates a unit PASS.
-
-- **Do not cherry-pick only favourable diagnostics.** Same-settings merged rest
-  IoU **0.903515 → 0.902229** and fixed-grade mean CIE76 ΔE
-  **13.735 → 13.905** slightly regressed; the final refitted grade is **13.814**.
-  The lane's lower-leg overlap and moving-shoulder/collapse gains still justify
-  retention, but this is not a whole-image metric win or a PASS. Record regional
-  and global results together; keep IoU **0.95** / ΔE **6** targets unchanged.
-  The CPU decoded atlas validates at **183,016 bytes / q80**, all 40 frames.
+- 2026-11-24 art director on R10: the first tells at 160 px are thin dark props, pale small feet, calves outside the greaves, and a death that wastes three frames and teleports once; reviews now carry pixel boxes and measured values. [1, 5, 7, 11]
+- 2026-11-24 kit: `grade`, `atlas`/`deliver` and `regions` reproduce the Spearman R10 LUT, atlas and regional numbers exactly; a decoded-pixel motion test passes a static clip under lossy WebP. [10, 11]
+- 2026-11-23 R10 (merge): report regional and whole-image metrics together; R10 kept regional wins with a small global regression (IoU 0.9035 → 0.9022). [11]
+- 2026-11-23 R10a: a narrow sandal was a guard-orientation and calf-mass problem, not a foot-size problem; flare and outward knees rejected. [1]
+- 2026-11-23 R10b: material-ID render first; the pale patch was the sleeve. Linearise byte images once. Grazing-angle gate rejected. [4]
+- 2026-11-23 R10c: blend the donor's own settled pose in source space; walk influence 0.90, 0.88 and 0.82 rejected; grip-preserving shield hinge. [7]
+- 2026-11-23 R9: full-rotation Quaternius retarget with heel/toe locking replaced hand-built motion; loosened hit cloth pins rejected; microtexture gain modest. [4, 7, 8]
+- 2026-11-23 R8: compare raw and graded regions before touching the grade; fix the stone, keep the LUT. [6]
+- 2026-11-23 R7: matching hand targets does not match the arm; elbow poles must share the guard. A moved base needs contact tests in its own footprint. [7, 10]
+- 2026-11-23 R6: active MPFB macro shape keys override direct vertex fitting; bake the mix on the projection copy. Audit against the real disc footprint. [2, 10]
+- 2026-11-22 R5: check relief clearance on evaluated faces, in plain clay as well as painted. [1]
+- 2026-11-22 R4: visibility by ray distance, not normals; register ornament before projecting. [3]
+- 2026-11-22 R1–R3 (Sam): "looks like something a high school student would make" → projection, geometry finish, product light, one grade; R2 "huge improvement"; walk "duck feet" → open motion. [1, 3, 6, 7]
