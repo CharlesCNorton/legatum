@@ -50,7 +50,7 @@ Get a crude unit through all five clips and the atlas before polishing any stage
 ### 2. Body and rig
 
 - [ ] Default body: MPFB 2 with macro overrides, `game_engine` skeleton, original MPFB weights (`kit/human.py: create_body`, `add_rig`). Spearman: 19,158 vertices, 53 bones. Do not re-weight the skin automatically.
-- [ ] Before fitting vertices on the projection copy, **bake the active macro shape-key mix** into that copy. **[proven]** R6: 25 active macro/muscle keys silently overrode direct `data.vertices` edits, leaving feet below the sole through several "fixes". Keep the morphable original; add new shape keys only after the freeze.
+- [ ] Before fitting vertices on the projection copy, **bake the active macro shape-key mix** into that copy (`kit/human.py: freeze_macro_mix`). **[proven]** R6: 25 active macro/muscle keys silently overrode direct `data.vertices` edits, leaving feet below the sole through several "fixes". Keep the morphable original; add new shape keys only after the freeze.
 - [ ] Skin sandals and soles to foot **and** ball bones; an ankle-parented sandal cannot toe-off. New footwear geometry needs its own evaluated floor check (R10a welt minimum z 0.1069 m over the 0.105 m stone).
 - [ ] Bind rigid helmet, shield and weapon to one bone, preserving `matrix_world`. When rebuilding a released equipment transform from a quaternion, preserve its scale (R4).
 - [ ] MPFB may add `Armature` plus `Armature PV` (Multi Modifier, `mhmask-preserve-volume`). That pair is intended; do not delete it or require exactly one armature modifier.
@@ -67,7 +67,7 @@ Get a crude unit through all five clips and the atlas before polishing any stage
 
 ### 4. Cover what the painting never shows
 
-- [ ] Before repainting a pale patch that appears in motion, render a **material-ID image** of that pose and find which surface it is. **[proven]** R10b: the hit/death shoulder patch was the linen sleeve, not the cape; cape-only paint did nothing.
+- [ ] Before repainting a pale patch that appears in motion, render a **material-ID image** of that pose (`kit/ab.py: material_id_render`) and find which surface it is. **[proven]** R10b: the hit/death shoulder patch was the linen sleeve, not the cape; cape-only paint did nothing.
 - [ ] Fill by garment region with broad, coherent colour masses (rear shoulder facing, warm linen folds, skin, darker cloak folds). Keep trusted hero paint where visibility is high. **[proven]** R10b: pale shoulder pixels at peak hit 102 → 24 (256 px), 39 → 7 (160 px); rest shoulder error 12.06 → 12.20/255 (kept: a motion win at near-zero rest cost).
 - [ ] More noise, weave or micro-bump does not fix a plain or angular surface, and is not visible at 64 px. **[proven]** R9b: hammer/weave/grain gave a modest gain at 256 only. Spend the effort on shape and broad value first.
 - [ ] Seams: `kit/seams.py: underpaint` extends trusted paint up to **75 mm** along mesh edges (geodesic Dijkstra), never across a gap, and stores colour and weight in a corner attribute. It only softens transitions; it does not author missing back or underside art.
@@ -87,7 +87,7 @@ Get a crude unit through all five clips and the atlas before polishing any stage
 
 - [ ] Light like a product shot of a painted miniature: `kit/studio.py: match_lighting` builds disk area lights from the preset. Spearman: warm key upper-left `(-3,-4,8)` 596.75 W size 5 colour `(1,.97,.93)`; cool fill `(4,-2,3)` 77 W size 3; back rim `(-2,3,4)` 132 W size 2 colour `(.7,.83,1)`; world 0.19 grey. Match the painting's shadow direction with the key alone before adding fill and rim.
 - [ ] Colour management for a painted source: **Standard**, Look None, exposure 0, gamma 1. **[proven]** probe: cream `(233,207,160)` round-trips exactly in Standard; AgX gives `(190,177,157)`, Filmic `(198,187,161)`.
-- [ ] Grade: fit one monotone per-channel histogram match on the **rest** render against the 256 px painting (opaque pixels, alpha > 240, strength **0.80**), bind it to the master hash, and apply the same LUT to every frame (`grade.py`). Never fit per frame: colour pumps. Keep raw renders.
+- [ ] Grade: fit one monotone per-channel histogram match on the **rest** render against the 256 px painting (opaque pixels, alpha > 240, strength **0.80**), bind it to the master hash, and apply the same LUT to every frame (`kit/grade.py: fit_file`, `load`, `apply`; a grade whose master hash is stale is refused). Never fit per frame: colour pumps. Keep raw renders.
 - [ ] Before changing the grade, compare raw and graded figure and base regions separately. **[proven]** R8: the grade already improved the figure; the fix was the physical stone, not the LUT.
 - [ ] Refit once after any camera, material, light or engine change, then rerender dependent clips.
 
@@ -112,7 +112,7 @@ for p in rig.pose.bones:  # parent-first order
 - [ ] Death staging (reviewer): knees give, torso falls, ends lying across the base with the shield still on the arm and the spear dropped beside him. Register the donor's fall toward the disc centre (Spearman 0.40 m).
 - [ ] Hit: sample the donor recoil over the first third (`phase*3`), then blend back to idle over the last 70% so four frames do not snap.
 - [ ] Attack: start and end on the idle guard, **including elbow IK poles**, not only hand targets (R7).
-- [ ] Carried equipment stays parented at its grip; add a geometry-triggered hinge about the grip that rotates only enough to clear the floor. **[proven]** R10c: grip distance range 1.142 m → 0.0000002 m. Still open: the shield turns 83° between two delivered samples; audit equipment rotation per delivered frame, not just attachment.
+- [ ] Carried equipment stays parented at its grip; add a geometry-triggered hinge about the grip that rotates only enough to clear the floor. **[proven]** R10c: grip distance range 1.142 m → 0.0000002 m. Still open: the shield turns 83° between two delivered samples; measure equipment rotation per delivered frame (`kit/motion_metrics.py`), not just attachment.
 - [ ] Cloth: one second of pre-roll and a persistent bake per clip; full shoulder pins. Death keeps 35% partial pins, bending stiffness 0.8, air damping 4 (R10c: late cape travel 0.419 → 0.119 m). **[rejected]** loosened hit cloth pins: raised a cape corner behind the shoulder at recovery (R9).
 - [ ] Secondary motion (crest, shield sway) is a damped spring driven by carrier acceleration, capped (crest 16 mm), not a second keyed performance.
 - [ ] Clips: idle/move/attack/hit/death = **8/8/10/4/10** frames at **4/6/14/12/4 fps**; idle and move loop; move keeps the donor's 1.33 s cycle. Render the final death sample once and copy it byte-for-byte.
@@ -127,7 +127,8 @@ for p in rig.pose.bones:  # parent-first order
 
 ### 9. Render
 
-- [ ] CPU preview for every A/B: Cycles CPU, **256 px, 16 samples, seed 17**, denoising off, identical camera, lights and **one fixed LUT** on both sides. Label CPU and GPU evidence; never claim one from the other.
+- [ ] CPU preview for every A/B: Cycles CPU, **256 px, 16 samples, seed 17**, denoising and adaptive sampling off (`kit/ab.py: preview_settings`), identical camera, lights and **one fixed LUT** on both sides. Stage renders (`render.py`) keep denoising on with adaptive threshold 0.025; never compare across the two. Label CPU and GPU evidence; never claim one from the other.
+- [ ] For a change that claims to touch only materials or only motion, hash everything else before and after (`kit/ab.py: invariant`: geometry, weights, UVs, pose, actions, camera, lights) and assert equality. **[proven]** R10a and R10b shipped with these invariants identical to R9.
 - [ ] Final: `RENDER_ENGINE=CYCLES CYCLES_DEVICE=GPU CYCLES_BACKEND=METAL RESOLUTION=512 SAMPLES=64 GRADE=1`, transparent RGBA. A preflight fails fast if no GPU is exposed rather than falling back to CPU.
 - [ ] Keep 512 px masters and a derived 256 px set under `masters/<slug>/{512,256}/`. Derive 256 and 160 from the 512 masters, never by upscaling.
 - [ ] Downsample in **linear light with premultiplied alpha**, before trimming (`kit/images.py: resize_rgba`, Lanczos). A straight sRGB RGBA resize fringes edges.
@@ -136,9 +137,10 @@ for p in rig.pose.bones:  # parent-first order
 ### 10. Deliver and verify the decoded atlas
 
 - [ ] Atlas: 160 px logical cells, per-frame alpha trim with offsets, shared anchor (no per-crop recentring), 2 px gutters, WebP quality ≥ 75, **≤ 200,000 bytes**, all 40 records. Spearman R10 CPU preview: 183,016 bytes at q80. If it does not fit, report it; do not drop frames or quality silently.
-- [ ] Validate the **decoded** atlas: rebuild logical cells and check alpha, offsets, gutters, bounds, frame counts, timing, visible motion, byte-identical held death and current master hashes. Use `ATLAS_OUTPUT` to keep CPU previews out of the shipped asset.
+- [ ] Pack and validate with `python -m kit.deliver` (`kit/atlas.py`): it rebuilds logical cells from the **decoded** atlas and checks alpha, offsets, gutters, bounds, frame counts, timing, motion and the held death. The unit script adds the hash checks (master, grade, render manifests current). Write CPU previews to a lane folder, never to `app/src/assets/units/anim/`. **[proven]** the kit packer reproduces the Spearman R10 atlas byte for byte.
+- [ ] Judge "this clip moves" on the lossless reduced source frames. Lossy WebP makes identical tiles decode differently, so a decoded-pixel difference test passes a static clip (found while testing `kit/atlas.py`).
 - [ ] Movie: all five clips side by side on cream at 2×, 1600×352, H.264 yuv420p, 24 fps, 8 s, written to `review/3d-v2/<slug>-round<N>.mp4`.
-- [ ] Pose audit over all 40 saved poses: equipment crossings, camera bounds, contact against the real disc footprint plus world ground (not an infinite plane), arm transitions. Zero findings required. Tighten a check when it misses something; never loosen one to pass.
+- [ ] Pose audit over all 40 saved poses (`kit/audit.py`): equipment crossings, camera bounds, contact against the real disc footprint plus world ground (not an infinite plane), arm joints within 2 mm of idle at clip entry and exit. Zero findings required. Tighten a check when it misses something; never loosen one to pass.
 
 ### 11. Critique, A/B and stop rules
 
@@ -151,7 +153,7 @@ $ANIM_ROOT/venv/bin/python tools/art/anim3d/critique.py --slug <slug> --round <N
 ```
 
 - [ ] Targets: silhouette IoU ≥ **0.95** (best of ±3 px offsets, alpha > 8), mean CIE76 ΔE ≤ **6** over the overlap. Both include the base. Spearman R10: 0.9022 and 13.81, both fail. These numbers are not comparable with the older unshifted, threshold-32 IoU (R10 on that scale: 0.8989).
-- [ ] Report regional and global numbers together, wins and losses. **[proven]** R10 kept three regional wins while whole-image IoU fell 0.9035 → 0.9022 and fixed-grade ΔE rose 13.74 → 13.91; that was disclosed, not hidden.
+- [ ] Report regional and global numbers together, wins and losses (`python -m kit.regions --painting P --before A --after B --region name=x0,y0,x1,y1 --pale name=x0,y0,x1,y1`; the Spearman boxes are in `kit/presets/spearman.json`). **[proven]** R10 kept three regional wins while whole-image IoU fell 0.9035 → 0.9022 and fixed-grade ΔE rose 13.74 → 13.91; that was disclosed, not hidden.
 - [ ] One variable per A/B, so a win can be attributed. Port lane changes by scoped diff, not whole-branch merge.
 - [ ] Look at the images: rest at 256/160/64, hit and death strips, all 40 decoded cells, feet sheet, movie samples. Reject seam popping, swimming texture, doubled ornament, bright unpainted backs and foot drift even when every number passes.
 - [ ] Each round note ends with a ranked list of visible gaps and three FOCUS lines (a: form, b: surface, c: motion). Add the round to `tools/art/anim3d/LOG.md` with time spent and metric before/after.
@@ -218,6 +220,7 @@ Recheck the licence file of anything downloaded.
 
 One line per finding, newest first; the rule itself lives in the step named in brackets. Full numbers are in `LOG.md` and the round notes. Round agents: add one dated line here, edit the step it changes, and delete any rule it contradicts rather than leaving both.
 
+- 2026-11-24 kit: `grade`, `atlas`/`deliver` and `regions` reproduce the Spearman R10 LUT, atlas and regional numbers exactly; a decoded-pixel motion test passes a static clip under lossy WebP. [10, 11]
 - 2026-11-23 R10 (merge): report regional and whole-image metrics together; R10 kept regional wins with a small global regression (IoU 0.9035 → 0.9022). [11]
 - 2026-11-23 R10a: a narrow sandal was a guard-orientation and calf-mass problem, not a foot-size problem; flare and outward knees rejected. [1]
 - 2026-11-23 R10b: material-ID render first; the pale patch was the sleeve. Linearise byte images once. Grazing-angle gate rejected. [4]
