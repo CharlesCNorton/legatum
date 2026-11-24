@@ -30,22 +30,25 @@ PARTS = ['shield', 'helmet', 'crest', 'cuirass', 'greave_l', 'greave_r', 'cloak'
          'belt', 'sandal_l', 'sandal_r', 'skin', 'spear', 'base']
 # Well separated sRGB codes; decoded by nearest colour in look_textures.py.
 ID_COLOURS = {p: (40 + 70 * (i % 4), 40 + 70 * ((i // 4) % 4), 250 - 100 * (i % 3)) for i, p in enumerate(PARTS)}
+# Thin or fibrous parts whose stored visibility is mostly grazing: always painted.
+ALWAYS_PAINT = ('crest', 'spear')
 PAINT_UV = 'Painting camera rest'
 VISIBILITY = 'Painting visibility'
 
 LOOK = {
-    'sun_strength': 1.0,      # white diffuse facing the key renders 1.0
+    'sun_strength': 3.14159,  # Eevee: white diffuse facing a sun of strength pi returns 1.0
     'sun_angle': 12.0,        # degrees; soft painted shadow edge
     'paint_cast': .22,        # how far a live cast shadow darkens projected paint
     'paint_form': .0,         # live form shading on projected paint (0: painted light only)
-    'fill_palette': .55,      # unseen surfaces: palette ramp vs local low-frequency paint
+    'fill_palette': .75,      # unseen surfaces: palette ramp vs local low-frequency paint
     'fill_cast': .45,         # live cast shadow depth on unseen surfaces
     'fill_light': .30,        # camera-right soft fill share of the ramp input
     'ao': .55,                # cavity share of the ramp input
     'stroke': .10,            # brush-patch offset of the ramp input
-    'vis_lo': .25, 'vis_hi': .75,
+    'vis_lo': .08, 'vis_hi': .45,
     'base_cast': .30,         # contact shadow depth on the stone
     'shadow_r': .50, 'shadow_g': .36, 'shadow_b': .34,  # warm-dark shadow multiplier
+    'debug': 0,               # 1 paint weight, 2 unseen layer only, 3 projected paint only
 }
 
 
@@ -58,6 +61,11 @@ def lin3(rgb):
 
 
 def part_of(ob):
+    if 'look_part' not in ob: ob['look_part'] = classify(ob)
+    return ob['look_part']
+
+
+def classify(ob):
     name = ob.name.rstrip('.0123456789').lower()
     materials = ' '.join(m.name for m in ob.data.materials if m).lower()
     side = 'l' if name.endswith(' l') else 'r'
@@ -135,9 +143,11 @@ class Graph:
         node = self.node('ShaderNodeValToRGB')
         ramp = node.color_ramp
         ramp.interpolation = interpolation
-        while len(ramp.elements) < len(stops): ramp.elements.new(.5)
-        for element, (position, colour) in zip(ramp.elements, stops):
-            element.position, element.color = position, colour
+        # Elements re-sort when a position changes: build them in order instead.
+        while len(ramp.elements) > 1: ramp.elements.remove(ramp.elements[-1])
+        ramp.elements[0].position, ramp.elements[0].color = stops[0]
+        for position, colour in stops[1:]:
+            ramp.elements.new(position).color = colour
         self.l.new(factor, node.inputs['Fac'])
         return node.outputs['Color']
 
@@ -145,7 +155,11 @@ class Graph:
         """White diffuse -> Shader to RGB -> value: the key light's response."""
         diffuse = self.node('ShaderNodeBsdfDiffuse')
         diffuse.inputs['Color'].default_value = (1, 1, 1, 1)
-        if constant_normal is not None: diffuse.inputs['Normal'].default_value = constant_normal
+        if constant_normal is not None:
+            # An unlinked Normal socket means "geometry normal": link a constant.
+            vector = self.node('ShaderNodeCombineXYZ')
+            for socket, value in zip(vector.inputs, constant_normal): socket.default_value = value
+            self.l.new(vector.outputs[0], diffuse.inputs['Normal'])
         elif normal is not None: self.l.new(normal, diffuse.inputs['Normal'])
         to_rgb = self.node('ShaderNodeShaderToRGB')
         self.l.new(diffuse.outputs[0], to_rgb.inputs[0])
@@ -185,7 +199,7 @@ def build_material(ob, part, look_dir, palettes, key_dir, fill_dir, uv_world, re
     paint = g.image(look_dir / f'front-{part}.png', uv).outputs['Color']
     shadow_tint = (cfg['shadow_r'], cfg['shadow_g'], cfg['shadow_b'], 1)
     # Cast shadow alone: a diffuse whose normal is the key direction ignores form.
-    cast = g.math('DIVIDE', g.lit(constant_normal=key_dir), cfg['sun_strength'], clamp=True)
+    cast = g.math('DIVIDE', g.lit(constant_normal=key_dir), cfg['sun_strength'] / math.pi, clamp=True)
     if part == 'base':
         depth = g.math('MULTIPLY', g.math('SUBTRACT', 1, cast), cfg['base_cast'])
         g.emit(g.mix(depth, paint, shadow_tint, 'MULTIPLY'))
@@ -194,7 +208,7 @@ def build_material(ob, part, look_dir, palettes, key_dir, fill_dir, uv_world, re
     # Brush patches in rest (generated) coordinates: they stay on the surface.
     coords = g.node('ShaderNodeTexCoord').outputs['Generated' if ob.type == 'MESH' else 'Object']
     mapping = g.node('ShaderNodeMapping')
-    mapping.inputs['Scale'].default_value = (9, 9, 26)
+    mapping.inputs['Scale'].default_value = (22, 22, 5)  # strokes run along the part's length
     g.l.new(coords, mapping.inputs['Vector'])
     noise = g.node('ShaderNodeTexNoise')
     noise.inputs['Scale'].default_value = 3
@@ -202,7 +216,7 @@ def build_material(ob, part, look_dir, palettes, key_dir, fill_dir, uv_world, re
     g.l.new(mapping.outputs[0], noise.inputs['Vector'])
     stroke = g.math('MULTIPLY', g.math('SUBTRACT', noise.outputs['Factor'], .5), cfg['stroke'] * 2)
     geometry = g.node('ShaderNodeNewGeometry')
-    key = g.math('DIVIDE', g.lit(), cfg['sun_strength'], clamp=True)
+    key = g.math('DIVIDE', g.lit(), cfg['sun_strength'] / math.pi, clamp=True)
     fill = g.math('MULTIPLY_ADD', g.dot(geometry.outputs['Normal'], fill_dir), .5, .5)
     ao = g.node('ShaderNodeAmbientOcclusion', samples=8)
     ao.inputs['Distance'].default_value = .12
@@ -225,8 +239,16 @@ def build_material(ob, part, look_dir, palettes, key_dir, fill_dir, uv_world, re
         bw = g.node('ShaderNodeRGBToBW')
         g.l.new(vis, bw.inputs[0])
         g.l.new(bw.outputs[0], weight.inputs['Value'])
-        weight.inputs['From Min'].default_value, weight.inputs['From Max'].default_value = cfg['vis_lo'], cfg['vis_hi']
-        g.emit(g.mix(weight.outputs[0], unseen, seen))
+        lo, hi = (-1, -.5) if part in ALWAYS_PAINT else (cfg['vis_lo'], cfg['vis_hi'])
+        weight.inputs['From Min'].default_value, weight.inputs['From Max'].default_value = lo, hi
+        final = g.mix(weight.outputs[0], unseen, seen)
+        if cfg['debug'] == 1: final = g.mix(weight.outputs[0], (0, 0, 0, 1), (1, 1, 1, 1))
+        if cfg['debug'] == 2: final = unseen
+        if cfg['debug'] == 3: final = seen
+        if cfg['debug'] in (4, 5, 6, 7):
+            value = {4: key, 5: cast, 6: t, 7: cavity}[int(cfg['debug'])]
+            final = g.mix(value, (0, 0, 0, 1), (1, 1, 1, 1))
+        g.emit(final)
     else:
         # No stored visibility (curves): the camera-facing half carries the paint.
         facing = g.math('ABSOLUTE', g.dot(geometry.outputs['Normal'], tuple(cfg['_view'])))
@@ -243,26 +265,30 @@ def id_material(part):
     return material
 
 
-def apply(scene, mode, look_dir, cfg):
+def directions(scene):
     camera = scene.camera
-    view = (camera.matrix_world.to_quaternion() @ Vector((0, 0, 1))).normalized()
-    cfg['_view'] = view
-    right = camera.matrix_world.to_quaternion() @ Vector((1, 0, 0))
-    up = camera.matrix_world.to_quaternion() @ Vector((0, 1, 0))
+    q = camera.matrix_world.to_quaternion()
+    view, right, up = q @ Vector((0, 0, 1)), q @ Vector((1, 0, 0)), q @ Vector((0, 1, 0))
     # Upper-left key in camera space (the painting's light), soft fill from the right.
-    to_key = (-1.5 * right + 2.0 * up + 2.0 * view).normalized()
-    fill_dir = (1.2 * right + .2 * up + 1.0 * view).normalized()
+    return view.normalized(), (-1.5 * right + 2.0 * up + 2.0 * view).normalized(), (1.2 * right + .2 * up + 1.0 * view).normalized()
+
+
+def apply_materials(scene, mode, look_dir, cfg):
+    """(Re)build the look materials; safe to call again with other settings."""
+    for material in [m for m in bpy.data.materials if m.name.startswith(('LOOK ', 'ID '))]:
+        bpy.data.materials.remove(material)
+    view, to_key, fill_dir = directions(scene)
+    cfg['_view'] = view
     rest_file = look_dir / 'rest-matrices.json'
     is_master = 'clips' not in Path(bpy.data.filepath).parts
-    renderable = [o for o in scene.objects if o.type in ('MESH', 'CURVE') and o.data.materials]
+    renderable = [o for o in scene.objects if o.type in ('MESH', 'CURVE') and len(o.data.materials)]
     if is_master:
         look_dir.mkdir(parents=True, exist_ok=True)
         rest_file.write_text(json.dumps({o.name: [list(r) for r in o.matrix_world] for o in renderable
                                          if not (o.type == 'MESH' and o.data.uv_layers.get(PAINT_UV))}, indent=1))
     rest_matrices = json.loads(rest_file.read_text()) if rest_file.exists() else {}
     palettes = json.loads((look_dir / 'palettes.json').read_text()) if mode == 'beauty' else {}
-    source_size = (1254, 1254)
-    uv_world = uv_of_world(scene, source_size)
+    uv_world = uv_of_world(scene, (1254, 1254))
     ids = {}
     for ob in renderable:
         part = part_of(ob)
@@ -272,10 +298,15 @@ def apply(scene, mode, look_dir, cfg):
             material = build_material(ob, part, look_dir, palettes, tuple(to_key), tuple(fill_dir), uv_world, rest_matrices, cfg)
         for i in range(len(ob.data.materials)):
             ob.data.materials[i] = material
+    sun = bpy.data.objects['LOOK upper-left key']
+    sun.data.energy, sun.data.angle = cfg['sun_strength'], math.radians(cfg['sun_angle'])
+
+
+def apply_scene(scene, mode):
+    view, to_key, fill_dir = directions(scene)
     for ob in scene.objects:
         if ob.type == 'LIGHT': ob.hide_render = True
     sun = bpy.data.lights.new('LOOK upper-left key', 'SUN')
-    sun.energy, sun.angle = cfg['sun_strength'], math.radians(cfg['sun_angle'])
     sun_ob = bpy.data.objects.new(sun.name, sun)
     scene.collection.objects.link(sun_ob)
     sun_ob.rotation_euler = to_key.to_track_quat('Z', 'Y').to_euler()
@@ -304,7 +335,8 @@ def apply(scene, mode, look_dir, cfg):
 def main():
     args = sys.argv[sys.argv.index('--') + 1:]
     blend, out = Path(args[0]), Path(args[1])
-    opts = {'mode': 'beauty', 'res': '512', 'samples': '64', 'frames': 'rest', 'orbit': '0', 'look': None, 'name': None}
+    opts = {'mode': 'beauty', 'res': '1280', 'samples': '64', 'frames': 'rest', 'orbit': '0', 'look': None,
+            'name': None, 'variants': None}
     cfg = dict(LOOK)
     i = 2
     while i < len(args):
@@ -319,31 +351,49 @@ def main():
     bpy.ops.wm.open_mainfile(filepath=str(blend))
     scene = bpy.context.scene
     look_dir = Path(opts['look']) if opts['look'] else Path(os.environ['ANIM_ROOT']) / 'masters/spearman-3d-v2/look'
-    apply(scene, opts['mode'], look_dir, cfg)
+    orbit = float(opts['orbit'])
+    apply_scene(scene, opts['mode'])
     scene.render.resolution_x = scene.render.resolution_y = int(opts['res'])
     scene.render.resolution_percentage = 100
     if opts['mode'] == 'id':
         scene.render.filter_size = .01
     else:
         scene.eevee.taa_render_samples = int(opts['samples'])
-    orbit = float(opts['orbit'])
-    if orbit:
-        pivot = Matrix.Translation((0, 0, 0))
-        scene.camera.matrix_world = pivot @ Matrix.Rotation(math.radians(orbit), 4, 'Z') @ pivot.inverted() @ scene.camera.matrix_world
     out.mkdir(parents=True, exist_ok=True)
 
     def render(path):
         scene.render.filepath = str(path)
         bpy.ops.render.render(write_still=True)
 
-    if opts['frames'] == 'rest':
-        render(out / ((opts['name'] or ('id' if opts['mode'] == 'id' else 'rest')) + '.png'))
-    else:
+    # "a:key=v,key=v;b:key=v" renders several settings in one Blender session
+    # (one wait for the GPU lock). Without it, one variant named by --name.
+    variants = [(opts['name'] or ('id' if opts['mode'] == 'id' else 'rest'), {})]
+    if opts['variants']:
+        variants = [(v.split(':')[0], dict(kv.split('=') for kv in v.split(':')[1].split(',') if kv)) for v in opts['variants'].split(';')]
+    rest_camera = scene.camera.matrix_world.copy()
+    for name, overrides in variants:
+        settings = dict(cfg)
+        turn = orbit
+        for key, value in overrides.items():
+            if key == 'orbit': turn = float(value); continue
+            assert key in settings, key
+            settings[key] = float(value)
+        # Materials are built at the rest camera (the paint projection's frame).
+        scene.camera.matrix_world = rest_camera
+        bpy.context.view_layer.update()
+        apply_materials(scene, opts['mode'], look_dir, settings)
+        if turn:
+            scene.camera.matrix_world = Matrix.Rotation(math.radians(turn), 4, 'Z') @ rest_camera
+        if opts['frames'] == 'rest':
+            render(out / (name + '.png'))
+            continue
+        target = out / name if opts['variants'] else out
+        target.mkdir(parents=True, exist_ok=True)
         samples = json.loads(scene['sample_frames'])
         wanted = range(len(samples)) if opts['frames'] == 'clip' else [int(v) for v in opts['frames'].split(',')]
         done = {}
         for index in wanted:
-            frame, path = samples[index], out / f'{index:02}.png'
+            frame, path = samples[index], target / f'{index:02}.png'
             if frame in done:
                 shutil.copyfile(done[frame], path)  # held sample: identical bytes
                 continue

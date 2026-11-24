@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Part-constrained paint textures for look.py, from the painting and an ID render.
 
-  look_textures.py SOURCE.png ID.png OUT_DIR
+  look_textures.py SOURCE.png ID.png OUT_DIR [LIGHT.png]
 
 The frozen rest projection samples the painting at each surface point's screen
 position. Wherever the 3D silhouette and the painting disagree by a few pixels,
@@ -31,20 +31,49 @@ import critique  # noqa: E402
 PARTS = ['shield', 'helmet', 'crest', 'cuirass', 'greave_l', 'greave_r', 'cloak', 'tunic', 'skirt',
          'belt', 'sandal_l', 'sandal_r', 'skin', 'spear', 'base']
 ID_COLOURS = {p: (40 + 70 * (i % 4), 40 + 70 * ((i // 4) % 4), 250 - 100 * (i % 3)) for i, p in enumerate(PARTS)}
+MATERIAL = {'cloak': 'red', 'crest': 'red', 'tunic': 'linen', 'skirt': 'linen', 'shield': 'bronze', 'helmet': 'bronze',
+            'cuirass': 'bronze', 'greave_l': 'bronze', 'greave_r': 'bronze'}
 REACH = 64          # px in source space a part may claim paint beyond its 3D outline
 COLOUR_SCALE = 10.  # CIE76 units that cost as much as SPACE_SCALE pixels
 SPACE_SCALE = 18.
 
 
-def id_in_source_space(id_image, size):
-    """Sample the square ID render at each source pixel (project.py's calibration)."""
-    ids = np.asarray(id_image.convert('RGBA'))
-    n = ids.shape[0]
+def register(source):
+    """Resample the painting so project.py's frozen UVs land on the right pixels.
+
+    Fitting the full painting to the game's 256 px painting gives one isotropic
+    scale (5.3425 source px per 256-canvas px, centred on (627, 627) <-> (127.5,
+    128); mean CIE76 0.7 with Lanczos). project.py's calibration, frozen into
+    every UV, is 0.9% narrower and 0.3% shorter: up to 0.4 px off at 256, which
+    alone costs about 3 CIE76 against the painting. The UVs stay; the texture moves.
+    """
+    k = 5.3425
+    ax, ay = 105 * k / 556, 232 * k / 1236
+    bx, by = 627 - 52.5 * k - 349 * ax, 627 - 116 * k - 9 * ay
+    pixels = np.asarray(source.convert('RGBA')).astype(np.float32)
+    pixels[..., :3] *= pixels[..., 3:] / 255
+    bands = [Image.fromarray(np.ascontiguousarray(pixels[..., i]), 'F').transform(
+        source.size, Image.Transform.AFFINE, (ax, 0, bx, 0, ay, by), Image.Resampling.BICUBIC) for i in range(4)]
+    out = np.dstack([np.asarray(b, dtype=np.float32) for b in bands])
+    alpha = np.clip(out[..., 3:], 0, 255)
+    out[..., :3] = np.where(alpha > .5, out[..., :3] * 255 / np.maximum(alpha, 1e-3), 0)
+    out[..., 3:] = alpha
+    return np.clip(out, 0, 255)
+
+
+def render_in_source_space(image, size):
+    """Sample a square rest-camera render at each source pixel (project.py's calibration)."""
+    pixels = np.asarray(image.convert('RGBA'))
+    n = pixels.shape[0]
     sx, sy = np.meshgrid(np.arange(size[0]) + .5, np.arange(size[1]) + .5)
     x = (75 + (sx - 349) * 105 / 556) * n / 256
     y = (12 + (sy - 9) * 232 / 1236) * n / 256
     inside = (x >= 0) & (x < n) & (y >= 0) & (y < n)
-    px = ids[np.clip(y.astype(int), 0, n - 1), np.clip(x.astype(int), 0, n - 1)]
+    return pixels[np.clip(y.astype(int), 0, n - 1), np.clip(x.astype(int), 0, n - 1)], inside
+
+
+def id_in_source_space(id_image, size):
+    px, inside = render_in_source_space(id_image, size)
     table = np.array([ID_COLOURS[p] for p in PARTS], dtype=np.int32)
     distance = np.abs(px[..., None, :3].astype(np.int32) - table[None, None]).sum(-1)
     index = distance.argmin(-1)
@@ -114,49 +143,75 @@ def blur_valid(colour, weight, cell):
     return np.dstack([resize_f(coarse[..., i], size, Image.Resampling.BICUBIC) for i in range(3)])
 
 
-def palette(pixels):
-    """Six value steps of the part's own paint, dark to light."""
+QUANTILES = (2, 9, 22, 38, 54, 70, 84, 94, 99)
+
+
+def palette(pixels, light=None):
+    """Value steps of the material's own paint, dark to light.
+
+    With `light` (the look's ramp input at rest, for the same material's 3D
+    surface) each step sits where that share of the surface is lit: at rest the
+    unseen-surface shader then has the painting's own value distribution, and
+    the key light decides where the lights and darks fall. Without it the steps
+    are evenly spread.
+    """
     luminance = pixels @ np.array([.2126, .7152, .0722])
     order = np.argsort(luminance)
-    colours = []
-    for q in (3, 16, 38, 62, 84, 97):
-        lo, hi = int(len(order) * max(0, q - 4) / 100), max(int(len(order) * min(100, q + 4) / 100), 1)
+    colours, positions = [], []
+    for i, q in enumerate(QUANTILES):
+        lo, hi = int(len(order) * max(0, q - 3) / 100), max(int(len(order) * min(100, q + 3) / 100), 1)
         colours.append([int(round(v)) for v in pixels[order[lo:hi]].mean(0)])
-    return {'positions': [.05, .20, .40, .60, .80, .95], 'colours': colours}
+        position = float(np.percentile(light, q)) if light is not None and len(light) > 200 else .05 + .9 * i / (len(QUANTILES) - 1)
+        positions.append(round(max(position, positions[-1] + .012 if positions else 0), 4))
+    return {'positions': positions, 'colours': colours}
 
 
 def main():
     source_path, id_path, out = Path(sys.argv[1]), Path(sys.argv[2]), Path(sys.argv[3])
+    light_path = Path(sys.argv[4]) if len(sys.argv) > 4 else None
     out.mkdir(parents=True, exist_ok=True)
-    source = np.asarray(Image.open(source_path).convert('RGBA')).astype(np.float32)
+    source = register(Image.open(source_path))
+    Image.fromarray(source.round().astype(np.uint8), 'RGBA').save(out / 'registered-source.png')
     rgb, alpha = source[..., :3], source[..., 3] / 255
     height, width = alpha.shape
     ids = id_in_source_space(Image.open(id_path), (width, height))
     lab = critique.rgb_to_lab(rgb).astype(np.float32)
+    light = None
+    if light_path:
+        # look.py --set debug=6 writes the ramp input through the display transform.
+        encoded = render_in_source_space(Image.open(light_path), (width, height))[0][..., 0] / 255
+        light = np.where(encoded <= .04045, encoded / 12.92, ((encoded + .055) / 1.055) ** 2.4)
     opaque = alpha > .85
     lightness, red, yellow = lab[..., 0], lab[..., 1], lab[..., 2]
     chroma = np.hypot(red, yellow)
     is_red = (red > 30) & (red > yellow * .9)
     is_pale = (lightness > 68) & (chroma < 33) & (red < 14)
     families = {'red': is_red | (lightness < 22), 'pale': ~is_red & (chroma < 34), 'warm': ~is_red & ~is_pale}
-    family_of = {'cloak': 'red', 'crest': 'red', 'tunic': 'pale', 'skirt': 'pale', 'base': 'pale'}
+    strict = {'cloak': 'red', 'crest': 'red', 'shield': 'warm', 'helmet': 'warm', 'greave_l': 'warm', 'greave_r': 'warm',
+              'sandal_l': 'warm', 'sandal_r': 'warm', 'spear': 'warm', 'skin': 'warm'}
     owner = np.full((height, width), -1, dtype=np.int32)
+    bronze_region = np.isin(ids, [PARTS.index(q) for q, m in MATERIAL.items() if m == 'bronze'])
     debug = np.zeros((height, width, 3), dtype=np.uint8)
     palettes = {}
     stone_like = (lightness > 66) & (red < 14)  # cream and bright bronze overlap: the stone uses its outline
-    figure = opaque & ~((ids == PARTS.index('base')) & stone_like)
+    base_index = PARTS.index('base')
+    figure = ((ids >= 0) & (ids != base_index)) | (opaque & (ids == base_index) & ~stone_like)
     for index, part in enumerate(PARTS):
         region = ids == index
-        # A part keeps the painting inside its own rest outline unless the paint
-        # there plainly belongs to another material family (red on bronze, linen
-        # on skin, background). Bronze, leather, skin and wood share a family:
-        # colour cannot separate them, so the 3D outline decides.
-        agree = region & opaque & (stone_like if part == 'base' else families[family_of.get(part, 'warm')])
+        # A part keeps the painting inside its own rest outline. Only rigid or
+        # free-swinging parts also reject paint of another material family (red
+        # cloak on a shield rim, linen on a thigh): that patch would travel with
+        # the part. Torso layers keep everything: where the model's tunic sits
+        # under the painted cloak collar, the collar is what belongs on it.
+        family = strict.get(part)
+        agree = region & opaque & (stone_like if part == 'base' else families[family] if family else True)
         smooth = np.asarray(Image.fromarray((agree * 255).astype(np.uint8)).filter(ImageFilter.BoxBlur(3))) > 127
         valid = erode(smooth & region & opaque, 1)
         if part == 'base':
-            # The stone keeps only clean stone: no feet, spear butt or their painted shadows.
-            valid = valid & ~(grow_distance(figure, 16) <= 16)
+            # The stone keeps only clean stone: no feet, spear butt or their painted
+            # shadows. Painted stone just outside the 3D disc still seeds the fill.
+            valid = erode(opaque & stone_like & ((ids == index) | (ids < 0)), 1) & ~(grow_distance(figure, 16) <= 16)
+            valid[:int(height * .8)] = False
         if valid.sum() < 50:
             print('too few owned pixels for', part, int(valid.sum()))
             valid = region & opaque
@@ -165,9 +220,19 @@ def main():
         weight = valid.astype(np.float32)
         filled = push_pull(rgb, weight)
         Image.fromarray(np.clip(filled, 0, 255).round().astype(np.uint8)).save(out / f'front-{part}.png')
-        low = blur_valid(rgb, weight, 28)
+        low = blur_valid(rgb, weight, 96)
         Image.fromarray(np.clip(low, 0, 255).round().astype(np.uint8)).save(out / f'low-{part}.png')
-        palettes[part] = palette(rgb[valid])
+        # Ramps come from the whole painting's material, not just the part's rest
+        # outline: the visible cloak is mostly its shadowed inside, but its unseen
+        # back needs the lit cinnabar of the collar too.
+        material = MATERIAL.get(part)
+        pool, surface = valid, region
+        if material == 'red': pool = valid | (opaque & is_red)
+        elif material == 'linen': pool = (valid & ~is_red) | (opaque & is_pale & (ids != base_index) & (np.arange(height)[:, None] < height * .8))
+        elif material == 'bronze': pool = opaque & bronze_region & families['warm']
+        elif part == 'skin': pool = valid & (yellow < 2.1 * red) & (red > 9)   # tan flesh, not the bronze it borders
+        if material: surface = np.isin(ids, [PARTS.index(q) for q, m in MATERIAL.items() if m == material])
+        palettes[part] = palette(rgb[pool], light[surface] if light is not None else None)
         print(part, 'owned px', int(valid.sum()), 'of 3D region', int(region.sum()))
     Image.fromarray(debug).save(out / 'assignment.png')
     ids_view = np.zeros((height, width, 3), dtype=np.uint8)

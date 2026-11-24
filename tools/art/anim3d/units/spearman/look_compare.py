@@ -4,7 +4,7 @@
 Run with the pipeline venv (Pillow and numpy):
   look_compare.py RENDER.png OUT.png [--painting P] [--zoom OUT2.png] [--label TEXT]
 The render is any transparent square PNG at the painting's camera. It is reduced
-in linear light with premultiplied alpha. The numbers reuse critique.py, so they
+the way the game's painting was (display-space Lanczos, premultiplied alpha). The numbers reuse critique.py, so they
 match the round critique (IoU with a ±3 px search, mean CIE76 ΔE on the overlap).
 """
 import argparse
@@ -31,20 +31,26 @@ def to_srgb(c):
 
 
 def resize_linear(image, size):
-    """Area/Lanczos reduction in linear light with premultiplied alpha."""
+    """Lanczos reduction with premultiplied alpha, in display (sRGB) space.
+
+    The game's 256 px painting is a display-space Lanczos reduction of its
+    1254 px master (refitting it that way leaves 0.7 CIE76; a linear-light
+    reduction of the same pixels leaves 3.1). A render judged against that
+    painting has to be reduced the same way, or every painted highlight edge
+    reads as a colour error. The name is kept for callers.
+    """
     image = image.convert('RGBA')
     if image.size == (size, size):
         return image
     a = np.asarray(image).astype(np.float64) / 255
-    rgb, alpha = to_linear(a[..., :3]) * a[..., 3:], a[..., 3]
+    rgb, alpha = a[..., :3] * a[..., 3:], a[..., 3]
     bands = [Image.fromarray(band.astype(np.float32), 'F').resize((size, size), Image.Resampling.LANCZOS)
              for band in (*np.moveaxis(rgb, 2, 0), alpha)]
     r, g, b, al = (np.asarray(band, dtype=np.float64) for band in bands)
     al = np.clip(al, 0, 1)
-    out = np.stack([r, g, b], -1) / np.maximum(al, 1e-6)[..., None]
-    out = np.clip(to_srgb(np.clip(out, 0, 1)), 0, 1)
+    out = np.clip(np.stack([r, g, b], -1) / np.maximum(al, 1e-6)[..., None], 0, 1)
     out[al < 1e-4] = 0
-    return Image.fromarray(np.dstack([out, al]).__mul__(255).round().astype(np.uint8), 'RGBA')
+    return Image.fromarray((np.dstack([out, al]) * 255).round().astype(np.uint8), 'RGBA')
 
 
 def flat(image, bg=CREAM):
@@ -52,7 +58,7 @@ def flat(image, bg=CREAM):
     return Image.alpha_composite(base, image).convert('RGB')
 
 
-def metrics(painting, render):
+def metrics(painting, render, heat=None):
     p, r = resize_linear(painting, 256), resize_linear(render, 256)
     pm, _ = critique.painting_mask(p)
     rm = np.asarray(r)[:, :, 3] > 8
@@ -62,8 +68,20 @@ def metrics(painting, render):
                            critique.rgb_to_lab(critique.shift_array(np.asarray(r)[:, :, :3], dx, dy)), axis=2)
     # The base is a third of the overlap: also report the figure above the disc.
     rows = np.arange(256)[:, None] < 236
+    # The ±3 px search maximises silhouette overlap only; projected paint is
+    # registered at zero offset, so also report the colour error unshifted.
+    plain = np.linalg.norm(critique.rgb_to_lab(np.asarray(p)[:, :, :3]) - critique.rgb_to_lab(np.asarray(r)[:, :, :3]), axis=2)
+    both = pm & rm
+    if heat is not None:
+        view = np.asarray(flat(r)).copy()
+        level = np.clip(plain / 40, 0, 1)[..., None]
+        view = (view * (1 - level) + np.array([255, 0, 255]) * level).astype(np.uint8)
+        view[~both] = (view[~both] * .35 + 150).astype(np.uint8)
+        view[pm & ~rm] = (0, 170, 210)
+        Image.fromarray(view).resize((768, 768), Image.Resampling.NEAREST).save(heat)
     return {'iou': round(float(iou), 4), 'offset': [dx, dy], 'delta_e': round(float(delta[overlap].mean()), 2),
-            'delta_e_figure_rows_lt_236': round(float(delta[overlap & rows].mean()), 2),
+            'delta_e_no_offset': round(float(plain[both].mean()), 2),
+            'delta_e_no_offset_figure': round(float(plain[both & rows].mean()), 2),
             'delta_e_p90': round(float(np.percentile(delta[overlap], 90)), 2), 'overlap_px': int(overlap.sum())}
 
 
@@ -103,12 +121,13 @@ def main():
     ap.add_argument('--zoom', type=Path)
     ap.add_argument('--box', type=int, nargs=4)
     ap.add_argument('--scale', type=int, default=3)
+    ap.add_argument('--heat', type=Path, help='ΔE heat (magenta) over the render, 3x; cyan = painting only')
     args = ap.parse_args()
     painting, render = Image.open(args.painting).convert('RGBA'), Image.open(args.render).convert('RGBA')
     sheet(painting, render, args.label).save(args.out)
     if args.zoom:
         zoom(painting, render, args.box, args.scale).save(args.zoom)
-    print(json.dumps(metrics(painting, render)))
+    print(json.dumps(metrics(painting, render, args.heat)))
 
 
 if __name__ == '__main__':
