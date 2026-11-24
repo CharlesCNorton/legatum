@@ -165,3 +165,20 @@
   8. Death, frame 1: spear still dead vertical and planted while the body recoils. Start the tip 5-8 degrees in that frame.
   9. Move, frames 2 and 6: the lifted foot is fine now; the cloak on the spear side swings 6-7 px wider than at rest and back in one frame. Damp it to 3-4 px.
   10. Hit, frame 2: head drops 14 px in one frame; halve it.
+- (cloud reviewer, on Fable B final with Fable A's look) The best complete Spearman so far. B's measured evidence on the shield and helmet is accepted: leave them. ROUND 12 FORM BASE = fable/unit-anim-3d-spearman-b (28da82cb) with Fable A's look (fable/unit-anim-3d-spearman-a, look.sh). Remaining before showing Sam:
+  1. Legs at rest are still slightly A-framed: in the painting the shins are more vertical and the feet a little closer together (in the crossfade the render's feet sit outside the painted ones on both sides).
+  2. Death end pose: he ends face-down under the shield with the crest sticking out left, off the base. Keep the collapse, but end with more of the body on the base and the head and crest readable, e.g. on his side facing the camera with the shield beside him.
+  3. Walk: the trailing foot lifts high and reads as a march. Lower the foot lift and add a little hip sway.
+  4. Material items from the round-11 note go into the look pass: darker sandals, base contact shadow and side-band gradient, shield rim value.
+  Candidate bar for Sam: IoU >= 0.94 and blurred ΔE <= 6, with good clips.
+- (Fable art director, 2026-11-24T05:17Z, on Fable B look build rendered 05:15Z: spearman-fable-b-look-rest-compare.png, spearman-fable-b-look.mp4; and the final Astra r12c death, spearman-r12c-death-256.png rendered 05:07Z) Positions at 256 px.
+  Fable B: rest IoU 0.937 (was 0.935). Death frame 1 now starts the spear tipping and the shield keeps its face toward camera through the drop; both read right at 160. Death and hit need nothing more from me.
+  Astra r12c death, final version: the cloak tent in frames 5-8 is gone, good. New problems: frames 1-2 throw the cloak up over the head as a red flag 25 px above the helmet (x 115-150, y 60-95), and frames 7-9 end as a low heap about 18 px tall with the shield on edge and no helmet, crest or shield face visible. At 64 px it is a brown smudge. Fable B's ending (crest left, shield face up on his back) still identifies the unit. Death stays with Fable B.
+  Best per aspect, unchanged: silhouette = Fable B; materials/values = Fable A's look; death = Fable B; hit = Astra r12c or Fable B; move = Fable B or Astra r12c; idle, attack = frozen. The simplest merge for round 12 is Fable B's masters and clips rendered with A's look, plus r12c's hit if the motion rule must hold for that clip.
+  Open fixes on that candidate, ranked (only these are left on the rest pose):
+  1. Foot slabs, unchanged since my last block: grey-brown plates under both feet (left x 82-104, right x 147-168, y 216-225), base-top p10 luminance 130 vs 199. This is now the single most visible difference from the painting at 256 and 160. Sole outline plus 2 px, warm brown, 40% strength, soft edge.
+  2. Sandal straps: three dark bands per foot and a dark sole line; bring foot luminance from 162 to ~140.
+  3. Cloak lit folds, spear side: p90 luminance 140 vs 150. Lift ~8%.
+  4. Cloak hem behind the right leg: level at y ~190 with three small scallops instead of one diagonal edge.
+  5. Base top: aim for (249,217,176); add the faint shadow behind the feet.
+  6. If r12c's death is kept anyway: pin the cloak for frames 1-2 (max 6 px above the shoulders) and end with the shield face and the crest toward camera.
