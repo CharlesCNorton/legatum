@@ -119,6 +119,8 @@ def refine(sc):
                 for p in spline.bezier_points:
                     p.co = fitted(p.co);p.handle_left = fitted(p.handle_left);p.handle_right = fitted(p.handle_right)
         records.append(ob.name)
+    from blade import fit_blade
+    fit_blade(sc)
     # Finish rigid surfaces before sampling projection. Deforming anatomy retains
     # native weights and subdivision; paint.py samples its evaluated rest surface.
     bpy.ops.object.select_all(action='DESELECT')

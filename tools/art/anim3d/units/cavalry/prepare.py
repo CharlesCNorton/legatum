@@ -21,6 +21,23 @@ for kind in ['coat','cloth','skin']:
 # Visibility on the actual rest mesh is tested in paint.py; no alpha cutouts.
 out.save(A/'projection-horse.png')
 
+# Register the clean generated disc to the original disc bounds. RGB padding
+# extends edge pigment only; generated alpha never clips the 3D geometry.
+stone=Image.open(A/'stone-fill-source.png').convert('RGBA')
+mask=stone.getchannel('A').point(lambda a:255 if a>200 else 0)
+sb=mask.getbbox()
+patch=stone.crop(sb).resize((568,132),Image.Resampling.LANCZOS)
+plate=Image.new('RGBA',(1024,1024),(239,214,171,255));plate.paste(patch,(276,844),patch)
+# Edge extension prevents background color leaking at the physical bevel.
+for y in range(828,990):
+ row=[x for x in range(276,844) if 844<=y<976 and patch.getpixel((x-276,y-844))[3]>200]
+ if row:
+  lo,hi=min(row),max(row)
+  for x in range(250,870):
+   if x<lo:plate.putpixel((x,y),plate.getpixel((lo,y)))
+   elif x>hi:plate.putpixel((x,y),plate.getpixel((hi,y)))
+plate.convert('RGB').save(A/'stone-pigment.png')
+
 inputs={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in A.iterdir() if p.suffix in ['.png','.glb']}
 lock=json.loads(Path(__file__).with_name('assets.lock.json').read_text());lock['paint_assets_sha256']={k:v for k,v in inputs.items() if k!='Horse.glb'}
 assert inputs['Horse.glb']==lock['sha256'];Path(__file__).with_name('assets.lock.json').write_text(json.dumps(lock,indent=2)+'\n');(M/'inputs.json').write_text(json.dumps(inputs,indent=2)+'\n')

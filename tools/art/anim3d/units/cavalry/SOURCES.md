@@ -15,3 +15,9 @@ Original geometry, tailoring, UV projection, shader, animation and delivery code
 is MIT; rendered artwork CC BY 4.0. `rider_motion.py` and the evaluated front/top
 feet review are isolated adaptations of the inspected cataphract/keshig MIT
 helpers. No other lane's files are edited.
+
+Round 3 clean stone occlusion fill: built-in ImageGen, 2026-11-23, output
+`01a20b00-3885-7173-9128-ed393842c79a/exec-b7794ac2-58dd-461f-ae34-c1a9fd99f74a.png`;
+original project CC BY 4.0, no public URL. Exact prompt in `stone-fill.prompt.txt`;
+source and derived texture SHA256 in `assets.lock.json`. Applied as color to the
+real beveled stone with live contact AO; image alpha never clips geometry.

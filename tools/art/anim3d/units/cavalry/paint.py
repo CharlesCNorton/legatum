@@ -69,20 +69,7 @@ sc.view_settings.view_transform='Standard';sc.view_settings.look='None';sc.view_
 for name,energy in [('Warm key',340),('Cool fill',68),('Cool rim',110)]:bpy.data.objects[name].data.energy=energy
 bpy.data.objects['Warm key'].data.color=(1,.95,.86)
 s.inputs['Roughness'].default_value=.86
-# Warm stone pigment stays independent of the figure painting. Non-camera rays
-# and 40% of visible shading retain the physical material and contact shadows.
-n=stone.node_tree.nodes;l=stone.node_tree.links
-geo=n.new('ShaderNodeNewGeometry');xyz=n.new('ShaderNodeSeparateXYZ');l.new(geo.outputs['Normal'],xyz.inputs[0])
-ramp=n.new('ShaderNodeValToRGB')
-def linear(v):
- v=v/255;return v/12.92 if v<=.04045 else ((v+.055)/1.055)**2.4
-ramp.color_ramp.elements[0].position=.15;ramp.color_ramp.elements[0].color=tuple(linear(v) for v in (209,172,113))+(1,)
-ramp.color_ramp.elements[1].position=.8;ramp.color_ramp.elements[1].color=tuple(linear(v) for v in (245,225,186))+(1,)
-l.new(xyz.outputs['Z'],ramp.inputs[0]);pig=n.new('ShaderNodeEmission')
-noise=n.new('ShaderNodeTexNoise');noise.inputs['Scale'].default_value=95;noise.inputs['Detail'].default_value=3
-grain=n.new('ShaderNodeValToRGB');grain.color_ramp.elements[0].color=(.73,.69,.61,1);grain.color_ramp.elements[1].color=(1,1,1,1);l.new(noise.outputs['Fac'],grain.inputs[0])
-stonepaint=n.new('ShaderNodeMixRGB');stonepaint.blend_type='MULTIPLY';stonepaint.inputs[0].default_value=.38;l.new(ramp.outputs[0],stonepaint.inputs[1]);l.new(grain.outputs[0],stonepaint.inputs[2]);l.new(stonepaint.outputs[0],pig.inputs['Color'])
-ray=n.new('ShaderNodeLightPath');weight=n.new('ShaderNodeMath');weight.operation='MULTIPLY';weight.inputs[1].default_value=.6;l.new(ray.outputs['Is Camera Ray'],weight.inputs[0])
-blend=n.new('ShaderNodeMixShader');l.new(weight.outputs[0],blend.inputs[0]);l.new(s.outputs[0],blend.inputs[1]);l.new(pig.outputs[0],blend.inputs[2]);l.new(blend.outputs[0],n.get('Material Output').inputs['Surface'])
+from stone import stone_pigment
+stone_pigment(sc,A)
 (M/'projection.json').write_text(json.dumps({'objects':records,'cream_srgb':'#E9CFA0','method':'rest camera projection on genuine meshes; generated backfill; no alpha cutout geometry','limitation':'Round-one alignment and uncovered seams require visual review.'},indent=2))
 bpy.ops.file.pack_all();bpy.ops.wm.save_as_mainfile(filepath=str(M/'cavalry.blend'))

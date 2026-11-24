@@ -5,7 +5,7 @@ cd "$(git -C "$(dirname "$0")" rev-parse --show-toplevel)"
 source tools/art/anim3d/env.sh
 U=tools/art/anim3d/units/cavalry
 export RENDER_ENGINE="${RENDER_ENGINE:-CYCLES}" CYCLES_DEVICE=GPU
-export RESOLUTION=512 SAMPLES="${SAMPLES:-64}" ROUND="${ROUND:-2}"
+export RESOLUTION=512 SAMPLES="${SAMPLES:-64}" ROUND="${ROUND:-3}"
 log="$ANIM_ROOT/cavalry-gpu-round${ROUND}.log"
 status="$ANIM_ROOT/review/3d-v2/cavalry-gpu-status.txt"
 # Keep the driver transcript useful as well as the unit-owned detailed log.
@@ -24,6 +24,8 @@ if [[ "$RENDER_ENGINE" == CYCLES ]]; then
 elif [[ "$RENDER_ENGINE" != BLENDER_EEVEE ]]; then
   echo "Unsupported GPU engine: $RENDER_ENGINE"; false
 fi
+stage=inputs
+"$ANIM_ROOT/venv/bin/python" "$U/verify_inputs.py"
 stage=prepare
 "$ANIM_ROOT/venv/bin/python" "$U/prepare.py"
 stage=paint

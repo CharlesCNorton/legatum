@@ -18,4 +18,7 @@ for f in range(192):
  p.stdin.write(im.tobytes())
 p.stdin.close();assert p.wait()==0
 probe=json.loads(subprocess.check_output(['ffprobe','-v','error','-show_streams','-show_format','-of','json',str(out)]));s=probe['streams'][0];assert s['codec_name']=='h264' and s['pix_fmt']=='yuv420p' and int(s['nb_frames'])==192 and float(probe['format']['duration'])==8
-(V/'cavalry-video-validation.json').write_text(json.dumps({'file':str(out),'frames':192,'seconds':8,'size':[1600,352],'codec':'h264','pixel_format':'yuv420p'},indent=2)+'\n');print('VIDEO',out)
+check_sheet=V/f'cavalry-round{os.environ.get("ROUND","1")}-video-check.png'
+subprocess.run(['ffmpeg','-y','-loglevel','error','-i',str(out),'-vf','fps=1,scale=800:176,tile=2x4:nb_frames=8','-frames:v','1','-threads','3','-update','1',str(check_sheet)],check=True)
+assert Image.open(check_sheet).size==(1600,704)
+(V/'cavalry-video-validation.json').write_text(json.dumps({'file':str(out),'frames':192,'seconds':8,'size':[1600,352],'codec':'h264','pixel_format':'yuv420p','decoded_check_sheet':str(check_sheet)},indent=2)+'\n');print('VIDEO',out)

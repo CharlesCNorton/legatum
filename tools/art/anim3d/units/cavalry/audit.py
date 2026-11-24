@@ -22,11 +22,13 @@ for clip in ['idle','move','attack','hit','death']:
   for ob in [horse,body]:
    ev=ob.evaluated_get(bpy.context.evaluated_depsgraph_get());me=ev.to_mesh();z=[(ev.matrix_world @ v.co).z for v in me.vertices];ev.to_mesh_clear();heights.append({'frame':f,'object':ob.name,'min_z':min(z),'max_z':max(z)})
    if ob==horse:
+    if clip=='idle':assert min(z)>=.085,f'{clip}/{f}: lower-leg skin penetrates stone, min z={min(z)}'
     soles={}
     for name in ['FF.L','FF.R','FFB.L','FFB.R']:
      group=horse.vertex_groups[name].index
      ids=[v.index for v in horse.data.vertices if any(g.group==group and g.weight>.5 for g in v.groups)]
      soles[name]=min(z[i] for i in ids)
+    if clip=='idle':assert all(soles[n]>=.09 for n in ('FF.L','FFB.L','FFB.R')),f'{clip}/{f}: planted sole penetrates stone {soles}'
     hoof_samples.append({'frame':f,'lowest_z':soles,'below_stone_warning':any(h<.09 for h in soles.values())})
- records.append({'clip':clip,'stationary_base':True,'rigs':True,'height_samples':heights,'hoof_samples':hoof_samples,'rider_source_action':sc.get('rider_source_action'),'horse_source_action':sc.get('horse_source_action'),'contact_method':sc.get('contact_method','source collapse plus floor solver')})
+ records.append({'clip':clip,'stationary_base':True,'rigs':True,'height_samples':heights,'hoof_samples':hoof_samples,'rider_source_action':sc.get('rider_source_action'),'horse_source_action':sc.get('horse_source_action'),'contact_method':sc.get('stance_method','native source motion')})
 (R/'review/3d-v2/cavalry-audit.json').write_text(json.dumps({'structural_pass':True,'clips':records,'limitations':'No exhaustive mesh collision or hoof slip solver. Inspect strips and video.'},indent=2)+'\n');print('AUDIT cavalry dual rigs, anatomy, safe scale and fixed base passed')

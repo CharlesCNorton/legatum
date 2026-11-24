@@ -7,7 +7,6 @@ from math import sin,cos,pi
 sys.path.insert(0,str(Path(__file__).parent))
 from tack import reins
 from rider_motion import sample_rider
-from contacts import key_contacts
 R=Path(os.environ['ANIM_ROOT']);M=R/'masters/cavalry';(M/'clips').mkdir(exist_ok=True)
 CLIPS={'idle':(8,10,True,'Idle',80),'move':(8,12,True,'Gallop',14),'attack':(10,14,False,'Gallop',14),'hit':(4,12,False,'Idle_HitReact_Left',16),'death':(10,10,False,'Death',24)}
 for node in ast.parse(Path('tools/art/anim3d/scene.py').read_text()).body:
@@ -17,11 +16,13 @@ for clip,(count,fps,loop,src,length) in CLIPS.items():
  bpy.ops.wm.open_mainfile(filepath=str(M/'cavalry.blend'));sc=bpy.context.scene;hrig=bpy.data.objects['AnimalArmature'];rig=bpy.data.objects['Rider MPFB game_engine'];root=bpy.data.objects['Horse world control']
  rest_pose={p.name:p.matrix_basis.copy() for p in hrig.pose.bones}
  rider_action,rider_samples=sample_rider(rig,clip,count,loop)
- raised={n:Matrix(m) for n,m in json.loads(hrig.get('raised_idle_foreleg','{}')).items()}
+ raised={n:Matrix(m) for n,m in json.loads(hrig['registered_stance']).items()}
  act=bpy.data.actions['AnimalArmature|'+src];hrig.animation_data.action=act;hrig.animation_data.action_slot=act.slots[0]
  poses=[]
  for i in range(count+int(loop)):
   t=i/count if loop else min(i/(count-2 if clip=='death' else count-1),1)
+  # Sparse source actions must not inherit registered rest translations/scales.
+  for p in hrig.pose.bones:p.matrix_basis=Matrix.Identity(4)
   f=t*length;sc.frame_set(int(f),subframe=f%1);bpy.context.view_layer.update()
   sampled={p.name:p.matrix_basis.copy() for p in hrig.pose.bones};object_matrix=hrig.matrix_basis.copy()
   if clip=='idle':sampled.update(raised)
@@ -115,7 +116,6 @@ for clip,(count,fps,loop,src,length) in CLIPS.items():
    p.rotation_mode='QUATERNION'
    for prop in ['location','rotation_quaternion','scale']:p.keyframe_insert(prop,frame=f)
   bpy.context.view_layer.update();reins(f)
- key_contacts(count,loop,clip)
  # Smooth interpolation for the editable rig; delivered samples remain exact.
  for obj in [hrig,rig,root]+weapons:
   if obj.animation_data and obj.animation_data.action:

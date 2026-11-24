@@ -5,7 +5,7 @@ are compensated before applying motion; no foot orientation patch is used.
 """
 import bpy, hashlib, os
 from pathlib import Path
-from mathutils import Quaternion
+from mathutils import Quaternion, Matrix
 
 def sample_rider(rig, clip, count, loop):
     root = Path(os.environ['ANIM_ROOT'])/'assets/quaternius-ual'
@@ -30,12 +30,14 @@ def sample_rider(rig, clip, count, loop):
         mapping.update({'upperarm_l':'DEF-upper_arm.L','lowerarm_l':'DEF-forearm.L',
                         'upperarm_r':'DEF-upper_arm.R','lowerarm_r':'DEF-forearm.R'})
     scene = bpy.context.scene
+    for p in source.pose.bones:p.matrix_basis = Matrix.Identity(4)
     scene.frame_set(int(action.frame_range[0])); bpy.context.view_layer.update()
     reference = {s:source.pose.bones[s].matrix_basis.to_quaternion() for s in mapping.values()}
     samples = []
     for i in range(count+int(loop)):
         t = i/count if loop else min(i/(count-2 if clip == 'death' else count-1), 1)
         f = action.frame_range[0]+t*(action.frame_range[1]-action.frame_range[0])
+        for p in source.pose.bones:p.matrix_basis = Matrix.Identity(4)
         scene.frame_set(int(f), subframe=f%1); bpy.context.view_layer.update()
         deltas = {}
         for name, src in mapping.items():

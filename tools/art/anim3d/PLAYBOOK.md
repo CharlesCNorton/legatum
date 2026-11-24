@@ -313,3 +313,51 @@ Added tail locks must copy both the native horse object parent hierarchy and
 its skin weights. An armature modifier alone looked attached at rest but left
 the hair behind during root-level death translation; the structural audit now
 checks that shared hierarchy, and the death strip is reviewed after rebuild.
+
+### Cavalry driver round 3: joint registration instead of skin displacement
+
+The round2 GPU handoff completed at 184,594 bytes/Q80, but its successful audit
+hid visibly stretched hind tendons and a different rest stance. Prior GPU
+masters, clips and reviews are retained under `masters/cavalry/driver-r2-gpu/`.
+
+`stance.py` fits the actual leg joints and independent imported hoof controls to
+measured painting coordinates before frozen UV projection. The imported rear
+hoof controls are separate roots; verify their pairing from shared skin weights,
+not apparent proximity in the projected pose. A screen-proximity trial paired
+them incorrectly and was rejected after inspecting the lowest vertices. Control
+origins can also differ from visible skin joints: the final fitter measures
+shared-weight boundary centroids on the evaluated rest mesh, then fits those
+anchors. Bone-origin-only fitting was rejected for lower-leg distortion. Mild radial changes
+broaden the existing weighted anatomy around its axes. The pose fit keeps depth,
+then adjusts support along the camera depth axis so planted soles touch the
+stone without changing their image coordinates. `contacts.py`'s mesh-only support
+warps were removed. Idle retains the registered stance; move uses synchronized
+native gallop; attack/hit/death blend out of the registered pose into source
+motion. This is rest-pose adaptation, not a claim of full contact/slip solving.
+
+Reset all source pose bases before evaluating each action sample. Imported glTF
+actions may be sparse: a channel absent from the action otherwise retains a
+registered rest translation/scale or the previously sampled action. This applies
+to both the horse and the CC0 seated rider source. Do not patch foot yaw after
+retargeting.
+
+`blade.py` fits a real beveled diamond-section sabre to the painting's curved
+profile before UV sampling; broader tapered solid tail locks keep their copied
+horse parent hierarchy and source weights. Existing thickness, straps, buckles,
+uniform folds, scanned materials, generated unseen-surface fills, product lights
+and the single automatic rest-histogram LUT remain. `stone.py` uses a new generated
+clean occlusion plate as pigment on the actual beveled disc, with live AO for
+moving hoof shadows. Generated alpha never clips geometry. Exact prompt and
+SHA256 pins are in the unit directory and both source ledgers.
+
+`ROUND=3 tools/art/anim3d/units/cavalry/gpu.sh` verifies immutable source inputs
+before regenerating derived maps, then rebuilds the complete sequential GPU512
+pass, gallery256, top/front feet diagnostics, rig audit, 160px trimmed Q75+ atlas,
+validation and eight-second H.264/yuv420p movie. Review sheets now label device,
+native resolution and samples. CPU previews remain CPU evidence; no PASS is
+created by the script. Inspect all five clips and both token sizes after GPU
+rendering, including first-frame continuity, support, tail and released sabre.
+
+The movie helper also extracts eight frames from the encoded MP4 into
+`cavalry-round${ROUND}-video-check.png`; that sheet is decoded movie evidence,
+not a reconstruction from the original frame files.

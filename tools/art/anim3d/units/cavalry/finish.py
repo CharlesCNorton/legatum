@@ -68,8 +68,8 @@ def finish(sc):
         v.co = skin.inverted_safe() @ (horse.matrix_world.inverted() @ world)
     horse.data.update()
     bpy.context.view_layer.update()
-    from contacts import fit_rest_contacts
-    fit_rest_contacts()
+    from stance import fit_stance
+    fit_stance(sc)
 
     # Fit the real leather to the muzzle instead of the old oversized snout.
     targets = {
@@ -109,7 +109,7 @@ def finish(sc):
             index = min(5, int(t*6)); a = t*6-index
             x = tail_targets[index][0]*(1-a)+tail_targets[index+1][0]*a
             y = tail_targets[index][1]*(1-a)+tail_targets[index+1][1]*a
-            x += spread*(3+7*math.sin(math.pi*t)) + 1.5*math.sin(t*9+strand)*t
+            x += spread*(2+4*math.sin(math.pi*t)) + 1.5*math.sin(t*9+strand)*t
             y += spread*2*t
             bone = arm.pose.bones[f'Tail{index+1}']
             center = arm.matrix_world @ bone.head
@@ -117,7 +117,7 @@ def finish(sc):
             center = move(center, x-px, y-py)
             # Move toward camera so the fine locks sit on the visible surface.
             center += (sc.camera.location-center).normalized()*(.018+abs(spread)*.006)
-            radius = .010*(1-.92*t)
+            radius = .022*(1-.94*t)
             for k in range(6):
                 angle = k*math.tau/6
                 world = center + right*(radius*math.cos(angle)) + (right.cross(up))*(radius*math.sin(angle))
