@@ -235,3 +235,5 @@
 
 - Round 13 merge: read feedback through 06:40Z; ported updated skill and kit (Git ORIG_HEAD lock denied), Fable C guard/look, Astra C translation-only walk and calm death; rejected Fable D foot rotations/death on rule and director verdict. Ankle-only walk transition shifted contact 29.82 mm: rejected; complete track registration passes slip 0.0042 mm, floor 0.0001 mm, seam zero. Full CPU rebuild in progress.
 - Round 13 selection corrected on new 06:40Z art-director feedback: Fable D death dropped, Astra c calm death retained. Whole-track walk registration passed all eight feet limits. Shared look/delivery render functions and mandatory host pixel-parity check added. CPU build and visual review continue.
+
+- Round 13 CPU review complete: IoU .9512536, blurred deltaE 3.3866, raw 7.2743, feet 5.4466, base 3.2322; 192866-byte Q80 atlas; 36 tests; audit 0 findings; attack sole continuity <.001 mm; all feet limits pass. Reviewed 256/160/64 sheets and top/front feet; idle/attack deliberately re-pinned. GPU parity/final visual approval pending; no PASS.

@@ -11,7 +11,7 @@ Not a PASS. Final GPU rendering and the pixel-parity gate still require the lead
 - **Fable A/B:** retained A's registered per-part painted look and B's underlying leg/foot/cloth/base form and keyed collapse. Their earlier rest (.938 IoU, 4.56 blurred ΔE with A's look) is superseded by C's rest; no old master/atlas copied into this candidate.
 - **Fable C:** selected the painted guard registration, fitted disc and cloak, ankle-following ground shadow, side-band gradient and mild leather tone. Source-lane matched CPU IoU .9394 → .9513 and blurred ΔE 4.55 → 3.31; its standalone 1280 Eevee evidence scored .9534 / 3.35, feet 5.38, base 3.26. Those GPU numbers are historical candidate evidence, not this merge's final render. The 06:40Z director says feet, straps, shins, lip and base now match and rest reads identically at 160/64.
 - **Fable D:** dropped the death after the new 06:40Z verdict: shield floats over the body in frames 5–6 and the ending is less calm than Astra c. Dropped its walk-foot pitch/yaw edits (post-retarget orientation correction is prohibited). Kept only the earlier spear landing timing, to clear the kneeling figure sooner; must pass the all-pose shaft audit.
-- **Idle, attack, hit:** idle donor and R12 donor hit retained. Attack choreography retained but planted legs now target the new guard; old frozen action fingerprints are intentionally invalid until the rebuilt clips are visually reviewed and re-pinned.
+- **Idle, attack, hit:** idle donor and R12 donor hit retained. Attack choreography retained but planted legs and knee poles now target the new guard. Idle and attack were reviewed on the combined 256/160/64 sheets and deliberately re-pinned in frozen-actions.json.
 
 ## Merge fixes and reuse
 
@@ -21,12 +21,12 @@ The look CLI and delivery renderer now share `configure_render` and `render_fram
 
 The kit already contains MPFB/game rig, opt-in Rigify and corrective helpers, painterly graphs, registered projection/seam fills, studio presets, Quaternius and KayKit retarget maps/contact locks and critique. This round adds donor-preserving `kit/walk.py` and the new imported gridded crops/import checker. No CMU or Rigify retarget map is claimed; Quaternius remains the tested human preset. Heavy assets stay outside git.
 
-## Remaining visible gaps (provisional until the combined CPU sheets below)
+## Remaining visible gaps — reviewed on the combined CPU sheets
 
 1. At 256 px, spear-side cloak between arm and hip is slightly narrow (C evidence: 579 vs painted 632 px in x98–112/y120–175); at 160 it is a small red-mass difference. Restoring the earlier flare requires a measured A/B, not an untested stack on the winning guard.
 2. At 256, the back of the ground shadow is a little strong/hard (x105–170/y214–222); it can read as a dark seam at 160. The stone and sandals are much closer overall. CPU has no cast-shadow term; judge this on the host Eevee pass.
 3. Small surface remnants at 256: pale/red sliver under the spear hand (~106,123), dark skirt linen (source-lane luminance 98 vs 105) and a simplified cloak hem. These mostly disappear at 160/64.
-4. Walk still exposes a lighter sole during toe-off; death must be checked for the shaft crossing the knees after the faster landing. Review those at actual 160 px motion, not just a rest score.
+4. Walk still exposes a lighter sole during toe-off (most evident at 256); the feet sheet confirms aligned planted feet and a lower swing, without post-retarget foot rotations. The earlier spear landing clears the knees by death frame 3; frame 2 still has a diagonal shaft in front of the figure. The final crest and shield remain identifiable at 64. The shield covers much of the fallen torso, a retained staging tradeoff.
 
 ### Automated critique: spearman-round13 (Cycles CPU proxy / 8 samples / decoded 160 atlas; GPU pending)
 
@@ -35,6 +35,18 @@ The kit already contains MPFB/game rig, opt-in Rigify and corrective helpers, pa
 - Regions (blurred ΔE): head_crest 3.7, torso 2.6, cloak_spear_side 5.0, shield 2.2, legs 2.7, feet 5.4, base 3.2.
 - Painting mask: alpha; frames: idle 8, move 8, attack 10, hit 4, death 10.
 - Rest: `/Users/samcorcos/LegatumRuns/anim-pilot/lanes/spearman-r13-merge/preview/rest/00.png`. Contact sheet uses `/Users/samcorcos/LegatumRuns/anim-pilot/lanes/spearman-r13-merge/review/3d-v2/spearman-decoded-160`.
+
+## Verified combined result
+
+- Rest CPU proxy, Cycles 256 px / 8 samples: IoU **0.9512536**, zero offset; blurred ΔE **3.3866**; raw per-pixel ΔE **7.2743** (raw does not meet 6; the agreed pass metric is blurred ΔE). Regions: head 3.74, torso 2.63, cloak 5.03, shield 2.22, legs 2.73, feet 5.45, base 3.23. Against the previous same-settings R12 proxy: IoU 0.9394 → 0.9513; blurred ΔE 4.55 → 3.39; feet 13.35 → 5.45; base 4.75 → 3.23.
+- All five clips rebuilt and rendered, **40 poses audited with zero findings**. After the final knee-pole adjustment the changed attack was rebuilt, rerendered and audited again: zero findings. Attack entry/exit soles differ from idle by 0.00085 mm left / 0.00060 mm right, against 2 mm limits.
+- **36 tests pass**: kit 27, critique 4, pipeline 2, look 3. Blender import checker: zero unresolved imports. Python and shell syntax and git whitespace checks pass.
+- Full 33-sample feet check: slip **0.0042 mm**, floor error **0.0001 mm**, planted heading **5.142°**, readable heading **9.175°**, loop seam **0**; all eight limits pass. Root XY correction 48.963 mm / 50, foot IK 19.943 mm / 50, sole correction 39.954 mm / 40: headroom remains tight, so do not enlarge feet casually.
+- Walk registration is a fixed world-track shift matching the guard's average ankle shift. It removes the fixed guard-registration offset; the walking gait's entry pose naturally differs from standing idle. No claim of identical idle and walk poses. Review the actual transition on the GPU movie before approval.
+- Isolated CPU atlas: **192,866 bytes, Q80**, 160 px trimmed cells, all 40 decoded records validated. Source frames and decoded contact sheet reviewed at 256/160/64. Rest identity is close at 256 and reads as the same painted unit at 160/64; CPU noise and absent cast shadows prevent a final premium-surface verdict.
+- Movie verified with ffprobe: **H.264, yuv420p, 1600×352, 24 fps, 192 frames, 8.000 s**, five clips side by side. Crossfade, 256 px triptych, 160 contact sheet and top/front feet sheet exist in this review folder.
+- GPU work is deliberately pending: the no-argument executable `tools/art/anim3d/units/spearman/gpu.sh` rebuilds, calibrates, renders all stages/512 and 256 masters, checks exact look/atlas-path pixel parity, validates the atlas, and regenerates critique/note/movie. Run from the repo root with `ROUND=13`. Numerical success is not art approval; no PASS file written.
+- Selection cutoff: the 06:40Z director verdict. Fable D continued committing after its evaluated `12c06372` version; those later unreviewed death variants were not silently substituted into this tested candidate.
 
 FOCUS a: Measure a local cloak-flare A/B (arm to hip) on the new guard; preserve the feet, knee registration, shield and helmet that now match.
 FOCUS b: Soften the far ground-shadow edge, identify the forearm sliver by material ID, and compare skirt midtones without darkening already-correct sandals.
