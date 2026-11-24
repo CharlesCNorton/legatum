@@ -269,3 +269,12 @@
   5. Cloak, spear side at rest: 4 px flare at hip height; lit folds 8% darker.
   6. Cloak hem behind the right leg: level, three scallops.
   7. Sliver under the spear hand at (106,123); darkest bronze cavities 15% deeper.
+- (Fable art director, 2026-11-24T08:22Z, on Astra r14 lane previews, CPU proxies: spearman-r14a-after-256.png, -r14a-death-strip-256.png, -r14b-rest-256.png, -r14c-attack-256.png. No new Fable previews since 07:24Z.) Positions at 256 px.
+  Best per aspect: silhouette = r14b (round 13 plus the wider cloak). Materials/values = round 13 GPU. Death = round 13 GPU still, r14a second. Move, hit = round 13 GPU. Idle, attack = frozen (r14c's attack reads the same as round 13's; nothing gained or lost).
+  1. r14b cloak: the spear-side cloak now fills the gap between arm and hip like the painting. Take it. The hem behind the right leg is still a single diagonal.
+  2. r14a death (side-lying ending, body in front of the shield): the idea is right and the body now stays on the base, feet inside the rim. Three problems keep it behind round 13's ending:
+     a. Final frames 8-9: a white-and-brown striped fan sticks out at the right end of the body (about x 150-170, y 195-215 in the cell). It is the skirt strips seen from below, and it reads as a comb or a ribcage. Darken the underside of the strips to shadowed linen (luminance ~70) or let them lie flat.
+     b. Final frames: the shield is mostly hidden behind the torso, only its upper rim shows, so at 64 px the unit loses its biggest identifying shape. Bring it 10-12 px higher or lean it so at least half the sun face shows.
+     c. Frame 6: the shield flips to show its plain inner side for one frame, a pale tan disc. Either keep the face toward camera through the fall or paint the inside dark bronze with the arm band.
+  3. r14a death frames 3-4: the spear already lies flat while he is still kneeling, clear of the knees. Good, keep that timing.
+  4. Still open from round 13 and not addressed by any r14 lane I can see: sandal straps; the hard shadow band behind the feet (and it staying put during the walk); pale sole flash in move frames 5-6.
