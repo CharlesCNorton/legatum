@@ -191,3 +191,6 @@
 - R11a: loaded legatum-unit-3d and all six Blender skills; source-ported round10 anim3d/atlas after Git merge lock denial; isolated lane root; focus sleeve/greave geometry, preserve feet/guard.
 
 - R11c: loaded legatum-unit-3d and all six Blender skills; round-10 source baseline ported after ORIG_HEAD.lock denial. Isolated master/clip copies; motion-only focus, no new assets.
+- R11b: loaded cumulative unit skill and six Blender skills; source-ported round-10 anim3d baseline after sandbox ORIG_HEAD lock denial. Surface-only lane, no geometry/motion edits.
+- R11b: rest/hit/death material-ID previews identify shoulder sleeve, cloak between thighs and pale skirt lining; CPU 256/16 A/B sheets published as spearman-r11b-*-compare.png.
+- R11b: rejected first replacement-palette experiment (raw delta-E 13.761 -> 13.999, sigma2 7.684 -> 7.916); preserving R10 pigment and adding sewn fold contrast instead.
