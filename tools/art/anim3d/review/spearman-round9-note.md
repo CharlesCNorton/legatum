@@ -1,0 +1,38 @@
+# Spearman round 9 — combined candidate
+
+**Not PASS.** Closer to the painting at rest, with a more restrained walk and clearer attack, but the lower-body silhouette and exposed shoulder/cloth surfaces still give away the 3D reconstruction. This review uses actual merged Cycles CPU renders at 256 px / 16 samples, native 160/64 px reductions, all five clip strips, top/front feet renders and sampled frames from the decoded-atlas movie. It does not certify a round-9 GPU render or real-time playback review.
+
+## Lane decisions
+
+- **A — merged** from `378c4ca3`: lowered the shield's over-high top contour without moving the boss, shortened side cloak tails, refined the shoulder/upper arm and crest tip. These are useful silhouette corrections beside the painting. Combined rest silhouette overlap is 89.83%; lane A's same-settings baseline was 88.0%. This diagnostic is not an artistic score. Camera, original body topology, skinning and anatomical feet are retained.
+- **B — merged** from `d2e3bf67`: frozen geodesic seam underpainting, generated-fill blending and restrained physical hammer/weave/grain. The shoulder transition is somewhat less abrupt and unseen surfaces warmer. The gain at 256 px is modest; individual new texture detail is not meaningfully visible at 64 px. This does not solve the large pale shoulder/back patch revealed during hit and death.
+- **C — selectively merged** from `5abad282`: 92% source-space Quaternius walk, continuous attack anticipation/extension/recovery, earlier source-driven hit recoil, retimed source death, passive crest/shield response, and attack cloth changes. The walk has less exaggerated lift and the attack no longer holds its peak as long. **Dropped the loosened cloth pins and changed cloth settings for hit:** in the combined candidate they raised a red cape corner behind the shoulder at recovery. Restoring the original hit cloth removes that spike while keeping its timing and equipment improvements. See `spearman-round9-hit-selection.png` (rejected and retained recovery at 256/160 px).
+- No other lane art change was dropped after comparison. The unrelated lane-A `app/node_modules` commit `18bc43df` was excluded. Changes were ported by scoped diffs, not whole-branch merges.
+
+## Remaining visible gaps, ranked
+
+1. **Lower-body stance and silhouette.** At 256 px the painting has fuller greaves, broader sandals and a more convincing braced stance. The render's legs/feet look thin, straight and slightly perched. This is also the clearest rest mismatch at **160 px**; at 64 px the narrower support still weakens the heroic stance. Preserve anatomically valid feet and source rest/roll retargeting while improving the rest rig/shape; do not reintroduce painted-foot deformation or post-retarget toe rotations.
+2. **Shoulder, sleeve and unseen cloth continuity.** At 256 px the spear-side shoulder has a pale, hard transition, and hit/death reveal a broad plain patch behind the upper torso. Frozen projection cannot supply the missing garment/skin finish. At **160 px** the fine seams soften, but the large pale patch and moving red hem remain visible. The hit-cloth rejection fixes one silhouette spike, not this underlying surface problem.
+3. **Weight and settling in motion.** The reduced lift is better, and measured stance contact passes, but the walk still reads as a stylized march; the fall goes abruptly from crouch to feet-up, and cape/shield settling can feel light. These broad movements remain obvious at **160 and 64 px**. Use the open-motion pipeline and inspect decoded playback rather than treating contact metrics as proof of natural motion.
+4. **Material and stone finish.** At 256 px the painting retains more coherent bright metal edges, dark cavities and soft painted cloth transitions. The render is softer in some projected detail and more uniform in unseen regions. Its base rim is more orange and regular than the painting's pale cream stone. At **160 px**, broad tone and base differences matter more than additional weave or micro-bump; at 64 px the bronze/red/cream identity is already strong.
+
+## Verified outputs and checks
+
+- Combined master and all five baked clips: `~/LegatumRuns/anim-pilot/lanes/spearman-r9-merge/masters/spearman-3d-v2/`. Scene checks passed: 19,158 body vertices, 53 bones, 314 painted materials, both round-9 hooks, original camera, articulated sandals and shield clearances.
+- Final audit: **40 poses, zero findings**, including equipment crossings, camera bounds, floor contact and arm transitions. All 40 transparent CPU frames rendered; held death samples 08/09 are byte-identical.
+- Walk: 33 dense frames / 33 planted samples; maximum planted heading **2.544 degrees**, readable heading **3.467 degrees**, compensated sole slip **0.00216 mm**, floor error **1.080 mm**, loop seam **0**. Virtual forward speed **1.051 m/s**. These are in-place contact checks, not a claim that ankles never move. All thresholds passed. `spearman-g-feet-check.png` contains top/front views across the cycle.
+- Preview-only trimmed atlas: **196,738 bytes, quality 85, 160 px, 40 frames (8/8/10/4/10)**. Validation passed current hashes, clip metadata, offsets/anchors, exact alpha, gutters, bounds, motion and held death. Preview atlas lives in `lanes/spearman-r9-merge/preview-atlas/`; the previous shipped GPU atlas remains unchanged.
+- `spearman-round9.mp4`: decoded trimmed frames, all five clips side by side, cream, 2x, **1600x352, H.264 yuv420p, 24 fps, 192 frames / 8 seconds**. Matches the inspected round-8 video layout. CPU-labelled; GPU pass will replace it.
+- `spearman-round9-restpose-compare.png` and `spearman-f-restpose-compare.png`: painting / merged render / 50-50 crossfade / split, native 256 px plus 64 px. `spearman-round9-sizes.png` also shows native 160 px. Standard plain/detail/pose/clip previews are published.
+- Pinned CC0 motion and licence hashes passed. Two pipeline regression tests passed. Python syntax **38/38**, Bash syntax, executable GPU handoff and `git diff --check` passed. No Rust/UI changes or unrelated build suite were needed. No new downloads.
+
+## Lead GPU pass and repository status
+
+Run from this checkout: `ROUND=9 tools/art/anim3d/units/spearman/gpu.sh`.
+It preflights Cycles GPU, rebuilds projection and every clip, renders every stage, produces 512/256 masters under `masters/spearman/`, packs the 160 px atlas into the app at quality >=75 and <=200,000 bytes, validates it, makes the feet sheet and five-clip movie, and now saves the round-numbered rest comparison. It checks required output files before reporting completion. Final GPU size and appearance remain unverified here; CPU packing is evidence of feasibility, not a substitute. No PASS file was written.
+
+Git staging failed with `index.lock: Operation not permitted`; all 14 scoped source files remain uncommitted for the runner. Commit message and exact input hashes are saved in `lanes/spearman-r9-merge/commit-message.txt` and `inputs.json`. `origin/master` was already an ancestor of this branch; no fetch, master merge, push or PR was performed.
+
+FOCUS a: Match the painting's fuller lower-leg and sandal silhouette and braced rest stance without deforming feet in screen space or breaking source rest/roll retargeting.
+FOCUS b: Replace the pale shoulder/back exposure and cloth projection seams with coherent painted garment/skin coverage; judge rest, hit and death at 256 and 160 px before adding microtexture.
+FOCUS c: Make the open-source walk and collapse feel heavier and less stylized, with controlled cape/shield settling and clean clip recovery; retain planted-foot checks and the restored hit cloth pins.

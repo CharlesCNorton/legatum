@@ -165,3 +165,5 @@
 - Round 9 combined CPU: e-hit rendered at 256px/16 samples; published interim review.
 - Round 9 combined CPU: e-death rendered at 256px/16 samples; published interim review.
 - Round 9 visual rejection: loosened hit cloth produced a raised corner behind the shoulder at recovery. Drop only hit cloth pin/settings change; retain source timing and passive equipment response. Rebuilding hit and revalidating delivery.
+- Round 9 final CPU selection: original hit cloth removes the recovery spike. Final 40-pose audit: zero findings; atlas 196738 bytes/Q85, all trim/alpha/clip/held-death checks passed; eight-second five-clip movie verified. Critique and next-round FOCUS lines saved. GPU pass/visual approval pending; no PASS. Git index.lock denied; runner commit message and input hashes saved.
+- GPU round 9 started: full Cycles GPU pass requested.
