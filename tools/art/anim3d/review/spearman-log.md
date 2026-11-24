@@ -218,3 +218,4 @@
 - Round 12: rebuilt projection and passed scene checks. Rejected Fable foot length x1.42 after 42.6 mm sole and 56.5 mm root correction failures at unchanged 40 mm limits; testing lane A original-length rule with Fable width/height/guard.
 - Round 12: extracted shared frozen lining/sole pigment, analytic CPU look proxy, and KayKit bone map into kit; shared critique already supersedes the old critique branch.
 - Round 12 final: rest gap fixed 3→1 mm; 40-pose audit zero findings; eight walk limits and 33 tests pass. Matched CPU IoU 0.924358→0.939372; blurred deltaE 4.488→4.553; 190952-byte q80 atlas; all five clips and 8-second movie. Kit/learning/log updated; no PASS. Merge/staging locks blocked Git; lane-only.patch and commit-message.txt saved. GPU handoff remains pending the lead.
+- GPU round 12 started: full Eevee painted GPU pass requested; Cycles GPU feet inspection.
