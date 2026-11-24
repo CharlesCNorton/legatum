@@ -12,7 +12,13 @@ scan as faint bump; that asset is optional and not wired here.
 NOT YET RUN FROM THE KIT IN BLENDER: check `audit.check_base` and a rest
 render against the painting on first use, then update kit/README.md.
 
-Open review item (art director, Spearman round 10): the rendered top was
+Open review items on the shape (art director, Spearman round 10 GPU): the
+painting's base has a thin light lip at the rim and a side wall about 17 px
+tall at 256 px; this build renders a rounded edge with no lip and a 20 px
+wall, and its camera-only pigment may be washing out the figure's cast shadow
+on the top. Change the defaults here once the Spearman proves the fix.
+
+Open review item on colour (art director, Spearman round 10): the rendered top was
 (245,206,154) against the painting's (249,217,176) and the rim (219,172,114)
 against (226,181,126). Measure the rendered base with
 `python -m kit.regions --stats` and adjust `lift` rather than the shared hex
