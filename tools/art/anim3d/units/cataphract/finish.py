@@ -76,6 +76,7 @@ exec(compile(Path('tools/art/anim3d/units/cataphract/refine.py').read_text(), 'c
 sys.path.insert(0,str(Path(__file__).resolve().parent))
 from reins import build_reins
 from contacts import fit_rest_contacts
+exec(compile(Path(__file__).with_name('round3.py').read_text(), 'cataphract round3', 'exec'))
 fit_rest_contacts()
 build_reins()
 # Save true-geometry stage before projection, with neutral clay material override.
@@ -121,7 +122,7 @@ for o in list(sc.objects):
  for v in me.vertices:
   w=ev.matrix_world@v.co;q=world_to_camera_view(sc,sc.camera,w);coords.append((q.x,q.y))
   normal=(ev.matrix_world.to_3x3().inverted().transposed()@v.normal).normalized()
-  facing=max(0,min(1,(normal.dot(view)+.02)/.22))
+  facing=max(0,min(1,(normal.dot(view)+.10)/.22))
   hit,location,_,_,hit_object,_=sc.ray_cast(deps,w+view*20,-view,distance=20.04)
   visible=hit and (location-w).length<.025
   # Source-object exclusion: cream base must never become painted white socks.

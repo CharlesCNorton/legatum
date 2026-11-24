@@ -15,7 +15,14 @@ for kind in ['coat','linen','bronze','hair']:
  shutil.copyfile(R/f'assets/horseman/fill-{kind}.png',A/f'fill-{kind}.png')
 for kind,source in [('skin','medjay'),('steel','tagmatic-soldier'),('cloth','tagmatic-soldier'),('leather','tagmatic-soldier')]:
  shutil.copyfile(R/f'assets/{source}/fill-{kind}.png',A/f'fill-{kind}.png')
-files=[A/'painting-source.png',A/'projection.png',R/'assets/horseman/Horse.glb']+list(A.glob('fill-*.png'))
+# Generated clean plate supplies the stone hidden by the horse, not geometry.
+stone=Image.open(A/'stone-fill-source.png').convert('RGBA')
+stone=stone.crop(stone.getchannel('A').point(lambda a:255 if a>128 else 0).getbbox())
+plate=Image.new('RGBA',(1024,1024),(233,207,160,255))
+plate.paste(stone.resize((126*4,29*4),Image.Resampling.LANCZOS),(56*4,214*4))
+# Fill transparent edge RGB with cream: alpha never clips the real disc.
+bg=Image.new('RGBA',plate.size,(233,207,160,255));bg.alpha_composite(plate);bg.save(A/'stone-projection.png')
+files=[A/'stone-fill-source.png',A/'stone-projection.png',A/'painting-source.png',A/'projection.png',R/'assets/horseman/Horse.glb']+list(A.glob('fill-*.png'))
 files += [R/'assets/quaternius-ual'/name for name in ['AnimationLibrary_Godot_Standard.gltf','AnimationLibrary_Godot_Standard.bin','LICENSE']]
 lock={'source_alpha_bbox':sb,'token_alpha_bbox':b,'files':{str(p.relative_to(R)):hashlib.sha256(p.read_bytes()).hexdigest() for p in files}}
 (M/'inputs.json').write_text(json.dumps(lock,indent=2)+'\n')

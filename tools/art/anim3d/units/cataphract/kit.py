@@ -20,7 +20,20 @@ def scales(name, surface, rows, cols, bone):
     vs.append(tuple(point))
    fs.append(tuple(range(start,start+6)))
  o=bevel(solid(mesh(name,vs,fs,steel),.007),.002,2)
- return horse_attach(o,bone)
+ horse_attach(o,bone)
+ # Scales are sewn onto a continuous thick backing, visible in the collapse.
+ # Without this physical layer their undersides read as a perforated metal grid.
+ backing=[];quads=[]
+ for j in range(rows+1):
+  for i in range(cols+1):
+   p=Vector(surface(i/cols,j/rows));p.x-=.012 if p.x>=0 else -.012
+   backing.append(tuple(p))
+ for j in range(rows):
+  for i in range(cols):
+   k=j*(cols+1)+i;quads.append((k,k+1,k+cols+2,k+cols+1))
+ lining=bevel(solid(mesh('GEO-barding lining '+name,backing,quads,red),.009),.002,2)
+ horse_attach(lining,bone)
+ return o
 # Barrel covering: both sides curve smoothly over the horse's actual back.
 for sg in [-1,1]:
  def surf(a,b,sg=sg):

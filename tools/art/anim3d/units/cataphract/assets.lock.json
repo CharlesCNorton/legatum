@@ -12,6 +12,8 @@
     244
   ],
   "files": {
+    "assets/cataphract/stone-fill-source.png": "00dc2dfdf0887cd7f57288106381e2868ecd121192070a8e1f0d49eaf08aae05",
+    "assets/cataphract/stone-projection.png": "a0f9f77d1f5dea2ad782a4f732c1aa037fb00f7d4a6eb24f590677bec974a6a8",
     "assets/cataphract/painting-source.png": "0ef4c7973c1f57456474a5f2f420e2581014ce85fda6ed1e41d87542ab4a93e1",
     "assets/cataphract/projection.png": "26f737d263cd6e5f24c3ee38f69d8c868b1061f4c4549e71487bfe67e49bbc39",
     "assets/horseman/Horse.glb": "fbddb2c97179eca896ec69c985cd9cc74540484510776c400df64e088e9f2414",

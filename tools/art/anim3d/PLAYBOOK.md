@@ -304,3 +304,57 @@ At256 the arm/neck proportions, saddle/boots, base perspective and death undersi
 still miss the painting; at64 the identity reads but the silhouette is different.
 No complete sliding/intersection certification and no GPU512/64 result yet.
 **No PASS marker.**
+
+### Cataphract driver round 3: backing, registration and durable GPU input
+
+The round-2 GPU log failed before rendering because its lane-14 script disappeared.
+The incoming review stills/video were CPU256 evidence, not a successful GPU pass.
+`gpu.sh` now defaults to round 3 and copies the small runtime dependency tree and
+reference token into a unique external `masters/cataphract/gpu-r3-*` snapshot
+**before** entering the Blender gate. The GPU stages execute there. Snapshot
+hashes, checkout and branch are retained in `snapshot.json`. Independent delivery
+verification precedes copying the atlas back; publication refuses a changed branch
+or source tree. Verified output is also kept in `masters/cataphract/gpu-delivery/`.
+This avoids relying on an ephemeral worktree throughout a queued host pass.
+
+`round3.py` fits the real chest barding, head contours, forearms and rigid lance
+before freezing camera UVs. Anatomical arm material assignments close the missing
+steel sleeve. `kit.py` adds eight continuous thick backing panels beneath the
+individual scales so the collapse does not expose a perforated grid. Existing
+bevels, saddle straps/buckles, cloak folds, volume mane/tail, generated unseen
+surface fills and actual helmet AO/Pointiness bakes remain. The top/front foot views rejected an attempted camera-depth hoof fit: it
+distorted the lower legs outside the beauty view and lifted the collapse. That
+adjustment was removed. Existing native gait and vertical support corrections
+remain; no no-sliding or whole-body collision certificate is claimed.
+
+The built-in ImageGen clean stone plate reconstructs the surface hidden beneath
+the horse. Its prompt and immutable source/prepared hashes are in the unit folder;
+provenance is recorded in both source inventories. `prepare.py` registers this
+plate, and `round3.py` projects its color onto the actual circular beveled disc.
+The image never controls mesh opacity. Contact AO and physical product lighting
+remain live, and the shared rest-derived histogram grade applies to every frame.
+Camera/pose fitting is still approximate and must be judged in the split/crossfade.
+
+Rebuild after geometry changes with `render.sh build`, `finish`, `bake`, `animate`,
+`audit`, `all`, `feet`, `pack`, then `ROUND=3 .../venv/bin/python
+ tools/art/anim3d/units/cataphract/verify.py` (using the existing ANIM_ROOT venv).
+All Blender calls are sequential, plain `blender -b`, CPU previews only in the lane.
+The lead's complete host command remains:
+
+```sh
+ROUND=3 tools/art/anim3d/units/cataphract/gpu.sh
+```
+
+This produces actual GPU512/64 stage/clip masters, derives the 256px set, all
+reviews including the rest comparison and top/front feet, trimmed 160px delivery,
+independent validation and the eight-second side-by-side round3 MP4. A successful
+technical receipt still has `art_pass:false`; visual acceptance alone permits PASS.
+
+Round-three CPU evidence: **192,888 bytes at Q85**, all forty frames,
+160px logical canvases, lossless alpha and exact decoded death hold. All b/c/d/e
+stages are CPU256/8, feet are CPU192/4; source/geometry/delivery/movie checks pass.
+The full audit also executes successfully from the external runtime snapshot.
+Evidence is preserved in `masters/cataphract/driver-round3-cpu/`. At256 the
+shoulder/hand, horse face/neck, front-leg placement and hidden underside finish
+still differ; at64 the unit reads correctly but the pose is distinguishable.
+**No PASS marker; GPU512/64 and visual acceptance remain outstanding.**
