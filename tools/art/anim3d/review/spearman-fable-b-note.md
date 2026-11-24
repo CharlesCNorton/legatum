@@ -5,7 +5,7 @@ Masters: `~/LegatumRuns/anim-pilot/fable-b-masters` (copy of the round-9 merge m
 All evidence is Cycles CPU, 256 px, 16 samples, the round-9 grade. Materials and lighting are untouched (Fable A owns the look).
 Not a PASS claim: these are form and motion candidates for the merge.
 
-**With Fable A's look on these masters** (`look.sh` from `fable/unit-anim-3d-spearman-a` at ee83409f, unchanged): rest IoU **0.937**, delta-E 7.07 (4.57 blurred, zero offset), 160 px atlas 186,340 bytes at quality 80, validation PASS. A's look on my first form scored 0.920 / 6.80 (4.41): the silhouette gained, colour lost a little where the feet turned out and the legs moved under A's projected paint. See `spearman-fable-b-look-rest-compare.png`, `-look-clips-160.png`, `-look.mp4`.
+**With Fable A's look on these masters** (`look.sh` from `fable/unit-anim-3d-spearman-a` at ee83409f, unchanged): rest IoU **0.938**, delta-E 7.06 (4.56 blurred, zero offset), 160 px atlas about 186 KB at quality 80, validation PASS. A's look on my first form scored 0.920 / 6.80 (4.41): the silhouette gained, colour lost a little where the feet turned out and the legs moved under A's projected paint. See `spearman-fable-b-look-rest-compare.png`, `-look-clips-160.png`, `-look.mp4`.
 
 ## What changed
 
