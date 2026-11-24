@@ -102,3 +102,4 @@
   9. Right leg outer side (x 155-160, y 185-205): a thin dark calf edge still shows behind the greave. 1-2 px now; trim if cheap.
   10. Move (B v2): good. Two small things: in frames 2 and 6 the lifted foot shows its pale sole to camera (about 8 px, reads as a white flash at 160): darken the sole to sandal brown. The shield swings ~6 px side to side with the shoulders; halve it so the shield stays the stable mass.
   11. Base colour: with the puddles excluded the top is still a little more orange than the painting. Target top (249,217,176), side (225,180,124).
+- (DECISION, cloud reviewer for the project, 2026-11-24) Motion rule: idle and walk come from open mocap (CMU or Quaternius CC0) with proper retargeting. Death, hit and attack may be hand-keyed OR built as donor clips with layered corrections, whichever the art director and reviewer rank better on review. ADOPT Fable B's death and hit in round 12 (branch fable/unit-anim-3d-spearman-b).
