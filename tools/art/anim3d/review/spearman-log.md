@@ -224,3 +224,7 @@
 - GPU round 12 finished: all stages, masters, atlas validation and movie complete; visual review pending.
 - R13a: loaded cumulative unit skill and all six Blender skills; attempted merge 07643cd4 (ORIG_HEAD.lock denied), applied exact round-12 tree diff; isolated stance work in lanes/spearman-r13a.
 - R13c: skills and R12 review read; Git ORIG_HEAD.lock denied; applied exact 07643cd4 baseline content without index changes. Isolated R12 master and clips in lanes/spearman-r13c; scope death ending and walk lift/sway.
+- R13b: loaded legatum-unit-3d and all six Blender skills; using material/render guidance with the painted-unit Standard/emission override. Git merge blocked by ORIG_HEAD.lock; applied exact R12 source delta to clean worktree, lane patch will be relative to 07643cd4.
+- R13b: inspected R12 GPU comparison/metrics and latest 06:16Z feedback. Copied R12 master/look to lanes/spearman-r13b; baseline Cycles CPU 256/16 samples, seed 17. Material-only invariants passed.
+- R13b: rejected broad sandal darkening (feet blurred delta-E 13.327 -> 13.896) and strong base gradient (base 4.772 -> 4.849). First CPU comparison published as spearman-r13b-compare-256/160/64.png; tuning narrower strap pigment and faint geometry-driven stone AO.
+- R13c first CPU death probe published (cloth not baked): final body vertices vertically over disc 55.36% -> 76.42%; head and shield readable. Walk diagnostic passes all 8 limits; sole peak clearance 114.23 -> 76.15 mm, donor foot rotations retained. Baking final move/death next.
