@@ -69,6 +69,10 @@ def prepare(rig, root, clip, phases):
         strip.action_slot = idle.slots[0]
         strip.action_frame_start, strip.action_frame_end = idle.frame_range
         strip.frame_end = last
+    # glTF actions can omit channels. Never inherit unkeyed pose components
+    # from the importer's initially selected action or a prior sample.
+    for p in source.pose.bones:
+        p.matrix_basis = Matrix.Identity(4)
     scene.frame_set(int(first))
     bpy.context.view_layer.update()
     reference = {n: source.pose.bones[n].matrix.copy() for n in MAP.values()}
@@ -82,10 +86,13 @@ def prepare(rig, root, clip, phases):
         # Upper body stays in its weapon-bearing guard, with the complete source
         # delta layered on it. Locomotion legs use anatomical rest, not the
         # painting's braced stance. Both mappings include complete bone rolls.
-        locomotion_leg = (clip == 'move' and target.startswith(('thigh_', 'calf_', 'foot_', 'ball_'))) or (clip=='death' and target.startswith(('thigh_', 'calf_', 'foot_', 'ball_', 'upperarm_', 'lowerarm_', 'hand_')))
+        # The complete fall must share one anatomical calibration. Mixing a
+        # guard-relative pelvis/spine with T-pose limbs pitched a foot below
+        # the torso and root contact correction then floated the whole body.
+        locomotion_leg = clip == 'death' or (clip == 'move' and target.startswith(('thigh_', 'calf_', 'foot_', 'ball_')))
         source_ref = source.data.bones[origin].matrix_local if locomotion_leg else donor.pose.bones[origin].matrix.copy()
         target_ref = p.bone.matrix_local.copy() if locomotion_leg else neutral[target]
-        if locomotion_leg and target.startswith(('foot_', 'ball_')):
+        if clip == 'move' and target.startswith(('foot_', 'ball_')):
             # The fitted boot soles are flat in the painted neutral. Map that
             # calibration to the source T-pose's flat soles, including roll;
             # matching only the foot-bone axes pitches the boots down.
@@ -120,6 +127,8 @@ def prepare(rig, root, clip, phases):
     frames = []
     for phase in phases:
         frame = first+(last-first)*max(0, min(1, phase))
+        for p in source.pose.bones:
+            p.matrix_basis = Matrix.Identity(4)
         scene.frame_set(int(frame), subframe=frame-int(frame))
         bpy.context.view_layer.update()
         hip = source.pose.bones['DEF-hips'].head.copy()

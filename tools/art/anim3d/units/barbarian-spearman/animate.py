@@ -27,6 +27,7 @@ for clip,(count,fps,loop) in clips.items():
  shield=bpy.data.objects['Shield grip control'];shield_rest=shield.matrix_world.copy();arm_rest=rig.matrix_world@rig.pose.bones['lowerarm_l'].matrix
  if clip=='death':
   weapon.parent=None;weapon.matrix_world=wrest;shield.parent=None;shield.matrix_world=shield_rest
+  weapon_release=wrest.copy();shield_release=shield_rest.copy()
  sc.render.fps=fps;sc.frame_start=1;sc.frame_end=count
  samples=list(range(1,count+1))
  if clip=='death':samples[-1]=samples[-2]
@@ -34,7 +35,7 @@ for clip,(count,fps,loop) in clips.items():
  motion,provenance=prepare(rig,R,clip,phases) if clip!='attack' else (None,{'provider':'Original spear-specific attack'})
  (M/'clips').mkdir(exist_ok=True);(M/'clips'/f'{clip}-motion.json').write_text(json.dumps(provenance,indent=2))
  contact=[]
- cloth=[o for o in sc.objects if o.type=='MESH' and o.name.startswith(('Folded fur cloak','Cloak fur lock','Torn folded linen skirt'))] if clip=='death' else []
+ cloth=[o for o in sc.objects if o.type=='MESH' and o.name.startswith(('Folded fur cloak','Cloak fur lock'))] if clip=='death' else []
  for ob in cloth:ob.shape_key_add(name='Rest folds')
  for i,t in enumerate(phases):
   sc.frame_set(i+1);rig.location=root;rig.rotation_euler=(0,0,0)
@@ -61,15 +62,19 @@ for clip,(count,fps,loop) in clips.items():
     low=surface_low(['MPFB barbarian anatomy','Lasted leather shoe r','Lasted leather shoe l'])
     rig.location.z+=.095-low;bpy.context.view_layer.update()
     fall=smooth(min(1,t/.85))
-    if t<.28:
+    if t<.14:
      weapon.matrix_world=(rig.matrix_world@rig.pose.bones['hand_r'].matrix)@hand_rest.inverted()@wrest
      shield.matrix_world=(rig.matrix_world@rig.pose.bones['lowerarm_l'].matrix)@arm_rest.inverted()@shield_rest
+     weapon_release=weapon.matrix_world.copy();shield_release=shield.matrix_world.copy()
     else:
-     drop=smooth(min(1,(t-.28)/.55))
-     pos=wrest.translation.lerp(Vector((-.45,-.52,.13)),drop)
-     weapon.matrix_world=Matrix.Translation(pos)@Matrix.Rotation(-.28*drop,4,'Y')
-     pos=shield_rest.translation.lerp(Vector((.28,.10,.28)),drop)
-     shield.matrix_world=Matrix.Translation(pos)@Matrix.Rotation(1.45*drop,4,'X')
+     drop=smooth(min(1,(t-.14)/.65))
+     weapon.matrix_world=weapon_release.lerp(Matrix.Translation((-.45,-.52,.13))@Matrix.Rotation(-.28,4,'Y'),drop)
+     shield.matrix_world=shield_release.lerp(Matrix.Translation((.28,.10,.28))@Matrix.Rotation(1.45,4,'X'),drop)
+     bpy.context.view_layer.update()
+     for control in [weapon,shield]:
+      parts=[o.name for o in control.children if o.type=='MESH']
+      control.location.z+=max(0,.095-surface_low(parts))
+      bpy.context.view_layer.update()
     for ob in [weapon,shield]:
      ob.rotation_mode='QUATERNION';ob.keyframe_insert('location',frame=i+1);ob.keyframe_insert('rotation_quaternion',frame=i+1)
     for digit in ['index','middle','ring','pinky']:

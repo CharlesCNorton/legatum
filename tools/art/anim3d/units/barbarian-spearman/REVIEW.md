@@ -1,66 +1,83 @@
-# Barbarian spearman — driver round 2
+# Barbarian spearman — driver round 3
 
-Unapproved 3D art candidate. No PASS marker. The previous driver GPU pass
-completed all stages, 512/256 masters, atlas and movie: 191422 bytes at Q80.
-That exact GPU evidence is archived under masters/barbarian-spearman/driver-r1-gpu/.
-Development-round labels in the older external log do not match driver rounds.
+Unapproved art candidate. No PASS marker. The incoming round-2 GPU pass succeeded:
+196162 bytes at Q80, GPU512/64 masters, all stages and valid eight-second movie.
+Its evidence is preserved in masters/barbarian-spearman/driver-r2-gpu/; the old
+512 exports are explicitly labelled 512-driver-r2. Current local renders are
+CPU256/8 previews, never upscaled and called final GPU masters.
 
-This pass adds a continuous thick shoulder pelt, better shield slant, a narrower
-source-spear mask that preserves the gripping anatomy, original generated pelt
-and leather fills, and painting projection restricted to the stone's front lip.
-Trying to project the whole stone copied the painted feet; a luminance mask
-still left pale boot-shaped holes. The final lip-only mask avoids both defects.
-One automatic rest histogram grade remains frozen across every frame.
+This round replaces the rigid calf/foot overlap with continuous MPFB-weighted
+leather, retains anatomical weights and adds smooth pelvis/thigh skirt weighting.
+MPFB helper polygons are excluded when extracting the shell. The hand and ash
+shaft are fuller; the straight shaft is registered to the painting before UVs
+are frozen. Generated clean stone pigment restores grain beneath moving feet,
+with live AO and the original rim. A second generated garment/shield pigment
+plate removes the faint painted spear only in the narrow occluded band. Both
+source plates, derived maps, prompts and licences are pinned and recorded.
 
-The full-depth fitted MPFB skin is rebound to joints fitted by the same field,
-retaining 19158 vertices, original weights and 53 bones. This corrects the old
-ankle/shoe offset during articulation. Thick straps, bevels, physical cloth,
-frozen rest UVs, eight real AO/curvature bakes and product lights remain editable.
+Death uses one anatomical reference calibration throughout the body. Sparse glTF
+channels reset before sampling; the original CC0 Quaternius idle/walk/hit/death
+remain. Equipment releases continuously from the held transform and clears the
+support plane. The spear-specific attack remains authored. The scene keeps its
+53 bones, 19158-vertex body, real bevels, straps, cloth thickness, generated hidden
+fills, eight actual AO/curvature bakes, product lights and one automatic rest LUT.
+The cloth deformation is weighted/keyed geometry, not a cloth simulation.
 
-Idle, move, hit and death now retarget pinned CC0 Quaternius actions with Blender
-rest/roll constraints; the original spear-specific thrust remains. Carrying arms
-use the library idle layer. Ground correction translates the root. A 65mm hip-lowering knee solve fits the
-upright library walk to the fixed canvas while preserving captured ankles; source
-foot rotations are independently checked in the saved-scene audit. The audit
-also measures a common virtual-ground toe stance speed and planted shoe height.
-All eight move samples have actual top/front footwear renders. Death has keyed
-support-plane cloth folds; this is not a cloth simulation.
+## Verification
 
-At 256px the figure preserves the painting's brushwork, and the shield/pelt fit
-is closer, but it remains distinguishable: the hand/spear are thin and dark,
-shoulder fur is less natural, the stone top is smooth, and hidden skin/cloth
-surfaces lack the painting's finish. At 64px it clearly reads as the same unit;
-rest proportions are close but not interchangeable. Source-derived locomotion
-is more articulated, but shin/boot joins and the compressed death cloth remain
-visible problems. Neither technical checks nor size limits establish clean clips.
+- All 40 CPU256/8 samples and every b/c/details/d/e/g review rendered successfully.
+- Preview atlas: 181464 bytes, WebP Q80, logical 160px trimmed cells, 8/8/10/4/10
+  frames. Independent provenance, offsets, exact alpha reconstruction, bounds,
+  actual motion and identical terminal death hold passed.
+- Saved-scene audit passed: unchanged body/rig, evaluated sole error below
+  0.00001m, horizontal virtual-ground stance error below 0.000001m, retained
+  source foot rotations, maximum bone-to-shaft distance 0.0301m, loop closure
+  within 0.00001, and released-equipment support clearance. No complete collision
+  solver is claimed.
+- Decoded-atlas movie: H.264/yuv420p, 1600x348, 240 frames, 8.000 seconds. Actual
+  decoded frames, all strips, rest split/crossfade and top/front feet inspected.
+- Eighteen Python parses, two Bash syntax checks, ten image-input hashes,
+  repeated-grade byte equality and git diff --check passed.
+- REQUIRE_GPU=1 correctly rejects this CPU preview. Round-3 GPU execution remains
+  lead-side; no final GPU provenance or art approval claimed.
 
-Local output is CPU256/8 preview evidence. Previous GPU512 exports are retained
-in driver-r1-gpu/512 and 512-driver-r1, not relabelled as current masters.
-The executable, no-argument lead-side handoff is:
+## Visual verdict
+
+At 256px, the base grain, hand, shaft and ankle continuity improve on round 2;
+original face/cloth brushwork and overall silhouette remain close. The shoulder
+pelt, shield contour and hidden-surface finish still differ, and the death pose
+retains conspicuously elevated arms and stiff cloth. At 64px it clearly reads as
+the same unit with close scale; it is not interchangeable in motion. Idle/hit
+and the thrust are readable; all five clips are not yet artistically clean.
+Rest silhouette IoU is .871860 versus the incoming GPU .865384 (alpha >32 at
+256px). Different render settings mean this is registration evidence, not an
+art-equivalence score. No PASS marker is justified.
+
+## GPU handoff
+
+Run from the repository root:
 
 ```sh
-ROUND=2 tools/art/anim3d/units/barbarian-spearman/gpu.sh
+ROUND=3 tools/art/anim3d/units/barbarian-spearman/gpu.sh
 ```
 
-It checks GPU availability, rebuilds registration/paint/bakes/clips, renders all
-review stages including g-feet at Cycles GPU512/64, exports 512/256, packs the
-trimmed 160px atlas at Q75 or better within 200000 bytes, validates it, audits
-saved rigs, and creates the eight-second decoded-atlas H.264/yuv420p movie.
-The transcript and status identify the failed stage if anything fails.
-Fresh GPU visual review remains required. Nothing is uploaded or integrated.
+The executable script verifies pinned inputs, regenerates geometry/materials/
+clips, performs GPU bakes and every GPU512/64 review stage, exports 512/256
+masters, packs/validates the trimmed 160px Q75+ atlas within 200000 bytes, audits
+saved scenes and writes barbarian-spearman-round3.mp4. It records the failed stage
+on error and never writes PASS automatically. Fresh GPU visual review is required.
 
-Final CPU checks: 40 frames and trim/alpha/hold validation passed; preview atlas
-185920 bytes at Q80. Scene audit passed with maximum grip gap 0.0236m, sole error
-below 0.00001m, horizontal stance error below 0.000001m and unchanged source foot
-rotations. Movie: H.264/yuv420p, 1600x348, 240 frames, 8.000 seconds. Seventeen
-Python parses, two shell syntax checks, six input hashes, repeated-grade byte
-equality and whitespace check passed. GPU provenance correctly rejects previews.
+Non-obvious learnings are in this unit's PLAYBOOK chapter and external log:
+exclude MPFB helper geometry during shell extraction, evaluate skinned soles for
+contact, use one anatomical calibration for a fall, and use a generated pigment
+underpainting when adjacent source samples retain a weapon ghost. No rules,
+runtime integration, docs/learnings, uploads, pushes or PRs are part of this pass.
 
-Git staging/commit was denied by the sandbox at
-.git/worktrees/lane-22/index.lock. The runner should commit the present changes:
+Git staging/commit was denied by the sandbox at .git/worktrees/lane-1/index.lock.
+Changes remain uncommitted for the runner. Requested commit:
 
 ```
-Refine barbarian spearman surfaces and retarget open motion
+Refine barbarian spearman footwear, projection and fall
 
 Co-Authored-By: gpt-6-astra (Codex) <noreply@openai.com>
 ```

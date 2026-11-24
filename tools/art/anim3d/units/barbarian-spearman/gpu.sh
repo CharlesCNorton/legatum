@@ -5,7 +5,7 @@ cd "$(dirname "$0")/../../../../.."
 source tools/art/anim3d/env.sh
 TASK=tools/art/anim3d/units/barbarian-spearman
 PY="$ANIM_ROOT/venv/bin/python"
-export ROUND="${ROUND:-2}"
+export ROUND="${ROUND:-3}"
 if [[ ! "$ROUND" =~ ^[0-9]+$ ]]; then echo "ROUND must be an integer" >&2; exit 1; fi
 STATUS="$ANIM_ROOT/review/3d-v2/barbarian-spearman-gpu-status.txt"
 LOG="$ANIM_ROOT/gpu-logs-barbarian-spearman-r${ROUND}.log"
@@ -23,6 +23,8 @@ if [[ ! -f "$ANIM_ROOT/masters/barbarian-spearman/plain.blend" ]]; then echo "Mi
 if [[ ! -x "$PY" ]]; then echo "Missing Pillow Python"; exit 1; fi
 export RENDER_ENGINE=CYCLES CYCLES_DEVICE=GPU CYCLES_BACKEND="${CYCLES_BACKEND:-METAL}" RESOLUTION=512 SAMPLES=64
 blender -b --disable-autoexec --python-exit-code 1 --python "$TASK/gpu-check.py" || exit "$?"
+stage=prepare
+"$PY" "$TASK/prepare.py" || exit "$?"
 for stage in refine paint bake animate; do "$TASK/render.sh" "$stage" || exit "$?"; done
 for stage in b c c-details d e-idle e-move e-attack e-hit e-death g-feet; do
   "$TASK/render.sh" "$stage" || exit "$?"

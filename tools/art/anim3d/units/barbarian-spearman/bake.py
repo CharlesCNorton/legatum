@@ -2,7 +2,11 @@
 import bpy,os
 from pathlib import Path
 R=Path(os.environ['ANIM_ROOT']);M=R/'masters/barbarian-spearman';T=M/'textures';T.mkdir(exist_ok=True)
-bpy.ops.wm.open_mainfile(filepath=str(M/'barbarian-spearman.blend'));sc=bpy.context.scene;sc.render.engine='CYCLES';sc.cycles.device='CPU';sc.cycles.samples=8
+bpy.ops.wm.open_mainfile(filepath=str(M/'barbarian-spearman.blend'));sc=bpy.context.scene;sc.render.engine='CYCLES';sc.cycles.device=os.environ.get('CYCLES_DEVICE','CPU');sc.cycles.samples=8
+if sc.cycles.device=='GPU':
+ prefs=bpy.context.preferences.addons['cycles'].preferences;backend=os.environ.get('CYCLES_BACKEND','METAL');prefs.compute_device_type=backend;prefs.get_devices()
+ assert any(d.type==backend for d in prefs.devices),f'No {backend} bake device'
+ for d in prefs.devices:d.use=d.type==backend
 for name in ['MPFB barbarian anatomy','Linen fitted tunic','Convex oval rawhide shield','Domed iron shield boss']:
  ob=bpy.data.objects[name];bpy.ops.object.select_all(action='DESELECT');ob.select_set(True);bpy.context.view_layer.objects.active=ob
  mods=[]

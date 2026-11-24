@@ -264,3 +264,42 @@ actual footwear, to `barbarian-spearman-g-feet-check.png`. `gpu.sh` includes thi
 stage in the same sequential pass as b/c/details/d/e, 512/256 masters, trimmed
 Q75+ atlas validation and the decoded-atlas H.264 movie. `--preview` packing
 remains explicitly CPU256 evidence; it is never final GPU provenance or art PASS.
+
+### Barbarian spearman driver round 3: continuous footwear and clean stone
+
+Preserve the incoming GPU receipt before iteration. Driver round 2 completed at
+196162 bytes/Q80; its actual images, clips and movie are in
+`masters/barbarian-spearman/driver-r2-gpu/`. CPU previews are separate evidence.
+
+`finish_geometry.py` extracts only MPFB's visible `body` group: its 19158-vertex
+source also includes hidden helper surfaces. Copying every low polygon exposes
+those helpers as phantom shoes. Fit one continuous leather shell to the reviewed
+toe/sole footprint, retain original skin weights, and rebind calf bindings and
+breeches. Evaluate modifiers when measuring sole contact. The skirt uses smooth
+pelvis/thigh weights rather than nearest-bone patches, which crease into shards.
+The original body topology and all 53 bones remain intact.
+
+The clean stone plate is generated from the registered painting, pinned in
+`assets.lock.json`, and aligned by `prepare.py`. It textures the real beveled
+disc, retaining the original rim and fresh AO under moving feet. Alpha blends
+pigment with physical stone; it never replaces geometry. Uncovered/back surfaces
+retain the existing generated material fills and product lights. The hand and
+shaft have fuller real cross-sections; the straight weapon axis is registered
+before frozen UV projection. A second generated cloth/shield plate supplies only
+the narrow masked band behind the moving spear; adjacent-pixel sampling left a
+faint painted duplicate. One rest histogram LUT still grades every clip.
+
+Death uses one anatomical source calibration for the whole body. Mixing
+guard-relative pelvis/spine with anatomical limb calibration can pitch a foot
+below the torso; a correct lowest-point floor solve then lifts the entire body.
+Reset unkeyed source channels before sampling sparse glTF actions. Released
+equipment interpolates from its last held transform and respects the support
+plane instead of snapping back to the starting guard. These are retarget/contact
+corrections on CC0 motion, not a replacement authored fall or cloth simulation.
+
+`ROUND=3 tools/art/anim3d/units/barbarian-spearman/gpu.sh` validates pinned inputs,
+rebuilds the scene and clips, runs GPU bakes and every GPU512/64 review stage,
+exports 512/256 masters, packs and validates the 160px Q75+ atlas, and reconstructs
+the eight-second H.264 movie from decoded trimmed rectangles. Input changes need
+an explicit local `prepare.py --update-lock`; the GPU driver never repins them.
+The script never writes PASS: fresh 256/64 and five-clip review must establish it.

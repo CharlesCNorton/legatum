@@ -1,8 +1,12 @@
 {
   "fill-hair.png": "f472a44cdc7ee21159636cfb3ab6b7ceaacae420510632164307f0b67245041a",
+  "cloth-underpaint-source.png": "222022c48836629ad41712439999cac743e2b4d3808c79afe92ce7cb63e599d7",
+  "cloth-underpaint-aligned.png": "7562b160a77dbf16158e0a8840f20ee2c3fb9aba7b1c892c90aa2564d1266d03",
+  "stone-fill-source.png": "32215750f8fe266669deaea434852581787b37b1ccdc81fcd0fedd239d091f7e",
   "painting-aligned.png": "5974519ca0668efcb0b64f888f6225f740a6df5d459b448dc0edcd4f2829b5b7",
+  "fill-leather.png": "d4a269e2dd3a802215f1c0ddcfae6c03d18518820b60d9f181e9bf9a4e28f852",
   "fill-linen.png": "c71ed83e71404d76f318e2410e111c1ec6ecf00864d9730f13514f2f5c932da3",
-  "painting-source.png": "e109e81b4483fd33a5c2049d854ba30303fbf6502188e59d7468523a931f7a81",
   "fill-fur.png": "968e0284ab6994e9ee2ccce9867aa50332b32d9e835d54e0e198ee8b8a798ca7",
-  "fill-leather.png": "d4a269e2dd3a802215f1c0ddcfae6c03d18518820b60d9f181e9bf9a4e28f852"
+  "painting-source.png": "e109e81b4483fd33a5c2049d854ba30303fbf6502188e59d7468523a931f7a81",
+  "stone-fill-aligned.png": "2ee04e7d831d0b0d47114db685b570ff4d7dbdaa6710b5bc1e837df823099db7"
 }

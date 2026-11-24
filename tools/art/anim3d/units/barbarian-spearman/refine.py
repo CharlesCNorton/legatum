@@ -46,6 +46,8 @@ def fitted(p):
  skirt=math.exp(-((x-118)/40)**2-((y-139)/13)**2)
  dx=-14*shoulder-3*elbow+(.12*(x-126)-1.5)*torso
  dy=-9*shoulder-2*elbow+5*skirt
+ hand=math.exp(-((x-76)/9)**2-((y-110)/8)**2)
+ dx+=(.75*(x-76)-2)*hand;dy+=.70*(y-110)*hand
  # Broaden bent-knee silhouette and remove the forward-facing tiny shoes.
  leg=max(0,min(1,(y-150)/55))
  if x<128:
@@ -96,6 +98,30 @@ for ob in list(s.objects):
   w=ob.matrix_world@v.co;p=world_to_camera_view(s,cam,w);x,y=p.x*256,(1-p.y)*256
   if x>76:v.co=inv@(w-right*((x-76)*.052)*px+up*((y-109)*.052)*px)
  ob.data.update()
+# The shaft needs the painting's robust carved-ash cross-section, including at 64px.
+shaft=bpy.data.objects['Ash spear shaft']
+import numpy as np
+points=np.array([list(v.co) for v in shaft.data.vertices]);center=points.mean(axis=0)
+_,axes=np.linalg.eigh(np.cov((points-center).T));axis=axes[:,-1]
+for v in shaft.data.vertices:
+ p=np.array(v.co);along=center+axis*np.dot(p-center,axis)
+ v.co=Vector(along+(p-along)*1.35)
+shaft.data.update()
+# Register the straight weapon axis to the painted ash shaft, not to its outer
+# alpha fringe. This keeps the warm wood stripe on the camera-facing cylinder.
+projected=[]
+for v in shaft.data.vertices:
+ p=world_to_camera_view(s,cam,shaft.matrix_world@v.co)
+ projected.append((p.x*256,(1-p.y)*256))
+slope,intercept=np.polyfit(np.array(projected)[:,0],np.array(projected)[:,1],1)
+for ob in s.objects:
+ if ob.type!='MESH' or not any(k in ob.name.lower() for k in ['spear','shaft','socket']):continue
+ inv=ob.matrix_world.inverted()
+ for v in ob.data.vertices:
+  w=ob.matrix_world@v.co;p=world_to_camera_view(s,cam,w);x=p.x*256
+  dy=.275*x+89.4-(slope*x+intercept)
+  v.co=inv@(w-up*dy*px)
+ ob.data.update()
 # One real stone disc; preserve top and contact height, shift its ground footprint.
 base=bpy.data.objects['Stationary cream base'];base.location.x=-.018;base.location.y=.20
 for mod in base.modifiers:
@@ -137,7 +163,10 @@ for mod,value in saved_mods:mod.show_viewport=value
 bpy.context.view_layer.update()
 rig['neutral_pose']=json.dumps({p.name:[list(row) for row in p.matrix_basis] for p in rig.pose.bones})
 
-s['registration']='Driver round 2: full-depth shoulder/torso/foot fit, shield and boss registration; no alpha cutout'
+import runpy
+runpy.run_path('tools/art/anim3d/units/barbarian-spearman/finish_geometry.py')['apply']()
+
+s['registration']='Driver round 3: full-depth fit, continuous weighted footwear and articulated skirt; no alpha cutout'
 (M/'registration.json').write_text(json.dumps({'meshes_fitted':changed,'body_vertices':len(body.data.vertices),'bones':len(rig.data.bones),'camera':list(cam.location),'scale':cam.data.ortho_scale,'method':s['registration']},indent=2))
 bpy.ops.wm.save_as_mainfile(filepath=str(M/'registered.blend'))
 print('REGISTERED',changed)

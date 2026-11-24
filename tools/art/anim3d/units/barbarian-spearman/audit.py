@@ -10,6 +10,9 @@ for clip in ['idle','move','attack','hit','death']:
  assert s['source_sha256']==expected,'Clip from stale source'
  assert len(r.data.bones)==53 and len(bpy.data.objects['MPFB barbarian anatomy'].data.vertices)==19158
  assert bpy.data.objects['MPFB barbarian anatomy'].data.shape_keys is None,'Macro shape keys override fitting'
+ assert not any(o.name.startswith('Leather boot ') for o in s.objects),'Legacy calf-attached duplicate feet'
+ for side in ['r','l']:
+  assert any(m.type=='ARMATURE' and m.object==r for m in bpy.data.objects['Lasted leather shoe '+side].modifiers),'Unskinned footwear'
  shaft=bpy.data.objects['Ash spear shaft'];points=np.array([list(v.co) for v in shaft.data.vertices]);center=points.mean(axis=0);_,axes=np.linalg.eigh(np.cov((points-center).T));axis=axes[:,-1];along=(points-center)@axis;ends=[Vector(center+axis*t) for t in [along.min(),along.max()]]
  max_grip=0;max_contact_error=0
  for frame in json.loads(s['sample_frames']):
@@ -23,7 +26,8 @@ for clip in ['idle','move','attack','hit','death']:
     expected_rotation=Quaternion(motion['target_foot_rotations'][frame-1][side])
     assert abs(expected_rotation.dot(r.pose.bones['foot_'+side].matrix.to_quaternion()))> .99999,'Foot rotation changed after retarget'
     shoe=bpy.data.objects['Lasted leather shoe '+side]
-    sole=min((shoe.matrix_world@v.co).z for v in shoe.data.vertices);soles.append(sole)
+    ev=shoe.evaluated_get(bpy.context.evaluated_depsgraph_get());me=ev.to_mesh()
+    sole=min((ev.matrix_world@v.co).z for v in me.vertices);ev.to_mesh_clear();soles.append(sole)
     assert sole>=.086,f'{clip}/{frame}: foot below stone {sole}'
    error=abs(min(soles)-.092);max_contact_error=max(max_contact_error,error)
    assert error<.006,f'{clip}/{frame}: neither sole planted {error}'
@@ -34,6 +38,19 @@ for clip in ['idle','move','attack','hit','death']:
    dg=bpy.context.evaluated_depsgraph_get()
    for name in ['MPFB barbarian anatomy','Lasted leather shoe r','Lasted leather shoe l']:
     ob=bpy.data.objects[name];ev=ob.evaluated_get(dg);me=ev.to_mesh();lowest=min((ob.matrix_world@v.co).z for v in me.vertices);ev.to_mesh_clear();assert lowest>=.09,f'{clip}/{frame}: below base {name}: {lowest}'
+   if frame>=2:
+    for control in ['Spear grip control','Shield grip control']:
+     for ob in bpy.data.objects[control].children:
+      if ob.type!='MESH':continue
+      ev=ob.evaluated_get(dg);me=ev.to_mesh();lowest=min((ev.matrix_world@v.co).z for v in me.vertices);ev.to_mesh_clear()
+      assert lowest>=.09,f'{clip}/{frame}: released equipment penetrates support: {ob.name}: {lowest}'
+ if clip in {'idle','move'}:
+  s.frame_set(1);start={p.name:p.matrix.copy() for p in r.pose.bones};root=r.matrix_world.copy()
+  s.frame_set(9)
+  assert max(abs(a-b) for aa,bb in zip(root,r.matrix_world) for a,b in zip(aa,bb))<1e-5,'Root loop seam'
+  for p in r.pose.bones:
+   assert max(abs(a-b) for aa,bb in zip(start[p.name],p.matrix) for a,b in zip(aa,bb))<1e-5,f'Pose loop seam: {p.name}'
+  rows.append(clip+': unsampled closure key matches first pose and root within 0.00001')
  if clip!='attack':
   assert s.get('motion_provider')=='Quaternius Universal Animation Library Standard'
  if clip=='move':

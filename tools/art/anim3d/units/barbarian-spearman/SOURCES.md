@@ -9,3 +9,9 @@
 - Blender 5.3.0 https://www.blender.org/ (GPL software), Pillow 13.0.0 https://pypi.org/project/pillow/13.0.0/ (MIT-CMU), existing FFmpeg. Every Blender invocation is through PATH blender. No paid services, accounts or downloads this round.
 
 Masters and raw assets remain under ~/LegatumRuns/anim-pilot/. The runtime still uses the original painting; no art PASS is implied by successful technical checks.
+
+## Barbarian spearman driver round 3, 2026-11-23
+- Clean stone occlusion fill: built-in ImageGen `01a20ad4-f65f-7980-a0cf-85993c23ebb5/exec-57287196-bac2-480e-bc3b-36c4edb13a67.png`, original project CC BY 4.0, no public URL. External assets/barbarian-spearman/stone-fill-source.png; exact prompt in stone-fill.prompt.txt, hashes in assets.lock.json. Registered pigment on real beveled disc with live AO; alpha never replaces geometry.
+- Reuses original painting, generated linen/fur/hair/leather fills, MPFB CC0 anatomy and Quaternius CC0 motion. Continuous leather/cloth skinning and evaluated sole audits are original MIT scripts / CC BY 4.0 renders. Prior GPU evidence preserved under masters/barbarian-spearman/driver-r2-gpu.
+
+- Barbarian spearman round3 cloth/shield occlusion fill: built-in ImageGen `01a20ad4-f65f-7980-a0cf-85993c23ebb5/exec-c6729036-4bac-481e-9966-b342cb1d02f9.png`, original project CC BY 4.0, no public URL. External cloth-underpaint-source.png; exact prompt in cloth-underpaint.prompt.txt and source/derived SHA256 pins in assets.lock.json. Only a narrow frozen pigment band is used beneath the independently moving spear. Original painting and mesh alpha unchanged.

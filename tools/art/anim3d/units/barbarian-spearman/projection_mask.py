@@ -1,11 +1,9 @@
-"""Fill the independently moving spear's narrow source band in frozen texture space.
-
-Sample adjacent painted surface pigment above/below the shaft; do not change
-mesh alpha, edit the source raster, or project from the animated camera.
-"""
-import bpy
+"""Generated garment/shield underpainting in the frozen source spear band only."""
+import bpy, os
+from pathlib import Path
 
 def apply():
+ image=bpy.data.images.load(str(Path(os.environ['ANIM_ROOT'])/'assets/barbarian-spearman/cloth-underpaint-aligned.png'));image.pack()
  count=0
  for ob in bpy.context.scene.objects:
   if ob.type!='MESH' or any(k in ob.name.lower() for k in ['spear','shaft','socket','anatomy','base']):continue
@@ -21,12 +19,8 @@ def apply():
    line=n.new('ShaderNodeMath');line.operation='MULTIPLY_ADD';line.inputs[1].default_value=.275;line.inputs[2].default_value=-.6508;l.new(sep.outputs['X'],line.inputs[0])
    delta=n.new('ShaderNodeMath');delta.operation='ADD';l.new(line.outputs[0],delta.inputs[0]);l.new(sep.outputs['Y'],delta.inputs[1])
    absolute=n.new('ShaderNodeMath');absolute.operation='ABSOLUTE';l.new(delta.outputs[0],absolute.inputs[0])
-   keep=n.new('ShaderNodeMapRange');keep.name='Exclude painted spear';keep.clamp=True;keep.inputs['From Min'].default_value=.005;keep.inputs['From Max'].default_value=.012;l.new(absolute.outputs[0],keep.inputs['Value'])
-   samples=[]
-   for offset in [-.014,.014]:
-    shift=n.new('ShaderNodeVectorMath');shift.operation='ADD';shift.inputs[1].default_value=(0,offset,0);l.new(uv.outputs[0],shift.inputs[0])
-    sample=n.new('ShaderNodeTexImage');sample.image=tex.image;sample.extension='CLIP';l.new(shift.outputs[0],sample.inputs[0]);samples.append(sample)
-   mean=n.new('ShaderNodeMixRGB');mean.inputs[0].default_value=.5;l.new(samples[0].outputs['Color'],mean.inputs[1]);l.new(samples[1].outputs['Color'],mean.inputs[2])
-   mix=n.new('ShaderNodeMixRGB');l.new(keep.outputs[0],mix.inputs[0]);l.new(mean.outputs[0],mix.inputs[1]);l.new(tex.outputs['Color'],mix.inputs[2]);l.new(mix.outputs[0],pigment.inputs['Emission Color']);count+=1
- bpy.context.scene['projection_occluder_mask']='Spear band: adjacent frozen pigment samples, feathered 1.3-3.1px, anatomy and base excluded; unchanged source and mesh alpha'
+   keep=n.new('ShaderNodeMapRange');keep.name='Exclude painted spear';keep.clamp=True;keep.inputs['From Min'].default_value=.010;keep.inputs['From Max'].default_value=.023;l.new(absolute.outputs[0],keep.inputs['Value'])
+   fill=n.new('ShaderNodeTexImage');fill.image=image;fill.extension='CLIP';l.new(uv.outputs[0],fill.inputs[0])
+   mix=n.new('ShaderNodeMixRGB');l.new(keep.outputs[0],mix.inputs[0]);l.new(fill.outputs['Color'],mix.inputs[1]);l.new(tex.outputs['Color'],mix.inputs[2]);l.new(mix.outputs[0],pigment.inputs['Emission Color']);count+=1
+ bpy.context.scene['projection_occluder_mask']='Generated frozen garment/shield pigment in spear band, feathered 2.6-5.9px; anatomy and base excluded; unchanged source and mesh alpha'
  print('PROJECTION_OCCLUDER_MASK',count)

@@ -9,6 +9,7 @@ for name,digest in json.loads(Path(__file__).with_name('assets.lock.json').read_
  assert hashlib.sha256((A/name).read_bytes()).hexdigest()==digest, f'Changed painting/fill input: {name}'
 bpy.ops.wm.open_mainfile(filepath=str(M/'registered.blend'));sc=bpy.context.scene
 image=bpy.data.images.load(str(A/'painting-aligned.png'));image.pack()
+stone_image=bpy.data.images.load(str(A/'stone-fill-aligned.png'));stone_image.pack()
 # Camera coordinates are baked in the neutral pose, never evaluated per animation frame.
 for ob in list(sc.objects):
  if ob.type=='CURVE':
@@ -61,7 +62,7 @@ for ob in list(sc.objects):
   if ob.name=='Stationary cream base':weight=1 if p.y<.25 else 0
   if p.x<0 or p.x>1 or p.y<0 or p.y>1:weight=0
   hit=visibility.ray_cast(world+view_ray*5,-view_ray,10)[0]
-  if hit is not None and (hit-world).dot(view_ray)>.018:weight=0
+  if ob.name!='Stationary cream base' and hit is not None and (hit-world).dot(view_ray)>.018:weight=0
   attr.data[loop.index].color=(weight,weight,weight,1)
  ev.to_mesh_clear()
  for mod,value in saved:mod.show_viewport=value
@@ -70,15 +71,19 @@ for ob in list(sc.objects):
  mul=n.new('ShaderNodeMath');mul.operation='MULTIPLY';l.new(weight.outputs['Color'],mul.inputs[0]);l.new(tex.outputs['Alpha'],mul.inputs[1])
  strength=n.new('ShaderNodeMath');strength.operation='MULTIPLY';strength.inputs[1].default_value=.98;l.new(mul.outputs[0],strength.inputs[0])
  if ob.name=='Stationary cream base':
-  # Only project the front stone lip below the figure. A colour mask can leave
-  # pale boot-shaped holes in its pigment even after the dark feet disappear.
+  # Clean generated top on the real stone; original rim below the figure.
+  filltex=n.new('ShaderNodeTexImage');filltex.image=stone_image;filltex.extension='EXTEND';l.new(coord.outputs[0],filltex.inputs[0])
   sep=n.new('ShaderNodeSeparateXYZ');l.new(coord.outputs[0],sep.inputs[0])
   lip=n.new('ShaderNodeMapRange');lip.clamp=True;lip.inputs['From Min'].default_value=.125;lip.inputs['From Max'].default_value=.145;lip.inputs['To Min'].default_value=1;lip.inputs['To Max'].default_value=0;l.new(sep.outputs['Y'],lip.inputs['Value'])
-  factor=n.new('ShaderNodeMath');factor.operation='MULTIPLY';l.new(mul.outputs[0],factor.inputs[0]);l.new(lip.outputs[0],factor.inputs[1]);l.new(factor.outputs[0],strength.inputs[0])
+  stone_mix=n.new('ShaderNodeMixRGB');l.new(lip.outputs[0],stone_mix.inputs[0]);l.new(filltex.outputs['Color'],stone_mix.inputs[1]);l.new(tex.outputs['Color'],stone_mix.inputs[2])
+  contact=n.new('ShaderNodeMixRGB');contact.blend_type='MULTIPLY';contact.inputs[0].default_value=.65;l.new(stone_mix.outputs[0],contact.inputs[1]);l.new(ao.outputs['Color'],contact.inputs[2])
+  for link in list(strength.inputs[0].links):l.remove(link)
+  l.new(filltex.outputs['Alpha'],strength.inputs[0])
  l.new(fallback,bs.inputs['Base Color'])
  # Preserve the painting's existing illumination for camera rays only.
  pigment=n.new('ShaderNodeBsdfPrincipled');pigment.name='Camera painted pigment';pigment.inputs['Base Color'].default_value=(0,0,0,1);pigment.inputs['Specular IOR Level'].default_value=0
  l.new(tex.outputs['Color'],pigment.inputs['Emission Color']);pigment.inputs['Emission Strength'].default_value=1
+ if ob.name=='Stationary cream base':l.new(contact.outputs[0],pigment.inputs['Emission Color'])
  lp=n.new('ShaderNodeLightPath');camera_weight=n.new('ShaderNodeMath');camera_weight.operation='MULTIPLY';l.new(lp.outputs['Is Camera Ray'],camera_weight.inputs[0]);l.new(strength.outputs[0],camera_weight.inputs[1])
  shader=n.new('ShaderNodeMixShader');l.new(camera_weight.outputs[0],shader.inputs[0]);l.new(bs.outputs[0],shader.inputs[1]);l.new(pigment.outputs[0],shader.inputs[2]);l.new(shader.outputs[0],n.get('Material Output').inputs['Surface'])
 sc.view_settings.view_transform='Standard';sc.view_settings.look='None'
