@@ -70,6 +70,16 @@ Lanes started about 23:31 on the round-11 GPU candidate `01a69951`, with the res
 - GPU rerun 00:38:24–01:16:07 (38 m), pushed as `07643cd4`: IoU **0.9384**, blurred ΔE **4.72** (passes), raw 7.52; regions head/crest 3.7, torso 2.9, cloak 4.8, shield 2.4, legs 3.4, feet 12.9, base 4.8; atlas 186,556 bytes at q80; walk slip 0.0018 mm, floor error 0.000 mm, heading 5.142°. Round wall-clock from lanes to GPU result: about 105 m including the failed launch. No PASS.
 - Art director on the merge (CPU proxy, before the GPU frames): best Astra candidate on every aspect; feet are the only failing region; the base lost the lip round 11 had; walk lifts the trailing foot too high; hit frames 1 and 2 too alike; death's final frame reads at 64 px.
 
+### Round 13 (2026-11-24 local, in progress)
+
+Lanes about 01:20–01:39 on the round-12 GPU candidate `07643cd4`, with the consolidated skill installed. Same-settings CPU proxy A/Bs against round 12:
+
+- Lane a (stance): IoU 0.9358 → 0.9367 (zero offset 0.9358 → 0.9361); lower-leg IoU 0.9169 → 0.9187; blurred ΔE 4.58 → 4.53; shin lean 10.4/5.3 → 9.3/4.5 px; feet region unchanged at 13.3. Larger inward shifts lost zero-offset IoU.
+- Lane b (base and sandals): base 4.77 → 4.00 (side 3.81 → 2.86); feet 13.33 → 13.36 with strap-only darkening; broad foot darkening rejected (13.90).
+- Lane c (walk and death staging): swing-sole clearance 114 → 76 mm; pelvis sway 68 → 85 mm; slip 0.0018 → 0.0043 mm; death body over the disc 55% → 76%.
+- For scale: Fable C, working on the same round-12 base at the same time, took the rest pose from IoU 0.9394 to 0.9513 and the feet region from 13.35 to 5.3 by measuring the feet on a gridded crop first.
+- Lanes done 01:39:25; merge task queued.
+
 ### Fable C and D (2026-11-24, from round 12)
 
 - Fable C (rest stance, ground shadow, base band), `fable/unit-anim-3d-spearman-c`, note about 01:30 local: rest IoU 0.9394 → **0.9513** on the CPU proxy and **0.9534** in Eevee; blurred ΔE 4.55 → **3.35**; feet 13.35 → 5.4; base 4.75 → 3.3. First candidate to pass both targets. Walk numbers unchanged to the digit (slip 0.0016 mm, heading 5.14°, root 48.96 mm). Dropped: ankle targets without knee columns (0.936), an AO ground shadow (base 2.7 → 5.4), stronger sandal tones.
