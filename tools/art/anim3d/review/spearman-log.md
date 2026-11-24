@@ -152,3 +152,4 @@
 
 - R9c CPU death strip available; review is provisional, Cycles CPU 256px/8 samples.
 - R9c atlas validator caught death frame 2 alpha at the left cell edge after retiming. Adjusting only the released spear's lateral mid-fall arc, keeping its final landing unchanged; rebaking/rerendering before validation. Git index.lock denied by sandbox; commit message saved for runner.
+- R9c final CPU checks: 40 poses, zero geometry findings; 33 dense move frames, no unsupported frame; peak sole clearance 143 -> 104mm (27% lower), planted heading 2.54deg, slip .0022mm, floor error 1.08mm, zero loop seam. 256/64 painting + round8 comparisons, full top/front feet, decoded atlas and eight-second movie saved with r9c prefix. No material/proportion edits. GPU final pass and visual approval remain; no PASS.
