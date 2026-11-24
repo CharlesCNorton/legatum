@@ -86,6 +86,7 @@ mod random;
 mod raze;
 mod research;
 mod rome_drill;
+mod rome_finish;
 mod rome_found_now;
 mod rome_opening;
 mod runaway;

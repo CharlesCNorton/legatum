@@ -10,7 +10,7 @@ impl Planner<'_> {
         self.faction == Faction::Rome
             && self.difficulty == AiDifficulty::Hard
             && self.decisions.rome_opening_march > 0
-            && self.view().turn <= 40
+            && self.view().turn <= self.rome_opening_last_turn()
             && self.campaigns.rome_opening_target.is_some()
     }
 
@@ -46,8 +46,8 @@ impl Planner<'_> {
 
     pub(crate) fn rome_opening_build(&self, city: &CityView) -> Option<ProductionItem> {
         if !self.rome_opening_active()
-            || self.view().turn > 30
-            || self.rome_opening_melee().len() >= 3
+            || self.view().turn > self.rome_opening_last_turn() - 10
+            || self.rome_opening_melee().len() >= self.rome_opening_melee_goal()
         {
             return None;
         }
@@ -73,8 +73,12 @@ impl Planner<'_> {
         if self.faction != Faction::Rome
             || self.difficulty != AiDifficulty::Hard
             || self.decisions.rome_opening_march == 0
-            || self.view().turn > 40
         {
+            return;
+        }
+        // Gene `rome_opening_finish`: the war on the opening's city names the victim.
+        self.note_rome_victim();
+        if self.view().turn > self.rome_opening_last_turn() {
             return;
         }
         let v = self.view();
@@ -100,7 +104,13 @@ impl Planner<'_> {
             .campaigns
             .rome_opening_target
             .and_then(|id| candidates.iter().find(|c| c.id == id).copied());
-        let selected = if prior.is_some_and(|city| !city.walls) {
+        let selected = if self.rome_finish() {
+            let scored: Vec<_> = candidates
+                .iter()
+                .map(|city| (*city, self.rome_opening_distance(city.pos)))
+                .collect();
+            self.rome_finish_target(&scored, prior)
+        } else if prior.is_some_and(|city| !city.walls) {
             prior
         } else if prior.is_some() {
             candidates
@@ -123,6 +133,10 @@ impl Planner<'_> {
                 .min_by_key(|city| (self.rome_opening_distance(city.pos), city.id))
         };
         let Some(city) = selected else {
+            if self.rome_finish() {
+                // No rival worth the opening yet: the march waits for one to be found.
+                self.campaigns.rome_opening_target = None;
+            }
             return;
         };
         self.campaigns.rome_opening_target = Some(city.id);
@@ -172,7 +186,24 @@ impl Planner<'_> {
         };
         let target = city.pos;
         let at_war = self.view().at_war(self.view().me, city.owner);
-        let radius = if at_war { 1 } else { 3 };
+        let finish = self.rome_finish();
+        // Gene `rome_opening_finish`: out of a walled city's fire, and at peace two hexes out
+        // where the land is open, so the declaration turn lands hits.
+        let radius = if finish && at_war && city.walls && city.hp > 0 {
+            3
+        } else if at_war {
+            1
+        } else {
+            3
+        };
+        let open_at = |p: &Self, unit: &legatum_core::view::UnitView, h: Hex| {
+            p.free_tile_for(unit, h)
+                && p.ctx.reachable(unit.pos, h)
+                && p.view().tile(h).is_some_and(|tile| {
+                    tile.terrain.is_some()
+                        && p.view().passage_allowed(p.view().me, unit.kind, tile.owner)
+                })
+        };
         let melee: Vec<_> = self
             .free(army)
             .into_iter()
@@ -181,6 +212,17 @@ impl Planner<'_> {
         for unit in melee {
             if self.has_acted(unit.id) {
                 continue;
+            }
+            if finish && !at_war {
+                let near = target
+                    .ring(2)
+                    .into_iter()
+                    .filter(|h| *h == unit.pos || open_at(self, unit, *h))
+                    .min_by_key(|h| (unit.pos.distance(*h), *h));
+                if let Some(near) = near {
+                    self.go_to(unit, near);
+                    continue;
+                }
             }
             if unit.pos.distance(target) <= radius && self.free_tile_for(unit, unit.pos) {
                 self.go_to(unit, unit.pos);

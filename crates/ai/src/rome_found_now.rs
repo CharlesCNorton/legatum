@@ -111,7 +111,9 @@ impl Planner<'_> {
         // part and its further hits would only spend the city's HP.
         if let Some(city) = self.rome_opening_city()
             && self.view().at_war(self.view().me, city.owner)
-            && u.pos.distance(city.pos) <= 3
+            // Gene `rome_opening_finish`: while the victim's open city stands, every veteran
+            // stays on the campaign (192 Hard games: victims eliminated by turn 50, 39 to 52).
+            && (u.pos.distance(city.pos) <= 3 || (self.rome_finish() && !city.walls))
             && !(self.rome_drill() && self.rome_wing_recruits(city.pos) >= 2)
         {
             return Some(Kept::Siege);
@@ -142,7 +144,8 @@ impl Planner<'_> {
             return true;
         }
         match self.rome_founder_kept(u) {
-            Some(Kept::Siege) => u.hp >= SIEGE_MIN_HP,
+            // Gene `rome_opening_finish`: the opening's siege rests its wounded on the spot.
+            Some(Kept::Siege) => u.hp >= SIEGE_MIN_HP || self.rome_finish_holds(u),
             Some(_) => true,
             None => false,
         }
