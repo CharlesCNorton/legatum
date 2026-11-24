@@ -187,3 +187,7 @@
 - Round 10 combined CPU complete: all 5 clips / 40-pose audit zero findings; feet pass; decoded 160 atlas 183016 bytes q80; IoU .902229 / CIE76 deltaE 13.814 (targets fail). Inspected rest, hit/death, decoded contact and feet sheets. MPFB/Rigify/corrective kit probe passes; no art PASS.
 - GPU round 10 started: full Cycles GPU pass requested.
 - GPU round 10 finished: all stages, masters, atlas validation and movie complete; visual review pending.
+
+- R11a: loaded legatum-unit-3d and all six Blender skills; source-ported round10 anim3d/atlas after Git merge lock denial; isolated lane root; focus sleeve/greave geometry, preserve feet/guard.
+
+- R11c: loaded legatum-unit-3d and all six Blender skills; round-10 source baseline ported after ORIG_HEAD.lock denial. Isolated master/clip copies; motion-only focus, no new assets.
