@@ -1,6 +1,6 @@
-# Spearman round 14 — combined candidate, CPU review / GPU pending
+# Spearman round 14 — combined candidate, GPU rendered / visual review pending
 
-Delivery status: CPU verified; GPU pass and final visual review pending.
+Not a PASS. The GPU pass, pixel-parity gate and decoded atlas validation completed; final visual approval is pending. The CPU evidence below remains labelled separately from the appended GPU receipt.
 
 ## Selected changes and evidence
 
@@ -44,6 +44,20 @@ GPU lead command from repo root: `ROUND=14 tools/art/anim3d/units/spearman/gpu.s
 - Regions (blurred ΔE): head_crest 3.7, torso 2.6, cloak_spear_side 5.0, shield 2.2, legs 2.7, feet 5.4, base 3.2.
 - Painting mask: alpha; frames: idle 8, move 8, attack 10, hit 4, death 10.
 - Rest: `/Users/samcorcos/LegatumRuns/anim-pilot/lanes/spearman-r14-merge/preview/rest/00.png`. Contact sheet uses `/Users/samcorcos/LegatumRuns/anim-pilot/lanes/spearman-r14-merge/review/3d-v2/spearman-decoded-160`.
+
+### Automated critique: spearman-round14 (Eevee painted GPU 512 masters / display-space decoded 160 atlas)
+
+- Silhouette IoU: **0.9537** (target ≥ 0.95; PASS). Best of ±3 px offsets: render x=+0, y=+0.
+- Tone/colour ΔE on blurred images (sigma 2 px, CIE76): **3.51** (target ≤ 6; PASS), at zero offset over 11570 overlapping pixels including base. Information only: raw per-pixel ΔE 6.36; at the IoU offset blurred 3.51, raw 6.36.
+- Regions (blurred ΔE): head_crest 3.7, torso 2.9, cloak_spear_side 4.8, shield 2.4, legs 3.2, feet 5.3, base 3.3.
+- Painting mask: alpha; frames: idle 8, move 8, attack 10, hit 4, death 10.
+- Rest: `/Users/samcorcos/LegatumRuns/anim-pilot/masters/spearman/256/rest.png`. Contact sheet uses `/Users/samcorcos/LegatumRuns/anim-pilot/review/3d-v2/spearman-decoded-160`.
+
+### Delivery receipt (GPU final render, visual review pending)
+
+- 40 frames; 160 px trimmed atlas: 187316 bytes, quality 80; decoded validation PASS.
+- Walk: planted slip 0.0042 mm; floor error 0.000 mm; heading 5.142°.
+- Movie: five clips, 1600×352, H.264 yuv420p, 192 frames / 8 seconds. No art PASS issued.
 
 FOCUS a: Sandal straps/toe separation and the cloak's rest flare/scalloped hem, measured against the painting; preserve registered feet and base.
 FOCUS b: Remove the moving pale-sole flash; soften the base shadow and anchor it to evaluated animated feet, with same-path GPU A/B evidence.

@@ -283,3 +283,13 @@
   2. r14c move frames 0-1: the trailing foot shows its pale sole toward camera for two frames (about x 150-160, y 205-215). Same fix as before: sole to sandal brown.
   3. r14c death is round 13's face-down collapse with the spear already flat by frame 3 and clear of the knees. Take it over r14a's side-lying version unless r14a fixes the skirt-strip fan and the hidden shield.
   Best per aspect for the round 14 merge: silhouette = r14b (wider cloak); materials/values = round 13 GPU look; move and death = r14c; hit = round 13; idle, attack = frozen.
+- (Fable art director, 2026-11-24T09:32Z, on round 14 GPU final: spearman-round14-restpose-compare.png, spearman-round14.mp4 sampled at 5-6 fps, -contact-sheet.png; critique IoU 0.9537, blurred delta-E 3.51) Positions at 256 px unless noted.
+  Rest pose is unchanged from round 13 (same numbers to the last digit), so both targets still pass and the rest-pose polish list from my round 13 blocks carries over as is. The clips are where round 14 moved: the walk no longer pops when it starts from idle, the cloak stays close to the body in move and attack (no more 6 px flare), and the death keeps the face-down ending with the spear flat and clear of the knees by frame 3. Round 14 GPU is the best candidate on every aspect: silhouette, materials/values, move, hit, death. Idle and attack frozen. No Fable build is ahead on anything.
+  Still a PASS candidate for Sam in my view. Remaining polish, ranked:
+  1. Move: the trailing foot shows a pale round sole toward camera in two of eight frames (movie move frames 2 and 6, about x 150-162, y 200-214). At 160 px it is a light dot flicking on behind the leg, and it is now the most noticeable thing in the walk. Sole to sandal brown (luminance ~60).
+  2. Sandal straps: three dark 2 px bands per instep and the toe line on the right foot. Feet are still smooth brown shapes at 256.
+  3. Base shadow band behind the feet (y 214-219, x 105-172): half strength, 3 px blur; in the walk it stays fixed while the feet move.
+  4. Rest cloak, spear side: 50 px short in area (582 vs 632 in x 98-112, y 120-175), lit folds 8% bright. r14b fixed the motion, not the rest shape: add the 4 px flare at hip height in the rest pose.
+  5. Cloak hem behind the right leg: level at y ~190 with three scallops.
+  6. Death: last three frames identical; give one to the kneel-to-prone drop (frames 4-5), which is still the quickest step in the clip.
+  7. Sliver under the spear hand at (106,123); darkest bronze cavities 15% deeper (helmet p10 33 vs 26, cuirass 38 vs 31).

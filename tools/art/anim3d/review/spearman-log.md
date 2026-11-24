@@ -255,3 +255,4 @@
 - R14 merge: read live feedback, Legatum 3D and Blender modeling/materials/lighting/cameras/animation/rendering skills; ported skill updates, c support/loops/transitions, b cloak; retained R13/Fable A+B+C look/form and death by director ranking. CPU build isolated in lanes/spearman-r14-merge.
 - R14 merge verified 2026-11-24T03:47:24: all five CPU clips; IoU .951254 / blurred delta-E 3.386599 (R13 pixels identical); 192682-byte Q80 preview; 36 tests; audit 0; feet 8 limits pass. GPU handoff ready; no PASS.
 - GPU round 14 started: full Eevee painted GPU pass requested; Cycles GPU feet inspection.
+- GPU round 14 finished: all stages, masters, atlas validation and movie complete; visual review pending.
