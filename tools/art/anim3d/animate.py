@@ -219,7 +219,7 @@ for f in range(1,end+1):
    dg=bpy.context.evaluated_depsgraph_get();lift=0;culprit=''
    feet_zones=[(rig.matrix_world @ rig.pose.bones[n+side].head,r) for side in 'lr' for n,r in [('ball_',.17),('foot_',.12)]]
    for ob in (sc.objects if t>0 else []):
-    if ob.type!='MESH' or ob.hide_render or ob==base or ob.name.startswith(('Linen pteruges','Pteruges','Cloak •','Aspis','Sunburst','Convex bronze aspis','Shield','Leather shield','Leather sandal','Sandal strap')):continue
+    if ob.type!='MESH' or ob.hide_render or ob==base or ob.name.startswith(('Cloak •','Aspis','Sunburst','Convex bronze aspis','Shield','Leather shield','Leather sandal','Sandal strap')):continue
     if ob in spear_objects:continue
     # Only rig-carried body/clothes/armour; released equipment has its own solve.
     parent=ob.parent

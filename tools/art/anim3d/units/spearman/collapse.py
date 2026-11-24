@@ -51,8 +51,8 @@ KEYS = [
                 hand_r=(-.40, -.14, .78), elbow_r=(-.58, .06, 1.08), ease='in')),
     # 4 toppling over the spear-side knee; head and shield lag behind the hips
     (0.45, dict(pelvis=(.20, .06, .46), rot=(-.15, -.62, 0, 0), spine=(.30, .16, 0), head=(.25, .25, 0),
-                plant=0, ankle_l_w=(.26, .27, .215), ankle_r_w=(-.28, .25, .24),
-                ankle_l=(.18, .22, .62), ankle_r=(-.20, .24, .63),
+                plant=1, ankle_l_w=(.26, .27, .215), ankle_r_w=(-.28, .25, .24),
+                ankle_l=(.18, .22, .62), ankle_r=(-.12, .24, .66),
                 knee_l=(.20, -2.0, .40), knee_r=(-.40, -2.0, .40), foot=(2.6, 2.6),
                 hand_l=(.28, -.30, 1.02), elbow_l=(.60, -.10, 1.06),
                 hand_r=(-.42, -.24, 1.02), elbow_r=(-.62, .02, 1.12),
@@ -70,23 +70,23 @@ KEYS = [
                 hand_r_w=(-.25, -.45, .14), elbow_r_w=(-.55, -.25, .10),
                 shield_w=.80, shield_arc=.35, ease='out')),
     # 6 settles on his side facing out, knees drawn up; the aspis lands on its rim behind him
-    (0.80, dict(pelvis=(.24, .10, .31), rot=(-.50, -1.40, 0, -.2), spine=(.15, .0, 0), head=(.05, -.10, -.45),
+    (0.80, dict(pelvis=(.24, .10, .36), rot=(-.50, -1.49, 0, -.2), spine=(.15, .0, 0), head=(.05, -.10, -.45),
                 plant=0, ankle_l_w=(.26, .27, .215), ankle_r_w=(-.28, .25, .24),
                 ankle_l=(-.02, .10, .52), ankle_r=(-.125, -.08, .66),
                 knee_l=(.125, -2.0, .60), knee_r=(-.125, -2.0, .80), foot=(1.4, 1.35),
                 hand_l=(-.12, -.32, .98), elbow_l=(.60, -.30, 1.10),
                 hand_r=(-.50, -.38, 1.20), elbow_r=(-.45, -.25, 1.60),
-                arm_w=1, hand_l_w=(.28, -.02, .50), elbow_l_w=(.0, .30, .90),
+                arm_w=1, hand_l_w=(.22, .26, .30), elbow_l_w=(.0, .33, .40),
                 hand_r_w=(-.25, -.45, .14), elbow_r_w=(-.55, -.25, .10),
                 shield_w=1, shield_arc=.35, ease='out')),
     # 7 at rest (held)
-    (0.96, dict(pelvis=(.24, .10, .30), rot=(-.55, -1.40, 0, -.2), spine=(.15, .0, 0), head=(.0, .0, -.5),
+    (0.96, dict(pelvis=(.24, .10, .355), rot=(-.55, -1.49, 0, -.2), spine=(.15, .0, 0), head=(.0, .0, -.5),
                 plant=0, ankle_l_w=(.26, .27, .215), ankle_r_w=(-.28, .25, .24),
                 ankle_l=(-.02, .10, .52), ankle_r=(-.125, -.08, .66),
                 knee_l=(.125, -2.0, .60), knee_r=(-.125, -2.0, .80), foot=(1.3, 1.3),
                 hand_l=(-.12, -.32, .98), elbow_l=(.60, -.30, 1.10),
                 hand_r=(-.50, -.38, 1.20), elbow_r=(-.45, -.25, 1.60),
-                arm_w=1, hand_l_w=(.28, -.02, .50), elbow_l_w=(.0, .30, .90),
+                arm_w=1, hand_l_w=(.22, .26, .30), elbow_l_w=(.0, .33, .40),
                 hand_r_w=(-.25, -.45, .14), elbow_r_w=(-.55, -.25, .10),
                 shield_w=1, ease='out')),
 ]
@@ -153,7 +153,7 @@ def sample(t, KEYS=KEYS):
 # band: standing on its rim on the stone behind him, leaning forward against
 # his back and hip with the face toward the camera, so the whole body lies in
 # front of it. World space; centre of the shell and the outward facing.
-SHIELD_REST = (Vector((.12, .42, .45)), Vector((.25, -.93, -.25)))
+SHIELD_REST = (Vector((.02, .42, .45)), Vector((.25, -.93, -.25)))
 _shield_points = {}
 
 
