@@ -5,8 +5,10 @@ from mathutils import Vector,Matrix,Quaternion
 from mathutils.bvhtree import BVHTree
 sys.path.insert(0,str(Path(__file__).parent))
 sys.path.insert(0,str(Path(__file__).parent/'infantry'))
+sys.path.insert(0,str(Path(__file__).parent/'units/spearman'))
 from retarget import prepare, apply_matrices, contact_ik
 from contact import sole_points
+from motion import attack_channels, source_phase, EquipmentResponse
 root=Path(os.environ['ANIM_ROOT']);M=root/'masters/spearman-3d-v2';A=root/'assets'
 CLIPS={'idle':(8,4),'move':(8,6),'attack':(10,14),'hit':(4,12),'death':(10,4)}
 
@@ -27,6 +29,17 @@ shield=bpy.data.objects.get('Aspis control');shield_neutral=shield.matrix_basis.
 if shield:shield.rotation_mode='QUATERNION'
 cloth=bpy.data.objects['Cloak • simulated wool'].modifiers['Cloth per clip']
 cloth.show_viewport=False
+if clip=='attack':
+ # Retain the shoulder attachment; free more of the lower wool to lag the
+ # torso's acceleration, then damp it like a heavy cloak instead of a flag.
+ # Hit keeps the original pins/settings: loosening them raised a cloak corner
+ # behind the shoulder at its four-frame recovery in the merged candidate.
+ cloak=bpy.data.objects['Cloak • simulated wool'];pins=cloak.vertex_groups['Shoulder pins']
+ for v in cloak.data.vertices:
+  for g in v.groups:
+   if g.group==pins.index and g.weight<.99:pins.add([v.index],g.weight*.65,'REPLACE')
+ cloth.settings.bending_stiffness=.8
+ cloth.settings.air_damping=2
 if clip=='death':
  # Release the lower cape's silhouette pins so it drapes during the collapse.
  # Keep the shoulder attachment; no visibility or scale trick hides the cloth.
@@ -73,15 +86,14 @@ def pose(t):
  elif clip=='attack':
   # Raise outside the right shoulder, then drive forward above the shield rim.
   # Right hand stays on the shaft; the rear shaft stays outside the torso.
-  strength=[0,.05,.22,.72,1,1,.68,.25,.05,0][min(9,round(t*9))]
-  raised=[0,.35,.90,1,1,1,1,.85,.30,0][min(9,round(t*9))]
+  strength,raised=attack_channels(t)
   rig.location=base_loc+Vector((.12*strength,-.16*strength,-.12*strength))
   turn('spine_03','X',.20*strength);turn('spine_03','Y',.15*strength)
   # Counter root travel in the ankle targets: soles remain on the disc.
   limb('thigh_l','calf_l',(.21+.10*strength,.15-.18*strength,.082+.12*strength),(.42,-.50,.48))
   limb('thigh_r','calf_r',(-.39-.05*strength,-.075+.16*strength,.082+.12*strength),(-.40,-.20,.48))
   pole=Vector((-.48,-.12,1.08)).lerp(Vector((-.65,.05,1.48)),raised)
-  limb('upperarm_r','lowerarm_r',(guard_hand.x+(-.27-guard_hand.x)*strength,guard_hand.y+(-.41-guard_hand.y)*raised-.05*strength,guard_hand.z+(1.71-guard_hand.z)*raised),pole)
+  limb('upperarm_r','lowerarm_r',(guard_hand.x+(-.13-guard_hand.x)*strength,guard_hand.y+(-.41-guard_hand.y)*raised-.05*strength,guard_hand.z+(1.71-guard_hand.z)*raised),pole)
   limb('upperarm_l','lowerarm_l',(.29,-.34-.10*strength,1.12+.10*strength),Vector((.53,-.10,1.13)).lerp(Vector((.55,-.12,1.20)),strength))
   aim('hand_r',(0,-.03,.09));hand_spear(Vector((.98,.17,.12))*raised+Vector((0,0,1))*(1-raised))
  bpy.context.view_layer.update()
@@ -116,7 +128,9 @@ def pose(t):
   tilt=max(0,min(1,(release-.20)/.55));tilt=tilt*tilt*(3-2*tilt)
   rotation=Quaternion().slerp(direction.rotation_difference(Vector((.99,.08,.015)).normalized()),tilt)
   target=center.lerp(Vector((-.05,-.57,.13)),release)
-  target.x-=.08*math.sin(math.pi*release)
+  # Keep a real pixel margin while the retimed fall crosses the horizontal
+  # weapon pose; the endpoint and held landing stay exactly where authored.
+  target.x+=.02*math.sin(math.pi*release)
   target.x+=.12*tilt
   target.y=center.y+(-.95-center.y)*depth
   if release>.80:target.y=-.95+.38*(release-.80)/.20
@@ -151,6 +165,7 @@ sc.frame_start=1;sc.frame_end=end;sc.render.fps=24
 phases=[max(0,(f-25))/(count*24/fps) if clip in ['idle','move']
         else max(0,min(1,(f-25)/max(1,end-25))) for f in range(1,end+1)]
 retarget_frames,motion_source=prepare(rig,root,clip,phases) if clip!='attack' else (None,{'provider':'Original weapon-specific hand keys, rebased on Quaternius idle reference'})
+response=EquipmentResponse(rig,shield,clip)
 # A single complete source cycle, sampled before its duplicate endpoint.
 
 for f in range(1,end+1):
@@ -160,7 +175,8 @@ for f in range(1,end+1):
  # Loop clips sample before the duplicate final phase.
  if clip in ['idle','move']:t=max(0,(f-25))/(count*24/fps)
  active_frame=f
- pose(t)
+ equipment_phase=source_phase('death',t) if clip=='death' else t
+ pose(equipment_phase)
  # Resolve the actual finished sandal underside against the real stone top.
  # Small foot-bone translations preserve the keyed action and live skinning;
  # airborne feet are unchanged. The previous root heuristic allowed buried soles.
@@ -229,6 +245,7 @@ for f in range(1,end+1):
     for ob in spear_objects:
      matrix=ob.matrix_world.copy();matrix.translation+=shift;ob.matrix_world=matrix
     bpy.context.view_layer.update()
+ response.key(f,equipment_phase)
  rig.keyframe_insert(data_path='location',frame=f)
  for o in spear_objects:
   o.keyframe_insert(data_path='location',frame=f);o.keyframe_insert(data_path='rotation_quaternion',frame=f)
@@ -236,6 +253,7 @@ for f in range(1,end+1):
   shield.keyframe_insert(data_path='location',frame=f);shield.keyframe_insert(data_path='rotation_quaternion',frame=f)
  for p in rig.pose.bones:
   p.rotation_mode='QUATERNION';p.keyframe_insert(data_path='location',frame=f);p.keyframe_insert(data_path='rotation_quaternion',frame=f);p.keyframe_insert(data_path='scale',frame=f)
+motion_source['equipment_response']=response.report()
 sc['motion_source']=json.dumps(motion_source)
 sc['sample_frames']=json.dumps(samples)
 if os.environ.get('MOTION_DIAGNOSTIC') == '1':
