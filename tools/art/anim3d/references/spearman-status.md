@@ -74,3 +74,21 @@ MPFB game rig; Quaternius Idle_Loop/Walk_Loop, influence .90; KayKit Hit_B;
 keyed attack/collapse. Foot width 1.50, original length, height 1.18.
 Eevee emission paint: sun pi at 24°, paint cast .22, fill cast .30, base cast
 .16, contact .40. Clips 8/8/10/4/10 at 4/6/14/12/4 fps. CPU proxy is ungraded.
+
+## GPU result (added by the skill editor, 2026-11-24 08:03Z)
+
+Round 13 GPU (`d7798046`), after the parity gate was given a noise tolerance: **IoU 0.9537, blurred ΔE 3.51**, raw 6.36; regions head/crest 3.7, torso 2.9, cloak 4.8, shield 2.4, legs 3.2, feet 5.3, base 3.3; atlas 187,254 bytes at q80; walk slip 0.0042 mm, heading 5.142°. Both metric targets pass for the first time. Visual review pending; no PASS file.
+
+## Art director on round 13 GPU (08:03Z)
+
+"Ready to show Sam as a PASS candidate." Best on every aspect; both numeric targets pass; clips hold at 160 px and the death reads at 64. Polish, none blocking: paint three strap bands per instep; halve and blur the base shadow band and make it follow the feet in the walk (it stays put in the movie); darken the pale sole in move frames 5–6 and damp the cloak flare to 3–4 px; let the death shaft fall 10 px nearer the viewer and give one of the three identical final frames to the kneel-to-prone drop; 4 px more cloak flare at the hip and lit folds 8% lighter; level cloak hem with three scallops; sliver under the spear hand at (106,123); darkest bronze cavities 15% deeper.
+
+## Spearman settings worth knowing
+
+- Camera: orthographic, location (2.5, −7, 3.0), target (0, 0, 1.2), ortho scale 2.9.
+- Registration: 5.3425 source px per 256-canvas px, source (627,627) ↔ canvas (127.5,128). `project.py`'s frozen UV formula is 0.9% narrow and 0.3% short; the correction lives in the look's texture registration. Switch both together at a rebuild.
+- Guard (Fable C): pelvis 5 cm back along the view ray, ankles on their painted positions, knees on columns 112.5 and 146.6; disc 1.6 px left and 3% shallower.
+- Rest form (Fable B, measured by row spans): thigh 1.12, knee cap 1.18, shin 1.0, ankle 1.20; skin calf at half the greave's scale; merged foot width × 1.50, height × 1.18, original length; shaft radius × 1.75–1.8; disc radius × 0.965, band 8 mm deeper.
+- Look (`units/spearman/look.py`): sun strength π at 24°; cast-shadow depth 0.22 on projected paint, 0.45 on unseen fill, 0.85 on stone; ramp input fill 0.30, AO 0.55, stroke 0.10; contact shadow at 40%.
+- Motion: Quaternius `Idle_Loop`, `Walk_Loop` at 0.90 source influence with an 8.5 cm lateral ankle offset per foot; KayKit `Hit_B`; keyed death (`collapse.py`) and attack. Clips 8/8/10/4/10 frames at 4/6/14/12/4 fps.
+- Cycles hybrid fallback (through R10): key (−3,−4,8) 596.75 W size 5; fill (4,−2,3) 77 W; rim (−2,3,4) 132 W; world 0.19; one histogram grade at strength 0.80.

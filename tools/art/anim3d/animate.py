@@ -32,17 +32,8 @@ shield=bpy.data.objects.get('Aspis control');shield_neutral=shield.matrix_basis.
 if shield:shield.rotation_mode='QUATERNION'
 cloth=bpy.data.objects['Cloak • simulated wool'].modifiers['Cloth per clip']
 cloth.show_viewport=False
-if clip=='attack':
- # Retain the shoulder attachment; free more of the lower wool to lag the
- # torso's acceleration, then damp it like a heavy cloak instead of a flag.
- # Hit keeps the original pins/settings: loosening them raised a cloak corner
- # behind the shoulder at its four-frame recovery in the merged candidate.
- cloak=bpy.data.objects['Cloak • simulated wool'];pins=cloak.vertex_groups['Shoulder pins']
- for v in cloak.data.vertices:
-  for g in v.groups:
-   if g.group==pins.index and g.weight<.99:pins.add([v.index],g.weight*.65,'REPLACE')
- cloth.settings.bending_stiffness=.8
- cloth.settings.air_damping=2
+from cloak import configure as configure_cloak
+cloth_response=configure_cloak(bpy.data.objects['Cloak • simulated wool'],clip)
 if clip=='death':
  # Release the lower cape's silhouette pins so it drapes during the collapse.
  # Keep the shoulder attachment; no visibility or scale trick hides the cloth.
@@ -283,6 +274,7 @@ for f in range(1,end+1):
  for p in rig.pose.bones:
   p.rotation_mode='QUATERNION';p.keyframe_insert(data_path='location',frame=f);p.keyframe_insert(data_path='rotation_quaternion',frame=f);p.keyframe_insert(data_path='scale',frame=f)
 motion_source['equipment_response']=response.report()
+if cloth_response:motion_source['cloth_response']=cloth_response
 sc['motion_source']=json.dumps(motion_source)
 sc['sample_frames']=json.dumps(samples)
 if os.environ.get('MOTION_DIAGNOSTIC') == '1':

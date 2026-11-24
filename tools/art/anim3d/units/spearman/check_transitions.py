@@ -52,6 +52,8 @@ for clip in ('rest', 'idle', 'attack', 'move'):
         assert max(v['max_vertex_mm'] for v in info['dense_loop'].values()) <= 3
         if clip == 'move':
             period = scene.frame_end-25
+            assert len(samples) == 8, 'Move delivery must retain eight frames'
+            assert all(isinstance(f, int) and 25 <= f < scene.frame_end for f in samples)
             steps = [(b-a) % period for a, b in zip(samples, samples[1:]+samples[:1])]
             assert len(set(steps)) == 1, ('Uneven move loop timing', steps)
             info['cyclic_frame_intervals'] = steps
@@ -69,7 +71,7 @@ for label, row in [('attack entry', poses['attack'][0]), ('attack exit', poses['
 report['boundaries'] = boundaries
 report['move_hard_cut_seamless_160'] = max(
     v['max_vertex_px160'] for v in boundaries['move entry']['from_idle_0'].values()) <= 1
-report['note'] = ('Move sample order may rotate; source pose/foot rotations/contact remain untouched. '
+report['note'] = ('Move uses a uniform dense integer phase; source action/foot rotations/contact remain untouched. '
                   'A residual over 1 px is explicitly unresolved, even if loop/contact gates pass.')
 (master/'transitions.json').write_text(json.dumps(report, indent=2)+'\n')
 print('TRANSITIONS_OK', json.dumps({k:v['from_idle_0'] for k,v in boundaries.items()}))

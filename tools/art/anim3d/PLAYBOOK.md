@@ -810,3 +810,61 @@ because the corrective node has an animated weight; attack stays unchanged.
 Re-pin only after reviewing the corrected 256/160/64 sheets. The generic
 loop helper can run after another lane's cloth bake without changing its
 pins or physical settings.
+
+### Spearman round 14b: cloak-only walk and attack pass
+
+Retain the round-13 walk: the director's 08:03Z GPU review ranks it first.
+`units/spearman/cloak.py` configures only move/attack wool before the existing
+one-second pre-roll and persistent bake. Full shoulder pins stay at one; lower
+pins use 1.8x on move and .85x on attack, bending 2.0/1.2, air damping 6/5.
+Call it on a fresh master, never cumulatively on a previously configured clip.
+`animate.py` uses this same entry point during the unchanged `gpu.sh` handoff.
+
+`cloak_review.py --bake` rebakes isolated round-13 clips with master pin weights
+and asserts unchanged action hashes; its default Blender mode renders matched
+Cycles CPU A/Bs, `--context-only` renders the unchanged clips, and Python
+`--assemble` writes painting/before/after sheets at 256, 160 and 64 px. All
+inputs and caches live under `lanes/spearman-r14b`, never the shared masters.
+The first 1.35x walk-pin trial reduced sweep but worsened the largest cloth
+endpoint gap (220 to 246 mm); 1.8x reduced that gap to 215 mm and p95 from
+182 to 133 mm. Attack p95 fell from 154 to 114 mm. These are full-mesh endpoint
+residuals, including hidden cloth: neither clip has a perfectly settled cloak.
+The chest-relative geometric left-edge sweep fell 22.10 to 15.48 px for move
+and 10.37 to 7.96 px for attack; this is not the director's visible-flare metric.
+Action equality does not prove cloth loop continuity; measure both separately.
+Fresh top/front feet renders still pass all eight limits (33 samples, slip
+0.0042 mm, floor error 0.0001 mm, planted heading 5.142 degrees). Judge the
+remaining cloth return in the merged GPU movie; no PASS is implied by the audit.
+
+### Spearman round 14 merge
+
+Merge the director-preferred c cycle entry and post-bake cloth closure with b's restrained cloth settings. Apply physical settings before baking, then close the periodic residual. The rest form and look stay at round 13: b changed solver settings, not the master silhouette, despite the review describing a wider rest cloak. Drop a/D's side-lying death because its tucked feet gain cannot compensate for hidden shield identity and striped skirt undersides. Keep c's inherited face-down death and early level spear.
+
+`cpu_review.py` now calls the same render setup/frame functions as the GPU entry point, records source/code/calibration hashes, and requires an isolated root. `cpu_deliver.py` checks those receipts before packing, creates native 256/160/64 comparisons and a validated five-clip movie. CPU analytical-light proxies cannot verify Eevee cast shadows. Round 14 adds reusable `kit.cloth`, `kit.loop`, and evaluated `kit.base.SupportSurface`.
+
+### Spearman round 15c: retain the boundary tradeoff that already passes
+
+Test dense sampling phases without changing donor rotations, contact, cloth
+or cadence before attempting a pose correction. `round15c_review.py` compares
+all 32 integer phases of the existing 24 Hz walk with eight samples, four source
+frames apart. R14 starts at 41; the minimax candidate starts at 40. At 160 px
+the full-sole entry falls 14.411 → 13.373 px, but exit grows 9.442 → 10.339 px.
+Only phase 41 is no worse than R14 at both boundaries. Keep R14 in production:
+`transitions.py`, the cloth bake and shield-readable death are unchanged.
+
+The discarded candidate also raises maximum evaluated cloth-vertex delivery
+step 11.889 → 12.526 px and wrap step 6.017 → 7.004 px at 160, despite identical
+cloth geometry at all 33 dense samples and closed duplicate endpoints. These
+are full-mesh geometric displacements, not visible silhouette measurements.
+A closed source seam does not prove an arbitrary delivered sample phase is
+better. Inspect every combined-cloth frame and the delivered wrap.
+
+The isolated review script preserves all 53 bone matrices and every sole and
+cloth vertex at all 33 samples by exact comparison; source action hashes and
+five untouched blend files also match. Run it with
+`ANIM_ROOT=$HOME/LegatumRuns/anim-pilot/lanes/spearman-r15c` after copying the
+R14 merge masters there; it reads the preserved `spearman-r14-merge` sibling.
+It saves the rejected candidate only in that lane, never in production.
+Review evidence is labelled rejected; a lower worst-boundary score alone is
+not a win when the exit and cloth regress. The GPU handoff stays
+`ROUND=15 tools/art/anim3d/units/spearman/gpu.sh`.
