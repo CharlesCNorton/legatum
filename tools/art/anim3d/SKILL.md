@@ -30,8 +30,8 @@ Settings are the Spearman's working values. Sample each new painting before copy
 Get a crude unit through all five clips and the atlas before polishing any stage. Read `tools/art/anim3d/kit/README.md`, copy `kit/presets/spearman.json` to `<slug>.json`, and build in this order. Each increment ends with a render the lead can look at.
 
 1. Clay figure on the cream base, camera matched, compared with the painting (steps 1–2).
-2. Frozen projection plus flat fills for unseen surfaces (steps 3–5).
-3. Open motion on all four donor clips, plus a blocked attack; feet check (steps 7–8).
+2. Registration fit, frozen projection and the Eevee painted look with flat fills for unseen surfaces (steps 3–5).
+3. Open mocap for idle and walk, blocked-in attack, death and hit; feet check (steps 7–8).
 4. CPU preview atlas, movie and `critique.py` numbers (steps 9–11).
 5. Only then iterate on the worst visible gap, one variable at a time.
 
@@ -214,7 +214,7 @@ $ANIM_ROOT/venv/bin/python tools/art/anim3d/critique.py --slug <slug> --round <N
 - [ ] IoU on the `critique.py` scale is not comparable with the older unshifted, threshold-32 diagnostic (R10: 0.9022 vs 0.8989). CPU previews and GPU masters differ by a few thousandths of IoU and a few tenths of ΔE; compare like with like.
 - [ ] Report regional and global numbers together, wins and losses (`python -m kit.regions --painting P --before A --after B --region name=x0,y0,x1,y1 --pale name=x0,y0,x1,y1`; the Spearman boxes are in `kit/presets/spearman.json`). **[proven]** R10 kept three regional wins while whole-image IoU fell 0.9035 → 0.9022 and fixed-grade ΔE rose 13.74 → 13.91; that was disclosed, not hidden.
 - [ ] One variable per A/B, so a win can be attributed. Port lane changes by scoped diff, not whole-branch merge.
-- [ ] With several builders, judge per aspect (silhouette, materials and values, each clip) and merge the best of each, as the art director does ("materials = Fable A v1, except the linen; motion, death, hit = Astra r10; silhouette = tie"). Keep aspects separable in code so that is possible. The first such merge (reviewer, 2026-11-24): Fable A's look + Fable B's death, hit and silhouette + the best walk and attack + the open shape fixes, then measure.
+- [ ] With several builders, split the work by aspect (look; form and motion) and judge per aspect (silhouette, materials and values, each clip), merging the best of each as the art director does. Keep aspects separable in code so that is possible. **[proven]** two builders split this way took the Spearman from IoU 0.905 to 0.920 with the colour inside target in about 50 minutes, where three lanes plus a merge on one candidate moved IoU 0.9035 → 0.9039 in 67 (LOG.md).
 - [ ] Use the shared `critique.py` numbers in notes. A lane-local variant of a metric (R11b computed its own blurred ΔE on cream-composited sRGB: 7.68 where the shared tool gives 7.36 for the same round) is not comparable across lanes.
 - [ ] When a metric's definition changes, give the old and new values for the same render side by side, so the change is not read as an artistic gain (R11 merge: the same preview scores 5.98 blurred at zero offset and 7.23 on the previous shifted definition).
 - [ ] Report secondary regressions next to the win (R11c: fewer head and shield jumps, but a higher ankle sample and more late cloth travel).
@@ -243,7 +243,6 @@ Try one at a time, on a copy, with a same-settings A/B. Move it into the checkli
 - **Selective rim.** Large area rim, or shader rim `(1−max(N·V,0))^4 * max(N·L_rim,0)` mixed at 0.03–0.08 on the lit silhouette only; keep it off painted highlights.
 - **Pose-space correctives.** Blender Studio's Pose Shape Keys extension (GPL) turns a posed sculpt into a rest-space key; start elbow and knee correction at 45°, full near 100–110°, separate left/right shapes. Corrective Smooth after the armature (factor 0.2, 5 iterations, joint mask) is cleanup, not volume.
 - **Other donors and tools.** CMU mocap (free-use, **not CC0**; credit CMU/NSF EIA-0196217, record the converter) for a less stylised walk. Rokoko's LGPL add-on for retargeting only if it runs locally without a login. Brushstroke Tools (GPL) for a small cloak patch. Rain, Snow and Einar rigs (CC-BY 4.0, Blender Studio) as study references only; credit if any data is reused.
-- **Cycles final settings to test.** Adaptive threshold 0.01, min 16 samples, bounces 6 (diffuse 2, glossy 2, transparent 8); compare OIDN on and off at 160 px, since denoising can smear painted strokes.
 
 ## Probe
 
@@ -269,16 +268,14 @@ Recheck the licence file of anything downloaded.
 
 One line per finding, newest first; the rule itself lives in the step named in brackets. Full numbers are in `LOG.md` and the round notes. Round agents: add one dated line here, edit the step it changes, and delete any rule it contradicts rather than leaving both.
 
-- 2026-11-24 R11 merge: IoU 0.9035 → 0.9219 from the greave fit, cloak flare and a shaft 1.8× thicker in the master; fix registration in one place only; a metric redefinition must be reported as such, not as a gain; [3, 11]
+- 2026-11-24 R11 merge: IoU 0.9035 → 0.9219 from the greave fit, cloak flare and a shaft 1.8× thicker in the master; fix registration in one place only; a metric redefinition must be reported as such, not as a gain. [3, 11]
 - 2026-11-24 reviewer's decision: idle and walk from open mocap; attack, death and hit keyed or donor-based, whichever reviews better. Round 12 adopts Fable B's death and hit. [7]
 - 2026-11-24 art director, 03:52Z: Fable B's widened walk wins (lateral ankle offset, legs separate at 160); leg-spread calibration alone rejected; never crop the weapon; contact shadow no wider than the sole plus 2 px. [1, 7]
-- 2026-11-24 baseline is Fable A's look on Fable B's form (IoU 0.920, blurred ΔE 4.41); colour is scored blurred at zero offset; what is left is silhouette. [11]
-- 2026-11-24 verdicts (reviewer, art director): adopt Fable A's look, registration fix and display-space reduction; adopt Fable B's keyed death and hit and its silhouette; no walk winner; attack and idle frozen. [1, 5, 7, 9, 11]
+- 2026-11-24 verdicts (reviewer, art director): adopt Fable A's look, registration fix and display-space reduction; adopt Fable B's silhouette, keyed death and hit; attack and idle frozen. Baseline is A's look on B's form (IoU 0.920); colour is scored blurred at zero offset and is inside target; what is left is silhouette. [1, 5, 7, 9, 11]
 - 2026-11-24 Fable B: rest-space leg and foot scaling (IoU 0.894 → 0.918), inward-only calf growth, keyed collapse authored with a one-minute quick-look loop. [1, 7]
 - 2026-11-24 R11b: keep coverage alpha and source pigment; local feathered fixes beat palette replacement. R11c: edge-down shield preference (83° → 34°), leg spread kept in calibration (walk spacing 42% → 58%). [4, 7]
 - 2026-11-24 Fable A (look): Eevee emission-only look with per-part paint and painting-fitted ramps beats the Cycles hybrid on materials and renders 41 frames in 55 s; fit registration by image, not bounding boxes (0.9% error cost 3 ΔE); compare with the painting using the painting's own reduction. [3, 5, 9]
 - 2026-11-24 R11a: armour that carries foot weights is not foot anatomy; freeing the greave shell fixed the pinched ankle (lower-leg overlap 78.3% → 83.0%, IoU 0.9035 → 0.9103). Sleeve smoothing did not fix the shoulder. [1, 2]
-- 2026-11-24 art director on Fable A v1: the render-time painted look beats the R10 hybrid on materials (not on form; linen too dark); judge and merge per aspect. [5, 11]
 - 2026-11-24 cloud reviewer on R10: judge colour on blurred images and per region; raw per-pixel ΔE is information only. Implemented in `kit/critique.py`. [11]
 - 2026-11-24 art director on R10 GPU: same 14 items as the CPU preview, plus contact patch, missing cast shadow, base lip and a detached crest; attack and idle frozen. Iterate on CPU, review contact shading on GPU. [1, 7, 9, 11]
 - 2026-11-24 art director on R10: the first tells at 160 px are thin dark props, pale small feet, calves outside the greaves, and a death that wastes three frames and teleports once; reviews now carry pixel boxes and measured values. [1, 5, 7, 11]
