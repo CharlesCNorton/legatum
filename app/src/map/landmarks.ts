@@ -6,6 +6,8 @@ import { buildingArtSlug, itemArtUrl } from '../unlockArt';
 import { tintedIcon } from '../icons';
 import { HEX_SIZE, isFar } from './grid';
 import { ATLAS } from './style';
+import { cityArtFootprint } from './cityArt';
+import { CITY_DROP, CITY_WORLD } from './terrain';
 
 export interface Landmark { city: number; owner: number; building: BuildingKind; tile: number; hex: Hex }
 
@@ -65,7 +67,8 @@ export function landmarkCore(b: { x: number; y: number; s: number }) {
 
 type Rect = { x: number; y: number; w: number; h: number };
 /** Where a wonder may stand on its tile, as offsets from the centred footprint in hex radii (the first is the centred one). */
-const SPOTS: readonly (readonly [number, number])[] = [[0, 0], [-0.7, 0], [-0.7, 0.55], [0.7, 0], [0.7, 0.55], [0, 0.8]];
+// The last two step a little further aside: they clear a walled town's full ring beside the wonder's tile.
+const SPOTS: readonly (readonly [number, number])[] = [[0, 0], [-0.7, 0], [-0.7, 0.55], [0.7, 0], [0.7, 0.55], [0, 0.8], [-0.75, 0], [0.75, 0]];
 /** The zoom the footprint is chosen at (the opening zoom), so zooming and panning never move a wonder. */
 export const LANDMARK_REF_ZOOM = 0.9;
 
@@ -74,9 +77,10 @@ function boxAt(c: { x: number; y: number }, hexPx: number, spot: readonly [numbe
   return { x: c.x - s / 2 + spot[0] * hexPx, y: c.y - s * 0.36 + spot[1] * hexPx, s };
 }
 
-/** The solid part of a city's painted town (walls and towers, not its faded ground), centred on the city's hex. */
+/** A city's painted town and its walls (`cityArtFootprint`: the full ground oval, roofs and walls), for a hex centre on screen. */
 export function townCover(c: { x: number; y: number }, hexPx: number): Rect {
-  return { x: c.x - 0.8 * hexPx, y: c.y - 0.5 * hexPx, w: 1.6 * hexPx, h: 1.2 * hexPx };
+  const f = cityArtFootprint(CITY_WORLD, CITY_DROP), z = hexPx / HEX_SIZE;
+  return { x: c.x + f.x0 * z, y: c.y + f.y0 * z, w: (f.x1 - f.x0) * z, h: (f.y1 - f.y0) * z };
 }
 
 /** Which of SPOTS keeps the painting clearest of `covers` (banners and earlier landmarks, never moving units). */

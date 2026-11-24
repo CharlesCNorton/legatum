@@ -9,6 +9,9 @@
 
 // The Machine Age's city sprites are sepia-tinted Industrial ones until its own art (increment 2). `modern` is the World War
 // era's; the Modern era (`contemporary`) has no sprites yet and falls back to the nearest finished era, the World War one.
+import type { CityView, PlayerView } from '../types';
+import { sitesOf } from './constructionSites';
+
 export const CITY_ERAS = ['ancient', 'classical', 'medieval', 'renaissance', 'industrial', 'machine', 'modern', 'contemporary', 'future'] as const;
 export const CITY_TIERS = ['hamlet', 'town', 'city', 'metropolis'] as const;
 export type CityTier = (typeof CITY_TIERS)[number];
@@ -18,6 +21,10 @@ const urls = import.meta.glob<string>('../assets/cities/**/*.png', { eager: true
 /** `ancient-hamlet-128` style key (path below `assets/cities/`, no extension) to URL. */
 const byKey = new Map<string, string>();
 for (const [path, url] of Object.entries(urls)) byKey.set(path.replace(/^.*\/assets\/cities\//, '').replace(/\.png$/, ''), url);
+// Walls under construction: the era's painted footings (`construction/<era>-walls-stage1`), registered to the finished ring's canvas,
+// keyed `<era>-walls-footings` so the terrain cache draws them with the town (back half, town, front half) like finished Walls.
+const footings = import.meta.glob<string>('../assets/construction/*-walls-stage1*.png', { eager: true, query: '?url', import: 'default' });
+for (const [path, url] of Object.entries(footings)) byKey.set(path.replace(/^.*\/construction\//, '').replace(/\.png$/, '').replace('-walls-stage1', '-walls-footings'), url);
 
 /** City size tiers by population (the art's own bands: 1-3, 4-7, 8-12, 13+). */
 export function cityTier(population: number): CityTier {
@@ -63,6 +70,20 @@ export function wallStem(era: number, bastion: boolean, exists: Has = has): stri
   const ok = (name: string) => exists(`${name}-walls`, 128) || exists(`${name}-walls`, 512);
   const pick = bastion && ok('renaissance') ? 'renaissance' : nearest(CITY_ERAS, e, ok);
   return pick ? `${pick}-walls` : null;
+}
+
+/** The footings stem for Walls under construction: the same ring as `wallStem`, unfinished. */
+export function footingsStem(era: number, bastion: boolean): string | null {
+  const stem = wallStem(era, bastion, (name, size) => has(name.replace(/-walls$/, '-walls-footings'), size));
+  return stem ? stem.replace(/-walls$/, '-walls-footings') : null;
+}
+
+/** The wall ring a city's town stands in on the map (finished Walls, else footings while Walls are built), as the terrain cache draws it. */
+export function cityRing(view: PlayerView, c: CityView): string | null {
+  const owner = view.players.find((p) => p.id === c.owner);
+  const era = Math.max(0, (owner?.era ?? 1) - 1), bastion = owner?.faction === 'Switzerland';
+  if (c.visible && c.walls) return wallStem(era, bastion);
+  return sitesOf(view).some((s) => s.walls && s.city === c.id) ? footingsStem(era, bastion) : null;
 }
 
 /** A city's visible wall level for its banner: 0 none (or not in sight), 1 Walls, 2 Castle, 3 Star Fort. */
@@ -156,3 +177,32 @@ export function cityUrl(stem: string, size: 64 | 128 | 512 = 512): string | null
 /** Sprite geometry, from the art's shared canvas: the ground oval spans x 18..493 of 512 and rests on y = 454. */
 export const CITY_CANVAS = 512;
 export const CITY_GROUND = { x0: 18, x1: 493, bottom: 454, middle: 335 };
+
+/**
+ * A walled town is drawn at this scale about its ground centre, so it stands inside the ring instead of under it: the
+ * ring's back half is drawn first, then the town, then the front half (`WALL_CUT`). Every era's ring leaves this much room.
+ */
+export const WALLED_TOWN_SCALE = 0.78;
+/** Where a wall ring is cut into back and front (canvas y): the ground oval's middle. */
+export const WALL_CUT = CITY_GROUND.middle;
+/**
+ * Draws a city-art canvas (`img`, square) into the box at `x, y` sized `size`: whole, or the `back` or `front` part of a
+ * wall ring cut at `WALL_CUT`. The back part keeps one spare source row, which the front part covers, so no seam shows.
+ */
+export function drawCityCanvas(g: CanvasDrawImage, img: HTMLImageElement, x: number, y: number, size: number, part: 'all' | 'back' | 'front' = 'all') {
+  if (part === 'all') { g.drawImage(img, x, y, size, size); return; }
+  const n = img.naturalHeight, cut = Math.round(n * WALL_CUT / CITY_CANVAS);
+  if (part === 'back') g.drawImage(img, 0, 0, img.naturalWidth, cut + 1, x, y, size, size * (cut + 1) / n);
+  else g.drawImage(img, 0, cut, img.naturalWidth, n - cut, x, y + size * cut / n, size, size * (n - cut) / n);
+}
+
+/**
+ * The city art's footprint relative to the hex centre, in world units, for marks that must keep clear of it (resource
+ * medallions, wonder badges): the ground oval's width, from the top of an ordinary town's roofs to the oval's front edge.
+ * Spires and towers rise above `top`; marks above that height sit over sky, not over buildings.
+ */
+export function cityArtFootprint(world: number, drop: number): { x0: number; x1: number; y0: number; y1: number } {
+  const k = world / CITY_CANVAS;
+  const half = (CITY_GROUND.x1 - CITY_GROUND.x0) / 2 * k;
+  return { x0: -half, x1: half, y0: drop - (CITY_GROUND.middle - 190) * k, y1: drop + (CITY_GROUND.bottom - CITY_GROUND.middle) * k };
+}

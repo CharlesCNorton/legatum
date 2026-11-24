@@ -87,10 +87,13 @@ export function buildOverlayTiles(view: PlayerView, overlays: OverlaySet): Overl
   if (!overlays.yields && !overlays.borders) return NONE;
   const faction = view.players.find((p) => p.id === view.me)?.faction ?? 'Switzerland';
   const out: OverlayTiles = { yields: [], borders: [] };
+  // A city's own tile shows its town, not a yield cluster painted over the houses: the banner carries the city's totals
+  // and hovering the tile gives the exact values.
+  const towns = new Set(view.cities.map((c) => tileIndex(c.pos, view.width, view.height)));
   view.tiles.forEach((t, index) => {
     if (!t.explored || !t.terrain) return;
     const base = { index, faded: !t.visible };
-    if (overlays.yields) {
+    if (overlays.yields && !towns.has(index)) {
       const yields = yieldEntries(tileYields(faction, t));
       if (yields.length) out.yields.push({ ...base, tint: '', yields });
     }

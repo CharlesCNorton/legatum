@@ -41,7 +41,7 @@ import { drawLens, drawOwnerOverlay } from './drawLens';
 import { artFadeFor, DEFAULT_OVERLAYS, ownerWashScale, type OverlaySet } from './overlays';
 import { drawYieldIcons, yieldClusterRects, YIELD_FILL } from './yieldIcons';
 import { drawImprovements } from './improvementArt';
-import { drawResourceIcons, medallionTop, resourceDetail, STACK_LIFT } from './resourceIcons';
+import { drawResourceIcons, medallionTop, resourceDetail, STACK_LIFT, type Cover } from './resourceIcons';
 import { drawRoads } from './roadArt';
 import { drawClosedLand } from './sakokuLand';
 import { drawStationBadge, drawStationLand, stationBadgeAt, stationSites } from './yamRelayStation';
@@ -60,7 +60,7 @@ import { drawMarchDust, drawMomentFx, drawMomentGround, drawRevealed, revealAt, 
 import { drawAirCandidates, drawAirLabels, drawAirOffscreen, drawAirRings, drawTileCandidates, type AirOverlay } from './airOverlay';
 import { aircraftAsUnit } from '../airWing';
 import { unworkedClaimIndexes } from './unworkedClaims';
-import { wallTierOf } from './cityArt';
+import { cityRing, wallTierOf } from './cityArt';
 
 export { HEX_SIZE } from './grid';
 
@@ -298,13 +298,13 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
   // Landmarks use a fixed footprint chosen from every banner at one reference zoom (never these screen covers, never moving units).
   const fixedLandmarkBoxes = landmarkBoxes(landmarkSites, toScreen, hexPx, referenceBannerCovers(bannerView, look, siege));
   // The ink-and-wash landmark sits in the land, under everything else the map draws (full colour belongs to its cards).
-  drawWonderArt(ctx, view, cam, w, h, dpr, inp.lens, overlays.yields);
+  drawWonderArt(ctx, view, cam, w, h, dpr, inp.lens, overlays.yields, (g, near) => terrain.stampTowns(g, cam, w, h, dpr, near));
   // Improvements change the land itself: drawn on it, under every lens, overlay, unit and banner.
   const momentView: MomentView | null = moments ? {
     toScreen: (p) => worldToScreen(cam, w, h, p.x, p.y), hexPx, zoom: z, dpr, far: isFar(hexPx), w, h, colorOf: mapBorderColor,
     eraOf: (owner) => Math.max(0, (view.players.find((p) => p.id === owner)?.era ?? 1) - 1),
     factionOf: (owner) => factionOf.get(owner),
-    city: (id) => { const c = view.cities.find((x) => x.id === id); return c ? { population: c.population, owner: c.owner } : null; },
+    city: (id) => { const c = view.cities.find((x) => x.id === id); return c ? { population: c.population, owner: c.owner, ring: cityRing(view, c) } : null; },
     unitAt: (id) => { const u = view.units.find((x) => x.id === id); return u ? inp.unitPos.get(id) ?? hexToPixel(u.pos, HEX_SIZE) : null; },
     tokenHalf: isFar(hexPx) ? PIP_HALF : tokenHalf(hexPx),
     landmarkAt: (city, building) => { const l = landmarksOf(view).find((x) => x.city === city && x.building === building); return l ? hexToPixel(l.hex, HEX_SIZE) : null; },
@@ -335,16 +335,18 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
   // Overlays draw over the lens tint, so a lens never hides them: owned land first, then the yield icons on top of both.
   if (inp.borderTiles?.length) drawOwnerOverlay(ctx, inp.borderTiles, cam, w, h, view.width, dpr, look, 'tint', ownerWashScale(inp.lens));
   // Tile yields sit under every unit and banner: quiet enough to leave on.
-  if (inp.yieldTiles?.length) drawYieldIcons(ctx, inp.yieldTiles, cam, w, h, view.width, dpr, look, inp.lens === 'settle');
+  // A neighbour's medallion, yield cluster or wonder badge never sits on a town (or its walls): they keep clear of its footprint.
+  const townCovers = cityArtCovers(view, toScreen, z, hexPx);
+  if (inp.yieldTiles?.length) drawYieldIcons(ctx, inp.yieldTiles, cam, w, h, view.width, dpr, look, inp.lens === 'settle', townCovers);
   // Banner positions are known up front so the resource medallions below them can keep clear.
   const bannerMotion = moments?.hold.banner;
   // Known resources, on every lens (as in Civ): top of the hex, under units and banners.
   const iconView = moments?.hold.resources.size
     ? { ...view, tiles: view.tiles.map((tile, i) => moments.hold.resources.has(i) ? { ...tile, resource: null } : tile) }
     : view;
-  drawResourceIcons(ctx, iconView, cam, w, h, dpr, look, bannerCovers, overlays.resources);
+  drawResourceIcons(ctx, iconView, cam, w, h, dpr, look, bannerCovers, overlays.resources, townCovers);
   // A natural wonder's bonus, on its tile: above the lens tint and yield icons, under units and banners.
-  drawWonderBadges(ctx, view, cam, w, h, dpr, overlays.yields, bannerCovers);
+  drawWonderBadges(ctx, view, cam, w, h, dpr, overlays.yields, [...bannerCovers, ...townCovers]);
 
   // World transform for vector overlays.
   const worldT = () => ctx.setTransform(dpr * z, 0, 0, dpr * z, dpr * (w / 2 - cam.x * z), dpr * (h / 2 - cam.y * z));
@@ -1038,7 +1040,7 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
     const unitsAt = new Map<number, number>();
     for (const u of view.units) { const t = tileIndex(u.pos, W, H); unitsAt.set(t, (unitsAt.get(t) ?? 0) + 1); }
     drawLens(ctx, inp.lensTiles, cam, w, h, W, dpr, look, 'labels', unitBottoms, [...(inp.lensAvoid ?? []), ...bannerCovers],
-      (i) => medallions && view.tiles[i]?.resource && view.tiles[i]?.explored ? medallionTop(hexPx, cityAt.has(i), (unitsAt.get(i) ?? 0) > 1) : 0, { yieldsOn: overlays.yields, yieldRects: overlays.yields && inp.lensTiles.some((t) => t.rank) ? yieldClusterRects(inp.yieldTiles ?? [], cam, w, h, W) : [] });
+      (i) => medallions && view.tiles[i]?.resource && view.tiles[i]?.explored ? medallionTop(hexPx, cityAt.has(i), (unitsAt.get(i) ?? 0) > 1) : 0, { yieldsOn: overlays.yields, yieldRects: overlays.yields && inp.lensTiles.some((t) => t.rank) ? yieldClusterRects(inp.yieldTiles ?? [], cam, w, h, W, cityArtCovers(view, (p) => worldToScreen(cam, w, h, p.x, p.y), z, hexPx)) : [] });
   }
 
   if (inp.reportArrow && inp.reportArrow.alpha > 0) {
@@ -1668,4 +1670,17 @@ function drawRoute(
   const xs = pts.map((p) => p.x), ys = pts.map((p) => p.y);
   const x0 = Math.min(...xs) - pad, y0 = Math.min(...ys) - pad;
   return { x: x0, y: y0, w: Math.max(...xs) + pad - x0, h: Math.max(...ys) + pad - y0 };
+}
+
+/**
+ * Screen rects of the painted towns in view (their ground oval and roofs, walls included), tagged with the town's tile.
+ * Zoomed out the town is a small mark and nothing needs to move, so there are none.
+ */
+export function cityArtCovers(view: PlayerView, toScreen: (p: { x: number; y: number }) => { x: number; y: number }, zoom: number, hexPx: number): (Cover & { tile: number })[] {
+  if (isFar(hexPx)) return [];
+  return view.cities.flatMap((c) => {
+    const tile = tileIndex(c.pos, view.width, view.height);
+    if (tile < 0 || !view.tiles[tile]?.explored) return [];
+    return [{ ...townCover(toScreen(hexToPixel(c.pos, HEX_SIZE)), HEX_SIZE * zoom), tile }];
+  });
 }
