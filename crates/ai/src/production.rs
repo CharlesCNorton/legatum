@@ -2427,6 +2427,10 @@ impl Planner<'_> {
             if !detail.captured || detail.raze_blocker.is_some() {
                 continue;
             }
+            // Gene `rome_opening_finish`: the opening keeps what it takes from its victim.
+            if self.rome_finish_keeps(detail.former_owner) {
+                continue;
+            }
             if self.decisions.raze_value > 0 {
                 if self.raze_by_value(i, city) {
                     raze.push(city.id);
@@ -3679,7 +3683,8 @@ impl Planner<'_> {
         }
         if self.faction == Faction::Rome && self.hard_defense() && self.decisions.roman_founders > 0
             && tally.army < (self.ctx.own_cities.len() as i32 * 2 + 1).max(5)
-            && self.ctx.own_cities.len() < 6
+            // Gene `rome_found_now`: founders are replaced at any city count.
+            && (self.ctx.own_cities.len() < 6 || self.rome_found_now())
             && let Some(item) = c.detail.as_ref()?.options.iter()
                 .filter(|o| o.turns > 0 && o.resource_blocker.is_none()
                     && matches!(o.item, ProductionItem::Unit { unit } if legatum_core::data::unit_class(unit) == Some(legatum_core::UnitClass::Melee)))
