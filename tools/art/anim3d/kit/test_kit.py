@@ -187,6 +187,13 @@ class RegionTests(unittest.TestCase):
         self.assertEqual(regions.span_differences(painting, painting, 0, 256), {})
         self.assertEqual(regions.spans(painting, 150, 151, axis='column')[150], (90, 255, 166))
 
+    def test_grid_crop_enlarges_a_box_for_pixel_counting(self):
+        image = figure(size=256)
+        sheet = regions.grid_crop([('Painting', image), ('Render', image)], (120, 200, 200, 232))
+        self.assertEqual(sheet.size, ((80*8+24)*2, 32*8+34))
+        self.assertEqual(sheet.getpixel((20+5*8+3, 16+3)), (224, 215, 191))   # x 125: outside the figure
+        self.assertEqual(sheet.getpixel((20+15*8+3, 16+3)), (180, 60, 40))    # x 135: the body
+
     def test_frame_steps_flags_wasted_and_teleporting_frames(self):
         moving = [figure(shift=4*i) for i in range(8)]
         self.assertEqual(regions.frame_steps(moving+[moving[-1]])['findings'], [])
