@@ -38,6 +38,7 @@ IoU-old is the original CPU diagnostic (unshifted, alpha threshold 32). IoU and 
 | 11 | 11-23 | lanes 19 m + merge 17 m + GPU 31 m | – | 0.9219 CPU, 0.9275 GPU | blurred 4.59 GPU (R10 6.47) | – | 188,730 q80 CPU, 185,380 q80 GPU | Greave fit (a), lining pigment (b), wider walk and shield damping (c); Fable A's Eevee look, Fable B's cloak flare, shaft 1.8× thicker; registration and reduction fixes | Not PASS; colour passes, feet 13.4, silhouette 0.93 |
 | 12 | 11-23/24 | lanes 40 m + merge 25 m + GPU 38 m (after a failed 2 m launch) | – | 0.9394 CPU proxy, 0.9384 GPU | blurred 4.55 CPU proxy, 4.72 GPU | – | 190,952 q80 CPU, 186,556 q80 GPU | Fable B's form, guard, cloak, disc and keyed death; KayKit donor hit and 8.5 cm walk offset (c); width-only foot fit (a); revealed-surface pigment (b); soles seated on the stone | Not PASS; best on every aspect; feet 12.9; base lip regressed |
 | 13 | 11-24 | lanes 19 m + merge 19 m + GPU 38 m (after a failed 25 m launch) | – | 0.9513 CPU proxy, **0.9537 GPU** | blurred 3.39 CPU proxy, **3.51 GPU** | – | 192,866 q80 CPU, 187,254 q80 GPU | Fable C's guard replanted on the painted feet, registered disc, ankle-anchored ground shadow, base band; lane c's lower swing and calmer collapse; one render function for look and delivery | Both metric targets pass; visual review pending |
+| 14 | 11-24 | lanes 29 m + merge 16 m + GPU pending | – | 0.9513 CPU proxy (rest unchanged) | blurred 3.39 CPU proxy | – | 192,682 q80 CPU | Polish: cloak damping in move and attack (b); cloth loop closure, walk sample rotation, evaluated support surface, early parity gate (c) | Rest targets still pass; GPU and visual review pending |
 
 Round-to-task mapping for rounds 1–3 is inferred from task order in `astra.log`. The round-9 ΔE and IoU on the `critique.py` scale are the same-settings baseline measured during round 10 (8 samples, fixed round-9 grade).
 
@@ -103,7 +104,7 @@ Lanes about 03:05–03:33 on the round-13 GPU candidate `d7798046`.
 - Lane a (death staging): Fable D's collapse compacted onto the base; crest and feet margins against the rim −28.1 / −13.7 px → +3.3 / +5.0 px. Rest on the CPU proxy unchanged in kind: IoU 0.9513, blurred ΔE 3.33.
 - Lane b (cloak in move and attack): cloak edge sweep 22.1 → 15.5 px (move) and 10.4 → 8.0 px (attack); cloth endpoint p95 182 → 133 mm. A 1.35× pin trial rejected (worst vertex 246 mm).
 - Lane c (loops and transitions): cloak loop gap 12.07 → 0.00003 px (move), 2.62 → 0.00003 px (idle); idle-to-move sole gap 23.0 → 14.4 px, move-to-idle 18.7 → 9.4 px by rotating the walk's eight samples.
-- Lanes done 03:33:00; merge task queued.
+- Lanes done 03:33:00 (a 16 m, b 13 m, c 29 m in parallel). Merge 03:33–03:49 (16 m): lane b's cloth and lane c's loop closure, sample rotation, evaluated support surface and early parity gate; lane a's side-lying death dropped (contained, but the shield face is lost). Rest pixels identical to round 13 on the CPU proxy (IoU 0.9513, blurred ΔE 3.39); CPU preview atlas 192,682 bytes at q80; 36 tests, zero audit findings, walk slip 0.0042 mm. Worst free-cloth loop correction 273 mm (authored, not simulated). GPU pass started 03:49:31.
 
 ### Fable C and D (2026-11-24, from round 12)
 
