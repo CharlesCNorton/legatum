@@ -52,6 +52,8 @@ Lanes started 22:21:19–22:21:25 on the round-10 GPU candidate `aeacff7d`.
 
 - Merge task 22:40–22:57 (17 minutes). Same-settings CPU A/B against round 10 (256 px, 16 samples, seed 17, fixed round-10 grade): IoU 0.9035 → **0.9219**; blurred ΔE at zero offset 6.63 → 6.42; raw 10.55 → 10.29. Production-style preview with a refitted grade: blurred 5.98 (7.23 on the previous shifted definition), feet region 15.7. Kept: lane a's greave fit, lane b's lining for the Cycles fallback, lane c's walk and shield, Fable A's look as the final path, Fable B's cloak flare and a shaft 1.8× thicker in the master. Not taken: lane a's sleeve folds, Fable B's leg and foot scaling (no matched contact A/B yet) and its keyed death and hit (the merge's instruction allows only a keyed attack). 40-pose audit zero findings; feet slip 0.0023 mm, floor error 0.00002 mm, root correction 48.88 mm of 50; idle and attack action hashes equal round 10; CPU preview atlas 188,730 bytes at q80; 32 tests pass (23 kit, 4 critique, 2 pipeline, 3 look). GPU pass started 22:57:52.
 
+- Reviewer's decision after the merge (about 04:00Z): death, hit and attack may be hand-keyed or donor-based, whichever reviews better; idle and walk stay on open mocap. Round 12 adopts Fable B's death and hit.
+
 ### Colour on the blurred scale (added 2026-11-24)
 
 `critique.py` now scores colour on blurred images (2 px Gaussian at 256) at zero offset, with per-region values; the ±3 px search is for IoU only. Each round's own graded rest render, re-measured:
