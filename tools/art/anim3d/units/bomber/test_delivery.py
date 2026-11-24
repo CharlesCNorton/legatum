@@ -19,16 +19,20 @@ class DeliveryChecks(unittest.TestCase):
             root=Path(folder);master=root/'masters/bomber';assets=root/'assets/bomber'
             master.mkdir(parents=True);assets.mkdir(parents=True)
             for name in ('bomber-source.png','painted-fill.png','projection.png','projection-mask.png',
-                         'stone-mask.png','occlusion-fill-source.png','occlusion-fill.png'):
+                         'occlusion-fill-source.png','occlusion-fill.png',
+                         'stone-fill-source.png','stone-fill.png'):
                 (assets/name).write_bytes(b'original texture')
             for name in ('bomber.blend','plain.blend','textures/baked/manifest.json'):
                 path=master/name;path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(b'master')
             with patch.object(delivery,'R',root),patch.object(delivery,'M',master):
                 delivery.build_inputs(write=True)
                 delivery.build_inputs()
-                (assets/'occlusion-fill-source.png').write_bytes(b'new texture, old blend')
-                with self.assertRaisesRegex(AssertionError,'build inputs changed'):
-                    delivery.build_inputs()
+                for name in ('occlusion-fill-source.png','stone-fill-source.png'):
+                    with self.subTest(texture=name):
+                        (assets/name).write_bytes(b'new texture, old blend')
+                        with self.assertRaisesRegex(AssertionError,'build inputs changed'):
+                            delivery.build_inputs()
+                        (assets/name).write_bytes(b'original texture')
 
     def test_grade_is_monotone_and_bounded(self):
         with tempfile.TemporaryDirectory() as folder, patch.object(delivery, 'M', Path(folder)):

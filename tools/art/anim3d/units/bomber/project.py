@@ -7,10 +7,9 @@ def apply_projection(scene, camera, assets, front):
     texture = bpy.data.images.load(str(assets / 'projection.png'))
     fill = bpy.data.images.load(str(assets / 'painted-fill.png'))
     occluded = bpy.data.images.load(str(assets / 'occlusion-fill.png'))
+    stone_plate = bpy.data.images.load(str(assets / 'stone-fill.png'))
     source_mask = bpy.data.images.load(str(assets / 'projection-mask.png'))
     source_mask.colorspace_settings.name = 'Non-Color'
-    stone_mask = bpy.data.images.load(str(assets / 'stone-mask.png'))
-    stone_mask.colorspace_settings.name = 'Non-Color'
     deps = bpy.context.evaluated_depsgraph_get()
     for ob in list(bpy.data.objects):
         if ob.type != 'MESH' or 'bomb-' in ob.name:
@@ -38,8 +37,8 @@ def apply_projection(scene, camera, assets, front):
         is_base = ob.name == 'GEO-stationary cream base'
         stone_color = None
         if is_base:
-            # Frozen paint only on the exposed rim and outer top. The missing
-            # support footprint stays clean and receives live contact shading.
+            # Clean painted stone covers the formerly occluded support footprint;
+            # contact shadows are live rather than retained from the painting.
             strength.inputs[1].default_value = .94
             geom = nodes.new('ShaderNodeNewGeometry')
             xyz = nodes.new('ShaderNodeSeparateXYZ')
@@ -78,7 +77,7 @@ def apply_projection(scene, camera, assets, front):
             # frames/hubs. Vertex ray masks there smear the occluder's boundary
             # across a whole face, producing blue/white bands in visible paint.
             attached = any(name in ob.name for name in
-                           ('glazing','cockpit','dorsal turret','spinner','prop blade','silver cowl'))
+                           ('glazing','cockpit','dorsal turret','spinner','prop blade','silver cowl','stone support'))
             if weight and not is_base and not attached:
                 hit, loc, _, _, hit_ob, _ = scene.ray_cast(deps, world + front * 20, -front, distance=20.01)
                 if hit and hit_ob != ob and (loc - world).length > .015:
@@ -87,7 +86,7 @@ def apply_projection(scene, camera, assets, front):
         uvnode = nodes.new('ShaderNodeUVMap')
         uvnode.uv_map = 'RestPainting'
         image = nodes.new('ShaderNodeTexImage')
-        image.image = texture
+        image.image = stone_plate if is_base else texture
         image.extension = 'CLIP'
         links.new(uvnode.outputs[0], image.inputs[0])
         paint_color = image.outputs['Color']
@@ -98,7 +97,7 @@ def apply_projection(scene, camera, assets, front):
         factor.operation = 'MULTIPLY'
         links.new(facing.outputs['Color'], factor.inputs[0])
         mask_image = nodes.new('ShaderNodeTexImage')
-        mask_image.image = stone_mask if is_base else source_mask
+        mask_image.image = source_mask
         links.new(uvnode.outputs[0], mask_image.inputs[0])
         coverage = nodes.new('ShaderNodeMath')
         coverage.operation = 'MULTIPLY'
@@ -119,10 +118,7 @@ def apply_projection(scene, camera, assets, front):
             links.new(paint_alpha, alpha.inputs[2])
             paint_color, paint_alpha = merged.outputs[0], alpha.outputs[0]
         links.new(paint_alpha, coverage.inputs[0])
-        if not is_base:
-            coverage.inputs[1].default_value = 1
-        else:
-            links.new(mask_image.outputs['Color'], coverage.inputs[1])
+        coverage.inputs[1].default_value = 1
         links.new(coverage.outputs[0], factor.inputs[1])
         mix = nodes.new('ShaderNodeMixRGB')
         links.new(factor.outputs[0], mix.inputs[0])
@@ -144,5 +140,5 @@ def apply_projection(scene, camera, assets, front):
             color = shade.outputs[0]
         links.new(color, physical.inputs['Base Color'])
         links.new(color, pigment.inputs['Color'])
-        ob['projection'] = ('masked stone rim, clean support footprint, live AO' if is_base
+        ob['projection'] = ('generated stone top, original rim, live AO' if is_base
                             else 'finished surface, frozen UV, facing and visibility masked')

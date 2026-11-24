@@ -1,5 +1,5 @@
 """Audit the actual editable masters independently of atlas pixel checks."""
-import bpy,os,json,hashlib
+import bpy,os,json,hashlib,sys
 from mathutils import Vector
 from pathlib import Path
 R=Path(os.environ['ANIM_ROOT']);M=R/'masters/bomber';records={}
@@ -8,8 +8,8 @@ for record in bakes:
     assert all(Path(record[key]).exists() for key in ('AO','curvature'))
 def base_has_clean_contact(base):
     return ('RestPainting' in base.data.uv_layers
-            and base.get('projection')=='masked stone rim, clean support footprint, live AO'
-            and any(n.type=='TEX_IMAGE' and n.image and n.image.name.startswith('stone-mask')
+            and base.get('projection')=='generated stone top, original rim, live AO'
+            and any(n.type=='TEX_IMAGE' and n.image and n.image.name.startswith('stone-fill')
                     for n in base.data.materials[0].node_tree.nodes))
 
 for clip,n in [('idle',8),('move',8),('attack',10),('hit',4),('death',10)]:
@@ -42,15 +42,12 @@ for clip,n in [('idle',8),('move',8),('attack',10),('hit',4),('death',10)]:
                 sc.frame_set(f);angles.append(prop.rotation_euler.z)
             assert 0<angles[2]-angles[1]<angles[1]-angles[0]<.3,'propeller stop snaps'
             assert angles[-1]==angles[-2],'terminal propeller not held'
-        top=max((base.matrix_world @ Vector(v)).z for v in base.bound_box);points=[];deps=bpy.context.evaluated_depsgraph_get()
-        for name in ('GEO-fuselage','GEO-near nacelle'):
-            o=bpy.data.objects[name].evaluated_get(deps);me=o.to_mesh()
-            for v in me.vertices:
-                pt=o.matrix_world @ v.co
-                if (pt.xy-base.location.xy).length<.94:points.append(pt.z)
-            o.to_mesh_clear()
-        assert points and abs(min(points)-top)<.001,'wreck does not contact base'
-        sc['verified_wreck_contact_gap']=min(points)-top
+        sys.path.insert(0,str(Path(__file__).resolve().parent))
+        from contact import wreck_contact
+        contact=wreck_contact()
+        assert abs(contact['gap'])<.002, ('wreck surface contact failed',contact)
+        assert contact['samples']>100, 'insufficient stone contact coverage'
+        (M/'wreck-contact.json').write_text(json.dumps(contact,indent=2))
     if clip in ('idle','move'):
         sc.frame_set(n+1);closing=tuple(v for row in root.matrix_world for v in row)
         assert max(abs(a-b) for a,b in zip(poses[0],closing))<1e-6,'loop discontinuity'

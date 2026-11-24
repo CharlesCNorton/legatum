@@ -13,10 +13,10 @@ COUNTS={'b':3,'c':1,'d':4,'g':16,**{'e-'+c:v[0] for c,v in CLIPS.items()}}
 def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
 def build_inputs(write=False):
     unit=Path(__file__).parent
-    paths=[unit/name for name in ('prepare.py','scene.py','project.py','bake.py')]
+    paths=[unit/name for name in ('prepare.py','scene.py','project.py','bake.py','stone-fill.json')]
     paths += [R/'assets/bomber'/name for name in
-              ('bomber-source.png','painted-fill.png','projection.png','projection-mask.png','stone-mask.png',
-               'occlusion-fill-source.png','occlusion-fill.png')]
+              ('bomber-source.png','painted-fill.png','projection.png','projection-mask.png',
+               'occlusion-fill-source.png','occlusion-fill.png','stone-fill-source.png','stone-fill.png')]
     paths += [M/name for name in ('bomber.blend','plain.blend','textures/baked/manifest.json')]
     # Logical keys let the lead use a different checkout of the same sources.
     current={('code/'+path.name if path.parent==unit else
@@ -164,7 +164,7 @@ def validate():
     return meta,frames
 
 def video(meta,frames):
-    out=V/f'bomber-round{os.environ.get("ROUND","2")}.mp4';w,h=1600,348
+    out=V/f'bomber-round{os.environ.get("ROUND","3")}.mp4';w,h=1600,348
     proc=subprocess.Popen(['ffmpeg','-y','-loglevel','error','-f','rawvideo','-pixel_format','rgb24','-video_size',f'{w}x{h}','-framerate','30','-i','-','-an','-c:v','libx264','-pix_fmt','yuv420p','-crf','20','-movflags','+faststart',str(out)],stdin=subprocess.PIPE)
     enlarged={name:[im.resize((320,320),Image.Resampling.LANCZOS) for im in fr] for name,fr in frames.items()}
     for t in range(240):
@@ -208,10 +208,11 @@ def gpu_check():
 def receipt():
     gpu_check()
     meta,_=validate()
-    round_id=os.environ.get('ROUND','2')
+    round_id=os.environ.get('ROUND','3')
     movie=V/f'bomber-round{round_id}.mp4'
     report={'round':round_id,'master_sha256':sha(M/'bomber.blend'),'atlas_sha256':sha(Path('app/src/assets/units/anim/bomber.webp')),
-            'atlas':meta['atlas'],'video':verify_video(movie),'video_sha256':sha(movie),'audit':json.loads((M/'audit.json').read_text()),'art_approval':False}
+            'atlas':meta['atlas'],'video':verify_video(movie),'video_sha256':sha(movie),'audit':json.loads((M/'audit.json').read_text()),
+            'wreck_contact':json.loads((M/'wreck-contact.json').read_text()),'art_approval':False}
     (V/f'bomber-gpu-round{round_id}.json').write_text(json.dumps(report,indent=2))
 
 if __name__=='__main__':

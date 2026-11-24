@@ -65,8 +65,8 @@ def airfoil(name,sections,mat):
         for j in range(N):fs.append((k*N+j,k*N+(j+1)%N,(k+1)*N+(j+1)%N,(k+1)*N+j))
     fs.extend([tuple(range(N-1,-1,-1)),tuple((len(sections)-1)*N+j for j in range(N))])
     o=mesh(name,vs,fs,mat);b=o.modifiers.new('Rounded edges','BEVEL');b.width=.014;b.segments=3;return o
-near=airfoil('near wing',[((785,534),(665,477),.35,.065),((634,575),(521,522),.70,.065),((420,681),(316,632),1.07,.045),((125,789),(64,764),1.55,.025),((80,793),(60,781),1.56,.012)],olive)
-far=airfoil('far wing',[((948,394),(811,360),-.2,.06),((1050,310),(941,294),-.9,.055),((1187,214),(1121,201),-1.7,.03),((1232,198),(1201,174),-1.95,.018),((1240,188),(1236,183),-1.98,.01)],olive)
+near=airfoil('near wing',[((785,534),(665,477),.35,.065),((634,575),(521,522),.70,.065),((420,681),(316,632),1.07,.045),((190,774),(99,748),1.45,.032),((133,793),(68,765),1.53,.022),((88,791),(60,777),1.56,.014),((70,786),(63,782),1.57,.008)],olive)
+far=airfoil('far wing',[((1057,408),(811,360),-.2,.06),((1050,310),(941,294),-.9,.055),((1187,234),(1100,198),-1.65,.032),((1217,210),(1150,181),-1.82,.026),((1238,191),(1200,174),-1.95,.018),((1238,184),(1225,177),-1.98,.01)],olive)
 # Tailplane on both sides, with twin tall rudders.
 airfoil('tailplane near',[((379,438),(294,424),-.1,.035),((111,532),(74,505),.58,.025)],olive)
 airfoil('tailplane far',[((370,417),(301,408),-.3,.035),((530,346),(498,342),-.9,.025)],olive)
@@ -165,7 +165,7 @@ basecenter=p(640,1005,-.55)
 bpy.ops.mesh.primitive_cylinder_add(vertices=128,radius=1.04,depth=.15,location=basecenter);base=bpy.context.object;base.name='GEO-stationary cream base';base.data.materials.append(stone);bev=base.modifiers.new('Rounded stone lip','BEVEL');bev.width=.018;bev.segments=5
 supportcoords=[(521,966),(536,889),(564,804),(609,735),(660,679),(687,653),(667,731),(650,785),(659,845),(688,903),(748,966)]
 vs=[p(x,y,d) for d in (-.38,-.15) for x,y in supportcoords];n=len(supportcoords);fs=[tuple(range(n-1,-1,-1)),tuple(range(n,2*n))]+[(j,(j+1)%n,(j+1)%n+n,j+n) for j in range(n)]
-support=mesh('curved stationary stone support',vs,fs,stone,False);b=support.modifiers.new('Carved stone soft edges','BEVEL');b.width=.03;b.segments=3
+support=mesh('curved stationary stone support',vs,fs,stone,False,False);b=support.modifiers.new('Carved stone soft edges','BEVEL');b.width=.025;b.segments=4
 # Parent airframe rigid components after positioning. Keep pivots local.
 root=bpy.data.objects.new('RIG-airframe',None);bpy.context.collection.objects.link(root);root.location=p(660,480,0)
 bpy.context.view_layer.update()

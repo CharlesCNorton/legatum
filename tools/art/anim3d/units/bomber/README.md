@@ -1,22 +1,25 @@
-# Bomber — driver round 2 candidate
+# Bomber — driver round 3 candidate
 
-The aircraft uses closed 3D geometry, frozen painting UVs, image-generated unseen-surface fills, real AO/curvature bakes, product lighting and one measured rest-pose histogram grade. This round follows the successful GPU round-one pass, preserved under `masters/bomber/driver-r1-gpu/`.
+True 3D aircraft with finished closed geometry, frozen painting UVs, generated unseen-surface fills, actual AO/curvature bakes, product lighting and one automatically measured histogram grade. The incoming round-two GPU pass succeeded; its complete evidence is preserved in `masters/bomber/driver-r2-gpu/`.
 
-Changed: masked cream stone grain and rim pigment with a clean contact footprint; a tilted nose lens and matching solid frames; smaller spinners; original painted propeller highlights and tip bands; generated fills only behind removed blades; a collapsing solid support, stronger wing buckling and a smooth propeller stop. Original paint supplies all other visible colour. All masks are texture coverage, not image cards or geometry substitutes.
+Round three adds a generated clean stone top beneath the collapsing support, retains the original painted rim and live contact AO, finishes the support's cap normals and bevels, rounds both wing tips and extends the far wing root. Death folds the outer wing at a span break and retains a thicker support remnant. Settlement and audit now sample evaluated aircraft triangle surfaces against the actual stone/support BVH. A farther-left death path clipped the tail; the original horizontal path was restored and the final death clip rerendered.
 
-Run from the repository root. Every Blender invocation uses the gated `blender` on PATH, one at a time. External inputs and masters remain under `~/LegatumRuns/anim-pilot/`; provenance is in `SOURCES.md`, the asset registry and `app/src/assets/PROVENANCE.md`.
+All textures color real geometry; alpha never replaces meshes. Generated stone provenance, source hash and exact prompt are in `SOURCES.md`, `stone-fill.json` and `stone-fill.prompt.txt`. External copy: `~/LegatumRuns/anim-pilot/assets/bomber/stone-fill-source.png`. No human/animal motion applies to this aircraft; actual top/front move views check shaft axes and bank.
+
+Run from the repository root. Every Blender invocation uses the gated plain `blender` command, sequentially:
 
 ```sh
 tools/art/anim3d/units/bomber/render.sh build
 RESOLUTION=512 SAMPLES=8 tools/art/anim3d/units/bomber/render.sh all
 source tools/art/anim3d/env.sh
 "$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/bomber/deliver.py all
-# Complete final host GPU pass, including all stages, packing, checks and movie:
-ROUND=2 tools/art/anim3d/units/bomber/gpu.sh
+blender -b --disable-autoexec --python-exit-code 1 --python tools/art/anim3d/units/bomber/audit.py
+# Complete host GPU pass; no arguments, ROUND supplied by the driver:
+ROUND=3 tools/art/anim3d/units/bomber/gpu.sh
 ```
 
-The executable GPU handoff requires Metal, defaults to 96 samples and 512 px, and never silently falls back. Before rendering it verifies builder, texture and master hashes. It retains a round log/status, reports the transcript path and outcome to the driver, and emits a receipt only after verifying GPU512/256 provenance, geometry, atlas and decoded-atlas MP4. It does not write PASS. `ROUND` comes from the driver. The 160 px trimmed JSON contract is documented in the bomber chapter of `PLAYBOOK.md`.
+The GPU entry point requires Metal and defaults to Cycles GPU512/96. It verifies builder/texture/master hashes, renders every stage, writes 512/256 masters and interim reviews, refits the rest grade, audits geometry, packs/validates the trimmed atlas and makes the decoded five-clip H.264 movie. The round log/status and receipt record success or failure. The receipt now includes the wreck contact result. No script writes art PASS automatically.
 
-CPU checks: all 40 clip frames, **197,232 bytes at quality 80**, exact decoded alpha/trim offsets, transparent gutters, fixed anchor and held death pass. Geometry audit passes all five clips, 73 meshes, finished projected surfaces, clean stone contact, stationary base, shaft axes, loop closure, propeller deceleration and wreck contact. There are 64 stage/master PNGs each at 512 and 256 px, including top/front move views. The MP4 is H.264/yuv420p, 1600 × 348, 240 frames and 8.000 s. Six delivery regression tests, eight Python syntax checks and both Bash syntax checks pass. CPU renders use Cycles/8 samples with denoising and remain previews.
+CPU results: all **40 frames**, **197,588 bytes at quality 80**, logical **160 px** cells with per-frame offsets. Decoded alpha, offsets, gutters, clipping margins, current hashes, timing, motion and held death pass. All five geometry audits pass with 73 meshes, fixed base, local propeller axes and periodic loops. The sampled terminal contact gap is zero across 21,240 valid stone-surface samples; this is not a continuous collision proof. Six delivery regression tests pass, including invalidation when either generated fill changes. Nine Python files and both Bash entry points parse. There are 64 PNGs each at 512 and 256 px. The MP4 is H.264/yuv420p, 1600×348, 240 frames, 8.000 seconds.
 
-At 64 px it reads as the same bomber. At 256 px the stone and glazing are closer; wingtip shape, hub/propeller finish and the still-too-intact wreck remain visibly different from the painting's finish. Large rotations expose the limitations of fixed-view paint. Silhouette IoU is .882 at 256 and .884 at 64; shared opaque-pixel RGB error is 6.166/5.626, versus GPU round-one 9.080/7.831. Different sample counts limit that comparison, and metrics do not establish art parity. **No PASS; this round's GPU rendering and visual acceptance remain outstanding.** No runtime activation is included.
+At **64 px**, the same olive twin-tail bomber reads clearly. At **256 px**, stone and wing contours are closer, but propeller hubs/blade finish, nose glazing edges and the support shape remain distinguishable from the painting. The folded wing improves death, although the wreck still looks too intact and supported near the disc edge. Top views and large rotations reveal fixed-view pigment/fill seams. **No PASS: GPU round-three rendering and visual acceptance remain outstanding.** The static painting stays in use; no runtime activation is included.

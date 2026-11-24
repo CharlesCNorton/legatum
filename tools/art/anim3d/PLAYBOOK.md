@@ -219,3 +219,43 @@ pass. Atlas: **197,232 bytes at Q80**. Six delivery regression tests pass. Movie
 yuv420p, 1600x348, 240 frames/eight seconds. The native 256/64 comparison improves, but
 wingtip shape, propeller hubs and the too-intact wreck still differ; no PASS. Run
 `ROUND=2 tools/art/anim3d/units/bomber/gpu.sh` for the final Metal pass and visual review.
+
+### Bomber driver round 3: stone fill and surface contact
+
+The incoming GPU round-two pass completed all stages at Cycles GPU512/96, with
+all 40 frames and an eight-second decoded movie. Preserve its masters, receipt
+and review images under `masters/bomber/driver-r2-gpu/` before CPU iteration.
+At256 the outstanding gaps were stone grain/support edges, angular wing tips,
+simplified hubs and a too-intact, weakly grounded death; identity already matched
+at64. Metrics and successful rendering are not art acceptance.
+
+The generated clean stone disc is registered by its opaque bounds to the original
+painting's disc. Its top supplies hidden mineral grain; the original lower rim
+remains, and Blender AO supplies moving contact. Source SHA256 is verified before
+preparation; the exact prompt and generation are recorded with the unit. Finish
+support bevels and planar cap normals before projection, and do not interpolate
+coarse occluder masks over the support's visible cap. Both wing tips have more
+rounded span stations; the far wing root extends beneath the nacelle.
+
+Death now folds the outer wing at a span break and retains a solid crushed
+support. The original horizontal flight path keeps the entire tail inside the cell. `contact.py` samples evaluated aircraft
+vertices, triangle interiors and edge midpoints against a BVH of the actual disc
+and deformed support. This replaces the old nominal-disc-height vertex test,
+which ignored the remnant and could pass an unconvincing pose. It is a sampled
+contact check, not a full continuous collision solver. Review the complete strip
+and decoded movie as well. The GPU receipt includes the measured contact record.
+
+Run `ROUND=3 tools/art/anim3d/units/bomber/gpu.sh` from the repository root after
+the CPU build. The executable does every GPU stage, 512/256 masters, grade,
+trimmed 160px atlas, alpha/offset checks, geometry audit, reviews and H.264 movie.
+It checks current input hashes, fails rather than using CPU when Metal is absent,
+and never writes art PASS automatically.
+
+Driver-round-three CPU evidence: all 40 frames, **197,588 bytes at Q80**, trimmed
+160px cells; exact alpha/offset/gutter/clipping/held-death checks pass. All five
+73-mesh audits pass; sampled terminal stone contact gap zero over 21,240 samples.
+Six delivery regressions, nine Python parses and both Bash syntax checks pass.
+64 masters at each of512/256; movie H.264/yuv420p1600x348,240frames,8.000s.
+A farther-left wreck path failed clipping and was restored before final delivery.
+At64 identity matches; at256 the hubs, glazing edge and support still differ,
+and broad rotations reveal pigment seams. No PASS; GPU round3 review is pending.

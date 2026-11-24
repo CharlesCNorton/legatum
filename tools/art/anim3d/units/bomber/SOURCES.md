@@ -6,3 +6,7 @@
 - Original full-depth geometry, mechanical rig and keys: this directory, MIT scripts / CC BY 4.0 rendered art. Blender 5.3.0 (GPL software), Pillow 13.0.0 (MIT-CMU). No external model or motion download.
 
 Motion is mechanical flight/propeller rotation, with no human or animal rig. CMU/Quaternius retargeting and feet planting are inapplicable. `bomber-g-feet-check.png` explicitly identifies this exception and shows the complete move cycle from top/front views for shaft-axis and bank review. No mocap is claimed.
+
+## Bomber driver round 3, 2026-11-23
+- Clean stone occlusion plate: built-in ImageGen `01a20ae2-a241-76a2-8d9e-7e1b365ed0d6/exec-7c3fe9ad-7b9d-4852-a2fd-578c689fefed.png`, original project CC BY 4.0, no public URL. Input is the original registered bomber painting. External `assets/bomber/stone-fill-source.png`; exact prompt in unit `stone-fill.prompt.txt`; SHA256 `6b57af74a2261edbf5a1cca06d102666f0a68ad65d0e060cc7e82b34bc59e998`. Registered generated top plus original lower rim colors the actual beveled stone, with live contact AO. Generated alpha never replaces geometry.
+- Existing painting/generated olive and propeller occlusion fills reused. Revised finished support, wing contour, folded wing damage and evaluated stone/airframe contact checks are original MIT scripts / CC BY 4.0 renders. Prior GPU round2 evidence retained under `masters/bomber/driver-r2-gpu/`. No third-party download or human/animal motion.

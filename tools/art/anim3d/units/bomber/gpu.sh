@@ -5,7 +5,7 @@ cd "$(cd "$(dirname "$0")/../../../../.." && pwd)"
 source tools/art/anim3d/env.sh
 unit=tools/art/anim3d/units/bomber
 export RENDER_ENGINE=CYCLES CYCLES_DEVICE=GPU RESOLUTION=512
-export SAMPLES="${SAMPLES:-96}" ROUND="${ROUND:-2}"
+export SAMPLES="${SAMPLES:-96}" ROUND="${ROUND:-3}"
 log="$REVIEW/bomber-gpu-round${ROUND}.log"
 receipt="$REVIEW/bomber-gpu-round${ROUND}.json"
 status="$REVIEW/bomber-gpu-status.txt"

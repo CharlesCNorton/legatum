@@ -1,0 +1,13 @@
+{
+  "source_sha256": "6b57af74a2261edbf5a1cca06d102666f0a68ad65d0e060cc7e82b34bc59e998",
+  "input": "assets/bomber/projection.png",
+  "license": "CC BY 4.0",
+  "generation": "01a20ae2-a241-76a2-8d9e-7e1b365ed0d6/exec-7c3fe9ad-7b9d-4852-a2fd-578c689fefed.png",
+  "target_bounds": [
+    354,
+    735,
+    691,
+    851
+  ],
+  "original_rim_below_y": 811
+}

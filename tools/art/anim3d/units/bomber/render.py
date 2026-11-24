@@ -43,14 +43,16 @@ def animate(sc,clip):
         support_damage=support.shape_key_add(name='Crushed stone support')
         for v,k in zip(support.data.vertices,support_damage.data):
             height=max(0,v.co.z-top)
-            k.co.x+=.12*height
-            k.co.y=base.location.y+(v.co.y-base.location.y)*.6+.17*height
-            k.co.z=top+.025+.10*height
+            k.co.x-=.22*height
+            k.co.y=base.location.y+(v.co.y-base.location.y)*.6+.10*height
+            k.co.z=top+.025+.24*height
         for name in ('GEO-near wing','GEO-fuselage'):
             o=bpy.data.objects[name];o.shape_key_add(name='Basis');key=o.shape_key_add(name='Impact deformation');damage.append(key)
             for v,k in zip(o.data.vertices,key.data):
                 if name=='GEO-near wing':
-                    w=max(0,min(1,(-v.co.x+.2)/2.7))**2;k.co+=UP*(.95*w)+FRONT*(.22*w)
+                    # Fold the outer panel sharply at the span break, rather
+                    # than straightening the entire wing into an intact plank.
+                    w=max(0,min(1,(-v.co.x-.7)/1.8));k.co+=UP*(1.30*w)+RIGHT*(.55*w)+FRONT*(.22*w)
                 else:
                     w=max(0,min(1,(v.co.x-1.2)/1.7));k.co-=RIGHT*(.22*w)+UP*(.07*w)
     for j in range(n+1 if loop else n):
@@ -85,20 +87,16 @@ def animate(sc,clip):
             for f in curves(o.animation_data.action):
                 for k in f.keyframe_points:k.interpolation='CONSTANT' if 'hide_render' in f.data_path else 'LINEAR'
     if clip=='death':
-        # Settle the belly on the actual disc, not merely near it in projection.
-        sc.frame_set(n-1);base=bpy.data.objects['GEO-stationary cream base'];top=max((base.matrix_world @ Vector(v)).z for v in base.bound_box);points=[]
-        deps=bpy.context.evaluated_depsgraph_get()
-        for name in ('GEO-fuselage','GEO-near nacelle'):
-            o=bpy.data.objects[name].evaluated_get(deps);me=o.to_mesh()
-            for v in me.vertices:
-                pt=o.matrix_world @ v.co
-                if (pt.xy-base.location.xy).length<.94:points.append(pt.z)
-            o.to_mesh_clear()
-        assert points,'wreck misses the base footprint'
-        correction=min(points)-top
+        # Settle on the evaluated top surfaces, including support rubble.
+        sys.path.insert(0,str(Path(__file__).resolve().parent))
+        from contact import wreck_contact
+        sc.frame_set(n-1)
+        contact=wreck_contact();correction=contact['gap']
         for f,weight in zip(range(6,n+1),(.2,.7,1,1,1)):
             sc.frame_set(f);root.location.z-=correction*weight;root.keyframe_insert('location',frame=f)
         sc['wreck_contact_correction']=correction
+        sc.frame_set(n)
+        sc['wreck_contact']=json.dumps(wreck_contact())
     sc['master_sha256']=hashlib.sha256((M/'bomber.blend').read_bytes()).hexdigest()
     sc.frame_set(1);bpy.ops.wm.save_as_mainfile(filepath=str(M/(clip+'.blend')))
 
