@@ -204,3 +204,4 @@
 - GPU round 11 finished: all stages, masters, atlas validation and movie complete; visual review pending.
 - R12a: loaded cumulative skills/reviews; Git merge blocked at ORIG_HEAD.lock, applied exact 01a69951 working tree; isolated inputs in lanes/spearman-r12a.
 - R12c: Git merge blocked by ORIG_HEAD.lock; round11 branch content applied as baseline diff. Isolated master/clips preserved, KayKit Free 1.1 CC0 Death_B and Hit_B in retarget probe; no render verdict yet.
+- R12b: loaded cumulative skills/reviews; Git merge lock denied; applied exact round11 source tree, preserved master/clips/look for matched CPU continuity checks.
