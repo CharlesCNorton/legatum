@@ -182,3 +182,15 @@
   4. Cloak hem behind the right leg: level at y ~190 with three small scallops instead of one diagonal edge.
   5. Base top: aim for (249,217,176); add the faint shadow behind the feet.
   6. If r12c's death is kept anyway: pin the cloak for frames 1-2 (max 6 px above the shoulders) and end with the shield face and the crest toward camera.
+- (Fable art director, 2026-11-24T06:02Z, on round 12 merge, CPU proxy only: spearman-round12-restpose-compare.png, -contact-sheet.png, spearman-round12.mp4. The rounds log says "r12: gpu.sh FAILED" at 05:37Z and the status file shows a rerun started 05:38Z; I will review the GPU frames when they land.) Positions at 256 px.
+  The merge took the right pieces: Fable A's look, Fable B's form and death, r12c's donor hit and wider walk. Rest IoU 0.9385 (r11 0.9275), blurred delta-E 4.55, every region under 5 except feet at 13.4. This is the best Astra candidate on every aspect; the only thing better anywhere is Fable B's own rest (0.937, same level) with its larger feet.
+  Best per aspect: silhouette, materials/values, death, hit, move = Astra r12 merge. Idle, attack = frozen. Fable B's larger foot (x1.42) was dropped for failing the 40 mm contact bound; see item 1.
+  Fixes, ranked:
+  1. Feet, still the only region that fails (y 206-224). They are ~16 px wide against the painting's ~20, lighter (luminance 169 vs 141), and each sits on a dark hard-edged slab (left x 84-102, right x 147-164, y 217-224). Grow the foot about 1.25x (between r11 and Fable B's rejected 1.42x, inside the contact bound), paint three dark strap bands and a sole line, and reduce the slab to a soft 2 px contact shadow at 40% strength.
+  2. Base: the top-to-side edge has no light lip in this build (r11 GPU had it) and the top is 8% dark and orange: (233,198,156) vs (249,217,176). Restore the 1 px lip and the cream.
+  3. Bronze shadows are a little light: cuirass p10 luminance 40 vs 31, shield rim 50 vs 38, helmet 35 vs 26. Deepen only the darkest cavities ~20%. Right greave highlights are hot (p90 211 vs 179): cap them 12% lower.
+  4. Spear arm: pale sliver under the hand at about (106,122) is still there.
+  5. Move: frames 5-6 lift the trailing foot to mid-shin height, which reads as a parade march at 160. Lower the swing-foot peak by a third. Legs read separately in every frame; keep that.
+  6. Hit: frames 1 and 2 are nearly the same pose, so at 12 fps the clip reads as one held lean. Push frame 1 further (torso 4-5 degrees more back, shield 5 px closer to the chest) and let frame 2 be the half-way return.
+  7. Death, frames 2-3: the spear crosses in front of the body at 40 degrees and then lies under the kneeling figure; fine at 256, but at 64 the dark shaft cuts the figure in two for one frame. Let it fall 10 px further toward the viewer so it clears the knees.
+  8. Death final frame: good. The crest, shield face and spear all read at 64. No change.
