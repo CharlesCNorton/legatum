@@ -10,6 +10,19 @@ import math
 WALK_INFLUENCE = .90
 
 
+def walk_calibration_axis(target, anatomical_axis, donor_axis):
+    """Retain some anatomical leg spread in the reference, never turn feet."""
+    if target.startswith(('thigh_', 'calf_')):
+        return donor_axis.lerp(anatomical_axis, .50).normalized()
+    return donor_axis
+
+
+def blend_walk_source(source, carry):
+    """Carry the idle arms on the walking donor's moving torso, before retarget."""
+    for name in ['DEF-hips', 'DEF-spine.001', 'DEF-spine.002', 'DEF-spine.003']:
+        carry.pose.bones[name].rotation_quaternion = source.pose.bones[name].rotation_quaternion
+
+
 def curve(phase, values):
     """Bounded C1 Hermite interpolation, with zero slope only at extrema.
 
@@ -40,7 +53,7 @@ def source_phase(clip, phase):
         # Sample the knee yield and torso descent separately, then traverse the
         # donor's brief feet-up recoil between delivery samples. No new poses.
         # Reserve the final quarter for contact settling and an exact hold.
-        return curve(phase, [0, .18, .29, .37, .44, .54, .78, .94, 1, 1])
+        return curve(phase, [0, .14, .27, .35, .395, .43, .49, .63, 1, 1])
     return phase
 
 
@@ -157,8 +170,8 @@ class EquipmentResponse:
 class ShieldContact:
     """Ground-aware rotation about the carried grip; never detach or translate.
 
-Cache evaluated shield geometry in control space. Choose the nearer feasible
-flat orientation and the smallest additional hinge rotation that clears stone.
+Cache evaluated geometry in control space. Hang edge-down with damped donor
+heading, then tip face-up only as far as the floor requires. The grip is fixed.
 """
     def __init__(self, rig, shield):
         import bpy
@@ -172,6 +185,7 @@ flat orientation and the smallest additional hinge rotation that clears stone.
             self.points.extend(inverse @ ob.matrix_world @ v.co for v in mesh.vertices)
             evaluated.to_mesh_clear()
         self.max_angle = 0.
+        self.previous = None
 
     def solve(self):
         from mathutils import Matrix, Vector, Quaternion
@@ -179,16 +193,29 @@ flat orientation and the smallest additional hinge rotation that clears stone.
         pivot = self.rig.matrix_world @ self.rig.pose.bones['lowerarm_l'].tail
         # The shell was authored in the control's XZ plane.
         normal = matrix.to_quaternion() @ Vector((0, -1, 0))
+        # A freely hinged carrying grip lets the heavy shield hang edge-down.
+        # Remove the donor wrist's tray tilt, retain its yaw/roll, and damp the
+        # carrier's rotation in world space. Contact below determines the tilt.
+        horizontal = Vector((normal.x, normal.y, 0)).normalized()
+        hanging = normal.rotation_difference(horizontal)
+        desired = hanging @ matrix.to_quaternion()
+        if self.previous is not None:
+            desired = self.previous.slerp(desired, 1-math.exp(-1/(24*.12)))
+        hanging = desired @ matrix.to_quaternion().inverted()
+        matrix = (Matrix.Translation(pivot) @ hanging.to_matrix().to_4x4()
+                  @ Matrix.Translation(-pivot) @ matrix)
+        normal = matrix.to_quaternion() @ Vector((0, -1, 0))
         world = [matrix @ point-pivot for point in self.points]
         def lowest(rotation):
             return min((rotation @ point).z+pivot.z for point in world)
         if lowest(Quaternion()) >= .109:
+            self.shield.matrix_world = matrix
+            self.previous = matrix.to_quaternion()
             return
-        choices = [normal.rotation_difference(Vector((0,0,sign))) for sign in [1,-1]]
-        rotation = max(choices, key=lowest)
+        rotation = normal.rotation_difference(Vector((0, 0, 1)))
         assert lowest(rotation) >= .109, 'Attached shield has no floor-clear hinge pose'
         lo, hi = 0., 1.
-        for _ in range(12):
+        for _ in range(14):
             mid = (lo+hi)*.5
             if lowest(Quaternion().slerp(rotation, mid)) >= .109:
                 hi = mid
@@ -198,6 +225,7 @@ flat orientation and the smallest additional hinge rotation that clears stone.
         self.max_angle = max(self.max_angle, rotation.angle)
         self.shield.matrix_world = (Matrix.Translation(pivot)
             @ rotation.to_matrix().to_4x4() @ Matrix.Translation(-pivot) @ matrix)
+        self.previous = self.shield.matrix_world.to_quaternion()
 
 
 def death_source_layers(source, action):

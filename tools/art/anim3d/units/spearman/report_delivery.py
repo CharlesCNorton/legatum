@@ -20,4 +20,4 @@ append_evidence(review/f'spearman-round{round_number}-note.md',
     f"- Movie: five clips, 1600×352, H.264 yuv420p, 192 frames / 8 seconds. No art PASS issued.")
 if not validation['preview']:
     with Path('tools/art/anim3d/LOG.md').open('a') as log:
-        log.write(f"\n- Spearman round {round_number} GPU receipt: IoU {metrics['silhouette_iou']:.4f}; mean CIE76 ΔE {metrics['mean_delta_e_cie76']:.2f}; atlas {validation['bytes']} bytes / q{validation['quality']}; 40 frames. Visual review pending.\n")
+        log.write(f"\n- Spearman round {round_number} GPU receipt: IoU {metrics['silhouette_iou']:.4f}; blurred ΔE {metrics['mean_delta_e_blurred']:.2f}; raw ΔE {metrics['mean_delta_e_cie76']:.2f}; atlas {validation['bytes']} bytes / q{validation['quality']}; 40 frames. Visual review pending.\n")

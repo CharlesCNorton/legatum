@@ -290,6 +290,12 @@ refine(sc, aim, screen_sculpt)
 sys.path.insert(0, str(Path(__file__).parent/'units/spearman'))
 from silhouette import fit_silhouette
 fit_silhouette(sc, screen_sculpt)
+from stance import flare_cloak
+flare_cloak(sc, screen_sculpt)
+# Reviewer: a readable warm wood shaft needs real thickness, before projection.
+for ob in sc.objects:
+    if ob.name.startswith("Ash dory shaft") and ob.type == "CURVE":
+        ob.data.bevel_depth *= 1.8
 rig['neutral_pose'] = json.dumps({p.name: [list(row) for row in p.matrix_basis] for p in rig.pose.bones})
 
 # Evaluate deformation with original vertex indexing. UVs are written to the

@@ -33,7 +33,7 @@ else
   render_args=(--python tools/art/anim3d/render.py -- "$stage")
   if [[ "$RENDER_ENGINE" == BLENDER_EEVEE ]]; then render_args=(--gpu-backend metal "${render_args[@]}"); fi
   blender -b --disable-autoexec --factory-startup --python-exit-code 1 "${render_args[@]}"
-  if [[ "$stage" != b && "${GRADE:-1}" == 1 ]]; then
+  if [[ "$stage" != b && "${GRADE:-1}" == 1 && "${SPEARMAN_LOOK:-hybrid}" != painted ]]; then
     "$ANIM_ROOT/venv/bin/python" tools/art/anim3d/grade.py "$stage"
   fi
   "$ANIM_ROOT/venv/bin/python" tools/art/anim3d/review.py "$stage"

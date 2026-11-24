@@ -80,5 +80,85 @@
         1
       ]
     }
-  ]
+  ],
+  "delivery": {
+    "anchor": [
+      79.375,
+      138.125
+    ],
+    "cell": 160,
+    "painting": "app/src/assets/units/spearman-256.png"
+  },
+  "regions": {
+    "figure_above_base": [
+      85,
+      50,
+      190,
+      205
+    ],
+    "lower_legs_above_base": [
+      90,
+      180,
+      168,
+      205
+    ],
+    "rest_shoulder": [
+      93,
+      94,
+      130,
+      143
+    ]
+  },
+  "pale_regions": {
+    "hit-1_shoulder": [
+      138,
+      103,
+      162,
+      140
+    ]
+  },
+  "critique_regions": {
+    "head_crest": [
+      115,
+      55,
+      150,
+      95
+    ],
+    "torso": [
+      112,
+      92,
+      140,
+      140
+    ],
+    "cloak_spear_side": [
+      98,
+      118,
+      113,
+      176
+    ],
+    "shield": [
+      138,
+      108,
+      190,
+      172
+    ],
+    "legs": [
+      90,
+      172,
+      170,
+      208
+    ],
+    "feet": [
+      60,
+      206,
+      200,
+      222
+    ],
+    "base": [
+      60,
+      222,
+      200,
+      244
+    ]
+  }
 }

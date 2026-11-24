@@ -681,3 +681,34 @@ alpha against that same resampling. `ATLAS_OUTPUT` puts CPU preview atlases
 outside the app; the GPU entry point unsets it and writes the intended shipped
 atlas. No CPU upsample is exported as a 512 master. The five-column movie retains
 round 8's 1600×352 / 24 fps / 192-frame / eight-second cream layout.
+
+### Spearman round 11 merge: selected painted look, guarded motion
+
+The production GPU script now uses Fable A v3's Eevee emission-projection look
+with per-part registered paint, palette fills, cloak-red unseen shoulders,
+leather-coloured foot pigment, and short warm contact shadows. It runs an ID
+pass, texture build, ramp-input pass and final palette build before rendering.
+`look_receipt.py` rejects stale masters, textures, paintings or shader code.
+Finals use display-space premultiplied Lanczos and no grade; the previous
+Cycles camera-pigment hybrid is retained only as the labelled CPU fallback.
+All 40 frames, 512/256 masters, the decoded 160 atlas, eight-second five-column
+movie, 256 triptych, contact sheet, feet sheet and blurred/regional critique
+remain in the single no-argument `units/spearman/gpu.sh` entry point.
+
+Form combines Astra A's greave/calf fit (without its regressing sleeve smoothing)
+and Fable B's spear-side cloak flare. Shaft thickness is changed on the master
+before UV projection, never secretly at render time. Astra C supplies the
+broader source-calibrated walk, iterative sole contact and donor-based death.
+Fable B's visually preferred death/hit are fully hand-keyed body performances;
+those are excluded under Sam's open-donor rule, which permits only the attack
+to be hand-keyed. Their visual verdict remains the target for a future donor.
+Astra B's localized lining/fold pigments are retained in the Cycles fallback;
+Fable's part-paint look supersedes them for final surfaces. Do not count those
+fallback changes as an independently verified Eevee material win.
+
+Reuse: `kit/look.py`, `kit/part_paint.py`, configurable image reduction,
+plus the existing human/Rigify/corrective, projection, seams, studio, retarget
+and contact modules. Every walk still needs a dense top/front geometry sheet
+and measured sole slip, floor error and travel heading. Idle and attack action
+hashes are checked against round 10; geometry refinements can change pixels
+without changing their accepted performance.

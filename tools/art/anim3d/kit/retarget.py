@@ -204,6 +204,8 @@ def prepare(rig, root, clip, phases, motion):
             # target roll, rather than carrying that spread into every step.
             target_axis = target_ref.to_3x3() @ Vector((0,1,0))
             source_axis = source_ref.to_3x3() @ Vector((0,1,0))
+            if clip == 'move' and hasattr(motion, 'walk_calibration_axis'):
+                source_axis = motion.walk_calibration_axis(target, target_axis, source_axis)
             swing = target_axis.rotation_difference(source_axis)
             position = target_ref.translation.copy()
             target_ref = swing.to_matrix().to_4x4() @ target_ref
@@ -239,6 +241,8 @@ def prepare(rig, root, clip, phases, motion):
             for p in rig.pose.bones:
                 p.location=Matrix(json.loads(rig['neutral_pose'])[p.name]).translation*(1-blend)
         scene.frame_set(int(frame), subframe=frame-int(frame))
+        if carry and hasattr(motion, 'blend_walk_source'):
+            motion.blend_walk_source(source, carry)
         if death_layers:
             blend_death_source(source, motion_phase, death_layers)
         bpy.context.view_layer.update()

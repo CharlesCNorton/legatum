@@ -224,6 +224,20 @@ for f in range(1,end+1):
     foot=rig.pose.bones['foot_'+side];mat=foot.matrix.copy()
     mat.translation+=rig.matrix_world.to_3x3().inverted() @ Vector((0,0,lift))
     foot.matrix=mat;bpy.context.view_layer.update()
+    if planted:
+     # Skinning spreads a foot translation over neighbouring leg weights.
+     # Converge the existing vertical contact solve on the evaluated sole,
+     # keeping the donor rotation and all horizontal contact coordinates.
+     total=lift
+     for _ in range(3):
+      error=floor+.001-min(p.z for p in sole_points(side))
+      if abs(error)<.00002:break
+      total+=error
+      assert abs(total)<.04,('Large sole contact translation',side,total)
+      mat=foot.matrix.copy()
+      mat.translation+=rig.matrix_world.to_3x3().inverted() @ Vector((0,0,error))
+      foot.matrix=mat;bpy.context.view_layer.update()
+     motion_source['max_sole_translation_m']=max(motion_source.get('max_sole_translation_m',0),abs(total))
  if clip!='death':
   butt=next(o for o in spear_objects if o.name.startswith('Iron spear butt'))
   ev=butt.evaluated_get(bpy.context.evaluated_depsgraph_get());mesh=ev.to_mesh()
