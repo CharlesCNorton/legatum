@@ -10,10 +10,11 @@ Not a PASS claim. Death and walk code are untouched (Fable D).
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | Round 12, CPU proxy | 0.9394 | 4.55 | 13.35 | 4.75 | 2.87 | 4.37 | 2.22 | 2.71 | 3.73 |
 | fable-c, CPU proxy | 0.9513 | 3.31 | 5.27 | 3.23 | 2.61 | 4.49 | 2.23 | 2.63 | 3.73 |
-| fable-c, Eevee GPU (1280 reduced) | **0.9534** | **3.33** | 5.16 | 3.26 | 3.02 | 4.82 | 2.03 | 2.48 | 3.42 |
+| fable-c, Eevee GPU (look.py, 1280 reduced) | **0.9534** | **3.35** | 5.38 | 3.26 | 3.02 | 4.82 | 2.03 | 2.48 | 3.42 |
 
 Both candidate bars pass (IoU >= 0.94, blurred dE <= 6), and so does the 0.95 silhouette target. Lower-body IoU (y > 172) 0.9565 to 0.9652.
-Compare: `spearman-fable-c-rest-compare.png` (painting | render | crossfade | silhouette difference, 256 and 160). Feet at 8x: `spearman-fable-c-feet-zoom.png`. Clips: `spearman-fable-c-clips-160.png`.
+The CPU row is before the sandal tone; the Eevee row is the final look. Round 12's own GPU pass scored 0.938 / 4.72 / feet 12.9 (art director, 06:16Z) through `gpu.sh`, a different render path from `look.py`, so compare rows of one kind only.
+Compare: `spearman-fable-c-rest-compare.png` (painting | render | crossfade | silhouette difference, 256 and 160). Feet at 8x: `spearman-fable-c-feet-zoom.png`. Clips, all five rebuilt on the new guard and rendered with the look: `spearman-fable-c-clips-160.png`, `-clips-256.png`. Feet check sheet: `spearman-fable-c-feet-check.png`. Tool: `units/spearman/rest_compare.py` (`--rows` prints the opaque spans per row for both images).
 
 ## What the leg problem was
 
@@ -36,8 +37,8 @@ B's shield and helmet spans are untouched.
 
 - **Ground shadow** (new): the painting has one soft warm shadow on the stone top behind the heels and across the gap between the feet (x 114-144, y 208-218; luminance 164 against 225 on the front of the top). It is not a cast shadow of the key, and AO does not make it (tried: a 0.4-2 m ambient term darkens under the shield in front instead, base dE 2.7 to 5.4). It is drawn in the stone shader from two world-aligned empties that follow the ankle bones at render time: one blob per foot, offset back and inward, fading as the foot lifts. Same result in Cycles and Eevee, and it travels with the feet in the clips. Feet region 10.8 to 5.3, global 3.96 to 3.31. Top between the feet now 160 (painting 164).
 - **Side band**: `side_drop` 0.06 from lip to foot plus `side_foot` 0.18 on the lowest tenth. Base 2.99 to 2.69. The painted band is nearly flat at the centre column; the gain is on the flanks and the ground line.
-- **Sandals**: see the last section; set from the Eevee measurement.
-- **Shield rim**: measured by radius on the right half of the shield, Eevee: rim (r 0.9-1.03) 54-65 against the painting's 64-70, face within 2. The rim is already darker than the painting, so it was not darkened further.
+- **Sandals**: once the feet were under their own paint, most of the reported paleness was gone (foot luminance 84 and 81 against the painting's 73 and 76 in Eevee; it was 162-169 against 141 while misregistered). A leather tone multiplier (`sandal_r/g/b` 0.90, 0.84, 0.76 linear) on the sandal parts and, by the frozen foot mask, the strapped foot brings the means to 82 and 77. It costs 0.03 blurred dE (feet 5.16 to 5.38), because a flat multiplier also darkens pixels that were right; stronger tones cost more (0.82: 5.61, 0.74: 5.87) and were not taken. Set all three to 1 to remove it.
+- **Shield rim**: not changed, on measurement. In the `look.py` Eevee render the rim annulus has p10/p50/p90 luminance 27/64/107 against the painting's 28/65/108, and helmet, cuirass and both greaves are within 3 except helmet p10 (27 against 36, already darker). The light cavities and hot greave highlights the art director measured on round 12 GPU (rim p10 50 against 38, greave p90 209 against 179) are in the `gpu.sh` render path, not in this look: fix them there, or render the delivery with `look.py`.
 
 ## Checks
 
