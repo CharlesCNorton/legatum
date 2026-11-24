@@ -75,9 +75,9 @@ keyed attack/collapse. Foot width 1.50, original length, height 1.18.
 Eevee emission paint: sun pi at 24°, paint cast .22, fill cast .30, base cast
 .16, contact .40. Clips 8/8/10/4/10 at 4/6/14/12/4 fps. CPU proxy is ungraded.
 
-## GPU pass (added by the skill editor, 2026-11-24 07:24Z)
+## GPU result (added by the skill editor, 2026-11-24 08:03Z)
 
-The round-13 GPU pass failed after 25 minutes at the render-parity gate, on sample noise: 142 of 262,144 pixels differ between the two rest renders, one by more than 2 levels, mean error 0.0002. No round-13 GPU numbers or atlas exist yet; the shipped atlas is still round 12's. The gate needs a tolerance, then the pass can be rerun.
+Round 13 GPU (`d7798046`), after the parity gate was given a noise tolerance: **IoU 0.9537, blurred ΔE 3.51**, raw 6.36; regions head/crest 3.7, torso 2.9, cloak 4.8, shield 2.4, legs 3.2, feet 5.3, base 3.3; atlas 187,254 bytes at q80; walk slip 0.0042 mm, heading 5.142°. Both metric targets pass for the first time. Visual review pending; no PASS file.
 
 ## Spearman settings worth knowing
 
