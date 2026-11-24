@@ -1,8 +1,8 @@
 {
-  "round": 12,
-  "basis": "Rebuilt R12 form/guard, unchanged idle donor and attack choreography; CPU-reviewed actions for host repeatability",
+  "round": 14,
+  "basis": "R14c CPU review at 256/160/64 px: idle gains a post-cloth periodic residual correction (2.624 px loop gap to <0.00004 px); every dense bone matrix remains identical. Re-pinned idle action digest includes the animated correction weight. Attack action digest stays R13 after full-sole entry/exit verification below 0.001 mm. Sheets: spearman-r14c-idle-160.png and spearman-r14c-attack-160.png.",
   "actions": {
-    "idle": "5681aaa96e481c2f65ad8936c0a5f11a26fabb43f1906ef0422785d46b276db1",
-    "attack": "5925a6856308222b694f2051c55a10b77f7f4df7569514d6d9ec06850a9e3ecf"
+    "idle": "75c85c9d912cbc2e8ee41a18902123a2c5e661741972eb16a6b80d2209087cca",
+    "attack": "d78edd5ce23bd3725d76f2e1f7ffad98fb4d43e8f3834982c0872800f0706ab3"
   }
 }

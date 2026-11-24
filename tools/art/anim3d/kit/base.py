@@ -32,6 +32,43 @@ TOP_HEX, RIM_HEX = 'E9CFA0', 'B68A51'
 TOP_Z = .105
 
 
+class SupportSurface:
+    """World-space floor from evaluated faces, never a mesh's widest vertex.
+
+    A lower skirt, bevel, translated mesh origin or loose vertex is not a
+    stone top. Cast down onto actual faces so both fitting and auditing use
+    the same support, including the rounded edge. Build once per static base;
+    rebuild after changing its geometry or transform.
+    """
+    def __init__(self, base):
+        from mathutils.bvhtree import BVHTree
+        evaluated = base.evaluated_get(bpy.context.evaluated_depsgraph_get())
+        mesh = evaluated.to_mesh()
+        try:
+            points = [evaluated.matrix_world @ v.co for v in mesh.vertices]
+            faces = [list(p.vertices) for p in mesh.polygons]
+            used = {i for face in faces for i in face}
+            assert used, 'Base has no support faces'
+            self.top = max(points[i].z for i in used)
+            self.bottom = min(points[i].z for i in used)
+            self.tree = BVHTree.FromPolygons(points, faces)
+        finally:
+            evaluated.to_mesh_clear()
+
+    def stone_height(self, point):
+        hit, normal, _, _ = self.tree.ray_cast(
+            Vector((point.x, point.y, self.top+1)), Vector((0, 0, -1)),
+            self.top-self.bottom+2)
+        if hit is None or normal.z <= 0:
+            return None
+        # Ray intersection roundoff must not re-key a flat planted foot.
+        return self.top if abs(hit.z-self.top) < 1e-6 else hit.z
+
+    def height(self, point, ground=0., clearance=0.):
+        stone = self.stone_height(point)
+        return max(ground, stone+clearance) if stone is not None else ground
+
+
 def linear(c):
     return c/12.92 if c <= .04045 else ((c+.055)/1.055)**2.4
 

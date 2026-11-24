@@ -173,10 +173,8 @@ On a bent death foot a strap can become the lowest surface. Translate ankle
 contacts through IK, holding the donor's foot rotation and rigid bone lengths.
 """
     from kit.retarget import contact_ik
-    base = bpy.data.objects['Stationary cream stone']
-    floor = max((base.matrix_world@v.co).z for v in base.data.vertices)+.001
-    inverse = base.matrix_world.inverted()
-    radius = max((v.co.x*v.co.x+v.co.y*v.co.y)**.5 for v in base.data.vertices)-.015
+    from kit.base import SupportSurface
+    support = SupportSurface(bpy.data.objects['Stationary cream stone'])
     for _ in range(4):
         corrections = {}
         dg = bpy.context.evaluated_depsgraph_get()
@@ -189,8 +187,7 @@ contacts through IK, holding the donor's foot rotation and rigid bone lengths.
                 mesh=evaluated.to_mesh()
                 for vertex in mesh.vertices:
                     point=ob.matrix_world@vertex.co
-                    local=inverse@point
-                    plane=floor if local.x*local.x+local.y*local.y<radius*radius else .006
+                    plane=support.height(point, ground=.006, clearance=.001)
                     lift=max(lift,plane-point.z)
                 evaluated.to_mesh_clear()
             if lift>.00002:

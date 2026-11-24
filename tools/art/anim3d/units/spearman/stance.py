@@ -19,7 +19,14 @@ FOOT = Vector((1.50, 1.00, 1.18))  # R12a: original length passes contact; x1.42
 SHAFT = 1.75
 BASE = .965
 BAND = .008
+BASE_SHIFT = (-.0045, -.0142)  # Fable C: disc 1.6 px left and 0.2 px down the screen (toward the camera)
+BASE_DEPTH = .971  # Fable C: 3% shallower along the view: far rim 0.35 px lower, near foot 0.35 px higher
+FLARE = 3.2  # Fable C: 4.5 stood 1-2 px outside the painted cloak edge (rows 99-147)
 STRAP = .011
+# Fable C: where the painted figure stands on the disc (256 px, painting camera).
+DEEPEN = .050                                        # pelvis shift along the view ray, metres
+ANKLE_PX = {'r': (1.0, -3.3), 'l': (-.7, -2.7)}      # ankle joint shift on screen
+KNEE_X = {'r': 112.5, 'l': 146.6}                   # knee joint column
 SKIN = .5
 SPEAR_SIDE_TRIM = .32
 OUTER = 1.5
@@ -177,11 +184,12 @@ def flare_cloak(scene, screen_sculpt):
         # Centre hem between the legs hangs about four pixels lower.
         hem = smooth(120, 135, p.x)*(1-smooth(150, 166, p.x))*smooth(170, 195, p.y)
         # Centre scallop between the legs (painted hem y 190 at x 124-132, 186 either side).
-        delta = Vector((-4.5*edge, 5.0*hem+3.0*math.exp(-((p.x-128)/5)**2)*smooth(176, 186, p.y)))
+        delta = Vector((-FLARE*edge, 5.0*hem+3.0*math.exp(-((p.x-128)/5)**2)*smooth(176, 186, p.y)))
         # Level hem behind the legs: the painted wool ends near y 190 in three
         # shallow scallops; the modelled tail sloped down past the shield-side
         # greave and widened both shins in silhouette.
-        line = 191+2.0*math.cos((p.x-128)/27*2*math.pi)+2.0*math.exp(-((p.x-128)/5)**2)
+        # Fable C: measured hem rows are 187 either side of a centre lobe at 191 (x 122-133).
+        line = 187.5+4.0*math.exp(-((p.x-127.5)/5.5)**2)
         over = p.y+delta.y-line
         if over > 0 and 99 < p.x < 172:
             delta.y -= over*.9
@@ -209,9 +217,12 @@ def brace_feet(scene):
     # The painted disc is a little smaller than the modelled one.
     base = bpy.data.objects['Stationary cream stone']
     top = max(v.co.z for v in base.data.vertices)
+    view = scene.camera.matrix_world.to_quaternion() @ Vector((0, 0, -1))
+    depth = (base.matrix_world.inverted().to_3x3() @ Vector((view.x, view.y, 0))).normalized()
     for v in base.data.vertices:
-        v.co.x *= BASE
-        v.co.y *= BASE
+        along = v.co.x*depth.x+v.co.y*depth.y
+        v.co.x = (v.co.x-(1-BASE_DEPTH)*along*depth.x)*BASE+BASE_SHIFT[0]
+        v.co.y = (v.co.y-(1-BASE_DEPTH)*along*depth.y)*BASE+BASE_SHIFT[1]
         if v.co.z < top-.001:
             v.co.z -= BAND
     base.data.update()
@@ -257,3 +268,108 @@ def seat_straps(scene):
         ob.data.update()
     bpy.context.view_layer.update()
     print('STRAPS_SEATED', moved, 'vertices')
+
+
+def plant_guard(scene):
+    """Stand the guard where the painting stands it (Fable C).
+
+    Measured at 256 px: the modelled soles lay 3 px below the painted ones and
+    the shins ran from knee to ankle at a slant the painting does not have. An
+    orthographic view cannot tell depth, so the pelvis is moved back along the
+    view ray in the guard pose (its picture does not change; the rig object
+    stays, so the retargeted walk is not moved), the ankles are set on the stone
+    under the painted feet and both legs are re-solved at their own lengths
+    with the knee toward the camera at the painted knee column. The spear keeps
+    its foot on the stone and its picture: its head follows the hand along the
+    view ray. Guard pose only: no bone scale, bind, weight or rest change.
+    """
+    from bpy_extras.object_utils import world_to_camera_view
+    from mathutils import Matrix
+    rig = bpy.data.objects['Spearman • MPFB game_engine']
+    cam = scene.camera
+    q = cam.matrix_world.to_quaternion()
+    right, up, forward = q @ Vector((1, 0, 0)), q @ Vector((0, 1, 0)), q @ Vector((0, 0, -1))
+    per_px = cam.data.ortho_scale/256
+
+    def px(world):
+        c = world_to_camera_view(scene, cam, world)
+        return Vector((c.x*256, (1-c.y)*256))
+
+    def on_height(pixel, z):
+        origin = cam.matrix_world.translation+right*((pixel.x-128)*per_px)+up*((128-pixel.y)*per_px)
+        return origin+forward*((z-origin.z)/forward.z)
+
+    world = rig.matrix_world.copy()
+    ankles = {side: world @ rig.pose.bones['foot_'+side].head for side in 'lr'}
+    weapons = [o for o in scene.objects if o.name.startswith(('Ash dory shaft', 'Spear bronze ferrule', 'Leaf spearhead', 'Iron spear butt'))]
+    shaft = bpy.data.objects['Ash dory shaft']
+    points = [shaft.matrix_world @ Vector(p.co[:3]) for p in shaft.data.splines[0].points]
+    butt, head = points[0], points[-1]
+    originals = {o.name: o.matrix_world.copy() for o in weapons}
+    inverse = rig.matrix_world.inverted()
+    shift = inverse.to_3x3() @ (forward*DEEPEN)
+    pelvis = rig.pose.bones['pelvis']
+    assert pelvis.parent is None or not pelvis.parent.parent, 'expected pelvis at the top of the rig'
+    pelvis.matrix = Matrix.Translation(shift) @ pelvis.matrix
+    bpy.context.view_layer.update()
+    # Arm targets authored in rig space (the attack) follow the body: animate.py adds this.
+    rig['guard_shift'] = list(shift)
+    report = {}
+    ankle_shifts = []
+    for side in 'lr':
+        upper, lower = rig.pose.bones['thigh_'+side], rig.pose.bones['calf_'+side]
+        feet = [(rig.pose.bones[n+'_'+side], rig.pose.bones[n+'_'+side].matrix.copy()) for n in ('foot', 'ball')]
+        target_world = on_height(px(ankles[side])+Vector(ANKLE_PX[side]), ankles[side].z)
+        ankle_shifts.append(target_world-ankles[side])
+        target = inverse @ target_world
+        move = target-feet[0][1].translation
+        origin = upper.head.copy()
+        axis = target-origin
+        length = axis.length
+        a, b = upper.bone.length, lower.bone.length
+        assert abs(a-b) < length < a+b, (side, length, a+b)
+        axis.normalize()
+        along = (a*a-b*b+length*length)/(2*length)
+        radius = math.sqrt(max(0, a*a-along*along))
+        u = axis.orthogonal().normalized()
+        v = axis.cross(u)
+        toward = inverse.to_3x3() @ -forward
+        best = None
+        for step in range(720):
+            phi = step*math.pi/360
+            offset = (u*math.cos(phi)+v*math.sin(phi))*radius
+            if offset.dot(toward) <= 0:
+                continue
+            knee = origin+axis*along+offset
+            error = abs(px(rig.matrix_world @ knee).x-KNEE_X[side])
+            if best is None or error < best[0]:
+                best = (error, knee)
+        knee = best[1]
+        for bone, direction in ((upper, knee-origin), (lower, target-knee)):
+            rest = bone.bone.matrix_local.to_quaternion()
+            swing = (rest @ Vector((0, 1, 0))).rotation_difference(direction.normalized())
+            matrix = (swing @ rest).to_matrix().to_4x4()
+            matrix.translation = bone.head
+            bone.matrix = matrix
+            bpy.context.view_layer.update()
+        for bone, matrix in feet:
+            matrix.translation += move
+            bone.matrix = matrix
+            bpy.context.view_layer.update()
+        report[side] = {'reach': round(length/(a+b), 4), 'knee_px': [round(c, 1) for c in px(rig.matrix_world @ lower.head)],
+                        'ankle_px': [round(c, 1) for c in px(rig.matrix_world @ rig.pose.bones['foot_'+side].head)]}
+    # Spear: foot stays planted, head follows the hand along the view ray.
+    now = [shaft.matrix_world @ Vector(p.co[:3]) for p in shaft.data.splines[0].points]
+    grip_t = (220-116)/208
+    old_axis, new_axis = now[-1]-now[0], head+forward*(DEEPEN/grip_t)-butt
+    rotation = old_axis.rotation_difference(new_axis).to_matrix().to_4x4()
+    spin = Vector((0, 0, 1)).rotation_difference(old_axis)
+    stretch = spin.to_matrix().to_4x4() @ Matrix.Diagonal((1, 1, new_axis.length/old_axis.length, 1)) @ spin.inverted().to_matrix().to_4x4()
+    transform = Matrix.Translation(butt) @ rotation @ stretch @ Matrix.Translation(-now[0])
+    for ob in weapons:
+        ob.matrix_world = transform @ ob.matrix_world
+    bpy.context.view_layer.update()
+    report['spear_lean_degrees'] = round(math.degrees(new_axis.angle(Vector((0, 0, 1)))), 2)
+    rig['guard_walk_shift'] = list(sum(ankle_shifts, Vector())/len(ankle_shifts))
+    scene['spearman_plant_guard'] = str(report)
+    print('PLANT_GUARD_FABLE_C', report)

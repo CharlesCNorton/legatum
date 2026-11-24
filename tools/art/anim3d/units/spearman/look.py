@@ -52,6 +52,15 @@ LOOK = {
     'base_cast': .16,         # cast shadow depth on the stone
     'base_contact': .40,     # soft contact (AO) shadow depth under the feet
     'contact_reach': .07,     # metres: contact shadow is gone about 4 px (256) from the sole
+    'ground_shadow': 1.0,     # painted warm shadow on the stone top behind and between the feet
+    'ground_back': .24,       # metres behind each ankle (away from the camera) ...
+    'ground_in': .10,         # ... and toward the other foot
+    'ground_depth': .18,      # falloff away from the camera, metres
+    'ground_width': .26,      # falloff across the view, metres
+    'ground_r': .53, 'ground_g': .38, 'ground_b': .24,  # linear multiplier at full depth (painting, x 114-144 / y 212-214)
+    'sandal_r': .90, 'sandal_g': .84, 'sandal_b': .76,  # leather tone multiplier (linear) on sandals and the strapped foot
+    'side_drop': .06,         # side band: value lost from the lip down to the foot of the disc
+    'side_foot': .18,         # extra darkening of the lowest tenth of the side band (the painted ground line)
     'stone_grain': .08,
     'stone_radius': .594,     # metres, for the near-to-far tone of the top
     'shadow_r': .50, 'shadow_g': .36, 'shadow_b': .34,  # warm-dark shadow multiplier
@@ -153,6 +162,10 @@ def stone(g, colours, cast, shadow_tint, key_dir, cfg):
                     g.math('MULTIPLY', g.dot(geometry.outputs['Normal'], tuple(left)), .07))
     side = g.mix(step(height.outputs['Z'], .15, .85), lin3(colours['lower']), lin3(colours['upper']))
     side = g.mix(1, side, facing, 'MULTIPLY')
+    # Painted side band: a little darker toward the table and a dark line where it meets it.
+    down = g.math('SUBTRACT', 1, g.math('MULTIPLY', g.math('SUBTRACT', 1, step(height.outputs['Z'], .0, .80)), cfg['side_drop']))
+    foot = g.math('SUBTRACT', 1, g.math('MULTIPLY', g.math('SUBTRACT', 1, step(height.outputs['Z'], .02, .14)), cfg['side_foot']))
+    side = g.mix(1, side, g.math('MULTIPLY', down, foot), 'MULTIPLY')
     # Painted top: palest at the near edge, deeper cream toward the back.
     toward = Vector((view.x, view.y, 0)).normalized()
     near = g.math('MULTIPLY_ADD', g.dot(coords.outputs['Object'], tuple(toward)), .5 / cfg['stone_radius'], .5, clamp=True)
@@ -169,6 +182,28 @@ def stone(g, colours, cast, shadow_tint, key_dir, cfg):
         layer = g.math('MULTIPLY_ADD', noise.outputs['Factor'], amount, 1 - amount / 2)
         grain = layer if grain is None else g.math('MULTIPLY', grain, layer)
     colour = g.mix(1, colour, grain, 'MULTIPLY')
+    # The painting grounds the figure with one soft warm shadow on the top,
+    # behind the heels and across the gap between the feet. It is no light's
+    # cast shadow (the key throws those elsewhere), so it is drawn from the
+    # ankles: one blob per foot, offset back and inward, fading as a foot lifts.
+    if cfg['ground_shadow'] > 0 and cfg.get('_ankles'):
+        back = Vector((-view.x, -view.y, 0)).normalized()
+        across = -Vector((left.x, left.y, 0)).normalized()
+        ground = None
+        for side, marker in cfg['_ankles'].items():
+            at = g.node('ShaderNodeTexCoord')
+            at.object = marker
+            rel = at.outputs['Object']
+            inward = 1 if side == 'r' else -1
+            d = g.math('MULTIPLY_ADD', g.dot(rel, tuple(back)), 1 / cfg['ground_depth'], -cfg['ground_back'] / cfg['ground_depth'])
+            w = g.math('MULTIPLY_ADD', g.dot(rel, tuple(across)), 1 / cfg['ground_width'], -inward * cfg['ground_in'] / cfg['ground_width'])
+            blob = g.math('EXPONENT', g.math('MULTIPLY', g.math('ADD', g.math('MULTIPLY', d, d), g.math('MULTIPLY', w, w)), -1))
+            drop = g.node('ShaderNodeSeparateXYZ')
+            g.l.new(rel, drop.inputs[0])
+            blob = g.math('MULTIPLY', blob, step(drop.outputs['Z'], -.30, -.12))
+            ground = blob if ground is None else g.math('ADD', ground, blob)
+        shade = g.math('MULTIPLY', g.math('MULTIPLY', ground, cfg['ground_shadow'], clamp=True), step(up.outputs['Z'], .80, .97))
+        colour = g.mix(shade, colour, (cfg['ground_r'], cfg['ground_g'], cfg['ground_b'], 1), 'MULTIPLY')
     ao = g.node('ShaderNodeAmbientOcclusion', samples=16)
     ao.inputs['Distance'].default_value = cfg['contact_reach']
     contact = g.math('MULTIPLY', g.math('SUBTRACT', 1, ao.outputs['AO']), cfg['base_contact'])
@@ -250,6 +285,13 @@ def build_material(ob, part, look_dir, palettes, key_dir, fill_dir, uv_world, re
         if cfg.get('continuity', 1):
             from continuity import pigment
             final = pigment(g, part, final, g.math('SUBTRACT', 1, weight.outputs[0]), t, lin3, palettes)
+        tone = (cfg['sandal_r'], cfg['sandal_g'], cfg['sandal_b'], 1)
+        if part.startswith('sandal'):
+            final = g.mix(1, final, tone, 'MULTIPLY')
+        elif part == 'skin' and cfg.get('continuity', 1) and tone != (1, 1, 1, 1):
+            # The strapped foot reads as part of the sandal: same tone, by the frozen foot mask.
+            from continuity import ATTRIBUTE
+            final = g.mix(g.node('ShaderNodeVertexColor', layer_name=ATTRIBUTE).outputs['Alpha'], final, tone, 'MULTIPLY')
         if cfg['debug'] == 1: final = g.mix(weight.outputs[0], (0, 0, 0, 1), (1, 1, 1, 1))
         if cfg['debug'] == 2: final = unseen
         if cfg['debug'] == 3: final = seen
@@ -281,6 +323,24 @@ def directions(scene):
     return view.normalized(), (-1.5 * right + 2.0 * up + 2.0 * view).normalized(), (1.2 * right + .2 * up + 1.0 * view).normalized()
 
 
+def ankle_markers(scene):
+    """World-aligned empties riding the ankle joints, for the stone's ground shadow.
+
+    Render-time only, like the materials: nothing is saved."""
+    rig = bpy.data.objects.get('Spearman • MPFB game_engine')
+    markers = {}
+    for side in 'lr':
+        name = 'LOOK ankle ' + side
+        marker = bpy.data.objects.get(name)
+        if marker is None:
+            marker = bpy.data.objects.new(name, None)
+            scene.collection.objects.link(marker)
+            follow = marker.constraints.new('COPY_LOCATION')
+            follow.target, follow.subtarget = rig, 'foot_' + side
+        markers[side] = marker
+    return markers
+
+
 def apply_materials(scene, mode, look_dir, cfg):
     """(Re)build the look materials; safe to call again with other settings."""
     for material in [m for m in bpy.data.materials if m.name.startswith(('LOOK ', 'ID '))]:
@@ -288,6 +348,7 @@ def apply_materials(scene, mode, look_dir, cfg):
     view, to_key, fill_dir = directions(scene)
     cfg['_view'] = view
     cfg['_left'] = -(scene.camera.matrix_world.to_quaternion() @ Vector((1, 0, 0)))
+    cfg['_ankles'] = ankle_markers(scene) if mode == 'beauty' else None
     rest_file = look_dir / 'rest-matrices.json'
     is_master = 'clips' not in Path(bpy.data.filepath).parts
     renderable = [o for o in scene.objects if o.type in ('MESH', 'CURVE') and len(o.data.materials)]
@@ -343,6 +404,33 @@ def apply_scene(scene, mode):
     scene.render.use_motion_blur = False
 
 
+def configure_render(scene, mode='beauty', resolution=512, samples=64):
+    """Single render setup used by the look CLI and the delivery renderer."""
+    apply_scene(scene, 'id' if mode == 'id' else 'beauty')
+    scene.render.resolution_x = scene.render.resolution_y = int(resolution)
+    scene.render.resolution_percentage = 100
+    scene.render.threads_mode = 'FIXED'
+    scene.render.threads = 3
+    if mode == 'id':
+        scene.render.filter_size = .01
+    elif mode == 'proxy':
+        from kit.cpu_look import graph_for_sun
+        from kit.ab import preview_settings
+        global Graph
+        Graph = graph_for_sun(directions(scene)[1])
+        preview_settings(scene, resolution=int(resolution), samples=int(samples))
+    else:
+        scene.eevee.taa_render_samples = int(samples)
+
+
+def render_frame(scene, path, frame=None):
+    """Both entry points render through this function; no second light/grade path."""
+    if frame is not None:
+        scene.frame_set(frame)
+    scene.render.filepath = str(path)
+    bpy.ops.render.render(write_still=True)
+
+
 def main():
     args = sys.argv[sys.argv.index('--') + 1:]
     blend, out = Path(args[0]), Path(args[1])
@@ -363,18 +451,11 @@ def main():
     scene = bpy.context.scene
     look_dir = Path(opts['look']) if opts['look'] else Path(os.environ['ANIM_ROOT']) / 'masters/spearman-3d-v2/look'
     orbit = float(opts['orbit'])
-    apply_scene(scene, opts['mode'])
-    scene.render.resolution_x = scene.render.resolution_y = int(opts['res'])
-    scene.render.resolution_percentage = 100
-    if opts['mode'] == 'id':
-        scene.render.filter_size = .01
-    else:
-        scene.eevee.taa_render_samples = int(opts['samples'])
+    configure_render(scene, opts['mode'], int(opts['res']), int(opts['samples']))
     out.mkdir(parents=True, exist_ok=True)
 
     def render(path):
-        scene.render.filepath = str(path)
-        bpy.ops.render.render(write_still=True)
+        render_frame(scene, path)
 
     # "a:key=v,key=v;b:key=v" renders several settings in one Blender session
     # (one wait for the GPU lock). Without it, one variant named by --name.
@@ -392,7 +473,7 @@ def main():
         # Materials are built at the rest camera (the paint projection's frame).
         scene.camera.matrix_world = rest_camera
         bpy.context.view_layer.update()
-        apply_materials(scene, opts['mode'], look_dir, settings)
+        apply_materials(scene, 'id' if opts['mode'] == 'id' else 'beauty', look_dir, settings)
         if turn:
             scene.camera.matrix_world = Matrix.Rotation(math.radians(turn), 4, 'Z') @ rest_camera
         if opts['frames'] == 'rest':
