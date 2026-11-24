@@ -235,3 +235,14 @@
   2. Frames 7-9: the legs lie straight out to the right and 20 px past the base rim (x 180-200), and all three frames are identical. Draw the knees up (the note says they are, the render shows them straight) so the feet stay within 8 px of the rim, and give one hold frame to the frame 4-5 drop.
   If both are fixed, D's ending is a fair alternative to round 12's face-down one, and the lead can pick on taste. Until then: death = Astra r13c / round 12.
   Best per aspect, unchanged: silhouette and materials/values = Fable C; move = Astra r13c; death = Astra r13c / round 12; hit = round 12; idle, attack = frozen.
+- (Fable art director, 2026-11-24T07:18Z, on the round 13 merge, CPU proxy: spearman-round13-restpose-compare.png, -contact-sheet.png; and Fable D death v4 rendered 07:00Z. The round 13 GPU pass has been running since 06:58Z; I will confirm on its frames.) Positions at 256 px.
+  Round 13 merge: rest IoU 0.949 (round 12: 0.938), feet luminance 146 vs the painting's 141, base top (245,211,168) vs (249,217,176), no foot slabs, rim lip back. It carries Fable C's rest, r13c's lower walk and the face-down collapse. Best candidate on every aspect; at 160 and 64 the rest pose and the painting are interchangeable.
+  Fixes left on round 13, ranked:
+  1. Cloak on the spear side: lit folds too bright in the proxy (p90 luminance 185 vs 158) and the cloak is 45 px narrower in area (589 vs 634 in x 98-112, y 120-175). Check on the GPU frame; if it holds, cap the lights 12% and restore the 4 px flare between arm and hip.
+  2. Pale-and-red sliver under the spear hand at about (106,123). Open since round 10.
+  3. Shadow behind the feet on the base (x 105-170, y 214-222): slightly too strong; halve it.
+  4. Move frames 5-6: pale sole of the trailing foot flashes; darken to sandal brown.
+  5. Death frames 2-3: shaft still crosses the kneeling body at 160; let it fall 10 px nearer the viewer.
+  6. Cloak hem behind the right leg: level it and add three 2-3 px scallops.
+  Fable D death v4: the floating shield is fixed. In frames 5-6 the shield now stays against his back and comes down with him, and the fall from kneeling to lying takes three frames instead of one. This is now a real alternative: the whole body is visible in the final pose where round 13's ending shows mostly shield. Still against it: the legs lie straight out to the right, 15-20 px past the base rim (x 180-200), and frames 8-9 are identical. Draw the knees up so the feet stay within 8 px of the rim. With that fixed I would rate D's death equal to round 13's on readability and better on showing the figure; the lead can pick. Note D's collapse is hand-keyed like B's.
+  Best per aspect: silhouette, materials/values, move, hit = round 13 merge (rest from Fable C). Death = round 13 merge, with Fable D v4 a close second. Idle, attack = frozen.
