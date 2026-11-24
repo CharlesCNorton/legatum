@@ -30,17 +30,8 @@ shield=bpy.data.objects.get('Aspis control');shield_neutral=shield.matrix_basis.
 if shield:shield.rotation_mode='QUATERNION'
 cloth=bpy.data.objects['Cloak • simulated wool'].modifiers['Cloth per clip']
 cloth.show_viewport=False
-if clip=='attack':
- # Retain the shoulder attachment; free more of the lower wool to lag the
- # torso's acceleration, then damp it like a heavy cloak instead of a flag.
- # Hit keeps the original pins/settings: loosening them raised a cloak corner
- # behind the shoulder at its four-frame recovery in the merged candidate.
- cloak=bpy.data.objects['Cloak • simulated wool'];pins=cloak.vertex_groups['Shoulder pins']
- for v in cloak.data.vertices:
-  for g in v.groups:
-   if g.group==pins.index and g.weight<.99:pins.add([v.index],g.weight*.65,'REPLACE')
- cloth.settings.bending_stiffness=.8
- cloth.settings.air_damping=2
+from cloak import configure as configure_cloak
+cloth_response=configure_cloak(bpy.data.objects['Cloak • simulated wool'],clip)
 if clip=='death':
  # Release the lower cape's silhouette pins so it drapes during the collapse.
  # Keep the shoulder attachment; no visibility or scale trick hides the cloth.
@@ -84,12 +75,18 @@ def pose(t):
  elif clip in ['idle','move','hit']:
   motion=retarget_frames[active_frame-1]
   rig.location=base_loc+motion['root']
+  if clip=='move':
+   # Register the whole donor track; ankle-only shifts exceed the leg reach.
+   rig.location+=Vector(rig.get('guard_walk_shift',(0,0,0)))
   apply_matrices(rig,motion['matrices'])
   if clip=='move':
    # Constant stance registration, separate from the measured slip correction.
    # Native IK retains the donor's world foot rotations.
-   from motion import walk_offsets
+   from motion import walk_offsets, walk_weight
    contact_ik(rig,walk_offsets(motion['foot_corrections']))
+   shaping=walk_weight(rig,t,motion_source['contact']['planted'].get(str(active_frame),{}))
+   receipt=motion_source.setdefault('walk_weight',{})
+   for name,value in shaping.items():receipt[name]=max(receipt.get(name,0),value)
   bpy.context.view_layer.update()
  elif clip=='attack':
   # Raise outside the right shoulder, then drive forward above the shield rim.
@@ -98,11 +95,15 @@ def pose(t):
   rig.location=base_loc+Vector((.12*strength,-.16*strength,-.12*strength))
   turn('spine_03','X',.20*strength);turn('spine_03','Y',.15*strength)
   # Counter root travel in the ankle targets: soles remain on the disc.
-  limb('thigh_l','calf_l',(.21+.10*strength,.15-.18*strength,.082+.12*strength),(.42,-.50,.48))
-  limb('thigh_r','calf_r',(-.39-.05*strength,-.075+.16*strength,.082+.12*strength),(-.40,-.20,.48))
+  # Planted attack targets follow the fitted guard, including calf/foot offsets.
+  for side,delta in [('l',(.10,-.18,.12)),('r',(-.05,.16,.12))]:
+   target=neutral_world['calf_'+side] @ Vector((0,rig.data.bones['calf_'+side].length,0))
+   limb('thigh_'+side,'calf_'+side,target+Vector(delta)*strength,neutral_world['calf_'+side].translation+Vector((0,-.4,0))*strength)
   pole=Vector((-.48,-.12,1.08)).lerp(Vector((-.65,.05,1.48)),raised)
-  limb('upperarm_r','lowerarm_r',(guard_hand.x+(-.13-guard_hand.x)*strength,guard_hand.y+(-.41-guard_hand.y)*raised-.05*strength,guard_hand.z+(1.71-guard_hand.z)*raised),pole)
-  limb('upperarm_l','lowerarm_l',(.29,-.34-.10*strength,1.12+.10*strength),Vector((.53,-.10,1.13)).lerp(Vector((.55,-.12,1.20)),strength))
+  # Arm keys are authored about the round-12 pelvis; guard_shift is where the planted guard moved it (zero otherwise).
+  gs=Vector(rig.get('guard_shift',(0,0,0)))
+  limb('upperarm_r','lowerarm_r',Vector((guard_hand.x+(-.13-guard_hand.x)*strength,guard_hand.y+(-.41-guard_hand.y)*raised-.05*strength,guard_hand.z+(1.71-guard_hand.z)*raised))+gs,pole+gs)
+  limb('upperarm_l','lowerarm_l',Vector((.29,-.34-.10*strength,1.12+.10*strength))+gs,Vector((.53,-.10,1.13)).lerp(Vector((.55,-.12,1.20)),strength)+gs)
   aim('hand_r',(0,-.03,.09));hand_spear(Vector((.98,.17,.12))*raised+Vector((0,0,1))*(1-raised))
  bpy.context.view_layer.update()
  if clip=='attack':
@@ -133,7 +134,7 @@ def pose(t):
   # Clear the shield in depth while upright, tip forward, then settle inward
   # only after the shaft is horizontal and below the shield's lower edge.
   depth=min(1,release/.20);depth=depth*depth*(3-2*depth)
-  tilt=max(0,min(1,(release-.02)/.73));tilt=tilt*tilt*(3-2*tilt)
+  tilt=max(0,min(1,(release-.02)/.56));tilt=tilt*tilt*(3-2*tilt)
   rotation=Quaternion().slerp(direction.rotation_difference(Vector((.995,-.10,.0)).normalized()),tilt)
   target=center.lerp(Vector((-.30,-.60,.075)),release)
   # Keep a real pixel margin while the retimed fall crosses the horizontal
@@ -142,7 +143,7 @@ def pose(t):
   target.x+=.12*tilt
   target.y=center.y+(-.82-center.y)*depth
   if release>.80:target.y=-.82+.22*(release-.80)/.20
-  drop=min(1,release/.75)
+  drop=min(1,release/.58)
   target.z=center.z*(1-drop)+.075*drop
   # Over the stone the low end rides its top; past the front edge it drops to the ground.
   off=max(0,min(1,(-.40-target.y)/.20));rest_z=.13-.055*off*off*(3-2*off)
@@ -274,6 +275,7 @@ for f in range(1,end+1):
  for p in rig.pose.bones:
   p.rotation_mode='QUATERNION';p.keyframe_insert(data_path='location',frame=f);p.keyframe_insert(data_path='rotation_quaternion',frame=f);p.keyframe_insert(data_path='scale',frame=f)
 motion_source['equipment_response']=response.report()
+if cloth_response:motion_source['cloth_response']=cloth_response
 sc['motion_source']=json.dumps(motion_source)
 sc['sample_frames']=json.dumps(samples)
 if os.environ.get('MOTION_DIAGNOSTIC') == '1':

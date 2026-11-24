@@ -1,6 +1,6 @@
 """Spearman timing and passive equipment response; no anatomy/material edits.
 
-Source actions own human joint motion except for the weapon-specific attack.
+Source actions own idle, walk and hit; attack and collapse are authored.
 Secondary motion is a damped inertial response to the evaluated carrier, not a
 second hand-keyed performance. Units are metres, seconds and radians.
 """
@@ -27,6 +27,11 @@ def walk_offsets(corrections):
     from mathutils import Vector
     return {side: offset+Vector((.085 if side == 'l' else -.085, 0, 0))
             for side, offset in corrections.items()}
+
+
+def walk_weight(rig, phase, planted):
+    from kit.walk import shape_walk
+    return shape_walk(rig, phase, planted, sway_m=.012, clearance_scale=2/3)
 
 
 def curve(phase, values):

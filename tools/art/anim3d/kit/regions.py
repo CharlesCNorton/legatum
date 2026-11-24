@@ -197,6 +197,33 @@ def comparison_sheet(entries, sizes=(256, 160, 64), background=CREAM, note=''):
     return sheet
 
 
+def grid_crop(images, box, scale=8, every=4, background=CREAM):
+    """Enlarge one box of several same-size images side by side with a pixel
+    grid, for measuring a small region (feet, a hand) by counting pixels.
+
+    `images` is [(label, image), ...]; `box` is (x0, y0, x1, y1). Grid lines
+    fall every `every` source pixels and are labelled with source coordinates.
+    The Spearman's leg problem was found on such a crop: soles 3 px low, not
+    legs too wide.
+    """
+    x0, y0, x1, y1 = box
+    w, h = (x1-x0)*scale, (y1-y0)*scale
+    sheet = Image.new('RGB', ((w+24)*len(images), h+34), background)
+    draw = ImageDraw.Draw(sheet)
+    for index, (label, image) in enumerate(images):
+        left = index*(w+24)+20
+        crop = flatten(image.convert('RGBA'), background).crop(box).resize((w, h), Image.Resampling.NEAREST)
+        sheet.paste(crop, (left, 16))
+        draw.text((left, 2), label, fill=(40, 34, 27))
+        for x in range(x0-x0 % every+every, x1, every):
+            draw.line((left+(x-x0)*scale, 16, left+(x-x0)*scale, 16+h), fill=(0, 0, 0))
+            draw.text((left+(x-x0)*scale+2, 18+h), str(x), fill=(40, 34, 27))
+        for y in range(y0-y0 % every+every, y1, every):
+            draw.line((left, 16+(y-y0)*scale, left+w, 16+(y-y0)*scale), fill=(0, 0, 0))
+            draw.text((left-19, 12+(y-y0)*scale), str(y), fill=(40, 34, 27))
+    return sheet
+
+
 def compare(painting, before, after, regions=None, pale=None):
     """Before/after metrics for named regions. Images are same-size RGBA.
 
@@ -242,6 +269,7 @@ def main():
     parser.add_argument('--sheet', type=Path, help='write a native-size painting/before/after sheet')
     parser.add_argument('--rows', help='y0,y1[,x0,x1]: rows where the after outline differs from the painting by over 1 px')
     parser.add_argument('--columns', help='x0,x1[,y0,y1]: the same for columns')
+    parser.add_argument('--grid', help='x0,y0,x1,y1: write an 8x gridded crop of painting and after to --sheet')
     parser.add_argument('--clips', type=Path, help='folder of decoded cells (<clip>/NN.png): report wasted and jumping frames')
     args = parser.parse_args()
     if args.clips:
@@ -263,7 +291,9 @@ def main():
             report[axis+'_span_differences_after_minus_painting'] = {
                 str(k): list(d) for k, d in span_differences(painting, after, v[0], v[1], axis, v[2], v[3]).items()}
     print(json.dumps(report, indent=2))
-    if args.sheet:
+    if args.sheet and args.grid:
+        grid_crop([('Painting', painting), ('Render', after)], tuple(int(v) for v in args.grid.split(','))).save(args.sheet)
+    elif args.sheet:
         comparison_sheet([('Painting', painting), ('Before', before), ('After', after)]).save(args.sheet)
 
 

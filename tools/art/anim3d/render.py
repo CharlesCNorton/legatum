@@ -34,7 +34,7 @@ if painted:
  from look_receipt import verify
  look_dir = master/'look'
  look_hash = verify(master, look_dir)
- look.apply_scene(sc, 'beauty')
+ look.configure_render(sc, 'beauty', int(os.environ.get('RESOLUTION','512')), int(os.environ.get('SAMPLES','64')))
  look.apply_materials(sc, 'beauty', look_dir, dict(look.LOOK))
  sc.eevee.taa_render_samples = int(os.environ.get('SAMPLES', '64'))
 sc.render.resolution_x=sc.render.resolution_y=int(os.environ.get('RESOLUTION','256'))
@@ -53,15 +53,19 @@ if clip:
  frames=json.loads(sc['sample_frames'])
  if stage=='d': frames=[frames[i] for i in [0,2,4,9]]
  def render_sample(frame,destination):
-  sc.frame_set(frame);sc.render.filepath=str(destination);bpy.ops.render.render(write_still=True)
+  if painted: look.render_frame(sc,destination,frame)
+  else:
+   sc.frame_set(frame);sc.render.filepath=str(destination);bpy.ops.render.render(write_still=True)
  render_samples(frames,out,render_sample)
 else:
  views=[('front',(0,-7,3.0)),('three-quarter',None),('side',(7,-.3,3.0))] if stage=='b' else [('three-quarter',None)]
  camera_matrix=sc.camera.matrix_world.copy()
  for name,pos in views:
-  sc.camera.matrix_world=camera_matrix
+  if stage=='b': sc.camera.matrix_world=camera_matrix
   if pos is not None:
    sc.camera.location=pos;sc.camera.rotation_euler=(Vector((0,0,1.25))-sc.camera.location).to_track_quat('-Z','Y').to_euler()
-  sc.render.filepath=str(out/(name+'.png'));bpy.ops.render.render(write_still=True)
+  if painted: look.render_frame(sc,out/(name+'.png'))
+  else:
+   sc.render.filepath=str(out/(name+'.png'));bpy.ops.render.render(write_still=True)
 (out/'render.json').write_text(json.dumps({'engine':sc.render.engine,'device':sc.cycles.device if sc.render.engine=='CYCLES' else 'GPU','resolution':sc.render.resolution_x,'samples':sc.cycles.samples if sc.render.engine=='CYCLES' else sc.eevee.taa_render_samples,'look_sha256':look_hash,'colour_space':'display' if painted else 'linear','blend_sha256':hashlib.sha256(path.read_bytes()).hexdigest(),'blender':bpy.app.version_string,'held_frames':{str(i):frame for i,frame in enumerate(frames)} if clip else {}},indent=2))
 print('RENDER_READY',out)
