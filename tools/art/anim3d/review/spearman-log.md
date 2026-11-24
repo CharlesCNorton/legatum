@@ -238,3 +238,5 @@
 
 - Round 13 CPU review complete: IoU .9512536, blurred deltaE 3.3866, raw 7.2743, feet 5.4466, base 3.2322; 192866-byte Q80 atlas; 36 tests; audit 0 findings; attack sole continuity <.001 mm; all feet limits pass. Reviewed 256/160/64 sheets and top/front feet; idle/attack deliberately re-pinned. GPU parity/final visual approval pending; no PASS.
 - GPU round 13 started: full Eevee painted GPU pass requested; Cycles GPU feet inspection.
+- GPU round 13 failed at render-parity (exit 1); inspect gpu-logs-spearman-r13.log before judging this pass.
+- GPU round 13 started: full Eevee painted GPU pass requested; Cycles GPU feet inspection.
