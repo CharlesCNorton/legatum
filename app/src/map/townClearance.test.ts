@@ -3,9 +3,10 @@
 // footprint (its ground oval, roofs and walls), and a walled town fits inside its ring.
 import { describe, expect, it } from 'vitest';
 import { fileURLToPath } from 'node:url';
+import { readdirSync } from 'node:fs';
 import { alphaOf } from '../test/pngAlpha';
 import { hexToPixel, neighbors } from '../hex';
-import { CITY_ERAS, CITY_GROUND, CITY_TIERS, WALLED_TOWN_SCALE, WALL_CUT } from './cityArt';
+import { CITY_CANVAS, CITY_ERAS, CITY_GROUND, CITY_TIERS, WALLED_TOWN_SCALE, WALL_CUT } from './cityArt';
 import { HEX_SIZE, isFar } from './grid';
 import { townCover } from './landmarks';
 import { medallionSlots, pickSlot, type Cover } from './resourceIcons';
@@ -102,4 +103,28 @@ describe('a walled town fits inside its ring', () => {
       }
     });
   }
+});
+
+describe('every wall ring has a closed court for the town to stand in', () => {
+  // Mirrors `courtMask`: a flood fill of clear ground from the oval's centre on the cut row. If a repaint made the
+  // centre opaque or opened a gap to the canvas edge, the runtime clip would silently switch off.
+  const dir = (d: string) => fileURLToPath(new URL(`../assets/${d}/`, import.meta.url));
+  const files = [...readdirSync(dir('cities')).filter((f) => /^[a-z]+-walls(-128|-64)?\.png$/.test(f)).map((f) => `${dir('cities')}${f}`),
+    ...readdirSync(dir('construction')).filter((f) => /^[a-z]+-walls-stage1(-128|-64)?\.png$/.test(f)).map((f) => `${dir('construction')}${f}`)];
+  it('finds the rings and footings at every size', () => expect(files.length).toBeGreaterThanOrEqual(CITY_ERAS.length * 2 * 3));
+  for (const file of files) it(file.replace(/^.*assets\//, ''), () => {
+    const { width: n, alpha } = alphaOf(file);
+    const k = n / CITY_CANVAS, cut = Math.round(WALL_CUT * k);
+    const start = cut * n + Math.round((CITY_GROUND.x0 + CITY_GROUND.x1) / 2 * k);
+    expect(alpha[start], 'the court centre is clear').toBeLessThan(40);
+    const seen = new Uint8Array(n * n), stack = [start];
+    seen[start] = 1;
+    let leaks = false;
+    while (stack.length) {
+      const i = stack.pop()!, x = i % n, y = (i - x) / n;
+      if (x === 0 || y === 0 || x === n - 1 || y === n - 1) { leaks = true; break; }
+      for (const j of [i - n, i + n, i - 1, i + 1]) if (!seen[j] && alpha[j] < 40) { seen[j] = 1; stack.push(j); }
+    }
+    expect(leaks, 'the court is closed by the wall').toBe(false);
+  });
 });

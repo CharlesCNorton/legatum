@@ -4,7 +4,7 @@
 // strokes, fills, clipped drawImage calls of art already on the map, and a one-off engraving of each sprite (`inkOf`),
 // so a turn with many moments stays cheap; nothing here uses filters, shadowBlur or per-frame canvases.
 import type { Faction, PlayerView } from '../types';
-import { cityImage, cityStem, cityTier, drawCityCanvas, markStem, spriteSize, CITY_CANVAS, CITY_GROUND, WALLED_TOWN_SCALE } from './cityArt';
+import { cityImage, cityStem, cityTier, drawCityCanvas, markStem, spriteSize, walledTown, CITY_CANVAS, CITY_GROUND, WALLED_TOWN_SCALE } from './cityArt';
 import { CITY_DROP, CITY_WORLD } from './terrain';
 import { buildingIconName, itemName } from '../data';
 import { tintedIcon } from '../icons';
@@ -145,7 +145,7 @@ function blots(x: number, y: number, w: number, h: number, seed: number, k: numb
 }
 
 /** A sprite sketched in, then painted: the engraving laid down by `kInk`, the colour flooding in under it by `kWash`. */
-function sketch(ctx: CanvasRenderingContext2D, img: HTMLImageElement, key: string, x: number, y: number, w: number, h: number, seed: number, kInk: number, kWash: number, inkAlpha = 1) {
+function sketch(ctx: CanvasRenderingContext2D, img: HTMLImageElement | HTMLCanvasElement, key: string, x: number, y: number, w: number, h: number, seed: number, kInk: number, kWash: number, inkAlpha = 1) {
   const ink = inkOf(img, key);
   const origin = { x: 0.5, y: 0.82 };
   if (kWash > 0) {
@@ -289,13 +289,15 @@ function drawGrow(ctx: CanvasRenderingContext2D, g: FxGrow, t: number, v: Moment
   const c = v.toScreen(worldOf(g.at));
   // A walled town grows inside its ring, as the terrain cache draws it, with the near wall kept in front.
   const ring = !v.far && city.ring ? cityImage(city.ring, spriteSize(townBox(c, v.zoom).s * v.dpr)) : null;
-  const box = townBox(c, v.zoom, city.ring && !v.far ? WALLED_TOWN_SCALE : 1);
-  const sprite = townSprite(v.eraOf(city.owner), city.population, v.far, box.s * v.dpr);
+  const sprite = townSprite(v.eraOf(city.owner), city.population, v.far, townBox(c, v.zoom).s * v.dpr);
   if (!sprite) return;
+  // Clipped to the ring's court like the cached town (`walledTown`, drawn in the ring's full frame); unclipped and scaled until the ring loads.
+  const fitted = ring ? walledTown(sprite.img, ring) : null;
+  const box = townBox(c, v.zoom, city.ring && !v.far && !fitted ? WALLED_TOWN_SCALE : 1);
   const k = Math.min(1, dt / GROW_MS);
   const s = 0.96 + 0.04 * easeOut(clamp01(k / 0.7));
   const bw = box.s * s, bx = c.x - (c.x - box.x) * s, by = box.y + box.s * (1 - s) * 0.85;
-  sketch(ctx, sprite.img, sprite.key, bx, by, bw, bw, g.seed, clamp01(k / 0.55), clamp01((k - 0.25) / 0.7));
+  sketch(ctx, fitted ?? sprite.img, fitted ? `${sprite.key}|${city.ring}` : sprite.key, bx, by, bw, bw, g.seed, clamp01(k / 0.55), clamp01((k - 0.25) / 0.7));
   if (ring) { const r = townBox(c, v.zoom); drawCityCanvas(ctx, ring, r.x, r.y, r.s, 'front'); }
 }
 
