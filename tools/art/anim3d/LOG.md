@@ -208,3 +208,5 @@ Final art director, 10:13Z: R15 CPU best on every aspect; recovered straps/toes
 now visible at 256, weaker rest band acceptable at 160/64, all clips natural.
 Show Sam if GPU matches. Updated round note and skill replace the preliminary
 "no visible sandal gain" conclusion; no new art edits after that review.
+
+- Spearman round 15 GPU receipt: IoU 0.9537; blurred ΔE 3.42; raw ΔE 6.19; atlas 187440 bytes / q80; 40 frames. Visual review pending.
