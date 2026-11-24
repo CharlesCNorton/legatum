@@ -168,3 +168,5 @@ fitting, C donor death (reviewer: low heap/early cloak flag). Contact strength
 100% → 40%: global ΔE 4.5745 → 4.5530, base 4.8554 → 4.7462. Kit gains:
 continuity, CPU look proxy, KayKit preset, rest seating; no heavy files in git.
 No art PASS. GPU pixels/512 masters/final atlas remain pending the lead.
+
+- Spearman round 12 GPU receipt: IoU 0.9384; blurred ΔE 4.72; raw ΔE 7.52; atlas 186556 bytes / q80; 40 frames. Visual review pending.
