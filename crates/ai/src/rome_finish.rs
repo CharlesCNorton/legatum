@@ -307,7 +307,8 @@ impl Planner<'_> {
             .filter(|h| h.distance(anchor) <= SEARCH_RADIUS && self.ctx.unexplored_near(*h) > 0)
             .chain(
                 (0..v.tiles.len())
-                    .filter_map(|i| (v.tiles[i].owner == Some(victim)).then(|| self.ctx.hex_at(i))),
+                    .filter(|&i| v.tiles[i].owner == Some(victim))
+                    .map(|i| self.ctx.hex_at(i)),
             )
             .collect();
         let scouts: Vec<&UnitView> = self

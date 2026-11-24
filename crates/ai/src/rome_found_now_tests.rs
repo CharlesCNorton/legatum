@@ -186,6 +186,8 @@ fn a_wounded_veteran_leaves_a_siege_below_half_health_but_not_a_fallen_city() {
         v.cities.iter_mut().find(|c| c.pos == rival).unwrap().hp = city_hp;
         let mut p = hard(&v, 1);
         p.decisions.rome_opening_march = 1;
+        // `rome_opening_finish` rests wounded units at the siege; off, to test this rule alone.
+        p.decisions.rome_opening_finish = 0;
         p.campaigns.rome_opening_target = Some(legatum_core::CityId(5));
         assert!(p.rome_opening_active());
         let u = v.units.iter().find(|u| u.id == UnitId(1)).unwrap();

@@ -3085,6 +3085,8 @@ mod tests {
             let mut p = planner(&v);
             p.decisions.roman_founders = 1;
             p.decisions.roman_found_first = found_first;
+            // `rome_found_now` also exempts founders from this recall; off, to test this gene alone.
+            p.decisions.rome_found_now = 0;
             p.decisions.settler_min_site_score = 1000;
             p.plan_settlers();
             assert!(
