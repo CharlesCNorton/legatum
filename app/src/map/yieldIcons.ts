@@ -93,8 +93,24 @@ function fittedCluster(yields: readonly LensYield[], r: number): { cluster: Yiel
   return { cluster, size };
 }
 
+/**
+ * How far a cluster at `x` (its centre) slides sideways to keep clear of a neighbouring town's art (`towns`, screen rects):
+ * away from the town, by the overlap plus a small gap, at most a quarter of the hex radius `r` so it stays on its own tile.
+ */
+export function clusterShift(x: number, top: number, w: number, h: number, r: number, towns: readonly Rect[]): number {
+  const gap = 2;
+  let dx = 0;
+  for (const t of towns) {
+    if (top >= t.y + t.h || top + h <= t.y) continue;
+    const left = x + dx - w / 2, right = x + dx + w / 2;
+    if (right + gap <= t.x || left - gap >= t.x + t.w) continue;
+    dx += x < t.x + t.w / 2 ? t.x - gap - right : t.x + t.w + gap - left;
+  }
+  return Math.max(-r * 0.25, Math.min(r * 0.25, dx));
+}
+
 /** Screen rects of the icon clusters in view (none zoomed out, where they are dots), so a callout can be placed clear of them. */
-export function yieldClusterRects(tiles: readonly LensTile[], cam: Camera, width: number, height: number, mapWidth: number): Rect[] {
+export function yieldClusterRects(tiles: readonly LensTile[], cam: Camera, width: number, height: number, mapWidth: number, towns: readonly Rect[] = []): Rect[] {
   const r = HEX_SIZE * cam.zoom;
   if (yieldDetail(r) !== 'icons') return [];
   const rects: Rect[] = [];
@@ -104,13 +120,14 @@ export function yieldClusterRects(tiles: readonly LensTile[], cam: Camera, width
     const cy = (centerY(tile.index, mapWidth) - cam.y) * cam.zoom + height / 2;
     if (x < -r || x > width + r || cy < -r || cy > height + r) continue;
     const { cluster } = fittedCluster(tile.yields, r);
-    rects.push({ x: x - cluster.width / 2, y: cy + r * 0.64 - cluster.height, w: cluster.width, h: cluster.height });
+    const top = cy + r * 0.64 - cluster.height, dx = clusterShift(x, top, cluster.width, cluster.height, r, towns);
+    rects.push({ x: x + dx - cluster.width / 2, y: top, w: cluster.width, h: cluster.height });
   }
   return rects;
 }
 
 /** Draw every yield tile's cluster. Runs before units, cities and routes so they stay on top. */
-export function drawYieldIcons(ctx: CanvasRenderingContext2D, tiles: readonly LensTile[], cam: Camera, width: number, height: number, mapWidth: number, dpr: number, look: LookId, heavyRim = false) {
+export function drawYieldIcons(ctx: CanvasRenderingContext2D, tiles: readonly LensTile[], cam: Camera, width: number, height: number, mapWidth: number, dpr: number, look: LookId, heavyRim = false, towns: readonly Rect[] = []) {
   const r = HEX_SIZE * cam.zoom;
   const detail = yieldDetail(r);
   if (detail === 'none') return;
@@ -123,23 +140,24 @@ export function drawYieldIcons(ctx: CanvasRenderingContext2D, tiles: readonly Le
   ctx.lineJoin = 'round';
   for (const tile of tiles) {
     if (!tile.yields?.length) continue;
-    const x = (centerX(tile.index, mapWidth) - cam.x) * cam.zoom + width / 2;
+    const cx = (centerX(tile.index, mapWidth) - cam.x) * cam.zoom + width / 2;
     const cy = (centerY(tile.index, mapWidth) - cam.y) * cam.zoom + height / 2;
-    if (x < -r || x > width + r || cy < -r || cy > height + r) continue;
+    if (cx < -r || cx > width + r || cy < -r || cy > height + r) continue;
     ctx.globalAlpha = tile.faded ? 0.7 : 1;
     if (detail === 'dots') {
       const kinds = YIELD_ORDER.filter((k) => tile.yields!.some((y) => y.kind === k && y.value > 0));
       kinds.forEach((k, i) => {
         ctx.beginPath();
-        ctx.arc(x + (i - (kinds.length - 1) / 2) * dot * 2.6, cy + r * 0.55, dot, 0, Math.PI * 2);
+        ctx.arc(cx + (i - (kinds.length - 1) / 2) * dot * 2.6, cy + r * 0.55, dot, 0, Math.PI * 2);
         ctx.fillStyle = FILL[k]; ctx.fill();
         ctx.lineWidth = ATLAS.pen.thin; ctx.strokeStyle = RIM[look]; ctx.stroke();
       });
       continue;
     }
     const { cluster, size } = fittedCluster(tile.yields, r);
-    // Bottom-centre of the hex (pointy-top), clear of the bottom vertex.
+    // Bottom-centre of the hex (pointy-top), clear of the bottom vertex, slid aside off a neighbouring town's walls.
     const oy = cy + r * 0.64 - cluster.height / 2;
+    const x = cx + clusterShift(cx, oy - cluster.height / 2, cluster.width, cluster.height, r, towns);
     for (const m of cluster.marks) {
       const s = rimmed(m.kind, look, Math.round(size * dpr), pad);
       if (s) ctx.drawImage(s, x + m.x - size / 2 - pad / dpr, oy + m.y - size / 2 - pad / dpr, s.width / dpr, s.height / dpr);

@@ -2242,6 +2242,10 @@ impl Planner<'_> {
         } else {
             self.endangered()
         };
+        // Gene `rome_opening_finish`: the opening's victim gets no Peace while it runs.
+        if self.rome_finish_refuses_peace(against) {
+            return (false, "Roman opening victim");
+        }
         // Gene `operations`: a committed strike on this team refuses Peace while it runs.
         if self.operation_refuses_peace(against) {
             return (false, "committed operation");
