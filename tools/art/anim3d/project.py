@@ -75,8 +75,8 @@ head = rig.pose.bones['head']
 pivot = head.head.copy()
 head.matrix = Matrix.Translation(pivot) @ Matrix.Rotation(1.5, 4, 'Z') @ Matrix.Diagonal((1.10, 1.10, 1.10, 1)) @ Matrix.Translation(-pivot) @ head.matrix
 bpy.context.view_layer.update()
-limb('thigh_r', 'calf_r', (-.39, -.075, .082), (-.43, -.40, .48))
-limb('thigh_l', 'calf_l', (.21, .15, .082), (.36, -.36, .48))
+limb('thigh_r', 'calf_r', (-.345, -.075, .082), (-.40, -.40, .48))
+limb('thigh_l', 'calf_l', (.185, .15, .082), (.26, -.36, .48))
 # Raised fist / bent elbow rather than a straight lowered forearm.
 limb('upperarm_r', 'lowerarm_r', (-.37, -.31, 1.34), (-.48, -.12, 1.08))
 aim('hand_r', (0, -.03, .09))
@@ -253,8 +253,8 @@ forward = cam.to_quaternion() @ Vector((0, 0, -1))
 scale = sc.camera.data.ortho_scale
 origin = cam.translation + right*((94/256-.5)*scale) + up*((.5-220/256)*scale)
 floor = origin + forward*((.105-origin.z)/forward.z)
-tip = floor + right*(5/256*scale) + Vector((0, 0, (207/256*scale)/up.z))
-grip = floor.lerp(tip, (220-115)/207)
+tip = floor + right*(5/256*scale) + Vector((0, 0, (208/256*scale)/up.z))
+grip = floor.lerp(tip, (220-116)/208)
 hand = rig.matrix_world.inverted() @ (grip-Vector((0, -.012, .047)))
 limb('upperarm_r', 'lowerarm_r', hand, (-.48, -.12, 1.08))
 aim('hand_r', (0, -.03, .09))
@@ -290,12 +290,14 @@ refine(sc, aim, screen_sculpt)
 sys.path.insert(0, str(Path(__file__).parent/'units/spearman'))
 from silhouette import fit_silhouette
 fit_silhouette(sc, screen_sculpt)
-from stance import flare_cloak
+from stance import bulk_legs, flare_cloak, seat_straps, brace_feet
+bulk_legs(sc)
 flare_cloak(sc, screen_sculpt)
-# Reviewer: a readable warm wood shaft needs real thickness, before projection.
-for ob in sc.objects:
-    if ob.name.startswith("Ash dory shaft") and ob.type == "CURVE":
-        ob.data.bevel_depth *= 1.8
+seat_straps(sc)
+brace_feet(sc)
+# R12b found a 3 mm rest gap. Seat the complete fitted guard before UV freeze.
+from kit.contact import seat_rest_guard
+sc['rest_contact'] = json.dumps(seat_rest_guard(rig, .106))
 rig['neutral_pose'] = json.dumps({p.name: [list(row) for row in p.matrix_basis] for p in rig.pose.bones})
 
 # Evaluate deformation with original vertex indexing. UVs are written to the

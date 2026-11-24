@@ -11,13 +11,7 @@ from mathutils import Matrix, Vector
 from kit.retarget import apply_matrices
 from motion import curve
 
-MAP = {'pelvis': 'hips', 'spine_01': 'spine', 'spine_02': 'chest',
-       'spine_03': 'chest', 'neck_01': 'head', 'head': 'head'}
-for side in ('l', 'r'):
-    for target, source in [('upperarm', 'upperarm'), ('lowerarm', 'lowerarm'),
-                           ('hand', 'wrist'), ('thigh', 'upperleg'),
-                           ('calf', 'lowerleg'), ('foot', 'foot'), ('ball', 'toes')]:
-        MAP[target+'_'+side] = source+'.'+side
+from kit.retarget_presets import KAYKIT_MAP as MAP, KAYKIT_ACTIONS
 
 
 def prepare(rig, root, clip, phases):
@@ -32,7 +26,7 @@ def prepare(rig, root, clip, phases):
     source = next(o for o in imported if o.type == 'ARMATURE')
     for track in source.animation_data.nla_tracks:
         track.mute = True
-    name = os.environ.get('SPEARMAN_DONOR_ACTION', 'Death_B' if clip == 'death' else 'Hit_B')
+    name = os.environ.get('SPEARMAN_DONOR_ACTION', KAYKIT_ACTIONS[clip])
     action = bpy.data.actions[name]
     source.animation_data.action = action
     source.animation_data.action_slot = action.slots[0]

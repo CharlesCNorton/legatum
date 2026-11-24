@@ -62,3 +62,11 @@ Evaluated `Death_A`, `Death_B`, `Hit_A`, `Hit_B`; candidate selects `Death_B` an
 The imported rig supplies reference-calibrated rotations; no KayKit mesh is rendered.
 - `Rig_Medium_General.glb` SHA256 `5f725c0f745f36078c7238968cd5c04843cbc6260689eb6e7f5e2bbd7ffdd7ad`
 - `License.txt` SHA256 `373b159044d1a886ed15f57ca5a7673ba14e2623c460283452705f2056912ed9`
+
+## Round 12 combined selection
+
+Idle/move retain the pinned Quaternius CC0 sources. Hit uses KayKit Free 1.1
+`Hit_B` above. The evaluated `Death_B` candidate is not selected: death uses
+Fable B's original project-authored collapse (`collapse.py`, MIT), as permitted
+by the 2026-11-24 motion decision. No third-party geometry is imported from the
+reaction donor and no new asset was downloaded by the merge.

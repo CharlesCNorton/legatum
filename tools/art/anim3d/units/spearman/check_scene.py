@@ -17,7 +17,7 @@ assert sc['infantry_refinement'] == 8
 assert sc['spearman_silhouette_round'] == '9a'
 assert sc['spearman_surface_finish'] == 9
 assert sc['spearman_garment_coverage'] == 10
-assert sc['spearman_lower_body_round'] == '10a'
+assert sc['spearman_stance_round'] == 'fable-b'
 for name in ['Linen tunic shoulder sleeves', 'Cloak • simulated wool',
              'MPFB anatomical male • original topology']:
     assert sc.objects[name].data.color_attributes.get('R10b garment coverage'), name
@@ -69,7 +69,7 @@ assert bpy.data.objects['Warm upper-left key'].data.size == 5.0
 assert base.data.uv_layers.get('Painting camera rest') is None
 assert abs(max((base.matrix_world @ v.co).z for v in base.data.vertices)-.105) < .0001
 heights = [(base.matrix_world @ v.co).z for v in base.data.vertices]
-assert abs(max(heights)-min(heights)-.155) < .0001, 'Stone underside was not deepened'
+assert abs(max(heights)-min(heights)-.163) < .0001, 'Stone underside was not deepened'
 assert tuple(sc.camera.location) == (2.5, -7.0, 3.0)
 for side in ['l', 'r']:
     sole = bpy.data.objects['Leather sandal sole '+side]
@@ -79,7 +79,7 @@ for side in ['l', 'r']:
     assert 0<=sole['toe_vertex']<len(sole.data.vertices)
     assert 0<=sole['heel_vertex']<len(sole.data.vertices)
     lowest = min(v.z for v in sole_points(side))
-    assert lowest >= .100, (sole.name, lowest)
+    assert abs(lowest-.105) <= .002, (sole.name, 'rest contact gap', lowest-.105)
 for mat in base.data.materials:
     for node in mat.node_tree.nodes:
         if node.type == 'BUMP':

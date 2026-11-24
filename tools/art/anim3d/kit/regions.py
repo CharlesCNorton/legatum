@@ -104,6 +104,40 @@ def span_width(image, y, x0=0, x1=None, threshold=128):
     return int((alpha > threshold).sum())
 
 
+def spans(image, start, stop, axis='row', x0=0, x1=None, threshold=128):
+    """Opaque extent of each row (or column) in [start, stop): {index: (first,
+    last, count)}; rows with nothing opaque are omitted. `x0`/`x1` limit the
+    search along the line, to isolate one limb or prop.
+    """
+    alpha = _rgba(image)[..., 3] > threshold
+    if axis == 'column':
+        alpha = alpha.T
+    result = {}
+    for index in range(start, stop):
+        hits = np.flatnonzero(alpha[index, x0:x1])
+        if hits.size:
+            result[index] = (int(hits[0])+x0, int(hits[-1])+x0, int(hits.size))
+    return result
+
+
+def span_differences(painting, render, start, stop, axis='row', x0=0, x1=None, tolerance=1):
+    """Where the render's outline differs from the painting's by more than
+    `tolerance` px: {index: (first edge, last edge, opaque count)} as render
+    minus painting. Tune form against these numbers, not by eye: the Spearman's
+    first leg bulking "looked right but measured wrong" (shins 13-15 px wide
+    against the painting's 9-10), and a reviewer's "shield 5% small" turned out
+    to match within 1 px (Fable form lane, 2026-11-24).
+    """
+    a, b = spans(painting, start, stop, axis, x0, x1), spans(render, start, stop, axis, x0, x1)
+    report = {}
+    for index in sorted(set(a) | set(b)):
+        pa, pb = a.get(index, (0, 0, 0)), b.get(index, (0, 0, 0))
+        delta = tuple(q-p for p, q in zip(pa, pb))
+        if max(abs(v) for v in delta) > tolerance:
+            report[index] = delta
+    return report
+
+
 def frame_steps(frames, held_tail=2, still=.15, jump=2.5):
     """Frame-to-frame change over a clip, to spend the frame budget on motion.
 
@@ -206,6 +240,8 @@ def main():
     parser.add_argument('--pale', type=_box, action='append', default=[], help='name=x0,y0,x1,y1 (pale-pixel count)')
     parser.add_argument('--stats', type=_box, action='append', default=[], help='name=x0,y0,x1,y1 (pixels, mean RGB, luminance mean and p90)')
     parser.add_argument('--sheet', type=Path, help='write a native-size painting/before/after sheet')
+    parser.add_argument('--rows', help='y0,y1[,x0,x1]: rows where the after outline differs from the painting by over 1 px')
+    parser.add_argument('--columns', help='x0,x1[,y0,y1]: the same for columns')
     parser.add_argument('--clips', type=Path, help='folder of decoded cells (<clip>/NN.png): report wasted and jumping frames')
     args = parser.parse_args()
     if args.clips:
@@ -221,6 +257,11 @@ def main():
     for name, box in args.stats:
         report[name] = {'box': list(box), 'painting': region_stats(painting, box),
                         'before': region_stats(before, box), 'after': region_stats(after, box)}
+    for axis, text in (('row', args.rows), ('column', args.columns)):
+        if text:
+            v = [int(n) for n in text.split(',')]+[0, None]
+            report[axis+'_span_differences_after_minus_painting'] = {
+                str(k): list(d) for k, d in span_differences(painting, after, v[0], v[1], axis, v[2], v[3]).items()}
     print(json.dumps(report, indent=2))
     if args.sheet:
         comparison_sheet([('Painting', painting), ('Before', before), ('After', after)]).save(args.sheet)

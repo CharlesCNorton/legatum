@@ -175,6 +175,18 @@ class RegionTests(unittest.TestCase):
         self.assertEqual(regions.region_stats(image, (0, 0, 10, 10)), {'pixels': 0})
         self.assertEqual(regions.span_width(image, 60, 200, 230), 3)
 
+    def test_span_differences_measure_an_outline_against_the_painting(self):
+        painting = figure(size=256)
+        wide = painting.copy()
+        ImageDraw.Draw(wide).rectangle((126, 200, 194, 240), fill=(180, 60, 40, 255))
+        self.assertEqual(regions.spans(painting, 100, 101)[100], (130, 211, 64))
+        self.assertEqual(regions.spans(painting, 100, 101, x0=120, x1=200)[100], (130, 190, 61))
+        differences = regions.span_differences(painting, wide, 190, 250, x0=100, x1=200)
+        self.assertEqual(sorted(differences), list(range(200, 241)))
+        self.assertEqual(differences[220], (-4, 4, 8))
+        self.assertEqual(regions.span_differences(painting, painting, 0, 256), {})
+        self.assertEqual(regions.spans(painting, 150, 151, axis='column')[150], (90, 255, 166))
+
     def test_frame_steps_flags_wasted_and_teleporting_frames(self):
         moving = [figure(shift=4*i) for i in range(8)]
         self.assertEqual(regions.frame_steps(moving+[moving[-1]])['findings'], [])

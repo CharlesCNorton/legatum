@@ -1,4 +1,9 @@
-"""Refuse drift in the approved idle/attack actions after any host rebuild."""
+"""Check the rebuilt idle/attack actions against the reviewed CPU merge.
+
+A form/guard change rebases the old performance. Record that explicitly in the
+round note; never claim the old .blend/action hashes survived such a rebuild.
+This receipt ensures the host repeats the exact locally checked choreography.
+"""
 import json
 import os
 from pathlib import Path
@@ -6,17 +11,13 @@ import sys
 import bpy
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from kit.ab import invariant
-
-EXPECTED = {
-    'idle': '057f5cef51f6b2199b5834af980f67b1920b0e954f12b50f63d875298dcda227',
-    'attack': '667d83498c04185fb13b1142c58274ef864aec7ae5222f07f73360d9d5168a6e',
-}
 master = Path(os.environ['ANIM_ROOT'])/'masters/spearman-3d-v2'
+expected = json.loads(Path(__file__).with_name('frozen-actions.json').read_text())
 report = {}
-for clip, expected in EXPECTED.items():
+for clip, digest in expected['actions'].items():
     bpy.ops.wm.open_mainfile(filepath=str(master/'clips'/clip/(clip+'.blend')))
     actual = invariant(bpy.context.scene)['actions']
-    report[clip] = {'expected':expected, 'actual':actual, 'identical':actual == expected}
-    assert actual == expected, (clip, 'approved performance changed', actual)
-(master/'frozen-actions.json').write_text(json.dumps(report,indent=2)+'\n')
+    report[clip] = {'expected': digest, 'actual': actual, 'identical': digest == actual}
+    assert digest == actual, (clip, 'CPU-reviewed performance changed', actual)
+(master/'frozen-actions.json').write_text(json.dumps(report, indent=2)+'\n')
 print('FROZEN_ACTIONS_OK', json.dumps(report), flush=True)
