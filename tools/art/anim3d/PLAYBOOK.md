@@ -555,3 +555,129 @@ The movie retains round 8's 1600x352, five-column, 2x-on-cream layout, 24 fps,
 192 frames, H.264/yuv420p. CPU merge checks use the isolated external root
 `lanes/spearman-r9-merge`; its atlas is preview-only, leaving the last GPU atlas
 intact until the lead's pass. Passing these checks is not a visual PASS.
+
+### Round 10a lower legs and guard stance
+
+`units/spearman/lower_body.py` runs from the silhouette hook before frozen UVs.
+It adds radial calf and greave volume in anatomical rest coordinates, with
+separate 6mm leather welts. Human foot vertices and original sole vertices,
+weights and heel/toe contact IDs are unchanged. The
+welts sit above the old contact surface and use the same foot/ball weighting.
+Body vertices carrying foot/ball weights are explicitly excluded from shaping.
+
+The guard turns complete foot/ball pairs about the anatomical vertical axis
+(left 55 degrees, right -12), moves the overextended spear-side ankle inward
+25mm, and solves fixed-length thigh/calf chains to the planted ankles. This is
+an authored **rest guard before source calibration**, never a post-retarget
+toe correction. Bind matrices and bone rolls are unchanged. Locomotion already
+resets the guard's leg transforms before its source T-pose calibration; keep
+that behavior. `check_lower_body.py -- --move` compares foot/ball matrices over
+33 dense frames against the preserved R9 walk, as well as foot geometry,
+weights, topology, original soles, camera, lighting and upper-body pose.
+
+Use the isolated `ANIM_ROOT=$HOME/LegatumRuns/anim-pilot/lanes/spearman-r10a` for
+CPU work. `lower_body_review.py` applies the same R9 LUT to both raw CPU renders,
+outputs native 256/160/64 comparisons with premultiplied linear-light resizing,
+and reports lower-leg alpha overlap above the stone separately from whole-image
+overlap. Neither metric establishes an art pass. Inspect the actual feet from
+top/front through the move cycle and the attack/death extremes. The unchanged
+complete handoff is `ROUND=10 tools/art/anim3d/units/spearman/gpu.sh`.
+
+### Round 10b shoulder and back coverage
+
+`units/spearman/coverage.py` follows the round-9 surface pass in `project.py`.
+A material-ID render identified the broad pale hit-pose patch as the linen
+shoulder shell, not the simulated wool cape. Fill its unprojected rear with a
+cinnabar shoulder facing continuing the collar, warm shaded linen below it,
+and source-derived pigment near the projection boundary. Retain painted skin
+on the upper arm and torso; do not change face, legs, feet or geometry. Wool
+receives dark red fold masses on both sides and a source-colour gate that rejects
+linen/skin paint landing on the cloak. All colour masses and coverage weights
+are frozen corner attributes, so they follow deformation instead of changing
+with generated bounds. No additional microtexture is introduced.
+
+Preserve trusted projected areas. Apply new fill only as the frozen visibility
+mask drops below 0.85, with a smooth transition to full coverage below 0.15.
+Continue trustworthy pigment over mesh adjacency (100mm linen, 120mm wool/skin),
+not across spatially adjacent but disconnected parts. The camera-only pigment,
+existing AO, physical response, original UVs and all motion stay intact. The
+rear facing boundary is authored in garment rest coordinates, never in the
+animated camera view.
+
+`coverage_preview.py` compares preserved round-9 rest/hit/death files with
+identical Cycles CPU settings: 256px, 16 samples, seed 17, denoising off. It
+asserts identical geometry, faces, skin/pin weights, original UVs, transforms,
+actions, pose, lights and camera. `coverage_review.py` applies one frozen round-9
+LUT to both sides and makes native 256/160/64px sheets with linear-light,
+premultiplied RGBA reductions. Raw sheets remain available. Pixel thresholds
+measure pale exposure, not artistic quality or agreement with an unseen painted
+pose. The byte-backed sRGB source exposes encoded values through `image.pixels`
+on the tested Blender 5.3 build (verified against PNG bytes); convert those once
+to linear before storing `FLOAT_COLOR`, rather than assuming the read buffer is
+linear. Reverify this for float/HDR images.
+
+Lane work remains under `lanes/spearman-r10b/`; public review evidence uses
+`spearman-r10b-*`. The existing executable GPU handoff is retained:
+`ROUND=10 tools/art/anim3d/units/spearman/gpu.sh` rebuilds projection and every
+clip, then all masters, the trimmed atlas, checks, feet views and the movie.
+Coverage is a surface improvement, not a unit PASS or a motion fix.
+
+### Spearman round 10c: restrained source motion and attached shield
+
+Keep the round-9 projected master and restored hit pins unchanged. The motion
+lane uses `WALK_INFLUENCE` in `units/spearman/motion.py` for complete donor-space
+NLA attenuation before rest/roll retargeting. Test the actual 33-frame contact
+trace after changing this value: 82% split the source stance and 88% required
+54.8mm root correction, so both were rejected against the existing 50mm bound.
+90% preserves one cyclic support interval per foot; target foot yaw is untouched.
+
+Death01 is sampled through separate knee-yield and torso-descent phases.
+Before retargeting, blend its own terminal local leg rotations into the impact
+recoil, and layer Idle_Loop's local arm rotations (85% left, 65% right) to
+retain a carried shield and soften the free arm's upward recoil. This uses existing donor poses, not new human keys; foot orientation is
+never changed after the rest/roll solve. Preserve the original source actions. Keep
+the strapped aspis on its original arm attachment instead of interpolating its
+world transform toward a disconnected ground pose. Keep the spear's existing
+release/crossing solve. A geometric hinge solve rotates the shield about the grip
+only when its evaluated rim would enter the stone; it never translates the grip.
+A smooth 40cm root-path registration brings the floor-length donor collapse back
+across the disc. This is scene placement, with source joint rotations retained. Death-only cape silhouette pins retain 35% of their
+partial weights, bending stiffness is 0.8 and air damping 4; full shoulder pins
+remain fixed. Death crest response is near critically damped and limited to
+16mm; attack/hit retain their existing springs and recovery envelopes.
+
+`motion_metrics.py` measures saved motion without mutating it.
+`round10_review.py` requires same-settings Cycles CPU renders in an isolated
+ANIM_ROOT and its `before/` root; it writes painting/R9/R10c comparisons at native
+256, 160 and 64 px plus animated 160px comparisons. Preserve the standard
+top/front feet sheet, full rig audit, final repeated death frame and hit recovery
+checks. The complete GPU handoff remains `ROUND=10
+tools/art/anim3d/units/spearman/gpu.sh`; this lane does not approve final art.
+
+### Spearman round 10 combined handoff and reusable kit
+
+Retained all three final lane changes: guarded lower-leg support, warmer exposed
+shoulder/back pigment, and a donor-based collapse with attached shield. Keep
+round 9's attack/idle and restored hit cloth pins. The broad guard is not a
+walking-foot rotation correction. The shoulder shell and shield hinge still need
+visual work. See `kit/README.md` for reusable mechanisms and explicit limits.
+
+The production entry points now import `kit/` for MPFB rig setup, painterly
+cavity-pigment nodes, frozen projection, geodesic seam continuation, fixed
+camera/lights, Quaternius rest/roll retargeting and cyclic heel/toe contacts.
+Rigify and rest-space corrective drivers are opt-in helpers; no current rig
+migration or finished anatomical corrective is implied. Masters remain external.
+
+`gpu.sh` runs `critique.py` after delivery validation, using the registered
+`-256.png` painting, the 256 master rest and **decoded 160 atlas frames**. The
+critique writes the exact 768×256 painting/render/crossfade triptych, separate
+crossfade, contact sheet, silhouette/ΔE diagnostics, feet copy and note. Targets
+are IoU ≥0.95 / mean CIE76 ΔE ≤6; both include the base and use the same best ±3 px
+translation. They do not establish artistic approval. Evidence is inserted
+before `FOCUS a/b/c`, keeping the driver's next-round instructions last.
+
+Delivery now resamples premultiplied linear-light RGBA and validates reconstructed
+alpha against that same resampling. `ATLAS_OUTPUT` puts CPU preview atlases
+outside the app; the GPU entry point unsets it and writes the intended shipped
+atlas. No CPU upsample is exported as a 512 master. The five-column movie retains
+round 8's 1600×352 / 24 fps / 192-frame / eight-second cream layout.

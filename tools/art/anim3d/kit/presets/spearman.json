@@ -1,0 +1,84 @@
+{
+  "camera": {
+    "location": [
+      2.5,
+      -7,
+      3
+    ],
+    "target": [
+      0,
+      0,
+      1.2
+    ],
+    "ortho_scale": 2.9
+  },
+  "view_transform": "Standard",
+  "look": "None",
+  "world": [
+    0.19,
+    0.19,
+    0.19
+  ],
+  "lights": [
+    {
+      "name": "Warm upper-left key",
+      "location": [
+        -3,
+        -4,
+        8
+      ],
+      "target": [
+        0,
+        0,
+        1
+      ],
+      "energy": 596.7500000000001,
+      "size": 5,
+      "color": [
+        1,
+        0.97,
+        0.93
+      ]
+    },
+    {
+      "name": "Soft cool fill",
+      "location": [
+        4,
+        -2,
+        3
+      ],
+      "target": [
+        0,
+        0,
+        1
+      ],
+      "energy": 77.0,
+      "size": 3,
+      "color": [
+        0.95,
+        0.97,
+        1
+      ]
+    },
+    {
+      "name": "Warm back rim",
+      "location": [
+        -2,
+        3,
+        4
+      ],
+      "target": [
+        0,
+        0,
+        1
+      ],
+      "energy": 132.0,
+      "size": 2,
+      "color": [
+        0.7,
+        0.83,
+        1
+      ]
+    }
+  ]
+}

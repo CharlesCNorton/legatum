@@ -6,13 +6,16 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from kit.images import resize_rgba
 
 from PIL import Image, ImageChops, ImageDraw
 
 ROOT = Path(os.environ.get('ANIM_ROOT', Path.home()/'LegatumRuns/anim-pilot'))
 MASTER = ROOT/'masters/spearman-3d-v2'
 REVIEW = ROOT/'review/3d-v2'
-OUTPUT = Path('app/src/assets/units/anim')
+OUTPUT = Path(os.environ.get('ATLAS_OUTPUT', 'app/src/assets/units/anim'))
 CLIPS = {'idle': (8, 4, True), 'move': (8, 6, True), 'attack': (10, 14, False),
          'hit': (4, 12, False), 'death': (10, 4, False)}
 CELL, PAD = 160, 2
@@ -61,7 +64,7 @@ def pack(preview=False):
         metadata['clips'][clip] = {'row': row, 'frames': count, 'fps': fps, 'loop': loop}
         metadata['frames'][clip] = []
         for im in source[clip]:
-            im = im.resize((CELL, CELL), Image.Resampling.LANCZOS)
+            im = resize_rgba(im, (CELL, CELL))
             # Keep real alpha, including thin spear edges, without quantization.
             box = im.getchannel('A').getbbox()
             assert box, f'{clip}: empty source frame'
@@ -100,8 +103,8 @@ def pack(preview=False):
                 directory = export/str(size)/clip
                 directory.mkdir(parents=True, exist_ok=True)
                 for i, im in enumerate(images):
-                    im.resize((size, size), Image.Resampling.LANCZOS).save(directory/f'{i:02}.png')
-            Image.open(MASTER/'renders/c/three-quarter.png').resize((size, size), Image.Resampling.LANCZOS).save(export/str(size)/'rest.png')
+                    resize_rgba(im, (size, size)).save(directory/f'{i:02}.png')
+            resize_rgba(Image.open(MASTER/'renders/c/three-quarter.png'), (size, size)).save(export/str(size)/'rest.png')
         (export/'delivery.json').write_text(json.dumps(report, indent=2)+'\n')
     print('PACK', report['bytes'], 'bytes, quality', quality, '40 frames; preview:', preview)
 
@@ -140,11 +143,14 @@ def validate():
             assert not occupancy.crop(box).getbbox(), f'{clip}/{i}: overlapping crops or gutter'
             draw.rectangle((x, y, x+w-1, y+h-1), fill=1)
             cell = decode(meta, atlas, clip, i)
-            expected = source[clip][i].resize((CELL, CELL), Image.Resampling.LANCZOS)
+            expected = resize_rgba(source[clip][i], (CELL, CELL))
             assert cell.getchannel('A').tobytes() == expected.getchannel('A').tobytes(), f'{clip}/{i}: alpha/offset mismatch'
             bounds = cell.getchannel('A').point(lambda v: 255 if v > 16 else 0).getbbox()
             assert bounds and min(bounds[:2]) >= 1 and max(bounds[2:]) <= CELL-1, f'{clip}/{i}: clipping {bounds}'
             decoded[clip].append(cell)
+            destination = REVIEW/'spearman-decoded-160'/clip
+            destination.mkdir(parents=True, exist_ok=True)
+            cell.save(destination/f'{i:02}.png')
         assert any(ImageChops.difference(decoded[clip][0], im).getbbox(alpha_only=False) for im in decoded[clip][1:]), f'{clip}: no motion'
     assert not ImageChops.multiply(atlas.getchannel('A'), occupancy.convert('L').point(lambda v: 255-v)).getbbox(), 'Opaque padding'
     terminal = MASTER/'renders/e-death'
