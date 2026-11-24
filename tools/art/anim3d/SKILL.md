@@ -5,6 +5,8 @@ description: Build and refine Legatum's painted 3D miniature units in Blender fr
 
 # Painted miniature units
 
+> **The bar is game feel (Sam, 2026-11-24).** A unit should "feel like a unit in those games" (Age of Empires, Civ 6), and the painting is inspiration, not a pixel target. Pass means clear, weighty, readable motion at 160 px; rigid props; no pops or foot sliding; and recognisably the painting's unit (colours, crest, shield device, bronze) without matching it pixel for pixel. Silhouette IoU and ΔE against the painting are info only, not pass criteria. Method: motion first, on a proven CC0 rig and animation library (Quaternius base character and Universal Animation Library; see PRIOR-ART.md), with props rigidly bone-parented; the painted look goes on top afterwards. No hand-building or hand-posing of bodies, and nothing paid or needing an account. Where a rule below conflicts with this, this wins.
+
 The painting is the art target. The goal at rest: a viewer cannot tell the render from the painting at 256, 160 and 64 px. A passing audit, atlas or metric is never art approval; only the lead writes PASS.
 
 Tags: **[proven]** kept on a Spearman round, with the evidence. **[rejected]** tried and measured worse; do not retry without a new reason. **[untested]** not yet proven on a unit.
