@@ -86,7 +86,7 @@ describe('a walled town fits inside its ring', () => {
   // The wall's own thickness on that line, in canvas px: the scaled town must end inside it.
   const WALL = 20;
   for (const era of CITY_ERAS) {
-    // The Renaissance star fort is notched at the cut line between its bastions; its points ring the town instead.
+    // The Renaissance star fort is notched at the cut line between its bastions; at runtime the town is clipped to its court (`courtMask`).
     if (era === 'renaissance') continue;
     let ring: Png;
     try { ring = read(`${era}-walls`); } catch { continue; }

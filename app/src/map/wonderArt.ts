@@ -122,7 +122,6 @@ export function wonderBadgeLayout(hexPx: number, measure?: (text: string, font: 
 }
 
 type Cover = { x: number; y: number; w: number; h: number };
-const overlaps = (a: Cover, b: Cover) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
 
 /**
  * The badge's centre for a wonder hex centred at `x, cy` (screen px): the top of the hex; else a little higher (clear of

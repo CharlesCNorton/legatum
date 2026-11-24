@@ -8,7 +8,7 @@
 // grid, glyphs, towns, fog, territory, fog hatch, unexplored veil, known edge.
 import type { CityView, PlayerView, Terrain } from '../types';
 import { PLAYER_BORDER_DASH, rgba } from '../theme';
-import { CITY_CANVAS, CITY_GROUND, WALLED_TOWN_SCALE, cityArtArrivals, drawCityCanvas, cityArtEpoch, cityImage, cityStem, cityTier, footingsStem, markStem, spriteSize, traceCityArt, wallStem } from './cityArt';
+import { CITY_CANVAS, CITY_GROUND, WALLED_TOWN_SCALE, cityArtArrivals, drawCityCanvas, cityArtEpoch, cityImage, cityStem, cityTier, footingsStem, walledTown, markStem, spriteSize, traceCityArt, wallStem } from './cityArt';
 import { sitesOf } from './constructionSites';
 import { mapBorderColor, mapPlayerColor, type BorderSpec, type MapStyle } from './style';
 import { getBorderVariant, type BorderVariant } from './borderVariant';
@@ -1640,7 +1640,10 @@ export class TerrainCache {
     }
     // The town stands inside its ring: the far wall behind it, the near wall in front (never a ring painted across the houses).
     if (ring) this.drawSprite(g, ring, 'back');
-    if (img) this.drawSprite(g, img, 'all', WALLED_TOWN_SCALE);
+    // Clipped to the ring's court, so no house stands on a rampart; until the ring loads, just the scaled town.
+    const fitted = img && ring ? walledTown(img, ring) : null;
+    if (fitted) this.drawSprite(g, fitted);
+    else if (img) this.drawSprite(g, img, 'all', WALLED_TOWN_SCALE);
     if (ring) this.drawSprite(g, ring, 'front');
   }
 
@@ -1658,7 +1661,7 @@ export class TerrainCache {
    * One city-art canvas, its ground oval centred on the hex (a little low, so tall roofs rise into the hex's top half),
    * drawn at `scale` about the oval's centre, whole or as a wall ring's `back` or `front` part (`drawCityCanvas`).
    */
-  private drawSprite(g: Ctx2D | CanvasRenderingContext2D, img: HTMLImageElement, part: 'all' | 'back' | 'front' = 'all', scale = 1) {
+  private drawSprite(g: Ctx2D | CanvasRenderingContext2D, img: HTMLImageElement | HTMLCanvasElement, part: 'all' | 'back' | 'front' = 'all', scale = 1) {
     const k = CITY_WORLD / CITY_CANVAS;
     const size = CITY_WORLD * scale;
     const x = -(CITY_GROUND.x0 + CITY_GROUND.x1) / 2 * k * scale, y = -CITY_GROUND.middle * k * scale + CITY_DROP;
