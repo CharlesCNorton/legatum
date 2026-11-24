@@ -668,6 +668,7 @@ impl Planner<'_> {
         // Gene `rome_colonia`: a level-3 veteran founds the Colonia Victrix first.
         self.plan_colonia();
         if self.faction == Faction::Rome
+            && !self.rome_opening_active()
             && self.hard_defense()
             && self.decisions.roman_founders > 0
             && self.ctx.own_cities.len() < 6
@@ -722,6 +723,7 @@ impl Planner<'_> {
             }
         }
         if self.faction == Faction::Rome
+            && !self.rome_opening_active()
             && self.hard_defense()
             && self.decisions.roman_founders > 0
             && self.ctx.own_cities.len() < 6
