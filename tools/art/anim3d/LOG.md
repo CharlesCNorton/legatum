@@ -96,6 +96,15 @@ Lanes about 01:20–01:39 on the round-12 GPU candidate `07643cd4`, with the con
 - GPU pass 01:58:55–02:23:57: **failed after 25 minutes** at the new render-parity gate, which asserted exact pixel equality between two Eevee renders of the rest. They differ by sample noise only (142 of 262,144 pixels, one by more than 2 levels, mean 0.0002). Second GPU launch of the night lost to a gate or import the sandbox could not run. The lead gave the gate a noise tolerance in `10966f8e`.
 - GPU rerun 02:25:00–03:02:39 (38 m), pushed as `d7798046`: IoU **0.9537** (passes 0.95), blurred ΔE **3.51** (passes 6), raw 6.36; regions head/crest 3.7, torso 2.9, cloak 4.8, shield 2.4, legs 3.2, feet 5.3, base 3.3; atlas 187,254 bytes at q80; walk slip 0.0042 mm, floor error 0.000 mm, heading 5.142°. **First round to pass both metric targets.** Art director, 08:03Z: best on every aspect, clips hold at 160 px, "ready to show Sam as a PASS candidate"; seven polish items, none blocking. No PASS file (the lead's and Sam's call). Round wall-clock from lanes to GPU result: about 100 m including the failed launch.
 
+### Round 14 (2026-11-24 local, in progress): polish after passing
+
+Lanes about 03:05–03:33 on the round-13 GPU candidate `d7798046`.
+
+- Lane a (death staging): Fable D's collapse compacted onto the base; crest and feet margins against the rim −28.1 / −13.7 px → +3.3 / +5.0 px. Rest on the CPU proxy unchanged in kind: IoU 0.9513, blurred ΔE 3.33.
+- Lane b (cloak in move and attack): cloak edge sweep 22.1 → 15.5 px (move) and 10.4 → 8.0 px (attack); cloth endpoint p95 182 → 133 mm. A 1.35× pin trial rejected (worst vertex 246 mm).
+- Lane c (loops and transitions): cloak loop gap 12.07 → 0.00003 px (move), 2.62 → 0.00003 px (idle); idle-to-move sole gap 23.0 → 14.4 px, move-to-idle 18.7 → 9.4 px by rotating the walk's eight samples.
+- Lanes done 03:33:00; merge task queued.
+
 ### Fable C and D (2026-11-24, from round 12)
 
 - Fable C (rest stance, ground shadow, base band), `fable/unit-anim-3d-spearman-c`, note about 01:30 local: rest IoU 0.9394 → **0.9513** on the CPU proxy and **0.9534** in Eevee; blurred ΔE 4.55 → **3.35**; feet 13.35 → 5.4; base 4.75 → 3.3. First candidate to pass both targets. Walk numbers unchanged to the digit (slip 0.0016 mm, heading 5.14°, root 48.96 mm). Dropped: ankle targets without knee columns (0.936), an AO ground shadow (base 2.7 → 5.4), stronger sandal tones.
