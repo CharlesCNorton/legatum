@@ -127,3 +127,15 @@ Round 3 first CPU rest review: replacing mesh-only support warps with full-depth
 e-death: review emitted from CYCLES frames; no art-pass claim.
 e-idle: review emitted from CYCLES frames; no art-pass claim.
 c: review emitted from CYCLES frames; no art-pass claim.
+b: review emitted from CYCLES frames; no art-pass claim.
+c: review emitted from CYCLES frames; no art-pass claim.
+c-details: review emitted from CYCLES frames; no art-pass claim.
+d: review emitted from CYCLES frames; no art-pass claim.
+e-idle: review emitted from CYCLES frames; no art-pass claim.
+e-move: review emitted from CYCLES frames; no art-pass claim.
+e-attack: review emitted from CYCLES frames; no art-pass claim.
+e-hit: review emitted from CYCLES frames; no art-pass claim.
+Round 3 follow-up: first death sample revealed a floor-solver pop caused by rest soles below the stone. Fit planted sole depth along the orthographic viewing axis, preserving projected joint positions, and added idle sole penetration assertion. Reset sparse horse/rider action pose bases before every sample to prevent rest transforms leaking into source motion. Final full CPU cycle now renders all stages at 256/8, genuine 512/8 detail, with device/resolution/sample labels.
+Round 3 interim measurement: source/rest silhouette IoU improved from GPU round2 0.6962 to CPU round3 0.7724 at256 and 0.7049 to 0.7772 at64; opaque-overlap RGB MAE 10.403/8.150. These diagnostics include the base and do not certify anatomy, animation or art parity. Opened clay, details and split: hock/knee contours remain angular, muzzle/face/hand differ, tail still needs fuller natural hair.
+Repository gate: HEAD hygiene/public-claims passed; art distinctness could not launch Chromium. Direct working-tree reproduction confirmed bootstrap_check_in MachPortRendezvousServer Permission denied (1100). Working-file hygiene independently passed all 18 changed/new/deleted files; 27 Python modules parse, both shell entrypoints parse, git diff --check passes. Missing-checkpoint GPU test exits nonzero with visible failed-stage receipt. No art approval inferred from these checks.
+e-death: review emitted from CYCLES frames; no art-pass claim.

@@ -372,3 +372,16 @@
 - Lead must run ROUND=3 tools/art/anim3d/units/archer/gpu.sh for fresh512/256 GPU masters, atlas and MP4. All current CPU evidence is labeled; previous GPU success does not approve this revision.
 - Final feedback check: no archer-FEEDBACK.md; shared feedback remains1-23. origin/master is already an ancestor of HEAD, so no merge/fetch.
 - Commit staging blocked by sandbox: cannot create .git/worktrees/lane-24/index.lock. Changes left uncommitted for runner; requested body at anim-pilot/archer-round3-commit-message.txt ends with Co-Authored-By: gpt-6-astra (Codex) <noreply@openai.com>. No push or PR attempted.
+- Geometry audit passed: anatomy, fixed base, nonzero scales, bow/nock contact and loop closure.
+- Rendered b: 512px CYCLES GPU, 64 samples.
+- Published b native 256/64 comparison; render device GPU.
+- Rendered c: 512px CYCLES GPU, 64 samples.
+- Published c native 256/64 comparison; render device GPU.
+- Rendered c-details: 512px CYCLES GPU, 64 samples.
+- Published c-details native 256/64 comparison; render device GPU.
+- Rendered d: 512px CYCLES GPU, 64 samples.
+- Published d native 256/64 comparison; render device GPU.
+- Rendered e-idle: 512px CYCLES GPU, 64 samples.
+- Published e-idle native 256/64 comparison; render device GPU.
+- Rendered e-move: 512px CYCLES GPU, 64 samples.
+- Published e-move native 256/64 comparison; render device GPU.
