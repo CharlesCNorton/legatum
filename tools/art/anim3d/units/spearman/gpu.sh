@@ -3,8 +3,8 @@
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/../../../../.."
 source tools/art/anim3d/env.sh
-export ROUND="${ROUND:-10}"
-unset MOTION_DIAGNOSTIC FEET_METRICS_ONLY ATLAS_OUTPUT
+export ROUND="${ROUND:-12}"
+unset MOTION_DIAGNOSTIC FEET_METRICS_ONLY ATLAS_OUTPUT SPEARMAN_DONOR_ACTION
 [[ "$ROUND" =~ ^[0-9]+$ ]] || { echo 'ROUND must be an integer' >&2; exit 2; }
 # Keep the exact requested log even if the overnight driver's redirection changes.
 # Avoid a second writer when the driver already redirects to this exact file.
@@ -25,15 +25,19 @@ printf 'round=%s status=running started=%s\n' "$ROUND" "$(date -u +%FT%TZ)" > "$
 printf 'Spearman GPU round %s | %s | checkout %s\n' "$ROUND" "$(date -u +%FT%TZ)" "$PWD"
 printf 'Revision %s | Blender gate %s\n' "$(git rev-parse HEAD)" "$(command -v blender)"
 git status --short -- tools/art/anim3d app/src/assets/units/anim/spearman.json app/src/assets/units/anim/spearman.webp
-printf '%s\n' "- GPU round $ROUND started: full Cycles GPU pass requested." >> "$REVIEW/spearman-log.md"
-export RENDER_ENGINE=CYCLES CYCLES_DEVICE=GPU CYCLES_BACKEND="${CYCLES_BACKEND:-METAL}"
-export RESOLUTION=512 SAMPLES="${SAMPLES:-64}" GRADE=1
+printf '%s\n' "- GPU round $ROUND started: full Eevee painted GPU pass requested; Cycles GPU feet inspection." >> "$REVIEW/spearman-log.md"
+export SPEARMAN_LOOK=painted
+export RENDER_ENGINE=BLENDER_EEVEE CYCLES_DEVICE=GPU CYCLES_BACKEND="${CYCLES_BACKEND:-METAL}"
+export RESOLUTION=512 SAMPLES="${SAMPLES:-64}" GRADE=0
 # Fail before expensive cloth baking if the host cannot expose a GPU.
 blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python tools/art/anim3d/units/spearman/preflight.py
 stage=motion-sources
 "$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/spearman/fetch_motion.py
+"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/spearman/fetch_reactions.py
 stage=project
 tools/art/anim3d/render.sh project
+stage=painted-look
+tools/art/anim3d/units/spearman/prepare-look.sh
 stage=scene-checks
 blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python tools/art/anim3d/units/spearman/check_scene.py
 # Regenerate every clip from the current master before final renders/audit.
@@ -41,6 +45,8 @@ for clip in idle move attack hit death; do
   stage="animate-$clip"
   tools/art/anim3d/render.sh "animate-$clip"
 done
+stage=frozen-actions
+blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python tools/art/anim3d/units/spearman/check_frozen.py
 # Plain geometry review uses the same calibrated camera and no texture shaders.
 stage=b
 SPEARMAN_PLAIN=1 tools/art/anim3d/render.sh b
@@ -68,10 +74,10 @@ stage=delivery
 "$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/spearman/delivery.py movie
 stage=critique
 "$ANIM_ROOT/venv/bin/python" tools/art/anim3d/critique.py \
-  --slug spearman --round "$ROUND" --label 'GPU 512 masters / decoded 160 atlas' \
+  --slug spearman --round "$ROUND" --label 'Eevee painted GPU 512 masters / display-space decoded 160 atlas' \
   --painting app/src/assets/units/spearman-256.png \
   --rest "$ANIM_ROOT/masters/spearman/256/rest.png" \
-  --frames "$REVIEW/spearman-decoded-160" --feet "$REVIEW/spearman-g-feet-check.png" --out "$REVIEW"
+  --frames "$REVIEW/spearman-decoded-160" --feet "$REVIEW/spearman-g-feet-check.png" --out "$REVIEW" --preset spearman
 "$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/spearman/report_delivery.py
 stage=required-outputs
 for output in "spearman-round${ROUND}.mp4" "spearman-round${ROUND}-restpose-compare.png" spearman-f-restpose-compare.png spearman-g-feet-check.png "spearman-round${ROUND}-contact-sheet.png" "spearman-round${ROUND}-crossfade.png" "spearman-round${ROUND}-metrics.json" "spearman-round${ROUND}-note.md"; do

@@ -11,16 +11,22 @@ WALK_INFLUENCE = .90
 
 
 def walk_calibration_axis(target, anatomical_axis, donor_axis):
-    """Retain some anatomical leg spread in the reference, never turn feet."""
-    if target.startswith(('thigh_', 'calf_')):
-        return donor_axis.lerp(anatomical_axis, .50).normalized()
+    """Match donor leg axes; track width is a separate constant IK offset."""
     return donor_axis
 
 
 def blend_walk_source(source, carry):
     """Carry the idle arms on the walking donor's moving torso, before retarget."""
     for name in ['DEF-hips', 'DEF-spine.001', 'DEF-spine.002', 'DEF-spine.003']:
-        carry.pose.bones[name].rotation_quaternion = source.pose.bones[name].rotation_quaternion
+        carry.pose.bones[name].rotation_quaternion = carry.pose.bones[name].rotation_quaternion.slerp(
+            source.pose.bones[name].rotation_quaternion, .50)
+
+
+def walk_offsets(corrections):
+    """Widen ankle tracks in travel space; no camera-dependent or toe rotation."""
+    from mathutils import Vector
+    return {side: offset+Vector((.085 if side == 'l' else -.085, 0, 0))
+            for side, offset in corrections.items()}
 
 
 def curve(phase, values):
@@ -103,7 +109,7 @@ class EquipmentResponse:
                             else Spring(4.2, .48, .7, .026))
         self.shield_spring = (Spring(3.0, 1., .025, math.radians(1)) if clip == 'death'
                               else Spring(3.0, .72, .06, math.radians(3)))
-        if clip in ['idle', 'move']:
+        if clip in ['idle', 'move', 'hit']:
             return
         anchors = []
         for ob in bpy.context.scene.objects:
@@ -136,7 +142,7 @@ class EquipmentResponse:
     def key(self, frame, phase):
         import bpy
         from mathutils import Matrix, Vector
-        if self.clip in ['idle', 'move']:
+        if self.clip in ['idle', 'move', 'hit']:
             return
         head = self.rig.matrix_world @ self.rig.pose.bones['head'].matrix
         # A point above the attachment senses both translation and head rotation.
@@ -187,7 +193,7 @@ heading, then tip face-up only as far as the floor requires. The grip is fixed.
         self.max_angle = 0.
         self.previous = None
 
-    def solve(self):
+    def solve(self, face_up=False):
         from mathutils import Matrix, Vector, Quaternion
         matrix = self.shield.matrix_world.copy()
         pivot = self.rig.matrix_world @ self.rig.pose.bones['lowerarm_l'].tail
@@ -208,7 +214,9 @@ heading, then tip face-up only as far as the floor requires. The grip is fixed.
         world = [matrix @ point-pivot for point in self.points]
         def lowest(rotation):
             return min((rotation @ point).z+pivot.z for point in world)
-        if lowest(Quaternion()) >= .109:
+        settle=max(0.,min(1.,(.38-pivot.z)/.14)) if face_up else 0.
+        settle=settle*settle*(3-2*settle)
+        if lowest(Quaternion()) >= .109 and not settle:
             self.shield.matrix_world = matrix
             self.previous = matrix.to_quaternion()
             return
@@ -221,7 +229,7 @@ heading, then tip face-up only as far as the floor requires. The grip is fixed.
                 hi = mid
             else:
                 lo = mid
-        rotation = Quaternion().slerp(rotation, hi)
+        rotation = Quaternion().slerp(rotation, max(hi,settle))
         self.max_angle = max(self.max_angle, rotation.angle)
         self.shield.matrix_world = (Matrix.Translation(pivot)
             @ rotation.to_matrix().to_4x4() @ Matrix.Translation(-pivot) @ matrix)

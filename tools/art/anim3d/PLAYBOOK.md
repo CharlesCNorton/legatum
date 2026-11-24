@@ -682,46 +682,99 @@ outside the app; the GPU entry point unsets it and writes the intended shipped
 atlas. No CPU upsample is exported as a 512 master. The five-column movie retains
 round 8's 1600×352 / 24 fps / 192-frame / eight-second cream layout.
 
-### Spearman round 11c: continuous shield contact and donor carrying weight
+### Spearman round 11 merge: selected painted look, guarded motion
 
-Motion-only lane over round 10. `motion.py` keeps the shield edge-down about its
-existing grip, damps the donor heading with a 0.12 s exponential response, and
-uses evaluated shell geometry to tip face-up only enough to clear z=0.109 m.
-This is a geometric carrying/contact constraint, not a rigid-body simulation.
-A nearest-feasible-floor rotation alone did not improve the 83.03 degree jump:
-the abrupt orientation came from the arm before contact. The retained source-time
-map spends more delivered frames on `Death01` descent. Matched samples: maximum
-shield step 83.03 -> 34.41 degrees; head step 0.655 -> 0.420 m. Tradeoffs: sampled
-ankle maximum 0.355 -> 0.423 m and late cape travel 0.119 -> 0.145 m. The final two
-frames remain identical. This is a better transition, not approval of the ending.
+The production GPU script now uses Fable A v3's Eevee emission-projection look
+with per-part registered paint, palette fills, cloak-red unseen shoulders,
+leather-coloured foot pigment, and short warm contact shadows. It runs an ID
+pass, texture build, ramp-input pass and final palette build before rendering.
+`look_receipt.py` rejects stale masters, textures, paintings or shader code.
+Finals use display-space premultiplied Lanczos and no grade; the previous
+Cycles camera-pigment hybrid is retained only as the labelled CPU fallback.
+All 40 frames, 512/256 masters, the decoded 160 atlas, eight-second five-column
+movie, 256 triptych, contact sheet, feet sheet and blurred/regional critique
+remain in the single no-argument `units/spearman/gpu.sh` entry point.
 
-Walk still uses the complete 90% `Walk_Loop` donor. Its rest/roll calibration
-retains 50% of the anatomical thigh/calf spread; feet and ball bones retain the
-same donor rotation mapping. `Idle_Loop` carrying arms now inherit the walking
-donor's local torso rotations before retargeting. Mean ankle width 0.246 ->
-0.344 m (42% -> 58% of the 0.592 m guard). Do not widen the foot mesh or turn a
-foot after retargeting. Optional profile hooks in `kit/retarget.py` preserve the
-old behavior for profiles which do not define them.
+Form combines Astra A's greave/calf fit (without its regressing sleeve smoothing)
+and Fable B's spear-side cloak flare. Shaft thickness is changed on the master
+before UV projection, never secretly at render time. Astra C supplies the
+broader source-calibrated walk, iterative sole contact and donor-based death.
+Fable B's visually preferred death/hit are fully hand-keyed body performances;
+those are excluded under Sam's open-donor rule, which permits only the attack
+to be hand-keyed. Their visual verdict remains the target for a future donor.
+Astra B's localized lining/fold pigments are retained in the Cycles fallback;
+Fable's part-paint look supersedes them for final surfaces. Do not count those
+fallback changes as an independently verified Eevee material win.
 
-The wider stance revealed that a single vertical foot translation leaves a
-skinned sole slightly above the floor (35% spread probe: 2.402 mm, rejected).
-Converge the existing vertical solve on evaluated sole geometry; keep the full
-40 mm total translation limit and donor rotations. Final dense checks: slip
-0.0023 mm, floor error <0.0001 mm, planted heading 2.618 degrees, zero loop seam;
-root correction 48.880 mm, IK 19.635 mm, sole translation 35.728 mm. Root/sole
-corrections remain near their caps; do not widen further without rechecking.
+Reuse: `kit/look.py`, `kit/part_paint.py`, configurable image reduction,
+plus the existing human/Rigify/corrective, projection, seams, studio, retarget
+and contact modules. Every walk still needs a dense top/front geometry sheet
+and measured sole slip, floor error and travel heading. Idle and attack action
+hashes are checked against round 10; geometry refinements can change pixels
+without changing their accepted performance.
 
-`feet.py` now renders all 33 dense samples from both top and front, and
-`feet_sheet.py` wraps them in eight-column bands. This is the per-round standard,
-including the GPU handoff. The 40-pose audit has zero findings. Rest master,
-idle, attack and hit are byte-identical to the round-10 inputs, including hit pins.
+### Spearman round 12c: alternate CC0 reactions and visible walk tracks
 
-`round11c_preview.py` produces matched Cycles CPU A/B (256 px, 16 samples,
-seed 17, no denoising/adaptive sampling, one unchanged R10 LUT), derives 160/64
-in premultiplied linear light and retains lossless 160 frames for critique.
-R11c raw rest critique: IoU 0.90351 / CIE76 13.752; identical rest on both sides,
-no rest improvement claimed. The reviewer-requested blurred colour metric is a
-lead/kit follow-up, not silently substituted here. CPU evidence and receipts:
-`lanes/spearman-r11c/`; review prefix `spearman-r11c-`. GPU still requires
-`ROUND=11 tools/art/anim3d/units/spearman/gpu.sh`; atlas size is unverified for
-this new motion. No PASS file.
+This lane keeps the explicit round-12 donor-only body constraint even though
+Fable's keyed reaction is the visual target. `units/spearman/donor_motion.py`
+retargets KayKit Character Animations Free 1.1 (`Death_B`, `Hit_B`, CC0), fetched
+with archive and extracted-file hash checks by `fetch_reactions.py`. The rig is
+never rendered. Full reference matrices preserve bone rolls; death legs match
+anatomical rest axes instead of carrying the painted guard's knee bend into the
+fall. Hit layers the donor upper body over planted guard legs, with no root
+translation. Source-local arm deltas are attenuated toward the donor's initial
+pose so the spear/shield carrier does not inherit an unarmed arm throw. Hit's
+crest stays rigid. `infantry/retarget.py` routes only these two clips to KayKit;
+Quaternius idle/move and the authored attack keep their original paths.
+
+Walk width is a constant 85 mm offset per ankle in travel coordinates, solved
+with native two-bone IK while retaining the donor's world foot rotation. Remove
+the prior half-spread calibration before adding it: stacking both pushed a sole
+past the stone and failed contact. This is stance registration, distinct from
+the bounded slip corrections (root 48.97 mm, foot IK 19.95 mm). The 33-sample
+actual-sole check passes unchanged limits: 0.0019 mm slip, under 0.0001 mm floor
+error, 2.62 degree planted heading, zero seam, 26.32 mm maximum sole translation.
+The minimum delivered ankle separation in the painting camera is 15.0 px at
+256 versus 9.0 px in round 11; world-space width alone is not the acceptance
+criterion. The source torso's carrying-arm delta is halved, reducing the largest
+walk shield turn from 5.69 to 2.52 degrees per delivered frame. Render and inspect
+the dense top/front feet sheet every round; do not use only these scalar checks.
+
+For a short donor fall, sample existing dense poses according to measured head,
+pelvis and attached-shield travel, preserving nine unique samples and one repeated
+terminal sample. Bone curves hold while cloth receives two seconds of simulated
+post-roll; no extra delivered frames are added. The armoured-body contact solver
+also runs during early knee yield, and a floor-triggered carrying-hand solve
+prevents the shield grip going below the stone. The first KayKit trial is rejected
+in the lane evidence: guard-relative legs produced a bounce, a 0.540 m head step,
+a 53.8 degree shield step and a late cloak travel of 0.585 m. A donor label alone
+is not an improvement; judge the final strip and its audit.
+
+`check_frozen.py` pins the approved idle and attack action hashes and runs in the
+GPU handoff after clip generation. Lane evidence additionally checks the complete
+idle/attack blend bytes and unchanged rest master. `round12c_review.py` renders
+matched before/after Cycles CPU at 256 px, 16 samples, seed 17, no denoiser, with
+one stored LUT; its 256/160/64 comparisons use display-space premultiplied reduction.
+These are explicitly hybrid-fallback motion previews, not the selected Eevee look.
+Run `ROUND=12 tools/art/anim3d/units/spearman/gpu.sh` for the full selected-look
+512/256 masters, trimmed 160 atlas, validation, feet sheet, critique and movie.
+
+The short-legged KayKit mannequin also needs **ankle contact height transferred
+after** the armour-aware root lift. Use two-bone IK to the source-derived ankle
+height and preserve foot world rotation: a root-only lift left a trailing ankle
+at 0.597 m. Ground evaluated sandal straps too, not only soles; a bent strap was
+32 mm through the base even with a clear sole. The final death sample allocator
+minimizes the worst normalized delivered head displacement and shield angle
+(with accumulated head/pelvis/shield arc as a tie-break) rather than their weighted sum, so it cannot spend all in-betweens on the body and leave a shield
+flip at landing. Cloth retains full shoulder pins; lower pins are reduced to
+15%, air damping is 1 and gravity weight 2, with two seconds of baked post-roll.
+These are motion/collision settings; no rest geometry, weights or pigment changes.
+
+Final R12c CPU selection: death head step 0.420 -> 0.319 m, shield step
+34.41 -> 33.12 degrees, late cape travel 0.157 -> 0.081 m. The settled shield
+uses a floor-height-driven face-up hinge while remaining attached; the spear
+release is timed against the donor fall rather than the old backward-fall phase.
+All 40 delivered poses pass the geometry audit. This is still not an art PASS:
+early cloak flutter remains, the foot undersides are pale, and the selected
+painted GPU look needs its own render/review. Hit and move are the strongest
+merge candidates; inspect death at 64 px and in the movie before retaining it.

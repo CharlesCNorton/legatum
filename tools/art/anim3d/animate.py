@@ -46,9 +46,10 @@ if clip=='death':
  cloak=bpy.data.objects['Cloak • simulated wool'];pins=cloak.vertex_groups['Shoulder pins']
  for v in cloak.data.vertices:
   for g in v.groups:
-   if g.group==pins.index and g.weight<.99:pins.add([v.index],g.weight*.35,'REPLACE')
+   if g.group==pins.index and g.weight<.99:pins.add([v.index],g.weight*.15,'REPLACE')
  cloth.settings.bending_stiffness=.8
- cloth.settings.air_damping=4
+ cloth.settings.air_damping=1
+ cloth.settings.effector_weights.gravity=2
  bpy.ops.mesh.primitive_cube_add(size=1,location=(0,0,-.02))
  ground=bpy.context.object;ground.name='Death ground cloth collider';ground.scale=(6,6,.04)
  bpy.ops.object.transform_apply(location=False,rotation=False,scale=True)
@@ -82,12 +83,16 @@ def pose(t):
   motion=retarget_frames[active_frame-1]
   rig.location=base_loc+motion['root']
   apply_matrices(rig,motion['matrices'])
-  if clip=='death':
+  if clip=='death' and motion_source['provider'].startswith('Quaternius'):
    # Register the donor's floor-length fall across the miniature's stone.
    # Keep source joint rotations and entry pose; avoid landing behind the disc.
    settle=max(0.,min(1.,(t-.25)/.30));settle=settle*settle*(3-2*settle)
    rig.location.y-=.40*settle
-  if clip=='move':contact_ik(rig,motion['foot_corrections'])
+  if clip=='move':
+   # Constant stance registration, separate from the measured slip correction.
+   # Native IK retains the donor's world foot rotations.
+   from motion import walk_offsets
+   contact_ik(rig,walk_offsets(motion['foot_corrections']))
   bpy.context.view_layer.update()
  elif clip=='attack':
   # Raise outside the right shoulder, then drive forward above the shield rim.
@@ -122,6 +127,10 @@ def pose(t):
   # Let go before the body rolls across the shaft. The rigid weapon lands across
   # the front edge of the stone; it is never hidden or teleported out of frame.
   release=max(0,min(1,t/.44))
+  if motion_source['provider'].startswith('KayKit'):
+   # Match the staged donor fall: upright recoil, tip, then land in front.
+   phase=max(0,min(1,(active_frame-25)/max(1,len(retarget_frames)-25)))
+   release=max(0,min(1,(phase-.20)/.42))
   if release>0:
    for o in spear_objects:o.matrix_world=spear_world[o.name]
    bpy.context.view_layer.update()
@@ -192,7 +201,7 @@ for f in range(1,end+1):
    # stone and thick armour, preserving every retargeted joint rotation.
    released={o:o.matrix_world.copy() for o in spear_objects}
    dg=bpy.context.evaluated_depsgraph_get();lift=0
-   for ob in (sc.objects if t>.30 else []):
+   for ob in (sc.objects if t>(0 if motion_source['provider'].startswith('KayKit') else .30) else []):
     if ob.type!='MESH' or ob.hide_render or ob==base or ob.name.startswith(('Cloak •','Aspis','Sunburst','Convex bronze aspis','Shield','Leather shield')):continue
     if ob in spear_objects:continue
     # Only rig-carried body/clothes/armour; released equipment has its own solve.
@@ -209,6 +218,12 @@ for f in range(1,end+1):
     for ob,matrix in released.items():ob.matrix_world=matrix
     bpy.context.view_layer.update()
    motion_source['max_armoured_fall_root_lift_m']=max(motion_source.get('max_armoured_fall_root_lift_m',0),lift)
+  if clip=='death' and motion_source['provider'].startswith('KayKit'):
+   # Transfer donor ankle contact height after the armour-aware body lift.
+   # Different torso/leg proportions otherwise lift the trailing foot into air.
+   # IK preserves the retargeted world foot roll; no target toe angles are keyed.
+   desired=retarget_frames[active_frame-1]['ankle_height']
+   contact_ik(rig,{s:Vector((0,0,desired[s]-(rig.matrix_world @ rig.pose.bones['foot_'+s].head).z)) for s in ['l','r']})
   for side in ['l','r']:
    sole=bpy.data.objects['Leather sandal sole '+side]
    planted=clip=='move' and flags.get(side,False)
@@ -238,6 +253,9 @@ for f in range(1,end+1):
       mat.translation+=rig.matrix_world.to_3x3().inverted() @ Vector((0,0,error))
       foot.matrix=mat;bpy.context.view_layer.update()
      motion_source['max_sole_translation_m']=max(motion_source.get('max_sole_translation_m',0),abs(total))
+ if clip=='death' and motion_source['provider'].startswith('KayKit'):
+  from donor_motion import clear_sandals
+  clear_sandals(rig)
  if clip!='death':
   butt=next(o for o in spear_objects if o.name.startswith('Iron spear butt'))
   ev=butt.evaluated_get(bpy.context.evaluated_depsgraph_get());mesh=ev.to_mesh()
@@ -252,7 +270,12 @@ for f in range(1,end+1):
     bpy.context.view_layer.update()
  response.key(f,equipment_phase)
  if shield_contact:
-  shield_contact.solve()
+  if motion_source['provider'].startswith('KayKit'):
+   grip=rig.matrix_world @ rig.pose.bones['lowerarm_l'].tail
+   if grip.z<.24:
+    grip.z=.24
+    limb('upperarm_l','lowerarm_l',rig.matrix_world.inverted() @ grip,rig.pose.bones['lowerarm_l'].head.copy())
+  shield_contact.solve(face_up=motion_source['provider'].startswith('KayKit'))
   bpy.context.view_layer.update()
  rig.keyframe_insert(data_path='location',frame=f)
  for o in spear_objects:
@@ -261,6 +284,10 @@ for f in range(1,end+1):
   shield.keyframe_insert(data_path='location',frame=f);shield.keyframe_insert(data_path='rotation_quaternion',frame=f)
  for p in rig.pose.bones:
   p.rotation_mode='QUATERNION';p.keyframe_insert(data_path='location',frame=f);p.keyframe_insert(data_path='rotation_quaternion',frame=f);p.keyframe_insert(data_path='scale',frame=f)
+if clip=='death' and motion_source['provider'].startswith('KayKit'):
+ from donor_motion import delivery_samples
+ samples=delivery_samples(sc,rig,shield,25,end,count)
+ motion_source['delivery_sampling']='9 donor poses minimizing worst delivered head step/shield angle, arc tie-break; final pose repeated'
 motion_source['equipment_response']=response.report()
 if shield_contact:motion_source['equipment_response']['max_attached_shield_hinge_radians']=shield_contact.max_angle
 sc['motion_source']=json.dumps(motion_source)
@@ -282,6 +309,12 @@ for frame in samples:
   tree=BVHTree.FromPolygons([ob.matrix_world @ v.co for v in me.vertices],[list(poly.vertices) for poly in me.polygons])
   crossing=tree.ray_cast(start,direction,length)[0];ev.to_mesh_clear()
   assert crossing is None,f'{clip}/{frame}: spear intersects {name}; fix pose before cloth bake'
+if clip=='death' and motion_source['provider'].startswith('KayKit'):
+ # Bone curves hold after the donor ends; give heavy wool real settling time.
+ # This is simulated post-roll, not an additional delivered body hold.
+ end+=48
+ sc.frame_end=end
+ samples[-2:]=[end,end]
 cloth.show_viewport=True
 sc.frame_set(1)
 cloth=bpy.data.objects['Cloak • simulated wool'].modifiers['Cloth per clip'];pc=cloth.point_cache;pc.frame_start=1;pc.frame_end=end

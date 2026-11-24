@@ -12,6 +12,8 @@ from mathutils import Vector
 
 sys.path.insert(0,str(Path(__file__).resolve().parents[2]/'infantry'))
 from contact import sole_points, landmarks
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from kit.feet import failures as foot_failures
 
 root = Path(os.environ['ANIM_ROOT'])
 master = root/'masters/spearman-3d-v2'
@@ -112,11 +114,7 @@ report = {'blend_sha256': hashlib.sha256(path.read_bytes()).hexdigest(),
           'meaning': 'In-place locomotion: subtract virtual forward travel before judging stance slip.'}
 (out/'metrics.json').write_text(json.dumps(report, indent=2))
 (root/'review/3d-v2/spearman-motion-checks.json').write_text(json.dumps(report,indent=2))
-failures=[]
-for metric,limit in [('max_sole_contact_slip_m',.001),('max_planted_floor_error_m',.002),
-                     ('max_planted_heading_degrees',10),('max_readable_heading_degrees',10),('loop_seam_m',.003),
-                     ('max_root_xy_correction_m',.05),('max_foot_ik_correction_m',.05),('max_sole_translation_m',.04)]:
-    if metric not in checks or checks[metric]>limit:failures.append(f'{metric}: {checks.get(metric)} exceeds {limit}')
+failures = foot_failures(checks)
 report['failures']=failures
 (out/'metrics.json').write_text(json.dumps(report,indent=2))
 (root/'review/3d-v2/spearman-motion-checks.json').write_text(json.dumps(report,indent=2))

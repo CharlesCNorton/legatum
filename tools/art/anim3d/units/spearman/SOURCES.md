@@ -43,3 +43,22 @@ keys. Death blends its own settled local leg pose into recoil and the existing
 Idle_Loop local arms (85% shield arm, 65% free arm) into the carrying pose
 before retargeting. It keeps the
 original arm-mounted shield, with damped crest and cape response. Original orchestration is MIT; renders are CC BY 4.0.
+
+Round 11 merge adds no downloaded or generated asset. Fable A's registered
+part paint and palette fills derive from the existing project CC BY 4.0
+painting. Its Blender node builder and push/pull fill are original MIT project
+code, extracted into `kit/paint_graph.py` and `kit/paint_fill.py`. Astra C's
+walk/death still use the pinned Quaternius CC0 actions above; Fable B's authored
+body death/hit were not adopted under the donor-only requirement.
+
+## Spearman round 12c donor candidate
+
+KayKit Character Animations Free 1.1, Kay Lousberg, CC0-1.0.
+Official source/licence: https://kaylousberg.com/game-assets/character-animations
+and https://kaylousberg.itch.io/kaykit-character-animations .
+Pinned free archive mirror: https://media.githubusercontent.com/media/MightyBubble/Ludots-Assets/fab331eff1cb9c552c60399ea10186ef675cd460/animations/KayKit-Character-Animations-Free-1.1.zip
+Archive SHA256: `65882f31f905ad2e953819648a59287cdeab8f623908d5ef701971d3758be20f`.
+Evaluated `Death_A`, `Death_B`, `Hit_A`, `Hit_B`; candidate selects `Death_B` and `Hit_B`.
+The imported rig supplies reference-calibrated rotations; no KayKit mesh is rendered.
+- `Rig_Medium_General.glb` SHA256 `5f725c0f745f36078c7238968cd5c04843cbc6260689eb6e7f5e2bbd7ffdd7ad`
+- `License.txt` SHA256 `373b159044d1a886ed15f57ca5a7673ba14e2623c460283452705f2056912ed9`
