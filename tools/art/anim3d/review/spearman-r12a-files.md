@@ -1,0 +1,63 @@
+# Lane-owned edits relative to 01a69951
+
+- `tools/art/anim3d/PLAYBOOK.md`
+- `tools/art/anim3d/units/spearman/shell_fit.py`
+- `tools/art/anim3d/units/spearman/foot_fit.py`
+- `tools/art/anim3d/units/spearman/fit_preview.py`
+- `tools/art/anim3d/units/spearman/fit_review.py`
+- `tools/art/anim3d/units/spearman/fit_motion_preview.py`
+- `tools/art/anim3d/units/spearman/check_fit.py`
+
+# Imported round-11 baseline (Git metadata merge was blocked)
+
+- `app/src/assets/units/anim/spearman.json`
+- `app/src/assets/units/anim/spearman.webp`
+- `tools/art/anim3d/LOG.md`
+- `tools/art/anim3d/PLAYBOOK.md`
+- `tools/art/anim3d/SKILL.md`
+- `tools/art/anim3d/animate.py`
+- `tools/art/anim3d/kit/README.md`
+- `tools/art/anim3d/kit/ab.py`
+- `tools/art/anim3d/kit/atlas.py`
+- `tools/art/anim3d/kit/audit.py`
+- `tools/art/anim3d/kit/base.py`
+- `tools/art/anim3d/kit/critique.py`
+- `tools/art/anim3d/kit/deliver.py`
+- `tools/art/anim3d/kit/feet.py`
+- `tools/art/anim3d/kit/grade.py`
+- `tools/art/anim3d/kit/human.py`
+- `tools/art/anim3d/kit/images.py`
+- `tools/art/anim3d/kit/look.py`
+- `tools/art/anim3d/kit/motion_metrics.py`
+- `tools/art/anim3d/kit/part_paint.py`
+- `tools/art/anim3d/kit/presets/spearman.json`
+- `tools/art/anim3d/kit/quicklook.py`
+- `tools/art/anim3d/kit/quicksheet.py`
+- `tools/art/anim3d/kit/regions.py`
+- `tools/art/anim3d/kit/registration.py`
+- `tools/art/anim3d/kit/retarget.py`
+- `tools/art/anim3d/kit/test_kit.py`
+- `tools/art/anim3d/project.py`
+- `tools/art/anim3d/render.py`
+- `tools/art/anim3d/render.sh`
+- `tools/art/anim3d/test_critique.py`
+- `tools/art/anim3d/units/spearman/SOURCES.md`
+- `tools/art/anim3d/units/spearman/check_merge.py`
+- `tools/art/anim3d/units/spearman/coverage.py`
+- `tools/art/anim3d/units/spearman/delivery.py`
+- `tools/art/anim3d/units/spearman/feet.py`
+- `tools/art/anim3d/units/spearman/feet_sheet.py`
+- `tools/art/anim3d/units/spearman/fold_paint.py`
+- `tools/art/anim3d/units/spearman/gpu.sh`
+- `tools/art/anim3d/units/spearman/look.py`
+- `tools/art/anim3d/units/spearman/look_compare.py`
+- `tools/art/anim3d/units/spearman/look_receipt.py`
+- `tools/art/anim3d/units/spearman/look_textures.py`
+- `tools/art/anim3d/units/spearman/motion.py`
+- `tools/art/anim3d/units/spearman/prepare-look.sh`
+- `tools/art/anim3d/units/spearman/report_delivery.py`
+- `tools/art/anim3d/units/spearman/shell_fit.py`
+- `tools/art/anim3d/units/spearman/shell_preview.py`
+- `tools/art/anim3d/units/spearman/shell_review.py`
+- `tools/art/anim3d/units/spearman/stance.py`
+- `tools/art/anim3d/units/spearman/test_look.py`
