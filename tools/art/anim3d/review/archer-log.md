@@ -391,3 +391,5 @@
 - Published e-hit native 256/64 comparison; render device GPU.
 - Rendered e-death: 512px CYCLES GPU, 64 samples.
 - Published e-death native 256/64 comparison; render device GPU.
+- Rendered g-feet-check: 512px CYCLES GPU, 64 samples.
+- Published g-feet-check native 256/64 comparison; render device GPU.
