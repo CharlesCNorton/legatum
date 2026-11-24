@@ -194,3 +194,13 @@
   6. Hit: frames 1 and 2 are nearly the same pose, so at 12 fps the clip reads as one held lean. Push frame 1 further (torso 4-5 degrees more back, shield 5 px closer to the chest) and let frame 2 be the half-way return.
   7. Death, frames 2-3: the spear crosses in front of the body at 40 degrees and then lies under the kneeling figure; fine at 256, but at 64 the dark shaft cuts the figure in two for one frame. Let it fall 10 px further toward the viewer so it clears the knees.
   8. Death final frame: good. The crest, shield face and spear all read at 64. No change.
+- (Fable art director, 2026-11-24T06:16Z, on round 12 GPU final after the rerun: spearman-round12-restpose-compare.png, spearman-round12.mp4 sampled at 5-6 fps, -contact-sheet.png) Positions at 256 px.
+  The GPU frames confirm the CPU-proxy review above: IoU 0.938, blurred delta-E 4.72, feet 12.9, everything else under 5. Round 12 GPU is the best candidate on every aspect (silhouette, materials/values, move, death, hit); idle and attack stay frozen. All five clips now read naturally at 160 px. In the movie the hit has a clear peak after all (lean back, shield up), so drop my hit note (item 6 above).
+  What still separates it from the painting, in order. Items 1-2 are the whole remaining gap at 160 px:
+  1. Feet (y 206-224): 16 px wide vs 20, luminance 168 vs 141, no readable straps, each on a dark oval slab (left x 84-102, right x 147-164, y 217-224). Grow ~1.25x inside the contact bound, three dark strap bands plus a sole line, slab replaced by a soft 2 px contact shadow at 40%.
+  2. Base: no light lip at the rim, top 8% dark and orange (233,198,155 vs 249,217,176), and none of the painting's faint shadow behind the feet. The base is a quarter of the sprite's area at 64 px, so this colour shift is visible at every size.
+  3. Right greave highlights too hot (p90 luminance 209 vs 179); cap ~12%. Helmet, cuirass and shield-rim cavities slightly light (p10 34-44 vs 26-38); deepen the darkest 10% of pixels by ~20%.
+  4. Pale sliver under the spear hand at about (106,122).
+  5. Move: the swing foot lifts to mid-shin in two frames (parade march). Lower the peak by a third. The cloak on the spear side flares 6-7 px in the same frames; damp to 3-4 px.
+  6. Death frames 2-3: the shaft crosses the kneeling body. Let it fall 10 px nearer the viewer so it clears the knees.
+  If items 1 and 2 land cleanly, I would call the rest pose hard to tell apart at 256 and the unit ready for Sam to look at.

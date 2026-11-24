@@ -1,3 +1,7 @@
+FOCUS a: (reviewer) Legs at rest are still slightly A-framed: make the shins more vertical and bring the feet a little closer together so they sit on the painted feet in the crossfade (on both sides). Form base: Fable B's stance.py. Keep B's measured shield/helmet spans. Re-measure IoU.
+FOCUS b: (reviewer) In the look pass (Fable A's look.py): darker brown sandals; a soft base contact shadow on the top around the feet and a darker gradient down the side band; a slightly darker shield rim value. Measure blurred ΔE per region at zero offset.
+FOCUS c: (reviewer) Death end pose: keep the collapse but end with more of the body on the base and the head and crest readable, e.g. lying on his side facing the camera with the shield beside him. Walk: lower the trailing foot lift (it reads as a march) and add a little hip sway; keep the feet check passing.
+
 # Spearman round 12 — combined candidate (CPU review; GPU pass pending)
 
 Not PASS. Source ports on astra/unit-anim-3d-v2; Git refused ORIG_HEAD.lock.
@@ -127,6 +131,20 @@ Artifacts: `spearman-round12-restpose-compare.png`, `spearman-round12-crossfade.
 `spearman-g-feet-check.png`, `spearman-round12.mp4`; all current round-12 review
 pixels are explicitly CPU evidence until the lead's GPU handoff overwrites them.
 The 05:17Z art-director update was read during the merge; no PASS file was written.
+
+### Automated critique: spearman-round12 (Eevee painted GPU 512 masters / display-space decoded 160 atlas)
+
+- Silhouette IoU: **0.9384** (target ≥ 0.95; FAIL). Best of ±3 px offsets: render x=+0, y=+0.
+- Tone/colour ΔE on blurred images (sigma 2 px, CIE76): **4.72** (target ≤ 6; PASS), at zero offset over 11544 overlapping pixels including base. Information only: raw per-pixel ΔE 7.52; at the IoU offset blurred 4.72, raw 7.52.
+- Regions (blurred ΔE): head_crest 3.7, torso 2.9, cloak_spear_side 4.8, shield 2.4, legs 3.4, feet 12.9, base 4.8.
+- Painting mask: alpha; frames: idle 8, move 8, attack 10, hit 4, death 10.
+- Rest: `/Users/samcorcos/LegatumRuns/anim-pilot/masters/spearman/256/rest.png`. Contact sheet uses `/Users/samcorcos/LegatumRuns/anim-pilot/review/3d-v2/spearman-decoded-160`.
+
+### Delivery receipt (GPU final render, visual review pending)
+
+- 40 frames; 160 px trimmed atlas: 186556 bytes, quality 80; decoded validation PASS.
+- Walk: planted slip 0.0018 mm; floor error 0.000 mm; heading 5.142°.
+- Movie: five clips, 1600×352, H.264 yuv420p, 192 frames / 8 seconds. No art PASS issued.
 
 FOCUS a: Match sandal instep height, strap bands and remaining shin contour without lengthening feet beyond the contact budget.
 FOCUS b: Review final GPU foot shadows, sandal tone and cloak lit folds; preserve the lining/sole continuity wins.
