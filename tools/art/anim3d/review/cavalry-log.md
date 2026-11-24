@@ -126,3 +126,4 @@ e-move: review emitted from CYCLES frames; no art-pass claim.
 Round 3 first CPU rest review: replacing mesh-only support warps with full-depth joint registration improves silhouette substantially. Diagnosed crossed hind fetlocks: source rear IK hoof roots have opposite suffixes from upper/lower leg chains; registered anatomical pairs explicitly. Small radial native-mesh refinement retains topology and weights. No foot yaw patch. First move/death/idle checks running before accepting the fit. Generated a clean stone pigment plate using built-in ImageGen; projected on physical beveled disc with live AO, never alpha geometry. Added true diamond-section sabre fitted to painted arc and denser tapered solid tail locks for next preview.
 e-death: review emitted from CYCLES frames; no art-pass claim.
 e-idle: review emitted from CYCLES frames; no art-pass claim.
+c: review emitted from CYCLES frames; no art-pass claim.
