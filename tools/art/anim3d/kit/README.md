@@ -39,7 +39,9 @@ Work in `tools/art/anim3d/units/<slug>/`. Get a crude version through every stag
 | `seams.py` | Geodesic continuation of trusted paint (75 mm reach) into a corner attribute. | Used by Spearman `surface_finish.py`. |
 | `materials.py` | Camera-only pigment over a physical BSDF, shared cavity-pigment node group. | Used by Spearman `paint_finish.py`. Cycles only. |
 | `retarget.py`, `retarget_presets.py`, `contact.py` | Quaternius Standard → MPFB `game_engine`: full-rotation retarget with rest-roll calibration, cyclic heel/toe locking with one fitted speed, IK contact correction; `contact.seat_rest_guard` seats the fitted guard on its evaluated soles before projection; KayKit Free 1.1 bone and action names beside the Quaternius ones (round 12). Optional hooks on the unit's `motion` module since round 11: `walk_calibration_axis` (keep some leg spread in the walk's reference pose) and `blend_walk_source` (donor torso drives the carrying arms). | Used by Spearman `infantry/retarget.py`. Assumes −Y travel, 24 fps sampling, `Leather sandal sole <side>` objects. No CMU or Rigify map. |
-| `base.py` | Shared cream disc plus `SupportSurface`: world-space ray query on evaluated faces, including bevel and world ground. | R14 support regression passed on wider bottom, loose vertex and transformed ellipse; used by the Spearman animator and audit. The disc builder itself remains unverified in production. |
+| `base.py` | The shared cream stone disc (fitted Spearman dimensions) and `SupportSurface`: a world-space ray query on evaluated faces, bevel and ground included, shared by animation, floor fitting and audit. | `SupportSurface`: round 14 regression on a wider bottom, a loose vertex and a transformed ellipse; used by the Spearman animator and audit. The disc builder itself is **not yet run from the kit in Blender**. |
+| `cloth.py` | `configure`: lower-pin strength, bending and air damping before a fresh bake, full attachment pins fixed. | Round 14: the Spearman's `cloak.py` holds only its two presets. |
+| `loop.py` | `close_cloth_loop`: post-bake correction of a cloth loop's residual at the duplicate endpoint, bones and UVs untouched. | Round 14: walk and idle cloak gaps 12.07 and 2.62 px → under 0.00004 px. An authored correction; report its size. |
 | `part_paint.py` | Per-part paint: keep a part's own painted pixels and inpaint the rest (push-pull), low-frequency local colour, value ramps from the part's painted pixels. | Tests. Copied from the Fable look lane (`239540b5`), where it produced the art director's preferred materials; the Spearman imports it from the kit since round 11. |
 | `look.py` | Eevee node helpers for the render-time painted look: `Graph` (emission-only graphs, form and cast-only light terms, ordered ColorRamp), `ramp_stops`, `key_sun` (strength π). | `Graph` copied from the Fable look lane, where it ran in Blender 5.3 Eevee. Round 11: the Spearman imports it from the kit and the graph was constructed on the merged rest and all five clips with geometry, camera and action invariants passing. `key_sun` not yet run. |
 | `quicklook.py`, `quicksheet.py` | Render chosen frames of a clip from the painting camera plus top, front, side and back, optionally in clay, with unbaked cloth switched off; tile them into one sheet. The authoring loop for keyed clips. | Copied from the Fable form-and-motion lane (`91e3031c`), where they ran in Blender 5.3; behaviour unchanged. |
@@ -75,9 +77,20 @@ python3 tools/art/anim3d/kit/check_imports.py   # every script's local imports r
 - When a second unit needs something the kit assumes away (travel axis, sole object names, another donor skeleton), add the parameter then, with that unit as the test.
 - The kit does not make art decisions. Rigify, corrective helpers and the node group are mechanisms; a passing probe or test is not a unit PASS.
 
-## Round 14 additions
+## Round 15 addition
 
-- `cloth.configure`: parameterized lower-pin strength, bending and air damping before a fresh bake; full attachment pins remain fixed. Spearman `cloak.py` holds only its two measured presets.
-- `loop.close_cloth_loop`: post-bake periodic residual correction, before thickness/subdivision; preserves captured bone motion and UVs. Measure correction magnitude and inspect the entire cycle.
-- `base.SupportSurface`: shared by animation, donor floor fitting and the audit, replacing the widest-vertex/infinite-top approximation.
-- The existing human kit includes optional Rigify and authored hinge corrective shapes; the production spearman retains its verified MPFB game-engine rig. Quaternius and KayKit maps are implemented; CMU/Rigify retarget maps are not claimed. Painting projection/seam fill, painterly graph, studio presets, foot locking and critique continue to be imported from the kit.
+`foot_finish.py` supplies paired frozen pigment masks, tilt-driven pigment shading
+and evaluated-sole shadow markers. Spearman's `foot_finish.py` holds only its
+part/bone names, clip policy and tint. Call `update` after `frame_set` through the
+same final/review render path. It does not edit foot rotation, geometry, weights
+or UVs. This is a Z-up, two-foot helper; the pigment's local z-range must be fit
+to each new body's rest coordinates. A compact pool uses marker mode 2; mode 1
+retains the legacy ankle anchor. The unit's matched A/B asserts geometry, UV,
+weights and actions unchanged and measures the marker against evaluated soles.
+
+Existing starting points remain `human` (MPFB, optional Rigify, authored hinge
+correctives), `materials`/`look` (painted node groups), `projection`/`seams`/
+`part_paint` (registration and fill), `studio` (painting camera/light preset),
+`retarget`/`retarget_presets`/`feet` (Quaternius/KayKit and contact), and `critique`.
+Rigify and corrective mechanisms remain opt-in; Spearman keeps its verified
+MPFB game-engine rig. No CMU skeleton map is claimed or silently substituted.

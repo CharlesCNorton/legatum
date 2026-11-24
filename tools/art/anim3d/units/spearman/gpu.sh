@@ -3,7 +3,7 @@
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/../../../../.."
 source tools/art/anim3d/env.sh
-export ROUND="${ROUND:-14}"
+export ROUND="${ROUND:-15}"
 unset MOTION_DIAGNOSTIC FEET_METRICS_ONLY ATLAS_OUTPUT SPEARMAN_DONOR_ACTION PREVIEW_CPU
 [[ "$ROUND" =~ ^[0-9]+$ ]] || { echo 'ROUND must be an integer' >&2; exit 2; }
 # Keep the exact requested log even if the overnight driver's redirection changes.
@@ -61,6 +61,13 @@ stage=transitions
 blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python tools/art/anim3d/units/spearman/check_transitions.py
 stage=frozen-actions
 blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python tools/art/anim3d/units/spearman/check_frozen.py
+# Same master, frames, engine, camera and sampling; R14 settings versus this
+# foot finish only. Both variants use look.configure_render/render_frame.
+stage=foot-finish-ab
+blender -b --disable-autoexec --factory-startup --python-exit-code 1 --gpu-backend metal --python tools/art/anim3d/units/spearman/foot_finish_review.py -- beauty
+"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/spearman/foot_finish_report.py beauty
+test -s "$REVIEW/spearman-r15b-gpu-pools-rest-256.png"
+test -s "$REVIEW/spearman-r15b-gpu-metrics.json"
 stage=detail
 tools/art/anim3d/render.sh detail
 stage=d

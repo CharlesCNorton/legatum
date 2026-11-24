@@ -841,3 +841,15 @@ remaining cloth return in the merged GPU movie; no PASS is implied by the audit.
 Merge the director-preferred c cycle entry and post-bake cloth closure with b's restrained cloth settings. Apply physical settings before baking, then close the periodic residual. The rest form and look stay at round 13: b changed solver settings, not the master silhouette, despite the review describing a wider rest cloak. Drop a/D's side-lying death because its tucked feet gain cannot compensate for hidden shield identity and striped skirt undersides. Keep c's inherited face-down death and early level spear.
 
 `cpu_review.py` now calls the same render setup/frame functions as the GPU entry point, records source/code/calibration hashes, and requires an isolated root. `cpu_deliver.py` checks those receipts before packing, creates native 256/160/64 comparisons and a validated five-clip movie. CPU analytical-light proxies cannot verify Eevee cast shadows. Round 14 adds reusable `kit.cloth`, `kit.loop`, and evaluated `kit.base.SupportSurface`.
+
+### Infantry: spearman round 15 merge (2026-11-24)
+
+Recovered sandal pigment across semantic IDs and darkened the rolling instep
+in move; retained R14 form, cloth and choreography. `kit/foot_finish` now owns
+the reusable frozen foot masks, pigment nodes and evaluated-sole markers;
+`units/spearman/foot_finish.py` supplies names and clip policy. Include both
+modules and `sandal_paint.py` in calibration receipts. Same-path GPU A/B keeps
+the requested rest pools reviewable, but they are not the default after the
+matched feet metric regressed. Top/front dense feet check remains mandatory.
+The installed unit, Blender materials, animation and rendering skills informed
+this merge; the unit's emission look overrides the general PBR recipe.
