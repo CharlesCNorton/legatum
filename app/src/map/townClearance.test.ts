@@ -10,7 +10,7 @@ import { HEX_SIZE, isFar } from './grid';
 import { townCover } from './landmarks';
 import { medallionSlots, pickSlot, type Cover } from './resourceIcons';
 import { clusterShift, yieldCluster, yieldIconSize } from './yieldIcons';
-import { wonderBadgeLayout, wonderBadgeY } from './wonderArt';
+import { wonderBadgeAt, wonderBadgeLayout } from './wonderArt';
 import { buildOverlayTiles } from './overlays';
 import type { PlayerView } from '../types';
 
@@ -47,12 +47,17 @@ describe('marks keep clear of a neighbouring town', () => {
       }
     });
     it(`natural wonder bonus badges, zoom ${z}`, () => {
-      const L = wonderBadgeLayout(r);
+      // The canvas measures the text; here a generous 0.75 em a character stands in, so the check is the harder case.
+      const L = wonderBadgeLayout(r, (text, font) => text.length * font * 0.75);
       for (const yieldsOn of [false, true]) for (const n of neighbors(city)) {
         const c = at(n, z);
-        const y = wonderBadgeY(c.x, c.y, L, yieldsOn, [town]);
-        expect(y, `neighbour ${JSON.stringify(n)}`).toBeDefined();
-        expect(hit({ x: c.x - L.width / 2, y: y! - L.height / 2, w: L.width, h: L.height }, town)).toBe(false);
+        // The city's banner sits over the top of its own hex: the badge must also keep clear of it.
+        const banner = { x: at(city, z).x - r * 1.4, y: at(city, z).y - r * 1.5, w: r * 2.8, h: r * 0.9 };
+        const b = wonderBadgeAt(c.x, c.y, r, L, yieldsOn, [town, banner]);
+        expect(b, `neighbour ${JSON.stringify(n)}, yields ${yieldsOn}`).toBeDefined();
+        const box = { x: b!.x - L.width / 2, y: b!.y - L.height / 2, w: L.width, h: L.height };
+        // Zoomed out the pill (its font has a floor) is wider than a hex and can only take the least covered slot.
+        if (L.width <= r * 1.5) expect(hit(box, town) || hit(box, banner), `neighbour ${JSON.stringify(n)}, yields ${yieldsOn}`).toBe(false);
       }
     });
   }

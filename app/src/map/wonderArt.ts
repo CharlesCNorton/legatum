@@ -5,7 +5,7 @@ import { FONTS } from './sprites';
 import { ATLAS } from './style';
 import { centerX, centerY, HEX_SIZE, isFar } from './grid';
 import { hexAt, neighbors, tileIndex } from '../hex';
-import { YIELD_FILL } from './yieldIcons';
+import { clusterShift, YIELD_FILL } from './yieldIcons';
 import type { Camera } from './render';
 
 const images = new Map<Wonder, HTMLImageElement>();
@@ -125,13 +125,25 @@ type Cover = { x: number; y: number; w: number; h: number };
 const overlaps = (a: Cover, b: Cover) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
 
 /**
- * The badge's centre y for a wonder hex centred at `x, cy` (screen px): the top of the hex; else a little higher (clear of
+ * The badge's centre for a wonder hex centred at `x, cy` (screen px): the top of the hex; else a little higher (clear of
  * a town beside it); else the bottom (left to the tile's yields while the Yields overlay is on); else its middle, so a banner or a neighbouring town never hides the bonus
- * altogether. Undefined when every slot is covered.
+ * altogether; slid sideways (at most a quarter of the radius `r`) off a cover it grazes. When every slot is covered, the least covered one.
  */
-export function wonderBadgeY(x: number, cy: number, L: BadgeLayout, yieldsOn: boolean, covers: readonly Cover[]): number | undefined {
+export function wonderBadgeAt(x: number, cy: number, r: number, L: BadgeLayout, yieldsOn: boolean, covers: readonly Cover[]): { x: number; y: number } | undefined {
   const slots = yieldsOn ? [L.dy, L.dy * 1.5, 0] : [L.dy, L.dy * 1.5, -L.dy, 0];
-  return slots.map((dy) => cy + dy).find((yy) => !covers.some((c) => overlaps(c, { x: x - L.width / 2, y: yy - L.height / 2, w: L.width, h: L.height })));
+  const area = (a: Cover, b: Cover) => Math.max(0, Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x)) * Math.max(0, Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y));
+  let best: { x: number; y: number; covered: number } | undefined;
+  for (const dy of slots) {
+    const y = cy + dy, top = y - L.height / 2;
+    // A pill grazing a town or banner beside it slides a little away, staying on its own hex.
+    const bx = x + clusterShift(x, top, L.width, L.height, r, covers);
+    const box = { x: bx - L.width / 2, y: top, w: L.width, h: L.height };
+    const covered = covers.reduce((sum, c) => sum + area(c, box), 0);
+    if (covered === 0) return { x: bx, y };
+    if (!best || covered < best.covered) best = { x: bx, y, covered };
+  }
+  // Zoomed out the pill is wider than its hex: it takes the least covered slot rather than vanish (the bonus stays visible).
+  return best && { x: best.x, y: best.y };
 }
 
 /**
@@ -161,9 +173,9 @@ export function drawWonderBadges(ctx: CanvasRenderingContext2D, view: PlayerView
       ctx.lineWidth = 1.2; ctx.strokeStyle = ATLAS.tone.vellum; ctx.stroke();
       continue;
     }
-    const y = wonderBadgeY(x, cy, L, yieldsOn, covers);
-    if (y === undefined) continue;
-    const left = x - L.width / 2, top = y - L.height / 2;
+    const at = wonderBadgeAt(x, cy, hexPx, L, yieldsOn, covers);
+    if (!at) continue;
+    const y = at.y, left = at.x - L.width / 2, top = y - L.height / 2;
     ctx.beginPath(); ctx.roundRect(left, top, L.width, L.height, L.height / 2);
     ctx.fillStyle = 'rgba(247, 241, 227, 0.95)'; ctx.fill();
     ctx.lineWidth = ATLAS.pen.thin; ctx.strokeStyle = '#564932'; ctx.stroke();
