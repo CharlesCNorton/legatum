@@ -150,3 +150,18 @@
   6. r12c move: frames 5-6 kick the trailing foot back high enough to show the pale sole (about 8 px). Darken the sole to sandal brown. The shield slides ~8 px left-right over the cycle; halve it.
   7. Fable B v4 death: the cloak fin left of the helmet in frames 6-9 is unchanged (x 68-92, y 185-215). Same fix as r12c item 1: flat by frame 7. The spear landing and frame timing are now right.
   8. r12a rest: spear shaft drawn black again in the CPU hybrid; confirm the GPU pass uses Fable A's wood (r11 GPU had it).
+- (Fable art director, 2026-11-24T05:02Z, on Fable B with A's look: spearman-fable-b-look-rest-compare.png, -look-clips-160.png, spearman-fable-b-look.mp4) Positions at 256 px in the painting's frame.
+  Correction to my last three blocks: the red shape left of the helmet in Fable B's final death frames is the helmet crest, not a cloak fin. With the look applied it reads correctly as the crest of a man lying face-down. Drop that fix (B v3 item 1, r12 block item 7). The cloak does lie flat.
+  This is now the best complete Spearman: rest IoU 0.935 (Astra r11 GPU 0.9275, r10 0.904). Both feet point toward camera, the left shin is within 2 px of the painting, the greave lobes are gone. All five clips read at 160 px, and the death holds up at 64.
+  Best per aspect: silhouette = Fable B (this build). Materials/values = Fable A's look as rendered in Astra r11 GPU (no foot slabs there). Death = Fable B. Move = Fable B or Astra r12c (tie). Hit = Astra r12c for the clean donor version, Fable B if hand-keyed is allowed; either is acceptable. Idle, attack = frozen.
+  Fixes, ranked:
+  1. Dark slabs under both feet (left x 82-104 / y 216-225, right x 147-168 / y 216-225): grey-brown plates wider than the feet, hard-edged, darkest thing on the base (base-top p10 luminance 130 vs 199). Astra r11 GPU with the same look had none, so this is the contact-shadow or sole setting on B's bigger feet. Limit it to the sole outline plus 2 px, warm brown at 40% strength, soft edge.
+  2. Feet still too light on top (luminance 162 vs 140) and the strap bands do not read. Three dark-brown bands per foot plus a dark sole line, as in the painting.
+  3. Cloak, spear side: lit folds too dark (p90 luminance 140 vs 150; mean 127,53,32 vs 133,62,36). Lift the lights ~8% and add a little yellow to the red.
+  4. Cloak hem behind the right leg (x 140-165, y 175-195): still one straight diagonal edge; painting hem is level at y ~190 with three 2-3 px scallops.
+  5. Base top is a shade orange: (230,194,149) with the slabs included; aim for (249,217,176) once the slabs are gone. Add the faint warm shadow behind the feet (x 110-170, y 216-224, 6-8% darker).
+  6. Spear arm: a small red-and-pale sliver shows under the hand at about (106,123). The painting has plain forearm skin there.
+  7. Death, frames 3-4 (movie, 160 px): when he drops to his knees the shield goes nearly flat, face-up, for one frame, and reads as a dish. Keep the face tilted at least 30 degrees toward camera through the drop.
+  8. Death, frame 1: spear still dead vertical and planted while the body recoils. Start the tip 5-8 degrees in that frame.
+  9. Move, frames 2 and 6: the lifted foot is fine now; the cloak on the spear side swings 6-7 px wider than at rest and back in one frame. Damp it to 3-4 px.
+  10. Hit, frame 2: head drops 14 px in one frame; halve it.
