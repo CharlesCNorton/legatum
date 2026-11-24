@@ -135,3 +135,18 @@
   4. Shield: about 5% smaller than the painting's; scale it up and darken the rim a touch.
   5. Helmet and crest: slightly narrower than the painting's; widen them a little.
   Then motion: Fable B's death and hit in round 12; check the walk at 160 px in motion. If round 12 reaches IoU >= 0.94 and blurred ΔE <= 6 with good clips, it is a possible candidate for Sam (the lead flags it to the reviewer).
+- (Fable art director, 2026-11-24T04:47Z, on Astra r12 lane previews spearman-r12c-death-256.png, -r12c-hit-256.png, -r12c-move-256.png, -r12a-256.png, -r12a-feet.png, and Fable B v4 strips + contact-160 rendered 04:46Z) Positions at 256 px. r12 lane images are CPU hybrid previews; I judge shape and motion only.
+  r12c closes most of the motion gap with donor motion. Best per aspect now:
+  - Hit: Astra r12c. Lean back with the shield drawn in, crest full height, cloak pinned, no lump. It is quieter than Fable B's but clean, and it stays inside the motion rule. Take it.
+  - Move: tie between Astra r12c and Fable B v4; both now show two separate legs in every frame. Prefer r12c since it is already in the Astra tree, unless its feet check fails.
+  - Death: Fable B v4 still wins on the ending (body on the base, shield on his back, spear level in front, all inside the frame). r12c is now a real forward collapse (no squat, no sitting, feet stay down) and is the best donor-based death so far, but frames 5-8 have the cloak standing up as a red tent 30-35 px above the body (x 100-150, y 150-200), and the final frame hides the helmet and shows a jumble of shield edge and cloak. If r12c's cloak is fixed (below), it is good enough to ship and the hand-keyed exception is not needed.
+  - Silhouette, materials/values: Astra r11 GPU rest with Fable A's look; r12a's wider feet are a small step toward the painting.
+  Fixes, ranked:
+  1. r12c death, frames 4-8: stop the cloak tenting. From frame 4 on, the cloak must lie on the back and never rise more than 6 px above the shoulder line. Raise cloth damping or pin the hem to the hips for this clip.
+  2. r12c death, frames 8-9 (final pose): the shield ends on edge, half under the body, face away from camera, and the head is hidden. The dead unit must still read as the Spearman at 64 px: end with the shield face toward camera (flat on the base beside him or on his back as in Fable B) and the helmet crest visible.
+  3. r12c death, frames 1-2: the spear tips to 20 degrees in frame 1 and is flat on the ground and 190 px long by frame 2. Use Fable B v4's timing: tip over frames 2-4, land level along the front of the base.
+  4. Feet (r12a-feet.png): better width, still too low. Painting feet are ~12 px tall at the instep with the ankle strap as the highest dark band; r12a's are ~8 px and wedge-shaped, and the left one still points left. Raise the instep 3-4 px, turn the left foot ~25 degrees to camera, and keep three dark strap bands readable at 256.
+  5. r12c hit: frames 1 and 2 are almost the same pose. Push frame 1 further (torso 4-5 degrees more back, shield 5 px closer to the chest) so the 4-frame clip has a visible peak at 160.
+  6. r12c move: frames 5-6 kick the trailing foot back high enough to show the pale sole (about 8 px). Darken the sole to sandal brown. The shield slides ~8 px left-right over the cycle; halve it.
+  7. Fable B v4 death: the cloak fin left of the helmet in frames 6-9 is unchanged (x 68-92, y 185-215). Same fix as r12c item 1: flat by frame 7. The spear landing and frame timing are now right.
+  8. r12a rest: spear shaft drawn black again in the CPU hybrid; confirm the GPU pass uses Fable A's wood (r11 GPU had it).
