@@ -151,3 +151,4 @@
 - R9a commit blocked by sandbox: .git/worktrees/lane-3/index.lock Operation not permitted. Four scoped repo files remain uncommitted for runner; exact message saved in spearman-r9a-commit-message.txt. No push/PR; origin/master comparison 17 ahead / 0 behind.
 
 - R9c CPU death strip available; review is provisional, Cycles CPU 256px/8 samples.
+- R9c atlas validator caught death frame 2 alpha at the left cell edge after retiming. Adjusting only the released spear's lateral mid-fall arc, keeping its final landing unchanged; rebaking/rerendering before validation. Git index.lock denied by sandbox; commit message saved for runner.
