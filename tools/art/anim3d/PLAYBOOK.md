@@ -116,7 +116,7 @@ Blender/Pillow environment. Read the Vehicles family chapter on
 its model, cockpit, hollow cowling, rotary engine, cambered wings, rib seams, struts,
 landing gear, propeller and cream support are original volumetric geometry. The
 painting's airborne display composition stays intact at rest. Only the base is
-stationary through every clip; the support is hidden during the crash.
+stationary through every clip; three capped support sections separate during the crash.
 
 ### Required finish method
 
@@ -288,3 +288,37 @@ Using original construction coordinates buried them in the cowling. The revised
 short solid amber bursts use keyed visibility and keep nonzero thickness.
 `gpu.sh` invalidates any old PASS when a new run starts; a successful GPU receipt
 still does not approve the art.
+
+### Driver round 3: clean stone and retained fracture geometry
+
+Read the incoming GPU receipt and open c/f, all five strips, and decoded MP4
+frames before editing. The round-two GPU pass succeeded (GPU512/64, 194,118
+bytes Q80); preserve its inputs, masters and reviews under `driver-r2-gpu`.
+
+The clean stone plate is a recorded ImageGen edit of the registered painting.
+`prepare.py` registers its opaque disc bounds, blends the original lower rim,
+and adds pigment beyond the image contour so the real bevel does not gain a
+dark transparency fringe. `paint.py` projects this pigment onto the closed disc
+and multiplies it by fresh short-distance AO from the actual support. The
+texture never determines geometry visibility. Native 256 CPU previews can
+look softer than the prior GPU512 images; do not claim them as GPU evidence.
+
+Apply the fin's registration to its rudder seam too: translating that seam
+separately left a visible spike above the fin. Visible radial engine cylinders
+and cooling fins now receive frozen camera pigment; unseen surfaces retain
+physical steel. Existing linen folds/ribs, beveled spars and generated hidden
+fills remain intact. No human straps or gait are introduced into a crewless plane.
+
+The curved support is bisected into three closed, capped sections **before**
+projection. At rest their fracture boundaries coincide and preserve the source
+silhouette. During death each section rotates and translates to a separate
+rest position on the disc, with floor/disc clearance. Never delete the support
+at frame three, collapse its scale, or let a full-length fallen piece stick out
+like a horn. Audit closed positive-volume sections and visibility at all forty
+samples, alongside stationary base, camera bounds and held terminal wreck.
+These checks do not establish absence of every possible mesh intersection.
+
+`ROUND=3 tools/art/anim3d/units/biplane/gpu.sh` is the complete lead pass. Its
+default round is now 3, and its receipt includes input asset hashes and the
+build manifest as well as delivery/video/geometry results. It still never
+writes PASS automatically. New GPU visual review is required before approval.

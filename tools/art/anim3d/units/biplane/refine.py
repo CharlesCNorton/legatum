@@ -70,6 +70,7 @@ body = bpy.data.objects['GEO-tapered-fuselage']
 body_fit = bound_map(bounds(body), [54, 70, 223, 124])
 cowl = bpy.data.objects['GEO-engine-cowling']
 cowl_fit = bound_map(bounds(cowl), [39, 69, 83, 124])
+fin_fit = bound_map(bounds(bpy.data.objects['GEO-vertical-tail']), [196, 45, 232, 82])
 
 # Register each actual strut attachment, including its two solid brass shoes.
 # The source has four interplane struts. Earlier construction accidentally made
@@ -116,8 +117,8 @@ for o in list(sc.objects):
     elif name.startswith(('GEO-tapered-fuselage', 'GEO-fuselage-panel-seam', 'GEO-rivet', 'GEO-seat-', 'GEO-cockpit-coaming', 'GEO-synchronized-gun')):
         edit(o, body_fit)
     elif name == 'GEO-horizontal-tail': edit(o, bound_map(before, [175, 60, 244, 94]))
-    elif name == 'GEO-vertical-tail': edit(o, bound_map(before, [196, 45, 232, 82]))
-    elif name.startswith('GEO-rudder-seam'): edit(o, lambda w,p: offset(w,5,-3))
+    elif name == 'GEO-vertical-tail': edit(o, fin_fit)
+    elif name.startswith('GEO-rudder-seam'): edit(o, fin_fit)
     # Wheels are already close: preserve true circular wheel geometry/axles.
     after = bounds(o)
     if any(abs(a-b)>.01 for a,b in zip(before,after)):
@@ -174,11 +175,30 @@ for polygon in me.polygons: polygon.use_smooth=True
 bpy.context.view_layer.objects.active=support
 be=support.modifiers.new('Rounded stone edge','BEVEL');be.width=.012;be.segments=3
 bpy.ops.object.modifier_apply(modifier=be.name)
+# Three closed stone sections coincide at their fracture faces at rest. They can
+# break and settle as actual solid pieces, without deleting or shrinking geometry.
+original=support.data.copy()
+for index,(bottom,top) in enumerate(((0,.62),(.62,1.10),(1.10,2))):
+ bm=bmesh.new();bm.from_mesh(original)
+ for height,inner in ((bottom,True),(top,False)):
+  bmesh.ops.bisect_plane(bm,geom=list(bm.verts)+list(bm.edges)+list(bm.faces),dist=1e-6,
+                        plane_co=(0,0,height),plane_no=(0,0,1),
+                        clear_inner=inner,clear_outer=not inner)
+  edges=[e for e in bm.edges if e.is_boundary]
+  if edges:bmesh.ops.holes_fill(bm,edges=edges,sides=0)
+ bmesh.ops.recalc_face_normals(bm,faces=list(bm.faces))
+ data=bpy.data.meshes.new('Solid stone fracture section');bm.to_mesh(data);bm.free()
+ data.materials.append(original.materials[0])
+ if index==0:support.data=data;piece=support
+ else:
+  piece=bpy.data.objects.new('GEO-curved-display-support',data);sc.collection.objects.link(piece)
+ piece['stone_section']=index
+bpy.data.meshes.remove(original)
 # One stationary round disc. Translate on the ground, retaining its horizontal
 # plane, rather than fitting its ellipse with a flattened screen-space transform.
 base=bpy.data.objects['GEO-cream-stone-base']
-base.location += forward*(3.5*unit / up.dot(forward))
-base.scale.x=base.scale.y=.985
+base.location += forward*(5.0*unit / up.dot(forward)) - right*(2*unit)
+base.scale.x=base.scale.y=.965
 
 # Standard preserves the painting's display pigment; product lights are reduced
 # because the painted layer already encodes illumination. Physical backs remain lit.

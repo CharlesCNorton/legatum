@@ -37,7 +37,13 @@ The date range is the range of dates the repository's own records give (prompt h
 - No prompt is stored for the map improvements, the six original resource medallions, the aircraft plan sprites or the parchment texture.
 - Where a set was generated from one shared prompt (terrain, city sets, camps and ruins), there is one prompt for the set, not one per file.
 
-### Animated biplane candidate (round 1)
+### Animated biplane candidate (round 3)
+
+Round 3 adds a project CC BY 4.0 generated clean stone fill (built-in ImageGen
+`01a20adc-a7b3-7521-9922-f659076c42db/exec-b4668c7a-9f99-4e2f-bcd7-31280f42ea1f.png`),
+registered onto solid geometry. Exact prompt and hash: `tools/art/anim3d/units/biplane/stone-fill.prompt.txt`
+and `stone-fill.json`. No third-party model or animation asset was added.
+
 
 `units/anim/biplane.webp` and `.json`: original true-3D Blender geometry, mechanical
 rig and authored clips in `tools/art/anim3d/units/biplane/` (MIT scripts; rendered art

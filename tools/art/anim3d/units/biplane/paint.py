@@ -58,7 +58,7 @@ for obj in sc.objects:
 visibility=BVHTree.FromPolygons(verts,faces,all_triangles=False)
 for o in list(sc.objects):
  if o.type!='MESH' or not o.name.startswith('GEO-'):continue
- if o.name.startswith(('GEO-rivet','GEO-cooling-fin','GEO-radial-cylinder','GEO-wheel-brass-hub','GEO-laminated-propeller','GEO-propeller-boss','GEO-cream-stone-base')):continue
+ if o.name.startswith(('GEO-rivet','GEO-wheel-brass-hub','GEO-laminated-propeller','GEO-propeller-boss','GEO-cream-stone-base')):continue
  me=o.data;uv=me.uv_layers.new(name='PaintingProjection');wt=me.color_attributes.new(name='PaintConfidence',type='FLOAT_COLOR',domain='CORNER');nm=o.matrix_world.to_3x3().inverted().transposed()
  sampled=[]
  for v in me.vertices:
@@ -89,50 +89,27 @@ for o in list(sc.objects):
  blend=n.new('ShaderNodeMixShader');l.new(fac.outputs[0],blend.inputs[0])
  l.new(s.outputs[0],blend.inputs[1]);l.new(pigment.outputs[0],blend.inputs[2]);l.new(blend.outputs[0],out.inputs['Surface'])
  records.append({'mesh':o.name,'projection':'frozen camera UV','hidden':'painted generated box fill or original material','visibility':'normal and scene ray cast'})
-# Static stone keeps physical cream shading with a restrained camera pigment
-# lift; never put a static painting of the moving support on the disc.
+# Clean generated stone top and original rim on the real horizontal disc.
+# Fresh AO follows the physical support; no painted contact shadow can remain.
 base=bpy.data.objects['GEO-cream-stone-base'];ma=base.data.materials[0].copy();base.data.materials[0]=ma
 n=ma.node_tree.nodes;l=ma.node_tree.links;s=n.get('Principled BSDF');out=n.get('Material Output')
-pigment=n.new('ShaderNodeBsdfPrincipled');pigment.inputs['Base Color'].default_value=(0,0,0,1)
-pigment.inputs['Emission Strength'].default_value=1
-geo=n.new('ShaderNodeNewGeometry');separate=n.new('ShaderNodeSeparateXYZ');l.new(geo.outputs['Normal'],separate.inputs[0])
-ramp=n.new('ShaderNodeValToRGB')
-def linear(c):return ((c/255+.055)/1.055)**2.4
-ramp.color_ramp.elements[0].position=0;ramp.color_ramp.elements[0].color=tuple(linear(c) for c in (218,177,132))+(1,)
-ramp.color_ramp.elements[1].position=.8;ramp.color_ramp.elements[1].color=tuple(linear(c) for c in (249,218,178))+(1,)
-l.new(separate.outputs['Z'],ramp.inputs[0])
-# Stone pigment needs visible fine grain and a broad brushed wash. Keep them in
-# object coordinates: the disc never inherits an image of the moving support.
-coord=n.new('ShaderNodeTexCoord')
-coarse=n.new('ShaderNodeTexNoise');coarse.inputs['Scale'].default_value=5
-fine=n.new('ShaderNodeTexNoise');fine.inputs['Scale'].default_value=175
-for noise in (coarse,fine):l.new(coord.outputs['Generated'],noise.inputs['Vector'])
-variation=n.new('ShaderNodeMixRGB');variation.blend_type='MULTIPLY';variation.inputs[0].default_value=.28
-l.new(coarse.outputs['Fac'],variation.inputs[1]);l.new(fine.outputs['Fac'],variation.inputs[2])
-grain=n.new('ShaderNodeMapRange');grain.inputs['To Min'].default_value=.82;grain.inputs['To Max'].default_value=1.08
-l.new(variation.outputs[0],grain.inputs['Value'])
-colour=n.new('ShaderNodeMixRGB');colour.blend_type='MULTIPLY';colour.inputs[0].default_value=1
-l.new(ramp.outputs['Color'],colour.inputs[1]);l.new(grain.outputs[0],colour.inputs[2])
-# Recover the painting's actual lower-disc brushwork on the real stone mesh.
-# Exclude the central support/contact region so it cannot become a painted ghost
-# when the aircraft falls. Feather into the object-space grain there.
 uv=base.data.uv_layers.new(name='PaintingProjection')
 for loop in base.data.loops:
  p=world_to_camera_view(sc,sc.camera,base.matrix_world@base.data.vertices[loop.vertex_index].co)
  uv.data[loop.index].uv=(p.x,p.y)
 co=n.new('ShaderNodeUVMap');co.uv_map='PaintingProjection'
-tx=n.new('ShaderNodeTexImage');tx.image=tex;tx.extension='CLIP';l.new(co.outputs[0],tx.inputs[0])
-xy=n.new('ShaderNodeSeparateXYZ');l.new(co.outputs[0],xy.inputs[0])
-low=n.new('ShaderNodeMapRange');low.clamp=True
-low.inputs['From Min'].default_value=1-212/256;low.inputs['From Max'].default_value=1-218/256
-l.new(xy.outputs['Y'],low.inputs['Value'])
-mask=n.new('ShaderNodeMath');mask.operation='MULTIPLY'
-l.new(low.outputs[0],mask.inputs[0]);l.new(tx.outputs['Alpha'],mask.inputs[1])
-paint=n.new('ShaderNodeMixRGB');l.new(mask.outputs[0],paint.inputs[0])
-l.new(colour.outputs[0],paint.inputs[1]);l.new(tx.outputs['Color'],paint.inputs[2])
-l.new(paint.outputs[0],pigment.inputs['Emission Color'])
-pigment.inputs['Specular IOR Level'].default_value=0
-ray=n.new('ShaderNodeLightPath');ray.name='Camera-only paint';fac=n.new('ShaderNodeMath');fac.operation='MULTIPLY';fac.inputs[1].default_value=.90;l.new(ray.outputs['Is Camera Ray'],fac.inputs[0])
+tx=n.new('ShaderNodeTexImage');tx.image=bpy.data.images.load(str(A/'stone-projection.png'));tx.extension='EXTEND';l.new(co.outputs[0],tx.inputs[0])
+# Outside the registered plate keep physical stone, never clip the mesh by alpha.
+pigment=n.new('ShaderNodeBsdfPrincipled');pigment.inputs['Base Color'].default_value=(0,0,0,1)
+pigment.inputs['Emission Strength'].default_value=1;pigment.inputs['Specular IOR Level'].default_value=0
+occlusion=n.new('ShaderNodeAmbientOcclusion');occlusion.inputs['Distance'].default_value=.18
+shade=n.new('ShaderNodeMapRange');shade.inputs['To Min'].default_value=.72;shade.inputs['To Max'].default_value=1
+l.new(occlusion.outputs['AO'],shade.inputs['Value'])
+colour=n.new('ShaderNodeMixRGB');colour.blend_type='MULTIPLY';colour.inputs[0].default_value=1
+l.new(tx.outputs['Color'],colour.inputs[1]);l.new(shade.outputs[0],colour.inputs[2]);l.new(colour.outputs[0],pigment.inputs['Emission Color'])
+ray=n.new('ShaderNodeLightPath');ray.name='Camera-only paint'
+mask=n.new('ShaderNodeMath');mask.operation='MULTIPLY';l.new(tx.outputs['Alpha'],mask.inputs[0]);l.new(ray.outputs['Is Camera Ray'],mask.inputs[1])
+fac=n.new('ShaderNodeMath');fac.operation='MULTIPLY';fac.inputs[1].default_value=.96;l.new(mask.outputs[0],fac.inputs[0])
 blend=n.new('ShaderNodeMixShader');l.new(fac.outputs[0],blend.inputs[0]);l.new(s.outputs[0],blend.inputs[1]);l.new(pigment.outputs[0],blend.inputs[2]);l.new(blend.outputs[0],out.inputs['Surface'])
 bpy.ops.file.pack_all();bpy.ops.wm.save_as_mainfile(filepath=str(M/'biplane.blend'));(T/'paint.json').write_text(json.dumps(records,indent=2));print('PAINTED',len(records))
 

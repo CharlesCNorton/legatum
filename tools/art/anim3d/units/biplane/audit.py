@@ -1,5 +1,5 @@
 """Verify finished projection, mechanical orientation, bounds and held wreck."""
-import bpy, os, json, hashlib
+import bpy, bmesh, os, json, hashlib
 from pathlib import Path
 from mathutils import Vector
 from bpy_extras.object_utils import world_to_camera_view
@@ -22,6 +22,13 @@ for o in sc.objects:
 assert max_uv<1e-5,('UV registration moved',max_uv)
 # All generated/full-fill materials and original painting remain packed.
 assert any(im.name.startswith('projection') and im.packed_file for im in bpy.data.images)
+stone=[o for o in sc.objects if 'stone_section' in o]
+assert len(stone)==3,'Expected three retained solid stone sections'
+for o in stone:
+ bm=bmesh.new();bm.from_mesh(o.data)
+ assert all(e.is_manifold for e in bm.edges),('open fracture surface',o.name)
+ assert abs(bm.calc_volume())>.0001,('zero-volume support',o.name)
+ bm.free()
 base0=None;report={'projection':{'meshes':projected,'max_pixel_error':max_uv*256},'clips':{}}
 for clip,count in [('idle',8),('move',8),('attack',10),('hit',4),('death',10)]:
  bpy.ops.wm.open_mainfile(filepath=str(M/(clip+'.blend')));sc=bpy.context.scene
@@ -32,6 +39,7 @@ for clip,count in [('idle',8),('move',8),('attack',10),('hit',4),('death',10)]:
  for f in range(1,sc.frame_end+1):
   sc.frame_set(f);bpy.context.view_layer.update();deps=bpy.context.evaluated_depsgraph_get();pts=[];zs=[]
   b=tuple(tuple(r) for r in base.matrix_world)
+  assert all(not o.hide_render for o in sc.objects if 'stone_section' in o),'support disappeared'
   if base0 is None:base0=b
   assert base0==b,'base moved'
   forward=(bpy.data.objects['RIG-flight'].matrix_world.to_3x3()@Vector((1,0,0))).normalized()
@@ -51,6 +59,6 @@ for clip,count in [('idle',8),('move',8),('attack',10),('hit',4),('death',10)]:
   if clip=='death' and f>=count-1:
    terminal.append([(o.name,tuple(round(v,6) for row in o.matrix_world for v in row),o.hide_render) for o in sc.objects])
  if clip=='death':assert terminal[0]==terminal[1],'wreck must hold'
- report['clips'][clip]={'min_xy':mins,'max_xy':maxs,'min_z':floor,'stationary_base':True,'wheel_axis_aligned':True}
+ report['clips'][clip]={'min_xy':mins,'max_xy':maxs,'min_z':floor,'stationary_base':True,'wheel_axis_aligned':True,'three_solid_support_sections_visible':True}
 (M/'geometry-audit.json').write_text(json.dumps(report,indent=2))
-print('PASS: finished UVs/camera-only pigment, four distinct struts, 40 bounded poses, aligned airborne wheels, stationary base and held wreck')
+print('PASS: finished UVs/camera-only pigment, four distinct struts, 40 bounded poses, aligned airborne wheels, three closed visible support sections, stationary base and held wreck')

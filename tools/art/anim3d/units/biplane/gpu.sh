@@ -4,7 +4,7 @@ set -euo pipefail
 cd "$(dirname "$0")/../../../../.."
 source tools/art/anim3d/env.sh
 UNIT=tools/art/anim3d/units/biplane
-export ROUND="${ROUND:-2}" CYCLES_DEVICE=GPU RESOLUTION=512 SAMPLES="${SAMPLES:-64}" REQUIRE_GPU=1
+export ROUND="${ROUND:-3}" CYCLES_DEVICE=GPU RESOLUTION=512 SAMPLES="${SAMPLES:-64}" REQUIRE_GPU=1
 PY="$ANIM_ROOT/venv/bin/python"
 STATUS="$ANIM_ROOT/review/3d-v2/biplane-gpu-status.txt"
 RECEIPT="$ANIM_ROOT/review/3d-v2/biplane-gpu-round${ROUND}.json"
@@ -42,6 +42,8 @@ import json,os,hashlib
 from pathlib import Path
 r=Path(os.environ['ANIM_ROOT']);m=r/'masters/biplane'
 record={'round':os.environ['ROUND'],'gpu_stages_verified':True,'visual_approval':False,
+        'input_assets':json.loads((m/'inputs.json').read_text()),
+        'build_inputs':json.loads((m/'build-inputs.json').read_text()),
         'master_sha256':hashlib.sha256((m/'biplane.blend').read_bytes()).hexdigest(),
         'delivery':json.loads((m/'validation.json').read_text()),
         'video':json.loads((m/'video-validation.json').read_text()),

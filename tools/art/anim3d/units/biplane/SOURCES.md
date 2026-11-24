@@ -16,3 +16,11 @@
 Round 2 adds no download, model or image-generation call. External `inputs.json`
 pins every painting/fill PNG by SHA256; `build-inputs.json` pins geometry/paint scripts
 and the saved master. Full asset ledger: `~/LegatumRuns/anim-pilot/assets/SOURCES.md`.
+
+Round 3 adds an original built-in ImageGen clean stone occlusion fill, project
+CC BY 4.0, generation `01a20adc-a7b3-7521-9922-f659076c42db/exec-b4668c7a-9f99-4e2f-bcd7-31280f42ea1f.png`
+(no public URL). External `assets/biplane/stone-fill-source.png`; exact prompt in
+`stone-fill.prompt.txt`, source hash in `stone-fill.json`. The generated clean top
+is registered to the existing painting and blended into its original rim as pigment
+on the actual beveled disc. Live AO follows the falling full-depth support.
+Existing painting and generated linen/olive/wood/rubber fills remain unchanged.

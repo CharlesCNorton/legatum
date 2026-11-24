@@ -1,7 +1,7 @@
 """Authored rigid aircraft clips; the stationary base never follows the flight rig."""
 import bpy,math,os,json,hashlib
 from pathlib import Path
-from mathutils import Vector
+from mathutils import Vector, Matrix
 R=Path(os.environ['ANIM_ROOT']);M=R/'masters/biplane';src=M/'biplane.blend';source_hash=hashlib.sha256(src.read_bytes()).hexdigest()
 clips={'idle':(8,10,True),'move':(8,12,True),'attack':(10,14,False),'hit':(4,12,False),'death':(10,10,False)}
 requested=os.environ.get('CLIP')
@@ -9,6 +9,31 @@ if requested and requested not in clips:raise ValueError('Unknown CLIP: '+reques
 for clip,(count,fps,loop) in clips.items():
  if requested and clip!=requested:continue
  bpy.ops.wm.open_mainfile(filepath=str(src));sc=bpy.context.scene;root=bpy.data.objects['RIG-flight'];prop=bpy.data.objects['RIG-propeller'];rest=root.location.copy();rot=root.rotation_euler.copy();support=bpy.data.objects['GEO-curved-display-support'];flash=[]
+ # Full-depth stone fractures fall separately and settle on the base. Sections
+ # share their exact rest boundary, with capped faces and frozen surface pigment.
+ bpy.context.view_layer.update()
+ supports=sorted((o for o in sc.objects if 'stone_section' in o),key=lambda o:o['stone_section'])
+ support_rests={o.name:o.matrix_world.copy() for o in supports}
+ pivots={o.name:sum((o.matrix_world@v.co for v in o.data.vertices),Vector())/len(o.data.vertices) for o in supports}
+ fall_axis=sc.camera.matrix_world.to_3x3()@Vector((0,0,1))
+ fall_axis.z=0;fall_axis.normalize()
+ right=sc.camera.matrix_world.to_3x3()@Vector((1,0,0))
+ base=bpy.data.objects['GEO-cream-stone-base'];base_inverse=base.matrix_world.inverted()
+ def falling_support(progress):
+  for o in supports:
+   index=o['stone_section'];pivot=pivots[o.name]
+   target=base.matrix_world.translation+right*[-.12,.20,.07][index]+fall_axis*[-.06,-.12,.24][index]
+   target.z=[.28,.24,.20][index]
+   rotation=Matrix.Rotation(math.radians([-92,88,-86][index])*progress,4,fall_axis)
+   centre=pivot.lerp(target,progress)
+   transform=Matrix.Translation(centre)@rotation@Matrix.Translation(-pivot)@support_rests[o.name]
+   lift=0
+   for v in o.data.vertices:
+    world=transform@v.co;local=base_inverse@world
+    surface=.13 if local.x**2+local.y**2<.68**2 else 0
+    lift=max(lift,surface-world.z)
+   transform.translation.z+=lift
+   o.matrix_world=transform
  # Brief 3D muzzle streaks, never volume meshes or zero-scale hide tricks.
  # Position bursts from the finished barrel endpoints, not the pre-registration
  # coordinates: the old flashes sat inside the cowling after silhouette fitting.
@@ -33,7 +58,8 @@ for clip,(count,fps,loop) in clips.items():
  # A broken upper wing pivots at the center on impact, rather than a generic fade.
  wing=bpy.data.objects['GEO-upper-cambered-wing'];wing_rest=wing.rotation_euler.copy()
  for i in range(count+(1 if loop else 0)):
-  f=i+1;t=i/count;phase=math.tau*t;root.location=rest;root.rotation_euler=rot;prop.rotation_euler.x=i*2.13;wing.rotation_euler=wing_rest;support.hide_render=False
+  f=i+1;t=i/count;phase=math.tau*t;root.location=rest;root.rotation_euler=rot;prop.rotation_euler.x=i*2.13;wing.rotation_euler=wing_rest
+  for o in supports:o.hide_render=False;o.matrix_world=support_rests[o.name]
   if clip=='idle':root.location.z+=.025*math.sin(phase);root.rotation_euler.x+=.025*math.sin(phase)
   elif clip=='move':root.location.x+=.035*(1+math.sin(phase));root.location.z+=.04*math.sin(phase);root.rotation_euler.x+=.055*math.sin(phase);root.rotation_euler.y+=.025*math.cos(phase);prop.rotation_euler.x=i*2.8
   elif clip=='attack':
@@ -45,10 +71,10 @@ for clip,(count,fps,loop) in clips.items():
    k=min(1,i/6);ease=k*k;root.location.z-=.54*ease;root.location.x+=.36*ease;root.rotation_euler.y-=.5*ease;root.rotation_euler.x+=.11*ease
    root.location -= (sc.camera.matrix_world.to_3x3()@Vector((1,0,0)))*(.14*ease)
    if i>=5:wing.rotation_euler.x+=.14*min(1,(i-4)/3)
-   support.hide_render=i>=2;prop.rotation_euler.x=i*2.13 if i<5 else -1.0
+   falling_support(min(1,max(0,(i-1)/6))**1.5);prop.rotation_euler.x=i*2.13 if i<5 else -1.0
   for o in flash:o.hide_render=not(clip=='attack' and i in [3,5]);o.keyframe_insert('hide_render',frame=f)
-  support.keyframe_insert('hide_render',frame=f)
-  for o in [root,prop,wing]:
+  for o in supports:o.keyframe_insert('hide_render',frame=f)
+  for o in [root,prop,wing]+supports:
    o.keyframe_insert('location',frame=f);o.keyframe_insert('rotation_euler',frame=f)
  # Loop propeller at a multiple of pi (two visually identical blades).
  if loop:
