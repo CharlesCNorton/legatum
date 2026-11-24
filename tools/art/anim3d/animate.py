@@ -8,7 +8,8 @@ sys.path.insert(0,str(Path(__file__).parent/'infantry'))
 sys.path.insert(0,str(Path(__file__).parent/'units/spearman'))
 from retarget import prepare, apply_matrices, contact_ik
 from contact import sole_points
-from motion import attack_channels, source_phase, EquipmentResponse, ShieldContact
+from motion import attack_channels, source_phase, EquipmentResponse
+import collapse
 root=Path(os.environ['ANIM_ROOT']);M=root/'masters/spearman-3d-v2';A=root/'assets'
 CLIPS={'idle':(8,4),'move':(8,6),'attack':(10,14),'hit':(4,12),'death':(10,4)}
 
@@ -46,9 +47,8 @@ if clip=='death':
  cloak=bpy.data.objects['Cloak • simulated wool'];pins=cloak.vertex_groups['Shoulder pins']
  for v in cloak.data.vertices:
   for g in v.groups:
-   if g.group==pins.index and g.weight<.99:pins.add([v.index],g.weight*.35,'REPLACE')
- cloth.settings.bending_stiffness=.8
- cloth.settings.air_damping=4
+   if g.group==pins.index and g.weight<.99:pins.add([v.index],g.weight*.15,'REPLACE')
+ cloth.settings.bending_stiffness=.4
  bpy.ops.mesh.primitive_cube_add(size=1,location=(0,0,-.02))
  ground=bpy.context.object;ground.name='Death ground cloth collider';ground.scale=(6,6,.04)
  bpy.ops.object.transform_apply(location=False,rotation=False,scale=True)
@@ -58,6 +58,7 @@ if clip=='death':
 for p in rig.pose.bones:p.rotation_mode='QUATERNION'
 def reset():
  rig.location=base_loc
+ if clip=='death':rig.rotation_mode='QUATERNION';rig.rotation_quaternion=(1,0,0,0)
  if shield:shield.matrix_basis=shield_neutral
  for o in spear_objects:o.matrix_basis=spear_neutral[o.name]
  for p in rig.pose.bones:p.matrix_basis=Matrix(neutral[p.name])
@@ -78,16 +79,17 @@ def hand_spear(direction):
  rot=q.to_matrix().to_4x4();pos=reset_mat.translation.copy();mat=rot @ reset_mat;mat.translation=pos;p.matrix=mat;bpy.context.view_layer.update()
 def pose(t):
  reset()
- if clip in ['idle','move','hit','death']:
+ if clip=='death':
+  if t>0:collapse.apply(t,rig,neutral_world,limb,turn)
+ elif clip in ['idle','move','hit']:
   motion=retarget_frames[active_frame-1]
   rig.location=base_loc+motion['root']
   apply_matrices(rig,motion['matrices'])
-  if clip=='death':
-   # Register the donor's floor-length fall across the miniature's stone.
-   # Keep source joint rotations and entry pose; avoid landing behind the disc.
-   settle=max(0.,min(1.,(t-.25)/.30));settle=settle*settle*(3-2*settle)
-   rig.location.y-=.40*settle
-  if clip=='move':contact_ik(rig,motion['foot_corrections'])
+  if clip=='move':
+   # Constant stance registration, separate from the measured slip correction.
+   # Native IK retains the donor's world foot rotations.
+   from motion import walk_offsets
+   contact_ik(rig,walk_offsets(motion['foot_corrections']))
   bpy.context.view_layer.update()
  elif clip=='attack':
   # Raise outside the right shoulder, then drive forward above the shield rim.
@@ -121,7 +123,7 @@ def pose(t):
  if clip=='death':
   # Let go before the body rolls across the shaft. The rigid weapon lands across
   # the front edge of the stone; it is never hidden or teleported out of frame.
-  release=max(0,min(1,t/.44))
+  release=max(0,min(1,t/.56))
   if release>0:
    for o in spear_objects:o.matrix_world=spear_world[o.name]
    bpy.context.view_layer.update()
@@ -131,18 +133,20 @@ def pose(t):
   # Clear the shield in depth while upright, tip forward, then settle inward
   # only after the shaft is horizontal and below the shield's lower edge.
   depth=min(1,release/.20);depth=depth*depth*(3-2*depth)
-  tilt=max(0,min(1,(release-.20)/.55));tilt=tilt*tilt*(3-2*tilt)
-  rotation=Quaternion().slerp(direction.rotation_difference(Vector((.99,.08,.015)).normalized()),tilt)
-  target=center.lerp(Vector((-.05,-.57,.13)),release)
+  tilt=max(0,min(1,(release-.02)/.73));tilt=tilt*tilt*(3-2*tilt)
+  rotation=Quaternion().slerp(direction.rotation_difference(Vector((.995,-.10,.0)).normalized()),tilt)
+  target=center.lerp(Vector((-.30,-.60,.075)),release)
   # Keep a real pixel margin while the retimed fall crosses the horizontal
   # weapon pose; the endpoint and held landing stay exactly where authored.
   target.x+=.02*math.sin(math.pi*release)
   target.x+=.12*tilt
-  target.y=center.y+(-.95-center.y)*depth
-  if release>.80:target.y=-.95+.38*(release-.80)/.20
+  target.y=center.y+(-.82-center.y)*depth
+  if release>.80:target.y=-.82+.22*(release-.80)/.20
   drop=min(1,release/.75)
-  target.z=center.z*(1-drop)+.13*drop
-  if release>0:target.z=max(target.z,.11+(end-start).length*.5*abs((rotation @ direction).z))
+  target.z=center.z*(1-drop)+.075*drop
+  # Over the stone the low end rides its top; past the front edge it drops to the ground.
+  off=max(0,min(1,(-.40-target.y)/.20));rest_z=.13-.055*off*off*(3-2*off)
+  if release>0:target.z=max(target.z,rest_z+(end-start).length*.5*abs((rotation @ direction).z))
   transform=Matrix.Translation(target) @ rotation.to_matrix().to_4x4() @ Matrix.Translation(-center)
   for o in spear_objects:o.matrix_world=transform @ o.matrix_world
   for digit in ['index','middle','ring','pinky']:
@@ -155,9 +159,10 @@ end=25+round(count*24/fps) if clip in ['idle','move'] else samples[-1]
 sc.frame_start=1;sc.frame_end=end;sc.render.fps=24
 phases=[max(0,(f-25))/(count*24/fps) if clip in ['idle','move']
         else max(0,min(1,(f-25)/max(1,end-25))) for f in range(1,end+1)]
-retarget_frames,motion_source=prepare(rig,root,clip,phases) if clip!='attack' else (None,{'provider':'Original weapon-specific hand keys, rebased on Quaternius idle reference'})
+if clip=='death':retarget_frames,motion_source=None,{'provider':'Authored weighted collapse (Fable B, accepted 2026-11-24)','keys':len(collapse.KEYS)}
+elif clip=='attack':retarget_frames,motion_source=None,{'provider':'Original weapon-specific hand keys, rebased on Quaternius idle reference'}
+else:retarget_frames,motion_source=prepare(rig,root,clip,phases)
 response=EquipmentResponse(rig,shield,clip)
-shield_contact=ShieldContact(rig,shield) if clip=='death' and shield else None
 # A single complete source cycle, sampled before its duplicate endpoint.
 
 for f in range(1,end+1):
@@ -167,7 +172,7 @@ for f in range(1,end+1):
  # Loop clips sample before the duplicate final phase.
  if clip in ['idle','move']:t=max(0,(f-25))/(count*24/fps)
  active_frame=f
- equipment_phase=source_phase('death',t) if clip=='death' else t
+ equipment_phase=t
  pose(equipment_phase)
  # Resolve the actual finished sandal underside against the real stone top.
  # Small foot-bone translations preserve the keyed action and live skinning;
@@ -177,23 +182,32 @@ for f in range(1,end+1):
   floor=max((base.matrix_world @ v.co).z for v in base.data.vertices)
   if clip=='move':
    flags=motion_source['contact']['planted'].get(str(f),{})
-   support=next((s for s in ['l','r'] if flags.get(s)),None)
-   if support:
-    sole=bpy.data.objects['Leather sandal sole '+support]
-    lowest=min(v.z for v in sole_points(support))
-    correction=floor+.001-lowest
+   # Each planted sole meets the stone. The root follows the planted foot that
+   # needs the lowest pelvis; any other foot (second support, or a swing toe
+   # that would dip into the stone) is raised by leg IK with its source roll.
+   # No rigid ankle translation and no error left on the second support.
+   need={side:floor+.001-min(v.z for v in sole_points(side)) for side in ['l','r']}
+   planted=[side for side in ['l','r'] if flags.get(side)]
+   if planted:
+    correction=min(need[side] for side in planted)
     assert abs(correction)<.04, f'Large contact height correction: {correction}'
     rig.location.z+=correction
     bpy.context.view_layer.update()
+    raise_by={side:Vector((0,0,need[side]-correction if side in planted else max(0,need[side]-correction))) for side in ['l','r']}
+    raise_by={side:v for side,v in raise_by.items() if v.z>1e-5}
+    if raise_by:
+     motion_source['max_ik_sole_raise_m']=max(motion_source.get('max_ik_sole_raise_m',0),max(v.z for v in raise_by.values()))
+     contact_ik(rig,raise_by)
   base_inverse=base.matrix_world.inverted()
   base_radius=max((v.co.x*v.co.x+v.co.y*v.co.y)**.5 for v in base.data.vertices)-.015
   if clip=='death':
    # The open clip falls onto a flat floor. Fit its root to the actual raised
    # stone and thick armour, preserving every retargeted joint rotation.
    released={o:o.matrix_world.copy() for o in spear_objects}
-   dg=bpy.context.evaluated_depsgraph_get();lift=0
-   for ob in (sc.objects if t>.30 else []):
-    if ob.type!='MESH' or ob.hide_render or ob==base or ob.name.startswith(('Cloak •','Aspis','Sunburst','Convex bronze aspis','Shield','Leather shield')):continue
+   dg=bpy.context.evaluated_depsgraph_get();lift=0;culprit=''
+   feet_zones=[(rig.matrix_world @ rig.pose.bones[n+side].head,r) for side in 'lr' for n,r in [('ball_',.17),('foot_',.12)]]
+   for ob in (sc.objects if t>0 else []):
+    if ob.type!='MESH' or ob.hide_render or ob==base or ob.name.startswith(('Cloak •','Aspis','Sunburst','Convex bronze aspis','Shield','Leather shield','Leather sandal','Sandal strap')):continue
     if ob in spear_objects:continue
     # Only rig-carried body/clothes/armour; released equipment has its own solve.
     parent=ob.parent
@@ -201,9 +215,12 @@ for f in range(1,end+1):
     ev=ob.evaluated_get(dg);me=ev.to_mesh()
     for v in me.vertices:
      w=ob.matrix_world @ v.co;local=base_inverse @ w
+     # Feet are solved separately below (sole, straps and their own pitch).
+     if any((w-c).length<r for c,r in feet_zones):continue
      plane=floor+.005 if local.x*local.x+local.y*local.y<base_radius**2 else .012
-     lift=max(lift,plane-w.z)
+     if plane-w.z>lift:lift=plane-w.z;culprit=ob.name+' at '+str([round(c,2) for c in w])+' groups '+str([ob.vertex_groups[g.group].name for g in ob.data.vertices[v.index].groups if g.weight>.3] if len(ob.data.vertices)==len(me.vertices) else '')
     ev.to_mesh_clear()
+   if f in samples:print('DEATH_LIFT',f,round(lift,3),culprit if lift>0 else '',flush=True)
    if lift>0:
     rig.location.z+=lift;bpy.context.view_layer.update()
     for ob,matrix in released.items():ob.matrix_world=matrix
@@ -212,32 +229,29 @@ for f in range(1,end+1):
   for side in ['l','r']:
    sole=bpy.data.objects['Leather sandal sole '+side]
    planted=clip=='move' and flags.get(side,False)
-   lift=-10 if planted else 0
-   for point in sole_points(side):
+   if planted:continue
+   lift=0
+   foot_points=sole_points(side)
+   if clip=='death':
+    dg=bpy.context.evaluated_depsgraph_get()
+    for ob in sc.objects:
+     if ob.name.startswith('Sandal strap '+side):
+      ev=ob.evaluated_get(dg);me=ev.to_mesh();foot_points+=[ob.matrix_world @ v.co for v in me.vertices];ev.to_mesh_clear()
+   for point in foot_points:
     local=base_inverse @ point
-    plane=floor+.001 if local.x*local.x+local.y*local.y<base_radius**2 else .006
+    reach=base_radius+(.15 if clip=='death' else 0)
+    plane=floor+.001 if local.x*local.x+local.y*local.y<reach**2 else .006
     lift=max(lift,plane-point.z)
    if abs(lift)>1e-8:
     if clip=='move':assert abs(lift)<.04,('Large sole contact translation',side,lift)
     motion_source['max_sole_translation_m']=max(motion_source.get('max_sole_translation_m',0),abs(lift))
     motion_source['max_sole_lift_m']=max(motion_source.get('max_sole_lift_m',0),lift)
-    foot=rig.pose.bones['foot_'+side];mat=foot.matrix.copy()
-    mat.translation+=rig.matrix_world.to_3x3().inverted() @ Vector((0,0,lift))
-    foot.matrix=mat;bpy.context.view_layer.update()
-    if planted:
-     # Skinning spreads a foot translation over neighbouring leg weights.
-     # Converge the existing vertical contact solve on the evaluated sole,
-     # keeping the donor rotation and all horizontal contact coordinates.
-     total=lift
-     for _ in range(3):
-      error=floor+.001-min(p.z for p in sole_points(side))
-      if abs(error)<.00002:break
-      total+=error
-      assert abs(total)<.04,('Large sole contact translation',side,total)
-      mat=foot.matrix.copy()
-      mat.translation+=rig.matrix_world.to_3x3().inverted() @ Vector((0,0,error))
-      foot.matrix=mat;bpy.context.view_layer.update()
-     motion_source['max_sole_translation_m']=max(motion_source.get('max_sole_translation_m',0),abs(total))
+    if clip=='move':
+     contact_ik(rig,{side:Vector((0,0,lift))})
+    else:
+     foot=rig.pose.bones['foot_'+side];mat=foot.matrix.copy()
+     mat.translation+=rig.matrix_world.to_3x3().inverted() @ Vector((0,0,lift))
+     foot.matrix=mat;bpy.context.view_layer.update()
  if clip!='death':
   butt=next(o for o in spear_objects if o.name.startswith('Iron spear butt'))
   ev=butt.evaluated_get(bpy.context.evaluated_depsgraph_get());mesh=ev.to_mesh()
@@ -251,10 +265,8 @@ for f in range(1,end+1):
      matrix=ob.matrix_world.copy();matrix.translation+=shift;ob.matrix_world=matrix
     bpy.context.view_layer.update()
  response.key(f,equipment_phase)
- if shield_contact:
-  shield_contact.solve()
-  bpy.context.view_layer.update()
  rig.keyframe_insert(data_path='location',frame=f)
+ if clip=='death':rig.keyframe_insert(data_path='rotation_quaternion',frame=f)
  for o in spear_objects:
   o.keyframe_insert(data_path='location',frame=f);o.keyframe_insert(data_path='rotation_quaternion',frame=f)
  if shield:
@@ -262,7 +274,6 @@ for f in range(1,end+1):
  for p in rig.pose.bones:
   p.rotation_mode='QUATERNION';p.keyframe_insert(data_path='location',frame=f);p.keyframe_insert(data_path='rotation_quaternion',frame=f);p.keyframe_insert(data_path='scale',frame=f)
 motion_source['equipment_response']=response.report()
-if shield_contact:motion_source['equipment_response']['max_attached_shield_hinge_radians']=shield_contact.max_angle
 sc['motion_source']=json.dumps(motion_source)
 sc['sample_frames']=json.dumps(samples)
 if os.environ.get('MOTION_DIAGNOSTIC') == '1':

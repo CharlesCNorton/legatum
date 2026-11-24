@@ -49,12 +49,13 @@ LOOK = {
     'stroke': .10,            # brush-patch offset of the ramp input
     'vis_lo': .08, 'vis_hi': .45,
     'base_cast': .16,         # cast shadow depth on the stone
-    'base_contact': 1.0,     # soft contact (AO) shadow depth under the feet
+    'base_contact': .40,     # soft contact (AO) shadow depth under the feet
     'contact_reach': .07,     # metres: contact shadow is gone about 4 px (256) from the sole
     'stone_grain': .08,
     'stone_radius': .594,     # metres, for the near-to-far tone of the top
     'shadow_r': .50, 'shadow_g': .36, 'shadow_b': .34,  # warm-dark shadow multiplier
     'debug': 0,               # 1 paint weight, 2 unseen layer only, 3 projected paint only
+    'continuity': 1,          # frozen sole/lining/rear-shoulder pigment; 0 for A/B
 }
 
 
@@ -245,6 +246,9 @@ def build_material(ob, part, look_dir, palettes, key_dir, fill_dir, uv_world, re
         lo, hi = (-1, -.5) if part in ALWAYS_PAINT else (cfg['vis_lo'], cfg['vis_hi'])
         weight.inputs['From Min'].default_value, weight.inputs['From Max'].default_value = lo, hi
         final = g.mix(weight.outputs[0], unseen, seen)
+        if cfg.get('continuity', 1):
+            from continuity import pigment
+            final = pigment(g, part, final, g.math('SUBTRACT', 1, weight.outputs[0]), t, lin3, palettes)
         if cfg['debug'] == 1: final = g.mix(weight.outputs[0], (0, 0, 0, 1), (1, 1, 1, 1))
         if cfg['debug'] == 2: final = unseen
         if cfg['debug'] == 3: final = seen
@@ -286,6 +290,9 @@ def apply_materials(scene, mode, look_dir, cfg):
     rest_file = look_dir / 'rest-matrices.json'
     is_master = 'clips' not in Path(bpy.data.filepath).parts
     renderable = [o for o in scene.objects if o.type in ('MESH', 'CURVE') and len(o.data.materials)]
+    if mode == 'beauty' and cfg.get('continuity', 1):
+        from continuity import prepare
+        prepare(scene, classify)
     if is_master and mode == 'id':
         look_dir.mkdir(parents=True, exist_ok=True)
         rest_file.write_text(json.dumps({o.name: [list(r) for r in o.matrix_world] for o in renderable

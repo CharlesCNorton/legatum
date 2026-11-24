@@ -44,12 +44,12 @@ A histogram match measures tone distribution, not geometric or artistic fidelity
 ### Open motion standard — every unit (Sam, feedback 23)
 
 Use proven open motion as the default. Humans use CMU (free use) or the free
-Quaternius Universal Animation Library (CC0) for idle, move, hit and death.
+Quaternius Universal Animation Library (CC0) for idle and move. Hit/death may
+use licensed donors or authored keys, selected by visual review.
 Retarget through Rokoko's free add-on or Blender's native constraints and baking.
 Match the source T-pose/rest pose to the target anatomy and carry complete bone
 rotations, including roll. Positions or a single bone direction do not preserve
-roll. Keep only the weapon-specific attack hand-keyed, starting and ending on the
-new idle. Holding a weapon may require a constant upper-body reference offset;
+roll. Attack and hit start and end on the current idle guard. Holding a weapon may require a constant upper-body reference offset;
 record it rather than replacing the source motion with invented keys.
 
 For horses, elephants and other animals, use a CC0 animated quadruped (for
@@ -699,9 +699,9 @@ Form combines Astra A's greave/calf fit (without its regressing sleeve smoothing
 and Fable B's spear-side cloak flare. Shaft thickness is changed on the master
 before UV projection, never secretly at render time. Astra C supplies the
 broader source-calibrated walk, iterative sole contact and donor-based death.
-Fable B's visually preferred death/hit are fully hand-keyed body performances;
-those are excluded under Sam's open-donor rule, which permits only the attack
-to be hand-keyed. Their visual verdict remains the target for a future donor.
+Round 11 excluded Fable B's death/hit under the then-current motion rule.
+The 2026-11-24 decision supersedes that restriction: hit/death may be keyed
+or donor-based, selected by review; idle and walk must still use open mocap.
 Astra B's localized lining/fold pigments are retained in the Cycles fallback;
 Fable's part-paint look supersedes them for final surfaces. Do not count those
 fallback changes as an independently verified Eevee material win.
@@ -712,3 +712,26 @@ and contact modules. Every walk still needs a dense top/front geometry sheet
 and measured sole slip, floor error and travel heading. Idle and attack action
 hashes are checked against round 10; geometry refinements can change pixels
 without changing their accepted performance.
+
+### Spearman round 12: combine by aspect, then regenerate contact
+
+Selected Fable B's measured form/base and staged collapse, Astra 12c's KayKit
+Hit_B and Quaternius walk, and Astra 12b's frozen underside/lining pigment over
+Fable A's painted look. Do not stack Astra 12a's fitting on Fable's rest-space
+fitting: they solve the same ankle/foot problem on different baselines.
+
+A larger foot invalidates the old sole correction. The first combined move
+failed at 42.6 mm against the unchanged 40 mm limit. Fable's root/support IK
+solve restores bone lengths and source foot rolls; dense contact must pass
+before accepting the merge. Never increase the limit to fit a new model.
+
+Reusable additions: `kit/continuity.py` freezes sole/lining/shoulder pigment
+masks, parameterized by object prefixes; `kit/cpu_look.py` provides an explicitly
+labelled analytic-sun proxy for Eevee Shader-to-RGB when only CPU is available.
+It has no live cast shadow and cannot certify the GPU contact shadow.
+
+The complete host entry remains `ROUND=12 tools/art/anim3d/units/spearman/gpu.sh`.
+It fetches the pinned CC0 reaction source, rebuilds projection and all five
+clips, renders 512/256 masters, validates the trimmed 160 atlas, checks feet,
+and writes movie, critique and the round note. CPU evidence stays in
+`lanes/spearman-r12-merge`; there is no automatic art PASS.

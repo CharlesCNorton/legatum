@@ -12,3 +12,14 @@ for side, suffix in [('l', 'L'), ('r', 'R')]:
         MAP[target+'_'+side] = 'DEF-'+source+'.'+suffix
 
 
+
+# KayKit Character Animations Free 1.1 (CC0), tested with Spearman Hit_B.
+KAYKIT_MAP = {'pelvis': 'hips', 'spine_01': 'spine', 'spine_02': 'chest',
+       'spine_03': 'chest', 'neck_01': 'head', 'head': 'head'}
+for side in ('l', 'r'):
+    for target, source in [('upperarm', 'upperarm'), ('lowerarm', 'lowerarm'),
+                           ('hand', 'wrist'), ('thigh', 'upperleg'),
+                           ('calf', 'lowerleg'), ('foot', 'foot'), ('ball', 'toes')]:
+        KAYKIT_MAP[target+'_'+side] = source+'.'+side
+
+KAYKIT_ACTIONS = {'hit': 'Hit_B', 'death': 'Death_B'}
