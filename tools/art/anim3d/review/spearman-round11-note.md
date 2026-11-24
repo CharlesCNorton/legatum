@@ -39,7 +39,10 @@ regenerates all of them; it does not relabel or upscale these CPU previews.
   Lane evidence: mean ankle spacing 0.246 → 0.344 m; shield step 83.03° → 34.41°;
   head step 0.655 → 0.420 m. Tradeoffs disclosed by the lane: ankle height
   0.355 → 0.423 m and late cape travel 0.119 → 0.145 m. The combined rendered death
-  still raises its feet and looks arranged. Idle and attack actions are unchanged.
+  still raises its feet and looks arranged. Combined measurement confirms head
+  step 0.41993 m, shield step 34.4144°, ankle height 0.42261 m, and late cape
+  travel 0.15734 m (worse than the lane's 0.145 m after the cloak flare).
+  Idle and attack actions are unchanged.
 - Fable A, ee83409f: selected its registered per-part emission paint, palette
   fills, shaded cream stone, lighter linen, leather foot pigment, cloak-coloured
   unseen shoulders, shorter warm contact shadows and display-space reduction.
@@ -154,7 +157,7 @@ The source correction stays in Fable's texture registration on the frozen UVs;
 changing project.py's UV formula as well would double-correct the paint. A later
 projection-calibration cleanup must switch both together and prove the same image.
 
-Git's ORIG_HEAD lock was denied, so changes were ported by scoped source diff.
+Git's ORIG_HEAD and index locks were denied, so changes were ported by scoped source diff and remain uncommitted.
 No push or master merge was performed. A full patch and commit message are in
 `lanes/spearman-r11-merge/` for the runner if its Git permissions differ.
 
