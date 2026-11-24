@@ -50,7 +50,7 @@ KEYS = [
                 hand_l=(.30, -.32, 1.06), elbow_l=(.56, -.08, 1.08),
                 hand_r=(-.40, -.14, .78), elbow_r=(-.58, .06, 1.08), ease='in')),
     # 4 toppling over the spear-side knee; head and shield lag behind the hips
-    (0.50, dict(pelvis=(.22, .06, .46), rot=(-.15, -.62, 0), spine=(.30, .16, 0), head=(.25, .25, 0),
+    (0.50, dict(pelvis=(.20, .06, .46), rot=(-.15, -.62, 0, 0), spine=(.30, .16, 0), head=(.25, .25, 0),
                 plant=0, ankle_l_w=(.26, .27, .215), ankle_r_w=(-.28, .25, .24),
                 ankle_l=(.18, .22, .62), ankle_r=(-.28, .24, .63),
                 knee_l=(.20, -2.0, .40), knee_r=(-.40, -2.0, .40), foot=(2.6, 2.6),
@@ -60,7 +60,7 @@ KEYS = [
                 hand_r_w=(-.25, -.45, .14), elbow_r_w=(-.55, -.25, .10),
                 shield_w=0, shield_arc=.06, ease='in')),
     # 5 shoulder and hip strike the stone; the arm goes limp and the aspis slips off it
-    (0.70, dict(pelvis=(.28, .10, .34), rot=(-.35, -1.25, 0), spine=(.18, .12, 0), head=(.10, .20, -.2),
+    (0.70, dict(pelvis=(.23, .09, .34), rot=(-.35, -1.25, 0, -.12), spine=(.18, .12, 0), head=(.10, .20, -.2),
                 plant=0, ankle_l_w=(.26, .27, .215), ankle_r_w=(-.28, .25, .24),
                 ankle_l=(.06, .14, .60), ankle_r=(-.125, .06, .55),
                 knee_l=(.15, -2.0, .50), knee_r=(-.25, -2.0, .60), foot=(2.0, 1.9),
@@ -70,9 +70,9 @@ KEYS = [
                 hand_r_w=(-.25, -.45, .14), elbow_r_w=(-.55, -.25, .10),
                 shield_w=.5, shield_arc=.06, ease='out')),
     # 6 settles on his side facing out, knees drawn up; the aspis tips back against them
-    (0.86, dict(pelvis=(.30, .12, .31), rot=(-.50, -1.40, 0), spine=(.15, .0, 0), head=(.05, -.10, -.45),
+    (0.86, dict(pelvis=(.24, .10, .31), rot=(-.50, -1.40, 0, -.2), spine=(.15, .0, 0), head=(.05, -.10, -.45),
                 plant=0, ankle_l_w=(.26, .27, .215), ankle_r_w=(-.28, .25, .24),
-                ankle_l=(-.02, .10, .56), ankle_r=(-.125, -.08, .58),
+                ankle_l=(-.02, .08, .64), ankle_r=(-.125, -.08, .66),
                 knee_l=(.125, -2.0, .60), knee_r=(-.125, -2.0, .80), foot=(1.4, 1.35),
                 hand_l=(-.12, -.32, .98), elbow_l=(.60, -.30, 1.10),
                 hand_r=(-.50, -.38, 1.20), elbow_r=(-.45, -.25, 1.60),
@@ -80,9 +80,9 @@ KEYS = [
                 hand_r_w=(-.25, -.45, .14), elbow_r_w=(-.55, -.25, .10),
                 shield_w=.92, shield_arc=.06, ease='out')),
     # 7 at rest (held)
-    (0.96, dict(pelvis=(.30, .12, .30), rot=(-.55, -1.40, 0), spine=(.15, .0, 0), head=(.0, .0, -.5),
+    (0.96, dict(pelvis=(.24, .10, .30), rot=(-.55, -1.40, 0, -.2), spine=(.15, .0, 0), head=(.0, .0, -.5),
                 plant=0, ankle_l_w=(.26, .27, .215), ankle_r_w=(-.28, .25, .24),
-                ankle_l=(-.02, .10, .56), ankle_r=(-.125, -.08, .58),
+                ankle_l=(-.02, .08, .64), ankle_r=(-.125, -.08, .66),
                 knee_l=(.125, -2.0, .60), knee_r=(-.125, -2.0, .80), foot=(1.3, 1.3),
                 hand_l=(-.12, -.32, .98), elbow_l=(.60, -.30, 1.10),
                 hand_r=(-.50, -.38, 1.20), elbow_r=(-.45, -.25, 1.60),
@@ -153,7 +153,7 @@ def sample(t, KEYS=KEYS):
 # band: standing on its rim on the stone, leaning back against his drawn-up
 # knees with the face toward the camera. World space; centre of the shell and
 # the outward facing.
-SHIELD_REST = (Vector((.40, -.14, .53)), Vector((.39, -.77, .50)))
+SHIELD_REST = (Vector((.33, -.18, .53)), Vector((.30, -.80, .50)))
 _shield_points = {}
 
 

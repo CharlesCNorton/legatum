@@ -29,6 +29,92 @@ def walk_offsets(corrections):
             for side, offset in corrections.items()}
 
 
+class WalkLayer:
+    """Weight shift and a lower swing on the retargeted donor walk.
+
+The donor (a stylised game walk) carries the swing foot 10 cm clear of the
+ground and kicks the trailing heel up behind, which reads as a march at
+160 px, and its pelvis hardly moves sideways. This layer, phase-locked to the
+clip's own stance intervals:
+- shifts the pelvis SWAY metres toward the stance foot and drops the swing
+  hip by LIST radians, with the chest turned back upright; both legs are then
+  re-solved by IK so every ankle keeps the world position and the source
+  rotation it had before the layer;
+- eases the swing foot toward level by up to LEVEL at mid-swing (heading kept);
+- lets the caller scale each swing sole's clearance above the stone by SWING
+  (`lowering`), after the planted foot has set the pelvis height, so a
+  toe-down swing foot cannot reach the stone.
+Planted feet are untouched: contact, heading and slip do not change.
+"""
+    SWING = .35
+    SWAY = .028
+    LIST = math.radians(4.5)
+    LEAD = 2   # frames by which the hip drop leads the lateral shift
+    LEVEL = .5  # share of the swing foot's toes-down pitch removed at mid-swing
+    TOE_OUT = math.radians(6)
+
+    def __init__(self, frames, planted):
+        count = self.count = len(frames)-25
+        centres, self.swing = {}, {}
+        for s in 'lr':
+            flags = [planted[str(25+j)][s] for j in range(count)]
+            start = next(j for j in range(count) if flags[j] and not flags[j-1])
+            centres[s] = (start+(sum(flags)-1)/2) % count
+            # Swing progress 0..1 for each frame of the cycle (0 while planted).
+            stance, swing = sum(flags), count-sum(flags)
+            self.swing[s] = [0.]*count
+            for i in range(swing):
+                self.swing[s][(start+stance+i) % count] = (i+1)/(swing+1)
+        # Left mid-stance; the right foot's is half a cycle later.
+        half = count/2
+        delta = ((centres['r']-half-centres['l']+half) % count)-half
+        self.phase = centres['l']+delta/2
+        self.max_lower = 0.
+
+    def apply(self, rig, frame, turn, contact_ik):
+        from mathutils import Vector, Quaternion
+        j = (max(frame, 25)-25) % self.count
+        feet = {s: rig.pose.bones['foot_'+s] for s in 'lr'}
+        position = {s: rig.matrix_world @ feet[s].head for s in 'lr'}
+        rotation = {s: rig.matrix_world @ feet[s].matrix for s in 'lr'}
+        for s in 'lr':
+            # Mid-swing the donor foot hangs toes-down and shows its sole to the
+            # camera. Ease it toward level (same heading) by up to LEVEL; zero at
+            # toe-off and heel strike, so planted rotations stay the donor's.
+            level = self.LEVEL*math.sin(math.pi*self.swing[s][j])**2
+            if level > 0:
+                rest = feet[s].bone.matrix_local.to_quaternion()
+                delta = rig.matrix_world.to_quaternion() @ feet[s].matrix.to_quaternion() @ rest.inverted()
+                ahead = delta @ Vector((0, -1, 0))
+                # The donor also swings the toes out up to 24 degrees; bring the
+                # heading back inside TOE_OUT once the foot is clear of the stone.
+                yaw = math.atan2(ahead.x, -ahead.y)
+                inside = max(-self.TOE_OUT, min(self.TOE_OUT, yaw))
+                straighten = Quaternion((0, 0, 1), (inside-yaw)*min(1., 4*level/self.LEVEL))
+                delta = straighten @ delta
+                flat = Quaternion((0, 0, 1), yaw+(inside-yaw)*min(1., 4*level/self.LEVEL))
+                matrix = (delta.slerp(flat, level) @ rest).to_matrix().to_4x4()
+                matrix.translation = rotation[s].translation
+                rotation[s] = matrix
+        angle = 2*math.pi*(j-self.phase)/self.count
+        rig.location.x += self.SWAY*math.cos(angle)
+        tilt = -self.LIST*math.cos(angle+2*math.pi*self.LEAD/self.count)
+        turn('pelvis', 'Y', tilt)
+        turn('spine_01', 'Y', -tilt)
+        contact_ik(rig, {s: position[s]-rig.matrix_world @ feet[s].head for s in 'lr'}, rotation)
+
+    def lowering(self, clearance):
+        """Metres to lower a swing foot whose sole is `clearance` above the stone."""
+        lower = (1-self.SWING)*max(0., clearance)
+        self.max_lower = max(self.max_lower, lower)
+        return lower
+
+    def report(self):
+        return {'swing_clearance_scale': self.SWING, 'max_swing_foot_lowering_m': self.max_lower,
+                'swing_foot_levelling': self.LEVEL, 'pelvis_sway_m': self.SWAY, 'pelvis_list_degrees': math.degrees(self.LIST),
+                'left_mid_stance_frame': 25+self.phase}
+
+
 def curve(phase, values):
     """Bounded C1 Hermite interpolation, with zero slope only at extrema.
 

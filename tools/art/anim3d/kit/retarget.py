@@ -104,8 +104,11 @@ a foot planted across the loop boundary instead of resetting its contact.
                        for j,i in enumerate(indices+[len(frames)-1])}}
 
 
-def contact_ik(rig, corrections):
-    """Blender two-bone IK translates the contact, retaining source foot rolls."""
+def contact_ik(rig, corrections, rotations=None):
+    """Blender two-bone IK translates the contact, retaining source foot rolls.
+
+`rotations` (side -> world matrix) keeps a foot at an orientation recorded
+before an upstream bone (the pelvis) was turned; default is its current one."""
     controls=[];constraints=[]
     for side,offset in corrections.items():
         foot=rig.pose.bones['foot_'+side]
@@ -113,7 +116,7 @@ def contact_ik(rig, corrections):
         rotation=bpy.data.objects.new('CONTACT source rotation '+side,None)
         for ob in [target,rotation]:bpy.context.scene.collection.objects.link(ob)
         target.location=rig.matrix_world @ foot.head+offset
-        rotation.matrix_world=rig.matrix_world @ foot.matrix
+        rotation.matrix_world=rotations[side] if rotations else rig.matrix_world @ foot.matrix
         ik=rig.pose.bones['calf_'+side].constraints.new('IK')
         ik.target=target;ik.chain_count=2;ik.use_stretch=False
         keep=foot.constraints.new('COPY_ROTATION');keep.target=rotation

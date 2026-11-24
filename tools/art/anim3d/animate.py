@@ -90,6 +90,8 @@ def pose(t):
    # Native IK retains the donor's world foot rotations.
    from motion import walk_offsets
    contact_ik(rig,walk_offsets(motion['foot_corrections']))
+   # Weight shift over the stance foot and a lower swing; ankles keep their contact.
+   walk_layer.apply(rig,active_frame,turn,contact_ik)
   bpy.context.view_layer.update()
  elif clip=='attack':
   # Raise outside the right shoulder, then drive forward above the shield rim.
@@ -162,6 +164,9 @@ phases=[max(0,(f-25))/(count*24/fps) if clip in ['idle','move']
 if clip=='death':retarget_frames,motion_source=None,{'provider':'Authored weighted collapse (Fable B, accepted 2026-11-24)','keys':len(collapse.KEYS)}
 elif clip=='attack':retarget_frames,motion_source=None,{'provider':'Original weapon-specific hand keys, rebased on Quaternius idle reference'}
 else:retarget_frames,motion_source=prepare(rig,root,clip,phases)
+if clip=='move':
+ from motion import WalkLayer
+ walk_layer=WalkLayer(retarget_frames,motion_source['contact']['planted'])
 response=EquipmentResponse(rig,shield,clip)
 # A single complete source cycle, sampled before its duplicate endpoint.
 
@@ -198,9 +203,13 @@ for f in range(1,end+1):
     bpy.context.view_layer.update()
     raise_by={side:Vector((0,0,need[side]-correction if side in planted else max(0,need[side]-correction))) for side in ['l','r']}
     raise_by={side:v for side,v in raise_by.items() if v.z>1e-5}
-    if raise_by:
-     motion_source['max_ik_sole_raise_m']=max(motion_source.get('max_ik_sole_raise_m',0),max(v.z for v in raise_by.values()))
-     contact_ik(rig,raise_by)
+    if raise_by:motion_source['max_ik_sole_raise_m']=max(motion_source.get('max_ik_sole_raise_m',0),max(v.z for v in raise_by.values()))
+    # A swing foot keeps a share of its donor clearance (the donor's reads as a march).
+    for side in ['l','r']:
+     if side not in planted and side not in raise_by:
+      lower=walk_layer.lowering(correction-need[side])
+      if lower>1e-5:raise_by[side]=Vector((0,0,-lower))
+    if raise_by:contact_ik(rig,raise_by)
   base_inverse=base.matrix_world.inverted()
   base_radius=max((v.co.x*v.co.x+v.co.y*v.co.y)**.5 for v in base.data.vertices)-.015
   if clip=='death':
@@ -279,6 +288,7 @@ for f in range(1,end+1):
  for p in rig.pose.bones:
   p.rotation_mode='QUATERNION';p.keyframe_insert(data_path='location',frame=f);p.keyframe_insert(data_path='rotation_quaternion',frame=f);p.keyframe_insert(data_path='scale',frame=f)
 motion_source['equipment_response']=response.report()
+if clip=='move':motion_source['walk_layer']=walk_layer.report()
 sc['motion_source']=json.dumps(motion_source)
 sc['sample_frames']=json.dumps(samples)
 if os.environ.get('MOTION_DIAGNOSTIC') == '1':
