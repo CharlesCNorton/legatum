@@ -241,3 +241,6 @@
 - GPU round 13 failed at render-parity (exit 1); inspect gpu-logs-spearman-r13.log before judging this pass.
 - GPU round 13 started: full Eevee painted GPU pass requested; Cycles GPU feet inspection.
 - GPU round 13 finished: all stages, masters, atlas validation and movie complete; visual review pending.
+
+- R14b: loaded cumulative unit skill and all six Blender skills; latest 08:03Z director ranks R13 walk first. Git merge denied ORIG_HEAD.lock; copied d7798046 source tree through binary diff, isolated unchanged R13 masters/clips, preparing cloak-only A/B.
+- R14a: loaded cumulative unit and six Blender skills; round13 source snapshot d7798046 applied after ORIG_HEAD.lock denial. Copied preserved master/look to lanes/spearman-r14a; integrating only Fable D c6e55c3b death and dynamic guard registration. CPU proxy previews pending.
