@@ -150,3 +150,5 @@ Feet, the spear-side cloak and the legs carry the colour error on the Cycles rou
   rest/look and Astra c walk/death, dropped a/b overlapping fixes and D death/
   orientation changes. Kit gained shared donor-preserving walk shaping. No
   PASS: GPU renderer parity and final surface/clip review pending.
+
+- Spearman round 13 GPU receipt: IoU 0.9537; blurred ΔE 3.51; raw ΔE 6.36; atlas 187254 bytes / q80; 40 frames. Visual review pending.
