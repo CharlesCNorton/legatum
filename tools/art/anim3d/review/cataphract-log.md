@@ -77,3 +77,39 @@ Driver round3 opening: opened c-textured-lit, f-restpose comparison, ALL five e-
 Driver round3 loaded all six Blender skills and full local PLAYBOOK/standing/unit feedback: modeling for continuous weighted surfaces and bevels, cameras for source landmark/base perspective, materials for projection and generated occlusion fills, lighting for cream/contact product shot, animation for source gait and rig contacts, rendering for CPU previews and stable GPU handoff.
 Rendered c-textured-lit: 256px CYCLES CPU, 8 samples.
 Rendered c-textured-lit: 256px CYCLES CPU, 8 samples.
+Rendered b-plain: 256px CYCLES CPU, 8 samples.
+Rendered c-textured-lit: 256px CYCLES CPU, 8 samples.
+Rendered four keyed attack rig poses.
+Rendered idle: 8 frames, 256px, 8 samples, CPU.
+Rendered move: 8 frames, 256px, 8 samples, CPU.
+Rendered attack: 10 frames, 256px, 8 samples, CPU.
+Rendered hit: 4 frames, 256px, 8 samples, CPU.
+Rendered death: 10 frames, 256px, 8 samples, CPU.
+Packed and decoded 40 trimmed frames, quality 85, 196616 bytes; wrote cataphract-round3.mp4. Warnings: []
+Rendered c-textured-lit: 256px CYCLES CPU, 8 samples.
+Driver round3 interim: original painting projection retained on horse AND rider; widened physical barding/chest, relaxed far forearm and assigned continuous steel sleeve to weighted anatomy, adjusted horse crest/head and rigid lance registration. Generated clean stone fill through built-in ImageGen, prompt/source hashes recorded; camera UV pigment on the real beveled circular disc with live AO and a single automatic rest histogram grade.
+Driver round3 motion inspection: first CPU40-frame pass/audit/delivery verified; death revealed open undersides between scale plates, so adding continuous thick backing panels before final rebuild. Rest hoof depth fit moves full weighted lower-leg volumes on the support plane, retaining source foot rotations; no post-retarget yaw edits.
+Driver round3 GPU failure repair: r2 referenced retired lane-14. gpu.sh now freezes a hash-recorded, self-contained render dependency snapshot in external masters before waiting at the Blender gate, runs all relative helpers there, preserves verified delivery externally, and publishes atlas only if the original branch and source files still match. Default ROUND=3; no fallback or PASS creation.
+Rendered b-plain: 256px CYCLES CPU, 8 samples.
+Rendered c-textured-lit: 256px CYCLES CPU, 8 samples.
+Rendered four keyed attack rig poses.
+Rendered idle: 8 frames, 256px, 8 samples, CPU.
+Rendered move: 8 frames, 256px, 8 samples, CPU.
+Rendered attack: 10 frames, 256px, 8 samples, CPU.
+Rendered hit: 4 frames, 256px, 8 samples, CPU.
+Rendered death: 10 frames, 256px, 8 samples, CPU.
+Packed and decoded 40 trimmed frames, quality 85, 194240 bytes; wrote cataphract-round3.mp4. Warnings: []
+Driver round3 rejected iteration: camera-depth hoof alignment looked closer in the beauty view but top/front diagnostic exposed severely stretched lower-leg geometry and the collapse lifted. Removed that code completely; restored prior full-depth legs/native rotations plus existing vertical support correctives. Continuous armor backing retained. Rebuilding every dependent output, not retaining stale feet or clips.
+Rendered b-plain: 256px CYCLES CPU, 8 samples.
+Rendered c-textured-lit: 256px CYCLES CPU, 8 samples.
+Rendered four keyed attack rig poses.
+Rendered idle: 8 frames, 256px, 8 samples, CPU.
+Rendered move: 8 frames, 256px, 8 samples, CPU.
+Rendered attack: 10 frames, 256px, 8 samples, CPU.
+Rendered hit: 4 frames, 256px, 8 samples, CPU.
+Rendered death: 10 frames, 256px, 8 samples, CPU.
+Packed and decoded 40 trimmed frames, quality 85, 192888 bytes; wrote cataphract-round3.mp4. Warnings: []
+Driver round3 FINAL CPU checks PASS: all b/c/d/e stages Cycles CPU256/8; sixteen top/front feet views CPU192/4; all40-pose geometry/source-motion/rein/support audit, original53-bone rider, stationary base/camera and idle/move endpoint error0. Minimum sole z=0.108484425m (base top0.100m), maximum rein endpoint gap=0.000000267m. Full audit also passed from the external38-file runtime snapshot.
+Driver round3 FINAL delivery: 192888 bytes atQ85,160px logical frames,[1113, 736] trimmed atlas,8/8/10/4/10 frames,lossless alpha,exact decoded death hold and zero warnings. Independent source/hash/reconstruction verification PASS; movie H.264/yuv420p1600x348,240frames,8seconds. Python/JSON/Bash syntax,diff whitespace and every source SHA256 PASS. Missing-input GPU handoff fails cleanly before Blender; GPU512/64 verifier rejects CPU evidence.
+Driver round3 FINAL visual review: opened final b/c/details/d and ALL five strips, top/front feet and eight freshly decoded movie contact frames. At256 chest barding/backing and warm grained stone are improved; sleeve coverage and lance match are closer. Rider near shoulder/hand silhouette still bulky/patchy, horse face/neck too slender and differently angled, front hooves displaced, saddle/boot craftsmanship and unseen death underside shading still simpler. At64 same cataphract identity, but pose remains distinguishable. Clips technically valid, not visually certified clean; no full sliding/intersection certificate. NO PASS marker. Fresh GPU512/64 renders remain pending. Lead: ROUND=3 tools/art/anim3d/units/cataphract/gpu.sh from this checkout.
+Driver round3 staging/commit blocked: git add could not create .git/worktrees/lane-19/index.lock (Operation not permitted). Changes left uncommitted for runner; intended message with required gpt-6-astra coauthor saved in masters/cataphract/commit-message-r3.txt. Nothing pushed; no PR. origin/master is already an ancestor of HEAD, no merge required.
