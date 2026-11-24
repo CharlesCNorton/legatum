@@ -94,7 +94,8 @@ for b in rig.data.edit_bones:
  b.head=inv@h;b.tail=inv@t
 bpy.ops.object.mode_set(mode='OBJECT');bpy.context.view_layer.update()
 for name,matrix in worlds.items():bpy.data.objects[name].matrix_world=matrix
-base=bpy.data.objects['GEO-stationary-cream-base'];base.location.x-=.038;base.location.y+=.12;base.scale.x*=.96;base.scale.y*=.96
+base=bpy.data.objects['GEO-stationary-cream-base'];base.location.x-=.042;base.location.y+=.08;base.scale.x*=.955;base.scale.y*=.955
+bpy.context.view_layer.update()  # Capture these transforms before restoring bone-parented kit.
 rim=base.data.materials[0].copy();rim.name='MAT-cream-stone-rim';rim.node_tree.nodes['Principled BSDF'].inputs['Base Color'].default_value=(.47,.25,.085,1);base.data.materials.append(rim)
 for polygon in base.data.polygons:
  polygon.material_index=0 if polygon.normal.z>.5 else 1
@@ -110,7 +111,7 @@ view=-ray
 
 def right_hand_fit(point):
  d=point-hand_origin
- return (hand_origin-right*4*scale+up*5*scale+view*.035
+ return (hand_origin-right*4*scale+up*5*scale+view*.105
          +right*(.88*d.dot(right)-.19*d.dot(up))
          +up*(.48*d.dot(up))+view*(.75*d.dot(view)))
 
@@ -135,7 +136,70 @@ for b in rig.data.edit_bones:
 rig.data.edit_bones['lowerarm_r'].tail=rig.data.edit_bones['hand_r'].head
 bpy.ops.object.mode_set(mode='OBJECT');bpy.context.view_layer.update()
 for name,matrix in kit_worlds.items():bpy.data.objects[name].matrix_world=matrix
+# Round 3: fit both actual hands and their bind bones to the painted palm planes.
+# Full depth is retained; the salute is compressed vertically, not pasted over the face.
+def hand_fit(point,side):
+ anchor=rig.matrix_world@rig.data.bones['hand_'+side].head_local
+ d=point-anchor
+ x,y,z=d.dot(right),d.dot(up),d.dot(view)
+ if side=='l':return anchor+right*(x*.82)+up*(y*.32)+view*z
+ return anchor-right*3*scale+up*scale+right*(1.15*x-.75*y)+up*(.8*y)+view*z
+kit_worlds={o.name:o.matrix_world.copy() for o in s.objects if o.type=='MESH'}
+for o in s.objects:
+ if o.type!='MESH':continue
+ inv=o.matrix_world.inverted()
+ for v in o.data.vertices:
+  point=o.matrix_world@v.co
+  if o.vertex_groups:
+   for side in ('l','r'):
+    weight=min(1,sum(g.weight for g in v.groups if o.vertex_groups[g.group].name.endswith('_'+side) and o.vertex_groups[g.group].name.startswith(('hand','index','middle','ring','pinky','thumb'))))
+    if weight:point=point.lerp(hand_fit(point,side),weight)
+  if o.name.startswith(('GEO-sculpted-scalp','GEO-sculpted-hair')):
+   px=world_to_camera_view(s,cam,point).x*256
+   point+=right*(-6-.10*(px-142))*scale
+  if o.name in ('GEO-wolf-pelt-cowl','GEO-layered-fur-tufts','GEO-folded-pelt-cape','GEO-layered-fur-tufts.001'):
+   p=world_to_camera_view(s,cam,point);px=p.x*256;py=(1-p.y)*256
+   point-=right*(max(0,px-173)*.70*max(0,min(1,(py-50)/18)))*scale
+   # A cowl wraps the shoulders; it cannot fill the opening under the salute.
+   shoulder_line=44+.45*(px-158)
+   point-=up*(max(0,shoulder_line-py)*max(0,min(1,(px-150)/8)))*scale
+  v.co=inv@point
+ o.data.update()
+bpy.context.view_layer.objects.active=rig
+bpy.ops.object.mode_set(mode='EDIT')
+# Anchors remain unchanged throughout this pass; changing the wrist first must
+# not move the coordinate origin for the subsequent finger transforms.
+for b in rig.data.edit_bones:
+ for side in ('l','r'):
+  if b.name.endswith('_'+side) and b.name.startswith(('hand','index','middle','ring','pinky','thumb')):
+   b.head=rig.matrix_world.inverted()@hand_fit(rig.matrix_world@b.head,side)
+   b.tail=rig.matrix_world.inverted()@hand_fit(rig.matrix_world@b.tail,side)
+for side in ('l','r'):rig.data.edit_bones['lowerarm_'+side].tail=rig.data.edit_bones['hand_'+side].head
+bpy.ops.object.mode_set(mode='OBJECT');bpy.context.view_layer.update()
+for name,matrix in kit_worlds.items():bpy.data.objects[name].matrix_world=matrix
+# The raw MPFB head filled the lookout opening with skin. Narrow the true
+# skull/face in camera space while retaining its depth and anatomical topology.
+def head_fit(point):
+ p=world_to_camera_view(s,cam,point)
+ return point-right*((p.x*256-140)*.40)*scale
+bpy.context.view_layer.update()
+worlds={o.name:o.matrix_world.copy() for o in s.objects if o.type=='MESH'}
+for o in s.objects:
+ if o.type!='MESH':continue
+ inv=o.matrix_world.inverted()
+ for v in o.data.vertices:
+  weight=1 if o.name.startswith('GEO-beard') or 'system eyes' in o.name else 0
+  if o.name=='GEO-anatomy':weight=min(1,sum(g.weight*(1 if o.vertex_groups[g.group].name=='head' else .25) for g in v.groups if o.vertex_groups[g.group].name in ('head','neck_01')))
+  if weight:
+   point=o.matrix_world@v.co;v.co=inv@point.lerp(head_fit(point),weight)
+ o.data.update()
+bpy.context.view_layer.objects.active=rig;bpy.ops.object.mode_set(mode='EDIT')
+head=rig.data.edit_bones['head'];head.head=rig.matrix_world.inverted()@head_fit(rig.matrix_world@head.head);head.tail=rig.matrix_world.inverted()@head_fit(rig.matrix_world@head.tail)
+rig.data.edit_bones['neck_01'].tail=head.head
+bpy.ops.object.mode_set(mode='OBJECT');bpy.context.view_layer.update()
+for name,matrix in worlds.items():bpy.data.objects[name].matrix_world=matrix
+s['round3_registered']=True
 s['round2_registered']=True
-(M/'registration.json').write_text(json.dumps({'method':'full-depth bind mesh and skeleton fit before UV projection','controls':controls,'depth_offsets':foot_depth,'limb_length_ratios':ratios,'max_landmark_residual_px':float(np.max(np.linalg.norm(K@weights-delta,axis=1)))},indent=2))
+(M/'registration.json').write_text(json.dumps({'method':'full-depth bind mesh and skeleton fit before UV projection','round3':'palm/finger and skull camera-space fits; cowl outline; base transform preserved through dependency update','controls':controls,'depth_offsets':foot_depth,'limb_length_ratios':ratios,'max_landmark_residual_px':float(np.max(np.linalg.norm(K@weights-delta,axis=1)))},indent=2))
 bpy.ops.wm.save_as_mainfile(filepath=str(M/'registered.blend'))
 print('SCOUT_REGISTERED')

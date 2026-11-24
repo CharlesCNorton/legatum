@@ -21,3 +21,28 @@ p.write_text(json.dumps(records,indent=2))
 for kind,source in [('skin','medjay/fill-skin.png'),('hair','barbarian-archer/fill-hair.png'),('leather','barbarian-archer/fill-leather.png')]:
     records['painted-'+kind]={'source':'Existing original generated '+source+'; generation provenance in unit SOURCES.md and assets/SOURCES.md','licence':'Project CC BY 4.0','sha256':hashlib.sha256((A/('painted-'+kind+'.png')).read_bytes()).hexdigest()}
 p.write_text(json.dumps(records,indent=2))
+
+# Register the generated occlusion plate to the painting's foreground bounds.
+fill=Image.open(A/'cloth-underpaint-source.png').convert('RGBA')
+box=fill.getchannel('A').point(lambda x:255 if x>200 else 0).getbbox()
+original=im.getchannel('A').point(lambda x:255 if x>200 else 0).getbbox()
+aligned=Image.new('RGBA',(1024,1024))
+aligned.alpha_composite(fill.crop(box).resize((original[2]-original[0],original[3]-original[1]),Image.Resampling.LANCZOS),(original[0],original[1]))
+aligned.save(A/'cloth-underpaint.png')
+records['cloth-underpaint']={'source':'Built-in ImageGen, 2026-11-23; exact prompt in cloth-underpaint.prompt.txt','licence':'Project CC BY 4.0','sha256':hashlib.sha256((A/'cloth-underpaint-source.png').read_bytes()).hexdigest()}
+p.write_text(json.dumps(records,indent=2))
+
+# Generated stone supplies the formerly occluded top. Source rim stays original.
+stone=Image.open(A/'stone-fill-source.png').convert('RGBA')
+box=stone.getchannel('A').point(lambda x:255 if x>200 else 0).getbbox()
+registered=Image.new('RGBA',(1024,1024))
+registered.alpha_composite(stone.crop(box).resize((648,184),Image.Resampling.LANCZOS),(164,792))
+# Feather to the original brushwork below the foreground boot region.
+for y in range(840,1024):
+    blend=max(0,min(1,(y-840)/30))
+    for x in range(1024):
+        src=im.getpixel((x,y));dst=registered.getpixel((x,y))
+        if src[3]>200:registered.putpixel((x,y),tuple(round(dst[c]*(1-blend)+src[c]*blend) for c in range(4)))
+registered.save(A/'stone-fill.png')
+records['stone-fill']={'source':'Built-in ImageGen, 2026-11-23; exact prompt in stone-fill.prompt.txt','licence':'Project CC BY 4.0','sha256':hashlib.sha256((A/'stone-fill-source.png').read_bytes()).hexdigest()}
+p.write_text(json.dumps(records,indent=2))

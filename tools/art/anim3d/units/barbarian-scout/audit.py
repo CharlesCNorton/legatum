@@ -8,7 +8,7 @@ counts={'idle':8,'move':8,'attack':10,'hit':4,'death':10};report={}
 for name,count in counts.items():
     bpy.ops.wm.open_mainfile(filepath=str(M/'clips'/name/(name+'.blend')))
     sc=bpy.context.scene;rig=bpy.data.objects['Scout • MPFB rig'];base=bpy.data.objects['GEO-stationary-cream-base']
-    assert sc.get('round2_registered'), 'Missing round-two geometry registration'
+    assert sc.get('round3_registered'), 'Missing round-three geometry registration'
     assert not bpy.data.objects['GEO-anatomy'].data.shape_keys, 'Unfrozen shape keys'
     assert sc.camera and rig.type=='ARMATURE' and len(rig.data.bones)>=50
     assert sc['source_sha256']==source and sc['clip_count']==count
@@ -19,7 +19,7 @@ for name,count in counts.items():
     if name!='attack':
         meta=json.loads((M/'clips'/name/'clip.json').read_text())
         assert meta['motion']['provider']=='Quaternius Universal Animation Library Standard'
-    rest=base.matrix_world.copy();poses=[];bounds=[]
+    rest=base.matrix_world.copy();poses=[];bounds=[];sole_heights=[]
     for frame in range(1,count+1):
         sc.frame_set(frame);bpy.context.view_layer.update()
         assert base.matrix_world==rest,'Moving base'
@@ -30,6 +30,13 @@ for name,count in counts.items():
             grip=haft.matrix_world@Vector(haft['grip_local'])
             palm=rig.matrix_world@rig.pose.bones['hand_r'].matrix@Vector((0,.035,0))
             assert (grip-palm).length<.002,(frame,'axe grip misses palm',(grip-palm).length)
+        if name=='move':
+            for side in ('l','r'):
+                boot=bpy.data.objects['GEO-closed-boot-'+side]
+                ev=boot.evaluated_get(bpy.context.evaluated_depsgraph_get());me=ev.to_mesh()
+                lowest=min((ev.matrix_world@v.co).z for v in me.vertices);ev.to_mesh_clear()
+                assert lowest>=.090,(frame,side,'boot penetrates stone',lowest)
+                sole_heights.append({'frame':frame,'side':side,'minimum_z':lowest})
         poses.append([v for row in rig.matrix_world for v in row]+[v for p in rig.pose.bones for row in p.matrix for v in row])
         points=[]
         for o in sc.objects:
@@ -42,6 +49,6 @@ for name,count in counts.items():
     if name in ('idle','move'):
         sc.frame_set(count+1);end=[v for row in rig.matrix_world for v in row]+[v for p in rig.pose.bones for row in p.matrix for v in row]
         assert max(abs(a-b) for a,b in zip(poses[0],end))<1e-5,'Loop does not close'
-    report[name]={'bones':len(rig.data.bones),'frames':count,'bounds':bounds,'stationary_base':True,'positive_scales':True}
+    report[name]={'bones':len(rig.data.bones),'frames':count,'bounds':bounds,'stationary_base':True,'positive_scales':True,'sole_heights':sole_heights}
 (M/'audit.json').write_text(json.dumps({'technical_checks':'passed','art_approved':False,'notes':'Bounding boxes are conservative diagnostics, not a skin/cloth collision solver. Grounding, projection seams and hand grip require visual review.','clips':report},indent=2))
 print('AUDIT_OK: anatomy, rig, bake evidence, source hashes, positive scale, stationary base, five moving clips, closed loops, held death')

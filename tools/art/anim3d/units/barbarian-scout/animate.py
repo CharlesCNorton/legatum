@@ -26,6 +26,18 @@ for clip,(count,fps,loop) in CLIPS.items():
     grip0=(sum(lower,Vector())/len(lower)).lerp(sum(upper,Vector())/len(upper),.72)
     palm0=hand0@Vector((0,.035,0))
     haft['grip_local']=list(haft.matrix_world.inverted()@grip0)
+    # Sole support is measured from the actual boot in foot-bone coordinates.
+    # Keep source rotations intact and solve ankle translation around contact.
+    soles={};contacts={}
+    for side in ('l','r'):
+        foot=rig.matrix_world@rig.pose.bones['foot_'+side].matrix
+        boot=bpy.data.objects['GEO-closed-boot-'+side]
+        points=[boot.matrix_world@v.co for v in boot.data.vertices]
+        z=min(v.z for v in points)
+        supporting=[v for v in points if v.z<z+.004]
+        contacts[side]=sum(supporting,Vector())/len(supporting)
+        contacts[side].z=max(.096,contacts[side].z)
+        soles[side]=[foot.inverted()@v for v in points]
     targets0={n:(rig.matrix_world@rig.pose.bones[n].head).copy() for n in ('hand_l','hand_r','foot_l','foot_r','calf_l','calf_r','lowerarm_l','lowerarm_r')}
     def aim(name,direction):
         p=rig.pose.bones[name];q=p.bone.matrix_local.to_quaternion()
@@ -49,7 +61,14 @@ for clip,(count,fps,loop) in CLIPS.items():
                 for key in ob.data.shape_keys.key_blocks:key.value=0
         if clip=='attack':
             a=[0,.15,.55,1,.78,.32,-.12,-.06,0,0][i]
-            turn('spine_03',2,-.15*a);turn('upperarm_r',0,-1.1*a);turn('lowerarm_r',0,-.45*a)
+            turn('spine_03',2,-.15*a)
+            bpy.context.view_layer.update()
+            # Readable draw, raised backswing and descending cut in the painting
+            # camera plane, solved on the real two-bone arm rather than a depth jab.
+            path=[(0,0),(-3,3),(-12,-9),(-18,-35),(-24,-20),(-18,3),(-6,6),(-3,3),(0,0),(0,0)]
+            dx,dy=path[i];camera=sc.camera.matrix_world.to_quaternion();unit=sc.camera.data.ortho_scale/256
+            target=targets0['hand_r']+camera@Vector((dx*unit,-dy*unit,.025*min(1,i/2) if i<8 else 0))
+            limb('upperarm_r','lowerarm_r',target,targets0['lowerarm_r'])
             turn('upperarm_l',0,.22*a);turn('head',2,-.08*a)
             draw=min(1,i/2) if i<7 else max(0,(9-i)/2)
             for finger in ('index','middle','ring','pinky'):
@@ -101,7 +120,17 @@ for clip,(count,fps,loop) in CLIPS.items():
                         gate=min(1,lift/.015)
                         # The rear knee remains the primary support. Translation
                         # is applied only while the lead foot is airborne.
-                        if side=='l':target+=Vector((d.x*.15*gate,d.y*.25*gate,lift))
+                        # The lowest physical sole, not the ankle, defines contact.
+                        # A swinging source foot must lift the whole toe box clear.
+                        rotation=feet_rotation[side]
+                        sole=[rotation@v for v in soles[side]]
+                        z=min(v.z for v in sole)
+                        support=[v for v in sole if v.z<z+.004]
+                        contact=sum(support,Vector())/len(support)
+                        destination=contacts[side].copy()
+                        if side=='l':destination+=Vector((d.x*.15*gate,d.y*.25*gate,lift))
+                        target=destination-contact
+                        target.z=destination.z-z
                     limb('thigh_'+side,'calf_'+side,target,targets0['calf_'+side])
                     pb=rig.pose.bones['foot_'+side];mat=feet_rotation[side].to_matrix().to_4x4();mat.translation=pb.head;pb.matrix=mat
                     bpy.context.view_layer.update()

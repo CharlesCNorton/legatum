@@ -16,3 +16,7 @@ MIT; original project paintings, generated fills and rendered art are CC BY 4.0.
 `assets.lock.json` pins all unit texture inputs; `prepare.py` rejects changed
 inputs and writes external source metadata. Native GPU512 evidence from driver
 round 1 is preserved in `masters/barbarian-scout/driver-r1-gpu/`.
+
+## Barbarian scout driver round 3, 2026-11-23
+- Cloth occlusion underpainting: built-in ImageGen `01a20ac7-42fc-7863-9b39-7d572ce0740a/exec-29b280c4-f97c-4d64-a8e7-1d3afddec542.png`, original project CC BY 4.0, no public URL. Input: original registered CC BY 4.0 scout painting. External `assets/barbarian-scout/cloth-underpaint-source.png`; exact prompt `cloth-underpaint.prompt.txt`, SHA256 in `assets.lock.json`. Used only as garment pigment beneath moving hand/axe; no replacement geometry. Existing CC0 MPFB and Quaternius motion retained.
+- Clean stone fill: built-in ImageGen `01a20ac7-42fc-7863-9b39-7d572ce0740a/exec-2d8cec93-64bf-480c-9b39-a5ecaec94d2f.png`, original project CC BY 4.0, no public URL. External `assets/barbarian-scout/stone-fill-source.png`; exact prompt `stone-fill.prompt.txt`, SHA256 in `assets.lock.json`. Generated top blended into original rim as pigment on the real beveled disc; live contact shadow, no texture alpha geometry.

@@ -286,3 +286,53 @@ copying the preceding frame. Only negligible RGB render noise (at most three
 levels, mean below .05, identical alpha) is deduplicated in graded delivery after
 the geometry-state check; original independently rendered PNGs remain. Source licences/hashes are in unit `SOURCES.md`,
 `assets.lock.json` and `motion.lock.json`.
+
+### Barbarian scout: driver round 3, semantic surface repair
+
+Preserve the incoming GPU receipt in `masters/barbarian-scout/driver-r2-gpu/`.
+That pass completed 40 native GPU512 frames and a Q80 187,628-byte atlas, but
+its hair/hand masks, false forehead silhouette and exposed garment patches
+failed the visual bar. An emission object-ID diagnostic is useful here: it
+showed the MPFB head itself filling the opening under the saluting hand.
+
+Fit the true skull, palms/fingers and their bind bones before UV projection;
+keep the mesh depth. Restore bone-parented kit world matrices after bind edits.
+Update the dependency graph before capturing those matrices: otherwise a later
+restore silently discards the stone's just-assigned scale/translation. The
+round-three disc is 95.5% of the initial radius and shifted 42mm left/80mm back.
+
+Small adjacent hair/finger surfaces must not binary-mask their own paint into
+stripes. Hair carries continuous source brushwork at rest. A rest-normal shader fade
+was rejected after its preview suppressed visible brushwork even in the bind
+pose; no such fade is shipped. Hidden surfaces retain the existing generated
+fills. If adding normal-based attributes, cache all vertex/polygon normals before
+writing color attributes: querying normals between attribute writes triggers
+repeated whole-mesh recalculation and makes a small texture stage very slow.
+
+Two original ImageGen assets are hash-pinned in `assets.lock.json`: a garment
+underpainting without the lowered arm/axe, and an empty stone top. `prepare.py`
+registers them to the original painting. Only the previously occluded garment
+region uses the new plate, feathered into original paint; the stone top blends
+into the original lower rim. These are colors on full-depth meshes; texture
+alpha never clips geometry. Prompts and source/licence entries accompany the
+unit scripts and external `assets/SOURCES.md`. Keep real folds, bevels, straps,
+physical shadow/bounce shaders, and one rest-derived histogram LUT for all clips.
+
+Move contact uses the actual boot vertices in foot-bone coordinates. Preserve
+Quaternius rotations, find the lowest sole support under that rotation, and solve
+ankle translation so the toe box clears the stone. This is contact adaptation,
+not a hand-authored foot-yaw correction. Inspect all eight top/front foot samples
+and the complete move strip; successful geometry measurements are not gait approval.
+
+The complete host entry point remains `ROUND=3 tools/art/anim3d/units/barbarian-scout/gpu.sh`.
+It checks both new source fills, rebuilds/bakes/retargets, audits, renders GPU512,
+keeps native512/gallery256, packs and validates trimmed160, and writes the decoded
+five-clip eight-second MP4. It never writes PASS automatically.
+
+The occlusion plate must cover every underlying garment, including trousers:
+removing a hand from shirt paint alone leaves a second painted hand on the knee.
+Seat the anatomical palm in front of the cloth rather than relying on that ghost.
+The authored axe attack now solves a two-bone draw/backswing/descending cut in
+the painting camera plane; shorten its screen arc if the real haft reaches a
+cell edge. Atlas packing publishes `<slug>-f-atlas-check.png` from decoded WebP
+rectangles so review includes compression and per-frame offset reconstruction.

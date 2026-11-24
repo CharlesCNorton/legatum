@@ -4,7 +4,7 @@ set -euo pipefail
 cd "$(dirname "$0")/../../../../.."
 source tools/art/anim3d/env.sh
 HERE=tools/art/anim3d/units/barbarian-scout
-export ROUND="${ROUND:-2}" CYCLES_DEVICE=GPU RESOLUTION=512 SAMPLES="${SAMPLES:-64}"
+export ROUND="${ROUND:-3}" CYCLES_DEVICE=GPU RESOLUTION=512 SAMPLES="${SAMPLES:-64}"
 STATUS="$ANIM_ROOT/review/3d-v2/barbarian-scout-gpu-status.txt"
 LOG="$ANIM_ROOT/gpu-logs-barbarian-scout-r${ROUND}.log"
 exec >> "$LOG" 2>&1
@@ -15,7 +15,7 @@ printf 'Checkout: %s\n' "$PWD"
 git rev-parse HEAD
 git status --short
 command -v blender
-for asset in painting-source.png painted-fur.png painted-linen.png painted-skin.png painted-hair.png painted-leather.png; do
+for asset in painting-source.png painted-fur.png painted-linen.png painted-skin.png painted-hair.png painted-leather.png cloth-underpaint-source.png stone-fill-source.png; do
   test -s "$ANIM_ROOT/assets/barbarian-scout/$asset"
 done
 # Check the actual host device before touching any preserved editable masters.

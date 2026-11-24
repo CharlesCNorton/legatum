@@ -133,7 +133,16 @@ def pack():
     meta={'version':2,'unit':SLUG,'frame':{'w':160,'h':160,'ax':80,'ay':140},'atlas':{'w':atlas.width,'h':atlas.height},'clips':records}
     (dest/f'{SLUG}.webp').write_bytes(best[1]);(dest/f'{SLUG}.json').write_text(json.dumps(meta,indent=2)+'\n')
     (M/'pack.json').write_text(json.dumps({'quality':best[0],'bytes':len(best[1]),'frame_hashes':rawhash,'clip_hashes':cliphash,'source_sha256':sourcehash,'grade_sha256':gradehash},indent=2))
-    validate();log(f'Packed 40 trimmed 160 px frames, WebP quality {best[0]}, {len(best[1])} bytes.')
+    validate()
+    # Review the decoded, trimmed delivery, not the uncompressed input frames.
+    decoded_clips=decoded()[2]
+    check=Image.new('RGBA',(1600,5*188),CREAM);draw=ImageDraw.Draw(check)
+    for row,(name,images) in enumerate(decoded_clips.items()):
+        for i,im in enumerate(images):
+            check.alpha_composite(im,(160*i,188*row+28))
+            draw.text((160*i+5,188*row+7),f'{name} {i+1}',fill=(50,40,30))
+    check.save(V/f'{SLUG}-f-atlas-check.png')
+    log(f'Packed 40 trimmed 160 px frames, WebP quality {best[0]}, {len(best[1])} bytes.')
 
 def decoded():
     dest=REPO/'app/src/assets/units/anim';meta=json.loads((dest/f'{SLUG}.json').read_text());atlas=Image.open(dest/f'{SLUG}.webp').convert('RGBA');result={}
