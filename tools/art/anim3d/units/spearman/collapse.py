@@ -50,39 +50,39 @@ KEYS = [
                 hand_l=(.30, -.32, 1.06), elbow_l=(.56, -.08, 1.08),
                 hand_r=(-.40, -.14, .78), elbow_r=(-.58, .06, 1.08), ease='in')),
     # 4 toppling over the spear-side knee; head and shield lag behind the hips
-    (0.45, dict(pelvis=(.20, .06, .46), rot=(-.15, -.62, 0, 0), spine=(.30, .16, 0), head=(.25, .25, 0),
+    (0.47, dict(pelvis=(.20, .06, .46), rot=(-.15, -.62, 0, 0), spine=(.30, .16, 0), head=(.25, .25, 0),
                 plant=1, ankle_l_w=(.26, .27, .215), ankle_r_w=(-.28, .25, .24),
-                ankle_l=(.18, .22, .62), ankle_r=(-.12, .24, .66),
+                ankle_l=(.18, .22, .62), ankle_r=(.05, .15, .60),
                 knee_l=(.20, -2.0, .40), knee_r=(-.40, -2.0, .40), foot=(2.6, 2.6),
                 hand_l=(.28, -.30, 1.02), elbow_l=(.60, -.10, 1.06),
                 hand_r=(-.42, -.24, 1.02), elbow_r=(-.62, .02, 1.12),
                 arm_w=0, hand_l_w=(.28, -.02, .50), elbow_l_w=(.0, .30, .90),
                 hand_r_w=(-.25, -.45, .14), elbow_r_w=(-.55, -.25, .10),
-                shield_w=0, shield_arc=.35, ease='in')),
-    # 5 shoulder and hip strike the stone; the shield arm is flung up and the aspis slips off it over his side
-    (0.65, dict(pelvis=(.23, .09, .34), rot=(-.35, -1.25, 0, -.12), spine=(.18, .12, 0), head=(.10, .20, -.2),
+                shield_w=0, shield_arc=.10, ease='in')),
+    # 5 shoulder and hip strike the stone; the shield arm goes limp across his flank and the aspis slides off it
+    (0.72, dict(pelvis=(.23, .09, .34), rot=(-.35, -1.25, 0, -.12), spine=(.18, .12, 0), head=(.10, .20, -.2),
                 plant=0, ankle_l_w=(.26, .27, .215), ankle_r_w=(-.28, .25, .24),
-                ankle_l=(.06, .14, .60), ankle_r=(-.03, .08, .58),
-                knee_l=(.15, -2.0, .50), knee_r=(-.25, -2.0, .60), foot=(2.0, 1.9),
+                ankle_l=(.06, .14, .60), ankle_r=(.02, .08, .58),
+                knee_l=(.15, -2.0, .50), knee_r=(.40, -2.0, .60), foot=(2.0, 1.9),
                 hand_l=(.16, -.34, 1.06), elbow_l=(.60, -.30, 1.10),
                 hand_r=(-.40, -.30, 1.25), elbow_r=(-.60, -.30, 1.00),
-                arm_w=.8, hand_l_w=(.12, .12, .72), elbow_l_w=(-.10, .40, .90),
+                arm_w=.8, hand_l_w=(.08, .10, .66), elbow_l_w=(-.10, .40, .70),
                 hand_r_w=(-.25, -.45, .14), elbow_r_w=(-.55, -.25, .10),
-                shield_w=.80, shield_arc=.35, ease='out')),
+                shield_w=.55, shield_arc=.10, ease='out')),
     # 6 settles on his side facing out, knees drawn up; the aspis lands on its rim behind him
-    (0.80, dict(pelvis=(.24, .10, .36), rot=(-.50, -1.49, 0, -.2), spine=(.15, .0, 0), head=(.05, -.10, -.45),
+    (0.88, dict(pelvis=(.24, .10, .36), rot=(-.62, -1.49, 0, -.2), spine=(.15, .0, 0), head=(.05, -.10, -.45),
                 plant=0, ankle_l_w=(.26, .27, .215), ankle_r_w=(-.28, .25, .24),
-                ankle_l=(-.02, .10, .52), ankle_r=(-.125, -.08, .66),
+                ankle_l=(-.02, .08, .62), ankle_r=(-.125, -.08, .66),
                 knee_l=(.125, -2.0, .60), knee_r=(-.125, -2.0, .80), foot=(1.4, 1.35),
                 hand_l=(-.12, -.32, .98), elbow_l=(.60, -.30, 1.10),
                 hand_r=(-.50, -.38, 1.20), elbow_r=(-.45, -.25, 1.60),
                 arm_w=1, hand_l_w=(.22, .26, .30), elbow_l_w=(.0, .33, .40),
                 hand_r_w=(-.25, -.45, .14), elbow_r_w=(-.55, -.25, .10),
-                shield_w=1, shield_arc=.35, ease='out')),
+                shield_w=1, shield_arc=.10, ease='out')),
     # 7 at rest (held)
-    (0.96, dict(pelvis=(.24, .10, .355), rot=(-.55, -1.49, 0, -.2), spine=(.15, .0, 0), head=(.0, .0, -.5),
+    (0.97, dict(pelvis=(.24, .10, .34), rot=(-.70, -1.49, 0, -.2), spine=(.15, .0, 0), head=(.0, .0, -.40),
                 plant=0, ankle_l_w=(.26, .27, .215), ankle_r_w=(-.28, .25, .24),
-                ankle_l=(-.02, .10, .52), ankle_r=(-.125, -.08, .66),
+                ankle_l=(-.02, .08, .62), ankle_r=(-.125, -.08, .66),
                 knee_l=(.125, -2.0, .60), knee_r=(-.125, -2.0, .80), foot=(1.3, 1.3),
                 hand_l=(-.12, -.32, .98), elbow_l=(.60, -.30, 1.10),
                 hand_r=(-.50, -.38, 1.20), elbow_r=(-.45, -.25, 1.60),
@@ -182,11 +182,14 @@ def place_shield(c, rig):
     centre = matrix @ _shield_points['centre']
     normal = rotation @ Vector((0, -1, 0))
     rest_centre, rest_normal = SHIELD_REST
-    turned = normal.rotation_difference(rest_normal.normalized()) @ rotation
-    rotation = rotation.slerp(turned, weight)
+    # It tips over him rather than rising: face-up across his flank at the
+    # half-way point (a lid, not a raised plate), then down onto its rim.
+    up = Vector((0, 0, 1))
+    facing = (normal.slerp(up, weight*2) if weight < .5
+              else up.slerp(rest_normal.normalized(), weight*2-1))
+    rotation = normal.rotation_difference(facing) @ rotation
     centre = centre.lerp(rest_centre, weight)
-    # Slipping off the arm it drops rim-first: a small arc keeps the rim out
-    # of his thigh on the way down.
+    # Just enough height to clear his upper side on the way across.
     centre.z += c.get('shield_arc', 0.)*math.sin(math.pi*weight)
     matrix = Matrix.LocRotScale(Vector(), rotation, scale)
     matrix.translation = centre-matrix.to_3x3() @ _shield_points['centre']
