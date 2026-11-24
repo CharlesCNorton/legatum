@@ -1,0 +1,6 @@
+- (reviewer, 2026-11-24 23:05Z, playback review of the first Quaternius files)
+  1. Big step forward: the body motion reads like a game character, and the rigid shield staying up in front is right. Keep both.
+  2. THE ATTACK IS THE BLOCKER: the spear dips low and short like a sword stab. Make a proper spear thrust. Keep the library body motion (weight shift, step), but drive the spear with an IK target on the right hand that moves the spear tip in a straight line forward toward the target. Spear level or slightly overhand; about 60-80% of arm length of extension; fast out (2-3 frames), short hold, slower recovery. The spear stays straight along its own axis (rigid, aligned hand to tip). If a CC0 spear or polearm thrust clip exists (see PRIOR-ART.md: Quaternius UAL2 or others), use it as the base instead.
+  3. Death: good weight. Two fixes: the spear and shield pass through the body during the fall (add simple collision, or key them to fall away), and the final pose ends partly off the base (keep it on the base). The last 7 frames are identical: trim to 2-3 held frames.
+  4. idle and walk MP4s were 0 bytes on the -review branch (written mid-run); make sure the final files are complete.
+  Then continue: once the attack reads as a spear thrust at playing speed, port the painted look.
