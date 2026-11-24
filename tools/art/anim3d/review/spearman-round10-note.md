@@ -53,6 +53,19 @@ Run from the repository root: `ROUND=10 tools/art/anim3d/units/spearman/gpu.sh`.
 - Final checks: **65 Python files parse**, three shell entry points pass Bash syntax, **7/7 regression tests**, `git diff --check`, executable GPU handoff, required CPU output files and final focus-line ordering all pass.
 - Git staging failed with `index.lock: Operation not permitted`; the runner must commit the source changes. Exact input refs and the required co-authored commit message are saved in `lanes/spearman-r10-merge/inputs.json` and `commit-message.txt`. No push or PR was performed. The checked-in app atlas was not replaced by the CPU preview.
 
+### Automated critique: spearman-round10 (GPU 512 masters / decoded 160 atlas)
+
+- Silhouette IoU: **0.9039** (target ≥ 0.95; FAIL). Best of ±3 px offsets: render x=+0, y=+1.
+- Mean CIE76 ΔE: **14.05** (target ≤ 6; FAIL), over 11207 overlapping pixels including base after that offset.
+- Painting mask: alpha; frames: idle 8, move 8, attack 10, hit 4, death 10.
+- Rest: `/Users/samcorcos/LegatumRuns/anim-pilot/masters/spearman/256/rest.png`. Contact sheet uses `/Users/samcorcos/LegatumRuns/anim-pilot/review/3d-v2/spearman-decoded-160`.
+
+### Delivery receipt (GPU final render, visual review pending)
+
+- 40 frames; 160 px trimmed atlas: 197114 bytes, quality 85; decoded validation PASS.
+- Walk: planted slip 0.0018 mm; floor error 1.133 mm; heading 2.618°.
+- Movie: five clips, 1600×352, H.264 yuv420p, 192 frames / 8 seconds. No art PASS issued.
+
 FOCUS a: Refine the shoulder/sleeve shell and the remaining ankle/greave mass against the painting at 256/160, preserving real foot geometry and the wider guard's contact.
 FOCUS b: Paint coherent shoulder/back/underside folds and restore dark cloak, inner-thigh and shield-rim values; preserve highlights and avoid orange saturation or finer noise as substitutes.
 FOCUS c: Smooth the arm-attached shield's floor hinge during collapse and improve walk weight using donor motion; retain clean contacts, attack/idle and restored hit pins.

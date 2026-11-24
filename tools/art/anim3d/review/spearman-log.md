@@ -186,3 +186,4 @@
 - Round 10 merge: read both feedback files and lane comparisons; used Legatum unit 3D plus modeling/materials/lighting/cameras/animation/rendering skills. Ported skill/critique and all three final lane gains because git lock writes are denied. Shared kit extraction is live; isolated CPU rebuild in progress.
 - Round 10 combined CPU complete: all 5 clips / 40-pose audit zero findings; feet pass; decoded 160 atlas 183016 bytes q80; IoU .902229 / CIE76 deltaE 13.814 (targets fail). Inspected rest, hit/death, decoded contact and feet sheets. MPFB/Rigify/corrective kit probe passes; no art PASS.
 - GPU round 10 started: full Cycles GPU pass requested.
+- GPU round 10 finished: all stages, masters, atlas validation and movie complete; visual review pending.
