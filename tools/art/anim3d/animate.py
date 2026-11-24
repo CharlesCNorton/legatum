@@ -9,6 +9,7 @@ sys.path.insert(0,str(Path(__file__).parent/'units/spearman'))
 from retarget import prepare, apply_matrices, contact_ik
 from contact import sole_points
 from motion import attack_channels, source_phase, EquipmentResponse
+import collapse
 root=Path(os.environ['ANIM_ROOT']);M=root/'masters/spearman-3d-v2';A=root/'assets'
 CLIPS={'idle':(8,4),'move':(8,6),'attack':(10,14),'hit':(4,12),'death':(10,4)}
 
@@ -57,6 +58,7 @@ if clip=='death':
 for p in rig.pose.bones:p.rotation_mode='QUATERNION'
 def reset():
  rig.location=base_loc
+ if clip=='death':rig.rotation_mode='QUATERNION';rig.rotation_quaternion=(1,0,0,0)
  if shield:shield.matrix_basis=shield_neutral
  for o in spear_objects:o.matrix_basis=spear_neutral[o.name]
  for p in rig.pose.bones:p.matrix_basis=Matrix(neutral[p.name])
@@ -77,7 +79,10 @@ def hand_spear(direction):
  rot=q.to_matrix().to_4x4();pos=reset_mat.translation.copy();mat=rot @ reset_mat;mat.translation=pos;p.matrix=mat;bpy.context.view_layer.update()
 def pose(t):
  reset()
- if clip in ['idle','move','hit','death']:
+ if clip=='death':
+  # Authored weighted collapse (units/spearman/collapse.py); t=0 is the exact guard.
+  if t>0:collapse.apply(t,rig,neutral_world,limb,turn)
+ elif clip in ['idle','move','hit']:
   motion=retarget_frames[active_frame-1]
   rig.location=base_loc+motion['root']
   apply_matrices(rig,motion['matrices'])
@@ -143,28 +148,15 @@ def pose(t):
    for k in range(1,4):
     p=rig.pose.bones[f'{digit}_{k:02d}_r'];p.rotation_quaternion=p.rotation_quaternion.slerp(Quaternion(),min(1,release*4))
   bpy.context.view_layer.update()
- if clip=='death' and shield:
-  release=max(0,min(1,(t-.30)/.42));mat=shield.matrix_world.copy();q=mat.to_quaternion().slerp(Matrix.Rotation(-math.pi/2,4,'X').to_quaternion(),release)
-  pos=mat.translation.lerp(Vector((.14,.02,.28)),release)
-  scale=mat.to_scale()
-  mat=q.to_matrix().to_4x4() @ Matrix.Diagonal((*scale,1));mat.translation=pos;shield.matrix_world=mat
-  bpy.context.view_layer.update()
-  # Contact correction for the released shield, using evaluated mesh geometry.
-  dg=bpy.context.evaluated_depsgraph_get();lowest=10
-  for ob in shield.children:
-   ev=ob.evaluated_get(dg);me=ev.to_mesh()
-   lowest=min(lowest,min((ob.matrix_world @ v.co).z for v in me.vertices));ev.to_mesh_clear()
-  if lowest<.10:
-   parent_matrix=shield.matrix_world @ shield.matrix_basis.inverted()
-   shield.location+=parent_matrix.to_3x3().inverted() @ Vector((0,0,.10-lowest))
-   bpy.context.view_layer.update()
 count,fps=CLIPS[clip];samples=[25+round(i*24/fps) for i in range(count)]
 # Give cloth one second to settle before any output sample.
 end=25+round(count*24/fps) if clip in ['idle','move'] else samples[-1]
 sc.frame_start=1;sc.frame_end=end;sc.render.fps=24
 phases=[max(0,(f-25))/(count*24/fps) if clip in ['idle','move']
         else max(0,min(1,(f-25)/max(1,end-25))) for f in range(1,end+1)]
-retarget_frames,motion_source=prepare(rig,root,clip,phases) if clip!='attack' else (None,{'provider':'Original weapon-specific hand keys, rebased on Quaternius idle reference'})
+if clip=='attack':retarget_frames,motion_source=None,{'provider':'Original weapon-specific hand keys, rebased on Quaternius idle reference'}
+elif clip=='death':retarget_frames,motion_source=None,{'provider':'Authored weighted collapse (units/spearman/collapse.py); shield stays strapped','keys':len(collapse.KEYS)}
+else:retarget_frames,motion_source=prepare(rig,root,clip,phases)
 response=EquipmentResponse(rig,shield,clip)
 # A single complete source cycle, sampled before its duplicate endpoint.
 
@@ -175,7 +167,7 @@ for f in range(1,end+1):
  # Loop clips sample before the duplicate final phase.
  if clip in ['idle','move']:t=max(0,(f-25))/(count*24/fps)
  active_frame=f
- equipment_phase=source_phase('death',t) if clip=='death' else t
+ equipment_phase=t
  pose(equipment_phase)
  # Resolve the actual finished sandal underside against the real stone top.
  # Small foot-bone translations preserve the keyed action and live skinning;
@@ -199,10 +191,9 @@ for f in range(1,end+1):
    # The open clip falls onto a flat floor. Fit its root to the actual raised
    # stone and thick armour, preserving every retargeted joint rotation.
    released={o:o.matrix_world.copy() for o in spear_objects}
-   if shield and t>.30:released[shield]=shield.matrix_world.copy()
-   dg=bpy.context.evaluated_depsgraph_get();lift=0
-   for ob in (sc.objects if t>.30 else []):
-    if ob.type!='MESH' or ob.hide_render or ob==base or ob.name.startswith(('Cloak •','Aspis','Sunburst','Convex bronze aspis','Shield','Leather shield')):continue
+   dg=bpy.context.evaluated_depsgraph_get();lift=0;culprit=''
+   for ob in (sc.objects if t>0 else []):
+    if ob.type!='MESH' or ob.hide_render or ob==base or ob.name.startswith(('Cloak •','Aspis','Sunburst','Convex bronze aspis','Shield','Leather shield','Leather sandal','Sandal strap')):continue
     if ob in spear_objects:continue
     # Only rig-carried body/clothes/armour; released equipment has its own solve.
     parent=ob.parent
@@ -211,8 +202,9 @@ for f in range(1,end+1):
     for v in me.vertices:
      w=ob.matrix_world @ v.co;local=base_inverse @ w
      plane=floor+.005 if local.x*local.x+local.y*local.y<base_radius**2 else .012
-     lift=max(lift,plane-w.z)
+     if plane-w.z>lift:lift=plane-w.z;culprit=ob.name
     ev.to_mesh_clear()
+   if f in samples:print('DEATH_LIFT',f,round(lift,3),culprit if lift>0 else '',flush=True)
    if lift>0:
     rig.location.z+=lift;bpy.context.view_layer.update()
     for ob,matrix in released.items():ob.matrix_world=matrix
@@ -247,6 +239,7 @@ for f in range(1,end+1):
     bpy.context.view_layer.update()
  response.key(f,equipment_phase)
  rig.keyframe_insert(data_path='location',frame=f)
+ if clip=='death':rig.keyframe_insert(data_path='rotation_quaternion',frame=f)
  for o in spear_objects:
   o.keyframe_insert(data_path='location',frame=f);o.keyframe_insert(data_path='rotation_quaternion',frame=f)
  if shield:
