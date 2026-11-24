@@ -168,3 +168,7 @@
 - Round 9 final CPU selection: original hit cloth removes the recovery spike. Final 40-pose audit: zero findings; atlas 196738 bytes/Q85, all trim/alpha/clip/held-death checks passed; eight-second five-clip movie verified. Critique and next-round FOCUS lines saved. GPU pass/visual approval pending; no PASS. Git index.lock denied; runner commit message and input hashes saved.
 - GPU round 9 started: full Cycles GPU pass requested.
 - GPU round 9 finished: all stages, masters, atlas validation and movie complete; visual review pending.
+
+- R10c: loaded unit-3D and all six Blender skills; isolated round-9 master in lanes/spearman-r10c. Merge lock denied; round-9 art source diff applied, no unrelated engine changes. Focus: source stride/collapse weight and equipment settling; retain restored hit cloth pins.
+
+- R10a: loaded unit-3D and all six Blender skills, art skill and playbook. R9 is already ancestor; merge no-op blocked at ORIG_HEAD.lock. Isolated CPU workspace lanes/spearman-r10a; focus lower legs, footwear and anatomical rest stance only.
