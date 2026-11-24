@@ -202,3 +202,4 @@
 - Round 11 merge: read live feedback and Astra/Fable evidence; used unit-3D and all six Blender skills. Skill/critique ported after ORIG_HEAD lock denied. Isolated rebuild scene check passed; all clips rebuilt from combined geometry. CPU rest preview available; painted Eevee final awaits host.
 - GPU round 11 started: full Eevee painted GPU pass requested; Cycles GPU feet inspection.
 - GPU round 11 finished: all stages, masters, atlas validation and movie complete; visual review pending.
+- R12a: loaded cumulative skills/reviews; Git merge blocked at ORIG_HEAD.lock, applied exact 01a69951 working tree; isolated inputs in lanes/spearman-r12a.
