@@ -47,6 +47,14 @@ analytic sun instead of Eevee Shader-to-RGB and no live cast shadow. GPU colour,
 contact shadows and final byte size must be measured again; CPU and GPU numbers
 are not interchangeable.
 
+### Automated critique: spearman-round12 (Cycles CPU painted-look proxy, 256 px / 8 samples, decoded 160 atlas; not GPU)
+
+- Silhouette IoU: **0.9394** (target ≥ 0.95; FAIL). Best of ±3 px offsets: render x=+0, y=+0.
+- Tone/colour ΔE on blurred images (sigma 2 px, CIE76): **4.55** (target ≤ 6; PASS), at zero offset over 11574 overlapping pixels including base. Information only: raw per-pixel ΔE 8.35; at the IoU offset blurred 4.55, raw 8.35.
+- Regions (blurred ΔE): head_crest 3.7, torso 2.7, cloak_spear_side 4.4, shield 2.2, legs 2.9, feet 13.4, base 4.7.
+- Painting mask: alpha; frames: idle 8, move 8, attack 10, hit 4, death 10.
+- Rest: `/Users/samcorcos/LegatumRuns/anim-pilot/lanes/spearman-r12-merge/preview/rest/00.png`. Contact sheet uses `/Users/samcorcos/LegatumRuns/anim-pilot/lanes/spearman-r12-merge/review/3d-v2/spearman-decoded-160`.
+
 FOCUS a: Match sandal instep height, strap bands and remaining shin contour without lengthening feet beyond the contact budget.
 FOCUS b: Review final GPU foot shadows, sandal tone and cloak lit folds; preserve the lining/sole continuity wins.
 FOCUS c: Review death shield tilt and early spear release, and the hit peak at 160; keep the wider open-mocap walk contact-clean.
