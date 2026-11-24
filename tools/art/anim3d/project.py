@@ -286,6 +286,9 @@ sys.path.insert(0, str(Path(__file__).parent/'infantry'))
 from refine import refine
 from paint_finish import painted_fill
 refine(sc, aim, screen_sculpt)
+sys.path.insert(0, str(Path(__file__).parent/'units/spearman'))
+from silhouette import fit_silhouette
+fit_silhouette(sc, screen_sculpt)
 rig['neutral_pose'] = json.dumps({p.name: [list(row) for row in p.matrix_basis] for p in rig.pose.bones})
 
 # Evaluate deformation with original vertex indexing. UVs are written to the

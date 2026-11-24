@@ -401,6 +401,33 @@ resolved Blender gate in its retained log. The requested round-7 GPU log was
 absent and supplied evidence was CPU-labelled. This is an unverified GPU pass,
 not evidence of successful final rendering or a diagnosed GPU failure.
 
+### Round 9a proportions and silhouette lane
+
+`units/spearman/silhouette.py` is a geometry-only pass after `refine()` and
+before frozen painting UVs. It lowers the shield's over-high upper rim while
+leaving its boss registered, shortens the cape's side tails, seats the shoulder
+cap, fills the upper-arm contour and extends the crest tip. Shell, rim, backing
+and ornament receive the same continuous fitting field. Weighted surfaces are
+edited in the guard pose through inverse skin transforms. Camera-axis depth,
+MPFB topology/weights, material definitions, cloth settings, foot geometry and
+open-motion retargeting remain unchanged. The existing camera already registers
+the crest height and base ellipse closely; changing it would move every landmark.
+
+Parallel Spearman lanes must use separate external `ANIM_ROOT` working copies.
+Lane a uses `ANIM_ROOT=$HOME/LegatumRuns/anim-pilot/lanes/spearman-r9a`, copying
+the master, projection checkpoint, source painting and textures, with links to
+the existing assets and Blender resources. Do not overwrite the
+shared final master or another lane's renders during CPU iteration.
+
+`silhouette_review.py` compares the preserved `round8-render/`, a 256px/16-sample
+CPU `baseline-cpu/`, and the current raw `renders/c/` with one
+`baseline-grade.json` LUT. It emits `spearman-r9a-restpose-compare.png` with
+native 256/64 views, a 50/50 crossfade and split-screen in the shared review
+folder. Alpha IoU is diagnostic only; it cannot certify proportions, surface
+quality or clean motion. The unchanged `ROUND=9 tools/art/anim3d/units/spearman/gpu.sh`
+automatically includes this pass when it rebuilds projection, clips and final
+512/256 masters, atlas, foot check and movie after the lead merges lane winners.
+
 ### Trimmed atlas v2 and checks
 
 `units/spearman/delivery.py` preserves 8/8/10/4/10 frames, real alpha, and the
