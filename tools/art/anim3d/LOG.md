@@ -168,3 +168,5 @@ Feet, the spear-side cloak and the legs carry the colour error on the Cycles rou
 - Art director on the GPU final (03:21Z): all 14 CPU items stand in the same order; six additions visible only on clean frames (pale patch under both feet, calf flap with a ring artifact on the right greave, base lip and wall height, no cast shadow on the base top, shaft still a 2 px black line, crest spike in death frame 3). Attack and idle frozen. Best candidate on every aspect is still Astra round 10; no Fable previews yet.
 
 - Round 14 timing from `.progress/astra.log`: a 03:02:58–03:19:04 (16m06s), b 03:03:00–03:16:27 (13m27s), c 03:03:14–03:32:23 (29m09s); parallel lane wall 29m25s. Merge started 03:33:06, verification recorded 2026-11-24T03:47:24 (14.3 m elapsed; final runner finish is not yet recorded). GPU minutes unknown/pending. Tokens not measured. Motion: cloth seams 2.624/12.074 px to <0.00004; entry/exit 23.00/18.66 to 14.41/9.44 px. Full correction peak 273 mm versus c 230 mm; visually restrained, not a universal metric win.
+
+- Spearman round 14 GPU receipt: IoU 0.9537; blurred ΔE 3.51; raw ΔE 6.36; atlas 187316 bytes / q80; 40 frames. Visual review pending.
