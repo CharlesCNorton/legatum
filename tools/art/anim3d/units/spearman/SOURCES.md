@@ -31,3 +31,10 @@ layer. `Hit_Chest` and `Death01` are time-remapped with a guard recovery blend
 for hit. No new human joint motion is invented for those clips. Continuous
 weapon attack curves, passive crest/shield springs and cloth response are
 original MIT orchestration; no new asset download.
+
+Round 10c reuses the same pinned CC0 `Walk_Loop` (90% source NLA influence),
+`Death01` (source phase remapping), idle and hit. No new asset or human joint
+keys. Death blends its own settled local leg pose into recoil and the existing
+Idle_Loop local arms (85% shield arm, 65% free arm) into the carrying pose
+before retargeting. It keeps the
+original arm-mounted shield, with damped crest and cape response. Original orchestration is MIT; renders are CC BY 4.0.

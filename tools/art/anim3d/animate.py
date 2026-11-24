@@ -8,7 +8,7 @@ sys.path.insert(0,str(Path(__file__).parent/'infantry'))
 sys.path.insert(0,str(Path(__file__).parent/'units/spearman'))
 from retarget import prepare, apply_matrices, contact_ik
 from contact import sole_points
-from motion import attack_channels, source_phase, EquipmentResponse
+from motion import attack_channels, source_phase, EquipmentResponse, ShieldContact
 root=Path(os.environ['ANIM_ROOT']);M=root/'masters/spearman-3d-v2';A=root/'assets'
 CLIPS={'idle':(8,4),'move':(8,6),'attack':(10,14),'hit':(4,12),'death':(10,4)}
 
@@ -29,9 +29,11 @@ shield=bpy.data.objects.get('Aspis control');shield_neutral=shield.matrix_basis.
 if shield:shield.rotation_mode='QUATERNION'
 cloth=bpy.data.objects['Cloak • simulated wool'].modifiers['Cloth per clip']
 cloth.show_viewport=False
-if clip in ['attack','hit']:
+if clip=='attack':
  # Retain the shoulder attachment; free more of the lower wool to lag the
  # torso's acceleration, then damp it like a heavy cloak instead of a flag.
+ # Hit keeps the original pins/settings: loosening them raised a cloak corner
+ # behind the shoulder at its four-frame recovery in the merged candidate.
  cloak=bpy.data.objects['Cloak • simulated wool'];pins=cloak.vertex_groups['Shoulder pins']
  for v in cloak.data.vertices:
   for g in v.groups:
@@ -44,8 +46,9 @@ if clip=='death':
  cloak=bpy.data.objects['Cloak • simulated wool'];pins=cloak.vertex_groups['Shoulder pins']
  for v in cloak.data.vertices:
   for g in v.groups:
-   if g.group==pins.index and g.weight<.99:pins.add([v.index],g.weight*.15,'REPLACE')
- cloth.settings.bending_stiffness=.4
+   if g.group==pins.index and g.weight<.99:pins.add([v.index],g.weight*.35,'REPLACE')
+ cloth.settings.bending_stiffness=.8
+ cloth.settings.air_damping=4
  bpy.ops.mesh.primitive_cube_add(size=1,location=(0,0,-.02))
  ground=bpy.context.object;ground.name='Death ground cloth collider';ground.scale=(6,6,.04)
  bpy.ops.object.transform_apply(location=False,rotation=False,scale=True)
@@ -79,6 +82,11 @@ def pose(t):
   motion=retarget_frames[active_frame-1]
   rig.location=base_loc+motion['root']
   apply_matrices(rig,motion['matrices'])
+  if clip=='death':
+   # Register the donor's floor-length fall across the miniature's stone.
+   # Keep source joint rotations and entry pose; avoid landing behind the disc.
+   settle=max(0.,min(1.,(t-.25)/.30));settle=settle*settle*(3-2*settle)
+   rig.location.y-=.40*settle
   if clip=='move':contact_ik(rig,motion['foot_corrections'])
   bpy.context.view_layer.update()
  elif clip=='attack':
@@ -141,21 +149,6 @@ def pose(t):
    for k in range(1,4):
     p=rig.pose.bones[f'{digit}_{k:02d}_r'];p.rotation_quaternion=p.rotation_quaternion.slerp(Quaternion(),min(1,release*4))
   bpy.context.view_layer.update()
- if clip=='death' and shield:
-  release=max(0,min(1,(t-.30)/.42));mat=shield.matrix_world.copy();q=mat.to_quaternion().slerp(Matrix.Rotation(-math.pi/2,4,'X').to_quaternion(),release)
-  pos=mat.translation.lerp(Vector((.14,.02,.28)),release)
-  scale=mat.to_scale()
-  mat=q.to_matrix().to_4x4() @ Matrix.Diagonal((*scale,1));mat.translation=pos;shield.matrix_world=mat
-  bpy.context.view_layer.update()
-  # Contact correction for the released shield, using evaluated mesh geometry.
-  dg=bpy.context.evaluated_depsgraph_get();lowest=10
-  for ob in shield.children:
-   ev=ob.evaluated_get(dg);me=ev.to_mesh()
-   lowest=min(lowest,min((ob.matrix_world @ v.co).z for v in me.vertices));ev.to_mesh_clear()
-  if lowest<.10:
-   parent_matrix=shield.matrix_world @ shield.matrix_basis.inverted()
-   shield.location+=parent_matrix.to_3x3().inverted() @ Vector((0,0,.10-lowest))
-   bpy.context.view_layer.update()
 count,fps=CLIPS[clip];samples=[25+round(i*24/fps) for i in range(count)]
 # Give cloth one second to settle before any output sample.
 end=25+round(count*24/fps) if clip in ['idle','move'] else samples[-1]
@@ -164,6 +157,7 @@ phases=[max(0,(f-25))/(count*24/fps) if clip in ['idle','move']
         else max(0,min(1,(f-25)/max(1,end-25))) for f in range(1,end+1)]
 retarget_frames,motion_source=prepare(rig,root,clip,phases) if clip!='attack' else (None,{'provider':'Original weapon-specific hand keys, rebased on Quaternius idle reference'})
 response=EquipmentResponse(rig,shield,clip)
+shield_contact=ShieldContact(rig,shield) if clip=='death' and shield else None
 # A single complete source cycle, sampled before its duplicate endpoint.
 
 for f in range(1,end+1):
@@ -197,7 +191,6 @@ for f in range(1,end+1):
    # The open clip falls onto a flat floor. Fit its root to the actual raised
    # stone and thick armour, preserving every retargeted joint rotation.
    released={o:o.matrix_world.copy() for o in spear_objects}
-   if shield and t>.30:released[shield]=shield.matrix_world.copy()
    dg=bpy.context.evaluated_depsgraph_get();lift=0
    for ob in (sc.objects if t>.30 else []):
     if ob.type!='MESH' or ob.hide_render or ob==base or ob.name.startswith(('Cloak •','Aspis','Sunburst','Convex bronze aspis','Shield','Leather shield')):continue
@@ -244,6 +237,9 @@ for f in range(1,end+1):
      matrix=ob.matrix_world.copy();matrix.translation+=shift;ob.matrix_world=matrix
     bpy.context.view_layer.update()
  response.key(f,equipment_phase)
+ if shield_contact:
+  shield_contact.solve()
+  bpy.context.view_layer.update()
  rig.keyframe_insert(data_path='location',frame=f)
  for o in spear_objects:
   o.keyframe_insert(data_path='location',frame=f);o.keyframe_insert(data_path='rotation_quaternion',frame=f)
@@ -252,6 +248,7 @@ for f in range(1,end+1):
  for p in rig.pose.bones:
   p.rotation_mode='QUATERNION';p.keyframe_insert(data_path='location',frame=f);p.keyframe_insert(data_path='rotation_quaternion',frame=f);p.keyframe_insert(data_path='scale',frame=f)
 motion_source['equipment_response']=response.report()
+if shield_contact:motion_source['equipment_response']['max_attached_shield_hinge_radians']=shield_contact.max_angle
 sc['motion_source']=json.dumps(motion_source)
 sc['sample_frames']=json.dumps(samples)
 if os.environ.get('MOTION_DIAGNOSTIC') == '1':

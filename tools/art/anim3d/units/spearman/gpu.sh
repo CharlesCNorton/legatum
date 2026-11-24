@@ -46,6 +46,7 @@ stage=b
 SPEARMAN_PLAIN=1 tools/art/anim3d/render.sh b
 stage=c
 tools/art/anim3d/render.sh c
+cp "$REVIEW/spearman-f-restpose-compare.png" "$REVIEW/spearman-round${ROUND}-restpose-compare.png"
 stage=detail
 tools/art/anim3d/render.sh detail
 stage=d
@@ -65,6 +66,16 @@ stage=delivery
 "$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/spearman/delivery.py pack
 "$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/spearman/delivery.py validate
 "$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/spearman/delivery.py movie
+stage=required-outputs
+for output in "spearman-round${ROUND}.mp4" "spearman-round${ROUND}-restpose-compare.png" spearman-f-restpose-compare.png spearman-g-feet-check.png; do
+  test -s "$REVIEW/$output"
+done
+for size in 512 256; do
+  test -s "$ANIM_ROOT/masters/spearman/$size/rest.png"
+  for clip in idle move attack hit death; do
+    test -s "$ANIM_ROOT/masters/spearman/$size/$clip/00.png"
+  done
+done
 printf '%s\n' "- GPU round $ROUND finished: all stages, masters, atlas validation and movie complete; visual review pending." >> "$REVIEW/spearman-log.md"
 printf 'round=%s status=complete finished=%s visual_review=pending\n' "$ROUND" "$(date -u +%FT%TZ)" > "$status"
 # PASS is a visual judgment after reviewing these outputs; never write it here.

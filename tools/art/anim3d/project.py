@@ -286,6 +286,9 @@ sys.path.insert(0, str(Path(__file__).parent/'infantry'))
 from refine import refine
 from paint_finish import painted_fill
 refine(sc, aim, screen_sculpt)
+sys.path.insert(0, str(Path(__file__).parent/'units/spearman'))
+from silhouette import fit_silhouette
+fit_silhouette(sc, screen_sculpt)
 rig['neutral_pose'] = json.dumps({p.name: [list(row) for row in p.matrix_basis] for p in rig.pose.bones})
 
 # Evaluate deformation with original vertex indexing. UVs are written to the
@@ -423,6 +426,9 @@ for ob in list(sc.objects):
         pigment.inputs['Emission Strength'].default_value = 1
         blend = nodes.new('ShaderNodeMixShader')
         links.new(camera_paint.outputs[0], blend.inputs[0]); links.new(physical, blend.inputs[1]); links.new(pigment.outputs[0], blend.inputs[2]); links.new(blend.outputs[0], output.inputs['Surface'])
+# Material-only lane hook: frozen underpainting after projection, before save.
+from surface_finish import apply as finish_surfaces
+finish_surfaces(sc, image)
 for mod, enabled in saved_modifiers: mod.show_viewport = enabled
 cloth.show_viewport = True
 sc['projection_v3'] = True

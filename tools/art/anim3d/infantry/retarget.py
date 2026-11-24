@@ -14,7 +14,7 @@ from mathutils import Matrix, Vector
 from contact import landmarks
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]/'units/spearman'))
-from motion import source_phase, hit_envelope
+from motion import source_phase, hit_envelope, WALK_INFLUENCE, death_source_layers, blend_death_source
 
 ACTIONS = {'idle': 'Idle_Loop', 'move': 'Walk_Loop',
            'hit': 'Hit_Chest', 'death': 'Death01'}
@@ -159,6 +159,7 @@ def prepare(rig, root, clip, phases):
     source.animation_data.action = action
     source.animation_data.action_slot = action.slots[0]
     first, last = action.frame_range
+    death_layers = death_source_layers(source, action) if clip == 'death' else None
     if clip == 'move':
         # Attenuate the COMPLETE source action in its own rest space, before
         # reference calibration/retargeting. This reduces the high stepping of
@@ -169,7 +170,7 @@ def prepare(rig, root, clip, phases):
         walk.action_slot = action.slots[0]
         walk.blend_type = 'REPLACE'
         walk.use_animated_influence = True
-        walk.influence = .92
+        walk.influence = WALK_INFLUENCE
         walk.keyframe_insert(data_path='influence', frame=first)
     carry = None
     if clip == 'move':
@@ -249,6 +250,8 @@ def prepare(rig, root, clip, phases):
             for p in rig.pose.bones:
                 p.location=Matrix(json.loads(rig['neutral_pose'])[p.name]).translation*(1-blend)
         scene.frame_set(int(frame), subframe=frame-int(frame))
+        if death_layers:
+            blend_death_source(source, motion_phase, death_layers)
         bpy.context.view_layer.update()
         hip = source.pose.bones['DEF-hips'].head.copy()
         frames.append({'matrices': {p.name: p.matrix.copy() for p in rig.pose.bones},
@@ -265,8 +268,9 @@ def prepare(rig, root, clip, phases):
     scene.frame_set(1)
     bpy.context.view_layer.update()
     return frames, {'provider': 'Quaternius Universal Animation Library Standard',
-                    'action': ACTIONS[clip], 'source_action_influence': .92 if clip=='move' else 1,
-                    'timing': 'r9c impact then settle; source rotations retained',
+                    'action': ACTIONS[clip], 'source_action_influence': WALK_INFLUENCE if clip=='move' else 1,
+                    'timing': 'r10c knee yield, torso descent, damped settle; source pose blends before retarget',
+                    'death_layers': 'Death01 settled legs / Idle_Loop local carrying arms' if death_layers else None,
                     'arm_layer': 'Idle_Loop via Blender NLA' if carry else None, 'entry_blend_fraction': .18 if clip=='death' else 0, 'exit_blend_fraction': .70 if clip=='hit' else 0, 'license': 'CC0-1.0',
                     'method': 'Blender COPY_ROTATION WORLD, calibrated reference/rest matrices including roll',
                     'source_frames': [first, last], 'leg_scale': scale,
