@@ -91,3 +91,5 @@ GPU round 2: all stages GPU512, verified 256 copies, trimmed atlas, geometry/alp
 
 Driver round3 opening: opened GPU c/f, all five e strips and round2 movie filmstrip before edits. GPU round2 completed: outer log reports success; receipt and all stages GPU512/96 retained under masters/bomber/driver-r2-gpu. No bomber-FEEDBACK.md exists. At256 aircraft paint and glazing are close, but stand has triangulated/chalky side edges, stone top a flat patch, far wingtip too angular, and death still resembles an intact plane hovering beside its disc. At64 identity/wingspan match well, yet support and wreck silhouette differ. No PASS.
 Round3 skills: read all PLAYBOOK chapters, full standing FEEDBACK 1-23, art instructions, sources, and all six Blender skills. Preserve exact-view frozen projection on full-depth finished geometry, generated hidden fills, warm key/cool rim and one measured histogram grade. Priorities: generated clean stone footprint, supported grounded death and smoother stand normals. No cloth/straps on this crewless aircraft.
+c: 1 frames at 256/64 from 256px CYCLES/CPU, 8 samples.
+e-death: 10 frames at 256/64 from 256px CYCLES/CPU, 8 samples.

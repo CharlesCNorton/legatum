@@ -199,3 +199,8 @@
 - Published e-hit review from CPU render.
 - Published e-death review from CPU render.
 - Published g-feet review from CPU render.
+- Final CPU audit PASSED all 40 samples, body/rig integrity, evaluated soles (<0.00001m), source foot rotations, horizontal stance (<0.000001m), 0.0301m maximum grip gap, exact loop closure (<0.00001) and released-equipment clearance. No full collision solver.
+- Final preview pack/validation PASSED: 1260x756 atlas, 160px trimmed logical cells, 181464 bytes at Q80, exact alpha/offset reconstruction and held death. GPU provenance correctly REJECTED the CPU preview.
+- Final decoded movie PASSED H264/yuv420p, 1600x348, 240 frames, 8.000 seconds. Inspected actual decoded movie frames and all five final strips plus rest split/crossfade and top/front feet. Eighteen Python parses, two shell syntax checks, ten asset hashes, repeated-grade byte equality and whitespace checks passed.
+- Final honest verdict: 256px stone grain, hand/shaft and continuous ankles improved; pelt contour, shield edge and hidden surfaces remain below the painting. At 64px it is the same unit at close scale, but death arms and cloth remain visibly stiff. Rest IoU .871860 vs incoming GPU .865384 is cross-settings registration evidence only. NO PASS. Lead must run ROUND=3 tools/art/anim3d/units/barbarian-spearman/gpu.sh for final GPU512/64, 512/256 exports, atlas and review movie.
+- Git add/commit blocked by sandbox denial of .git/worktrees/lane-1/index.lock. Changes remain uncommitted for runner; requested message and co-author trailer recorded in unit REVIEW.md. origin/master is contained in HEAD; no merge needed. No push, PR, master merge or docs/learnings edits.
