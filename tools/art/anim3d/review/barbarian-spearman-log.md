@@ -171,3 +171,5 @@
 - Published e-move review from CPU render.
 - Published e-death review from CPU render.
 - Published g-feet review from CPU render.
+- Published c review from CPU render.
+- Published e-death review from CPU render.
