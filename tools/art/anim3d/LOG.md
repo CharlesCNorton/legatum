@@ -106,6 +106,15 @@ Lanes about 03:05–03:33 on the round-13 GPU candidate `d7798046`.
 - Lane c (loops and transitions): cloak loop gap 12.07 → 0.00003 px (move), 2.62 → 0.00003 px (idle); idle-to-move sole gap 23.0 → 14.4 px, move-to-idle 18.7 → 9.4 px by rotating the walk's eight samples.
 - Lanes done 03:33:00 (a 16 m, b 13 m, c 29 m in parallel). Merge 03:33–03:49 (16 m): lane b's cloth and lane c's loop closure, sample rotation, evaluated support surface and early parity gate; lane a's side-lying death dropped (contained, but the shield face is lost). Rest pixels identical to round 13 on the CPU proxy (IoU 0.9513, blurred ΔE 3.39); CPU preview atlas 192,682 bytes at q80; 36 tests, zero audit findings, walk slip 0.0042 mm. Worst free-cloth loop correction 273 mm (authored, not simulated). GPU pass 03:49:31–04:31:40 (42 m), first launch clean with the parity gate early, pushed as `9c35ac22`: rest unchanged at IoU **0.9537**, blurred ΔE **3.51** (regions head/crest 3.7, torso 2.9, cloak 4.8, shield 2.4, legs 3.2, feet 5.3, base 3.3); atlas 187,316 bytes at q80; walk slip 0.0042 mm, heading 5.142°. Round wall-clock from lanes to GPU result: 89 m. Reviewer, about 04:35 local: round 14 is the first full candidate to show Sam (rest matches the painting, all five clips read at 160 px). No PASS file; that is Sam's call.
 
+### Round 15 (2026-11-24 local, in progress): four polish items, nothing may regress
+
+Lanes about 04:35–04:59 on the round-14 GPU candidate `9c35ac22`. CPU proxy against round 14:
+
+- Lane a: sandal detail from shared source pigment, feet 5.45 → 4.72, blurred ΔE 3.39 → 3.30, IoU unchanged at 0.9513; a cloak contour trial rejected because it cost the idle clip.
+- Lane b: moving stone shadow; rest unchanged (3.33, feet 5.45); a "rest pools" alternative rejected (feet 10.9).
+- Lane c: all 32 walk phases checked; round 14's kept as the only one with no regression in entry, exit or cloth steps.
+- Lanes done 04:59:24; merge task queued. The skill editor's session ended at 05:30 local; later results are not recorded here.
+
 ### Fable C and D (2026-11-24, from round 12)
 
 - Fable C (rest stance, ground shadow, base band), `fable/unit-anim-3d-spearman-c`, note about 01:30 local: rest IoU 0.9394 → **0.9513** on the CPU proxy and **0.9534** in Eevee; blurred ΔE 4.55 → **3.35**; feet 13.35 → 5.4; base 4.75 → 3.3. First candidate to pass both targets. Walk numbers unchanged to the digit (slip 0.0016 mm, heading 5.14°, root 48.96 mm). Dropped: ankle targets without knee columns (0.936), an AO ground shadow (base 2.7 → 5.4), stronger sandal tones.
