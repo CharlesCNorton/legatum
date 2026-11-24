@@ -1,6 +1,6 @@
 # Spearman round 14 — combined candidate, CPU review / GPU pending
 
-Delivery status: build in progress; no round-14 GPU result is claimed.
+Delivery status: CPU verified; GPU pass and final visual review pending.
 
 ## Selected changes and evidence
 
@@ -26,7 +26,16 @@ CPU review now uses the same look.configure_render/render_frame as the GPU hando
 
 ## Verification
 
-Combined build and CPU image measurements will be appended after completion. No PASS marker: the merged GPU movie still needs the lead's visual review.
+- Fresh projection and CPU look calibration, all five clip/cloth builds, 19,158-vertex MPFB / 53-bone scene check, evaluated support regression: passed.
+- 40-pose audit: **zero findings**. All eight contact limits pass over 33 dense top/front samples: slip **0.004234 mm**, floor **0.000106 mm**, planted/readable headings **5.142/9.175 degrees**, foot loop **0**. Root correction 48.963 mm and sole correction 39.954 mm remain near their 50/40 mm caps, not relaxed.
+- Frozen idle and attack fingerprints reproduced exactly. Attack full-sole entry/exit error **0.0000341 px** at 160. Move entry/exit residual **14.4112 / 9.4421 px**. Combined cloth endpoint gaps: idle **0.0000305 px**, move **0.0000153 px** at 160.
+- Combined b+c maximum free-cloth correction is **273 mm**, versus c's reported 230 mm; idle remains 71 mm. This is a regression in correction magnitude, not hidden as a universal improvement. Inspected all intermediate 160 px poses against c: less flag-like motion and no obvious new silhouette artifact; retain pending GPU playback review. The correction is authored geometry after simulation, not a physically converged cloth bake.
+- Rest RGBA pixels equal the archived R13 CPU proxy **exactly** (mean/max channel difference 0). Rest IoU **0.951254**, zero-offset blurred delta-E **3.386599**, raw **7.274262**. No rest gain or GPU-to-CPU comparison claim. All regional blurred values under 6 (feet 5.447; cloak 5.034).
+- CPU atlas: **192,682 bytes, Q80, 160 px cells, 40 records**, decoded alpha/trim/offset/gutter/motion/held-death validation passed. Movie verified H.264/yuv420p, **1600x352, 24 fps, 192 frames, 8.000 s**. Preview atlas lives in `lanes/spearman-r14-merge/atlas`; app assets remain the R13 GPU delivery.
+- Python tests **36/36** (kit 27, critique 4, pipeline 2, look 3). Import check: zero unresolved imports; 113 Python files parse; gpu.sh shell syntax and executable bit pass. No Rust/UI source changes or unrelated engine builds.
+- Personally inspected 256 rest triptych, 256/160/64 sizes, 160 contact sheet, b+c versus c move/attack strips and all 33 top/front foot samples. At 256 it is close but sandals, hem, small sliver and the low-sample CPU surface noise still distinguish it. At 160/64 it reads as the same painted unit; moving sole and boundary-cut polish remain. No PASS marker: merged GPU output still needs visual review.
+
+GPU lead command from repo root: `ROUND=14 tools/art/anim3d/units/spearman/gpu.sh`. It regenerates every stage and replaces the clearly labelled CPU round-14 review outputs with final GPU evidence. The GPU parity gate and 512/256 delivery are prepared, not claimed as executed inside this sandbox.
 
 ### Automated critique: spearman-round14 (Merged R14 Cycles CPU proxy, freshly rebuilt/calibrated, 256 px 8 samples; decoded 160 atlas; GPU pending)
 

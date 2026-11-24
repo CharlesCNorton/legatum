@@ -253,3 +253,4 @@
 - R14c complete: cloth loop gaps 2.624/12.074 px -> <0.00004 px at 160, donor bones identical; balanced move cuts 23.00/18.66 -> 14.41/9.44 px (still open). True stone support, frozen pins/fresh rebuild and 40-pose audit pass. CPU rest unchanged (IoU .951254, blurred dE 3.33059); Q80 atlas 193118 bytes. Evidence spearman-r14c-*.png/mp4/json; note and lane-c.patch ready. GPU pending; no PASS; Git locks blocked commit.
 
 - R14 merge: read live feedback, Legatum 3D and Blender modeling/materials/lighting/cameras/animation/rendering skills; ported skill updates, c support/loops/transitions, b cloak; retained R13/Fable A+B+C look/form and death by director ranking. CPU build isolated in lanes/spearman-r14-merge.
+- R14 merge verified 2026-11-24T03:47:24: all five CPU clips; IoU .951254 / blurred delta-E 3.386599 (R13 pixels identical); 192682-byte Q80 preview; 36 tests; audit 0; feet 8 limits pass. GPU handoff ready; no PASS.
