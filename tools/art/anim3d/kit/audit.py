@@ -20,6 +20,7 @@ misses something; never loosen one to pass.
 import bpy
 from bpy_extras.object_utils import world_to_camera_view
 from mathutils.bvhtree import BVHTree
+from kit.base import SupportSurface
 
 BASE_PALETTE = ['#E9CFA0', '#B68A51']
 
@@ -41,20 +42,34 @@ def check_base(base, palette=BASE_PALETTE, projection_uv='Painting camera rest')
 
 
 def base_frame(base, inset=.015):
-    """(top z in world, inverse world matrix, footprint radius) of a round base."""
-    top = max((base.matrix_world @ v.co).z for v in base.data.vertices)
-    radius = max((v.co.x*v.co.x+v.co.y*v.co.y)**.5 for v in base.data.vertices)-inset
-    return top, base.matrix_world.inverted(), radius
+    """Legacy conservative circular top frame; use SupportSurface for fitting.
+
+    Derive the center and inscribed radius from evaluated top faces, excluding
+    wider lower rings and loose vertices. The actual support need not be round.
+    """
+    from mathutils import Matrix, Vector
+    ev = base.evaluated_get(bpy.context.evaluated_depsgraph_get())
+    mesh = ev.to_mesh()
+    try:
+        face = max((p for p in mesh.polygons if p.normal.z > .99), key=lambda p: p.area)
+        points = [ev.matrix_world @ mesh.vertices[i].co for i in face.vertices]
+        center = sum(points, Vector())/len(points)
+        radius = min((p-center).xy.length for p in points)-inset
+        return center.z, Matrix.Translation(center).inverted(), max(0., radius)
+    finally:
+        ev.to_mesh_clear()
 
 
 def check_bounds_and_contact(scene, base, label, tolerance=.01, ground=0.0):
     """One sampled frame: everything inside the camera, nothing through the
     base top inside its footprint, nothing below world ground outside it.
     """
-    top, inverse, radius = base_frame(base)
+    support = SupportSurface(base)
+    top = support.top
     depsgraph = bpy.context.evaluated_depsgraph_get()
     bounds = [1., 1., 0., 0.]
     low, lowest, disc_low, disc_lowest = 100, None, 100, None
+    penetration = 0.
     for ob in scene.objects:
         if ob.type not in ('MESH', 'CURVE') or ob == base or ob.hide_render:
             continue
@@ -64,21 +79,23 @@ def check_bounds_and_contact(scene, base, label, tolerance=.01, ground=0.0):
             w = ob.matrix_world @ v.co
             if w.z < low:
                 low, lowest = w.z, ob.name
-            local = inverse @ w
-            if local.x*local.x+local.y*local.y <= radius**2 and w.z < disc_low:
-                disc_low, disc_lowest = w.z, ob.name
+            height = support.stone_height(w)
+            if height is not None:
+                penetration = max(penetration, height-w.z)
+                if w.z < disc_low:
+                    disc_low, disc_lowest = w.z, ob.name
             p = world_to_camera_view(scene, scene.camera, w)
             bounds = [min(bounds[0], p.x), min(bounds[1], p.y), max(bounds[2], p.x), max(bounds[3], p.y)]
         evaluated.to_mesh_clear()
     findings = []
     if min(bounds[:2]) < 0 or max(bounds[2:]) > 1:
         findings.append(f'{label}: geometry outside camera {bounds}')
-    if disc_low < top-tolerance:
+    if penetration > tolerance:
         findings.append(f'{label}: {disc_lowest} intersects base, z={disc_low:.4f}, top={top:.4f}')
     if low < ground:
         findings.append(f'{label}: {lowest} below ground, z={low:.4f}')
     return findings, {'camera_bounds': bounds, 'min_z': low, 'lowest_object': lowest,
-                      'disc_min_z': disc_low, 'disc_lowest_object': disc_lowest}
+                      'disc_min_z': disc_low, 'base_penetration_m': penetration, 'disc_lowest_object': disc_lowest}
 
 
 def check_shaft(start, end, hand, blockers, label, released=False, grip_limit=.10):

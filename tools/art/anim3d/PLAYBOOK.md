@@ -766,6 +766,51 @@ the repository root (full path `tools/art/anim3d/units/spearman/gpu.sh`).
 Top/front feet inspection over the full 33-frame move cycle remains mandatory
 every round; contact numbers alone do not judge the painted feet.
 
+### Spearman round 14c: real support and measured clip boundaries
+
+`kit.base.SupportSurface` casts onto evaluated stone faces in world space.
+Use it for both animation fitting and pose audits: the widest raw vertex can
+belong to a lower ring or lie away from the top's center, and an elliptical
+base cannot be represented by one radius. The regression covers a 0.58 m top,
+0.77 m bottom, loose vertex, translated/scaled base and the real sloping rim.
+The merged R13 master itself measures 0.584 m at its widest raw local vertex;
+the reviewer's 0.77 m was not reproduced on that input. Keep this distinction.
+
+A frozen action fingerprint is not a transition measurement. Compare every
+sole vertex at 160 px, all idle exit phases, source duplicate loop endpoints,
+and the last-to-first delivered interval. R13 attack entry/exit already match
+idle within 0.00004 px; do not change the choreography to fix an obsolete note.
+The walk starts on a raised foot. `transitions.choose_move_entry` rotates its
+eight existing samples to balance entry and exit against the guard, preserving
+all source rotations, contacts, cloth, cycle intervals and frame counts. It
+reduces the entry vertex jump from 23.00 to 14.41 px and the exit from 18.66
+to 9.44 px, but does **not** make
+the idle/walk hard cut seamless. `check_transitions.py` records that unresolved
+status explicitly. A proper transition performance requires separate entry
+and exit samples; forcing the painted toe-out guard into every walk loop is
+not a valid substitute for one and would violate the donor rotation rule.
+
+Render-parity checking stays on the shared `look.configure_render` /
+`look.render_frame` path, at the existing measured GPU noise tolerance, and
+now runs before the five expensive cloth bakes. No look settings are changed.
+The full 33-pose top/front feet check remains part of every GPU handoff.
+
+The full-geometry loop check found an independent gap: the R13 cloak's
+first/duplicate-last vertices differed by 2.62 px in idle and 12.07 px in move
+at 160 px, despite nearly zero foot-loop error. `kit.loop.close_cloth_loop`
+measures the baked cloth's endpoint residual and subtracts it with a smooth
+zero-slope envelope in a Geometry Nodes modifier immediately after Cloth and
+before thickness/subdivision. This leaves all 53 bone matrices exactly
+unchanged at every dense sample, preserves UVs and the first cloth pose, and
+closes both cloth endpoints below 0.00004 px. It is an authored correction of
+the simulation's drift, not a new physical simulation. Corrections peak at
+71 mm idle / 230 mm move on free cloth vertices; judge the intermediate
+silhouette, not only the endpoint gate. This changes the idle action digest
+because the corrective node has an animated weight; attack stays unchanged.
+Re-pin only after reviewing the corrected 256/160/64 sheets. The generic
+loop helper can run after another lane's cloth bake without changing its
+pins or physical settings.
+
 ### Spearman round 14b: cloak-only walk and attack pass
 
 Retain the round-13 walk: the director's 08:03Z GPU review ranks it first.
@@ -790,3 +835,48 @@ Action equality does not prove cloth loop continuity; measure both separately.
 Fresh top/front feet renders still pass all eight limits (33 samples, slip
 0.0042 mm, floor error 0.0001 mm, planted heading 5.142 degrees). Judge the
 remaining cloth return in the merged GPU movie; no PASS is implied by the audit.
+
+### Spearman round 14 merge
+
+Merge the director-preferred c cycle entry and post-bake cloth closure with b's restrained cloth settings. Apply physical settings before baking, then close the periodic residual. The rest form and look stay at round 13: b changed solver settings, not the master silhouette, despite the review describing a wider rest cloak. Drop a/D's side-lying death because its tucked feet gain cannot compensate for hidden shield identity and striped skirt undersides. Keep c's inherited face-down death and early level spear.
+
+`cpu_review.py` now calls the same render setup/frame functions as the GPU entry point, records source/code/calibration hashes, and requires an isolated root. `cpu_deliver.py` checks those receipts before packing, creates native 256/160/64 comparisons and a validated five-clip movie. CPU analytical-light proxies cannot verify Eevee cast shadows. Round 14 adds reusable `kit.cloth`, `kit.loop`, and evaluated `kit.base.SupportSurface`.
+
+### Spearman round 15b: rolled-foot pigment and evaluated shadow
+
+Scope: foot appearance and stone shadow only. `foot_finish.py` is a render-time
+layer; no rest geometry, weights, UVs, donor rotations, actions or clip sampling
+changes. The object-ID/raycast diagnostic found that the apparent pale "sole"
+in move is mostly the rolled instep skin and sandal straps. Repainting only
+negative-Z sole faces cannot fix it. Frozen per-foot masks retain painted detail;
+evaluated anatomical foot tilt smoothly shades that pigment in **move only**.
+The mask is off below about 28 degrees and complete at about 43 degrees. Existing
+rest, idle, attack, hit and death foot pigment is preserved. The 09:48Z reviewer
+accepted this fix: the light dot is gone at 160 px.
+
+The R14 ankle constraints really do move, but broad overlapping blobs conceal
+that motion. Before every shared `look.render_frame`, explicitly update world-
+aligned markers from the evaluated rig and articulated sole geometry. Move
+uses the evaluated sole centroid, strength .4, Gaussian scales .09/.07 m,
+offsets .035/.02 m, and fades between 25 and 100 mm of mean clearance above the
+receiving stone point. Its contact reach is 25 mm (about 2 px at 256), contact
+depth .2 and cast depth .08. Geometry is never moved to fake contact. Shader
+anchors equal evaluated sole centers at every delivered walk sample.
+
+Rest is deliberately retained from R14. The first compact half-strength profile
+regressed feet blurred delta-E 5.447 -> 10.883. A gentler wide profile improved
+that metric to 5.177 but the 09:48Z reviewer still rejected its continuous band.
+The reviewer's exact two-small-pools/40%-strength alternative is implemented as
+`ground_pools=1` and rendered separately; it is not selected automatically over
+the accepted rest because the cloud review says to retain R14 on regression.
+This is an open visual-versus-metric tradeoff, not a claimed shadow completion.
+
+`foot_finish_review.py -- proxy|beauty` records source/code hashes, actual clip
+settings, pose/action/geometry/UV/weight invariants, evaluated centers and shader
+anchors. It compares R14 foot settings with the selected finish on the same
+master, plus the opt-in pools at rest. `foot_finish_report.py proxy|beauty` writes
+native 256/160/64 comparisons and measured foot patches. GPU handoff runs this
+same-path A/B after clips are built; all original stages, masters, trimmed atlas,
+validation and movie remain. CPU analytic lighting cannot certify Eevee cast
+shadows; only the lead's GPU comparison can resolve the remaining rest choice.
+Dense 33-sample top/front checking still passes with donor orientations intact.

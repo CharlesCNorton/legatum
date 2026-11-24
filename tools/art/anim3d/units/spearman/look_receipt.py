@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 
 UNIT = Path(__file__).resolve().parent
-CODE = [UNIT/'look.py', UNIT/'look_textures.py', UNIT/'continuity.py',
+CODE = [UNIT/'look.py', UNIT/'foot_finish.py', UNIT/'look_textures.py', UNIT/'continuity.py',
         UNIT.parents[1]/'kit/continuity.py', UNIT.parents[1]/'kit/look.py', UNIT.parents[1]/'kit/part_paint.py']
 
 def digest(path):

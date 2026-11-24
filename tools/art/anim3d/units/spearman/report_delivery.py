@@ -22,7 +22,7 @@ if not validation['preview']:
     note = review/f'spearman-round{round_number}-note.md'
     text = note.read_text().replace('combined candidate, CPU review / GPU pending',
                                     'combined candidate, GPU rendered / visual review pending')
-    text = text.replace("Not a PASS. Final GPU rendering and the pixel-parity gate still require the lead's host. CPU evidence is isolated under `lanes/spearman-r13-merge`; the shipped atlas remains the previous GPU round until the host pass.",
+    text = text.replace('Delivery status: CPU verified; GPU pass and final visual review pending.',
                         'Not a PASS. The GPU pass, pixel-parity gate and decoded atlas validation completed; final visual approval is pending. The CPU evidence below remains labelled separately from the appended GPU receipt.')
     note.write_text(text)
     with Path('tools/art/anim3d/LOG.md').open('a') as log:
