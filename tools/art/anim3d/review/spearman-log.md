@@ -244,3 +244,6 @@
 
 - R14b: loaded cumulative unit skill and all six Blender skills; latest 08:03Z director ranks R13 walk first. Git merge denied ORIG_HEAD.lock; copied d7798046 source tree through binary diff, isolated unchanged R13 masters/clips, preparing cloak-only A/B.
 - R14a: loaded cumulative unit and six Blender skills; round13 source snapshot d7798046 applied after ORIG_HEAD.lock denial. Copied preserved master/look to lanes/spearman-r14a; integrating only Fable D c6e55c3b death and dynamic guard registration. CPU proxy previews pending.
+- R14c: loaded cumulative legatum-unit-3d and six Blender skills; round-13 source ported after ORIG_HEAD lock denial. Scope: contact surface and sampled clip boundaries, same painted CPU/GPU render path.
+- R14b: second cloth trial kept provisionally: move geometric cloak sweep 22.10 -> 15.48 px, attack 10.37 -> 7.96 px; 1.35x pin trial rejected for worse worst-vertex loop residual. Matched CPU 256/160/64 comparisons and animated A/Bs published.
+- R14b: 33-sample top/front feet pass all eight limits, 40-pose audit zero findings, frozen idle/attack action hashes unchanged, 36 existing tests pass, imports/syntax pass. CPU rest critique IoU 0.95087 / blurred delta-E 3.36357; rest master unchanged. Full GPU pass pending with lead.
