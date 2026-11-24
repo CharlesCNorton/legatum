@@ -100,6 +100,22 @@ for node in n:
 out=next(x for x in n if x.type=='OUTPUT_MATERIAL')
 paint=n.new('ShaderNodeBsdfPrincipled');paint.inputs['Base Color'].default_value=(0,0,0,1);paint.inputs['Specular IOR Level'].default_value=0;paint.inputs['Emission Strength'].default_value=1
 l.new(ramp.outputs[0],paint.inputs['Emission Color'])
+# Register the unobstructed front stone rim to the original brushwork. The
+# upper surface remains procedural and receives moving contact shadows;
+# source feet and their shadows are excluded by a strict camera-space bound.
+uv=base.data.uv_layers.new(name='Stone rest camera')
+coords=[world_to_camera_view(sc,cam,base.matrix_world@v.co) for v in base.data.vertices]
+for loop in base.data.loops:
+ q=coords[loop.vertex_index];uv.data[loop.index].uv=(q.x,q.y)
+tc=n.new('ShaderNodeUVMap');tc.uv_map=uv.name
+tex=n.new('ShaderNodeTexImage');tex.image=next(im for im in bpy.data.images if 'painting-aligned' in im.name);tex.extension='CLIP';l.new(tc.outputs[0],tex.inputs['Vector'])
+axis=n.new('ShaderNodeSeparateXYZ');l.new(tc.outputs[0],axis.inputs[0])
+rim=n.new('ShaderNodeMath');rim.operation='LESS_THAN';rim.inputs[1].default_value=1-230/256;l.new(axis.outputs['Y'],rim.inputs[0])
+mask=n.new('ShaderNodeMath');mask.operation='MULTIPLY';l.new(rim.outputs[0],mask.inputs[0]);l.new(tex.outputs['Alpha'],mask.inputs[1])
+geo=n.new('ShaderNodeNewGeometry');normal=n.new('ShaderNodeSeparateXYZ');l.new(geo.outputs['Normal'],normal.inputs[0])
+side=n.new('ShaderNodeMapRange');side.inputs['From Min'].default_value=.15;side.inputs['From Max'].default_value=.85;side.inputs['To Min'].default_value=1;side.inputs['To Max'].default_value=0;side.clamp=True;l.new(normal.outputs['Z'],side.inputs['Value'])
+side_mask=n.new('ShaderNodeMath');side_mask.operation='MULTIPLY';l.new(mask.outputs[0],side_mask.inputs[0]);l.new(side.outputs[0],side_mask.inputs[1]);mask=side_mask
+pigment=n.new('ShaderNodeMixRGB');l.new(mask.outputs[0],pigment.inputs[0]);l.new(ramp.outputs[0],pigment.inputs[1]);l.new(tex.outputs['Color'],pigment.inputs[2]);l.new(pigment.outputs[0],paint.inputs['Emission Color'])
 ray=n.new('ShaderNodeLightPath');fac=n.new('ShaderNodeMath');fac.operation='MULTIPLY';fac.inputs[1].default_value=.55;l.new(ray.outputs['Is Camera Ray'],fac.inputs[0])
 blend=n.new('ShaderNodeMixShader');l.new(fac.outputs[0],blend.inputs[0]);l.new(s.outputs[0],blend.inputs[1]);l.new(paint.outputs[0],blend.inputs[2]);l.new(blend.outputs[0],out.inputs['Surface'])
 # Frozen one-camera UVs; source opacity affects pigment only, never geometry.
@@ -152,7 +168,7 @@ for ob in sc.objects:
   strength=n.new('ShaderNodeMath');strength.operation='MULTIPLY';strength.inputs[1].default_value=.96;l.new(cam_mask.outputs[0],strength.inputs[0])
   blend=n.new('ShaderNodeMixShader');l.new(strength.outputs[0],blend.inputs[0]);l.new(s.outputs[0],blend.inputs[1]);l.new(paint.outputs[0],blend.inputs[2]);l.new(blend.outputs[0],out.inputs['Surface'])
  records.append({'mesh':ob.name,'vertices':len(ob.data.vertices)})
-sc['finish_version']=3
+sc['finish_version']=4
 bpy.ops.file.pack_all();bpy.ops.wm.save_as_mainfile(filepath=str(M/'byzantine-heir.blend'))
 bpy.ops.wm.save_as_mainfile(filepath=str(M/'plain.blend'))
 (M/'projection.json').write_text(json.dumps({'method':'Finished rigid surfaces and subdivided weighted anatomy, frozen rest-camera UVs; camera-ray visibility and camera-only 96% pigment; retained generated fills and AO/curvature','meshes':records,'checkpoint':str(checkpoint)},indent=2))

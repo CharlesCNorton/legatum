@@ -40,7 +40,7 @@ def review(stage):
    sheet.convert('RGB').save(V/f'{U}-b-plain.png')
   else:compare(ims[0],V/f'{U}-b-plain.png','Plain '+tag)
   return
- gp=grade_params() if stage=='c' else json.loads((M/'grade.json').read_text());ims=[grade(im,gp) for im in ims]
+ gp=grade_params() if stage=='c' else json.loads((M/'grade.json').read_text());check_grade(gp);ims=[grade(im,gp) for im in ims]
  # Masters are never synthesized at a higher resolution than the render.
  for size in [512,256]:
   if meta['resolution']<size:continue

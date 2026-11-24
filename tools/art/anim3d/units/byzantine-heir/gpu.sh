@@ -4,7 +4,7 @@ cd "$(dirname "$0")/../../../../.."
 source tools/art/anim3d/env.sh
 UNIT=tools/art/anim3d/units/byzantine-heir
 export CYCLES_DEVICE=GPU RESOLUTION=512 SAMPLES=48
-: "${ROUND:=2}"
+: "${ROUND:=3}"
 export ROUND
 LOG="$ANIM_ROOT/masters/byzantine-heir/gpu-round${ROUND}.log"
 STATUS="$ANIM_ROOT/review/3d-v2/byzantine-heir-gpu-status.txt"
@@ -19,6 +19,7 @@ git status --short
 command -v blender
 test -f "$ANIM_ROOT/masters/byzantine-heir/projection-input.blend"
 test -f "$UNIT/finish_geometry.py"
+test -f "$UNIT/garment.py"
 test ! -f "$ANIM_ROOT/masters/byzantine-heir/bake-required"
 blender -b --disable-autoexec --python-exit-code 1 --gpu-backend metal --python "$UNIT/render.py" -- check-gpu
 stage=finish

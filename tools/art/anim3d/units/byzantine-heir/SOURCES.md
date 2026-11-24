@@ -26,3 +26,8 @@ death skeletal motion use the recordings above, with fixed axis/rest calibration
 retiming, uniform anatomical scale and global contact translation. The hit is an
 adapted balance-loss excerpt, not a claim that CMU recorded a weapon strike.
 Cloth follow-through/settling is authored, not physics simulation.
+
+Round 3 reuses the original heir painting and generated purple/linen/leather/metal
+fills recorded in `assets/SOURCES.md`; no new download or generation. Lined tunic,
+gravity folds, fitted boots/jewels and source stone-rim UVs are original MIT
+scripts; rendered art is project CC BY 4.0.

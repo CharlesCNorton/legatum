@@ -279,3 +279,35 @@ The final fall samples CMU 90_18 through frame 360 of 395, holding that later
 settled pose twice; frame 200 was still mid-fall. The source list is recorded in
 clip metadata. Extending the capture does not by itself solve the skirt lining
 and cloth-shape limitations exposed in the fallen pose.
+
+
+### Heir driver round 3: lined tunic and attached ornament
+
+The round-2 GPU pass succeeded (170110 bytes, Q85); its complete review and
+512/256 masters are retained under `masters/byzantine-heir/driver-r2-gpu/`.
+The visual failure was a hollow skirt and depth-detached jewels exposed by the
+captured fall. Rest-camera projection can conceal those construction defects.
+
+`finish_geometry.py` now fits low leather lasts, densifies the hem/skirt before
+skinning, adds a thick sewn lining with two leg openings, and covers the pelvis
+as well as the thighs with the existing generated woven fill. The lining uses
+that same licensed image-generated linen, dyed plum-brown. `garment.py` adds a
+pose-space gravity fold with evaluated anatomical clearance; it is authored
+cloth deformation, not a simulation. Keep the shoulder wrap attached to the
+chest rather than applying the long train's ground-settling deformation to it.
+Seat each bezel and garnet on its actual backing in depth. Camera-ray fitting
+preserves projected positions where possible; the overhanging shoulder clasp
+uses the nearest sewn edge. Audit backing clearance in every output pose.
+
+Hair/crown geometry is constrained to the reference contour while retaining
+depth. Only the unobstructed source rim below camera y=230/256 is projected onto
+the stone; the upper base remains physical with moving contact shadows. Never
+copy source boots or their shadows onto the stationary disc. The original four
+generated fills, bevels, bakes, warm key/fill/rim and fixed histogram grade remain.
+`finish_version=4` identifies this construction. Review now rejects stale grade
+provenance as well as packing. Source UVs include the dense lined garments.
+
+Run `ROUND=3 tools/art/anim3d/units/byzantine-heir/gpu.sh` from the repository root.
+It rebuilds this finish and every clip, renders all stages on Metal Cycles at
+512/48, retains 512/256 masters, packs and validates the trimmed 160 px atlas,
+and writes the eight-second round MP4. It does not grant visual PASS.

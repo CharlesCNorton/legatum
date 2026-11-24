@@ -4,6 +4,7 @@ from pathlib import Path
 from mathutils import Matrix, Vector, Quaternion
 sys.path.insert(0,str(Path(__file__).parent))
 from motion import Retarget
+from garment import settle
 from bpy_extras.object_utils import world_to_camera_view
 R=Path(os.environ['ANIM_ROOT']);M=R/'masters/byzantine-heir'
 CLIPS={'idle':(8,10,True),'move':(8,12,True),'attack':(10,14,False),'hit':(4,12,False),'death':(10,10,False)}
@@ -60,7 +61,7 @@ def make_clips(selected=None):
    # the rigid torso horizontally. It is deformation, not a physics claim.
    sc.frame_set(count);bpy.context.view_layer.update()
    for ob in cloth:
-    if ob.name=='Embroidered purple standard':continue
+    if ob.name in {'Embroidered purple standard','Purple shoulder mantle'}:continue
     key=ob.shape_key_add(name='Settled death drape')
     inv=ob.matrix_world.inverted();rows=40;columns=29
     for index,vertex in enumerate(key.data):
@@ -74,6 +75,7 @@ def make_clips(selected=None):
      t=i/(count-1);a=min(1,t/.78);a=a*a*(3-2*a)
      key.value=a*a;key.keyframe_insert('value',frame=i+1)
   if clip=='death':
+   settle(sc,rig,count)
    # The captured backward fall is longer in depth than the original side
    # collapse. Seat its finished cloak within the token with ground-plane
    # translation only; keep released equipment in its keyed world position.
