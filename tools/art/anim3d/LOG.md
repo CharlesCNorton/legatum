@@ -17,7 +17,7 @@ For a second infantry unit starting from the kit, with two builders split by asp
 
 That is roughly 3 hours of wall-clock per unit and two GPU launches if a gate fails, against 31 hours for the first. The bottleneck is the single Blender slot: a full GPU pass holds it for 38 minutes and starves every preview, so thirty units in parallel are limited by about 30 × 1 hour of Blender time, not by agents. Run GPU passes back to back when builders are between previews, or move final passes to a second machine. Record the real numbers here when the second unit runs; delete this estimate then.
 
-## Spearman (first unit; metric targets passed in round 13, art PASS pending)
+## Spearman (first unit; metric targets passed in round 13; round 14 is the first full candidate for Sam)
 
 ### Summary
 
@@ -38,7 +38,8 @@ IoU-old is the original CPU diagnostic (unshifted, alpha threshold 32). IoU and 
 | 11 | 11-23 | lanes 19 m + merge 17 m + GPU 31 m | – | 0.9219 CPU, 0.9275 GPU | blurred 4.59 GPU (R10 6.47) | – | 188,730 q80 CPU, 185,380 q80 GPU | Greave fit (a), lining pigment (b), wider walk and shield damping (c); Fable A's Eevee look, Fable B's cloak flare, shaft 1.8× thicker; registration and reduction fixes | Not PASS; colour passes, feet 13.4, silhouette 0.93 |
 | 12 | 11-23/24 | lanes 40 m + merge 25 m + GPU 38 m (after a failed 2 m launch) | – | 0.9394 CPU proxy, 0.9384 GPU | blurred 4.55 CPU proxy, 4.72 GPU | – | 190,952 q80 CPU, 186,556 q80 GPU | Fable B's form, guard, cloak, disc and keyed death; KayKit donor hit and 8.5 cm walk offset (c); width-only foot fit (a); revealed-surface pigment (b); soles seated on the stone | Not PASS; best on every aspect; feet 12.9; base lip regressed |
 | 13 | 11-24 | lanes 19 m + merge 19 m + GPU 38 m (after a failed 25 m launch) | – | 0.9513 CPU proxy, **0.9537 GPU** | blurred 3.39 CPU proxy, **3.51 GPU** | – | 192,866 q80 CPU, 187,254 q80 GPU | Fable C's guard replanted on the painted feet, registered disc, ankle-anchored ground shadow, base band; lane c's lower swing and calmer collapse; one render function for look and delivery | Both metric targets pass; visual review pending |
-| 14 | 11-24 | a 16m06s, b 13m27s, c 29m09s (parallel wall 29m25s); merge 14.3 m through verification; GPU pending | – | 0.9513 CPU (unchanged pixels) | blurred 3.39 CPU (unchanged) | – | 192,682 q80 CPU | b cloth + c loop closure, balanced entry, evaluated support; retained R13/Fable A+B+C look/form and shield-readable death; dropped a/D ending | Both rest targets pass; 36 tests, zero audit findings, eight feet limits pass; GPU visual review pending |
+| 14 | 11-24 | lanes 29 m + merge 16 m + GPU 42 m | – | 0.9513 CPU proxy, 0.9537 GPU (rest unchanged) | blurred 3.39 CPU proxy, 3.51 GPU | – | 192,682 q80 CPU, 187,316 q80 GPU | Polish: cloak damping in move and attack (b); cloth loop closure, walk sample rotation, evaluated support surface, early parity gate (c) | Rest targets pass on GPU; clip review pending |
+| 15 | 11-24 | a 20m38s, b 24m51s, c 8m40s; merge 14.4 m through verification; GPU pending | – | 0.9512536 CPU unchanged | blurred 3.3866 → 3.2980 CPU; feet 5.4466 → 4.7171 | – | 192,774 q80 CPU | a recovered pigment, b dark walking foot and tracking pools, c cadence checks; R14 form/motion retained | 36 tests, 40 poses clean, 33 feet samples pass; no GPU or art PASS |
 
 Round-to-task mapping for rounds 1–3 is inferred from task order in `astra.log`. The round-9 ΔE and IoU on the `critique.py` scale are the same-settings baseline measured during round 10 (8 samples, fixed round-9 grade).
 
@@ -104,7 +105,16 @@ Lanes about 03:05–03:33 on the round-13 GPU candidate `d7798046`.
 - Lane a (death staging): Fable D's collapse compacted onto the base; crest and feet margins against the rim −28.1 / −13.7 px → +3.3 / +5.0 px. Rest on the CPU proxy unchanged in kind: IoU 0.9513, blurred ΔE 3.33.
 - Lane b (cloak in move and attack): cloak edge sweep 22.1 → 15.5 px (move) and 10.4 → 8.0 px (attack); cloth endpoint p95 182 → 133 mm. A 1.35× pin trial rejected (worst vertex 246 mm).
 - Lane c (loops and transitions): cloak loop gap 12.07 → 0.00003 px (move), 2.62 → 0.00003 px (idle); idle-to-move sole gap 23.0 → 14.4 px, move-to-idle 18.7 → 9.4 px by rotating the walk's eight samples.
-- Lanes done 03:33:00; merge task queued.
+- Lanes done 03:33:00 (a 16 m, b 13 m, c 29 m in parallel). Merge 03:33–03:49 (16 m): lane b's cloth and lane c's loop closure, sample rotation, evaluated support surface and early parity gate; lane a's side-lying death dropped (contained, but the shield face is lost). Rest pixels identical to round 13 on the CPU proxy (IoU 0.9513, blurred ΔE 3.39); CPU preview atlas 192,682 bytes at q80; 36 tests, zero audit findings, walk slip 0.0042 mm. Worst free-cloth loop correction 273 mm (authored, not simulated). GPU pass 03:49:31–04:31:40 (42 m), first launch clean with the parity gate early, pushed as `9c35ac22`: rest unchanged at IoU **0.9537**, blurred ΔE **3.51** (regions head/crest 3.7, torso 2.9, cloak 4.8, shield 2.4, legs 3.2, feet 5.3, base 3.3); atlas 187,316 bytes at q80; walk slip 0.0042 mm, heading 5.142°. Round wall-clock from lanes to GPU result: 89 m. Reviewer, about 04:35 local: round 14 is the first full candidate to show Sam (rest matches the painting, all five clips read at 160 px). No PASS file; that is Sam's call.
+
+### Round 15 (2026-11-24 local, in progress): four polish items, nothing may regress
+
+Lanes about 04:35–04:59 on the round-14 GPU candidate `9c35ac22`. CPU proxy against round 14:
+
+- Lane a: sandal detail from shared source pigment, feet 5.45 → 4.72, blurred ΔE 3.39 → 3.30, IoU unchanged at 0.9513; a cloak contour trial rejected because it cost the idle clip.
+- Lane b: moving stone shadow; rest unchanged (3.33, feet 5.45); a "rest pools" alternative rejected (feet 10.9).
+- Lane c: all 32 walk phases checked; round 14's kept as the only one with no regression in entry, exit or cloth steps.
+- Lanes done 04:59:24; merge task queued. The skill editor's session ended at 05:30 local; later results are not recorded here.
 
 ### Fable C and D (2026-11-24, from round 12)
 
@@ -167,6 +177,36 @@ Feet, the spear-side cloak and the legs carry the colour error on the Cycles rou
 - GPU pass 21:49:29–22:18:57 (29 m 28 s), 512 px / 64 samples, pushed as `aeacff7d`: IoU **0.9039**, ΔE **14.05**, atlas **197,114 bytes at q85** (2,886 bytes under the limit), 40 frames, decoded validation passes; feet slip 0.0018 mm, floor error 1.133 mm, heading 2.618°. Kit measurements on the GPU masters: figure-above-base IoU 0.8899, lower-leg IoU 73.19%, feet-region luminance 186 vs 146 in the painting, base top `(236,193,137)` vs `(241,203,156)`; death frames 6–8 still barely change. No PASS.
 - Art director on the GPU final (03:21Z): all 14 CPU items stand in the same order; six additions visible only on clean frames (pale patch under both feet, calf flap with a ring artifact on the right greave, base lip and wall height, no cast shadow on the base top, shaft still a 2 px black line, crest spike in death frame 3). Attack and idle frozen. Best candidate on every aspect is still Astra round 10; no Fable previews yet.
 
-- Round 14 timing from `.progress/astra.log`: a 03:02:58–03:19:04 (16m06s), b 03:03:00–03:16:27 (13m27s), c 03:03:14–03:32:23 (29m09s); parallel lane wall 29m25s. Merge started 03:33:06, verification recorded 2026-11-24T03:47:24 (14.3 m elapsed; final runner finish is not yet recorded). GPU minutes unknown/pending. Tokens not measured. Motion: cloth seams 2.624/12.074 px to <0.00004; entry/exit 23.00/18.66 to 14.41/9.44 px. Full correction peak 273 mm versus c 230 mm; visually restrained, not a universal metric win.
 
-- Spearman round 14 GPU receipt: IoU 0.9537; blurred ΔE 3.51; raw ΔE 6.36; atlas 187316 bytes / q80; 40 frames. Visual review pending.
+### Spearman round 15 merge (2026-11-24)
+
+Timing from `.progress/astra.log` (local America/New_York): a 04:34:25–04:55:03
+(20m38s), b 04:34:27–04:59:18 (24m51s), c 04:34:28–04:43:08 (8m40s);
+parallel lane wall 24m53s. Merge start 04:59:33; verified through
+2026-11-24T05:13:55.461126-05:00 (14.37 minutes). Runner finish is not yet recorded;
+GPU time and token use unknown, not estimated.
+
+Scoped port from R14 `9c35ac22`: skill/status updates; lane a source-sandal
+recovery; b move-only instep shading and evaluated-sole pools; c cadence
+assertions. Kept R14 rest shadow, cloak, donor walk and shield-readable death.
+Rejected rest pools despite art director preference (combined feet 4.717 →
+10.279); rejected cloak and phase trials for motion regressions. Historical
+Fable A/B wins are already incorporated and not reapplied as older whole trees.
+
+Fresh combined CPU 256/8 samples: IoU 0.9512536 unchanged, blurred ΔE
+3.386599 → 3.297989, raw 7.148674, feet 5.446646 → 4.717082. Region table in
+the round note discloses a 0.0016 rise at the blurred foot/leg boundary; other
+regions unchanged or improved. All 41 alpha images and every action hash match
+R14. All 36 Python tests pass, import check clean, 120 files parse, 40-pose audit
+zero findings. Feet: 33 samples, slip 0.004234 mm, floor 0.000106 mm, heading
+5.1424° (readable 9.1751°), loop seam zero. CPU atlas 192,774 bytes Q80; movie
+8.000 s / 192 frames / H.264 yuv420p 1600×352. Full render and A/B use the new
+shared `kit/foot_finish`, with unchanged geometry/UV/weight/action assertions.
+Production GPU masters and shipped atlas remain R14 until the lead runs gpu.sh.
+
+Final art director, 10:13Z: R15 CPU best on every aspect; recovered straps/toes
+now visible at 256, weaker rest band acceptable at 160/64, all clips natural.
+Show Sam if GPU matches. Updated round note and skill replace the preliminary
+"no visible sandal gain" conclusion; no new art edits after that review.
+
+- Spearman round 15 GPU receipt: IoU 0.9537; blurred ΔE 3.42; raw ΔE 6.19; atlas 187440 bytes / q80; 40 frames. Visual review pending.

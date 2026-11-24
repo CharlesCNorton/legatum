@@ -135,6 +135,8 @@ def main():
     is_red, is_pale, stone_like, flesh, families = colour_masks(rgb)
     strict = {'cloak': 'red', 'crest': 'red', 'shield': 'warm', 'helmet': 'warm', 'greave_l': 'warm', 'greave_r': 'warm',
               'sandal_l': 'warm', 'sandal_r': 'warm', 'spear': 'warm', 'skin': 'not red'}
+    from sandal_paint import foot_regions
+    feet = foot_regions(ids, PARTS)
     owner = np.full((height, width), -1, dtype=np.int32)
     bronze_region = np.isin(ids, [PARTS.index(q) for q, m in MATERIAL.items() if m == 'bronze'])
     debug = np.zeros((height, width, 3), dtype=np.uint8)
@@ -152,6 +154,9 @@ def main():
         agree = region & opaque & (stone_like if part in ('base', 'rim') else families[family] if family else True)
         smooth = np.asarray(Image.fromarray((agree * 255).astype(np.uint8)).filter(ImageFilter.BoxBlur(3))) > 127
         valid = erode(smooth & region & opaque, 1)
+        if part in feet:
+            # Preserve fine source straps/toes across the shared leather/skin footprint.
+            valid = feet[part] & opaque
         if part in ('base', 'rim'):
             # The stone keeps only clean stone: no feet, spear butt or their painted
             # shadows. Top and side are separate parts so neither bleeds into the other.
@@ -163,13 +168,14 @@ def main():
         debug[valid] = ID_COLOURS[part]
         weight = valid.astype(np.float32)
         filled = push_pull(rgb, weight)
-        if part.startswith('sandal'): sandals.append((region, filled))
+        if part.startswith('sandal'): sandals.append((feet[part], filled))
         if part == 'skin':
             # Feet inside the sandals read as strapped leather, as painted: the
             # anatomical toes would otherwise take pale stone or stay flesh-light.
             for sandal, leather in sandals:
                 near = np.clip(1 - grow_distance(sandal, 14) / 14, 0, 1)[..., None]
                 filled = filled * (1 - near) + leather * near
+                filled[sandal & opaque] = rgb[sandal & opaque]
         Image.fromarray(np.clip(filled, 0, 255).round().astype(np.uint8)).save(out / f'front-{part}.png')
         low = blur_valid(rgb, weight, 48)
         Image.fromarray(np.clip(low, 0, 255).round().astype(np.uint8)).save(out / f'low-{part}.png')

@@ -30,7 +30,7 @@ def main():
     for size in (256,160,64):
         painting = Image.open('app/src/assets/units/spearman-64.png').convert('RGBA') if size == 64 else painting256
         sheet = Image.new('RGB',(size*3,size+36),(248,244,230)); draw = ImageDraw.Draw(sheet)
-        for i,(label,im) in enumerate([('Painting',painting),('R14 look',frame('before','rest')),('R15b look',frame('after','rest'))]):
+        for i,(label,im) in enumerate([('Painting',painting),('R14 foot settings',frame('before','rest')),('Merged foot finish',frame('after','rest'))]):
             draw.text((i*size+3,3),label,fill='black'); paste(sheet,im,(i*size,30),size)
         sheet.save(review/f'{prefix}-rest-{size}.png')
         if 'pools' in receipt['clips']['rest']['variants']:
@@ -75,7 +75,7 @@ def main():
     stats['shadow_anchor_travel_m'] = {s: np.ptp(np.array(points),axis=0).tolist() for s,points in coords.items()}
     # Enlarged crops disclose the region actually changed, including regressions.
     sheet=Image.new('RGB',(3*512,200),(248,244,230)); draw=ImageDraw.Draw(sheet)
-    for i,(label,im) in enumerate([('Painting',painting),('R14 look',frame('before','rest')),('R15b look',frame('after','rest'))]):
+    for i,(label,im) in enumerate([('Painting',painting),('R14 foot settings',frame('before','rest')),('Merged foot finish',frame('after','rest'))]):
         draw.text((i*512+5,4),label,fill='black')
         crop=im.crop((75,200,180,239)).resize((504,156),Image.Resampling.NEAREST)
         sheet.paste(crop,(i*512,28),crop)

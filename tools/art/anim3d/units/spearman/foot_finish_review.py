@@ -15,6 +15,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import look
 import foot_finish
+from look_receipt import CODE
 from kit.ab import digest, invariant
 
 R14 = dict(base_cast=.16, base_contact=.40, contact_reach=.07,
@@ -41,8 +42,7 @@ def main():
     receipt = {'mode': mode, 'engine': 'Cycles CPU analytic proxy (no cast shadows)' if mode=='proxy' else 'Eevee Metal',
                'resolution': 256, 'samples': 8 if mode=='proxy' else 64, 'seed': 17,
                'before_overrides': R14, 'after_settings': look.LOOK,
-               'code_sha256': {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in
-                              [Path(look.__file__), Path(foot_finish.__file__)]}, 'clips': {}}
+               'code_sha256': {str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in CODE}, 'clips': {}}
     for clip in clips:
         path = master/'spearman.blend' if clip=='rest' else master/'clips'/clip/(clip+'.blend')
         item = {'source_sha256': hashlib.sha256(path.read_bytes()).hexdigest(), 'variants': {}}

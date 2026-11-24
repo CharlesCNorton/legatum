@@ -842,41 +842,14 @@ Merge the director-preferred c cycle entry and post-bake cloth closure with b's 
 
 `cpu_review.py` now calls the same render setup/frame functions as the GPU entry point, records source/code/calibration hashes, and requires an isolated root. `cpu_deliver.py` checks those receipts before packing, creates native 256/160/64 comparisons and a validated five-clip movie. CPU analytical-light proxies cannot verify Eevee cast shadows. Round 14 adds reusable `kit.cloth`, `kit.loop`, and evaluated `kit.base.SupportSurface`.
 
-### Spearman round 15b: rolled-foot pigment and evaluated shadow
+### Infantry: spearman round 15 merge (2026-11-24)
 
-Scope: foot appearance and stone shadow only. `foot_finish.py` is a render-time
-layer; no rest geometry, weights, UVs, donor rotations, actions or clip sampling
-changes. The object-ID/raycast diagnostic found that the apparent pale "sole"
-in move is mostly the rolled instep skin and sandal straps. Repainting only
-negative-Z sole faces cannot fix it. Frozen per-foot masks retain painted detail;
-evaluated anatomical foot tilt smoothly shades that pigment in **move only**.
-The mask is off below about 28 degrees and complete at about 43 degrees. Existing
-rest, idle, attack, hit and death foot pigment is preserved. The 09:48Z reviewer
-accepted this fix: the light dot is gone at 160 px.
-
-The R14 ankle constraints really do move, but broad overlapping blobs conceal
-that motion. Before every shared `look.render_frame`, explicitly update world-
-aligned markers from the evaluated rig and articulated sole geometry. Move
-uses the evaluated sole centroid, strength .4, Gaussian scales .09/.07 m,
-offsets .035/.02 m, and fades between 25 and 100 mm of mean clearance above the
-receiving stone point. Its contact reach is 25 mm (about 2 px at 256), contact
-depth .2 and cast depth .08. Geometry is never moved to fake contact. Shader
-anchors equal evaluated sole centers at every delivered walk sample.
-
-Rest is deliberately retained from R14. The first compact half-strength profile
-regressed feet blurred delta-E 5.447 -> 10.883. A gentler wide profile improved
-that metric to 5.177 but the 09:48Z reviewer still rejected its continuous band.
-The reviewer's exact two-small-pools/40%-strength alternative is implemented as
-`ground_pools=1` and rendered separately; it is not selected automatically over
-the accepted rest because the cloud review says to retain R14 on regression.
-This is an open visual-versus-metric tradeoff, not a claimed shadow completion.
-
-`foot_finish_review.py -- proxy|beauty` records source/code hashes, actual clip
-settings, pose/action/geometry/UV/weight invariants, evaluated centers and shader
-anchors. It compares R14 foot settings with the selected finish on the same
-master, plus the opt-in pools at rest. `foot_finish_report.py proxy|beauty` writes
-native 256/160/64 comparisons and measured foot patches. GPU handoff runs this
-same-path A/B after clips are built; all original stages, masters, trimmed atlas,
-validation and movie remain. CPU analytic lighting cannot certify Eevee cast
-shadows; only the lead's GPU comparison can resolve the remaining rest choice.
-Dense 33-sample top/front checking still passes with donor orientations intact.
+Recovered sandal pigment across semantic IDs and darkened the rolling instep
+in move; retained R14 form, cloth and choreography. `kit/foot_finish` now owns
+the reusable frozen foot masks, pigment nodes and evaluated-sole markers;
+`units/spearman/foot_finish.py` supplies names and clip policy. Include both
+modules and `sandal_paint.py` in calibration receipts. Same-path GPU A/B keeps
+the requested rest pools reviewable, but they are not the default after the
+matched feet metric regressed. Top/front dense feet check remains mandatory.
+The installed unit, Blender materials, animation and rendering skills informed
+this merge; the unit's emission look overrides the general PBR recipe.
