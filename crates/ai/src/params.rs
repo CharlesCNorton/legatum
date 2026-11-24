@@ -116,6 +116,7 @@ macro_rules! decision_params {
 }
 
 decision_params! {
+    rome_endless_war: 0, 0, 2, "Hard Rome: after the opening march keep one open (unwalled) rival city as the campaign target (the city being worn down, the retained target, the nearest open city of an enemy at War, then of a neighbour it may declare on), gather three fit melee near it and strike together every turn without waiting for a capture forecast, refuse Peace with its owner unless Rome is losing (an own city about to fall or an army under half the enemy's), never raze a captured city, and train melee in the capital below eight; 1 fights one war at a time, 2 refuses Peace with every enemy and opens up to three wars without waiting for Peace; 0 keeps the ordinary plan after turn 40";
     rome_opening_march: 1, 0, 1, "Hard Rome: train three opening melee, commit to the nearest reachable open rival city, declare once two melee are within three hexes, and keep the force marching; 0 preserves the ordinary plan";
     mongol_horde: 0, 0, 3, "Hard Mongols: 1 mounted war force and early counter plus Iron Working, 2 funded veteran Keshig upgrades and retreat, 3 ranged siege of walled cities before capture";
     walls_garrison_value: 0, 0, 200, "Shared Walls-as-garrison valuation, percent: compare expected city damage saved and dealt per Production with a troop's defence plus its offensive service under the current plan (0: legacy garrison floor)";

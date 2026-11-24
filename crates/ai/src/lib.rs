@@ -86,6 +86,7 @@ mod random;
 mod raze;
 mod research;
 mod rome_opening;
+mod rome_war;
 mod runaway;
 mod scripted;
 pub mod search;
