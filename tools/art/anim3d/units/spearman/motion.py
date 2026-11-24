@@ -37,10 +37,10 @@ ground and kicks the trailing heel up behind, which reads as a march at
 160 px, and its pelvis hardly moves sideways. This layer, phase-locked to the
 clip's own stance intervals:
 - shifts the pelvis SWAY metres toward the stance foot (on top of the donor's
-  own 3.4 cm) and drops the swing hip by LIST radians; the spine turns the
-  chest back upright and leans it LEAN radians the other way, so the hips
-  sway under shoulders, cloak and shield that travel no further than the
-  donor's; both legs are then
+  own 3.4 cm) and drops the swing hip by LIST radians; the lower spine leans
+  LEAN radians the other way and the chest is turned back upright, so the
+  hips sway under shoulders, shield and an unrocked spear that travel no
+  further than the donor's; both legs are then
   re-solved by IK so every ankle keeps the world position and the source
   rotation it had before the layer;
 - eases the swing foot toward level by up to LEVEL at mid-swing (heading kept);
@@ -51,7 +51,7 @@ Planted feet are untouched: contact, heading and slip do not change.
 """
     SWING = .35
     SWAY = .012
-    LEAN = math.radians(3.5)   # chest leans back over the swing side: hips move, shoulders and shield hold
+    LEAN = math.radians(3.5)   # lower-spine lean that slides the chest back over the swing side
     LIST = math.radians(4.5)
     LEAD = 2   # frames by which the hip drop leads the lateral shift
     LEVEL = .5  # share of the swing foot's toes-down pitch removed at mid-swing
@@ -105,9 +105,11 @@ Planted feet are untouched: contact, heading and slip do not change.
         tilt = -self.LIST*math.cos(angle+2*math.pi*self.LEAD/self.count)
         lean = -self.LEAN*math.cos(angle)
         turn('pelvis', 'Y', tilt)
-        turn('spine_01', 'Y', -tilt+lean/2)
-        turn('spine_02', 'Y', lean/2)
-        turn('neck_01', 'Y', -lean*.6)
+        # Lean the lower spine, then take the lean out again at the chest: the
+        # ribcage slides back over the swing side but stays upright, so the
+        # spear in the hand does not rock.
+        turn('spine_01', 'Y', -tilt+lean)
+        turn('spine_03', 'Y', -lean)
         contact_ik(rig, {s: position[s]-rig.matrix_world @ feet[s].head for s in 'lr'}, rotation)
 
     def lowering(self, clearance):
@@ -118,7 +120,7 @@ Planted feet are untouched: contact, heading and slip do not change.
 
     def report(self):
         return {'swing_clearance_scale': self.SWING, 'max_swing_foot_lowering_m': self.max_lower,
-                'swing_foot_levelling': self.LEVEL, 'pelvis_sway_m': self.SWAY, 'pelvis_list_degrees': math.degrees(self.LIST), 'chest_counter_lean_degrees': math.degrees(self.LEAN),
+                'swing_foot_levelling': self.LEVEL, 'pelvis_sway_m': self.SWAY, 'pelvis_list_degrees': math.degrees(self.LIST), 'lower_spine_counter_lean_degrees': math.degrees(self.LEAN),
                 'left_mid_stance_frame': 25+self.phase}
 
 

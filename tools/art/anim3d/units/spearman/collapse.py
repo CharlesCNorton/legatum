@@ -66,9 +66,9 @@ KEYS = [
                 knee_l=(.15, -2.0, .50), knee_r=(-.25, -2.0, .60), foot=(2.0, 1.9),
                 hand_l=(.16, -.34, 1.06), elbow_l=(.60, -.30, 1.10),
                 hand_r=(-.40, -.30, 1.25), elbow_r=(-.60, -.30, 1.00),
-                arm_w=.7, hand_l_w=(.05, .15, .85), elbow_l_w=(-.10, .40, .90),
+                arm_w=.8, hand_l_w=(.12, .12, .72), elbow_l_w=(-.10, .40, .90),
                 hand_r_w=(-.25, -.45, .14), elbow_r_w=(-.55, -.25, .10),
-                shield_w=.55, shield_arc=.35, ease='out')),
+                shield_w=.80, shield_arc=.35, ease='out')),
     # 6 settles on his side facing out, knees drawn up; the aspis lands on its rim behind him
     (0.80, dict(pelvis=(.24, .10, .31), rot=(-.50, -1.40, 0, -.2), spine=(.15, .0, 0), head=(.05, -.10, -.45),
                 plant=0, ankle_l_w=(.26, .27, .215), ankle_r_w=(-.28, .25, .24),
@@ -78,7 +78,7 @@ KEYS = [
                 hand_r=(-.50, -.38, 1.20), elbow_r=(-.45, -.25, 1.60),
                 arm_w=1, hand_l_w=(.28, -.02, .50), elbow_l_w=(.0, .30, .90),
                 hand_r_w=(-.25, -.45, .14), elbow_r_w=(-.55, -.25, .10),
-                shield_w=.93, shield_arc=.35, ease='out')),
+                shield_w=1, shield_arc=.35, ease='out')),
     # 7 at rest (held)
     (0.96, dict(pelvis=(.24, .10, .30), rot=(-.55, -1.40, 0, -.2), spine=(.15, .0, 0), head=(.0, .0, -.5),
                 plant=0, ankle_l_w=(.26, .27, .215), ankle_r_w=(-.28, .25, .24),
