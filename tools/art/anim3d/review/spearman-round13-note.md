@@ -28,6 +28,14 @@ The kit already contains MPFB/game rig, opt-in Rigify and corrective helpers, pa
 3. Small surface remnants at 256: pale/red sliver under the spear hand (~106,123), dark skirt linen (source-lane luminance 98 vs 105) and a simplified cloak hem. These mostly disappear at 160/64.
 4. Walk still exposes a lighter sole during toe-off; death must be checked for the shaft crossing the knees after the faster landing. Review those at actual 160 px motion, not just a rest score.
 
+### Automated critique: spearman-round13 (Cycles CPU proxy / 8 samples / decoded 160 atlas; GPU pending)
+
+- Silhouette IoU: **0.9513** (target ≥ 0.95; PASS). Best of ±3 px offsets: render x=+0, y=+0.
+- Tone/colour ΔE on blurred images (sigma 2 px, CIE76): **3.39** (target ≤ 6; PASS), at zero offset over 11572 overlapping pixels including base. Information only: raw per-pixel ΔE 7.27; at the IoU offset blurred 3.39, raw 7.27.
+- Regions (blurred ΔE): head_crest 3.7, torso 2.6, cloak_spear_side 5.0, shield 2.2, legs 2.7, feet 5.4, base 3.2.
+- Painting mask: alpha; frames: idle 8, move 8, attack 10, hit 4, death 10.
+- Rest: `/Users/samcorcos/LegatumRuns/anim-pilot/lanes/spearman-r13-merge/preview/rest/00.png`. Contact sheet uses `/Users/samcorcos/LegatumRuns/anim-pilot/lanes/spearman-r13-merge/review/3d-v2/spearman-decoded-160`.
+
 FOCUS a: Measure a local cloak-flare A/B (arm to hip) on the new guard; preserve the feet, knee registration, shield and helmet that now match.
 FOCUS b: Soften the far ground-shadow edge, identify the forearm sliver by material ID, and compare skirt midtones without darkening already-correct sandals.
 FOCUS c: Judge merged clip transitions and spear landing at 160 px; retain donor foot rotations and all eight contact limits, with top/front feet evidence.
