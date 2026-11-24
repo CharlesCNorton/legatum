@@ -13,7 +13,8 @@ import bpy
 from mathutils import Vector
 
 THIGH, KNEE, ANKLE = 1.16, 1.46, 1.26
-FOOT = Vector((1.30, 1.28, 1.12))
+FOOT = Vector((1.50, 1.38, 1.22))
+SHAFT = 1.75
 SKIN = .8
 OUTER = 1.5
 
@@ -110,6 +111,18 @@ def bulk_legs(scene):
                 vertex.co = back @ (p+radial*(scale-1))
             ob.data.update()
             changed[ob.name] = len(ob.data.vertices)
+    # The chased spirals were seated on the old greave and now float beside the
+    # fuller shell as rings; the projected painting already carries that
+    # ornament. Hidden by visibility, never by scale.
+    for ob in scene.objects:
+        if ob.name.startswith('Greave chased spiral'):
+            ob.hide_render = True
+            ob.hide_viewport = True
+    # The painted dory is a stout pole about four pixels wide at 256 px; the
+    # modelled shaft was a two-pixel line. Radius only; paint is the look lane's.
+    for ob in scene.objects:
+        if ob.type == 'CURVE' and ob.name.startswith(('Ash dory shaft', 'Spear bronze ferrule', 'Iron spear butt')):
+            ob.data.bevel_depth *= SHAFT
     scene['spearman_stance_round'] = 'fable-b'
     bpy.context.view_layer.update()
     print('STANCE_FABLE_B', len(changed), 'meshes', sum(changed.values()), 'vertices', sorted(changed)[:12])

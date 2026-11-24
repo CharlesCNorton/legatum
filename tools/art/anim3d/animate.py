@@ -92,11 +92,14 @@ def pose(t):
   if clip=='move':
    # Weight shift over the stance foot; ankles are re-solved to where the
    # retarget put them, so contact and source foot rolls are unchanged.
-   w=walk_weight.channels(t);shift=Vector((w['sway'],0,w['dip']))
+   w=walk_weight.channels(t);shift=Vector((w['sway']+WalkWeight.CENTRE_X,0,w['dip']))
    rig.location=rig.location+shift;bpy.context.view_layer.update()
    turn('spine_01','X',w['lean']);turn('spine_02','Z',w['twist']*.5);turn('spine_03','Z',w['twist']*.5)
    turn('neck_01','Z',-w['twist']*.8);turn('neck_01','X',-w['lean']*.6)
-   contact_ik(rig,{side:offset-shift for side,offset in motion['foot_corrections'].items()})
+   turn('hand_r','X',w['spear']);turn('hand_r','Y',w['spear']*.5)
+   # Step width: the donor walks a tightrope, which merged the thick greaves
+   # into one column. A constant lateral ankle offset cannot add slip.
+   contact_ik(rig,{side:offset-shift+Vector((WalkWeight.CENTRE_X,0,0))+Vector((WalkWeight.STEP_WIDTH*(1 if side=='l' else -1),0,0)) for side,offset in motion['foot_corrections'].items()})
   bpy.context.view_layer.update()
  elif clip=='attack':
   # Raise outside the right shoulder, then drive forward above the shield rim.
@@ -106,7 +109,7 @@ def pose(t):
   turn('spine_03','X',.20*strength);turn('spine_03','Y',.15*strength)
   # Counter root travel in the ankle targets: soles remain on the disc.
   limb('thigh_l','calf_l',(.21+.10*strength,.15-.18*strength,.082+.12*strength),(.42,-.50,.48))
-  limb('thigh_r','calf_r',(-.39-.05*strength,-.075+.16*strength,.082+.12*strength),(-.40,-.20,.48))
+  limb('thigh_r','calf_r',(-.34-.05*strength,-.075+.16*strength,.082+.12*strength),(-.40,-.20,.48))
   pole=Vector((-.48,-.12,1.08)).lerp(Vector((-.65,.05,1.48)),raised)
   limb('upperarm_r','lowerarm_r',(guard_hand.x+(-.13-guard_hand.x)*strength,guard_hand.y+(-.41-guard_hand.y)*raised-.05*strength,guard_hand.z+(1.71-guard_hand.z)*raised),pole)
   limb('upperarm_l','lowerarm_l',(.29,-.34-.10*strength,1.12+.10*strength),Vector((.53,-.10,1.13)).lerp(Vector((.55,-.12,1.20)),strength))
@@ -130,7 +133,7 @@ def pose(t):
  if clip=='death':
   # Let go before the body rolls across the shaft. The rigid weapon lands across
   # the front edge of the stone; it is never hidden or teleported out of frame.
-  release=max(0,min(1,t/.44))
+  release=max(0,min(1,t/.56))
   if release>0:
    for o in spear_objects:o.matrix_world=spear_world[o.name]
    bpy.context.view_layer.update()
@@ -141,17 +144,19 @@ def pose(t):
   # only after the shaft is horizontal and below the shield's lower edge.
   depth=min(1,release/.20);depth=depth*depth*(3-2*depth)
   tilt=max(0,min(1,(release-.20)/.55));tilt=tilt*tilt*(3-2*tilt)
-  rotation=Quaternion().slerp(direction.rotation_difference(Vector((.99,.08,.015)).normalized()),tilt)
-  target=center.lerp(Vector((-.05,-.57,.13)),release)
+  rotation=Quaternion().slerp(direction.rotation_difference(Vector((.80,-.60,.0)).normalized()),tilt)
+  target=center.lerp(Vector((-.12,-.72,.03)),release)
   # Keep a real pixel margin while the retimed fall crosses the horizontal
   # weapon pose; the endpoint and held landing stay exactly where authored.
   target.x+=.02*math.sin(math.pi*release)
   target.x+=.12*tilt
   target.y=center.y+(-.95-center.y)*depth
-  if release>.80:target.y=-.95+.38*(release-.80)/.20
+  if release>.80:target.y=-.95+.23*(release-.80)/.20
   drop=min(1,release/.75)
-  target.z=center.z*(1-drop)+.13*drop
-  if release>0:target.z=max(target.z,.11+(end-start).length*.5*abs((rotation @ direction).z))
+  target.z=center.z*(1-drop)+.03*drop
+  # Over the stone the low end rides its top; past the front edge it drops to the ground.
+  off=max(0,min(1,(-.40-target.y)/.20));rest_z=.11-.08*off*off*(3-2*off)
+  if release>0:target.z=max(target.z,rest_z+(end-start).length*.5*abs((rotation @ direction).z))
   transform=Matrix.Translation(target) @ rotation.to_matrix().to_4x4() @ Matrix.Translation(-center)
   for o in spear_objects:o.matrix_world=transform @ o.matrix_world
   for digit in ['index','middle','ring','pinky']:
@@ -191,14 +196,22 @@ for f in range(1,end+1):
   floor=max((base.matrix_world @ v.co).z for v in base.data.vertices)
   if clip=='move':
    flags=motion_source['contact']['planted'].get(str(f),{})
-   support=next((s for s in ['l','r'] if flags.get(s)),None)
-   if support:
-    sole=bpy.data.objects['Leather sandal sole '+support]
-    lowest=min(v.z for v in sole_points(support))
-    correction=floor+.001-lowest
-    assert abs(correction)<.07, f'Large contact height correction: {correction}'
+   # Each planted sole meets the stone. The root follows the planted foot that
+   # needs the lowest pelvis; any other foot (second support, or a swing toe
+   # that would dip into the stone) is raised by leg IK with its source roll.
+   # No rigid ankle translation and no error left on the second support.
+   need={side:floor+.001-min(v.z for v in sole_points(side)) for side in ['l','r']}
+   planted=[side for side in ['l','r'] if flags.get(side)]
+   if planted:
+    correction=min(need[side] for side in planted)
+    assert abs(correction)<.08, f'Large contact height correction: {correction}'
     rig.location.z+=correction
     bpy.context.view_layer.update()
+    raise_by={side:Vector((0,0,need[side]-correction if side in planted else max(0,need[side]-correction))) for side in ['l','r']}
+    raise_by={side:v for side,v in raise_by.items() if v.z>1e-5}
+    if raise_by:
+     motion_source['max_ik_sole_raise_m']=max(motion_source.get('max_ik_sole_raise_m',0),max(v.z for v in raise_by.values()))
+     contact_ik(rig,raise_by)
   base_inverse=base.matrix_world.inverted()
   base_radius=max((v.co.x*v.co.x+v.co.y*v.co.y)**.5 for v in base.data.vertices)-.015
   if clip=='death':
@@ -227,7 +240,10 @@ for f in range(1,end+1):
   for side in ['l','r']:
    sole=bpy.data.objects['Leather sandal sole '+side]
    planted=clip=='move' and flags.get(side,False)
-   lift=-10 if planted else 0
+   # Planted walking soles were solved above against every sole point; this
+   # disc-footprint pass would pull an overhanging toe below the stone top.
+   if planted:continue
+   lift=0
    for point in sole_points(side):
     local=base_inverse @ point
     plane=floor+.001 if local.x*local.x+local.y*local.y<base_radius**2 else .006

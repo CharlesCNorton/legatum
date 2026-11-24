@@ -160,6 +160,11 @@ caller re-solves both ankles to their previous world positions, so planted
 contacts are unchanged. Metres and radians.
 """
     DIP, SWAY, TWIST, LEAN, NOD = .022, .020, .085, .045, .03
+    STEP_WIDTH = .085
+    # The guard stands right of the disc centre; walk nearer the middle so
+    # the wider steps stay on the stone.
+    CENTRE_X = -.07
+    SPEAR = .045
 
     def __init__(self, planted, first, count):
         import math
@@ -176,4 +181,5 @@ contacts are unchanged. Metres and radians.
         side = math.cos(a)                      # +1 over the left foot, -1 over the right
         dip = (1-math.cos(2*a))/2               # 0 at mid-stance, 1 at double support
         return {'sway': self.SWAY*side, 'dip': -self.DIP*dip,
-                'twist': self.TWIST*math.sin(a), 'lean': self.LEAN+self.NOD*dip}
+                'twist': self.TWIST*math.sin(a), 'lean': self.LEAN+self.NOD*dip,
+                'spear': self.SPEAR*math.sin(a+.6)}
