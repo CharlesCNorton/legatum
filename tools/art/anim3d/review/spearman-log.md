@@ -194,3 +194,5 @@
 - R11b: loaded cumulative unit skill and six Blender skills; source-ported round-10 anim3d baseline after sandbox ORIG_HEAD lock denial. Surface-only lane, no geometry/motion edits.
 - R11b: rest/hit/death material-ID previews identify shoulder sleeve, cloak between thighs and pale skirt lining; CPU 256/16 A/B sheets published as spearman-r11b-*-compare.png.
 - R11b: rejected first replacement-palette experiment (raw delta-E 13.761 -> 13.999, sigma2 7.684 -> 7.916); preserving R10 pigment and adding sewn fold contrast instead.
+- R11a final: matched CPU16 no-denoise lower-leg IoU 78.3139% -> 83.0156%, RGB error 30.7912 -> 23.5601; critique IoU .903509 -> .910334, delta-E 13.752 -> 13.613. Sleeve only marginal, still angular. Foot/sole/guard invariants and 33-frame contact check pass. Seven tests pass; GPU pending; index/merge locks denied; lane-only patch and note saved.
+- R11c: CPU comparisons at 256/160/64, all 40 lossless preview frames and 33 top/front foot samples complete. Audit zero findings; shield step 83.03 -> 34.41 deg, walk width .246 -> .344 m. Rest/idle/attack/hit unchanged. Critique .90351 IoU / 13.752 raw CIE76; no PASS.
