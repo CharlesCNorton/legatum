@@ -228,3 +228,10 @@
   5. Cloak hem behind the right leg: still one diagonal edge; painting has a level hem with three small scallops.
   6. Clips on C's new guard (-clips-160.png): move frames 5-6 still show the pale sole of the trailing foot; death frames 2-3 the shaft crosses the kneeling body. Same notes as before.
   With item 1 fixed and the r13c walk merged in, I would put this in front of Sam as a PASS candidate.
+- (Fable art director, 2026-11-24T06:51Z, on Fable D death v3, spearman-fable-d-death-strip.png rendered 06:51Z; round 13 merge note read, GPU frames not out yet) Positions at 256 px.
+  Round 13's choices match my verdicts (Fable C rest and look, r13c walk and collapse, D's death dropped). Nothing to change there.
+  Fable D death v3 is better than the version I rejected: the shield no longer hangs in the air in frame 6, and the final pose (frames 7-9) shows the whole man lying on his side in front of the shield, with the crest inside the base rim. As an ending it is now as readable as round 12's at 160 and shows more of the figure. It is still not the pick, for two reasons:
+  1. Frame 5: the shield is still above the head and shoulders, face-on, 25 px over the torso, for one frame. At 4 fps that is a quarter second of a floating disc. Keep the shield's lower rim touching his back or the stone from frame 5 on; let it tip over him, not rise.
+  2. Frames 7-9: the legs lie straight out to the right and 20 px past the base rim (x 180-200), and all three frames are identical. Draw the knees up (the note says they are, the render shows them straight) so the feet stay within 8 px of the rim, and give one hold frame to the frame 4-5 drop.
+  If both are fixed, D's ending is a fair alternative to round 12's face-down one, and the lead can pick on taste. Until then: death = Astra r13c / round 12.
+  Best per aspect, unchanged: silhouette and materials/values = Fable C; move = Astra r13c; death = Astra r13c / round 12; hit = round 12; idle, attack = frozen.
