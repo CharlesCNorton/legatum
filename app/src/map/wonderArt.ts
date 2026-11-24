@@ -147,27 +147,30 @@ type Cover = { x: number; y: number; w: number; h: number };
 
 /**
  * The badge's centre for a wonder hex centred at `x, cy` (screen px): the top of the hex; else a little higher (clear of
- * a town beside it); else the bottom (left to the tile's yields while the Yields overlay is on); else its middle, so a banner or a neighbouring town never hides the bonus
- * altogether; slid sideways (at most a quarter of the radius `r`) off a cover it grazes. When every slot is covered, the least covered one.
+ * a town beside it); else the bottom (left to the tile's yields while the Yields overlay is on); else its middle; slid
+ * sideways (at most a quarter of the radius `r`) off a cover it grazes. `hard` covers (banners, towns) keep a visible gap
+ * and are never given way to while any slot clears them; `soft` covers (resting unit counters) are avoided when possible.
+ * `overUnit` says the chosen slot still meets a counter, so the pill is drawn above the units. When every slot touches a
+ * hard cover (zoomed out, the pill is wider than its hex), the least covered one: the bonus never vanishes.
  */
-export function wonderBadgeAt(x: number, cy: number, r: number, L: BadgeLayout, yieldsOn: boolean, covers: readonly Cover[]): { x: number; y: number } | undefined {
+export function wonderBadgeAt(x: number, cy: number, r: number, L: BadgeLayout, yieldsOn: boolean, hard: readonly Cover[], soft: readonly Cover[] = []): { x: number; y: number; overUnit: boolean } | undefined {
   const slots = yieldsOn ? [L.dy, L.dy * 1.5, 0] : [L.dy, -L.dy, L.dy * 1.5, 0];
   // A visible gap from every cover, so a pill under a banner never reads as one of its rows.
   const pad = Math.max(4, r * 0.12);
-  covers = covers.map((c) => ({ x: c.x - pad, y: c.y - pad, w: c.w + pad * 2, h: c.h + pad * 2 }));
+  const grow = (c: Cover) => ({ x: c.x - pad, y: c.y - pad, w: c.w + pad * 2, h: c.h + pad * 2 });
+  const H = hard.map(grow), S = soft.map(grow);
   const area = (a: Cover, b: Cover) => Math.max(0, Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x)) * Math.max(0, Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y));
-  let best: { x: number; y: number; covered: number } | undefined;
-  for (const dy of slots) {
+  const options = slots.map((dy) => {
     const y = cy + dy, top = y - L.height / 2;
     // A pill grazing a town or banner beside it slides a little away, staying on its own hex.
-    const bx = x + clusterShift(x, top, L.width, L.height, r, covers);
+    const bx = x + clusterShift(x, top, L.width, L.height, r, H);
     const box = { x: bx - L.width / 2, y: top, w: L.width, h: L.height };
-    const covered = covers.reduce((sum, c) => sum + area(c, box), 0);
-    if (covered === 0) return { x: bx, y };
-    if (!best || covered < best.covered) best = { x: bx, y, covered };
-  }
-  // Zoomed out the pill is wider than its hex: it takes the least covered slot rather than vanish (the bonus stays visible).
-  return best && { x: best.x, y: best.y };
+    return { x: bx, y, hard: H.reduce((sum, c) => sum + area(c, box), 0), soft: S.reduce((sum, c) => sum + area(c, box), 0) };
+  });
+  const pick = options.find((o) => o.hard === 0 && o.soft === 0)
+    ?? options.filter((o) => o.hard === 0).sort((a, b) => a.soft - b.soft)[0]
+    ?? [...options].sort((a, b) => a.hard - b.hard)[0];
+  return pick && { x: pick.x, y: pick.y, overUnit: pick.soft > 0 };
 }
 
 /**
@@ -176,20 +179,21 @@ export function wonderBadgeAt(x: number, cy: number, r: number, L: BadgeLayout, 
  * and steps to the bottom slot when a banner or a town covers the top (never with the Yields overlay on, where the tile's
  * own yields sit at the bottom), then to the middle.
  */
-export function drawWonderBadges(ctx: CanvasRenderingContext2D, view: PlayerView, cam: Camera, w: number, h: number, dpr: number, yieldsOn: boolean, covers: readonly Cover[]): void {
+export function drawWonderBadges(ctx: CanvasRenderingContext2D, view: PlayerView, cam: Camera, w: number, h: number, dpr: number, yieldsOn: boolean, covers: readonly Cover[], units: readonly Cover[] = []): () => void {
   const hexPx = HEX_SIZE * cam.zoom;
   const far = isFar(hexPx);
+  const later: (() => void)[] = [];
   ctx.save();
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   const L = wonderBadgeLayout(hexPx, (text, font) => { ctx.font = `700 ${font}px ${FONTS.atlas.sans}`; return ctx.measureText(text).width; });
-  ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
   for (let i = 0; i < view.tiles.length; i++) {
     const t = view.tiles[i];
     if (!t.explored || !t.wonder) continue;
     const x = (centerX(i, view.width) - cam.x) * cam.zoom + w / 2, cy = (centerY(i, view.width) - cam.y) * cam.zoom + h / 2;
     if (x < -90 || x > w + 90 || cy < -90 || cy > h + 90) continue;
     const kind = WONDER_INFO[t.wonder].yield;
-    ctx.globalAlpha = t.visible ? 1 : 0.78;
+    const alpha = t.visible ? 1 : 0.78;
+    ctx.globalAlpha = alpha;
     if (far) {
       drawFarWonder(ctx, x, cy);
       ctx.beginPath(); ctx.arc(x + 7, cy - 7, 3.6, 0, Math.PI * 2);
@@ -197,17 +201,29 @@ export function drawWonderBadges(ctx: CanvasRenderingContext2D, view: PlayerView
       ctx.lineWidth = 1.2; ctx.strokeStyle = ATLAS.tone.vellum; ctx.stroke();
       continue;
     }
-    const at = wonderBadgeAt(x, cy, hexPx, L, yieldsOn, covers);
+    const at = wonderBadgeAt(x, cy, hexPx, L, yieldsOn, covers, units);
     if (!at) continue;
-    const y = at.y, left = at.x - L.width / 2, top = y - L.height / 2;
-    ctx.beginPath(); ctx.roundRect(left, top, L.width, L.height, L.height / 2);
-    ctx.fillStyle = 'rgba(247, 241, 227, 0.95)'; ctx.fill();
-    ctx.lineWidth = ATLAS.pen.thin; ctx.strokeStyle = '#564932'; ctx.stroke();
-    ctx.font = `700 ${L.font}px ${FONTS.atlas.sans}`;
-    ctx.fillStyle = '#2b2419';
-    ctx.fillText(wonderBadgeText(), left + L.font * 0.3, y + L.font * 0.04);
-    const icon = tintedIcon(`yield-${kind}`, YIELD_FILL[kind], Math.round(L.icon * dpr));
-    if (icon) ctx.drawImage(icon, left + L.width - L.icon - L.font * 0.3, y - L.icon / 2, L.icon, L.icon);
+    // A pill a resting counter would cover is drawn after the units (still under the banners), so it stays readable.
+    if (at.overUnit) later.push(() => drawPill(ctx, at.x, at.y, L, kind, alpha, dpr));
+    else drawPill(ctx, at.x, at.y, L, kind, alpha, dpr);
   }
+  ctx.restore();
+  return () => { for (const f of later) f(); };
+}
+
+function drawPill(ctx: CanvasRenderingContext2D, x: number, y: number, L: BadgeLayout, kind: keyof typeof YIELD_FILL, alpha: number, dpr: number) {
+  ctx.save();
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.globalAlpha = alpha;
+  ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  const left = x - L.width / 2, top = y - L.height / 2;
+  ctx.beginPath(); ctx.roundRect(left, top, L.width, L.height, L.height / 2);
+  ctx.fillStyle = 'rgba(247, 241, 227, 0.95)'; ctx.fill();
+  ctx.lineWidth = ATLAS.pen.thin; ctx.strokeStyle = '#564932'; ctx.stroke();
+  ctx.font = `700 ${L.font}px ${FONTS.atlas.sans}`;
+  ctx.fillStyle = '#2b2419';
+  ctx.fillText(wonderBadgeText(), left + L.font * 0.3, y + L.font * 0.04);
+  const icon = tintedIcon(`yield-${kind}`, YIELD_FILL[kind], Math.round(L.icon * dpr));
+  if (icon) ctx.drawImage(icon, left + L.width - L.icon - L.font * 0.3, y - L.icon / 2, L.icon, L.icon);
   ctx.restore();
 }

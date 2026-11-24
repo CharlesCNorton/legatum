@@ -351,7 +351,7 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
     const p = toScreen(inp.unitPos.get(u.id) ?? hexToPixel(u.pos, HEX_SIZE)), t = tokenHalf(hexPx);
     return { x: p.x - t, y: p.y - t, w: t * 2, h: t * 2 };
   });
-  drawWonderBadges(ctx, view, cam, w, h, dpr, overlays.yields, [...bannerCovers, ...townCovers, ...tokenCovers]);
+  const wonderPillsOverUnits = drawWonderBadges(ctx, view, cam, w, h, dpr, overlays.yields, [...bannerCovers, ...townCovers], tokenCovers);
 
   // World transform for vector overlays.
   const worldT = () => ctx.setTransform(dpr * z, 0, 0, dpr * z, dpr * (w / 2 - cam.x * z), dpr * (h / 2 - cam.y * z));
@@ -945,6 +945,8 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
     drawUnit(ctx, look, u, x, y, tw, dpr, u.owner === view.me, inp.pendingMarks.get(u.id), u.origin ?? factionOf.get(u.owner), strengthCue, siegePropFor(view, u), hexBox, contractLeft(u, view), heirTag(view, u), u.owner === view.me && isColoniaFounder(view, u.id));
     if (stack.length > 2 && stack[0].id === u.id) drawBadge(ctx, look, x - tw, y - tw, tw * 0.45, String(stack.length), true);
   }
+  // A natural wonder's bonus pill that a resting counter would hide goes above the units (still under the banners).
+  wonderPillsOverUnits();
 
   // Units that fell this turn stand (from the view before the turn) until their blow lands, then sink and fade.
   for (const g of inp.ghosts ?? []) {
