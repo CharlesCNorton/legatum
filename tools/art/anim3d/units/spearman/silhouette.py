@@ -75,3 +75,6 @@ def fit_silhouette(scene, screen_sculpt):
     scene['spearman_silhouette_round'] = '9a'
     bpy.context.view_layer.update()
     print('SILHOUETTE_9A', len(changed), 'meshes', sum(changed.values()), 'vertices')
+    # Anatomical lower-body work is isolated from the round-9 screen fitting.
+    from lower_body import apply
+    apply(scene)

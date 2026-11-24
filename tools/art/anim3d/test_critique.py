@@ -1,0 +1,72 @@
+#!/usr/bin/env python3
+"""Synthetic checks for critique.py: run with the anim-pilot venv Python."""
+
+import argparse
+import json
+from pathlib import Path
+import tempfile
+import unittest
+
+import numpy as np
+from PIL import Image, ImageDraw
+
+import critique
+
+
+class CritiqueTest(unittest.TestCase):
+    def test_lab_reference_and_offset(self):
+        white = critique.rgb_to_lab(np.array([[[255, 255, 255]]]))[0, 0]
+        black = critique.rgb_to_lab(np.array([[[0, 0, 0]]]))[0, 0]
+        np.testing.assert_allclose(white, [100, 0, 0], atol=0.01)
+        np.testing.assert_allclose(black, [0, 0, 0], atol=0.01)
+        target = np.zeros((256, 256), dtype=bool)
+        target[40:90, 50:80] = True
+        moved = critique.shift_array(target, 2, -3)
+        score, dx, dy, aligned = critique.best_iou(target, moved)
+        self.assertEqual((score, dx, dy), (1.0, -2, 3))
+        np.testing.assert_array_equal(aligned, target)
+
+    def test_end_to_end_alpha_and_background_key(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            painting = Image.new("RGBA", (256, 256), (0, 0, 0, 0))
+            draw = ImageDraw.Draw(painting)
+            draw.rectangle((50, 40, 79, 89), fill=(120, 75, 40, 255))
+            render = Image.new("RGBA", (256, 256), (0, 0, 0, 0))
+            ImageDraw.Draw(render).rectangle((52, 37, 81, 86), fill=(120, 75, 40, 255))
+            paint_path, rest_path = root / "paint.png", root / "rest.png"
+            painting.save(paint_path)
+            render.save(rest_path)
+            frames = root / "frames"
+            for clip in critique.CLIPS:
+                (frames / clip).mkdir(parents=True)
+                render.save(frames / clip / "00.png")
+                render.save(frames / clip / "01.png")
+            feet = root / "feet.png"
+            render.save(feet)
+            out = root / "out"
+            args = argparse.Namespace(slug="test-unit", painting=paint_path, rest=rest_path,
+                                      frames=frames, feet=feet, out=out, round=2)
+            for expected_mask in ("alpha", "corner background key"):
+                metrics = critique.run(args)
+                self.assertEqual(metrics["painting_mask_source"], expected_mask)
+                self.assertEqual(metrics["silhouette_iou"], 1.0)
+                self.assertEqual(metrics["best_render_offset_px"], {"x": -2, "y": 3})
+                self.assertAlmostEqual(metrics["mean_delta_e_cie76"], 0, places=6)
+                self.assertTrue(metrics["silhouette_pass"] and metrics["colour_pass"])
+                self.assertEqual(metrics["frame_counts"], dict.fromkeys(critique.CLIPS, 2))
+                with Image.open(out / "test-unit-round2-side-by-side.png") as side:
+                    self.assertEqual(side.size, (512, 256))
+                with Image.open(out / "test-unit-round2-contact-sheet.png") as contact:
+                    self.assertEqual(contact.size, (320, 910))
+                self.assertEqual((out / "test-unit-round2-feet-check.png").read_bytes(), feet.read_bytes())
+                self.assertEqual(json.loads((out / "test-unit-round2-metrics.json").read_text()), metrics)
+                if expected_mask == "alpha":
+                    opaque = Image.new("RGB", (256, 256), (246, 242, 230))
+                    opaque.paste(painting, mask=painting.getchannel("A"))
+                    opaque.save(paint_path)
+            self.assertEqual((out / "test-unit-round2-note.md").read_text().count("### Automated critique"), 2)
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -3,6 +3,8 @@ import bpy, sys, os, math, json, random
 from pathlib import Path
 from mathutils import Vector, Matrix, Quaternion
 from math import sin, cos, pi
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from kit.human import create_body, add_rig
 ROOT = Path(os.environ.get('ANIM_ROOT', str(Path.home()/'LegatumRuns/anim-pilot')))
 MASTER = ROOT/'masters/spearman-3d-v2'
 ASSETS = ROOT/'assets'
@@ -76,11 +78,9 @@ bpy.ops.object.select_all(action='SELECT'); bpy.ops.object.delete(use_global=Fal
 bpy.ops.preferences.addon_enable(module='bl_ext.user_default.mpfb')
 from bl_ext.user_default.mpfb.services.humanservice import HumanService
 from bl_ext.user_default.mpfb.services.targetservice import TargetService
-macro=TargetService.get_default_macro_info_dict()
-macro.update(gender=1.0,age=.42,muscle=1.0,weight=.72,height=.42,proportions=.65)
-macro['race']={'caucasian':.75,'african':.15,'asian':.10}
-body=HumanService.create_human(macro_detail_dict=macro)
-body.name='MPFB anatomical male • original topology'
+body=create_body(dict(gender=1.0,age=.42,muscle=1.0,weight=.72,height=.42,proportions=.65,
+                      race={'caucasian':.75,'african':.15,'asian':.10}),
+                 'MPFB anatomical male • original topology')
 from bl_ext.user_default.mpfb.services.locationservice import LocationService
 for side in ['l','r']:
     for target,weight in [('upperarm-muscle-incr',.65),('upperarm-shoulder-muscle-incr',.45),('lowerarm-muscle-incr',.45)]:
@@ -92,7 +92,7 @@ zlo=min(v.co.z for v in me.vertices); zhi=max(v.co.z for v in me.vertices); ev.t
 body.scale=(1.72/(zhi-zlo)*1.10,1.72/(zhi-zlo)*1.04,1.72/(zhi-zlo))
 bpy.context.view_layer.objects.active=body; body.select_set(True)
 bpy.ops.object.transform_apply(location=False,rotation=False,scale=True)
-rig=HumanService.add_builtin_rig(body,'game_engine'); rig.name='Spearman • MPFB game_engine'
+rig=add_rig(body, 'Spearman • MPFB game_engine')
 rig.location.z=.105
 system_data=ROOT/'blender-user/extensions/.user/user_default/mpfb/data'
 eyes=HumanService.add_mhclo_asset(str(system_data/'eyes/high-poly/high-poly.mhclo'),body,asset_type='Eyes',subdiv_levels=1,material_type='MAKESKIN')

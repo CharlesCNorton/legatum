@@ -20,7 +20,8 @@ path = master/'clips/move'/('move-diagnostic.blend' if diagnostic else 'move.ble
 bpy.ops.wm.open_mainfile(filepath=str(path))
 sc = bpy.context.scene
 rig = bpy.data.objects['Spearman • MPFB game_engine']
-frames = json.loads(sc['sample_frames'])
+# Inspect/render the full 24 Hz cycle, including its duplicate loop endpoint.
+frames = list(range(25, sc.frame_end+1))
 out = master/'feet-check'
 out.mkdir(exist_ok=True)
 rows = []

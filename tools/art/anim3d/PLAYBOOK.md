@@ -556,6 +556,72 @@ The movie retains round 8's 1600x352, five-column, 2x-on-cream layout, 24 fps,
 `lanes/spearman-r9-merge`; its atlas is preview-only, leaving the last GPU atlas
 intact until the lead's pass. Passing these checks is not a visual PASS.
 
+### Round 10a lower legs and guard stance
+
+`units/spearman/lower_body.py` runs from the silhouette hook before frozen UVs.
+It adds radial calf and greave volume in anatomical rest coordinates, with
+separate 6mm leather welts. Human foot vertices and original sole vertices,
+weights and heel/toe contact IDs are unchanged. The
+welts sit above the old contact surface and use the same foot/ball weighting.
+Body vertices carrying foot/ball weights are explicitly excluded from shaping.
+
+The guard turns complete foot/ball pairs about the anatomical vertical axis
+(left 55 degrees, right -12), moves the overextended spear-side ankle inward
+25mm, and solves fixed-length thigh/calf chains to the planted ankles. This is
+an authored **rest guard before source calibration**, never a post-retarget
+toe correction. Bind matrices and bone rolls are unchanged. Locomotion already
+resets the guard's leg transforms before its source T-pose calibration; keep
+that behavior. `check_lower_body.py -- --move` compares foot/ball matrices over
+33 dense frames against the preserved R9 walk, as well as foot geometry,
+weights, topology, original soles, camera, lighting and upper-body pose.
+
+Use the isolated `ANIM_ROOT=$HOME/LegatumRuns/anim-pilot/lanes/spearman-r10a` for
+CPU work. `lower_body_review.py` applies the same R9 LUT to both raw CPU renders,
+outputs native 256/160/64 comparisons with premultiplied linear-light resizing,
+and reports lower-leg alpha overlap above the stone separately from whole-image
+overlap. Neither metric establishes an art pass. Inspect the actual feet from
+top/front through the move cycle and the attack/death extremes. The unchanged
+complete handoff is `ROUND=10 tools/art/anim3d/units/spearman/gpu.sh`.
+
+### Round 10b shoulder and back coverage
+
+`units/spearman/coverage.py` follows the round-9 surface pass in `project.py`.
+A material-ID render identified the broad pale hit-pose patch as the linen
+shoulder shell, not the simulated wool cape. Fill its unprojected rear with a
+cinnabar shoulder facing continuing the collar, warm shaded linen below it,
+and source-derived pigment near the projection boundary. Retain painted skin
+on the upper arm and torso; do not change face, legs, feet or geometry. Wool
+receives dark red fold masses on both sides and a source-colour gate that rejects
+linen/skin paint landing on the cloak. All colour masses and coverage weights
+are frozen corner attributes, so they follow deformation instead of changing
+with generated bounds. No additional microtexture is introduced.
+
+Preserve trusted projected areas. Apply new fill only as the frozen visibility
+mask drops below 0.85, with a smooth transition to full coverage below 0.15.
+Continue trustworthy pigment over mesh adjacency (100mm linen, 120mm wool/skin),
+not across spatially adjacent but disconnected parts. The camera-only pigment,
+existing AO, physical response, original UVs and all motion stay intact. The
+rear facing boundary is authored in garment rest coordinates, never in the
+animated camera view.
+
+`coverage_preview.py` compares preserved round-9 rest/hit/death files with
+identical Cycles CPU settings: 256px, 16 samples, seed 17, denoising off. It
+asserts identical geometry, faces, skin/pin weights, original UVs, transforms,
+actions, pose, lights and camera. `coverage_review.py` applies one frozen round-9
+LUT to both sides and makes native 256/160/64px sheets with linear-light,
+premultiplied RGBA reductions. Raw sheets remain available. Pixel thresholds
+measure pale exposure, not artistic quality or agreement with an unseen painted
+pose. The byte-backed sRGB source exposes encoded values through `image.pixels`
+on the tested Blender 5.3 build (verified against PNG bytes); convert those once
+to linear before storing `FLOAT_COLOR`, rather than assuming the read buffer is
+linear. Reverify this for float/HDR images.
+
+Lane work remains under `lanes/spearman-r10b/`; public review evidence uses
+`spearman-r10b-*`. The existing executable GPU handoff is retained:
+`ROUND=10 tools/art/anim3d/units/spearman/gpu.sh` rebuilds projection and every
+clip, then all masters, the trimmed atlas, checks, feet views and the movie.
+Coverage is a surface improvement, not a unit PASS or a motion fix.
+
 ### Spearman round 10c: restrained source motion and attached shield
 
 Keep the round-9 projected master and restored hit pins unchanged. The motion
@@ -587,3 +653,75 @@ ANIM_ROOT and its `before/` root; it writes painting/R9/R10c comparisons at nati
 top/front feet sheet, full rig audit, final repeated death frame and hit recovery
 checks. The complete GPU handoff remains `ROUND=10
 tools/art/anim3d/units/spearman/gpu.sh`; this lane does not approve final art.
+
+### Spearman round 10 combined handoff and reusable kit
+
+Retained all three final lane changes: guarded lower-leg support, warmer exposed
+shoulder/back pigment, and a donor-based collapse with attached shield. Keep
+round 9's attack/idle and restored hit cloth pins. The broad guard is not a
+walking-foot rotation correction. The shoulder shell and shield hinge still need
+visual work. See `kit/README.md` for reusable mechanisms and explicit limits.
+
+The production entry points now import `kit/` for MPFB rig setup, painterly
+cavity-pigment nodes, frozen projection, geodesic seam continuation, fixed
+camera/lights, Quaternius rest/roll retargeting and cyclic heel/toe contacts.
+Rigify and rest-space corrective drivers are opt-in helpers; no current rig
+migration or finished anatomical corrective is implied. Masters remain external.
+
+`gpu.sh` runs `critique.py` after delivery validation, using the registered
+`-256.png` painting, the 256 master rest and **decoded 160 atlas frames**. The
+critique writes the exact 768×256 painting/render/crossfade triptych, separate
+crossfade, contact sheet, silhouette/ΔE diagnostics, feet copy and note. Targets
+are IoU ≥0.95 / mean CIE76 ΔE ≤6; both include the base and use the same best ±3 px
+translation. They do not establish artistic approval. Evidence is inserted
+before `FOCUS a/b/c`, keeping the driver's next-round instructions last.
+
+Delivery now resamples premultiplied linear-light RGBA and validates reconstructed
+alpha against that same resampling. `ATLAS_OUTPUT` puts CPU preview atlases
+outside the app; the GPU entry point unsets it and writes the intended shipped
+atlas. No CPU upsample is exported as a 512 master. The five-column movie retains
+round 8's 1600×352 / 24 fps / 192-frame / eight-second cream layout.
+
+### Spearman round 11c: continuous shield contact and donor carrying weight
+
+Motion-only lane over round 10. `motion.py` keeps the shield edge-down about its
+existing grip, damps the donor heading with a 0.12 s exponential response, and
+uses evaluated shell geometry to tip face-up only enough to clear z=0.109 m.
+This is a geometric carrying/contact constraint, not a rigid-body simulation.
+A nearest-feasible-floor rotation alone did not improve the 83.03 degree jump:
+the abrupt orientation came from the arm before contact. The retained source-time
+map spends more delivered frames on `Death01` descent. Matched samples: maximum
+shield step 83.03 -> 34.41 degrees; head step 0.655 -> 0.420 m. Tradeoffs: sampled
+ankle maximum 0.355 -> 0.423 m and late cape travel 0.119 -> 0.145 m. The final two
+frames remain identical. This is a better transition, not approval of the ending.
+
+Walk still uses the complete 90% `Walk_Loop` donor. Its rest/roll calibration
+retains 50% of the anatomical thigh/calf spread; feet and ball bones retain the
+same donor rotation mapping. `Idle_Loop` carrying arms now inherit the walking
+donor's local torso rotations before retargeting. Mean ankle width 0.246 ->
+0.344 m (42% -> 58% of the 0.592 m guard). Do not widen the foot mesh or turn a
+foot after retargeting. Optional profile hooks in `kit/retarget.py` preserve the
+old behavior for profiles which do not define them.
+
+The wider stance revealed that a single vertical foot translation leaves a
+skinned sole slightly above the floor (35% spread probe: 2.402 mm, rejected).
+Converge the existing vertical solve on evaluated sole geometry; keep the full
+40 mm total translation limit and donor rotations. Final dense checks: slip
+0.0023 mm, floor error <0.0001 mm, planted heading 2.618 degrees, zero loop seam;
+root correction 48.880 mm, IK 19.635 mm, sole translation 35.728 mm. Root/sole
+corrections remain near their caps; do not widen further without rechecking.
+
+`feet.py` now renders all 33 dense samples from both top and front, and
+`feet_sheet.py` wraps them in eight-column bands. This is the per-round standard,
+including the GPU handoff. The 40-pose audit has zero findings. Rest master,
+idle, attack and hit are byte-identical to the round-10 inputs, including hit pins.
+
+`round11c_preview.py` produces matched Cycles CPU A/B (256 px, 16 samples,
+seed 17, no denoising/adaptive sampling, one unchanged R10 LUT), derives 160/64
+in premultiplied linear light and retains lossless 160 frames for critique.
+R11c raw rest critique: IoU 0.90351 / CIE76 13.752; identical rest on both sides,
+no rest improvement claimed. The reviewer-requested blurred colour metric is a
+lead/kit follow-up, not silently substituted here. CPU evidence and receipts:
+`lanes/spearman-r11c/`; review prefix `spearman-r11c-`. GPU still requires
+`ROUND=11 tools/art/anim3d/units/spearman/gpu.sh`; atlas size is unverified for
+this new motion. No PASS file.

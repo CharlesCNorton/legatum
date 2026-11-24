@@ -3,8 +3,8 @@
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/../../../../.."
 source tools/art/anim3d/env.sh
-export ROUND="${ROUND:-9}"
-unset MOTION_DIAGNOSTIC FEET_METRICS_ONLY
+export ROUND="${ROUND:-10}"
+unset MOTION_DIAGNOSTIC FEET_METRICS_ONLY ATLAS_OUTPUT
 [[ "$ROUND" =~ ^[0-9]+$ ]] || { echo 'ROUND must be an integer' >&2; exit 2; }
 # Keep the exact requested log even if the overnight driver's redirection changes.
 # Avoid a second writer when the driver already redirects to this exact file.
@@ -66,8 +66,15 @@ stage=delivery
 "$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/spearman/delivery.py pack
 "$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/spearman/delivery.py validate
 "$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/spearman/delivery.py movie
+stage=critique
+"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/critique.py \
+  --slug spearman --round "$ROUND" --label 'GPU 512 masters / decoded 160 atlas' \
+  --painting app/src/assets/units/spearman-256.png \
+  --rest "$ANIM_ROOT/masters/spearman/256/rest.png" \
+  --frames "$REVIEW/spearman-decoded-160" --feet "$REVIEW/spearman-g-feet-check.png" --out "$REVIEW"
+"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/spearman/report_delivery.py
 stage=required-outputs
-for output in "spearman-round${ROUND}.mp4" "spearman-round${ROUND}-restpose-compare.png" spearman-f-restpose-compare.png spearman-g-feet-check.png; do
+for output in "spearman-round${ROUND}.mp4" "spearman-round${ROUND}-restpose-compare.png" spearman-f-restpose-compare.png spearman-g-feet-check.png "spearman-round${ROUND}-contact-sheet.png" "spearman-round${ROUND}-crossfade.png" "spearman-round${ROUND}-metrics.json" "spearman-round${ROUND}-note.md"; do
   test -s "$REVIEW/$output"
 done
 for size in 512 256; do

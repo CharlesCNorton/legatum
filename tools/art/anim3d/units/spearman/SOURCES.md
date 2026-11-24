@@ -32,6 +32,11 @@ for hit. No new human joint motion is invented for those clips. Continuous
 weapon attack curves, passive crest/shield springs and cloth response are
 original MIT orchestration; no new asset download.
 
+Round 10b uses no new downloaded or generated asset. Frozen shoulder/back
+pigment, broad garment folds and region masks are original MIT code in
+`coverage.py`; output art is project CC BY 4.0. Reuses the original painting,
+CC0 MPFB anatomy/skin, recorded wool/linen fills and unchanged CC0 motion.
+
 Round 10c reuses the same pinned CC0 `Walk_Loop` (90% source NLA influence),
 `Death01` (source phase remapping), idle and hit. No new asset or human joint
 keys. Death blends its own settled local leg pose into recoil and the existing
