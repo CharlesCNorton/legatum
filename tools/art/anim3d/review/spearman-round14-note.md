@@ -28,6 +28,14 @@ CPU review now uses the same look.configure_render/render_frame as the GPU hando
 
 Combined build and CPU image measurements will be appended after completion. No PASS marker: the merged GPU movie still needs the lead's visual review.
 
+### Automated critique: spearman-round14 (Merged R14 Cycles CPU proxy, freshly rebuilt/calibrated, 256 px 8 samples; decoded 160 atlas; GPU pending)
+
+- Silhouette IoU: **0.9513** (target ≥ 0.95; PASS). Best of ±3 px offsets: render x=+0, y=+0.
+- Tone/colour ΔE on blurred images (sigma 2 px, CIE76): **3.39** (target ≤ 6; PASS), at zero offset over 11572 overlapping pixels including base. Information only: raw per-pixel ΔE 7.27; at the IoU offset blurred 3.39, raw 7.27.
+- Regions (blurred ΔE): head_crest 3.7, torso 2.6, cloak_spear_side 5.0, shield 2.2, legs 2.7, feet 5.4, base 3.2.
+- Painting mask: alpha; frames: idle 8, move 8, attack 10, hit 4, death 10.
+- Rest: `/Users/samcorcos/LegatumRuns/anim-pilot/lanes/spearman-r14-merge/preview/rest/00.png`. Contact sheet uses `/Users/samcorcos/LegatumRuns/anim-pilot/lanes/spearman-r14-merge/review/3d-v2/spearman-decoded-160`.
+
 FOCUS a: Sandal straps/toe separation and the cloak's rest flare/scalloped hem, measured against the painting; preserve registered feet and base.
 FOCUS b: Remove the moving pale-sole flash; soften the base shadow and anchor it to evaluated animated feet, with same-path GPU A/B evidence.
 FOCUS c: Reduce guard/walk boundary jumps without changing donor foot rotation, contact or frame count; review combined cloth through the loop and preserve shield-readable death.
