@@ -135,7 +135,7 @@ def pose(t):
   # Clear the shield in depth while upright, tip forward, then settle inward
   # only after the shaft is horizontal and below the shield's lower edge.
   depth=min(1,release/.20);depth=depth*depth*(3-2*depth)
-  tilt=max(0,min(1,(release-.02)/.73));tilt=tilt*tilt*(3-2*tilt)
+  tilt=max(0,min(1,(release-.02)/.56));tilt=tilt*tilt*(3-2*tilt)
   rotation=Quaternion().slerp(direction.rotation_difference(Vector((.995,-.10,.0)).normalized()),tilt)
   target=center.lerp(Vector((-.30,-.60,.075)),release)
   # Keep a real pixel margin while the retimed fall crosses the horizontal
@@ -144,7 +144,7 @@ def pose(t):
   target.x+=.12*tilt
   target.y=center.y+(-.82-center.y)*depth
   if release>.80:target.y=-.82+.22*(release-.80)/.20
-  drop=min(1,release/.75)
+  drop=min(1,release/.58)
   target.z=center.z*(1-drop)+.075*drop
   # Over the stone the low end rides its top; past the front edge it drops to the ground.
   off=max(0,min(1,(-.40-target.y)/.20));rest_z=.13-.055*off*off*(3-2*off)

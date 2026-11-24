@@ -36,8 +36,11 @@ The donor (a stylised game walk) carries the swing foot 10 cm clear of the
 ground and kicks the trailing heel up behind, which reads as a march at
 160 px, and its pelvis hardly moves sideways. This layer, phase-locked to the
 clip's own stance intervals:
-- shifts the pelvis SWAY metres toward the stance foot and drops the swing
-  hip by LIST radians, with the chest turned back upright; both legs are then
+- shifts the pelvis SWAY metres toward the stance foot (on top of the donor's
+  own 3.4 cm) and drops the swing hip by LIST radians; the spine turns the
+  chest back upright and leans it LEAN radians the other way, so the hips
+  sway under shoulders, cloak and shield that travel no further than the
+  donor's; both legs are then
   re-solved by IK so every ankle keeps the world position and the source
   rotation it had before the layer;
 - eases the swing foot toward level by up to LEVEL at mid-swing (heading kept);
@@ -47,7 +50,8 @@ clip's own stance intervals:
 Planted feet are untouched: contact, heading and slip do not change.
 """
     SWING = .35
-    SWAY = .028
+    SWAY = .012
+    LEAN = math.radians(3.5)   # chest leans back over the swing side: hips move, shoulders and shield hold
     LIST = math.radians(4.5)
     LEAD = 2   # frames by which the hip drop leads the lateral shift
     LEVEL = .5  # share of the swing foot's toes-down pitch removed at mid-swing
@@ -99,8 +103,11 @@ Planted feet are untouched: contact, heading and slip do not change.
         angle = 2*math.pi*(j-self.phase)/self.count
         rig.location.x += self.SWAY*math.cos(angle)
         tilt = -self.LIST*math.cos(angle+2*math.pi*self.LEAD/self.count)
+        lean = -self.LEAN*math.cos(angle)
         turn('pelvis', 'Y', tilt)
-        turn('spine_01', 'Y', -tilt)
+        turn('spine_01', 'Y', -tilt+lean/2)
+        turn('spine_02', 'Y', lean/2)
+        turn('neck_01', 'Y', -lean*.6)
         contact_ik(rig, {s: position[s]-rig.matrix_world @ feet[s].head for s in 'lr'}, rotation)
 
     def lowering(self, clearance):
@@ -111,7 +118,7 @@ Planted feet are untouched: contact, heading and slip do not change.
 
     def report(self):
         return {'swing_clearance_scale': self.SWING, 'max_swing_foot_lowering_m': self.max_lower,
-                'swing_foot_levelling': self.LEVEL, 'pelvis_sway_m': self.SWAY, 'pelvis_list_degrees': math.degrees(self.LIST),
+                'swing_foot_levelling': self.LEVEL, 'pelvis_sway_m': self.SWAY, 'pelvis_list_degrees': math.degrees(self.LIST), 'chest_counter_lean_degrees': math.degrees(self.LEAN),
                 'left_mid_stance_frame': 25+self.phase}
 
 
