@@ -184,9 +184,13 @@ impl Planner<'_> {
         // threatened cities and retaking a weakened lost city come before any withdrawal.
         self.pass("door_military");
         self.door_military(&army);
+        // Gene `rome_drill_rotation`: a siege's hits are shared out for first promotions
+        // before the assault passes commit the wing.
+        self.pass("rome_drill_sieges");
+        self.rome_drill_sieges(&army);
         // A Roman recruit adjacent to a favourable fight can earn its first
         // promotion now. Leave distant marches to the later field pass.
-        if self.faction == Faction::Rome && !self.rome_opening_active() {
+        if self.faction == Faction::Rome && (!self.rome_opening_active() || self.rome_drill()) {
             self.pass("drill_nearby_recruits");
             self.drill_veterans(&army, false);
         }

@@ -107,9 +107,12 @@ impl Planner<'_> {
             return Some(Kept::Garrison);
         }
         // Gene `rome_opening_march`: the opening siege keeps the units at its walls.
+        // Gene `rome_drill_rotation`: with two recruits in the wing the veteran has done its
+        // part and its further hits would only spend the city's HP.
         if let Some(city) = self.rome_opening_city()
             && self.view().at_war(self.view().me, city.owner)
             && u.pos.distance(city.pos) <= 3
+            && !(self.rome_drill() && self.rome_wing_recruits(city.pos) >= 2)
         {
             return Some(Kept::Siege);
         }
