@@ -12,19 +12,25 @@ the point under the ankle on the sole plane, so soles stay on the stone.
 import bpy
 from mathutils import Vector
 
-THIGH, KNEE, ANKLE = 1.16, 1.46, 1.26
-FOOT = Vector((1.50, 1.38, 1.22))
+THIGH, KNEE, MID, ANKLE = 1.12, 1.18, 1.0, 1.20
+FOOT = Vector((1.32, 1.30, 1.18))
 SHAFT = 1.75
-BASE = .995
+BASE = .965
+BAND = .008
 SKIN = .5
+SPEAR_SIDE_TRIM = .32
 OUTER = 1.5
 
 
 def calf_scale(t):
-    # t: 0 at the knee joint, 1 at the ankle. Widest over the knee cap and belly.
+    # t: 0 at the knee joint, 1 at the ankle. Measured against the painting at
+    # 256 px: a 14 px knee cap, a 9 px shin, a slightly heavier ankle.
     t = max(0., min(1., t))
-    u = max(0., (t-.45)/.55)
-    return KNEE+(ANKLE-KNEE)*u*u*(3-2*u)
+    if t < .5:
+        u = t/.5
+        return KNEE+(MID-KNEE)*u*u*(3-2*u)
+    u = (t-.5)/.5
+    return MID+(ANKLE-MID)*u*u*(3-2*u)
 
 
 def bulk_legs(scene):
@@ -76,6 +82,11 @@ def bulk_legs(scene):
                         if part == 'calf' and radial.length > 1e-6:
                             outward = radial.normalized().x*(1 if side == 'l' else -1)
                             scale = 1+(scale-1)*(1-OUTER*max(0., outward))
+                        if part == 'calf' and radial.length > 1e-6:
+                            # Both painted shins sit about 1.5 px toward the spear side of
+                            # the modelled ones between knee and ankle (rows 190-202).
+                            u = max(0., min(1., along/length))
+                            scale -= SPEAR_SIDE_TRIM*max(0., radial.normalized().x)*(4*u*(1-u))**.5
                         move += radial*(scale-1)*g.weight
                     elif part in ('foot', 'ball'):
                         ankle = bones['foot_'+side].head_local
@@ -155,7 +166,15 @@ def flare_cloak(scene, screen_sculpt):
         edge = smooth(124, 104, p.x)*smooth(108, 140, p.y)*(1-.6*smooth(198, 222, p.y))
         # Centre hem between the legs hangs about four pixels lower.
         hem = smooth(120, 135, p.x)*(1-smooth(150, 166, p.x))*smooth(170, 195, p.y)
-        delta = Vector((-6.0*edge, 4.0*hem))
+        delta = Vector((-4.5*edge, 5.0*hem))
+        # Level hem behind the legs: the painted wool ends near y 190 in three
+        # shallow scallops; the modelled tail sloped down past the shield-side
+        # greave and widened both shins in silhouette.
+        import math
+        line = 191+2.0*math.cos((p.x-128)/27*2*math.pi)
+        over = p.y+delta.y-line
+        if over > 0 and 99 < p.x < 172:
+            delta.y -= over*.9
         if delta.length < .01:
             continue
         vertex.co = skin.inverted_safe() @ screen_sculpt(ob, posed, p+delta)
@@ -179,8 +198,11 @@ def brace_feet(scene):
         bpy.context.view_layer.update()
     # The painted disc is a little smaller than the modelled one.
     base = bpy.data.objects['Stationary cream stone']
+    top = max(v.co.z for v in base.data.vertices)
     for v in base.data.vertices:
         v.co.x *= BASE
         v.co.y *= BASE
+        if v.co.z < top-.001:
+            v.co.z -= BAND
     base.data.update()
     bpy.context.view_layer.update()

@@ -108,7 +108,7 @@ def pose(t):
   rig.location=base_loc+Vector((.12*strength,-.16*strength,-.12*strength))
   turn('spine_03','X',.20*strength);turn('spine_03','Y',.15*strength)
   # Counter root travel in the ankle targets: soles remain on the disc.
-  limb('thigh_l','calf_l',(.21+.10*strength,.15-.18*strength,.082+.12*strength),(.42,-.50,.48))
+  limb('thigh_l','calf_l',(.185+.125*strength,.15-.18*strength,.082+.12*strength),(.42,-.50,.48))
   limb('thigh_r','calf_r',(-.345-.05*strength,-.075+.16*strength,.082+.12*strength),(-.40,-.20,.48))
   pole=Vector((-.48,-.12,1.08)).lerp(Vector((-.65,.05,1.48)),raised)
   limb('upperarm_r','lowerarm_r',(guard_hand.x+(-.13-guard_hand.x)*strength,guard_hand.y+(-.41-guard_hand.y)*raised-.05*strength,guard_hand.z+(1.71-guard_hand.z)*raised),pole)

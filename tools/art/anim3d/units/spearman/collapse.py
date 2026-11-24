@@ -23,22 +23,22 @@ NEUTRAL_PELVIS_W = Vector((.065, -.006, .998))
 KEYS = [
     # 0 guard
     (0.00, dict(pelvis=(.065, -.006, .998), rot=(0, 0, 0), spine=(0, 0, 0), head=(0, 0, 0),
-                plant=1, ankle_l_w=(.275, .150, .191), ankle_r_w=(-.272, -.073, .191),
-                ankle_l=(.21, .15, .106), ankle_r=(-.337, -.073, .106),
+                plant=1, ankle_l_w=(.25, .150, .191), ankle_r_w=(-.272, -.073, .191),
+                ankle_l=(.185, .15, .106), ankle_r=(-.337, -.073, .106),
                 knee_l=(.42, -.50, .48), knee_r=(-.40, -.20, .48), foot=(0, 0),
                 hand_l=(.29, -.34, 1.12), elbow_l=(.53, -.10, 1.13),
                 hand_r=(-.432, -.02, 1.197), elbow_r=(-.48, -.12, 1.08), ease='out')),
     # 1 struck: chest and head thrown back, shield knocked in, weight on the heels
     (0.09, dict(pelvis=(.065, .055, .985), rot=(0, 0, 0), spine=(-.34, -.05, .10), head=(-.42, 0, .10),
-                plant=1, ankle_l_w=(.275, .150, .191), ankle_r_w=(-.272, -.073, .191),
-                ankle_l=(.21, .15, .106), ankle_r=(-.337, -.073, .106),
+                plant=1, ankle_l_w=(.25, .150, .191), ankle_r_w=(-.272, -.073, .191),
+                ankle_l=(.185, .15, .106), ankle_r=(-.337, -.073, .106),
                 knee_l=(.42, -.50, .48), knee_r=(-.40, -.20, .48), foot=(0, 0),
                 hand_l=(.24, -.27, 1.20), elbow_l=(.56, -.02, 1.10),
                 hand_r=(-.50, -.10, 1.16), elbow_r=(-.56, .05, 1.05), ease='in')),
     # 2 knees give: pelvis drops, torso folds over the belt, head hangs
     (0.21, dict(pelvis=(.045, -.02, .74), rot=(0, 0, 0), spine=(.34, -.06, 0), head=(.30, -.05, 0),
-                plant=1, ankle_l_w=(.275, .170, .25), ankle_r_w=(-.272, .020, .26),
-                ankle_l=(.21, .15, .106), ankle_r=(-.337, -.073, .106),
+                plant=1, ankle_l_w=(.25, .170, .25), ankle_r_w=(-.272, .020, .26),
+                ankle_l=(.185, .15, .106), ankle_r=(-.337, -.073, .106),
                 knee_l=(.42, -.80, .30), knee_r=(-.50, -.80, .30), foot=(.50, .55),
                 hand_l=(.30, -.30, 1.04), elbow_l=(.58, -.02, 1.02),
                 hand_r=(-.44, -.16, .96), elbow_r=(-.60, .05, 1.10), ease='in')),
