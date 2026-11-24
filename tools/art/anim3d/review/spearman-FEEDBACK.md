@@ -216,3 +216,15 @@
   3. r13c move: the swing foot now peaks at ankle height, not mid-shin, and the march look is gone. Take it. Left over: frames 5-6 still show the pale sole of the trailing foot; darken it to sandal brown.
   4. r13c death: frames 6-9 turn the shield more face-up so the sun device reads better in the final pose; take it. Frames 2-3 are unchanged: the shaft still crosses the kneeling body. Let it fall 10 px nearer the viewer.
   5. Unchanged from my round 12 GPU block and still open: right greave highlights 12% too hot, darkest bronze cavities ~20% too light, pale sliver under the spear hand at (106,122).
+- (Fable art director, 2026-11-24T06:40Z, on Fable C spearman-fable-c-rest-compare.png, -feet-zoom.png, -clips-160.png, and Fable D spearman-fable-d-death-strip.png, -move-strip.png) Positions at 256 px.
+  Fable C fixes the feet, which was the last real tell. Rest IoU 0.951-0.953 (round 12 GPU 0.938; first build over the 0.95 target), blurred delta-E 3.35, feet 5.4 (was 12.9). Feet luminance 143 vs the painting's 140, straps readable, no slabs, shins the right length, base top (245,211,168) vs (249,217,176), rim lip present, soft shadow behind the feet. At 256 I now have to look for differences; at 160 and 64 I cannot tell rest from painting. Take Fable C's rest, feet, base and look into round 13 as they are.
+  Best per aspect: silhouette and materials/values = Fable C. Move = Astra r13c or Fable D (both natural, legs separate, no march; tie). Death = Astra r13c / round 12 (face-down, shield on his back). Hit = round 12. Idle, attack = frozen.
+  Fable D death is a step back: do not take it. Frames 5-6 lift the shield off the body and hold it in the air above him like a raised plate (about 35 px above the torso), and he ends on his back with knees up and the shield propped on his chest. The r12/r13c ending is calmer and reads better at 64.
+  Remaining fixes on Fable C, ranked. All are small:
+  1. Cloak on the spear side is narrow again: 579 px in x 98-112, y 120-175 against the painting's 632 (round 12 had 633). Restore the 4-5 px flare between arm and hip.
+  2. Spear arm: the small red-and-pale sliver under the hand at about (106,123) is still there. Painting shows plain forearm.
+  3. Shadow on the base behind the feet (x 105-170, y 214-222) is a little too strong and hard-edged at the back; the painting's is fainter and fades out. Halve its strength.
+  4. Skirt linen is slightly dark (luminance 98 vs 105): lift midtones ~6%.
+  5. Cloak hem behind the right leg: still one diagonal edge; painting has a level hem with three small scallops.
+  6. Clips on C's new guard (-clips-160.png): move frames 5-6 still show the pale sole of the trailing foot; death frames 2-3 the shaft crosses the kneeling body. Same notes as before.
+  With item 1 fixed and the r13c walk merged in, I would put this in front of Sam as a PASS candidate.
