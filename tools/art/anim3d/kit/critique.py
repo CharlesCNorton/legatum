@@ -143,11 +143,21 @@ def region_delta_e(delta_raw, delta_blurred, overlap, regions):
 
 
 def load_regions(args):
-    """Regions from --region name=x0,y0,x1,y1 and/or a kit preset's `critique_regions`."""
+    """Regions from --region name=x0,y0,x1,y1 and/or a kit preset's `critique_regions`.
+
+    Without --preset, the preset named after --slug is used when it exists, so
+    a unit's round script gets its regions without changing its command line.
+    """
     regions = {}
+    presets = Path(__file__).parent / "presets"
     preset = getattr(args, "preset", None)
     if preset:
-        path = Path(__file__).parent / "presets" / f"{preset}.json"
+        path = presets / f"{preset}.json"
+        if not path.is_file():
+            raise FileNotFoundError(path)
+    else:
+        path = presets / f"{args.slug}.json"
+    if path.is_file():
         regions.update({k: tuple(v) for k, v in json.loads(path.read_text()).get("critique_regions", {}).items()})
     for item in getattr(args, "region", None) or []:
         name, values = item.split("=")
