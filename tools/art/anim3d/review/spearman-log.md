@@ -172,3 +172,4 @@
 - R10c: loaded unit-3D and all six Blender skills; isolated round-9 master in lanes/spearman-r10c. Merge lock denied; round-9 art source diff applied, no unrelated engine changes. Focus: source stride/collapse weight and equipment settling; retain restored hit cloth pins.
 
 - R10a: loaded unit-3D and all six Blender skills, art skill and playbook. R9 is already ancestor; merge no-op blocked at ORIG_HEAD.lock. Isolated CPU workspace lanes/spearman-r10a; focus lower legs, footwear and anatomical rest stance only.
+- R10b: loaded cumulative unit and all six Blender skills; merge lock denied, scoped round-9 art baseline applied; isolated lane copy. Surface-ID CPU render identifies broad pale hit patch as linen shoulder shell, not the wool cape. No new microtexture.
