@@ -235,6 +235,14 @@ def run(args):
                                    - rgb_to_lab(blurred_rgb(render_rgb, overlap)), axis=2)
     mean_blurred = float(np.mean(delta_blurred[overlap]))
     regions = region_delta_e(delta, delta_blurred, overlap, load_regions(args))
+    # Projected paint is registered at zero offset. When the silhouette search
+    # picks another offset, every painted edge counts as colour error, so the
+    # unshifted values are reported too (Fable look lane, 2026-11-24).
+    unshifted = paint_mask & render_mask
+    raw_rgb = np.asarray(render)[:, :, :3]
+    zero_raw = float(np.mean(np.linalg.norm(rgb_to_lab(paint_rgb) - rgb_to_lab(raw_rgb), axis=2)[unshifted]))
+    zero_blurred = float(np.mean(np.linalg.norm(rgb_to_lab(blurred_rgb(paint_rgb, unshifted))
+                                                - rgb_to_lab(blurred_rgb(raw_rgb, unshifted)), axis=2)[unshifted]))
     out = args.out
     out.mkdir(parents=True, exist_ok=True)
     stem = f"{slug}-round{args.round}"
@@ -278,6 +286,7 @@ def run(args):
         "mean_delta_e_cie76": mean_delta, "delta_e_target": DELTA_E_TARGET,
         "colour_pass": bool(mean_blurred <= DELTA_E_TARGET),
         "colour_metric": "mean_delta_e_blurred (raw per-pixel CIE76 is information only)",
+        "zero_offset": {"mean_delta_e_blurred": zero_blurred, "mean_delta_e_cie76": zero_raw},
         "regions": regions,
         "overlap_pixels": int(np.count_nonzero(overlap)),
         "frame_counts": {clip: len(frames[clip]) for clip in CLIPS},
@@ -290,7 +299,8 @@ def run(args):
                    f"- Tone/colour ΔE on blurred images (sigma {BLUR_SIGMA:g} px, CIE76): **{mean_blurred:.2f}** "
                    f"(target ≤ {DELTA_E_TARGET:.0f}; {'PASS' if metrics['colour_pass'] else 'FAIL'}), "
                    f"over {metrics['overlap_pixels']} overlapping pixels including base after that offset. "
-                   f"Raw per-pixel ΔE, information only: {mean_delta:.2f}.\n"
+                   f"Raw per-pixel ΔE, information only: {mean_delta:.2f}. "
+                   f"At zero offset: blurred {zero_blurred:.2f}, raw {zero_raw:.2f}.\n"
                    + ("- Regions (blurred ΔE): " + ", ".join(
                        f"{name} {r['mean_delta_e_blurred']:.1f}" for name, r in regions.items() if "mean_delta_e_blurred" in r) + ".\n"
                       if regions else "")

@@ -12,7 +12,7 @@ Work in `tools/art/anim3d/units/<slug>/`. Get a crude version through every stag
 2. **Body and rig** (Blender). `human.create_body(macro_overrides, name)` then `human.add_rig(body, name)` gives the MPFB body with its 53-bone `game_engine` rig and original weights. On the disposable projection copy call `human.freeze_macro_mix(body)` before fitting any vertices.
 3. **Camera, light, base** (Blender). `studio.match_camera(scene, '<slug>')`, `studio.match_lighting(scene, '<slug>')`. Build the shared cream disc with `base.build(scene)` (top #E9CFA0, side #B68A51, top at z = 0.105 m) and verify it with `audit.check_base`.
 4. **Clay check** (Blender). `ab.clay_override(scene)`, render, and compare the silhouette with the painting before any texture work.
-5. **Projection and fills** (Blender). `projection.freeze_projection(...)` at the fitted rest pose; `seams.underpaint(...)` for narrow unpainted wedges; `materials.painted_fill(...)` for unseen surfaces. If a pale patch shows up in a motion pose, run `ab.material_id_render(...)` on that pose first.
+5. **Projection and fills.** First fit the registration (venv Python): `python -m kit.registration <slug>-source.png <slug>-256.png`, and pass its `registration` to the projection. Then in Blender: `projection.freeze_projection(...)` at the fitted rest pose; `seams.underpaint(...)` for narrow unpainted wedges; `materials.painted_fill(...)` for unseen surfaces. If a pale patch shows up in a motion pose, run `ab.material_id_render(...)` on that pose first. For the Eevee painted look (SKILL.md step 5, method B) build per-part textures and ramps with `part_paint` and the materials with `look.Graph`; the Spearman's `look.py` and `look_textures.py` on `fable/unit-anim-3d-spearman-a` are the worked example.
 6. **Motion** (Blender). `retarget.prepare(rig, root, clip, phases, motion)` for idle, move, hit and death from the pinned Quaternius actions; it locks the walk's feet. The unit supplies a `motion` module (walk influence, time remap, hit envelope, death blends: copy `units/spearman/motion.py`) and hand-keys only the attack. Each sole object needs `toe_vertex` and `heel_vertex` custom properties for `contact.landmarks`.
 7. **Checks** (Blender). `audit.check_bounds_and_contact`, `audit.check_shaft`, `audit.check_transition` on every delivered pose; `feet.sample_dense` then `feet.measure`, `feet.failures`, `feet.step_width` on the walk; `motion_metrics.sample` and `summarise` on death and hit.
 8. **Grade and deliver** (venv Python). Fit one grade on the rest render with `grade.fit_file`, then:
@@ -34,11 +34,14 @@ Work in `tools/art/anim3d/units/<slug>/`. Get a crude version through every stag
 | --- | --- | --- |
 | `human.py` | MPFB body, `game_engine` rig (or opt-in Rigify), `freeze_macro_mix`, `add_hinge_corrective` (authored rest-space deltas with a hinge driver). | `probe_human.py` in Blender (round 10): 19,158 vertices, 53 bones, 930-bone Rigify. `freeze_macro_mix` is the Spearman `refine.py` code; not yet run from the kit. |
 | `studio.py`, `presets/<slug>.json` | Fixed orthographic camera and disk area lights from a preset; Standard view transform. | Used by Spearman `project.py` and `refine.py` since round 10. |
+| `registration.py` | Fits where the full-size painting sits on the 256 px canvas (isotropic scale and offset, by image comparison); returns the tuple `freeze_projection` takes. CLI: `python -m kit.registration`. | Test, and on the Spearman gives 5.3421 source px per canvas px, matching the look lane's independent 5.3425 (the bounding-box calibration in use was 0.9% off). |
 | `projection.py` | Frozen hero-camera UVs and a ray-distance visibility mask on original topology. | Used by Spearman `project.py`. Tolerances (18 mm, 140 mm relief) are Spearman's. |
 | `seams.py` | Geodesic continuation of trusted paint (75 mm reach) into a corner attribute. | Used by Spearman `surface_finish.py`. |
 | `materials.py` | Camera-only pigment over a physical BSDF, shared cavity-pigment node group. | Used by Spearman `paint_finish.py`. Cycles only. |
 | `retarget.py`, `retarget_presets.py`, `contact.py` | Quaternius Standard → MPFB `game_engine`: full-rotation retarget with rest-roll calibration, cyclic heel/toe locking with one fitted speed, IK contact correction. | Used by Spearman `infantry/retarget.py`. Assumes −Y travel, 24 fps sampling, `Leather sandal sole <side>` objects. No CMU or Rigify map. |
 | `base.py` | The shared cream stone disc: two materials, fine grain, physical shading plus camera-only pigment, cloth collision. | Rebuilt from the Spearman base code; **not yet run from the kit in Blender**. |
+| `part_paint.py` | Per-part paint: keep a part's own painted pixels and inpaint the rest (push-pull), low-frequency local colour, value ramps from the part's painted pixels. | Tests. Copied from the Fable look lane (`239540b5`), where it produced the art director's preferred materials. |
+| `look.py` | Eevee node helpers for the render-time painted look: `Graph` (emission-only graphs, form and cast-only light terms, ordered ColorRamp), `ramp_stops`, `key_sun` (strength π). | `Graph` copied from the Fable look lane, where it ran in Blender 5.3 Eevee; `key_sun` and the kit copy **not yet run in Blender**. |
 | `ab.py` | A/B preview settings (CPU, 256 px, 16 samples, seed 17), scene invariant hashes, clay override, material-ID render. | Copied from round-10 lane scripts that ran; **not yet run from the kit in Blender**. |
 | `audit.py` | Base contract, camera bounds, disc-footprint and ground contact, shaft crossings and grip, arm continuity with idle. | Generalised from Spearman `audit.py`; **not yet run from the kit in Blender**. |
 | `motion_metrics.py` | Head step, ankle height, equipment grip range and rotation step, late cloth travel on delivered samples. | Generalised from Spearman `motion_metrics.py`; **not yet run from the kit in Blender**. |
@@ -52,7 +55,7 @@ Work in `tools/art/anim3d/units/<slug>/`. Get a crude version through every stag
 ## Tests
 
 ```sh
-$ANIM_ROOT/venv/bin/python tools/art/anim3d/kit/test_kit.py   # 17 tests, about 20 s, no Blender
+$ANIM_ROOT/venv/bin/python tools/art/anim3d/kit/test_kit.py   # 21 tests, about 35 s, no Blender
 (cd tools/art/anim3d && $ANIM_ROOT/venv/bin/python test_critique.py)   # 4 tests
 ```
 

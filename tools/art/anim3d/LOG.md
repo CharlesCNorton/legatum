@@ -60,7 +60,17 @@ Feet, the spear-side cloak and the legs carry the colour error; shield, torso an
 
 ### Fable builders (2026-11-24, in progress)
 
-- Fable A (look), `fable/unit-anim-3d-spearman-a`: commits `267b2c59` 22:02 and `2127e5ef` 22:22 local; first rest preview 22:23. Art director 03:24Z: better materials than Astra round 10 (shaft colour, cloak cavities, greave and shield highlights, base lip), linen too dark, form unchanged (IoU 0.900 vs 0.903). No clips yet.
+- Fable A (look), `fable/unit-anim-3d-spearman-a`, cut from the round-9 candidate: commits `267b2c59` 22:02, `2127e5ef` 22:22, `239540b5` 22:33 local; note at 22:34. About 35 minutes from first commit to a look the art director prefers (03:24Z: better materials than Astra round 10; linen too dark; form unchanged). Rest ΔE on the round-9 geometry, raw per-pixel:
+
+  | Step | IoU | ΔE at critique offset | ΔE at zero offset |
+  | --- | --- | --- | --- |
+  | Round 9, Cycles CPU, graded | 0.9053 | 13.71 | 10.73 |
+  | First Eevee pass | 0.9053 | 14.45 | 11.06 |
+  | + display-space reduction, torso layers keep all paint | 0.9048 | 13.29 | 8.45 |
+  | + sun at π, cast-only term, ordered ramps | 0.9048 | 12.62 | 7.10 |
+  | + shaded stone (current) | 0.9048 | 12.46 | 7.34 |
+
+  Per part at zero offset: shield 3.0, cuirass 3.2, belt 3.5, skirt 3.9, greaves 4.3–5.2, helmet 5.4, spear 5.8 (round 9: 21.3), skin 9.6, cloak 10.9, stone top 12.6, sandals 18–22. Render cost: rest plus 40 frames in about 55 s in Eevee, against a 30-minute Cycles GPU pass. Preview atlas 195,048 bytes at q85. `critique.py` on this branch reproduces the round-9 zero-offset figure (10.73) and gives round 10 GPU 9.91.
 - Fable B (form and motion), `fable/unit-anim-3d-spearman-b`: commit `c74a6c2d` 22:16 local, an authored keyed death collapse plus quick-look tools. No preview or note yet.
 
 ### Round 10 detail (2026-11-23)

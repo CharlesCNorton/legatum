@@ -8,7 +8,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from kit.images import resize_rgba
 from kit.report import append_evidence
-from kit import atlas, feet, grade, regions
+from kit import atlas, feet, grade, part_paint, regions, registration
 from PIL import Image, ImageDraw
 
 
@@ -202,6 +202,60 @@ class FeetTests(unittest.TestCase):
         lift = feet.swing_lift(walk_rows(), .106)
         self.assertAlmostEqual(lift['r'], .14)
         self.assertEqual(lift['l'], 0.0)
+
+
+class RegistrationTests(unittest.TestCase):
+    def test_fit_recovers_a_known_scale_and_offset(self):
+        source = Image.new('RGBA', (640, 640))
+        draw = ImageDraw.Draw(source)
+        draw.ellipse((200, 520, 460, 590), fill=(233, 207, 160, 255))
+        draw.rectangle((270, 150, 380, 540), fill=(170, 60, 40, 255))
+        draw.ellipse((300, 250, 420, 370), fill=(200, 150, 60, 255))
+        draw.line((240, 60, 240, 560), fill=(150, 110, 70, 255), width=9)
+        truth = (2.43, 14.0, -9.0)
+        reference = registration.reduce_to_canvas(registration.pad(source), *truth)
+        result = registration.fit(source, reference)
+        self.assertLess(abs(result['scale']/truth[0]-1), .001)
+        self.assertLess(abs(result['x0']-truth[1]), .3)
+        self.assertLess(abs(result['y0']-truth[2]), .3)
+        self.assertLessEqual(result['error'], result['bbox_estimate']['error'])
+        self.assertEqual(registration.registration_tuple(result)[2:4], (0, 0))
+        self.assertEqual(registration.registered_reference(source, result).size, (256, 256))
+
+
+class PartPaintTests(unittest.TestCase):
+    def test_push_pull_keeps_owned_pixels_and_fills_holes_from_them(self):
+        rgb = np.zeros((64, 64, 3), dtype=np.float32)
+        rgb[:, :32] = (200, 40, 30)      # the part's own paint
+        rgb[:, 32:] = (20, 200, 220)     # a neighbour's paint it must not inherit
+        owned = np.zeros((64, 64), dtype=bool)
+        owned[:, :32] = True
+        filled = part_paint.part_texture(rgb, owned)
+        np.testing.assert_allclose(filled[:, :32], rgb[:, :32], atol=.01)
+        np.testing.assert_allclose(filled[:, 40:], np.broadcast_to((200, 40, 30), (64, 24, 3)), atol=1)
+        low = part_paint.low_frequency(rgb, owned.astype(np.float32), cell=16)
+        self.assertEqual(low.shape, (16, 16, 3))
+        np.testing.assert_allclose(low.reshape(-1, 3).mean(0), (200, 40, 30), atol=2)
+
+    def test_palette_runs_dark_to_light_with_increasing_positions(self):
+        rng = np.random.default_rng(3)
+        value = rng.uniform(.1, 1, size=(4000, 1))
+        pixels = value*np.array([[230, 120, 60]])
+        result = part_paint.palette(pixels)
+        luminance = [np.dot(c, part_paint.LUMA) for c in result['colours']]
+        self.assertEqual(luminance, sorted(luminance))
+        self.assertEqual(result['positions'], sorted(set(result['positions'])))
+        self.assertEqual(len(result['colours']), len(part_paint.QUANTILES))
+        lit = part_paint.palette(pixels, light=rng.uniform(.4, .6, size=4000))
+        self.assertGreater(lit['positions'][0], .39)
+        self.assertLess(lit['positions'][-1], .7)
+
+    def test_masks(self):
+        mask = np.zeros((20, 20), dtype=bool)
+        mask[8:12, 8:12] = True
+        distance = part_paint.grow_distance(mask, 3)
+        self.assertEqual((distance[10, 10], distance[10, 13], distance[0, 0]), (0, 2, 4))
+        self.assertEqual(int(part_paint.erode(mask, 1).sum()), 4)
 
 
 if __name__ == '__main__':
