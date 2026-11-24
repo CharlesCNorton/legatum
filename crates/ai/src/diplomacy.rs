@@ -961,6 +961,10 @@ impl Planner<'_> {
                 decisions.push(order.order.clone());
             }
         }
+        if let Some(order) = self.rome_second_declaration() {
+            decisions.retain(|existing| !matches!(existing, Order::DeclareWar { .. }));
+            decisions.push(order);
+        }
         self.orders.extend(decisions);
     }
 
@@ -2245,6 +2249,9 @@ impl Planner<'_> {
         // Gene `rome_opening_finish`: the opening's victim gets no Peace while it runs.
         if self.rome_finish_refuses_peace(against) {
             return (false, "Roman opening victim");
+        }
+        if self.rome_second_refuses_peace(against) {
+            return (false, "Roman second war open city");
         }
         // Gene `operations`: a committed strike on this team refuses Peace while it runs.
         if self.operation_refuses_peace(against) {

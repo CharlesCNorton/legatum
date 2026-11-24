@@ -460,6 +460,7 @@ impl ScriptedBrain {
         p.reconcile_campaign();
         p.choose_plan();
         p.choose_rome_opening();
+        p.choose_rome_second_war();
         p.note_operation_took();
         p
     }
