@@ -1153,6 +1153,8 @@ pub(crate) struct Planner<'a> {
     pub escort_sites: Vec<Hex>,
     /// Gene `roman_found_first`: the Roman veteran sent to found a city this turn.
     pub(crate) roman_founder: Option<UnitId>,
+    /// Gene `rome_found_now`: the Roman veterans founding or walking to their site this turn.
+    pub(crate) rome_founders_now: BTreeSet<UnitId>,
     /// Gene `rome_colonia`: the Roman veteran sent to found the Colonia Victrix this turn.
     pub(crate) colonia_founder: Option<UnitId>,
     /// Gene `rome_colonia`: cities the would-be founder stood aside from this turn
@@ -1347,6 +1349,7 @@ impl<'a> Planner<'a> {
             settle_targets: Vec::new(),
             escort_sites: Vec::new(),
             roman_founder: None,
+            rome_founders_now: BTreeSet::new(),
             colonia_founder: None,
             colonia_aside: Vec::new(),
             gold_left: view.economy.gold,
