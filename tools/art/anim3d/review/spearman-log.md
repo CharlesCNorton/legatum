@@ -257,3 +257,4 @@
 - GPU round 14 started: full Eevee painted GPU pass requested; Cycles GPU feet inspection.
 - GPU round 14 finished: all stages, masters, atlas validation and movie complete; visual review pending.
 - R15c: loaded cumulative unit and six Blender skills; content-ported R14 9c35ac22 after ORIG_HEAD.lock denial. Dense integer phase probe: entry 14.411 -> 13.373 px, exit 9.442 -> 10.339 px at 160; evaluating same motion/cloth, no new assets.
+- R15a: loaded cumulative unit skill and all six Blender skills; using fixed-camera modeling, original pigment, rest-space deformation and CPU rendering. Round-14 merge blocked by ORIG_HEAD.lock; exact 9c35ac22 baseline ported. Sandal source pigment recovery and measured cloak-only contour under test.
