@@ -167,3 +167,7 @@
 - Read all PLAYBOOK chapters, global feedback 1-23, project art instructions and all six Blender skills. Unit-specific FEEDBACK is absent. Modeling/animation: continuous weighted footwear and clothing; materials/cameras: frozen projection and generated occlusion fills; lighting/rendering: live contact AO, product lights, fixed histogram grade and sequential CPU verification.
 - Published c review from CPU render.
 - Published c review from CPU render.
+- Published c review from CPU render.
+- Published e-move review from CPU render.
+- Published e-death review from CPU render.
+- Published g-feet review from CPU render.

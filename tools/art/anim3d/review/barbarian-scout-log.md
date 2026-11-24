@@ -176,3 +176,49 @@ Driver round 3: OPENED round2 GPU c/rest/64 comparison, all five e strips and de
 Round3 read all PLAYBOOK chapters, full shared FEEDBACK1-23, prior unit log and GPU transcript; unit-specific FEEDBACK absent. Loaded all six Blender skills; applying full-depth mesh/bind fitting, frozen source UVs with generated occlusion fills, bevels/straps/folds, product light, fixed histogram grade and real clip/feet review.
 Published c review: CPU 256 px, 8 samples; fixed rest-derived grade.
 Published c review: CPU 256 px, 16 samples; fixed rest-derived grade.
+Round3 first preview: refitted palms/finger bones eliminate the broken lower-hand paint; continuous hair coverage restores source highlights. Fixed dependency-graph ordering that silently discarded base transform. ID diagnostic proves skull fills the saluting-arm opening; narrowed actual face mesh/bind with depth preserved. New generated cloth occlusion plate and clean stone top are pinned with prompts/licences.
+Round3 texture-normal iteration hit excessive Blender recalculation when reading normals between color-attribute writes; cached all normals before attribute writes for the rerun. Process cancellation denied by sandbox; no concurrent heavy job started.
+Published c review: CPU 256 px, 16 samples; fixed rest-derived grade.
+Published c review: CPU 256 px, 16 samples; fixed rest-derived grade.
+Completed build stage.
+Completed refine stage.
+Completed texture stage.
+Completed bake stage.
+Completed animate stage.
+Published b-plain geometry checkpoint.
+Published c review: CPU 256 px, 16 samples; fixed rest-derived grade.
+Published d review: CPU 256 px, 16 samples; fixed rest-derived grade.
+Published e-idle review: CPU 256 px, 16 samples; fixed rest-derived grade.
+Published e-move review: CPU 256 px, 16 samples; fixed rest-derived grade.
+Published e-attack review: CPU 256 px, 16 samples; fixed rest-derived grade.
+Published e-hit review: CPU 256 px, 16 samples; fixed rest-derived grade.
+Published e-death review: CPU 256 px, 16 samples; fixed rest-derived grade.
+Published actual top/front boot cycle; contact/direction measurements in feet.json; diagnostic, not gait approval.
+Published b-plain geometry checkpoint.
+Published c review: CPU 256 px, 16 samples; fixed rest-derived grade.
+Published d review: CPU 256 px, 16 samples; fixed rest-derived grade.
+Published e-idle review: CPU 256 px, 16 samples; fixed rest-derived grade.
+Published e-move review: CPU 256 px, 16 samples; fixed rest-derived grade.
+Published e-attack review: CPU 256 px, 16 samples; fixed rest-derived grade.
+Published e-hit review: CPU 256 px, 16 samples; fixed rest-derived grade.
+Published e-death review: CPU 256 px, 16 samples; fixed rest-derived grade.
+Published actual top/front boot cycle; contact/direction measurements in feet.json; diagnostic, not gait approval.
+Published b-plain geometry checkpoint.
+Published c review: CPU 256 px, 16 samples; fixed rest-derived grade.
+Published d review: CPU 256 px, 16 samples; fixed rest-derived grade.
+Round3 visual iteration: narrowed full-depth MPFB face and lowered right cowl neckline to restore the actual open space under the salute; source hair highlights now continuous. Rejected rest-normal pigment fade because bind-pose preview dulled brushwork. Retained generated hidden material fills and source UVs.
+Round3 motion iteration: lower-hand paint on trousers was a ghost, not geometry; extended clean generated cloth plate to the trousers and seated the real weighted hand 70mm farther toward the camera. Attack now uses a two-bone camera-plane draw/backswing/cut with measured haft grip; initial wide cut hit left edge and was shortened before delivery.
+Round3 contact audit: all16 actual boot samples clear the stone, minimum0.09599975m (stone top0.095m), maximum0.13391690m. Original Quaternius foot rotations retained; source crouch still produces a constrained kneeling shuffle, not a full walking stride.
+Published e-idle review: CPU 256 px, 16 samples; fixed rest-derived grade.
+Published e-move review: CPU 256 px, 16 samples; fixed rest-derived grade.
+Published e-attack review: CPU 256 px, 16 samples; fixed rest-derived grade.
+Published e-hit review: CPU 256 px, 16 samples; fixed rest-derived grade.
+Published e-death review: CPU 256 px, 16 samples; fixed rest-derived grade.
+Published actual top/front boot cycle; contact/direction measurements in feet.json; diagnostic, not gait approval.
+Packed 40 trimmed 160 px frames, WebP quality 80, 180348 bytes.
+Published five-clip, 2x, cream-background H.264 review: barbarian-scout-round3.mp4
+Round3 final CPU checks passed: all40 native256 Cycles16 frames, six real AO/Pointiness bakes, 53-bone rig, garment/asset/motion source guards, positive scale, stationary base, closed idle/move loops, under2mm attack grip, both independently rendered held-death frames, and all16 boot-clearance samples. Atlas/JSON validation and exact decoded-alpha reconstruction passed: trimmed160 cells, Q80, 180348 bytes.
+Round3 final delivery regressions3/3 passed; all12 Python scripts parse; all3 Bash scripts pass syntax; executable gpu.sh and git diff --check pass. MP4 verified H.264/yuv420p,1600x348,240frames,8.000s; opened eight decoded frames, decoded atlas sheet, all five strips, plain views, rest256/64 and feet sheet.
+Round3 honest visual verdict: at256 the face/hair highlights, open salute gap, cream base size and generated cloth beneath the drawn axe improve. Removing the false hand paint exposes the actual palm/fingers still too small/fragmentary and poorly aligned; wrist/cuff anatomy, cloth depth/seams and pelt outline remain below painting. At64 the same fur/horn/red-scarf lookout reads, but crouched silhouette and lower-hand/cloth mass are distinguishable. Move is still a constrained shuffle with pronounced source foot roll; attack reads more clearly but needs weight transfer and finger grip; death settles but exposes stretched projection/fallback surfaces. NOT five clean approved clips, NO PASS.
+Round3 GPU handoff updated: ROUND=3 tools/art/anim3d/units/barbarian-scout/gpu.sh from this checkout; rebuilds all sources, new generated fill pins, allGPU512 stages/native512+256, feet, trimmed160 atlas, decoded atlas review, validation and round3 MP4. Round3 GPU pass remains lead-side pending. Incoming round2 native512 and receipts retained in driver-r2-gpu; current CPU256 was never upscaled into512. Shared feedback remains1-23, unit FEEDBACK absent; origin/master already ancestor (zero commits ahead), no engine/runtime changes or merge needed.
+Round3 final CPU source/render/atlas/video receipt preserved in driver-r3-cpu, including script hashes. Commit attempted with requested co-author line; sandbox denied index.lock for both add and commit. Changes remain uncommitted on astra/unit-anim-3d-barbarian-scout for runner. No push, PR, master merge or PASS.
