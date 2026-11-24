@@ -116,3 +116,4 @@ e-move: review emitted from CYCLES frames; no art-pass claim.
 e-attack: review emitted from CYCLES frames; no art-pass claim.
 e-hit: review emitted from CYCLES frames; no art-pass claim.
 e-death: review emitted from CYCLES frames; no art-pass claim.
+Round 2: GPU stages, 512/256 masters, trimmed atlas, validation and MP4 complete; visual approval still required.
