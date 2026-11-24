@@ -423,6 +423,9 @@ for ob in list(sc.objects):
         pigment.inputs['Emission Strength'].default_value = 1
         blend = nodes.new('ShaderNodeMixShader')
         links.new(camera_paint.outputs[0], blend.inputs[0]); links.new(physical, blend.inputs[1]); links.new(pigment.outputs[0], blend.inputs[2]); links.new(blend.outputs[0], output.inputs['Surface'])
+# Material-only lane hook: frozen underpainting after projection, before save.
+from surface_finish import apply as finish_surfaces
+finish_surfaces(sc, image)
 for mod, enabled in saved_modifiers: mod.show_viewport = enabled
 cloth.show_viewport = True
 sc['projection_v3'] = True

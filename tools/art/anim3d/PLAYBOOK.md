@@ -401,6 +401,40 @@ resolved Blender gate in its retained log. The requested round-7 GPU log was
 absent and supplied evidence was CPU-labelled. This is an unverified GPU pass,
 not evidence of successful final rendering or a diagnosed GPU failure.
 
+### Round 9b material lane: seam underpainting
+
+`infantry/surface_finish.py` is a material-only pass called at the end of
+`project.py`, after the frozen camera UVs. It leaves the base, geometry, weights,
+pose, actions, lights and camera alone. Trusted opaque source samples seed a
+bounded 75mm geodesic colour continuation along the original mesh edges. That
+undercoat blends into the existing generated bronze/linen/wool/leather fills;
+source alpha and the ray-visibility mask still govern the original projection.
+Disconnected surfaces cannot borrow pigment from each other. This is frozen
+mesh pigment, not a new image plane or per-frame projection.
+
+The undercoat retains restrained generated-fill grain. Live cavity shading and
+10% physical response remain on unseen surfaces, with the original baked
+AO/curvature, scan normals and roughness. Additional submillimetre hammer/weave
+bump and polished bronze rim roughness add surface variation; oxide remains a
+dielectric. Camera-only pigment avoids illuminating the stone. The existing
+rest-fitted histogram grade is still fitted once and reused for every clip.
+
+For a material-only A/B on an isolated master, use `units/spearman/surface_preview.py`
+with a clean projected master and an output directory as its two arguments after
+`--`, through plain `blender -b --disable-autoexec`. `RESOLUTION=512 SAMPLES=32`
+produces CPU diagnostic masters. It hashes geometry, weights, original UVs,
+transforms, pose, actions, camera and lights before/after, and fails if they
+change. `surface_review.py` emits native 256/64 comparisons and enlarged crops;
+its optional argument is the isolated work root. Both CPU previews receive the
+same candidate-rest LUT, and raw comparisons remain available.
+
+R9b evidence lives under `review/3d-v2/spearman-r9b-*`; the isolated work root is
+`masters/spearman-r9b`. The improvement is seam continuity and tone, not a claim
+that new weave is individually visible at 64px. Rest checks do not establish
+motion quality: inspect unseen areas after the lead's full GPU pass. The existing
+`ROUND=9 tools/art/anim3d/units/spearman/gpu.sh` automatically includes this pass
+through its project stage; do not replace the other lanes' animation changes.
+
 ### Trimmed atlas v2 and checks
 
 `units/spearman/delivery.py` preserves 8/8/10/4/10 frames, real alpha, and the
