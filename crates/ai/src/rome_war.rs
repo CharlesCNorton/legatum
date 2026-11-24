@@ -9,8 +9,10 @@
 //! waiting for a capture forecast (one counterattack is shared between the attackers, and a
 //! city struck or flanked each turn does not heal). Rome refuses Peace with the target's
 //! owner unless it is losing (an own city about to fall, or an army less than half the
-//! enemy's), keeps the cities it takes, and the capital trains melee while the army is
-//! small. Level 1 fights one war at a time; level 2 refuses Peace with every enemy and opens
+//! enemy's), keeps the cities it takes, builds Walls first outside the capital, and the
+//! capital trains melee while the army is small. A city taken from an enemy stays locked and
+//! frozen until Peace or that enemy's end, so the war with it rests unless it is on its last
+//! city, which is finished Walls or not. Level 1 fights one war at a time; level 2 refuses Peace with every enemy and opens
 //! up to three wars without waiting for Peace. Everything reads the seat's `PlayerView`.
 use crate::scripted::Planner;
 use legatum_core::view::{CityView, UnitView};
@@ -25,7 +27,14 @@ const STORM_MIN_HP: i32 = 40;
 /// The army gathers within this distance of the target before it closes in.
 const GATHER_RADIUS: i32 = 4;
 /// The capital trains melee below this many living melee units.
-const HEALTHY_ARMY: usize = 8;
+const HEALTHY_ARMY: usize = 6;
+/// After the opening window the capital returns to its ordinary builds above this many.
+const WAR_ARMY: usize = 4;
+/// A walled city (an enemy's last stand) is stormed by at least this many.
+const WALL_GROUP: usize = 4;
+/// An enemy with this few cities left (its last) is finished, Walls or not: its end frees every
+/// unit locked in the cities taken from it and lets those cities work.
+const LAST_STAND: u32 = 1;
 /// A unit this likely to die in the strike sits it out.
 const STORM_MAX_LOSS: u32 = 30;
 /// An enemy army this close to an own city keeps the soldiers beside that city home.
@@ -109,13 +118,40 @@ impl Planner<'_> {
             .iter()
             .filter(|p| p.alive && p.team != v.team && v.teams_at_war(v.team, p.team))
             .count();
+        let cities_of = |owner: legatum_core::PlayerId| {
+            v.players
+                .iter()
+                .find(|p| p.id == owner)
+                .map_or(u32::MAX, |p| p.cities)
+        };
+        // Cities taken from an enemy still at War: locked and frozen until Peace or its end.
+        let occupied: Vec<(Hex, legatum_core::TeamId)> = self
+            .ctx
+            .own_cities
+            .iter()
+            .filter_map(|c| c.occupation_lock.map(|from| (c.pos, v.team_of(from))))
+            .collect();
         let candidates: Vec<&CityView> = v
             .cities
             .iter()
             .filter(|city| {
+                let last_stand = v.at_war(v.me, city.owner) && cities_of(city.owner) <= LAST_STAND;
+                let team = v.team_of(city.owner);
+                // A city taken from this enemy is frozen until Peace: unless the enemy can be
+                // finished or this city is already being worn down, the war with it rests.
+                let covered = last_stand
+                    || !occupied.iter().any(|(_, from)| *from == team)
+                    || (city.visible
+                        && city.hp < city.max_hp
+                        && melee
+                            .iter()
+                            .filter(|u| u.pos.distance(city.pos) <= 2)
+                            .count()
+                            >= 2);
                 !city.owner.is_barbarian()
                     && !v.same_team(v.me, city.owner)
-                    && !city.walls
+                    && (!city.walls || last_stand)
+                    && covered
                     && (v.at_war(v.me, city.owner)
                         || (wars < self.rome_max_wars()
                             && crate::opportunity::legal_declaration(v, v.team_of(city.owner))))
@@ -161,6 +197,8 @@ impl Planner<'_> {
                 (
                     !at_war,
                     !at_war && soft(city),
+                    cities_of(city.owner),
+                    city.walls,
                     city.visible
                         && self
                             .ctx
@@ -174,7 +212,8 @@ impl Planner<'_> {
         });
         match selected {
             Some(city) => self.commit_rome_target(city, "Roman endless war"),
-            // No open city in reach: the ordinary plan decides (it may besiege Walls).
+            // No target in reach: the ordinary plan decides (it may make Peace, which frees
+            // the occupied cities to build Walls, or besiege Walls).
             None => self.campaigns.rome_opening_target = None,
         }
     }
@@ -199,10 +238,10 @@ impl Planner<'_> {
             return;
         };
         let v = self.view();
-        if !v.at_war(v.me, city.owner) || city.walls || !city.visible {
+        if !v.at_war(v.me, city.owner) || !city.visible {
             return;
         }
-        let (target, city_hp, max_hp) = (city.pos, city.hp, city.max_hp);
+        let (target, city_hp, max_hp, walls) = (city.pos, city.hp, city.max_hp, city.walls);
         let garrison = self
             .ctx
             .enemy_units
@@ -240,17 +279,22 @@ impl Planner<'_> {
             return;
         }
         if city_hp <= 0 {
-            // The garrison of a fallen city fights as a unit. Charge it only to kill it this
-            // turn or at an even trade; otherwise hold the ring so the city cannot heal.
-            let (dealt, taken) = group
+            // The garrison of a fallen city fights as a unit, and its one reply a turn is split
+            // between the attackers. Three charge it; fewer only to kill it this turn or when
+            // they deal more than that one reply.
+            let forecasts: Vec<_> = group
                 .iter()
                 .filter_map(|u| self.melee_forecast(u, target))
-                .fold((0, 0), |(dealt, taken), f| {
-                    (
-                        dealt + f.expected_damage_to_defender,
-                        taken + f.expected_damage_to_attacker,
-                    )
-                });
+                .collect();
+            let dealt: i32 = forecasts
+                .iter()
+                .map(|f| f.expected_damage_to_defender)
+                .sum();
+            let reply = forecasts
+                .iter()
+                .map(|f| f.expected_damage_to_attacker)
+                .max()
+                .unwrap_or(0);
             let garrison_hp = self
                 .ctx
                 .enemy_units
@@ -259,7 +303,15 @@ impl Planner<'_> {
                 .map(|u| u.hp)
                 .max()
                 .unwrap_or(0);
-            if group.is_empty() || (dealt < garrison_hp && dealt < taken) {
+            if group.is_empty()
+                || (group.len() < STORM_GROUP && dealt < garrison_hp && dealt < reply)
+            {
+                return;
+            }
+        } else if walls {
+            // Walls halve every hit and the city shoots: only a large group, or two that
+            // keep a half-broken city from healing.
+            if group.len() < WALL_GROUP && !(group.len() >= 2 && city_hp * 2 <= max_hp) {
                 return;
             }
         } else {
@@ -299,7 +351,12 @@ impl Planner<'_> {
         let target = city.pos;
         let v = self.view();
         let at_war = v.at_war(v.me, city.owner);
-        let close = at_war && !city.walls && self.rome_war_ready(city);
+        let gathered = self
+            .rome_war_fit()
+            .iter()
+            .filter(|u| u.pos.distance(target) <= GATHER_RADIUS)
+            .count();
+        let close = at_war && gathered >= if city.walls { WALL_GROUP } else { STORM_GROUP };
         let alarmed = self.rome_alarmed_cities();
         let melee: Vec<&UnitView> = self
             .free(army)
@@ -310,8 +367,31 @@ impl Planner<'_> {
                     && !alarmed.iter().any(|home| home.distance(u.pos) <= 3)
             })
             .collect();
+        let fresh: Vec<Hex> = self
+            .ctx
+            .own_cities
+            .iter()
+            .filter(|c| c.detail.as_ref().is_some_and(|d| d.resistance > 0))
+            .map(|c| c.pos)
+            .collect();
+        let mut guards = self
+            .ctx
+            .own_units
+            .iter()
+            .filter(|u| {
+                u.military
+                    && self.has_acted(u.id)
+                    && fresh.iter().any(|at| (1..=1).contains(&at.distance(u.pos)))
+            })
+            .count();
         for unit in melee {
             if self.has_acted(unit.id) {
+                continue;
+            }
+            // Two soldiers stay beside a fresh capture while it resists.
+            if fresh.iter().any(|at| at.distance(unit.pos) <= 1) && guards < 2 {
+                guards += 1;
+                self.go_to(unit, unit.pos);
                 continue;
             }
             // Every city keeps its last soldier.
@@ -370,12 +450,26 @@ impl Planner<'_> {
             .collect()
     }
 
-    /// The capital trains the strongest melee unit while the army is small.
+    /// Walls first in every other city; the capital trains the strongest melee unit while
+    /// the army is small.
     pub(crate) fn rome_war_build(&self, city: &CityView) -> Option<ProductionItem> {
+        if self.rome_endless_war() && !city.is_capital && !city.walls {
+            return city.detail.as_ref()?.options.iter().find_map(|option| {
+                matches!(option.item, ProductionItem::Building { building }
+                    if data::is_walls_line(building))
+                .then_some(option.item)
+                .filter(|_| option.resource_blocker.is_none() && option.turns > 0)
+            });
+        }
         if !self.rome_endless_war()
             || !city.is_capital
             || self.campaigns.rome_opening_target.is_none()
-            || self.rome_opening_melee().len() >= HEALTHY_ARMY
+            || self.rome_opening_melee().len()
+                >= if self.view().turn <= OPENING_TURNS {
+                    HEALTHY_ARMY
+                } else {
+                    WAR_ARMY
+                }
             || self.rome_alarmed_cities().contains(&city.pos)
         {
             return None;
@@ -450,6 +544,11 @@ mod tests {
             .unit(3, ME, UnitKind::Spearman, off(7, 8))
             .build();
         view.turn = 60;
+        view.players
+            .iter_mut()
+            .find(|p| p.id == ENEMY)
+            .unwrap()
+            .cities = 2;
         view.diplomacy.legacy = false;
         view.diplomacy.relations.push(Relation {
             a: TeamId(0),
@@ -592,5 +691,64 @@ mod tests {
             planner.wants_peace_why(TeamId(2)),
             (true, "Roman endless war")
         );
+    }
+
+    #[test]
+    fn a_city_taken_from_an_enemy_rests_that_war_unless_the_enemy_is_on_its_last_city() {
+        // City 1 was taken from the enemy and is frozen until Peace or the enemy's end.
+        let mut view = war_view();
+        view.cities
+            .iter_mut()
+            .find(|c| c.id.0 == 1)
+            .unwrap()
+            .occupation_lock = Some(ENEMY);
+        view.players
+            .iter_mut()
+            .find(|p| p.id == ENEMY)
+            .unwrap()
+            .cities = 2;
+        let mut planner = rome(&view, 1);
+        planner.campaigns.rome_opening_target = Some(CityId(2));
+        planner.choose_rome_war();
+        assert_eq!(planner.campaigns.rome_opening_target, None);
+        // Its last city is finished, Walls or not: the end frees the locked units.
+        view.cities.retain(|c| c.id.0 != 3);
+        view.cities.iter_mut().find(|c| c.id.0 == 2).unwrap().walls = true;
+        view.players
+            .iter_mut()
+            .find(|p| p.id == ENEMY)
+            .unwrap()
+            .cities = 1;
+        let mut planner = rome(&view, 1);
+        planner.choose_rome_war();
+        assert_eq!(planner.campaigns.rome_opening_target, Some(CityId(2)));
+    }
+
+    #[test]
+    fn every_city_but_the_capital_builds_walls_first() {
+        let view = ViewBuilder::new(28, 18)
+            .faction(Faction::Rome)
+            .city_with_detail(1, ME, off(4, 8), 3)
+            .city_with_detail(4, ME, off(8, 4), 2)
+            .build();
+        let planner = rome(&view, 1);
+        let outpost = view.cities.iter().find(|c| c.id.0 == 4).unwrap();
+        let walls = planner.rome_war_build(outpost);
+        if outpost
+            .detail
+            .as_ref()
+            .unwrap()
+            .options
+            .iter()
+            .any(|o| matches!(o.item, ProductionItem::Building { building } if data::is_walls_line(building)))
+        {
+            assert!(matches!(
+                walls,
+                Some(ProductionItem::Building { building }) if data::is_walls_line(building)
+            ));
+        } else {
+            assert_eq!(walls, None);
+        }
+        assert_eq!(rome(&view, 0).rome_war_build(outpost), None);
     }
 }

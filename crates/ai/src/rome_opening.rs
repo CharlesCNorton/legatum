@@ -120,7 +120,18 @@ impl Planner<'_> {
                 .iter()
                 .copied()
                 .filter(|city| !city.walls)
-                .min_by_key(|city| (self.rome_opening_distance(city.pos), city.id))
+                .min_by_key(|city| {
+                    (
+                        // Gene `rome_endless_war`: Sparta and the Mongols last.
+                        self.rome_endless_war()
+                            && v.players.iter().any(|p| {
+                                p.id == city.owner
+                                    && matches!(p.faction, Faction::Sparta | Faction::Mongols)
+                            }),
+                        self.rome_opening_distance(city.pos),
+                        city.id,
+                    )
+                })
         };
         let Some(city) = selected else {
             return;
