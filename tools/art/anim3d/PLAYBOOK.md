@@ -401,6 +401,39 @@ resolved Blender gate in its retained log. The requested round-7 GPU log was
 absent and supplied evidence was CPU-labelled. This is an unverified GPU pass,
 not evidence of successful final rendering or a diagnosed GPU failure.
 
+### Round 9c motion lane
+
+`units/spearman/motion.py` owns the motion-only refinement. The open Quaternius
+walk is blended at 92% **on the source armature in Blender NLA**, before matched
+rest/roll constraints are sampled. Enable `use_animated_influence` and key its constant value: setting only
+`influence` leaves Blender's automatic strip influence at full strength. The
+source cadence and idle carrying-arm layer remain. The source stance detector
+allows a 12mm near-floor arc after blending; virtual speed is refitted, and the
+actual target sole still must pass 1mm slip and 2mm floor-error limits; no target foot rotation is corrected. Keep the top/front feet-over-cycle
+review mandatory for every walk iteration.
+
+The weapon attack now has bounded C1 pose curves instead of rounded pose indices:
+small reverse anticipation, a short drive with 14cm more hand extension, then
+longer recovery. The CC0 hit
+reaches recoil earlier and releases over the remaining samples; death retains
+its source poses with faster collapse and more settling time. Equipment release
+uses the same remapped death phase. Human hit/death joints are still source-driven.
+
+Crest tips flex with a damped spring driven by head acceleration (roots fixed,
+26mm cap); the strapped shield lags its carrier around the grip (3-degree cap).
+Attack/hit fade that response into the exact guard. Lower cloak silhouette pins
+are loosened for those two clips and air damping increased; shoulders stay pinned
+and the real cloth cache is rebaked. The master, materials and proportions are
+unchanged. Loop clips keep their previous secondary response to avoid introducing
+a new equipment seam.
+
+For independent CPU iteration, copy the current master/grade/assets into an
+isolated `ANIM_ROOT` under `ANIM_ROOT/lanes/`. `compare_motion.py` combines preserved
+round-8 GPU strips with the actual CPU renders and painting at native 256/64 px,
+writing only `spearman-r9c-*.png` to the shared review directory. GPU delivery is
+still `ROUND=9 tools/art/anim3d/units/spearman/gpu.sh`, unchanged; it rebuilds all
+motion, cloth, feet checks, atlas, 512/256 masters and movie from merged code.
+
 ### Trimmed atlas v2 and checks
 
 `units/spearman/delivery.py` preserves 8/8/10/4/10 frames, real alpha, and the
