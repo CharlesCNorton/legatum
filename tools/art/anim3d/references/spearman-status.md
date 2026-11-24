@@ -79,6 +79,10 @@ Eevee emission paint: sun pi at 24°, paint cast .22, fill cast .30, base cast
 
 Round 13 GPU (`d7798046`), after the parity gate was given a noise tolerance: **IoU 0.9537, blurred ΔE 3.51**, raw 6.36; regions head/crest 3.7, torso 2.9, cloak 4.8, shield 2.4, legs 3.2, feet 5.3, base 3.3; atlas 187,254 bytes at q80; walk slip 0.0042 mm, heading 5.142°. Both metric targets pass for the first time. Visual review pending; no PASS file.
 
+## Art director on round 13 GPU (08:03Z)
+
+"Ready to show Sam as a PASS candidate." Best on every aspect; both numeric targets pass; clips hold at 160 px and the death reads at 64. Polish, none blocking: paint three strap bands per instep; halve and blur the base shadow band and make it follow the feet in the walk (it stays put in the movie); darken the pale sole in move frames 5–6 and damp the cloak flare to 3–4 px; let the death shaft fall 10 px nearer the viewer and give one of the three identical final frames to the kneel-to-prone drop; 4 px more cloak flare at the hip and lit folds 8% lighter; level cloak hem with three scallops; sliver under the spear hand at (106,123); darkest bronze cavities 15% deeper.
+
 ## Spearman settings worth knowing
 
 - Camera: orthographic, location (2.5, −7, 3.0), target (0, 0, 1.2), ortho scale 2.9.
