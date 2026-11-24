@@ -93,3 +93,5 @@ Driver round3 opening: opened GPU c/f, all five e strips and round2 movie filmst
 Round3 skills: read all PLAYBOOK chapters, full standing FEEDBACK 1-23, art instructions, sources, and all six Blender skills. Preserve exact-view frozen projection on full-depth finished geometry, generated hidden fills, warm key/cool rim and one measured histogram grade. Priorities: generated clean stone footprint, supported grounded death and smoother stand normals. No cloth/straps on this crewless aircraft.
 c: 1 frames at 256/64 from 256px CYCLES/CPU, 8 samples.
 e-death: 10 frames at 256/64 from 256px CYCLES/CPU, 8 samples.
+c: 1 frames at 256/64 from 512px CYCLES/CPU, 8 samples.
+e-death: 10 frames at 256/64 from 256px CYCLES/CPU, 8 samples.
