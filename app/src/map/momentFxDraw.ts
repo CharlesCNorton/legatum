@@ -4,7 +4,7 @@
 // strokes, fills, clipped drawImage calls of art already on the map, and a one-off engraving of each sprite (`inkOf`),
 // so a turn with many moments stays cheap; nothing here uses filters, shadowBlur or per-frame canvases.
 import type { Faction, PlayerView } from '../types';
-import { cityImage, cityStem, cityTier, markStem, spriteSize, CITY_CANVAS, CITY_GROUND } from './cityArt';
+import { cityImage, cityStem, cityTier, drawCityCanvas, markStem, spriteSize, walledTown, CITY_CANVAS, CITY_GROUND, WALLED_TOWN_SCALE } from './cityArt';
 import { CITY_DROP, CITY_WORLD } from './terrain';
 import { buildingIconName, itemName } from '../data';
 import { tintedIcon } from '../icons';
@@ -12,7 +12,7 @@ import { ATLAS } from './style';
 import { ring } from './combatFxDraw';
 import { FONTS } from './sprites';
 import { landmarkBox, type LandmarkBox } from './landmarks';
-import { drawSite, drawWallsSite, stageImage } from './constructionFx';
+import { drawSite, stageImage } from './constructionFx';
 import { constructionStage, type ConstructionSite } from './constructionSites';
 import { rnd, type Pt } from './combatFx';
 import { resourceArtUrl } from '../icons';
@@ -42,8 +42,8 @@ export interface MomentView {
   /** Where a city's world wonder stands as a landmark (landmarks.ts), once built. */
   landmarkAt(city: number, building: string): Pt | null;
   landmarkBoxes?: ReadonlyMap<number, LandmarkBox>;
-  /** A city's population now, and its owner. */
-  city(id: number): { population: number; owner: number } | null;
+  /** A city's population now, its owner, and the wall ring it stands in (a `cityArt` stem: finished Walls or footings), if any. */
+  city(id: number): { population: number; owner: number; ring?: string | null } | null;
 }
 
 const clamp01 = (k: number) => Math.max(0, Math.min(1, k));
@@ -145,7 +145,7 @@ function blots(x: number, y: number, w: number, h: number, seed: number, k: numb
 }
 
 /** A sprite sketched in, then painted: the engraving laid down by `kInk`, the colour flooding in under it by `kWash`. */
-function sketch(ctx: CanvasRenderingContext2D, img: HTMLImageElement, key: string, x: number, y: number, w: number, h: number, seed: number, kInk: number, kWash: number, inkAlpha = 1) {
+function sketch(ctx: CanvasRenderingContext2D, img: HTMLImageElement | HTMLCanvasElement, key: string, x: number, y: number, w: number, h: number, seed: number, kInk: number, kWash: number, inkAlpha = 1) {
   const ink = inkOf(img, key);
   const origin = { x: 0.5, y: 0.82 };
   if (kWash > 0) {
@@ -170,10 +170,10 @@ function sketch(ctx: CanvasRenderingContext2D, img: HTMLImageElement, key: strin
   ctx.restore();
 }
 
-/** Where the terrain cache draws a town's sprite on screen (cityArt geometry), for a hex centre on screen. */
-function townBox(c: Pt, zoom: number) {
+/** Where the terrain cache draws a town's sprite on screen (cityArt geometry), for a hex centre on screen; `scale` shrinks it about its ground centre (a walled town). */
+function townBox(c: Pt, zoom: number, scale = 1) {
   const k = CITY_WORLD / CITY_CANVAS;
-  return { x: c.x - (CITY_GROUND.x0 + CITY_GROUND.x1) / 2 * k * zoom, y: c.y + (-CITY_GROUND.middle * k + CITY_DROP) * zoom, s: CITY_WORLD * zoom };
+  return { x: c.x - (CITY_GROUND.x0 + CITY_GROUND.x1) / 2 * k * zoom * scale, y: c.y + (-CITY_GROUND.middle * k * scale + CITY_DROP) * zoom, s: CITY_WORLD * zoom * scale };
 }
 
 function townSprite(era: number, pop: number, far: boolean, px: number): { img: HTMLImageElement; key: string } | null {
@@ -255,10 +255,8 @@ function drawBuild(ctx: CanvasRenderingContext2D, b: FxBuild, t: number, v: Mome
   const site: ConstructionSite = { city: b.city, owner: b.owner, tile: b.tile, hex: b.at,
     building: b.item.kind === 'Building' || b.item.kind === 'Wonder' ? b.item.building : 'Walls',
     era: v.eraOf(b.owner), k, stage: constructionStage(k), seed: b.seed, walls: b.walls };
-  if (b.walls) {
-    drawWallsSite(ctx, site, centre, v.zoom, v.dpr, k, v.factionOf(b.owner));
-    return;
-  }
+  // Walls footings are the town's own art: the terrain cache draws them, behind and in front of the town.
+  if (b.walls) return;
   const box = v.landmarkBoxes?.get(b.tile) ?? landmarkBox(centre, v.hexPx);
   const crossed = constructionStage(b.from) !== constructionStage(b.to);
   if (!crossed) drawSite(ctx, site, box, k, v.factionOf(b.owner));
@@ -289,13 +287,18 @@ function drawGrow(ctx: CanvasRenderingContext2D, g: FxGrow, t: number, v: Moment
   const city = v.city(g.city);
   if (!city) return;
   const c = v.toScreen(worldOf(g.at));
-  const box = townBox(c, v.zoom);
-  const sprite = townSprite(v.eraOf(city.owner), city.population, v.far, box.s * v.dpr);
+  // A walled town grows inside its ring, as the terrain cache draws it, with the near wall kept in front.
+  const ring = !v.far && city.ring ? cityImage(city.ring, spriteSize(townBox(c, v.zoom).s * v.dpr)) : null;
+  const sprite = townSprite(v.eraOf(city.owner), city.population, v.far, townBox(c, v.zoom).s * v.dpr);
   if (!sprite) return;
+  // Clipped to the ring's court like the cached town (`walledTown`, drawn in the ring's full frame); unclipped and scaled until the ring loads.
+  const fitted = ring ? walledTown(sprite.img, ring) : null;
+  const box = townBox(c, v.zoom, city.ring && !v.far && !fitted ? WALLED_TOWN_SCALE : 1);
   const k = Math.min(1, dt / GROW_MS);
   const s = 0.96 + 0.04 * easeOut(clamp01(k / 0.7));
   const bw = box.s * s, bx = c.x - (c.x - box.x) * s, by = box.y + box.s * (1 - s) * 0.85;
-  sketch(ctx, sprite.img, sprite.key, bx, by, bw, bw, g.seed, clamp01(k / 0.55), clamp01((k - 0.25) / 0.7));
+  sketch(ctx, fitted ?? sprite.img, fitted ? `${sprite.key}|${city.ring}` : sprite.key, bx, by, bw, bw, g.seed, clamp01(k / 0.55), clamp01((k - 0.25) / 0.7));
+  if (ring) { const r = townBox(c, v.zoom); drawCityCanvas(ctx, ring, r.x, r.y, r.s, 'front'); }
 }
 
 const WAX = '#8f2a1c';
