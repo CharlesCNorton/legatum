@@ -4,6 +4,15 @@ from PIL import Image
 
 
 def resize_rgba(image, size, space="linear"):
+    """Lanczos reduction with premultiplied alpha.
+
+    space="linear" averages light (the Spearman delivery through round 10).
+    space="display" averages encoded sRGB values, which is how the game's
+    painted tokens were reduced from their masters: a render reduced this way
+    can match the painting, while the same pixels reduced in linear light sit
+    about 3 CIE76 away (look lane, 2026-11-24). Use one space for a unit's
+    delivery, its validation and every image it is compared with.
+    """
     assert space in {"linear", "display"}, space
     rgba = np.asarray(image.convert('RGBA'), dtype=np.float32)/255
     if image.size == size:

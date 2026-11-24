@@ -23,6 +23,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # unit-local modules (continuity.py) under blender --python
 import bpy
 from bpy_extras.object_utils import world_to_camera_view
 from mathutils import Matrix, Vector
@@ -49,8 +50,12 @@ LOOK = {
     'stroke': .10,            # brush-patch offset of the ramp input
     'vis_lo': .08, 'vis_hi': .45,
     'base_cast': .16,         # cast shadow depth on the stone
-    'base_contact': 1.0,     # soft contact (AO) shadow depth under the feet
+    'base_contact': .40,     # soft contact (AO) shadow depth under the feet
     'contact_reach': .07,     # metres: contact shadow is gone about 4 px (256) from the sole
+    'stone_finish': 1,        # calibrated cream, light lip and descending side value
+    'sandal_value': .85,      # linear pigment gain on straps, not sole undersides
+    'base_soft_contact': .18, # broad, faint geometry-driven shade around planted feet
+    'shield_rim_value': .80,  # deepest rim paint only; keep bright worn edges
     'stone_grain': .08,
     'stone_radius': .594,     # metres, for the near-to-far tone of the top
     'shadow_r': .50, 'shadow_g': .36, 'shadow_b': .34,  # warm-dark shadow multiplier
@@ -132,6 +137,9 @@ def stone(g, colours, cast, shadow_tint, key_dir, cfg):
     painted feet and shadows must not stay behind when the real feet move. Top,
     beveled edge and side are told apart by the object-space normal.
     """
+    if cfg['stone_finish']:
+        colours = dict(colours, edge=(255, 235, 205), upper=(237, 192, 136),
+                       lower=(226, 177, 118), shadow=(150, 105, 70))
     coords = g.node('ShaderNodeTexCoord')
     up = g.node('ShaderNodeSeparateXYZ')
     g.l.new(coords.outputs['Normal'], up.inputs[0])
@@ -169,8 +177,13 @@ def stone(g, colours, cast, shadow_tint, key_dir, cfg):
         grain = layer if grain is None else g.math('MULTIPLY', grain, layer)
     colour = g.mix(1, colour, grain, 'MULTIPLY')
     ao = g.node('ShaderNodeAmbientOcclusion', samples=16)
-    ao.inputs['Distance'].default_value = cfg['contact_reach']
+    ao.inputs['Distance'].default_value = .025 if cfg['stone_finish'] else cfg['contact_reach']
     contact = g.math('MULTIPLY', g.math('SUBTRACT', 1, ao.outputs['AO']), cfg['base_contact'])
+    if cfg['stone_finish']:
+        soft = g.node('ShaderNodeAmbientOcclusion', samples=16)
+        soft.inputs['Distance'].default_value = .28
+        soft_depth = g.math('MULTIPLY', g.math('SUBTRACT', 1, soft.outputs['AO']), cfg['base_soft_contact'])
+        contact = g.math('ADD', contact, g.math('MULTIPLY', step(up.outputs['Z'], .80, .97), soft_depth))
     depth = g.math('ADD', contact, g.math('MULTIPLY', g.math('SUBTRACT', 1, cast), cfg['base_cast']), clamp=True)
     # The painted stone's own shadow colour, as a linear multiplier of its lit top.
     tint = tuple(max(linear(s / 255) / linear(t / 255), .05) for s, t in zip(colours['shadow'], colours['top'])) + (1,)
@@ -179,7 +192,12 @@ def stone(g, colours, cast, shadow_tint, key_dir, cfg):
 
 def build_material(ob, part, look_dir, palettes, key_dir, fill_dir, uv_world, rest_matrices, cfg):
     has_uv = ob.type == 'MESH' and ob.data.uv_layers.get(PAINT_UV) is not None
-    name = 'LOOK ' + part + ('' if has_uv else ' @ ' + ob.name)
+    # Rim/strap meshes share the part's frozen textures but need their own
+    # material; caching only by part silently gives them the shell/sole graph.
+    is_strap = ob.name.startswith('Sandal strap ')
+    is_rim = ob.name in ('Aspis turned rim', 'Aspis turned rim.001')
+    detail = ' strap' if is_strap else ' edge' if is_rim else ''
+    name = 'LOOK ' + part + detail + ('' if has_uv else ' @ ' + ob.name)
     existing = bpy.data.materials.get(name)
     if existing: return existing
     material = bpy.data.materials.new(name)
@@ -249,6 +267,17 @@ def build_material(ob, part, look_dir, palettes, key_dir, fill_dir, uv_world, re
         if cfg.get('continuity', 1):
             from continuity import pigment
             final = pigment(g, part, final, g.math('SUBTRACT', 1, weight.outputs[0]), t, lin3, palettes)
+        if is_strap:
+            final = g.mix(1, final, (cfg['sandal_value'],) * 3 + (1,), 'MULTIPLY')
+        if is_rim:
+            value = g.node('ShaderNodeRGBToBW')
+            g.l.new(final, value.inputs[0])
+            dark = g.node('ShaderNodeMapRange', interpolation_type='SMOOTHSTEP')
+            g.l.new(value.outputs[0], dark.inputs['Value'])
+            dark.inputs['From Min'].default_value = .02
+            dark.inputs['From Max'].default_value = .16
+            final = g.mix(g.math('SUBTRACT', 1, dark.outputs[0]), final,
+                          (cfg['shield_rim_value'],) * 3 + (1,), 'MULTIPLY')
         if cfg['debug'] == 1: final = g.mix(weight.outputs[0], (0, 0, 0, 1), (1, 1, 1, 1))
         if cfg['debug'] == 2: final = unseen
         if cfg['debug'] == 3: final = seen

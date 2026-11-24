@@ -102,7 +102,7 @@ if source_samples:
               'dense_frames': len(dense), 'planted_samples': len(gaps), 'loop_seam_m': seam,
               'max_raw_foot_yaw_degrees': max(abs(f['heading']) for row in dense for f in row['feet'].values()),
               'max_root_xy_correction_m': source['contact']['max_root_xy_correction_m'],
-              'max_foot_ik_correction_m': source['contact']['max_foot_ik_correction_m'],
+              'max_foot_ik_correction_m': max(source['contact']['max_foot_ik_correction_m'], source.get('max_ik_sole_raise_m', 0)),
               'max_sole_translation_m': source['max_sole_translation_m'],
               'max_readable_heading_degrees': max(abs(f['heading']) for row in dense for f in row['feet'].values() if f['heading_projection_m']>=.08),
               'ankle_note': 'Ankle travel above a rolling sole is not contact slip; measure heel/toe landmarks.',

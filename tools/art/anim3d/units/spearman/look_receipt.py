@@ -5,7 +5,7 @@ from pathlib import Path
 
 UNIT = Path(__file__).resolve().parent
 CODE = [UNIT/'look.py', UNIT/'look_textures.py', UNIT/'continuity.py',
-        UNIT.parents[1]/'kit/look.py', UNIT.parents[1]/'kit/part_paint.py']
+        UNIT.parents[1]/'kit/continuity.py', UNIT.parents[1]/'kit/look.py', UNIT.parents[1]/'kit/part_paint.py']
 
 def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
