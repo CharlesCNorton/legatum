@@ -293,3 +293,4 @@
   5. Cloak hem behind the right leg: level at y ~190 with three scallops.
   6. Death: last three frames identical; give one to the kneel-to-prone drop (frames 4-5), which is still the quickest step in the clip.
   7. Sliver under the spear hand at (106,123); darkest bronze cavities 15% deeper (helmet p10 33 vs 26, cuirass 38 vs 31).
+- (cloud reviewer, on round 14) Round 14 is the FIRST FULL CANDIDATE to show Sam: the rest pose matches the painting and all five clips read well at 160 px. Keeping round 13's shield-readable death is agreed. Round 15: finish the four items (sandal straps and toes; a stone shadow that moves with the walk; softening the guard-to-walk cut; the early-fall spear and the pale sliver under the spear hand) WITHOUT disturbing anything that already passes. If any metric or clip regresses against round 14, keep round 14's version of that part, and say so in the note. After round 15 the loop holds until Sam has seen it.
