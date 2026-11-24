@@ -29,7 +29,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 import critique  # noqa: E402
 
 PARTS = ['shield', 'helmet', 'crest', 'cuirass', 'greave_l', 'greave_r', 'cloak', 'tunic', 'skirt',
-         'belt', 'sandal_l', 'sandal_r', 'skin', 'spear', 'base']
+         'belt', 'sandal_l', 'sandal_r', 'skin', 'spear', 'base', 'rim']
 ID_COLOURS = {p: (40 + 70 * (i % 4), 40 + 70 * ((i // 4) % 4), 250 - 100 * (i % 3)) for i, p in enumerate(PARTS)}
 MATERIAL = {'cloak': 'red', 'crest': 'red', 'tunic': 'linen', 'skirt': 'linen', 'shield': 'bronze', 'helmet': 'bronze',
             'cuirass': 'bronze', 'greave_l': 'bronze', 'greave_r': 'bronze'}
@@ -175,27 +175,33 @@ def main():
     rgb, alpha = source[..., :3], source[..., 3] / 255
     height, width = alpha.shape
     ids = id_in_source_space(Image.open(id_path), (width, height))
-    lab = critique.rgb_to_lab(rgb).astype(np.float32)
     light = None
     if light_path:
         # look.py --set debug=6 writes the ramp input through the display transform.
         encoded = render_in_source_space(Image.open(light_path), (width, height))[0][..., 0] / 255
         light = np.where(encoded <= .04045, encoded / 12.92, ((encoded + .055) / 1.055) ** 2.4)
     opaque = alpha > .85
-    lightness, red, yellow = lab[..., 0], lab[..., 1], lab[..., 2]
-    chroma = np.hypot(red, yellow)
-    is_red = (red > 30) & (red > yellow * .9)
-    is_pale = (lightness > 68) & (chroma < 33) & (red < 14)
-    families = {'red': is_red | (lightness < 22), 'pale': ~is_red & (chroma < 34), 'warm': ~is_red & ~is_pale}
+
+    def colour_masks(pixels):
+        lab = critique.rgb_to_lab(pixels).astype(np.float32)
+        lightness, red, yellow = lab[..., 0], lab[..., 1], lab[..., 2]
+        chroma = np.hypot(red, yellow)
+        is_red = (red > 30) & (red > yellow * .9)
+        is_pale = (lightness > 68) & (chroma < 33) & (red < 14)
+        # Cream stone and bright bronze overlap in colour: the stone also needs its outline.
+        stone_like = (lightness > 66) & (red < 14)
+        flesh = (yellow < 2.1 * red) & (red > 9)
+        return is_red, is_pale, stone_like, flesh, {'red': is_red | (lightness < 22), 'pale': ~is_red & (chroma < 34), 'warm': ~is_red & ~is_pale}
+
+    is_red, is_pale, stone_like, flesh, families = colour_masks(rgb)
     strict = {'cloak': 'red', 'crest': 'red', 'shield': 'warm', 'helmet': 'warm', 'greave_l': 'warm', 'greave_r': 'warm',
               'sandal_l': 'warm', 'sandal_r': 'warm', 'spear': 'warm', 'skin': 'warm'}
     owner = np.full((height, width), -1, dtype=np.int32)
     bronze_region = np.isin(ids, [PARTS.index(q) for q, m in MATERIAL.items() if m == 'bronze'])
     debug = np.zeros((height, width, 3), dtype=np.uint8)
     palettes = {}
-    stone_like = (lightness > 66) & (red < 14)  # cream and bright bronze overlap: the stone uses its outline
-    base_index = PARTS.index('base')
-    figure = ((ids >= 0) & (ids != base_index)) | (opaque & (ids == base_index) & ~stone_like)
+    stone = np.isin(ids, [PARTS.index('base'), PARTS.index('rim')])
+    figure = ((ids >= 0) & ~stone) | (opaque & stone & ~stone_like)
     for index, part in enumerate(PARTS):
         region = ids == index
         # A part keeps the painting inside its own rest outline. Only rigid or
@@ -204,14 +210,13 @@ def main():
         # the part. Torso layers keep everything: where the model's tunic sits
         # under the painted cloak collar, the collar is what belongs on it.
         family = strict.get(part)
-        agree = region & opaque & (stone_like if part == 'base' else families[family] if family else True)
+        agree = region & opaque & (stone_like if part in ('base', 'rim') else families[family] if family else True)
         smooth = np.asarray(Image.fromarray((agree * 255).astype(np.uint8)).filter(ImageFilter.BoxBlur(3))) > 127
         valid = erode(smooth & region & opaque, 1)
-        if part == 'base':
+        if part in ('base', 'rim'):
             # The stone keeps only clean stone: no feet, spear butt or their painted
-            # shadows. Painted stone just outside the 3D disc still seeds the fill.
-            valid = erode(opaque & stone_like & ((ids == index) | (ids < 0)), 1) & ~(grow_distance(figure, 16) <= 16)
-            valid[:int(height * .8)] = False
+            # shadows. Top and side are separate parts so neither bleeds into the other.
+            valid = erode(opaque & stone_like & region, 2) & ~(grow_distance(figure, 16) <= 16)
         if valid.sum() < 50:
             print('too few owned pixels for', part, int(valid.sum()))
             valid = region & opaque
@@ -220,7 +225,7 @@ def main():
         weight = valid.astype(np.float32)
         filled = push_pull(rgb, weight)
         Image.fromarray(np.clip(filled, 0, 255).round().astype(np.uint8)).save(out / f'front-{part}.png')
-        low = blur_valid(rgb, weight, 96)
+        low = blur_valid(rgb, weight, 48)
         Image.fromarray(np.clip(low, 0, 255).round().astype(np.uint8)).save(out / f'low-{part}.png')
         # Ramps come from the whole painting's material, not just the part's rest
         # outline: the visible cloak is mostly its shadowed inside, but its unseen
@@ -228,12 +233,30 @@ def main():
         material = MATERIAL.get(part)
         pool, surface = valid, region
         if material == 'red': pool = valid | (opaque & is_red)
-        elif material == 'linen': pool = (valid & ~is_red) | (opaque & is_pale & (ids != base_index) & (np.arange(height)[:, None] < height * .8))
+        elif material == 'linen': pool = (valid & ~is_red) | (opaque & is_pale & ~stone & (np.arange(height)[:, None] < height * .8))
         elif material == 'bronze': pool = opaque & bronze_region & families['warm']
-        elif part == 'skin': pool = valid & (yellow < 2.1 * red) & (red > 9)   # tan flesh, not the bronze it borders
+        elif part == 'skin': pool = valid & flesh   # tan flesh, not the bronze it borders
         if material: surface = np.isin(ids, [PARTS.index(q) for q, m in MATERIAL.items() if m == material])
         palettes[part] = palette(rgb[pool], light[surface] if light is not None else None)
         print(part, 'owned px', int(valid.sum()), 'of 3D region', int(region.sum()))
+    # The stone is shaded, not projected (its 3D outline is larger than the painted
+    # one): keep the painting's lit top, upper and lower side and bright edge colours.
+    # Measured on the painting's own disc: the side is the band above its bottom
+    # edge in the central columns, the top is clean stone well above that band.
+    columns = np.nonzero(opaque.any(0))[0]
+    centre = range(int(np.percentile(columns, 30)), int(np.percentile(columns, 70)))
+    bottom = {x: int(np.nonzero(opaque[:, x])[0].max()) for x in centre}
+    band = lambda lo, hi: np.array([rgb[bottom[x] - d, x] for x in centre for d in range(lo, hi)])
+    clean = erode(opaque & stone_like, 2) & ~(grow_distance(figure, 6) <= 6)
+    clean[:min(bottom.values()) - 190] = False
+    clean[max(bottom.values()) - 85:] = False
+    top = rgb[clean]
+    luminance = top @ np.array([.2126, .7152, .0722])
+    mean = lambda pixels: [int(round(v)) for v in np.median(pixels, axis=0)]
+    palettes['stone'] = {'top': mean(top), 'top_light': mean(top[luminance > np.percentile(luminance, 85)]),
+                         'top_dark': mean(top[luminance < np.percentile(luminance, 15)]),
+                         'shadow': mean(top[luminance < np.percentile(luminance, 3)]),
+                         'edge': mean(band(66, 74)), 'upper': mean(band(36, 56)), 'lower': mean(band(6, 20))}
     Image.fromarray(debug).save(out / 'assignment.png')
     ids_view = np.zeros((height, width, 3), dtype=np.uint8)
     for index, part in enumerate(PARTS): ids_view[ids == index] = ID_COLOURS[part]
