@@ -40,6 +40,12 @@ Round-to-task mapping for rounds 1–3 is inferred from task order in `astra.log
 - Open motion (round 9) fixed the walk at a stroke after eight rounds of hand-built motion; contact checks have passed since (slip ≤ 0.0022 mm, floor error ≤ 1.14 mm, heading ≤ 2.62°).
 - Rounds 9 and 10 improved motion and revealed-surface coverage more than rest metrics: IoU has been flat at 0.90 for two rounds. The remaining rest gap is form (shoulder, lower legs) and value structure.
 
+### Round 11 (2026-11-23 local, in progress)
+
+Lanes started 22:21:19–22:21:25 on the round-10 GPU candidate `aeacff7d`.
+
+- Lane a (sleeve and greave shell), note at 22:32: keep the lower-leg correction. Same-settings CPU A/B (256 px, 16 samples, seed 17, no denoising, fixed round-10 LUT): lower-leg overlap 78.31% → 83.02%; lower-leg RGB error 30.79 → 23.56/255; figure above base 88.98% → 89.87%; whole-image IoU 0.9035 → 0.9103; raw ΔE 13.75 → 13.61. Sleeve smoothing: shoulder overlap 88.75% → 88.64%, optional. Uniform calf-and-greave widening rejected (77.87% → 76.62%). Feet checks unchanged (slip 0.0018 mm, floor 1.133 mm, heading 2.618°; root correction 48.97 mm).
+
 ### Colour on the blurred scale (added 2026-11-24)
 
 `critique.py` now judges colour on blurred images (2 px Gaussian at 256) and per region. Each round's own graded rest render, re-measured:
