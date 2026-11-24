@@ -78,7 +78,8 @@ Lanes about 01:20–01:39 on the round-12 GPU candidate `07643cd4`, with the con
 - Lane b (base and sandals): base 4.77 → 4.00 (side 3.81 → 2.86); feet 13.33 → 13.36 with strap-only darkening; broad foot darkening rejected (13.90).
 - Lane c (walk and death staging): swing-sole clearance 114 → 76 mm; pelvis sway 68 → 85 mm; slip 0.0018 → 0.0043 mm; death body over the disc 55% → 76%.
 - For scale: Fable C, working on the same round-12 base at the same time, took the rest pose from IoU 0.9394 to 0.9513 and the feet region from 13.35 to 5.3 by measuring the feet on a gridded crop first.
-- Lanes done 01:39:25; merge task queued.
+- Lanes done 01:39:25. Merge 01:39–01:58 (19 m): Fable C's guard, feet, base and look with lane c's walk and collapse; lanes a and b dropped as overlapping, Fable D's death dropped on the 06:40Z verdict. CPU proxy against round 12: IoU 0.9394 → **0.9513**, blurred ΔE 4.55 → **3.39**, feet 13.35 → 5.45, base 4.75 → 3.23; walk slip 0.0042 mm on the new guard after a whole-track registration (ankle-only: 29.8 mm). Look and delivery now share one render function.
+- GPU pass 01:58:55–02:23:57: **failed after 25 minutes** at the new render-parity gate, which asserted exact pixel equality between two Eevee renders of the rest. They differ by sample noise only (142 of 262,144 pixels, one by more than 2 levels, mean 0.0002). No round-13 GPU numbers yet. Second GPU launch of the night lost to a gate or import the sandbox could not run.
 
 ### Fable C and D (2026-11-24, from round 12)
 
