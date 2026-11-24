@@ -72,6 +72,68 @@ def pale_pixels(image, box, min_mean=145, max_chroma=80, opaque=240):
     return int((pale & (data[..., 3] > opaque)).sum())
 
 
+def luminance(rgb):
+    """Rec. 709 luma of display-referred sRGB values (0-255), as a reviewer reads it."""
+    rgb = np.asarray(rgb, dtype=float)
+    return rgb[..., 0]*.2126+rgb[..., 1]*.7152+rgb[..., 2]*.0722
+
+
+def region_stats(image, box, opaque=240):
+    """What a reviewer measures in one box: opaque pixel count, mean RGB, mean
+    and 90th-percentile luminance. Compare painting and render box by box
+    ("feet luminance 183 vs 141", "shield p90 161 vs 174") to turn a visual
+    note into a number the next round can check.
+    """
+    x0, y0, x1, y1 = box
+    data = _rgba(image)[y0:y1, x0:x1].astype(float)
+    mask = data[..., 3] > opaque
+    if not np.any(mask):
+        return {'pixels': 0}
+    rgb = data[..., :3][mask]
+    luma = luminance(rgb)
+    return {'pixels': int(mask.sum()), 'mean_rgb': [round(float(v), 1) for v in rgb.mean(axis=0)],
+            'luminance_mean': round(float(luma.mean()), 1), 'luminance_p90': round(float(np.percentile(luma, 90)), 1)}
+
+
+def span_width(image, y, x0=0, x1=None, threshold=128):
+    """Opaque pixel count along row `y` between x0 and x1: the on-screen width
+    of a thin prop (spear shaft, ankle). Thin geometry that covers under ~2 px
+    at delivery size renders dark and jagged.
+    """
+    alpha = _rgba(image)[y, x0:x1, 3]
+    return int((alpha > threshold).sum())
+
+
+def frame_steps(frames, held_tail=2, still=.15, jump=2.5):
+    """Frame-to-frame change over a clip, to spend the frame budget on motion.
+
+    Returns the mean absolute difference (0-255) between consecutive frames,
+    the largest step as a multiple of the clip median, and findings: frames
+    that barely change (under `still` x median) before the allowed held tail,
+    and steps over `jump` x median (a pose that teleports between two
+    delivered samples). Pass lossless frames or decoded alpha, not lossy RGB.
+
+    Spearman round-10 death, decoded alpha: steps 13.6, 8.2, 11.1, 15.1, 5.5,
+    1.2, 0.03, 0.03, 0: three of ten frames spent on a pose that had already
+    settled, which the art director flagged as the clip's main waste.
+    """
+    arrays = [_rgba(f).astype(float) for f in frames]
+    steps = [float(np.abs(b-a).mean()) for a, b in zip(arrays, arrays[1:])]
+    moving = sorted(step for step in steps if step > 0)
+    if not moving:
+        return {'steps': steps, 'max_step_over_median': 0, 'findings': ['clip does not move']}
+    median = moving[len(moving)//2]
+    findings = []
+    last_free = len(steps)-(held_tail-1)
+    quiet = [i+1 for i, step in enumerate(steps[:last_free]) if step < still*median]
+    if quiet:
+        findings.append(f'frames {quiet} barely change before the held tail')
+    big = [i+1 for i, step in enumerate(steps) if step > jump*median]
+    if big:
+        findings.append(f'frames {big} jump more than {jump}x the median step')
+    return {'steps': [round(step, 3) for step in steps],
+            'max_step_over_median': round(max(steps)/median, 2), 'findings': findings}
+
 def scale_box(box, source=256, target=160):
     return tuple(round(v*target/source) for v in box)
 
@@ -125,19 +187,41 @@ def _box(text):
     return name, box
 
 
+def clip_report(folder):
+    """Frame-step findings for each <folder>/<clip>/NN.png set (decoded cells)."""
+    report = {}
+    for clip in sorted(p for p in Path(folder).iterdir() if p.is_dir()):
+        paths = sorted((p for p in clip.glob('*.png') if p.stem.isdecimal()), key=lambda p: int(p.stem))
+        if len(paths) > 1:
+            report[clip.name] = frame_steps([Image.open(p).getchannel('A').convert('RGBA') for p in paths])
+    return report
+
+
 def main():
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--painting', type=Path, required=True)
-    parser.add_argument('--before', type=Path, required=True)
-    parser.add_argument('--after', type=Path, required=True)
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument('--painting', type=Path)
+    parser.add_argument('--before', type=Path)
+    parser.add_argument('--after', type=Path)
     parser.add_argument('--region', type=_box, action='append', default=[], help='name=x0,y0,x1,y1 (IoU and RGB error)')
     parser.add_argument('--pale', type=_box, action='append', default=[], help='name=x0,y0,x1,y1 (pale-pixel count)')
+    parser.add_argument('--stats', type=_box, action='append', default=[], help='name=x0,y0,x1,y1 (pixels, mean RGB, luminance mean and p90)')
     parser.add_argument('--sheet', type=Path, help='write a native-size painting/before/after sheet')
+    parser.add_argument('--clips', type=Path, help='folder of decoded cells (<clip>/NN.png): report wasted and jumping frames')
     args = parser.parse_args()
-    painting, before, after = (Image.open(p).convert('RGBA') for p in (args.painting, args.before, args.after))
-    if before.size != painting.size:
-        painting = resize_rgba(painting, before.size)
-    print(json.dumps(compare(painting, before, after, dict(args.region), dict(args.pale)), indent=2))
+    if args.clips:
+        print(json.dumps(clip_report(args.clips), indent=2))
+    if not args.painting:
+        return
+    assert args.after, '--painting needs --after (and usually --before)'
+    painting, after = (Image.open(p).convert('RGBA') for p in (args.painting, args.after))
+    before = Image.open(args.before).convert('RGBA') if args.before else after
+    if after.size != painting.size:
+        painting = resize_rgba(painting, after.size)
+    report = compare(painting, before, after, dict(args.region), dict(args.pale))
+    for name, box in args.stats:
+        report[name] = {'box': list(box), 'painting': region_stats(painting, box),
+                        'before': region_stats(before, box), 'after': region_stats(after, box)}
+    print(json.dumps(report, indent=2))
     if args.sheet:
         comparison_sheet([('Painting', painting), ('Before', before), ('After', after)]).save(args.sheet)
 

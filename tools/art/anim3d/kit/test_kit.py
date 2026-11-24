@@ -146,6 +146,24 @@ class RegionTests(unittest.TestCase):
         self.assertEqual(regions.scale_box((138, 103, 162, 140)), (86, 64, 101, 88))
         self.assertEqual(regions.comparison_sheet([('Painting', image), ('After', patched)]).size, (544, 572))
 
+    def test_reviewer_stats_and_prop_width(self):
+        image = figure(size=256)
+        stats = regions.region_stats(image, (130, 100, 160, 130))
+        self.assertEqual(stats['pixels'], 900)
+        self.assertEqual(stats['mean_rgb'], [180.0, 60.0, 40.0])
+        self.assertEqual(stats['luminance_mean'], stats['luminance_p90'])
+        self.assertEqual(regions.region_stats(image, (0, 0, 10, 10)), {'pixels': 0})
+        self.assertEqual(regions.span_width(image, 60, 200, 230), 3)
+
+    def test_frame_steps_flags_wasted_and_teleporting_frames(self):
+        moving = [figure(shift=4*i) for i in range(8)]
+        self.assertEqual(regions.frame_steps(moving+[moving[-1]])['findings'], [])
+        wasted = regions.frame_steps(moving[:5]+[moving[4]]*4)
+        self.assertEqual(wasted['findings'], ['frames [5, 6, 7] barely change before the held tail'])
+        teleport = regions.frame_steps(moving[:4]+[figure(shift=70+4*i) for i in range(4)])
+        self.assertEqual(teleport['findings'], ['frames [4] jump more than 2.5x the median step'])
+        self.assertEqual(regions.frame_steps([moving[0]]*4)['findings'], ['clip does not move'])
+
 
 if __name__ == '__main__':
     unittest.main()
