@@ -141,3 +141,15 @@ Repository gate: HEAD hygiene/public-claims passed; art distinctness could not l
 e-death: review emitted from CYCLES frames; no art-pass claim.
 c: review emitted from CYCLES frames; no art-pass claim.
 Round 3 rejection/correction: final death review still showed an entry pop. Direct inspection of the lowest mesh vertices found lower-leg skin below the base despite valid hoof-only sole checks. Shared vertex weights prove BackLowerLeg.L pairs with IKBackLeg.L (and R with R); my earlier inference from screen proximity was wrong. Reverted the crossed pairing, corrected the playbook, and rebuilding before accepting delivery. Keep this failed trial as evidence, not a clean-motion claim.
+c: review emitted from CYCLES frames; no art-pass claim.
+Round 3 final registration correction: use same-suffix rear control pairs verified by shared skin weights; source control origins differ from actual visible joints. Fitter now derives source anchors from shared-weight boundary centroids, retains true depth and native topology, and moves real bone transforms. Lowest rest skin improved to 0.088m; planted hoof soles 0.112m. Added whole-horse idle penetration guard (0.085m minimum) as well as hoof checks. Remaining bent hock/leg contours are still visibly wrong, so this is progress rather than PASS. Full final rebuild underway; old intermediate measurements superseded by final look receipt.
+b: review emitted from CYCLES frames; no art-pass claim.
+c: review emitted from CYCLES frames; no art-pass claim.
+c-details: review emitted from CYCLES frames; no art-pass claim.
+d: review emitted from CYCLES frames; no art-pass claim.
+Round 3 handoff now also extracts an eight-frame contact sheet from the actual encoded MP4, cavalry-round3-video-check.png, so the reviewer does not accidentally inspect an older manually generated video sheet. CPU/GPU provenance rejection confirmed before atlas writes; all 13 source/derived asset pins match. Final branch is already up to date with the fetched origin/master (0 missing commits); no merge needed.
+e-idle: review emitted from CYCLES frames; no art-pass claim.
+e-move: review emitted from CYCLES frames; no art-pass claim.
+e-attack: review emitted from CYCLES frames; no art-pass claim.
+e-hit: review emitted from CYCLES frames; no art-pass claim.
+e-death: review emitted from CYCLES frames; no art-pass claim.
