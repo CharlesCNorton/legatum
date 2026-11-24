@@ -842,29 +842,14 @@ Merge the director-preferred c cycle entry and post-bake cloth closure with b's 
 
 `cpu_review.py` now calls the same render setup/frame functions as the GPU entry point, records source/code/calibration hashes, and requires an isolated root. `cpu_deliver.py` checks those receipts before packing, creates native 256/160/64 comparisons and a validated five-clip movie. CPU analytical-light proxies cannot verify Eevee cast shadows. Round 14 adds reusable `kit.cloth`, `kit.loop`, and evaluated `kit.base.SupportSurface`.
 
-### Spearman round 15c: retain the boundary tradeoff that already passes
+### Infantry: spearman round 15 merge (2026-11-24)
 
-Test dense sampling phases without changing donor rotations, contact, cloth
-or cadence before attempting a pose correction. `round15c_review.py` compares
-all 32 integer phases of the existing 24 Hz walk with eight samples, four source
-frames apart. R14 starts at 41; the minimax candidate starts at 40. At 160 px
-the full-sole entry falls 14.411 → 13.373 px, but exit grows 9.442 → 10.339 px.
-Only phase 41 is no worse than R14 at both boundaries. Keep R14 in production:
-`transitions.py`, the cloth bake and shield-readable death are unchanged.
-
-The discarded candidate also raises maximum evaluated cloth-vertex delivery
-step 11.889 → 12.526 px and wrap step 6.017 → 7.004 px at 160, despite identical
-cloth geometry at all 33 dense samples and closed duplicate endpoints. These
-are full-mesh geometric displacements, not visible silhouette measurements.
-A closed source seam does not prove an arbitrary delivered sample phase is
-better. Inspect every combined-cloth frame and the delivered wrap.
-
-The isolated review script preserves all 53 bone matrices and every sole and
-cloth vertex at all 33 samples by exact comparison; source action hashes and
-five untouched blend files also match. Run it with
-`ANIM_ROOT=$HOME/LegatumRuns/anim-pilot/lanes/spearman-r15c` after copying the
-R14 merge masters there; it reads the preserved `spearman-r14-merge` sibling.
-It saves the rejected candidate only in that lane, never in production.
-Review evidence is labelled rejected; a lower worst-boundary score alone is
-not a win when the exit and cloth regress. The GPU handoff stays
-`ROUND=15 tools/art/anim3d/units/spearman/gpu.sh`.
+Recovered sandal pigment across semantic IDs and darkened the rolling instep
+in move; retained R14 form, cloth and choreography. `kit/foot_finish` now owns
+the reusable frozen foot masks, pigment nodes and evaluated-sole markers;
+`units/spearman/foot_finish.py` supplies names and clip policy. Include both
+modules and `sandal_paint.py` in calibration receipts. Same-path GPU A/B keeps
+the requested rest pools reviewable, but they are not the default after the
+matched feet metric regressed. Top/front dense feet check remains mandatory.
+The installed unit, Blender materials, animation and rendering skills informed
+this merge; the unit's emission look overrides the general PBR recipe.

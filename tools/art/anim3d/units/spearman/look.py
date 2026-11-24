@@ -51,9 +51,9 @@ LOOK = {
     'vis_lo': .08, 'vis_hi': .45,
     'base_cast': .16,         # cast shadow depth on the stone
     'base_contact': .40,     # soft contact (AO) shadow depth under the feet
-    'contact_reach': .07,     # metres: contact shadow is gone about 4 px (256) from the sole
+    'contact_reach': .07,     # metres; move profile overrides this to 25 mm
     'ground_shadow': 1.0,     # painted warm shadow on the stone top behind and between the feet
-    'ground_back': .24,       # metres behind each ankle (away from the camera) ...
+    'ground_back': .24,       # metres behind each evaluated sole (away from camera) ...
     'ground_in': .10,         # ... and toward the other foot
     'ground_depth': .18,      # falloff away from the camera, metres
     'ground_width': .26,      # falloff across the view, metres
@@ -65,6 +65,9 @@ LOOK = {
     'stone_radius': .594,     # metres, for the near-to-far tone of the top
     'shadow_r': .50, 'shadow_g': .36, 'shadow_b': .34,  # warm-dark shadow multiplier
     'debug': 0,               # 1 paint weight, 2 unseen layer only, 3 projected paint only
+    'ground_pools': 0,      # opt-in rest pools: reviewer request, metric regression
+    'foot_roll': 1,          # shade registered foot pigment at toe-off; 0 for R14 A/B
+    'ground_follow': 1,      # evaluated sole centers, refreshed at every render
     'continuity': 1,          # frozen sole/lining/rear-shoulder pigment; 0 for A/B
 }
 
@@ -200,7 +203,7 @@ def stone(g, colours, cast, shadow_tint, key_dir, cfg):
             blob = g.math('EXPONENT', g.math('MULTIPLY', g.math('ADD', g.math('MULTIPLY', d, d), g.math('MULTIPLY', w, w)), -1))
             drop = g.node('ShaderNodeSeparateXYZ')
             g.l.new(rel, drop.inputs[0])
-            blob = g.math('MULTIPLY', blob, step(drop.outputs['Z'], -.30, -.12))
+            blob = g.math('MULTIPLY', blob, step(drop.outputs['Z'], -.10, -.025) if cfg['ground_follow'] == 2 else step(drop.outputs['Z'], -.30, -.12))
             ground = blob if ground is None else g.math('ADD', ground, blob)
         shade = g.math('MULTIPLY', g.math('MULTIPLY', ground, cfg['ground_shadow'], clamp=True), step(up.outputs['Z'], .80, .97))
         colour = g.mix(shade, colour, (cfg['ground_r'], cfg['ground_g'], cfg['ground_b'], 1), 'MULTIPLY')
@@ -292,6 +295,9 @@ def build_material(ob, part, look_dir, palettes, key_dir, fill_dir, uv_world, re
             # The strapped foot reads as part of the sandal: same tone, by the frozen foot mask.
             from continuity import ATTRIBUTE
             final = g.mix(g.node('ShaderNodeVertexColor', layer_name=ATTRIBUTE).outputs['Alpha'], final, tone, 'MULTIPLY')
+        if cfg.get('foot_roll', 1) and (part.startswith('sandal') or part == 'skin'):
+            from foot_finish import pigment as foot_pigment
+            final = foot_pigment(g, final)
         if cfg['debug'] == 1: final = g.mix(weight.outputs[0], (0, 0, 0, 1), (1, 1, 1, 1))
         if cfg['debug'] == 2: final = unseen
         if cfg['debug'] == 3: final = seen
@@ -323,8 +329,8 @@ def directions(scene):
     return view.normalized(), (-1.5 * right + 2.0 * up + 2.0 * view).normalized(), (1.2 * right + .2 * up + 1.0 * view).normalized()
 
 
-def ankle_markers(scene):
-    """World-aligned empties riding the ankle joints, for the stone's ground shadow.
+def ankle_markers(scene, follow_sole=True):
+    """World-aligned shader coordinates refreshed from evaluated soles before rendering.
 
     Render-time only, like the materials: nothing is saved."""
     rig = bpy.data.objects.get('Spearman • MPFB game_engine')
@@ -335,6 +341,9 @@ def ankle_markers(scene):
         if marker is None:
             marker = bpy.data.objects.new(name, None)
             scene.collection.objects.link(marker)
+        marker.constraints.clear()
+        marker['evaluated_sole'] = int(follow_sole)
+        if not follow_sole:
             follow = marker.constraints.new('COPY_LOCATION')
             follow.target, follow.subtarget = rig, 'foot_' + side
         markers[side] = marker
@@ -343,18 +352,23 @@ def ankle_markers(scene):
 
 def apply_materials(scene, mode, look_dir, cfg):
     """(Re)build the look materials; safe to call again with other settings."""
+    from foot_finish import settings
+    settings(scene, cfg)
     for material in [m for m in bpy.data.materials if m.name.startswith(('LOOK ', 'ID '))]:
         bpy.data.materials.remove(material)
     view, to_key, fill_dir = directions(scene)
     cfg['_view'] = view
     cfg['_left'] = -(scene.camera.matrix_world.to_quaternion() @ Vector((1, 0, 0)))
-    cfg['_ankles'] = ankle_markers(scene) if mode == 'beauty' else None
+    cfg['_ankles'] = ankle_markers(scene, cfg.get('ground_follow', 1)) if mode == 'beauty' else None
     rest_file = look_dir / 'rest-matrices.json'
     is_master = 'clips' not in Path(bpy.data.filepath).parts
     renderable = [o for o in scene.objects if o.type in ('MESH', 'CURVE') and len(o.data.materials)]
     if mode == 'beauty' and cfg.get('continuity', 1):
         from continuity import prepare
         prepare(scene, classify)
+    if mode == 'beauty' and cfg.get('foot_roll', 1):
+        from foot_finish import prepare as prepare_feet
+        prepare_feet(scene, classify)
     if is_master and mode == 'id':
         look_dir.mkdir(parents=True, exist_ok=True)
         rest_file.write_text(json.dumps({o.name: [list(r) for r in o.matrix_world] for o in renderable
@@ -427,6 +441,8 @@ def render_frame(scene, path, frame=None):
     """Both entry points render through this function; no second light/grade path."""
     if frame is not None:
         scene.frame_set(frame)
+    from foot_finish import update
+    update(scene)
     scene.render.filepath = str(path)
     bpy.ops.render.render(write_still=True)
 

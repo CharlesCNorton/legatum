@@ -79,6 +79,14 @@ Eevee emission paint: sun pi at 24°, paint cast .22, fill cast .30, base cast
 
 Round 13 GPU (`d7798046`), after the parity gate was given a noise tolerance: **IoU 0.9537, blurred ΔE 3.51**, raw 6.36; regions head/crest 3.7, torso 2.9, cloak 4.8, shield 2.4, legs 3.2, feet 5.3, base 3.3; atlas 187,254 bytes at q80; walk slip 0.0042 mm, heading 5.142°. Both metric targets pass for the first time. Visual review pending; no PASS file.
 
+## Reviewer on round 14 (about 09:35Z)
+
+Round 14 is the **first full candidate to show Sam**: the rest pose matches the painting and all five clips read well at 160 px; round 13's shield-readable death stays. Round 15 finishes four items without disturbing anything that passes: sandal straps and toes; a stone shadow that moves with the walk; a softer guard-to-walk cut; the early-fall spear and the pale sliver under the spear hand. If anything regresses against round 14, round 14's version of that part is kept. After round 15 the loop holds until Sam has seen it.
+
+## Round 14 GPU (added by the skill editor, 2026-11-24 09:32Z)
+
+Round 14 (`9c35ac22`) is round 13's rest with polished clips: cloak damped in move and attack, cloth loop seams closed, walk samples rotated to soften the idle cut, support queried on evaluated faces. GPU: IoU 0.9537, blurred ΔE 3.51 (unchanged), atlas 187,316 bytes at q80, walk slip 0.0042 mm. The pass ran clean on its first launch. Clip review pending. The polish list below still applies except the cloak flare in move and the loop seams.
+
 ## Art director on round 13 GPU (08:03Z)
 
 "Ready to show Sam as a PASS candidate." Best on every aspect; both numeric targets pass; clips hold at 160 px and the death reads at 64. Polish, none blocking: paint three strap bands per instep; halve and blur the base shadow band and make it follow the feet in the walk (it stays put in the movie); darken the pale sole in move frames 5–6 and damp the cloak flare to 3–4 px; let the death shaft fall 10 px nearer the viewer and give one of the three identical final frames to the kneel-to-prone drop; 4 px more cloak flare at the hip and lit folds 8% lighter; level cloak hem with three scallops; sliver under the spear hand at (106,123); darkest bronze cavities 15% deeper.
@@ -92,3 +100,21 @@ Round 13 GPU (`d7798046`), after the parity gate was given a noise tolerance: **
 - Look (`units/spearman/look.py`): sun strength π at 24°; cast-shadow depth 0.22 on projected paint, 0.45 on unseen fill, 0.85 on stone; ramp input fill 0.30, AO 0.55, stroke 0.10; contact shadow at 40%.
 - Motion: Quaternius `Idle_Loop`, `Walk_Loop` at 0.90 source influence with an 8.5 cm lateral ankle offset per foot; KayKit `Hit_B`; keyed death (`collapse.py`) and attack. Clips 8/8/10/4/10 frames at 4/6/14/12/4 fps.
 - Cycles hybrid fallback (through R10): key (−3,−4,8) 596.75 W size 5; fill (4,−2,3) 77 W; rim (−2,3,4) 132 W; world 0.19; one histogram grade at strength 0.80.
+
+## Round 15 merge — 2026-11-24, GPU pending
+
+R14 geometry/choreography retained; a source-sandal pigment recovery plus b
+move-only foot shading/tracking pools. c contributes cadence assertions, not
+its regressing phase trial. Rest pools preferred by the art director remain an
+unselected GPU A/B due to feet ΔE 4.717 → 10.279 on the combined CPU render.
+CPU: IoU 0.9512536, blurred ΔE 3.29799, feet 4.71708; all regions <6; atlas
+192,774 bytes Q80. 36 tests, zero 40-pose audit findings, 33-sample foot check
+passes. All actions and 41 alpha images match R14. GPU and Sam review pending;
+no PASS. Remaining: strap contrast/toes, rest shadow stripe, cloak flare/hem,
+guard cut and death frame allocation, hand sliver and bronze cavity depth.
+
+Final director 10:13Z: straps/toes now readable at 256, weaker shadow band
+acceptable at game size; all clips natural at 160. R15 merge best CPU candidate
+on every aspect, R14 GPU still best verified final. Recommend showing Sam if
+R15 GPU matches. Cloak flare/hem now lead the remaining list. Preserve feet
+if fading the inter-foot band; no broad rest-pool replacement before GPU review.
