@@ -95,3 +95,14 @@ c: 1 frames at 256/64 from 256px CYCLES/CPU, 8 samples.
 e-death: 10 frames at 256/64 from 256px CYCLES/CPU, 8 samples.
 c: 1 frames at 256/64 from 512px CYCLES/CPU, 8 samples.
 e-death: 10 frames at 256/64 from 256px CYCLES/CPU, 8 samples.
+c: 1 frames at 256/64 from 512px CYCLES/CPU, 8 samples.
+b: 3 frames at 256/64 from 512px CYCLES/CPU, 8 samples.
+c: 1 frames at 256/64 from 512px CYCLES/CPU, 8 samples.
+d: 4 frames at 256/64 from 512px CYCLES/CPU, 8 samples.
+Round3 interim: CPU256 rest/death published immediately, followed by CPU512 rest/details. Generated clean stone top registered to original bounds, original lower rim retained, fresh AO; source hash/prompt pinned. Flat cap normals and finished support projection remove chalky triangle bands. Both wing tips now have rounded span stations; far root closes most of cockpit/nacelle gap. Folded outer wing and farther-left belly improve wreck identity, but nose/propeller finish still differs at256. No PASS.
+Round3 contact finding: old scalar vertex-to-flat-disc audit ignored the raised collapsed support. Replaced with evaluated world-space triangle-interior/edge/vertex samples against actual stone/support BVH, used by settlement and independent audit; sampled, not continuous collision proof.
+e-idle: 8 frames at 256/64 from 512px CYCLES/CPU, 8 samples.
+e-move: 8 frames at 256/64 from 512px CYCLES/CPU, 8 samples.
+e-attack: 10 frames at 256/64 from 512px CYCLES/CPU, 8 samples.
+e-hit: 4 frames at 256/64 from 512px CYCLES/CPU, 8 samples.
+e-death: 10 frames at 256/64 from 512px CYCLES/CPU, 8 samples.
