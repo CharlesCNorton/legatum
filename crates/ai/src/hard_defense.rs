@@ -213,6 +213,16 @@ impl Planner<'_> {
                 assigned = Some(u.id);
             }
         }
+        // Gene `rome_opening_finish`: against a neighbour still at peace the garrison stays,
+        // and the opening march is not recalled.
+        if self.rome_finish()
+            && self.rome_opening_active()
+            && attackers
+                .iter()
+                .all(|e| !self.view().at_war(self.view().me, e.owner))
+        {
+            return;
+        }
         let mut staging = Vec::new();
         for _ in 0..2 {
             let choice = self

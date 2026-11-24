@@ -184,6 +184,9 @@ impl Planner<'_> {
         // threatened cities and retaking a weakened lost city come before any withdrawal.
         self.pass("door_military");
         self.door_military(&army);
+        // Gene `rome_opening_finish`: every fit melee unit hits the opening's city each turn.
+        self.pass("rome_finish_assault");
+        self.rome_finish_assault(&army);
         // Gene `rome_drill_rotation`: a siege's hits are shared out for first promotions
         // before the assault passes commit the wing.
         self.pass("rome_drill_sieges");
@@ -290,6 +293,9 @@ impl Planner<'_> {
         self.answer_bombardment(&army);
         self.pass("rome_opening_march");
         self.march_rome_opening(&army);
+        // Gene `rome_opening_finish`: with no city of the victim in sight, look for one.
+        self.pass("rome_finish_search");
+        self.rome_finish_search(&army);
         self.pass("avoid_free_damage");
         self.avoid_free_damage(&army);
         if !primitive_escorts

@@ -2427,6 +2427,10 @@ impl Planner<'_> {
             if !detail.captured || detail.raze_blocker.is_some() {
                 continue;
             }
+            // Gene `rome_opening_finish`: the opening keeps what it takes from its victim.
+            if self.rome_finish_keeps(detail.former_owner) {
+                continue;
+            }
             if self.decisions.raze_value > 0 {
                 if self.raze_by_value(i, city) {
                     raze.push(city.id);
