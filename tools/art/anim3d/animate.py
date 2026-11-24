@@ -8,6 +8,8 @@ sys.path.insert(0,str(Path(__file__).parent/'infantry'))
 sys.path.insert(0,str(Path(__file__).parent/'units/spearman'))
 from retarget import prepare, apply_matrices, contact_ik
 from contact import sole_points
+from kit.base import SupportSurface
+from transitions import choose_move_entry
 from motion import attack_channels, source_phase, EquipmentResponse
 import collapse
 root=Path(os.environ['ANIM_ROOT']);M=root/'masters/spearman-3d-v2';A=root/'assets'
@@ -30,17 +32,8 @@ shield=bpy.data.objects.get('Aspis control');shield_neutral=shield.matrix_basis.
 if shield:shield.rotation_mode='QUATERNION'
 cloth=bpy.data.objects['Cloak • simulated wool'].modifiers['Cloth per clip']
 cloth.show_viewport=False
-if clip=='attack':
- # Retain the shoulder attachment; free more of the lower wool to lag the
- # torso's acceleration, then damp it like a heavy cloak instead of a flag.
- # Hit keeps the original pins/settings: loosening them raised a cloak corner
- # behind the shoulder at its four-frame recovery in the merged candidate.
- cloak=bpy.data.objects['Cloak • simulated wool'];pins=cloak.vertex_groups['Shoulder pins']
- for v in cloak.data.vertices:
-  for g in v.groups:
-   if g.group==pins.index and g.weight<.99:pins.add([v.index],g.weight*.65,'REPLACE')
- cloth.settings.bending_stiffness=.8
- cloth.settings.air_damping=2
+from cloak import configure as configure_cloak
+cloth_response=configure_cloak(bpy.data.objects['Cloak • simulated wool'],clip)
 if clip=='death':
  # Release the lower cape's silhouette pins so it drapes during the collapse.
  # Keep the shoulder attachment; no visibility or scale trick hides the cloth.
@@ -173,6 +166,8 @@ if clip=='death':retarget_frames,motion_source=None,{'provider':'Authored weight
 elif clip=='attack':retarget_frames,motion_source=None,{'provider':'Original weapon-specific hand keys, rebased on Quaternius idle reference'}
 else:retarget_frames,motion_source=prepare(rig,root,clip,phases)
 response=EquipmentResponse(rig,shield,clip)
+support=SupportSurface(bpy.data.objects['Stationary cream stone'])
+guard_soles={side: sole_points(side) for side in 'lr'}
 # A single complete source cycle, sampled before its duplicate endpoint.
 
 for f in range(1,end+1):
@@ -189,14 +184,13 @@ for f in range(1,end+1):
  # airborne feet are unchanged. The previous root heuristic allowed buried soles.
  if sc.get('infantry_refinement',0)>=6:
   base=bpy.data.objects['Stationary cream stone']
-  floor=max((base.matrix_world @ v.co).z for v in base.data.vertices)
   if clip=='move':
    flags=motion_source['contact']['planted'].get(str(f),{})
    # Each planted sole meets the stone. The root follows the planted foot that
    # needs the lowest pelvis; any other foot (second support, or a swing toe
    # that would dip into the stone) is raised by leg IK with its source roll.
    # No rigid ankle translation and no error left on the second support.
-   need={side:floor+.001-min(v.z for v in sole_points(side)) for side in ['l','r']}
+   need={side:max(support.height(v, ground=.006, clearance=.001)-v.z for v in sole_points(side)) for side in ['l','r']}
    planted=[side for side in ['l','r'] if flags.get(side)]
    if planted:
     correction=min(need[side] for side in planted)
@@ -208,8 +202,6 @@ for f in range(1,end+1):
     if raise_by:
      motion_source['max_ik_sole_raise_m']=max(motion_source.get('max_ik_sole_raise_m',0),max(v.z for v in raise_by.values()))
      contact_ik(rig,raise_by)
-  base_inverse=base.matrix_world.inverted()
-  base_radius=max((v.co.x*v.co.x+v.co.y*v.co.y)**.5 for v in base.data.vertices)-.015
   if clip=='death':
    # The open clip falls onto a flat floor. Fit its root to the actual raised
    # stone and thick armour, preserving every retargeted joint rotation.
@@ -224,10 +216,10 @@ for f in range(1,end+1):
     if parent!=rig:continue
     ev=ob.evaluated_get(dg);me=ev.to_mesh()
     for v in me.vertices:
-     w=ob.matrix_world @ v.co;local=base_inverse @ w
+     w=ob.matrix_world @ v.co
      # Feet are solved separately below (sole, straps and their own pitch).
      if any((w-c).length<r for c,r in feet_zones):continue
-     plane=floor+.005 if local.x*local.x+local.y*local.y<base_radius**2 else .012
+     plane=support.height(w, ground=.012, clearance=.005)
      if plane-w.z>lift:lift=plane-w.z;culprit=ob.name+' at '+str([round(c,2) for c in w])+' groups '+str([ob.vertex_groups[g.group].name for g in ob.data.vertices[v.index].groups if g.weight>.3] if len(ob.data.vertices)==len(me.vertices) else '')
     ev.to_mesh_clear()
    if f in samples:print('DEATH_LIFT',f,round(lift,3),culprit if lift>0 else '',flush=True)
@@ -248,9 +240,7 @@ for f in range(1,end+1):
      if ob.name.startswith('Sandal strap '+side):
       ev=ob.evaluated_get(dg);me=ev.to_mesh();foot_points+=[ob.matrix_world @ v.co for v in me.vertices];ev.to_mesh_clear()
    for point in foot_points:
-    local=base_inverse @ point
-    reach=base_radius+(.15 if clip=='death' else 0)
-    plane=floor+.001 if local.x*local.x+local.y*local.y<reach**2 else .006
+    plane=support.height(point, ground=.006, clearance=.001)
     lift=max(lift,plane-point.z)
    if abs(lift)>1e-8:
     if clip=='move':assert abs(lift)<.04,('Large sole contact translation',side,lift)
@@ -284,6 +274,7 @@ for f in range(1,end+1):
  for p in rig.pose.bones:
   p.rotation_mode='QUATERNION';p.keyframe_insert(data_path='location',frame=f);p.keyframe_insert(data_path='rotation_quaternion',frame=f);p.keyframe_insert(data_path='scale',frame=f)
 motion_source['equipment_response']=response.report()
+if cloth_response:motion_source['cloth_response']=cloth_response
 sc['motion_source']=json.dumps(motion_source)
 sc['sample_frames']=json.dumps(samples)
 if os.environ.get('MOTION_DIAGNOSTIC') == '1':
@@ -310,7 +301,17 @@ cloth=bpy.data.objects['Cloak • simulated wool'].modifiers['Cloth per clip'];p
 bpy.ops.wm.save_as_mainfile(filepath=str(out/(clip+'.blend')))
 with bpy.context.temp_override(point_cache=pc):bpy.ops.ptcache.bake(bake=True)
 assert pc.is_baked, 'Cloth bake did not complete'
+if clip in ['idle','move']:
+ from kit.loop import close_cloth_loop
+ motion_source['cloth_loop']=close_cloth_loop(sc,bpy.data.objects['Cloak • simulated wool'],25,end)
+ sc['cloth_loop']=json.dumps(motion_source['cloth_loop'])
+ sc['motion_source']=json.dumps(motion_source)
 if clip=='death':samples[-2]=samples[-1]
+if clip=='move':
+ samples,entry_report=choose_move_entry(sc,samples,guard_soles)
+ sc['move_entry']=json.dumps(entry_report)
+ motion_source['move_entry']=entry_report
+ sc['motion_source']=json.dumps(motion_source)
 sc['source_master_sha256']=hashlib.sha256((M/'spearman.blend').read_bytes()).hexdigest()
 sc['spear_release_start']=0 if clip=='death' else -1
 sc['clip']=clip;sc['sample_frames']=json.dumps(samples);sc['cloth_baked']=True

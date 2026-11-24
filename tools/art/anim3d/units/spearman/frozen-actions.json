@@ -1,8 +1,8 @@
 {
-  "round": 13,
-  "basis": "Deliberately re-pinned after reviewing combined CPU idle/attack at 256/160/64. Fable C guard; guard-relative planted attack and knee poles; sole transition errors <0.001 mm. Choreography retained, guard rebase changes actions.",
+  "round": 14,
+  "basis": "R14c CPU review at 256/160/64 px: idle gains a post-cloth periodic residual correction (2.624 px loop gap to <0.00004 px); every dense bone matrix remains identical. Re-pinned idle action digest includes the animated correction weight. Attack action digest stays R13 after full-sole entry/exit verification below 0.001 mm. Sheets: spearman-r14c-idle-160.png and spearman-r14c-attack-160.png.",
   "actions": {
-    "idle": "3d5967c57b7e42bfec76e9483c086360175e97d13973e6e444c92b1cd60066fd",
+    "idle": "75c85c9d912cbc2e8ee41a18902123a2c5e661741972eb16a6b80d2209087cca",
     "attack": "d78edd5ce23bd3725d76f2e1f7ffad98fb4d43e8f3834982c0872800f0706ab3"
   }
 }

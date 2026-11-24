@@ -3,7 +3,7 @@
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/../../../../.."
 source tools/art/anim3d/env.sh
-export ROUND="${ROUND:-13}"
+export ROUND="${ROUND:-14}"
 unset MOTION_DIAGNOSTIC FEET_METRICS_ONLY ATLAS_OUTPUT SPEARMAN_DONOR_ACTION PREVIEW_CPU
 [[ "$ROUND" =~ ^[0-9]+$ ]] || { echo 'ROUND must be an integer' >&2; exit 2; }
 # Keep the exact requested log even if the overnight driver's redirection changes.
@@ -32,6 +32,8 @@ export RESOLUTION=512 SAMPLES="${SAMPLES:-64}" GRADE=0
 # Fail before expensive cloth baking if the host cannot expose a GPU.
 blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python tools/art/anim3d/units/spearman/preflight.py
 python3 tools/art/anim3d/kit/check_imports.py
+stage=support-check
+blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python tools/art/anim3d/units/spearman/check_support.py
 stage=motion-sources
 "$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/spearman/fetch_motion.py
 "$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/spearman/fetch_reactions.py
@@ -41,15 +43,6 @@ stage=painted-look
 tools/art/anim3d/units/spearman/prepare-look.sh
 stage=scene-checks
 blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python tools/art/anim3d/units/spearman/check_scene.py
-# Regenerate every clip from the current master before final renders/audit.
-for clip in idle move attack hit death; do
-  stage="animate-$clip"
-  tools/art/anim3d/render.sh "animate-$clip"
-done
-stage=transitions
-blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python tools/art/anim3d/units/spearman/check_transitions.py
-stage=frozen-actions
-blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python tools/art/anim3d/units/spearman/check_frozen.py
 # Plain geometry review uses the same calibrated camera and no texture shaders.
 stage=b
 SPEARMAN_PLAIN=1 tools/art/anim3d/render.sh b
@@ -59,6 +52,15 @@ stage=render-parity
 blender -b --disable-autoexec --factory-startup --python-exit-code 1 --gpu-backend metal --python tools/art/anim3d/units/spearman/look.py -- "$MASTER/spearman.blend" "$MASTER/look-parity" --res "$RESOLUTION" --samples "$SAMPLES"
 "$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/spearman/render_parity.py
 cp "$REVIEW/spearman-f-restpose-compare.png" "$REVIEW/spearman-round${ROUND}-restpose-compare.png"
+# Regenerate every clip from the current master before final renders/audit.
+for clip in idle move attack hit death; do
+  stage="animate-$clip"
+  tools/art/anim3d/render.sh "animate-$clip"
+done
+stage=transitions
+blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python tools/art/anim3d/units/spearman/check_transitions.py
+stage=frozen-actions
+blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python tools/art/anim3d/units/spearman/check_frozen.py
 stage=detail
 tools/art/anim3d/render.sh detail
 stage=d
