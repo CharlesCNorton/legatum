@@ -3,6 +3,7 @@ import { isBarbarian } from './barbarians';
 import type { DiplomaticAction, Order, PlayerView, TeamId, TreatyKind, Hex, Event, UnitKind } from './types';
 import { hexAt, neighbors, tileIndex } from './hex';
 import { moveCost } from './data';
+import { bordersOpen } from './deals';
 
 export function teamName(view: PlayerView, team: TeamId): string {
   return empireTitle(view, team);
@@ -101,7 +102,7 @@ export function peacefulRangedAt(v: PlayerView, h: Hex): { kind: 'unit' | 'city'
   return c ? { kind: 'city', owner: c.owner, team: target.team, id: c.id } : null;
 }
 
-/** Own team, War, an Alliance (passage), or the land of a Yam Relay Station's holder (open to every empire). */
+/** Own team, War, an Alliance (passage), Open Borders (deals), or the land of a Yam Relay Station's holder (open to every empire). */
 export function canEnter(view: PlayerView, _kind: UnitKind, owner: number | null, city = false): boolean {
   const team = owner === null ? undefined : view.players.find((p) => p.id === owner)?.team;
   // A closed country (Sakoku) lets nobody in at Peace: no Alliance, no courier passage, no open road.
@@ -109,7 +110,7 @@ export function canEnter(view: PlayerView, _kind: UnitKind, owner: number | null
   const allied = team !== undefined && relationWith(view, team)?.state === 'Alliance';
   if (city && team !== undefined && team !== view.team && !atWar(view, owner!)) return false;
   return owner === null || team === view.team || atWar(view, owner)
-    || (!closed && (allied
+    || (!closed && (allied || (team !== undefined && bordersOpen(view, team))
       || (view.courier_halls ?? []).some((h) => h.holder === owner)));
 }
 export function neutralBlocker(view: PlayerView, at: Hex): boolean {
@@ -132,9 +133,10 @@ export function otherTeam(view: PlayerView, order: Order): TeamId | null {
 }
 /**
  * Orders that end every offer between the two teams when the turn resolves: War and leaving an
- * Alliance each change the relation, and core withdraws the pair's offers then.
+ * Alliance each change the relation, and core withdraws the pair's offers then. Closing Open
+ * Borders does not change the relation, so it ends no offer.
  */
-export const endsOffers = (o: Order) => o.type === 'DeclareWar' || o.type === 'BreakTreaty';
+export const endsOffers = (o: Order) => o.type === 'DeclareWar' || (o.type === 'BreakTreaty' && o.agreement !== 'OpenBorders');
 
 /**
  * The queued order (ours or a teammate's) that already settles incoming offer `p`: a reply to it,
@@ -204,6 +206,8 @@ export function betrayalsBy(view: PlayerView, team: TeamId) {
 
 export function sameDiplomaticAction(a: Order,b: Order): boolean {
   if(a.type==='RespondToProposal'&&b.type==='RespondToProposal')return a.proposal===b.proposal&&a.accept===b.accept;
+  // One offer per pair: the same treaty offered with other Gold is the same action (deals).
+  if(a.type==='ProposeTreaty'&&b.type==='ProposeTreaty')return a.to===b.to&&a.kind===b.kind;
   return JSON.stringify(a)===JSON.stringify(b);
 }
 
