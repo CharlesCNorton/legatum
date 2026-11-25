@@ -23,7 +23,7 @@ it('a goal past the last turn at today’s Science says so instead of naming a t
   view.turn_limit = 300;
   view.economy.science_per_turn.total = 2;
   tree(far);
-  expect(screen.getByTestId('tree-goal').textContent).toContain('Not before the last turn at today’s Science.');
+  expect(screen.getByTestId('tree-goal').textContent).toContain('The game ends before you get there at your current Science.');
   cleanup();
   view.turn_limit = null;
   tree(far);
