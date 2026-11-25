@@ -3,7 +3,7 @@ import { WhyCard } from '../ui/WhyCard';
 import { CelebrationProvider, MomentLane } from '../celebrate/MomentLane';
 import { AlarmScreen } from '../celebrate/AlarmScreen';
 import { lazy, Suspense, useEffect, useState } from 'react';
-import { canUse3d, useMapView } from '../map3d/mapPrefs';
+import { canUse3d, needsFlatMap, useMapView } from '../map3d/mapPrefs';
 import { useGame } from '../store';
 import { MapCanvas } from '../map/MapCanvas';
 
@@ -82,7 +82,8 @@ export function GameScreen() {
   useGoalActionKey();
   const mapKind = useMapView((m) => m.kind);
   const [can3d] = useState(canUse3d);
-  const show3d = can3d && mapKind === '3d';
+  const picking = useGame(needsFlatMap);
+  const show3d = can3d && mapKind === '3d' && !picking;
   if (!views) return null;
   const view = views[seat];
   const unit = selection?.kind === 'unit' ? view.units.find((u) => u.id === selection.id) : null;

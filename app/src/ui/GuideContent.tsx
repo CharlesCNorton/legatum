@@ -385,6 +385,7 @@ function Credits() {
   return <>
     <h3>Artwork</h3>
     <p>Legatum’s original artwork is offered under CC BY 4.0 to the extent rights exist. The Niter, Oil and Silicon resource medallions were generated with an OpenAI image model, selected and resized for the game. Their prompts and provenance are in the resource art README.</p>
+    <p>The 3D Spearman is adapted from 0 A.D. art by Wildfire Games (play0ad.com), CC BY-SA 3.0. The adapted model is shared under the same licence.</p>
     <h3>Music</h3>
     {sharedMusic
       ? <p>{music[0].attribution}. The full piece plays on the title screen and during peaceful play; an intense excerpt plays during an empire war. <a href={music[0].source} target="_blank" rel="noreferrer">Source</a></p>
