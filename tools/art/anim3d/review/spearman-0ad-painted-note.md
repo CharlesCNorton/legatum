@@ -1,102 +1,103 @@
-# Spearman painted lane — premium round 1
+# Spearman painted lane — premium round 2
 
 Branch: `astra/unit-anim-3d-spearman-0ad-painted`.
 Main GLB: `tools/art/anim3d/units/spearman-0ad/spearman.glb`.
-SHA-256: `c15f8a6ef4d1b12079d51bac87b4b2ce28adcf1e3d31e17eed5294fb7fabc250`.
+SHA-256: `9f860b78aa85c0a292fa3a02e5ebd1c6bef0a61b1bc1214360ad2655259651b1`.
 
-## What changed
+## Changes
 
-- Rebuilt a 64-segment convex aspis, thick rolled rim, raised twelve-ray sunburst,
-  boss, concentric registers and rivets. Rebuilt the Corinthian dome, cheek/nose
-  guards, dark eye recesses, seated crest support and full fluted horsehair mass.
-- New leaf spearhead and butt spike, greaves, shaped bronze cuirass with palmette
-  and pectoral ornament, leather pteruges, and folds in the native weighted cloak.
-  Corrected the collar to crimson and the hands to skin. Welded coincident source
-  seam vertices for smoother shading. Subdivision/bevel followed by decimation.
-- A high-poly copy with extra subdivision and geometric noise displacement was
-  baked to tangent normals and AO in Cycles CPU. Authored painted pigment graphs
-  carry stronger directional form shading, grain and some AO in albedo. Bronze
-  is deliberately rough and partly metallic; linen/wool/leather are dielectrics.
-  This is procedural painted pigment, not a manual brush-painted texture.
-- Actual 2048-square base colour, normal, AO and ORM masters retained under
-  `/Users/samcorcos/LegatumRuns/anim-pilot/lanes/spearman-0ad-painted-r1`. Three 1024-square base colour/normal/ORM maps are shipped and embedded.
-  ORM is R AO, G roughness, B metallic on UV0. Editable master: `painted-master.blend`.
-- Viewer: local CC0 Poly Haven studio HDRI (exact licence/hash in SOURCES.md),
-  warm key, cool rim, filtered shadows, material AO, ACES, LOD selector and an
-  exact-frame 12-second 360-degree idle turntable. No asset yaw was added.
+Continued from round 1; read both lanes' round-one comparisons and feedback
+through the cloud review at 2026-11-25 02:36Z. Replaced the native mannequin
+with a muscular CC0 MPFB 2.0.18 body fitted to the existing rest pose; transferred
+0 A.D. weights using nearest-face interpolation, normalized and limited to four.
+Real hands and feet, sandal straps, fuller cuirass, pleated linen, shaped knee
+greaves, larger helmet, full sagittal crest with 105 tufts, and a wider lined
+cloak with folds. The temporary fitting rig is removed. No new animation donor.
 
-## Contract and checks
+Retained the convex 64-segment shield and raised sunburst; compared the other
+lane's shield contrast without copying its buffers. Increased pigment contrast
+and roughness variation. High-to-low Cycles CPU normal/AO bakes use part/pigment
+groups; 70,332 pre-decimation triangles, 1,131,232 subdivided reference triangles.
+The base colour is procedurally authored painted shading, not manual brushwork.
 
-- LOD0: **9783 triangles**; LOD1:
-  **2846 triangles**. Exactly two named
-  skinned meshes, one skeleton, **30 joints**, one shared material and one draw
-  per active LOD. Both carry COLOR_0 red team masks and rigid prop weights.
-- `validate_glb.py`: **PASS**, zero errors. GLB: 6,145,012 bytes.
+Master and logs: `~/LegatumRuns/anim-pilot/lanes/spearman-0ad-painted-r2/`.
+Actual lossless 2048 base colour/normal/AO/ORM masters remain outside git.
+Three 1024-square WebPs ship inside/beside the GLB: base colour 243,366 bytes,
+normal 202,402 bytes, ORM 293,048 bytes (quality 84/85/84). Data-map compression
+is lossy; final browser inspection remains necessary. Packed ORM uses UV0.
+Quantized normal/tangent/UV/weights plus shared identical animation buffer views
+reduce the GLB to **1,985,664 bytes**. Required extensions: EXT_texture_webp and
+KHR_mesh_quantization. Positions and approved animation samples remain floats.
+
+The existing HDRI/warm key/cool rim/ACES viewer is retained. `record.mjs` now
+adds a 512 px three.js still and a same-size vs-panel comparison to its five
+clip movies and 12-second 360-degree idle turntable.
+
+## Exact checks
+
+- Contract: **PASS**, errors `[]`; **9,981 triangles LOD0 / 2,634 LOD1**.
+  Two named skinned meshes, one shared material, one skeleton, **30 joints**,
+  red COLOR_0 mask on both LODs, rigid single-bone props. One draw per active LOD.
 - Khronos: **0 errors, 0 warnings, 0 infos, 0 hints**.
-- Exact animation/skeleton comparison: **PASS**. Every channel, key time/value,
-  bone transform, hierarchy and inverse bind equals approved round 6. Fingerprint:
+- Motion/skeleton identity: **PASS**, fingerprint
   `639ad201654bf2a08b90c9b7b35c8f047ac1f5cf3531e7b7224f80e0e1d58f79`.
-- Three.js 170 CPU loader/mixer/team material/LOD sharing/framing check: **PASS**.
-- Ground check, both LODs at 120 Hz: **PASS**, worst -0.5000 mm against
-  the 2 mm tolerance. New geometry was fitted in bind space; motion was not changed.
-  This is a ground check, not a mesh-intersection certificate.
-- Contract regression suite: **8/8 passed**. Import checker: **0 unresolved imports**.
-  Python compilation, JS syntax and `git diff --check`: passed.
-- All five 160 px H.264/yuv420p movies were decoded/probed: three loops each.
-  Encoded frames/rates: attack 51/14 fps, death 18/4, hit 30/12, idle 24/4,
-  walk 24/6. Whole-frame game-rate sampling rounds attack/hit/death cycle lengths;
-  the GLB and lead's 30 fps viewer recording retain the exact approved timings.
-- Broad repository static gates were also attempted on the existing branch HEAD:
-  public claims passed; hygiene flagged four pre-existing matrix-multiplication
-  expressions as email addresses in `units/spearman/donor_motion.py` and
-  `round12c_review.py`; the unrelated art-set renderer exited 1. Those files were
-  not changed here. This is not a claim of an all-green repository gate.
+  All channels, times, samples, transforms, hierarchy and inverse binds match
+  approved round 6; all five original clip durations are unchanged.
+- Three.js 170 CPU load/mix/LOD sharing/team material/framing: **PASS**.
+  The image shim checks dimensions; it does not prove browser decoding/GPU pixels.
+- Ground check at 120 Hz, both LODs: **PASS**, minimum **-0.50015 mm**, inside
+  the 2 mm tolerance. Bind-geometry fitting leaves motion untouched. This is
+  not a general collision or joint-deformation certificate.
+- Validator regression tests: **25/25 pass** (8.219 s).
+- Import checker: **0 unresolved local imports**. Python compilation,
+  `node --check` on both changed JS files, `git diff --check`: **PASS**.
+- Five 160×160 H.264/yuv420p movies: ffprobe and full ffmpeg decode **PASS**,
+  three loops each. Encoded frames/fps: attack 51/14, death 18/4, hit 30/12,
+  idle 24/4, walk 24/6. Whole-frame game sampling rounds the short nonintegral
+  cycles; the GLB and native browser movies retain exact timing.
+- `origin/master` is already an ancestor of HEAD. No fetch or merge needed.
+  No Rust or production UI changes; broad unrelated suites were not rerun.
 
-## Delivered evidence
+## Evidence and handoff
 
-`spearman-0ad-painted-r1-<clip>-160.mp4` for idle, walk, attack, hit, death;
-`spearman-0ad-painted-r1-readability-48.png`; `spearman-0ad-painted-r1-vs-panel.png`;
-`spearman-0ad-painted-r1-closeups.png`; `spearman-0ad-painted-r1-motion-sheet.png`.
-JSON receipts cover contract, Khronos, motion identity, contact, runtime and video.
-All were refreshed from the final GLB; packaging rejects stale frames by mtime.
-The still/sprite evidence is **Cycles CPU / AgX**, not browser ACES output.
+All required CPU artifacts are in `~/LegatumRuns/anim-pilot/review/3d-v2/`,
+prefix **spearman-0ad-painted-r2-**: five `<clip>-160.mp4`, `readability-48.png`
+(actual LOD1), `vs-panel.png`, `closeups.png`, `motion-sheet.png`, and `rear.png`.
+JSON receipts cover contract, motion identity, Khronos, contact, runtime and
+video validation. CPU evidence was regenerated from the final hashed GLB and
+uses Cycles/AgX. The readability, motion and close-up sheets were inspected.
 
-The lead records the browser videos outside the sandbox, from the lane worktree:
+Lead command from this worktree, outside the sandbox:
 
 ```sh
-PLAYWRIGHT_MODULE="$HOME/LegatumRuns/anim-pilot/oad/viewer-runtime/node_modules/playwright/index.mjs" node tools/art/anim3d/viewer/record.mjs --prefix spearman-0ad-painted-r1 --out "$HOME/LegatumRuns/anim-pilot/review/3d-v2"
+PLAYWRIGHT_MODULE="$HOME/LegatumRuns/anim-pilot/oad/viewer-runtime/node_modules/playwright/index.mjs" node tools/art/anim3d/viewer/record.mjs --prefix spearman-0ad-painted-r2 --out "$HOME/LegatumRuns/anim-pilot/review/3d-v2"
 ```
 
-Expected turntable: `spearman-0ad-painted-r1-turntable.mp4`. Browser videos and
-turntable have **not** been recorded here, as requested. The native browser
-playing-speed look, shadows and the full 360-degree view still need lead review.
+Expected browser outputs: `spearman-0ad-painted-r2-turntable.mp4`, five
+`<clip>-viewer.mp4`, `viewer-idle.png`, `vs-panel-viewer.png`, and the asset-hash
+receipt. **Host browser capture has not run here**, as instructed. Actual
+MeshStandardMaterial/ACES tuning and playing-speed/360 review remain pending.
 
 ## Honest verdict
 
-**Technical contract passes; premium art gate is NOT met yet.** The shield,
-helmet and crest are much rounder and the sunburst has genuine relief. At 48 px (the actual LOD1, not a downscaled LOD0)
-it reads as a spear/shield unit. Beside the panel painting, however, the bronze
-still looks too uniform/matte, cloth and skin remain plain, and the crest reads
-as a sculpted fluted fan rather than convincing horsehair. Some neckline/skirt
-faceting and attachment transitions remain visible in the close-ups. This is a
-usable round-one comparison candidate, not something I would call excellent or
-approved. The lead should compare both lanes before choosing the next look pass.
+**Technical contract passes; premium art gate is NOT met.** Anatomy, folds and
+silhouette have changed, but the final body still lacks the painting's heroic
+mass. Shield-rim faceting is visible close up. The crest reads as a comb, the
+neckline looks stiff, the helmet's face coverage is still too open, and bronze,
+skin and cloth lack the painting's richness. The close-ups do not justify
+calling this excellent or approved. Further art work and actual browser review
+are necessary. Sampled five-clip sheets do not certify every joint deformation.
 
-Non-obvious implementation lessons: manually packaged Blender UVs need V flipped
-and tangent handedness reversed together; exported seam duplicates must be welded
-before smoothing; preserve animation bytes outside Blender export; round props
-need a protected simplification budget; fitting geometry to the original motion's
-ground envelope prevents a larger crest/rim from invalidating approved death keys.
-
-FOCUS a: refine crest strands and neckline/skirt transitions without new motion.
-FOCUS b: richer bronze edge wear, engraved contrast and more convincing cloth/leather detail.
-FOCUS c: keep all motion frozen; inspect browser clips and turntable at playing speed.
+Non-obvious lessons: keep untouched high-resolution parts before decimation;
+bake by part/pigment to avoid cross-surface rays; use a fresh Blender image when
+saving resized textures to avoid stale 2048 payloads; merge LOD1 simplification
+regions so per-tuft minimums do not exhaust the budget; zero quantized-weight
+joint indices; deduplicate identical animation storage without changing samples.
 
 ## Git handoff
 
-The sandbox denied creation of `.git/worktrees/lane-7/index.lock`; nothing was
-committed or pushed. All task changes remain in this worktree. The runner can
-use `lanes/spearman-0ad-painted-r1/commit-message.txt` (with the required
-Co-Authored-By line). A scoped binary patch is at
-`lanes/spearman-0ad-painted-r1/lane-7.patch`. `origin/master` is already an
-ancestor of HEAD; no fetch, merge into master or push was performed.
+The sandbox denied creation of `.git/worktrees/lane-7/index.lock`; changes are
+uncommitted. The runner can use `lanes/spearman-0ad-painted-r2/commit-message.txt`
+(with the required co-author line). A scoped binary patch including new files
+is at `lanes/spearman-0ad-painted-r2/lane-7.patch`. No push or merge into master
+was performed.
