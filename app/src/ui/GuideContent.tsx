@@ -370,6 +370,8 @@ export function GuideContent({ section }: { section: GuideSection }) {
       <p>In an online game, the host’s tab keeps the game: a reload carries on, and closing the tab ends it unless the host saved it. To carry on later, the host chooses Save to file in the menu, then Host from a save on the Multiplayer screen. Players rejoin from the game list and take their old seats. How to Play keeps your screen and pending plans in place, but other players can still finish the turn while you read.</p>
       <h3>Help when you need it</h3>
       <p>Open How to Play from the main menu, Menu in a game, or <kbd>?</kbd>. The advisor is on by default. It explains one recommended action at a time and shows where to click. It never gives orders for you: you make each move yourself. Its advice is what a strong AI empire would do with what you can see. Not now moves to the next decision; turn it off in Settings.</p>
+      <h3>Fill the screen</h3>
+      <p>Settings has Full screen. It also has Install Legatum, which gives the game its own window without browser tabs. Each shows only if your browser supports it.</p>
     </>;
     case 'credits': return <Credits />;
   }
