@@ -448,7 +448,7 @@ mod tests {
         );
         assert_eq!(state.cities[&city].producing, Some(grow), "{events:?}");
         let save = state_to_json(&state);
-        assert!(save.contains("\"save_version\":60"));
+        assert!(save.contains("\"save_version\":61"));
         assert!(!save.contains("capitals_taken"));
         assert!(
             state
