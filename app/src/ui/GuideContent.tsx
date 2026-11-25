@@ -1,3 +1,4 @@
+import { STRONG_ARMY_RATIO } from './RivalsTable';
 import { uniquePieceBare, ARTILLERY_RULE, SIEGE_RULE, SIEGE_USES_IRON, siegeGold, interceptRule, siegeBonusOf, unitStatsFor, KESHIG_KIND, TANK_MOVES, EARLY_TANK_MOVES, AUTONOMOUS_ARMOUR_MOVES, swissInterestRule, swissTollRule, BUILDING_STATS, UNIT_STATS, UNIT_NAME, itemKey, CLASS_BONUS_PERCENT, MOUNTED_CITY_PENALTY_PERCENT, FIRST_GROWTH, MOUNTED_MOVES, START_GOLD, IMPROVEMENT_INFO, FACTIONS, FACTION_INFO, factionGoalVp, RULES, TECH_NAME, buildingStatsFor, CAPTURE_RESISTANCE_TURNS, SETTLER_COST_STEP, WORK_RADIUS, TILE_GOLD_BASE, TILE_GOLD_PER_TILE, tileRingPercent, TECH_DIFFUSION_MAX, TECH_DIFFUSION_PER_EMPIRE, DECADENCE_FOOD_RULE, decadencePercent, decadenceRules, GREAT_WORKS, buildingIconName, HOPLITE_PHALANX_STRENGTH, SPECIAL_UNIT, specialUnitName, specialUnitEdge } from '../data';
 import { FACTION_SHEETS } from '../factionSheets';
 import { comparedItems, comparisonSentence, pieceComparison } from '../pieceCompare';
@@ -266,6 +267,7 @@ export function GuideContent({ section }: { section: GuideSection }) {
     </>;
     case 'victory': return <>
       <div className="guide-targets"><div><b>10</b><span>VP · one-empire team</span></div><div><b>20</b><span>VP · two-empire team</span></div><div><b>+10</b><span>target per extra teammate</span></div></div>
+      <p>The Victory race in the right panel lists every team, ranked by VP. Each row shows its VP, your Peace or War with it, and its Gold, army strength, cities and Science per turn. Every empire can see these numbers. An army at least {STRONG_ARMY_RATIO} times as strong as yours is red. An empire you haven’t met shows only its VP. Click a rival’s row to open Diplomacy with it.</p>
       <p>Scores are checked after every turn. Teammates combine their points. Open the score ledger from the Victory race’s “Score ledger” link. Its columns show teams and empires in rank order, with your column in gilt and the team’s VP over its first member. Every way to score has a row; open a row for its rule and progress. The ledger shows the actual target and standings for your game.</p>
       <h3>Winning · hold the target</h3>
       <p>Reaching the target is not enough: a team wins by VP only after it <b>holds</b> its target at the end of {HOLD_TURNS} turns in a row. The turn the target is reached counts as the first.</p>
