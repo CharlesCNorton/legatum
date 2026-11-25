@@ -1,0 +1,49 @@
+// Which sounds a battle makes, and when: read off the same plan the map animates (map/combatFx.ts),
+// so a volley is heard as it leaves the bow and a clash as the lines meet. Only weapons we have a
+// recording for make a sound: guns, cannon, shells and aircraft stay silent (no source we may ship
+// yet, docs/design/sound-sources.md). Pure, so it is tested without audio.
+import type { CombatPlan } from '../map/combatFx';
+import type { UnitKind } from '../types';
+import type { BattleCue, BattleSound } from './sound';
+
+/** A turn with twenty fights is a wall of noise; the first blows carry it. */
+export const MAX_BATTLE_CUES = 10;
+/** The same sound twice inside this window reads as one. */
+export const CUE_MERGE_MS = 160;
+const HOOVES_LEAD_MS = 450;
+
+/** Units from before gunpowder: the only ones whose fall has a voice. */
+const OLD_WORLD = new Set<UnitKind>(['Scout', 'Spearman', 'Archer', 'Pikeman', 'Crossbowman', 'Horseman', 'Knight', 'Phalangite', 'CompositeArcher', 'Cataphract', 'HeirToTheThrone']);
+
+export function battleSoundCues(plan: CombatPlan | null | undefined): BattleCue[] {
+  if (!plan) return [];
+  const all: BattleCue[] = [];
+  const add = (t: number, sound: BattleSound, seed: number) => all.push({ t: Math.max(0, Math.round(t)), sound, seed });
+  for (const s of plan.shots) {
+    if (s.kind === 'arrows' || s.kind === 'bolts') {
+      add(s.launch, 'bow', s.seed);
+      if (s.hit) add(s.launch + s.flight, 'arrowHit', s.seed);
+    } else if (s.kind === 'stone') {
+      add(s.launch, 'siegeLaunch', s.seed);
+      add(s.launch + s.flight, 'siegeHit', s.seed);
+    }
+  }
+  for (const c of plan.clashes) {
+    if (c.guns) continue;
+    if (c.mounted) add(c.t - HOOVES_LEAD_MS, 'hooves', c.seed);
+    add(c.t, 'clash', c.seed);
+  }
+  for (const d of plan.deaths) if (OLD_WORLD.has(d.unit.kind)) add(d.t, 'death', d.seed);
+  for (const c of plan.captures) if (c.razed) add(c.t, 'collapse', c.city);
+  all.sort((a, b) => a.t - b.t);
+  const last = new Map<BattleSound, number>();
+  const cues: BattleCue[] = [];
+  for (const cue of all) {
+    if (cues.length >= MAX_BATTLE_CUES) break;
+    const prev = last.get(cue.sound);
+    if (prev != null && cue.t - prev < CUE_MERGE_MS) continue;
+    last.set(cue.sound, cue.t);
+    cues.push(cue);
+  }
+  return cues;
+}

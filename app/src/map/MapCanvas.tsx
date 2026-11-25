@@ -28,6 +28,8 @@ import { buildOverlayTiles, overlayEmpty, useOverlays } from './overlays';
 import { settleTileNote, withProxySettler } from './settleAdvice';
 import { LensSwitcher } from './LensSwitcher';
 import { isColoniaFounder } from '../goalCities';
+import { ambienceFor, cancelBattleSounds, playBattleSounds, setAmbience } from '../feel/sound';
+import { battleSoundCues } from '../feel/battleSound';
 import { isBarbarian } from '../barbarians';
 import { SettlementCard, SettlementDetails } from './SettlementCard';
 import { PING_PULSE_MS, pingsFor } from '../teamPing';
@@ -164,6 +166,23 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
   const orderErrors = useGame((s) => s.errors[s.seat]);
   const mode = useGame((s) => s.mode);
   const anim = useGame((s) => s.anim);
+  // A battle is heard as it is drawn: the sounds are scheduled against the same plan and clock.
+  useEffect(() => {
+    if (!anim?.plan || still) return;
+    playBattleSounds(battleSoundCues(anim.plan), performance.now() - anim.start);
+    return cancelBattleSounds;
+  }, [anim, still]);
+  // The land under the middle of the view has a quiet sound of its own (birds, wind); the sea and the unexplored are silent.
+  useEffect(() => {
+    const listen = () => {
+      const v = useGame.getState().views?.[useGame.getState().seat];
+      const tile = v?.tiles[tileIndex(pixelToHex(cam.current.x, cam.current.y, HEX_SIZE), v.width, v.height)];
+      setAmbience(tile?.explored ? ambienceFor(tile.terrain) : null);
+    };
+    listen();
+    const id = setInterval(listen, 1500);
+    return () => { clearInterval(id); setAmbience(null); };
+  }, []);
   const focus = useGame((s) => s.focus);
   const client = useGame((s) => s.client);
   const forecastTick = useGame((s) => s.forecastTick);
