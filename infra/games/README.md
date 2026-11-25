@@ -21,7 +21,7 @@ promise to players).
   `coach_answers` it is upload-only: strip it before feeding a record to the engine, and exports drop it.
 - Only what the game itself writes is accepted (uploads are written by strangers and read on the analysis Mac):
   seat factions and difficulties from the lists in `src/names.ts` (a core test keeps that list equal to the
-  game's factions), `engine_commit` a full 40-digit git commit, and `created_at` a real ISO time (it names the
+  game's factions), `engine_commit` a full 40-digit git commit, and `created_at` a real ISO time
   no more than a day after the start time in the game id (earlier is fine: a save loaded from a file gets a
   new id and keeps its `created_at`). That start time must fall after 2026-11-01 and not in the future, and it
   names the storage month, so a sender cannot pick the month. Anything else is answered 422.
@@ -44,7 +44,7 @@ promise to players).
 - All addresses together may store at most 5000 new games per UTC day (`MAX_NEW_GAMES_TOTAL_PER_DAY`, a bad
   value means 5000), so many addresses cannot grow the bucket without limit; past it every new game gets the
   same `429`. Bodies may unpack to at most 16 MiB (the largest real record is about 1.4 MB).
-- What is kept about a sender: a salted SHA-256 of the address (cut to /64 for IPv6) and its count, for the
+- What is kept about a sender: a salted SHA-256 of the address (cut to /64 for IPv6) and of its network, each with a count, for the
   current UTC day only, inside the `Quota` Durable Object (SQLite-backed; the salt is made once and never
   leaves it; older rows are deleted on every call). The raw address is never stored or logged.
   Observability (request logs) is off on purpose: logs would hold IP addresses.
