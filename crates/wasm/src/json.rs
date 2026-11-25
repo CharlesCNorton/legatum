@@ -408,7 +408,7 @@ mod tests {
     }
 
     #[test]
-    fn rules_59_saves_round_trip_and_a_version_58_save_is_refused() {
+    fn rules_60_saves_round_trip_and_a_version_59_save_is_refused() {
         // Rules 47: held shots at fallen cities; 48: Egypt's Nile and its Grow project. The save
         // shape only gains the project value, so a city growing on the Nile round-trips at 48,
         // and a 47 save is refused rather than migrated. Rules 49: Egypt starts knowing the Bronze
@@ -421,8 +421,9 @@ mod tests {
         // Rules 56: city names in list order; the save shape is unchanged, and the app refuses a 55 save.
         // Rules 57: the Mongols never have Walls; the save shape is unchanged, and a 56 save is
         // refused. Rules 58: Walls levels replace Castle and Star Fort. Rules 59: Egypt's Chariot
-        // Archer replaces its Archer; the save shape is unchanged, and a 58 save is refused.
-        assert_eq!(legatum_core::RULES_VERSION, 59);
+        // Archer replaces its Archer; the save shape is unchanged, and a 58 save is refused. Rules 60:
+        // the research goal adds an optional `Player` field; a 59 save is refused and upgrades.
+        assert_eq!(legatum_core::RULES_VERSION, 60);
         let mut setup = GameSetup::all_ai(3);
         setup.players[0].faction = legatum_core::Faction::Egypt;
         let mut state = legatum_core::new_game(&setup);
@@ -445,7 +446,7 @@ mod tests {
         );
         assert_eq!(state.cities[&city].producing, Some(grow), "{events:?}");
         let save = state_to_json(&state);
-        assert!(save.contains("\"save_version\":59"));
+        assert!(save.contains("\"save_version\":60"));
         assert!(!save.contains("capitals_taken"));
         assert!(
             state
@@ -456,12 +457,12 @@ mod tests {
         assert!(save.contains("\"Grow\""));
         assert_eq!(parse_state(&save).unwrap(), state);
         let mut old: Value = serde_json::from_str(&save).unwrap();
-        old["save_version"] = Value::from(58);
+        old["save_version"] = Value::from(59);
         assert!(
             parse_state(&old.to_string())
                 .unwrap_err()
                 .contains(&format!(
-                    "incompatible rules version: saved Some(58), current {}",
+                    "incompatible rules version: saved Some(59), current {}",
                     legatum_core::RULES_VERSION
                 ))
         );
