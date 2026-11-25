@@ -10,7 +10,7 @@ Dependencies are taken from each crate's `Cargo.toml`. An arrow means "depends o
   hosts            app (WASM in the browser)       crates/sim   crates/analysis
                             |                           |              |
                             v                           v              v
-  shared loop       crates/wasm  (Session, saves, tapes, scenarios)  <- crates/archive
+  shared loop       crates/wasm  (Session, saves, tapes, position loading)  <- crates/archive
                          |
                          v
   brains            crates/ai    (Brain trait: PlayerView -> Orders)
@@ -51,7 +51,7 @@ defined in `crates/core/src/rules/mod.rs`. It clones the state, applies every pl
 
 | Step | Where |
 | --- | --- |
-| Create a game from a `GameSetup` | `new_game` in `crates/core/src/game.rs` (map from `mapgen.rs`, then each empire's founded capital, a Scout and a Soldier) |
+| Create a game from a `GameSetup` | `new_game` in `crates/core/src/game.rs` (map from `mapgen.rs`, then each empire's founded capital, a Scout and a Spearman) |
 | The order vocabulary | `Order` in `crates/core/src/orders.rs` |
 | Validate a player's orders without applying them | `validate_orders` in `crates/core/src/rules/mod.rs` |
 | Resolve a turn | `resolve_turn` in `crates/core/src/rules/mod.rs` |
@@ -102,7 +102,7 @@ The UI depends on one interface, `GameClient` in `app/src/client.ts`. Local game
 
 | Client | File | Used for |
 | --- | --- | --- |
-| WASM | `app/src/wasmClient.ts` | Single player, hot seat and scenarios. The engine runs in the page, loaded from `app/src/wasm-pkg` (built by `scripts/build-wasm.sh`). Views, validation, forecasts, saves and turn resolution are JSON strings across the WASM boundary. |
+| WASM | `app/src/wasmClient.ts` | Single player and hot seat. The engine runs in the page, loaded from `app/src/wasm-pkg` (built by `scripts/build-wasm.sh`). Views, validation, forecasts, saves and turn resolution are JSON strings across the WASM boundary. |
 | Remote | `app/src/remote.ts` | Online play. The client is bound to one human seat and talks to the host's tab through the relay's room URL (`setServerBase`); `app/src/relaySocket.ts` reassembles `chunk` messages. The host's own seat uses an in-tab socket instead. |
 
 The game state lives in a Zustand store (`app/src/store.ts`); the map is drawn on a 2D canvas (`app/src/map/`, entry points `MapCanvas.tsx` and `render.ts`). Test fixtures in `app/src/test/` start from Rust-generated saves and resolve turns through WASM.
@@ -115,7 +115,7 @@ The game state lives in a Zustand store (`app/src/store.ts`); the map is drawn o
 
 ## Save files and versioning
 
-- **Save format.** A save is the serialized `GameState` as JSON, written by `state_to_json` and read by `parse_state` in `crates/wasm/src/json.rs`. `Session::save_json` adds two optional sections: `archive` (the game's recording, see below) and `ai_opponent_memory` (what each AI seat has learned from its own views, which contains no hidden state). Faction ids in saves are the `Faction` enum names (for example `Switzerland`); a renamed faction keeps its old name as a serde alias (`Japan` still parses as India).
+- **Save format.** A save is the serialized `GameState` as JSON, written by `state_to_json` and read by `parse_state` in `crates/wasm/src/json.rs`. `Session::save_json` adds two optional sections: `archive` (the game's recording, see below) and `ai_opponent_memory` (what each AI seat has learned from its own views, which contains no hidden state). Faction ids in saves are the `Faction` enum names (for example `Switzerland`); a renamed faction keeps its old name as a serde alias (`Japan` still parses as India). Units, buildings and improvements are named the same way: the identifier is the PascalCase of the display name (`Spearman`, `GreatLibrary`), and the names used before the 2026-11-22 rename (`Soldier`, `RelayUplink`, ...) still parse as serde aliases in `crates/core/src/types.rs`, for tapes, archived games and fixtures. The state hash is taken over this JSON, so renaming an identifier changes every hash and needs a `RULES_VERSION` bump.
 - **Versions.** The writer stamps every save with `save_version = legatum_core::RULES_VERSION`, and `parse_state` refuses a save whose version differs (or is missing) with an explicit "incompatible rules version" error. Any change to the rules or to the serialized shape bumps the constant; there are no migrations. The hosted site opens an other-rules save in the earlier build that made it: every web build is also published at `v/<id>/` and listed in `versions.json` for 30 days (`tools/release/keep-builds.mjs`, `app/src/platform/versions.ts`; `docs/ops/releasing.md`), and the autosave database stays at version 1 so every kept build can open it. Tapes carry their own `version`.
 - **Stable serialization by serde defaults.** New fields are added with `#[serde(default)]` and, where a default value should leave existing serializations untouched, `skip_serializing_if`. The comments in `crates/core/src/state.rs` call this out ("omitted when absent, so old hashes hold"), which keeps pinned tape hashes stable.
 - **Fixtures.** Current-version playtest saves live in `crates/wasm/tests/fixtures/saves/` (see its README); `current_browser_fixtures.rs` loads them, resolves a turn and reloads the result. Other fixtures in `crates/wasm/tests/fixtures/` pin specific reported bugs, each replayed from a saved state.
@@ -141,10 +141,10 @@ All brains implement `Brain` (`crates/ai/src/lib.rs`): `orders(&mut self, &Playe
 
 `crates/sim` builds `legatum-sim` (`src/main.rs`; `--help` lists every flag). It plays AI-only games in parallel with rayon, one game per task, using the same `Session` as the app. Typical outputs are markdown and JSON reports (win rates by faction, pacing, telemetry modules such as `hold_telemetry.rs` and `opponent_telemetry.rs`), optional order tapes (`--tape-out`) and replays. Other modes: `--determinism`, `--proxy` (a human-proxy benchmark seat), `--duel-matrix`, `--search`, `--ai-params`, `--replay` and `--tape-in`. Larger studies live in `crates/sim/examples/`, such as `hard_vs_human.rs` and `war_suite`, which the scripts in `tools/sim/` wrap.
 
-Scenarios are start states with a briefing, a measurable objective and predictions:
+Scenario files are AI measurement positions with a checked start state, objective and predictions:
 
-- **Format.** `crates/wasm/src/scenario.rs` defines the file format (a gzip and base64 encoded save, checked against a recorded hash). `crates/core/src/scenario.rs` defines objectives and scoring, which read only game state, so the app, the runner and any replay score a run identically.
-- **Files.** `scenarios/*.json` holds the training positions. `scenarios/war/*.json` holds short wars cut from recorded human games and brought forward to the current rules by `legatum-sim war-build` (`crates/sim/src/war_build.rs`).
+- **Format.** `crates/wasm/src/scenario.rs` defines the file format (a gzip and base64 encoded save, checked against a recorded hash). `crates/core/src/scenario.rs` defines objectives and scoring, which read only game state, so the runner and replays score a position identically.
+- **Files.** `scenarios/*.json` holds root-level test positions; `scenarios/lab/*.json` holds AI measurement cuts from saves. `scenarios/war/*.json` holds short wars cut from recorded human games and brought forward to the current rules by `legatum-sim war-build` (`crates/sim/src/war_build.rs`).
 - **AI baselines.** `legatum-sim scenario <file> --runs N` has the scripted AI play the scenario seat across many seeds and writes a report. The human-seat benchmark and the war suite compare AI changes against recorded human results; the methodology is in [docs/sim-results/hard-vs-human/README.md](docs/sim-results/hard-vs-human/README.md).
 
 ## Test layers
@@ -155,7 +155,7 @@ Scenarios are start states with a briefing, a measurable objective and predictio
 | Rust integration tests | `crates/*/tests/`: determinism and pins (`sim`), playtest saves and scenarios (`wasm`), the online host protocol (`wasm`), property and privacy tests (`core`), AI behaviour (`ai`) | `cargo test --workspace` |
 | TypeScript unit tests | `app/src/**/*.test.ts(x)` (Vitest, Node environment) | `cd app && npm test` |
 | WASM behavior tests | `app/src/**/*.wasm.test.ts`: core-backed fixtures and browser-facing engine APIs | `cd app && npm test` (needs `scripts/build-wasm.sh` first) |
-| Browser end-to-end | `app/e2e/*.spec.ts` (Playwright, Chromium) against the static production build and a local relay (`wrangler dev`) | `cd app && npm run e2e` |
+| Browser end-to-end | `app/e2e/*.spec.ts` (Playwright, Chromium) against the static production build and a local relay (`wrangler dev`); CI runs a smoke subset per pull request and the full suite nightly | `cd app && npm run e2e` |
 | Cross-target determinism | `scripts/wasm-tape-check.mjs`, `scripts/wasm-search-check.mjs` | see the headers of those scripts |
 
 `cargo fmt --all` and `cargo clippy --workspace --all-targets -- -D warnings` are the expected lint gates for Rust; `npm run build` type-checks the TypeScript, including the Playwright specs.

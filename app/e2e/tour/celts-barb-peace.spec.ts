@@ -1,6 +1,6 @@
 // UI review of claude/celts-barb-peace and claude/lobby-six (merge-ui-1103): barbarians beside a Celtic city raise no alarm,
 // call to action, wounded warning or danger mark, while a non-Celtic city still alarms; the Celtic Auto-fire tooltip and
-// the Guide's Celts paragraph; the Single Player lobby's default of 6 empires and its size switches.
+// How to Play's Celts paragraph; the Single Player lobby's default of 6 empires and its size switches.
 // Run alone: `npx playwright test e2e/tour/celts-barb-peace`.
 import { test, expect } from '../fixtures';
 import { endPlanning } from '../turnActions';
@@ -13,7 +13,7 @@ import { SIZES, aim, closeReportIfOpen, dismissCelebrations, hexPoint, loadFixtu
 
 test.describe.configure({ mode: 'parallel' });
 
-/** The siege fixture with its three attackers turned barbarian; `faction` is you. `rival` adds one Byzantine Soldier at War beside the city. */
+/** The siege fixture with its three attackers turned barbarian; `faction` is you. `rival` adds one Byzantine Spearman at War beside the city. */
 function barbarianGate(faction: Faction, { rival = false } = {}) {
   const setup = siegeFixture({ fresh: true });
   const f = setup.fixture;
@@ -25,14 +25,14 @@ function barbarianGate(faction: Faction, { rival = false } = {}) {
   own.buildings = ['Walls'];
   const free = (hs: ReturnType<typeof neighbors>) => hs.filter((h) => f.terrain[tileIndex(h, f.width, f.height)] === 'Plains'
     && !f.units.some((u) => hexEq(u.pos, h)) && !f.cities.some((c) => hexEq(c.pos, h)));
-  // A ranged unit in the city (Auto-fire is offered), and a wounded Soldier outside beside a barbarian.
-  const archer = spawnUnit(f, 0, 'Ranger', own.pos, false);
+  // A ranged unit in the city (Auto-fire is offered), and a wounded Spearman outside beside a barbarian.
+  const archer = spawnUnit(f, 0, 'Archer', own.pos, false);
   const barbPos = f.units.find((u) => u.id === setup.attackers[0])!.pos;
   const woundedAt = free(neighbors(barbPos)).find((h) => !hexEq(h, own.pos))!;
-  const wounded = spawnUnit(f, 0, 'Soldier', woundedAt, false);
+  const wounded = spawnUnit(f, 0, 'Spearman', woundedAt, false);
   wounded.hp = 30;
   let rivalId: number | undefined;
-  if (rival) rivalId = spawnUnit(f, 1, 'Soldier', free(neighbors(own.pos))[0], false).id;
+  if (rival) rivalId = spawnUnit(f, 1, 'Spearman', free(neighbors(own.pos))[0], false).id;
   refreshVision(f);
   return { ...setup, archer: archer.id, wounded: wounded.id, rival: rivalId };
 }
@@ -64,7 +64,7 @@ for (const size of SIZES) test.describe(`celts barbarian peace ${size.name}`, ()
       await page.evaluate(() => { const m = (window as unknown as { legatumMap: { camera: { zoom: number }; redraw(): void } }).legatumMap; m.camera.zoom = 1.25; m.redraw(); });
       // The Threat lens: barbarians draw no danger for the Celts.
       await page.getByRole('radio', { name: 'Threat', exact: true }).first().click();
-      if (faction === 'Celts') await expect(page.locator('.lens-empty')).toHaveText('Nothing in sight can attack you next turn. Barbarians never attack you.');
+      if (faction === 'Celts') await expect(page.locator('.lens-empty')).toHaveText("Nothing in sight can attack you next turn. Barbarians don't attack you.");
       await page.mouse.move(5, size.height / 2);
       await page.waitForTimeout(400);
       await shot(page, size, `cb-${label}-02a-threat-lens`);
@@ -78,10 +78,10 @@ for (const size of SIZES) test.describe(`celts barbarian peace ${size.name}`, ()
       }
       await shot(page, size, `cb-${label}-02b-barbarian-card`);
       await page.mouse.move(5, size.height / 2);
-      // The wounded Soldier beside a barbarian: no "wounded next to enemies" warning for the Celts.
+      // The wounded Spearman beside a barbarian: no "wounded next to enemies" warning for the Celts.
       await selectThing(page, 'unit', setup.wounded);
       await page.waitForTimeout(500);
-      if (faction === 'Celts') await expect(page.getByTestId('strength-key')).toContainText('barbarians never attack you');
+      if (faction === 'Celts') await expect(page.getByTestId('strength-key')).toContainText("barbarians don't attack you");
       await page.mouse.move(5, size.height / 2);
       await shot(page, size, `cb-${label}-03-wounded-unit`);
       // The ranged unit in the city: hover Auto-fire for its tooltip.
@@ -94,7 +94,7 @@ for (const size of SIZES) test.describe(`celts barbarian peace ${size.name}`, ()
       if (faction === 'Celts') await expect.soft(page.locator('[role=tooltip]:visible')).toContainText('never shoots barbarians');
       await shot(page, size, `cb-${label}-04-autofire-tooltip`);
       await page.mouse.move(5, size.height / 2);
-      // Plot a move with the wounded Soldier past the barbarians: the route preview's danger line.
+      // Plot a move with the wounded Spearman past the barbarians: the route preview's danger line.
       await selectThing(page, 'unit', setup.wounded);
       const target = await page.evaluate(({ id }) => {
         const s = (window as unknown as GameWindow).legatum.getState(), v = s.views![s.seat];
@@ -141,7 +141,7 @@ for (const size of SIZES) test.describe(`celts barbarian peace ${size.name}`, ()
     await shot(page, size, 'cb-celts-mixed-01-this-turn');
   });
 
-  test('the Guide: the Celts paragraph', async ({ page }) => {
+  test('How to Play: the Celts paragraph', async ({ page }) => {
     await page.goto('/?client=wasm');
     await page.getByRole('button', { name: /^How to Play/ }).click();
     const guide = page.getByRole('dialog', { name: 'How to Play', exact: true });

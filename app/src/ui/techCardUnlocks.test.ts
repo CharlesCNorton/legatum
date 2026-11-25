@@ -15,11 +15,11 @@ describe('tech card effect icons', () => {
     expect(icons('Irrigation')).toEqual(['yield-food']);
     expect(icons('CodeOfLaws')).toEqual(['effect-insight']);
     // The Phalangite is an item on the view's unlock list; the upgrade and Siege lines are effects.
-    expect(icons('Mathematics')).toEqual(['ui-siege', 'unit-soldier']);
+    expect(icons('Mathematics')).toEqual(['ui-siege', 'unit-spearman']);
     expect(icons('Feudalism')).toEqual(['unit-phalangite']);
     expect(icons('MilitaryEngineering')).toEqual(['yield-gold']);
-    expect(icons('PrintingPress')).toEqual(['building-laboratory', 'building-market']);
-    expect(icons('FusionPower')).toEqual(['yield-production', 'building-inferencecore']);
+    expect(icons('PrintingPress')).toEqual(['building-library', 'building-market']);
+    expect(icons('FusionPower')).toEqual(['yield-production', 'building-researchlab']);
     expect(icons('StealthTechnology')).toContain('resource-silicon');
     expect(icons('IronWorking')).toContain('resource-iron');
   });
@@ -70,14 +70,14 @@ describe('faction-accurate tech cards', () => {
       buy_cost: 420, yields: { food: 0, production: 0, gold: 0, science: 0 }, city_strength: 0,
       unit_strength: 40, upgrade_cost: 100,
     });
-    const unlocked = { unlocks: [unit('AssaultTrooper'), unit('Arquebusier')] } as ResearchView;
+    const unlocked = { unlocks: [unit('Musketman'), unit('Arquebusier')] } as ResearchView;
     const rows = techCardUnlocks(unlocked, 'Gunpowder', 'India');
     expect(rows.filter((u) => u.kind !== 'Effect').map((u) => [u.label, u.upgradeFrom])).toEqual([
       ['Musketman', 'Pikeman'], ['Arquebusier', 'Crossbowman'],
     ]);
     // Niter's reveal is the only effect: both upgrade lines folded into their units.
     expect(rows.filter((u) => u.kind === 'Effect').map((u) => u.label)).toEqual(['Reveals Niter on the map']);
-    const withoutTarget = { unlocks: [unit('AssaultTrooper')] } as ResearchView;
+    const withoutTarget = { unlocks: [unit('Musketman')] } as ResearchView;
     expect(techCardUnlocks(withoutTarget, 'Gunpowder', 'India').map((u) => u.label)).toEqual([
       'Musketman', 'Reveals Niter on the map', 'Crossbowmen can upgrade to Arquebusiers',
     ]);
@@ -92,7 +92,7 @@ describe('faction-accurate tech cards', () => {
 
   it('every card a faction researches gives it something; a tech with nothing for it is skipped', () => {
     expect(techHasBenefit('Byzantium', 'PrintingPress')).toBe(true);
-    // Since 2026-10-19 the Mongols raise Walls from the Medieval era, so Masonry helps them too.
+    // The Mongols never raise Walls (rules 57), but Masonry's Quarry bonus still helps them.
     expect(techHasBenefit('Mongols', 'Masonry')).toBe(true);
     // The Nile: Egypt has no Production, so Bronze Working's Workshop does nothing for it: Egypt skips it.
     const noBenefit = new Set<string>(['Egypt BronzeWorking']);

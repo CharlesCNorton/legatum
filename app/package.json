@@ -3,7 +3,7 @@
   "private": true,
   "license": "MIT",
   "repository": "github:samcorcos/legatum",
-  "homepage": "https://legatum-game.pages.dev",
+  "homepage": "https://playlegatum.com",
   "version": "0.1.0",
   "type": "module",
   "scripts": {
@@ -33,6 +33,7 @@
     "@vitejs/plugin-react": "^6.1.1",
     "fake-indexeddb": "^6.2.5",
     "happy-dom": "^21.0.4",
+    "jsdom": "^31.0.1",
     "sharp": "^0.35.5",
     "typescript": "5.9",
     "vite": "^8.3.4",

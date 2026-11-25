@@ -26,13 +26,13 @@ export type Terrain =
 
 export type Faction = 'Switzerland' | 'India' | 'Byzantium' | 'Germany' | 'Celts' | 'Mongols' | 'Sparta' | 'Athens' | 'Aztecs' | 'Egypt' | 'Rome';
 export type UnitKind =
-  | 'Scout' | 'Settler' | 'Soldier' | 'Ranger' | 'Trooper' | 'Marksman' | 'AssaultTrooper' | 'Heir'
+  | 'Scout' | 'Settler' | 'Spearman' | 'Archer' | 'Pikeman' | 'Crossbowman' | 'Musketman' | 'HeirToTheThrone'
   | 'Horseman' | 'Knight' | 'Cavalry' | 'Tank' | 'AutonomousArmour'
   | 'Rifleman' | 'Infantry' | 'HunterKiller' | 'StealthFighter' | 'StealthBomber'
-  | 'FieldCannon' | 'Artillery' | 'Drone'
+  | 'FieldCannon' | 'Artillery' | 'CombatDrone'
   | 'Fighter' | 'Bomber'
   | 'Phalangite' | 'CompositeArcher' | 'Cataphract' | 'Arquebusier' | 'Cuirassier'
-  | 'TrenchInfantry' | 'Howitzer' | 'Landship' | 'Biplane'
+  | 'TrenchInfantry' | 'Howitzer' | 'EarlyTank' | 'Biplane'
   | 'MechanisedInfantry' | 'MainBattleTank' | 'RocketArtillery' | 'JetFighter' | 'JetBomber';
 /** A military unit's class (core `UnitClass`): melee beats mounted, ranged beats melee, mounted beats ranged. */
 export type UnitClass = 'Melee' | 'Ranged' | 'Mounted' | 'Air';
@@ -73,29 +73,29 @@ export interface CityAssaultForecast {
   can_capture: boolean;
 }
 export type BuildingKind =
-  | 'BroodHall'
+  | 'RiceStorehouse'
   | 'Granary'
   | 'Workshop'
   | 'Market'
-  | 'Laboratory'
+  | 'Library'
   | 'Walls'
-  | 'Hydroponics'
-  | 'MachineShop'
-  | 'WarShrine'
-  | 'College'
-  | 'Clearinghouse'
-  | 'Autoworks'
+  | 'Mill'
+  | 'Forge'
+  | 'Agoge'
+  | 'University'
+  | 'Bank'
+  | 'Factory'
   | 'Castle'
   | 'StarFort'
-  | 'RelayUplink'
+  | 'GreatLibrary'
   | 'Pyramids'
   | 'HagiaSophia'
   | 'EiffelTower'
-  | 'IterReactor'
-  | 'PlanetaryFoundry'
-  | 'WorldExchange'
-  | 'InferenceCore'
-  | 'CourierHall'
+  | 'IterFusionReactor'
+  | 'RoyalArsenal'
+  | 'GrandBazaar'
+  | 'ResearchLab'
+  | 'YamRelayStation'
   | 'ImperialDiwan'
   | 'Roadworks'
   | 'StockExchange'
@@ -155,12 +155,12 @@ export type ProductionItem =
   | { kind: 'Unit'; unit: UnitKind }
   | { kind: 'Building'; building: BuildingKind }
   | { kind: 'Wonder'; building: BuildingKind; tile: Hex }
-  | { kind: 'Project'; project: 'Gold' | 'Science' | 'Grow' }
+  | { kind: 'Project'; project: 'Gold' | 'Science' | 'Food' | 'Grow' }
   /** Improve one owned, worked resource tile (core `improvements`); `improvement` matches the tile's resource. */
   | { kind: 'Improvement'; improvement: ImprovementKind; tile: Hex };
 
 /** A tile improvement (core `ImprovementKind`); it upgrades by itself with technology. */
-export type ImprovementKind = 'Farm' | 'Pasture' | 'Quarry' | 'Mine' | 'SaltpeterWorks' | 'OilWell' | 'QuartzMine';
+export type ImprovementKind = 'Farm' | 'Pasture' | 'Quarry' | 'Mine' | 'SaltpetreWorks' | 'OilWell' | 'QuartzMine';
 
 export interface Yields {
   food: number;
@@ -269,7 +269,8 @@ interface IdleBuilding {
 }
 
 export type Automation = 'Explore';
-export type CityBuildFocus = 'Balanced' | 'Science' | 'Gold' | 'Military';
+/** Military and Economy pick builds; Gold, Science and Food run that project (core `CityBuildFocus`). */
+export type CityBuildFocus = 'Military' | 'Economy' | 'Gold' | 'Science' | 'Food';
 export type StandingOrder = 'Sleep' | 'Heal' | 'AutoFire';
 export type ExploreStopReason = 'Complete' | 'Threatened' | 'Damaged' | 'Blocked';
 
@@ -505,6 +506,8 @@ export interface CityView {
   great_works: BuildingKind[];
   /** Public chosen wonder tile and current construction stage, including through fog. */
   construction?: { building: BuildingKind; tile: Hex; stage: number; progress: number } | null;
+  /** The city is building Walls: public, including through fog, like a wonder site. */
+  walls_building?: boolean;
   visible: boolean;
   detail: CityDetail | null;
 }
@@ -513,7 +516,7 @@ export interface CityView {
 export type VpSource = { kind: 'GreatWork'; of: PlayerId } | { kind: 'FactionGoal'; of: PlayerId } | { kind: 'EraObjective'; era: number } | { kind: 'CapitalTaken'; capital: CityId } | { kind: 'CapitalSacked'; capital: CityId };
 
 /** Core `goals::GoalRule`: which rule a goal follows (the Aztecs use the Swarm rule for the New Fire). */
-export type GoalRule = 'None' | 'Hoard' | 'Swarm' | 'Sakoku' | 'Diwan' | 'Heir' | 'Factories' | 'Wild' | 'Retire' | 'Hall' | 'Broadcast';
+export type GoalRule = 'None' | 'Hoard' | 'Swarm' | 'Sakoku' | 'Diwan' | 'Heir' | 'Factories' | 'Wild' | 'Retire' | 'Hall' | 'Broadcast' | 'Colonia' | 'Tomb';
 
 export interface PlayerPublic {
   id: PlayerId;
@@ -537,6 +540,10 @@ export interface PlayerPublic {
   faction_goal_done: boolean;
   /** Sakoku (Japan): the country is closed, with the turn ends it has been closed (public). Null while open. */
   sakoku_turns?: number | null;
+  /** Egypt is building its Royal Tomb (public): none of its cities builds or grows while it does. Absent when not. */
+  tomb_work?: boolean;
+  /** Turn ends of work this empire has put toward its Royal Tomb (public; kept across a pause, absent at 0). */
+  tomb_turns?: number;
   /** The rule this empire's goal follows (core `goals::GoalRule`; public). */
   goal_rule?: GoalRule | null;
   /** The empire's current era, 1-based (1 Ancient .. 8 Future; core `objectives::era_of`): it rises the turn the previous era's last technology lands. Public. */
@@ -623,7 +630,7 @@ export interface TechUnlock {
   upgrade_from?: UnitKind | null;
   predecessor?: BuildingKind | null;
   min_population?: number;
-  /** Core `research::locked_note`: why this faction cannot build the item yet ("Walls for the Mongols from the Medieval era"); said in place of the build line and prices. */
+  /** Core `research::locked_note`: why this faction cannot build the item yet; said in place of the build line and prices. Always null since rules 57 (its one use, the Mongols' Medieval-era Walls, is gone). */
   locked_note?: string | null;
   cities?: { city: CityId; blocker: string | null; build_turns: number | null; yields_after: CityYields; food_surplus_after: number; turns_to_six_after?: number | null; turns_to_eight_at_gate?: number | null; turns_to_eight_after?: number | null }[];
 }
@@ -845,6 +852,30 @@ interface SakokuView {
   /** Why the next move (closing, or reopening) can't be ordered now. */
   blocker: string | null;
 }
+/** Egypt's Royal Tomb (core `rules::actions::TombView`; own view only). */
+export interface TombView {
+  /** The work is on: no city builds or grows. */
+  working: boolean;
+  /** Turn ends counted toward the tomb (kept across a pause). */
+  turns: number;
+  /** Turn ends the tomb needs. */
+  target: number;
+  /** The city the tomb would stand in if the work finished now (the capital, else the largest city). */
+  site: CityId | null;
+  /** The tomb's city, once it stands (in anyone's hands). */
+  tomb: CityId | null;
+  /** Why the next move (starting, or pausing while it is on) can't be ordered now. */
+  blocker: string | null;
+}
+/** Rome's Colonia Victrix while none stands (core `rules::actions::ColoniaFoundersView`; own view only). */
+export interface ColoniaFoundersView {
+  /** The promotion level the founder needs. */
+  level: number;
+  /** The highest level among the empire's melee units. */
+  best: number;
+  /** Melee veterans of that level, in id order: each founds the Colonia on a site that counts. */
+  founders: UnitId[];
+}
 interface BroadcastView { techs_each: number; blocker: string | null; receivers: PlayerId[] }
 /** Free technologies the viewer has to choose (a rival's broadcast). */
 interface FreeTechsView {
@@ -869,7 +900,7 @@ interface RetireView {
   target: number;
   /** The promotion level a veteran needs. */
   level: number;
-  /** Own cities with a War Shrine: where veterans retire. */
+  /** Own cities with an Agoge: where veterans retire. */
   shrines: CityId[];
   /** Every unit of the required level, in id order. */
   veterans: RetireVeteranView[];
@@ -890,6 +921,10 @@ interface WildView {
 export interface ActionsView {
   swarm?: SwarmView | null;
   sakoku?: SakokuView | null;
+  /** Egypt: the Royal Tomb (absent for every other empire). */
+  tomb?: TombView | null;
+  /** Rome: present while its goal is open (no Colonia Victrix stands). */
+  colonia?: ColoniaFoundersView | null;
   broadcast?: BroadcastView | null;
   free_techs?: FreeTechsView | null;
   retire?: RetireView | null;
@@ -915,6 +950,8 @@ export interface ArmyContribution {
 export interface PlayerView {
   army_breakdown?: ArmyContribution[];
   rule_experiments?: RuleSwitches;
+  /** The game started with the AI-only teams allied in pairs. Omitted when off. */
+  ai_alliances?: boolean;
   diplomacy: DiplomacyView;
   turn: number;
   turn_limit: number | null;
@@ -946,9 +983,15 @@ export interface PlayerView {
   faction_goal?: FactionGoalView | null;
   /** The viewer's one-time actions and pending free technologies. */
   actions?: ActionsView;
-  /** Every standing Courier Hall (public): whose it is, who holds it now (the owner of its city) and where. Its holder's land is open to every empire at Peace. */
+  /** Every standing Yam Relay Station (public): whose it is, who holds it now (the owner of its city) and where. Its holder's land is open to every empire at Peace. */
   courier_halls?: CourierHallView[];
   imperial_diwans?: ImperialDiwanView[];
+  /** Every standing Colonia Victrix (public, through fog and on unexplored land): whose goal it is, who holds it, its city, place and name. */
+  colonias?: GoalCityView[];
+  /** Every standing Royal Tomb (public, as `colonias`). */
+  royal_tombs?: GoalCityView[];
+  /** Where each Royal Tomb under construction will stand (core `goals::tomb_site`), one per empire whose work is on (public). `holder` is the city's owner. */
+  tomb_sites?: GoalCityView[];
   /** Your team's aircraft, each in one city's hangar (never on the map). */
   aircraft?: AircraftView[];
   /** Rival aircraft currently visible in a city's hangar; no private health or supply. */
@@ -1065,11 +1108,13 @@ export type GameAction =
   | { action: 'Swarm' }
   /** Japan, Sakoku: close the country (`close: true`) or reopen it. */
   | { action: 'Sakoku'; close: boolean }
+  /** Egypt, the Royal Tomb: start (or resume) the work (`build: true`) or pause it. */
+  | { action: 'Tomb'; build: boolean }
   /** Athens, Share the Learning: every rival outside the team gains free techs of its choice. */
   | { action: 'Broadcast' }
   /** Spend a broadcast's free technologies (1 to the pending count, prerequisites known or listed first). */
   | { action: 'ChooseFreeTechs'; techs: TechId[] }
-  /** Sparta, Honour the Fallen: retire a veteran standing in an own War Shrine city. */
+  /** Sparta, Honour the Fallen: retire a veteran standing in an own Agoge city. */
   | { action: 'RetireVeteran'; unit: UnitId }
   /** Celts, Call the warbands: raise a barbarian camp in the territory of every Celts city. */
   | { action: 'CallTheWild' };
@@ -1208,6 +1253,12 @@ export type Event =
   | { type: 'SakokuClosed'; player: PlayerId }
   /** India reopened the country after `turns` turn ends closed. Public. */
   | { type: 'SakokuReopened'; player: PlayerId; turns: number }
+  /** Egypt started (or resumed) work on its Royal Tomb, with `turns` already counted. Public. */
+  | { type: 'TombStarted'; player: PlayerId; turns: number }
+  /** Egypt paused work on its Royal Tomb with `turns` counted (the count is kept). Public. */
+  | { type: 'TombPaused'; player: PlayerId; turns: number }
+  /** The Royal Tomb stands in `city`: 2 VP to whoever holds it. Public. */
+  | { type: 'TombRaised'; player: PlayerId; city: CityId; name: string; at: Hex }
   | { type: 'SignalBroadcast'; from: PlayerId; receivers: PlayerId[]; techs_each: number }
   | { type: 'RoadsLaid'; owner: PlayerId; city: CityId; at: Hex; linked: number }
   | { type: 'VeteranRetired'; player: PlayerId; unit: UnitId; kind: UnitKind; city: CityId; retired: number; of: number }
@@ -1332,6 +1383,8 @@ export interface GameSetup {
   legacy_all_war?: boolean;
   /** Civ 6 style barbarian camps. Omitted (off) in setups from before barbarians existed. */
   barbarians?: boolean;
+  /** The teams with no human seat start in Alliances of two (core `GameSetup::ai_alliances`). Omitted when off. */
+  ai_alliances?: boolean;
   /** Core rule experiments (only the switches the app reads); omitted when all default. */
   rule_experiments?: RuleSwitches;
 }
@@ -1380,6 +1433,8 @@ export interface CourierHallView {
   tile?: Hex;
 }
 export interface ImperialDiwanView { of: PlayerId; holder: PlayerId; city: CityId }
+/** A city that carries a faction goal's VP for whoever holds it (core `view::GoalCityView`): Rome's Colonia Victrix, Egypt's Royal Tomb. */
+export interface GoalCityView { of: PlayerId; holder: PlayerId; city: CityId; at: Hex; name: string }
 
 export interface FactionGoalView {
   value: number;
@@ -1420,6 +1475,8 @@ export interface SettlementScore {
   band: SiteBand;
   /** A visible foreign border makes an unseen city within spacing range possible. */
   border_risk: boolean;
+  /** Rome only: this founder, founding here, founds the Colonia Victrix (core `goals::known_colonia_site`). Absent when false. */
+  colonia?: boolean;
   rank: number | null;
   travel_turns: number | null;
 }

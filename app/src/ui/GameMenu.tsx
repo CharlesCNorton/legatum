@@ -1,10 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { hostedSaveText, saveFile, useGame, type SaveFile } from '../store';
+import { currentCampaign, hostedSaveText, saveFile, useGame, type SaveFile } from '../store';
+import { EarlierTurnDialog } from './EarlierTurnDialog';
 import { openGuide } from './guideState';
-import { HintSettings } from './FirstGameHints';
-import { HapticsSettings } from './HapticsSettings';
-import { SoundSettings } from './SoundSettings';
-import { CombatFxSettings } from './CombatFxSettings';
+import { SettingsDialog } from './SettingsDialog';
 import { loadFromFile, saveToFile } from '../platform/files';
 import { checkSaveText } from '../platform/saveLimits';
 import { loadErrorMessage, parseSaveFile } from '../saveErrors';
@@ -51,6 +49,8 @@ export async function pickSaveFile(onLoad: (s: SaveFile) => void | Promise<void>
 
 export function GameMenu() {
   const [open, setOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [earlier, setEarlier] = useState(false);
   const [activeSeconds, setActiveSeconds] = useState(0);
   const ref = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
@@ -58,7 +58,6 @@ export function GameMenu() {
   const set = useGame((s) => s.set);
   const goto = useGame((s) => s.goto);
   const hash = useGame((s) => s.lastHash);
-  const hasReport = useGame((s) => !!s.report);
   const kind = useGame((s) => s.client?.kind);
   const leaveOnline = useGame((s) => s.leaveOnline);
   const hostHere = useGame((s) => !!s.net?.status.is_local);
@@ -108,6 +107,7 @@ export function GameMenu() {
           <path d="M3 5h12M3 9h12M3 13h12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
         </svg>
       </button>
+      {earlier && turn !== undefined && <EarlierTurnDialog campaign={currentCampaign()} current={turn} onClose={() => { setEarlier(false); trigger.current?.focus(); }} />}
       {open && (
         <div className="menu-pop" id="game-menu">
           {kind !== 'remote' && <p className="menu-foot" aria-label="Active play time">Active play: {formatPlayDuration(archivedSeconds + activeSeconds)}</p>}
@@ -122,6 +122,9 @@ export function GameMenu() {
               >
                 Load from file…
               </button>
+              {/* Going back is for games on this screen only: an online game's host would rewind everyone. */}
+              {kind === 'wasm' && turn !== undefined && turn > 1 &&
+                <button onClick={() => (setOpen(false), setEarlier(true))}>Load an earlier turn…</button>}
               <hr />
             </>
           )}
@@ -131,16 +134,10 @@ export function GameMenu() {
               <hr />
             </>
           )}
-          <HintSettings />
-          <HapticsSettings />
-          <SoundSettings />
-          <CombatFxSettings />
+          <button onClick={() => (setOpen(false), setSettingsOpen(true))}>Settings</button>
           <hr />
           <button onClick={() => (trigger.current?.focus(), setOpen(false), openGuide())}>How to Play (?)</button>
-          <button onClick={() => (trigger.current?.focus(), set({ techOpen: true }), setOpen(false))}>Technologies (T)</button>
-          <button onClick={() => (trigger.current?.focus(), set({ citiesOpen: true }), setOpen(false))}>Cities (C)</button>
-          {/* A loaded save has no report until the next turn resolves: don't offer a no-op. */}
-          <button disabled={!hasReport} onClick={() => (trigger.current?.focus(), set({ reportOpen: true, reportTurn: null }), setOpen(false))}>Last turn report (L)</button>
+          <button onClick={() => (trigger.current?.focus(), set({ techOpen: true }), setOpen(false))}>Research (T)</button>
           <hr />
           {kind === 'remote' ? (
             hostHere ? (
@@ -173,6 +170,7 @@ export function GameMenu() {
           </details>
         </div>
       )}
+      {settingsOpen && <SettingsDialog onClose={() => { setSettingsOpen(false); trigger.current?.focus(); }} />}
     </div>
   );
 }

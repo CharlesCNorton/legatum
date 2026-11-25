@@ -15,9 +15,8 @@ import { bankruptcyWarning, FORECAST_ASSUMPTIONS } from './forecastWarnings';
 import { usePhoneLayout } from './usePhoneLayout';
 import { ScienceHoverSummary } from './ScienceHover';
 import { Amount, Amounts, Quantity } from './Amounts';
-import { VpChip } from './ObjectiveSheet';
 import { CitiesButton } from './CitiesOverview';
-import { HoardReadout } from './FactionGoalProgress';
+import { HoardReadout, TombReadout } from './FactionGoalProgress';
 import { LevyCounter } from './Levy';
 import { DecadenceNote } from './DecadenceNote';
 import { pendingSpend } from './productionPurchases';
@@ -26,12 +25,13 @@ import { TrainingLine, TrainingTip } from './Training';
 /**
  * Desktop and tablet top bar compaction, in order: each step hides more secondary text (all of it
  * stays in the tooltips) until the totals fit and the research cell shows its text in full. The
- * first step drops the Technologies button (the research cell opens the same dialog); the resource names go late,
+ * Egypt's Royal Tomb readout goes to its short form ("6/15") early, before the brand or the Gold income go. The
+ * resource names go late,
  * and the painted resource art keeps the strategic resources apart after them. The "Pop." and "Armed" words go first, and shortage chips keep their names at every size. The
  * research cell truncates only after the last step. Measured, not media queries, because what the
  * bar holds varies (0 to 6 supply chips, the treasury warning, a one- or two-line research plan).
  */
-const TOP_BAR_COMPACTION = ['counts', 'nav', 'cities', 'warning', 'tight', 'score', 'era', 'brand', 'incomes', 'hoard', 'art', 'names', 'label', 'eraname', 'erachip'] as const;
+const TOP_BAR_COMPACTION = ['counts', 'cities', 'tomb', 'warning', 'tight', 'era', 'brand', 'incomes', 'hoard', 'art', 'names', 'label', 'eraname', 'erachip'] as const;
 
 function fitsTopBar(bar: HTMLElement) {
   const stats = bar.querySelector<HTMLElement>('.tb-stats');
@@ -116,6 +116,7 @@ export function TopBar() {
           <HoardReadout view={view} gold={gold} />
           <span className={e.gold_per_turn.total < 0 ? 'neg' : 'pos'}>({signed(e.gold_per_turn.total)})</span>
         </Tip>
+        <TombReadout view={view} />
         {!phone && warning && e.bankruptcy && (
           <Tip className="gold-warning" content={warning}>
             <span className="gold-warning-text"><b><Icon name="ui-alert" size={13} className="ui-mark" /> Treasury <Quantity value={e.bankruptcy.gold.total} unit="Gold" /><span className="gw-long"> next turn</span></b><span className="gw-long"> {e.bankruptcy.disband ? `${itemName({ kind: 'Unit', unit: e.bankruptcy.disband.kind }, view.players.find((p) => p.id === view.me)?.faction)} will be disbanded` : 'treasury resets to 0'}</span></span>
@@ -143,13 +144,12 @@ export function TopBar() {
         {!phone && <Tip content={<>
           <div className="bd-title">{eraName(r.era)} era</div>
           <div>{r.era_known} of {r.era_total} {eraName(r.era)} technologies known. Only this era's technologies can be researched; finishing them all enters the next era.</div>
-          <div className="bd-note">Click to open research.</div>
         </>} summary={`${eraName(r.era)} era: ${r.era_known} of ${r.era_total} technologies known`} className="era-chip-tip">
-          <button className="era-chip" data-testid="era-chip" aria-label={`${eraName(r.era)} era, ${r.era_known} of ${r.era_total} technologies known. Open research`} onClick={() => set({ techOpen: true })}>
+          <span className="era-chip" data-testid="era-chip" aria-label={`${eraName(r.era)} era, ${r.era_known} of ${r.era_total} technologies known`}>
             <span className="era-chip-numeral" aria-hidden="true">{eraNumeral(r.era)}</span>
             <span className="era-chip-name">{eraName(r.era)}</span>
             <small className="era-chip-count">{r.era_known}/{r.era_total}</small>
-          </button>
+          </span>
         </Tip>}
         <div className="research-slot">
           <button className={`research-chip ${researching ? '' : 'needs'}`} onClick={() => set({ techOpen: true })}>
@@ -182,11 +182,6 @@ export function TopBar() {
           <span className="turn-year" data-testid="turn-year">· {calendarLabel(view.turn)}</span>
           <TrainingLine />
         </Tip>
-        <VpChip />
-        {/* The research cell opens the same dialog, so the most crowded bar drops this button. */}
-        <button className="tb-nav tb-nav-tech" onClick={() => set({ techOpen: true })}>
-          Technologies
-        </button>
         <CitiesButton />
         <GameMenu />
       </div>

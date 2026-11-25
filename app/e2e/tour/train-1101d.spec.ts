@@ -31,7 +31,7 @@ for (const size of SIZES) test.describe(`train 1101d ${size.name}`, () => {
     const s = improvementCity({ techs: ['Masonry', 'IronWorking'] });
     s.cities[0].producing = { kind: 'Building', building: 'Granary' };
     s.cities[0].prod = 12;
-    s.cities[0].productionQueue = [{ kind: 'Unit', unit: 'Soldier' }] as never;
+    s.cities[0].productionQueue = [{ kind: 'Unit', unit: 'Spearman' }] as never;
     await loadFixture(page, coreFixture(s), 12);
     await selectThing(page, 'city', s.cities[0].id);
     const panel = page.locator('.city-panel');
@@ -130,7 +130,7 @@ for (const size of SIZES) test.describe(`train 1101d ${size.name}`, () => {
       const status = page.locator('.unit-panel .up-status');
       await expect(status).toHaveText(text, { ignoreCase: true });
       await expect(status).toHaveClass(/standing/);
-      // Neutral ink, not the accent red of "Awaiting orders" (computed, since both are text colours on the same card).
+      // Neutral ink, not the accent red of "Needs orders" (computed, since both are text colours on the same card).
       const [ink, accent] = await status.evaluate((el) => {
         const probe = (v: string) => { const d = document.createElement('i'); d.style.color = `var(${v})`; document.body.append(d); const c = getComputedStyle(d).color; d.remove(); return c; };
         return [getComputedStyle(el).color, probe('--accent')];
@@ -147,7 +147,7 @@ for (const size of SIZES) test.describe(`train 1101d ${size.name}`, () => {
     f.units.find((u) => u.id === 0)!.hp = 100;
     await loadFixture(page, coreFixture(f), 2);
     const at = await posOf(page, 'unit', 0);
-    const events: Event[] = [{ type: 'UnitHealed', unit: 0, owner: 0, unit_kind: 'Soldier', at } as Event];
+    const events: Event[] = [{ type: 'UnitHealed', unit: 0, owner: 0, unit_kind: 'Spearman', at } as Event];
     await stageHallReport(page, events);
     await dismissCelebrations(page);
     await park(page, size);
@@ -224,7 +224,7 @@ for (const size of SIZES) test.describe(`train 1101d ${size.name}`, () => {
     await shot(page, size, 'd33-capital-taken-rival-card');
     await dismissCelebrations(page);
     // The ledger with a capital taken.
-    await page.getByRole('button', { name: /^Every way to score/ }).click();
+    await page.locator('.vp .vhc-head button.link').click();
     const sheet = page.getByTestId('objective-sheet');
     await expect(sheet.locator('.sl-table')).toBeVisible();
     await sheet.locator('[data-row="capitals-held"]').scrollIntoViewIfNeeded();

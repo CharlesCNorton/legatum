@@ -197,7 +197,7 @@ struct Metrics {
     peace_turn: BTreeMap<(u8, u8), u32>,
     /// Turn -> every living empire's Iron and Coal supply, what uses it, and its units.
     strategic: BTreeMap<u32, Value>,
-    /// Per player: [Troopers completed, Military Engineers completed] over the whole game.
+    /// Per player: [Pikemen completed, Military Engineers completed] over the whole game.
     strategic_built: BTreeMap<u8, [i64; 2]>,
     /// Per AI: reached Flight, Fighters completed (including buys), Bomber strikes intercepted.
     air: BTreeMap<u8, AirMetrics>,
@@ -589,7 +589,7 @@ fn strategic_standings(state: &legatum_core::GameState) -> Value {
                 "iron_used": legatum_core::resources::in_use(state, p.id, Resource::Iron),
                 "coal": legatum_core::resources::supplied(state, p.id, Resource::Coal),
                 "coal_used": legatum_core::resources::in_use(state, p.id, Resource::Coal),
-                "troopers": count(&[UnitKind::Trooper]),
+                "troopers": count(&[UnitKind::Pikeman]),
                 "siege_units": state.units.values().filter(|u| u.owner == p.id && u.siege).count(),
                 "military": state.units.values().filter(|u| u.owner == p.id && class_key(u.kind).is_some()).count(),
             })
@@ -920,7 +920,7 @@ fn play(
                         d.options.iter().any(|o| {
                             o.item
                                 == legatum_core::ProductionItem::Building {
-                                    building: legatum_core::BuildingKind::InferenceCore,
+                                    building: legatum_core::BuildingKind::ResearchLab,
                                 }
                                 && o.supply_need == Some(oil)
                         })
@@ -1192,7 +1192,7 @@ fn play(
             } = event
             {
                 let row = metrics.strategic_built.entry(owner.0).or_default();
-                if *unit == legatum_core::UnitKind::Trooper {
+                if *unit == legatum_core::UnitKind::Pikeman {
                     row[0] += 1;
                 }
             }
@@ -1929,17 +1929,20 @@ mod tests {
         // with searching rivals the seat then wins by elimination at T173 on this fixed tape.
         // The leader war and the siege clock (2026-11-21) returned it to five cities at T62 and two VP at T100, with no win; with the clock off by default (held-out finding, 2026-11-21) it is four cities at T62, no VP at T100 and the elimination win at T173 of the survive-him genes.
         // World Ages as the only era scoring, with its peaceful cards (rules 50, 2026-11-22), keeps four cities at T62 and no VP at T100, and the seat no longer wins on this tape.
+        // Hard weighing a site's whole ring-one terrain (site_terrain_weight 20, 2026-11-22) gives five cities at T50 and T62, two VP at T100 and an elimination win at T154.
+        // Peaceful contests (rules 51, 2026-11-22: the stronger side takes a contested tile between empires not at War) give four cities at T50, five at T62, no VP at T100 and no win.
+        // The Mongols never having Walls (rules 57, 2026-11-22) leaves the Mongol rival open, and the seat wins by elimination at T164.
         assert_eq!(
             first_map_game(true),
             json!({
                 "cities_t30": 3,
                 "cities_t50": 4,
-                "cities_t62": 4,
+                "cities_t62": 5,
                 "vp_t100": 0,
                 "vp_t60": 0,
-                "win": false,
-                "win_turn": null,
-                "win_type": null,
+                "win": true,
+                "win_turn": 164,
+                "win_type": "elimination",
             })
         );
     }
@@ -1965,17 +1968,20 @@ mod tests {
         // Founded capitals (rules 45) move this fixed tape to 3/4/5 cities and 2 VP at T100.
         // The survive-him genes (2026-11-21: neighbour_alarm, the production-thrash fix) leave four cities at T62 and no VP at T100.
         // The leader war and the siege clock (2026-11-21) left five cities at T62, no VP at T100 and an elimination win at T169; with the clock off by default (held-out finding, 2026-11-21) it is four cities at T62, no VP at T100 and no win.
+        // Hard weighing a site's whole ring-one terrain (site_terrain_weight 20, 2026-11-22) gives five cities at T50 and T62, two VP at T100 and an elimination win at T225.
+        // Peaceful contests (rules 51, 2026-11-22: the stronger side takes a contested tile between empires not at War) give four cities at T50, five at T62, no VP at T100 and no win.
+        // The Mongols never having Walls (rules 57, 2026-11-22) leaves the Mongol rival open, and the seat wins by elimination at T183.
         assert_eq!(
             first_map_game(false),
             json!({
                 "cities_t30": 3,
                 "cities_t50": 4,
-                "cities_t62": 4,
+                "cities_t62": 5,
                 "vp_t100": 0,
                 "vp_t60": 0,
-                "win": false,
-                "win_turn": null,
-                "win_type": null,
+                "win": true,
+                "win_turn": 183,
+                "win_type": "elimination",
             })
         );
     }

@@ -1,14 +1,14 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState, type Ref } from 'react';
+import { empireOfPlayer } from '../empires';
 import { useGame } from '../store';
 import { feel } from '../feel';
 import type { Faction, PlayerView, TechId } from '../types';
-import { TECH_NAME } from '../data';
+import { ERA_COUNT, TECH_NAME } from '../data';
 import { effectiveResearchQueue } from '../orders';
 import { firstScienceForecast } from '../research';
 import { revealedByTech } from '../resources';
 import { resourceArtUrl } from '../icons';
 import { ResearchQueue, editQueue } from './ResearchQueue';
-import { markQueueHintSeen } from './queueHint';
 import { flyToQueue } from './flyChip';
 import { BreakdownTable, Icon, Tip, YieldIcon } from './index';
 import { closeTips } from './Tip';
@@ -25,7 +25,7 @@ import { pendingSpend } from './productionPurchases';
 function EraBadge({ view }: { view: PlayerView }) {
   const r = view.research;
   const who = eraFirst(r, r.era);
-  const first = who === null ? null : who === view.me ? 'You were first into this era' : `${view.players.find((p) => p.id === who)?.name ?? 'A rival'} was first into this era`;
+  const first = who === null ? null : who === view.me ? 'You were first into this era' : `${empireOfPlayer(view, who)} was first into this era`;
   const rows = eraRows(r);
   return <div className="era-badge" data-testid="era-badge" aria-label={`${r.era_name} era, ${r.era_known} of ${r.era_total} technologies known`}>
     <span className="era-badge-numeral" aria-hidden="true">{eraNumeral(r.era)}</span>
@@ -103,7 +103,12 @@ export function TechPanel() {
     return () => { cancel?.(); window.clearTimeout(done); };
   }, [picked]);
   useEffect(() => {
-    if (inspected) detail.current?.scrollIntoView({ block: 'nearest', behavior: 'instant' });
+    if (!inspected) return;
+    detail.current?.scrollIntoView({ block: 'nearest', behavior: 'instant' });
+    // A short window can't hold a tall card and its details at once: keep the card's name in view, details below.
+    const scroller = detail.current?.closest<HTMLElement>('.research-scroll');
+    const head = scroller?.querySelector<HTMLElement>(`.era-card[data-tech="${inspected}"]`);
+    if (scroller && head && head.getBoundingClientRect().top < scroller.getBoundingClientRect().top) scroller.scrollTop -= scroller.getBoundingClientRect().top - head.getBoundingClientRect().top + 4;
   }, [inspected]);
   if (!visible || !view) return null;
   const r = view.research;
@@ -135,7 +140,6 @@ export function TechPanel() {
   };
   const addToQueue = (tech: TechId) => {
     if (view.finished || queue.includes(tech)) return;
-    markQueueHintSeen();
     editQueue(view, appendToQueue(queue, tech));
     announce(tech);
   };
@@ -184,7 +188,7 @@ export function TechPanel() {
           </div>
         </section>}
         <section className="era-current" aria-label={`${eraName(r.era)} era technologies`}>
-          <h3 className="era-heading">{eraName(r.era)} era <span className="muted">· only these can be researched now; finish them all to enter the next era{view.eras?.some((x) => x.era === r.era + 2) ? ' and open its three VP objectives' : ''}</span></h3>
+          <h3 className="era-heading">{eraName(r.era)} era <span className="muted">· only these can be researched now{r.era < ERA_COUNT - 1 ? '; finish them all to enter the next era' : ''}</span></h3>
           <div className="era-cards" data-count={cards.length}>
             {cards.map((option) => {
               const queueIndex = queue.indexOf(option.tech);

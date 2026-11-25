@@ -10,9 +10,9 @@ import { improvementTitle } from './improvements';
 import type { Breakdown, CityView, Event, Faction, Hex, PlayerId, PlayerView, ProductionItem, Resource, TechId, UnitKind, UpkeepPreview } from './types';
 import { techCardUnlocks, techUnlockSummary } from './ui/techCardUnlocks';
 import { eraName } from './ui/eraResearch';
-import { cardName } from './ageCards';
+import { cardName, cardNameAndAsk } from './ageCards';
 import { CITY_HEAL, CITY_HP, cityCanFire } from './combat';
-import { BUILDING_NAME, FACTION_ADJECTIVE, FACTION_GOAL, factionGoalVp, RULES, TECH_NAME, CAPTURE_RESISTANCE_TURNS, eraScaled, factionGoalRule, UNIT_NAME, itemName, pluralUnit } from './data';
+import { ageName, BUILDING_NAME, unitIconName, FACTION_ADJECTIVE, FACTION_GOAL, factionGoalVp, RULES, TECH_NAME, CAPTURE_RESISTANCE_TURNS, eraScaled, factionGoalRule, UNIT_NAME, itemName, pluralUnit } from './data';
 import { closeObjectives } from './eraObjectives';
 import { bearing, empireNameOf, empireOfPlayer, empireTitle, PEOPLE_NAME, placeName } from './empires';
 import { CAMP_CLEAR_GOLD, isBarbarian } from './barbarians';
@@ -20,6 +20,7 @@ import { STRENGTH_PERCENT } from './promotion';
 import { distance, hexEq } from './hex';
 import { releasedGarrison } from './releasedGarrison';
 import { sakokuTarget } from './sakoku';
+import { GOAL_CITY_ICON, GOAL_CITY_TITLE, goalCityKindOf } from './goalCities';
 import { cityHits, forceText, fromText } from './siege';
 import { foundCityBlocker } from './settlement';
 import { claimedTile, growthUnlocks } from './milestones';
@@ -36,6 +37,8 @@ export const FRIEND_BLOCK_PREFIX = 'blocked by ';
 export const TARGET_GONE = 'its target was destroyed before it could attack';
 /** Core `PEACE_BLOCK_PREFIX`: a move onto a unit of a team at Peace; the rest names that unit. */
 export const PEACE_BLOCK_PREFIX = 'at Peace: ';
+/** Core `OUTMATCHED_PREFIX`: a stronger unit of a team not at War took the tile this unit also stepped onto; the rest names it and both strengths. */
+export const OUTMATCHED_PREFIX = 'outmatched: ';
 
 export type EventCategory = 'attack' | 'combat' | 'cities' | 'movement' | 'science' | 'victory' | 'economy' | 'orders' | 'diplomacy' | 'discoveries';
 
@@ -250,11 +253,11 @@ function renamePlayers(view: PlayerView, text: string): string {
 /** Use the viewer's empire names only when a core reason's subject uniquely identifies a player. */
 function renameSubject(view: PlayerView, text: string): string {
   for (const p of [...view.players].sort((a, b) => b.name.length - a.name.length)) {
-    const subject = new RegExp(`^${escapeRegExp(p.name)} (was|were|could not) `);
+    const subject = new RegExp(`^${escapeRegExp(p.name)} (was|were|could not|brought|took) `);
     if (!subject.test(text)) continue;
     if (view.players.filter((other) => other.name === p.name).length !== 1) return text;
     return text.replace(subject, (_, verb: string) =>
-      p.id === view.me ? `you ${verb === 'could not' ? verb : 'were'} ` : `${empireNameOf([p], view.players)} ${verb} `);
+      p.id === view.me ? `you ${verb === 'was' ? 'were' : verb} ` : `${empireNameOf([p], view.players)} ${verb} `);
   }
   return text;
 }
@@ -322,7 +325,7 @@ function combinedAssaults(events: Event[]): Map<string, Battle[]> {
 }
 const assaultKey = (d: Battle['defender']) => (d.kind === 'City' ? `City:${d.city}` : `Unit:${d.unit}`);
 
-/** "your 3 Oathbearers", "Switzerland' 2 Soldiers and Trooper": who joined a combined assault. */
+/** "your 3 Spartan Hoplites", "Switzerland' 2 Spearmen and Pikeman": who joined a combined assault. */
 function assaultForce(ctx: ReportContext, fights: Battle[]): string {
   const counts = new Map<string, number>();
   for (const b of fights) {
@@ -386,26 +389,24 @@ export function cityHealStatus(city: CityView): { blocked: boolean; text: string
  * city panel, tile card and attack forecast.
  */
 export function cityFireStatus(view: PlayerView, city: CityView): { fires: boolean; text: string } {
-  const wall = view.players.find((p) => p.id === city.owner)?.faction === 'Switzerland' ? 'Alpine Redoubt' : 'Walls';
-  if (!city.walls) return { fires: false, text: `No ${wall}: can't fire` };
+  const faction = view.players.find((p) => p.id === city.owner)?.faction;
+  const wall = faction === 'Switzerland' ? 'Alpine Redoubt' : 'Walls';
+  // Core `data::never_walls`: a Mongol city never has Walls, so the status names the rule, not a fix.
+  if (!city.walls) return { fires: false, text: faction === 'Mongols' ? "Can't fire: Mongols never build Walls" : `No ${wall}: can't fire` };
   if (!cityCanFire(city.walls, city.hp)) return { fires: false, text: "0 HP: can't fire" };
   return { fires: true, text: `${wall}: fires at units within 2 tiles` };
 }
 
-/** Each empire's first 2 military units are free; every extra costs 1 Gold/turn, 3 for the
- * Switzerland. Scouts and civilians never cost upkeep and never use a free slot. One rule, one wording: the production picker, unit panel
- * and Guide all describe upkeep this way. */
-const FREE_MILITARY_UNITS = 2;
-
-/** A production card's upkeep line, for a unit not yet built (legatum-ui: "every build card
+/** Each empire's first 2 military units are free (core `FREE_MILITARY_UNITS`); every extra costs 1 Gold/turn, 3 for Switzerland. Scouts and civilians never cost upkeep.
+ * A production card's upkeep line, for a unit not yet built (legatum-ui: "every build card
  * shows its ongoing cost"). Undefined `upkeep` means a Scout or civilian (Settlers included): no upkeep. */
 export function upkeepText(upkeep?: UpkeepPreview | null): string {
   if (!upkeep) return 'No upkeep';
-  if (upkeep.free) return `Upkeep: free · ${upkeep.free_slots_left} of ${FREE_MILITARY_UNITS} slots left`;
+  if (upkeep.free) return `Upkeep: free (${upkeep.free_slots_left === 1 ? '1 more free unit' : `${upkeep.free_slots_left} more free units`})`;
   return `Upkeep: −${upkeep.rate} Gold/turn`;
 }
 
-/** A city's automatic shot (cities fire back): "Levy Reach fired on Switzerland' Soldier at …: −14 HP". */
+/** A city's automatic shot (cities fire back): "Levy Reach fired on Switzerland' Spearman at …: −14 HP". */
 function cityShotLine(e: Battle, city: number, ctx: ReportContext, mine: Mine): ReportLine {
   const name = ctx.cityName(city);
   const shooter = e.attacker_owner === ctx.me ? name : `${possessiveOf(who(ctx, e.attacker_owner))} city ${name}`;
@@ -435,7 +436,7 @@ function cityShotLine(e: Battle, city: number, ctx: ReportContext, mine: Mine): 
 
 /**
  * One battle as a report line that answers "who hit what, where, from where, and what it cost":
- * "Hollow Crown's Archer bombarded your Ranger at Beacon from 2 tiles NE: −35 HP (65 left)".
+ * "Hollow Crown's Archer bombarded your Archer at Beacon from 2 tiles NE: −35 HP (65 left)".
  * Melee lines also carry what happens next (G18, G21): an attack whose defender survived ends the
  * attacker's order ("Needs orders"), and a unit hit while pulling back either got away or was stopped.
  */
@@ -557,7 +558,7 @@ function heirGoalLine(e: GoalEvent, ctx: ReportContext): ReportLine {
   const subject = (p: PlayerId) => (p === ctx.me ? 'You' : who(ctx, p));
   const gain = (p: PlayerId) => (mine(p) ? ` (+${e.vp} VP)` : '');
   const loss = (p: PlayerId) => (mine(p) ? ` (−${e.vp} VP)` : '');
-  const base = { weight: 2, icon: 'unit-heir' } as const;
+  const base = { weight: 2, icon: 'unit-heirtothethrone' } as const;
   if (e.type === 'FactionGoalLost') {
     const text = isByzantium(e.player) ? `${subject(e.player)} lost the Heir: nobody scores until he is held again` : `${subject(e.player)} lost Byzantine Heir`;
     return line('victory', `${text}${loss(e.player)}`, { ...base, players: [e.player], tone: mine(e.player) ? 'bad' : 'neutral' });
@@ -580,8 +581,8 @@ function heirGoalLine(e: GoalEvent, ctx: ReportContext): ReportLine {
 }
 
 /**
- * Mongols's held goal: the Courier Hall. A capture is one line from the new holder's gain, with the
- * old holder's loss folded in (see `formatEvents`); a Hall built has no loss beside it; a loss with
+ * Mongols's held goal: the Yam Relay Station. A capture is one line from the new holder's gain, with the
+ * old holder's loss folded in (see `formatEvents`); a Station built has no loss beside it; a loss with
  * no new holder is its city sacked (or taken by barbarians). The city's name comes from the capture
  * or completion event when the viewer saw one.
  */
@@ -589,8 +590,8 @@ function hallGoalLine(e: GoalEvent, ctx: ReportContext): ReportLine {
   const mine = (p: PlayerId) => p === ctx.me || ctx.team.includes(p);
   const subject = (p: PlayerId) => (p === ctx.me ? 'You' : who(ctx, p));
   const events = ctx.events ?? [];
-  const built = (p: PlayerId) => events.find((x): x is Extract<Event, { type: 'ProductionCompleted' }> => x.type === 'ProductionCompleted' && x.owner === p && (x.item.kind === 'Building' || x.item.kind === 'Wonder') && x.item.building === 'CourierHall');
-  const base = { weight: 2, icon: 'building-courierhall' } as const;
+  const built = (p: PlayerId) => events.find((x): x is Extract<Event, { type: 'ProductionCompleted' }> => x.type === 'ProductionCompleted' && x.owner === p && (x.item.kind === 'Building' || x.item.kind === 'Wonder') && x.item.building === 'YamRelayStation');
+  const base = { weight: 2, icon: 'building-yamrelaystation' } as const;
   if (e.type === 'FactionGoalLost') {
     const razed = events.find((x): x is Extract<Event, { type: 'CityRazed' }> => x.type === 'CityRazed' && x.from === e.player);
     const lost = mine(e.player) ? ` (−${e.vp} VP)` : '';
@@ -614,6 +615,54 @@ function hallGoalLine(e: GoalEvent, ctx: ReportContext): ReportLine {
   if (mine(taker)) return line('victory', `${subject(taker)} took the Yam Relay Station${where} from ${whom(ctx, from)}: the open road is ${taker === ctx.me ? 'yours' : 'your team’s'} now, and every empire crosses ${taker === ctx.me ? 'your' : 'its'} land at Peace${gain}`, { ...opts, tone: 'good' });
   if (mine(from)) return line('victory', `${subject(taker)} took the Yam Relay Station${where} from ${from === ctx.me ? 'you' : whom(ctx, from)}: the open road and the points went with the city. Retake it to get them back${from === ctx.me ? ' (−' + e.vp + ' VP)' : ''}`, { ...opts, tone: 'bad' });
   return line('victory', `${who(ctx, taker)} took the Yam Relay Station${where}: every empire may now cross ${possessiveOf(who(ctx, taker))} land at Peace`, { ...opts, tone: 'neutral' });
+}
+
+/**
+ * Rome's Colonia Victrix and Egypt's Royal Tomb: held goals in a city. A capture is one line from
+ * the new holder's gain, with the old holder's loss folded in (see `formatEvents`); a founding is
+ * the Colonia's first line (the tomb's `TombRaised` folds into this one); a loss with no new
+ * holder is its city razed.
+ */
+function goalCityGoalLine(e: GoalEvent, ctx: ReportContext): ReportLine {
+  const kind = goalCityKindOf(e.faction)!;
+  const title = GOAL_CITY_TITLE[kind];
+  const mine = (p: PlayerId) => p === ctx.me || ctx.team.includes(p);
+  const ours = ctx.playerFaction?.(ctx.me) === e.faction;
+  // "your Colonia Victrix" for Rome itself, "Rome's Colonia Victrix" for everyone else.
+  const whose = ours ? `your ${title}` : `${possessiveOf(e.faction)} ${title}`;
+  const events = ctx.events ?? [];
+  const base = { weight: 2, icon: GOAL_CITY_ICON[kind] } as const;
+  if (e.type === 'FactionGoalLost') {
+    const razed = events.find((x): x is Extract<Event, { type: 'CityRazed' }> => x.type === 'CityRazed' && x.from === e.player);
+    const lost = mine(e.player) ? ` (−${e.vp} VP)` : '';
+    const again = ours ? (kind === 'colonia' ? 'Found another' : 'Build another') : kind === 'colonia' ? 'Rome may found another' : 'Egypt may build another';
+    const text = razed
+      ? `${cap(whose)} is gone: ${ctx.cityName(razed.city)} was razed. ${again}`
+      : `${who(ctx, e.player)} lost ${whose}: nobody scores until its city is retaken`;
+    return line('victory', `${text}${lost}`, { ...base, players: [e.player], ...(razed ? { at: razed.at } : {}), tone: mine(e.player) ? 'bad' : 'neutral' });
+  }
+  const taker = e.player;
+  const gain = mine(taker) ? ` (+${e.vp} VP while you hold it)` : '';
+  const captured = events.find((x): x is Extract<Event, { type: 'CityCaptured' }> => x.type === 'CityCaptured' && x.to === taker);
+  if (!captured) {
+    const founded = kind === 'colonia' ? events.find((x): x is Extract<Event, { type: 'CityFounded' }> => x.type === 'CityFounded' && x.owner === taker) : undefined;
+    const raised = kind === 'tomb' ? events.find((x): x is Extract<Event, { type: 'TombRaised' }> => x.type === 'TombRaised' && x.player === taker) : undefined;
+    const name = founded?.name ?? raised?.name;
+    const where = founded?.at ?? raised?.at;
+    const text = kind === 'colonia'
+      ? (taker === ctx.me ? `You founded ${name ?? 'a city'}: it is your Colonia Victrix${gain}` : `${who(ctx, taker)} founded its Colonia Victrix${name ? ` at ${name}` : ''}: ${e.vp} VP to whoever holds it`)
+      : (taker === ctx.me ? `The Royal Tomb stands in ${name ?? 'your capital'}: your cities build and grow again${gain}` : `${possessiveOf(who(ctx, taker))} Royal Tomb stands${name ? ` in ${name}` : ''}: ${e.vp} VP to whoever holds it`);
+    return line('victory', text, { ...base, players: [taker], ...(where ? { at: where } : {}), tone: mine(taker) ? 'good' : 'neutral' });
+  }
+  const from = captured.from;
+  const city = ctx.cityName(captured.city);
+  const opts = { ...base, players: [taker, from], at: ctx.cityPos(captured.city) };
+  if (mine(taker)) {
+    const text = ours && taker === ctx.me ? `You retook your ${title}, ${city}` : `${who(ctx, taker)} took ${whose}, ${city}, from ${whom(ctx, from)}`;
+    return line('victory', `${text}${gain}`, { ...opts, tone: 'good' });
+  }
+  if (mine(from)) return line('victory', `${who(ctx, taker)} took ${whose}, ${city}: retake the city to score again${from === ctx.me ? ` (−${e.vp} VP)` : ''}`, { ...opts, tone: 'bad' });
+  return line('victory', `${who(ctx, taker)} took ${whose}, ${city}, from ${whom(ctx, from)}: ${who(ctx, taker)} now scores the ${e.vp} VP`, { ...opts, tone: 'neutral' });
 }
 
 /** Format one event, with its report icon. UnitMoved steps are collapsed by `formatEvents`. */
@@ -891,6 +940,15 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
           details: ['A move never attacks a unit of a team at Peace. To attack it, click it and confirm Declare War; or give this unit a new order.'],
         });
       }
+      // Units of teams not at War stepped onto one tile: the stronger moved in, nobody fought.
+      if (e.reason.startsWith(OUTMATCHED_PREFIX)) {
+        return line('orders', `${unitLabel(ctx, e.unit, e.owner)} couldn't enter ${e.toward ? location(ctx, e.toward) : 'the tile'}: ${rename(e.reason.slice(OUTMATCHED_PREFIX.length))}`, {
+          at: e.at, players: [e.owner], weight: mine(e.owner) ? 2 : 0, tone: 'neutral',
+          details: [mine(e.owner)
+            ? 'Empires not at War never fight over a tile: the stronger side moves in. This unit stayed put and keeps its order; give it a new route.'
+            : 'Empires not at War never fight over a tile: the stronger side moves in. This unit stayed put.'],
+        });
+      }
       // The attack's target died to ranged fire before movement and nothing hostile is left there.
       if (e.reason === TARGET_GONE) {
         return line('orders', `${unitLabel(ctx, e.unit, e.owner)} didn't attack: its target was destroyed first. Needs orders.`, {
@@ -907,7 +965,9 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
       return line('movement', `${unitLabel(ctx, e.unit, e.owner)} was blocked ${e.at ? at(ctx, e.at) : 'beyond sight'}`, {
         at: e.at,
         players: [e.owner],
-        details: [rename(e.reason)],
+        // Core's reason is written for the unit's owner ("against your 30"); for anyone else's unit, name the owner.
+        details: [(e.owner === ctx.me ? rename(e.reason) : rename(e.reason).replace(/ against your /, ` against ${possessive(ctx, e.owner)} `))
+          .replace(/^you /, 'You ')],
         weight: mine(e.owner) ? 1 : 0,
       });
     case 'AttackPursuit': {
@@ -1078,12 +1138,12 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
       const vp = factionGoalVp('Byzantium');
       if (mine(e.owner)) {
         return line('victory', `${e.owner === ctx.me ? 'Your' : `${possessiveOf(who(ctx, e.owner))}`} Heir was born in ${e.city_name}: hold him to score ${vp} VP, and keep him safe`, {
-          at: e.at, players: [e.owner], weight: 2, tone: 'good', icon: 'unit-heir',
+          at: e.at, players: [e.owner], weight: 2, tone: 'good', icon: 'unit-heirtothethrone',
           details: ['Every empire was told where he was born. His position is public from now on: a rival that captures him scores the points.'],
         });
       }
       return line('victory', `${possessiveOf(who(ctx, e.owner))} Heir was born in ${e.city_name}: be at War, then capture him to score ${vp} VP`, {
-        at: e.at, players: [e.owner], weight: 2, tone: 'neutral', icon: 'unit-heir',
+        at: e.at, players: [e.owner], weight: 2, tone: 'neutral', icon: 'unit-heirtothethrone',
         details: ['Every empire is told where he was born. His position is public every turn, on the map and the minimap, and whoever holds him scores the points. To capture him you must be at War with his holder.'],
       });
     }
@@ -1232,7 +1292,7 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
       // World Ages: the engine's one announcement of an Age. It names no player, so every report filter shows it. It stands in for the first empire's `EraEntered` line (`formatEvents`).
       const era = ctx.eraName?.(e.era) ?? eraName(e.era - 1);
       const mineFirst = e.first === ctx.me;
-      return line('victory', `The ${era} Age began: ${mineFirst ? 'You' : who(ctx, e.first)} entered the ${era} era first. Its card is open to every empire.`, {
+      return line('victory', `The ${ageName(era)} began: ${mineFirst ? 'You' : who(ctx, e.first)} entered the ${era} era first. Its card is open to every empire.`, {
         players: [], weight: 2, tone: toneFor(e.first), openLedger: true,
         // Every player can see the Age's score check again (the opener its own era-up first).
         reopenEra: { era: e.era, first: mineFirst, age: e.first },
@@ -1241,7 +1301,7 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
     case 'EraObjectiveScored': {
       const name = ctx.eraName?.(e.era);
       const card = ctx.ageCard?.(e.era, e.slot);
-      return line('victory', `${who(ctx, e.player)} scored ${name ? `the ${name} Age` : `Age ${e.era}`} with ${card ? cardName(e.objective) : e.objective}: +1 VP`, {
+      return line('victory', `${who(ctx, e.player)} scored ${name ? `the ${ageName(name)}` : `Age ${e.era}`} with ${card ? cardName(e.objective) : e.objective}: +1 VP`, {
         players: [e.player], weight: 2, tone: toneFor(e.player),
       });
     }
@@ -1254,6 +1314,7 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
         players: [e.player], weight: 2, tone: mine(e.player) ? 'bad' : 'good',
       });
     case 'FactionGoalCompleted':
+      if (goalCityKindOf(e.faction)) return goalCityGoalLine(e, ctx);
       if (e.faction === 'Byzantium') return heirGoalLine(e, ctx);
       if (e.faction === 'Mongols') return hallGoalLine(e, ctx);
       if (e.faction === 'India') {
@@ -1271,6 +1332,7 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
         tone: toneFor(e.player),
       });
     case 'FactionGoalLost':
+      if (goalCityKindOf(e.faction)) return goalCityGoalLine(e, ctx);
       if (e.faction === 'Byzantium') return heirGoalLine(e, ctx);
       if (e.faction === 'Mongols') return hallGoalLine(e, ctx);
       if (e.faction === 'India') return line('victory', `${who(ctx, e.player)} lost the Imperial Diwan (−${e.vp} VP): retake its city to score again`, {
@@ -1301,6 +1363,25 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
         details: [cities],
       });
     }
+    case 'TombStarted': {
+      const left = Math.max(0, RULES.tombTurns - e.turns);
+      return line('victory', e.player === ctx.me
+        ? `You began work on the Royal Tomb: no city builds or grows while it goes on. ${turnsWord(left)} of work left`
+        : `${who(ctx, e.player)} is building its Royal Tomb: its cities do not build or grow. ${turnsWord(left)} of work left`, {
+        players: [e.player], weight: 2, tone: 'neutral', icon: 'goal-royal-tomb',
+      });
+    }
+    case 'TombPaused':
+      return line('victory', e.player === ctx.me
+        ? `You paused the Royal Tomb at ${e.turns} of ${RULES.tombTurns} turns: your cities build and grow again. The count is kept`
+        : `${who(ctx, e.player)} paused its Royal Tomb at ${e.turns} of ${RULES.tombTurns} turns: its cities build and grow again`, {
+        players: [e.player], weight: 2, tone: 'neutral', icon: 'goal-royal-tomb',
+      });
+    case 'TombRaised':
+      // The goal's own line (`FactionGoalCompleted`) names the city and the points; this one stands alone only without it.
+      return line('victory', e.player === ctx.me ? `The Royal Tomb stands in ${e.name}: your cities build and grow again` : `${possessiveOf(who(ctx, e.player))} Royal Tomb stands in ${e.name}`, {
+        at: e.at, players: [e.player], weight: 2, tone: mine(e.player) ? 'good' : 'neutral', icon: 'goal-royal-tomb',
+      });
     case 'SakokuClosed': {
       const turns = sakokuTarget();
       return line('victory', mine(e.player)
@@ -1405,6 +1486,7 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
     case 'SiegeBought':
       return line('economy', `${unitLabel(ctx, e.unit, e.owner)} bought Siege for ${e.gold} Gold: its attacks on a city ignore enemy Walls`, {
         players: [e.owner],
+        icon: ctx.unitKind(e.unit) ? unitIconName(ctx.unitKind(e.unit)!, ctx.playerFaction?.(e.owner)) : undefined,
       });
     case 'UnitUpgraded':
       return line('economy', `${unitLabel(ctx, e.unit, e.owner)} upgraded to ${itemName({ kind: 'Unit', unit: e.to }, ctx.playerFaction?.(e.owner))} for ${e.gold} Gold`, {
@@ -1471,7 +1553,7 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
         at: e.at,
         players: ctx.team,
         weight: 1,
-        details: [`Destroy its guard, then move a military unit onto the camp for ${CAMP_CLEAR_GOLD} Gold. ${ctx.playerFaction?.(ctx.me) === 'Celts' ? 'Barbarians never attack you.' : 'Its scouts bring raiders to cities they find.'}`],
+        details: [`Destroy its guard, then move a military unit onto the camp for ${CAMP_CLEAR_GOLD} Gold. ${ctx.playerFaction?.(ctx.me) === 'Celts' ? "Barbarians don't attack you." : 'Its scouts bring raiders to cities they find.'}`],
       });
     case 'BarbarianScoutSpotted':
       return line('combat', `A barbarian scout spotted ${ctx.cityName(e.city)} and is heading home. Kill it before it reaches its camp, or raiders will follow.`, {
@@ -1509,7 +1591,7 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
  * line ("moved 3 hexes to x,y").
  */
 /**
- * A core order refusal in the words a player reads: "Astra can't train a Spearman: your levies are full (3 of 2)."
+ * A core order refusal in the words a player reads: "Astra can't train a Spearman: you have 3 military units and room for 2."
  * Other reasons keep core's wording after the contraction.
  */
 export function plainOrderError(message: string): string {
@@ -1518,7 +1600,7 @@ export function plainOrderError(message: string): string {
   const [, city, item, why] = m;
   const levy = /^Levies full: (\d+) of (\d+)$/.exec(why);
   const article = /^[AEIOU]/.test(item) ? 'an' : 'a';
-  if (levy) return `${city} can't train ${article} ${item}: your levies are full (${levy[1]} of ${levy[2]}).`;
+  if (levy) return `${city} can't train ${article} ${item}: you have ${levy[1]} military units and room for ${levy[2]}.`;
   return `${city} can't build ${item}: ${plainBlocker(why)}.`;
 }
 
@@ -1530,7 +1612,7 @@ const plainBlocker = (reason: string) => reason
 /**
  * Core reports a city's production changes it didn't choose as OrderFailed: "Hymnal can no longer
  * produce Settler: Settler needs population 2 (currently 1); its 38 Production stays banked", and
- * "Hymnal skipped queued Trooper: Needs 10 Iron …; kept in queue". These read as city news, not a
+ * "Hymnal skipped queued Pikeman: Needs 10 Iron …; kept in queue". These read as city news, not a
  * failed order, and say what happens to the progress and what to do next.
  */
 function cityProductionFailure(reason: string): { city: string; text: string } | null {
@@ -1550,7 +1632,7 @@ function cityProductionFailure(reason: string): { city: string; text: string } |
 }
 
 /**
- * "Waypost Seven was attacked: 200 → 120 HP by 3 Soldiers": one line per own city that took
+ * "Waypost Seven was attacked: 200 → 120 HP by 3 Spearmen": one line per own city that took
  * damage, first in the report (user, 2026-10-08: "I shouldn't be surprised to see that one of my
  * cities is about to get taken over"). The battle lines below it keep the strike-by-strike math.
  */
@@ -1588,7 +1670,9 @@ export function formatEvents(events: Event[], ctx: ReportContext): ReportLine[] 
     // A hand-over of the Imperial Diwan is one line, from the new holder's gain.
     // The birth line says it all: the first completion of Byzantium's goal is the same event.
     if (e.type === 'FactionGoalCompleted' && e.faction === 'Byzantium' && !heirLoss(events) && events.some((x) => x.type === 'HeirBorn' && x.owner === e.player)) continue;
-    if (e.type === 'FactionGoalLost' && (e.faction === 'Byzantium' || e.faction === 'Mongols' || e.faction === 'India') && events.some((x) => x.type === 'FactionGoalCompleted' && x.faction === e.faction)) continue;
+    // The tomb's goal line says it stands, so its TombRaised line folds into it.
+    if (e.type === 'TombRaised' && events.some((x) => x.type === 'FactionGoalCompleted' && x.faction === 'Egypt' && x.player === e.player)) continue;
+    if (e.type === 'FactionGoalLost' && (e.faction === 'Byzantium' || e.faction === 'Mongols' || e.faction === 'India' || e.faction === 'Rome' || e.faction === 'Egypt') && events.some((x) => x.type === 'FactionGoalCompleted' && x.faction === e.faction)) continue;
     if (e.type === 'FactionGoalLost' && events.some((x) => x.type === 'SakokuReopened' && x.player === e.player)) continue;
     // The Age line tells who entered the era first, so the first empire's own entry line folds into it.
     if (e.type === 'EraEntered' && e.first && events.some((x) => x.type === 'AgeBegan' && x.era === e.era)) continue;
@@ -1612,7 +1696,7 @@ export function formatEvents(events: Event[], ctx: ReportContext): ReportLine[] 
         at: e.at, from: e.attacker_at ?? null, players: [e.attacker_owner, d.owner], weight: 2,
         tone: mine(e.attacker_owner) && !mine(d.owner) ? 'good' : mine(d.owner) && !mine(e.attacker_owner) ? 'bad' : 'neutral',
         details: group.map((b) => `${unitLabel(ctx, b.attacker as number, b.attacker_owner)} dealt ${b.damage_to_defender} and took ${b.damage_to_attacker}.`),
-        icon: d.kind === 'City' && hpAfter <= 0 ? 'emblem-captured' : d.kind === 'City' ? 'fortify' : 'unit-soldier',
+        icon: d.kind === 'City' && hpAfter <= 0 ? 'emblem-captured' : d.kind === 'City' ? 'fortify' : 'unit-spearman',
       }));
       continue;
     }
@@ -1667,13 +1751,13 @@ export function releasedGarrisonLines(before: PlayerView | null, after: PlayerVi
 
 /**
  * Age cards you have just come close to (one short of the target, or within a tenth of it), in an Age you have not scored:
- * "Close to the Classical Age's VP: Gain 4 cities (3 of 4, 1 to go)". Only the turn it first gets that close.
+ * "Close to the Classical Age's VP: Dominion, gain 4 cities (3 of 4, 1 to go)". Only the turn it first gets that close.
  */
 export function objectiveCloseLines(before: PlayerView | null, after: PlayerView): ReportLine[] {
   return closeObjectives(before, after).map(({ era, line: o }) => line('victory',
-    `Close to the ${era.name} Age’s VP: ${o.text} (${o.current} of ${o.target}, ${o.remaining} to go)`, {
+    `Close to the ${ageName(era.name)}’s VP: ${cardNameAndAsk(o.text)} (${o.current} of ${o.target}, ${o.remaining} to go)`, {
       players: [after.me], weight: 2, tone: 'good',
-      details: [`Meet the ${era.name} Age’s card to score its 1 VP, kept for good.`],
+      details: [`Meet the ${ageName(era.name)}’s card to score its 1 VP, kept for good.`],
     }));
 }
 

@@ -1,5 +1,5 @@
 //! The one-time goal actions as real decisions (`Order::Action`): Japan's Sakoku vow
-//! (`goal_sakoku.rs`), the
+//! (`goal_sakoku.rs`), Egypt's royal tomb (`goal_tomb.rs`), the
 //! Athens' broadcast and a broadcast's free-technology picks, Sparta's retirement of
 //! veterans and the Celts' Call the Wild. Every brain gets them through `Brain::orders`, so they
 //! are decided from the fogged view alone.
@@ -37,7 +37,7 @@ pub(crate) fn hold_turns(_view: &PlayerView) -> u32 {
 /// is none to plan against: such a game ends when somebody wins, however long that takes, so a
 /// goal whose build needs 50 turns is not "too late" at turn 800. The earlier fiction (the end a
 /// tenth of the expected length ahead, calibration 2026-10-07) let a 9-VP Mongols that was 50
-/// turns from its Courier Hall never start it in 900 turns (`docs/learnings.md` 2026-10-23).
+/// turns from its Yam Relay Station never start it in 900 turns (`docs/learnings.md` 2026-10-23).
 pub(crate) fn last_turn(view: &PlayerView, open_end: bool) -> u32 {
     view.turn_limit.unwrap_or_else(|| {
         if open_end {
@@ -169,7 +169,7 @@ fn broadcast_now(view: &PlayerView, open_end: bool) -> bool {
 }
 
 /// The Sparta's retirement window: the 2 VP take the team to the target with time to hold it,
-/// or the game is late. Veterans gather at a War Shrine city in this window (`gather_veterans`).
+/// or the game is late. Veterans gather at an Agoge city in this window (`gather_veterans`).
 pub(crate) fn retire_window(view: &PlayerView, open_end: bool) -> bool {
     view.actions.retire.is_some()
         && rite_pays(
@@ -180,7 +180,7 @@ pub(crate) fn retire_window(view: &PlayerView, open_end: bool) -> bool {
         )
 }
 
-/// The veterans to retire this turn: the ones in a War Shrine city, up to those still owed, once
+/// The veterans to retire this turn: the ones in an Agoge city, up to those still owed, once
 /// enough veterans exist to finish (a part-retired
 /// veteran guard scores nothing), the weakest first (lowest level, then HP). Never when it leaves
 /// a threatened city with no garrison, except in the last turns.
@@ -450,6 +450,10 @@ fn goal_actions_inner(
             action: Action::CallTheWild,
         });
     }
+    // Egypt's royal tomb: start, pause or resume the work (`goal_tomb.rs`).
+    if let Some(action) = crate::goal_tomb::tomb_action(view, open_end, decisions) {
+        out.push(Order::Action { action });
+    }
     out
 }
 
@@ -547,7 +551,7 @@ mod tests {
         let mut v = aztecs(70, 18, 20);
         assert!(swarms(&v));
         v = ViewBuilder { view: v }
-            .unit(1, ENEMY, UnitKind::Soldier, off(5, 3))
+            .unit(1, ENEMY, UnitKind::Spearman, off(5, 3))
             .build();
         assert!(!swarms(&v));
         // In the last turns nothing after it matters.
@@ -573,20 +577,20 @@ mod tests {
         swarm.cities[0].lost = 30;
         swarm.cities[1].lost = 0;
         let v = ViewBuilder { view: v }
-            .unit(1, ENEMY, UnitKind::Soldier, off(5, 10))
+            .unit(1, ENEMY, UnitKind::Spearman, off(5, 10))
             .build();
         assert!(!swarms(&v), "the stock rite waits for every city");
         assert!(closer(&v), "the closer starts the hold");
         // An army at a city that shrinks still stops it.
         let v = ViewBuilder { view: v }
-            .unit(2, ENEMY, UnitKind::Soldier, off(5, 3))
+            .unit(2, ENEMY, UnitKind::Spearman, off(5, 3))
             .build();
         assert!(!closer(&v));
         // And it only overrides the wait when the rite starts the hold.
         let mut far = aztecs(70, 11, 20);
         far.actions.swarm.as_mut().unwrap().cities[1].lost = 0;
         let far = ViewBuilder { view: far }
-            .unit(1, ENEMY, UnitKind::Soldier, off(5, 10))
+            .unit(1, ENEMY, UnitKind::Spearman, off(5, 10))
             .build();
         assert!(!closer(&far));
     }

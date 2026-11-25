@@ -6,6 +6,7 @@
 #   2. the third-party licence notices (app/public/THIRD_PARTY_LICENSES.txt)
 #   3. the web UI, with the relay's address baked in (app/src/platform/online.ts)
 #   4. the host files from app/hosted/ (_headers, whose connect-src names the relay, and 404.html)
+#   5. the teaser video the README links to (docs/media/legatum-teaser.mp4 -> media/legatum-teaser.mp4)
 # LEGATUM_GAMES_URL (optional) is the game-upload Worker (infra/games): every game played on the build is sent
 # there (app/src/platform/gameUpload.ts), and _headers lets the page connect to it. Unset, nothing is uploaded.
 # Usage: scripts/build-web.sh [--skip-wasm]     --skip-wasm reuses an engine already in app/src/wasm-pkg
@@ -43,7 +44,9 @@ if [ -z "${LEGATUM_BUILD_ID:-}" ]; then
 fi
 [[ "$LEGATUM_BUILD_ID" =~ ^[a-z0-9][a-z0-9-]{0,39}$ ]] || { echo "LEGATUM_BUILD_ID must be lower-case letters, digits and hyphens: $LEGATUM_BUILD_ID" >&2; exit 1; }
 # The live relay, and the origins the page's Content-Security-Policy allows for it (hosted/_headers).
-default_relay="https://legatum-relay.sam-1e7.workers.dev"
+# hosted/_headers also lists the earlier workers.dev addresses: builds kept at v/<id>/ from before the domain
+# still call them. Drop them there when keep-builds no longer keeps such a build.
+default_relay="https://relay.playlegatum.com"
 relay="${LEGATUM_RELAY_URL:-$default_relay}"
 relay="${relay%/}"
 [ "$relay" = none ] && relay=""
@@ -51,7 +54,7 @@ case "$relay" in ""|http://*|https://*) ;; *) echo "LEGATUM_RELAY_URL must start
 games_url="${LEGATUM_GAMES_URL:-}"
 games_url="${games_url%/}"
 if [ -n "$games_url" ] && ! [[ "$games_url" =~ ^https://[A-Za-z0-9.-]+$ ]]; then
-  echo "LEGATUM_GAMES_URL must be an https origin such as https://legatum-games.example.workers.dev" >&2; exit 1
+  echo "LEGATUM_GAMES_URL must be an https origin such as https://games.playlegatum.com" >&2; exit 1
 fi
 # Bundled PNG art is served as WebP on the website (app/vite-plugin-webp.ts). LEGATUM_WEBP=0 keeps PNG.
 LEGATUM_WEBP="${LEGATUM_WEBP:-1}" VITE_LEGATUM_BUILD_ID="$LEGATUM_BUILD_ID" VITE_LEGATUM_RELAY_URL="$relay" VITE_LEGATUM_GAMES_URL="$games_url" npm run build
@@ -75,6 +78,10 @@ protocol="$(sed -n 's/^export const ONLINE_PROTOCOL = \([0-9]*\);.*/\1/p' src/pl
 node ../tools/release/keep-builds.mjs dist --id "$LEGATUM_BUILD_ID" --rules "$rules" --protocol "$protocol" \
   --label "$LEGATUM_BUILD_LABEL" --commit "$commit" ${LEGATUM_CARRY_ASSETS_FROM:+--from "$LEGATUM_CARRY_ASSETS_FROM"} \
   ${legacy_keep[@]+"${legacy_keep[@]}"}
+# The README's teaser poster links to the video on the site: GitHub's own page for an mp4 this size shows
+# "can't show files this big" instead of playing it. Copied after keep-builds so it is not repeated under v/<id>/.
+mkdir -p dist/media
+cp ../docs/media/legatum-teaser.mp4 dist/media/legatum-teaser.mp4
 # Every file the build points to must be in it (a missing one is a broken image in the game).
 node ../tools/release/check-dist-refs.mjs dist
 # A hosted build must not ship source maps or a file over Cloudflare Pages' 25 MiB limit.

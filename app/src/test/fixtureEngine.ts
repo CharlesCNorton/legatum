@@ -46,7 +46,8 @@ export function stateFromCore(save: string): MState {
     research_queue: p.research_queue ?? [], techs: p.techs, settlersTrained: p.settlers_trained,
     militaryPurchases: p.military_purchases, eras: p.eras, factionGoalDone: p.faction_goal_done,
     factionGoalReachedBefore: p.faction_goal_reached_before, goalHolder: p.goal_holder,
-    hallCity: p.hall_city, diwanCity: p.diwan_city, freeTechsPending: p.free_techs_pending,
+    hallCity: p.hall_city, diwanCity: p.diwan_city, coloniaCity: p.colonia_city,
+    tombWork: p.tomb_work, tombTurns: p.tomb_turns, tombCity: p.tomb_city, freeTechsPending: p.free_techs_pending,
     freeTechsFrom: p.free_techs_from, veteransRetired: p.veterans_retired,
     sakokuTurns: p.sakoku_turns, goalRule: p.goal_rule, scienceHistory: p.science_history ?? [],
     greatWorkCompleted: p.great_work_completed,
@@ -158,7 +159,7 @@ export const upgradeCost = (s: MState, u: MUnit): number | null =>
 export const developmentForecast = (s: MState, owner: number) => viewFromFixture(s, owner).development!;
 export const exploreStep = (view: PlayerView, unit: number): Order | null => JSON.parse(explore_step(JSON.stringify(view), unit));
 
-/** Let the core lay Hall and Roadworks links, preserving the arranged scene's other fields. */
+/** Let the core lay Station and Roadworks links, preserving the arranged scene's other fields. */
 export function refreshRoads(s: MState): void {
   const after = resolveFixture(s);
   s.road = after.road;

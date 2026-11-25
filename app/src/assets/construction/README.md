@@ -3,8 +3,8 @@
 The Great Library, Grand Bazaar and Royal Arsenal each have three approved,
 transparent construction stills: footings, lower courses, then a roofless
 shell. Their finished fourth frames live in
-`../../../../docs/design/unlock-art/masters/` as `building-relayuplink.png`,
-`building-worldexchange.png` and `building-planetaryfoundry.png`. The `-256`
+`../../../../docs/design/unlock-art/masters/` as `building-greatlibrary.png`,
+`building-grandbazaar.png` and `building-royalarsenal.png`. The `-256`
 and `-128` files are Lanczos downscales of each 1254 px stage.
 
 The stages were image edits of their finished masters, with their construction
@@ -19,7 +19,7 @@ edited full-resolution files. They use the same CC BY 4.0 art license as the
 rest of the painted set.
 
 The Pyramids, Hagia Sophia, the Eiffel Tower and the ITER Fusion Reactor
-(`building-pyramids`, `-hagiasophia`, `-eiffeltower`, `-iterreactor`) have the same
+(`building-pyramids`, `-hagiasophia`, `-eiffeltower`, `-iterfusionreactor`) have the same
 three stages, made on 2026-11-01 with `tools/art/wonder-art.py`: each master was painted
 by image generation on a flat magenta field, then each stage was an image edit of that
 raw master (prompts beside the files). `wonder-art.py stage` keys the field to alpha and
@@ -29,12 +29,13 @@ jump between frames (the lower-half patch overlap is above 0.96 for every stage)
 levelled footings, rubble-and-mudbrick ramps up stepped cores, then a nearly full stepped
 core with the white casing laid from the bottom and no capstone. Hagia Sophia: footings
 with timber hoists, piers and walls at half height, then the great piers and arches done
-with the dome as an open timber centring. Eiffel Tower: four masonry piers with iron stubs,
-four separate trestled legs not yet joined, then the first platform and shaft with no
-lantern. ITER: the excavated pit with the isolation pedestals, half-height tokamak walls
+with the dome as an open timber centring. Eiffel Tower (all three stages repainted 2026-11-22 from the new master, stage 3 keyed with
+`wonder-art.py --lattice`): four masonry piers with iron stubs,
+four separate trestled legs not yet joined, then the legs joined by the first platform and
+the shaft rising to a short unfinished top. ITER: the excavated pit with the isolation pedestals, half-height tokamak walls
 with the bare steel assembly hall, then full-height concrete with the hall half clad.
 
-The Yam Relay Station (`building-courierhall`) also occupies a chosen tile under
+The Yam Relay Station (`building-yamrelaystation`) also occupies a chosen tile under
 the wonder-tile rule. Its three 1254 px edits show circular footings, exposed
 lattice yurt frames, and partially covered roof ribs, with matching 256 and 128
 px derivatives. These were added after the original stage set; the designer has

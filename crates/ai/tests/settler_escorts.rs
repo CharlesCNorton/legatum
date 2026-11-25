@@ -34,10 +34,10 @@ fn scenario() -> Scenario {
         let founder = spawn_unit(&mut state, owner, UnitKind::Settler, pos);
         found_city(&mut state, founder, &mut Vec::new()).unwrap();
     }
-    let garrison = spawn_unit(&mut state, ME, UnitKind::Soldier, HOME);
+    let garrison = spawn_unit(&mut state, ME, UnitKind::Spearman, HOME);
     let settler = spawn_unit(&mut state, ME, UnitKind::Settler, HOME);
-    let escort = spawn_unit(&mut state, ME, UnitKind::Soldier, Hex::new(4, 8));
-    let spare = spawn_unit(&mut state, ME, UnitKind::Soldier, Hex::new(2, 8));
+    let escort = spawn_unit(&mut state, ME, UnitKind::Spearman, Hex::new(4, 8));
+    let spare = spawn_unit(&mut state, ME, UnitKind::Spearman, Hex::new(2, 8));
     state.units.get_mut(&settler).unwrap().goto = Some(SITE);
     // A live journey has spent movement; full moves plus a goto means it was blocked.
     state.units.get_mut(&settler).unwrap().moves_left = 0;
@@ -55,7 +55,7 @@ fn scenario() -> Scenario {
     assert_eq!(HOME.distance(SITE), 4);
     assert!(settlement::known_legal_site(&player_view(&state, ME), SITE));
     assert_eq!(
-        data::unit_stats_for(Faction::Mongols, UnitKind::Soldier).moves,
+        data::unit_stats_for(Faction::Mongols, UnitKind::Spearman).moves,
         3
     );
     assert_eq!(
@@ -205,7 +205,7 @@ fn arrived_escort_leaves_when_the_settler_disappears_or_changes_destination() {
 }
 
 #[test]
-fn another_friendly_soldier_at_the_site_becomes_the_only_escort() {
+fn another_friendly_spearman_at_the_site_becomes_the_only_escort() {
     let Scenario {
         mut state,
         settler,
@@ -248,7 +248,7 @@ fn an_arrived_escort_still_retreats_from_an_overwhelming_threat() {
     for relation in &mut state.diplomacy.as_mut().unwrap().relations {
         relation.state = diplomacy::RelationState::War;
     }
-    let threat = spawn_unit(&mut state, OTHER, UnitKind::Trooper, Hex::new(9, 8));
+    let threat = spawn_unit(&mut state, OTHER, UnitKind::Pikeman, Hex::new(9, 8));
     update_explored(&mut state);
     assert!(player_view(&state, ME).units.iter().any(|u| u.id == threat));
     let generated = orders(&state);
@@ -269,11 +269,11 @@ fn another_friendly_scout_blocks_recruitment() {
     spawn_unit(&mut state, ME, UnitKind::Scout, SITE);
     update_explored(&mut state);
     let generated = orders(&state);
-    for soldier in [escort, spare] {
+    for spearman in [escort, spare] {
         assert_ne!(
-            unit_order(&generated, soldier),
+            unit_order(&generated, spearman),
             &Order::MoveUnit {
-                unit: soldier,
+                unit: spearman,
                 to: SITE
             }
         );
@@ -301,11 +301,11 @@ fn a_settler_founding_without_an_escort_does_not_recruit_one() {
         unit_order(&generated, settler),
         &Order::FoundCity { unit: settler }
     );
-    for soldier in [escort, spare] {
+    for spearman in [escort, spare] {
         assert_ne!(
-            unit_order(&generated, soldier),
+            unit_order(&generated, spearman),
             &Order::MoveUnit {
-                unit: soldier,
+                unit: spearman,
                 to: SITE
             }
         );

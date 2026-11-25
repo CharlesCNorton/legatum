@@ -50,6 +50,8 @@ fn genes_off(brain: &mut ScriptedBrain) {
     brain.decisions.supported_defence = 0;
     // The fixtures were recorded before Walls counted as the garrison (shared since 2026-11-06).
     brain.decisions.walls_garrison = 0;
+    // Recorded before Hard weighed a site's whole ring-one terrain (2026-11-22).
+    brain.decisions.site_terrain_weight = 0;
 }
 
 fn unit_order(orders: &[Order], unit: UnitId) -> Option<&Order> {
@@ -60,10 +62,10 @@ fn unit_order(orders: &[Order], unit: UnitId) -> Option<&Order> {
 
 const LEIPZIG: Hex = Hex { q: 14, r: 23 };
 const GERMAN_SETTLER: UnitId = UnitId(21);
-const GERMAN_SOLDIER: UnitId = UnitId(18);
+const GERMAN_SPEARMAN: UnitId = UnitId(18);
 
 /// Gene off, the fixture reproduces the recorded trip: T12 east with the garrison, T13 and
-/// T14 south-west to (11,27) with the Soldier beside the Settler.
+/// T14 south-west to (11,27) with the Spearman beside the Settler.
 #[test]
 fn the_fixtures_reproduce_the_recorded_trip_with_the_genes_off() {
     for f in [
@@ -99,27 +101,27 @@ fn destination(order: Option<&Order>) -> Option<Hex> {
     }
 }
 
-/// T12-T14: Germany's Settler leaves with its only Soldier beside it, and at T13 and T14 a
-/// single troop of a neighbour without a surprise war (a Spartan, then an Indian Soldier)
+/// T12-T14: Germany's Settler leaves with its only Spearman beside it, and at T13 and T14 a
+/// single troop of a neighbour without a surprise war (a Spartan, then an Indian Spearman)
 /// does not hold the garrison home (`capital_guard` needs two troops, a war or a recent
-/// surprise war: in the Lab position a Spartan Soldier parked by Leipzig for twenty turns).
-/// The genes keep the recorded escort: the Soldier walks onto the Settler's path.
+/// surprise war: in the Lab position a Spartan Spearman parked by Leipzig for twenty turns).
+/// The genes keep the recorded escort: the Spearman walks onto the Settler's path.
 #[test]
 fn germany_t12_to_t14_escorts_its_settler() {
     for f in [fixture!("T12-p5"), fixture!("T13-p5"), fixture!("T14-p5")] {
         let (view, mut brain) = germany(f);
         let orders = brain.orders(&view);
         let path = path_of(unit_order(&orders, GERMAN_SETTLER));
-        let soldier = destination(unit_order(&orders, GERMAN_SOLDIER));
+        let spearman = destination(unit_order(&orders, GERMAN_SPEARMAN));
         assert!(
-            soldier.is_some_and(|to| path.contains(&to)),
+            spearman.is_some_and(|to| path.contains(&to)),
             "T{}: {orders:?}",
             view.turn
         );
     }
 }
 
-/// T15 (two Indian Soldiers in sight, one beside the Settler): the Settler turns home and
+/// T15 (two Indian Spearmen in sight, one beside the Settler): the Settler turns home and
 /// its escort, which stood still in the recorded game (its tile was unsafe, so the escort
 /// pass skipped it), now walks back beside it (`snipe_read`).
 #[test]
@@ -132,9 +134,9 @@ fn germany_t15_escort_walks_home_with_the_settler() {
         "{orders:?}"
     );
     assert_eq!(
-        unit_order(&orders, GERMAN_SOLDIER),
+        unit_order(&orders, GERMAN_SPEARMAN),
         Some(&Order::MoveUnit {
-            unit: GERMAN_SOLDIER,
+            unit: GERMAN_SPEARMAN,
             to: Hex { q: 12, r: 25 }
         }),
         "{orders:?}"
@@ -143,32 +145,32 @@ fn germany_t15_escort_walks_home_with_the_settler() {
     genes_off(&mut brain);
     let orders = brain.orders(&view);
     assert_eq!(
-        unit_order(&orders, GERMAN_SOLDIER),
+        unit_order(&orders, GERMAN_SPEARMAN),
         Some(&Order::SkipUnit {
-            unit: GERMAN_SOLDIER
+            unit: GERMAN_SPEARMAN
         }),
         "{orders:?}"
     );
 }
 
-/// `capital_guard`: T14 with a second Indian Soldier two hexes from the empty capital. Two
-/// troops of one rival in reach of Leipzig call the Settler home, and its Soldier with it.
+/// `capital_guard`: T14 with a second Indian Spearman two hexes from the empty capital. Two
+/// troops of one rival in reach of Leipzig call the Settler home, and its Spearman with it.
 #[test]
 fn germany_t14_goes_home_when_an_army_reaches_the_empty_capital() {
     let (mut view, mut brain) = germany(fixture!("T14-p5"));
     let mut second = view
         .units
         .iter()
-        .find(|u| u.owner == legatum_core::PlayerId(0) && u.kind == UnitKind::Soldier)
+        .find(|u| u.owner == legatum_core::PlayerId(0) && u.kind == UnitKind::Spearman)
         .unwrap()
         .clone();
     second.id = UnitId(900);
     second.pos = Hex { q: 12, r: 24 };
     view.units.push(second);
-    let soldier = view
+    let spearman = view
         .units
         .iter()
-        .find(|u| u.id == GERMAN_SOLDIER)
+        .find(|u| u.id == GERMAN_SPEARMAN)
         .unwrap()
         .pos;
     let orders = brain.orders(&view);
@@ -177,9 +179,9 @@ fn germany_t14_goes_home_when_an_army_reaches_the_empty_capital() {
         Some(LEIPZIG),
         "{orders:?}"
     );
-    let to = destination(unit_order(&orders, GERMAN_SOLDIER)).expect("the Soldier moves");
+    let to = destination(unit_order(&orders, GERMAN_SPEARMAN)).expect("the Spearman moves");
     assert!(
-        to.distance(LEIPZIG) < soldier.distance(LEIPZIG),
+        to.distance(LEIPZIG) < spearman.distance(LEIPZIG),
         "{orders:?}"
     );
     let (_, mut off) = germany(fixture!("T14-p5"));
@@ -193,7 +195,7 @@ fn germany_t14_goes_home_when_an_army_reaches_the_empty_capital() {
 }
 
 const CELTIC_SETTLER: UnitId = UnitId(27);
-const CELTIC_SOLDIER: UnitId = UnitId(15);
+const CELTIC_SPEARMAN: UnitId = UnitId(15);
 
 /// T17: India declared on Germany at T16. The Celts have not met India and see none of its
 /// units; their Settler walked on alone to (18,9) and India's Scout took it at T18. With
@@ -217,9 +219,9 @@ fn celts_t17_settler_waits_for_its_escort() {
         "{orders:?}"
     );
     assert_eq!(
-        unit_order(&orders, CELTIC_SOLDIER),
+        unit_order(&orders, CELTIC_SPEARMAN),
         Some(&Order::MoveUnit {
-            unit: CELTIC_SOLDIER,
+            unit: CELTIC_SPEARMAN,
             to: settler
         }),
         "{orders:?}"
@@ -249,8 +251,8 @@ fn a_recent_surprise_war_raises_the_capture_chance() {
     );
 }
 
-/// `escort_buy`: at T13 Germany has one Soldier, its Settler beside Leipzig and a Spartan
-/// Soldier two hexes off. With 300 Gold the fight-aware scorer buys a second Soldier
+/// `escort_buy`: at T13 Germany has one Spearman, its Settler beside Leipzig and a Spartan
+/// Spearman two hexes off. With 300 Gold the fight-aware scorer buys a second Spearman
 /// against the Spearman's anti-mounted bonus; gene 0 keeps the old Horseman order.
 /// With its real 70 Gold, it buys nothing.
 #[test]
@@ -268,7 +270,7 @@ fn germany_t13_buys_a_second_troop_when_it_has_the_gold() {
         unit: UnitKind::Horseman,
     };
     let guard = ProductionItem::Unit {
-        unit: UnitKind::Soldier,
+        unit: UnitKind::Spearman,
     };
     let rich = |view: &mut PlayerView| {
         view.economy.gold = 300;

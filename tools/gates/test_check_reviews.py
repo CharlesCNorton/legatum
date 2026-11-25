@@ -33,6 +33,32 @@ class Reviews(unittest.TestCase):
         self.assertEqual(kinds["artimpact"], ["app/src/unitArt.ts"])
         self.assertEqual(kinds["art"], ["app/public/terrain/grass.png"])
 
+    def test_position_only_branch_uses_fast_scenario_gate(self):
+        files = ["scenarios/lab/probe.json", "docs/sim-results/scenarios/probe-baseline.md"]
+        kinds = check.classify(".", "HEAD", "HEAD", files)
+        self.assertEqual(kinds["scenario"], ["scenarios/lab/probe.json"])
+        self.assertEqual(kinds["code"], [])
+        self.assertEqual(kinds["copy"], [])
+
+    def test_controls_and_rules_the_advisor_teaches_need_the_advisor_reviewer(self):
+        files = ["app/src/map/MapCanvas.tsx", "app/src/ui/Advisor.tsx", "crates/core/src/rules/cities.rs",
+                 "app/src/ui/advisor.test.ts", "app/src/ui/DiplomacyPanel.tsx", "crates/ai/src/scripted.rs"]
+        kinds = check.classify(".", "HEAD", "HEAD", files)
+        self.assertEqual(kinds["advisor"], ["app/src/map/MapCanvas.tsx", "app/src/ui/Advisor.tsx",
+                                            "crates/core/src/rules/cities.rs"])
+        advisor = dict(KINDS, code=["app/src/ui/Advisor.tsx"], copy=[], ui=[], advisor=["app/src/ui/Advisor.tsx"])
+        self.assertEqual([r for _, r, _ in check.required_reviews(advisor)],
+                         ["legatum-docs-reviewer", "legatum-advisor-reviewer"])
+
+    def test_the_front_door_needs_the_docs_and_art_reviewers(self):
+        kinds = check.classify(".", "HEAD", "HEAD", ["README.md", "docs/media/banner.jpg", "docs/learnings/2026-11.md"])
+        self.assertEqual(kinds["code"], [])
+        self.assertEqual(kinds["front"], ["README.md", "docs/media/banner.jpg"])
+        self.assertEqual([r for _, r, _ in check.required_reviews(kinds)],
+                         ["legatum-docs-reviewer", "legatum-art-reviewer"])
+        docs = check.classify(".", "HEAD", "HEAD", ["docs/learnings/2026-11.md"])
+        self.assertEqual(check.required_reviews(docs), [])
+
     def test_a_comment_must_name_the_reviewer_and_the_head_sha(self):
         reviews = check.required_reviews(KINDS)
         comments = ["legatum-docs-reviewer: PASS at 8d5a6c66c",

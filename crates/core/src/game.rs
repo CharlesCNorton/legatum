@@ -45,6 +45,10 @@ pub fn blank_game(setup: &GameSetup, map: Map) -> GameState {
             goal_holder: None,
             hall_city: None,
             diwan_city: None,
+            colonia_city: None,
+            tomb_work: false,
+            tomb_turns: 0,
+            tomb_city: None,
             faction_goal_reached_before: false,
             free_techs_pending: 0,
             free_techs_from: None,
@@ -66,6 +70,9 @@ pub fn blank_game(setup: &GameSetup, map: Map) -> GameState {
             let mut d = crate::diplomacy::DiplomacyState::new(teams.iter().copied());
             if setup.rule_experiments.start_met {
                 d.meet_all(&teams);
+            }
+            for (a, b) in setup.ai_alliance_pairs() {
+                d.start_alliance(a, b);
             }
             d
         }),
@@ -136,7 +143,7 @@ pub fn unit_with_id(
 /// Start a new game: generate the planet, found each capital, place the starting units, reveal the start.
 ///
 /// Each empire starts with `data::START_GOLD`, a population-1 capital on its start hex,
-/// then a Scout and a Soldier on the first two passable neighbors in hex order.
+/// then a Scout and a Spearman on the first two passable neighbors in hex order.
 pub fn new_game(setup: &GameSetup) -> GameState {
     try_new_game(setup).unwrap_or_else(|e| panic!("{e}"))
 }
@@ -184,7 +191,7 @@ pub fn try_new_game(setup: &GameSetup) -> Result<GameState, String> {
                 city: state.cities[&city].name.clone(),
             });
         spawn_unit(&mut state, owner, UnitKind::Scout, room[0]);
-        spawn_unit(&mut state, owner, UnitKind::Soldier, room[1]);
+        spawn_unit(&mut state, owner, UnitKind::Spearman, room[1]);
     }
     // Place extras after all ordinary units, retaining their IDs. Breadth-first search
     // stays on connected passable land, never stacks civilians, and has a fixed hex order.
@@ -249,7 +256,7 @@ mod tests {
                 kinds.sort();
                 assert_eq!(
                     kinds,
-                    vec![UnitKind::Scout, UnitKind::Soldier],
+                    vec![UnitKind::Scout, UnitKind::Spearman],
                     "seed {seed} player {:?}",
                     p.id
                 );

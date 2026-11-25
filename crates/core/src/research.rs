@@ -44,8 +44,10 @@ pub struct TechUnlock {
     pub predecessor: Option<BuildingKind>,
     pub min_population: i32,
     pub cities: Vec<UnlockCity>,
-    /// Why this faction cannot build the item yet ("Walls for the Mongols from the Medieval era"):
-    /// the card lists it, but says this in place of the build line, price and forecasts.
+    /// Why this faction cannot build the item yet: the card lists it, but says this in place of
+    /// the build line, price and forecasts. Always None since rules 57 (its one use, the Mongols'
+    /// Medieval-era Walls, is gone: a card lists only what the faction can build); kept so the
+    /// app's handling and older saved views still read.
     #[serde(default)]
     pub locked_note: Option<String>,
 }
@@ -98,27 +100,6 @@ pub fn cost_breakdown(state: &GameState, player: PlayerId, item: ProductionItem)
     result
 }
 
-/// The card line that replaces the build line for an item the faction lists but cannot build yet.
-fn locked_note(
-    state: &GameState,
-    player: PlayerId,
-    item: ProductionItem,
-    name: &str,
-) -> Option<String> {
-    let p = state.player(player);
-    if state
-        .setup
-        .rule_experiments
-        .available_to_player(p.faction, state.era_of(player), item)
-    {
-        return None;
-    }
-    Some(format!(
-        "{name} for the {} from the Medieval era",
-        data::faction_name(p.faction)
-    ))
-}
-
 pub fn tech_unlocks(state: &GameState, player: PlayerId) -> Vec<TechUnlock> {
     let mut cache = crate::yields_cache::ViewCache::default();
     cache.begin(state);
@@ -149,10 +130,9 @@ pub(crate) fn tech_unlocks_for(
         .collect();
     // Only what this faction can build and that does something for it, under its own name.
     let unlocks = items
-        // A card lists what the technology will unlock for the faction, whatever its era now: the
-        // Mongols' Walls are on the Masonry card although they raise them from the Medieval era.
+        // A card lists what the technology will unlock for the faction, whatever its era now.
         .filter(|item| {
-            let era = state.era_of(player).max(data::MONGOL_WALLS_ERA);
+            let era = state.era_of(player);
             state
                 .setup
                 .rule_experiments
@@ -192,7 +172,6 @@ pub(crate) fn tech_unlocks_for(
                         .rule_experiments
                         .building_stats_for(p.faction, building);
                     unlock.name = data::building_name_for(p.faction, building).into();
-                    unlock.locked_note = locked_note(state, player, item, &unlock.name);
                     unlock.yields = stats.yields;
                     unlock.city_strength = stats.city_strength;
                     unlock.predecessor = data::building_predecessor(building);
@@ -201,7 +180,6 @@ pub(crate) fn tech_unlocks_for(
                 ProductionItem::Unit { unit } => {
                     let stats = state.setup.rule_experiments.unit_stats_for(p.faction, unit);
                     unlock.name = data::unit_name_for(p.faction, unit).into();
-                    unlock.locked_note = locked_note(state, player, item, &unlock.name);
                     unlock.unit_strength = stats.strength;
                     unlock.unit_ranged = stats.ranged;
                     unlock.unit_range = stats.range;
@@ -266,10 +244,7 @@ pub(crate) fn tech_unlocks_for(
                     // Decision views work out after-yields only where a brain reads them:
                     // the industry buildings' Production gain (`legatum_ai::production`).
                     let read = full
-                        || matches!(
-                            installed,
-                            Some(BuildingKind::MachineShop | BuildingKind::Autoworks)
-                        );
+                        || matches!(installed, Some(BuildingKind::Forge | BuildingKind::Factory));
                     let (yields_after, food_surplus_after) = if read {
                         let yields = base.cached.yields(state, city, installed, full);
                         let food = yields.total.food - data::FOOD_PER_POP * city.population;

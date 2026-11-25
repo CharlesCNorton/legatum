@@ -55,7 +55,7 @@ for (const size of SIZES) {
         v.eras[0].objectives = [
           { slot: 0, family: 'Fight', text: 'Veterans: earn 4 promotions in battle (a promotion is a level a unit gains from combat experience after this Age began)', target: 4, objective: { kind: 'Veterans', n: 4 } },
           { slot: 1, family: 'Fight', text: 'Breach: capture a walled city', target: 1, objective: { kind: 'Breach' } },
-          { slot: 2, family: 'Fight', text: 'Humble the mighty: capture a city from an empire ahead of you on VP', target: 1, objective: { kind: 'HumbleTheMighty' } },
+          { slot: 2, family: 'Fight', text: 'Humble the mighty: capture a city from an empire ahead of you on VP or, if you lead, from the rival with the most VP', target: 1, objective: { kind: 'HumbleTheMighty' } },
         ];
         v.objective_progress = [
           { era: 2, slot: 0, current: 2, target: 4, entered: true, era_scored: false, ready: false },
@@ -66,7 +66,7 @@ for (const size of SIZES) {
       });
       const race = page.getByRole('region', { name: 'Victory race', exact: true });
       await expect(race).toContainText('The next Age begins when any empire enters the Medieval era');
-      await race.getByRole('button', { name: 'All objectives', exact: true }).click();
+      await race.getByRole('button', { name: 'Score ledger', exact: true }).click();
       const sheet = page.getByTestId('objective-sheet');
       await expect(sheet).not.toContainText('Age III: Medieval');
       const era = sheet.locator('.sl-row[data-row="era-2"] button');
@@ -76,14 +76,14 @@ for (const size of SIZES) {
       await shot(page, 'objective-deck', size);
     });
 
-    test('World Ages: the oldest open Age is one line in the sidebar at scroll 0, and a click opens How you win', async ({ page }) => {
+    test('World Ages: the oldest open Age is one line in the sidebar at scroll 0, and a click opens Score ledger', async ({ page }) => {
       await start(page);
       const base = await page.evaluate(() => { const s = (window as unknown as GameWindow).legatum.getState(); return structuredClone(s.views![s.seat]); });
       const view = withWorldAges(base);
       await page.evaluate((v) => { const store = (window as unknown as GameWindow).legatum, s = store.getState(); store.setState({ views: s.views!.map((x, i) => (i === s.seat ? v : x)) }); }, view);
       const line = page.getByRole('complementary', { name: 'Empire sidebar' }).locator('.sidebar-objective');
       await expect(line).toBeVisible();
-      await expect(line).toContainText('Age of Classical · 1 VP');
+      await expect(line).toContainText('Classical Age · 1 VP');
       await expect(line.getByTestId('era-objective')).toHaveCount(1);
       await expect(line.locator('.eo-text')).toHaveText('Veterans');
       await expect(line.locator('.eo-num')).toHaveText('2/4');
@@ -93,7 +93,7 @@ for (const size of SIZES) {
       expect(box.y + box.height).toBeLessThanOrEqual(size.height);
       await expectSidebarGlance(page);
       await shot(page, 'age-standing-line', size);
-      await line.getByRole('button', { name: /How you win/ }).click();
+      await page.getByRole('region', { name: 'Victory race', exact: true }).getByRole('button', { name: 'Score ledger', exact: true }).click();
       await expect(page.getByTestId('objective-sheet')).toBeVisible();
     });
 
@@ -104,7 +104,7 @@ for (const size of SIZES) {
       await expect(hud.getByTestId('era-objective')).toHaveCount(1);
       await expect(hud).toContainText('3/4');
       await expectSidebarGlance(page);
-      await hud.getByRole('button', { name: /How you win/ }).click();
+      await page.getByRole('region', { name: 'Victory race', exact: true }).getByRole('button', { name: 'Score ledger', exact: true }).click();
       await expect(page.getByTestId('objective-sheet')).toBeVisible();
       const era = page.locator('.sl-row[data-row="era-2"] button');
       if (await era.getAttribute('aria-expanded') === 'false') await era.click();
@@ -123,12 +123,16 @@ for (const size of SIZES) {
       await expect(header.getByTestId('era-objective')).toHaveCount(0);
       await shot(page, 'research-ancient', size);
       await page.keyboard.press('Escape');
-      await stage(page, { era: 2, scored: [], progress: { '2:0': [6, 9], '2:1': [3, 4], '2:2': [0, 1] } });
+      // The Medieval Age in focus shows real progress: one card part way, one met.
+      await stage(page, { era: 2, scored: [], progress: { '2:0': [6, 9], '2:1': [3, 4], '2:2': [0, 1], '3:0': [9, 14], '3:1': [40, 40], '3:2': [0, 1] } });
       await page.locator('.topbar .research-chip').click();
       // The fixture's rival began the Medieval Age, so it is the Age in focus.
-      await expect(header.getByTestId('research-objectives-current')).toContainText('Score 1 VP this Age');
+      await expect(header.getByTestId('research-objectives-current')).toContainText(/\w+ Age: score 1 VP/);
       await expect(header.getByTestId('research-objectives-current').getByTestId('era-objective')).toHaveCount(3);
-      await expect(header.getByTestId('research-objectives-next')).toContainText('Next: Renaissance Age');
+      await expect(header.getByTestId('research-objectives-next')).toContainText('The next Age begins when any empire enters the Renaissance era.');
+      await expect(header.getByTestId('research-objectives-current').locator('.eo-line.met')).toHaveCount(1);
+      // The seal stamps in and the met card flashes the first time this Age is shown; let both finish before the shot.
+      await header.evaluate((el) => Promise.all(el.getAnimations({ subtree: true }).map((a) => a.finished)));
       await shot(page, 'research-classical', size);
     });
   });

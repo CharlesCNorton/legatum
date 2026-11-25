@@ -57,10 +57,10 @@ it('explains population as territory and the way cities claim land', () => {
 
 it('uses the generated Library, Agoge and resource-specific Deep Mine rules', () => {
   const cities = renderToStaticMarkup(<GuideContent section="cities" />);
-  expect(RULES.factionBuildingStats.Athens.Laboratory.yields.production).toBe(0);
-  expect(RULES.factionBuildingStats.Athens.Laboratory.yields.science).toBeGreaterThan(0);
-  expect(cities).toContain(`Writing (${RULES.buildingNames.Laboratory} for Science)`);
-  expect(cities).toContain(`Sparta’s ${RULES.buildingNames.WarShrine}`);
+  expect(RULES.factionBuildingStats.Athens.Library.yields.production).toBe(0);
+  expect(RULES.factionBuildingStats.Athens.Library.yields.science).toBeGreaterThan(0);
+  expect(cities).toContain(`Writing (${RULES.buildingNames.Library} for Science)`);
+  expect(cities).toContain(`Sparta’s ${RULES.buildingNames.Agoge}`);
   const mine = RULES.improvements.forResource;
   expect(cities).toContain(`+${mine.Copper.upgradeYields.gold} Gold on Copper`);
   expect(cities).toContain(`+${mine.Iron.upgradeYields.production} Production on Iron`);
@@ -135,11 +135,12 @@ it('explains map resources, reveals, supply and idle buildings and units (G11)',
   expect(cities).toContain('Every start has a Copper deposit two tiles away and an Iron deposit three to five tiles away');
 });
 
-it('explains the Mongol Medieval-era Walls and Siege gate', () => {
+it('explains that the Mongols never have Walls and buy Siege from the Medieval era', () => {
   const combat = renderToStaticMarkup(<GuideContent section="combat" />);
   expect(combat).not.toContain('unless they capture');
-  expect(combat).toContain('Before the Medieval era, Mongols cannot build Walls, Castles or Star Forts');
-  expect(combat).toContain('From the Medieval era they build both.');
+  expect(combat).toContain('The Mongols never build Walls, in any era');
+  expect(combat).toContain('a walled city they capture loses its Walls');
+  expect(combat).toContain('They buy no Siege before the Medieval era.');
 });
 
 it('explains Germany’s Forge replacement and double supply', () => {
@@ -171,7 +172,7 @@ it('explains Mercenary Companies from the generated numbers', () => {
   expect(turns).toContain('A Peace offer is between two teams');
   expect(turns).toContain('Making Peace on your own is not a betrayal');
   expect(turns).toContain('Thin levies (Byzantium)');
-  expect(turns).toContain('at most one military unit per city, plus one more, not counting Scouts');
+  expect(turns).toContain('at most one military unit per city, plus one more. Aircraft count');
   expect(turns).not.toContain('120%');
 });
 

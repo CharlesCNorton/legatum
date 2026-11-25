@@ -15,7 +15,7 @@ const root = fileURLToPath(new URL('../../', import.meta.url));
  *   LEGATUM_RELAY_URL=http://127.0.0.1:8787 scripts/build-web.sh
  */
 // LEGATUM_E2E_RELAY points the online tests at a deployed relay instead (a live check before a release):
-//   LEGATUM_E2E_RELAY=https://legatum-relay.sam-1e7.workers.dev, with app/dist built for that relay.
+//   LEGATUM_E2E_RELAY=https://relay.playlegatum.com, with app/dist built for that relay.
 export const E2E_RELAY = process.env.LEGATUM_E2E_RELAY ?? 'http://127.0.0.1:8787';
 const BUILD_HINT = `Build first: LEGATUM_RELAY_URL=${E2E_RELAY} scripts/build-web.sh (needs the WASM engine; add --skip-wasm to reuse it).`;
 
@@ -57,7 +57,10 @@ export const testWithFailingRequests = base.extend<{}, { serverURL: string; rela
     const port = new URL(E2E_RELAY).port;
     // A fresh relay state per run: rooms a crashed earlier run left behind would show twice in the game list.
     const state = await mkdtemp(join(tmpdir(), 'legatum-relay-'));
-    const proc = spawn(join(dir, 'node_modules/.bin/wrangler'), ['dev', '--port', port, '--ip', '127.0.0.1', '--persist-to', state], {
+    // Every test hosts from 127.0.0.1 and the relay lives for the whole run, so rooms earlier tests left open
+    // would hit the per-address cap (2 live rooms) and refuse the next host. The cap's own wording is tested with
+    // mocked replies (tour/online.spec.ts).
+    const proc = spawn(join(dir, 'node_modules/.bin/wrangler'), ['dev', '--port', port, '--ip', '127.0.0.1', '--persist-to', state, '--var', 'MAX_ROOMS_PER_IP:50'], {
       cwd: dir,
       env: { ...process.env, WRANGLER_SEND_METRICS: 'false', CI: '1' },
       stdio: ['ignore', 'pipe', 'pipe'],

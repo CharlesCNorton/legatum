@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { BUILDING_NAME, FACTIONS, GREAT_WORK_ICON, buildingIconName, itemIcon, unitIconName, UNIT_STATS } from './data';
+import { BUILDING_NAME, FACTION_GOAL, FACTIONS, GREAT_WORK_ICON, buildingIconName, itemIcon, unitIconName, UNIT_STATS } from './data';
 import { iconUrl, resourceArtUrl } from './icons';
 import type { BuildingKind, UnitKind } from './types';
 
@@ -36,12 +36,16 @@ describe('icon set', () => {
 
   it('resolves faction pieces by their own name', () => {
     expect(itemIcon({ kind: 'Unit', unit: 'Cataphract' }, 'Mongols')).toBe('unit-keshig');
-    expect(itemIcon({ kind: 'Building', building: 'Walls' }, 'Switzerland')).toBe('building-customsbastion');
+    expect(itemIcon({ kind: 'Building', building: 'Walls' }, 'Switzerland')).toBe('building-alpineredoubt');
     expect(itemIcon({ kind: 'Building', building: 'Walls' }, 'India')).toBe('building-walls');
   });
 
+  it('draws every faction goal (the score check boxes show them)', () => {
+    for (const f of FACTIONS) expect(iconUrl(FACTION_GOAL[f].icon), `${f}: ${FACTION_GOAL[f].icon}`).not.toBeNull();
+  });
+
   it('has the icons the UI swaps in for text glyphs and map order badges', () => {
-    const names = ['ui-alert', 'ui-siege', 'ui-random', 'ui-check', 'ui-cross', 'ui-trend-up', 'ui-trend-down', 'ui-chevron-up', 'ui-chevron-down', 'mark-move', 'mark-heal', 'mark-skip', 'mark-lock', 'mark-sleep', 'mark-found', 'mark-invalid', 'fortify', 'unit-scout', 'unit-ranger', 'title-strongest-army'];
+    const names = ['ui-alert', 'ui-siege', 'ui-random', 'ui-check', 'ui-cross', 'ui-trend-up', 'ui-trend-down', 'ui-chevron-up', 'ui-chevron-down', 'mark-move', 'mark-heal', 'mark-skip', 'mark-lock', 'mark-sleep', 'mark-found', 'mark-invalid', 'fortify', 'unit-scout', 'unit-archer', 'title-strongest-army'];
     for (const name of names) expect(iconUrl(name), name).not.toBeNull();
     expect(iconUrl(GREAT_WORK_ICON), GREAT_WORK_ICON).not.toBeNull();
   });

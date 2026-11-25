@@ -128,7 +128,7 @@ fn staging(
             state.map.get(*h).is_some_and(|t| {
                 t.terrain.move_cost().is_some()
                     && allowed(t.owner)
-                    && state.passage_allowed(mover, legatum_core::UnitKind::Soldier, t.owner)
+                    && state.passage_allowed(mover, legatum_core::UnitKind::Spearman, t.owner)
             }) && state.city_at(*h).is_none()
                 && state.units_at(*h).next().is_none()
         })
@@ -241,16 +241,16 @@ fn rush_defense() -> Result<Built, String> {
         }
         let target = nearest_city(&state, seat, gcap).expect("seat has cities");
         let tpos = state.cities[&target].pos;
-        // The classic archer rush: Soldiers screen two Rangers, two to three hexes out.
-        // Four Soldiers three hexes out never attacked a fortified garrison (first baseline);
-        // two Soldiers and two Rangers never broke a city that shields its garrison (revision
-        // 2 after city shields: the AI defender held 50 of 50), so a third Soldier joins.
+        // The classic archer rush: Spearmen screen two Archers, two to three hexes out.
+        // Four Spearmen three hexes out never attacked a fortified garrison (first baseline);
+        // two Spearmen and two Archers never broke a city that shields its garrison (revision
+        // 2 after city shields: the AI defender held 50 of 50), so a third Spearman joins.
         let kinds = [
-            UnitKind::Soldier,
-            UnitKind::Soldier,
-            UnitKind::Soldier,
-            UnitKind::Ranger,
-            UnitKind::Ranger,
+            UnitKind::Spearman,
+            UnitKind::Spearman,
+            UnitKind::Spearman,
+            UnitKind::Archer,
+            UnitKind::Archer,
         ];
         let tiles = staging(&state, glass, tpos, gcap, (2, 3), |o| o != Some(seat));
         if tiles.len() < kinds.len() {
@@ -276,7 +276,8 @@ fn rush_defense() -> Result<Built, String> {
         let garrisoned = state
             .units_at(tpos)
             .any(|u| u.owner == seat && is_military(u.kind));
-        let garrison = (!garrisoned).then(|| spawn_unit(&mut state, seat, UnitKind::Soldier, tpos));
+        let garrison =
+            (!garrisoned).then(|| spawn_unit(&mut state, seat, UnitKind::Spearman, tpos));
         legatum_core::visibility::update_explored(&mut state);
         // The declaration is an ordinary order; the force holds while it takes effect.
         let seat_team = state.player(seat).team;
@@ -333,7 +334,7 @@ fn rush_defense() -> Result<Built, String> {
         notes.extend(unit_lines(&state, glass));
         let source = format!(
             "All-AI Hard game, Standard speed, seed {seed}; Mongols (player {glass}) played the \
-             Rush opening. Played to turn 20, then a force of three Soldiers and two Rangers was \
+             Rush opening. Played to turn 20, then a force of three Spearmen and two Archers was \
              staged 2-3 hexes from {city} ({moved} existing Mongols units moved, {spawned} \
              spawned), {garrison}and Mongols declared war as an ordinary order on turn 20 (its \
              staged units held). Built by `legatum-sim scenario-build rush-defense`.",
@@ -342,7 +343,7 @@ fn rush_defense() -> Result<Built, String> {
             city = state.cities[&target].name,
             spawned = kinds.len() - moved,
             garrison = if garrison.is_some() {
-                "the threatened city was given a Soldier garrison (it had none), "
+                "the threatened city was given a Spearman garrison (it had none), "
             } else {
                 ""
             }
@@ -436,18 +437,18 @@ fn rush_offense() -> Result<Built, String> {
         force.sort_by_key(|u| (state.units[u].pos.distance(tpos), *u));
         force.truncate(4);
         let moved = force.len();
-        let has_ranger = force
+        let has_archer = force
             .iter()
-            .any(|u| state.units[u].kind == UnitKind::Ranger);
+            .any(|u| state.units[u].kind == UnitKind::Archer);
         let mut spawned = vec![];
         for (i, to) in tiles.iter().take(4).enumerate() {
             match force.get(i) {
                 Some(u) => relocate(&mut state, *u, *to),
                 None => {
-                    let kind = if !has_ranger && spawned.is_empty() {
-                        UnitKind::Ranger
+                    let kind = if !has_archer && spawned.is_empty() {
+                        UnitKind::Archer
                     } else {
-                        UnitKind::Soldier
+                        UnitKind::Spearman
                     };
                     spawned.push(kind);
                     spawn_unit(&mut state, oath, kind, *to);
@@ -702,7 +703,7 @@ pub fn run(cli: &Cli) -> Result<(), String> {
         let summary = std::mem::take(&mut file.objective.summary);
         file.objective = built.objective;
         file.objective.summary = summary;
-        file.prepare(true).map_err(|e| format!("{id}: {e}"))?;
+        file.prepare().map_err(|e| format!("{id}: {e}"))?;
         std::fs::create_dir_all(&cli.dir).map_err(|e| e.to_string())?;
         let mut json = serde_json::to_string_pretty(&file).expect("scenario JSON");
         json.push('\n');
@@ -748,7 +749,6 @@ fn placeholder(id: &str, built: &Built) -> ScenarioFile {
         source: String::new(),
         baseline: None,
         human: None,
-        lab: None,
         rusher: None,
         ai_memory: None,
         state: EncodedState {

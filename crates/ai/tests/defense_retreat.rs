@@ -5,7 +5,7 @@ use legatum_core::*;
 use std::collections::BTreeMap;
 
 const ME: PlayerId = PlayerId(4);
-const RANGER: UnitId = UnitId(49);
+const ARCHER: UnitId = UnitId(49);
 const THREAT: UnitId = UnitId(42);
 const BLOCKER: UnitId = UnitId(69);
 const CITY: Hex = Hex::new(13, 16);
@@ -24,8 +24,8 @@ fn original() -> GameState {
     for h in [Hex::new(14, 15), Hex::new(15, 14)] {
         state.map.get_mut(h).unwrap().terrain = Terrain::Ocean;
     }
-    assert_eq!(state.units[&RANGER].pos, SUPPORT);
-    assert_eq!(state.units[&RANGER].hp, 100);
+    assert_eq!(state.units[&ARCHER].pos, SUPPORT);
+    assert_eq!(state.units[&ARCHER].hp, 100);
     assert_eq!(state.units[&THREAT].pos, ENEMY_POS);
     assert!(state.cities_of(ME).any(|c| c.pos == CITY));
     state
@@ -34,7 +34,7 @@ fn original() -> GameState {
 fn open_approach() -> GameState {
     let mut state = original();
     // Unlike the adapted archive's impassable detour, this permits u42 to attack the
-    // city within its three moves. A weak Ranger must use safe support instead.
+    // city within its three moves. A weak Archer must use safe support instead.
     for h in [Hex::new(14, 15), Hex::new(15, 14)] {
         state.map.get_mut(h).unwrap().terrain = Terrain::Plains;
     }
@@ -82,7 +82,7 @@ fn advance(state: &GameState, blocked: bool) -> GameState {
 }
 
 fn check_six_turns(mut state: GameState, blocked: bool) -> GameState {
-    let mut path = vec![state.units[&RANGER].pos];
+    let mut path = vec![state.units[&ARCHER].pos];
     for _ in 0..6 {
         let view = player_view(&state, ME);
         assert!(
@@ -100,7 +100,7 @@ fn check_six_turns(mut state: GameState, blocked: bool) -> GameState {
         if blocked {
             assert_eq!(state.units[&BLOCKER].pos, SUPPORT);
         }
-        path.push(state.units[&RANGER].pos);
+        path.push(state.units[&ARCHER].pos);
     }
     assert!(
         path.windows(4)
@@ -117,21 +117,21 @@ fn archived_defender_does_not_alternate_city_and_support() {
 
 #[test]
 fn reachable_melee_threat_sends_a_ranged_defender_into_its_shielding_city() {
-    // Civ 6: the healthy city absorbs every attack on its tile, so the Ranger garrisons it
+    // Civ 6: the healthy city absorbs every attack on its tile, so the Archer garrisons it
     // (and can shoot from safety) instead of standing exposed in support.
     let state = check_six_turns(open_approach(), false);
     assert!(state.cities_of(ME).any(|c| c.pos == CITY && c.hp > 0));
-    assert_eq!(state.units[&RANGER].pos, CITY);
+    assert_eq!(state.units[&ARCHER].pos, CITY);
 }
 
 #[test]
 fn blocking_the_original_escape_does_not_shift_the_same_loop_to_another_tile() {
     let mut state = original();
-    state.units.get_mut(&RANGER).unwrap().pos = CITY;
+    state.units.get_mut(&ARCHER).unwrap().pos = CITY;
     // u69 is a later reinforcement in the archive; add it early in this counterfactual.
-    let mut blocker = state.units[&RANGER].clone();
+    let mut blocker = state.units[&ARCHER].clone();
     blocker.id = BLOCKER;
-    blocker.kind = UnitKind::Soldier;
+    blocker.kind = UnitKind::Spearman;
     blocker.pos = SUPPORT;
     state.units.insert(BLOCKER, blocker);
     state.next_unit_id = state.next_unit_id.max(BLOCKER.0);
@@ -141,20 +141,20 @@ fn blocking_the_original_escape_does_not_shift_the_same_loop_to_another_tile() {
 #[test]
 fn a_suitable_city_defender_stays_and_fortifies() {
     let mut state = open_approach();
-    let defender = state.units.get_mut(&RANGER).unwrap();
-    defender.kind = UnitKind::Trooper;
+    let defender = state.units.get_mut(&ARCHER).unwrap();
+    defender.kind = UnitKind::Pikeman;
     defender.pos = CITY;
     state = check_six_turns(state, false);
-    assert_eq!(state.units[&RANGER].pos, CITY);
+    assert_eq!(state.units[&ARCHER].pos, CITY);
     assert_eq!(
-        state.units[&RANGER].fortify,
+        state.units[&ARCHER].fortify,
         legatum_core::data::FORTIFY_MAX
     );
 }
 
 #[test]
 fn visibly_clearing_the_threat_allows_a_healthy_defender_to_reoccupy() {
-    // A fallen city exposes its garrison: the weak Ranger waits in support while a
+    // A fallen city exposes its garrison: the weak Archer waits in support while a
     // healthy defender moves in once the visible threat is gone.
     let mut state = open_approach();
     state
@@ -162,9 +162,9 @@ fn visibly_clearing_the_threat_allows_a_healthy_defender_to_reoccupy() {
         .values_mut()
         .filter(|c| c.pos == CITY)
         .for_each(|c| c.hp = 0);
-    state.units.get_mut(&RANGER).unwrap().hp = 60;
+    state.units.get_mut(&ARCHER).unwrap().hp = 60;
     let mut state = advance(&state, false);
-    assert_eq!(state.units[&RANGER].pos, SUPPORT);
+    assert_eq!(state.units[&ARCHER].pos, SUPPORT);
     assert!(player_view(&state, ME).tile(ENEMY_POS).unwrap().visible);
     state.units.remove(&THREAT);
     legatum_core::visibility::update_explored(&mut state);
@@ -176,7 +176,7 @@ fn visibly_clearing_the_threat_allows_a_healthy_defender_to_reoccupy() {
             .values()
             .any(|u| u.owner == ME && legatum_core::rules::is_military(u.kind) && u.pos == CITY)
         {
-            assert_eq!(state.units[&RANGER].pos, SUPPORT);
+            assert_eq!(state.units[&ARCHER].pos, SUPPORT);
             return;
         }
     }
@@ -216,7 +216,7 @@ fn hidden_enemy_changes_cannot_change_defense_orders() {
 }
 
 #[test]
-fn fortified_soldier_retreats_before_wounds_make_later_attack_rounds_lethal() {
+fn fortified_spearman_retreats_before_wounds_make_later_attack_rounds_lethal() {
     use legatum_core::events::Defender;
     use legatum_core::game::{blank_game, spawn_unit};
     use legatum_core::rules::cities::found_city;
@@ -246,11 +246,11 @@ fn fortified_soldier_retreats_before_wounds_make_later_attack_rounds_lethal() {
         .values_mut()
         .filter(|c| c.pos == city)
         .for_each(|c| c.hp = 0);
-    let defender = spawn_unit(&mut state, ME, UnitKind::Soldier, city);
+    let defender = spawn_unit(&mut state, ME, UnitKind::Spearman, city);
     state.units.get_mut(&defender).unwrap().fortify = 3;
     // Independent approaches: one attack in movement round two, two in round three.
     let attackers = [Hex::new(8, 8), Hex::new(9, 5), Hex::new(6, 11)]
-        .map(|pos| spawn_unit(&mut state, enemy, UnitKind::Soldier, pos));
+        .map(|pos| spawn_unit(&mut state, enemy, UnitKind::Spearman, pos));
     legatum_core::visibility::update_explored(&mut state);
     let view = player_view(&state, ME);
     assert!(attackers.iter().all(|id| {
@@ -260,10 +260,10 @@ fn fortified_soldier_retreats_before_wounds_make_later_attack_rounds_lethal() {
     }));
     assert_eq!(state.units[&defender].hp, 100);
     let attack =
-        combat::unit_attack_strength_for(Faction::Mongols, UnitKind::Soldier, 100, 0).total;
+        combat::unit_attack_strength_for(Faction::Mongols, UnitKind::Spearman, 100, 0).total;
     let defense = combat::unit_defense_strength_for(
         Faction::Switzerland,
-        UnitKind::Soldier,
+        UnitKind::Spearman,
         100,
         Terrain::Plains,
         3,
@@ -307,7 +307,7 @@ fn fortified_soldier_retreats_before_wounds_make_later_attack_rounds_lethal() {
     let orders = decide(&state);
     assert!(validate_orders(&state, ME, &orders).is_empty());
     // A garrison holds its city: only maximum rolls kill it, so the city is not
-    // certain to fall and the Soldier keeps absorbing the attacks.
+    // certain to fall and the Spearman keeps absorbing the attacks.
     assert!(
         !orders.iter().any(|order| matches!(order,
             Order::MoveUnit { unit, to } if *unit == defender && *to != city
@@ -315,7 +315,7 @@ fn fortified_soldier_retreats_before_wounds_make_later_attack_rounds_lethal() {
         "the garrison must hold its city: {orders:?}"
     );
 
-    // The same fortified Soldier in the field, beside the city, retreats before the
+    // The same fortified Spearman in the field, beside the city, retreats before the
     // later rounds can become lethal (the retreat-before-worst-case forecast).
     let field = Hex::new(5, 8);
     state.units.get_mut(&defender).unwrap().pos = field;

@@ -1,14 +1,14 @@
 //! Playtest G20, from the user's own game (playtest 3, engine 29a5b2a): on turn 102 they
-//! declared War on AI 5 (team 4, plain Peace, no treaty) and ordered their Soldier (#54) onto
-//! AI 5's Settler (#83). The declaration took effect on turn 103, so the Soldier held while the
-//! Settler walked away, which read as a bounce; the Soldier caught it on turn 103. The fixture
+//! declared War on AI 5 (team 4, plain Peace, no treaty) and ordered their Spearman (#54) onto
+//! AI 5's Settler (#83). The declaration took effect on turn 103, so the Spearman held while the
+//! Settler walked away, which read as a bounce; the Spearman caught it on turn 103. The fixture
 //! is the recorded state at the start of turn 102 (replayed from the save's tape with the
 //! playtest-3 engine) and the recorded orders of turns 102 and 103.
 use legatum_core::events::PursuitOutcome;
 use legatum_core::{Event, GameState, Hex, Order, PlayerId, TeamId, UnitId, resolve_turn};
 use legatum_wasm::tape::TapeTurn;
 
-const SOLDIER: UnitId = UnitId(54);
+const SPEARMAN: UnitId = UnitId(54);
 const SETTLER: UnitId = UnitId(83);
 
 fn fixture() -> (GameState, Vec<TapeTurn>) {
@@ -23,7 +23,7 @@ fn fixture() -> (GameState, Vec<TapeTurn>) {
 fn declaring_war_at_plain_peace_captures_the_settler_on_the_same_turn() {
     let (state, turns) = fixture();
     assert_eq!(state.turn, 102);
-    assert_eq!(state.units[&SOLDIER].pos, Hex { q: 27, r: 18 });
+    assert_eq!(state.units[&SPEARMAN].pos, Hex { q: 27, r: 18 });
     assert_eq!(state.units[&SETTLER].pos, Hex { q: 27, r: 17 });
     assert!(!state.at_war(PlayerId(0), PlayerId(4)), "plain Peace");
     let orders = &turns[0].orders[&PlayerId(0)];
@@ -32,7 +32,7 @@ fn declaring_war_at_plain_peace_captures_the_settler_on_the_same_turn() {
         breach: false
     }));
     assert!(orders.contains(&Order::MoveUnit {
-        unit: SOLDIER,
+        unit: SPEARMAN,
         to: Hex { q: 27, r: 17 }
     }));
     let (next, events) = resolve_turn(&state, &turns[0].orders);
@@ -54,11 +54,11 @@ fn declaring_war_at_plain_peace_captures_the_settler_on_the_same_turn() {
         "the report reads: declared, then captured"
     );
     assert!(!events.iter().any(|e| matches!(e,
-        Event::AttackPursuit { unit, outcome: PursuitOutcome::AwaitingWar, .. } if *unit == SOLDIER)));
+        Event::AttackPursuit { unit, outcome: PursuitOutcome::AwaitingWar, .. } if *unit == SPEARMAN)));
     assert!(
         !events
             .iter()
-            .any(|e| matches!(e, Event::MoveBlocked { unit, .. } if *unit == SOLDIER))
+            .any(|e| matches!(e, Event::MoveBlocked { unit, .. } if *unit == SPEARMAN))
     );
     assert!(next.at_war(PlayerId(0), PlayerId(4)));
     assert_eq!(next.units[&SETTLER].owner, PlayerId(0));

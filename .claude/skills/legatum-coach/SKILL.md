@@ -15,6 +15,7 @@ The goal is that on Hard the user usually doesn't win, through better AI decisio
 - **Conquest:** cities the user captured or lost, when, and from or to whom. Did the victim or its neighbours respond?
 - **The runaway problem:** once the user led, when did the AIs first name him their top threat (`ai_opponent_memory[*].threat_log`), did they coalesce, and did their wars ever reach a city (campaign `end` reasons)?
 - **Signature use:** did the user exploit the faction's strength better than the AI does with that faction? Compare with the same faction's AI in the same game when there is one.
+- **What did the drawback cost him? (outside review, 2026-11-22; every review)** For the faction he played, name its drawback and say what it cost him in this game, with a number or an event (a turn, a Gold amount, a skipped or delayed build). The review found that four drawbacks (India, Germany, Switzerland, Athens) do not bite a human player. If it cost him nothing, say that plainly and add the game to that faction's tally; do this before proposing any rule change to the faction.
 - **Signature as a target:** did the AIs attack what the faction's goal hangs on (the Swiss capital and hoard, the Heir, the Courier Hall)?
 - **The hold:** once he started the 10-turn hold, what would have broken it (a thin crown, the capital, the goal, a public camp or Great Work tile) and did any AI try? Count rival units within 3 tiles of each removable VP source per hold turn (`py/camps.py` in coach-8925-celts).
 - **Diplomacy coherence:** peace and war flips, alliances that did nothing, wars declared without an army, peace signed with the leader.
@@ -31,7 +32,7 @@ The goal is that on Hard the user usually doesn't win, through better AI decisio
 - **Rank fixes across factions** (user, 2026-10-28: "i win whether I play a defensive faction playing defense or ... sparta and just go offense all game"): rank recommendations by how much they'd cut his win rate with any faction, citing the same pattern in earlier games; faction balance gets one line unless he asks.
 
 - **Questions for the designer are only about intent (user, 2026-11-07): "Only ask me questions that you cannot automatically definitively know from the game logs."** Settle what he saw, knew, placed or ordered, and when, from the tape: per-seat visibility, reveal turns, orders. Ask him only about plans and reasons. Drop any question the tape answers, and state the answer in the review instead.
-- **Scenario Lab:** each review ends by cutting 1 or 2 scenarios (`tools/scenarios/cut.sh`, see `scenarios/README.md`) and deletes scenarios that no longer teach anything; log the designer's runs in `references/scenario-lab-feedback.md`.
+- **AI measurement positions:** cut a position from a game when it tests a specific AI gap; remove obsolete ones. The player-facing Scenario Lab was removed on 2026-11-22.
 
 ## His early game, T1 to T60 (for a model seat; 45 tapes, `docs/playtests/early-defence.md`)
 Resolves "capital: Walls first" against "Granary, Archer, three Settlers": the first is how he plays now, the second is his opening before 2026-11-07 and when the rush faction is far. Counts are his games that show the rule.
@@ -92,4 +93,4 @@ Check each review against these, add evidence to the reference table, and update
 | `references/methods.md` | Running a review: replaying a save at its tag, rubber-band accounting, what-if branches, seat models, tracing a gene, finding the right build |
 | `references/patterns.md` | Adding evidence to a pattern or reading why its status is what it is |
 | `references/verdicts.md` | Recording a game's verdict (append a row) or comparing with past games |
-| `references/scenario-lab-feedback.md` | Reading what the designer said about past scenarios and which were cut |
+| `references/scenario-lab-feedback.md` | Historical notes on retired player runs and position cuts |

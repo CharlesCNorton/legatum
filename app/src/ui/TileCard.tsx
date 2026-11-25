@@ -15,7 +15,7 @@ import { cityFireStatus } from '../format';
 import { usePlacedCard, type CardAnchor } from './usePlacedCard';
 import { BARBARIAN_INK, campAt, CAMP_CLEAR_GOLD, isBarbarian } from '../barbarians';
 import { useGame } from '../store';
-import { buildingIconName, factionGoalVp, wonderTileText } from '../data';
+import { buildingIconName, factionGoalVp, sameItem, wonderTileText } from '../data';
 import { heirLines } from './HeirNote';
 import { contractLine, isCompany } from '../company';
 import { heirHoverLine, heirTag, isHeir } from '../heir';
@@ -23,9 +23,11 @@ import { atWar } from '../diplomacy';
 import { WONDER_INFO, cityWonders, holdingCity, wonderArt, wonderBonusParts, wonderDiscoveryLine, wonderYieldWord } from '../wonders';
 import { FactionSeal } from '../brand/ornaments';
 import { RankMark } from './RankMark';
-import { sleepOrderText } from '../orders';
+import { buildingArtSlug, slugUrl } from '../unlockArt';
+import { pendingProduction, sleepOrderText } from '../orders';
 import { capitalMark, replacementTileLine } from '../capitalMark';
 import { CapitalNote, ReplacementNote } from './CapitalStar';
+import { GOAL_CITY_ICON, goalCities, goalCitiesAt, goalCityLine, tombSiteAt, tombSiteLine } from '../goalCities';
 
 /** "Mongol Scout", but a faction's own piece already carries its name ("Spartan Hoplite"). */
 const ownedName = (adjective: string, unit: string) => unit.startsWith(`${adjective} `) ? unit : `${adjective} ${unit}`;
@@ -47,6 +49,13 @@ export function TileCard({ view, hex, anchor, routeWarning, blockedReason, reinf
     </div>;
     // Byzantium's Heir is public wherever he stands: an unexplored tile that holds him still answers the hover, with only what is known.
     const lone = view.units.find((u) => isHeir(u) && hexEq(u.pos, hex));
+    // Rome's Colonia and Egypt's tomb are public too: their tile answers the hover with whose goal it is and who scores.
+    const goalHere = goalCities(view).filter((g) => hexEq(g.at, hex));
+    if (!lone && goalHere.length) return <div className="tilecard" ref={placed.ref} style={placed.style}>
+      <div className="tilecard-head"><b>{goalHere[0].name}</b><span className="muted">{placeName(view, hex)}</span></div>
+      {goalHere.map((g) => <div key={g.kind} className="tilecard-row tilecard-goal-city" data-testid={`tile-goal-${g.kind}`}><Icon name={GOAL_CITY_ICON[g.kind]} size={14} /> <Amounts text={goalCityLine(view, g)} /></div>)}
+      <div className="tilecard-row muted">Unexplored: its place is public, the land around it is not.</div>
+    </div>;
     if (!lone) return null;
     return <div className="tilecard" ref={placed.ref} style={placed.style}>
       <div className="tilecard-head"><b>{heirTag(view, lone) ?? 'Heir'}</b><span className="muted">{placeName(view, hex)}</span></div>
@@ -72,7 +81,7 @@ export function TileCard({ view, hex, anchor, routeWarning, blockedReason, reinf
   // A barbarian camp or unit on an owned tile: it yields nothing to its owner (Civ 6).
   const barbarianHeld = !!owner && !city && (!!camp || units.some((u) => isBarbarian(u.owner)));
   // A rival-held Heir under your selected military unit: moving onto his tile captures him.
-  const heir = units.find((u) => u.kind === 'Heir');
+  const heir = units.find((u) => u.kind === 'HeirToTheThrone');
   const mover = selection?.kind === 'unit' ? view.units.find((u) => u.id === selection.id && u.owner === view.me && u.military) : undefined;
   const team = (id: number) => view.players.find((p) => p.id === id)?.team === view.team;
   const capturable = !!heir && !!mover && !team(heir.owner) && !isBarbarian(heir.owner) && atWar(view, heir.owner);
@@ -104,7 +113,7 @@ export function TileCard({ view, hex, anchor, routeWarning, blockedReason, reinf
     : dormantNote;
   return (
     <div className="tilecard" ref={placed.ref} style={placed.style}>
-      {t.landmark ? <div className="tilecard-lead" data-testid="tile-landmark"><Icon name={buildingIconName(t.landmark.building)} size={46} /><div><b className="tilecard-lead-name">{BUILDING_NAME[t.landmark.building]}</b><span className="tilecard-lead-kind">Wonder tile · {owner ? empireOfPlayer(view, owner.id) : 'unclaimed'}</span></div></div> : t.wonder ? <WonderLead view={view} hex={hex} t={t} /> : resource ? (
+      {t.landmark ? <div className="tilecard-lead" data-testid="tile-landmark"><LeadArt url={slugUrl(buildingArtSlug(t.landmark.building, owner?.faction), 128) ?? slugUrl(buildingArtSlug(t.landmark.building), 128)} icon={buildingIconName(t.landmark.building)} /><div><b className="tilecard-lead-name">{BUILDING_NAME[t.landmark.building]}</b><span className="tilecard-lead-kind">Wonder tile · {owner ? empireOfPlayer(view, owner.id) : 'unclaimed'}</span></div></div> : t.wonder ? <WonderLead view={view} hex={hex} t={t} /> : resource ? (
         <div className="tilecard-lead" data-testid="tile-resource">
           <Icon name={`resource-${resource.toLowerCase()}`} size={46} label={RESOURCE_INFO[resource].name} />
           <div>
@@ -164,7 +173,7 @@ export function TileCard({ view, hex, anchor, routeWarning, blockedReason, reinf
           : `Striped: ${owningCity.name} owns this tile beyond its ${WORK_RADIUS}-tile work radius. It gives no yield. It blocks rivals.`}
       </div>}
       {barbarianHeld && <div className="tilecard-row bad">Barbarians hold the tile: it yields nothing.</div>}
-      {(camp || units.some((u) => isBarbarian(u.owner))) && faction === 'Celts' && <div className="tilecard-row good">Barbarians never attack you.</div>}
+      {(camp || units.some((u) => isBarbarian(u.owner))) && faction === 'Celts' && <div className="tilecard-row good">Barbarians don't attack you.</div>}
       {city && view.players.find((p) => p.id === view.me)?.faction === 'Celts' && owner?.id !== view.me && city.founder !== view.me && <div className="tilecard-row bad">Celts sack this city when they capture it.</div>}
       {t.ruin && <div className="tilecard-row ruin"><Icon name="ruin" size={15} color="currentColor" /> ancient ruin: unexplored</div>}
       {camp && (
@@ -182,12 +191,18 @@ export function TileCard({ view, hex, anchor, routeWarning, blockedReason, reinf
         return mark ? <div className="tilecard-row"><CapitalNote view={view} mark={mark} testId="tile-capital" /></div>
           : replaced && <div className="tilecard-row"><ReplacementNote text={replaced} testId="tile-replacement" /></div>;
       })()}
+      {city && goalCitiesAt(view, city.id).map((g) => <div key={g.kind} className="tilecard-row tilecard-goal-city" data-testid={`tile-goal-${g.kind}`}><Icon name={GOAL_CITY_ICON[g.kind]} size={14} /> <Amounts text={goalCityLine(view, g)} /></div>)}
+      {city && (() => { const site = tombSiteAt(view, city.id); return site ? <div className="tilecard-row tilecard-goal-city planned" data-testid="tile-goal-tomb-site"><Icon name={GOAL_CITY_ICON.tomb} size={14} /> {tombSiteLine(view, site)}</div> : null; })()}
       {/* Production is private (pillar 6): only your own city's banner meter gets this tooltip line. */}
       {city && city.visible && city.owner === view.me && (() => {
         const p = productionProgress(city);
         if (!p) return null;
         const name = p.item ? itemName(p.item, faction) : null;
-        const text = cityOccupiedLine(view, city) ?? (p.state === 'idle' ? 'No production chosen'
+        // A choice made this turn shows at once, as it does on the banner beside this card.
+        const chosen = pendingProduction(orders, city.id);
+        const option = chosen && !sameItem(chosen, city.detail?.producing ?? null) ? city.detail?.options.find((o) => sameItem(o.item, chosen)) : undefined;
+        const chosenText = chosen && option ? `Chosen this turn: ${itemName(chosen, faction)}${option.turns > 0 ? ` · ${option.turns} turn${option.turns === 1 ? '' : 's'}` : ''}` : null;
+        const text = cityOccupiedLine(view, city) ?? chosenText ?? (p.state === 'idle' ? 'No production chosen'
           : p.state === 'stalled' ? p.stallText
           : p.state === 'waiting' ? `Queued: ${name} · ${p.stored}/${p.needed} stored`
           : `Producing ${name}: ${p.stored}/${p.needed}${p.turns !== null ? `, ${p.turns} turn${p.turns === 1 ? '' : 's'}` : ''}`);
@@ -249,4 +264,9 @@ function WonderLead({ view, hex, t }: { view: PlayerView; hex: Hex; t: PlayerVie
       </ul>
     </div>
   );
+}
+
+/** The card's lead picture: the painting (the same 56 px as a natural wonder's), else the engraved icon. */
+function LeadArt({ url, icon }: { url: string | null; icon: string }) {
+  return url ? <img src={url} width={56} height={56} alt="" draggable={false} /> : <Icon name={icon} size={46} />;
 }

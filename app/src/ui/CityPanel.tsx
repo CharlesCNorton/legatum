@@ -3,13 +3,13 @@ import { rivalBuilders as rivalsOnWonder, rivalBuilderText } from '../wonderRace
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { purchasePreviews, tilePurchasePreview } from './productionPurchases';
 import { useGame } from '../store';
-import { AUTOMATION_NO_CHOICE, autoPickReason, cityAutomationFocus, setCityAutomation } from '../automation';
+import { AUTOMATION_NO_CHOICE, autoPickReason, cityAutomationFocus, FOCUS_CYCLE, focusLabel, setCityAutomation } from '../automation';
 import type { CityBuildFocus } from '../types';
 import type { BuildingKind, CityView, Faction, Order, PlayerView, ProductionItem, ProductionOption, Resource, ImprovementKind, UnavailableOption } from '../types';
 import { comparisonSentence, pieceAgainst, pieceComparison } from '../pieceCompare';
 import { PieceVsLine } from './PieceVs';
 import { razeLossLines, razeLosses, razeWorkText } from '../razeLosses';
-import { BUILDING_NAME, BUILDING_STATS, TERRAIN_NAME, FIRST_GROWTH, GROWTH_BASE, GROWTH_PER_POP, WORK_RADIUS, GERMANY_PROJECT_GOLD_PERCENT, GERMANY_PROJECT_SCIENCE_PERCENT, costInFactionYield, costYield, isGrow, greatWorkRules, greatWorkRequirement, GREAT_WORKS, isGreatWork, isProductionBuilding, TECH_NAME, CAPTURE_RESISTANCE_TURNS, itemCardText, itemDescription, itemSummary, moreText, itemKey, itemName as baseItemName, IMPROVEMENT_INFO, sameItem, buildingFamily, RULES, HORSE_MOUNTED } from '../data';
+import { BUILDING_NAME, BUILDING_STATS, TERRAIN_NAME, FIRST_GROWTH, GROWTH_BASE, GROWTH_PER_POP, WORK_RADIUS, projectPercent, costInFactionYield, costYield, isGrow, greatWorkRules, greatWorkRequirement, GREAT_WORKS, isGreatWork, isProductionBuilding, TECH_NAME, CAPTURE_RESISTANCE_TURNS, itemCardText, itemDescription, itemSummary, moreText, itemKey, itemName as baseItemName, IMPROVEMENT_INFO, sameItem, buildingFamily, RULES, HORSE_MOUNTED } from '../data';
 import { effectiveProduction, errorsWhere, orderCity, productionQueue, queueAfterBuild, setProductionQueue, toggleBuy } from '../orders';
 import { distance, hexEq, tileIndex } from '../hex';
 import { WONDER_INFO, WONDER_PERCENT, cityWonders, wonderArt, wonderBonusSentence, wonderYieldWord } from '../wonders';
@@ -30,8 +30,10 @@ import { closeTips } from './Tip';
 import { CapitalNote, CapitalStarGlyph, KickerDot } from './CapitalStar';
 import { capitalLine, capitalMark, replacementKickerLine } from '../capitalMark';
 import { hallCardText, hallStands } from './goalText';
+import { GOAL_CITY_ICON, TOMB_CITY_NOTE, goalCitiesAt, goalCityLine, tombWorking } from '../goalCities';
 import { isPermanentlyUnavailable, nestBuildingUpgrades, progressText, unavailableText, unitLines, withUnavailable, type BuildingLineNode } from './productionChoices';
 import { feel } from '../feel';
+import { answerDecision } from '../notice';
 import { RESOURCE_INFO, isStrategic, needText, nileYields, supplyPerMine, supplyRuleText, withArticle } from '../resources';
 import { CostChip } from './CostChip';
 import { Amount, Amounts, Quantity } from './Amounts';
@@ -41,7 +43,7 @@ import { ForeignCityActions } from './ForeignCityActions';
 import { CityBorders } from './CityBorders';
 import { ProgressBar } from './ProgressBar';
 import { claimSummary, growthProgress, territoryCounts, yieldsText } from '../cityProgress';
-import { revealIdleProductionPicker } from './cityPanelScroll';
+import { revealBelowStickyHead, revealIdleProductionPicker } from './cityPanelScroll';
 import { LevyNote } from './Levy';
 import { CompanyShop } from './CompanyShop';
 import { canHire } from '../company';
@@ -53,10 +55,11 @@ const upperFirst = (text: string) => text.charAt(0).toUpperCase() + text.slice(1
 
 /** What each automatic-build focus does, for the select's tooltip. */
 const FOCUS_TIP: Record<CityBuildFocus, string> = {
-  Balanced: 'Picks the best all-round build for the city. Spends no Gold.',
-  Science: 'Prefers Science buildings and never trains military units. Spends no Gold.',
-  Gold: 'Prefers Gold buildings and never trains military units. Spends no Gold.',
-  Military: 'Leans strongly toward military units. Spends no Gold.',
+  Military: 'Trains the newest military units your strategic resources allow, never outdated ones. Spends no Gold.',
+  Economy: 'Builds buildings and improvements, never units. Spends no Gold.',
+  Gold: 'Runs the Gold project and builds nothing else.',
+  Science: 'Runs the Science project and builds nothing else.',
+  Food: 'Runs the Food project and builds nothing else.',
 };
 
 /** How Build and + Queue work, and what happens to progress when you switch (one rule, one wording). */
@@ -193,6 +196,16 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
     if (orders.some((o) => (o.type === 'SetProduction' || o.type === 'SetProductionQueue') && o.city === city.id)) return;
     revealIdleProductionPicker(scroller);
   }, [city.id, city.owner, view.me]);
+  // A production warning that appears while the panel is scrolled to the build list (Ready with an automated
+  // city that has nothing to pick) would sit half under the sticky head: scroll it whole into view once.
+  const shownWarning = useRef<string | null>(null);
+  useLayoutEffect(() => {
+    const scroller = panel.current, warning = scroller?.querySelector<HTMLElement>('.production-warning') ?? null;
+    const key = warning ? `${city.id}:${warning.textContent}` : null;
+    if (key === shownWarning.current) return;
+    shownWarning.current = key;
+    if (scroller && warning) revealBelowStickyHead(scroller, warning);
+  });
   // The star marks the original capital for the whole game (the scoring rule), not the current capital. In the common case, your own
   // founding city, the line is a tooltip so it costs the build list no room; any other original capital prints it under the head.
   const capMark = capitalMark(view, city);
@@ -202,7 +215,9 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
   const replacedLine = replacementKickerLine(view, city);
   const kickerLabel = city.owner === view.me ? <>Your {city.visible && city.is_capital ? 'capital' : 'city'} <PlayerBadge id={city.owner} /></>
     : <>{city.visible && city.is_capital ? 'Capital' : 'City'} of <PlayerBadge id={city.owner} /> {owner ? empireOfPlayer(view, owner.id) : 'the unknown'}</>;
-  const head = (
+  // The sticky head: name, three numbers and, for a city you can see into, its yields row, so scrolling to the build
+  // cards never hides what the city makes (the 1000x600 laptop opened an idle city with the yields scrolled away).
+  const headWith = (yieldsRow?: ReactNode) => (
     <div className="cp-head">
       <div className="cp-kicker">
         {capKicker('right')}
@@ -218,19 +233,28 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
           <span className="lbl">Strength</span>
           <b>{city.strength}</b>
         </Tip>
-        <Tip content={`City health. ${CITY_HEAL_RULE}`}>
-          <span className="lbl">Health</span>
+        <Tip content={`City HP. ${CITY_HEAL_RULE}`}>
+          <span className="lbl">HP</span>
           <b>{city.hp}</b>
-          <span className="muted">/{city.max_hp}</span>
+          <span className="muted"> / {city.max_hp}</span>
         </Tip>
       </div>}
+      {yieldsRow}
     </div>
   );
+  const head = headWith();
 
+  // Egypt's Royal Tomb work: none of its cities builds or grows (core `economy`), and every panel says so.
+  const tombStopped = city.owner === view.me && tombWorking(view);
   // Healing, fire and bounty scroll with the list instead of riding in the sticky head: the head stays a name and three numbers, so the build cards keep the room.
   const status = (
     <>
       {capMark && !(capMark.own && city.owner === view.me) && <div className="cp-capital"><CapitalNote view={view} mark={capMark} testId="city-capital" /></div>}
+      {/* Rome's Colonia and Egypt's tomb: public goal cities, named with whose goal it is and who scores now. */}
+      {goalCitiesAt(view, city.id).map((g) => <div key={g.kind} className="cp-capital cp-goal-city" data-testid={`city-goal-${g.kind}`}>
+        <Icon name={GOAL_CITY_ICON[g.kind]} size={16} /><span>{goalCityLine(view, g)}</span>
+      </div>)}
+      {tombStopped && <div className="cp-capital cp-goal-city cp-tomb-work" data-testid="city-tomb-work"><Icon name="goal-royal-tomb" size={16} /><span>{TOMB_CITY_NOTE}</span></div>}
       {(fire || heal || bounty !== null || city.greece_captive_at_risk) && <div className="cp-status">
         {heal && <Tip as="div" className="cp-healing-wrap" content={CITY_HEAL_RULE}>
           <ProgressBar className="cp-healing" testId="city-heal" name="City HP healing"
@@ -331,7 +355,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
       const turns = Math.max(1, Math.ceil((d.growth_threshold - d.food_stored) / gain));
       return `Grows in ${turns} turn${turns === 1 ? '' : 's'}`;
     }
-    return `+${Math.floor(y.total.production * (item.project === 'Gold' ? GERMANY_PROJECT_GOLD_PERCENT : GERMANY_PROJECT_SCIENCE_PERCENT) / 100)} ${item.project}/turn`;
+    return `+${Math.floor(Math.max(0, y.total.production) * projectPercent(owner?.faction, item.project) / 100)} ${item.project}/turn`;
   };
   const growOption = owner?.faction === 'Egypt' ? d.options.find((o) => isGrow(o.item)) ?? null : null;
   const nileSurplus = egyptBuilding ? -(yields.sources.find((src) => src.label.startsWith('The Nile: surplus Food builds'))?.yields.food ?? 0) : 0;
@@ -356,7 +380,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
   const claimTip = claim ? <Tip content={<span data-testid="claim-rule">
     <Amounts text={`Ring ${claim.ring}. ${claim.worked ? `Worked as soon as it is claimed: ${claim.effect}.` : claim.handoffTo ? `Beyond ${WORK_RADIUS} tiles from this city: ${claim.handoffTo} takes over and works it at the end of the turn.` : `Beyond ${WORK_RADIUS} tiles from the city: claimed but not worked. It keeps rivals out.`} `} />
     {`Claims the nearest ring first, then the best tile for your focus (${yields.focus}${focusReason.startsWith('building') ? `, from ${focusReason}` : `, ${focusReason}`}). `}
-    {`${yields.focus} is this city's focus, and you never set it by hand. It follows what the city builds: Soldiers and world wonders favour Production, a Settler at population 1 favours Food. ${TILE_PRIORITY_INFO[yields.focus]}`}
+    {`${yields.focus} is this city's focus, and you never set it by hand. It follows what the city builds: military units and world wonders favour Production, a Settler at population 1 favours Food. ${TILE_PRIORITY_INFO[yields.focus]}`}
     {pendingQueue && ' Preview after Ready.'}
   </span>}>{claim.text}</Tip> : null;
   // Under the bar: what the claim adds, as icons with counts (or that it only blocks rivals).
@@ -369,11 +393,12 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
   const growthLabelText = growth?.state === 'starving' ? 'Starving' : `Grows to ${city.population + 1}${claim ? ` · ${claim.text}` : ''}${unlockNames ? ` · unlocks ${unlockNames}` : ''}`;
   const counts = territoryCounts(d);
   const ownedWonders = cityWonders(view, city);
-  const growthTurns = egyptBuilding && d.resistance === 0 ? 'Food builds instead'
+  const growthTurns = tombStopped && d.resistance === 0 ? 'Paused'
+    : egyptBuilding && d.resistance === 0 ? 'Food builds instead'
     : growth?.state === 'resisting' ? 'Paused'
     : growth?.state === 'starving' ? `−1 population in ${growth.turns}`
     : growth?.state === 'growing' ? `${growth.turns} turn${growth.turns === 1 ? '' : 's'}`
-    : growth?.state === 'shortage' ? 'Short of Food' : 'Stagnant';
+    : growth?.state === 'shortage' ? 'Short of Food' : 'Not growing';
   const growthDecadence = d.growth_breakdown?.parts.find(([label]) => isDecadenceLine(label));
   const growthTip = (
     <div className="bd">
@@ -387,6 +412,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
       <div className="bd-note"><Amounts text={
         growth?.state === 'starving' ? `Stored Food runs out and ${city.name} loses 1 population in ${growth.turns} turn${growth.turns === 1 ? '' : 's'}. Build a Farm or a Granary to add Food.`
           : growth?.state === 'resisting' ? `No growth during resistance (${d.resistance} turns).`
+          : tombStopped ? TOMB_CITY_NOTE
           : egyptBuilding ? `While ${city.name} is building, its surplus Food goes into the build and the city doesn't grow. Choose Grow to grow it instead.`
           : `Grows at ${d.growth_threshold} Food. The first growth costs ${FIRST_GROWTH} Food. After that, each growth costs ${GROWTH_BASE} Food plus ${GROWTH_PER_POP} for every population above 1. Leftover Food carries over, and a city grows at most 1 population a turn. Each growth claims one more tile.`
       } /></div>
@@ -396,9 +422,9 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
     </div>
   );
   const faction = owner?.faction;
-  // The Mongols's Courier Hall in its own city: a greyed card too, so the Hall reads as built where it is bought.
-  const hallHere = city.owner === view.me && faction === 'Mongols' && d.buildings.includes('CourierHall');
-  const unavailable: UnavailableOption[] = [...(d.unavailable ?? []), ...(hallHere && !(d.unavailable ?? []).some((u) => sameItem(u.item, { kind: 'Building', building: 'CourierHall' })) ? [{ item: { kind: 'Building' as const, building: 'CourierHall' as const }, cost: 0, reason: `The Yam Relay Station already stands in ${city.name}`, production_banked: 0 }] : [])];
+  // The Mongols's Yam Relay Station in its own city: a greyed card too, so the Station reads as built where it is bought.
+  const hallHere = city.owner === view.me && faction === 'Mongols' && d.buildings.includes('YamRelayStation');
+  const unavailable: UnavailableOption[] = [...(d.unavailable ?? []), ...(hallHere && !(d.unavailable ?? []).some((u) => sameItem(u.item, { kind: 'Building', building: 'YamRelayStation' })) ? [{ item: { kind: 'Building' as const, building: 'YamRelayStation' as const }, cost: 0, reason: `The Yam Relay Station already stands in ${city.name}`, production_banked: 0 }] : [])];
   const listOptions = d.options;
   const listUnavailable = unavailable;
   const permanentLine = (items: UnavailableOption[], options: ProductionOption[] = []) => {
@@ -425,11 +451,22 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
     clearTimeout(flashTimer.current);
     flashTimer.current = setTimeout(() => setFlash(null), 1500);
   };
-  const buildNow = (item: ProductionItem, from?: Element | null) => {
+  /** True when it replaced the current build: that shows the G17 notice, which must not be hidden by the next decision. */
+  const buildNow = (item: ProductionItem, from?: Element | null): boolean => {
     setNotice(null);
     keepInPlace(from);
-    changeQueue(queueAfterBuild(queue, producing, item));
+    const next = queueAfterBuild(queue, producing, item);
+    // Misclick guard: replacing the current build names both, with Undo (G17).
+    if (producing && !sameItem(producing, item)) {
+      answerDecision(`${city.name} now builds ${itemName(item, faction)} instead of ${itemName(producing, faction)}.`, (o) => setProductionQueue(o, city.id, next), undefined, 'queue');
+      return true;
+    }
+    changeQueue(next);
+    return false;
   };
+  /** Buying names the city, with Undo (G17): a buy in the wrong city is easy to miss before End Turn. */
+  const buy = (item: ProductionItem, price: number | null) => answerDecision(
+    `Buying ${itemName(item, faction)} in ${city.name}${price === null ? '' : ` for ${price} Gold`}.`, (ord) => toggleBuy(ord, city.id, item), undefined, 'purchase');
   /** A greyed-out item never adds an order; clicking it says why, on the card (never a silent bounce). */
   const refuse = (u: UnavailableOption) => {
     const why = whyUnavailable(u);
@@ -472,7 +509,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
   const siteCard = (building: BuildingKind) => { const all = siteOptions(building); return all.find(siteChosen) ?? all[0]; };
   /** "Plains, Wheat, 3 tiles SW": the chosen tile, as the card names it. */
   const sitePlace = (tile: CityView['pos']) => { const t = view.tiles[tileIndex(tile, view.width, view.height)]; return [t?.terrain ? TERRAIN_NAME[t.terrain] : null, t?.resource ? RESOURCE_INFO[t.resource].name : null, wonderWhere(tile)].filter(Boolean).join(', '); };
-  const yamCard = listOptions.some((o) => o.item.kind === 'Wonder' && o.item.building === 'CourierHall') ? siteCard('CourierHall') : undefined;
+  const yamCard = listOptions.some((o) => o.item.kind === 'Wonder' && o.item.building === 'YamRelayStation') ? siteCard('YamRelayStation') : undefined;
   const placing = (building: BuildingKind) => place?.city === city.id && place.building === building;
   const startPlace = (building: BuildingKind, intent: 'build' | 'queue' | 'buy') => {
     setImproveHover(null);
@@ -498,7 +535,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
     useGame.getState().set({ place: null });
     if (!o) return;
     if (place.intent === 'queue') append(o.item);
-    else if (place.intent === 'buy') editOrders((ord) => toggleBuy(ord, city.id, o.item), 'purchase');
+    else if (place.intent === 'buy') buy(o.item, null);
     else buildNow(o.item);
   };
   // Short of a strategic resource, the newest buildings that need it yield nothing: say so beside the building list.
@@ -524,7 +561,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
       <button className="btn primary" data-primary-action disabled={view.finished || !choice || choiceBlocked}
         aria-label={choice ? `Build ${itemName(choice.item, owner?.faction)}` : 'Build'}
         aria-description={choiceBlocked ? choice!.resource_blocker! : undefined}
-        onClick={() => { if (choice) { buildNow(choice.item); advanceAfterBuild(); } }}><span>{choice?.item.kind === 'Project' ? 'Run project' : 'Build'}</span></button>
+        onClick={() => { if (choice && !buildNow(choice.item)) advanceAfterBuild(); }}><span>{choice?.item.kind === 'Project' ? 'Run project' : 'Build'}</span></button>
       {choiceBlocked && <small className="phone-action-why prod-blocked" role="note"><ResourceReason text={choice!.resource_blocker!} resource={choice!.supply_need!} /></small>}
     </div>;
   }
@@ -600,7 +637,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
     const description = itemDescription(o.item, owner?.faction);
     const cardText = itemCardText(o.item, owner?.faction);
     const fullCopy = cardText === description ? description : `${cardText} ${description}`;
-    const hallDetail = o.item.kind === 'Building' && o.item.building === 'CourierHall' ? hallCardText() : null;
+    const hallDetail = o.item.kind === 'Building' && o.item.building === 'YamRelayStation' ? hallCardText() : null;
     const detail = [fullCopy, effect, hallDetail, site && isGreatWork(site.building) ? `Only one empire can complete it. ${rivalBuilders.length ? `Known builders: ${rivalBuilders.join(', ')}.` : 'No known rival builder.'}` : null].filter(Boolean).join(' ');
     const cardLineBase = site && isGreatWork(site.building) ? `${itemSummary(o.item, owner?.faction).replace(/^World wonder: /, '').replace(/^whoever holds its tile scores (\+\d+ VP)$/, '$1 to its tile holder')} · one in the world${rivalBuilders.length ? `, also building: ${rivalBuilders.join(', ')}` : ''}` : [keeps, gains || itemSummary(o.item, owner?.faction)].filter(Boolean).join(' · ');
     const cardLine = industryFood(o.item) ? `${cardLineBase} · −1 Food` : cardLineBase;
@@ -609,7 +646,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
         aria-disabled={resourceBlocked || undefined}
         aria-description={resourceBlocked ? `${o.resource_blocker}${o.supply_need ? ` Open ${o.supply_need} supply.` : ''}` : undefined}
         title={imp || site ? detail : undefined}
-        disabled={view.finished} onClick={(event) => { if (unplaced) { startPlace(site!.building, event.shiftKey ? 'queue' : 'build'); return; } if (resourceBlocked) { if (headOnly) { if (o.supply_need) openResourceChip(o.supply_need); return; } if (!duplicate && queue.length < 50) append(o.item, event.currentTarget); return; } if (event.shiftKey) { if (!duplicate && queue.length < 50) append(o.item, event.currentTarget); } else { buildNow(o.item, event.currentTarget); advanceAfterBuild(); } }}>
+        disabled={view.finished} onClick={(event) => { if (unplaced) { startPlace(site!.building, event.shiftKey ? 'queue' : 'build'); return; } if (resourceBlocked) { if (headOnly) { if (o.supply_need) openResourceChip(o.supply_need); return; } if (!duplicate && queue.length < 50) append(o.item, event.currentTarget); return; } if (event.shiftKey) { if (!duplicate && queue.length < 50) append(o.item, event.currentTarget); } else if (!buildNow(o.item, event.currentTarget)) advanceAfterBuild(); }}>
         <span className="prod-icons"><ItemArt item={o.item} faction={owner?.faction} size={20} />{imp && preview && <Icon name={`resource-${preview.resource.toLowerCase()}`} size={18} label={RESOURCE_INFO[preview.resource].name} />}</span>
         <span className="prod-name">{imp ? <><span className="prod-what">{improvementName(imp.improvement, preview?.resource)}</span><span className="prod-where">{improvementWhere(imp, city.pos)}</span></> : site ? <><span className="prod-what">{baseItemName(site, owner?.faction)}</span>{unplaced && !isGreatWork(site.building) && <span className="prod-where place-where">{placingHere ? 'Click a lit tile on the map' : 'Choose its tile on the map'}</span>}{!unplaced && <><span className="prod-where">{sitePlace(site.tile)}</span>{o.wonder && <span className="prod-where site-cost"><Amounts text={`gives up ${yieldsText(o.wonder.lost)}`} /></span>}</>}</> : name} {positions.length > 1
           ? <span className="queue-badge queue-count" title={`In the queue ${positions.length} times (positions ${positions.join(', ')})`}>×{positions.length}</span>
@@ -618,7 +655,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
         <span className="prod-turns">{o.turns > 0 ? `${o.turns} turn${o.turns === 1 ? '' : 's'}` : 'No output'}</span>
         {o.item.kind === 'Unit' && <span className={`prod-upkeep ${o.upkeep ? o.upkeep.free ? 'free' : 'paid' : 'none'}`}><Amounts text={upkeepText(o.upkeep)} />{o.upkeep && o.upkeep.gold_per_turn_after < 0 && <span className="prod-upkeep-after" title="Your total Gold/turn once this unit exists"> → <Amounts text={`${signed(o.upkeep.gold_per_turn_after)} Gold/turn`} /></span>}</span>}
         {imp && <span className="prod-upkeep none">No upkeep</span>}
-        <span className="prod-go" title={chosen ? 'Chosen: it starts when the turn ends' : undefined}>{placingHere ? 'Cancel' : resourceBlocked ? headOnly ? 'Blocked' : 'Queue →' : chosen ? active ? 'Chosen' : 'Queued' : 'Build →'}</span>
+        <span className="prod-go" title={chosen ? 'Chosen: it starts when the turn ends' : undefined}>{placingHere ? 'Cancel' : resourceBlocked ? headOnly ? 'Blocked' : 'Queue →' : chosen ? active ? 'Chosen' : 'Queued' : tombStopped ? 'Queue' : 'Build →'}</span>
       </button>
     </>;
     return <div className={`production-choice ${picked ? ' picked' : ''}${resourceBlocked ? ' supply-blocked' : ''}${site ? ' wonder-site' : ''}`} key={key} data-item={key} data-picked={picked || undefined}
@@ -633,7 +670,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
           <button className={`btn-buy ${selectedBuy ? 'active' : ''}`} aria-pressed={selectedBuy}
             aria-label={`Buy ${name}${price === null ? '' : ` for ${price} Gold`}`}
             aria-describedby={`purchase-status-${city.id}`}
-            disabled={view.finished || (!selectedBuy && !!reason)} onClick={() => unplaced && !selectedBuy ? startPlace(site!.building, 'buy') : editOrders((ord) => toggleBuy(ord, city.id, o.item), selectedBuy ? undefined : 'purchase')}>
+            disabled={view.finished || (!selectedBuy && !!reason)} onClick={() => unplaced && !selectedBuy ? startPlace(site!.building, 'buy') : selectedBuy ? editOrders((ord) => toggleBuy(ord, city.id, o.item)) : buy(o.item, price)}>
             {/* G16: the price is a spend chip; a chosen buy keeps it, with ✓ (clicking again cancels). */}
             {selectedBuy ? <Icon name="ui-check" size={13} className="ui-mark" label="Buying" /> : 'Buy'} {price === null ? '—' : resourceBlocked && !selectedBuy ? null : <CostChip spends={[selectedBuy ? { unit: 'Gold', amount: price, from: purchase.gold, to: purchase.gold - price } : { unit: 'Gold', amount: price }]} />}
           </button>
@@ -734,7 +771,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
   // The same check as the map's faded medallions and the tile card: owned, known and unimproved.
   const dormant = d.territory.filter((h) => { const t = view.tiles[tileIndex(h, view.width, view.height)]; return !!t && isDormant(t, view.me, owner?.faction); }).length;
   const improvements = (city.owner === view.me && improvementOptions.length > 0) ? <section aria-label="Improvements" data-testid="improvements-group">
-    <Tip as="div" className="cp-sub" content={`A resource yields its bonus only once its tile is improved. A strategic deposit supplies its resource as soon as it is inside your borders. Its improvement (${['Mine', 'SaltpeterWorks', 'OilWell', 'QuartzMine'].map((k) => withArticle(IMPROVEMENT_INFO[k as ImprovementKind].name)).join(', ')}) adds its tile's yield and 1 more supply. Pick a tile here or click it on the map. Improvements upgrade by themselves with technology; a released tile keeps its improvement, and a captured city's land keeps it.`}>
+    <Tip as="div" className="cp-sub" content={`A resource yields its bonus only once its tile is improved. A strategic deposit supplies its resource as soon as it is inside your borders. Its improvement (${['Mine', 'SaltpetreWorks', 'OilWell', 'QuartzMine'].map((k) => withArticle(IMPROVEMENT_INFO[k as ImprovementKind].name)).join(', ')}) adds its tile's yield and 1 more supply. Pick a tile here or click it on the map. Improvements upgrade by themselves with technology; a released tile keeps its improvement, and a captured city's land keeps it.`}>
       Improvements <span className="cp-sub-note">· {dormant} resource tile{dormant === 1 ? '' : 's'} unimproved</span>
     </Tip>
     <div className={`prod-list ${producing ? '' : 'choosing'}`}>{improvementOptions.map((o) => renderOption(o))}</div>
@@ -744,15 +781,15 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
 
   /** Idle with nothing queued: the control sits on the "Choose what ... builds" line, so it never scrolls out of view above the cards and costs no extra row. */
   const idleChoice = city.owner === view.me && !producing && queue.length === 0;
-  const autoSelect = <select id={`city-automation-${city.id}`} aria-label={`Build automatically in ${city.name}`} title={buildFocus ? FOCUS_TIP[buildFocus] : 'Pick a focus and the city chooses its builds. Spends no Gold.'} value={buildFocus ?? ''}
+  const autoSelect = <select id={`city-automation-${city.id}`} aria-label={`Automate ${city.name}`} title={buildFocus ? buildFocus === 'Food' && owner?.faction === 'Egypt' ? 'Runs Grow and builds nothing else.' : FOCUS_TIP[buildFocus] : 'Pick a focus: the city picks its builds or runs a project. Spends no Gold.'} value={buildFocus ?? ''}
     disabled={view.finished} onChange={(e) => editOrders((list) => setCityAutomation(list, city.id, (e.target.value || null) as CityBuildFocus | null))}>
-    <option value="">Off</option><option value="Balanced">Balanced</option><option value="Science">Science</option><option value="Gold">Gold</option><option value="Military">Military</option>
+    <option value="">Off</option>{FOCUS_CYCLE.map((f) => <option key={f} value={f}>{focusLabel(f, owner?.faction)}</option>)}
   </select>;
   const autoReason = buildFocus && productionWarning !== AUTOMATION_NO_CHOICE ? <p className="cp-automation-reason">{autoPick
     ? autoPickReason(autoPick, buildFocus, city, view)
-    : `Your queue goes first. When it empties, the city picks a ${buildFocus} build.`}</p> : null;
+    : buildFocus === 'Military' || buildFocus === 'Economy' ? `Your queue goes first. When it empties, the city picks ${buildFocus === 'Economy' ? 'an' : 'a'} ${buildFocus} build.` : buildFocus === 'Food' && owner?.faction === 'Egypt' ? 'Your queue goes first. When it empties, the city runs Grow.' : `Your queue goes first. When it empties, the city runs its ${focusLabel(buildFocus, owner?.faction)}.`}</p> : null;
   const automationRow = city.owner === view.me ? <section className="cp-automation" aria-label="City building automation">
-    <label htmlFor={`city-automation-${city.id}`}>Build automatically <kbd className="kbd">I</kbd> <kbd className="kbd" title="Shift+I: next focus">⇧I</kbd></label>
+    <label htmlFor={`city-automation-${city.id}`}>Automate <kbd className="kbd" title="I: on or off with your last focus. Shift+I: next focus.">I</kbd></label>
     {autoSelect}
     {autoReason}
   </section> : null;
@@ -764,7 +801,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
     const other = view.cities.find((c) => c.owner === view.me && c.id !== city.id && c.detail && [c.detail.producing, ...(c.detail.production_queue ?? [])].some((item) => item?.kind === 'Wonder'));
     if (other) return `A world wonder is already being built or queued in ${other.name}.`;
     const tech = BUILDING_STATS[building].requires;
-    if (tech && !view.research.known.includes(tech)) return `Research ${TECH_NAME[tech]} first.`;
+    if (tech && !view.research.known.includes(tech)) return `Needs ${TECH_NAME[tech]}.`;
     const required = greatWorkRequirement(building);
     if (required) {
       if (!d.buildings.includes(required[0])) return `Build ${baseItemName({ kind: 'Building', building: required[0] })} in this city first.`;
@@ -802,7 +839,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
 
   return (
     <div ref={panel} className="panel city-panel" style={{ ['--pc' as string]: col }}>
-      {head}
+      {headWith(<>
       <div className="cp-yields" aria-label="City yields per turn" data-testid="city-yields">
         {YIELD_KEYS.map((k) => owner?.faction === 'Egypt' && k === 'production' ? (
           // The Nile: Egypt has no Production, so this cell says what its surplus Food builds instead.
@@ -818,6 +855,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
           </Tip>
         ))}
       </div>
+      </>)}
       {status}
       {!idleChoice && automationRow}
       {city.owner === view.me && (view.aircraft ?? []).some((a) => a.city === city.id) && <div className="city-hangar" aria-label="City hangar">
@@ -872,7 +910,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
       <div className="cp-block">
         {/* The active item shares this row, keeping at least five choices visible at 1280x800. */}
         <ProgressBar className="cp-production" testId="city-production" name={egyptBuilding ? 'Built from Food' : 'Production'} color={YIELD_COLORS.production}
-          label={<span className="cp-now-line"><span className="lbl">Now producing</span>{producing ? <>
+          label={<span className="cp-now-line"><span className="lbl">{tombStopped ? 'Waiting for the tomb' : 'Now producing'}</span>{producing ? <>
             <span className="cp-now-item"><ItemArt item={producing} faction={owner?.faction} size={16} /><span className="cp-now-name">{meterName(producing)}</span></span>
           </> : raceLost ? <>
             <span className="cp-now-item"><ItemArt item={{ kind: 'Building', building: raceLost.building }} faction={owner?.faction} size={16} /><span className="cp-now-name">{BUILDING_NAME[raceLost.building]}</span></span>
@@ -897,7 +935,8 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
             return <Tip content={tip} placement="top" className="cp-now-stop-tip"><button className="queue-remove cp-now-stop" data-testid="production-stop" aria-label={`Stop building ${name}`}
               disabled={view.finished} onClick={() => changeQueue(after)}><Icon name="ui-cross" size={12} /></button></Tip>;
           })()}</span>}
-          turns={<span className="cp-now-turns">
+          turns={<span className={`cp-now-turns${tombStopped ? ' wrap' : ''}`}>
+            {tombStopped ? (producing ? <>{d.production_stored}/{d.production_cost ?? option?.cost ?? '—'} stored · waits for the tomb</> : 'Nothing queued') : <>
             {producing && pendingQueue && <><span className="pending-dot" aria-hidden="true" /><span className="pending-label" title="Pending until Ready">pending</span>{' '}</>}
             {buildChanged
               ? !producing ? '—' : producing.kind === 'Project' ? projectRate(producing, yields) : option
@@ -908,11 +947,12 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
                 ? <>{d.production_stored}/{d.production_cost} stored · {egyptBuilding ? `+${egyptProgress} from Food` : <Amount sign="+" n={yields.total.production} unit="Production" />}/turn · {d.production_stall ? 'Stalled' : `${d.turns_to_complete ?? '—'} turn${d.turns_to_complete === 1 ? '' : 's'}`}</>
                 : raceLost ? (d.production_stored > 0 ? `Stopped · ${d.production_stored} Production held for the next build` : 'Stopped · choose a new build')
                 : waitingCap !== null ? `${d.production_stored}/${waitingCap} held` : `${d.production_stored}/${d.idle_production_cap} stored`}
+            </>}
           </span>}
           value={storedProduction} max={waitingCap !== null ? Math.max(1, waitingCap) : pendingQueue ? producing ? option?.cost ?? d.production_cost ?? 1 : d.idle_production_cap : d.production_cost ?? d.idle_production_cap} />
 
         {switchNote && <div className="production-switch" data-testid="production-switch" role="status"><Amounts text={`${switchNote}.`} /></div>}
-        {egyptBuilding && <div className="production-switch" data-testid="egypt-construction" role="status">{`${city.name}'s ${nileSurplus} surplus Food goes into the ${producing ? itemName(producing, owner?.faction) : 'build'} this turn, so ${city.name} doesn't grow.`}{growOption && <>{' '}<button className="btn quiet" data-testid="egypt-grow-instead" disabled={view.finished} onClick={() => buildNow(growOption.item)}>Grow instead →</button></>}</div>}
+        {egyptBuilding && !tombStopped && <div className="production-switch" data-testid="egypt-construction" role="status">{`${city.name}'s ${nileSurplus} surplus Food goes into the ${producing ? itemName(producing, owner?.faction) : 'build'} this turn, so ${city.name} doesn't grow.`}{growOption && <>{' '}<button className="btn quiet" data-testid="egypt-grow-instead" disabled={view.finished} onClick={() => buildNow(growOption.item)}>Grow instead →</button></>}</div>}
         {parkedText && <div className="production-choose" data-testid="production-choose"><b>Choose a new build.</b> <Amounts text={parkedText} /></div>}
         {productionWarning && <Tip as="div" className="production-warning" content={FORECAST_ASSUMPTIONS}><Amounts text={productionWarning} /></Tip>}
         {shownBanks.length > 0 && <Tip as="div" className="cp-banked" content="Progress stays with the item you switched away from, in this city. It resumes when you build that item again and never moves to another item. Buying an item is a separate full-price purchase and leaves its banked progress alone.">
@@ -959,18 +999,19 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
       {occupiedLine ? <><p className="hint warn" data-testid="city-occupied">{occupiedLine}. Food, Gold and Science continue.</p></> : <>
       <div className="cp-block production-choose-block">
         {/* How Build and Queue differ is one hover away, so the choices start right under the title. */}
-        <Tip as="div" className="cp-choose-title" content={owner?.faction === 'Egypt' ? EGYPT_BUILD_RULE : BUILD_RULE}>{buildFocus && idleChoice && productionWarning !== AUTOMATION_NO_CHOICE ? `Chooses at Ready · ${buildFocus} focus` : `Choose what ${city.name} builds`}</Tip>
+        <Tip as="div" className="cp-choose-title" content={owner?.faction === 'Egypt' ? EGYPT_BUILD_RULE : BUILD_RULE}>{buildFocus && idleChoice && productionWarning !== AUTOMATION_NO_CHOICE ? `Chooses at Ready · ${focusLabel(buildFocus, owner?.faction)}` : tombStopped ? 'Queue for after the tomb' : `Choose what ${city.name} builds`}</Tip>
       </div>
+      {tombStopped && <p className="hint" data-testid="city-tomb-picker">You can still buy with Gold.</p>}
       <div className="cp-buyline">
         <div className="purchase-status" id={`purchase-status-${city.id}`} role="status">
           <Tip content="Gold available for purchases this turn."><span><Amount n={purchases.gold} unit="Gold" /> ({signed(view.economy.gold_per_turn.total)}/turn) to spend</span></Tip>
         </div>
         {idleChoice && <div className="cp-automation-inline" role="group" aria-label="City building automation">
-          <label htmlFor={`city-automation-${city.id}`}>Auto <kbd className="kbd" title="I: on or off with your last focus. Shift+I: next focus.">I</kbd></label>{autoSelect}
+          <label htmlFor={`city-automation-${city.id}`}>Automate <kbd className="kbd" title="I: on or off with your last focus. Shift+I: next focus.">I</kbd></label>{autoSelect}
         </div>}
       </div>
       {idleChoice && buyTile('row')}
-      {idleChoice && autoReason && <div className="cp-block cp-auto-note">{autoReason}</div>}
+      {idleChoice && autoPick && autoReason && <div className="cp-block cp-auto-note">{autoReason}</div>}
 
 
       {growOption && <><div className="cp-sub">Growth</div><div className="prod-list">{renderOption(growOption)}</div></>}
@@ -983,7 +1024,6 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
         </div> : renderUnavailable(r.unavailable))}{permanentLine(listUnavailable.filter((u) => u.item.kind === 'Unit'), listOptions.filter((o) => o.item.kind === 'Unit')) && <p className="prod-faction-rule" role="note">{permanentLine(listUnavailable.filter((u) => u.item.kind === 'Unit'), listOptions.filter((o) => o.item.kind === 'Unit'))}</p>}
       </div>
       {hire}
-      {owner?.faction === 'Germany' && <><div className="cp-sub">Industry projects</div><div className="prod-list">{d.options.filter((o) => o.item.kind === 'Project').map((o) => renderOption(o))}</div></>}
       <div className="cp-sub">Buildings</div>
       {idleNote}
       <div className={`prod-list ${producing ? '' : 'choosing'}`}>{renderBuildingPicker(listOptions.filter((o) => o.item.kind === 'Building'), listUnavailable.filter((u) => u.item.kind === 'Building'))}</div>
@@ -993,7 +1033,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
       {owner?.faction === 'Mongols' && <section aria-label="Yam Relay Station"><div className="cp-sub">Yam Relay Station · one per empire</div>{yamCard && <div className="prod-list">{renderOption(yamCard)}</div>}{!yamCard && <p className="hint">{(() => {
         const hall = view.courier_halls?.find((h) => h.of === city.owner);
         if (hall) return hall.holder === city.owner ? `The Yam Relay Station already stands in ${view.cities.find((c) => c.id === hall.city)?.name ?? 'your city'}.` : `The Yam Relay Station stands in ${view.cities.find((c) => c.id === hall.city)?.name ?? 'a rival city'}; retake the city instead.`;
-        const building = view.cities.find((c) => c.owner === city.owner && c.id !== city.id && c.detail && [c.detail.producing, ...(c.detail.production_queue ?? [])].some((item) => item?.kind === 'Wonder' && item.building === 'CourierHall'));
+        const building = view.cities.find((c) => c.owner === city.owner && c.id !== city.id && c.detail && [c.detail.producing, ...(c.detail.production_queue ?? [])].some((item) => item?.kind === 'Wonder' && item.building === 'YamRelayStation'));
         return building ? `The Yam Relay Station is already being built in ${building.name}.` : 'No eligible tile is available for the Yam Relay Station here.';
       })()}</p>}</section>}
       <section className="cp-great-works" aria-label="World wonders">
@@ -1001,6 +1041,8 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
         <Tip as="div" className="hint" content={greatWorkRules(owner?.faction)}>Wonders are built with Production only. Each is built once in the world: choose Build, then click a lit tile on the map.</Tip>
         <div className="prod-list">{wonderCards}</div>
       </section>
+      {/* Projects come last, as in Civ 6: the fallback when nothing else is worth building (Sam, 2026-11-22). */}
+      {d.options.some((o) => o.item.kind === 'Project' && !isGrow(o.item)) && <><div className="cp-sub">Projects</div><div className="prod-list">{d.options.filter((o) => o.item.kind === 'Project' && !isGrow(o.item)).map((o) => renderOption(o))}</div></>}
 
       </>}
 

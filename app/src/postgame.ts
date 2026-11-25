@@ -1,7 +1,7 @@
 // The post-game report's model: the core's recorded history (`PlayerView.history`, present only once a game is
 // finished) arranged for the charts, the timeline and the statistics table. Presentation only: every number is
 // one the core recorded; this file only picks, sums, ranks and words them.
-import { ARMY_RULE, ERA_NAMES, FACTION_GOAL, itemName } from './data';
+import { ageName, ARMY_RULE, ERA_NAMES, FACTION_GOAL, itemName } from './data';
 import { empireNameOf } from './empires';
 import { playerInk } from './theme';
 import { WONDER_INFO } from './wonders';
@@ -201,7 +201,7 @@ function timelineEntry(c: Chronicle, view: PlayerView, nameOf: (id: PlayerId | n
         ? `${teamName(declarer)} declared war on ${onYou ? (teamName(other) === 'You' ? 'you' : 'your team') : teamName(other)}`
         : `War between ${teamName(c.a)} and ${teamName(c.b) === 'You' ? 'you' : teamName(c.b)}`;
       const yours = c.a === view.team || c.b === view.team;
-      return { ...base, icon: 'unit-soldier', text: text.replace(/^War between You and/, 'War between you and'), who: leaders(view, [c.a, c.b]), tone: yours ? (declarer === view.team ? 'mine' : 'against') : 'neutral', yours };
+      return { ...base, icon: 'unit-spearman', text: text.replace(/^War between You and/, 'War between you and'), who: leaders(view, [c.a, c.b]), tone: yours ? (declarer === view.team ? 'mine' : 'against') : 'neutral', yours };
     }
     case 'Peace': {
       const yours = c.a === view.team || c.b === view.team;
@@ -219,7 +219,7 @@ function timelineEntry(c: Chronicle, view: PlayerView, nameOf: (id: PlayerId | n
       return { ...base, icon: 'emblem-ruin', text: `${nameOf(c.player)} discovered ${WONDER_INFO[c.wonder]?.name ?? c.wonder}`, who: [c.player], tone: yoursP(c.player) ? 'mine' : 'neutral', yours: yoursP(c.player) };
     case 'Objective': {
       const name = ERA_NAMES[c.era - 1] ?? `era ${c.era}`;
-      return { ...base, icon: 'emblem-milestone', text: `${nameOf(c.player)} scored the ${name} Age: ${c.objective} (+1 VP)`, who: [c.player], tone: yoursP(c.player) ? 'mine' : 'neutral', yours: yoursP(c.player) };
+      return { ...base, icon: 'emblem-milestone', text: `${nameOf(c.player)} scored the ${ageName(name)}: ${c.objective} (+1 VP)`, who: [c.player], tone: yoursP(c.player) ? 'mine' : 'neutral', yours: yoursP(c.player) };
     }
     case 'Goal': {
       const faction = view.players.find((p) => p.id === c.player)?.faction;
@@ -257,7 +257,7 @@ function marker(c: Chronicle, view: PlayerView, nameOf: (id: PlayerId | null | u
     const other = by === c.a ? c.b : c.a;
     const who = view.players.find((p) => p.team === by)?.id ?? null;
     const text = c.by !== null && c.by !== undefined ? `Turn ${c.turn}: ${teamName(by)} declared war on ${teamName(other)}` : `Turn ${c.turn}: war between ${teamName(c.a)} and ${teamName(c.b)}`;
-    return [{ turn: c.turn, lane: 'war', icon: 'unit-soldier', text, who, mine: c.a === view.team || c.b === view.team }];
+    return [{ turn: c.turn, lane: 'war', icon: 'unit-spearman', text, who, mine: c.a === view.team || c.b === view.team }];
   }
   if (c.kind === 'Captured' || c.kind === 'Razed') {
     const text = `Turn ${c.turn}: ${nameOf(c.by)} ${c.kind === 'Captured' ? 'captured' : c.ordered ? 'razed' : 'sacked'} ${c.city} (${nameOf(c.from)})`;

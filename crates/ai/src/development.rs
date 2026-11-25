@@ -87,8 +87,16 @@ impl Planner<'_> {
             data::CITY_CENTER_YIELDS + data::terrain_yields(self.faction, center),
             |sum, (_, y)| sum + *y,
         );
+        // Gene `site_terrain_weight`: every owned ring-one tile is worked, so the whole known
+        // ring's terrain Production is the new city's early Production, not just its best two.
+        let ring_production: i32 = if self.decisions.site_terrain_weight > 0 {
+            workers.iter().map(|(_, y)| y.production).sum()
+        } else {
+            0
+        };
         100 + (yields.production - data::CITY_MIN_PRODUCTION).max(0) * 20
             + (yields.food - 4).clamp(-2, 4) * 5
+            + ring_production * self.decisions.site_terrain_weight
     }
 
     /// Do not consume every small income payment finishing buildings while a frontier
@@ -207,14 +215,14 @@ impl Planner<'_> {
         match b {
             BuildingKind::Granary if due(30) && d.yields.total.food <= 2 * c.population + 2 => 1100,
             BuildingKind::Workshop if due(40) => 1000,
-            BuildingKind::Laboratory if due(64) && has(BuildingKind::Workshop) => {
+            BuildingKind::Library if due(64) && has(BuildingKind::Workshop) => {
                 let first_lab = self.difficulty == AiDifficulty::Hard
                     && !self.ctx.own_cities.iter().any(|city| {
                         city.detail.as_ref().is_some_and(|d| {
-                            data::has_building(&d.buildings, BuildingKind::Laboratory)
+                            data::has_building(&d.buildings, BuildingKind::Library)
                                 || d.producing
                                     == Some(legatum_core::ProductionItem::Building {
-                                        building: BuildingKind::Laboratory,
+                                        building: BuildingKind::Library,
                                     })
                         })
                     })
@@ -223,12 +231,12 @@ impl Planner<'_> {
                             o,
                             legatum_core::Order::SetProduction {
                                 item: legatum_core::ProductionItem::Building {
-                                    building: BuildingKind::Laboratory
+                                    building: BuildingKind::Library
                                 },
                                 ..
                             } | legatum_core::Order::BuyItem {
                                 item: legatum_core::ProductionItem::Building {
-                                    building: BuildingKind::Laboratory
+                                    building: BuildingKind::Library
                                 },
                                 ..
                             }
@@ -240,7 +248,7 @@ impl Planner<'_> {
                     600
                 }
             }
-            BuildingKind::Laboratory
+            BuildingKind::Library
                 if due(110)
                     && !d.options.iter().any(|o| {
                         o.item
@@ -259,7 +267,7 @@ impl Planner<'_> {
                 900
             }
             BuildingKind::Granary if due(70) => 800,
-            BuildingKind::College if due(130) => 800,
+            BuildingKind::University if due(130) => 800,
             _ => 0,
         }
     }
@@ -279,8 +287,8 @@ mod tests {
             .known_techs(&[TechId::Masonry])
             .city(1, ME, off(4, 6), 4)
             .city(2, ENEMY, off(10, 6), 4)
-            .unit(20, ENEMY, UnitKind::Soldier, off(8, 6))
-            .unit(21, ENEMY, UnitKind::Soldier, off(8, 7))
+            .unit(20, ENEMY, UnitKind::Spearman, off(8, 6))
+            .unit(21, ENEMY, UnitKind::Spearman, off(8, 7))
             .build();
         v.turn = 40;
         v.diplomacy.legacy = false;
@@ -330,11 +338,11 @@ mod tests {
             b = b.city(id, ME, off(col, row), 3).unit(
                 10 + id,
                 ME,
-                UnitKind::Soldier,
+                UnitKind::Spearman,
                 off(col, row),
             );
         }
-        let mut v = b.unit(30, ME, UnitKind::Soldier, off(5, 5)).build();
+        let mut v = b.unit(30, ME, UnitKind::Spearman, off(5, 5)).build();
         v.turn = 160;
         // A Germany with five Foundries has no further city obligation from its goal.
         v.economy.gold = 5000;
@@ -357,7 +365,7 @@ mod tests {
         for c in &mut v.cities {
             let buildings = &mut c.detail.as_mut().unwrap().buildings;
             buildings.push(BuildingKind::Workshop);
-            buildings.push(BuildingKind::MachineShop);
+            buildings.push(BuildingKind::Forge);
         }
         let gates = |v: &legatum_core::PlayerView, difficulty| {
             ScriptedBrain::with_difficulty(Faction::Germany, 7, ME, difficulty)
@@ -386,9 +394,9 @@ mod tests {
             .faction(Faction::India)
             .known_techs(&[TechId::Irrigation, TechId::BronzeWorking, TechId::Writing])
             .city(1, ME, off(5, 8), 2)
-            .unit(1, ME, UnitKind::Soldier, off(5, 8))
-            .unit(2, ME, UnitKind::Soldier, off(5, 9))
-            .unit(3, ME, UnitKind::Ranger, off(4, 8))
+            .unit(1, ME, UnitKind::Spearman, off(5, 8))
+            .unit(2, ME, UnitKind::Spearman, off(5, 9))
+            .unit(3, ME, UnitKind::Archer, off(4, 8))
             .gold(0)
             .build();
         v.turn = 65;
@@ -419,7 +427,7 @@ mod tests {
         v.cities[0].detail.as_mut().unwrap().buildings.extend([
             BuildingKind::Granary,
             BuildingKind::Workshop,
-            BuildingKind::Laboratory,
+            BuildingKind::Library,
         ]);
         assert_eq!(choose(&v), Some(settler));
         v.units.extend(
@@ -433,5 +441,57 @@ mod tests {
             Some(settler),
             "finish the colony already on its way"
         );
+    }
+
+    /// Gene `site_terrain_weight`: the whole known ring-one terrain Production counts, so a
+    /// ring of Hills and Forest outranks a Grassland ring with the same best two tiles; unknown
+    /// and foreign tiles count for nothing; 0 leaves the multiplier as it was.
+    #[test]
+    fn ring_one_terrain_production_weighs_a_site_only_with_the_gene() {
+        use crate::scripted::Planner;
+        use legatum_core::{Hex, Terrain};
+        let rich = Hex::new(6, 8);
+        let plain = Hex::new(16, 8);
+        let mut v = ViewBuilder::new(24, 16).city(1, ME, off(1, 1), 3).build();
+        let set = |v: &mut legatum_core::PlayerView, h: Hex, t: Terrain| {
+            let i = v.index(h).unwrap();
+            v.tiles[i].terrain = Some(t);
+            v.tiles[i].explored = true;
+            v.tiles[i].owner = None;
+        };
+        for (center, ring) in [(rich, Terrain::Hills), (plain, Terrain::Grassland)] {
+            set(&mut v, center, Terrain::Plains);
+            for (k, h) in center.neighbors().into_iter().enumerate() {
+                // Both rings share their best two tiles: two Forests.
+                set(&mut v, h, if k < 2 { Terrain::Forest } else { ring });
+            }
+        }
+        let score = |v: &legatum_core::PlayerView, h: Hex, weight: i32| {
+            let mut p = Planner::new(
+                v,
+                crate::Knobs::for_faction(Faction::India),
+                Faction::India,
+                1,
+            );
+            p.difficulty = legatum_core::AiDifficulty::Hard;
+            p.decisions.site_terrain_weight = weight;
+            p.settlement_productivity(h)
+        };
+        assert_eq!(
+            score(&v, rich, 0),
+            score(&v, plain, 0),
+            "off: only the best two tiles count"
+        );
+        // Rich ring: 2 Forests + 4 Hills = 12 Production; plain ring: 2 Forests = 4.
+        assert_eq!(score(&v, rich, 10) - score(&v, rich, 0), 120);
+        assert_eq!(score(&v, plain, 10) - score(&v, plain, 0), 40);
+        // A Hills tile in fog or under a foreign border is not counted.
+        let hidden = rich.neighbors()[2];
+        let i = v.index(hidden).unwrap();
+        v.tiles[i].explored = false;
+        let foreign = rich.neighbors()[3];
+        let j = v.index(foreign).unwrap();
+        v.tiles[j].owner = Some(ENEMY);
+        assert_eq!(score(&v, rich, 10) - score(&v, rich, 0), 80);
     }
 }

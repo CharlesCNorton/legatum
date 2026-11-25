@@ -63,7 +63,14 @@ export const msgTooManyRooms = (n: number): string =>
  * digits with spaces and punctuation removed. A name containing one is replaced by "Game <id>".
  * Add entries here; nothing else needs to change.
  */
-export const BLOCKED_NAME_TERMS: readonly string[] = [];
+export const BLOCKED_NAME_TERMS: readonly string[] = [
+  // A first filter for the words that make a public list unpleasant, not a complete one. A term is matched
+  // anywhere in the name, so leave out any that sits inside ordinary words ("ass" is in "Assyria", "rape" in
+  // "grape", "coon" in "tycoon"). A host can still be removed from the lobby by closing the room.
+  "fuck", "fuk", "fck", "shit", "cunt", "bitch", "whore", "slut", "pussy", "penis", "vagina", "dildo", "jizz",
+  "wank", "porn", "rapist", "nigger", "nigga", "faggot", "tranny", "kike", "retard", "hitler", "nazi", "kkk",
+  "killyourself",
+];
 
 export const KIND_OPEN = 0;
 export const KIND_DATA = 1;
@@ -100,6 +107,8 @@ export interface RoomAnnounce {
   build: string;
   rules_version: number;
   protocol: number;
+  /** The host set a join code. The relay learns only this yes/no, never the code. */
+  locked: boolean;
 }
 
 export interface Summary {
@@ -168,10 +177,12 @@ export function parseAnnounce(v: unknown): RoomAnnounce | null {
   if (typeof name !== "string" || name.length > MAX_NAME_INPUT) return null;
   if (typeof build !== "string" || build.length < 1 || build.length > MAX_BUILD) return null;
   if (!isCount(rules_version) || !isCount(protocol)) return null;
+  const locked = o.locked === undefined ? false : o.locked;
+  if (typeof locked !== "boolean") return null;
   // Every player in the lobby reads the build label, so it holds only what a real label is made of
   // ("Version 0.1.0 (abc1234)", "Dev · after 9 (abc1234)", "playtest-9"): no markup, links or symbols.
   if (!BUILD_RE.test(build)) return null;
-  return { name: sanitizeName(name), build, rules_version, protocol };
+  return { name: sanitizeName(name), build, rules_version, protocol, locked };
 }
 
 const BUILD_RE = /^[\p{L}\p{N}][\p{L}\p{N} .·()_+-]*$/u;

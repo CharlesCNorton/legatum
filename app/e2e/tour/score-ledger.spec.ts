@@ -11,7 +11,7 @@ import { SIZES, loadFixture, shot, type GameWindow } from './helpers';
 test.describe.configure({ mode: 'parallel' });
 
 async function openLedger(page: Page) {
-  await page.getByRole('button', { name: /^Every way to score/ }).click();
+  await page.locator('.vp .vhc-head button.link').click();
   const sheet = page.getByTestId('objective-sheet');
   await expect(sheet.locator('.sl-table')).toBeVisible();
   await expect(sheet.locator('.vh-card')).toHaveCount(0);
@@ -61,7 +61,7 @@ for (const size of SIZES) test.describe(`score ledger ${size.name}`, () => {
     await loadFixture(page, coreFixture(progressFixture().fixture), 2);
     await stageHoldings(page, { oneCardPerAge: true });
     const sheet = await openLedger(page);
-    await expect(sheet.getByRole('button', { name: 'Close objectives' })).toHaveClass(/\bbtn\b/);
+    await expect(sheet.getByRole('button', { name: 'Close score ledger' })).toHaveClass(/\bbtn\b/);
     await expect(sheet.locator('.sl-col')).toHaveCount(2);
     // The two Ages that have begun in the staged view.
     await expect(sheet.locator('.sl-row.k-era')).toHaveCount(2);
@@ -117,7 +117,7 @@ for (const size of SIZES) test.describe(`score ledger ${size.name}`, () => {
     await loadFixture(page, coreFixture(progressFixture().fixture), 2);
     const base = await page.evaluate(() => { const s = (window as unknown as GameWindow).legatum.getState(); return structuredClone(s.views![s.seat]); });
     const v = withV2(base, { era: 4, scored: [2, 3, 4] });
-    v.great_works = (v.great_works ?? []).map((work) => work.player === v.me ? { ...work, completed: 'RelayUplink' } : work);
+    v.great_works = (v.great_works ?? []).map((work) => work.player === v.me ? { ...work, completed: 'GreatLibrary' } : work);
     v.players = v.players.map((p) => {
       if (p.id !== v.me) return p;
       const vp_sources: typeof p.vp_sources = [

@@ -47,7 +47,7 @@ and defending, the Keshig is mounted. Every other unit fights as its own class, 
 - **Iron.** Each Siege unit uses 1 Iron supply while it exists, as the Pikeman does (`resources::SupplyUser::Siege`, `siege_need`; a Siege Pikeman uses two): the purchase needs 1 spare Iron (counted with the Pikeman upgrades in an order list, `siege::iron_blocker`), and short of supply the newest users go idle and fight `UNSUPPLIED_STRENGTH_PERCENT` weaker (an idle Siege unit keeps its Siege). **The one switch** is `data::SIEGE_USES_IRON` (the user was "not sure" about a resource): `false` makes Siege cost Gold only, everywhere (core, `rules.generated.json` `siege.usesIron`, the app .
 - **What it does** (`rules/battle.rs::siege_cover`, `forecast.rs::siege_cover`, `UnitView::siege`, public): the owner's highest siege technology is the tier (`data::siege_tier`: Mathematics 1, Machinery 2, Metallurgy 3; the tier follows the technology, so nothing is re-bought). Against walls of its tier or lower the unit fights as if the city had no Walls: the tiers' strength is left out (`combat::city_defense_covered`, `city_defense_vs`) and the damage is full. Against higher walls it leaves out the tiers it reaches and the damage is 75% (`SIEGE_PARTIAL_PERCENT`). The forecast carries `BattleForecast::walls` (`WallsForecast {tier, covered, percent, built_in}`); the app's Walls line names Siege (`ui/forecastWarnings.ts::wallsLine`), and for built-in Siege prints "Siege built in: your Rifleman ignores Walls, Castles and Star Forts (Industrial-era guns)." (core's note after the unit's name). Mirrored in `app/src/combat.ts` (`siegeCover`, `data.ts::builtInSiege`). The unit wears siege gear of its own period on the map (`app/src/siegeProps.ts`, rivals see it too): the gear is capped by the unit's own era, whatever the tier (designer, 2026-10-28: an Ancient Archer with Metallurgy wore a bombard): Ancient and Classical ranged units a catapult, Medieval ranged units a catapult or a trebuchet (tier 2 and up), Renaissance ranged units a bombard; every other unit ladders (tier 1) or a siege tower (tiers 2 and 3) through Medieval, and ladders in the Renaissance; Industrial and later units nothing (no gear and no badge: the designer rejected a badge). The prop is cosmetic: the combat tier still comes from the technologies, and the combat animation's shot at a city follows the drawn prop (`combatFx.ts::shotKindFor`). The unit card's siege note reads "Siege built in: ..." for them, with no Siege upgrade row.
 - **The Military Engineer retired** (user, 2026-10-22): the unit, its build card, art, upkeep, stacked cover and capture rule are gone, with the AI's Engineer planning.
-- **Mongols** (user, 2026-10-19 and 2026-10-22) raise Walls, Castles and Star Forts **from the Medieval era** (the owner's era, `data::MONGOL_WALLS_ERA` 2, through `available_to_player(faction, era, item)` and `faction_excluded_building_at`) and buy Siege from then too (`data::siege_available`); before it neither. Greyed reasons: "The Mongols raise Walls from the Medieval era" and, on the unit card, `MONGOL_SIEGE_REASON` ("No Siege before the Medieval era."). Their old half damage to city HP was removed earlier. Walls are Ancient (Masonry), so the gate is the era, not the technology.
+- **Mongols never have Walls** (rules 57, Sam 2026-11-22: "no walls ever... more thematic"; before, from the Medieval era, user 2026-10-19). No Walls, Castle, Star Fort or any later wall level, in any era: `data::never_walls(off, faction)` with `data::is_walls_line` (every building whose `building_family` is Walls), read by `available_to_faction_rules`, `faction_excluded_building_at_rules` and `faction_unavailable_reason`, so the Masonry card and the build list do not list Walls for them. A walled city the Mongols capture loses its whole Walls line on capture (`rules/battle.rs::capture_city`; Sam chose this on 2026-11-22: "tear them down on capture"); the ablation switch `FactionRule::MongolsNoWalls` (`mongols_no_walls`) turns both off. They buy Siege from the Medieval era (`data::MONGOL_SIEGE_ERA` 2, `data::siege_available`), not before. Greyed reasons: `MONGOL_WALLS_REASON` ("The Mongols never build Walls") and, on the unit card, `MONGOL_SIEGE_REASON` ("No Siege before the Medieval era."). Their old half damage to city HP was removed earlier. A rules-54 state upgraded for simulation (`wasm::json::upgrade_from_49`) keeps any Walls a Mongol city already had.
 - Roadmap, not built: units laying roads (Engineering) and building Forts (Feudalism).
 
 **Cities shield their garrisons** (Civ 6; user decision 2026-10-03, after playtest 6). One shared
@@ -66,7 +66,7 @@ function decides what an attack on a hostile city's tile damages:
   attacker advances and captures. With no garrison, a melee unit entering captures as before;
   ranged fire at an empty fallen city is held for whoever comes in (next bullet).
 - **Held shots at a fallen city** (Sam, 2026-11-21, RULES_VERSION 47, from his turn-67 Geneva
-  siege: five Keshig volleys hit the empty 0-HP city and did nothing, then a Swiss Soldier
+  siege: five Keshig volleys hit the empty 0-HP city and did nothing, then a Swiss Spearman
   slipped in as garrison and only met the charge; his rule: "1) slip into garrison (with
   support) 2) ranged attack 3) melee attack"; `rules/battle.rs::HeldShot`, `held_city`,
   `release_held_shots`, `rules/movement.rs::movement_round`, `reserves`). A ground unit's shot
@@ -84,7 +84,7 @@ function decides what an attack on a hostile city's tile damages:
   empty city after movement exactly as before (a `Battle` on the city, no damage); a city
   captured or no longer hostile by then takes nothing. A city razed during movement (a Celtic capture) leaves its held shots with no city: they besiege nothing (`movement.rs::reserves` reads the city with `cities.get`, `held_shot_tests::a_held_shot_whose_city_was_razed_does_not_stop_a_later_relief`) and are dropped. A held shooter counts toward its side's
   force in a rival assault. Aircraft never hold (they return to their hangars after the ranged
-  phase). Replaying his tape at rules 47, the five volleys kill the Soldier (29 + 32 + 27 + 27
+  phase). Replaying his tape at rules 47, the five volleys kill the Spearman (29 + 32 + 27 + 27
   + 28) and his Keshig takes Geneva. The forecast card does not describe the held shot yet.
   Tests: `rules/held_shot_tests.rs`.
 - **Overflow on a city tile is per hit** (user decision 2026-10-04, made per hit by the designer
@@ -211,8 +211,10 @@ function decides what an attack on a hostile city's tile damages:
   that fought the garrison). The two attacking sides never fight each other over the city tile
   (the old meeting engagement at an empty 0-HP city between two of its enemies is gone; a unit
   on the owner's side still meets an attacker there as before). An exact tie in force between
-  the strongest sides bounces everyone: "<other> brought equal force (N each), so nobody took the
-  city". The assault forecast does not show rival force yet. Tests:
+  the strongest sides is drawn by seed, turn and tile (rules 51, Sam 2026-11-22: "in that case,
+  random"; it used to bounce everyone; `rng::purpose::UNIT_CONTEST`, as for peaceful contests on
+  open ground, movement.md): the losers read "<winner> brought equal force (N each) and won the
+  draw for the city". The assault forecast does not show rival force yet. Tests:
   `rules/rival_assault_tests.rs`.
 - **Garrison moving out the same turn:** during the ranged phase it is still shielded. In a
   movement round where it steps out while an attacker steps in, a city with HP takes the hit and
@@ -277,7 +279,7 @@ One shared function decides it: `combat::city_can_fire(walls, hp)`
 and through `forecast::city_fires` by
 `forecast_city_strike` (so `BattleForecast.city_strike` is absent for unwalled cities) and
 `city_strike_target`. Unit ranged fire uses `crates/core/src/los.rs::ranged_clear_with_tech`. A ranged unit standing in its own city with any wall tier (`data::wall_tier > 0`) ignores terrain LOS blockers, as the city strike does; it still needs range and team visibility. An unwalled city's garrison and units outside cities use ordinary LOS. City strikes use range and team visibility, with no terrain LOS check. Walls are public in `CityView.walls`. The client uses `app/src/combat.ts::cityCanFire` and `app/src/los.ts::shotBlockReason`.
-UI: the map draws a wall overlay on walled towns (the owner's era sprite, `app/src/map/cityArt.ts::wallStem`; the Alpine Redoubt uses the star-fort Renaissance sprite, and a Castle or Star Fort draws as plain Walls); the city panel and tile card say "Fires
+UI: the map draws a wall overlay on walled towns (the owner's era sprite, `app/src/map/cityArt.ts::wallStem`; the Alpine Redoubt uses the star-fort Renaissance sprite, and a Castle or Star Fort draws as plain Walls, so the ring shows the era, not the level). The city banner ends in the visible wall level: the Walls icon, followed by II for a Castle or III for a Star Fort (`cityArt.ts::wallTierOf`, `sprites.ts::WALL_TIER_LABEL`; 2026-11-22; not the Star Fort icon, which reads as a star at banner size). Walls under construction are public to every viewer, through fog too (`CityView.walls_building`, like a wonder site), and draw as the era's painted footings (`assets/construction/<era>-walls-stage1`) for the whole build; the later stages were deleted because they looked finished (Sam, 2026-11-22). The city panel and tile card say "Fires
 at units within 2 tiles: has Walls" or "Cannot fire: no Walls" (`app/src/format.ts::cityFireStatus`);
 the attack forecast notes when the target cannot fire back.
 **AI and the city shield** (2026-10-03): projections of committed fire and melee use
@@ -294,8 +296,8 @@ them), scores shots at a shielded tile as capture progress against the city's re
 MeleeOnly / None) makes a garrison of a city that cannot be broken this turn safe in
 `can_defend_at`, `garrison_doomed` and `unit_exposure_key`; when it can be broken, only melee
 reaches the garrison. `purchase_defense.rs::city_risk_with` applies hits to the city first and
-models a ranged garrison's own shot; `production.rs::buy_emergency_defender` can buy Rangers
-or Marksmen and prefers a shooter while the city has over half its HP, a melee garrison below.
+models a ranged garrison's own shot; `production.rs::buy_emergency_defender` can buy Archers
+or Crossbowmen and prefers a shooter while the city has over half its HP, a melee garrison below.
 Threatened cities with over half HP prefer a ranged garrison (`military.rs::prefers_ranged_garrison`, used by `defend_cities` and `garrison_cities`). Rush sieges bombard
 garrisoned cities and send the capturer only when the volley exposes the garrison and the melee
 forecast beats it. `targets()` keeps its force heuristic (garrison + city/4). Proxies v2-v5 are

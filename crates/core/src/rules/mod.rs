@@ -20,6 +20,7 @@ pub mod air;
 pub mod barbarians;
 pub mod battle;
 pub mod cities;
+pub mod city_names;
 pub mod gifts;
 pub mod movement;
 pub mod occupation;
@@ -587,6 +588,7 @@ pub(crate) mod test_support {
             players,
             turn_limit: Some(150),
             legacy_all_war: false,
+            ai_alliances: false,
             barbarians: false,
             rule_experiments: Default::default(),
         };
@@ -735,8 +737,8 @@ mod tests {
     #[test]
     fn tactical_turn_matches_full_turn_unit_phases() {
         let mut s = game(&[0, 1]);
-        let attacker = unit(&mut s, 0, UnitKind::Soldier, hex(4, 4));
-        let _defender = unit(&mut s, 1, UnitKind::Soldier, hex(5, 4));
+        let attacker = unit(&mut s, 0, UnitKind::Spearman, hex(4, 4));
+        let _defender = unit(&mut s, 1, UnitKind::Spearman, hex(5, 4));
         // Keep both empires alive in the full resolver, which also processes elimination.
         unit(&mut s, 0, UnitKind::Settler, hex(1, 1));
         unit(&mut s, 1, UnitKind::Settler, hex(10, 8));
@@ -763,9 +765,9 @@ mod tests {
     fn tactical_turn_matches_full_turn_city_assault() {
         let mut s = game(&[0, 1]);
         let city = walled_city(&mut s, 1, hex(5, 5), 3);
-        unit(&mut s, 1, UnitKind::Soldier, hex(5, 5));
-        let soldier = unit(&mut s, 0, UnitKind::Soldier, hex(4, 5));
-        let siege = unit(&mut s, 0, UnitKind::Ranger, hex(3, 5));
+        unit(&mut s, 1, UnitKind::Spearman, hex(5, 5));
+        let spearman = unit(&mut s, 0, UnitKind::Spearman, hex(4, 5));
+        let siege = unit(&mut s, 0, UnitKind::Archer, hex(3, 5));
         unit(&mut s, 0, UnitKind::Settler, hex(1, 1));
         let os = orders(
             0,
@@ -775,7 +777,7 @@ mod tests {
                     target: hex(5, 5),
                 },
                 Order::MoveUnit {
-                    unit: soldier,
+                    unit: spearman,
                     to: hex(5, 5),
                 },
             ],
@@ -803,12 +805,12 @@ mod tests {
     #[test]
     fn validate_accepts_good_unit_orders() {
         let mut s = game(&[0, 1]);
-        let soldier = unit(&mut s, 0, UnitKind::Soldier, hex(2, 2));
+        let spearman = unit(&mut s, 0, UnitKind::Spearman, hex(2, 2));
         let settler = unit(&mut s, 0, UnitKind::Settler, hex(3, 3));
         let scout = unit(&mut s, 0, UnitKind::Scout, hex(6, 6));
         let os = vec![
             Order::MoveUnit {
-                unit: soldier,
+                unit: spearman,
                 to: hex(8, 2),
             },
             Order::FoundCity { unit: settler },
@@ -820,10 +822,10 @@ mod tests {
     #[test]
     fn move_validation_does_not_reveal_unknown_terrain_or_connectivity() {
         let mut s = game(&[0, 1]);
-        let soldier = unit(&mut s, 0, UnitKind::Soldier, hex(1, 4));
+        let spearman = unit(&mut s, 0, UnitKind::Spearman, hex(1, 4));
         let target = hex(9, 4);
         let order = Order::MoveUnit {
-            unit: soldier,
+            unit: spearman,
             to: target,
         };
         let original_view = crate::player_view(&s, PlayerId(0));
@@ -844,7 +846,7 @@ mod tests {
                         _ => None,
                     })
                     .collect();
-                assert_eq!(reasons, [format!("Move of unit {} failed", soldier.0)]);
+                assert_eq!(reasons, [format!("Move of unit {} failed", spearman.0)]);
             }
         }
 
@@ -861,7 +863,7 @@ mod tests {
         let (_, events) = resolve_turn(&s, &orders(0, vec![order.clone()]));
         assert!(events.contains(&Event::OrderFailed {
             player: PlayerId(0),
-            reason: format!("Move of unit {} failed", soldier.0),
+            reason: format!("Move of unit {} failed", spearman.0),
         }));
 
         // Once the wall is known, its connectivity is legitimate validation feedback.
@@ -875,9 +877,9 @@ mod tests {
     #[test]
     fn validate_rejects_bad_unit_orders() {
         let mut s = game(&[0, 1]);
-        let soldier = unit(&mut s, 0, UnitKind::Soldier, hex(2, 2));
-        let enemy = unit(&mut s, 1, UnitKind::Soldier, hex(9, 8));
-        let ranger = unit(&mut s, 0, UnitKind::Ranger, hex(5, 5));
+        let spearman = unit(&mut s, 0, UnitKind::Spearman, hex(2, 2));
+        let enemy = unit(&mut s, 1, UnitKind::Spearman, hex(9, 8));
+        let archer = unit(&mut s, 0, UnitKind::Archer, hex(5, 5));
         set_terrain(&mut s, hex(10, 2), Terrain::Mountains);
         // Wall off the corner (11, 0) with mountains.
         for h in hex(11, 0).neighbors() {
@@ -895,11 +897,11 @@ mod tests {
                 to: hex(1, 1),
             }, // 1: missing
             Order::MoveUnit {
-                unit: soldier,
+                unit: spearman,
                 to: hex(40, 40),
             }, // 2: off map
-            Order::SkipUnit { unit: soldier }, // 3: second action for soldier
-            Order::FoundCity { unit: ranger }, // 4: not a settler
+            Order::SkipUnit { unit: spearman }, // 3: second action for soldier
+            Order::FoundCity { unit: archer },  // 4: not a settler
         ];
         let e = errors(&s, 0, &os);
         assert_eq!(
@@ -910,7 +912,7 @@ mod tests {
 
         let s2 = s.clone();
         let mut s3 = s.clone();
-        let other = unit(&mut s3, 0, UnitKind::Soldier, hex(3, 3));
+        let other = unit(&mut s3, 0, UnitKind::Spearman, hex(3, 3));
         // Terrain/connectivity errors are available only for known tiles.
         for index in 0..s3.map.len() {
             s3.player_mut(PlayerId(0)).explored.set(index);
@@ -920,7 +922,7 @@ mod tests {
             0,
             &[
                 Order::MoveUnit {
-                    unit: soldier,
+                    unit: spearman,
                     to: hex(10, 2),
                 }, // impassable
                 Order::MoveUnit {
@@ -939,34 +941,34 @@ mod tests {
             0,
             &[
                 Order::RangedAttack {
-                    unit: soldier,
+                    unit: spearman,
                     target: hex(3, 2),
                 },
                 Order::RangedAttack {
-                    unit: ranger,
+                    unit: archer,
                     target: hex(9, 8),
                 },
             ],
         );
         assert_eq!(e.len(), 2);
         let mut s4 = s2.clone();
-        let _friend = unit(&mut s4, 0, UnitKind::Soldier, hex(6, 5));
+        let _friend = unit(&mut s4, 0, UnitKind::Spearman, hex(6, 5));
         let e = errors(
             &s4,
             0,
             &[Order::RangedAttack {
-                unit: ranger,
+                unit: archer,
                 target: hex(6, 5),
             }],
         );
         assert_eq!(e.len(), 1, "cannot shoot a friendly tile");
-        let _foe = unit(&mut s4, 1, UnitKind::Soldier, hex(7, 5));
+        let _foe = unit(&mut s4, 1, UnitKind::Spearman, hex(7, 5));
         assert!(
             errors(
                 &s4,
                 0,
                 &[Order::RangedAttack {
-                    unit: ranger,
+                    unit: archer,
                     target: hex(7, 5)
                 }]
             )
@@ -977,25 +979,25 @@ mod tests {
     #[test]
     fn validate_upgrade_rules() {
         let mut s = game(&[0, 1]);
-        let soldier = unit(&mut s, 0, UnitKind::Phalangite, hex(2, 2));
+        let spearman = unit(&mut s, 0, UnitKind::Phalangite, hex(2, 2));
         let scout = unit(&mut s, 0, UnitKind::Scout, hex(2, 3));
         let up = |u| vec![Order::UpgradeUnit { unit: u }];
         // No tech, no territory, no gold.
-        let e = errors(&s, 0, &up(soldier));
+        let e = errors(&s, 0, &up(spearman));
         assert!(e[0].1.contains("Feudalism"), "{}", e[0].1);
         s.player_mut(PlayerId(0)).techs.insert(TechId::Feudalism);
         // Phalangite→Pikeman also uses 1 Iron supply; this test is about Gold.
         s.player_mut(PlayerId(0))
             .techs
             .extend([TechId::BronzeWorking, TechId::IronWorking]);
-        let e = errors(&s, 0, &up(soldier));
+        let e = errors(&s, 0, &up(spearman));
         assert!(e[0].1.contains("territory"), "{}", e[0].1);
         city(&mut s, 0, hex(2, 2), 1);
         s.map.get_mut(hex(3, 2)).unwrap().resource = Some(crate::Resource::Iron);
-        let e = errors(&s, 0, &up(soldier));
+        let e = errors(&s, 0, &up(spearman));
         assert!(e[0].1.contains("Gold"), "{}", e[0].1);
         s.player_mut(PlayerId(0)).gold = 84;
-        assert!(errors(&s, 0, &up(soldier)).is_empty());
+        assert!(errors(&s, 0, &up(spearman)).is_empty());
         assert_eq!(errors(&s, 0, &up(scout)).len(), 1, "scouts cannot upgrade");
         // Running gold: two upgrades need 168.
         let second = unit(&mut s, 0, UnitKind::Phalangite, hex(3, 2));
@@ -1003,7 +1005,7 @@ mod tests {
             &s,
             0,
             &[
-                Order::UpgradeUnit { unit: soldier },
+                Order::UpgradeUnit { unit: spearman },
                 Order::UpgradeUnit { unit: second },
             ],
         );
@@ -1036,13 +1038,13 @@ mod tests {
         set_terrain(&mut s, hex(6, 4), Terrain::Forest);
         s.map.get_mut(hex(7, 7)).unwrap().ruin = true;
         city(&mut s, 2, hex(9, 2), 3);
-        let a = unit(&mut s, 0, UnitKind::Soldier, hex(2, 5));
-        let b = unit(&mut s, 1, UnitKind::Soldier, hex(8, 5));
-        let c = unit(&mut s, 2, UnitKind::Soldier, hex(5, 8));
-        let r = unit(&mut s, 0, UnitKind::Ranger, hex(3, 4));
+        let a = unit(&mut s, 0, UnitKind::Spearman, hex(2, 5));
+        let b = unit(&mut s, 1, UnitKind::Spearman, hex(8, 5));
+        let c = unit(&mut s, 2, UnitKind::Spearman, hex(5, 8));
+        let r = unit(&mut s, 0, UnitKind::Archer, hex(3, 4));
         let st = unit(&mut s, 1, UnitKind::Settler, hex(7, 6));
         let sc = unit(&mut s, 2, UnitKind::Scout, hex(9, 7));
-        let _g = unit(&mut s, 2, UnitKind::Soldier, hex(9, 2));
+        let _g = unit(&mut s, 2, UnitKind::Spearman, hex(9, 2));
         for (u, to) in [
             (b, hex(2, 5)),
             (c, hex(5, 2)),
@@ -1143,7 +1145,7 @@ mod tests {
                 os.push(Order::SetProduction {
                     city: c.id,
                     item: ProductionItem::Unit {
-                        unit: UnitKind::Soldier,
+                        unit: UnitKind::Spearman,
                     },
                 });
             }

@@ -128,7 +128,7 @@ impl Planner<'_> {
 
     /// A wartime settler may not cross land owned by the team it is fighting, even though
     /// ordinary military movement can enter that land during a war.
-    fn enemy_war_tile(&self, h: Hex) -> bool {
+    pub(crate) fn enemy_war_tile(&self, h: Hex) -> bool {
         self.view().tile(h).is_some_and(|tile| {
             tile.owner
                 .is_some_and(|owner| self.view().at_war(self.ctx.me, owner))
@@ -138,7 +138,7 @@ impl Planner<'_> {
     /// Keep settlement sites outside the visible enemy army's threat radius. The shared
     /// settler danger map covers attack reach; THREAT_RADIUS adds the established city-threat
     /// buffer so a site cannot be selected just beyond that immediate reach.
-    fn enemy_army_near(&self, h: Hex) -> bool {
+    pub(crate) fn enemy_army_near(&self, h: Hex) -> bool {
         self.ctx
             .threat_units
             .iter()
@@ -665,16 +665,42 @@ impl Planner<'_> {
         for s in settlers {
             self.plan_settler(s);
         }
+        // Gene `rome_colonia`: a level-3 veteran founds the Colonia Victrix first.
+        self.plan_colonia();
+        // Gene `rome_found_now`: no six-city cap and no wait for the opening march.
+        let found_now = self.rome_found_now();
         if self.faction == Faction::Rome
+            && (found_now || !self.rome_opening_active())
             && self.hard_defense()
             && self.decisions.roman_founders > 0
-            && self.ctx.own_cities.len() < 6
+            && (found_now || self.ctx.own_cities.len() < 6)
         {
             // Gene `roman_finish_siege`: a siege whose capture still forecasts keeps its
             // committed units; a captured city is worth more than a founded one.
             let siege = self.roman_live_siege();
-            let in_siege =
-                |u: &UnitView| siege.as_ref().is_some_and(|(_, ids)| ids.contains(&u.id));
+            // Gene `rome_found_now`: a wounded veteran fights on only where
+            // `rome_wounded_fights_on` says so. Gene `rome_recruit_captures`: a badly hurt
+            // unit one fight from its promotion counts as one.
+            let wounded = |p: &Self, u: &UnitView| {
+                (u.level >= 1 && u.hp < legatum_core::data::UNIT_HP) || p.rome_near_veteran_hurt(u)
+            };
+            let kept: Vec<UnitId> = if found_now {
+                self.ctx
+                    .own_units
+                    .iter()
+                    .filter(|u| wounded(self, u) && self.rome_wounded_fights_on(u))
+                    .map(|u| u.id)
+                    .collect()
+            } else {
+                Vec::new()
+            };
+            let in_siege = |u: &UnitView| {
+                if found_now {
+                    kept.contains(&u.id)
+                } else {
+                    siege.as_ref().is_some_and(|(_, ids)| ids.contains(&u.id))
+                }
+            };
             // A veteran cannot retire while wounded. Let a safe one recover before
             // ordinary military assignments spend another turn of its health.
             let healing: Vec<_> = self
@@ -683,8 +709,7 @@ impl Planner<'_> {
                 .iter()
                 .copied()
                 .filter(|u| {
-                    u.level >= 1
-                        && u.hp < legatum_core::data::UNIT_HP
+                    wounded(self, u)
                         && legatum_core::data::unit_class(u.kind) == Some(UnitClass::Melee)
                         && !self.has_acted(u.id)
                         && self.exposure_at(u.pos) == 0
@@ -705,8 +730,7 @@ impl Planner<'_> {
                     .iter()
                     .copied()
                     .filter(|u| {
-                        u.level >= 1
-                            && u.hp < legatum_core::data::UNIT_HP
+                        wounded(self, u)
                             && legatum_core::data::unit_class(u.kind) == Some(UnitClass::Melee)
                             && !self.has_acted(u.id)
                             && self.exposure_at(u.pos) > 0
@@ -714,12 +738,27 @@ impl Planner<'_> {
                             && !in_siege(u)
                     })
                     .collect();
+                let walk_home = self.rome_recruit_captures();
                 for u in exposed {
-                    self.retreat(u);
+                    // Gene `rome_recruit_captures`: with no safer tile in one move, it walks
+                    // home instead of fighting on where it stands.
+                    if !self.retreat(u)
+                        && walk_home
+                        && let Some(home) = self.ctx.nearest_own_city(u.pos).map(|c| c.pos)
+                        && home != u.pos
+                        && self.move_or_hold(u, home)
+                    {
+                        self.retreats.insert(u.id);
+                    }
                 }
             }
         }
+        if found_now {
+            self.plan_rome_found_now();
+            return;
+        }
         if self.faction == Faction::Rome
+            && !self.rome_opening_active()
             && self.hard_defense()
             && self.decisions.roman_founders > 0
             && self.ctx.own_cities.len() < 6
@@ -745,6 +784,9 @@ impl Planner<'_> {
                         && legatum_core::data::unit_class(u.kind) == Some(UnitClass::Melee)
                         && !self.has_acted(u.id)
                         && self.roman_unit_can_leave(u)
+                        // Gene `rome_colonia`: the Colonia's founder, and the veteran closest
+                        // to becoming it, found no ordinary city.
+                        && !self.colonia_reserved(u)
                         && siege.as_ref().is_none_or(|(city, ids)| {
                             !ids.contains(&u.id) || {
                                 let rest: Vec<UnitId> =
@@ -828,7 +870,11 @@ impl Planner<'_> {
     /// Whether `force` still forecasts the capture of `city` (the campaign's own tests). A
     /// visible city shot down to 0 HP falls to the first melee unit that walks in; the siege
     /// forecasts stop pricing it there, which is exactly when the veterans must stay.
-    fn roman_capture_holds(&self, city: &legatum_core::view::CityView, force: &[UnitId]) -> bool {
+    pub(crate) fn roman_capture_holds(
+        &self,
+        city: &legatum_core::view::CityView,
+        force: &[UnitId],
+    ) -> bool {
         (city.visible
             && city.hp <= 0
             && force.iter().any(|id| {
@@ -1142,7 +1188,7 @@ impl Planner<'_> {
     /// Percent chance a city founded at `h` this turn falls to the visible attack: the at-war
     /// military that can reach it by next turn against a new city's defence. `empires_only`
     /// (gene `found_now`) leaves barbarians out: their raiders never assault a city.
-    fn fresh_city_loss(&self, h: Hex, empires_only: bool) -> i32 {
+    pub(crate) fn fresh_city_loss(&self, h: Hex, empires_only: bool) -> i32 {
         let v = self.view();
         let pressure: i32 = self
             .ctx
@@ -1729,8 +1775,8 @@ impl Planner<'_> {
         let at_war = self.at_war();
         // Gene `roman_soldier_route`: a Roman veteran is a soldier, not a civilian to be
         // captured on the road, so the Settler's danger detours do not apply to it.
-        let soldier = self.roman_soldier_founder(s);
-        let field = if soldier {
+        let spearman = self.roman_soldier_founder(s);
+        let field = if spearman {
             ctx.distance_field(s.pos, true)
         } else if at_war {
             let mut blocked = ctx.settler_danger.clone();
@@ -1841,7 +1887,7 @@ impl Planner<'_> {
                 Some("remembered border risk")
             } else if ctx.in_danger(h) {
                 Some("in danger")
-            } else if ctx.settler_danger[i] && !soldier {
+            } else if ctx.settler_danger[i] && !spearman {
                 Some("settler danger")
             } else if site.threats > 0 {
                 Some("site threats")
@@ -1932,7 +1978,7 @@ impl Planner<'_> {
                     && site
                         .nearest_city
                         .is_none_or(|home| home <= self.decisions.settler_max_site_distance));
-            let risk = if self.settler_safety() && !first_city && !soldier {
+            let risk = if self.settler_safety() && !first_city && !spearman {
                 self.settler_trip_risk(s.pos, h)
             } else {
                 0
@@ -2004,7 +2050,7 @@ impl Planner<'_> {
                 // A captured Settler denies us a city and gives the captor one. Exposure is a
                 // bounded loss-risk heuristic, so price both sides of that swing.
                 value -= Self::settler_loss_cost(value, risk);
-            } else if self.hard_defense() && !first_city && !soldier {
+            } else if self.hard_defense() && !first_city && !spearman {
                 // Retain the established two-seat policy used by the paired duel.
                 let legacy_risk = self.settler_trip_risk(s.pos, h);
                 if legacy_risk >= self.decisions.settler_risk_avoid {
@@ -2316,7 +2362,7 @@ impl Planner<'_> {
                         enemy.kind,
                         matches!(
                             enemy.kind,
-                            UnitKind::Artillery | UnitKind::RocketArtillery | UnitKind::Drone
+                            UnitKind::Artillery | UnitKind::RocketArtillery | UnitKind::CombatDrone
                         ),
                         v.cities
                             .iter()
@@ -3173,7 +3219,7 @@ mod timeout_tests {
             assert_eq!(p.orders, vec![Order::FoundCity { unit: UnitId(1) }]);
         }
         view = ViewBuilder { view }
-            .unit(2, ENEMY, UnitKind::Soldier, off(9, 8))
+            .unit(2, ENEMY, UnitKind::Spearman, off(9, 8))
             .build();
         let mut p = Planner::new(
             &view,
@@ -3336,8 +3382,8 @@ mod found_here_tests {
             .any(|o| matches!(o, Order::FoundCity { unit } if *unit == UnitId(1)))
     }
 
-    /// A Settler on a legal site with enemy Soldiers (2 moves) at `distance` from it.
-    fn settler_with_soldiers(distance: i32, soldiers: usize) -> PlayerView {
+    /// A Settler on a legal site with enemy Spearmen (2 moves) at `distance` from it.
+    fn settler_with_spearmen(distance: i32, spearmen: usize) -> PlayerView {
         let settler = off(9, 8);
         let mut b = ViewBuilder::new(20, 16).city(1, ME, off(3, 8), 3).unit(
             1,
@@ -3348,18 +3394,18 @@ mod found_here_tests {
         for (i, h) in settler
             .ring(distance)
             .into_iter()
-            .take(soldiers)
+            .take(spearmen)
             .enumerate()
         {
-            b = b.unit(2 + i as u32, ENEMY, UnitKind::Soldier, h);
+            b = b.unit(2 + i as u32, ENEMY, UnitKind::Spearman, h);
         }
         b.build()
     }
 
     #[test]
     fn a_settler_founds_beside_an_army_that_cannot_reach_it_this_turn() {
-        // Within the threat radius (3), beyond a Soldier's two moves.
-        let view = settler_with_soldiers(3, 1);
+        // Within the threat radius (3), beyond a Spearman's two moves.
+        let view = settler_with_spearmen(3, 1);
         let mut off_planner = planner(&view, 0);
         off_planner.plan_settlers();
         assert!(
@@ -3368,7 +3414,7 @@ mod found_here_tests {
         );
         let mut on = planner(&view, 1);
         on.plan_settlers();
-        assert!(founds(&on.orders), "one Soldier can't take a fresh city");
+        assert!(founds(&on.orders), "one Spearman can't take a fresh city");
         // The order is remembered, so a failed found is not repeated next turn.
         assert_eq!(
             on.campaigns.found_tried,
@@ -3378,8 +3424,8 @@ mod found_here_tests {
 
     #[test]
     fn a_settler_an_enemy_can_reach_this_turn_does_not_found_there() {
-        // Founding resolves after movement: the Soldier would capture it first.
-        let view = settler_with_soldiers(1, 1);
+        // Founding resolves after movement: the Spearman would capture it first.
+        let view = settler_with_spearmen(1, 1);
         let mut p = planner(&view, 1);
         let ((), notes) = trace_settler(UnitId(1), None, || p.plan_settlers());
         assert!(!founds(&p.orders));
@@ -3391,7 +3437,7 @@ mod found_here_tests {
 
     #[test]
     fn an_army_that_would_take_the_fresh_city_keeps_the_settler_off_the_tile() {
-        let view = settler_with_soldiers(3, 6);
+        let view = settler_with_spearmen(3, 6);
         let mut p = planner(&view, 1);
         let ((), notes) = trace_settler(UnitId(1), None, || p.plan_settlers());
         assert!(!founds(&p.orders));
@@ -3411,7 +3457,7 @@ mod found_here_tests {
 
     #[test]
     fn a_found_that_failed_here_last_turn_is_not_repeated() {
-        let view = settler_with_soldiers(3, 1);
+        let view = settler_with_spearmen(3, 1);
         let mut p = planner(&view, 1);
         p.campaigns
             .found_tried
@@ -3432,13 +3478,13 @@ mod settler_shelter_tests {
     use legatum_core::Faction;
 
     #[test]
-    fn a_settler_in_a_city_one_soldier_cannot_break_stays_inside() {
-        // A Soldier two hexes away reaches the city this turn but cannot take a full city.
+    fn a_settler_in_a_city_one_spearman_cannot_break_stays_inside() {
+        // A Spearman two hexes away reaches the city this turn but cannot take a full city.
         let city = off(6, 8);
         let view = ViewBuilder::new(20, 16)
             .city(1, ME, city, 3)
             .unit(1, ME, UnitKind::Settler, city)
-            .unit(2, ENEMY, UnitKind::Soldier, off(8, 8))
+            .unit(2, ENEMY, UnitKind::Spearman, off(8, 8))
             .build();
         let notes = |gene| {
             let mut p = Planner::new(
@@ -3455,7 +3501,7 @@ mod settler_shelter_tests {
         let (off_notes, _) = notes(0);
         assert!(
             off_notes.iter().any(|n| n.starts_with("exposed at")),
-            "gene off: the Soldier's reach makes the Settler retreat: {off_notes:?}"
+            "gene off: the Spearman's reach makes the Settler retreat: {off_notes:?}"
         );
         let (on_notes, _) = notes(1);
         assert!(
@@ -3587,14 +3633,14 @@ mod fallback_risk_tests {
 
     #[test]
     fn a_far_fallback_no_safer_than_the_near_site_loses_to_it() {
-        // At war: an enemy Soldier four rows south of the Settler (out of reach this turn)
+        // At war: an enemy Spearman four rows south of the Settler (out of reach this turn)
         // puts every site's trip at risk, near and far alike; the far sites (beyond the
         // preferred distance) are the fallback the search never charged for it.
         let city = off(3, 8);
         let view = ViewBuilder::new(30, 18)
             .city(1, ME, city, 3)
             .unit(1, ME, UnitKind::Settler, off(5, 8))
-            .unit(2, ENEMY, UnitKind::Soldier, off(5, 12))
+            .unit(2, ENEMY, UnitKind::Spearman, off(5, 12))
             .build();
         let notes = |gene: i32| {
             let mut p = crate::fixture::planner(&view, 7);
@@ -3729,10 +3775,10 @@ mod found_now_tests {
 
     #[test]
     fn a_camp_guard_does_not_stop_it_but_a_raider_does() {
-        let guard = settler_and_barbarian(UnitKind::Soldier, 2, true);
+        let guard = settler_and_barbarian(UnitKind::Spearman, 2, true);
         let (found, notes) = founds(&mut hard(&guard, 10));
         assert!(found, "the guard holds its camp: {notes:?}");
-        let raider = settler_and_barbarian(UnitKind::Soldier, 2, false);
+        let raider = settler_and_barbarian(UnitKind::Spearman, 2, false);
         let (found, notes) = founds(&mut hard(&raider, 10));
         assert!(!found, "a raider takes a lone civilian within its moves");
         assert!(
@@ -3748,7 +3794,7 @@ mod found_now_tests {
             .city(1, ME, off(3, 8), 3)
             .city(2, ENEMY, off(20, 8), 3)
             .unit(1, ME, UnitKind::Settler, settler)
-            .unit(2, ENEMY, UnitKind::Ranger, settler.ring(1)[0])
+            .unit(2, ENEMY, UnitKind::Archer, settler.ring(1)[0])
             .build();
         v.diplomacy.legacy = false;
         let enemy_team = v.team_of(ENEMY);

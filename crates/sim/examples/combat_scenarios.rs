@@ -102,8 +102,8 @@ fn roster(rules: &str) -> Result<Vec<UnitKind>, String> {
         return Err(format!("unknown rules: {rules}"));
     }
     Ok(vec![
-        UnitKind::Soldier,
-        UnitKind::Ranger,
+        UnitKind::Spearman,
+        UnitKind::Archer,
         UnitKind::Scout,
         UnitKind::Horseman,
     ])
@@ -144,8 +144,8 @@ fn case(
 }
 fn cases(roster: &[UnitKind]) -> Vec<Case> {
     let mut out = Vec::new();
-    let soldier = kind("Soldier");
-    let ranger = kind("Ranger");
+    let spearman = kind("Spearman");
+    let archer = kind("Archer");
     let scout = kind("Scout");
     for (a, b) in [(1, 1), (2, 2), (3, 3), (4, 5), (5, 4), (6, 6), (3, 6)] {
         for k in roster {
@@ -185,8 +185,8 @@ fn cases(roster: &[UnitKind]) -> Vec<Case> {
             Goal::Destroy,
             g,
             3,
-            repeat(soldier, 4),
-            repeat(soldier, 4),
+            repeat(spearman, 4),
+            repeat(spearman, 4),
             "defender_edge",
         ));
     }
@@ -200,8 +200,8 @@ fn cases(roster: &[UnitKind]) -> Vec<Case> {
                         Goal::TakeCity,
                         Ground::Open,
                         3,
-                        repeat(soldier, attackers),
-                        if garrison { vec![soldier] } else { vec![] },
+                        repeat(spearman, attackers),
+                        if garrison { vec![spearman] } else { vec![] },
                         if walls && garrison && !damaged && attackers < 6 {
                             "wall_holds"
                         } else if !walls && attackers >= 4 {
@@ -220,9 +220,9 @@ fn cases(roster: &[UnitKind]) -> Vec<Case> {
         }
     }
     for (a, b, label) in [
-        (soldier, ranger, "melee_vs_ranged"),
-        (ranger, soldier, "ranged_vs_melee"),
-        (soldier, scout, "melee_vs_scout"),
+        (spearman, archer, "melee_vs_ranged"),
+        (archer, spearman, "ranged_vs_melee"),
+        (spearman, scout, "melee_vs_scout"),
     ] {
         out.push(case(
             label,
@@ -232,7 +232,7 @@ fn cases(roster: &[UnitKind]) -> Vec<Case> {
             2,
             repeat(a, (160 / data::unit_stats(a).cost) as usize),
             repeat(b, (160 / data::unit_stats(b).cost) as usize),
-            if a == ranger || (a == soldier && b == scout) {
+            if a == archer || (a == spearman && b == scout) {
                 "attacker_wins"
             } else {
                 "valid_orders"
@@ -247,7 +247,7 @@ fn cases(roster: &[UnitKind]) -> Vec<Case> {
             Ground::Open,
             3,
             repeat(mounted, 3),
-            repeat(ranger, 3),
+            repeat(archer, 3),
             "attacker_wins",
         ));
         out.push(case(
@@ -256,7 +256,7 @@ fn cases(roster: &[UnitKind]) -> Vec<Case> {
             Goal::Destroy,
             Ground::Open,
             2,
-            repeat(soldier, 3),
+            repeat(spearman, 3),
             repeat(mounted, 3),
             "attacker_wins",
         ));
@@ -267,8 +267,8 @@ fn cases(roster: &[UnitKind]) -> Vec<Case> {
         Goal::Destroy,
         Ground::Open,
         4,
-        repeat(ranger, 4),
-        repeat(soldier, 5),
+        repeat(archer, 4),
+        repeat(spearman, 5),
         "ranged_not_dominant",
     );
     kite.kiting = true;
@@ -280,8 +280,8 @@ fn cases(roster: &[UnitKind]) -> Vec<Case> {
             Goal::Destroy,
             Ground::Open,
             2,
-            repeat(soldier, 3),
-            repeat(soldier, 3),
+            repeat(spearman, 3),
+            repeat(spearman, 3),
             "attacker_wins",
         );
         v.veteran = level;
@@ -319,8 +319,8 @@ fn cases(roster: &[UnitKind]) -> Vec<Case> {
                 Ground::Mixed
             },
             3,
-            vec![soldier, ranger, scout],
-            vec![soldier, ranger, scout],
+            vec![spearman, archer, scout],
+            vec![spearman, archer, scout],
             expectation,
         );
         c.city = matches!(
@@ -332,19 +332,29 @@ fn cases(roster: &[UnitKind]) -> Vec<Case> {
         out.push(c);
     }
     for (id, a, b, low) in [
-        ("all-scout", repeat(scout, 6), repeat(soldier, 3), false),
+        ("all-scout", repeat(scout, 6), repeat(spearman, 3), false),
         (
             "one-veteran-six-green",
-            repeat(soldier, 1),
-            repeat(soldier, 6),
+            repeat(spearman, 1),
+            repeat(spearman, 6),
             false,
         ),
-        ("ten-v-one", repeat(soldier, 10), repeat(soldier, 1), false),
-        ("one-hp", vec![soldier, ranger], vec![soldier, ranger], true),
+        (
+            "ten-v-one",
+            repeat(spearman, 10),
+            repeat(spearman, 1),
+            false,
+        ),
+        (
+            "one-hp",
+            vec![spearman, archer],
+            vec![spearman, archer],
+            true,
+        ),
         (
             "settler-in-mix",
-            vec![soldier, UnitKind::Settler, ranger],
-            vec![soldier, scout],
+            vec![spearman, UnitKind::Settler, archer],
+            vec![spearman, scout],
             false,
         ),
     ] {
@@ -362,7 +372,7 @@ fn cases(roster: &[UnitKind]) -> Vec<Case> {
         Ground::Mixed,
         3,
         repeat(scout, 3),
-        vec![soldier],
+        vec![spearman],
         "valid_orders",
     ));
     out
@@ -962,7 +972,7 @@ fn search(roster: &[UnitKind], seed: u64) -> Vec<CompositionRow> {
         ("break_siege", Goal::BreakSiege, Ground::Mixed, true, true),
         ("retreat", Goal::Retreat, Ground::Open, false, false),
     ] {
-        let fixed = vec![UnitKind::Soldier; 8];
+        let fixed = vec![UnitKind::Spearman; 8];
         let eval = |a: &Vec<UnitKind>, b: &Vec<UnitKind>| -> i32 {
             let defending = matches!(goal, Goal::DefendCity | Goal::HoldPass);
             let mut c = case(
@@ -1082,7 +1092,7 @@ fn violating_trial(c: &Case, row: &ResultRow) -> bool {
 const TRIANGLE_TIERS: [(&str, [UnitKind; 3]); 7] = [
     (
         "Ancient",
-        [UnitKind::Soldier, UnitKind::Ranger, UnitKind::Horseman],
+        [UnitKind::Spearman, UnitKind::Archer, UnitKind::Horseman],
     ),
     (
         "Classical",
@@ -1094,12 +1104,12 @@ const TRIANGLE_TIERS: [(&str, [UnitKind; 3]); 7] = [
     ),
     (
         "Medieval",
-        [UnitKind::Trooper, UnitKind::Marksman, UnitKind::Knight],
+        [UnitKind::Pikeman, UnitKind::Crossbowman, UnitKind::Knight],
     ),
     (
         "Renaissance",
         [
-            UnitKind::AssaultTrooper,
+            UnitKind::Musketman,
             UnitKind::Arquebusier,
             UnitKind::Cuirassier,
         ],
@@ -1116,7 +1126,7 @@ const TRIANGLE_TIERS: [(&str, [UnitKind; 3]); 7] = [
         "Future",
         [
             UnitKind::HunterKiller,
-            UnitKind::Drone,
+            UnitKind::CombatDrone,
             UnitKind::AutonomousArmour,
         ],
     ),
@@ -1345,7 +1355,7 @@ const KESHIG_FOES: [(&str, &[UnitKind]); 6] = [
             UnitKind::Cataphract,
         ],
     ),
-    ("6 Spearmen (Ancient)", &[UnitKind::Soldier; 6]),
+    ("6 Spearmen (Ancient)", &[UnitKind::Spearman; 6]),
 ];
 /// Win share of `n` Mongol `rider`s against `foe` (India), Human policy, ties half.
 fn rider_share(
@@ -1573,7 +1583,7 @@ fn response_report(seeds: usize, seed0: u64) -> String {
     text
 }
 /// The Spartan phalanx (`--phalanx`, how `data::HOPLITE_PHALANX_STRENGTH` was chosen): a small
-/// Spartan line of Hoplites (Soldiers) against the other side's army, win share % of the Spartans
+/// Spartan line of Hoplites (Spearmen) against the other side's army, win share % of the Spartans
 /// (Hard / Human policy), mean of starts 2-5 hexes apart, open ground and forest. The first rows
 /// say how much a pair beats a plain Spearman line; the counter-class rows say a ranged unit one
 /// era ahead (and the era-ahead melee line) still does well against it. Spartans already win most
@@ -1589,12 +1599,12 @@ fn phalanx_report(seeds: usize, seed0: u64) -> String {
         (
             "2 Spearmen (same era, same class)",
             2,
-            repeat(UnitKind::Soldier, 2),
+            repeat(UnitKind::Spearman, 2),
         ),
         (
             "3 Spearmen (outnumbered 2 to 3)",
             2,
-            repeat(UnitKind::Soldier, 3),
+            repeat(UnitKind::Spearman, 3),
         ),
         (
             "1 Composite Archer (ranged, one era ahead, same cost)",
@@ -1604,7 +1614,7 @@ fn phalanx_report(seeds: usize, seed0: u64) -> String {
         (
             "2 Archers (ranged, same era; 132 against 120)",
             3,
-            repeat(UnitKind::Ranger, 2),
+            repeat(UnitKind::Archer, 2),
         ),
         (
             "2 Phalangites (melee, one era ahead; 110 against 120)",
@@ -1623,7 +1633,7 @@ fn phalanx_report(seeds: usize, seed0: u64) -> String {
         ),
     ];
     for (label, count, army) in rows {
-        let hoplites = repeat(UnitKind::Soldier, count);
+        let hoplites = repeat(UnitKind::Spearman, count);
         let cells: Vec<_> = [Ground::Open, Ground::Forest]
             .into_iter()
             .map(|g| {
@@ -1862,10 +1872,10 @@ mod tests {
         let all = cases(&roster("default").unwrap());
         // Four default unit kinds produce 84 open matchups; the other families add 50.
         assert_eq!(all.len(), 134);
-        // Four current-cost Soldiers exactly fill the 320-production composition budget.
+        // Four current-cost Spearmen exactly fill the 320-production composition budget.
         assert!(
             compositions(&roster("default").unwrap(), COMPOSITION_BUDGET)
-                .contains(&vec![UnitKind::Soldier; 4])
+                .contains(&vec![UnitKind::Spearman; 4])
         );
         assert!(
             all.iter()
@@ -1909,8 +1919,8 @@ mod tests {
             Goal::Destroy,
             Ground::Open,
             2,
-            vec![UnitKind::Soldier, UnitKind::Ranger],
-            vec![UnitKind::Soldier],
+            vec![UnitKind::Spearman, UnitKind::Archer],
+            vec![UnitKind::Spearman],
             "valid_orders",
         );
         let a = play(&c, 9181, Policy::Human, true);

@@ -14,7 +14,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
 
 
 
-  // Faction goals 5: the Mongols' Courier Hall (Portolan rose landmark, build card, held goal, capture).
+  // Faction goals 5: the Mongols' Yam Relay Station (Portolan rose landmark, build card, held goal, capture).
   test('Yam Relay Station: held in your own cities (a walled one too), at normal and far zoom', async ({ page }) => {
     test.setTimeout(150_000);
     const f = await openHall(page, 'own');
@@ -24,7 +24,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await shot(page, size, '95b-hall-own-map-close');
     await frameHall(page, f.hallPos, 0.55);
     await shot(page, size, '95c-hall-own-map-far');
-    // The Hall's own city lists the standing building and its chosen tile.
+    // The Station's own city lists the standing building and its chosen tile.
     await selectThing(page, 'city', f.b);
     const built = page.locator('.city-panel .cp-foot');
     await built.scrollIntoViewIfNeeded();
@@ -38,7 +38,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await shot(page, size, '95e-hall-race-token-card');
     await page.mouse.move(5, size.height / 2);
     // The goal slip on the objectives sheet says where it stands and shows it on the map.
-    await page.getByRole('region', { name: 'Victory race', exact: true }).getByRole('button', { name: 'All objectives', exact: true }).click();
+    await page.getByRole('region', { name: 'Victory race', exact: true }).getByRole('button', { name: 'Score ledger', exact: true }).click();
     const sheet = page.getByTestId('objective-sheet');
     await expect(sheet).toBeVisible();
     await sheet.locator('.sl-row.k-heldGoal button').click();
@@ -122,7 +122,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await page.locator('.sidebar-standings > summary').click();
     await page.locator('.panel.vp .vhc-tok[data-held]').first().hover();
     await page.mouse.move(5, size.height / 2);
-    await page.getByRole('region', { name: 'Victory race', exact: true }).getByRole('button', { name: 'All objectives', exact: true }).click();
+    await page.getByRole('region', { name: 'Victory race', exact: true }).getByRole('button', { name: 'Score ledger', exact: true }).click();
     await expect(page.getByTestId('objective-sheet')).toBeVisible();
     await shot(page, size, '95l-hall-rival-goal-slip');
   });
@@ -176,7 +176,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     f.fixture.players[0].gold = 2000;
     await loadFixture(page, coreFixture(f.fixture), 12);
     await selectThing(page, 'city', f.a);
-    const card = page.locator('.city-panel .production-choice[data-item^="w:CourierHall:"]').first();
+    const card = page.locator('.city-panel .production-choice[data-item^="w:YamRelayStation:"]').first();
     await card.scrollIntoViewIfNeeded();
     await expect(card.locator('.prod-cost')).toContainText(/\d{3}/);
     await expect(card).toContainText('every empire may cross all of the holder\'s land at Peace');
@@ -217,7 +217,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await page.mouse.click(spot.x, spot.y);
     // Build moves on to the next decision, so come back to the city: the card now names its tile and cost.
     await selectThing(page, 'city', f.a);
-    await expect(yam.locator('.production-choice')).toHaveAttribute('data-item', `w:CourierHall:${pick.q},${pick.r}`);
+    await expect(yam.locator('.production-choice')).toHaveAttribute('data-item', `w:YamRelayStation:${pick.q},${pick.r}`);
     await expect(yam.locator('.prod-where.site-cost')).toContainText('gives up');
     // The placed tile stays marked on the map.
     expect(await page.evaluate((hex) => (window as unknown as { legatumMap: { improve?: { sites: { q: number; r: number }[] } | null } }).legatumMap.improve?.sites.some((h) => h.q === hex.q && h.r === hex.r), pick)).toBe(true);
@@ -240,7 +240,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     expect(label.over).toBeLessThanOrEqual(0);
     await shot(page, size, '95t5-hall-placed-panel-top');
     await stageHallReport(page, [
-      { type: 'ProductionCompleted', city: f.b, owner: 0, item: { kind: 'Wonder', building: 'CourierHall', tile: { q: f.hallPos.q + 1, r: f.hallPos.r } } },
+      { type: 'ProductionCompleted', city: f.b, owner: 0, item: { kind: 'Wonder', building: 'YamRelayStation', tile: { q: f.hallPos.q + 1, r: f.hallPos.r } } },
       { type: 'FactionGoalCompleted', player: 0, faction: 'Mongols', vp: 2 },
     ]);
     await expect(page.locator('.moment-card').first()).toContainText('The Yam Network');

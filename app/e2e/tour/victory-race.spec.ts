@@ -55,7 +55,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
 
   test('VP race: your own Byzantium goal says whether the Heir is trained and who holds him', async ({ page }) => {
     await loadFixture(page, coreFixture(researchFixture('Byzantium')), 2);
-    await page.getByRole('region', { name: 'Victory race', exact: true }).getByRole('button', { name: 'All objectives', exact: true }).click();
+    await page.getByRole('region', { name: 'Victory race', exact: true }).getByRole('button', { name: 'Score ledger', exact: true }).click();
     const sheet = page.getByTestId('objective-sheet');
     await expect(sheet).toBeVisible();
     const goal = sheet.locator('.sl-row.k-heldGoal');
@@ -73,7 +73,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await expect(race.locator('.vp-row')).toHaveCount(5);
     await expect(race).not.toContainText('Athens');
     await shot(page, size, '76-eliminated-race');
-    await race.getByRole('button', { name: 'All objectives', exact: true }).click();
+    await race.getByRole('button', { name: 'Score ledger', exact: true }).click();
     await expect(page.getByTestId('objective-sheet')).toBeVisible();
     await expect(page.getByTestId('objective-sheet')).not.toContainText('Athens');
     await page.mouse.move(5, size.height / 2);
@@ -81,7 +81,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await page.keyboard.press('Escape');
     await expect(page.getByTestId('objective-sheet')).toHaveCount(0);
     await revealSidebar(page, 'standings');
-    await page.getByRole('button', { name: /^Diplomacy inbox/ }).click();
+    await page.getByRole('button', { name: /^Diplomacy( \(\d+\))?$/ }).click();
     const empires = page.getByRole('list', { name: 'Empires' });
     await expect(empires.locator('.empire-row')).toHaveCount(4);
     await expect(empires).not.toContainText('Athens');
@@ -135,20 +135,20 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await shot(page, size, '79f-vp-token-card-own-goal-8-empires');
   });
 
-  // The score ledger opens from the top bar's VP chip, in both scenarios.
-  test('score ledger with 2 empires, from the VP chip', async ({ page }) => {
+  // The score ledger opens from the Victory race's Score ledger link, in both scenarios.
+  test('score ledger with 2 empires, from the Victory race', async ({ page }) => {
     await loadFixture(page, coreFixture(progressFixture().fixture), 2);
     await stageHoldings(page);
     await page.mouse.move(5, size.height / 2);
     await shot(page, size, '80a-vp-chip-2-empires');
-    await page.getByRole('button', { name: /^Every way to score/ }).click();
+    await page.locator('.vp .vhc-head button.link').click();
     await expect(page.getByTestId('objective-sheet')).toBeVisible();
     await page.mouse.move(5, size.height - 5);
     await expect(page.locator('.sl-col')).toHaveCount(2);
     await shot(page, size, '80b-score-ledger-2-empires');
   });
 
-  test('score ledger with 8 empires, from the VP chip', async ({ page }) => {
+  test('score ledger with 8 empires, from the Victory race', async ({ page }) => {
     await page.addInitScript(() => {
       if (location.protocol.startsWith('http')) localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
     });
@@ -161,7 +161,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await expect(page.getByTestId('turn-number')).toHaveText('1', { timeout: 60_000 });
     await expect(page.locator('.loading-screen')).toHaveCount(0);
     await stageHoldings(page);
-    await page.getByRole('button', { name: /^Every way to score/ }).click();
+    await page.locator('.vp .vhc-head button.link').click();
     await expect(page.getByTestId('objective-sheet')).toBeVisible();
     await page.mouse.move(5, size.height - 5);
     await expect(page.locator('.sl-col')).toHaveCount(8);

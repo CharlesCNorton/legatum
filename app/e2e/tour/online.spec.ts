@@ -108,7 +108,7 @@ for (const size of SIZES) testWithFailingRequests.describe(`online screens ${siz
     const worst = await page.context().newPage();
     await refuse(worst, REFUSALS[0]);
     await multiplayer(worst);
-    await worst.evaluate(() => { (window as unknown as GameWindow).legatum.setState({ views: [{ turn: 14 }] as never }); });
+    await worst.evaluate(() => { (window as unknown as GameWindow).legatum.setState({ views: [{ turn: 14, players: [{ id: 0, is_human: true, faction: 'Rome' }] }] as never }); });
     await worst.getByLabel('Your name in the game list').fill('Ada \u{1F600}');
     await worst.getByRole('button', { name: /^Host Game/ }).click();
     await expect(worst.locator('.title-notice')).toBeVisible();
@@ -117,14 +117,14 @@ for (const size of SIZES) testWithFailingRequests.describe(`online screens ${siz
     await expectMenuAboveFooter(worst, '25a worst case (Resume + notice + name note)');
     await shot(worst, size, '25a-menu-worst-case');
     await worst.getByLabel('Your name in the game list').fill('\u{1F600}\u{1F600}');
-    await expect(worst.locator('.host-name .host-name-note')).toHaveText('The game list will show “Game” and four characters.');
+    await expect(worst.locator('.host-name .host-name-note')).toHaveText('Listed as “Game” and four characters.');
     await expectMenuAboveFooter(worst, '25b worst case, nothing showable');
     await shot(worst, size, '25b-menu-name-note-empty');
 
     // The name note with a game open and no other message.
     const note = await page.context().newPage();
     await multiplayer(note);
-    await note.evaluate(() => { (window as unknown as GameWindow).legatum.setState({ views: [{ turn: 14 }] as never }); });
+    await note.evaluate(() => { (window as unknown as GameWindow).legatum.setState({ views: [{ turn: 14, players: [{ id: 0, is_human: true, faction: 'Rome' }] }] as never }); });
     await note.getByLabel('Your name in the game list').fill('Ada \u{1F600} of Rome');
     await note.mouse.move(5, 5);
     await expectMenuAboveFooter(note, '25c name note, game open');

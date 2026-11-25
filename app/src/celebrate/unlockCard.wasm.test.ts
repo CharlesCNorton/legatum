@@ -65,20 +65,16 @@ describe.skipIf(!available)('the unlock card for every technology', () => {
     // The Granary needs no research now: Irrigation unlocks no building, only +1 Food a city.
     expect(unlockCardFor(views.get('India')!, 'Irrigation').tiles.map((t) => t.name)).toEqual(['+1 Food in every city']);
     expect(sentence('India', 'CodeOfLaws')).toEqual([]);
-    expect(sentence('India', 'IronWorking')).toEqual(['Upgrade a Workshop to a Forge in a city of 4 or more: +3 Production', 'Train a Cataphract in any city: 33 melee, 4 moves']);
-    expect(sentence('India', 'Feudalism')[1]).toMatch(/^Train a Pikeman in any city: 32 melee, 2 moves/);
+    expect(sentence('India', 'IronWorking')).toEqual(['Upgrade a Workshop to a Forge in a city of 4 or more: +3 Production', 'Train a Cataphract in any city: 33 strength, 4 moves']);
+    expect(sentence('India', 'Feudalism')[1]).toMatch(/^Train a Pikeman in any city: 32 strength, 2 moves/);
     expect(sentence('India', 'Philosophy')[0]).toMatch(/^Build it on a chosen tile; its holder scores \+2 VP\./);
     // A tech that upgrades an improvement says so, as an effect tile (no item behind it).
     const names = (faction: Faction, tech: TechId) => unlockCardFor(views.get(faction)!, tech).tiles.map((t) => t.name);
     expect(names('India', 'CropRotation')).toContain('Farms and Pastures upgrade: Irrigated Farm, Ranch (+1 Food)');
     expect(names('Byzantium', 'IronWorking')).toContain('Mines upgrade: Deep Mine (+1 Gold on Copper, +1 Production on Iron and Coal)');
-    // The Mongols raise Walls from the Medieval era, so their Masonry card lists Walls like everyone's.
+    // The Mongols never raise Walls (rules 57): their Masonry card keeps its Quarry bonus and leaves Walls out.
     expect(names('Mongols', 'Masonry')).not.toEqual([]);
-    // ...but cannot raise them yet: the tile says so, from the core view, in place of the sentence and the price.
-    const walls = unlockCardFor(views.get('Mongols')!, 'Masonry').tiles.find((t) => t.name === 'Walls')!;
-    expect(walls.locked).toBe('Walls for the Mongols from the Medieval era');
-    expect(walls.sentence).toBe(walls.locked);
-    expect(walls.cost).toBeNull();
+    expect(names('Mongols', 'Masonry')).not.toContain('Walls');
     expect(unlockCardFor(views.get('India')!, 'Masonry').tiles.find((t) => t.name === 'Walls')!.locked).toBeNull();
     expect(unlockCardFor(views.get('Byzantium')!, 'PrintingPress').tiles).not.toEqual([]);
   });

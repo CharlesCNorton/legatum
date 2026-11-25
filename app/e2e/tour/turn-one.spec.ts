@@ -100,7 +100,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
         const hurt = wallsFixture();
         hurt.fixture.cities.find((c) => c.id === hurt.own)!.hp = 90;
         if (blocked) {
-          spawnUnit(hurt.fixture, 1, 'Soldier', fromOffset(4, 5), false);
+          spawnUnit(hurt.fixture, 1, 'Spearman', fromOffset(4, 5), false);
         }
         await loadFixture(p, coreFixture(hurt.fixture), 2);
         await selectThing(p, 'city', hurt.own);
@@ -171,8 +171,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await expect(page.getByTestId('turn-number')).toHaveText('2', { timeout: 60_000 });
 
     // A routine first turn has no founding celebration, but its report remains available.
-    await page.getByRole('button', { name: 'Menu', exact: true }).click();
-    await page.getByRole('button', { name: 'Last turn report (L)', exact: true }).click();
+    await page.locator('button.last-turn').first().click();
     await expect(page.getByRole('complementary', { name: 'Turn report' })).toBeVisible();
     await shot(page, size, '09-turn-report');
     await closeReportIfOpen(page);
@@ -232,10 +231,10 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
 
     // Victory race, expanded.
     await page.evaluate(() => (window as unknown as GameWindow).legatum.getState().select(null));
-    await page.getByRole('region', { name: 'Victory race', exact: true }).getByRole('button', { name: 'All objectives', exact: true }).click();
+    await page.getByRole('region', { name: 'Victory race', exact: true }).getByRole('button', { name: 'Score ledger', exact: true }).click();
     await expect(page.getByTestId('objective-sheet')).toBeVisible();
     await shot(page, size, '13-vp-race');
-    await page.getByRole('button', { name: 'Close objectives', exact: true }).click();
+    await page.getByRole('button', { name: 'Close score ledger', exact: true }).click();
     await expect(page.getByTestId('objective-sheet')).toHaveCount(0);
 
     // The game menu (in-game settings live here).
@@ -254,7 +253,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     // Your city builds a Spearman (12 so far) with a Settler (38) and a Granary (20) banked from earlier switches.
     const setup = wallsFixture();
     const own = setup.fixture.cities.find((c) => c.id === setup.own)!;
-    Object.assign(own, { population: 3, producing: { kind: 'Unit', unit: 'Soldier' }, prod: 12, productionQueue: [],
+    Object.assign(own, { population: 3, producing: { kind: 'Unit', unit: 'Spearman' }, prod: 12, productionQueue: [],
       productionBanked: [{ item: { kind: 'Unit', unit: 'Settler' }, progress: 38 }, { item: { kind: 'Building', building: 'Granary' }, progress: 20 }] });
     await loadFixture(page, coreFixture(setup.fixture), 2);
     await selectThing(page, 'city', setup.own);
@@ -409,11 +408,11 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     test.setTimeout(90_000);
     const setup = turnReportFixture();
     await loadFixture(page, coreFixture(setup.fixture), 2);
-    await page.evaluate(({ ranger, enemy }) => {
+    await page.evaluate(({ archer, enemy }) => {
       const s = (window as unknown as GameWindow).legatum.getState(), view = s.views![s.seat];
       const target = view.units.find((u) => u.id === enemy)!.pos;
-      s.editOrders((o) => [...o, { type: 'RangedAttack', unit: ranger, target }]);
-    }, { ranger: setup.ranger, enemy: setup.enemy });
+      s.editOrders((o) => [...o, { type: 'RangedAttack', unit: archer, target }]);
+    }, { archer: setup.archer, enemy: setup.enemy });
     await endPlanning(page);
     await expect(page.getByTestId('turn-number')).toHaveText('3');
     await openReport(page);
@@ -570,7 +569,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
   // core words (already bought, no tile in reach) are patched into the view: the sentence under test is core's, covered by Rust.
   test('Buy a tile in a building city: as opened, mixed affordability, already bought, no tile in reach, item queued', async ({ page }) => {
     const s = diplomacyState(12, { met: true });
-    Object.assign(s.cities[0], { producing: { kind: 'Unit', unit: 'Soldier' }, prod: 12 });
+    Object.assign(s.cities[0], { producing: { kind: 'Unit', unit: 'Spearman' }, prod: 12 });
     s.players[0].gold = 50;
     s.players[0].explored.fill(1);
     // The city already owns its west half of ring 2, so ring 2 (50 Gold) and ring 3 (60 Gold) are both buyable.
@@ -628,7 +627,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
 
     await restore();
     await page.evaluate((id) => {
-      (window as unknown as GameWindow).legatum.getState().editOrders((o) => [...o, { type: 'BuyItem', city: id, item: { kind: 'Unit', unit: 'Soldier' } }], 'purchase');
+      (window as unknown as GameWindow).legatum.getState().editOrders((o) => [...o, { type: 'BuyItem', city: id, item: { kind: 'Unit', unit: 'Spearman' } }], 'purchase');
     }, info.id);
     await expect(panel.locator('.city-borders-reason')).toHaveText(/^Cancel the .+ purchase first$/);
     await away();

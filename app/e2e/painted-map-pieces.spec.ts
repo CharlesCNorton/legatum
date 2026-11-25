@@ -1,6 +1,6 @@
 // The last placeholder drawings on the map, replaced with painted art (legatum-ui, 2026-11-01: "no line drawings of objects on
 // the map"): barbarians are painted raiders at normal zoom and class roundels at far zoom, a city's air wing wears the unit
-// icon, and Walls go up through their painted stages. At the user's laptop window and a desktop one.
+// icon, and Walls under construction show their painted footings. At the user's laptop window and a desktop one.
 import { test, expect } from './fixtures';
 import { wallsFixture } from '../src/test/wallsFixture';
 import { coreFixture } from '../src/test/coreFixture';
@@ -14,7 +14,7 @@ import type { UnitKind } from '../src/types';
 type MapWindow = GameWindow & { legatumMap: { camera: { x: number; y: number; zoom: number }; redraw(): void } };
 
 /** Every kind a barbarian camp fields (crates/core/src/rules/barbarians.rs), around the own city at (3, 5). */
-const RAIDERS: [UnitKind, number, number][] = [['Soldier', 5, 4], ['Trooper', 5, 5], ['AssaultTrooper', 5, 6], ['Ranger', 6, 4], ['Marksman', 6, 5], ['Scout', 6, 6]];
+const RAIDERS: [UnitKind, number, number][] = [['Spearman', 5, 4], ['Pikeman', 5, 5], ['Musketman', 5, 6], ['Archer', 6, 4], ['Crossbowman', 6, 5], ['Scout', 6, 6]];
 
 async function open(page: Page, opts: { raiders?: boolean; planes?: boolean; walls?: number } = {}) {
   const setup = wallsFixture(), f = setup.fixture;
@@ -74,16 +74,11 @@ for (const size of SIZES) test.describe(`painted map pieces ${size.name}`, () =>
     await shot(page, size, 'air-wing-badge');
   });
 
-  // Walls cost 100 Production here: 10, 40 and 75 stored are stages 1, 2 and 3 (10%, 40% and 75% are the thresholds).
-  for (const [stage, stored] of [[1, 10], [2, 40], [3, 75]] as const) test(`walls stage ${stage}`, async ({ page }) => {
+  // Walls under construction show the era's footings for the whole build (Sam, 2026-11-22: the later stages looked finished).
+  for (const stored of [10, 75] as const) test(`walls footings at ${stored}%`, async ({ page }) => {
     test.setTimeout(120_000);
     const { own } = await open(page, { walls: stored });
-    const k = await page.evaluate((id) => {
-      const s = (window as unknown as GameWindow).legatum.getState(), c = s.views![s.seat].cities.find((x) => x.id === id)!;
-      return c.detail!.production_stored / c.detail!.production_cost!;
-    }, own.id);
-    expect(k >= [0.1, 0.4, 0.75][stage - 1] && k < [0.4, 0.75, 1][stage - 1], `k=${k}`).toBe(true);
     await frame(page, own.pos, 2.6);
-    await shot(page, size, `walls-stage${stage}`);
+    await shot(page, size, `walls-footings-${stored}`);
   });
 });

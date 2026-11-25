@@ -1,9 +1,10 @@
 // Combat card projections call the same Rust functions as resolution and forecasts.
 import type { Breakdown, Faction, TechId, Terrain, UnitKind } from './types';
 import { RULES, siegeBonusOf } from './data';
+import { engineWork } from './frameTelemetry';
 import { Game } from './wasm-pkg/legatum.js';
 
-const projection = <T>(query: Record<string, unknown>): T => JSON.parse(Game.combat_projection(JSON.stringify(query))) as T;
+const projection = <T>(query: Record<string, unknown>): T => engineWork(() => JSON.parse(Game.combat_projection(JSON.stringify(query))) as T);
 
 export const CITY_HP = RULES.cityHp;
 /** HP a city regains at the end of a turn unless it took damage that turn or an at-war military unit is adjacent (core `data::CITY_HEAL`). */
@@ -90,7 +91,7 @@ export function unitRangedStrength(kind: UnitKind, hp: number, faction: Faction 
 
 /**
  * Core `combat::city_can_fire`: only a walled city fires, as in Civ 6 (any Walls tier; the
- * Switzerland' Customs Bastion is their Walls), and only while it has HP left.
+ * Switzerland' Alpine Redoubt is their Walls), and only while it has HP left.
  */
 export function cityCanFire(walls: boolean, hp: number): boolean {
   return projection({ op: 'cityCanFire', walls, hp });

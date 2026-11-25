@@ -75,14 +75,14 @@ fn every_faction_rule_belongs_to_a_faction_with_a_strength_or_drawback_kind() {
 
 #[test]
 fn ruhr_production_off_makes_it_an_ordinary_forge() {
-    let foundry = building(BuildingKind::MachineShop);
+    let foundry = building(BuildingKind::Forge);
     let mut s = german();
     let c = found(&mut s, P0, at(5, 5));
     s.cities
         .get_mut(&c)
         .unwrap()
         .buildings
-        .insert(BuildingKind::MachineShop);
+        .insert(BuildingKind::Forge);
     let control = economy::city_yields(&s, &s.cities[&c]).total.production;
     let cost = economy::production_cost(&s, P0, foundry);
     s.setup.rule_experiments = off(FactionRule::GermanyRuhrProduction);
@@ -91,12 +91,10 @@ fn ruhr_production_off_makes_it_an_ordinary_forge() {
     let ablated_stats = s
         .setup
         .rule_experiments
-        .building_stats_for(Faction::Germany, BuildingKind::MachineShop);
+        .building_stats_for(Faction::Germany, BuildingKind::Forge);
     assert_eq!(
         ablated_stats.yields.production,
-        data::building_stats(BuildingKind::MachineShop)
-            .yields
-            .production
+        data::building_stats(BuildingKind::Forge).yields.production
     );
     assert_eq!(
         ablated_stats.yields.food, 0,
@@ -112,7 +110,7 @@ fn ruhr_production_off_makes_it_an_ordinary_forge() {
 }
 
 #[test]
-fn industry_projects_off_removes_the_choice_and_its_yield() {
+fn industry_projects_off_leaves_germany_everyones_rate() {
     let gold = project(IndustryProject::Gold);
     let mut s = german();
     let c = found(&mut s, P0, at(5, 5));
@@ -123,34 +121,113 @@ fn industry_projects_off_removes_the_choice_and_its_yield() {
     assert!(control.total.gold > 0 && control.total.gold >= control.total.production / 2);
 
     s.setup.rule_experiments = off(FactionRule::GermanyIndustryProjects);
-    let reason = economy::production_check::<String>(&s, &s.cities[&c], gold, true)
-        .expect("the project is refused");
-    assert!(reason.contains("switched off"), "{reason}");
-    assert!(!data::available_to_faction_rules(
-        s.setup.rule_experiments.faction_rules_off,
-        Faction::Germany,
-        project(IndustryProject::Science)
-    ));
+    assert!(economy::production_check::<economy::Blocked>(&s, &s.cities[&c], gold, true).is_none());
     let ablated = economy::city_yields(&s, &s.cities[&c]);
     assert!(
         ablated.total.gold < control.total.gold,
-        "no Production-to-Gold"
+        "everyone's rate is lower than Germany's"
     );
-    // The player's view lists no project option for the city.
-    let view = crate::player_view(&s, P0);
-    let detail = view
-        .cities
-        .iter()
-        .find(|v| v.id == c)
-        .unwrap()
-        .detail
-        .as_ref()
-        .unwrap();
+}
+
+/// Every empire can run a Gold or Science project (Sam, 2026-11-22), at a lower rate than Germany.
+#[test]
+fn every_empire_runs_projects_below_germanys_rate() {
+    let rules = crate::experiments::RuleExperiments::default();
+    for faction in Faction::ALL {
+        for p in [IndustryProject::Gold, IndustryProject::Science] {
+            assert!(
+                data::available_to_faction(faction, project(p)),
+                "{faction:?} {p:?}"
+            );
+            let pct = rules.project_percent(faction, p);
+            let german = rules.project_percent(Faction::Germany, p);
+            if faction == Faction::Germany {
+                assert_eq!(pct, if p == IndustryProject::Gold { 50 } else { 25 });
+            } else {
+                assert!(
+                    pct > 0 && pct * 2 <= german,
+                    "{faction:?} {p:?} {pct} vs {german}"
+                );
+            }
+        }
+    }
+    let mut s = test_game(&[(Faction::Rome, 0), (Faction::India, 1)]);
+    let c = found(&mut s, P0, at(5, 5));
+    s.cities.get_mut(&c).unwrap().population = 6;
+    let gold = project(IndustryProject::Gold);
+    assert!(economy::production_check::<economy::Blocked>(&s, &s.cities[&c], gold, true).is_none());
+    let idle = economy::city_yields(&s, &s.cities[&c]);
+    s.cities.get_mut(&c).unwrap().producing = Some(gold);
+    let running = economy::city_yields(&s, &s.cities[&c]);
+    assert_eq!(
+        running.total.gold - idle.total.gold,
+        running.total.production * i32::from(data::PROJECT_GOLD_PERCENT) / 100
+    );
+    s.cities.get_mut(&c).unwrap().producing = Some(project(IndustryProject::Science));
+    let science = economy::city_yields(&s, &s.cities[&c]);
+    assert_eq!(
+        science.total.science - idle.total.science,
+        science.total.production * i32::from(data::PROJECT_SCIENCE_PERCENT) / 100
+    );
+}
+
+/// Every empire but Nile Egypt can run a Food project (Sam, 2026-11-22: a Science, Gold or Food
+/// stream). It turns `PROJECT_FOOD_PERCENT` of Production into Food; Germany has no better rate.
+#[test]
+fn a_food_project_turns_production_into_food_for_everyone_but_nile_egypt() {
+    let rules = crate::experiments::RuleExperiments::default();
+    let food = project(IndustryProject::Food);
+    for faction in Faction::ALL {
+        assert_eq!(
+            data::available_to_faction(faction, food),
+            faction != Faction::Egypt,
+            "{faction:?}"
+        );
+        assert_eq!(
+            rules.project_percent(faction, IndustryProject::Food),
+            i32::from(data::PROJECT_FOOD_PERCENT)
+        );
+    }
+    assert!(data::available_to_faction_rules(
+        off(FactionRule::EgyptNile).faction_rules_off,
+        Faction::Egypt,
+        food
+    ));
+    let mut s = test_game(&[(Faction::Rome, 0), (Faction::India, 1)]);
+    let c = found(&mut s, P0, at(5, 5));
+    s.cities.get_mut(&c).unwrap().population = 6;
+    assert!(economy::production_check::<economy::Blocked>(&s, &s.cities[&c], food, true).is_none());
+    let idle = economy::city_yields(&s, &s.cities[&c]);
+    s.cities.get_mut(&c).unwrap().producing = Some(food);
+    let running = economy::city_yields(&s, &s.cities[&c]);
+    let made = running.total.production * i32::from(data::PROJECT_FOOD_PERCENT) / 100;
+    assert!(made > 0, "{running:?}");
+    assert_eq!(running.total.food - idle.total.food, made);
     assert!(
-        !detail
-            .options
+        running
+            .sources
             .iter()
-            .any(|o| matches!(o.item, ProductionItem::Project { .. }))
+            .any(|src| src.label == "Food project (25% of Production)" && src.yields.food == made),
+        "{running:?}"
+    );
+}
+
+/// Egypt has no Production: its project converts the build progress its surplus Food makes.
+#[test]
+fn an_egyptian_project_converts_food_funded_progress() {
+    let mut s = test_game(&[(Faction::Egypt, 0), (Faction::India, 1)]);
+    let c = found(&mut s, P0, at(5, 5));
+    s.cities.get_mut(&c).unwrap().population = 1;
+    s.cities.get_mut(&c).unwrap().producing = Some(project(IndustryProject::Gold));
+    let y = economy::city_yields(&s, &s.cities[&c]);
+    let progress = y.total.production;
+    assert!(progress > 0, "surplus Food builds: {y:?}");
+    assert!(
+        y.sources
+            .iter()
+            .any(|src| src.label.starts_with("Gold project")
+                && src.yields.gold == progress * i32::from(data::PROJECT_GOLD_PERCENT) / 100),
+        "{y:?}"
     );
 }
 
@@ -167,14 +244,14 @@ fn every_production_building_costs_one_german_food_and_the_foundry_has_no_own_fo
         [
             BuildingKind::Workshop,
             BuildingKind::Pyramids,
-            BuildingKind::MachineShop,
-            BuildingKind::Autoworks
+            BuildingKind::Forge,
+            BuildingKind::Factory
         ]
     );
     assert_eq!(
         s.setup
             .rule_experiments
-            .building_stats_for(Faction::Germany, BuildingKind::MachineShop)
+            .building_stats_for(Faction::Germany, BuildingKind::Forge)
             .yields
             .food,
         0
@@ -186,8 +263,8 @@ fn every_production_building_costs_one_german_food_and_the_foundry_has_no_own_fo
         s.setup.rule_experiments = off(FactionRule::GermanyIndustryFood);
         let ablated = economy::city_yields(&s, &s.cities[&c]);
         let tiers = 1
-            + i32::from(building == BuildingKind::MachineShop)
-            + 2 * i32::from(building == BuildingKind::Autoworks);
+            + i32::from(building == BuildingKind::Forge)
+            + 2 * i32::from(building == BuildingKind::Factory);
         assert_eq!(
             ablated.total.food - control.total.food,
             tiers,
@@ -215,7 +292,7 @@ fn captured_city_uses_its_current_owners_industry_rule_and_names_the_loss() {
         .get_mut(&c)
         .unwrap()
         .buildings
-        .insert(BuildingKind::MachineShop);
+        .insert(BuildingKind::Forge);
     let indian_food = economy::city_yields(&s, &s.cities[&c]).total.food;
     s.cities.get_mut(&c).unwrap().owner = P0;
     let german = economy::city_yields(&s, &s.cities[&c]);
@@ -271,7 +348,7 @@ fn goal_off_scores_nothing_and_shows_no_meter() {
             .get_mut(&c)
             .unwrap()
             .buildings
-            .insert(BuildingKind::MachineShop);
+            .insert(BuildingKind::Forge);
     }
     let goal_vp = |s: &GameState| -> u32 {
         scoring::vp(s, P0)
@@ -377,13 +454,13 @@ fn swiss_interest_off_pays_no_interest() {
 fn swiss_cheap_buys_off_prices_purchases_like_everyone_else() {
     let mut s = state_of(Faction::Switzerland, None);
     let c = found(&mut s, P0, at(5, 5));
-    let soldier = ProductionItem::Unit {
-        unit: UnitKind::Soldier,
+    let spearman = ProductionItem::Unit {
+        unit: UnitKind::Spearman,
     };
-    let cheap = economy::buy_cost_for(&s, &s.cities[&c], soldier).unwrap();
+    let cheap = economy::buy_cost_for(&s, &s.cities[&c], spearman).unwrap();
     assert_eq!(economy::buy_percent(&s, P0), data::SWISS_BUY_PERCENT);
     s.setup.rule_experiments = off(FactionRule::SwissCheapBuys);
-    let dear = economy::buy_cost_for(&s, &s.cities[&c], soldier).unwrap();
+    let dear = economy::buy_cost_for(&s, &s.cities[&c], spearman).unwrap();
     assert_eq!(economy::buy_percent(&s, P0), data::BUY_COST_PERCENT);
     assert!(dear > cheap);
 }
@@ -422,7 +499,7 @@ fn swiss_unit_upkeep_off_charges_the_ordinary_one_gold() {
     let mut s = state_of(Faction::Switzerland, None);
     found(&mut s, P0, at(5, 5));
     for i in 0..5 {
-        unit(&mut s, 0, UnitKind::Soldier, hex(2 + i, 8));
+        unit(&mut s, 0, UnitKind::Spearman, hex(2 + i, 8));
     }
     let control = economy::upkeep(&s, P0);
     s.setup.rule_experiments = off(FactionRule::SwissUnitUpkeep);
@@ -536,7 +613,7 @@ fn byzantium_companies_off_closes_the_shop() {
     let s = build(Some(FactionRule::ByzantiumCompanies));
     assert!(crate::company::offers(&s, P0).is_empty());
     let city = s.cities_of(P0).next().unwrap();
-    let reason = crate::company::blocker(&s, city, UnitKind::Soldier, P1).unwrap();
+    let reason = crate::company::blocker(&s, city, UnitKind::Spearman, P1).unwrap();
     assert!(reason.contains("switched off"), "{reason}");
 }
 
@@ -552,9 +629,9 @@ fn byzantium_levy_off_lifts_the_cap() {
 #[test]
 fn byzantium_tagmatic_off_makes_the_pikeman_ordinary() {
     let rules = off(FactionRule::ByzantiumTagmatic);
-    let control = data::unit_stats_for(Faction::Byzantium, UnitKind::Trooper);
-    let ablated = rules.unit_stats_for(Faction::Byzantium, UnitKind::Trooper);
-    let ordinary = data::unit_stats(UnitKind::Trooper);
+    let control = data::unit_stats_for(Faction::Byzantium, UnitKind::Pikeman);
+    let ablated = rules.unit_stats_for(Faction::Byzantium, UnitKind::Pikeman);
+    let ordinary = data::unit_stats(UnitKind::Pikeman);
     assert!(control.strength > ordinary.strength && control.cost > ordinary.cost);
     assert_eq!(
         (ablated.strength, ablated.cost),
@@ -566,7 +643,7 @@ fn byzantium_tagmatic_off_makes_the_pikeman_ordinary() {
             off_set,
             Faction::Byzantium,
             Faction::Byzantium,
-            UnitKind::Trooper,
+            UnitKind::Pikeman,
             100,
             0,
         )
@@ -588,8 +665,8 @@ fn celts_barbarian_peace_off_lets_barbarians_attack_the_celts() {
 #[test]
 fn mongols_moves_off_drops_the_extra_move() {
     let rules = off(FactionRule::MongolsMoves);
-    let control = data::unit_moves_for(Faction::Mongols, UnitKind::Soldier);
-    let ablated = rules.unit_moves_for(Faction::Mongols, UnitKind::Soldier);
+    let control = data::unit_moves_for(Faction::Mongols, UnitKind::Spearman);
+    let ablated = rules.unit_moves_for(Faction::Mongols, UnitKind::Spearman);
     assert_eq!(control - ablated, 1);
 }
 
@@ -635,7 +712,7 @@ fn mongols_no_terrain_off_gives_the_terrain_bonus_back() {
             off_set,
             Faction::Mongols,
             Faction::Mongols,
-            UnitKind::Soldier,
+            UnitKind::Spearman,
             100,
             Terrain::Hills,
             0,
@@ -673,7 +750,7 @@ fn mongols_no_walls_off_opens_walls_and_siege_before_the_medieval_era() {
 fn sparta_veterans_off_starts_units_at_level_zero_without_the_xp_bonus() {
     let spawn = |rule: Option<FactionRule>| {
         let mut s = state_of(Faction::Sparta, rule);
-        let id = crate::game::spawn_unit(&mut s, P0, UnitKind::Soldier, hex(3, 3));
+        let id = crate::game::spawn_unit(&mut s, P0, UnitKind::Spearman, hex(3, 3));
         (s.units[&id].xp, s)
     };
     let (control_xp, _) = spawn(None);
@@ -701,17 +778,17 @@ fn sparta_no_wounds_off_makes_wounds_cost_strength() {
             off_set,
             Faction::Sparta,
             Faction::Sparta,
-            UnitKind::Soldier,
+            UnitKind::Spearman,
             40,
             0,
         )
     };
     assert!(wounded(FactionRuleSet::EMPTY) > wounded(rules.faction_rules_off));
-    assert!(data::ignores_wounds(Faction::Sparta, UnitKind::Soldier));
+    assert!(data::ignores_wounds(Faction::Sparta, UnitKind::Spearman));
     assert!(!data::ignores_wounds_rules(
         rules.faction_rules_off,
         Faction::Sparta,
-        UnitKind::Soldier
+        UnitKind::Spearman
     ));
 }
 
@@ -719,8 +796,8 @@ fn sparta_no_wounds_off_makes_wounds_cost_strength() {
 fn sparta_phalanx_off_ends_the_hoplite_bonus() {
     let neighbours = |rule: Option<FactionRule>| {
         let mut s = state_of(Faction::Sparta, rule);
-        let a = unit(&mut s, 0, UnitKind::Soldier, hex(3, 3));
-        unit(&mut s, 0, UnitKind::Soldier, hex(4, 3));
+        let a = unit(&mut s, 0, UnitKind::Spearman, hex(3, 3));
+        unit(&mut s, 0, UnitKind::Spearman, hex(4, 3));
         crate::rules::battle::has_phalanx_neighbour(&s, &s.units[&a])
     };
     assert!(neighbours(None));
@@ -730,7 +807,7 @@ fn sparta_phalanx_off_ends_the_hoplite_bonus() {
         &mut b,
         FactionRuleSet::EMPTY,
         Faction::Sparta,
-        UnitKind::Soldier,
+        UnitKind::Spearman,
         true,
     );
     assert_eq!(b.total, data::HOPLITE_PHALANX_STRENGTH);
@@ -739,7 +816,7 @@ fn sparta_phalanx_off_ends_the_hoplite_bonus() {
         &mut b,
         off(FactionRule::SpartaPhalanx).faction_rules_off,
         Faction::Sparta,
-        UnitKind::Soldier,
+        UnitKind::Spearman,
         true,
     );
     assert_eq!(b.total, 0);
@@ -756,11 +833,11 @@ fn sparta_premium_off_charges_ordinary_prices_for_civilian_builds() {
 }
 
 #[test]
-fn athens_lyceum_off_is_an_ordinary_laboratory() {
+fn athens_lyceum_off_is_an_ordinary_library() {
     let rules = off(FactionRule::AthensLyceum);
-    let control = data::building_stats_for(Faction::Athens, BuildingKind::Laboratory);
-    let ablated = rules.building_stats_for(Faction::Athens, BuildingKind::Laboratory);
-    let ordinary = data::building_stats(BuildingKind::Laboratory);
+    let control = data::building_stats_for(Faction::Athens, BuildingKind::Library);
+    let ablated = rules.building_stats_for(Faction::Athens, BuildingKind::Library);
+    let ordinary = data::building_stats(BuildingKind::Library);
     assert_eq!((control.cost, control.yields.science), (70, 6));
     assert_eq!(
         (ablated.cost, ablated.yields.science),
@@ -886,7 +963,7 @@ fn goal_actions_refuse_while_their_goal_is_off() {
         Some(crate::goals::SWITCHED_OFF)
     );
     let mut s = blocked(Faction::Sparta, FactionRule::SpartaGoal);
-    let u = unit(&mut s, 0, UnitKind::Soldier, hex(5, 5));
+    let u = unit(&mut s, 0, UnitKind::Spearman, hex(5, 5));
     assert_eq!(
         actions::retire_blocker(&s, P0, u).as_deref(),
         Some(crate::goals::SWITCHED_OFF)
@@ -913,7 +990,7 @@ fn the_heir_scores_only_while_its_goal_is_on() {
     let held = |rule: Option<FactionRule>| {
         let mut s = state_of(Faction::Byzantium, rule);
         found(&mut s, P0, at(5, 5));
-        let heir = crate::game::spawn_unit(&mut s, P0, UnitKind::Heir, hex(5, 6));
+        let heir = crate::game::spawn_unit(&mut s, P0, UnitKind::HeirToTheThrone, hex(5, 6));
         s.units.get_mut(&heir).unwrap().heir_of = Some(P0);
         crate::goals::held_by(&s, P0)
     };

@@ -10,7 +10,7 @@ import { pendingDecisions } from '../turnFlow';
 import { topDismissible } from '../gameplayKeys';
 import { Icon, Kbd } from './bits';
 import { useCoarsePointer } from './useCoarsePointer';
-import { empireMembers, empireTitle, isTeamAlive, unitsNearOurs } from '../empires';
+import { empireMembers, empireOfPlayer, empireTitle, isTeamAlive, unitsNearOurs } from '../empires';
 import { playerColor, playerInk } from '../theme';
 import { EmpireMark, EmpireWhere } from './EmpireIdentity';
 import { ALLIANCE_SHARES, allianceTerms, TREATY_TERMS, treatyDefinition } from '../treaties';
@@ -98,11 +98,11 @@ export function warLines(action: DiplomaticAction, view: PlayerView, withJoin = 
   const you = wars.filter((w) => w.team === view.team).map((w) => w.enemy);
   const againstYou = wars.filter((w) => w.enemy === view.team).map((w) => w.team);
   const helpers = wars.filter((w) => w.team !== view.team && w.enemy !== view.team);
-  if (you.length && withJoin) lines.push({ tone: 'cost', icon: 'unit-soldier', text: `You would join the war against ${names(view, you)}, which attacked your new ally` });
-  if (againstYou.length) lines.push({ tone: 'cost', icon: 'unit-soldier', text: o.type === 'DeclareWar'
+  if (you.length && withJoin) lines.push({ tone: 'cost', icon: 'unit-spearman', text: `You would join the war against ${names(view, you)}, which attacked your new ally` });
+  if (againstYou.length) lines.push({ tone: 'cost', icon: 'unit-spearman', text: o.type === 'DeclareWar'
     ? `${names(view, againstYou)}, ${againstYou.length > 1 ? 'allies' : 'an ally'} of ${target === null ? 'them' : empireTitle(view, target)}, would defend them and be at War with you at once`
     : `${names(view, againstYou)}, ${againstYou.length > 1 ? 'allies' : 'an ally'} of ${target === null ? 'them' : empireTitle(view, target)}, would also be at War with you at once` });
-  if (helpers.length) lines.push({ tone: 'gain', icon: 'unit-soldier', text: `${names(view, helpers.map((w) => w.team))} would join your war against ${names(view, helpers.map((w) => w.enemy))}` });
+  if (helpers.length) lines.push({ tone: 'gain', icon: 'unit-spearman', text: `${names(view, helpers.map((w) => w.team))} would join your war against ${names(view, helpers.map((w) => w.enemy))}` });
   const askedMe = calls.filter((c) => c.team === view.team), asked = calls.filter((c) => c.team !== view.team);
   if (askedMe.length) lines.push({ tone: 'note', text: `You would be asked to join the war on ${names(view, askedMe.map((c) => c.enemy))}. You may decline` });
   if (asked.length) lines.push({ tone: 'note', text: o.type === 'DeclareWar'
@@ -174,7 +174,7 @@ function Action({ action, view, orders, compact = false }: { action: DiplomaticA
   return <div className="diplomacy-action">
     {definition && <p className="treaty-definition"><strong>{action.order.type === 'ProposeTreaty' && action.order.kind}:</strong> {definition}</p>}
     {button}
-    {join && <p className="diplomacy-join-war" data-testid="join-war"><Icon name="unit-soldier" size={13} className="ui-mark" /> {join}</p>}
+    {join && <p className="diplomacy-join-war" data-testid="join-war"><Icon name="unit-spearman" size={13} className="ui-mark" /> {join}</p>}
     {/* A blocked action's reason is stated once for its empire row, not under each button. */}
     {!action.blocked_reason && <span>{spends.length || (allianceOffer && (action.cost > 0 || (action.upkeep ?? 0) > 0)) ? '' : 'Free · '}{action.effective_turn === view.turn ? 'Takes effect this turn'
       : `${action.order.type === 'ProposeTreaty' ? 'Earliest activation' : 'Takes effect'} turn ${action.effective_turn}`}</span>}
@@ -193,7 +193,7 @@ function Unavailable({ actions, view }: { actions: DiplomaticAction[]; view: Pla
   </>;
 }
 
-/** Peace closes borders, except where a Courier Hall's holder opens its land to every empire. */
+/** Peace closes borders, except where a Yam Relay Station's holder opens its land to every empire. */
 export function peaceBorders(relation: Relation, view: PlayerView): string {
   const other = relation.a === view.team ? relation.b : relation.a;
   const holds = (team: number) => (view.courier_halls ?? []).some((h) => view.players.find((p) => p.id === h.holder)?.team === team);
@@ -260,7 +260,7 @@ function offerForecast(p: PeaceProposal, view: PlayerView, accept: DiplomaticAct
   const other = proposalCounterparty(view, p, view.team);
   if (relationWith(view, other)?.state !== 'Alliance') {
     const near = unitsNearOurs(view, other);
-    if (near.length) lines.push({ tone: 'cost', text: `You can’t attack their ${near[0].unit} ${near[0].tiles <= 1 ? 'next to' : `${near[0].tiles} tiles from`} ${near[0].near}${near.length > 1 ? ` (or their ${near.length - 1} other unit${near.length > 2 ? 's' : ''} nearby)` : ''}`, icon: 'unit-soldier' });
+    if (near.length) lines.push({ tone: 'cost', text: `You can’t attack their ${near[0].unit} ${near[0].tiles <= 1 ? 'next to' : `${near[0].tiles} tiles from`} ${near[0].near}${near.length > 1 ? ` (or their ${near.length - 1} other unit${near.length > 2 ? 's' : ''} nearby)` : ''}`, icon: 'unit-spearman' });
   }
   lines.push({ tone: 'note', text: 'Costs no Gold' });
   lines.push({ tone: 'gain', text: `Peace guaranteed through turn ${view.turn + TREATY_TERMS.guaranteeTurns}; after that either side may declare war`, icon: 'fortify' });
@@ -480,15 +480,15 @@ function CallCard({ call, view, forecastView, orders, current }: { call: WarCall
   const ally = empireTitle(view, call.ally), target = empireTitle(view, call.target);
   const defenders = (join?.new_wars ?? []).map((w) => w.team);
   const lines: ForYou[] = [
-    { tone: 'cost', icon: 'unit-soldier', text: `Joining puts you at War with ${target} from turn ${join?.effective_turn ?? view.turn + 1}` },
-    ...(defenders.length ? [{ tone: 'cost' as const, icon: 'unit-soldier', text: `${names(view, defenders)}, ${defenders.length > 1 ? 'allies' : 'an ally'} of ${target}, would be at War with you too` }] : []),
+    { tone: 'cost', icon: 'unit-spearman', text: `Joining puts you at War with ${target} from turn ${join?.effective_turn ?? view.turn + 1}` },
+    ...(defenders.length ? [{ tone: 'cost' as const, icon: 'unit-spearman', text: `${names(view, defenders)}, ${defenders.length > 1 ? 'allies' : 'an ally'} of ${target}, would be at War with you too` }] : []),
     { tone: 'gain', icon: 'ui-check', text: `Declining keeps your Alliance with ${ally} and your Peace with ${target}` },
     { tone: 'note', text: 'Declining costs nothing.' },
   ];
   return <article className="diplomacy-item offer-card call-card" style={{ ['--empire' as string]: playerInk(leader?.id) }} aria-labelledby={`offer-${call.id}`}>
     <div className="offer-top">
-      {leader ? <PortraitFrame faction={leader.faction} crest={false} className="offer-portrait"><span className="offer-emblem"><Icon name="unit-soldier" size={30} /></span></PortraitFrame>
-        : <Icon name="unit-soldier" size={44} />}
+      {leader ? <PortraitFrame faction={leader.faction} crest={false} className="offer-portrait"><span className="offer-emblem"><Icon name="unit-spearman" size={30} /></span></PortraitFrame>
+        : <Icon name="unit-spearman" size={44} />}
       <div className="offer-top-text">
         <h4 className="offer-headline" id={`offer-${call.id}`}>
           <EmpireMark view={view} team={call.ally} size={26} />
@@ -607,7 +607,7 @@ export function DiplomacyPanel() {
   const teams = view.standings.filter((s) => s.team !== view.team && isTeamAlive(view, s.team));
   const team = selected !== null && teams.some((s) => s.team === selected) ? selected : teams[0]?.team;
   const relation = team === undefined ? undefined : relationWith(view, team);
-  const name = (p: number) => view.players.find((x) => x.id === p)?.name ?? `Empire ${p}`;
+  const name = (p: number) => empireOfPlayer(view, p);
   const forecastView = withLocalDiplomacy(view, humans, localOrders);
   const queued = forecastView.diplomacy.queued.filter((q) => q.player !== view.me);
   const errs = errorsWhere(orders, errors, (o) => otherTeam(view, o) !== null);
@@ -618,7 +618,7 @@ export function DiplomacyPanel() {
   const outgoing = d.proposals.filter((p) => !incoming.includes(p));
   const teamActions = relation ? d.actions.filter((a) => otherTeam(view, a.order) === team && !('proposal' in a.order) && fitsRelation(a, relation)) : [];
   const unmet = teamActions.find(blockedByContact);
-  return <aside className="report diplomacy-panel" aria-label="Diplomacy inbox" data-game-overlay data-dismissible="diplomacy" onKeyDown={(e) => {
+  return <aside className="report diplomacy-panel" aria-label="Diplomacy" data-game-overlay data-dismissible="diplomacy" onKeyDown={(e) => {
     e.stopPropagation();
     if (e.key === 'Escape') { e.preventDefault(); useGame.getState().set({ diplomacyOpen: false }); }
   }}>
@@ -627,7 +627,7 @@ export function DiplomacyPanel() {
         <button role="tab" aria-selected={tab === 'inbox'} onClick={() => setTab('inbox')}>Inbox</button>
         <button role="tab" aria-selected={tab === 'relations'} onClick={() => setTab('relations')}>Relations</button>
       </div>
-      <h3>{tab === 'relations' ? 'Empire relations' : 'Diplomacy inbox'}</h3></div>
+      <h3>Diplomacy</h3></div>
       <button ref={closeButton} className="icon-btn" aria-label="Close diplomacy" onClick={() => useGame.getState().set({ diplomacyOpen: false })}><Icon name="ui-cross" size={14} /></button>
     </div>
     <div className="report-body">
@@ -661,7 +661,7 @@ export function DiplomacyPanel() {
                 onClick={() => useGame.getState().set({ diplomacyTeam: s.team })}>
                 <EmpireMark view={view} team={s.team} size={24} />
                 <span className="empire-pick-identity"><span className="empire-pick-name">{empireTitle(view, s.team)}</span>{aiMembers.length > 0 && <small className="empire-pick-level">{aiMembers.map((p) => aiMembers.length === 1 ? `AI · ${aiLevel(p)}` : `${p.name}: ${aiLevel(p)}`).join(' · ')}</small>}</span>
-                <span className={`empire-relation ${state.toLowerCase()}`} title={treatyDefinition(state) ?? undefined}>{state}{state !== 'War' && rowRelation && rowRelation.guarantee_until > view.turn && <> · truce through turn {rowRelation.guarantee_until - 1}</>}</span>
+                <span className={`empire-relation ${state.toLowerCase()}`} title={treatyDefinition(state) ?? undefined}><TreatyEmblem kind={state} size={16} />{state}{state !== 'War' && rowRelation && rowRelation.guarantee_until > view.turn && <> · truce through turn {rowRelation.guarantee_until - 1}</>}</span>
                 <span className="empire-vp"><b>{s.vp}</b>/<Amount n={s.target} unit="VP" /></span>
               </button>
               <EmpireWhere view={view} team={s.team} />
@@ -709,8 +709,8 @@ function RelationsView({ view }: { view: PlayerView }) {
     : <span className="relations-unknown" aria-hidden="true">?</span>;
   return <section className="relations-view" aria-label="Relations between empires">
     <h4 className="diplomacy-section">Relations</h4>
-    <p className="muted relations-key"><span className="relations-sample war"><Icon name="ui-siege" size={15} /> War</span><span className="relations-sample alliance"><TreatyEmblem kind="Alliance" size={20} /> Alliance</span><span>Blank · Peace</span></p>
-    <div className="relations-scroll" role="region" aria-label="Empire relations table" tabIndex={0}>
+    <p className="muted relations-key"><span className="relations-sample war"><TreatyEmblem kind="War" size={20} /> War</span><span className="relations-sample alliance"><TreatyEmblem kind="Alliance" size={20} /> Alliance</span><span className="relations-sample"><TreatyEmblem kind="Peace" size={20} /> Peace</span></p>
+    <div className="relations-scroll" role="region" aria-label="Relations table" tabIndex={0}>
       <table className="relations-table" style={{ minWidth: 140 + model.empires.length * 60 }}>
         <thead><tr><th scope="col">Empire</th>{model.empires.map((empire) => <th scope="col" key={empire.team} title={empire.name}>{mark(empire.team)}<span className="sr-only">{empire.name}</span></th>)}</tr></thead>
         <tbody>{model.empires.map((empire, row) => <tr key={empire.team}>
@@ -718,13 +718,13 @@ function RelationsView({ view }: { view: PlayerView }) {
           {model.cells[row].map((cell) => <td key={cell.b} className={cell.state === 'Self' ? 'relations-self' : undefined}>
             {cell.state === 'Self' ? <span role="img" aria-label={`${empire.name}, itself`} title={empire.name} />
               : cell.state === 'Unknown' ? <span className="relations-unknown" title={cell.title} aria-label={cell.title}>?</span>
-                : cell.state === 'War' ? <span className="relations-cell war" title={cell.title} aria-label={cell.title}><Icon name="ui-siege" size={16} /></span>
+                : cell.state === 'War' ? <span className="relations-cell war" title={cell.title} aria-label={cell.title}><TreatyEmblem kind="War" size={23} /></span>
                   : cell.state === 'Alliance' ? <span className="relations-cell alliance" title={cell.title} aria-label={cell.title}><TreatyEmblem kind="Alliance" size={23} /></span>
-                    : <span className="relations-peace" title={cell.title} aria-label={cell.title} />}
+                    : <span className="relations-cell" title={cell.title} aria-label={cell.title}><TreatyEmblem kind="Peace" size={23} /></span>}
           </td>)}
         </tr>)}</tbody>
       </table>
     </div>
-    <p className="muted relations-note">Wars and Alliances are public. Unknown empires are hidden until you meet them.{model.empires.length > 4 && ' Scroll sideways to see every empire.'}</p>
+    <p className="muted relations-note">Wars and Alliances are public. Unknown empires are hidden until you meet them.{model.empires.length > 4 && ' Scroll sideways to see every empire.'}{view.ai_alliances && ' In this game the AI empires started allied in pairs.'}</p>
   </section>;
 }

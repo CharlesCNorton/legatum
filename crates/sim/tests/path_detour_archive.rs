@@ -42,7 +42,7 @@ fn tessitura_turn_38_direct_attack_is_legal() {
         _ => None,
     });
     assert_eq!(detour.map(|p| p.len()), Some(5));
-    // The India Soldier steps back this turn, so the attack becomes a pursuit.
+    // The India Spearman steps back this turn, so the attack becomes a pursuit.
     let first_step = |events: &[Event]| {
         events.iter().find_map(|e| match e {
             Event::UnitMoved { unit, to, .. } if *unit == attacker => Some(*to),
@@ -64,7 +64,7 @@ fn tessitura_turn_38_direct_attack_is_legal() {
     assert_eq!(first_step(&events), Some(Hex { q: 20, r: 13 }));
     assert_eq!(pursuit(&events), Some(PursuitOutcome::LostSight));
 
-    // The corrected preview's route, with the other two Oathbearers' orders unchanged.
+    // The corrected preview's route, with the other two Spartan Hoplites' orders unchanged.
     let mut orders = turn.orders.clone();
     for order in orders.get_mut(&PlayerId(0)).expect("seat 0 orders") {
         if matches!(order, Order::MoveUnitPath { unit, .. } if *unit == attacker) {

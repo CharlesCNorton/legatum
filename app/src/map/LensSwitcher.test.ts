@@ -38,7 +38,7 @@ it('names visible barbarians in the Celts Threat empty state', () => {
   })));
   try {
     render('Celts', true);
-    expect(host.querySelector('.lens-empty')?.textContent).toBe('Nothing in sight can attack you next turn. Barbarians never attack you.');
+    expect(host.querySelector('.lens-empty')?.textContent).toBe("Nothing in sight can attack you next turn. Barbarians don't attack you.");
     render('Celts', false);
     expect(host.querySelector('.lens-empty')?.textContent).toBe('No known enemy military can reach any tile next turn.');
     render('India', true);
@@ -100,7 +100,10 @@ it('collapses to the compact toggle on desktop while a city is selected, and res
     expect(host.querySelector<HTMLDivElement>('.lens-content')!.hidden).toBe(false);
     render(true);
     const toggle = host.querySelector<HTMLButtonElement>('.lens-toggle')!;
-    expect(toggle.textContent).toBe('Lens: Default');
+    // The Default lens beside a panel is a small chip that still names the lens to assistive tech.
+    expect(toggle.textContent).toBe('Lens');
+    expect(toggle.getAttribute('aria-label')).toBe('Lens: Default');
+    expect(host.querySelector('.map-lenses')!.getAttribute('data-chip')).toBe('true');
     expect(host.querySelector('.map-lenses')!.getAttribute('data-compact')).toBe('true');
     expect(host.querySelector<HTMLDivElement>('.lens-content')!.hidden).toBe(true);
     act(() => toggle.click());
@@ -280,7 +283,7 @@ it('the compact toggle names the lens and the overlays that are on', () => {
   const matchMedia = vi.spyOn(window, 'matchMedia').mockReturnValue(media);
   const m = mount({ collapsed: true });
   try {
-    expect(m.host.querySelector('.lens-toggle')!.textContent).toBe('Lens: Default');
+    expect(m.host.querySelector('.lens-toggle')!.textContent).toBe('Lens');
     act(() => setOverlay('yields', true));
     expect(m.host.querySelector('.lens-toggle')!.textContent).toBe('Lens: Default · Yields');
     act(() => setOverlay('borders', true));
@@ -318,4 +321,23 @@ it('the Resources key adds a "You lack it" mark when a revealed strategic resour
   } finally {
     act(() => root.unmount()); host.remove();
   }
+});
+
+it('the Settle legend names the selected unit, and a Colonia founder is shown its Colonia sites', () => {
+  const host = document.body.appendChild(document.createElement('div'));
+  const root = createRoot(host);
+  const site = (rank: number, colonia: boolean): SettlementScore => ({ pos: { q: rank, r: 0 }, score: 50, quality: 50, band: 'Good', border_risk: false, rank, travel_turns: 2, ...(colonia ? { colonia } : {}) });
+  const render = (sites: SettlementScore[], coloniaFounder: boolean, founderName?: string) => act(() => root.render(createElement(LensSwitcher, {
+    lens: 'settle', onChange: () => {}, sites, onInspect: () => {}, settlerId: 7, players: [], coloniaFounder, founderName,
+  })));
+  try {
+    render([site(1, true), site(2, true)], true, 'Spearman');
+    expect(host.querySelector('[data-testid="settle-top-key"]')?.textContent).toBe('Top three Colonia sites for this veteran, marked on the map:');
+    expect(host.querySelector('.settle-recommendations.colonia [data-settle-rank="1"]')?.textContent).toBe('Best Colonia site');
+    render([site(1, false), site(2, false)], true, 'Spearman');
+    expect(host.querySelector('[data-testid="settle-top-key"]')?.textContent).toBe('Top three for this Spearman, marked on the map:');
+    expect(host.querySelector('[data-testid="settle-colonia-none"]')?.textContent).toMatch(/^No site you know founds your Colonia Victrix\. A site counts if/);
+    render([site(1, false)], false);
+    expect(host.querySelector('[data-testid="settle-top-key"]')?.textContent).toBe('Top three for this Settler, marked on the map:');
+  } finally { act(() => root.unmount()); host.remove(); }
 });

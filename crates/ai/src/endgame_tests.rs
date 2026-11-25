@@ -4,14 +4,14 @@ use crate::{Brain, Knobs, ScriptedBrain};
 use legatum_core::view::TeamStanding;
 use legatum_core::*;
 
-const TROOPER: ProductionItem = ProductionItem::Unit {
-    unit: UnitKind::Trooper,
+const PIKEMAN: ProductionItem = ProductionItem::Unit {
+    unit: UnitKind::Pikeman,
 };
 const RELAY: ProductionItem = ProductionItem::Building {
-    building: BuildingKind::RelayUplink,
+    building: BuildingKind::GreatLibrary,
 };
 const LAB: ProductionItem = ProductionItem::Building {
-    building: BuildingKind::Laboratory,
+    building: BuildingKind::Library,
 };
 
 fn set_work_completed(v: &mut PlayerView, completed: bool) {
@@ -19,7 +19,7 @@ fn set_work_completed(v: &mut PlayerView, completed: bool) {
     if completed {
         v.great_works.push(legatum_core::projects::GreatWorkView {
             player: ME,
-            completed: Some(BuildingKind::RelayUplink),
+            completed: Some(BuildingKind::GreatLibrary),
             building: None,
             city: None,
             progress: 0,
@@ -40,7 +40,7 @@ fn endgame() -> PlayerView {
         b = b.unit(
             id,
             ME,
-            UnitKind::Trooper,
+            UnitKind::Pikeman,
             off(3 + id as i32 % 5, 6 + id as i32 / 5),
         );
     }
@@ -57,7 +57,7 @@ fn endgame() -> PlayerView {
     set_work_completed(&mut v, true);
     let d = v.cities[0].detail.as_mut().unwrap();
     d.options
-        .retain(|o| o.item == TROOPER || o.item == RELAY || o.item == LAB);
+        .retain(|o| o.item == PIKEMAN || o.item == RELAY || o.item == LAB);
     for opt in &mut d.options {
         opt.turns = 20;
         if opt.item != RELAY {
@@ -114,36 +114,36 @@ fn hard_limits_routine_upkeep_but_reinforces_visible_threats() {
         .city(2, ME, off(14, 5), 4)
         .city(3, ME, off(23, 5), 4);
     for id in 1..=5 {
-        builder = builder.unit(id, ME, UnitKind::Soldier, off(4 + id as i32, 5));
+        builder = builder.unit(id, ME, UnitKind::Spearman, off(4 + id as i32, 5));
     }
     for threatened in [false, true] {
         let mut view = builder.view.clone();
         if threatened {
             view.units.push(
                 ViewBuilder::new(32, 20)
-                    .unit(99, ENEMY, UnitKind::Soldier, off(5, 7))
+                    .unit(99, ENEMY, UnitKind::Spearman, off(5, 7))
                     .build()
                     .units
                     .remove(0),
             );
         }
         view.turn = 70;
-        let soldier = ProductionItem::Unit {
-            unit: UnitKind::Soldier,
+        let spearman = ProductionItem::Unit {
+            unit: UnitKind::Spearman,
         };
         for city in &mut view.cities {
             city.detail
                 .as_mut()
                 .unwrap()
                 .options
-                .retain(|o| o.item == soldier);
+                .retain(|o| o.item == spearman);
         }
         let orders = brain(&view, 7, AiDifficulty::Hard).orders(&view);
         assert_valid(&view, &orders);
         assert_eq!(
             orders
                 .iter()
-                .any(|o| matches!(o, Order::SetProduction { item, .. } if *item == soldier)),
+                .any(|o| matches!(o, Order::SetProduction { item, .. } if *item == spearman)),
             threatened
         );
     }
@@ -206,12 +206,12 @@ fn winning_cash_goal_survives_harassment_but_does_not_sacrifice_a_falling_city()
     v.players[0].faction_goal_done = false;
     v.economy.gold = 390;
     let d = v.cities[0].detail.as_mut().unwrap();
-    d.producing = Some(TROOPER);
+    d.producing = Some(PIKEMAN);
     d.buy_cost = Some(160);
     // A hostile unit cannot defeat the fortified city's healthy standing army.
     v.units.extend(
         ViewBuilder::new(24, 16)
-            .unit(80, ENEMY, UnitKind::Trooper, off(2, 8))
+            .unit(80, ENEMY, UnitKind::Pikeman, off(2, 8))
             .build()
             .units,
     );
@@ -228,14 +228,14 @@ fn winning_cash_goal_survives_harassment_but_does_not_sacrifice_a_falling_city()
             .orders(&v)
             .contains(&Order::BuyItem {
                 city: CityId(1),
-                item: TROOPER
+                item: PIKEMAN
             })
     );
     v.economy.gold = 560;
     let orders = ScriptedBrain::new(Faction::Switzerland, 7, ME).orders(&v);
     assert!(orders.contains(&Order::BuyItem {
         city: CityId(1),
-        item: TROOPER
+        item: PIKEMAN
     }));
 }
 
@@ -245,7 +245,7 @@ fn endgame_cash_goal_is_not_spent_again_on_each_bombardment_turn() {
     v.players[0].faction_goal_done = false;
     v.economy.gold_per_turn.total = 40;
     v.units = ViewBuilder::new(24, 16)
-        .unit(90, ENEMY, UnitKind::Ranger, off(2, 8))
+        .unit(90, ENEMY, UnitKind::Archer, off(2, 8))
         .build()
         .units;
     // The city can absorb harassment while income banks the goal. An endless stream of
@@ -271,14 +271,14 @@ fn endgame_cash_goal_is_not_spent_again_on_each_bombardment_turn() {
             .any(|o| matches!(o, Order::BuyItem { .. }))
     );
     v.units = ViewBuilder::new(24, 16)
-        .unit(90, ENEMY, UnitKind::Trooper, off(2, 8))
+        .unit(90, ENEMY, UnitKind::Pikeman, off(2, 8))
         .build()
         .units;
     v.economy.gold = 560;
     let orders = ScriptedBrain::new(Faction::Switzerland, 7, ME).orders(&v);
     assert!(orders.contains(&Order::BuyItem {
         city: CityId(1),
-        item: TROOPER
+        item: PIKEMAN
     }));
 }
 
@@ -288,11 +288,11 @@ fn relay_uses_safe_city_even_if_the_fastest_city_is_threatened() {
         .known_techs(&TechId::ALL)
         .city(1, ME, off(3, 8), 8)
         .city(2, ME, off(14, 8), 8)
-        .unit(90, ENEMY, UnitKind::Trooper, off(2, 8))
+        .unit(90, ENEMY, UnitKind::Pikeman, off(2, 8))
         .build();
     for c in &mut v.cities {
         let d = c.detail.as_mut().unwrap();
-        d.buildings.push(BuildingKind::Laboratory);
+        d.buildings.push(BuildingKind::Library);
         d.options.retain(|o| o.item == RELAY);
         d.yields.total.production = if c.id == CityId(1) { 20 } else { 10 };
     }
@@ -398,9 +398,9 @@ fn athens_finish_the_third_lab_before_more_optional_infrastructure() {
         .city(1, ME, off(3, 8), 3)
         .city(2, ME, off(13, 8), 3)
         .city(3, ME, off(23, 8), 3)
-        .unit(1, ME, UnitKind::Soldier, off(3, 8))
-        .unit(2, ME, UnitKind::Soldier, off(13, 8))
-        .unit(3, ME, UnitKind::Soldier, off(23, 8))
+        .unit(1, ME, UnitKind::Spearman, off(3, 8))
+        .unit(2, ME, UnitKind::Spearman, off(13, 8))
+        .unit(3, ME, UnitKind::Spearman, off(23, 8))
         .build();
     v.players[0].faction_goal_done = false;
     for c in &mut v.cities[..2] {
@@ -408,7 +408,7 @@ fn athens_finish_the_third_lab_before_more_optional_infrastructure() {
             .as_mut()
             .unwrap()
             .buildings
-            .push(BuildingKind::Laboratory);
+            .push(BuildingKind::Library);
     }
     let choose = |v: &PlayerView| {
         ScriptedBrain::new(Faction::Athens, 7, ME)
@@ -425,7 +425,7 @@ fn athens_finish_the_third_lab_before_more_optional_infrastructure() {
     assert_eq!(
         choose(&v),
         Some(ProductionItem::Building {
-            building: BuildingKind::Laboratory
+            building: BuildingKind::Library
         }),
         "finish an already researched faction goal before optional production"
     );
@@ -457,14 +457,14 @@ fn reserved_home_defenders_allow_a_separate_campaign_but_free_troops_do_not() {
         .city(1, ME, off(3, 8), 3)
         .city(2, ME, off(12, 8), 3)
         .city(9, ENEMY, target, 2)
-        .unit(91, ME, UnitKind::Trooper, off(3, 8))
-        .unit(92, ME, UnitKind::Trooper, off(4, 8))
-        .unit(90, ME, UnitKind::Trooper, off(12, 8))
-        .unit(1, ME, UnitKind::Trooper, off(11, 7))
-        .unit(2, ME, UnitKind::Trooper, off(12, 7))
-        .unit(3, ME, UnitKind::Trooper, off(13, 7))
-        .unit(80, ENEMY, UnitKind::Trooper, off(1, 8))
-        .unit(81, ENEMY, UnitKind::Trooper, off(2, 7))
+        .unit(91, ME, UnitKind::Pikeman, off(3, 8))
+        .unit(92, ME, UnitKind::Pikeman, off(4, 8))
+        .unit(90, ME, UnitKind::Pikeman, off(12, 8))
+        .unit(1, ME, UnitKind::Pikeman, off(11, 7))
+        .unit(2, ME, UnitKind::Pikeman, off(12, 7))
+        .unit(3, ME, UnitKind::Pikeman, off(13, 7))
+        .unit(80, ENEMY, UnitKind::Pikeman, off(1, 8))
+        .unit(81, ENEMY, UnitKind::Pikeman, off(2, 7))
         .build();
     let marches = |v: &PlayerView| {
         let mut p = planner(v, 7);

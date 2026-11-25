@@ -149,6 +149,16 @@ export async function aim(page: Page, hex: Hex, card: Locator) {
     notes.set(page, [...notes.get(page) ?? [], { kind: 'overlap', where: `target hex ${hex.q},${hex.r}`, detail: `centre covered by ${cover}` }]);
     const below = await hexPoint(page, { q: hex.q, r: hex.r + 1 });
     p = { x: Math.round(p.x + (below.x - p.x) * 0.4), y: Math.round(p.y + (below.y - p.y) * 0.4) };
+  } else {
+    // A city banner (drawn on the canvas, above units) over the hex's centre: its token is raised to the banner's
+    // top edge (render.ts::bannerLift), so aim at the token's head just above the banner, as a player would.
+    const banner = await page.evaluate(({ x, y }) => {
+      const b = document.querySelector('[data-game-map]')!.getBoundingClientRect();
+      const hits = (window as unknown as { legatumMap: { banners?: { cover: { x: number; y: number; w: number; h: number }; parts: { x: number; y: number; w: number; h: number }[]; far: boolean }[] } }).legatumMap.banners ?? [];
+      const hit = hits.findLast((h) => !h.far && h.parts.some((r) => x - b.left >= r.x && x - b.left <= r.x + r.w && y - b.top >= r.y && y - b.top <= r.y + r.h));
+      return hit ? Math.round(hit.cover.y + b.top) : null;
+    }, p);
+    if (banner !== null) p = { x: p.x, y: banner - 4 };
   }
   // A hover can land before the map has taken the new selection: wiggle until the card shows.
   await expect.poll(async () => {
@@ -156,6 +166,11 @@ export async function aim(page: Page, hex: Hex, card: Locator) {
     await page.mouse.move(p.x, p.y, { steps: 3 });
     return card.isVisible();
   }, { intervals: [500, 1000, 1000, 2000] }).toBe(true);
+}
+
+/** Move the mouse off the map (onto the top bar) so no hover card or select ring is in the next shot. */
+export async function parkMouse(page: Page) {
+  await page.mouse.move(20, 25);
 }
 
 /** Wait until the camera has centred the selected unit (selection jumps glide the camera). */
@@ -253,7 +268,7 @@ export async function dismissCelebrations(page: Page) {
 }
 
 
-/** Frame the Courier Hall's city at a zoom: the camera jumps there, then the zoom is set and the glide settles. */
+/** Frame the Yam Relay Station's city at a zoom: the camera jumps there, then the zoom is set and the glide settles. */
 export async function frameHall(page: Page, hex: Hex, zoom: number) {
   await page.evaluate(({ hex, zoom }) => {
     const w = window as unknown as GameWindow & { legatumMap: { camera: { zoom: number }; redraw(): void } };
@@ -268,7 +283,7 @@ export async function frameHall(page: Page, hex: Hex, zoom: number) {
   await page.waitForTimeout(500);
 }
 
-/** Stage last turn's Hall events as the turn report and its moments, for the fixture's viewer. */
+/** Stage last turn's Station events as the turn report and its moments, for the fixture's viewer. */
 export async function stageHallReport(page: Page, events: Event[]) {
   const v = await page.evaluate(() => { const s = (window as unknown as GameWindow).legatum.getState(); return s.views![s.seat]; });
   const report = { turn: v.turn - 1, hash: '', events: [events], moments: [momentsForTurn(events, v.me, null, v)], alarms: [[]], lines: [formatEvents(events, contextFromViews(v, v))] };

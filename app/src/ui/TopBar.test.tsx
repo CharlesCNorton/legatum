@@ -71,11 +71,11 @@ it('lists each Alliance\'s treaty upkeep in the Gold breakdown as a cost', () =>
 });
 
 it.each(['Athens', 'Byzantium'] as const)("a %s Science hover breaks down Capital, cities, buildings and faction bonus", (faction) => {
-  // Athens rename Laboratory to "Listening House"; the hover's generic "Buildings" line
+  // Athens rename the Library to "Lyceum"; the hover's generic "Buildings" line
   // must still pick it up, since it classifies by the faction's own display name.
   const f = researchFixture(faction);
   const capital = f.cities.find((c) => c.owner === 0 && c.isCapital)!;
-  capital.buildings = ['Laboratory'];
+  capital.buildings = ['Library'];
   const client = new FixtureClient();
   client.load(JSON.stringify(f));
   const view = client.view(0);

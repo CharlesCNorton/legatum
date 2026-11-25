@@ -94,6 +94,10 @@ pub struct StagingConfig {
     /// Barbarian camps; on unless the host turns them off.
     #[serde(default = "barbarians_on")]
     pub barbarians: bool,
+    /// The AI-only teams start in Alliances of two (`GameSetup::ai_alliances`). Off unless the
+    /// host turns it on; omitted when off, so rooms from older clients are unchanged.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub ai_alliances: bool,
     #[serde(default, skip_serializing_if = "StagingRules::is_default")]
     pub rule_experiments: StagingRules,
     pub seats: Vec<StagingSeat>,
@@ -132,6 +136,8 @@ pub struct StagingSettings {
     pub height: i32,
     pub turn_limit: Option<u32>,
     pub barbarians: bool,
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub ai_alliances: bool,
     #[serde(skip_serializing_if = "StagingRules::is_default")]
     pub rule_experiments: StagingRules,
     pub seats: Vec<StagingSeat>,
@@ -231,6 +237,7 @@ impl Room {
                 height: self.config.height,
                 turn_limit: self.config.turn_limit,
                 barbarians: self.config.barbarians,
+                ai_alliances: self.config.ai_alliances,
                 rule_experiments: self.config.rule_experiments,
                 seats: self.config.seats.clone(),
             },
@@ -332,6 +339,53 @@ impl Room {
         }
         self.occupants[slot] = None;
         Ok(())
+    }
+
+    /// Whether `token` is the live reservation of `slot` (a rejoin, which needs no join code).
+    pub(crate) fn owns(&self, slot: usize, token: Option<&str>) -> bool {
+        self.occupants
+            .get(slot)
+            .and_then(|o| o.as_ref())
+            .is_some_and(|o| crate::host::credentials::matches(Some(&o.token), token))
+    }
+
+    /// Whether `connection` holds a seat here.
+    pub(crate) fn holds(&self, connection: ConnectionId) -> bool {
+        self.occupants
+            .iter()
+            .flatten()
+            .any(|o| o.connection == Some(connection))
+    }
+
+    /// Removes the player in a network seat: the seat keeps the name but gets a new credential
+    /// nobody holds, so it stays closed to everyone until the host opens it with [`Room::release`].
+    /// Returns the connection that held it.
+    pub(crate) fn remove(&mut self, slot: usize) -> Result<Option<ConnectionId>, RoomError> {
+        if self
+            .config
+            .seats
+            .get(slot)
+            .is_none_or(|s| s.kind != SeatKind::Open)
+        {
+            return Err(RoomError {
+                code: "not_removable",
+                message: "Choose a network player seat.",
+            });
+        }
+        let token = crate::host::credentials::token().map_err(|_| RoomError {
+            code: "credential_failed",
+            message: "Cannot create seat credential.",
+        })?;
+        let Some(o) = self.occupants[slot].as_mut() else {
+            return Err(RoomError {
+                code: "not_removable",
+                message: "Nobody is in that seat.",
+            });
+        };
+        let old = o.connection.take();
+        o.ready = false;
+        o.token = token;
+        Ok(old)
     }
 
     pub(crate) fn take(
@@ -503,6 +557,7 @@ impl Room {
             players,
             legacy_all_war: false,
             barbarians: self.config.barbarians,
+            ai_alliances: self.config.ai_alliances,
             rule_experiments: legatum_core::experiments::RuleExperiments::default(),
         }
     }
@@ -547,6 +602,7 @@ mod faction_tests {
                 height: 32,
                 turn_limit: None,
                 barbarians: true,
+                ai_alliances: false,
                 rule_experiments: StagingRules::default(),
                 seats,
             },

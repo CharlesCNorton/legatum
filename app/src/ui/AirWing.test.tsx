@@ -48,7 +48,7 @@ describe.skipIf(!available)('the air wing of a city, on the Rust engine', () => 
   }
   const button = (text: RegExp, within: ParentNode = container) => [...within.querySelectorAll<HTMLButtonElement>('button')].find((b) => text.test(b.textContent ?? ''))!;
   const card = (plane: number) => container.querySelector<HTMLElement>(`[data-plane="${plane}"]`)!;
-  /** Nobody to strike: the fixture's enemy Soldiers and cities are removed from the view. */
+  /** Nobody to strike: the fixture's enemy Spearmen and cities are removed from the view. */
   const quiet = (view: { units: { owner: number }[]; cities: { owner: number }[] }) => { (view as { units: unknown[] }).units = view.units.filter((u) => u.owner === 0); (view as { cities: unknown[] }).cities = view.cities.filter((c) => c.owner === 0); };
 
   it('shows one selected aircraft in the side card and nothing for a city without it', () => {
@@ -145,7 +145,7 @@ describe.skipIf(!available)('the air wing of a city, on the Rust engine', () => 
     const fighter = card(901);
     expect(fighter.getAttribute('data-air-state')).toBe('guard');
     // Unanswered, so the status says it is awaiting orders (red), not that it is settled.
-    expect(fighter.querySelector('.up-status')?.textContent).toBe('Awaiting orders · on guard over 4 tiles around Waypost Seven');
+    expect(fighter.querySelector('.up-status')?.textContent).toBe('Needs orders · on guard over 4 tiles around Waypost Seven');
     expect(fighter.textContent).toContain('No enemy unit or city is visible within 5 tiles');
     expect(fighter.textContent).not.toContain('or rebase it');
     // The fixture has one city, so Rebase explains why it is unavailable.
@@ -162,7 +162,7 @@ describe.skipIf(!available)('the air wing of a city, on the Rust engine', () => 
     render(quiet);
     const bomber = card(900);
     expect(bomber.getAttribute('data-air-state')).toBe('idle');
-    expect(bomber.querySelector('.up-status')?.textContent).toBe('Awaiting orders · no targets within 8 tiles');
+    expect(bomber.querySelector('.up-status')?.textContent).toBe('Needs orders · no targets within 8 tiles');
     expect(bomber.textContent).toContain('Wait for a target, or skip this turn.');
     expect(bomber.textContent).not.toMatch(/rebase it/i);
     expect(bomber.textContent).toContain('No enemy unit or city is visible within 8 tiles of Waypost Seven');

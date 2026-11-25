@@ -1097,16 +1097,21 @@ pub fn ranged_target(
     ) {
         let at = los::blocker(u.pos, target, |h| state.map.get(h).map(|t| t.terrain)).unwrap();
         let terrain = state.map.get(at).map(|t| t.terrain);
-        let unwalled_garrison = state
+        let mut options = if terrain == Some(Terrain::Mountains) {
+            vec!["Move adjacent".to_string(), "around it".to_string()]
+        } else {
+            vec!["Fire from a hill".to_string(), "move adjacent".to_string()]
+        };
+        if let Some(c) = state
             .cities
             .values()
-            .any(|c| c.owner == u.owner && c.pos == u.pos);
-        let remedy = match (terrain == Some(Terrain::Mountains), unwalled_garrison) {
-            (true, true) => "Move adjacent, around it, or build Walls.",
-            (true, false) => "Move adjacent or around it.",
-            (false, true) => "Fire from a hill, move adjacent, or build Walls.",
-            (false, false) => "Fire from a hill or move adjacent.",
-        };
+            .find(|c| c.owner == u.owner && c.pos == u.pos)
+        {
+            options.push(format!("build Walls in {}", c.name));
+        }
+        let last = options.pop().unwrap_or_default();
+        let comma = if options.len() > 1 { "," } else { "" };
+        let remedy = format!("{}{comma} or {last}.", options.join(", "));
         return Err(format!(
             "No line of sight: the {:?} at ({}, {}) blocks the shot. {remedy}",
             terrain.unwrap_or(Terrain::Mountains),
@@ -1510,6 +1515,11 @@ pub fn capture_city(
             .setup
             .rule_experiments
             .rule_off(FactionRule::SpartaKillHeal);
+    // The Mongols never have Walls (rules 57): a city they take loses its whole Walls line.
+    let slight_walls = data::never_walls(
+        state.setup.rule_experiments.faction_rules_off,
+        state.player(captor).faction,
+    );
     // The captor takes the city, not its aircraft: they are lost with it.
     super::air::lose_city_aircraft(state, city, events);
     // Occupation lock: the new record is the civ just taken from; none for a city its captor's
@@ -1542,6 +1552,9 @@ pub fn capture_city(
     // cannot mint another payout without rebuilding the market.
     for (building, _) in &plundered {
         c.buildings.remove(building);
+    }
+    if slight_walls {
+        c.buildings.retain(|b| !data::is_walls_line(*b));
     }
     c.occupied_from = occupied_from;
     c.owner = captor;
@@ -1659,9 +1672,9 @@ mod tests {
         s.player_mut(PlayerId(0)).faction = Faction::Aztecs;
         let near = city(&mut s, 0, hex(2, 3), 1);
         let far = city(&mut s, 0, hex(10, 8), 1);
-        let a = unit(&mut s, 0, UnitKind::Soldier, hex(3, 3));
-        let b = unit(&mut s, 0, UnitKind::Soldier, hex(4, 2));
-        let victim = unit(&mut s, 1, UnitKind::Soldier, hex(4, 3));
+        let a = unit(&mut s, 0, UnitKind::Spearman, hex(3, 3));
+        let b = unit(&mut s, 0, UnitKind::Spearman, hex(4, 2));
+        let victim = unit(&mut s, 1, UnitKind::Spearman, hex(4, 3));
         let fights = [
             forced_hit(&s, a, victim, 50, 0),
             forced_hit(&s, b, victim, 50, 0),
@@ -1684,11 +1697,11 @@ mod tests {
     #[test]
     fn flower_wars_excludes_scouts_barbarians_ranged_mounted_and_dead_participants() {
         for (killer, victim_kind, barbarian, taken) in [
-            (UnitKind::Soldier, UnitKind::Scout, false, 0),
-            (UnitKind::Soldier, UnitKind::Soldier, true, 0),
-            (UnitKind::Ranger, UnitKind::Soldier, false, 0),
-            (UnitKind::Horseman, UnitKind::Soldier, false, 0),
-            (UnitKind::Soldier, UnitKind::Soldier, false, 100),
+            (UnitKind::Spearman, UnitKind::Scout, false, 0),
+            (UnitKind::Spearman, UnitKind::Spearman, true, 0),
+            (UnitKind::Archer, UnitKind::Spearman, false, 0),
+            (UnitKind::Horseman, UnitKind::Spearman, false, 0),
+            (UnitKind::Spearman, UnitKind::Spearman, false, 100),
         ] {
             let mut s = game(&[0, 1]);
             s.player_mut(PlayerId(0)).faction = Faction::Aztecs;
@@ -1717,8 +1730,8 @@ mod tests {
         let spots = at.neighbors();
         let first = city(&mut s, 0, spots[0], 1);
         let second = city(&mut s, 0, spots[3], 1);
-        let a = unit(&mut s, 1, UnitKind::Soldier, at);
-        let d = unit(&mut s, 0, UnitKind::Soldier, spots[1]);
+        let a = unit(&mut s, 1, UnitKind::Spearman, at);
+        let d = unit(&mut s, 0, UnitKind::Spearman, spots[1]);
         let fight = forced_hit(&s, a, d, 0, 100);
         apply_fights(&mut s, &[fight], &mut vec![]);
         assert_eq!(s.cities[&first].population, 2);
@@ -1732,9 +1745,9 @@ mod tests {
         let home = city(&mut s, 0, hex(2, 3), 1);
         let c = city(&mut s, 1, hex(5, 3), 2);
         s.cities.get_mut(&c).unwrap().hp = 1;
-        let g = unit(&mut s, 1, UnitKind::Soldier, hex(5, 3));
+        let g = unit(&mut s, 1, UnitKind::Spearman, hex(5, 3));
         s.units.get_mut(&g).unwrap().hp = 1;
-        let a = unit(&mut s, 0, UnitKind::Soldier, hex(4, 3));
+        let a = unit(&mut s, 0, UnitKind::Spearman, hex(4, 3));
         let mut fight = plan_fight(&s, 1, a, Target::City(c), FightKind::Melee);
         fight.damage_to_defender = 100;
         fight.damage_to_attacker = 0;
@@ -1747,8 +1760,8 @@ mod tests {
     fn flower_wars_without_a_city_does_not_panic_or_create_population() {
         let mut s = game(&[0, 1]);
         s.player_mut(PlayerId(0)).faction = Faction::Aztecs;
-        let a = unit(&mut s, 0, UnitKind::Soldier, hex(3, 3));
-        let v = unit(&mut s, 1, UnitKind::Soldier, hex(4, 3));
+        let a = unit(&mut s, 0, UnitKind::Spearman, hex(3, 3));
+        let v = unit(&mut s, 1, UnitKind::Spearman, hex(4, 3));
         let hit = forced_hit(&s, a, v, 100, 0);
         let mut events = vec![];
         apply_fights(&mut s, &[hit], &mut events);
@@ -1776,8 +1789,8 @@ mod tests {
     fn walls_halve_every_attack_on_a_citys_hp_but_not_on_its_garrison() {
         let mut s = game(&[0, 1]);
         let city = walled_city(&mut s, 1, hex(5, 3), 2);
-        let attacker = unit(&mut s, 0, UnitKind::Soldier, hex(4, 3));
-        let shooter = unit(&mut s, 0, UnitKind::Ranger, hex(3, 3));
+        let attacker = unit(&mut s, 0, UnitKind::Spearman, hex(4, 3));
+        let shooter = unit(&mut s, 0, UnitKind::Archer, hex(3, 3));
         let walled = melee_fight(&s, attacker, city);
         let normal = combat::damage(
             walled.attacker_strength.total,
@@ -1794,7 +1807,7 @@ mod tests {
         assert_eq!(shot.damage_to_defender, normal / 2);
 
         s.cities.get_mut(&city).unwrap().hp = 0;
-        let garrison = unit(&mut s, 1, UnitKind::Soldier, hex(5, 3));
+        let garrison = unit(&mut s, 1, UnitKind::Spearman, hex(5, 3));
         let direct = plan_fight(&s, 1, attacker, Target::Unit(garrison), FightKind::Melee);
         assert_eq!(
             direct.damage_to_defender,
@@ -1813,7 +1826,7 @@ mod tests {
         set_terrain(&mut s, pos, Terrain::Plains);
         let c = city(&mut s, 1, pos, 1);
         s.cities.get_mut(&c).unwrap().hp = 200;
-        let g = unit(&mut s, 1, UnitKind::Trooper, pos);
+        let g = unit(&mut s, 1, UnitKind::Pikeman, pos);
         s.player_mut(PlayerId(1))
             .supply
             .push(crate::resources::SupplyRecord {
@@ -1822,7 +1835,7 @@ mod tests {
                 since: 0,
                 idle: true,
             });
-        let a = unit(&mut s, 0, UnitKind::Soldier, hex(4, 3));
+        let a = unit(&mut s, 0, UnitKind::Spearman, hex(4, 3));
         let direct = plan_fight(&s, 1, a, Target::Unit(g), FightKind::Melee);
         assert_eq!(direct.defender_strength.total, 24);
 
@@ -1846,7 +1859,7 @@ mod tests {
     fn an_unwalled_city_takes_full_damage() {
         let mut s = game(&[0, 1]);
         let city = city(&mut s, 1, hex(5, 3), 2);
-        let attacker = unit(&mut s, 0, UnitKind::Soldier, hex(4, 3));
+        let attacker = unit(&mut s, 0, UnitKind::Spearman, hex(4, 3));
         let f = melee_fight(&s, attacker, city);
         assert_eq!(
             f.damage_to_defender,
@@ -1863,7 +1876,7 @@ mod tests {
         let mut s = game(&[0, 1]);
         s.player_mut(PlayerId(0)).techs.insert(TechId::Mathematics);
         let city = walled_city(&mut s, 1, hex(5, 3), 2);
-        let attacker = unit(&mut s, 0, UnitKind::Soldier, hex(4, 3));
+        let attacker = unit(&mut s, 0, UnitKind::Spearman, hex(4, 3));
         let alone = melee_fight(&s, attacker, city);
         s.units.get_mut(&attacker).unwrap().siege = true;
         let covered = melee_fight(&s, attacker, city);
@@ -1879,9 +1892,9 @@ mod tests {
         let mut s = game(&[0, 1]);
         s.player_mut(PlayerId(0)).techs.insert(TechId::Mathematics);
         let city = walled_city(&mut s, 1, hex(5, 3), 2);
-        let attacker = unit(&mut s, 0, UnitKind::Soldier, hex(4, 3));
+        let attacker = unit(&mut s, 0, UnitKind::Spearman, hex(4, 3));
         let alone = melee_fight(&s, attacker, city);
-        let other = unit(&mut s, 0, UnitKind::Soldier, hex(3, 3));
+        let other = unit(&mut s, 0, UnitKind::Spearman, hex(3, 3));
         s.units.get_mut(&other).unwrap().siege = true;
         assert_eq!(shape(&melee_fight(&s, attacker, city)), shape(&alone));
     }
@@ -1890,7 +1903,7 @@ mod tests {
     fn siege_without_a_siege_technology_ignores_nothing() {
         let mut s = game(&[0, 1]);
         let city = walled_city(&mut s, 1, hex(5, 3), 2);
-        let attacker = unit(&mut s, 0, UnitKind::Soldier, hex(4, 3));
+        let attacker = unit(&mut s, 0, UnitKind::Spearman, hex(4, 3));
         let alone = melee_fight(&s, attacker, city);
         s.units.get_mut(&attacker).unwrap().siege = true;
         assert_eq!(
@@ -1936,7 +1949,7 @@ mod tests {
                     && !label.contains("Walls"))
         );
         // A Renaissance Musketman with the same (lack of) technology is halved.
-        let musket = unit(&mut s, 0, UnitKind::AssaultTrooper, hex(4, 4));
+        let musket = unit(&mut s, 0, UnitKind::Musketman, hex(4, 4));
         let halved = melee_fight(&s, musket, city);
         let musket_open = open_city_fight(&mut s, musket, city);
         assert!(halved.damage_to_defender < musket_open.damage_to_defender);
@@ -1962,7 +1975,7 @@ mod tests {
             .unwrap()
             .buildings
             .insert(BuildingKind::Castle);
-        let attacker = unit(&mut s, 0, UnitKind::Soldier, hex(4, 3));
+        let attacker = unit(&mut s, 0, UnitKind::Spearman, hex(4, 3));
         s.units.get_mut(&attacker).unwrap().siege = true;
         let partial = melee_fight(&s, attacker, city);
         let walls = data::building_stats_for(Faction::India, BuildingKind::Walls).city_strength;
@@ -2019,6 +2032,37 @@ mod tests {
     }
 
     #[test]
+    fn mongols_slight_the_walls_of_a_city_they_capture_and_others_keep_them() {
+        use BuildingKind::{Castle, Market, StarFort, Walls};
+        for (captor, keeps) in [(Faction::Mongols, false), (Faction::India, true)] {
+            let mut s = game(&[0, 1]);
+            s.player_mut(PlayerId(0)).faction = captor;
+            let city_id = city(&mut s, 1, hex(5, 3), 2);
+            s.cities.get_mut(&city_id).unwrap().buildings =
+                [Walls, Castle, StarFort, Market].into();
+            let mut events = Vec::new();
+            capture_city(&mut s, city_id, PlayerId(0), &mut events);
+            let b = &s.cities[&city_id].buildings;
+            assert_eq!(s.cities[&city_id].owner, PlayerId(0));
+            assert!(b.contains(&Market), "{captor:?}");
+            for wall in [Walls, Castle, StarFort] {
+                assert_eq!(b.contains(&wall), keeps, "{captor:?} {wall:?}");
+            }
+        }
+        // The ablation switch turns the rule off: Mongol captors keep the walls too.
+        let mut s = game(&[0, 1]);
+        s.player_mut(PlayerId(0)).faction = Faction::Mongols;
+        s.setup
+            .rule_experiments
+            .faction_rules_off
+            .insert(crate::experiments::FactionRule::MongolsNoWalls);
+        let city_id = city(&mut s, 1, hex(5, 3), 2);
+        s.cities.get_mut(&city_id).unwrap().buildings.insert(Walls);
+        capture_city(&mut s, city_id, PlayerId(0), &mut Vec::new());
+        assert!(s.cities[&city_id].buildings.contains(&Walls));
+    }
+
+    #[test]
     fn mongols_cannot_buy_siege_before_medieval_even_after_a_workshop_capture() {
         let mut s = game(&[0, 1]);
         s.player_mut(PlayerId(0)).faction = Faction::Mongols;
@@ -2036,7 +2080,7 @@ mod tests {
         assert!(!data::siege_available(Faction::Mongols, 0));
         assert!(data::siege_available(
             Faction::Mongols,
-            data::MONGOL_WALLS_ERA
+            data::MONGOL_SIEGE_ERA
         ));
         assert!(
             events
@@ -2066,11 +2110,11 @@ mod tests {
         s.player_mut(PlayerId(0)).faction = Faction::Sparta;
         let c = city(&mut s, 1, hex(5, 3), 2);
         s.cities.get_mut(&c).unwrap().hp = 1;
-        let g = unit(&mut s, 1, UnitKind::Soldier, hex(5, 3));
+        let g = unit(&mut s, 1, UnitKind::Spearman, hex(5, 3));
         s.units.get_mut(&g).unwrap().hp = 1;
-        let a = unit(&mut s, 0, UnitKind::Soldier, hex(4, 3));
-        let b = unit(&mut s, 0, UnitKind::Soldier, hex(5, 2));
-        let bystander = unit(&mut s, 0, UnitKind::Soldier, hex(4, 4));
+        let a = unit(&mut s, 0, UnitKind::Spearman, hex(4, 3));
+        let b = unit(&mut s, 0, UnitKind::Spearman, hex(5, 2));
+        let bystander = unit(&mut s, 0, UnitKind::Spearman, hex(4, 4));
         for id in [a, b, bystander] {
             s.units.get_mut(&id).unwrap().hp = 40;
         }
@@ -2105,8 +2149,8 @@ mod tests {
     fn sparta_mutual_kill_removes_both_before_any_healing() {
         let mut s = game(&[0, 1]);
         s.player_mut(PlayerId(0)).faction = Faction::Sparta;
-        let attacker = unit(&mut s, 0, UnitKind::Soldier, hex(3, 3));
-        let victim = unit(&mut s, 1, UnitKind::Soldier, hex(4, 3));
+        let attacker = unit(&mut s, 0, UnitKind::Spearman, hex(3, 3));
+        let victim = unit(&mut s, 1, UnitKind::Spearman, hex(4, 3));
         s.units.get_mut(&attacker).unwrap().hp = 10;
         s.units.get_mut(&victim).unwrap().hp = 10;
         let fight = forced_hit(&s, attacker, victim, 10, 10);
@@ -2125,7 +2169,7 @@ mod tests {
     fn sparta_scout_kill_heals_solo_survivor_up_to_one_hundred() {
         let mut s = game(&[0, 1]);
         s.player_mut(PlayerId(0)).faction = Faction::Sparta;
-        let attacker = unit(&mut s, 0, UnitKind::Soldier, hex(3, 3));
+        let attacker = unit(&mut s, 0, UnitKind::Spearman, hex(3, 3));
         let victim = unit(&mut s, 1, UnitKind::Scout, hex(4, 3));
         s.units.get_mut(&attacker).unwrap().hp = 1;
         s.units.get_mut(&victim).unwrap().hp = 10;
@@ -2145,11 +2189,11 @@ mod tests {
     fn sparta_ranged_hit_in_an_earlier_stage_shares_a_later_melee_kill() {
         let mut s = game(&[0, 1]);
         s.player_mut(PlayerId(0)).faction = Faction::Sparta;
-        let shooter = unit(&mut s, 0, UnitKind::Ranger, hex(2, 3));
-        let soldier = unit(&mut s, 0, UnitKind::Soldier, hex(3, 3));
-        let victim = unit(&mut s, 1, UnitKind::Soldier, hex(4, 3));
+        let shooter = unit(&mut s, 0, UnitKind::Archer, hex(2, 3));
+        let spearman = unit(&mut s, 0, UnitKind::Spearman, hex(3, 3));
+        let victim = unit(&mut s, 1, UnitKind::Spearman, hex(4, 3));
         s.units.get_mut(&shooter).unwrap().hp = 40;
-        s.units.get_mut(&soldier).unwrap().hp = 40;
+        s.units.get_mut(&spearman).unwrap().hp = 40;
         s.units.get_mut(&victim).unwrap().hp = 30;
         let mut events = Vec::new();
         let mut shot = plan_fight(&s, 0, shooter, Target::Unit(victim), FightKind::Ranged);
@@ -2161,17 +2205,17 @@ mod tests {
                 .iter()
                 .any(|e| matches!(e, Event::SpartaKillHeal { .. }))
         );
-        let blow = forced_hit(&s, soldier, victim, 10, 0);
+        let blow = forced_hit(&s, spearman, victim, 10, 0);
         apply_fights(&mut s, &[blow], &mut events);
         assert!(!s.units.contains_key(&victim));
-        assert_eq!((s.units[&shooter].hp, s.units[&soldier].hp), (90, 90));
+        assert_eq!((s.units[&shooter].hp, s.units[&spearman].hp), (90, 90));
     }
 
     #[test]
     fn non_sparta_kills_heal_nobody() {
         let mut s = game(&[0, 1]);
-        let attacker = unit(&mut s, 0, UnitKind::Soldier, hex(3, 3));
-        let victim = unit(&mut s, 1, UnitKind::Soldier, hex(4, 3));
+        let attacker = unit(&mut s, 0, UnitKind::Spearman, hex(3, 3));
+        let victim = unit(&mut s, 1, UnitKind::Spearman, hex(4, 3));
         s.units.get_mut(&attacker).unwrap().hp = 40;
         s.units.get_mut(&victim).unwrap().hp = 10;
         let mut events = Vec::new();
@@ -2190,7 +2234,7 @@ mod tests {
             let mut s = game(&[0, 1]);
             s.player_mut(PlayerId(0)).faction = Faction::Sparta;
             let attackers = [hex(3, 3), hex(3, 4), hex(4, 4)]
-                .map(|pos| unit(&mut s, 0, UnitKind::Soldier, pos));
+                .map(|pos| unit(&mut s, 0, UnitKind::Spearman, pos));
             let victim = unit(&mut s, 1, UnitKind::Scout, hex(4, 3));
             s.units.get_mut(&victim).unwrap().hp = 30;
             for (id, hp) in attackers.iter().zip(starting_hp) {
@@ -2233,8 +2277,8 @@ mod tests {
         city(&mut s, 1, hex(9, 5), 3);
         s.player_mut(PlayerId(1)).gold = 120;
         s.cities.get_mut(&city_id).unwrap().production_stored = 13;
-        let near = unit(&mut s, 0, UnitKind::Soldier, hex(4, 5));
-        let far = unit(&mut s, 0, UnitKind::Soldier, hex(1, 1));
+        let near = unit(&mut s, 0, UnitKind::Spearman, hex(4, 5));
+        let far = unit(&mut s, 0, UnitKind::Spearman, hex(1, 1));
         s.units.get_mut(&near).unwrap().hp = 20;
         s.units.get_mut(&far).unwrap().hp = 20;
         let mut events = Vec::new();
@@ -2276,9 +2320,9 @@ mod tests {
         let mut s = game(&[0, 1]);
         s.player_mut(PlayerId(0)).faction = Faction::Sparta;
         let c = walled_city(&mut s, 0, hex(3, 3), 2);
-        let target = unit(&mut s, 1, UnitKind::Ranger, hex(5, 3));
-        let tie = unit(&mut s, 1, UnitKind::Soldier, hex(3, 5));
-        let healthy = unit(&mut s, 1, UnitKind::Soldier, hex(4, 3));
+        let target = unit(&mut s, 1, UnitKind::Archer, hex(5, 3));
+        let tie = unit(&mut s, 1, UnitKind::Spearman, hex(3, 5));
+        let healthy = unit(&mut s, 1, UnitKind::Spearman, hex(4, 3));
         let civilian = unit(&mut s, 1, UnitKind::Settler, hex(3, 4));
         for id in [target, tie, civilian] {
             s.units.get_mut(&id).unwrap().hp = 1;
@@ -2292,7 +2336,7 @@ mod tests {
         assert_eq!(s.units[&civilian].hp, 1);
         assert!(
             s.cities[&c].hp < old_hp,
-            "the killed Ranger still shoots from the same snapshot"
+            "the killed Archer still shoots from the same snapshot"
         );
         let shot: Vec<_> = events.iter().filter(|e| matches!(e, Event::Battle { attacker: crate::events::Attacker::City { city }, .. } if *city == c)).collect();
         assert_eq!(shot.len(), 1);
@@ -2332,21 +2376,21 @@ mod tests {
     fn city_strike_ignores_peace_civilians_and_out_of_range() {
         let mut s = game(&[0, 1]);
         walled_city(&mut s, 0, hex(3, 3), 2);
-        let soldier = unit(&mut s, 1, UnitKind::Soldier, hex(5, 3));
+        let spearman = unit(&mut s, 1, UnitKind::Spearman, hex(5, 3));
         unit(&mut s, 1, UnitKind::Settler, hex(3, 4));
         let mut events = Vec::new();
         resolve_ranged(&mut s, &[], &mut events);
         assert_eq!(
             events.len(),
             1,
-            "on by default: the city fires at the Soldier"
+            "on by default: the city fires at the Spearman"
         );
         events.clear();
-        s.units.get_mut(&soldier).unwrap().hp = 100;
-        s.units.get_mut(&soldier).unwrap().pos = hex(6, 3);
+        s.units.get_mut(&spearman).unwrap().hp = 100;
+        s.units.get_mut(&spearman).unwrap().pos = hex(6, 3);
         resolve_ranged(&mut s, &[], &mut events);
         assert!(events.is_empty());
-        s.units.get_mut(&soldier).unwrap().pos = hex(5, 3);
+        s.units.get_mut(&spearman).unwrap().pos = hex(5, 3);
         for r in &mut s.diplomacy.as_mut().unwrap().relations {
             r.state = crate::diplomacy::RelationState::Peace;
         }
@@ -2359,7 +2403,7 @@ mod tests {
         for blocker in [Terrain::Forest, Terrain::Hills] {
             let mut s = game(&[0, 1]);
             let city = walled_city(&mut s, 0, hex(3, 3), 2);
-            let soldier = unit(&mut s, 1, UnitKind::Soldier, hex(5, 3));
+            let spearman = unit(&mut s, 1, UnitKind::Spearman, hex(5, 3));
             s.map.get_mut(hex(4, 3)).unwrap().terrain = blocker;
             // Remove the normal city-border sight ring so only native sight governs this case.
             for h in hex(3, 3).neighbors() {
@@ -2378,17 +2422,17 @@ mod tests {
                 visibility::visible_tiles(&s, s.team_of(PlayerId(0)))
                     .get(s.map.index(hex(5, 3)).unwrap())
             );
-            let hp = s.units[&soldier].hp;
+            let hp = s.units[&spearman].hp;
             let mut events = Vec::new();
             resolve_ranged(&mut s, &[], &mut events);
             assert!(
-                s.units[&soldier].hp < hp,
+                s.units[&spearman].hp < hp,
                 "{blocker:?} must not block city fire"
             );
             assert!(events.iter().any(|e| matches!(e, Event::Battle {
                 attacker: Attacker::City { city: firing },
                 defender: Defender::Unit { unit: target, .. }, ..
-            } if *firing == city && *target == soldier)));
+            } if *firing == city && *target == spearman)));
         }
     }
 
@@ -2396,29 +2440,29 @@ mod tests {
     fn a_city_at_zero_hp_does_not_fire_but_one_hp_does() {
         let mut s = game(&[0, 1]);
         let c = walled_city(&mut s, 0, hex(3, 3), 2);
-        let soldier = unit(&mut s, 1, UnitKind::Soldier, hex(4, 3));
+        let spearman = unit(&mut s, 1, UnitKind::Spearman, hex(4, 3));
         s.cities.get_mut(&c).unwrap().hp = 0;
         let mut events = Vec::new();
         resolve_ranged(&mut s, &[], &mut events);
         assert!(events.is_empty());
-        assert_eq!(s.units[&soldier].hp, 100);
+        assert_eq!(s.units[&spearman].hp, 100);
         s.cities.get_mut(&c).unwrap().hp = 1;
         resolve_ranged(&mut s, &[], &mut events);
         assert_eq!(events.len(), 1);
-        assert!(s.units[&soldier].hp < 100);
+        assert!(s.units[&spearman].hp < 100);
     }
 
     #[test]
-    fn only_walled_cities_fire_with_citadel_and_customs_bastion_counting() {
+    fn only_walled_cities_fire_with_citadel_and_alpine_redoubt_counting() {
         // Civ 6: an unwalled city relies on its garrison and HP; Walls (any tier) let it fire.
         let mut s = game(&[0, 1]);
         s.players[0].faction = Faction::India;
         let c = city(&mut s, 0, hex(3, 3), 2);
-        let soldier = unit(&mut s, 1, UnitKind::Soldier, hex(4, 3));
+        let spearman = unit(&mut s, 1, UnitKind::Spearman, hex(4, 3));
         let mut events = Vec::new();
         resolve_ranged(&mut s, &[], &mut events);
         assert!(events.is_empty(), "an unwalled city cannot fire");
-        assert_eq!(s.units[&soldier].hp, 100);
+        assert_eq!(s.units[&spearman].hp, 100);
         for (faction, walls) in [
             (Faction::India, BuildingKind::Walls),
             (Faction::India, BuildingKind::Castle),
@@ -2430,7 +2474,7 @@ mod tests {
             let mut events = Vec::new();
             resolve_ranged(&mut t, &[], &mut events);
             assert_eq!(events.len(), 1, "{faction:?} {walls:?} fires");
-            assert!(t.units[&soldier].hp < 100);
+            assert!(t.units[&spearman].hp < 100);
         }
     }
 
@@ -2439,7 +2483,7 @@ mod tests {
         let mut s = game(&[0, 1]);
         let c = city(&mut s, 0, hex(3, 3), 2);
         city(&mut s, 1, hex(9, 7), 2);
-        let ranger = unit(&mut s, 1, UnitKind::Ranger, hex(5, 3));
+        let ranger = unit(&mut s, 1, UnitKind::Archer, hex(5, 3));
         s.cities.get_mut(&c).unwrap().hp = 100;
         let (mut next, events) = crate::resolve_turn(
             &s,
@@ -2461,7 +2505,7 @@ mod tests {
             })
             .unwrap();
         assert!(damage > 0);
-        // Damaged this turn: no heal at the end of it, even though the Ranger is two tiles off.
+        // Damaged this turn: no heal at the end of it, even though the Archer is two tiles off.
         assert_eq!(next.cities[&c].hp, 100 - damage);
         assert_eq!(next.cities[&c].last_attacked_turn, Some(1));
         next = serde_json::from_str(&serde_json::to_string(&next).unwrap()).unwrap();
@@ -2488,8 +2532,8 @@ mod tests {
     #[test]
     fn ranged_attacks_are_simultaneous_and_unanswered() {
         let mut s = game(&[0, 1]);
-        let a = unit(&mut s, 0, UnitKind::Ranger, hex(3, 3));
-        let b = unit(&mut s, 1, UnitKind::Ranger, hex(5, 3));
+        let a = unit(&mut s, 0, UnitKind::Archer, hex(3, 3));
+        let b = unit(&mut s, 1, UnitKind::Archer, hex(5, 3));
         let mut os = orders(
             0,
             vec![Order::RangedAttack {
@@ -2543,7 +2587,7 @@ mod tests {
     #[test]
     fn ranged_attack_on_empty_tile_fails_at_resolution() {
         let mut s = game(&[0, 1]);
-        let a = unit(&mut s, 0, UnitKind::Ranger, hex(3, 3));
+        let a = unit(&mut s, 0, UnitKind::Archer, hex(3, 3));
         let os = orders(
             0,
             vec![Order::RangedAttack {
@@ -2575,9 +2619,9 @@ mod tests {
     fn ranged_fire_at_a_city_with_hp_hits_the_city_and_spares_its_garrison() {
         // The city absorbs a shot within its HP; only damage past 0 HP reaches the garrison.
         let mut s = game(&[0, 1]);
-        let a = unit(&mut s, 0, UnitKind::Ranger, hex(3, 3));
+        let a = unit(&mut s, 0, UnitKind::Archer, hex(3, 3));
         let c = city(&mut s, 1, hex(5, 3), 2);
-        let g = unit(&mut s, 1, UnitKind::Soldier, hex(5, 3));
+        let g = unit(&mut s, 1, UnitKind::Spearman, hex(5, 3));
         let (next, events) = shoot(&s, &[a], hex(5, 3));
         assert_eq!(next.units[&g].hp, 100);
         assert!(next.cities[&c].hp < data::CITY_HP);
@@ -2585,7 +2629,7 @@ mod tests {
         assert_eq!(
             next.cities[&c].hp,
             data::CITY_HP - fight.damage_to_defender,
-            "the city's defense (not the Soldier's) decides the damage"
+            "the city's defense (not the Spearman's) decides the damage"
         );
         assert!(events.iter().any(|e| matches!(e,
             Event::Battle { defender: Defender::City { city, .. }, .. } if *city == c)));
@@ -2608,10 +2652,10 @@ mod tests {
         let mut s = game(&[0, 1]);
         let shooters: Vec<_> = [hex(3, 3), hex(4, 3), hex(6, 3)]
             .into_iter()
-            .map(|h| unit(&mut s, 0, UnitKind::Ranger, h))
+            .map(|h| unit(&mut s, 0, UnitKind::Archer, h))
             .collect();
         let c = city(&mut s, 1, hex(5, 3), 2);
-        let g = unit(&mut s, 1, UnitKind::Soldier, hex(5, 3));
+        let g = unit(&mut s, 1, UnitKind::Spearman, hex(5, 3));
         s.cities.get_mut(&c).unwrap().hp = 10;
         let (next, events) = shoot(&s, &shooters, hex(5, 3));
         assert_eq!(next.cities[&c].hp, 0);
@@ -2635,9 +2679,9 @@ mod tests {
     #[test]
     fn partial_ranged_overflow_wounds_garrison_without_capture_or_melee() {
         let mut s = game(&[0, 1]);
-        let a = unit(&mut s, 0, UnitKind::Ranger, hex(3, 3));
+        let a = unit(&mut s, 0, UnitKind::Archer, hex(3, 3));
         let c = city(&mut s, 1, hex(5, 3), 2);
-        let g = unit(&mut s, 1, UnitKind::Soldier, hex(5, 3));
+        let g = unit(&mut s, 1, UnitKind::Spearman, hex(5, 3));
         s.cities.get_mut(&c).unwrap().hp = 1;
         let (next, events) = shoot(&s, &[a], hex(5, 3));
         assert_eq!(next.cities[&c].hp, 0);
@@ -2653,10 +2697,10 @@ mod tests {
     #[test]
     fn melee_counterattack_is_split_once_with_remainder_to_strongest() {
         let mut s = game(&[0, 1]);
-        let defender = unit(&mut s, 1, UnitKind::Soldier, hex(5, 5));
+        let defender = unit(&mut s, 1, UnitKind::Spearman, hex(5, 5));
         let attackers: Vec<_> = [hex(4, 5), hex(5, 4), hex(6, 5)]
             .into_iter()
-            .map(|p| unit(&mut s, 0, UnitKind::Soldier, p))
+            .map(|p| unit(&mut s, 0, UnitKind::Spearman, p))
             .collect();
         let mut fights: Vec<_> = attackers
             .iter()
@@ -2676,10 +2720,10 @@ mod tests {
         assert_eq!(s.units[&defender].hp, 97);
 
         let mut s = game(&[0, 1]);
-        let defender = unit(&mut s, 1, UnitKind::Soldier, hex(5, 5));
+        let defender = unit(&mut s, 1, UnitKind::Spearman, hex(5, 5));
         let attackers: Vec<_> = [hex(4, 5), hex(5, 4), hex(6, 5)]
             .into_iter()
-            .map(|p| unit(&mut s, 0, UnitKind::Soldier, p))
+            .map(|p| unit(&mut s, 0, UnitKind::Spearman, p))
             .collect();
         let mut fights: Vec<_> = attackers
             .iter()
@@ -2714,8 +2758,8 @@ mod tests {
     fn city_counterattack_splits_and_single_attacker_is_unchanged() {
         let mut s = game(&[0, 1]);
         let city = city(&mut s, 1, hex(5, 5), 2);
-        let a = unit(&mut s, 0, UnitKind::Soldier, hex(4, 5));
-        let b = unit(&mut s, 0, UnitKind::Soldier, hex(5, 4));
+        let a = unit(&mut s, 0, UnitKind::Spearman, hex(4, 5));
+        let b = unit(&mut s, 0, UnitKind::Spearman, hex(5, 4));
         let mut fights = vec![
             plan_fight(&s, 1, a, Target::City(city), FightKind::Melee),
             plan_fight(&s, 1, b, Target::City(city), FightKind::Melee),
@@ -2729,8 +2773,8 @@ mod tests {
         // Equal strength: the lower id is the "strongest" and takes the remainder (10 + 1).
         assert_eq!((s.units[&a].hp, s.units[&b].hp), (89, 90));
         let mut s = game(&[0, 1]);
-        let d = unit(&mut s, 1, UnitKind::Soldier, hex(5, 5));
-        let a = unit(&mut s, 0, UnitKind::Soldier, hex(4, 5));
+        let d = unit(&mut s, 1, UnitKind::Spearman, hex(5, 5));
+        let a = unit(&mut s, 0, UnitKind::Spearman, hex(4, 5));
         let mut fight = plan_fight(&s, 1, a, Target::Unit(d), FightKind::Melee);
         fight.damage_to_attacker = 21;
         apply_fights(&mut s, &[fight], &mut Vec::new());
@@ -2740,12 +2784,12 @@ mod tests {
     #[test]
     fn ranged_attackers_neither_share_nor_dilute_the_counterattack() {
         let mut s = game(&[0, 1]);
-        let d = unit(&mut s, 1, UnitKind::Soldier, hex(5, 5));
+        let d = unit(&mut s, 1, UnitKind::Spearman, hex(5, 5));
         let melee: Vec<_> = [hex(4, 5), hex(5, 4), hex(6, 5)]
             .into_iter()
-            .map(|p| unit(&mut s, 0, UnitKind::Soldier, p))
+            .map(|p| unit(&mut s, 0, UnitKind::Spearman, p))
             .collect();
-        let archer = unit(&mut s, 0, UnitKind::Ranger, hex(3, 5));
+        let archer = unit(&mut s, 0, UnitKind::Archer, hex(3, 5));
         let mut fights: Vec<_> = melee
             .iter()
             .map(|&a| plan_fight(&s, 1, a, Target::Unit(d), FightKind::Melee))
@@ -2766,18 +2810,18 @@ mod tests {
         assert_eq!(s.units[&archer].hp, 100);
     }
 
-    /// The user's game (2026-10-04): three Oathbearers attacked one nearly dead Soldier in the
-    /// same movement round, and each took the Soldier's full counterattack. Now they share one,
-    /// and the Soldier is destroyed once.
+    /// The user's game (2026-10-04): three Spartan Hoplites attacked one nearly dead Spearman in the
+    /// same movement round, and each took the Spearman's full counterattack. Now they share one,
+    /// and the Spearman is destroyed once.
     #[test]
-    fn three_oathbearers_share_a_dying_soldiers_one_counterattack() {
+    fn three_spartan_hoplites_share_a_dying_spearmans_one_counterattack() {
         let mut s = game(&[0, 1]);
         s.player_mut(PlayerId(0)).faction = Faction::Sparta;
-        let d = unit(&mut s, 1, UnitKind::Soldier, hex(5, 5));
+        let d = unit(&mut s, 1, UnitKind::Spearman, hex(5, 5));
         s.units.get_mut(&d).unwrap().hp = 6;
         let attackers: Vec<_> = [hex(4, 5), hex(5, 4), hex(6, 5)]
             .into_iter()
-            .map(|p| unit(&mut s, 0, UnitKind::Soldier, p))
+            .map(|p| unit(&mut s, 0, UnitKind::Spearman, p))
             .collect();
         let planned: Vec<_> = attackers
             .iter()
@@ -2847,10 +2891,10 @@ mod tests {
         let mut s = game(&[0, 1]);
         let shooters: Vec<_> = [hex(3, 3), hex(4, 3), hex(6, 3)]
             .into_iter()
-            .map(|h| unit(&mut s, 0, UnitKind::Ranger, h))
+            .map(|h| unit(&mut s, 0, UnitKind::Archer, h))
             .collect();
         let c = city(&mut s, 1, hex(5, 3), 2);
-        let g = unit(&mut s, 1, UnitKind::Soldier, hex(5, 3));
+        let g = unit(&mut s, 1, UnitKind::Spearman, hex(5, 3));
         s.cities.get_mut(&c).unwrap().hp = 5;
         s.units.get_mut(&g).unwrap().hp = 5;
         let (next, events) = shoot(&s, &shooters, hex(5, 3));
@@ -2872,12 +2916,12 @@ mod tests {
     fn combined_melee_assault_captures_after_overflow_kills_garrison() {
         let mut s = game(&[0, 1]);
         let c = city(&mut s, 1, hex(5, 5), 2);
-        let g = unit(&mut s, 1, UnitKind::Soldier, hex(5, 5));
+        let g = unit(&mut s, 1, UnitKind::Spearman, hex(5, 5));
         s.cities.get_mut(&c).unwrap().hp = 1;
         s.units.get_mut(&g).unwrap().hp = 1;
         let attackers: Vec<_> = [hex(4, 5), hex(5, 4), hex(6, 5)]
             .into_iter()
-            .map(|p| unit(&mut s, 0, UnitKind::Soldier, p))
+            .map(|p| unit(&mut s, 0, UnitKind::Spearman, p))
             .collect();
         for &a in &attackers {
             goto(&mut s, a, hex(5, 5));
@@ -3369,7 +3413,7 @@ mod tests {
         let mut s = game(&[0, 1]);
         s.setup.rule_experiments = off(FactionRule::SpartaKillHeal);
         s.player_mut(PlayerId(0)).faction = Faction::Sparta;
-        let attacker = unit(&mut s, 0, UnitKind::Soldier, hex(3, 3));
+        let attacker = unit(&mut s, 0, UnitKind::Spearman, hex(3, 3));
         let victim = unit(&mut s, 1, UnitKind::Scout, hex(4, 3));
         s.units.get_mut(&attacker).unwrap().hp = 1;
         s.units.get_mut(&victim).unwrap().hp = 10;
@@ -3386,7 +3430,7 @@ mod tests {
         s.player_mut(PlayerId(1)).faction = Faction::India;
         let city_id = city(&mut s, 1, hex(5, 5), 3);
         city(&mut s, 1, hex(9, 5), 3);
-        let near = unit(&mut s, 0, UnitKind::Soldier, hex(4, 5));
+        let near = unit(&mut s, 0, UnitKind::Spearman, hex(4, 5));
         s.units.get_mut(&near).unwrap().hp = 20;
         let mut events = Vec::new();
         capture_city(&mut s, city_id, PlayerId(0), &mut events);
@@ -3404,8 +3448,8 @@ mod tests {
         s.setup.rule_experiments = off(FactionRule::AztecsFlowerWars);
         s.player_mut(PlayerId(0)).faction = Faction::Aztecs;
         let near = city(&mut s, 0, hex(2, 3), 1);
-        let a = unit(&mut s, 0, UnitKind::Soldier, hex(3, 3));
-        let victim = unit(&mut s, 1, UnitKind::Soldier, hex(4, 3));
+        let a = unit(&mut s, 0, UnitKind::Spearman, hex(3, 3));
+        let victim = unit(&mut s, 1, UnitKind::Spearman, hex(4, 3));
         let fights = [forced_hit(&s, a, victim, 100, 0)];
         let mut events = vec![];
         apply_fights(&mut s, &fights, &mut events);

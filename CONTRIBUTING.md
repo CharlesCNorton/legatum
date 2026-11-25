@@ -14,7 +14,7 @@ have in mind.
 - [ARCHITECTURE.md](ARCHITECTURE.md): the crates, the turn pipeline and the determinism rules.
 - [The rules reference](.claude/skills/legatum-rules/references/index.md) (one file per system): how the game works and
   which systems do not exist. It is the engineering reference: long, dated and checked against the code.
-  The in-app Guide is the short version.
+  How to Play in the app is the short version.
 - [docs/README.md](docs/README.md): an index of everything else.
 
 Much of this project is written by AI coding agents. `CLAUDE.md`, `AGENTS.md` and `.claude/` are their
@@ -49,6 +49,17 @@ scripts/build-web.sh                            # the hosted web build, as deplo
 Releases (the web deploy, the secrets it needs) are described in
 [docs/ops/releasing.md](docs/ops/releasing.md).
 
+### Art masters (only if you change art)
+
+The full-size art masters are not in git; a build and the tests never need them. To work on a unit source, a people painting or the title key art, fetch it by path:
+
+```sh
+export LEGATUM_ART_SOURCES_URL=https://pub-fb5c281dd12d4ea4bbd38d657cdeb907.r2.dev
+python3 tools/art/fetch-sources.py app/src/assets/art/people-athens.png
+```
+
+`tools/art/sources-manifest.json` lists every master with its size and sha256. The `docs/design` and `docs/playtests` entries are kept in a private archive, so `--all` reports those as missing.
+
 ## Test
 
 ### Quick checks
@@ -80,7 +91,11 @@ scripts/build-wasm.sh && cd app && npm ci && npx playwright install chromium && 
 `cargo test --workspace --release --lib --bins --tests` runs the same tests without building them.
 
 These are the commands CI runs (`.github/workflows/ci.yml`). Browser end-to-end tests (Playwright) are
-described in [app/README.md](app/README.md#browser-end-to-end-tests); CI does not run them.
+described in [app/README.md](app/README.md#browser-end-to-end-tests). CI runs a smoke subset on every pull request (the `e2e-smoke` job); the full suite runs nightly on `master`.
+
+Positions in `scenarios/` are AI measurement fixtures, including the stable `scenarios/lab/` cuts from
+recorded games. They are not a player menu. See [scenarios/README.md](scenarios/README.md) for cutting,
+checking and measuring a position.
 
 ## What a pull request needs
 
@@ -96,7 +111,7 @@ lacking them. They may lead to follow-up commits or requests.
 - Describe what changed for a player and what you ran. Include screenshots for UI changes (at 1000x600 and
   1440x900, the sizes the layout is tuned for).
 - If the change makes a line in `README.md`, `CONTRIBUTING.md`, `ARCHITECTURE.md`, `docs/README.md` or the
-  in-app Guide untrue, fix that line in the same pull request.
+  in-app How to Play untrue, fix that line in the same pull request.
 - Art and audio: add the prompt or source and its licence next to the file (see `LICENSE-ART` and
   `app/public/audio/CREDITS.md`). Third-party assets need a licence that allows redistribution.
 
@@ -114,14 +129,16 @@ lacking them. They may lead to follow-up commits or requests.
 4. **Saves carry a rules version.** Any change to the rules or to the serialized state bumps
    `legatum_core::RULES_VERSION` (`crates/core/src/lib.rs`). A save from another version is refused with
    a clear message; there are no migrations. The hosted site keeps each earlier build for 30 days at
-   `v/<id>/` (`docs/ops/releasing.md`), so a game opens in the build with its rules. Current-version fixtures in
+   `v/<id>/` (`docs/ops/releasing.md`), so a game opens in the build with its rules. The one exception to the
+   bump is optional client telemetry in the archive (`frame_times`, `turn_times`): a default-empty field that no
+   state hash reads and that old saves lack can be added without a bump. Current-version fixtures in
    `crates/wasm/tests/fixtures/saves/` guard the round trip.
 5. **No hidden maths, no AI bonuses.** A number shown to a player should open into a breakdown. An AI
    seat at Easy, Normal or Hard plans from its own `PlayerView` and plays under the same rules as a
    human: a level may change how it decides, never its yields, costs, combat strength or sight.
 6. **Delete, don't comment out.** Remove dead code and old experiments; git has the history.
 7. **Rules docs follow code.** If you change a rule or mechanic, update the matching file under `.claude/skills/legatum-rules/references/` (`index.md` lists them) in the same change.
-8. **Branches cut before the 2026-11-22 split.** If your branch conflicts on `docs/learnings.md` or `.claude/skills/legatum-rules/references/game-rules.md`, take master's version of that file (`git checkout origin/master -- <file>`), then either re-add your entry by hand (a learning goes at the top of the current month's `docs/learnings/<YYYY-MM>.md`; a rule goes in the matching per-system file) or carry your learnings over with `python3 tools/docs/split_learnings.py <your branch> --base $(git merge-base origin/master <your branch>) --write`. The hygiene gate fails while `docs/learnings.md` is over 30 KB or the `game-rules.md` stub over 5 KB.
+8. **Branches cut before the 2026-11-22 split.** If your branch conflicts on `docs/learnings.md` or `.claude/skills/legatum-rules/references/game-rules.md`, take master's version of that file (`git checkout origin/master -- <file>`), then either re-add your entry by hand (a learning goes in its own new file, `docs/learnings/<YYYY-MM>/<DD>-<slug>.md`; a rule goes in the matching per-system file) or carry your learnings over with `python3 tools/docs/split_learnings.py <your branch> --base $(git merge-base origin/master <your branch>) --write`. The hygiene gate fails while `docs/learnings.md` is over 30 KB or the `game-rules.md` stub over 5 KB.
 
 ## Licence of contributions
 

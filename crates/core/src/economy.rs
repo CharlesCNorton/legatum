@@ -361,8 +361,9 @@ fn yields_for_item<const FULL: bool>(
                     data::building_name_for(owner.faction, building)
                 }
                 ProductionItem::Project { project } => match project {
-                    IndustryProject::Gold => "Industry: Gold",
-                    IndustryProject::Science => "Industry: Science",
+                    IndustryProject::Gold => "Gold project",
+                    IndustryProject::Science => "Science project",
+                    IndustryProject::Food => "Food project",
                     IndustryProject::Grow => "Grow",
                 },
                 ProductionItem::Improvement { improvement, .. } => {
@@ -386,40 +387,40 @@ fn yields_for_item<const FULL: bool>(
     if city.resistance > 0 {
         return y.y;
     }
-    if owner.faction == Faction::Germany
-        && !state
-            .setup
-            .rule_experiments
-            .rule_off(crate::experiments::FactionRule::GermanyIndustryProjects)
-    {
-        match item {
-            Some(ProductionItem::Project {
-                project: IndustryProject::Gold,
-            }) => y.add(
-                "Industry project: Gold (50% Production)",
-                Yields::new(
-                    0,
-                    0,
-                    y.y.total.production * data::GERMANY_GOLD_PROJECT_PERCENT / 100,
-                    0,
-                ),
-            ),
-            Some(ProductionItem::Project {
-                project: IndustryProject::Science,
-            }) => y.add(
-                "Industry project: Science (25% Production)",
-                Yields::new(
-                    0,
-                    0,
-                    0,
-                    y.y.total.production * data::GERMANY_SCIENCE_PROJECT_PERCENT / 100,
-                ),
-            ),
-            _ => {}
-        }
-    }
     if owner.faction == Faction::Egypt && state.setup.rule_experiments.egypt_nile() {
         nile(state, city, item, &mut y);
+    }
+    // A Gold or Science project turns part of the city's Production into Gold or Science; after the
+    // Nile, so an Egyptian city converts the build progress its surplus Food makes.
+    if let Some(ProductionItem::Project { project }) = item
+        && project != IndustryProject::Grow
+    {
+        let pct = state
+            .setup
+            .rule_experiments
+            .project_percent(owner.faction, project);
+        let made = y.y.total.production.max(0) * pct / 100;
+        // Egypt has no Production: its project converts the build progress its Food makes.
+        let from = if owner.faction == Faction::Egypt {
+            "build progress"
+        } else {
+            "Production"
+        };
+        match project {
+            IndustryProject::Gold => y.add(
+                || format!("Gold project ({pct}% of {from})"),
+                Yields::new(0, 0, made, 0),
+            ),
+            IndustryProject::Science => y.add(
+                || format!("Science project ({pct}% of {from})"),
+                Yields::new(0, 0, 0, made),
+            ),
+            IndustryProject::Food => y.add(
+                || format!("Food project ({pct}% of {from})"),
+                Yields::new(made, 0, 0, 0),
+            ),
+            IndustryProject::Grow => {}
+        }
     }
     let pct = crate::scoring::decadence_percent(state, city.owner);
     if pct > 0 {
@@ -453,6 +454,19 @@ fn yields_for_item<const FULL: bool>(
                 Yields::new(0, converted, 0, 0),
             ),
             ScienceConversion::Gold => {}
+        }
+    }
+    if owner.tomb_work {
+        // The royal tomb (Egypt, `goals::GoalRule::Tomb`): the city's Production and its Food
+        // beyond what its people eat are taken, so it neither builds nor grows. A Food
+        // deficit is left, so it still starves.
+        let surplus = (y.y.total.food - FOOD_PER_POP * city.population).max(0);
+        let production = y.y.total.production.max(0);
+        if surplus > 0 || production > 0 {
+            y.add(
+                "The Royal Tomb: this city works on it",
+                Yields::new(-surplus, -production, 0, 0),
+            );
         }
     }
     y.y
@@ -727,15 +741,15 @@ fn yields_base<const FULL: bool>(
         y.add("Machinery: Workshop", Yields::new(0, 1, 0, 0));
     }
     if knows(TechId::ReplaceableParts)
-        && data::has_building(&city.buildings, BuildingKind::Autoworks)
-        && crate::resources::idle_tier(owner, city.id, BuildingKind::Autoworks).is_none()
+        && data::has_building(&city.buildings, BuildingKind::Factory)
+        && crate::resources::idle_tier(owner, city.id, BuildingKind::Factory).is_none()
     {
         y.add("Replaceable Parts: Factory", Yields::new(0, 2, 0, 0));
     }
     if knows(TechId::PrintingPress) && data::has_building(&city.buildings, BuildingKind::Market) {
         y.add("Printing Press: Market", Yields::new(0, 0, 1, 0));
     }
-    if data::has_building(&city.buildings, BuildingKind::Laboratory) {
+    if data::has_building(&city.buildings, BuildingKind::Library) {
         // Printing Press adds Science to the Library family.
         if knows(TechId::PrintingPress) {
             y.add("Printing Press", Yields::new(0, 0, 0, 1));
@@ -1285,7 +1299,7 @@ pub fn buy_percent(state: &GameState, owner: PlayerId) -> i32 {
 /// Items that can never be bought, only produced: the Heir, every Walls tier and world wonders.
 pub fn is_unbuyable(item: ProductionItem) -> bool {
     item == (ProductionItem::Unit {
-        unit: UnitKind::Heir,
+        unit: UnitKind::HeirToTheThrone,
     }) || matches!(item, ProductionItem::Building { building } if data::building_family(building) == BuildingKind::Walls)
         || data::is_great_work_item(item)
 }
@@ -1726,8 +1740,8 @@ fn building_check_at_era<R: Reason>(
             )
         }));
     }
-    if building == BuildingKind::CourierHall
-        && let Some(reason) = courier_hall_blocker(state, city)
+    if building == BuildingKind::YamRelayStation
+        && let Some(reason) = yam_relay_station_blocker(state, city)
     {
         return Some(R::word(|| reason));
     }
@@ -1775,12 +1789,12 @@ fn imperial_diwan_blocker(state: &GameState, city: &City) -> Option<String> {
     None
 }
 
-/// One Courier Hall per Mongols empire, rebuilt only once it no longer exists (a Celts capture
+/// One Yam Relay Station per Mongols empire, rebuilt only once it no longer exists (a Celts capture
 /// razed it): while it stands in another city, even one a rival captured, retake that city
 /// instead. An active or queued build in another city counts too.
-fn courier_hall_blocker(state: &GameState, city: &City) -> Option<String> {
+fn yam_relay_station_blocker(state: &GameState, city: &City) -> Option<String> {
     if let Some((tile, holder)) =
-        crate::landmarks::site(state, city.owner, BuildingKind::CourierHall)
+        crate::landmarks::site(state, city.owner, BuildingKind::YamRelayStation)
         && holder.is_none()
     {
         return Some(format!(
@@ -1802,9 +1816,9 @@ fn courier_hall_blocker(state: &GameState, city: &City) -> Option<String> {
         matches!(
             item,
             ProductionItem::Building {
-                building: BuildingKind::CourierHall
+                building: BuildingKind::YamRelayStation
             } | ProductionItem::Wonder {
-                building: BuildingKind::CourierHall,
+                building: BuildingKind::YamRelayStation,
                 ..
             }
         )
@@ -1922,7 +1936,7 @@ pub(crate) fn production_check_at_era<R: Reason>(
             )
         })),
         ProductionItem::Unit {
-            unit: UnitKind::Heir,
+            unit: UnitKind::HeirToTheThrone,
         } => heir_check(state, city),
         ProductionItem::Improvement { improvement, tile } => {
             crate::improvements::check(state, city, improvement, tile)
@@ -1988,7 +2002,7 @@ fn heir_check<R: Reason>(state: &GameState, city: &City) -> Option<R> {
         }));
     }
     let heir = ProductionItem::Unit {
-        unit: UnitKind::Heir,
+        unit: UnitKind::HeirToTheThrone,
     };
     let elsewhere = state.cities_of(city.owner).find(|other| {
         other.id != city.id
@@ -2138,7 +2152,7 @@ mod tests {
         let mut s = blank_game(&GameSetup::all_ai(1), Map::new(12, 12, Terrain::Grassland));
         let (id, tile) = owned_city(&mut s);
         let before = city_totals(&s, &s.cities[&id]);
-        crate::game::spawn_unit(&mut s, PlayerId::BARBARIAN, UnitKind::Soldier, tile);
+        crate::game::spawn_unit(&mut s, PlayerId::BARBARIAN, UnitKind::Spearman, tile);
         assert!(!worked_tiles(&s, &s.cities[&id]).contains(&tile));
         let after = city_totals(&s, &s.cities[&id]);
         assert!(after.food < before.food || after.production < before.production);

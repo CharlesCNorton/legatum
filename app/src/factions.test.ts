@@ -11,9 +11,9 @@ describe('faction content and setup', () => {
     expect(foundry).not.toContain('Food');
     expect(foundry).toContain('Upgrades a Workshop in a city of 4 or more');
     expect(foundry).toContain('Needs Iron');
-    const listeningHouse = itemDescription(FACTION_PIECES.Athens.item, 'Athens');
-    expect(listeningHouse).toContain('70 Production');
-    expect(listeningHouse).toContain('+6 Science');
+    const lyceum = itemDescription(FACTION_PIECES.Athens.item, 'Athens');
+    expect(lyceum).toContain('70 Production');
+    expect(lyceum).toContain('+6 Science');
     const revenueOffice = itemDescription(FACTION_PIECES.India.item, 'India');
     expect(revenueOffice).toContain('60 Production');
     expect(revenueOffice).toContain('+3 Gold');
@@ -21,7 +21,7 @@ describe('faction content and setup', () => {
     const legionary = itemDescription(FACTION_PIECES.Byzantium.item, 'Byzantium');
     expect(legionary).toContain('162 Production');
     expect(legionary).toContain('84 Gold');
-    expect(legionary).toContain('36 melee');
+    expect(legionary).toContain('36 strength');
   });
   it('has complete unique-piece, rule, goal, weakness and heraldry data for every stable ID', () => {
     expect(FACTIONS).toEqual(['Switzerland', 'India', 'Byzantium', 'Germany', 'Celts', 'Mongols', 'Sparta', 'Athens', 'Aztecs', 'Egypt', 'Rome']);
@@ -30,7 +30,7 @@ describe('faction content and setup', () => {
       for (const field of ['name', 'motto', 'ability', 'goal', 'weakness'] as const) expect(info[field].length).toBeGreaterThan(0);
       expect(info.rule).toContain(info.unique);
       expect(info.rule).toContain(info.weakness);
-      expect(info.goal).toContain((f === 'Egypt' || f === 'Rome') ? 'No faction goal yet' : f === 'Byzantium' ? `Whoever holds him scores ${factionGoalVp(f)} VP` : f === 'India' ? `Whoever holds its city scores ${factionGoalVp(f)} VP` : `+${factionGoalVp(f)} ${f === 'Switzerland' || f === 'Germany' || f === 'Celts' ? 'VP while held' : f === 'Mongols' ? 'VP while you hold the Yam Relay Station' : 'VP once, kept for good'}`);
+      expect(info.goal).toContain(f === 'Egypt' || f === 'Rome' ? `Whoever holds that city scores ${factionGoalVp(f)} VP` : f === 'Byzantium' ? `Whoever holds him scores ${factionGoalVp(f)} VP` : f === 'India' ? `Whoever holds its city scores ${factionGoalVp(f)} VP` : `+${factionGoalVp(f)} ${f === 'Switzerland' || f === 'Germany' || f === 'Celts' ? 'VP while held' : f === 'Mongols' ? 'VP while you hold the Yam Relay Station' : 'VP once, kept for good'}`);
       expect(factionDescription(f)).toContain(info.goal);
       const piece = FACTION_PIECES[f];
       if (piece) expect(itemName(piece.item, f)).toBe(piece.name);
@@ -43,7 +43,7 @@ describe('faction content and setup', () => {
     expect(new Set(FACTIONS.map((f) => FACTION_INFO[f].crest)).size).toBe(FACTIONS.length);
     expect(FACTION_INFO.Germany.name).toBe('Germany');
     expect(FACTION_INFO.Mongols.name).toBe('Mongols');
-    expect(FACTION_INFO.Rome.goal).toBe('No faction goal yet.');
+    expect(FACTION_INFO.Rome.goal).toMatch(/^Colonia Victrix: Found a city with a level 3 melee veteran within 2 tiles/);
     expect(FACTION_INFO.Rome.crest).toContain('crest-rome-512.png');
     expect(FACTION_INFO.Rome.glyph).toContain('glyph-rome.svg');
     expect(FACTION_INFO.Rome.weakness).toContain('cannot train or buy Settlers');
@@ -68,8 +68,8 @@ describe('faction content and setup', () => {
   });
   it('shows the simulation-adjusted strengths and the requested cost and movement limits', () => {
     expect(FACTION_INFO.Germany.unique).toContain('320 Production, +6 Production');
-    expect(FACTION_INFO.Germany.ability).toContain('Industry project instead of building');
-    expect(FACTION_INFO.Sparta.unique).toContain('20 melee');
+    expect(FACTION_INFO.Germany.ability).toContain('Your Gold and Science projects pay more');
+    expect(FACTION_INFO.Sparta.unique).toContain('20 strength');
     expect(FACTION_INFO.Sparta.ability).toContain('Spartan Veteran');
     expect(FACTION_INFO.Sparta.goal).toContain('+2 VP once, kept for good');
     expect(FACTION_INFO.Sparta.goal).toContain('retire them there');
@@ -93,10 +93,10 @@ describe('faction content and setup', () => {
     expect(FACTION_INFO.Switzerland.weakness).toContain('Military unit upkeep is triple: 3 Gold a turn instead of 1.');
     expect(FACTION_INFO.Celts.weakness).toContain("Celts can't keep cities they capture: they sack and burn them.");
     expect(FACTION_INFO.Celts.weakness).not.toContain('less strength');
-    expect(FACTION_INFO.Celts.ability).toContain('Barbarians never attack the Celts');
+    expect(FACTION_INFO.Celts.ability).toContain("Barbarians don't attack the Celts");
     expect(FACTION_INFO.Mongols.ability).toContain('at least 8 tiles from your capital');
     expect(FACTION_INFO.Mongols.ability).toContain('+2 Gold');
-    for (const building of ['Market', 'Clearinghouse'] as const) {
+    for (const building of ['Market', 'Bank'] as const) {
       const description = itemDescription({ kind: 'Building', building }, 'Mongols');
       expect(description).toContain('at least 8 tiles from your capital');
       expect(description).toContain('also earns +2 Gold');
@@ -108,48 +108,49 @@ describe('faction content and setup', () => {
     expect(itemDescription(FACTION_PIECES.Sparta.item, 'Sparta')).not.toContain('starts promoted');
     expect(FACTION_INFO.Mongols.ability).toContain('Settlers keep 2 moves');
     expect(FACTION_INFO.Mongols.weakness).toContain('buy no Siege before the Medieval era');
-    expect(FACTION_INFO.Mongols.weakness).toContain('raise no Walls, Castles or Star Forts');
+    expect(FACTION_INFO.Mongols.weakness).toContain('The Mongols never build Walls');
     expect(FACTION_INFO.Switzerland.ability).toContain('You buy buildings and units at 175% of their Production cost in Gold (others pay 200%).');
     expect(FACTION_INFO.Switzerland.weakness).toContain('Lose a city and its captor takes that city’s share of your treasury, by population (twice that for your capital).');
   });
 });
 
 describe('faction-accurate items', () => {
-  it('unlocks Mongol Walls and Siege from the Medieval era', async () => {
+  it('never gives the Mongols Walls, and unlocks their Siege from the Medieval era', async () => {
     const { availableToPlayer, factionUnavailableReason, isWorkshopLineBuilding, siegeAvailable } = await import('./data');
     const walls = { kind: 'Building', building: 'Walls' } as const;
     expect(siegeAvailable('Mongols', 1)).toBe(false);
     expect(siegeAvailable('Mongols', 2)).toBe(true);
     expect(siegeAvailable('Switzerland', 0)).toBe(true);
-    expect(availableToPlayer('Mongols', walls, 1)).toBe(false);
-    expect(factionUnavailableReason(walls, 'Mongols', 1)).toBe('The Mongols raise Walls from the Medieval era');
-    expect(availableToPlayer('Mongols', walls, 2)).toBe(true);
-    expect((['Workshop', 'MachineShop', 'Autoworks'] as const).every(isWorkshopLineBuilding)).toBe(true);
+    expect(availableToPlayer('Mongols', walls)).toBe(false);
+    expect(availableToPlayer('Mongols', { kind: 'Building', building: 'StarFort' })).toBe(false);
+    expect(factionUnavailableReason(walls, 'Mongols')).toBe('The Mongols never build Walls');
+    expect((['Workshop', 'Forge', 'Factory'] as const).every(isWorkshopLineBuilding)).toBe(true);
   });
 
   it('names and describes the Byzantium buildings as ordinary ones, with city Science', async () => {
     const { availableToFaction, buildingStatsFor } = await import('./data');
-    const lab = { kind: 'Building', building: 'Laboratory' } as const;
+    const lab = { kind: 'Building', building: 'Library' } as const;
     expect(itemName(lab, 'Byzantium')).toBe('Library');
     expect(itemName(lab, 'Athens')).toBe('Lyceum');
     expect(itemName(lab, 'India')).toBe('Library');
     expect(itemName({ kind: 'Building', building: 'Walls' }, 'Switzerland')).toBe('Alpine Redoubt');
-    expect(itemName({ kind: 'Unit', unit: 'Ranger' }, 'Celts')).toBe('Archer');
+    expect(itemName({ kind: 'Unit', unit: 'Archer' }, 'Celts')).toBe('Archer');
     expect(itemDescription(lab, 'Byzantium')).toBe(itemDescription(lab, 'India'));
-    expect(itemDescription({ kind: 'Building', building: 'College' }, 'Byzantium')).toBe('+4 Science. Upgrades your Library. Needs 5 population.');
-  expect(buildingStatsFor('Byzantium', 'Laboratory').yields.science).toBeGreaterThan(0);
-    expect(availableToFaction('India', { kind: 'Project', project: 'Gold' })).toBe(false);
+    expect(itemDescription({ kind: 'Building', building: 'University' }, 'Byzantium')).toBe('+4 Science. Upgrades your Library. Needs 5 population.');
+  expect(buildingStatsFor('Byzantium', 'Library').yields.science).toBeGreaterThan(0);
+    expect(availableToFaction('India', { kind: 'Project', project: 'Gold' })).toBe(true);
+    expect(availableToFaction('India', { kind: 'Project', project: 'Grow' })).toBe(false);
     expect(availableToFaction('Germany', { kind: 'Project', project: 'Science' })).toBe(true);
     expect(availableToFaction('Rome', { kind: 'Unit', unit: 'Settler' })).toBe(false);
     expect(itemDescription(FACTION_PIECES.Byzantium.item, 'Byzantium')).toContain('Tagmatic Soldier replaces Pikeman');
   });
 
-  it('gives the Byzantium a Library like everyone, and its Relay Uplink needs one', async () => {
+  it('gives the Byzantium a Library like everyone, and its Great Library needs one', async () => {
     const { availableToFaction, greatWorkRequirement } = await import('./data');
-    const library = { kind: 'Building', building: 'Laboratory' } as const;
+    const library = { kind: 'Building', building: 'Library' } as const;
     expect(availableToFaction('Byzantium', library)).toBe(true);
-    expect(greatWorkRequirement('RelayUplink')).toEqual(['Laboratory', 1]);
-    expect(greatWorkRequirement('PlanetaryFoundry')).toEqual(['Autoworks', 1]);
+    expect(greatWorkRequirement('GreatLibrary')).toEqual(['Library', 1]);
+    expect(greatWorkRequirement('RoyalArsenal')).toEqual(['Factory', 1]);
   });
 
   it('states the Byzantium Company rule from the generated numbers, in plain words', () => {

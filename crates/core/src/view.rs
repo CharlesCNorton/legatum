@@ -754,6 +754,9 @@ pub struct CityView {
     /// A chosen wonder tile under construction. Public at the city, including through fog.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub construction: Option<ConstructionView>,
+    /// The city is building Walls. Public at the city, including through fog, like a wonder site.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub walls_building: bool,
     /// Currently in sight (otherwise only identity and ownership are current).
     pub visible: bool,
     pub detail: Option<Shared<CityDetail>>,
@@ -807,6 +810,7 @@ impl CityView {
             occupation_lock: None,
             great_works: Vec::new(),
             construction: None,
+            walls_building: false,
             visible,
             detail: detail.map(Shared::from),
         }
@@ -858,6 +862,12 @@ pub struct PlayerPublic {
     /// Sakoku: the country is closed, with the turn ends it has been (public).
     #[serde(default)]
     pub sakoku_turns: Option<u32>,
+    /// This empire is building its royal tomb (public): none of its cities builds or grows.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub tomb_work: bool,
+    /// Turn ends of work this empire has put toward its royal tomb (public).
+    #[serde(default, skip_serializing_if = "crate::state::is_zero_u32")]
+    pub tomb_turns: u32,
     /// The rule this empire's goal follows (public; absent in views from before it existed:
     /// use [`PlayerPublic::rule`]).
     #[serde(default)]
@@ -1078,7 +1088,7 @@ pub struct VictoryHold {
     pub turns_needed: u32,
 }
 
-/// A standing Courier Hall: Mongols empire `of`'s, in `city`, held by `holder` (its owner).
+/// A standing Yam Relay Station: Mongols empire `of`'s, in `city`, held by `holder` (its owner).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CourierHallView {
     pub of: PlayerId,
@@ -1088,12 +1098,24 @@ pub struct CourierHallView {
     pub tile: Option<Hex>,
 }
 
-/// The Imperial Diwan's original India empire, current city and holder; public like the Yam Hall.
+/// The Imperial Diwan's original India empire, current city and holder; public like the Yam Relay Station.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ImperialDiwanView {
     pub of: PlayerId,
     pub holder: PlayerId,
     pub city: CityId,
+}
+
+/// A city that carries a faction goal's 2 VP for whoever holds it (Rome's Colonia Victrix,
+/// Egypt's royal tomb): the empire whose goal it is, the holder, and the city with its place and
+/// name. Public to every empire, in fog and on unexplored land too, like the Heir.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct GoalCityView {
+    pub of: PlayerId,
+    pub holder: PlayerId,
+    pub city: CityId,
+    pub at: Hex,
+    pub name: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -1103,6 +1125,10 @@ pub struct PlayerView {
         skip_serializing_if = "crate::experiments::RuleExperiments::is_default"
     )]
     pub rule_experiments: crate::experiments::RuleExperiments,
+    /// The game started with the AI-only teams allied in pairs (`GameSetup::ai_alliances`).
+    /// Public setup fact; omitted when false.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub ai_alliances: bool,
     pub diplomacy: Shared<crate::diplomacy::DiplomacyView>,
     pub turn: u32,
     pub turn_limit: Option<u32>,
@@ -1158,12 +1184,22 @@ pub struct PlayerView {
     /// The viewer's one-time actions and pending free technologies (`rules::actions`).
     #[serde(default)]
     pub actions: crate::rules::actions::ActionsView,
-    /// Every standing Courier Hall (public): who holds it and in which city. Its holder's land is
+    /// Every standing Yam Relay Station (public): who holds it and in which city. Its holder's land is
     /// open to every empire at Peace (`passage_allowed`).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub courier_halls: Vec<CourierHallView>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub imperial_diwans: Vec<ImperialDiwanView>,
+    /// Each Colonia Victrix on the map and who holds it. Public: rivals see the city is worth 2 VP.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub colonias: Vec<GoalCityView>,
+    /// Each royal tomb on the map and who holds it. Public: rivals see the city is worth 2 VP.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub royal_tombs: Vec<GoalCityView>,
+    /// Where each royal tomb under construction will stand (`goals::tomb_site`), for every
+    /// empire whose work is on. Public, like the work and its count: rivals see the city to watch.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub tomb_sites: Vec<GoalCityView>,
     /// Your team's aircraft, each in one city's hangar (`rules::air`); nobody else's are visible.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub aircraft: Vec<AircraftView>,
@@ -1282,7 +1318,7 @@ impl PlayerView {
 
     /// Mirrors `GameState::passage_allowed`: own team, War, an Alliance, land the mover's
     /// land of a
-    /// Courier Hall's holder (open to every empire).
+    /// Yam Relay Station's holder (open to every empire).
     pub fn passage_allowed(
         &self,
         player: PlayerId,
@@ -1475,6 +1511,7 @@ fn all_items() -> impl Iterator<Item = ProductionItem> {
             [
                 IndustryProject::Gold,
                 IndustryProject::Science,
+                IndustryProject::Food,
                 IndustryProject::Grow,
             ]
             .map(|project| ProductionItem::Project { project }),
@@ -1568,6 +1605,8 @@ pub fn public_view(state: &GameState) -> PublicView {
             cities: state.cities_of(p.id).count() as u32,
             faction_goal_done: p.faction_goal_done,
             sakoku_turns: p.sakoku_turns,
+            tomb_work: p.tomb_work,
+            tomb_turns: p.tomb_turns,
             goal_rule: Some(crate::goals::rule(state, p.id)),
             era: objectives::era_of(state, p.id),
             gold: if p.alive { p.gold } else { 0 },
@@ -1737,6 +1776,8 @@ pub(crate) fn order_check_view(state: &GameState, me: PlayerId) -> PlayerView {
                 cities: 0,
                 faction_goal_done: p.faction_goal_done,
                 sakoku_turns: p.sakoku_turns,
+                tomb_work: p.tomb_work,
+                tomb_turns: p.tomb_turns,
                 goal_rule: Some(crate::goals::rule(state, p.id)),
                 era: objectives::era_of(state, p.id),
                 gold: 0,
@@ -1776,7 +1817,7 @@ pub enum ViewDetail {
     ///   and tech unlocks (totals, worked tiles and focus are kept);
     /// - `UnlockCity`'s growth forecasts (`turns_to_six_after`, `turns_to_eight_after`,
     ///   `turns_to_eight_at_gate`), and its `yields_after` (`CityYields::empty`) and
-    ///   `food_surplus_after` (0) except for the Machine Shop and Autoworks, whose Production
+    ///   `food_surplus_after` (0) except for the Forge and Factory, whose Production
     ///   gain the AI prices;
     /// - `TechOption::income_change` and `TechEffects::growth`;
     /// - build options' `buy_quote` and `upkeep` previews, and `CityDetail::population_unlocks`;
@@ -1905,7 +1946,7 @@ pub fn player_view_cached(
                 || is_visible(u.pos)
                 || visibility::attack_revealed_to(state, team, u)
                 // The Heir's position is public to every empire, in fog too (user, 2026-10-22).
-                || u.kind == UnitKind::Heir
+                || u.kind == UnitKind::HeirToTheThrone
         })
         .map(|u| unit_view(state, me, u))
         .collect();
@@ -1983,6 +2024,12 @@ pub fn player_view_cached(
                 && state.players.iter().any(|r| {
                     r.alive && crate::rules::battle::greece_captive_available(state, c.id, r.id)
                 });
+            observed.walls_building = matches!(
+                c.producing,
+                Some(ProductionItem::Building {
+                    building: BuildingKind::Walls
+                })
+            );
             if let Some(ProductionItem::Wonder { building, tile }) = c.producing {
                 let cost = economy::city_production_cost(state, c, c.producing.unwrap()).max(1);
                 let progress = ((c.production_stored.max(0) as i64 * 1000) / cost as i64)
@@ -2013,6 +2060,7 @@ pub fn player_view_cached(
     let (Some(income), Some(forecasts)) = (income, forecasts) else {
         return PlayerView {
             rule_experiments: state.setup.rule_experiments,
+            ai_alliances: !state.setup.ai_alliance_pairs().is_empty(),
             diplomacy: crate::diplomacy::view(state, me).into(),
             turn: state.turn,
             turn_limit: state.setup.turn_limit,
@@ -2040,6 +2088,9 @@ pub fn player_view_cached(
             actions: Default::default(),
             courier_halls: crate::goals::courier_halls(state),
             imperial_diwans: crate::goals::imperial_diwans(state),
+            colonias: crate::goals::colonias(state),
+            royal_tombs: crate::goals::royal_tombs(state),
+            tomb_sites: crate::goals::tomb_sites(state),
             aircraft: aircraft_views(state, team),
             air_sightings: Vec::new(),
             air_contacts: Vec::new(),
@@ -2151,6 +2202,7 @@ pub fn player_view_cached(
 
     PlayerView {
         rule_experiments: state.setup.rule_experiments,
+        ai_alliances: !state.setup.ai_alliance_pairs().is_empty(),
         diplomacy: crate::diplomacy::view(state, me).into(),
         turn: state.turn,
         turn_limit: state.setup.turn_limit,
@@ -2194,6 +2246,9 @@ pub fn player_view_cached(
         actions: crate::rules::actions::view(state, me),
         courier_halls: crate::goals::courier_halls(state),
         imperial_diwans: crate::goals::imperial_diwans(state),
+        colonias: crate::goals::colonias(state),
+        royal_tombs: crate::goals::royal_tombs(state),
+        tomb_sites: crate::goals::tomb_sites(state),
         aircraft: aircraft_views(state, team),
         air_sightings: state
             .aircraft
@@ -2818,8 +2873,8 @@ pub(crate) mod tests {
     #[test]
     fn fog_hides_enemy_units_outside_sight() {
         let mut s = test_state(24, 16);
-        let mine = spawn_unit(&mut s, P0, UnitKind::Soldier, at(2, 2));
-        let near = spawn_unit(&mut s, P2, UnitKind::Soldier, at(4, 2));
+        let mine = spawn_unit(&mut s, P0, UnitKind::Spearman, at(2, 2));
+        let near = spawn_unit(&mut s, P2, UnitKind::Spearman, at(4, 2));
         let far = spawn_unit(&mut s, P2, UnitKind::Scout, at(18, 10));
         s.units.get_mut(&near).unwrap().goto = Some(at(0, 0));
         s.units.get_mut(&mine).unwrap().goto = Some(at(5, 5));
@@ -2843,10 +2898,10 @@ pub(crate) mod tests {
     #[test]
     fn teammates_share_vision_and_see_each_others_units() {
         let mut s = test_state(24, 16);
-        let a = spawn_unit(&mut s, P0, UnitKind::Soldier, at(2, 2));
+        let a = spawn_unit(&mut s, P0, UnitKind::Spearman, at(2, 2));
         let b = spawn_unit(&mut s, P1, UnitKind::Scout, at(18, 10));
         s.units.get_mut(&b).unwrap().goto = Some(at(20, 10));
-        let enemy = spawn_unit(&mut s, P2, UnitKind::Soldier, at(19, 10));
+        let enemy = spawn_unit(&mut s, P2, UnitKind::Spearman, at(19, 10));
         visibility::update_explored(&mut s);
 
         let v = player_view(&s, P0);
@@ -2995,7 +3050,7 @@ pub(crate) mod tests {
         let remembered = city(&player_view(&s, P0), id).unwrap().clone();
         s.units.get_mut(&scout).unwrap().pos = at(20, 12);
         crate::rules::battle::capture_city(&mut s, id, P3, &mut Vec::new());
-        let hidden_guard = spawn_unit(&mut s, P3, UnitKind::Soldier, site);
+        let hidden_guard = spawn_unit(&mut s, P3, UnitKind::Spearman, site);
         let c = s.cities.get_mut(&id).unwrap();
         c.name = "Changed unseen".into();
         c.hp = 17;
@@ -3126,7 +3181,7 @@ pub(crate) mod tests {
         let hidden = add_city(&mut s, P3, at(20, 12), 3);
         for id in [rival, hidden] {
             let buildings = &mut s.cities.get_mut(&id).unwrap().buildings;
-            buildings.insert(BuildingKind::RelayUplink);
+            buildings.insert(BuildingKind::GreatLibrary);
             buildings.insert(BuildingKind::Granary);
         }
         let scout = spawn_unit(&mut s, P0, UnitKind::Scout, at(4, 5));
@@ -3135,7 +3190,7 @@ pub(crate) mod tests {
         let v = player_view(&s, P0);
         let seen = city(&v, rival).unwrap();
         assert!(seen.visible);
-        assert_eq!(seen.great_works, vec![BuildingKind::RelayUplink]);
+        assert_eq!(seen.great_works, vec![BuildingKind::GreatLibrary]);
         assert!(seen.detail.is_none(), "rival buildings stay private");
         assert!(city(&v, hidden).is_none(), "unexplored city stays hidden");
 
@@ -3144,14 +3199,14 @@ pub(crate) mod tests {
             .get_mut(&rival)
             .unwrap()
             .buildings
-            .insert(BuildingKind::WorldExchange);
+            .insert(BuildingKind::GrandBazaar);
         visibility::update_explored(&mut s);
         let v = player_view(&s, P0);
         let fogged = city(&v, rival).unwrap();
         assert!(!fogged.visible);
         assert_eq!(
             fogged.great_works,
-            vec![BuildingKind::RelayUplink, BuildingKind::WorldExchange]
+            vec![BuildingKind::GreatLibrary, BuildingKind::GrandBazaar]
         );
         assert!(fogged.detail.is_none());
     }
@@ -3216,7 +3271,7 @@ pub(crate) mod tests {
         let site = at(6, 5);
         let c = s.cities.get_mut(&rival).unwrap();
         c.producing = Some(ProductionItem::Wonder {
-            building: BuildingKind::RelayUplink,
+            building: BuildingKind::GreatLibrary,
             tile: site,
         });
         c.production_stored = 240;
@@ -3226,7 +3281,7 @@ pub(crate) mod tests {
         let progress = city(&first, rival).unwrap().construction.unwrap();
         assert_eq!(
             (progress.building, progress.tile),
-            (BuildingKind::RelayUplink, site)
+            (BuildingKind::GreatLibrary, site)
         );
         assert!(progress.progress > 0);
         s.units.get_mut(&scout).unwrap().pos = at(20, 12);
@@ -3238,9 +3293,27 @@ pub(crate) mod tests {
     }
 
     #[test]
+    fn rival_walls_under_construction_are_public_even_in_fog() {
+        let mut s = test_state(24, 16);
+        let rival = add_city(&mut s, P2, at(5, 5), 3);
+        let scout = spawn_unit(&mut s, P0, UnitKind::Scout, at(4, 5));
+        visibility::update_explored(&mut s);
+        assert!(!city(&player_view(&s, P0), rival).unwrap().walls_building);
+        s.cities.get_mut(&rival).unwrap().producing = Some(ProductionItem::Building {
+            building: BuildingKind::Walls,
+        });
+        assert!(city(&player_view(&s, P0), rival).unwrap().walls_building);
+        s.units.get_mut(&scout).unwrap().pos = at(20, 12);
+        visibility::update_explored(&mut s);
+        let fogged = city(&player_view(&s, P0), rival).unwrap().clone();
+        assert!(!fogged.visible);
+        assert!(fogged.walls_building);
+    }
+
+    #[test]
     fn production_option_turns_include_only_unassigned_or_own_banked_production() {
-        let soldier = ProductionItem::Unit {
-            unit: UnitKind::Soldier,
+        let spearman = ProductionItem::Unit {
+            unit: UnitKind::Spearman,
         };
         let granary = ProductionItem::Building {
             building: BuildingKind::Granary,
@@ -3252,14 +3325,14 @@ pub(crate) mod tests {
             c.production_stored = 30;
             c.producing = producing;
             if producing.is_some() {
-                // The Monument owns its 30; give the Soldier its own banked 30 instead.
+                // The Monument owns its 30; give the Spearman its own banked 30 instead.
                 c.production_stored = 0;
-                c.bank(soldier, 30);
+                c.bank(spearman, 30);
             }
             let v = player_view(&s, P0);
             let detail = city(&v, id).unwrap().detail.as_ref().unwrap();
-            let option = detail.options.iter().find(|o| o.item == soldier).unwrap();
-            // Soldier 80, 30 stored, 5 a turn.
+            let option = detail.options.iter().find(|o| o.item == spearman).unwrap();
+            // Spearman 80, 30 stored, 5 a turn.
             assert_eq!(option.turns, 10);
             assert_eq!(option.production_stored, 30);
             assert_eq!(
@@ -3271,7 +3344,7 @@ pub(crate) mod tests {
                 P0,
                 &[crate::Order::SetProduction {
                     city: id,
-                    item: soldier,
+                    item: spearman,
                 }],
                 &mut Vec::new(),
             );
@@ -3335,8 +3408,8 @@ pub(crate) mod tests {
 
     #[test]
     fn production_option_quotes_match_switch_validation_and_actual_spending() {
-        let soldier = ProductionItem::Unit {
-            unit: UnitKind::Soldier,
+        let spearman = ProductionItem::Unit {
+            unit: UnitKind::Spearman,
         };
         let granary = ProductionItem::Building {
             building: BuildingKind::Granary,
@@ -3358,9 +3431,9 @@ pub(crate) mod tests {
                         .unwrap()
                         .options
                         .iter()
-                        .find(|o| o.item == soldier)
+                        .find(|o| o.item == spearman)
                         .unwrap();
-                    // Unassigned Production joins the Soldier; a Monument's stays its own.
+                    // Unassigned Production joins the Spearman; a Monument's stays its own.
                     assert_eq!(
                         option.production_stored,
                         if producing.is_none() { stored } else { 0 }
@@ -3382,11 +3455,11 @@ pub(crate) mod tests {
                     let orders = [
                         crate::Order::SetProduction {
                             city: id,
-                            item: soldier,
+                            item: spearman,
                         },
                         crate::Order::BuyItem {
                             city: id,
-                            item: soldier,
+                            item: spearman,
                         },
                     ];
                     s.player_mut(P0).gold = quote;
@@ -3405,7 +3478,7 @@ pub(crate) mod tests {
                     assert!(events.contains(&crate::Event::ItemBought {
                         city: id,
                         owner: P0,
-                        item: soldier,
+                        item: spearman,
                         gold: quote
                     }));
                 }
@@ -3417,8 +3490,8 @@ pub(crate) mod tests {
     fn separate_purchases_do_not_change_production_forecasts() {
         let mut s = test_state(24, 16);
         let id = add_city(&mut s, P0, at(5, 5), 1);
-        let soldier = ProductionItem::Unit {
-            unit: UnitKind::Soldier,
+        let spearman = ProductionItem::Unit {
+            unit: UnitKind::Spearman,
         };
         let granary = ProductionItem::Building {
             building: BuildingKind::Granary,
@@ -3431,18 +3504,18 @@ pub(crate) mod tests {
             &[
                 crate::Order::SetProduction {
                     city: id,
-                    item: soldier,
+                    item: spearman,
                 },
                 crate::Order::BuyItem {
                     city: id,
-                    item: soldier,
+                    item: spearman,
                 },
             ],
             &mut Vec::new(),
         );
         let v = player_view(&s, P0);
         let detail = city(&v, id).unwrap().detail.as_ref().unwrap();
-        let bought = detail.options.iter().find(|o| o.item == soldier).unwrap();
+        let bought = detail.options.iter().find(|o| o.item == spearman).unwrap();
         assert!(
             bought
                 .buy_blocker
@@ -3451,7 +3524,7 @@ pub(crate) mod tests {
                 .contains("already bought")
         );
         let switched = detail.options.iter().find(|o| o.item == granary).unwrap();
-        // The 10 unassigned joined the Soldier when it started; a Monument starts from 0.
+        // The 10 unassigned joined the Spearman when it started; a Monument starts from 0.
         assert_eq!(switched.production_stored, 0);
         let quote = switched.buy_cost;
         assert_eq!(quote, Some(switched.cost * 175 / 100));
@@ -3470,7 +3543,7 @@ pub(crate) mod tests {
             detail
                 .options
                 .iter()
-                .find(|o| o.item == soldier)
+                .find(|o| o.item == spearman)
                 .unwrap()
                 .turns,
             14
@@ -3628,22 +3701,22 @@ pub(crate) mod tests {
         let granary = ProductionItem::Building {
             building: BuildingKind::Granary,
         };
-        let soldier = ProductionItem::Unit {
-            unit: UnitKind::Soldier,
+        let spearman = ProductionItem::Unit {
+            unit: UnitKind::Spearman,
         };
         let market = ProductionItem::Building {
             building: BuildingKind::Market,
         };
         assert_eq!(turns_for(granary), Some((50, 6)), "counts stored progress");
         assert_eq!(
-            turns_for(soldier),
+            turns_for(spearman),
             Some((80, 12)),
-            "the Granary's progress stays banked with it; a Soldier starts from its own"
+            "the Granary's progress stays banked with it; a Spearman starts from its own"
         );
         assert_eq!(turns_for(market), None, "needs Exchange");
         assert!(
             turns_for(ProductionItem::Unit {
-                unit: UnitKind::Trooper
+                unit: UnitKind::Pikeman
             })
             .is_none()
         );
@@ -3680,7 +3753,12 @@ pub(crate) mod tests {
         let mut s = test_state(24, 16);
         s.players[1].faction_goal_done = true;
         // The Remnant's goal is held by whoever holds its Heir: here the Remnant itself.
-        let heir = crate::game::spawn_unit(&mut s, P1, UnitKind::Heir, Hex::from_offset(3, 3));
+        let heir = crate::game::spawn_unit(
+            &mut s,
+            P1,
+            UnitKind::HeirToTheThrone,
+            Hex::from_offset(3, 3),
+        );
         s.units.get_mut(&heir).unwrap().heir_of = Some(P1);
         s.turn = 42;
         let v = player_view(&s, P0);
@@ -3727,7 +3805,7 @@ pub(crate) mod tests {
     fn economy_and_research() {
         let mut s = test_state(24, 16);
         add_city(&mut s, P0, at(3, 3), 2);
-        for kind in [UnitKind::Soldier, UnitKind::Soldier, UnitKind::Ranger] {
+        for kind in [UnitKind::Spearman, UnitKind::Spearman, UnitKind::Archer] {
             spawn_unit(&mut s, P0, kind, at(3, 3));
         }
         s.players[0].gold = 33;
@@ -3801,7 +3879,7 @@ pub(crate) mod tests {
         let mut s = test_state(24, 16);
         add_city(&mut s, P0, at(3, 3), 2);
         add_city(&mut s, P2, at(7, 4), 2);
-        spawn_unit(&mut s, P2, UnitKind::Soldier, at(6, 3));
+        spawn_unit(&mut s, P2, UnitKind::Spearman, at(6, 3));
         visibility::update_explored(&mut s);
         let a = serde_json::to_string(&player_view(&s, P0)).unwrap();
         let b = serde_json::to_string(&player_view(&s.clone(), P0)).unwrap();

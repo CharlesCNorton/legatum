@@ -132,8 +132,8 @@ export function AirWing({ city, view, planeId }: { city: CityView; view: PlayerV
     : refused ? describeOrder(refused, view).replace(/^[^:]*: /, '').replace(/^./, (c) => c.toUpperCase()) : '';
   const headline = airHeadline(plane, city, state, view);
   const status = why.length ? `${refusedText} · won’t resolve`
-    : state.kind === 'guard' && unanswered ? `Awaiting orders · on guard over ${guardRange(plane.kind)} tiles around ${city.name}`
-    : state.kind === 'idle' && unanswered ? `Awaiting orders · ${state.peaceful.length ? headline : `no targets within ${range} tiles`}`
+    : state.kind === 'guard' && unanswered ? `Needs orders · on guard over ${guardRange(plane.kind)} tiles around ${city.name}`
+    : state.kind === 'idle' && unanswered ? `Needs orders · ${state.peaceful.length ? headline : `no targets within ${range} tiles`}`
     : headline;
   const stats = unitStatsFor(view.players.find((p) => p.id === plane.owner)!.faction, plane.kind);
   const beforeUpgrade = pendingSpend(view, orders, errors).available({ type: 'UpgradeAircraft', plane: plane.id });
@@ -166,11 +166,11 @@ export function AirWing({ city, view, planeId }: { city: CityView; view: PlayerV
           <b>{plane.hp}</b>
         </Tip>
         <Tip content={fighter ? `Strikes up to ${range} tiles from its city, and guards ${guardRange(plane.kind)} tiles around it.` : `Strikes up to ${range} tiles from its city.`} className="up-stat">
-          <span className="lbl"><RingMedallion icon="unit-ranger" tone="neutral" size={22} />Range</span>
+          <span className="lbl"><RingMedallion icon="unit-archer" tone="neutral" size={22} />Range</span>
           <b>{range}</b>
         </Tip>
         <Tip content={`Air strike strength ${stats.ranged}${fighter ? ', with no city bonus' : `, +${siegeBonusOf(plane.kind)} against city HP`}. Strikes take no retaliation.`} className="up-stat">
-          <span className="lbl"><RingMedallion icon="unit-soldier" tone="neutral" size={22} />Strength</span>
+          <span className="lbl"><RingMedallion icon="unit-spearman" tone="neutral" size={22} />Strength</span>
           <b>{stats.ranged}</b>
         </Tip>
         <Tip content={`Aircraft based in ${city.name}: ${hangar} of ${hangarCap} hangar slots used.`} className="up-stat">

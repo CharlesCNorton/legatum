@@ -844,7 +844,7 @@ fn shadow_spend(view: &PlayerView, order: &Order) -> Option<ShadowBuy> {
             Some(ShadowBuy {
                 label: format!("{} in {}", item_label(view, item), c.name),
                 cost,
-                military: matches!(item, ProductionItem::Unit { unit } if *unit != legatum_core::UnitKind::Settler && *unit != legatum_core::UnitKind::Scout && *unit != legatum_core::UnitKind::Heir),
+                military: matches!(item, ProductionItem::Unit { unit } if *unit != legatum_core::UnitKind::Settler && *unit != legatum_core::UnitKind::Scout && *unit != legatum_core::UnitKind::HeirToTheThrone),
             })
         }
         Order::HireCompany { city, unit, seller } => Some(ShadowBuy {
@@ -2098,7 +2098,7 @@ mod tests {
             .detail
             .as_mut()
             .unwrap()
-            .build_automation = Some(legatum_core::CityBuildFocus::Balanced);
+            .build_automation = Some(legatum_core::CityBuildFocus::Economy);
         let mut out = Vec::new();
         production(&view, &trace, std::slice::from_ref(&order), &mut out);
         assert!(out.is_empty());
@@ -2117,7 +2117,7 @@ mod tests {
                 order,
                 Order::SetCityAutomation {
                     city,
-                    focus: Some(legatum_core::CityBuildFocus::Balanced),
+                    focus: Some(legatum_core::CityBuildFocus::Economy),
                     picked: Some(items[1]),
                 },
             ],
@@ -2480,7 +2480,7 @@ mod tests {
             .detail
             .as_mut()
             .unwrap()
-            .build_automation = Some(legatum_core::CityBuildFocus::Balanced);
+            .build_automation = Some(legatum_core::CityBuildFocus::Economy);
         let mut automated = Vec::new();
         great_work(&view, &[order], &mut automated);
         assert!(automated.is_empty());

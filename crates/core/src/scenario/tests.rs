@@ -4,7 +4,7 @@ use crate::new_game;
 use crate::rules::cities::found_city;
 use crate::state::{GameSetup, Map};
 
-/// Two empires on open grassland, each with one city and a Soldier beside it.
+/// Two empires on open grassland, each with one city and a Spearman beside it.
 fn duel() -> GameState {
     let mut setup = GameSetup::all_ai(7);
     setup.players.truncate(2);
@@ -25,7 +25,7 @@ fn duel() -> GameState {
         spawn_unit(
             &mut state,
             owner,
-            UnitKind::Soldier,
+            UnitKind::Spearman,
             Hex::from_offset(col, 6),
         );
     }
@@ -34,7 +34,7 @@ fn duel() -> GameState {
 
 fn hold() -> Objective {
     Objective {
-        summary: "Hold your city with a Soldier".into(),
+        summary: "Hold your city with a Spearman".into(),
         turns: 3,
         win: vec![Condition::MinCombatUnits(1)],
         end_on_win: false,
@@ -82,7 +82,7 @@ fn losing_a_starting_city_ends_the_scenario_at_once() {
     let s = evaluate(&hold(), PlayerId(0), &start, &now);
     assert_eq!(s.outcome, Outcome::Lost);
     assert!(s.reason.contains("Hold your 1 city"), "{}", s.reason);
-    assert_eq!(s.score, 10, "only the Soldier still scores");
+    assert_eq!(s.score, 10, "only the Spearman still scores");
 }
 
 #[test]
@@ -243,7 +243,7 @@ fn units_gone_needs_every_named_unit_dead() {
     let enemy: Vec<UnitId> = start.units_of(PlayerId(1)).map(|u| u.id).collect();
     assert_eq!(enemy.len(), 1);
     let objective = Objective {
-        summary: "Kill their Soldier".into(),
+        summary: "Kill their Spearman".into(),
         turns: 5,
         win: vec![Condition::UnitsGone(vec![enemy[0], UnitId(9999)])],
         end_on_win: false,
@@ -401,17 +401,17 @@ fn illegal_edits_are_reported() {
             "expected {needle:?} in {errors:?}"
         );
     };
-    // Two Soldiers on one tile.
+    // Two Spearmen on one tile.
     check(
         &|s| {
-            spawn_unit(s, PlayerId(0), UnitKind::Soldier, Hex::from_offset(4, 6));
+            spawn_unit(s, PlayerId(0), UnitKind::Spearman, Hex::from_offset(4, 6));
         },
         "stack",
     );
-    // A Soldier inside a peaceful neighbour's borders.
+    // A Spearman inside a peaceful neighbour's borders.
     check(
         &|s| {
-            spawn_unit(s, PlayerId(0), UnitKind::Soldier, Hex::from_offset(13, 5));
+            spawn_unit(s, PlayerId(0), UnitKind::Spearman, Hex::from_offset(13, 5));
         },
         "territory without being at war",
     );

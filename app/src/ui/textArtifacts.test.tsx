@@ -12,7 +12,6 @@ import { FACTION_GOAL, SWARM_GOAL } from '../data';
 import { artifactsIn, auditBlocks, auditCopy, copyIssuesIn, htmlBlocks } from '../test/textArtifacts';
 import { companyText, coreInterfaceText, diplomacyText, factionText, guideText, interfaceText, itemText, renderedSheetText, reportText, techText, victoryText, type TextGroup } from '../test/playerText';
 import { FactionSheetView } from './FactionPicker';
-import { SOON_SLOTS, heldBackCatalog, scenarioCatalog } from '../scenarios/scenarios';
 
 const report = (hits: string[]) => expect(hits, hits.join('\n')).toEqual([]);
 
@@ -46,7 +45,7 @@ it('the copy lint flags mechanics-speak, glossary synonyms, doubled words and lo
     'Each city earns +1 Gold a turn for every 2 population.', 'Every 100 Gold in your treasury earns +1 Gold a turn in interest.',
     'You lose the VP while your treasury is below 5,000 Gold.',
     'Within 5 tiles of your capital.', 'While at War, build a Company.', 'A unit can move or fire in a turn, not both.', 'Each deposit supplies 2 Iron, 3 with a Mine.', 'Short of Iron: 2 buildings or units are idle.', 'Bring a Coal deposit inside your borders.', '+2 Production and +1 Iron supply when built.', 'Level 1.5 · 7 of 10 VP', 'Industry: −2 Food (Workshop, Ruhr Foundry).', 'Rounds 4-5 count twice.',
-    'Iron supply: needs 1 spare, you have none', 'Needs 60 Gold (you have 59)', 'Guards 4 tiles against air strikes, or strikes up to 5 tiles away', 'Upkeep: free · 2 of 2 slots left', 'Founds a city. Costs 1 population.',
+    'Iron supply: needs 1 spare, you have none', 'Needs 60 Gold (you have 59)', 'Guards 4 tiles against air strikes, or strikes up to 5 tiles away', 'Upkeep: free (2 more free units)', 'Founds a city. Costs 1 population.',
   ]) expect(copyIssuesIn(good), good).toEqual([]);
 });
 
@@ -74,7 +73,7 @@ it('the piece card never prints leftover punctuation or repeats its stat strip',
   const html = renderToStaticMarkup(<FactionSheetView faction="Celts" sheetId="s" />);
   // A pure-stats unit's only paragraph is the technology it needs: the stat strip is not said again in words.
   expect(html.match(/pc-text/g)).toHaveLength(1);
-  expect(html).toContain('Requires Mathematics.');
+  expect(html).toContain('Needs Mathematics.');
   const glass = renderToStaticMarkup(<FactionSheetView faction="Mongols" sheetId="s" />);
   expect(glass.match(/pc-text/g)).toHaveLength(1);
   expect(htmlBlocks(glass.slice(glass.indexOf('pc-vs'))).join(' ')).toContain('Shoots or charges each turn');
@@ -110,17 +109,6 @@ it('mercenary company texts read cleanly (rule, contract line, roster, order, re
 it('a core game\'s turn report reads cleanly (every line player 0 reads over 60 AI turns)', async () => {
   report(audit(await reportText(60)));
 }, 60_000);
-
-it('every Scenario Lab card, briefing and objective reads cleanly (including scenarios held back and the soon slots)', () => {
-  const blocks: string[] = [];
-  for (const e of [...scenarioCatalog(), ...heldBackCatalog()]) {
-    const f = e.file;
-    blocks.push(f.title, f.briefing, f.objective.summary, f.lab!.question, f.lab!.blurb, f.lab!.ask ?? '', f.lab!.opponent ?? '', f.tests ?? '');
-  }
-  for (const s of SOON_SLOTS) blocks.push(s.title, s.question, s.blurb, `Waiting for ${s.waitingFor}.`);
-  const text = blocks.filter(Boolean);
-  report([...auditBlocks('scenario lab', text), ...auditCopy('scenario lab', text)]);
-});
 
 it('Germany\'s text names the Ruhr Foundry, never the Forge, except to compare the two', () => {
   const german = (g: TextGroup) => /\(Germany\) | for Germany$|^Germany (info|sheet)$|^sheet Germany$/.test(g.label);

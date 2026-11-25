@@ -3156,7 +3156,7 @@ mod tests {
     use legatum_core::{GameSetup, TeamId};
 
     /// Two empires at war on a plain map: an enemy city with a Spearman garrison and three
-    /// of the seat's units two hexes west of it, one Ranger among them.
+    /// of the seat's units two hexes west of it, one Archer among them.
     fn siege() -> (GameState, CityId) {
         let mut setup = GameSetup::all_ai(7);
         setup.players.truncate(2);
@@ -3208,8 +3208,8 @@ mod tests {
             t.owner = Some(PlayerId(1));
             t.city = Some(id);
         }
-        spawn_unit(&mut s, PlayerId(1), UnitKind::Soldier, centre);
-        for (k, kind) in [UnitKind::Soldier, UnitKind::Ranger, UnitKind::Soldier]
+        spawn_unit(&mut s, PlayerId(1), UnitKind::Spearman, centre);
+        for (k, kind) in [UnitKind::Spearman, UnitKind::Archer, UnitKind::Spearman]
             .into_iter()
             .enumerate()
         {
@@ -3269,13 +3269,13 @@ mod tests {
         let b = find_battles(&s, PlayerId(0), 3).remove(0);
         let a = Arena::cut(&s, &b);
         let view = legatum_core::player_view(&a.state, PlayerId(0));
-        let ranger = b
+        let archer = b
             .units
             .iter()
             .copied()
-            .find(|id| s.units[id].kind == UnitKind::Ranger)
+            .find(|id| s.units[id].kind == UnitKind::Archer)
             .unwrap();
-        let opts = unit_options(&a.state, &view, ranger, a.to_arena(b.at).unwrap());
+        let opts = unit_options(&a.state, &view, archer, a.to_arena(b.at).unwrap());
         assert!(opts.iter().any(|o| matches!(o, Order::SkipUnit { .. })));
         assert!(opts.iter().any(|o| matches!(o, Order::RangedAttack { .. })));
         assert!(
@@ -3418,10 +3418,10 @@ mod tests {
     fn a_siege_stance_shoots_the_walls_and_holds_the_melee_until_the_city_is_at_zero() {
         let (mut s, city) = siege();
         let at = s.cities[&city].pos;
-        // The two Soldiers two tiles from the city.
-        let soldiers: Vec<UnitId> = s
+        // The two Spearmen two tiles from the city.
+        let spearmen: Vec<UnitId> = s
             .units_of(PlayerId(0))
-            .filter(|u| u.kind == UnitKind::Soldier)
+            .filter(|u| u.kind == UnitKind::Spearman)
             .map(|u| u.id)
             .collect();
         let taken: Vec<Hex> = s.units.values().map(|u| u.pos).collect();
@@ -3430,7 +3430,7 @@ mod tests {
             .into_iter()
             .filter(|h| !taken.contains(h))
             .collect();
-        for (id, h) in soldiers.iter().zip(free) {
+        for (id, h) in spearmen.iter().zip(free) {
             s.units.get_mut(id).unwrap().pos = h;
         }
         let view = legatum_core::player_view(&s, PlayerId(0));
@@ -3446,7 +3446,7 @@ mod tests {
         for u in s.units_of(PlayerId(0)) {
             let mine: Vec<_> = o.iter().filter(|x| unit_of(x) == Some(u.id)).collect();
             assert_eq!(mine.len(), 1);
-            if u.kind == UnitKind::Ranger {
+            if u.kind == UnitKind::Archer {
                 assert_eq!(
                     mine[0],
                     &Order::RangedAttack {
@@ -3465,17 +3465,17 @@ mod tests {
         // At 0 HP (here with its garrison gone) the melee storms.
         s.cities.get_mut(&city).unwrap().hp = 0;
         s.units.retain(|_, u| u.owner == PlayerId(0));
-        let soldier = soldiers[0];
+        let spearman = spearmen[0];
         let next = at
             .neighbors()
             .into_iter()
             .find(|h| !s.units.values().any(|u| u.pos == *h))
             .unwrap();
-        s.units.get_mut(&soldier).unwrap().pos = next;
+        s.units.get_mut(&spearman).unwrap().pos = next;
         let view = legatum_core::player_view(&s, PlayerId(0));
         let o = stance_orders(&view, Stance::Siege, hard, at, 4, Some(city));
         assert!(o.contains(&Order::MoveUnit {
-            unit: soldier,
+            unit: spearman,
             to: at
         }));
     }
@@ -3498,7 +3498,7 @@ mod tests {
             spawn_unit(
                 &mut relief,
                 PlayerId(1),
-                UnitKind::Soldier,
+                UnitKind::Spearman,
                 Hex::from_offset(19, r),
             );
         }
@@ -3604,15 +3604,15 @@ mod tests {
         }
     }
 
-    /// The siege with the city battered to `hp`, a Soldier next to it, and a Bomber in the
+    /// The siege with the city battered to `hp`, a Spearman next to it, and a Bomber in the
     /// hangar of a seat city 6 tiles west.
     fn battered_with_bomber(hp: i32) -> (GameState, CityId, UnitId, UnitId) {
         let (mut s, city) = siege();
         s.cities.get_mut(&city).unwrap().hp = hp;
         let at = s.cities[&city].pos;
-        let soldier = s
+        let spearman = s
             .units_of(PlayerId(0))
-            .find(|u| u.kind == UnitKind::Soldier)
+            .find(|u| u.kind == UnitKind::Spearman)
             .unwrap()
             .id;
         let next = at
@@ -3620,7 +3620,7 @@ mod tests {
             .into_iter()
             .find(|h| !s.units.values().any(|u| u.pos == *h))
             .unwrap();
-        s.units.get_mut(&soldier).unwrap().pos = next;
+        s.units.get_mut(&spearman).unwrap().pos = next;
         let base = s.alloc_city_id();
         let mut home = s.cities[&city].clone();
         home.id = base;
@@ -3650,12 +3650,12 @@ mod tests {
             hp: data::UNIT_HP,
             xp: 0,
         });
-        (s, city, soldier, plane)
+        (s, city, spearman, plane)
     }
 
     #[test]
     fn the_breach_bombs_the_city_to_zero_and_the_cheapest_melee_walks_in_the_same_turn() {
-        let (s, city, soldier, plane) = battered_with_bomber(10);
+        let (s, city, spearman, plane) = battered_with_bomber(10);
         let at = s.cities[&city].pos;
         let view = legatum_core::player_view(&s, PlayerId(0));
         let hard: Vec<Order> = s
@@ -3665,10 +3665,10 @@ mod tests {
         let b = breach_orders(&view, &hard, city).expect("the shots zero a 10 HP city");
         assert!(b.contains(&Order::AirStrike { plane, target: at }));
         assert!(b.contains(&Order::MoveUnit {
-            unit: soldier,
+            unit: spearman,
             to: at
         }));
-        // A full-HP city the Ranger alone can't zero: no breach.
+        // A full-HP city the Archer alone can't zero: no breach.
         let (mut s, city, _, _) = battered_with_bomber(data::CITY_HP);
         s.aircraft.clear();
         let view = legatum_core::player_view(&s, PlayerId(0));
@@ -3676,12 +3676,12 @@ mod tests {
     }
 
     /// Gene `breach` in plain Hard, end to end through the live order path: the Bomber's
-    /// strike is the planner's (the air planner leaves that plane alone) and the Soldier
+    /// strike is the planner's (the air planner leaves that plane alone) and the Spearman
     /// beside the city walks in the same turn.
     #[test]
     fn plain_hard_with_the_breach_gene_bombs_and_walks_in() {
         use crate::Brain;
-        let (s, city, soldier, plane) = battered_with_bomber(60);
+        let (s, city, spearman, plane) = battered_with_bomber(60);
         let at = s.cities[&city].pos;
         let view = legatum_core::player_view(&s, PlayerId(0));
         let faction = s.player(PlayerId(0)).faction;
@@ -3701,7 +3701,7 @@ mod tests {
         );
         assert!(
             orders.contains(&Order::MoveUnit {
-                unit: soldier,
+                unit: spearman,
                 to: at
             }),
             "{orders:?}"
@@ -3717,7 +3717,7 @@ mod tests {
 
     #[test]
     fn the_full_game_check_always_weighs_the_breach_and_plays_it_when_it_takes_the_city() {
-        let (s, city, soldier, plane) = battered_with_bomber(10);
+        let (s, city, spearman, plane) = battered_with_bomber(10);
         let hard: Vec<Order> = s
             .units_of(PlayerId(0))
             .map(|u| Order::SkipUnit { unit: u.id })
@@ -3741,7 +3741,7 @@ mod tests {
         if played.breach {
             assert!(o.contains(&Order::AirStrike { plane, target: at }));
             assert!(o.contains(&Order::MoveUnit {
-                unit: soldier,
+                unit: spearman,
                 to: at
             }));
         }

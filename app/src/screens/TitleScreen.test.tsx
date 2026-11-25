@@ -104,7 +104,7 @@ it('lists the newest autosave from the browser database, not only the old localS
   await slot(save, 1);
   await slot(save, 2);
   await show(<TitleScreen />);
-  expect(continueButton().textContent).toContain('turn 2');
+  expect(continueButton().textContent).toContain('Turn 2');
   expect(continueButton().disabled).toBe(false);
 });
 
@@ -113,10 +113,10 @@ it('offers the turn before when the newest save will not open, instead of a dead
   await slot(save, 1);
   await slot(save, 2, refusing({ ...save, turn: 2 }));
   await show(<TitleScreen />);
-  expect(continueButton().textContent).toContain('turn 2');
+  expect(continueButton().textContent).toContain('Turn 2');
   await press(continueButton());
   expect(useGame.getState().screen).not.toBe('game');
-  expect(continueButton().textContent).toContain('turn 1');
+  expect(continueButton().textContent).toContain('Turn 1');
   expect(continueButton().disabled).toBe(false);
   expect(continueButton().classList.contains('primary')).toBe(true);
   expect(host.querySelector('.title-notice')?.textContent).toBe('Your latest save (turn 2) could not be opened. Continue opens turn 1 instead.');
@@ -130,7 +130,7 @@ it('skips a newest save that is damaged text, and says so', async () => {
   await slot(save, 1);
   await slot(save, 2, '{"format":"legatum-save"');
   await show(<TitleScreen />);
-  expect(continueButton().textContent).toContain('turn 1');
+  expect(continueButton().textContent).toContain('Turn 1');
   expect(host.querySelector('.title-notice')?.textContent).toBe('Your latest save (turn 2) could not be opened. Continue opens turn 1 instead.');
 });
 

@@ -1,11 +1,14 @@
 // Constructed wonders use their publicly visible, chosen tile and the painted world wonder art.
 import type { BuildingKind, Faction, Hex, PlayerView } from '../types';
 import { buildingIconName, itemName } from '../data';
-import { hexAt, hexToPixel } from '../hex';
+import { hexAt, hexToPixel, neighbors, tileIndex } from '../hex';
+import { drawBehindTowns, type TownStamp } from './wonderArt';
 import { buildingArtSlug, itemArtUrl } from '../unlockArt';
 import { tintedIcon } from '../icons';
 import { HEX_SIZE, isFar } from './grid';
 import { ATLAS } from './style';
+import { cityArtFootprint } from './cityArt';
+import { CITY_DROP, CITY_WORLD } from './terrain';
 
 export interface Landmark { city: number; owner: number; building: BuildingKind; tile: number; hex: Hex }
 
@@ -63,30 +66,58 @@ export function landmarkCore(b: { x: number; y: number; s: number }) {
   return { x: b.x + b.s * 0.08, y: b.y + b.s * 0.22, w: b.s * 0.84, h: b.s * 0.68 };
 }
 
-/** Each world wonder fills at least the city's painted footprint on its own wonder tile. */
-export function landmarkBox(c: { x: number; y: number }, hexPx: number, covers: readonly { x: number; y: number; w: number; h: number }[] = []) {
+type Rect = { x: number; y: number; w: number; h: number };
+/** Where a wonder may stand on its tile, as offsets from the centred footprint in hex radii (the first is the centred one). */
+// The last two step a little further aside: they clear a walled town's full ring beside the wonder's tile.
+const SPOTS: readonly (readonly [number, number])[] = [[0, 0], [-0.7, 0], [-0.7, 0.55], [0.7, 0], [0.7, 0.55], [0, 0.8], [-0.75, 0], [0.75, 0]];
+/** The zoom the footprint is chosen at (the opening zoom), so zooming and panning never move a wonder. */
+export const LANDMARK_REF_ZOOM = 0.9;
+
+function boxAt(c: { x: number; y: number }, hexPx: number, spot: readonly [number, number]) {
   const s = hexPx * 3;
-  const base = { x: c.x - s / 2, y: c.y - s * 0.36, s };
-  // Banners and earlier landmarks determine the footprint. Moving units must never be covers.
-  const candidates = [base, ...[-0.7, 0.7].flatMap(dx => [0, 0.55].map(dy => ({ x: base.x + dx * hexPx, y: base.y + dy * hexPx, s }))), { ...base, y: base.y + 0.8 * hexPx }];
-  const overlap = (a: { x: number; y: number; w: number; h: number }, r: { x: number; y: number; w: number; h: number }) =>
+  return { x: c.x - s / 2 + spot[0] * hexPx, y: c.y - s * 0.36 + spot[1] * hexPx, s };
+}
+
+/** A city's painted town and its walls (`cityArtFootprint`: the full ground oval, roofs and walls), for a hex centre on screen. */
+export function townCover(c: { x: number; y: number }, hexPx: number): Rect {
+  const f = cityArtFootprint(CITY_WORLD, CITY_DROP), z = hexPx / HEX_SIZE;
+  return { x: c.x + f.x0 * z, y: c.y + f.y0 * z, w: (f.x1 - f.x0) * z, h: (f.y1 - f.y0) * z };
+}
+
+/** Which of SPOTS keeps the painting clearest of `covers` (banners and earlier landmarks, never moving units). */
+function landmarkSpot(c: { x: number; y: number }, hexPx: number, covers: readonly Rect[]) {
+  const overlap = (a: Rect, r: Rect) =>
     Math.max(0, Math.min(a.x + a.w, r.x + r.w) - Math.max(a.x, r.x)) * Math.max(0, Math.min(a.y + a.h, r.y + r.h) - Math.max(a.y, r.y));
   // Whole-box overlap keeps clear of banners; the solid core counts twice more so the facade stays clear.
-  const covered = (b: typeof base) => covers.reduce((sum, r) => sum + overlap({ x: b.x, y: b.y, w: s, h: s }, r) + 2 * overlap(landmarkCore(b), r), 0);
-  return candidates.reduce((best, b) => covered(b) < covered(best) ? b : best, base);
+  const covered = (b: ReturnType<typeof boxAt>) => covers.reduce((sum, r) => sum + overlap({ x: b.x, y: b.y, w: b.s, h: b.s }, r) + 2 * overlap(landmarkCore(b), r), 0);
+  let best = SPOTS[0], least = covered(boxAt(c, hexPx, best));
+  for (const spot of SPOTS.slice(1)) { const n = covered(boxAt(c, hexPx, spot)); if (n < least) { best = spot; least = n; } }
+  return best;
+}
+
+/** Each world wonder fills at least the city's painted footprint on its own wonder tile. */
+export function landmarkBox(c: { x: number; y: number }, hexPx: number, covers: readonly Rect[] = []) {
+  return boxAt(c, hexPx, landmarkSpot(c, hexPx, covers));
 }
 
 export type LandmarkBox = ReturnType<typeof landmarkBox>;
 
-/** One deterministic footprint per tile for finished works, sites, and the construction animation. */
-export function landmarkBoxes(sites: readonly { tile: number; hex: Hex }[], toScreen: (p: { x: number; y: number }) => { x: number; y: number }, hexPx: number, banners: readonly { x: number; y: number; w: number; h: number }[]): Map<number, LandmarkBox> {
+/**
+ * One deterministic footprint per tile for finished works, sites, and the construction animation. The spot is chosen at
+ * LANDMARK_REF_ZOOM against `refCovers` (every banner on the map, in world units × LANDMARK_REF_ZOOM), then scaled to the
+ * camera: banners keep a near-fixed pixel size, so choosing at the live zoom made a wonder hop a hex as the player zoomed.
+ */
+export function landmarkBoxes(sites: readonly { tile: number; hex: Hex }[], toScreen: (p: { x: number; y: number }) => { x: number; y: number }, hexPx: number, refCovers: readonly Rect[]): Map<number, LandmarkBox> {
   const boxes = new Map<number, LandmarkBox>();
-  const covers = [...banners];
+  const covers = [...refCovers];
+  const refPx = HEX_SIZE * LANDMARK_REF_ZOOM;
   for (const site of [...sites].sort((a, b) => a.tile - b.tile)) {
     if (boxes.has(site.tile)) continue;
-    const box = landmarkBox(toScreen(hexToPixel(site.hex, HEX_SIZE)), hexPx, covers);
-    boxes.set(site.tile, box);
-    covers.push(landmarkCore(box));
+    const world = hexToPixel(site.hex, HEX_SIZE);
+    const ref = { x: world.x * LANDMARK_REF_ZOOM, y: world.y * LANDMARK_REF_ZOOM };
+    const spot = landmarkSpot(ref, refPx, covers);
+    covers.push(landmarkCore(boxAt(ref, refPx, spot)));
+    boxes.set(site.tile, boxAt(toScreen(world), hexPx, spot));
   }
   return boxes;
 }
@@ -95,9 +126,24 @@ export function landmarkBoxes(sites: readonly { tile: number; hex: Hex }[], toSc
  * Draw the landmarks in view (screen space), below units and clear of banners. `skip` holds back
  * a landmark whose construction is still playing (momentFx.ts draws it rising instead).
  */
-export function drawLandmarks(ctx: CanvasRenderingContext2D, view: PlayerView, toScreen: (p: { x: number; y: number }) => { x: number; y: number }, hexPx: number, w: number, h: number, dpr: number, skip?: (l: Landmark) => boolean, boxes: ReadonlyMap<number, LandmarkBox> = new Map()) {
+export function drawLandmarks(ctx: CanvasRenderingContext2D, view: PlayerView, toScreen: (p: { x: number; y: number }) => { x: number; y: number }, hexPx: number, w: number, h: number, dpr: number, skip?: (l: Landmark) => boolean, boxes: ReadonlyMap<number, LandmarkBox> = new Map(), towns?: TownStamp) {
   const list = landmarksOf(view);
   if (!list.length) return;
+  const far = isFar(hexPx);
+  // The paintings stand behind any town beside them (cut away from it); the labels are drawn after, uncut.
+  if (towns && !far) {
+    const near = new Set(list.flatMap((l) => neighbors(l.hex).map((n) => tileIndex(n, view.width, view.height))));
+    if (view.cities.some((c) => near.has(tileIndex(c.pos, view.width, view.height)))) {
+      drawBehindTowns(ctx, w, h, dpr, towns, (t) => near.has(t), (g) => paintLandmarks(g, view, list, toScreen, hexPx, w, h, dpr, skip, boxes, false));
+      paintLandmarks(ctx, view, list, toScreen, hexPx, w, h, dpr, skip, boxes, true);
+      return;
+    }
+  }
+  paintLandmarks(ctx, view, list, toScreen, hexPx, w, h, dpr, skip, boxes);
+}
+
+/** The landmarks' paintings and labels (`labels`: true only the labels, false only the paintings, unset both). */
+function paintLandmarks(ctx: CanvasRenderingContext2D, view: PlayerView, list: Landmark[], toScreen: (p: { x: number; y: number }) => { x: number; y: number }, hexPx: number, w: number, h: number, dpr: number, skip: ((l: Landmark) => boolean) | undefined, boxes: ReadonlyMap<number, LandmarkBox>, labels?: boolean) {
   const far = isFar(hexPx);
   ctx.save();
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -115,7 +161,8 @@ export function drawLandmarks(ctx: CanvasRenderingContext2D, view: PlayerView, t
       const b = boxes.get(l.tile) ?? landmarkBox(c, hexPx);
       // Every work has painted art; a painting still decoding waits (onLandmarkArtLoad repaints) rather than showing a stand-in.
       if (!img) continue;
-      ctx.drawImage(img, b.x, b.y, b.s, b.s);
+      if (labels !== true) ctx.drawImage(img, b.x, b.y, b.s, b.s);
+      if (labels === false) continue;
       const label = shortLabel(itemName({ kind: 'Building', building: l.building }, view.players.find(p => p.id === l.owner)?.faction)).toUpperCase();
       const size = Math.max(9, Math.min(13, hexPx * .24));
       ctx.font = `600 ${size}px Georgia, serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';

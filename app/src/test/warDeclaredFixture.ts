@@ -5,7 +5,7 @@ import { idxOf, refreshVision } from './fixtureEngine';
 
 /**
  * The real AI declares war on the human (playtest 6: Sparta's war went unnoticed). An
- * Sparta army of five Troopers stands beside our lone city with a Scout in sight of it, the
+ * Sparta army of five Pikemen stands beside our lone city with a Scout in sight of it, the
  * scripted AI's "viable campaign" (crates/ai/tests/diplomacy.rs). Nothing is injected: ending
  * turn 1 resolves the AI's own DeclareWar. `teammate` adds a second human on our team (hot seat).
  */
@@ -36,7 +36,7 @@ function warDeclaredState({ teammate = false } = {}) {
     const i = idxOf(s, h); s.owner[i] = c.owner; s.tileCity[i] = c.id;
   }
   for (const p of s.players) p.gold = 1000;
-  for (const [c, r] of [[5, 6], [6, 6], [5, 7], [6, 7], [7, 7]]) spawnUnit(s, oath, 'Trooper', fromOffset(c, r), false);
+  for (const [c, r] of [[5, 6], [6, 6], [5, 7], [6, 7], [7, 7]]) spawnUnit(s, oath, 'Pikeman', fromOffset(c, r), false);
   spawnUnit(s, oath, 'Scout', fromOffset(9, 6), false);
   // Our Scouts watch their army and their city, so the declaration can say where they are.
   spawnUnit(s, 0, 'Scout', fromOffset(8, 5), false);

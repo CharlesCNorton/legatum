@@ -29,9 +29,9 @@ for (const size of SIZES) test.describe(`train-1031 ${size.name}`, () => {
     await loadFixture(page, coreFixture(f), 2);
     await selectThing(page, 'city', mine[3].id); // Geneva, idle
     await park(page);
-    await expect(page.getByRole('combobox', { name: /Build automatically in/ })).toBeVisible();
+    await expect(page.getByRole('combobox', { name: /^Automate / })).toBeVisible();
     await shot(page, size, '01-city-panel-automation-off');
-    await page.getByRole('combobox', { name: /Build automatically in/ }).selectOption('Science');
+    await page.getByRole('combobox', { name: /^Automate / }).selectOption('Science');
     await park(page);
     await shot(page, size, '02-city-panel-automation-science');
     await selectThing(page, 'city', mine[0].id); // Bern, building a Market
@@ -95,12 +95,12 @@ for (const size of SIZES) test.describe(`train-1031 ${size.name}`, () => {
       const g = citiesFixture('Germany');
       g.players[0].techs = [...TECHS];
       const bern = g.cities.filter((c) => c.owner === 0).sort((a, b) => a.id - b.id)[0];
-      bern.population = 8; bern.buildings = ['Laboratory', 'Workshop'];
+      bern.population = 8; bern.buildings = ['Library', 'Workshop'];
       const art = spawnUnit(g, 0, 'Artillery', fromOffset(5, 5), false);
       refreshVision(g);
       await loadFixture(p, coreFixture(g), 2);
       await selectThing(p, 'city', bern.id);
-      for (const [key, name] of [['b:MachineShop', '12-germany-ruhr-foundry'], ['u:Fighter', '13-aircraft-oil'], ['u:Artillery', '14-artillery-card']] as const) {
+      for (const [key, name] of [['b:Forge', '12-germany-ruhr-foundry'], ['u:Fighter', '13-aircraft-oil'], ['u:Artillery', '14-artillery-card']] as const) {
         const card = p.locator(`.city-panel .production-choice[data-item="${key}"]`).first();
         if (!await card.count()) { test.info().annotations.push({ type: 'missing', description: key }); continue; }
         await card.scrollIntoViewIfNeeded();
@@ -118,10 +118,10 @@ for (const size of SIZES) test.describe(`train-1031 ${size.name}`, () => {
     test.setTimeout(180_000);
     const m = citiesFixture('Mongols');
     m.players[0].techs.push('Mathematics');
-    const soldier = spawnUnit(m, 0, 'Soldier', fromOffset(5, 5), false);
+    const spearman = spawnUnit(m, 0, 'Spearman', fromOffset(5, 5), false);
     refreshVision(m);
     await loadFixture(page, coreFixture(m), 2);
-    await selectThing(page, 'unit', soldier.id);
+    await selectThing(page, 'unit', spearman.id);
     await park(page);
     await shot(page, size, '16-mongol-siege-reason');
 
@@ -130,8 +130,8 @@ for (const size of SIZES) test.describe(`train-1031 ${size.name}`, () => {
       const p = await ctx.newPage();
       await loadFixture(p, allianceCoreSave(), 50);
       await revealSidebar(p, 'standings');
-      await p.getByRole('button', { name: /^Diplomacy inbox/ }).click();
-      const panel = p.getByRole('complementary', { name: 'Diplomacy inbox' });
+      await p.getByRole('button', { name: /^Diplomacy( \(\d+\))?$/ }).click();
+      const panel = p.getByRole('complementary', { name: 'Diplomacy', exact: true });
       await park(p);
       await shot(p, size, '17-diplomacy-inbox-tab');
       await panel.getByRole('tab', { name: 'Relations' }).click();

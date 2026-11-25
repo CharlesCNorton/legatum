@@ -25,7 +25,7 @@ const SIZES = [{ name: '1000x600', width: 1000, height: 600 }, { name: '1440x900
 const SHOTS = path.resolve('test-results/air-wing');
 const PLANES = [{ id: 900, kind: 'Bomber' }, { id: 901, kind: 'Fighter' }] as const;
 
-/** Waypost Seven with a Bomber and a Fighter in the hangar and two enemy Soldiers three tiles out (the siege fixture's approach). */
+/** Waypost Seven with a Bomber and a Fighter in the hangar and two enemy Spearmen three tiles out (the siege fixture's approach). */
 async function start(page: Page, opts: { enemies?: boolean; planes?: readonly { id: number; kind: string }[]; producing?: 'Fighter' | 'Bomber'; forest?: boolean; noCities?: boolean; rebaseDestination?: boolean } = {}) {
   const { enemies = true, planes = PLANES, producing, forest = false, rebaseDestination = false } = opts;
   const setup = siegeFixture({ approach: true });
@@ -38,8 +38,8 @@ async function start(page: Page, opts: { enemies?: boolean; planes?: readonly { 
     setup.fixture.cities = setup.fixture.cities.filter((c) => kept.has(c.id)); setup.fixture.knownCities = {};
   }
   if (forest) {
-    // Forest on the two rings between the city and the Soldiers three tiles out: a ground shooter has no line, and the
-    // city cannot see over it, so a Scout of yours stands beside the first Soldier to give the strike its sight.
+    // Forest on the two rings between the city and the Spearmen three tiles out: a ground shooter has no line, and the
+    // city cannot see over it, so a Scout of yours stands beside the first Spearman to give the strike its sight.
     const f = setup.fixture;
     const home = f.cities.find((c) => c.id === setup.own)!.pos;
     for (const r of [1, 2]) for (const h of ring(home, r)) f.terrain[tileIndex(h, f.width, f.height)] = 'Forest';
@@ -140,7 +140,7 @@ for (const size of SIZES) {
       for (let i = 0; i < 8 && (await store(page, (s) => s.selection?.id)) !== 901; i++) { await page.keyboard.press('Enter'); await page.waitForTimeout(150); }
       const fighter = plane(page, 901);
       await expect(fighter).toHaveAttribute('data-air-state', 'guard');
-      await expect(fighter).toContainText('Awaiting orders · on guard over 4 tiles around Waypost Seven');
+      await expect(fighter).toContainText('Needs orders · on guard over 4 tiles around Waypost Seven');
       await expect(fighter.getByRole('button')).toHaveText(['Stay on guardF', 'Skip this turnSpace', 'Rebase…R']);
       await expect(fighter.getByRole('button', { name: /Rebase/ })).toBeDisabled();
       // The map rings what they cover: the Bomber's 8, the Fighter's strike 5 and guard 4, widest first, each labelled.
@@ -339,7 +339,7 @@ for (const size of SIZES) {
       // pinned and on screen at every window size (8.9.4 review: the 1000x600 card hid them).
       await expect(card.locator('h2')).toHaveText('Fighter ready');
       const area = (await card.boundingBox())!;
-      for (const name of ['Show on map', 'Turn report']) {
+      for (const name of ['Show on map']) {
         const box = (await card.getByRole('button', { name }).boundingBox())!;
         expect(box.y + box.height, `${name} is inside the card`).toBeLessThanOrEqual(area.y + area.height + 0.5);
         expect(box.y + box.height, `${name} is on screen`).toBeLessThanOrEqual(size.height);

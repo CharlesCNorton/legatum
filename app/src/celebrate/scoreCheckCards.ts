@@ -3,18 +3,23 @@
 // filled for what you have and empty for what is still open, with one line on how to win the next one.
 // Public facts and your own view only. Everything here reads the view; nothing here is a rule.
 import type { BuildingKind, Faction, PlayerId, PlayerView } from '../types';
-import { BUILDING_NAME, BUILDING_STATS, ERA_COUNT, FACTION_GOAL, GREAT_WORKS, TECH_NAME, factionGoalVp, isGreatWork } from '../data';
+import { BUILDING_NAME, BUILDING_STATS, ERA_COUNT, FACTION_GOAL, GREAT_WORK_ICON, GREAT_WORKS, TECH_NAME, buildingIconName, eraName, factionGoalVp, isGreatWork } from '../data';
 import { buildVpModel } from '../vpModel';
-import { cardName } from '../ageCards';
+import { cardNameAndAsk } from '../ageCards';
 import { eraObjectivesFor } from '../eraObjectives';
 import { empireOfPlayer } from '../empires';
 import { distance } from '../hex';
-import { roman } from '../brand/ornaments';
+import { roman } from '../brand/roman';
 import { playerColor } from '../theme';
 
 /** How a box on your sheet is filled: kept for good, held (lost with its city or item), new this Age, open, or an Age still to come. */
 export type BoxState = 'kept' | 'held' | 'new' | 'open' | 'later';
-export interface Box { state: BoxState; mark?: string; title: string }
+/**
+ * One box on your sheet. It draws the thing that scores (premium pass, user 2026-11-22: "the game needs to feel premium"):
+ * an Age's numeral (`mark`), a capital's star (`star`), a wonder's or goal's icon (`icon`). A box worth more than 1 VP
+ * spans that many cells (`span`), so the boxes still add up to the VP.
+ */
+export interface Box { state: BoxState; mark?: string; icon?: string; star?: boolean; span?: number; title: string }
 
 export interface SheetLine {
   key: 'ages' | 'capitals' | 'wonders' | 'goal';
@@ -69,7 +74,7 @@ export function scoreCheckFor(view: PlayerView, era: number, first: PlayerId): S
   const track: TrackSpace[] = Array.from({ length: target + 1 }, (_, vp) => ({ vp, pieces: [] }));
   for (const row of model.rows) {
     const space = track[Math.max(0, Math.min(target, row.vp))];
-    for (const m of row.members) space.pieces.push({ id: m.id, faction: m.faction, color: playerColor(m.id), name: m.name, isMine: m.isMine });
+    for (const m of row.members) space.pieces.push({ id: m.id, faction: m.faction, color: playerColor(m.id), name: empireOfPlayer(view, m.id), isMine: m.isMine });
   }
 
   const you = mine?.members.length && mine.members.length > 1 ? 'Your team' : 'You';
@@ -112,10 +117,10 @@ function ageLine(view: PlayerView, era: number): SheetLine {
     const ev = view.eras?.find((x) => x.era === e);
     const o = ev ? eraObjectivesFor(view, e) : null;
     const line = o?.lines[0];
-    if (!ev || !o) { boxes.push({ state: 'later', mark: roman(e), title: `Age ${roman(e)}: not begun yet` }); continue; }
+    if (!ev || !o) { boxes.push({ state: 'later', mark: roman(e), title: `${eraName(e - 1)}: not begun yet` }); continue; }
     if (o.state === 'scored') { boxes.push({ state: 'kept', mark: roman(e), title: `${ev.name}: scored, yours for good` }); continue; }
-    // The name and its plain ask, "Breach, capture a walled city"; a card with no name is its ask, "Gain 4 cities".
-    const card = line ? (line.text.includes(':') ? `${cardName(line.text)}, ${line.text.slice(line.text.indexOf(':') + 1).trim()}` : line.text) : 'its card';
+    // The name and its plain ask, "Breach, capture a walled city"; every card has a name ("Dominion, gain 4 cities").
+    const card = line ? cardNameAndAsk(line.text) : 'its card';
     boxes.push({ state: e === newest ? 'new' : 'open', mark: roman(e), title: `${ev.name}: ${card}, still open` });
     open.push({ era: e, name: ev.name, card, current: line?.current ?? 0, target: line?.target ?? 0 });
   }
@@ -127,7 +132,7 @@ function ageLine(view: PlayerView, era: number): SheetLine {
   const detail = rest.length
     ? `Also still open: ${and(rest.map((a) => `${a.name} (${a.card})`))}.`
     : fresh ? 'Cards never expire: this one stays open until you score it.' : 'Cards never expire.';
-  return { key: 'ages', name: 'Age cards', terms: '1 VP each · kept', boxes, how, detail, open: open.length, fresh: !!fresh };
+  return { key: 'ages', name: 'Age cards', terms: '1 VP each', boxes, how, detail, open: open.length, fresh: !!fresh };
 }
 
 /** Rival original capitals: 1 VP each while you hold it (rules 50); a Celtic sack keeps its 1 VP for good. */
@@ -138,9 +143,9 @@ function capitalLine(view: PlayerView, team: Set<PlayerId>): SheetLine {
   const done = new Set([...held, ...sacked].map(([id]) => id));
   const left = Math.max(0, rivals.length - done.size);
   const boxes: Box[] = [
-    ...sacked.map(([, name]): Box => ({ state: 'kept', title: `${name}: sacked, yours for good` })),
-    ...held.map(([, name]): Box => ({ state: 'held', title: `${name}: yours while you hold it` })),
-    ...Array.from({ length: left }, (): Box => ({ state: 'open', title: 'A rival capital you do not hold' })),
+    ...sacked.map(([, name]): Box => ({ state: 'kept', star: true, title: `${name}: sacked, yours for good` })),
+    ...held.map(([, name]): Box => ({ state: 'held', star: true, title: `${name}: yours while you hold it` })),
+    ...Array.from({ length: left }, (): Box => ({ state: 'open', star: true, title: 'A rival capital you do not hold' })),
   ];
   const mineCities = view.cities.filter((c) => c.owner === view.me);
   const targets = view.cities
@@ -156,7 +161,7 @@ function capitalLine(view: PlayerView, team: Set<PlayerId>): SheetLine {
   const detail = left === 0 ? (keep || 'You hold every rival capital.')
     : near ? `Nearest known: ${near.city.name} (${empireOfPlayer(view, near.city.original_capital_of!)}), ${plural(near.from!.d, 'tile')} from your city ${near.from!.name}.`
     : 'No rival capital on your map yet: explore to find them.';
-  return { key: 'capitals', name: 'Rival capitals', terms: '1 VP each · held', boxes, how: left ? 'Take a rival’s original capital' : 'You hold them all', detail, open: left };
+  return { key: 'capitals', name: 'Rival capitals', terms: '1 VP each', boxes, how: left ? 'Take a rival’s original capital' : 'You hold them all', detail, open: left };
 }
 
 /** World wonders: 2 VP each while you hold its city. Your held ones, then the ones you could build now. */
@@ -166,14 +171,18 @@ function wonderLine(view: PlayerView): SheetLine {
   const landmarkOf = (b: BuildingKind) => view.tiles.find((t) => t.landmark?.building === b);
   const built = (b: BuildingKind) => !!landmarkOf(b) || !!view.great_works?.some((g) => g.completed === b) || view.cities.some((c) => c.great_works?.includes(b));
   const heldVp = me.vp_sources.filter(([s]) => s.kind === 'GreatWork').length;
-  const heldNames = view.tiles.filter((t) => t.landmark && isGreatWork(t.landmark.building) && t.owner === view.me).map((t) => BUILDING_NAME[t.landmark!.building]);
+  const heldKinds = view.tiles.filter((t) => t.landmark && isGreatWork(t.landmark.building) && t.owner === view.me).map((t) => t.landmark!.building);
   const ownWork = view.great_works?.find((g) => g.player === view.me);
-  if (heldVp > heldNames.length && ownWork?.completed && !heldNames.includes(BUILDING_NAME[ownWork.completed])) heldNames.push(BUILDING_NAME[ownWork.completed]);
+  if (heldVp > heldKinds.length && ownWork?.completed && !heldKinds.includes(ownWork.completed)) heldKinds.push(ownWork.completed);
+  const heldNames = heldKinds.map((b) => BUILDING_NAME[b]);
   const open = GREAT_WORKS.filter((b) => known.has(BUILDING_STATS[b].requires as never) && !built(b));
   const later = GREAT_WORKS.filter((b) => !known.has(BUILDING_STATS[b].requires as never) && !built(b));
   const boxes: Box[] = [
-    ...Array.from({ length: heldVp * 2 }, (_, i): Box => ({ state: 'held', title: `${heldNames[Math.floor(i / 2)] ?? 'A world wonder'}: yours while you hold its city` })),
-    ...open.flatMap((b): Box[] => [0, 1].map(() => ({ state: 'open', title: `${BUILDING_NAME[b]}: nobody has built it yet` }))),
+    ...Array.from({ length: heldVp }, (_, i): Box => {
+      const b = heldKinds[i];
+      return { state: 'held', span: 2, icon: b ? buildingIconName(b, me.faction) : GREAT_WORK_ICON, title: `${b ? BUILDING_NAME[b] : 'A world wonder'}: yours while you hold its city` };
+    }),
+    ...open.map((b): Box => ({ state: 'open', span: 2, icon: buildingIconName(b, me.faction), title: `${BUILDING_NAME[b]}: nobody has built it yet` })),
   ];
   const building = ownWork?.building && !ownWork.completed ? ownWork : null;
   const how = building ? `Building the ${BUILDING_NAME[building.building!]}${building.turns != null ? `: ${plural(building.turns, 'turn')} left` : ''}`
@@ -182,7 +191,7 @@ function wonderLine(view: PlayerView): SheetLine {
     : 'Every world wonder is built';
   const keep = heldNames.length ? `You hold the ${and(heldNames)}: lose its city and you lose its 2 VP.` : '';
   const detail = keep || (open.length || later.length ? 'Only one of each can be built. Whoever holds its city scores 2 VP.' : 'Capture a wonder’s city to take its 2 VP.');
-  return { key: 'wonders', name: 'World wonders', terms: '2 VP each · held', boxes, how, detail, open: open.length * 2 };
+  return { key: 'wonders', name: 'World wonders', terms: '2 VP each', boxes, how, detail, open: open.length * 2 };
 }
 
 /** Your faction goal (and any rival's held goal you hold). None for a faction without a goal. */
@@ -197,8 +206,11 @@ function goalLine(view: PlayerView, faction: Faction): SheetLine | null {
   const mine = !!own?.owners.includes(view.me);
   const live = !!(g.live || g.held);
   const boxes: Box[] = [
-    ...Array.from({ length: vp }, (): Box => mine ? { state: live ? 'held' : 'kept', title: `${g.name}: ${live ? 'yours while you keep it done' : 'yours for good'}` } : { state: 'open', title: `${g.name}: not done yet` }),
-    ...heldRival.flatMap(([s, n]) => Array.from({ length: n }, (): Box => ({ state: 'held', title: `${FACTION_GOAL[view.players.find((p) => s.kind === 'FactionGoal' && p.id === s.of)?.faction ?? faction].name}: yours while you hold it` }))),
+    ...(vp > 0 ? [mine ? { state: live ? 'held' : 'kept', span: vp, icon: g.icon, title: `${g.name}: ${live ? 'yours while it stays done' : 'yours for good'}` } as Box : { state: 'open', span: vp, icon: g.icon, title: `${g.name}: not done yet` } as Box] : []),
+    ...heldRival.map(([s, n]): Box => {
+      const rival = FACTION_GOAL[view.players.find((p) => s.kind === 'FactionGoal' && p.id === s.of)?.faction ?? faction];
+      return { state: 'held', span: n, icon: rival.icon, title: `${rival.name}: yours while you hold it` };
+    }),
   ];
   const p = own?.progress;
   const count = p && p.target > 1 ? ` · you ${Math.min(p.value, p.target)} of ${p.target}` : '';
@@ -207,5 +219,5 @@ function goalLine(view: PlayerView, faction: Faction): SheetLine | null {
   // One sentence, never the name again: the goal's plain ask (user's plain-language rule, 2026-11-22).
   const detail = [vp > 0 && !mine ? (g.ask ?? g.rule)() : vp > 0 && live ? own?.holdNote ?? 'You lose it the turn you stop holding it.' : '', held.length ? `You also hold ${and(held)}.` : '']
     .filter(Boolean).join(' ');
-  return { key: 'goal', name: 'Faction goal', terms: `${vp || 2} VP · ${live ? 'held' : 'kept'}`, boxes, how, detail: detail ? `${detail.replace(/\.?$/, '.')}` : '', open: mine ? 0 : vp };
+  return { key: 'goal', name: 'Faction goal', terms: `${vp || 2} VP`, boxes, how, detail: detail ? `${detail.replace(/\.?$/, '.')}` : '', open: mine ? 0 : vp };
 }

@@ -29,11 +29,11 @@ fn scenario() -> GameState {
         rules::cities::found_city(&mut s, settler, &mut Vec::new()).unwrap();
     }
     for (kind, h) in [
-        (UnitKind::Soldier, at(9, 8)),
-        (UnitKind::Trooper, at(9, 10)),
-        (UnitKind::Ranger, at(9, 7)),
-        (UnitKind::Ranger, at(9, 9)),
-        (UnitKind::Ranger, at(8, 8)),
+        (UnitKind::Spearman, at(9, 8)),
+        (UnitKind::Pikeman, at(9, 10)),
+        (UnitKind::Archer, at(9, 7)),
+        (UnitKind::Archer, at(9, 9)),
+        (UnitKind::Archer, at(8, 8)),
         (UnitKind::Scout, at(10, 8)),
     ] {
         spawn_unit(&mut s, ME, kind, h);
@@ -84,7 +84,7 @@ fn a_visible_unguarded_city_does_not_wait_for_the_full_siege_force() {
     let spare = s
         .units
         .values()
-        .find(|u| u.owner == ME && u.kind == UnitKind::Ranger)
+        .find(|u| u.owner == ME && u.kind == UnitKind::Archer)
         .unwrap()
         .id;
     s.units.remove(&spare);
@@ -101,15 +101,15 @@ fn a_visible_unguarded_city_does_not_wait_for_the_full_siege_force() {
 }
 
 #[test]
-fn veteran_infantry_take_an_unguarded_city_without_waiting_for_rangers() {
+fn veteran_infantry_take_an_unguarded_city_without_waiting_for_archers() {
     let mut s = scenario();
-    s.units.retain(|_, u| u.kind != UnitKind::Ranger);
+    s.units.retain(|_, u| u.kind != UnitKind::Archer);
     for u in s
         .units
         .values_mut()
-        .filter(|u| u.owner == ME && u.kind == UnitKind::Soldier)
+        .filter(|u| u.owner == ME && u.kind == UnitKind::Spearman)
     {
-        u.kind = UnitKind::Trooper;
+        u.kind = UnitKind::Pikeman;
     }
     visibility::update_explored(&mut s);
     let city = s.city_at(at(12, 8)).unwrap().id;
@@ -145,11 +145,11 @@ fn veteran_infantry_take_an_unguarded_city_without_waiting_for_rangers() {
 fn staging_outside_sight_can_probe_a_remembered_city_without_reading_hidden_guards() {
     let mut a = scenario();
     a.units
-        .retain(|_, u| !matches!(u.kind, UnitKind::Scout | UnitKind::Ranger));
+        .retain(|_, u| !matches!(u.kind, UnitKind::Scout | UnitKind::Archer));
     for u in a.units.values_mut().filter(|u| u.owner == ME) {
-        u.kind = UnitKind::Trooper;
+        u.kind = UnitKind::Pikeman;
     }
-    let hidden = spawn_unit(&mut a, ENEMY, UnitKind::AssaultTrooper, at(27, 20));
+    let hidden = spawn_unit(&mut a, ENEMY, UnitKind::Musketman, at(27, 20));
     visibility::update_explored(&mut a);
     let mut b = a.clone();
     b.units.get_mut(&hidden).unwrap().pos = at(12, 8);
@@ -220,20 +220,20 @@ fn wounded_city_falls_after_a_volley_with_city_fire_enabled() {
         .unwrap()
         .buildings
         .insert(BuildingKind::Walls);
-    let soldier = s
+    let spearman = s
         .units
         .values()
-        .find(|u| u.owner == ME && u.kind == UnitKind::Soldier)
+        .find(|u| u.owner == ME && u.kind == UnitKind::Spearman)
         .unwrap()
         .id;
-    s.units.get_mut(&soldier).unwrap().pos = at(11, 8);
-    let ranger = s
+    s.units.get_mut(&spearman).unwrap().pos = at(11, 8);
+    let archer = s
         .units
         .values()
-        .find(|u| u.owner == ME && u.kind == UnitKind::Ranger)
+        .find(|u| u.owner == ME && u.kind == UnitKind::Archer)
         .unwrap()
         .id;
-    s.units.get_mut(&ranger).unwrap().pos = at(10, 7);
+    s.units.get_mut(&archer).unwrap().pos = at(10, 7);
     visibility::update_explored(&mut s);
     let orders = HumanPlaybookV6Brain::default().orders(&player_view(&s, ME));
     assert!(validate_orders(&s, ME, &orders).is_empty());
@@ -251,7 +251,7 @@ fn wounded_city_falls_after_a_volley_with_city_fire_enabled() {
 #[test]
 fn unseen_enemy_positions_cannot_change_the_plan() {
     let mut a = scenario();
-    let hidden = spawn_unit(&mut a, ENEMY, UnitKind::Soldier, at(27, 20));
+    let hidden = spawn_unit(&mut a, ENEMY, UnitKind::Spearman, at(27, 20));
     visibility::update_explored(&mut a);
     let mut b = a.clone();
     b.units.get_mut(&hidden).unwrap().pos = at(26, 21);
@@ -273,7 +273,7 @@ fn a_settler_raid_keeps_the_capturer_in_position_for_war_activation() {
     let raider = s
         .units
         .values()
-        .find(|u| u.owner == ME && u.kind == UnitKind::Trooper)
+        .find(|u| u.owner == ME && u.kind == UnitKind::Pikeman)
         .unwrap()
         .id;
     let orders = HumanPlaybookV6Brain::default().orders(&player_view(&s, ME));
@@ -297,17 +297,17 @@ fn withdraws_before_next_turns_unavoidable_city_shot_becomes_lethal() {
     for c in s.cities.values_mut().filter(|c| c.owner == ENEMY) {
         c.buildings.insert(BuildingKind::Walls);
     }
-    let ranger = s
+    let archer = s
         .units
         .values()
-        .find(|u| u.owner == ME && u.kind == UnitKind::Ranger)
+        .find(|u| u.owner == ME && u.kind == UnitKind::Archer)
         .unwrap()
         .id;
-    s.units.get_mut(&ranger).unwrap().pos = at(10, 8);
+    s.units.get_mut(&archer).unwrap().pos = at(10, 8);
     visibility::update_explored(&mut s);
     let view = player_view(&s, ME);
     let city = view.cities.iter().find(|c| c.owner == ENEMY).unwrap();
-    let original = view.units.iter().find(|u| u.id == ranger).unwrap();
+    let original = view.units.iter().find(|u| u.id == archer).unwrap();
     let hp = (40..=100)
         .find(|hp| {
             let mut u = original.clone();
@@ -325,24 +325,24 @@ fn withdraws_before_next_turns_unavoidable_city_shot_becomes_lethal() {
                 >= u.hp
         })
         .expect("a shot survivable now but lethal next turn");
-    s.units.get_mut(&ranger).unwrap().hp = hp;
+    s.units.get_mut(&archer).unwrap().hp = hp;
     let orders = HumanPlaybookV6Brain::default().orders(&player_view(&s, ME));
     assert!(
         !orders
             .iter()
-            .any(|o| matches!(o, Order::RangedAttack { unit, .. } if *unit == ranger))
+            .any(|o| matches!(o, Order::RangedAttack { unit, .. } if *unit == archer))
     );
     assert!(
         orders
             .iter()
             .any(|o| matches!(o, Order::MoveUnitPath { unit, to, .. }
-        if *unit == ranger && to.distance(city.pos) > 2)),
+        if *unit == archer && to.distance(city.pos) > 2)),
         "{orders:?}"
     );
     let (next, events) = resolve_turn(&s, &BTreeMap::from([(ME, orders)]));
     let escaped = next
         .units
-        .get(&ranger)
+        .get(&archer)
         .expect("survives the shot before moving");
     assert!(escaped.pos.distance(city.pos) > 2, "{events:?}");
 }
@@ -388,20 +388,20 @@ fn capture_infantry_can_arrive_from_two_tiles_after_the_finishing_volley() {
     }
     let city = s.city_at(at(12, 8)).unwrap().id;
     s.cities.get_mut(&city).unwrap().hp = 5;
-    let soldier = s
+    let spearman = s
         .units
         .values()
-        .find(|u| u.owner == ME && u.kind == UnitKind::Soldier)
+        .find(|u| u.owner == ME && u.kind == UnitKind::Spearman)
         .unwrap()
         .id;
-    let ranger = s
+    let archer = s
         .units
         .values()
-        .find(|u| u.owner == ME && u.kind == UnitKind::Ranger)
+        .find(|u| u.owner == ME && u.kind == UnitKind::Archer)
         .unwrap()
         .id;
-    s.units.get_mut(&soldier).unwrap().pos = at(10, 8);
-    s.units.get_mut(&ranger).unwrap().pos = at(11, 9);
+    s.units.get_mut(&spearman).unwrap().pos = at(10, 8);
+    s.units.get_mut(&archer).unwrap().pos = at(11, 9);
     visibility::update_explored(&mut s);
     let orders = HumanPlaybookV6Brain::default().orders(&player_view(&s, ME));
     assert!(validate_orders(&s, ME, &orders).is_empty());
@@ -417,18 +417,18 @@ fn doomed_infantry_is_not_counted_as_a_surviving_capture_unit() {
     }
     let city = s.city_at(at(12, 8)).unwrap().id;
     s.cities.get_mut(&city).unwrap().hp = 5;
-    let soldier = s
+    let spearman = s
         .units
         .values()
-        .find(|u| u.owner == ME && u.kind == UnitKind::Soldier)
+        .find(|u| u.owner == ME && u.kind == UnitKind::Spearman)
         .unwrap()
         .id;
-    s.units.get_mut(&soldier).unwrap().pos = at(11, 8);
-    s.units.get_mut(&soldier).unwrap().hp = 1;
+    s.units.get_mut(&spearman).unwrap().pos = at(11, 8);
+    s.units.get_mut(&spearman).unwrap().hp = 1;
     visibility::update_explored(&mut s);
     let view = player_view(&s, ME);
     let orders = HumanPlaybookV6Brain::default().orders(&view);
-    assert!(!orders.iter().any(|o| matches!(o, Order::MoveUnitPath { unit, to, .. } if *unit == soldier && *to == at(12, 8))));
+    assert!(!orders.iter().any(|o| matches!(o, Order::MoveUnitPath { unit, to, .. } if *unit == spearman && *to == at(12, 8))));
     assert!(validate_orders(&s, ME, &orders).is_empty());
 }
 
@@ -440,23 +440,23 @@ fn adjacent_infantry_finish_a_city_in_the_same_movement_round() {
     }
     let city = s.city_at(at(12, 8)).unwrap().id;
     s.cities.get_mut(&city).unwrap().hp = 90;
-    let soldier = s
+    let spearman = s
         .units
         .values()
-        .find(|u| u.owner == ME && u.kind == UnitKind::Soldier)
+        .find(|u| u.owner == ME && u.kind == UnitKind::Spearman)
         .unwrap()
         .id;
-    let trooper = s
+    let pikeman = s
         .units
         .values()
-        .find(|u| u.owner == ME && u.kind == UnitKind::Trooper)
+        .find(|u| u.owner == ME && u.kind == UnitKind::Pikeman)
         .unwrap()
         .id;
-    s.units.get_mut(&soldier).unwrap().pos = at(11, 8);
-    s.units.get_mut(&trooper).unwrap().pos = at(12, 9);
+    s.units.get_mut(&spearman).unwrap().pos = at(11, 8);
+    s.units.get_mut(&pikeman).unwrap().pos = at(12, 9);
     visibility::update_explored(&mut s);
     let view = player_view(&s, ME);
-    for id in [soldier, trooper] {
+    for id in [spearman, pikeman] {
         assert!(
             forecast_attack_mode(&view, id, at(12, 8), AttackMode::Melee)
                 .unwrap()
@@ -466,7 +466,7 @@ fn adjacent_infantry_finish_a_city_in_the_same_movement_round() {
     }
     let orders = HumanPlaybookV6Brain::default().orders(&view);
     assert!(validate_orders(&s, ME, &orders).is_empty());
-    for id in [soldier, trooper] {
+    for id in [spearman, pikeman] {
         assert!(orders.iter().any(|o| matches!(o, Order::MoveUnitPath { unit,to,.. } if *unit == id && *to == at(12,8))), "{orders:?}");
     }
     let (next, events) = resolve_turn(&s, &BTreeMap::from([(ME, orders)]));
@@ -486,9 +486,9 @@ fn sparta_can_declare_for_a_veteran_expedition_while_two_guards_stay_home() {
             .unwrap()
             .buildings
             .insert(BuildingKind::Walls);
-        guards.push(spawn_unit(&mut s, ME, UnitKind::Soldier, h));
+        guards.push(spawn_unit(&mut s, ME, UnitKind::Spearman, h));
     }
-    spawn_unit(&mut s, ME, UnitKind::Trooper, at(9, 8));
+    spawn_unit(&mut s, ME, UnitKind::Pikeman, at(9, 8));
     visibility::update_explored(&mut s);
     let orders = HumanPlaybookV6Brain::default().orders(&player_view(&s, ME));
     assert!(

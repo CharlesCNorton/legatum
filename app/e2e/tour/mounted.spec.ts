@@ -1,5 +1,5 @@
 // Screen tour, the mounted rebalance (2026-10-31): the forecast lines "Melee line against mounted (+40%)", "Mounted against ranged (+40%)" and
-// "Mounted against a city (-33%)", the mounted unit cards, the production picker, the Guide's unit-class section and the Chivalry unlock.
+// "Mounted against a city (-33%)", the mounted unit cards, the production picker, How to Play's unit-class section and the Chivalry unlock.
 // Run alone with `npx playwright test e2e/tour/mounted`. Shots land in test-results/screen-tour/<size>/mounted/; each forecast also saves its text.
 import { mkdir, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
@@ -33,16 +33,16 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     const f = setup.fixture;
     const open = f.cities.find((c) => c.id === setup.open)!;
     const walled = f.cities.find((c) => c.id === setup.walled)!;
-    const spear = spawnUnit(f, 1, 'Soldier', fromOffset(6, 8), false);
+    const spear = spawnUnit(f, 1, 'Spearman', fromOffset(6, 8), false);
     spear.fortify = 6;
-    const archer = spawnUnit(f, 1, 'Ranger', fromOffset(6, 3), false);
+    const archer = spawnUnit(f, 1, 'Archer', fromOffset(6, 3), false);
     archer.fortify = 6;
     const horseVsSpear = spawnUnit(f, 0, 'Horseman', ring(spear.pos, 1).find((h) => !f.units.some((u) => u.pos.q === h.q && u.pos.r === h.r))!, false);
     const horseVsArcher = spawnUnit(f, 0, 'Horseman', ring(archer.pos, 1).find((h) => !f.units.some((u) => u.pos.q === h.q && u.pos.r === h.r))!, false);
     const horseVsOpen = spawnUnit(f, 0, 'Horseman', ring(open.pos, 1).find((h) => !f.units.some((u) => u.pos.q === h.q && u.pos.r === h.r))!, false);
     const horseVsWalled = spawnUnit(f, 0, 'Horseman', ring(walled.pos, 1).find((h) => !f.units.some((u) => u.pos.q === h.q && u.pos.r === h.r))!, false);
     const rivalHorse = spawnUnit(f, 2, 'Horseman', fromOffset(20, 8), false);
-    const myPike = spawnUnit(f, 0, 'Soldier', ring(rivalHorse.pos, 1)[0], false);
+    const myPike = spawnUnit(f, 0, 'Spearman', ring(rivalHorse.pos, 1)[0], false);
     refreshVision(f);
     expect(distance(horseVsSpear.pos, spear.pos)).toBe(1);
     expect(distance(myPike.pos, rivalHorse.pos)).toBe(1);
@@ -77,8 +77,8 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     test.setTimeout(240_000);
     const f = wallsFixture().fixture;
     const rivalHorse = spawnUnit(f, 1, 'Horseman', fromOffset(4, 9), false);
-    const myArcher = spawnUnit(f, 0, 'Ranger', fromOffset(2, 9), false);
-    const rivalArcher = spawnUnit(f, 1, 'Ranger', fromOffset(9, 9), false);
+    const myArcher = spawnUnit(f, 0, 'Archer', fromOffset(2, 9), false);
+    const rivalArcher = spawnUnit(f, 1, 'Archer', fromOffset(9, 9), false);
     const myHorse = spawnUnit(f, 0, 'Horseman', fromOffset(10, 9), false);
     const rivalCav = spawnUnit(f, 2, 'Cavalry', fromOffset(21, 2), false);
     rivalCav.fortify = 6;
@@ -208,12 +208,12 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await shot(page, size, '32-knight-hovercard');
   });
 
-  test('Guide: the unit-class section (The matchup is a number)', async ({ page }) => {
+  test('How to Play: the unit-class section (The matchup is a number)', async ({ page }) => {
     await page.goto('/?client=wasm');
     await page.getByRole('button', { name: /^How to Play/ }).click();
     const guide = page.getByRole('dialog', { name: 'How to Play', exact: true });
     await expect(guide).toBeVisible();
-    await guide.getByRole('navigation', { name: 'Guide chapters' }).getByRole('button').filter({ hasText: 'Simultaneous combat' }).click();
+    await guide.getByRole('navigation', { name: 'How to Play chapters' }).getByRole('button').filter({ hasText: 'Simultaneous combat' }).click();
     const p = guide.locator('p', { hasText: 'The matchup is a number' });
     await p.scrollIntoViewIfNeeded();
     await expect(p).toContainText('Mounted gets the same bonus charging ranged units, but none when they shoot at it');

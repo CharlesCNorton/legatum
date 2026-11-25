@@ -75,6 +75,17 @@ No seat credentials, authorization headers, tokens, pending socket messages or c
 addresses enter the recording. Archives intentionally contain full game information for the
 owner's analysis, including information hidden by fog in the player UI.
 
+Client telemetry rides in the recording but never in a hash: `turn_times` (active play seconds per turn and
+session) and `frame_times` (`TurnFrameTime` in `crates/wasm/src/history.rs`, filled by `app/src/frameTelemetry.ts`).
+`frame_times` has one row per turn the player viewed: `frames`, `frame_p50_ms10` and `frame_p95_ms10` (gaps in
+tenths of ms), `frame_max_ms`, `slow_frames` (gaps over 50 ms), `inputs`, `input_p95_ms`, `input_max_ms`,
+`long_tasks`, `long_task_ms`, `long_draw_ms`, `long_terrain_ms` and `long_engine_ms` (how much of the long tasks was
+map drawing, terrain chunk painting and engine calls; the rest is interface work; added 2026-11-24, absent in
+older records), `map_draws`, `map_draw_mean_ms10`, `map_draw_max_ms`, `units`, `cities`, `zoom100`
+and `canvas_mp10` (map canvas in tenths of a megapixel). It identifies no browser, window or screen. It is
+optional and default-empty (omitted when empty), added in 2026-11 without a `RULES_VERSION` bump, so saves from
+before it still load; it is uploaded with the game and summarised by `tools/games/analyse_games.py`.
+
 Each telemetry snapshot has `turn` and `players`. Player rows contain `player`, `vp`, `cities`,
 `population`, `science` (produced in that resolved turn), `science_stored`, `gold` (treasury),
 `army_strength` (health-weighted Strongest Army title metric), `techs` (completed count),
@@ -105,7 +116,7 @@ invented.
 In the browser, the app captures each game's history at setup, every five turns, and at the finish,
 and keeps it in IndexedDB (gzip-compressed where browser compression is available) until it is
 delivered; a newer checkpoint of a game replaces the older one. The complete tape is also in the
-ordinary per-turn autosave. With an upload address, uploads retry after a reload, when the browser
+ordinary per-turn autosave. **Load an earlier turn** (local games only) opens one of the game's last 10 autosaved turns under the same game id; the tape then holds only the line played on, the record is uploaded at once instead of at the next checkpoint, and the times the player went back ride along as the upload-only `rewinds` key (`app/src/store.ts` `rewindTo`, `Rewind`; `infra/games/README.md`). With an upload address, uploads retry after a reload, when the browser
 comes online, and at the next checkpoint; without one, histories stay in the browser.
 **Export game history** in the game menu (Advanced) downloads the current game and every retained
 one, one gzip file per game (plain JSON if CompressionStream is unavailable); the browser may ask to

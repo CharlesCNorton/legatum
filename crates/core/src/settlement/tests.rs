@@ -122,7 +122,7 @@ fn unseen_world_changes_never_change_advice() {
         &[],
     );
     city(&mut s, 1, hex(10, 8), 5);
-    unit(&mut s, 1, UnitKind::Ranger, hex(9, 8));
+    unit(&mut s, 1, UnitKind::Archer, hex(9, 8));
     s.map.get_mut(hex(10, 7)).unwrap().terrain = Terrain::Hills;
     let after = player_view(&s, PlayerId(0));
     assert_eq!(before.tiles, after.tiles);
@@ -216,8 +216,11 @@ fn the_map_tints_exactly_the_legal_sites_and_explains_every_other_tile() {
         .collect();
     assert!(legal.len() > 50, "the fixture leaves many legal sites");
     assert_eq!(tinted, legal);
-    for i in 0..v.tiles.len() {
+    let table = site_blockers(&v);
+    assert_eq!(table.len(), v.tiles.len());
+    for (i, blocked) in table.iter().enumerate() {
         let h = hex_at(&v, i);
+        assert_eq!(*blocked, site_blocker(&v, h), "{h:?}");
         assert_eq!(site_blocker(&v, h).is_none(), legal.contains(&h), "{h:?}");
         s.units.get_mut(&id).unwrap().pos = h;
         assert_eq!(
@@ -306,7 +309,7 @@ fn known_threats_use_terrain_and_stationary_ranged_reach_and_exclude_teammates()
     let (mut v, u) = fixture();
     let mut enemy = u.clone();
     enemy.owner = PlayerId(1);
-    enemy.kind = UnitKind::Ranger;
+    enemy.kind = UnitKind::Archer;
     enemy.military = true;
     enemy.ranged = 15;
     enemy.range = 2;
@@ -325,7 +328,7 @@ fn peaceful_units_block_travel_without_becoming_attack_threats() {
     let mut foreign = u.clone();
     foreign.owner = PlayerId(1);
     foreign.pos = hex(6, 5);
-    foreign.kind = UnitKind::Ranger;
+    foreign.kind = UnitKind::Archer;
     foreign.military = true;
     foreign.ranged = 15;
     foreign.range = 2;

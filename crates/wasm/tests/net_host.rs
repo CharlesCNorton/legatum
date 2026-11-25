@@ -401,7 +401,8 @@ fn two_seats_resolve_native_turn_with_private_views_and_restartable_autosave() {
     orders.insert(PlayerId(0), orders_a);
     orders.insert(PlayerId(1), orders_b);
     native.step(&orders);
-    assert_eq!(turn_a["hash"], native.state.hash().to_string());
+    // Every seat sees the same masked value; the state hash itself is never sent.
+    assert_ne!(turn_a["hash"], native.state.hash().to_string());
     for (seat, view) in [(0, view_a), (1, view_b)] {
         let received: PlayerView = serde_json::from_value(view["view"].clone()).unwrap();
         assert_eq!(received, player_view(&native.state, PlayerId(seat)));
@@ -438,13 +439,13 @@ fn two_seats_resolve_native_turn_with_private_views_and_restartable_autosave() {
     let (mut b, _) = restarted.join(1);
     a.ready(true);
     b.ready(true);
-    let turn = a.turn(3, 0);
+    a.turn(3, 0);
     b.turn(3, 1);
     let orders = native.ai_orders();
     native.step(&orders);
     assert_eq!(
-        turn["hash"],
-        native.state.hash().to_string(),
+        game_json::parse_state(&restarted.save()).unwrap(),
+        native.state,
         "recreated AI brains continue identically"
     );
 }
@@ -705,7 +706,7 @@ fn ordinary_errors_and_game_replacement_do_not_report_seat_takeover() {
 }
 
 #[test]
-fn ranger_forecasts_use_the_requested_attack_mode() {
+fn archer_forecasts_use_the_requested_attack_mode() {
     use legatum_core::{AttackMode, Hex, Terrain, forecast_attack_mode, game::spawn_unit};
 
     let root = Disk::new();
@@ -727,24 +728,24 @@ fn ranger_forecasts_use_the_requested_attack_mode() {
         tile.ruin = false;
     }
     let target = Hex::new(6, 5);
-    let ranger = spawn_unit(&mut state, PlayerId(0), UnitKind::Ranger, Hex::new(5, 5));
-    spawn_unit(&mut state, PlayerId(2), UnitKind::Soldier, target);
-    state.units.get_mut(&ranger).unwrap().hp = 20;
+    let archer = spawn_unit(&mut state, PlayerId(0), UnitKind::Archer, Hex::new(5, 5));
+    spawn_unit(&mut state, PlayerId(2), UnitKind::Spearman, target);
+    state.units.get_mut(&archer).unwrap().hp = 20;
     legatum_core::visibility::update_explored(&mut state);
     assert_eq!(server.load(&game_json::state_to_json(&state)).status(), 200);
     let (mut peer, view) = server.join(0);
     for mode in [AttackMode::Melee, AttackMode::Ranged] {
-        peer.send(json!({"type": "forecast", "req_id": 7, "unit": ranger, "target": target, "mode": mode}));
+        peer.send(json!({"type": "forecast", "req_id": 7, "unit": archer, "target": target, "mode": mode}));
         let reply = peer.until("forecast");
         assert_eq!(reply["req_id"], 7);
-        let expected = forecast_attack_mode(&view, ranger, target, mode).unwrap();
+        let expected = forecast_attack_mode(&view, archer, target, mode).unwrap();
         assert_eq!(expected.ranged, mode == AttackMode::Ranged);
         assert_eq!(reply["forecast"], serde_json::to_value(expected).unwrap());
     }
     // Missing/unknown modes are rejected instead of falling back to a different attack.
     for mode in [None, Some("Auto")] {
         let mut request =
-            json!({"type": "forecast", "req_id": 8, "unit": ranger, "target": target});
+            json!({"type": "forecast", "req_id": 8, "unit": archer, "target": target});
         if let Some(mode) = mode {
             request["mode"] = json!(mode);
         }
@@ -1143,12 +1144,16 @@ fn staging_three_clients_start_in_human_order_and_resolve_native_first_turn() {
         }
     }
     native.step(&orders);
-    for (seat, peer) in peers.iter_mut().enumerate() {
-        assert_eq!(
-            peer.turn(2, seat as u8)["hash"],
-            native.state.hash().to_string()
-        );
-    }
+    let hashes: Vec<Value> = peers
+        .iter_mut()
+        .enumerate()
+        .map(|(seat, peer)| peer.turn(2, seat as u8)["hash"].clone())
+        .collect();
+    assert!(hashes.windows(2).all(|pair| pair[0] == pair[1]));
+    assert_eq!(
+        game_json::parse_state(&server.save()).unwrap(),
+        native.state
+    );
     assert_eq!(
         game_json::parse_state(&server.save()).unwrap(),
         native.state

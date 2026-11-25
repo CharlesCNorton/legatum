@@ -8,7 +8,7 @@ import { wallsFixture } from '../../src/test/wallsFixture';
 import { stageHeirHolder } from '../vpStage';
 import { forgeHeirFixture } from '../../src/test/forgeHeirFixture';
 import { broadcastCoreSave, freeTechsCoreSave, retireCoreSave, sakokuCoreSave, wildClearedCoreSave, wildCoreSave } from '../../src/test/goalActionsFixture';
-import { SIZES, aim, centred, dismissCelebrations, expectDockWhole, expectRaceWhole, loadFixture, openReport, selectThing, shot, showMoment, type GameWindow } from './helpers';
+import { SIZES, aim, centred, dismissCelebrations, expectDockWhole, expectRaceWhole, loadFixture, openReport, primaries, selectThing, shot, showMoment, type GameWindow } from './helpers';
 
 // Each test starts from its own save, so tests can run on separate workers.
 test.describe.configure({ mode: 'parallel' });
@@ -44,7 +44,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     const none = forgeHeirFixture('Byzantium', 'none');
     await loadFixture(page, coreFixture(none.fixture), 2);
     await selectThing(page, 'city', none.capital);
-    const card = page.locator('.city-panel .production-choice[data-item="u:Heir"]');
+    const card = page.locator('.city-panel .production-choice[data-item="u:HeirToTheThrone"]');
     await card.scrollIntoViewIfNeeded();
     await expect(card).toBeVisible();
     await expect(card.locator('.btn-buy')).toBeDisabled();
@@ -79,7 +79,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
           await shot(p, size, '91d-heir-disband-confirm');
           await p.getByRole('button', { name: 'Keep him' }).click();
           await selectThing(p, 'city', fx.capital);
-          const blocked = p.locator('.city-panel .production-choice[data-item="u:Heir"]');
+          const blocked = p.locator('.city-panel .production-choice[data-item="u:HeirToTheThrone"]');
           await blocked.scrollIntoViewIfNeeded();
           await expect(blocked).toContainText('The Heir to the Throne still lives');
           await p.mouse.move(5, size.height / 2);
@@ -89,7 +89,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
           await p.mouse.move(5, size.height / 2);
           await shot(p, size, '91g-race-own-heir-held-by-rival');
           // A military unit beside him: his tile offers the capture.
-          await selectThing(p, 'unit', fx.soldier!);
+          await selectThing(p, 'unit', fx.spearman!);
           const capture = p.getByTestId('heir-capture');
           await aim(p, fx.heirHex!, capture);
           await expect(capture).toHaveText('Capture the Heir (+2 VP)');
@@ -105,7 +105,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
   });
 
   test('Sparta 7b: Agoge in the production picker, older-save message', async ({ browser }) => {
-    // War Shrine: an Sparta city whose picker offers it (needs Chivalry).
+    // Agoge: an Sparta city whose picker offers it (needs Chivalry).
     const ctx = await browser.newContext({ viewport: { width: size.width, height: size.height } });
     try {
       const p2 = await ctx.newPage();
@@ -116,9 +116,9 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
       Object.assign(city, { population: 3, producing: null, prod: 0, productionQueue: [], productionBanked: [], buildings: [] });
       await loadFixture(p2, coreFixture(w.fixture), 2);
       await selectThing(p2, 'city', w.own);
-      const shrine = p2.locator('.city-panel .production-choice[data-item="b:WarShrine"]');
-      await shrine.scrollIntoViewIfNeeded();
-      await expect(shrine).toBeVisible();
+      const agoge = p2.locator('.city-panel .production-choice[data-item="b:Agoge"]');
+      await agoge.scrollIntoViewIfNeeded();
+      await expect(agoge).toBeVisible();
       await shot(p2, size, '67-sparta-war-shrine-picker');
     } finally { await ctx.close(); }
 
@@ -236,7 +236,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await revealSidebar(page, 'goal');
     const row = page.locator('[data-goal-action="Retire"]');
     await expect(row).toContainText('1 of 3 veterans retired');
-    // A veteran waiting in a city without a War Shrine: the panel says why, and the map marks where he can retire.
+    // A veteran waiting in a city without an Agoge: the panel says why, and the map marks where he can retire.
     const all = await units();
     const away = all.find((u) => u.level === 5)!, ready = all.find((u) => u.level === 4 && u.hp === 100)!;
     await selectThing(page, 'unit', away.id);
@@ -247,7 +247,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await page.mouse.move(5, size.height / 2);
     await expectRaceWhole(page);
     await shot(page, size, '93a-retire-veteran-away-shrine-city-marked');
-    // A veteran standing in the War Shrine city: the action is offered.
+    // A veteran standing in the Agoge city: the action is offered.
     await selectThing(page, 'unit', ready.id);
     await centred(page, ready.id);
     await expect(retireBtn).toBeEnabled();
@@ -345,6 +345,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
       await expect(p.getByTestId('turn-number')).toHaveText('102');
       await showMoment(p, 'A warband camp is cleared');
       await p.mouse.move(5, size.height / 2);
+      expect(await primaries(p), 'one primary with a moment card up').toBe(1);
       await shot(p, size, '93m-wild-camp-cleared-moment');
       await dismissCelebrations(p);
       await expect(p.locator('[data-goal-action="CallTheWild"]')).toContainText('2 of 3 cities have a wild camp');

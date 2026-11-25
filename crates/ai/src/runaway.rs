@@ -1089,27 +1089,27 @@ mod tests {
     }
 
     /// ENEMY (team 2) leads 6 VP to 2 with the strongest army and twice our army. Its city is 8
-    /// tiles east of ours; its army of four Soldiers is 10+ tiles from it, far to the south.
+    /// tiles east of ours; its army of four Spearmen is 10+ tiles from it, far to the south.
     fn runaway_view(at_war: bool) -> PlayerView {
         let mut v = ViewBuilder::new(40, 30)
             .faction(Faction::Sparta)
             .gold(1000)
             .city(1, ME, off(4, 5), 3)
             .city(2, ENEMY, off(12, 5), 3)
-            .unit(1, ME, UnitKind::Soldier, off(5, 5))
-            .unit(2, ME, UnitKind::Soldier, off(5, 6))
-            .unit(3, ME, UnitKind::Soldier, off(4, 6))
-            .unit(10, ENEMY, UnitKind::Soldier, off(12, 20))
-            .unit(11, ENEMY, UnitKind::Soldier, off(13, 20))
-            .unit(12, ENEMY, UnitKind::Soldier, off(12, 21))
-            .unit(13, ENEMY, UnitKind::Soldier, off(13, 21))
+            .unit(1, ME, UnitKind::Spearman, off(5, 5))
+            .unit(2, ME, UnitKind::Spearman, off(5, 6))
+            .unit(3, ME, UnitKind::Spearman, off(4, 6))
+            .unit(10, ENEMY, UnitKind::Spearman, off(12, 20))
+            .unit(11, ENEMY, UnitKind::Spearman, off(13, 20))
+            .unit(12, ENEMY, UnitKind::Spearman, off(12, 21))
+            .unit(13, ENEMY, UnitKind::Spearman, off(13, 21))
             .build();
         v.diplomacy.legacy = false;
         standings(&mut v, [(0, 2), (2, 6), (3, 1)]);
-        let soldier = unit_army_value(&v.units.iter().find(|u| u.id.0 == 10).unwrap().clone());
+        let spearman = unit_army_value(&v.units.iter().find(|u| u.id.0 == 10).unwrap().clone());
         armies(
             &mut v,
-            [(ME, 3 * soldier), (ENEMY, 4 * soldier), (THIRD, soldier)],
+            [(ME, 3 * spearman), (ENEMY, 4 * spearman), (THIRD, spearman)],
         );
         let me = v.team;
         let leader = v.team_of(ENEMY);
@@ -1306,7 +1306,7 @@ mod tests {
         let mut v = ViewBuilder {
             view: runaway_view(false),
         }
-        .unit(4, ME, UnitKind::Soldier, off(5, 7))
+        .unit(4, ME, UnitKind::Spearman, off(5, 7))
         .build();
         let target = v.team_of(ENEMY);
         let p = planner(&v, 1);
@@ -1514,10 +1514,14 @@ mod tests {
     fn a_coalition_war_strikes_at_once_with_the_army_at_home() {
         let mut v = runaway_view(true);
         // Wary enough (a VP lead and an army four times ours) for the all-in line.
-        let soldier = unit_army_value(&v.units.iter().find(|u| u.id.0 == 10).unwrap().clone());
+        let spearman = unit_army_value(&v.units.iter().find(|u| u.id.0 == 10).unwrap().clone());
         armies(
             &mut v,
-            [(ME, 3 * soldier), (ENEMY, 12 * soldier), (THIRD, soldier)],
+            [
+                (ME, 3 * spearman),
+                (ENEMY, 12 * spearman),
+                (THIRD, spearman),
+            ],
         );
         for u in v.units.iter_mut().filter(|u| u.owner == ENEMY) {
             u.pos = off(13 + (u.id.0 as i32 % 2), 6 + (u.id.0 as i32 / 12));
@@ -1552,7 +1556,7 @@ mod tests {
                 turns_needed: 10,
             });
         }
-        // Weakly held against our three Soldiers? The runaway's four stand beside the city, so
+        // Weakly held against our three Spearmen? The runaway's four stand beside the city, so
         // this is a gate on the defenders, not on the army-away test.
         let why = planner(&hold, 10).second_front_why();
         assert_ne!(why, Err("army not away"));

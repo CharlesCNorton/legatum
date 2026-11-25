@@ -14,7 +14,7 @@ import { empireOfPlayer } from '../empires';
 import { CAPITALS_RULE, CapitalChip, ClosedChip, DecadenceChip, HeldToken, HoldStrips, NobodyRow, LeadChip, PendingGoal, RowWho, TokenCard, tokenKey, useTokenCards, type RowRelation } from './VpHoldings';
 import { empireVars } from './vpParts';
 import { SidebarObjective } from './EraObjectives';
-/** Always-visible victory race (pillar 4): what each empire holds, and what nobody does. "All objectives" opens the sheet. */
+/** Always-visible victory race (pillar 4): what each empire holds, and what nobody does. "Score ledger" opens the sheet. */
 export function VpTrack() {
   const phone = usePhoneLayout();
   const view = useGame((s) => (s.views ? s.views[s.seat] : null));
@@ -46,8 +46,8 @@ export function VpTrack() {
   const nearRival = nearestRival(view);
   const raceDetails = <>
       <header className="ph vhc-head">
-        <h3>The Contest for History</h3>
-        <button className="link" aria-label="All objectives" aria-haspopup="dialog" onClick={() => set({ vpExpanded: true })}>Score ledger</button>
+        <h3>Victory race</h3>
+        <button className="link" aria-haspopup="dialog" onClick={() => set({ vpExpanded: true })}>Score ledger</button>
       </header>
       <div className="race-headline" data-celebration-counter={!model!.holds.length || ownHold ? 'vp' : undefined}>
         {!finished && model!.holds.length > 0 ? <HoldStrips model={{ ...model!, holds: model!.holds.slice(0, 1) }} named /> : <div className="race-score"><Icon name="vp" size={26} /><span>{finished ? 'Final standing' : 'Your standing'}<b>{mine?.vp ?? 0} / {mine?.target ?? 10} VP</b></span></div>}
@@ -55,7 +55,7 @@ export function VpTrack() {
       </div>
       {!finished && nearRival && <details className="sidebar-alerts">
         <summary><Icon name="ui-alert" size={14} />{rivalLine(view, nearRival).replace(/\.$/, '')}</summary>
-        <RivalWin view={view} rival={nearRival} />
+        <RivalWin view={view} rival={nearRival} showSummary={false} />
       </details>}
       {!finished && model && <SidebarObjective view={view} model={model} />}
       <details className="sidebar-standings" onToggle={e => { if (!e.currentTarget.open) cards.reset(); }}>
@@ -100,7 +100,7 @@ export function VpTrack() {
       </div>
       {!finished && model && <NobodyRow model={model} tokenProps={cards.tokenProps} />}
       {!finished && <footer className="vp-foot">
-        <button className="link" onClick={() => set({ diplomacyOpen: true })}>Diplomacy inbox{incoming ? ` (${incoming})` : ''}</button>
+        <button className="link" onClick={() => set({ diplomacyOpen: true })}>Diplomacy{incoming ? ` (${incoming})` : ''}</button>
       </footer>}
       </details>
   </>;

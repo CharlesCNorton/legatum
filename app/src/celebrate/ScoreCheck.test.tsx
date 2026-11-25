@@ -31,6 +31,7 @@ describe('the score check model', () => {
     const card = scoreCheckFor(view, 3, view.me);
     expect(card.track).toHaveLength(11);
     expect(card.track[5].pieces.map((p) => p.faction)).toEqual(['Mongols']);
+    expect(card.track[5].pieces.map((p) => p.name)).toEqual(['Mongols']);
     expect(card.track[3].pieces.some((p) => p.isMine)).toBe(true);
     expect(card.standing).toBe('You: 3 VP, tied 2nd with Celts and Switzerland.');
     expect(card.leader).toBe('Leader: Mongols, 5 VP.');
@@ -43,6 +44,9 @@ describe('the score check model', () => {
     const card = scoreCheckFor(view, 3, view.me);
     const ages = card.lines.find((l) => l.key === 'ages')!;
     expect(ages.boxes.slice(0, 3).map((b) => b.state)).toEqual(['kept', 'new', 'later']);
+    // A box still to come names its Age, as the heading does; the row terms are just the VP.
+    expect(ages.boxes[2].title).toBe('Renaissance: not begun yet');
+    expect(ages.terms).toBe('1 VP each');
     expect(ages.how).toBe('New card: Breach, capture a city that has Walls');
     expect(ages.fresh).toBe(true);
     expect(ages.open).toBe(1);
@@ -51,7 +55,14 @@ describe('the score check model', () => {
     expect(capitals.boxes).toHaveLength(view.players.filter((p) => p.team !== view.team).length);
     expect(capitals.how).toBe('Take a rival’s original capital');
     const wonders = card.lines.find((l) => l.key === 'wonders')!;
-    expect(wonders.boxes.filter((b) => b.state === 'held')).toHaveLength(2);
+    // One box per wonder, two cells wide (2 VP), drawing the wonder's icon; capitals draw their star.
+    const held = wonders.boxes.filter((b) => b.state === 'held');
+    expect(held).toHaveLength(1);
+    expect(held[0]).toMatchObject({ span: 2, icon: expect.stringMatching(/^building-/) });
+    expect(capitals.boxes.every((b) => b.star)).toBe(true);
+    const goal = card.lines.find((l) => l.key === 'goal')!;
+    expect(goal.boxes.reduce((n, b) => n + (b.span ?? 1), 0)).toBe(2);
+    expect(goal.boxes[0].icon).toBeTruthy();
     expect(wonders.detail).toContain('Great Library');
   });
 
@@ -119,8 +130,13 @@ describe('the takeover', () => {
     const t = host.querySelector('[data-testid=score-check]')!;
     expect(t.querySelector('.sc-kicker')?.textContent).toBe('The Medieval Age begins · Turn 92');
     expect(t.querySelectorAll('[data-testid=score-track] li')).toHaveLength(11);
+    expect(t.querySelector('.sc-piece[data-vp="5"]')?.getAttribute('title')).toBe('Mongols: 5 VP');
     expect([...t.querySelectorAll('.sc-row[data-line] .sc-name b')].map((b) => b.textContent)).toEqual(['Age cards', 'Rival capitals', 'World wonders', 'Faction goal']);
     expect(t.querySelector('.sc-row.fresh')?.getAttribute('data-line')).toBe('ages');
+    // The boxes draw the thing that scores: the wonder's icon, the capital's star.
+    expect(t.querySelector('.sc-row[data-line=wonders] .sc-box.held .mask-icon')).not.toBeNull();
+    expect(t.querySelector('.sc-row[data-line=capitals] .sc-box svg path')).not.toBeNull();
+    expect(t.querySelector('.sc-row[data-line=wonders] .sc-box.held')?.getAttribute('data-span')).toBe('2');
     expect(t.querySelectorAll('[data-primary-action]')).toHaveLength(1);
     act(() => t.querySelector<HTMLButtonElement>('[data-primary-action]')!.click());
     expect(dismiss).toHaveBeenCalledOnce();

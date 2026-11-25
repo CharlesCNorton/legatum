@@ -1,7 +1,7 @@
 // The online staging room, as specified in plans/game-protocol.md.
 import type { AiDifficulty, Faction } from './types';
-import { MAP_SIZES, levelFields, levelOf, mapDimensions, readDifficultyPreference, type Lobby, type MapSizeId, type Slot } from './lobby';
-import { apiFetch, rememberSeat, rememberedSeat, defaultWsUrl, defaultSocketFactory, serverBase, type ServerStatus, type SocketFactory, type SocketLike } from './remote';
+import { MAP_SIZES, levelFields, levelOf, mapDimensions, setDifficulty, type AiLevel, type Lobby, type MapSizeId, type Slot } from './lobby';
+import { apiFetch, joinCodeToSend, rememberSeat, rememberedSeat, defaultWsUrl, defaultSocketFactory, serverBase, type ServerStatus, type SocketFactory, type SocketLike } from './remote';
 
 // ---- Flag ----
 
@@ -37,6 +37,8 @@ export interface StagingConfig {
   turn_limit: number | null;
   /** Barbarian camps; servers from before barbarians omit it (read as on). */
   barbarians?: boolean;
+  /** The AI-only teams start in Alliances of two; servers from before it omit it (read as off). */
+  ai_alliances?: boolean;
   seats: StagingSeat[];
 }
 
@@ -58,8 +60,9 @@ export interface StagingState {
 
 export type StagingClientMsg =
   | { type: 'staging_watch'; host?: boolean }
-  | { type: 'staging_take'; seat: number; name: string; token?: string }
+  | { type: 'staging_take'; seat: number; name: string; token?: string; code?: string }
   | { type: 'staging_release'; seat: number }
+  | { type: 'staging_remove'; seat: number }
   | { type: 'staging_update'; name?: string; faction?: Faction | 'Random' }
   | { type: 'staging_ready'; ready: boolean }
   | { type: 'staging_leave' }
@@ -87,7 +90,8 @@ export function configFromLobby(l: Lobby): StagingConfig {
     turn_limit: l.turnLimit,
     // Omitted when on (the server's default), so default rooms keep their old config shape.
     ...(l.barbarians === false ? { barbarians: false } : {}),
-    seats: l.slots.map((s) => ({ kind: KIND[s.kind], name: s.name, faction: s.faction, team: s.team, difficulty: s.difficulty, ...(levelOf(s) === 'Training' ? { search: true } : {}) })),
+    ...(l.aiAlliances ? { ai_alliances: true } : {}),
+    seats: l.slots.map((s) => ({ kind: KIND[s.kind], name: s.name, faction: s.faction, team: s.team, difficulty: s.kind === 'ai' ? l.difficulty : s.difficulty, ...(s.kind === 'ai' && levelOf(l) === 'Training' ? { search: true } : {}) })),
   };
 }
 
@@ -98,20 +102,23 @@ export function lobbyFromStaging(st: StagingState, includeOccupants = true): Lob
   const c = st.config;
   const mapSize = (Object.keys(MAP_SIZES) as MapSizeId[]).find((k) => MAP_SIZES[k].width === c.width && MAP_SIZES[k].height === c.height) ?? { width: c.width, height: c.height };
   const aiLevels = c.seats.filter((s) => s.kind === 'ai').map((s) => levelOf(s));
-  const level = aiLevels.length && aiLevels.every((l) => l === aiLevels[0]) ? aiLevels[0] : readDifficultyPreference()?.level ?? 'Hard';
-  return {
+  // Older online rooms could mix seat levels. Use their hardest AI level throughout.
+  const rank: Record<AiLevel, number> = { Easy: 0, Normal: 1, Hard: 2, Training: 3 };
+  const level = aiLevels.reduce<AiLevel>((hardest, current) => rank[current] > rank[hardest] ? current : hardest, aiLevels[0] ?? 'Hard');
+  return setDifficulty({
     mode: 'host',
     preset: 'custom',
     seed: st.seed ?? 'Hidden',
     mapSize,
     turnLimit: c.turn_limit ?? null,
     barbarians: c.barbarians !== false,
+    aiAlliances: c.ai_alliances === true,
     ...levelFields(level),
     slots: c.seats.map((s, i) => {
       const o = includeOccupants ? st.occupants[i] : null;
       return { kind: SLOT_KIND[s.kind], name: o?.name ?? s.name, faction: o?.faction ?? s.faction, team: s.team, difficulty: s.difficulty, ...(levelOf(s) === 'Training' ? { search: true } : {}) };
     }),
-  };
+  }, level);
 }
 
 /** The host's lobby with the network players' own names and factions shown in their seats. */
@@ -140,7 +147,7 @@ export function settingsAcknowledged(config: StagingConfig, acknowledged: Stagin
   const host = state?.occupants[0];
   // Barbarians default to on: servers and configs may omit the flag, so compare it normalized.
   const canon = (c: Omit<StagingConfig, 'seed'> | undefined) => c && JSON.stringify({
-    width: c.width, height: c.height, turn_limit: c.turn_limit, barbarians: c.barbarians !== false, seats: c.seats,
+    width: c.width, height: c.height, turn_limit: c.turn_limit, barbarians: c.barbarians !== false, ai_alliances: c.ai_alliances === true, seats: c.seats,
   });
   const { seed, ...settings } = config;
   return config === acknowledged && !!host?.connected &&
@@ -220,7 +227,7 @@ export interface StagingEvents {
   started(seat: number, gameId: string, token: string): void;
   seatLost(message: string): void;
   closed(): void;
-  error(message: string): void;
+  error(message: string, code?: string): void;
 }
 
 const OPEN = 1;
@@ -262,7 +269,7 @@ export class StagingClient {
     sock.onopen = () => {
       if (this.socket !== sock || this.stopped) return;
       this.send({ type: 'staging_watch', ...(this.host ? { host: true } : {}) });
-      if (this.seat !== null) this.send({ type: 'staging_take', seat: this.seat, name: this.name, token: this.token });
+      if (this.seat !== null) this.send(this.takeMessage(this.seat, this.name));
       if (this.pendingUpdate) {
         this.send({ type: 'staging_update', ...this.pendingUpdate });
         this.pendingUpdate = null;
@@ -307,7 +314,13 @@ export class StagingClient {
     if (this.seat !== seat) this.token = undefined;
     this.seat = seat;
     this.name = name;
-    this.send({ type: 'staging_take', seat, name, token: this.token });
+    this.send(this.takeMessage(seat, name));
+  }
+
+  /** A seat claim; the typed join code rides along (the host ignores it on a rejoin with the seat's own credential). */
+  private takeMessage(seat: number, name: string): StagingClientMsg {
+    const code = joinCodeToSend();
+    return { type: 'staging_take', seat, name, token: this.token, ...(code ? { code } : {}) };
   }
 
   update(p: { name?: string; faction?: Faction | 'Random' }) {
@@ -325,6 +338,11 @@ export class StagingClient {
   /** One-shot host action; keep the host's own reservation and credential. */
   release(seat: number): boolean {
     return this.send({ type: 'staging_release', seat });
+  }
+
+  /** One-shot host action: take a remote player out of a seat; the seat stays closed until the host opens it. */
+  remove(seat: number): boolean {
+    return this.send({ type: 'staging_remove', seat });
   }
 
   /** Keep ownership until the server acknowledges release; never queue an offline leave. */
@@ -407,8 +425,19 @@ export class StagingClient {
           break;
         }
         if (msg.code === 'seat_taken') this.disconnect();
+        if (msg.code === 'removed') {
+          // The host took this player out. The seat is closed; this client keeps watching the room.
+          this.forget();
+          this.events.seatLost?.(msg.message);
+          break;
+        }
+        if (msg.code === 'join_code_needed' || msg.code === 'wrong_join_code') {
+          // The claim failed: stop asking for this seat until the player tries again.
+          this.seat = null;
+          this.token = undefined;
+        }
         if (msg.code === 'seat_occupied' || msg.code === 'seat_reserved' || msg.code === 'seat_expired' || msg.code === 'not_open') this.forget();
-        this.events.error?.(msg.message);
+        this.events.error?.(msg.message, msg.code);
         break;
     }
   }

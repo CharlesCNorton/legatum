@@ -7,9 +7,10 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState, type HTMLAtt
 import { CrestMedallion, Star, roman } from '../brand/ornaments';
 import { DECADENCE_FOOD_RULE, POWER_RULE, decadenceCurveText, decadenceRules, type DecadenceRules } from '../data';
 import { Icon } from './bits';
-import { RingMedallion } from './ringMedallion';
+import { RingMedallion, TreatyEmblem } from './ringMedallion';
 import { Amount } from './Amounts';
 import { sakokuChip, sakokuLine } from '../sakoku';
+import { GOAL_CITY_ICON, goalCityKindOf, tombChip, tombPublicLine, tombShort } from '../goalCities';
 import { useGame } from '../store';
 import { PortraitRoundel } from './premium';
 import { SourceCard, empireVars } from './vpParts';
@@ -139,7 +140,7 @@ export function TokenCard({ model, active, panel }: { model: VpModel | null; act
   return createPortal(
     <div ref={ref} id={CARD_ID} className="vhc-pop" role="tooltip" style={pos ? { top: pos.top, left: pos.left } : { top: 0, left: 0, visibility: 'hidden' }}>
       <SourceCard model={model} s={s} />
-      <div className="vhc-pop-hint"><kbd className="kbd">←</kbd><kbd className="kbd">→</kbd> every way to score <kbd className="kbd">Esc</kbd></div>
+      <div className="vhc-pop-hint"><kbd className="kbd">←</kbd><kbd className="kbd">→</kbd> next way to score <kbd className="kbd">Esc</kbd> <span>Rules: How to Play <kbd className="kbd">?</kbd></span></div>
     </div>,
     document.body,
   );
@@ -156,19 +157,27 @@ export function HeldToken({ t, props }: { t: Token; props: TokenProps }) {
   // A held goal's token also shows him on the map when he is in view: a click pans there.
   const locate = s.held && s.heldAt ? s.heldAt : undefined;
   const click = props.onClick as ((ev: MouseEvent<HTMLElement>) => void) | undefined;
-  return <button type="button" className={`vhc-tok k-${s.kind}${s.live ? ' live' : ''}`} style={empireVars(e)} aria-label={`${heldLabel(s, e, t.of)}${locate ? `. Click to show ${s.faction === 'Mongols' ? 'it' : 'him'} on the map` : ''}`} data-held={s.held || undefined} data-locate={locate ? `${locate.q},${locate.r}` : undefined} {...props}
+  return <button type="button" className={`vhc-tok k-${s.kind}${s.live ? ' live' : ''}`} style={empireVars(e)} aria-label={`${heldLabel(s, e, t.of)}${locate ? `. Click to show ${s.faction === 'Byzantium' ? 'him' : 'it'} on the map` : ''}`} data-held={s.held || undefined} data-locate={locate ? `${locate.q},${locate.r}` : undefined} {...props}
     onClick={locate ? (ev) => { click?.(ev); useGame.getState().jumpTo(locate); } : click}>
     {s.kind === 'goal' && !s.held ? <CrestMedallion faction={t.of?.faction ?? e.faction} color={t.of?.ink ?? e.ink} size={15} /> : s.kind === 'era' ? <b className="vhc-era-n">{roman(s.era!.era)}</b> : <Icon name={s.icon} size={14} />}
     {s.vp > 1 && <small>+{s.vp}</small>}
   </button>;
 }
 
-/** An empire's own goal, not done yet: its crest in a dashed ring. */
+/** An empire's own goal, not done yet: its crest in a dashed ring. A goal that lives in a city (Rome's Colonia Victrix,
+ * Egypt's Royal Tomb) shows the goal's own mark instead, the same mark its held token and the map seal wear; Egypt's
+ * token also carries the tomb's public count ("6/15"), so its row has one tomb mark. */
 export function PendingGoal({ t, props }: { t: Token; props: TokenProps }) {
   const { source: s, owner: e } = t;
+  const kind = goalCityKindOf(e.faction);
+  const st = kind === 'tomb' ? e.tomb : null;
+  const count = st ? `, Royal Tomb ${st.turns} of ${st.target} turns${st.working ? '' : ', paused'}` : '';
   return <span className={`vhc-goal-wrap${e.isMe && s.progress ? ' mine' : ''}`}>
-    <button type="button" className="vhc-goal-open" style={empireVars(e)} aria-label={`${s.name}, +${s.vp} VP, not yet${e.isMe ? `, yours, ${s.progress?.label ?? ''}` : `, ${e.name}`}`} {...props}>
-      <CrestMedallion faction={e.faction} color={e.ink} size={13} />
+    <button type="button" className={`vhc-goal-open${kind ? ' goal-city' : ''}${st ? ` tomb${st.working ? ' working' : ' paused'}` : ''}`} style={empireVars(e)}
+      data-testid={st ? 'tomb-chip' : undefined} data-owner={st ? e.id : undefined}
+      aria-label={`${s.name}, +${s.vp} VP, not yet${e.isMe ? `, yours, ${s.progress?.label ?? ''}` : `, ${e.name}`}${count}`} {...props}>
+      {kind ? <Icon name={GOAL_CITY_ICON[kind]} size={13} /> : <CrestMedallion faction={e.faction} color={e.ink} size={13} />}
+      {st && <small className="vhc-tomb-count">{tombChip(st)}</small>}
     </button>
     {e.isMe && s.progress && <small className="vhc-goal-progress">{s.progress.label}</small>}
   </span>;
@@ -225,6 +234,22 @@ export function ClosedChip({ members }: { members: VpEmpire[] }) {
   })}</>;
 }
 
+/** Egypt's public Royal Tomb work on its race row: the count toward the tomb, and whether the work is on (its cities stopped) or paused. */
+export function TombChip({ members }: { members: VpEmpire[] }) {
+  const working = members.filter((m) => m.tomb);
+  if (!working.length) return null;
+  return <>{working.map((m) => {
+    const st = m.tomb!;
+    const title = m.isMe
+      ? `${tombShort(st)}. ${st.working ? 'None of your cities builds or grows while the work is on.' : 'Paused: your cities build and grow; the count is kept.'}`
+      : `${m.name}: ${tombPublicLine(st)}`;
+    return <span key={m.id} className={`vhc-closed vhc-tomb${st.working ? ' working' : ''}`} title={title} data-testid="tomb-chip" data-owner={m.id}
+      aria-label={`${m.isMe ? 'Your' : `${m.name}'s`} ${tombShort(st)}${st.working ? '' : ', paused'}`}>
+      <Icon name="goal-royal-tomb" size={11} />{tombChip(st)}
+    </span>;
+  })}</>;
+}
+
 /** How far ahead of the average empire a row's empire is ("+60%", neutral: the cost is the red chip beside it), with the one rate it causes in the tooltip. */
 export function LeadChip({ members, rules = decadenceRules() }: { members: VpEmpire[]; rules?: DecadenceRules }) {
   if (rules.decadenceSlope === 0) return null;
@@ -259,10 +284,10 @@ export function DecadenceChip({ members, rules = decadenceRules() }: { members: 
 /** What a race row says about the relation with its empire: a pin on the roundel, the words in its tooltip and name. */
 export interface RowRelation { kind: 'war' | 'peace' | 'alliance'; declared?: boolean; isNew?: boolean; text: string; title: string }
 
-/** The pin on a roundel: war a red cross, peace a green check, an alliance the house star in gilt. Never colour alone. */
+/** The pin on a roundel: the treaty emblem (War red, Peace and Alliance ink; an Alliance is two rings). */
 function RelationPin({ r }: { r: RowRelation }) {
   return <span className={`vhc-rel ${r.kind}${r.declared ? ' declared' : ''}${r.isNew ? ' new' : ''}`} title={r.title} data-relation={r.text} aria-hidden="true">
-    {r.kind === 'alliance' ? <Star size={8} /> : <Icon name={r.kind === 'war' ? 'ui-cross' : 'ui-check'} size={8} />}
+    <TreatyEmblem kind={r.kind === 'war' ? 'War' : r.kind === 'alliance' ? 'Alliance' : 'Peace'} size={15} />
   </span>;
 }
 

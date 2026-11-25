@@ -1,5 +1,5 @@
 //! Peace closes foreign borders to every unit kind unless a separate rule opens them.
-//! War, Alliance and the Courier Hall open passage.
+//! War, Alliance and the Yam Relay Station open passage.
 use legatum_core::diplomacy::RelationState;
 use legatum_core::game::{blank_game, spawn_unit};
 use legatum_core::state::Map;
@@ -119,10 +119,10 @@ fn move_order(unit: UnitId, to: Hex) -> BTreeMap<PlayerId, Vec<Order>> {
 }
 
 #[test]
-fn mongols_soldiers_scouts_and_settlers_cannot_cross_at_peace() {
+fn mongols_spearmen_scouts_and_settlers_cannot_cross_at_peace() {
     let mut s = world(Faction::Mongols);
     for (kind, row) in [
-        (UnitKind::Soldier, 2),
+        (UnitKind::Spearman, 2),
         (UnitKind::Scout, 4),
         (UnitKind::Settler, 6),
     ] {
@@ -145,11 +145,11 @@ fn mongols_soldiers_scouts_and_settlers_cannot_cross_at_peace() {
 }
 
 #[test]
-fn a_soldier_ordered_across_the_border_by_a_stale_client_never_enters() {
+fn a_spearman_ordered_across_the_border_by_a_stale_client_never_enters() {
     let mut s = world(Faction::Mongols);
-    let soldier = spawn_unit(&mut s, ME, UnitKind::Soldier, h(3, 2));
-    let (next, _) = resolve_turn(&s, &move_order(soldier, h(5, 2)));
-    let at = next.units[&soldier].pos;
+    let spearman = spawn_unit(&mut s, ME, UnitKind::Spearman, h(3, 2));
+    let (next, _) = resolve_turn(&s, &move_order(spearman, h(5, 2)));
+    let at = next.units[&spearman].pos;
     assert_ne!(
         next.map.get(at).unwrap().owner,
         Some(THEM),
@@ -158,16 +158,16 @@ fn a_soldier_ordered_across_the_border_by_a_stale_client_never_enters() {
 }
 
 #[test]
-fn the_same_soldier_crosses_once_at_war() {
+fn the_same_spearman_crosses_once_at_war() {
     let mut s = world(Faction::Mongols);
     set_relation(&mut s, RelationState::War);
-    let soldier = spawn_unit(&mut s, ME, UnitKind::Soldier, h(3, 2));
+    let spearman = spawn_unit(&mut s, ME, UnitKind::Spearman, h(3, 2));
     assert!(
         rules::validate_orders(
             &s,
             ME,
             &[Order::MoveUnit {
-                unit: soldier,
+                unit: spearman,
                 to: h(5, 2)
             }]
         )
@@ -177,8 +177,8 @@ fn the_same_soldier_crosses_once_at_war() {
 
 #[test]
 fn mongols_keeps_its_extra_move() {
-    let plain = data::unit_stats_for(Faction::Celts, UnitKind::Trooper).moves;
-    let glass = data::unit_stats_for(Faction::Mongols, UnitKind::Trooper).moves;
+    let plain = data::unit_stats_for(Faction::Celts, UnitKind::Pikeman).moves;
+    let glass = data::unit_stats_for(Faction::Mongols, UnitKind::Pikeman).moves;
     assert_eq!(glass, plain + 1);
 }
 
@@ -198,31 +198,31 @@ fn hall_world() -> (GameState, CityId) {
 }
 
 #[test]
-fn the_courier_hall_opens_its_holders_land_to_a_soldier_at_peace_and_closes_when_it_falls() {
+fn the_yam_relay_station_opens_its_holders_land_to_a_spearman_at_peace_and_closes_when_it_falls() {
     let (mut s, city) = hall_world();
-    let soldier = spawn_unit(&mut s, ME, UnitKind::Soldier, h(3, 2));
+    let spearman = spawn_unit(&mut s, ME, UnitKind::Spearman, h(3, 2));
     let go = |s: &GameState| {
         rules::validate_orders(
             s,
             ME,
             &[Order::MoveUnit {
-                unit: soldier,
+                unit: spearman,
                 to: h(5, 2),
             }],
         )
     };
-    assert!(!go(&s).is_empty(), "closed before the Hall exists");
+    assert!(!go(&s).is_empty(), "closed before the Station exists");
     s.cities
         .get_mut(&city)
         .unwrap()
         .buildings
-        .insert(BuildingKind::CourierHall);
+        .insert(BuildingKind::YamRelayStation);
     s.player_mut(THEM).hall_city = Some(city);
     assert!(go(&s).is_empty(), "{:?}", go(&s));
     // Resolution agrees: the army walks into the holder's land, then stands there at Peace.
-    let (next, _) = resolve_turn(&s, &move_order(soldier, h(5, 2)));
+    let (next, _) = resolve_turn(&s, &move_order(spearman, h(5, 2)));
     assert_eq!(
-        next.map.get(next.units[&soldier].pos).unwrap().owner,
+        next.map.get(next.units[&spearman].pos).unwrap().owner,
         Some(THEM)
     );
     // The public view agrees with the engine for every kind.
@@ -237,6 +237,6 @@ fn the_courier_hall_opens_its_holders_land_to_a_soldier_at_peace_and_closes_when
     }
     // The city falls (razed): the road is gone and the soldier, stranded inside, is closed out again.
     s.cities.remove(&city);
-    assert!(!s.passage_allowed(ME, UnitKind::Soldier, Some(THEM)));
+    assert!(!s.passage_allowed(ME, UnitKind::Spearman, Some(THEM)));
     assert!(!go(&s).is_empty());
 }

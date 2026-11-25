@@ -22,7 +22,7 @@ def games_for(faction):
             "research_turns": {"0": {"IronWorking": 40 + seed}},
             "faction_goal_turns": {"0": goal} if goal else {},
             "germany_project_city_turns": {"Gold": seed},
-            "company_hires": [{"buyer": 0, "turn": 70 + seed, "gold": 80, "seller": 1, "unit": "Soldier", "until": 100}],
+            "company_hires": [{"buyer": 0, "turn": 70 + seed, "gold": 80, "seller": 1, "unit": "Spearman", "until": 100}],
             "celts_razes": {"0": seed},
             "era_entries": {"0": {"2": 60 + seed}},
         }
@@ -35,16 +35,10 @@ class RuleTable(unittest.TestCase):
         rows = ar.rule_table()
         names = [n for n, _, _ in rows]
         self.assertEqual(len(names), len(set(names)))
-        # Egypt and Rome have no faction goal (`GoalRule::None` in crates/core/src/goals.rs).
-        no_goal = {"egypt", "rome"}
         for faction in ar.FACTION_NAMES:
             kinds = [k for n, f, k in rows if f == faction]
             self.assertTrue(kinds, faction)
-            if faction in no_goal:
-                self.assertNotIn(f"{faction}_goal", [n for n, f, _ in rows if f == faction])
-                continue
             self.assertIn(f"{faction}_goal" if faction != "switzerland" else "swiss_goal", [n for n, f, _ in rows if f == faction])
-            self.assertTrue(kinds, faction)
         self.assertEqual({k for _, _, k in rows}, {"strength", "drawback"})
 
     def test_germany_has_the_current_rules(self):

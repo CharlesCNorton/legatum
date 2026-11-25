@@ -1,3 +1,4 @@
+import { newestGameState } from './autosave';
 import { revealSidebar } from './sidebarAssertions';
 import { endPlanning } from './turnActions';
 import { test, expect } from './fixtures';
@@ -38,7 +39,7 @@ for (const viewport of [{ name: 'desktop', width: 1440, height: 1100 }]) {
         await expect(page.getByTestId('turn-number')).toHaveText(String(turn));
         // Ruin celebrations hold the requested report; skip them before reading it.
         if (await page.locator('.moment-card, [data-celebrate-delta]').count()) await page.keyboard.press('Escape');
-        const state = await page.evaluate(() => JSON.parse(JSON.parse(localStorage.getItem('legatum.autosave.v1')!).game));
+        const state = await newestGameState<any>(page);
         positions.add(JSON.stringify(state.units['0'].pos));
         explored.push(state.players[0].tile_memory.filter(Boolean).length);
         ruin ||= state.players[0].ruins_explored > 0;
@@ -65,7 +66,7 @@ test('E toggles auto-explore on a military unit, and it moves on the next turn',
   const context = await browser.newContext({ baseURL, viewport: { width: 1440, height: 900 } });
   watchErrors(context);
   const fixture = explorationFixture();
-  fixture.units[0].kind = 'Soldier';
+  fixture.units[0].kind = 'Spearman';
   await context.addInitScript((game) => {
     if (!location.protocol.startsWith('http')) return;
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn: 1, names: ['Explorer'], savedAt: new Date().toISOString(), game }));
@@ -85,12 +86,12 @@ test('E toggles auto-explore on a military unit, and it moves on the next turn',
     await expect(page.getByRole('button', { name: /^Auto-explore/ })).toBeVisible();
     await page.keyboard.press('e');
     await expect(page.getByRole('button', { name: /^Stop auto-explore/ })).toBeVisible();
-    const start = await page.evaluate(() => JSON.stringify(JSON.parse(JSON.parse(localStorage.getItem('legatum.autosave.v1')!).game).units['0'].pos));
+    const start = JSON.stringify((await newestGameState<any>(page)).units['0'].pos);
     await endPlanning(page);
     await expect(page.getByTestId('turn-number')).toHaveText('2');
-    const after = await page.evaluate(() => JSON.parse(JSON.parse(localStorage.getItem('legatum.autosave.v1')!).game).units['0']);
+    const after = (await newestGameState<any>(page)).units['0'];
     expect(JSON.stringify(after.pos)).not.toBe(start);
-    expect(after.kind).toBe('Soldier');
+    expect(after.kind).toBe('Spearman');
     expect(after.automation).toBe('Explore');
   } finally { await context.close(); }
 });

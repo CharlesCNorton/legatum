@@ -60,7 +60,7 @@ for (const size of SIZES) test.describe(`yield icons ${size.width}x${size.height
       s.select({ kind: 'city', id: city.id }, true);
     });
     const panel = page.locator('.city-panel');
-    const card = panel.locator('.production-choice[data-item="b:Laboratory"]');
+    const card = panel.locator('.production-choice[data-item="b:Library"]');
     await expect(card).toBeVisible();
     await card.scrollIntoViewIfNeeded();
     if (!before) {
@@ -117,8 +117,8 @@ for (const size of SIZES) test.describe(`yield icons ${size.width}x${size.height
     await page.evaluate(() => (window as unknown as GameWindow).legatum.getState().set({ reportOpen: true }));
     const report = page.getByRole('complementary', { name: 'Turn report' });
     await expect.poll(async () => {
-      const open = page.getByTestId('moment-lane').getByRole('button', { name: 'Turn report', exact: true });
-      if (await open.isVisible()) await open.click();
+      // A moment card holds the report back; L opens it (the card has no Turn report button).
+      if (await page.getByTestId('moment-lane').locator('.moment-card').isVisible()) await page.keyboard.press('l');
       return report.isVisible();
     }).toBe(true);
     const line = report.locator('.rline', { hasText: /bought Granary/ });

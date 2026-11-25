@@ -13,13 +13,14 @@ pub mod session;
 pub mod tape;
 
 use legatum_core::{
-    AlongsideAttack, AttackMode, Faction, GameSetup, Hex, Order, PlayerId, UnitId,
+    AlongsideAttack, AttackMode, Faction, GameSetup, Hex, Order, PlayerId, PlayerView, UnitId,
     forecast_attack_mode, forecast_city_assault, player_view, validate_orders,
 };
 use serde::{Deserialize, Serialize};
 use session::{BrainKind, OrderMap, Session};
 use std::cell::RefCell;
 use std::panic::{AssertUnwindSafe, catch_unwind};
+use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 
 /// Primitive UI what-if queries. Every answer delegates to the same core function used by
@@ -414,6 +415,21 @@ impl Game {
     fn invalidate_view(&mut self) {
         self.state_change = self.state_change.wrapping_add(1);
         self.view_cache.get_mut().take();
+        self.forecast_view.get_mut().take();
+    }
+
+    /// The viewer's view for forecasts, built once per state.
+    fn forecast_view(&self, p: PlayerId) -> Rc<PlayerView> {
+        if let Some((player, change, view)) = self.forecast_view.borrow().as_ref()
+            && *player == p
+            && *change == self.state_change
+        {
+            return Rc::clone(view);
+        }
+        let view = Rc::new(player_view(&self.session.state, p));
+        self.forecast_view
+            .replace(Some((p, self.state_change, Rc::clone(&view))));
+        view
     }
 
     fn check_player(&self, player: u8) -> Result<PlayerId, String> {
@@ -428,10 +444,11 @@ impl Game {
         let setup = json::parse_setup(setup_json)?;
         Ok(Game {
             session: Session::try_new(&setup, scripted)?,
-            scenario: None,
 
             state_change: 0,
             view_cache: RefCell::new(None),
+            forecast_view: RefCell::new(None),
+            anonymized: RefCell::new(None),
         })
     }
 
@@ -439,40 +456,12 @@ impl Game {
         json::check_json_size(save_json)?;
         Ok(Game {
             session: Session::from_save_json(save_json, scripted)?,
-            scenario: None,
 
             state_change: 0,
             view_cache: RefCell::new(None),
+            forecast_view: RefCell::new(None),
+            anonymized: RefCell::new(None),
         })
-    }
-
-    /// Start a scenario: its prepared start state with the seat as the only human.
-    pub fn from_scenario_json(scenario_json: &str) -> Result<Game, String> {
-        let file = scenario::ScenarioFile::parse(scenario_json)?;
-        let start = file.prepare(true)?;
-        Ok(Game {
-            session: Session::from_state(start.clone(), scripted),
-            scenario: Some(scenario::ActiveScenario::new(file, start)),
-
-            state_change: 0,
-            view_cache: RefCell::new(None),
-        })
-    }
-
-    /// Re-attach a scenario's objective to a restored game (after recovering from a save).
-    pub fn attach_scenario_json(&mut self, scenario_json: &str) -> Result<(), String> {
-        let file = scenario::ScenarioFile::parse(scenario_json)?;
-        let start = file.prepare(true)?;
-        self.scenario = Some(scenario::ActiveScenario::new(file, start));
-        self.invalidate_view();
-        self.session.invalidate_state_hash();
-        Ok(())
-    }
-
-    /// The objective's status for the current state, as JSON.
-    pub fn scenario_status_json(&self) -> Result<String, String> {
-        let active = self.scenario.as_ref().ok_or("no scenario in play")?;
-        to_json(&active.status(&self.session.state))
     }
 
     pub fn view_json(&self, player: u8) -> Result<String, String> {
@@ -513,7 +502,7 @@ impl Game {
             "Ranged" => AttackMode::Ranged,
             _ => return Err(format!("unknown attack mode {mode:?} (Melee, Ranged)")),
         };
-        let view = player_view(&self.session.state, p);
+        let view = self.forecast_view(p);
         to_json(&forecast_attack_mode(
             &view,
             UnitId(unit),
@@ -541,7 +530,7 @@ impl Game {
         };
         let alongside: Vec<AlongsideAttack> = serde_json::from_str(alongside_json)
             .map_err(|e| format!("invalid alongside attacks: {e}"))?;
-        let view = player_view(&self.session.state, p);
+        let view = self.forecast_view(p);
         to_json(&forecast_city_assault(
             &view,
             UnitId(unit),
@@ -557,12 +546,6 @@ impl Game {
         if self.session.state.finished {
             return Err("the game is finished".into());
         }
-        if let Some(active) = &self.scenario
-            && active.status(&self.session.state).outcome
-                != legatum_core::scenario::Outcome::Playing
-        {
-            return Err("the scenario is over".into());
-        }
         let human: OrderMap = if human_orders_json.trim().is_empty() {
             OrderMap::new()
         } else {
@@ -576,9 +559,6 @@ impl Game {
             }
         }
         let mut orders = self.session.take_ai_orders();
-        if let Some(r) = self.scenario.as_ref().and_then(|a| a.file.rusher.as_ref()) {
-            rusher::apply(&mut orders, &self.session.state, r);
-        }
         orders.extend(human);
         let before: Vec<_> = self
             .session
@@ -783,9 +763,13 @@ struct CachedView {
 #[wasm_bindgen]
 pub struct Game {
     session: Session,
-    scenario: Option<scenario::ActiveScenario>,
     state_change: u64,
     view_cache: RefCell<Option<CachedView>>,
+    /// The viewer's `PlayerView` for hover forecasts, kept until the state changes: hovering a fight asks for
+    /// two or three forecasts per tile, and rebuilding the whole view for each made late-game hover lag.
+    forecast_view: RefCell<Option<(PlayerId, u64, Rc<PlayerView>)>>,
+    /// Where the last `public_archive` stopped, so the next upload replays only the turns since.
+    anonymized: RefCell<Option<history::AnonymizedResume>>,
 }
 
 #[wasm_bindgen]
@@ -893,6 +877,15 @@ impl Game {
         }))
     }
 
+    /// `site_blocker` for every tile, in tile-index order: one view parse answers every hover on that view.
+    pub fn site_blockers(view_json: &str) -> Result<String, JsError> {
+        js(guard(|| {
+            let view: legatum_core::PlayerView =
+                serde_json::from_str(view_json).map_err(|e| e.to_string())?;
+            to_json(&legatum_core::settlement::site_blockers(&view))
+        }))
+    }
+
     /// Threat tint from the fogged view, using the same reach calculation as settlement advice.
     pub fn known_threats(view_json: &str) -> Result<String, JsError> {
         js(guard(|| {
@@ -902,20 +895,35 @@ impl Game {
         }))
     }
 
-    /// Whether this one known enemy can reach a tile by moving next turn. Used for aftermath text.
-    pub fn unit_can_reach(view_json: &str, unit: u32, q: i32, r: i32) -> Result<bool, JsError> {
+    /// Which of these known enemies (`[id, ...]`) can reach a tile by moving next turn, as a JSON id list: the view is
+    /// parsed once for all of them (aftermath text asked per enemy, and a late-game view is large).
+    pub fn units_can_reach(
+        view_json: &str,
+        units_json: &str,
+        q: i32,
+        r: i32,
+    ) -> Result<String, JsError> {
         js(guard(|| {
-            let mut view: legatum_core::PlayerView =
+            let view: legatum_core::PlayerView =
                 serde_json::from_str(view_json).map_err(|e| e.to_string())?;
-            view.units.retain(|u| u.id == UnitId(unit));
-            if view.units.is_empty() {
-                return Ok(false);
-            }
-            view.units[0].ranged = 0;
+            let ids: Vec<u32> = serde_json::from_str(units_json).map_err(|e| e.to_string())?;
             let Some(index) = view.index(Hex::new(q, r)) else {
-                return Ok(false);
+                return to_json(&Vec::<u32>::new());
             };
-            Ok(legatum_core::settlement::known_threats(&view)[index] > 0)
+            let mut alone = view.clone();
+            let reach: Vec<u32> = ids
+                .into_iter()
+                .filter(|&id| {
+                    let Some(unit) = view.units.iter().find(|u| u.id == UnitId(id)) else {
+                        return false;
+                    };
+                    let mut unit = unit.clone();
+                    unit.ranged = 0;
+                    alone.units = vec![unit].into();
+                    legatum_core::settlement::known_threats(&alone)[index] > 0
+                })
+                .collect();
+            to_json(&reach)
         }))
     }
 
@@ -1037,7 +1045,7 @@ impl Game {
     pub fn public_archive(&self) -> Result<String, JsError> {
         js(guard(|| {
             let history = self.session.history.as_ref().ok_or("No recorded history")?;
-            to_json(&history.anonymized()?)
+            to_json(&history.anonymized_resuming(&mut self.anonymized.borrow_mut())?)
         }))
     }
 
@@ -1067,6 +1075,21 @@ impl Game {
         }))
     }
 
+    /// Attach a turn's browser frame and input timing (`TurnFrameTime` JSON) to the archive, outside GameState.
+    pub fn record_frame_time(&mut self, time_json: &str) -> Result<(), JsError> {
+        self.invalidate_view();
+        self.session.invalidate_state_hash();
+        js(guard(|| {
+            let time: history::TurnFrameTime =
+                serde_json::from_str(time_json).map_err(|e| format!("invalid frame time: {e}"))?;
+            self.session
+                .history
+                .as_mut()
+                .ok_or("No recorded history")?
+                .record_frame_time(time)
+        }))
+    }
+
     pub fn fork_archive(&mut self) {
         self.invalidate_view();
         self.session.invalidate_state_hash();
@@ -1077,21 +1100,6 @@ impl Game {
 
     pub fn load(json: &str) -> Result<Game, JsError> {
         js(guard(|| Game::from_save_json(json)))
-    }
-
-    /// Start a scenario from its file JSON (repo `scenarios/<id>.json`).
-    pub fn load_scenario(scenario_json: &str) -> Result<Game, JsError> {
-        js(guard(|| Game::from_scenario_json(scenario_json)))
-    }
-
-    /// Re-attach a scenario's objective after `load` restored its game.
-    pub fn attach_scenario(&mut self, scenario_json: &str) -> Result<(), JsError> {
-        js(guard(|| self.attach_scenario_json(scenario_json)))
-    }
-
-    /// Objective status JSON (`legatum_core::scenario::Status`) for the current state.
-    pub fn scenario_status(&self) -> Result<String, JsError> {
-        js(guard(|| self.scenario_status_json()))
     }
 
     /// Current state hash, decimal.
@@ -1115,6 +1123,28 @@ impl Game {
 mod tests {
     use super::*;
     use serde_json::Value;
+
+    #[test]
+    fn advisor_plans_turn_one_from_its_own_view() {
+        let setup = GameSetup::standard(7, [Faction::Athens, Faction::Byzantium]);
+        let game = Game::from_setup_json(&json::setup_to_value(&setup).to_string()).unwrap();
+        let view = game.view_json(0).unwrap();
+        let orders: Vec<Order> =
+            serde_json::from_str(&advisor_orders_json(&view).unwrap()).unwrap();
+        assert!(!orders.is_empty());
+        assert!(orders.iter().any(|o| matches!(
+            o,
+            Order::SetProduction { .. } | Order::SetProductionQueue { .. }
+        )));
+        assert!(orders.iter().any(|o| matches!(
+            o,
+            Order::SetResearch { .. } | Order::SetResearchQueue { .. }
+        )));
+        assert_eq!(
+            advisor_orders_json(&view).unwrap(),
+            advisor_orders_json(&view).unwrap()
+        );
+    }
 
     #[test]
     fn view_json_exposes_a_locked_building_predecessor() {
@@ -1159,7 +1189,7 @@ mod tests {
         let state_city = game.session.state.cities.get_mut(&city).unwrap();
         state_city.producing = None;
         state_city.production_queue.clear();
-        state_city.build_automation = Some(CityBuildFocus::Balanced);
+        state_city.build_automation = Some(CityBuildFocus::Economy);
         game.invalidate_view();
         let view = game.view_json(0).unwrap();
         let planned = city_automation_orders_json(&view, "[]").unwrap();
@@ -1216,7 +1246,7 @@ mod tests {
             .production_queue
             .clear();
         let current = ProductionItem::Unit {
-            unit: UnitKind::Soldier,
+            unit: UnitKind::Spearman,
         };
         let cost = legatum_core::economy::city_production_cost(
             &game.session.state,
@@ -1263,7 +1293,7 @@ mod tests {
                 .as_ref()
                 .unwrap()
                 .build_automation,
-            Some(CityBuildFocus::Balanced)
+            Some(CityBuildFocus::Economy)
         );
         // A missing field in an older city record is off by default.
         let mut old = serde_json::to_value(&reloaded.session.state.cities[&saved_city]).unwrap();
@@ -1289,7 +1319,7 @@ mod tests {
             matches!(
                 o.item,
                 legatum_core::ProductionItem::Unit {
-                    unit: UnitKind::Soldier
+                    unit: UnitKind::Spearman
                 }
             )
         });
@@ -1302,7 +1332,7 @@ mod tests {
         let manual = vec![Order::SetProduction {
             city: id,
             item: legatum_core::ProductionItem::Unit {
-                unit: UnitKind::Soldier,
+                unit: UnitKind::Spearman,
             },
         }];
         let manual_plan: CityAutomationPlan = serde_json::from_str(
@@ -1329,7 +1359,7 @@ mod tests {
             matches!(
                 o.item,
                 legatum_core::ProductionItem::Unit {
-                    unit: UnitKind::Soldier
+                    unit: UnitKind::Spearman
                 }
             )
         });
@@ -1497,7 +1527,7 @@ mod tests {
     }
 
     #[test]
-    fn cached_hash_matches_state_after_turn_save_load_and_scenario_attach() {
+    fn cached_hash_matches_state_after_turn_save_load() {
         let setup = standard_setup_json("7", "India", "Byzantium", "A", "B").unwrap();
         let mut game = Game::from_setup_json(&setup).unwrap();
         assert_eq!(game.hash(), game.session.state.hash().to_string());
@@ -1506,11 +1536,7 @@ mod tests {
         assert_eq!(game.hash(), game.session.state.hash().to_string());
         let save = game.save_json();
         assert_eq!(game.hash(), game.session.state.hash().to_string());
-        let mut loaded = Game::from_save_json(&save).unwrap();
-        assert_eq!(loaded.hash(), loaded.session.state.hash().to_string());
-        loaded
-            .attach_scenario_json(include_str!("../../../scenarios/opening-race.json"))
-            .unwrap();
+        let loaded = Game::from_save_json(&save).unwrap();
         assert_eq!(loaded.hash(), loaded.session.state.hash().to_string());
     }
 
@@ -1532,6 +1558,22 @@ mod tests {
         game.fork_archive();
         assert!(game.view_cache.borrow().is_none());
         assert_eq!(game.view_json(0).unwrap(), fresh(&game));
+    }
+
+    #[test]
+    fn forecast_view_is_reused_until_the_state_changes() {
+        let setup = standard_setup_json("7", "India", "Byzantium", "A", "B").unwrap();
+        let mut game = Game::from_setup_json(&setup).unwrap();
+        let first = game.forecast_view(PlayerId(0));
+        assert!(Rc::ptr_eq(&first, &game.forecast_view(PlayerId(0))));
+        assert!(!Rc::ptr_eq(&first, &game.forecast_view(PlayerId(1))));
+        game.end_turn_json("{}").unwrap();
+        let after = game.forecast_view(PlayerId(0));
+        assert_eq!(
+            to_json(&*after).unwrap(),
+            to_json(&player_view(&game.session.state, PlayerId(0))).unwrap()
+        );
+        assert_ne!(to_json(&*first).unwrap(), to_json(&*after).unwrap());
     }
 
     /// Lobby setups: solo on a small map with per-AI difficulty. Normal is omitted from JSON (old
@@ -1628,35 +1670,35 @@ mod tests {
         let unlocks = view["research"]["unlocks"].as_array().unwrap();
         let core = unlocks
             .iter()
-            .find(|u| u["item"]["building"] == "InferenceCore")
+            .find(|u| u["item"]["building"] == "ResearchLab")
             .unwrap();
-        assert_eq!(core["predecessor"], "College");
+        assert_eq!(core["predecessor"], "University");
         assert_eq!(core["min_population"], 8);
         assert_eq!(core["cost"], 360);
         assert_eq!(core["yields"]["science"], 6);
         let armor = unlocks
             .iter()
-            .find(|u| u["item"]["unit"] == "AssaultTrooper")
+            .find(|u| u["item"]["unit"] == "Musketman")
             .unwrap();
-        assert_eq!(armor["upgrade_from"], "Trooper");
+        assert_eq!(armor["upgrade_from"], "Pikeman");
         assert_eq!(armor["upgrade_cost"], 116);
         assert_eq!(armor["unit_strength"], 44);
-        let college = unlocks
+        let university = unlocks
             .iter()
-            .find(|u| u["item"]["building"] == "College")
+            .find(|u| u["item"]["building"] == "University")
             .unwrap();
-        assert_eq!(college["predecessor"], "Laboratory");
-        assert_eq!(college["min_population"], 5);
-        assert_eq!(college["cost"], 240);
+        assert_eq!(university["predecessor"], "Library");
+        assert_eq!(university["min_population"], 5);
+        assert_eq!(university["cost"], 240);
         // The Military Engineer retired with the Siege upgrade: it is no unit unlock.
         assert!(
             unlocks
                 .iter()
                 .all(|u| u["item"]["unit"] != "MilitaryEngineer")
         );
-        let ranger_upgrade: Vec<Order> =
+        let archer_upgrade: Vec<Order> =
             serde_json::from_str(r#"[{"type":"UpgradeUnit","unit":1}]"#).unwrap();
-        assert!(matches!(ranger_upgrade[0], Order::UpgradeUnit { .. }));
+        assert!(matches!(archer_upgrade[0], Order::UpgradeUnit { .. }));
 
         // Saves from before charters were removed carry a "doctrine" field; it is ignored.
         let mut save: Value = serde_json::from_str(&g.save_json()).unwrap();
@@ -1695,10 +1737,11 @@ mod tests {
         legatum_core::visibility::update_explored(&mut state);
         let mut game = Game {
             session: Session::from_state(state, scripted),
-            scenario: None,
 
             state_change: 0,
             view_cache: RefCell::new(None),
+            forecast_view: RefCell::new(None),
+            anonymized: RefCell::new(None),
         };
         let result: Value =
             serde_json::from_str(&game.end_turn_json(&to_json(&orders).unwrap()).unwrap()).unwrap();
@@ -1725,7 +1768,7 @@ mod tests {
     }
 
     #[test]
-    fn wounded_ranger_forecasts_match_melee_and_ranged_resolution() {
+    fn wounded_archer_forecasts_match_melee_and_ranged_resolution() {
         use legatum_core::{
             BattleForecast, Event, TeamId, Terrain, UnitKind, combat, game::spawn_unit,
         };
@@ -1744,8 +1787,8 @@ mod tests {
                 tile.ruin = false;
             }
             let target = Hex::new(6, 5);
-            let attacker = spawn_unit(state, PlayerId(0), UnitKind::Ranger, Hex::new(5, 5));
-            spawn_unit(state, PlayerId(1), UnitKind::Soldier, target);
+            let attacker = spawn_unit(state, PlayerId(0), UnitKind::Archer, Hex::new(5, 5));
+            spawn_unit(state, PlayerId(1), UnitKind::Spearman, target);
             state.units.get_mut(&attacker).unwrap().hp = 20;
             legatum_core::visibility::update_explored(state);
 
@@ -1895,7 +1938,7 @@ mod bicycle_two_tests {
                 ids.push(id);
                 let c = s.cities.get_mut(&id).unwrap();
                 c.population = 8;
-                c.buildings.insert(BuildingKind::Hydroponics);
+                c.buildings.insert(BuildingKind::Mill);
                 if let Some((required, _)) = data::great_work_requirement(building) {
                     c.buildings.insert(required);
                 }
@@ -1946,28 +1989,87 @@ mod bicycle_two_tests {
     }
 }
 
-/// The cities a scenario's objective is about, from its start state, for the briefing before
-/// it starts (`legatum_core::scenario::objective_targets`).
-#[wasm_bindgen]
-pub fn scenario_targets(scenario_json: &str) -> Result<String, JsError> {
-    js(scenario_targets_json(scenario_json))
-}
-
-pub fn scenario_targets_json(scenario_json: &str) -> Result<String, String> {
-    let file = scenario::ScenarioFile::parse(scenario_json)?;
-    let start = file.stored_state()?;
-    to_json(&legatum_core::scenario::objective_targets(
-        &file.objective,
-        file.seat,
-        &start,
-        &start,
-    ))
-}
-
 /// Stateless planning for local and online clients. The only input is the seat's fogged view.
 #[wasm_bindgen]
 pub fn explore_step(view_json: &str, unit: u32) -> Result<String, JsError> {
     js(explore_step_json(view_json, unit))
+}
+
+/// The in-game advisor: what a Hard AI would order for this seat this turn, planned only from the
+/// seat's own fogged view (no hidden information, pillar 6). The client explains each order in
+/// plain words and never submits them itself.
+#[wasm_bindgen]
+pub fn advisor_orders(view_json: &str) -> Result<String, JsError> {
+    js(guard(|| advisor_orders_json(view_json)))
+}
+
+thread_local! {
+    /// One advisor brain per seat and faction, kept across turns so its plans (openings, campaigns)
+    /// carry on like a real Hard seat's, with this turn's answer kept so asking again is free.
+    /// A new game, an earlier turn or another seat starts a new brain.
+    static ADVISOR: RefCell<Option<AdvisorSeat>> = const { RefCell::new(None) };
+}
+
+struct AdvisorSeat {
+    me: PlayerId,
+    faction: Faction,
+    turn: u32,
+    input: String,
+    brain: Box<dyn legatum_ai::Brain>,
+    answer: String,
+}
+
+pub fn advisor_orders_json(view_json: &str) -> Result<String, String> {
+    let view: PlayerView =
+        serde_json::from_str(view_json).map_err(|e| format!("invalid view: {e}"))?;
+    let faction = view
+        .players
+        .iter()
+        .find(|p| p.id == view.me)
+        .map(|p| p.faction)
+        .ok_or("the view has no player for its seat")?;
+    ADVISOR.with(|cell| {
+        let mut slot = cell.borrow_mut();
+        let same_seat = slot
+            .as_ref()
+            .is_some_and(|a| a.me == view.me && a.faction == faction);
+        if same_seat
+            && let Some(a) = slot
+                .as_ref()
+                .filter(|a| a.turn == view.turn && a.input == view_json)
+        {
+            return Ok(a.answer.clone());
+        }
+        if !same_seat
+            || slot
+                .as_ref()
+                .is_some_and(|a| a.turn > view.turn || a.turn == view.turn && a.input != view_json)
+        {
+            let brain: Box<dyn legatum_ai::Brain> = if view.rule_experiments.hard_v2_ai {
+                legatum_ai::hard_v2::brain(faction, 0, view.me)
+            } else {
+                Box::new(legatum_ai::ScriptedBrain::with_difficulty(
+                    faction,
+                    0,
+                    view.me,
+                    legatum_core::AiDifficulty::Hard,
+                ))
+            };
+            *slot = Some(AdvisorSeat {
+                me: view.me,
+                faction,
+                turn: view.turn,
+                input: String::new(),
+                brain,
+                answer: String::new(),
+            });
+        }
+        let seat = slot.as_mut().expect("advisor seat");
+        seat.turn = view.turn;
+        seat.input = view_json.to_owned();
+        seat.answer = to_json(&seat.brain.orders(&view))?;
+        Ok(seat.answer.clone())
+    })
 }
 
 /// Filter a proposed event list with the core's privacy rules for one player view.

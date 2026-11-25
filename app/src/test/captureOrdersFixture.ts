@@ -1,5 +1,5 @@
-// Playtest 8.4, turn 30 (user): five Soldiers ordered into a fallen city, one garrison soldier
-// left at 1 HP. One Soldier takes the city; the other four must be ready for orders afterwards.
+// Playtest 8.4, turn 30 (user): five Spearmen ordered into a fallen city, one garrison soldier
+// left at 1 HP. One Spearman takes the city; the other four must be ready for orders afterwards.
 import { fromOffset, neighbors } from '../hex';
 import { createState, makeStandardSetup, spawnUnit } from './fixtureEngine';
 import { idxOf, refreshVision } from './fixtureEngine';
@@ -29,10 +29,10 @@ export function captureOrdersFixture() {
   city(s, 1, 1, 'Vestige', CAPTURE_AT, 0);
   city(s, 2, 1, 'Rearguard', fromOffset(17, 9), 200);
   const home = city(s, 3, 0, 'Home', fromOffset(1, 10), 200);
-  home.producing = { kind: 'Unit', unit: 'Soldier' };
-  spawnUnit(s, 1, 'Soldier', CAPTURE_AT, false).hp = 1;
+  home.producing = { kind: 'Unit', unit: 'Spearman' };
+  spawnUnit(s, 1, 'Spearman', CAPTURE_AT, false).hp = 1;
   const attackers = neighbors(CAPTURE_AT).slice(0, 5).map((h) => {
-    const u = spawnUnit(s, 0, 'Soldier', h, false); u.goto = { ...CAPTURE_AT }; return u.id;
+    const u = spawnUnit(s, 0, 'Spearman', h, false); u.goto = { ...CAPTURE_AT }; return u.id;
   });
   refreshVision(s);
   return { state: s, attackers };

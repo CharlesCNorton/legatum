@@ -32,7 +32,7 @@ for (const [width, height] of [[1000, 600], [1440, 900]] as const) {
     expect(headlineFit.top).toBeGreaterThanOrEqual(-1);
     expect(headlineFit.bottom).toBeLessThanOrEqual(1);
     await scroll.evaluate((el) => { el.scrollTop = 0; });
-    await race.getByRole('button', { name: 'All objectives', exact: true }).click();
+    await race.getByRole('button', { name: 'Score ledger', exact: true }).click();
     const sheet = page.getByTestId('objective-sheet');
     await expect(sheet).toBeVisible();
     const head = sheet.locator('.sl-head'), body = sheet.locator('.sl-body');
@@ -58,7 +58,7 @@ for (const [width, height] of [[1000, 600], [1440, 900]] as const) {
     const bounds = await Promise.all([last.boundingBox(), body.boundingBox()]);
     expect(bounds[0]!.y + bounds[0]!.height).toBeLessThanOrEqual(bounds[1]!.y + bounds[1]!.height + 1);
     // Close is in view, and Escape gives the map back.
-    await expect(sheet.getByRole('button', { name: 'Close objectives' })).toBeInViewport();
+    await expect(sheet.getByRole('button', { name: 'Close score ledger' })).toBeInViewport();
     await page.keyboard.press('Escape');
     await expect(sheet).toHaveCount(0);
   });

@@ -1,11 +1,12 @@
-import { useState, type ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import { useGame } from '../../store';
 import { factionColor } from '../../theme';
 import { FactionPicker } from '../../ui/FactionPicker';
 import { OpenSeatButton } from '../../ui/OpenSeatButton';
+import { RemoveSeatButton } from '../../ui/RemoveSeatButton';
 import { Icon } from '../../ui/bits';
 import { MAX_PLAYERS } from '../../gameSetup';
-import { offeredLevels, DIFFICULTY_INFO, DIFFICULTY_LABEL, DIFFICULTY_SHORT, activeCount, addSlot, levelFields, levelOf, slotColorFactions, removeSlot, setSlot, slotKinds, type AiLevel, type Lobby, type LobbyMode, type Slot, type SlotKind } from '../../lobby';
+import { activeCount, addSlot, slotColorFactions, removeSlot, setSlot, slotKinds, type Lobby, type LobbyMode, type Slot, type SlotKind } from '../../lobby';
 import type { StagingState } from '../../staging';
 
 const KIND_LABEL: Record<SlotKind, string> = { you: 'You', human: 'Human', ai: 'AI', closed: 'Closed' };
@@ -50,7 +51,6 @@ export function SeatsTable({
           <span className="lbl">{room ? 'Player' : 'Name'}</span>
           <span className="lbl">Faction</span>
           <span className="lbl">Team</span>
-          <span className="lbl">AI level</span>
           <span />
         </div>
         {lobby.slots.map((s, i) => (
@@ -81,6 +81,7 @@ function Occupancy({ room, seat }: { room: RoomView; seat: number }) {
   const mySeat = useGame((s) => s.stagingSeat);
   const busy = useGame((s) => s.busy);
   const releaseSeat = useGame((s) => s.releaseStagingSeat);
+  const removePlayer = useGame((s) => s.removeStagingPlayer);
   const o = room.state.occupants[seat];
   if (!o) return <span className="occupant empty">Open · waiting for a player…</span>;
   const status = !o.connected ? 'disconnected' : o.is_host ? 'host' : o.ready ? 'Ready' : 'not ready';
@@ -93,6 +94,9 @@ function Occupancy({ room, seat }: { room: RoomView; seat: number }) {
       </span>
       {!room.guest && local && seat !== mySeat && !o.is_host && !o.connected && (
         <OpenSeatButton name={o.name} disabled={!!busy} onOpen={() => releaseSeat(seat)} />
+      )}
+      {!room.guest && local && seat !== mySeat && !o.is_host && o.connected && (
+        <RemoveSeatButton name={o.name} disabled={!!busy} onRemove={() => removePlayer(seat)} />
       )}
     </span>
   );
@@ -167,7 +171,7 @@ function SeatRow({
       </span>
       <span>{nameCell}</span>
       <span>
-        {!closed && (
+        {!closed && (room?.guest ? <span className="seat-text" aria-label={`Seat ${index + 1} faction`}>{slot.faction}</span> :
           <FactionPicker
             value={slot.faction}
             label={`Seat ${index + 1} faction`}
@@ -197,24 +201,6 @@ function SeatRow({
           ))}
       </span>
       <span>
-        {slot.kind === 'ai' ? (
-          readOnly ? (
-            <span className="seat-text" title={DIFFICULTY_LABEL[levelOf(slot)]}>{DIFFICULTY_SHORT[levelOf(slot)]}</span>
-          ) : (
-            <>
-            <AiLevelSelect
-              level={levelOf(slot)}
-              label={`Seat ${index + 1} AI level`}
-              onChange={(level) => onChange?.(levelFields(level))}
-            />
-            <span className="touch-only lobby-touch-note">{DIFFICULTY_INFO[levelOf(slot)]}</span>
-            </>
-          )
-        ) : (
-          <span className="muted">—</span>
-        )}
-      </span>
-      <span>
         {canRemove && (
           <button className="x seat-remove" onClick={onRemove} title="Remove this seat" aria-label={`Remove seat ${index + 1}`}>
             <Icon name="ui-cross" size={11} />
@@ -222,32 +208,5 @@ function SeatRow({
         )}
       </span>
     </div>
-  );
-}
-
-/** The closed select shows the short level name; the open list spells a longer one out. */
-function AiLevelSelect({ level, label, onChange }: { level: AiLevel; label: string; onChange: (level: AiLevel) => void }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <select
-      className="lobby-select"
-      value={level}
-      aria-label={label}
-      title={DIFFICULTY_INFO[level]}
-      aria-description={DIFFICULTY_INFO[level]}
-      onMouseDown={() => setOpen((o) => !o)}
-      onKeyDown={(e) => setOpen(e.key !== 'Escape' && e.key !== 'Tab' && (e.altKey || e.key === ' ' || e.key === 'Enter' || e.key === 'F4'))}
-      onBlur={() => setOpen(false)}
-      onChange={(e) => {
-        setOpen(false);
-        onChange(e.target.value as AiLevel);
-      }}
-    >
-      {offeredLevels().map((d) => (
-        <option key={d} value={d}>
-          {open || d !== level ? DIFFICULTY_LABEL[d] : DIFFICULTY_SHORT[d]}
-        </option>
-      ))}
-    </select>
   );
 }

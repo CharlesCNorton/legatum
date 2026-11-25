@@ -10,13 +10,14 @@ import {
   BUILDING_NAME, FACTION_GOAL, FACTION_INFO, GREAT_WORK_ICON, GREAT_WORK_NAME, GREAT_WORK_RULE,
   factionGoalRule, factionGoalTerms, factionGoalVp, decadenceRules, factionObjectiveText, isGreatWork, type DecadenceRules,
 } from './data';
-import { roman } from './brand/ornaments';
+import { roman } from './brand/roman';
 import { isBarbarian } from './barbarians';
 import { cappedGoalLabel } from './ui/goalText';
 import { empireOfPlayer, livingPlayers } from './empires';
 import { playerColor, playerInk } from './theme';
 import { buildTracks, teamHold, type TeamHold } from './vp';
 import { sakokuLine, sakokuStatus, type SakokuStatus } from './sakoku';
+import { goalCities, GOAL_CITY_TITLE, goalCityKindOf, tombPublicLine, tombStatus, type TombStatus } from './goalCities';
 import { aiLevel } from './aiLevel';
 
 type SourceKind = 'work' | 'goal' | 'era' | 'capital';
@@ -49,7 +50,7 @@ export interface EraObjective {
     countBaseline?: number; countTotal?: number; countingSinceTurn?: number; restartEras?: number[] };
 }
 
-/** An era as a way to score: its three objectives, who has entered it, and the viewer's standing in it. */
+/** An era as a way to score: its World Age card, who has entered it, and the viewer's standing in it. */
 interface EraInfo {
   era: number;
   /** The era's name from the core ("Consolidation"). */
@@ -88,7 +89,7 @@ export interface Source {
   privacy?: string;
   /** Your own progress where only you can see it. */
   progress?: Progress;
-  /** A held goal (Byzantium's Heir, Mongols's Courier Hall): whoever holds the item scores it, so `owners` are the holders, not the faction. */
+  /** A held goal (Byzantium's Heir, Mongols's Yam Relay Station): whoever holds the item scores it, so `owners` are the holders, not the faction. */
   held?: boolean;
   /** Held goals: who holds the item now, and where it stands when the viewer can place it (public facts only). */
   holdNote?: string;
@@ -116,6 +117,8 @@ export interface VpEmpire {
   isMine: boolean;
   /** Sakoku: this empire has closed the country (public), with its countdown. */
   sakoku?: SakokuStatus | null;
+  /** Egypt's Royal Tomb work (public): under way or paused, with its count; null when none is counted. */
+  tomb?: TombStatus | null;
   /** Its current Gold, public to every player. */
   gold: number;
   /** Its original capital still stands in its team's hands (public); the last team that holds one wins. */
@@ -240,12 +243,12 @@ export function buildVpModel(view: PlayerView): VpModel {
   const works = [baseWork, ...extraWorks];
   const capitalSources: Source[] = alive.flatMap((p) => (p.capitals_taken ?? []).map(([id, name]) => ({
     id: `capital-${p.id}-${id}`, kind: 'capital' as const, name, icon: 'city', vp: 1,
-    rule: `${p.name} holds the original capital ${name}: 1 VP while holding it`,
+    rule: `${empireOfPlayer(view, p.id)} holds the original capital ${name}: 1 VP while holding it`,
     terms: 'Held · follows the city', live: true, held: true,
     owners: [p.id], own: own([p.id]), facts: [{ id: p.id, value: 1, label: name }], unit: '',
   })).concat((p.capitals_sacked ?? []).map(([id, name]) => ({
     id: `capital-sacked-${p.id}-${id}`, kind: 'capital' as const, name, icon: 'city', vp: 1,
-    rule: `${p.name} sacked the original capital ${name}: 1 VP, kept for good`,
+    rule: `${empireOfPlayer(view, p.id)} sacked the original capital ${name}: 1 VP, kept for good`,
     terms: 'Kept · the city is gone', live: false, held: false,
     owners: [p.id], own: own([p.id]), facts: [{ id: p.id, value: 1, label: name }], unit: '',
   }))));
@@ -288,7 +291,8 @@ export function buildVpModel(view: PlayerView): VpModel {
     const s: Source = {
       id: goalId(p.id), kind: 'goal', name: g.name, icon: g.icon, vp: factionGoalVp(p.faction),
       rule: factionGoalRule(p.faction), detail: g.detail(),
-      terms: `${FACTION_INFO[p.faction].name} only · ${held ? 'Held goal' : factionGoalTerms(p.faction)}`,
+      terms: p.faction === 'Rome' ? 'Only Rome can found it' : p.faction === 'Egypt' ? 'Only Egypt can build it'
+        : `${FACTION_INFO[p.faction].name} only · ${held ? 'Held goal' : factionGoalTerms(p.faction)}`,
       live: g.live || held, owners, own: own(owners), only: p.id, faction: p.faction, facts: [], unit: '', held: held || undefined,
     };
     if (held) {
@@ -298,7 +302,11 @@ export function buildVpModel(view: PlayerView): VpModel {
     }
     const closed = sakokuStatus(p);
     if (p.id === me) s.progress = ownGoalProgress(view);
-    else if (p.goal_rule === 'Sakoku') {
+    else if (p.goal_rule === 'Tomb' && !owners.length) {
+      // The work is public: whether it is on and its count are everyone's facts (core `PlayerPublic.tomb_work`, `tomb_turns`).
+      const st = tombStatus(p);
+      s.facts = [{ id: p.id, value: st?.turns ?? 0, label: st ? tombPublicLine(st) : 'No work on the Royal Tomb yet' }];
+    } else if (p.goal_rule === 'Sakoku') {
       // The vow is public: the closed state, the countdown and whether the VP holds are everyone's facts.
       s.facts = [{ id: p.id, value: closed?.turns ?? 0, label: closed ? sakokuLine(closed) : 'Country open' }];
       s.privacy = 'Lost if it reopens the country';
@@ -318,7 +326,7 @@ export function buildVpModel(view: PlayerView): VpModel {
     const live = [...works, ...capitalSources, ...goals].filter((s) => s.owners.includes(p.id) && s.live);
     return {
       id: p.id, team: p.team, name: nameOf(p.id), faction: p.faction, aiLevel: aiLevel(p), color: playerColor(p.id), ink: playerInk(p.id),
-      isMe: p.id === me, isMine: team.has(p.id), power: p.power ?? 0, lead: p.lead_percent ?? 0, decadence: p.decadence_percent ?? 0, gold: p.gold ?? 0, capitalStands: p.capital_stands ?? true, sakoku: sakokuStatus(p), held: [...kept, ...live], goal,
+      isMe: p.id === me, isMine: team.has(p.id), power: p.power ?? 0, lead: p.lead_percent ?? 0, decadence: p.decadence_percent ?? 0, gold: p.gold ?? 0, capitalStands: p.capital_stands ?? true, sakoku: sakokuStatus(p), tomb: p.goal_rule === 'Tomb' ? tombStatus(p) : null, held: [...kept, ...live], goal,
     };
   });
 
@@ -359,10 +367,10 @@ function ownGoalProgress(view: PlayerView): Progress | undefined {
 
 /** The Byzantium `of`'s Heir: his position is public, so he is in every view, in fog too. */
 function visibleHeir(view: PlayerView, of: PlayerId): UnitView | undefined {
-  return view.units.find((u) => u.kind === 'Heir' && u.heir_of === of);
+  return view.units.find((u) => u.kind === 'HeirToTheThrone' && u.heir_of === of);
 }
 
-/** Where a held goal's item stands, when the viewer can place it: the Heir's tile (public every turn; `seen` says whether it is in sight now); the Hall's city while it is on the viewer's map (`seen` says whether it is in sight now). Public facts only. */
+/** Where a held goal's item stands, when the viewer can place it: the Heir's tile (public every turn; `seen` says whether it is in sight now); the Station's city while it is on the viewer's map (`seen` says whether it is in sight now). Public facts only. */
 function heldPlace(view: PlayerView, of: PlayerId, faction: Faction): { pos: Hex; seen: boolean; city?: string; barbarian?: boolean } | undefined {
   if (faction === 'Byzantium') {
     const heir = visibleHeir(view, of);
@@ -379,6 +387,13 @@ function heldPlace(view: PlayerView, of: PlayerId, faction: Faction): { pos: Hex
     const city = diwan && view.cities.find((c) => c.id === diwan.city);
     return city ? { pos: city.pos, seen: city.visible, city: city.name } : undefined;
   }
+  const kind = goalCityKindOf(faction);
+  if (kind) {
+    // Rome's Colonia and Egypt's tomb are public with their tile and name, through fog and on unexplored land.
+    const g = goalCities(view).find((x) => x.kind === kind && x.of === of);
+    const city = g && view.cities.find((c) => c.id === g.city);
+    return g ? { pos: g.at, seen: !!city?.visible, city: g.name } : undefined;
+  }
   return undefined;
 }
 
@@ -393,6 +408,12 @@ function heldHoldNote(view: PlayerView, faction: Faction, holders: PlayerId[], a
   if (faction === 'India') {
     if (!holders.length) return 'Nobody holds the Imperial Diwan yet';
     return `${names} ${verb} the Imperial Diwan${at?.city ? ` in ${at.city}` : ''}`;
+  }
+  const kind = goalCityKindOf(faction);
+  if (kind) {
+    const title = GOAL_CITY_TITLE[kind];
+    if (!holders.length) return `No ${title} stands.`;
+    return `${names} ${verb} the ${title}${at?.city ? ` in ${at.city}` : ''}.`;
   }
   const who = holders.length ? `${names} ${verb} the Heir` : at?.barbarian ? 'Barbarians hold the Heir: nobody scores until the camp is cleared' : 'Nobody holds the Heir now';
   return `${who}${at ? (at.seen ? ' · in view' : ' · out of sight') : ''}`;

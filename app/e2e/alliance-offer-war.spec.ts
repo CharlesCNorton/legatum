@@ -16,9 +16,9 @@ import { endPlanning } from './turnActions';
 
 type GameWindow = Window & { legatum: typeof useGame; legatumMap: { toScreen(hex: Hex): { x: number; y: number } } };
 const save = () => gunzipSync(readFileSync(fileURLToPath(new URL('./saves/p892-alliance-loop-t20.current.legatum.gz', import.meta.url)))).toString('utf8');
-// The Soldier beside Neuchâtel, which strikes the city's tile this turn.
-const SOLDIER = 3;
-const SWISS_SOLDIER: Hex = { q: 29, r: 22 };
+// The Spearman beside Neuchâtel, which strikes the city's tile this turn.
+const SPEARMAN = 3;
+const SWISS_SPEARMAN: Hex = { q: 29, r: 22 };
 const SWITZERLAND = 6;
 
 async function open(page: Page) {
@@ -58,10 +58,10 @@ test('declining Switzerland’s Alliance, then declaring War and attacking, neve
   await open(page);
   const cta = page.locator('.seatbar .cta').first();
   await revealSidebar(page, 'standings');
-  const inboxButton = page.getByRole('button', { name: /^Diplomacy inbox/ });
-  const inbox = page.getByRole('complementary', { name: 'Diplomacy inbox' });
+  const inboxButton = page.getByRole('button', { name: /^Diplomacy( \(\d+\))?$/ });
+  const inbox = page.getByRole('complementary', { name: 'Diplomacy', exact: true });
   await expect(cta).toContainText('Respond to offer');
-  await expect(inboxButton).toHaveText('Diplomacy inbox (1)');
+  await expect(inboxButton).toHaveText('Diplomacy (1)');
 
   // 1. Decline the offer: it is answered.
   await cta.click();
@@ -69,24 +69,24 @@ test('declining Switzerland’s Alliance, then declaring War and attacking, neve
   expect(await orders(page)).toEqual([{ type: 'RespondToProposal', proposal: 2, accept: false }]);
   await expect(cta).not.toContainText('Respond to offer');
 
-  // 2. Order a Soldier onto a Swiss Soldier at Peace: Declare War and attack.
+  // 2. Order a Spearman onto a Swiss Spearman at Peace: Declare War and attack.
   await page.evaluate((id) => {
     const s = (window as unknown as GameWindow).legatum.getState(), v = s.views![s.seat];
     s.set({ diplomacyOpen: false, techOpen: false });
     s.select({ kind: 'unit', id }); s.jumpTo(v.units.find((u) => u.id === id)!.pos);
-  }, SOLDIER);
-  const target = await mapPoint(page, SWISS_SOLDIER);
+  }, SPEARMAN);
+  const target = await mapPoint(page, SWISS_SPEARMAN);
   await page.mouse.click(target.x, target.y, { button: 'right' });
   await page.getByRole('dialog', { name: /^Declare War on / }).getByRole('button', { name: 'Declare War and attack' }).click();
   const plan = [
     { type: 'DeclareWar', against: SWITZERLAND, breach: false },
-    { type: 'MoveUnit', unit: SOLDIER, to: SWISS_SOLDIER },
+    { type: 'MoveUnit', unit: SPEARMAN, to: SWISS_SPEARMAN },
   ];
   await expect.poll(() => orders(page)).toEqual(plan);
 
   // The war ends the offer: no "Respond to offer", no inbox count, and the card says why.
   await expect(cta).not.toContainText('Respond to offer');
-  await expect(inboxButton).toHaveText('Diplomacy inbox');
+  await expect(inboxButton).toHaveText('Diplomacy');
   await inboxButton.click();
   await expect(inbox).toContainText('Ended by your War on');
   await expect(inbox.getByRole('button', { name: 'Decline', exact: true })).toHaveCount(0);
@@ -108,7 +108,7 @@ test('declining Switzerland’s Alliance, then declaring War and attacking, neve
       withdrawn: events.some((e) => e.type === 'ProposalInvalidated' && e.proposal.id === 2 && e.reason === 'War was declared'),
       offers: v.diplomacy.proposals.filter((p) => p.to === v.team).length,
     };
-  }, SOLDIER);
+  }, SPEARMAN);
   expect(after).toEqual({ battle: true, failed: [], withdrawn: true, offers: 0 });
   await expect(cta).not.toContainText('Respond to offer');
 });

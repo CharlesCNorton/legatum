@@ -250,7 +250,7 @@ pub fn check_state(state: &GameState) -> Result<(), String> {
 /// a seat in `players`, or the barbarians where they may appear; a tile is on the map.
 ///
 /// Team, city and unit ids are deliberately not checked here. States `resolve_turn` produces keep
-/// references to things that are gone: a razed Hall or Diwan city, a captured city's old records,
+/// references to things that are gone: a razed Station or Diwan city, a captured city's old records,
 /// camp rosters pruned only at the next barbarian planning, memories, supply records, relations
 /// and chronicle entries of a team whose empires are all eliminated. Every reader looks those up
 /// (`.get`, `contains`, team-member filters) and treats a miss as "gone"; none indexes by them, so
@@ -401,7 +401,7 @@ mod tests {
     /// Each case sets one reference in a valid save to a player, team, city, unit or tile the game
     /// does not have. `true` cases (an unknown player or a tile off the map) must be refused;
     /// `false` cases are stale team, city or unit references, which real games produce (a razed
-    /// Hall city, a pruned camp roster, a team with no members left) and must load.
+    /// Station city, a pruned camp roster, a team with no members left) and must load.
     fn mutations(base: &Value) -> Vec<(bool, &'static str, Value, String)> {
         let c = first_key(&base["cities"]);
         let u = first_key(&base["units"]);
@@ -419,7 +419,7 @@ mod tests {
             }
             json!([camp])
         };
-        let threat = |unit: Value, pos: Value| json!([{"unit": unit, "owner": 1, "kind": "Soldier", "pos": pos, "seen_turn": 1}]);
+        let threat = |unit: Value, pos: Value| json!([{"unit": unit, "owner": 1, "kind": "Spearman", "pos": pos, "seen_turn": 1}]);
         vec![
             (
                 true,
@@ -568,7 +568,7 @@ mod tests {
             (
                 true,
                 "tile landmark",
-                json!({"building": "CourierHall", "city": 1, "of": 200}),
+                json!({"building": "YamRelayStation", "city": 1, "of": 200}),
                 "map/tiles/0/landmark".to_string(),
             ),
             (
@@ -677,7 +677,7 @@ mod tests {
     }
 
     /// The app's fixtures build these states (`hall.wasm.test.ts`, `actions.wasm.test.ts`): a
-    /// Hall record pointing at a city that no longer exists, and a team left with no empire
+    /// Station record pointing at a city that no longer exists, and a team left with no empire
     /// after a player moves to another team. Both are reachable in play and must load.
     #[test]
     fn a_razed_hall_city_and_an_emptied_team_load() {

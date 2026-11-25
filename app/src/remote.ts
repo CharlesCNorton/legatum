@@ -47,17 +47,20 @@ export interface ServerStatus {
 
 export type ClientMsg =
   | { type: 'join'; seat: number; name: string; token: string }
-  | { type: 'game_take'; seat: number }
+  | { type: 'game_take'; seat: number; code?: string }
   | { type: 'game_release'; seat: number }
+  | { type: 'game_remove'; seat: number }
   | { type: 'orders'; game_id: string; turn: number; orders: Order[] }
   | { type: 'ready'; game_id: string; turn: number; ready: boolean }
   | { type: 'forecast'; req_id: number; unit: number; target: Hex; mode: AttackMode }
   | { type: 'assault'; req_id: number; unit: number; target: Hex; mode: AttackMode; alongside: AlongsideAttack[] }
-  | { type: 'ping' };
+  | { type: 'ping' }
+  /** Team map ping; sent only when the host's welcome said `map_pings`. */
+  | { type: 'map_ping'; hex: Hex };
 
 export type ServerMsg =
   | { type: 'seat_token'; seat: number; game_id: string; token: string }
-  | { type: 'welcome'; seat: number; game_id: string; orders: Order[] }
+  | { type: 'welcome'; seat: number; game_id: string; orders: Order[]; map_pings?: boolean }
   | { type: 'view'; view: PlayerView }
   | { type: 'seats'; seats: SeatStatus[] }
   | { type: 'validation'; errors: OrderError[] }
@@ -65,7 +68,8 @@ export type ServerMsg =
   | { type: 'forecast'; req_id: number; forecast: BattleForecast | null }
   | { type: 'assault'; req_id: number; assault: CityAssaultForecast | null }
   | { type: 'error'; code?: string; message: string }
-  | { type: 'pong' };
+  | { type: 'pong' }
+  | { type: 'map_ping'; from: number; hex: Hex; turn: number };
 
 // ---- HTTP ----
 
@@ -99,6 +103,24 @@ export function hostingHere(): boolean {
 }
 
 let serverBaseUrl = '';
+
+// ---- Join code (a guest's side) ----
+// The code the player typed for a locked game. It rides on seat claims only, lives in memory, and is
+// forgotten when the player leaves; a seat the guest already holds is rejoined with its own credential.
+
+let typedJoinCode = '';
+
+export function setJoinCode(code: string) {
+  typedJoinCode = code.trim();
+}
+
+/** The typed join code, or undefined when none (so the field is left out of the message). */
+export function joinCodeToSend(): string | undefined {
+  return typedJoinCode ? typedJoinCode.slice(0, 32) : undefined;
+}
+
+/** Error codes after which this connection must not retry by itself: the player acts first. */
+export const GIVE_UP_CODES: ReadonlySet<string> = new Set(['join_code_needed', 'wrong_join_code', 'too_many_codes', 'removed']);
 
 export function setServerBase(base: string) {
   serverBaseUrl = base.replace(/\/+$/, '');
@@ -179,6 +201,8 @@ export interface RemoteEvents {
   /** A forecast reply arrived (the cache changed). */
   forecast(): void;
   connection(state: ConnState): void;
+  /** A teammate pinged a tile. */
+  ping(from: number, hex: Hex, turn: number): void;
   error(message: string, code?: string): void;
 }
 
@@ -290,6 +314,8 @@ export class RemoteClient implements GameClient {
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private pingTimer: ReturnType<typeof setInterval> | null = null;
   private listeners: Partial<RemoteEvents> = {};
+  /** The host said it relays map pings (hosts from before pings never say so). */
+  private hostPings = false;
 
   constructor(
     seat: number,
@@ -345,6 +371,11 @@ export class RemoteClient implements GameClient {
     return this.state === 'open' && this.send({ type: 'game_release', seat });
   }
 
+  /** One-shot host action: take a remote player out of a seat and keep it closed. */
+  removeSeat(seat: number): boolean {
+    return this.state === 'open' && this.send({ type: 'game_remove', seat });
+  }
+
   /** Stop reconnecting; an explicit leave retains the credential for a manual rejoin. */
   disconnect(leave = true) {
     this.stopped = true;
@@ -382,7 +413,7 @@ export class RemoteClient implements GameClient {
     this.socket = sock;
     sock.onopen = () => {
       if (this.socket !== sock || this.stopped) return;
-      if (takeSeat) this.send({ type: 'game_take', seat: this.seat });
+      if (takeSeat) this.send({ type: 'game_take', seat: this.seat, ...(joinCodeToSend() ? { code: joinCodeToSend() } : {}) });
       else if (this.token) this.send({ type: 'join', seat: this.seat, name: this.name, token: this.token });
       else this.listeners.error?.('The seat claim was interrupted. Join again to retry.');
     };
@@ -466,6 +497,7 @@ export class RemoteClient implements GameClient {
         this.validatingOrders = [];
         this.seat = msg.seat;
         this.gameId = msg.game_id;
+        this.hostPings = msg.map_pings === true;
         this.attempts = 0;
         // Restore the server snapshot with the following view, before enabling Ready.
         this.welcomeOrders = decodeOrders(msg.orders);
@@ -542,9 +574,25 @@ export class RemoteClient implements GameClient {
       case 'error':
         this.validatingOrders = [];
         if (sock && msg.code === 'seat_taken') this.takeoverSocket = sock;
+        if (msg.code && GIVE_UP_CODES.has(msg.code)) {
+          // A join code the host refused, or the host removed this player: waiting cannot fix it.
+          this.stopped = true;
+          this.socket = null;
+          if (this.pingTimer) this.timers.stop(this.pingTimer);
+          this.pingTimer = null;
+          if (msg.code === 'removed') {
+            this.token = null;
+            rememberSeat(null);
+          }
+          sock.close();
+          this.setState('closed');
+        }
         this.listeners.error?.(msg.message, msg.code);
         break;
       case 'pong':
+        break;
+      case 'map_ping':
+        this.listeners.ping?.(msg.from, msg.hex, msg.turn);
         break;
     }
   }
@@ -582,6 +630,16 @@ export class RemoteClient implements GameClient {
     if (this.awaitingView || this.pendingTurn || this.state !== 'open' || !this.cachedView || !this.gameId) return false;
     this.pushOrders();
     return this.send({ type: 'ready', game_id: this.gameId, turn: this.cachedView.turn, ready });
+  }
+
+  /** Whether this host relays map pings to teammates. */
+  canPing(): boolean {
+    return this.hostPings && this.state === 'open';
+  }
+
+  /** Tell teammates about a tile. Nothing is sent to a host that does not relay pings. */
+  sendPing(hex: Hex): boolean {
+    return this.canPing() && this.send({ type: 'map_ping', hex });
   }
 
   pendingOrders(): Order[] {

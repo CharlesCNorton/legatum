@@ -2,6 +2,7 @@ import { stepReport, toggleLastTurnReport, useGame } from '../store';
 import { gameplayKeyAllowed } from '../gameplayKeys';
 import { readyAndPass } from '../ui/SeatBar';
 import { pendingDecisions } from '../turnFlow';
+import { useAdvisor } from '../ui/advisorModel';
 import { toggleOverlay } from '../map/overlays';
 import { airState, rebaseOptions, reconBlocker } from '../airWing';
 import { cityAutomationFocus, lastAutomationFocus, nextAutomationFocus, setCityAutomation } from '../automation';
@@ -85,6 +86,7 @@ export function handleGameKey(e: KeyboardEvent) {
       break;
     case 'Enter': {
       e.preventDefault();
+      if (document.querySelector('[data-advisor-id="welcome"]')) { useAdvisor.getState().markSeen('welcome'); break; }
       const finished = s.views?.[s.seat];
       // A finished game's one action: reopen its report.
       if (finished?.finished) { if (finished.history) s.openGameReport(); break; }
@@ -102,6 +104,7 @@ export function handleGameKey(e: KeyboardEvent) {
       if (map && e.target !== map && e.target !== document.body) { map.focus({ preventScroll: true }); break; }
       // Escape peels one layer at a time: the turn report first, then targeting, then selection.
       if (s.reportOpen && s.report) s.set({ reportOpen: false });
+      else if (s.pingMode) s.set({ pingMode: false });
       else if (s.place) s.set({ place: null });
       else if (s.air.what) s.set({ air: { plane: null, what: null, hover: null } });
       else if (s.mode !== 'normal') s.setMode('normal');
@@ -194,6 +197,10 @@ export function handleGameKey(e: KeyboardEvent) {
     case 'x':
     case 'X':
       if (e.shiftKey) disbandSelected();
+      break;
+    case 'p':
+    case 'P':
+      if (!e.ctrlKey && !e.metaKey && !e.altKey && s.canPing()) s.setPingMode(!s.pingMode);
       break;
   }
 }

@@ -43,6 +43,7 @@ impl Planner<'_> {
             || self.own_original_capital(c)
             || self.wonder_guard_city(c)
             || self.hall_guard_city(c)
+            || self.goal_city_guard(c)
             || self.heir_unguarded(c)
         {
             return false;
@@ -184,13 +185,13 @@ mod tests {
     }
 
     #[test]
-    fn a_rival_soldier_in_sight_ends_the_shelter_but_a_barbarian_does_not() {
+    fn a_rival_spearman_in_sight_ends_the_shelter_but_a_barbarian_does_not() {
         let rival = ViewBuilder { view: celts() }
-            .unit(50, ENEMY, UnitKind::Soldier, off(3, 16))
+            .unit(50, ENEMY, UnitKind::Spearman, off(3, 16))
             .build();
         assert!(!with_gene(&rival, LIGHT_GARRISONS).sheltered_city(&rival.cities[1]));
         let barbarian = ViewBuilder { view: celts() }
-            .unit(51, PlayerId::BARBARIAN, UnitKind::Soldier, off(3, 14))
+            .unit(51, PlayerId::BARBARIAN, UnitKind::Spearman, off(3, 14))
             .build();
         assert!(with_gene(&barbarian, LIGHT_GARRISONS).sheltered_city(&barbarian.cities[1]));
     }
@@ -199,8 +200,8 @@ mod tests {
     fn the_guard_of_a_camp_in_our_land_is_no_target_once_the_wild_is_played() {
         let mut v = ViewBuilder { view: celts() }
             .owner(off(3, 6), ME)
-            .unit(52, PlayerId::BARBARIAN, UnitKind::Soldier, off(3, 6))
-            .unit(53, PlayerId::BARBARIAN, UnitKind::Soldier, off(12, 6))
+            .unit(52, PlayerId::BARBARIAN, UnitKind::Spearman, off(3, 6))
+            .unit(53, PlayerId::BARBARIAN, UnitKind::Spearman, off(12, 6))
             .build();
         v.barbarian_camps = [off(3, 6), off(12, 6)]
             .into_iter()
@@ -227,7 +228,7 @@ mod tests {
         assert!(open >= SOFT_UNWALLED_VALUE, "{open}");
         let walled = ViewBuilder { view: celts() }
             .walled(3)
-            .unit(54, ENEMY, UnitKind::Soldier, off(26, 12))
+            .unit(54, ENEMY, UnitKind::Spearman, off(26, 12))
             .build();
         let p = with_gene(&walled, SOFT_TARGETS);
         assert!(p.celtic_soft_target(&walled.cities[2]) < open);

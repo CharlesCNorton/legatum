@@ -64,7 +64,7 @@ it('shows the shop to Byzantium only, one row per seller', async () => {
   const first = rows().find((r) => r.dataset.seller === '2')!;
   const faction = useGame.getState().views![0]!.players.find((p) => p.id === 2)!.faction;
   expect(first.textContent).toContain(specialUnitName(faction));
-  expect(first.textContent).toMatch(/melee/);
+  expect(first.textContent).toMatch(/\d+ strength/);
   expect(first.textContent).toContain(specialUnitEdge(faction));
   expect(first.querySelector('button')!.getAttribute('aria-label')).toMatch(new RegExp(`^Hire an? ${specialUnitName(faction)} Company from .* for 40 Gold$`));
 });
@@ -116,7 +116,7 @@ it('shows the hired Company\'s net Gold and first unpaid turn from the treasury 
 
 it('a seller that cannot field its unit yet is one muted line saying why, with nothing to press', async () => {
   await renderShop('Byzantium', 500, [
-    { seller: 2, unit: 'Soldier', price: 40 },
+    { seller: 2, unit: 'Spearman', price: 40 },
     { seller: 3, unit: 'Tank', price: 300, unavailable: 'Panzer needs Armoured Warfare' },
   ]);
   const shop = container.querySelector('[data-testid="company-shop"]')!;
@@ -137,9 +137,9 @@ it('says why the shop is empty before first contact', async () => {
 
 it('a hired Company says whose it was, its countdown and its upkeep in the unit panel and tile card; the last turn says so', async () => {
   const { client, view } = await renderShop();
-  const soldier = view.units.find((u) => u.owner === 0 && u.kind !== 'Settler') ?? client.view(0).units.find((u) => u.owner === 0)!;
-  const hired = { ...soldier, kind: 'Soldier' as const, military: true, contract_until: view.turn + 7, origin: 'Sparta' as const };
-  const v = { ...view, units: [hired, ...view.units.filter((u) => u.id !== soldier.id)] };
+  const spearman = view.units.find((u) => u.owner === 0 && u.kind !== 'Settler') ?? client.view(0).units.find((u) => u.owner === 0)!;
+  const hired = { ...spearman, kind: 'Spearman' as const, military: true, contract_until: view.turn + 7, origin: 'Sparta' as const };
+  const v = { ...view, units: [hired, ...view.units.filter((u) => u.id !== spearman.id)] };
   useGame.setState({ views: [v], selection: { kind: 'unit', id: hired.id } });
   act(() => root.render(<UnitPanel unit={hired} view={v} />));
   expect(container.querySelector('[data-testid="company-tag"]')!.textContent).toContain(`Hired from Sparta: 7 turns of contract left, upkeep ${RULES.company.upkeep} Gold a turn`);

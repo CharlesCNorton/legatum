@@ -1,19 +1,20 @@
 # Learnings (digest)
 
-This file is the short list of lessons that are still true and still change what an agent should do. Read it at session start and after compaction. The full record, every entry verbatim with its evidence, lives in the monthly archive under `docs/learnings/` (`2026-09.md`, `2026-10.md`, `2026-11.md`, ...).
+This file is the short list of lessons that are still true and still change what an agent should do. Read it at session start and after compaction. The full record, every entry verbatim with its evidence, lives in the archive under `docs/learnings/`: one file per entry in `docs/learnings/<YYYY-MM>/` since 2026-11-22, and the closed month files (`2026-09.md`, `2026-10.md`, `2026-11.md`) for everything earlier.
 
-**How to add a learning.** Append a dated entry (`## YYYY-MM-DD: title`, then bullets: cause, evidence, what changed) at the top of the current month's archive file, `docs/learnings/<YYYY-MM>.md`; start the file if the month is new. Promote it here, as one or two lines with the archive month in brackets, only if it is durable: a rule an agent must follow from now on. Correct or delete digest lines that stop being true; the archive keeps the history. Lessons about removed systems (the Tauri desktop app, the Mac app, the LAN server, iOS, Quick speed, crowns, decadence, the TS mock engine, the Codex lanes on the Mac) stay in the archive only.
+**How to add a learning.** Write a dated entry (`## YYYY-MM-DD: title`, then bullets: cause, evidence, what changed) as its own new file, `docs/learnings/<YYYY-MM>/<DD>-<slug>.md` (for example `docs/learnings/2026-11/22-one-file-per-learning.md`). Never append to a month file or to another entry's file: a shared file that every branch appends to conflicts in every open pull request. Promote it here, as one or two lines with the archive month in brackets, only if it is durable: a rule an agent must follow from now on. Correct or delete digest lines that stop being true; the archive keeps the history. Lessons about removed systems (the Tauri desktop app, the Mac app, the LAN server, iOS, Quick speed, crowns, decadence, the TS mock engine, the Codex lanes on the Mac) stay in the archive only.
 
-To find the full entry for a line, search its month file for the words in the line.
+To find the full entry for a line, search `docs/learnings/` for the words in the line (`grep -rn "words" docs/learnings/`).
 
 ## Engine and determinism
 
 - Integer math only, and never cast a `u64` seed or hash to `usize` (32-bit on wasm32, so native and WASM diverge). Apply a percentage to the total, not the delta (`total * 75 / 100`), or small values escape it. [2026-09]
 - On wasm32 `catch_unwind` catches nothing: a panic reaches JS as `RuntimeError: unreachable`; the UI recovers by rebuilding the `Game` from its last save. Treat save JSON as opaque in JS (u64 bitset words lose precision if re-parsed). [2026-09]
-- Saves and tapes from another `RULES_VERSION` are refused; there are no migrations (designer's "no grandfathering", 2026-10-31). Any change to the save shape or to resolution bumps `RULES_VERSION` and moves every pinned hash and embedded scenario state. [2026-10]
+- Saves and tapes from another `RULES_VERSION` are refused; there are no migrations (designer's "no grandfathering", 2026-10-31). Any change to the save shape or to resolution bumps `RULES_VERSION` (except optional, default-empty client telemetry that no hash reads, such as `turn_times` and `frame_times`) and moves every pinned hash and embedded scenario state. [2026-10]
 - Parallel branches silently pick the same `RULES_VERSION`; git merges the shared number with no conflict. Re-check the number against master after every merge, and re-encode scenarios cut on a branch when master bumped first. [2026-11, 2026-11 "scenario cut on a branch"]
 - New state fields must skip serializing their default (`skip_serializing_if`), or every archived fixture re-serializes and archive-hash pins fail. Removing or renaming an enum variant breaks every reader of old records, including the archive index. [2026-10, 2026-11]
 - `GameState::hash` covers player names; anonymizing a recording needs a replay (`Recording::anonymized`). [2026-11]
+- A unit or building identifier is the PascalCase of its display name (a test pins it). `GameState::hash` is FNV-1a over the JSON text, so renaming a variant moves every hash: keep the old name as `#[serde(alias)]`, bump `RULES_VERSION`, repin. After a variant rename run clippy with `-D warnings`: under `use UnitKind::*` a removed name silently becomes a catch-all binding. [2026-11 "Identifiers renamed"]
 - Every new `Order` variant needs a tape round-trip test in `crates/wasm/src/tape.rs`; a replay that reports hash mismatches is a bug, not noise. [2026-11]
 - Planning-time validation must apply the same phase order as resolution (surprise war in phase 0 makes a same-turn shot legal). A phase-1 order must not change anything the same turn's combat forecasts read. [2026-10, 2026-09]
 - A public fact that feeds passage or legality must be set in both `PlayerView` constructors (`player_view_cached` and `order_check_view`). [2026-10]
@@ -31,6 +32,7 @@ To find the full entry for a line, search its month file for the words in the li
 - A tech with nothing for a faction starts known (rules 49); `factions.rs::no_faction_ever_researches_a_tech_that_gives_it_nothing` pins the skip list. Prefer giving the tech something real. [2026-11]
 - `start-settlers=N` means N extra Settlers. [2026-10]
 - Rules 50 (2026-11-22): World Ages is the only era scoring, a rival's original capital is 1 VP only while held (the Celtic sack keeps its point), Alliance upkeep is waived at War with a near-winner. Grep player text and the Guide for the retired "era objectives" wording when touching scoring. [2026-11]
+- A World Age card judged against the standings (ahead of, behind) needs an answer for the leader and for ties: Humble the mighty was dead for the sole leader and froze a 2,000-game sim at turn 300 (no turn limit by default). Rules 53 counts the top rival when you lead (`objectives::humbles`, shared with the AI). [2026-11]
 - Before building a "new" idea, search the archive and the code: the designer's training-mode idea had been built a month earlier (`crates/ai/src/search/tactics.rs`). [2026-11]
 
 ## AI
@@ -44,6 +46,7 @@ To find the full entry for a line, search its month file for the words in the li
 - An AI-only ablation can call a faction drawback "backwards" when the AI overspends; read it against human play. [2026-11]
 - Describe what the AI actually does from a recorded tape, not from its configured priority list. [2026-10]
 - A gate keyed on a state the action itself changes closes mid-action: Rome's one-city war gate keyed on "no veteran" shut as soon as the siege promoted its units, and the army walked home. Key gates on the campaign, not on its side effects. [2026-11]
+- A "go beside the city" search that filters out tiles our own units hold stalls forever when our own shooter parks on the only approach tile (a fallen coastal city held at 0 HP for 888 turns). Treat own non-capturing units on approach tiles as movable, and leave cities the ordinary passes can already reach alone: staging on free tiles beside any fallen city moved a held-out cell by -29 pp. [2026-11]
 
 ## Simulations and measurement
 
@@ -55,6 +58,7 @@ To find the full entry for a line, search its month file for the words in the li
 - Cloud-container timings vary about 6% run to run; compare base and head built side by side, interleaved, best of three (`tools/perf/lean_check.py`). [2026-11]
 - Sim JSON reports are committed only as `.md` plus `gzip -9` JSON; raw `docs/sim-results/*.json` is gitignored. Run logs have leaked account details into git: scrub before committing. [2026-09, 2026-11]
 - Measure faction identity per faction, never in aggregate (pillar 8 is about the best and worst faction). [2026-10]
+- Winner's curse: the best value on sweep seeds, or a sequential test stopped at a boundary, overstates the effect; confirm on fresh seeds before landing. Judge on end-of-game VP share, VP and wins: VP share at T100 inflates tiny edges because seats hold about 1.2 VP then. [2026-11]
 
 ## UI
 
