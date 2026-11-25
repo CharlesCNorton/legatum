@@ -69,6 +69,10 @@
     "oad/src/binaries/data/mods/public/art/animation/biped/infantry/death_b.dae": {
       "bytes": 1102893,
       "sha256": "46793fd672b98bdd301b4e4fe9607634d2b05a639b6651cea50419497b1eda9d"
+    },
+    "oad/src/binaries/data/mods/public/art/animation/biped/infantry/death_a.dae": {
+      "bytes": 867565,
+      "sha256": "78802e0531e0881c38ffa28fb6b281ea18edcd8c95f3acfa2a883e287f1f8df4"
     }
   }
 }

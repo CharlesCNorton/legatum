@@ -8,7 +8,7 @@ from pathlib import Path
 from mathutils import Vector, Matrix
 UNIT=Path(__file__).resolve().parent
 ROOT=Path(os.environ.get('ANIM_ROOT',Path.home()/'LegatumRuns/anim-pilot'))
-WORK=ROOT/'oad/r4';OUT=WORK/'frames';OUT.mkdir(parents=True,exist_ok=True)
+WORK=ROOT/'oad/r5';OUT=WORK/'frames';OUT.mkdir(parents=True,exist_ok=True)
 QUICK='--quick' in sys.argv
 bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
 bpy.context.scene.render.fps=30
@@ -93,6 +93,13 @@ for name,a in actions.items():
     for i in range(count):
         f=start+(end-start)*i/(count if loop else count-1)
         pose(name,f);s.render.filepath=str(directory/f'{i:03}.png');bpy.ops.render.render(write_still=True)
+        if not QUICK and i in {'idle':[0],'attack':[0,6,9,13]}.get(name,[]):
+            # Same GLB, pose and lighting; maximum figure height exactly 48 px
+            # on a 160 px canvas. This is a fresh render, not a thumbnail crop.
+            tiny=OUT/('map48-'+name);tiny.mkdir(exist_ok=True)
+            camera.data.ortho_scale=fit['ortho_scale']*fit['figure_fraction']/(48/160)
+            s.render.filepath=str(tiny/f'{i:03}.png');bpy.ops.render.render(write_still=True)
+            camera.data.ortho_scale=fit['ortho_scale']
     manifest['clips'][name]={'count':counts[name],'duration':(end-start)/30,'loop':loop}
     if name=='attack' and not QUICK:
         directory=OUT/'attack-fullrate';directory.mkdir(exist_ok=True)

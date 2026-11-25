@@ -8,10 +8,11 @@ import bpy
 from mathutils import Matrix, Vector, Quaternion
 sys.path.insert(0,str(Path(__file__).resolve().parent))
 from dae import parse, geometry, bind, find, all, matrix
+from motion import open_idle_guard, attack_time, attack_weight, hit_recoil
 
 UNIT=Path(__file__).resolve().parent
 ROOT=Path(os.environ.get('ANIM_ROOT',Path.home()/'LegatumRuns/anim-pilot'))
-WORK=ROOT/'oad/r4';WORK.mkdir(parents=True,exist_ok=True)
+WORK=ROOT/'oad/r5';WORK.mkdir(parents=True,exist_ok=True)
 ART=ROOT/'oad/src/binaries/data/mods/public/art'
 CREDIT='0 A.D. art by Wildfire Games, CC BY-SA 3.0; adapted for Legatum'
 bpy.ops.wm.open_mainfile(filepath=str(ROOT/'oad/hoplite.blend'))
@@ -73,7 +74,10 @@ crest,_=prop('meshes/props/helmet/props/hele_crest_a.dae','crest_base',crestmatr
 hair,_=prop('meshes/props/helmet/props/hele_crest_hair_a.dae','crest',crestmatrix)
 # Broaden the existing crest across the helmet (no added triangles), so its
 # crimson silhouette survives the 160 px, near-frontal display camera.
-for v in hair.data.vertices:v.co.x*=1.65
+crest_bottom=min(v.co.z for v in hair.data.vertices)
+for v in hair.data.vertices:
+    v.co.x*=1.65*1.3
+    v.co.z=crest_bottom+(v.co.z-crest_bottom)*1.2
 for v in crest.data.vertices:v.co.x*=1.30
 paint(helmet,0);paint(crest,6);paint(hair,2,True)
 for p in helmet.data.polygons:
@@ -91,10 +95,14 @@ paint(bpy.data.objects['Greek head'],3)
 paint(bpy.data.objects['Aspis back'],7)
 paint(bpy.data.objects['Aspis handgrip'],4)
 spear=bpy.data.objects['spear'];paint(spear,4)
-for v in spear.data.vertices:v.co.z-=.28
+for v in spear.data.vertices:
+    v.co.z-=.28
+    v.co.x*=1.5;v.co.y*=1.5
 for p in spear.data.polygons:
     z=sum(spear.data.vertices[i].co.z for i in p.vertices)/len(p.vertices)
-    if z>1.65 or z< -3.8:swatch(spear,p,6)
+    if z>1.65:
+        for li in p.loop_indices:spear.data.uv_layers.active.data[li].uv=(.9375,1-288/1024)
+    elif z< -3.8:swatch(spear,p,6)
 shield=bpy.data.objects['aspis'];slots(shield)
 for p in shield.data.polygons:
     centre=sum((shield.data.vertices[i].co for i in p.vertices),Vector())/len(p.vertices)
@@ -171,15 +179,27 @@ for v in body.data.vertices:
         if (i,w) in groups[:4]:body.vertex_groups[i].add([v.index],w/total,'REPLACE')
         else:body.vertex_groups[i].remove([v.index])
 
-sources={'idle':'idle_relax_01','walk':'walk_relax','attack':'attack_melee_05','hit':'procedural_hit','death':'death_b'}
+sources={'idle':'idle_relax_01','walk':'walk_relax','attack':'attack_melee_05','hit':'idle_relax_01','death':'death_a'}
 cache={}
 for name,source in sources.items():
     a=bpy.data.actions[source];rig.animation_data.action=a;rig.animation_data.action_slot=a.slots[0]
     start,end=a.frame_range;length=round(end-start)
+    if name=='hit':length=24
     poses=[]
     for f in range(length+1):
-        sample=start+f*(end-start)/length;s.frame_set(int(sample),subframe=sample%1)
+        phase=f/length
+        if name=='attack':phase=attack_time(phase)
+        if name=='hit':phase=0
+        sample=start+phase*(end-start);s.frame_set(int(sample),subframe=sample%1)
         poses.append({p.name:p.matrix_basis.copy() for p in rig.pose.bones})
+    if name=='attack':
+        # Half the local cloak rotation relative to guard. Keep translations
+        # and authored body motion; cloth follows the shoulders without a snap.
+        for pose in poses:
+            for bone in ['cape1','cape2','cape3']:
+                loc,rot,scale=pose[bone].decompose()
+                guard=poses[0][bone].to_quaternion()
+                pose[bone]=Matrix.LocRotScale(loc,guard.slerp(rot,.5),scale)
     # Close the last 20% with a smooth correction; retain native motion elsewhere.
     if name in {'idle','walk'}:
         blend=max(6,round(length*.2))
@@ -220,15 +240,19 @@ def prop_floor(bone,objects,local_axis):
     def minimum(t):
         q=Quaternion().slerp(correction,t)
         return min((pivot+q @ (v-pivot)).z for v in points)
-    if minimum(1)<.002:
-        return  # Leave an explicit diagnostic; never hide geometry at scale zero.
+    # On a prone arm the socket can be lower than the shield's thickness. Lay
+    # the shield down first; translating the entire corpse would leave it flying.
+    lift=max(0,.002-minimum(1))
+    if lift and bone!='shield_arm':return
     lo=0;hi=1
-    for _ in range(18):
+    for _ in range(0 if lift else 18):
         mid=(lo+hi)/2
         if minimum(mid)<.002:lo=mid
         else:hi=mid
     q=Quaternion().slerp(correction,hi)
     world=Matrix.Translation(pivot) @ q.to_matrix().to_4x4() @ Matrix.Translation(-pivot) @ rig.matrix_world @ original
+    world.translation.z+=lift
+    if lift:print('SHIELD_CONTACT_LIFT',s.frame_current,lift,flush=True)
     p.matrix=rig.matrix_world.inverted() @ world
     bpy.context.view_layer.update()
 report={}
@@ -238,13 +262,20 @@ for name,poses in cache.items():
     for f,pose in enumerate(poses):
         s.frame_set(f+1)
         for p in rig.pose.bones:p.matrix_basis=pose[p.name];p.rotation_mode='QUATERNION'
+        if name=='attack':
+            bpy.context.view_layer.update()
+            if f==0:planted_feet={side:rig.pose.bones['foot_'+side].matrix.copy() for side in ['L','R']}
+            attack_weight(rig,f/(len(poses)-1),planted_feet)
+        if name=='hit':hit_recoil(rig,f/(len(poses)-1))
+        if name in {'idle','hit'}:
+            open_idle_guard(rig)
         if name=='death':
-            # Relax the head onto its side as the body lands. The native crest
-            # otherwise supports the entire body 3 cm above the floor.
+            # Relax the head onto its side as death_a lands. The previous
+            # death_b correction left the corpse suspended from its crest.
             t=max(0,min(1,(f/(len(poses)-1)-.60)/.28));t=t*t*(3-2*t)
             bpy.context.view_layer.update();head=rig.pose.bones['head']
             pivot=head.matrix.translation.copy()
-            head.matrix=Matrix.Translation(pivot) @ Matrix.Rotation(math.radians(16)*t,4,'X') @ Matrix.Translation(-pivot) @ head.matrix
+            head.matrix=Matrix.Translation(pivot) @ Matrix.Rotation(math.radians(32)*t,4,'X') @ Matrix.Translation(-pivot) @ head.matrix
         # Root remains fixed. Ground the actual feet/body, correcting native fall penetration.
         bpy.context.view_layer.update();dep=bpy.context.evaluated_depsgraph_get()
         ev=body.evaluated_get(dep);me=ev.to_mesh()

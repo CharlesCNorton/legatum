@@ -30,6 +30,8 @@ def paint(path):
         d.line([hp(sign*.035,.35),hp(sign*.20,.36)],fill=PALETTE[6],width=5)
         d.line([hp(sign*.20,.23),hp(sign*.15,-.05)],fill=PALETTE[7],width=4)
     d.line([hp(-.055,-.035),hp(.055,-.035)],fill=PALETTE[5],width=4)
+    # Bright bronze spearhead pigment; separate from the cuirass/greave bronze.
+    d.rectangle((896,256,1023,319),fill=(240,195,95))
     # Broad painted ornament, not shading: bronze borders and engraved cuirass.
     d.rectangle((576,0,767,255),fill=PALETTE[0])
     d.rectangle((580,5,763,251),outline=PALETTE[7],width=4)
