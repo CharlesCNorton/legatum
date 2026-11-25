@@ -1,0 +1,177 @@
+#!/usr/bin/env python3
+"""Validate Legatum's real-time unit contract directly from GLB JSON/BIN.
+
+No dependencies. Checks actual geometry, hierarchy, pixels, animation samples and
+skinned bounds; aesthetic flatness and recognisability still require visual review.
+"""
+import argparse, bisect, copy, json, math, struct
+from pathlib import Path
+
+CREDIT='0 A.D. art by Wildfire Games, CC BY-SA 3.0; adapted for Legatum'
+IDENTITY=[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]
+
+def multiply(a,b):
+    return [sum(a[k*4+r]*b[c*4+k] for k in range(4)) for c in range(4) for r in range(4)]
+
+def point(m,p):
+    return tuple(sum(m[c*4+r]*p[c] for c in range(3))+m[12+r] for r in range(3))
+
+def matrix(node):
+    if 'matrix' in node:return node['matrix']
+    x,y,z,w=node.get('rotation',[0,0,0,1]);sx,sy,sz=node.get('scale',[1,1,1])
+    tx,ty,tz=node.get('translation',[0,0,0])
+    return [(1-2*y*y-2*z*z)*sx,(2*x*y+2*w*z)*sx,(2*x*z-2*w*y)*sx,0,
+            (2*x*y-2*w*z)*sy,(1-2*x*x-2*z*z)*sy,(2*y*z+2*w*x)*sy,0,
+            (2*x*z+2*w*y)*sz,(2*y*z-2*w*x)*sz,(1-2*x*x-2*y*y)*sz,0,tx,ty,tz,1]
+
+class GLB:
+    def __init__(self,path):
+        self.path=Path(path);data=self.path.read_bytes()
+        magic,version,size=struct.unpack_from('<4sII',data)
+        assert magic==b'glTF' and version==2 and size==len(data),'Invalid GLB header'
+        pos=12;chunks=[]
+        while pos<len(data):
+            n,kind=struct.unpack_from('<II',data,pos);pos+=8
+            assert n%4==0 and pos+n<=len(data),'Invalid chunk size'
+            chunks.append((kind,data[pos:pos+n]));pos+=n
+        assert chunks[0][0]==0x4e4f534a and len(chunks)==2 and chunks[1][0]==0x004e4942
+        self.doc=json.loads(chunks[0][1]);self.bin=chunks[1][1];self.cache={}
+    def accessor(self,i):
+        if i in self.cache:return self.cache[i]
+        a=self.doc['accessors'][i];view=self.doc['bufferViews'][a['bufferView']]
+        assert 'sparse' not in a,'Sparse accessor unsupported by contract validator'
+        fmt={5120:'b',5121:'B',5122:'h',5123:'H',5125:'I',5126:'f'}[a['componentType']]
+        count={'SCALAR':1,'VEC2':2,'VEC3':3,'VEC4':4,'MAT4':16}[a['type']]
+        step=struct.calcsize(fmt)*count;stride=view.get('byteStride',step)
+        offset=view.get('byteOffset',0)+a.get('byteOffset',0)
+        assert a['count']==0 or offset+(a['count']-1)*stride+step<=len(self.bin)
+        vals=[struct.unpack_from('<'+fmt*count,self.bin,offset+n*stride) for n in range(a['count'])]
+        if a.get('normalized'):
+            maxval={5120:127,5121:255,5122:32767,5123:65535}[a['componentType']]
+            vals=[tuple(max(-1,v/maxval) for v in row) for row in vals]
+        assert all(math.isfinite(x) for row in vals for x in row),'Non-finite accessor'
+        self.cache[i]=vals;return vals
+    def worlds(self,animation=None,time=0):
+        nodes=copy.deepcopy(self.doc['nodes'])
+        if animation:
+            for ch in animation['channels']:
+                sampler=animation['samplers'][ch['sampler']];times=self.accessor(sampler['input'])
+                values=self.accessor(sampler['output']);idx=min(range(len(times)),key=lambda i:abs(times[i][0]-time))
+                nodes[ch['target']['node']][ch['target']['path']]=values[idx]
+        worlds={}
+        def walk(i,parent):
+            worlds[i]=multiply(parent,matrix(nodes[i]))
+            for child in nodes[i].get('children',[]):walk(child,worlds[i])
+        for root in self.doc['scenes'][self.doc.get('scene',0)]['nodes']:walk(root,IDENTITY)
+        return worlds
+    def vertices(self,animation=None,time=0,exclude=()):
+        worlds=self.worlds(animation,time)
+        for ni,node in enumerate(self.doc['nodes']):
+            if 'mesh' not in node or node.get('name') in exclude:continue
+            joint_matrices=None
+            if 'skin' in node:
+                skin=self.doc['skins'][node['skin']];inv=self.accessor(skin['inverseBindMatrices'])
+                joint_matrices=[multiply(worlds[j],inv[k]) for k,j in enumerate(skin['joints'])]
+            for prim in self.doc['meshes'][node['mesh']]['primitives']:
+                attrs=prim['attributes'];positions=self.accessor(attrs['POSITION'])
+                if joint_matrices:
+                    joints=self.accessor(attrs['JOINTS_0']);weights=self.accessor(attrs['WEIGHTS_0'])
+                    for p,js,ws in zip(positions,joints,weights):
+                        transformed=[point(joint_matrices[int(j)],p) for j in js]
+                        yield ni,tuple(sum(v[k]*w for v,w in zip(transformed,ws)) for k in range(3))
+                else:
+                    for p in positions:yield ni,point(worlds[ni],p)
+
+def validate(path):
+    g=GLB(path);d=g.doc;errors=[];warnings=[]
+    def require(test,message):
+        if not test:errors.append(message)
+    require(d['asset']['version']=='2.0','Must be glTF 2.0')
+    require(len(d.get('buffers',[]))==1 and 'uri' not in d['buffers'][0],'Must be self-contained')
+    extras=d['asset'].get('extras',{})
+    require(d['asset'].get('copyright')==CREDIT and extras.get('credit')==CREDIT,'Missing exact credit')
+    require(extras.get('license')=='CC-BY-SA-3.0','Missing licence in asset.extras')
+    require(extras.get('up_axis')=='Y' and extras.get('forward')=='+Z' and extras.get('units')=='metres','Missing axis/metre declarations')
+    require(Path(path).with_name('PROVENANCE.md').is_file(),'Missing adjacent PROVENANCE.md')
+    require(Path(path).with_name('LICENSE-ART').is_file(),'Missing adjacent LICENSE-ART')
+    nodes=d['nodes'];parents={c:i for i,n in enumerate(nodes) for c in n.get('children',[])}
+    skinned=[i for i,n in enumerate(nodes) if 'skin' in n]
+    require(len(skinned)==1 and len(d.get('skins',[]))==1,'Must have exactly one skinned mesh')
+    joints=set(j for skin in d.get('skins',[]) for j in skin['joints'])
+    require(len(joints)<=40,'More than 40 joints')
+    tris=0;team_regions=[]
+    for ni,node in enumerate(nodes):
+        require(all(abs(v)>1e-6 for v in node.get('scale',[1,1,1])),'Zero-scaled node')
+        if 'mesh' not in node:continue
+        has_team=False
+        for prim in d['meshes'][node['mesh']]['primitives']:
+            require(prim.get('mode',4)==4,'Only triangle primitives supported')
+            count=d['accessors'][prim['indices']]['count'] if 'indices' in prim else d['accessors'][prim['attributes']['POSITION']]['count']
+            tris+=count//3
+            require('TEXCOORD_0' in prim['attributes'],'Missing albedo UVs')
+            has_team |= d['materials'][prim['material']].get('name')=='team'
+            if 'skin' in node:
+                weights=g.accessor(prim['attributes']['WEIGHTS_0'])
+                require(all(abs(sum(w)-1)<.001 for w in weights),'Weights do not sum to one')
+        if has_team:team_regions.append(node.get('name'))
+    require(tris<=3000,f'Triangle budget exceeded: {tris}')
+    require({'body','aspis','crest'}<=set(team_regions),'team must cover cloak trim, shield rim and crest')
+    for prop,bone in [('spear','weapon_R'),('aspis','shield_arm'),('helmet','head')]:
+        found=[i for i,n in enumerate(nodes) if n.get('name')==prop]
+        require(len(found)==1,f'Missing unique rigid prop {prop}')
+        if found:
+            n=found[0];require('skin' not in nodes[n],f'{prop} must not be skinned')
+            require(nodes[parents.get(n,n)].get('name')==bone,f'{prop} must attach directly to {bone}')
+    images=d.get('images',[]);require(len(images)==1,'Exactly one atlas image required')
+    texture_size=None
+    if images:
+        im=images[0];require('bufferView' in im and im.get('mimeType')=='image/png','Atlas must be embedded PNG')
+        if 'bufferView' in im:
+            view=d['bufferViews'][im['bufferView']];off=view.get('byteOffset',0)
+            png=g.bin[off:off+view['byteLength']]
+            require(png[:8]==b'\x89PNG\r\n\x1a\n','Invalid PNG')
+            texture_size=struct.unpack_from('>II',png,16);require(texture_size==(1024,1024),'Atlas must be 1024 x 1024')
+    for mat in d.get('materials',[]):
+        require('normalTexture' not in mat and 'occlusionTexture' not in mat,'No normal or baked AO texture')
+        require('baseColorTexture' in mat.get('pbrMetallicRoughness',{}),'Every material needs the atlas')
+        require('KHR_materials_unlit' not in mat.get('extensions',{}),'Material must accept runtime lighting')
+        require(not any(mat.get('emissiveFactor',[0,0,0])),'No emission-projection material')
+    animations=d.get('animations',[]);require(sorted(a.get('name') for a in animations)==sorted(['idle','walk','attack','hit','death']),'Exactly five named clips required')
+    clips={}
+    roots=set(d['scenes'][d.get('scene',0)]['nodes'])
+    for a in animations:
+        duration=0;loop_error=0
+        for ch in a['channels']:
+            sam=a['samplers'][ch['sampler']];times=[t[0] for t in g.accessor(sam['input'])];vals=g.accessor(sam['output'])
+            require(sam.get('interpolation','LINEAR')=='LINEAR','Clips must be linearly sampled')
+            require(abs(times[0])<1e-5 and all(abs(t*30-round(t*30))<1e-4 for t in times),'Animation samples must lie on 30 fps grid')
+            require(all(abs(b-a-1/30)<1e-5 for a,b in zip(times,times[1:])),'Animation must include every 30 fps sample')
+            duration=max(duration,times[-1])
+            if ch['target']['node'] in roots:
+                require(all(max(abs(x-y) for x,y in zip(v,vals[0]))<1e-5 for v in vals),'Root motion is forbidden')
+            if ch['target']['path']=='scale':require(all(min(v)>1e-6 for v in vals),'Animated zero scale')
+            diff=max(abs(x-y) for x,y in zip(vals[0],vals[-1]))
+            if ch['target']['path']=='rotation':diff=min(diff,max(abs(x+y) for x,y in zip(vals[0],vals[-1])))
+            loop_error=max(loop_error,diff)
+        if a['name'] in {'idle','walk'}:require(loop_error<1e-4,f'{a["name"]} loop endpoint mismatch: {loop_error}')
+        clips[a['name']]={'duration_s':round(duration,6),'fps':30,'loop_endpoint_max_error':round(loop_error,7)}
+    idle=next((a for a in animations if a['name']=='idle'),None)
+    pts=[p for _,p in g.vertices(idle,0,exclude=('spear',))]
+    minimum=[min(p[i] for p in pts) for i in range(3)];maximum=[max(p[i] for p in pts) for i in range(3)]
+    height=maximum[1]-minimum[1]
+    require(1.65<=height<=1.95,f'Figure must be about 1.8m: {height:.3f}')
+    bodypts=[p for ni,p in g.vertices(idle,0) if ni in skinned]
+    feet=[p for p in bodypts if p[1]<min(v[1] for v in bodypts)+.035]
+    feet_centre=[(min(p[i] for p in feet)+max(p[i] for p in feet))/2 for i in range(3)]
+    require(abs(min(p[1] for p in feet))<.02,'Feet must sit at y=0')
+    require(abs(feet_centre[0])<.15 and abs(feet_centre[2])<.15,'Origin must be at feet centre')
+    # Mesh toes establish +Z, independently of metadata (front-most low vertex).
+    require(max(p[2] for p in feet)>abs(min(p[2] for p in feet)), 'Toe geometry must face +Z')
+    warnings.append('Flat albedo, exact team region coverage, seamless velocity and game feel require visual review.')
+    return {'valid':not errors,'glb':str(Path(path).resolve()),'bytes':Path(path).stat().st_size,'triangles':tris,'joints':len(joints),'skinned_meshes':len(skinned),'atlas_px':texture_size,'figure_height_m':round(height,4),'feet_centre_m':[round(v,4) for v in feet_centre],'team_meshes':team_regions,'clips':clips,'errors':errors,'review_required':warnings}
+
+if __name__=='__main__':
+    p=argparse.ArgumentParser();p.add_argument('glb',type=Path);p.add_argument('--output',type=Path);args=p.parse_args()
+    result=validate(args.glb);out=json.dumps(result,indent=2);print(out)
+    if args.output:args.output.write_text(out+'\n')
+    raise SystemExit(0 if result['valid'] else 1)
