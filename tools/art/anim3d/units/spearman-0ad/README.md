@@ -1,4 +1,4 @@
-# Spearman — painted premium round 2
+# Spearman — painted premium round 3
 
 `spearman.glb` is the primary asset. Both review renderers load that exact GLB.
 It contains **spearman_LOD0 (at most 10,000 triangles)** and **spearman_LOD1
@@ -13,7 +13,7 @@ The GLB requires EXT_texture_webp and KHR_mesh_quantization.
 COLOR_0 red is the team weight, interpreted with `viewer/team-mask.mjs`.
 The painted lane intentionally includes stronger form shading in albedo and
 uses rougher, less metallic bronze than a conventional PBR bronze material.
-This is a round-two art candidate, not a premium-quality approval.
+This is a round-three art candidate, not a premium-quality approval.
 
 All five round-six clips and the skeleton are preserved exactly, including the
 hit reaction and the round-five attack/death fixes. `check_painted.py` verifies
@@ -27,12 +27,14 @@ painted GLB as its own input:
 
 ```sh
 source tools/art/anim3d/env.sh
-mkdir -p "$ANIM_ROOT/lanes/spearman-0ad-painted-r2"
-git show 5199b147:tools/art/anim3d/units/spearman-0ad/spearman.glb > "$ANIM_ROOT/lanes/spearman-0ad-painted-r2/approved-r6.glb"
+mkdir -p "$ANIM_ROOT/lanes/spearman-0ad-painted-r3"
+git show 5199b147:tools/art/anim3d/units/spearman-0ad/spearman.glb > "$ANIM_ROOT/lanes/spearman-0ad-painted-r3/approved-r6.glb"
 blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python tools/art/anim3d/units/spearman-0ad/painted.py
 "$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/spearman-0ad/painted_deliver.py
 blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python tools/art/anim3d/units/spearman-0ad/painted_render.py -- --stills
 blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python tools/art/anim3d/units/spearman-0ad/painted_render.py
+blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python tools/art/anim3d/units/spearman-0ad/painted_render.py -- --joints
+blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python tools/art/anim3d/units/spearman-0ad/painted_render.py -- --turntable
 "$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/spearman-0ad/painted_review.py
 ```
 
@@ -40,7 +42,16 @@ blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python to
 horsehair arc, wider lined cloak and shaped knees to the round-one builder.
 `painted_human.py` fits a muscular MPFB 2.0.18 CC0 body to the approved rest
 pose and transfers native weights by nearest-face interpolation, limited to four.
+`painted_premium.py` closes the Corinthian face and nape, rebuilds the rounded
+horsehair volume and muscular cuirass, lowers the shoulder drape, integrates
+the team trim into the cloak surface, and preserves the circular shield outline.
 The unchanged native joint axes and keys remain the only motion source.
+
+Simplification runs on outer surfaces before thickness. LOD1 removes the marked
+inner shell before simplifying, then rebuilds thickness. Triangulation precedes
+UV packing and baking. Tangent normals are hemisphere-corrected and limited to
+25 degrees after Cycles transfer to prevent opposing-shell bake rays producing
+black shading. This is bounded baked relief, not unmodified high-poly normals.
 
 `painted_export.py` repackages the saved master without repeating Cycles bakes.
 The master and baking copies remain under ANIM_ROOT. No changes to game rules,
@@ -51,8 +62,9 @@ The old flat atlas remains only for the historical builder below.
 
 ```sh
 python3 tools/art/anim3d/validate_glb.py tools/art/anim3d/units/spearman-0ad/spearman.glb
-python3 tools/art/anim3d/units/spearman-0ad/check_painted.py "$ANIM_ROOT/lanes/spearman-0ad-painted-r2/approved-r6.glb" tools/art/anim3d/units/spearman-0ad/spearman.glb
+python3 tools/art/anim3d/units/spearman-0ad/check_painted.py "$ANIM_ROOT/lanes/spearman-0ad-painted-r3/approved-r6.glb" tools/art/anim3d/units/spearman-0ad/spearman.glb
 "$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/spearman-0ad/check_painted_contact.py tools/art/anim3d/units/spearman-0ad/spearman.glb
+"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/spearman-0ad/check_painted_joints.py tools/art/anim3d/units/spearman-0ad/spearman.glb
 python3 -m unittest discover -s tools/art/anim3d -p 'test_validate*.py' -v
 GLTF_VALIDATOR_MODULE="$ANIM_ROOT/oad/validator/node_modules/gltf-validator" node tools/art/anim3d/viewer/validate-khronos.mjs tools/art/anim3d/units/spearman-0ad/spearman.glb
 VIEWER_NODE_MODULES="$ANIM_ROOT/oad/viewer-runtime/node_modules" node tools/art/anim3d/viewer/check-runtime.mjs
@@ -61,7 +73,7 @@ VIEWER_NODE_MODULES="$ANIM_ROOT/oad/viewer-runtime/node_modules" node tools/art/
 The lead runs this host-only capture, outside the sandbox:
 
 ```sh
-PLAYWRIGHT_MODULE="$HOME/LegatumRuns/anim-pilot/oad/viewer-runtime/node_modules/playwright/index.mjs" node tools/art/anim3d/viewer/record.mjs --prefix spearman-0ad-painted-r2 --out "$HOME/LegatumRuns/anim-pilot/review/3d-v2"
+PLAYWRIGHT_MODULE="$HOME/LegatumRuns/anim-pilot/oad/viewer-runtime/node_modules/playwright/index.mjs" node tools/art/anim3d/viewer/record.mjs --prefix spearman-0ad-painted-r3 --out "$HOME/LegatumRuns/anim-pilot/review/3d-v2"
 ```
 
 It writes `<prefix>-<clip>-viewer.mp4`, `<prefix>-turntable.mp4` and a validation
@@ -73,7 +85,11 @@ at game sampling rates (idle/death 4, walk 6, attack 14, hit 12 fps); their
 rounding to whole frames is recorded in the video receipt. The 160-square
 camera contains the entire weapon/death extent, so attack and death fill less
 of the square than the 960-by-640 browser capture. Camera fitting is fixed per
-clip, not tracked per frame. CPU stills use Cycles/AgX; the browser uses ACES.
+clip, not tracked per frame. CPU stills use Cycles/AgX; the browser uses ACES. The CPU turntable is a separate
+`<prefix>-turntable-cycles.mp4` (256 px, 12 seconds, 8 fps). The joint sheet samples
+shoulders, elbows and knees in every clip. The numeric joint check detects severe
+LBS axis collapse; it does not certify collisions or visual deformation quality.
+The contract now enforces a strict 2,000,000-byte download ceiling.
 
 ## Historical round-six motion baseline
 

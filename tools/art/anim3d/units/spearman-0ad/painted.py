@@ -10,7 +10,7 @@ UNIT=Path(__file__).resolve().parent
 sys.path.insert(0,str(Path(__file__).resolve().parent));sys.path.insert(0,str(Path(__file__).resolve().parents[2]))
 from validate_glb import GLB
 ROOT=Path(os.environ.get('ANIM_ROOT',Path.home()/'LegatumRuns/anim-pilot'))
-WORK=ROOT/'lanes/spearman-0ad-painted-r2';WORK.mkdir(parents=True,exist_ok=True)
+WORK=ROOT/'lanes/spearman-0ad-painted-r3';WORK.mkdir(parents=True,exist_ok=True)
 SOURCE=WORK/'approved-r6.glb'
 g=GLB(SOURCE);d=g.doc
 attrs=d['meshes'][0]['primitives'][0]['attributes'];original={k:g.accessor(v) for k,v in attrs.items()}
@@ -23,7 +23,11 @@ objects=[]
 def active(o):
     bpy.ops.object.select_all(action='DESELECT');o.select_set(True);bpy.context.view_layer.objects.active=o
 
-def apply(o,kind,**kw):
+def apply(o,kind,defer=True,**kw):
+    # Decimate the outer shell first: independently collapsing a thin inner
+    # shell causes intersecting triangles and pigment flicker.
+    if kind=='SOLIDIFY' and defer:
+        o['shell_thickness']=kw.get('thickness',.004);o['shell_offset']=kw.get('offset',-1);return
     active(o);m=o.modifiers.new(kind,kind)
     for k,v in kw.items():setattr(m,k,v)
     bpy.ops.object.modifier_apply(modifier=m.name)
@@ -40,14 +44,14 @@ def material(name,col,rough,metal,scale=75):
     grain=n.new('ShaderNodeMixRGB');grain.blend_type='MULTIPLY';grain.inputs[0].default_value=.38;l.new(pigment.outputs[0],grain.inputs[1]);l.new(noise.outputs['Fac'],grain.inputs[2]);l.new(grain.outputs[0],emit.inputs[0]);m['paint_node']=grain.name
     return m
 M={
-'bronze':material('Painted ochre bronze',(.58,.265,.045),.49,.45),
-'gold':material('Worn raised gold',(.95,.61,.20),.35,.55),
-'shield':material('Recessed bronze shield field',(.29,.12,.019),.65,.32),
+'bronze':material('Painted ochre bronze',(.64,.285,.043),.60,.32),
+'gold':material('Worn raised gold',(.88,.48,.12),.42,.45),
+'shield':material('Recessed bronze shield field',(.33,.125,.018),.69,.22),
 'dark':material('Engraved umber bronze',(.065,.027,.009),.76,.24),
 'linen':material('Warm ivory linen',(.72,.57,.35),.95,0,160),
 'red':material('Crimson wool',(.31,.009,.005),.93,0,140),
 'leather':material('Oiled oxhide',(.11,.044,.017),.78,0,85),
-'skin':material('Warm skin',(.49,.255,.115),.8,0,45),
+'skin':material('Warm skin',(.57,.26,.095),.84,0,45),
 'mask':material('Neutral team pigment',(.65,.56,.45),.9,0,100),
 'wood':material('Ash spear shaft',(.22,.095,.025),.8,0,95)}
 
@@ -140,13 +144,13 @@ up=(Vector((0,1,0))-normal*normal.y).normalized();right=up.cross(normal).normali
 
 def shield_point(r,a,depth=0):return center+right*(r*math.cos(a))+up*(r*math.sin(a))+normal*depth
 vs=[shield_point(0,0,.093)];fs=[]
-for ring in range(1,7):
-    r=radius*ring/6
+for ring in range(1,4):
+    r=radius*ring/3
     for i in range(64):vs.append(shield_point(r,i*math.tau/64,.093*(1-(r/radius)**2)))
 for i in range(64):fs.append((0,1+i,1+(i+1)%64))
-for ring in range(5):
+for ring in range(2):
     for i in range(64):a=1+ring*64+i;b=1+ring*64+(i+1)%64;fs.append((a,a+64,b+64,b))
-shield=mesh('aspis',vs,fs,'shield','shield_arm');apply(shield,'SOLIDIFY',thickness=.009,offset=-1)
+shield=mesh('aspis',vs,fs,'shield','shield_arm');shield['keep_contour']=True;apply(shield,'SOLIDIFY',thickness=.009,offset=-1)
 for rad,depth,width,mat,team in [(radius,0,.015,'mask','shield rim'),(.373,.014,.006,'gold',None),(.095,.10,.008,'gold',None)]:
     pts=[shield_point(rad,i*math.tau/64,depth) for i in range(65)]
     tube('aspis:rolled rim',pts,[width]*65,mat,'shield_arm',team,8)
@@ -155,7 +159,7 @@ for i in range(12):
     a=i*math.tau/12;coords=[(.098,a-.12),(.325,a),(.098,a+.12),(.17,a)]
     vs=[shield_point(r,t,.093*(1-(r/radius)**2)+(.027 if j==3 else .007)) for j,(r,t) in enumerate(coords)]
     ray=mesh('aspis:sunray',vs,[(0,1,3),(1,2,3),(2,0,3)],'gold','shield_arm');apply(ray,'SOLIDIFY',thickness=.003)
-    apply(ray,'BEVEL',width=.0018,segments=2)
+    ray['keep_contour']=True
 sphere('aspis:boss',center+normal*.105,(.001,.001,.001),'gold','shield_arm')
 # Orient ellipsoidal boss in the shield basis rather than world axes.
 boss=objects[-1]
@@ -268,6 +272,8 @@ from painted_forms import refine
 refine(globals())
 from painted_human import replace_body
 replace_body(globals())
+from painted_premium import finish_forms
+finish_forms(globals())
 
 # Explicitly retain separate authoring parts; both runtime LODs get one primitive.
 for ob in objects:
@@ -283,14 +289,27 @@ for ob in objects:
 def triangles(ob):return sum(len(p.vertices)-2 for p in ob.data.polygons)
 from collections import Counter
 raw_by_part=Counter()
-for ob in objects:raw_by_part[ob['part']]+=triangles(ob)
-budgets={'Greek head':160,'Aspis handgrip':40,'body':900,'heroicbody':2100,'sandal':140,'linen':650,'sleeve':250,'aspis':2000,'helmet':650,'crest_base':180,'spear':120,'cuirass':850,'pteruges':350,'greave_L':500,'greave_R':500,'crest':1250,'cloak':650}
+for ob in objects:raw_by_part[ob['part']]+=triangles(ob)*(2.15 if ob.get('shell_thickness') else 1)
+budgets={'Greek head':160,'Aspis handgrip':40,'body':900,'heroicbody':2200,'sandal':140,'linen':600,'sleeve':180,'aspis':2400,'helmet':1050,'crest_base':130,'spear':120,'cuirass':1150,'pteruges':270,'greave_L':380,'greave_R':380,'crest':750,'cloak':1000}
 raw=sum(map(triangles,objects))
+protected=Counter()
 for ob in objects:
-    ratio=min(1,budgets[ob['part']]/raw_by_part[ob['part']])
+    if ob.get('keep_contour'):protected[ob['part']]+=triangles(ob)*(2.15 if ob.get('shell_thickness') else 1)
+for ob in objects:
+    ratio=min(1,max(0,budgets[ob['part']]-protected[ob['part']])/max(1,raw_by_part[ob['part']]-protected[ob['part']]))
+    ratio*=.85
+    if ob.get('keep_contour'):ratio=1
     if triangles(ob)>12 and ratio<1:apply(ob,'DECIMATE',ratio=ratio)
+    if ob.get('shell_thickness'):
+        ob['outer_faces']=len(ob.data.polygons)
+        apply(ob,'SOLIDIFY',defer=False,thickness=ob['shell_thickness'],offset=ob['shell_offset'])
+        outer=ob.data.attributes.new('outer_shell','BOOLEAN','FACE')
+        for i,value in enumerate(outer.data):value.value=i<ob['outer_faces']
 fit(objects,g,bones)
 print('GEOMETRY',raw,'->',sum(map(triangles,objects)),flush=True)
+# Freeze triangulation BEFORE UV packing/baking; a later ngon diagonal change
+# would sample unbaked atlas regions and create large triangular pigment scars.
+for ob in objects:apply(ob,'TRIANGULATE')
 # One packed non-overlapping UV0 shared by all pigments.
 bpy.ops.object.select_all(action='DESELECT')
 for ob in objects:ob.select_set(True)
@@ -341,6 +360,20 @@ for im,mode in [(normal,'NORMAL'),(ao,'AO')]:
         node.image=im;active(receiver);donor.select_set(True);s.render.bake.use_clear=gi==0
         print('BAKE',mode,size,key,flush=True);bpy.ops.object.bake(type=mode)
         bpy.data.objects.remove(receiver,do_unlink=True);bpy.data.objects.remove(donor,do_unlink=True)
+    if mode=='NORMAL':
+        # Close front/back shells can return the opposing high surface. Keep
+        # tangent perturbations in the receiving hemisphere and limit relief
+        # to 25 degrees; form shading belongs to the model's vertex normals.
+        pixels=np.array(im.pixels[:],dtype=np.float32).reshape(-1,4)
+        vectors=pixels[:,:3]*2-1;reverse=vectors[:,2]<0
+        vectors[reverse]*=-1
+        vectors[:,2]=np.maximum(vectors[:,2],.001)
+        length=np.linalg.norm(vectors[:,:2],axis=1)
+        limit=vectors[:,2]*math.tan(math.radians(25))
+        vectors[:,:2]*=np.minimum(1,limit/np.maximum(length,1e-8))[:,None]
+        vectors/=np.maximum(np.linalg.norm(vectors,axis=1),1e-8)[:,None]
+        pixels[:,:3]=vectors*.5+.5;im.pixels.foreach_set(pixels.ravel());im.update()
+        print('NORMAL_HEMISPHERE_REPAIR',int(reverse.sum()),'texels; relief cone 25 degrees',flush=True)
     im.filepath_raw=str(WORK/(im.name.replace(' ','-')+'.png'));im.file_format='PNG';im.save()
 s.render.bake.use_clear=True
 # Bake authored base pigment on its own surface, avoiding ray hits on adjacent thin props.

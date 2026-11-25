@@ -219,3 +219,73 @@ Honest gate verdict: technical contract passes, **premium art gate is not met**.
 Shield-rim faceting, a comb-like crest, angular neckline and insufficient bronze,
 skin and cloth richness remain visible. MPFB anatomy improves the source body,
 but the final silhouette still lacks the reference painting's heroic mass.
+
+## Painted premium round 3
+
+Continues the painted round-two commit, using the same approved round-six input
+and CC0 MPFB 2.0.18 assets. No paid service, new asset download or animation donor.
+The feedback was reread through the cloud review at 2026-11-25 03:18Z. The later
+suggestion to offset the stance was not applied: the task's exact motion lock
+remains authoritative. Bone transforms, hierarchy, inverse binds, all channels,
+key times and sample values remain byte-equivalent under `check_painted.py`.
+
+`painted_human.py` retains the MPFB macro anatomy and nearest-face interpolated
+native weight transfer (normalize, at most four influences). Limb radial fitting
+is fuller. Shoulders, thighs and knees remain continuous through the overhead
+attack and fall; cutting surfaces merely because idle armour hides them was
+rejected after the joint render exposed an open shoulder. Concealed facial
+geometry is removed beneath the closed helmet; a dark rigid liner sits behind
+its actual eye and mouth apertures. The torso remains continuous; covered central torso vertices are fitted inside
+the cuirass and use its spine/chest blend to prevent skin emerging through the
+armour during the locked attack. The temporary MPFB fitting rig never ships.
+
+`painted_premium.py` rebuilds the helmet as a continuous closed Corinthian shell,
+with temple/nape coverage, paired eye slots, central nose bridge, jaw guards and
+brow/cheek borders. A rounded fluted sagittal horsehair volume with painted radial
+streaks replaces the 105 collapsing tufts. The cuirass has paired pectoral and
+abdominal relief. A lower folded shoulder drape and a broad rear cloak replace
+the stiff collar; the team trim is part of the same cloth surface rather than
+an offset ribbon. Knee greaves, pleated chiton, leather pteruges, sandalled MPFB
+feet, leaf spear and butt spike retain the original sockets/weights.
+
+The convex aspis keeps a 64-segment boundary, protected raised sunburst rays,
+a 96-segment rolled rim and a protected inner gold register. Low-value tiny
+ornament no longer consumes the contour budget. Simplification operates on
+outer shells before thickness; a face attribute lets LOD1 remove the inner shell,
+simplify the exterior, then rebuild thickness. Both LODs are triangulated before
+export; LOD0 is triangulated before UV packing and baking.
+
+Cycles CPU selected-to-active normal and AO bakes use preserved pre-decimation
+parts subdivided and displaced in Blender. Close shell pairs sometimes return
+opposing normals; the baked tangent vectors are reoriented to the receiving
+hemisphere and limited to a 25-degree relief cone. This intentionally bounds
+surface perturbation and is not an unmodified high-poly normal transfer.
+Procedural Blender pigment graphs carry painted value shading, warm ochre,
+darker recesses and hair streaks. This is procedural painted-style authoring,
+not manual brush painting. Bronze is deliberately rougher and less metallic
+than conventional PBR (main bronze .60 roughness / .32 metallic before grain).
+
+Lossless 2048 base colour, normal, AO and ORM masters, editable .blend, bake logs
+and diagnostic experiments stay in `$ANIM_ROOT/lanes/spearman-0ad-painted-r3/`.
+The three delivered 1024 WebPs use quality 84/85/84; data-map compression is lossy.
+Packed ORM remains R occlusion, G roughness, B metallic on UV0. The same two LOD
+names, shared material/skin, red team mask, +Z facing and credit are preserved.
+The validator now additionally enforces a strict download size below 2,000,000 bytes.
+
+The existing CC0 Poly Haven HDRI, warm key, cool rim, AO, soft shadows and ACES
+viewer are retained. `record.mjs --prefix spearman-0ad-painted-r3` writes the
+three.js comparison and `<prefix>-turntable.mp4` on the lead's host. Browser
+access was unavailable in this lane; no new browser-pixel approval is claimed.
+Cycles/AgX evidence includes five three-loop 160 px movies, actual LOD1 48 px
+readability, same-size panel comparison, shield/helmet/crest close-ups, joint
+samples in all five clips and a separate 12-second CPU turntable. The numerical
+joint check is an LBS axis-collapse indicator, not a collision or art certificate.
+
+Final round-three asset: **1,610,900 bytes; LOD0 9,911
+triangles / LOD1 2,819; 30 joints; one material**.
+SHA-256: `692320d217f41db9f65b791c7a5c71009a35451efd126d1bafda2989746aa175`. The authoring surfaces contain 39,624 triangles;
+the combined subdivided reference contains 639,712. Contract and exact-motion
+checks pass; Khronos reports zero errors, warnings, infos and hints. The matching
+motion/skeleton fingerprint is unchanged from round six:
+`639ad201654bf2a08b90c9b7b35c8f047ac1f5cf3531e7b7224f80e0e1d58f79`.
+These technical checks do not establish premium art approval.

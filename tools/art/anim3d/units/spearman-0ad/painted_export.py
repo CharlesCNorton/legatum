@@ -1,12 +1,12 @@
 """Export the saved painted Blender master without repeating Cycles bakes."""
-import bpy,sys,os
+import bpy,bmesh,sys,os
 from mathutils import Vector
 from pathlib import Path
 UNIT=Path(__file__).resolve().parent
 sys.path.insert(0,str(Path(__file__).resolve().parent));sys.path.insert(0,str(Path(__file__).resolve().parents[2]))
 from validate_glb import GLB
 ROOT=Path(os.environ.get('ANIM_ROOT',Path.home()/'LegatumRuns/anim-pilot'))
-WORK=ROOT/'lanes/spearman-0ad-painted-r2'
+WORK=ROOT/'lanes/spearman-0ad-painted-r3'
 g=GLB(WORK/'approved-r6.glb');d=g.doc
 bones=[d['nodes'][j]['name'] for j in d['skins'][0]['joints']]
 bpy.ops.wm.open_mainfile(filepath=str(WORK/'painted-master.blend'))
@@ -46,27 +46,36 @@ def export_mesh(items,name):
                 idx.append((mapping[key],))
         regions.append({'part':ob['part'],'start':start,'count':len(attrs['POSITION'])-start,'bone':ob['bone'] or None,'team':ob['team'] or None})
     return {'name':name,'attrs':attrs,'indices':idx,'regions':regions}
-mesh0=export_mesh(objects,'spearman_LOD0')
+# Build LOD1 before export_mesh triangulates LOD0's polygon indices.
 # Simplify by semantic region, not one tiny tuft/rivet at a time: otherwise
 # minimum per-object triangle counts consume the entire map-LOD budget.
 from collections import defaultdict
 groups=defaultdict(list)
-for ob in objects:groups[(ob['part'],ob['bone'],ob['team'])].append(ob)
+for ob in objects:groups[(ob['part'],ob['bone'],ob['team'],ob.get('shell_thickness',0))].append(ob)
 lod1=[]
 ratio=2550/sum(map(triangles,objects))
 for group in groups.values():
     copies=[]
     for ob in group:
-        x=ob.copy();x.data=ob.data.copy();bpy.context.collection.objects.link(x);copies.append(x)
+        x=ob.copy();x.data=ob.data.copy();bpy.context.collection.objects.link(x)
+        if ob.data.attributes.get('outer_shell'):
+            bm=bmesh.new();bm.from_mesh(x.data);bm.faces.ensure_lookup_table()
+            mask=ob.data.attributes['outer_shell'].data
+            bmesh.ops.delete(bm,geom=[f for i,f in enumerate(bm.faces) if not mask[i].value],context='FACES')
+            bmesh.ops.delete(bm,geom=[v for v in bm.verts if not v.link_faces],context='VERTS')
+            bm.to_mesh(x.data);bm.free()
+        copies.append(x)
     bpy.ops.object.select_all(action='DESELECT')
     for x in copies:x.select_set(True)
     bpy.context.view_layer.objects.active=copies[0]
     if len(copies)>1:bpy.ops.object.join()
     x=bpy.context.object
     if triangles(x)>12:apply(x,'DECIMATE',ratio=ratio)
+    if x.get('shell_thickness'):apply(x,'SOLIDIFY',thickness=x['shell_thickness'],offset=x.get('shell_offset',-1))
     lod1.append(x)
 from painted_contact import fit
 fit(lod1,g,bones)
+mesh0=export_mesh(objects,'spearman_LOD0')
 mesh1=export_mesh(lod1,'spearman_LOD1')
 from painted_package import package
 package(g,[mesh0,mesh1],UNIT,WORK)

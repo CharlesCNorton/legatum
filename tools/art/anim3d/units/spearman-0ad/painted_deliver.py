@@ -11,7 +11,7 @@ UNIT=Path(__file__).resolve().parent
 sys.path.insert(0,str(UNIT.parents[1]))
 from validate_glb import GLB
 ROOT=Path(os.environ.get('ANIM_ROOT',Path.home()/'LegatumRuns/anim-pilot'))
-WORK=ROOT/'lanes/spearman-0ad-painted-r2'
+WORK=ROOT/'lanes/spearman-0ad-painted-r3'
 g=GLB(UNIT/'spearman.glb');d=g.doc;replacements={};report={}
 for im in d['images']:
     name=im['name'];png=UNIT/f'spearman-{name}.png';jpg=UNIT/f'spearman-{name}.webp'

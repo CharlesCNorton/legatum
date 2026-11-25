@@ -29,7 +29,7 @@ def replace_body(ctx):
     for side in ['l','r']:
         S=side.upper()
         for src,dst,end in [('clavicle','shoulder','arm'),('upperarm','arm','forearm'),('lowerarm','forearm','hand'),('thigh','thigh','leg'),('calf','leg','foot')]:
-            maps[src+'_'+side]=(source[src+'_'+side][0],source[src+'_'+side][1],target[dst+'_'+S],target[end+'_'+S],1.12)
+            maps[src+'_'+side]=(source[src+'_'+side][0],source[src+'_'+side][1],target[dst+'_'+S],target[end+'_'+S],1.30)
         palm=source['hand_'+side][0];finger=source['middle_01_'+side][0]
         maps['hand_'+side]=(palm,finger,target['hand_'+S],target['finger_'+S],1.12)
         # Common finger-frame transforms retain the spacing/anatomy of all five digits.
@@ -64,7 +64,9 @@ def replace_body(ctx):
     hidden=[]
     for f in bm.faces:
         p=f.calc_center_median()
-        if (.91<p.y<1.23 and abs(p.x)<.19) or (.64<p.y<.86 and abs(p.x)<.21):hidden.append(f)
+        # Preserve shoulders, thighs and knees even where the idle outfit hides
+        # them: they emerge during the approved overhead thrust and fall.
+        if p.y>1.45:hidden.append(f)
     bmesh.ops.delete(bm,geom=hidden,context='FACES')
     bmesh.ops.delete(bm,geom=[v for v in bm.verts if not v.link_faces],context='VERTS')
     bmesh.ops.recalc_face_normals(bm,faces=list(bm.faces));bm.to_mesh(body.data);bm.free()
@@ -86,6 +88,20 @@ def replace_body(ctx):
     mod.layers_vgroup_select_src='ALL';mod.layers_vgroup_select_dst='NAME'
     bpy.ops.object.modifier_apply(modifier=mod.name)
     bpy.ops.object.vertex_group_limit_total(limit=4);bpy.ops.object.vertex_group_normalize_all(lock_active=False)
+    # Keep the torso continuous too. Fit only covered central torso vertices
+    # inside the cuirass, with the cuirass's spine/chest blend, so the overhead
+    # attack cannot expose an idle-only culling hole or skin through bronze.
+    for v in body.data.vertices:
+        torso=sum(w.weight for w in v.groups if body.vertex_groups[w.group].name in {'hip','spine','spine1','chest'})
+        if .89<v.co.y<1.345 and abs(v.co.x)<.23 and torso>.65:
+            t=(v.co.y-.89)/.455
+            width=.166+.092*math.sin(t*math.pi*.68);depth=.117+.030*math.sin(t*math.pi)
+            radius=math.sqrt((v.co.x/width)**2+(v.co.z/depth)**2)
+            if radius>.87:v.co.x*=.87/radius;v.co.z*=.87/radius
+            blend=max(0,min(1,(t-.15)/.60))
+            for group in body.vertex_groups:group.remove([v.index])
+            body.vertex_groups['spine1'].add([v.index],1-blend,'REPLACE')
+            body.vertex_groups['chest'].add([v.index],blend,'REPLACE')
     for ob in list(objects):
         if ob['part'] in {'body','Greek head','Weight transfer donor'}:
             objects.remove(ob);bpy.data.objects.remove(ob,do_unlink=True)

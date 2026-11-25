@@ -1,4 +1,4 @@
-# Painted premium inputs (rounds 1 and 2)
+# Painted premium inputs (rounds 1–3)
 
 - Approved round-six `spearman.glb`, from commit `5199b147` on the 0 A.D. lane.
   SHA-256: `84bf794f543fd4a1af2d1b9c2b48c89a6c52533a00d7803e553b49a22513f92c`.
@@ -30,3 +30,11 @@ The approved GLB is also preserved in
 master, 2048 bakes and review frames are stored alongside it. Both lanes'
 round-one review images informed the shield contrast and value separation;
 no PBR-lane geometry, textures or motion were copied.
+
+Round 3 continues the same CC0 MPFB base and approved round-six animation input.
+No new external asset or animation donor was added. Both lanes' round-two
+Cycles close-ups and three.js comparisons informed the changes. The painted
+lane retained rougher bronze and stronger pigment separation; the PBR lane's
+shield edge contrast informed the aspis work. No other-lane buffers were copied.
+Masters, bakes and logs: `$ANIM_ROOT/lanes/spearman-0ad-painted-r3/`.
+The Poly Haven HDRI and its attribution remain in `../../viewer/SOURCES.md`.

@@ -119,6 +119,7 @@ def validate(path):
     g=GLB(path);d=g.doc;errors=[];warnings=[]
     def require(test,message):
         if not test:errors.append(message)
+    require(Path(path).stat().st_size<2_000_000,'GLB must be under 2 MB (2000000 bytes)')
     require(d['asset']['version']=='2.0','Must be glTF 2.0')
     require(len(d.get('buffers',[]))==1 and 'uri' not in d['buffers'][0],'Must be self-contained')
     extras=d['asset'].get('extras',{})

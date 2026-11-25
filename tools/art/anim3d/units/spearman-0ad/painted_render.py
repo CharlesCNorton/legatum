@@ -3,16 +3,18 @@
 --quick renders four diagnostic poses per clip. Full run writes sprite samples
 at the game frame rates. Package with painted_review.py afterwards.
 """
-import bpy, sys, os, json, math
+import bpy, sys, os, json, math, hashlib
 from pathlib import Path
 from mathutils import Vector, Matrix
 UNIT=Path(__file__).resolve().parent
 ROOT=Path(os.environ.get('ANIM_ROOT',Path.home()/'LegatumRuns/anim-pilot'))
-ROUND='painted-r2'
-WORK=ROOT/'lanes/spearman-0ad-painted-r2';OUT=WORK/'frames';OUT.mkdir(parents=True,exist_ok=True)
+ROUND='painted-r3'
+WORK=ROOT/'lanes/spearman-0ad-painted-r3';OUT=WORK/'frames';OUT.mkdir(parents=True,exist_ok=True)
 QUICK='--quick' in sys.argv
 STILLS='--stills' in sys.argv
 MAP_ONLY='--map-only' in sys.argv
+JOINTS='--joints' in sys.argv
+TURNTABLE='--turntable' in sys.argv
 bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
 bpy.context.scene.render.fps=30
 bpy.ops.import_scene.gltf(filepath=str(UNIT/'spearman.glb'),bone_heuristic='BLENDER')
@@ -32,6 +34,11 @@ for ob in meshes:
     for mat in ob.data.materials:
         nodes=mat.node_tree.nodes;links=mat.node_tree.links
         shader=nodes.get('Principled BSDF')
+        if os.environ.get('ANIM_NORMAL_STRENGTH'):
+            for n in nodes:
+                if n.type=='NORMAL_MAP':n.inputs['Strength'].default_value=float(os.environ['ANIM_NORMAL_STRENGTH'])
+            if float(os.environ['ANIM_NORMAL_STRENGTH'])==0:
+                for link in list(shader.inputs['Normal'].links):links.remove(link)
         texture=next(n for n in nodes if n.type=='TEX_IMAGE' and 'basecolor' in n.image.name.lower())
         color=nodes.new('ShaderNodeVertexColor');color.layer_name=ob.data.color_attributes[0].name
         separate=nodes.new('ShaderNodeSeparateColor');links.new(color.outputs['Color'],separate.inputs['Color'])
@@ -41,6 +48,10 @@ for ob in meshes:
         multiply=nodes.new('ShaderNodeMixRGB');multiply.blend_type='MULTIPLY';multiply.inputs[0].default_value=1
         links.new(texture.outputs['Color'],multiply.inputs[1]);links.new(mix.outputs[0],multiply.inputs[2])
         links.new(multiply.outputs[0],shader.inputs['Base Color'])
+        if os.environ.get('ANIM_CLAY'):
+            for key,value in [('Base Color',(.5,.5,.5,1)),('Metallic',0.),('Roughness',.8),('Normal',(0,0,0))]:
+                for link in list(shader.inputs[key].links):links.remove(link)
+                shader.inputs[key].default_value=value
 def pose(name,frame):
     s.frame_set(int(frame),subframe=frame%1)
     bpy.context.view_layer.update()
@@ -105,8 +116,9 @@ mat.node_tree.nodes.get('Principled BSDF').inputs['Base Color'].default_value=(.
 # Game sampling rates; retain GLB time rather than stretching clips to old frame counts.
 fps={'idle':4,'walk':6,'attack':14,'hit':12,'death':4}
 counts={name:max(1,math.ceil((a.frame_range[1]-a.frame_range[0])/30*fps[name]-1e-6)) for name,a in actions.items()}
-manifest={'display_yaw_degrees':config['display_yaw_degrees'],'pitch_degrees':math.degrees(math.asin(direction.z)),'framing':framing,'bounds':worldbounds,'clips':{}}
+manifest={'asset_sha256':hashlib.sha256((UNIT/'spearman.glb').read_bytes()).hexdigest(),'display_yaw_degrees':config['display_yaw_degrees'],'pitch_degrees':math.degrees(math.asin(direction.z)),'framing':framing,'bounds':worldbounds,'clips':{}}
 for name,a in actions.items():
+    if JOINTS or TURNTABLE:continue
     if STILLS and name!='idle':continue
     if MAP_ONLY and name not in {'idle','attack'}:continue
     rig.animation_data.action=a;rig.animation_data.action_slot=a.slots[0]
@@ -134,7 +146,7 @@ for name,a in actions.items():
         directory=OUT/(name+'-fullrate');directory.mkdir(exist_ok=True)
         for i,f in enumerate(range(round(start),round(end)+1)):
             pose(name,f);s.render.filepath=str(directory/f'{i:03}.png');bpy.ops.render.render(write_still=True)
-(WORK/('map-render.json' if MAP_ONLY else 'quick-render.json' if QUICK else 'render.json')).write_text(json.dumps(manifest,indent=2))
+(WORK/('joints-render.json' if JOINTS else 'turntable-render.json' if TURNTABLE else 'stills-render.json' if STILLS else 'map-render.json' if MAP_ONLY else 'quick-render.json' if QUICK else 'render.json')).write_text(json.dumps(manifest,indent=2))
 print('RENDER_REPORT',json.dumps(manifest),flush=True)
 
 if STILLS:
@@ -155,3 +167,33 @@ if STILLS:
     camera.rotation_euler=(-rear).to_track_quat('-Z','Y').to_euler()
     camera.location=Vector((0,0,1.18))+rear*8;camera.data.ortho_scale=2.8
     s.render.filepath=str(OUT/'rear-idle.png');bpy.ops.render.render(write_still=True)
+
+if JOINTS:
+    # Same delivered skinned mesh, seen from the spear side to expose the elbow.
+    s.render.resolution_x=s.render.resolution_y=384;s.cycles.samples=12
+    joint_direction=Vector((-1,-.7,.20)).normalized()
+    camera.rotation_euler=(-joint_direction).to_track_quat('-Z','Y').to_euler()
+    for name,a in actions.items():
+        rig.animation_data.action=a;rig.animation_data.action_slot=a.slots[0]
+        start,end=a.frame_range
+        times={'idle':[0,.5,1.5],'walk':[0,.33,.67],'attack':[.367,.467,.80],
+               'hit':[.133,.267,.533],'death':[.467,.633,.933]}[name]
+        directory=OUT/('joints-'+name);directory.mkdir(exist_ok=True)
+        for i,t in enumerate(times):
+            pose(name,min(end,start+t*30))
+            # Centre on evaluated limb joints so floor fall stays within this diagnostic crop.
+            pts=[rig.matrix_world @ rig.pose.bones[b].head for b in ['arm_R','forearm_R','leg_R']]
+            c=sum(pts,Vector())/len(pts)
+            camera.location=c+joint_direction*8;camera.data.ortho_scale=1.65
+            s.render.filepath=str(directory/f'{i:03}.png');bpy.ops.render.render(write_still=True)
+
+if TURNTABLE:
+    s.render.resolution_x=s.render.resolution_y=256;s.cycles.samples=8
+    a=actions['idle'];rig.animation_data.action=a;rig.animation_data.action_slot=a.slots[0]
+    directory=OUT/'turntable';directory.mkdir(exist_ok=True)
+    centre=Vector(framing['idle']['target']);camera.data.ortho_scale=framing['idle']['ortho_scale']
+    for i in range(96):
+        t=i/8;pose('idle',a.frame_range[0]+(t%2)*30)
+        orbit=Matrix.Rotation(math.tau*i/96,3,'Z') @ direction
+        camera.location=centre+orbit*8;camera.rotation_euler=(-orbit).to_track_quat('-Z','Y').to_euler()
+        s.render.filepath=str(directory/f'{i:03}.png');bpy.ops.render.render(write_still=True)

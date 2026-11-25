@@ -210,3 +210,15 @@ Show Sam if GPU matches. Updated round note and skill replace the preliminary
 "no visible sandal gain" conclusion; no new art edits after that review.
 
 - Spearman round 15 GPU receipt: IoU 0.9537; blurred ΔE 3.42; raw ΔE 6.19; atlas 187440 bytes / q80; 40 frames. Visual review pending.
+
+## 0 A.D. spearman — painted premium round 3 (2026-11-25 UTC)
+
+| Scope | Before → after | Verification | Art verdict |
+| --- | --- | --- | --- |
+| MPFB continuity, closed helmet, rounded crest, protected aspis contours, cloak and bake cleanup | 1,985,664 → 1,610,900 bytes; LOD0 9,981 → 9,911; LOD1 2,634 → 2,819 | Exact round-six motion/skeleton fingerprint unchanged; contract valid; Khronos 0/0; 26 validator tests | Premium gate not met; new browser capture remains the lead's handoff |
+
+Timing is retained in `lanes/spearman-0ad-painted-r3/*log` outside git; token
+usage was not measured. New body poses exposed idle-only hidden-face culling:
+restore shoulders and thighs, retain the torso and fit covered torso weights to
+the cuirass. Reject the interrupted candidate's stale media via asset hash and
+freshness checks. Do not interpret ground/LBS metrics as collision or art approval.

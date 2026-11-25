@@ -16,6 +16,9 @@ class PremiumContract(unittest.TestCase):
             p.write_bytes(struct.pack('<4sII',b'glTF',2,28+len(raw)+len(blob))+struct.pack('<II',len(raw),0x4e4f534a)+raw+struct.pack('<II',len(blob),0x004e4942)+blob)
             return validate(p)
     def test_delivered_contract(self):self.assertTrue(self.result(lambda d:None)['valid'])
+    def test_download_budget(self):
+        r=self.result(lambda d:d['asset']['extras'].update(oversize='x'*2_000_000))
+        self.assertIn('GLB must be under 2 MB (2000000 bytes)',r['errors'])
     def test_named_lods_required(self):
         r=self.result(lambda d:d['meshes'][1].update(name='unnamed'));self.assertIn('Expected named LOD0 and LOD1 meshes',r['errors'])
     def test_single_shared_material(self):

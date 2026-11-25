@@ -4,11 +4,12 @@ from pathlib import Path
 from PIL import Image,ImageDraw
 UNIT=Path(__file__).resolve().parent
 ROOT=Path(os.environ.get('ANIM_ROOT',Path.home()/'LegatumRuns/anim-pilot'))
-WORK=ROOT/'lanes/spearman-0ad-painted-r2';OUT=ROOT/'review/3d-v2';OUT.mkdir(parents=True,exist_ok=True)
-PREFIX='spearman-0ad-painted-r2';frames=WORK/'frames'
+WORK=ROOT/'lanes/spearman-0ad-painted-r3';OUT=ROOT/'review/3d-v2';OUT.mkdir(parents=True,exist_ok=True)
+PREFIX='spearman-0ad-painted-r3';frames=WORK/'frames'
 asset=UNIT/'spearman.glb'
 assert (WORK/'render.json').stat().st_mtime>=asset.stat().st_mtime,'Render has not completed for this GLB'
 manifest=json.loads((WORK/'render.json').read_text());receipts={}
+assert manifest['asset_sha256']==hashlib.sha256(asset.read_bytes()).hexdigest(),'Render hash differs from delivered GLB'
 def fresh(path):
     assert path.stat().st_mtime>=asset.stat().st_mtime,f'Stale render: {path}'
     return path
@@ -39,7 +40,7 @@ repo=UNIT.parents[4]
 sheet=Image.new('RGB',(1024,552),'#f8f4e8');draw=ImageDraw.Draw(sheet)
 sheet.paste(cream(repo/'app/src/assets/units/spearman-panel.png',(512,512)),(0,32))
 sheet.paste(cream(frames/'still-idle/000.png'),(512,32))
-draw.text((16,12),'Reference painting | 512 px',fill='#493b2a');draw.text((528,12),'Painted r2 | delivered LOD0 | Cycles CPU / AgX',fill='#493b2a')
+draw.text((16,12),'Reference painting | 512 px',fill='#493b2a');draw.text((528,12),'Painted r3 | delivered LOD0 | Cycles CPU / AgX',fill='#493b2a')
 sheet.save(OUT/f'{PREFIX}-vs-panel.png')
 sheet=Image.new('RGB',(1536,552),'#f8f4e8');draw=ImageDraw.Draw(sheet)
 for i,name in enumerate(['shield','helmet','crest']):
@@ -51,5 +52,20 @@ for row,(name,clip) in enumerate(manifest['clips'].items()):
     for col in range(4):
         i=round((clip['count']-1)*col/3);sheet.paste(cream(frames/name/f'{i:03}.png'),(col*160,row*184));draw.text((col*160+4,row*184+162),f'{name} {i:02}',fill='#493b2a')
 sheet.save(OUT/f'{PREFIX}-motion-sheet.png')
+sheet=Image.new('RGB',(384*3,408*5),'#f8f4e8');draw=ImageDraw.Draw(sheet)
+for row,name in enumerate(manifest['clips']):
+    for col in range(3):
+        sheet.paste(cream(frames/f'joints-{name}/{col:03}.png'),(col*384,row*408))
+        draw.text((col*384+8,row*408+387),f'{name} | joint diagnostic {col+1}',fill='#493b2a')
+sheet.save(OUT/f'{PREFIX}-joints.png')
+cream(frames/'rear-idle.png').save(OUT/f'{PREFIX}-rear.png')
+turn=WORK/'cream-turntable';turn.mkdir(exist_ok=True)
+for i in range(96):cream(frames/f'turntable/{i:03}.png').save(turn/f'{i:03}.png')
+output=OUT/f'{PREFIX}-turntable-cycles.mp4'
+subprocess.run(['ffmpeg','-y','-loglevel','error','-framerate','8','-i',str(turn/'%03d.png'),'-frames:v','96','-c:v','libx264','-crf','16','-pix_fmt','yuv420p',str(output)],check=True)
+subprocess.run(['ffmpeg','-v','error','-i',str(output),'-f','null','-'],check=True)
+stream=json.loads(subprocess.check_output(['ffprobe','-v','error','-count_frames','-select_streams','v:0','-show_entries','stream=width,height,pix_fmt,nb_read_frames,r_frame_rate,duration','-of','json',str(output)]))['streams'][0]
+assert int(stream['nb_read_frames'])==96 and stream['r_frame_rate']=='8/1'
+receipts['turntable_cycles']={'path':str(output),**stream}
 report={'asset_sha256':hashlib.sha256((UNIT/'spearman.glb').read_bytes()).hexdigest(),'render':'Cycles CPU, AgX; browser ACES recording is a separate lead handoff','clips':receipts}
 (OUT/f'{PREFIX}-video-validation.json').write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(report,indent=2))
