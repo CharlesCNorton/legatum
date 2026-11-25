@@ -37,7 +37,16 @@ const building = (b: BuildingKind): ProductionItem => ({ kind: 'Building', build
 
 /** The faction pieces that stand against a standard item, keyed by the piece's `itemKey`. Names come from core's replacement names; a rename with the same stats is listed too, so it reads as the rename it is. */
 const PIECES: Partial<Record<Faction, Record<string, PieceSpec>>> = {
-  Egypt: { 'b:Granary': { against: building('Granary') }, 'u:Spearman': { against: unit('Spearman'), rules: [{ text: '+1 sight.', tone: 'good' }] } },
+  Egypt: {
+    'b:Granary': { against: building('Granary') },
+    'u:Archer': {
+      against: unit('Archer'),
+      rules: [
+        { text: `+${RULES.specialUnitNumbers.chariotArcherVolleyPercent}% strength shooting foot soldiers.`, tone: 'good' },
+        { text: 'Forest and Hills take its whole turn to enter, unless a road runs there.', tone: 'bad' },
+      ],
+    },
+  },
   Rome: {
     'u:Phalangite': { against: unit('Phalangite'), rules: [{ text: 'A city founded by this Legionary starts at population 2 instead of 1.', tone: 'good' }] },
     'b:Walls': { against: building('Walls'), rules: [{ text: 'Upgrading a melee unit in this city restores 50 HP, up to full health, once per order.', tone: 'good' }] },

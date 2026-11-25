@@ -1038,6 +1038,28 @@ impl GameState {
         self.unit_stats_of(u).moves
     }
 
+    /// What `u` pays to enter `h`: `Map::move_cost` under its own unit rules, or `None` when
+    /// impassable. An Egyptian Chariot Archer pays its whole turn for Forest or Hills without a
+    /// road (`data::chariot_step_cost`). Movement resolution and route previews both use this.
+    pub fn unit_step_cost(&self, u: &Unit, h: Hex) -> Option<i32> {
+        let cost = self.map.move_cost(h)?;
+        Some(if self.is_chariot_archer(u) {
+            crate::data::chariot_step_cost(cost, self.unit_moves_of(u))
+        } else {
+            cost
+        })
+    }
+
+    /// Whether `u` is an Egyptian Chariot Archer (`data::is_chariot_archer_rules`).
+    pub fn is_chariot_archer(&self, u: &Unit) -> bool {
+        !u.owner.is_barbarian()
+            && crate::data::is_chariot_archer_rules(
+                self.setup.rule_experiments.faction_rules_off,
+                self.made_by(u),
+                u.kind,
+            )
+    }
+
     pub fn player(&self, id: PlayerId) -> &Player {
         if id.is_barbarian() {
             return &BARBARIAN_PLAYER;

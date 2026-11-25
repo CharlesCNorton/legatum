@@ -277,6 +277,11 @@ pub fn add_fight_class_bonus_rules(
     if extra != 0 {
         b.add(label, extra);
     }
+    let (label, volley) =
+        fight_chariot_volley_for_rules(off, faction, own, other, attacker_side, shot);
+    if volley != 0 {
+        b.add(label, volley);
+    }
 }
 
 /// The breakdown lines of the Gaesatae's charge and missing shield wall.
@@ -323,6 +328,37 @@ pub fn fight_reislaufer_bonus_for_rules(
         (
             REISLAUFER_LABEL,
             base * data::REISLAUFER_MOUNTED_PERCENT / 100,
+        )
+    } else {
+        ("", 0)
+    }
+}
+
+/// The breakdown line of the Chariot Archer's volley against the melee line (states the percentage).
+pub const CHARIOT_VOLLEY_LABEL: &str = "Chariot Archer against foot soldiers (+40%)";
+
+/// The extra an Egyptian Chariot Archer's shot gets against a melee-line unit
+/// (`data::CHARIOT_ARCHER_VOLLEY_PERCENT` of its own ranged strength, rounded down; Sam,
+/// 2026-11-25): only for its own shot (`attacker_side && shot`), never defending, and only while
+/// the class triangle applies (`triangle_applies`), as for every class bonus.
+pub fn fight_chariot_volley_for_rules(
+    off: FactionRuleSet,
+    made_by: Faction,
+    own: UnitKind,
+    other: UnitKind,
+    attacker_side: bool,
+    shot: bool,
+) -> (&'static str, i32) {
+    if attacker_side
+        && shot
+        && data::is_chariot_archer_rules(off, made_by, own)
+        && data::unit_class(other) == Some(UnitClass::Melee)
+        && triangle_applies(own, other)
+    {
+        let ranged = data::unit_stats_for_rules(off, made_by, own).ranged;
+        (
+            CHARIOT_VOLLEY_LABEL,
+            ranged * data::CHARIOT_ARCHER_VOLLEY_PERCENT / 100,
         )
     } else {
         ("", 0)

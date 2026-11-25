@@ -384,6 +384,11 @@ export function tileMoveCost(t: Terrain | null, road?: number | null): number | 
   return c !== null && road ? 1 : c;
 }
 
+/** Core `data::chariot_step_cost`: an Egyptian Chariot Archer pays one more than its full moves for rough ground (Forest or Hills without a road), so entering it takes its whole turn. */
+export function chariotStepCost(cost: number | null, maxMoves: number): number | null {
+  return cost !== null && cost > 1 ? Math.max(cost, maxMoves + 1) : cost;
+}
+
 export function defenseBonus(t: Terrain): number {
   return t === 'Hills' ? 5 : t === 'Forest' ? 3 : 0;
 }
@@ -991,7 +996,7 @@ const FACTION_UNIT_ICON: Partial<Record<Faction, Partial<Record<UnitKind, string
   Byzantium: { Pikeman: 'unit-tagmatic' },
   Rome: { Phalangite: 'unit-legionary' },
   Mongols: { Cataphract: 'unit-keshig' }, Sparta: { Spearman: 'unit-spartanhoplite' },
-  Aztecs: { Spearman: 'unit-eaglewarrior' }, Egypt: { Spearman: 'unit-medjay' }, Celts: { Phalangite: 'unit-gaesatae' }, Athens: { CompositeArcher: 'unit-peltast' },
+  Aztecs: { Spearman: 'unit-eaglewarrior' }, Egypt: { Archer: 'unit-chariot-archer' }, Celts: { Phalangite: 'unit-gaesatae' }, Athens: { CompositeArcher: 'unit-peltast' },
   India: { Knight: 'unit-warelephant' }, Switzerland: { Pikeman: 'unit-reislaufer' }, Germany: { Tank: 'unit-panzer' },
 };
 const FACTION_BUILDING_ICON: Partial<Record<Faction, Partial<Record<BuildingKind, string>>>> = {
@@ -1065,7 +1070,7 @@ export function specialUnitEdge(faction: Faction): string {
     case 'Aztecs': return `+${n.eagleWarriorStrength} strength, +${n.eagleWarriorCost} Production`;
     case 'Celts': return `+${n.gaesataeAttack} strength attacking, −${-n.gaesataeDefense} defending`;
     case 'Athens': return `${n.peltastMoves} moves instead of ${plain.moves}, the same shot`;
-    case 'Egypt': return '+1 sight';
+    case 'Egypt': return `${n.chariotArcherMoves} moves instead of ${plain.moves}, +${n.chariotArcherVolleyPercent}% shooting foot soldiers; Forest and Hills take its whole turn`;
     case 'India': return `+${n.warElephantStrength} strength, ${n.warElephantMoves} moves instead of ${plain.moves}, no penalty charging a city`;
     case 'Switzerland': return `+${n.reislauferMountedPercent}% against mounted units, on top of the usual bonus`;
     case 'Germany': return `+${n.panzerMoves - plain.moves} move`;

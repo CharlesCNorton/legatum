@@ -1,0 +1,6 @@
+# Egypt's Chariot Archer: a per-unit move cost without a new pathing path (2026-11-25)
+
+- A unit rule that changes terrain cost goes through `GameState::unit_step_cost`, not `Map::move_cost`: movement resolution (`rules/movement.rs`, the route, the hop and the step) and the client preview (`app/src/path.ts::viewCost` with the mover) both use it. `Map::move_cost` stays the terrain-only cost for map generation, roads and the AI's estimates.
+- "Takes its whole turn" is a cost of one more than the unit's full moves (`data::chariot_step_cost`). The engine's step rule (`rules::movement::can_step`: a unit with its moves untouched may always take one step) then lets it enter only at the start of a turn and leaves it with none, a road's extra starting move included; `path::path_turns` counts it the same way with no change.
+- `FactionRule` values are bits in saved rule masks: a retired rule leaves its bit vacant (`EgyptRoyalGranary = 59` after the Medjay's 58) and the new rule goes at the end.
+- A `RULES_VERSION` bump: `tools/sim/refresh-save-version-fixtures.py OLD NEW`, then `rehash_scenarios` (the save version is not in the state hash, so hashes stay), and add the old version to `crates/wasm/src/json.rs::upgrade_from_49`.

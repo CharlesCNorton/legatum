@@ -257,33 +257,17 @@ fn nile_grow_is_egypts_and_the_workshop_line_is_not() {
 }
 
 #[test]
-fn medjay_sight_uses_visibility_and_unit_view() {
+fn egyptian_spearmen_see_as_far_as_anyone_now_the_medjay_is_retired() {
     let mut s = state(Faction::Egypt);
-    let medjay = game::spawn_unit(&mut s, P, UnitKind::Spearman, at(10, 10));
+    let spear = game::spawn_unit(&mut s, P, UnitKind::Spearman, at(10, 10));
     let v = player_view(&s, P);
     assert_eq!(
-        v.units.iter().find(|u| u.id == medjay).unwrap().sight,
-        Some(data::UNIT_SIGHT + 1)
+        v.units.iter().find(|u| u.id == spear).unwrap().sight,
+        Some(data::UNIT_SIGHT)
     );
     let edge = at(10 + data::UNIT_SIGHT + 1, 10);
     let seen = visibility::visible_tiles(&s, s.team_of(P));
-    assert!(seen.get(s.map.index(edge).unwrap()));
-    s.player_mut(P).faction = Faction::India;
-    let seen = visibility::visible_tiles(&s, s.team_of(P));
     assert!(!seen.get(s.map.index(edge).unwrap()));
-    // A Company keeps the seller's unit version when a different empire hires it.
-    s.units.get_mut(&medjay).unwrap().origin = Some(Faction::Egypt);
-    let seen = visibility::visible_tiles(&s, s.team_of(P));
-    assert!(seen.get(s.map.index(edge).unwrap()));
-    assert_eq!(
-        player_view(&s, P)
-            .units
-            .iter()
-            .find(|u| u.id == medjay)
-            .unwrap()
-            .sight,
-        Some(data::UNIT_SIGHT + 1)
-    );
 }
 
 #[test]

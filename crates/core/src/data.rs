@@ -1278,6 +1278,10 @@ pub const GAESATAE_ATTACK_STRENGTH: i32 = 8;
 pub const GAESATAE_DEFENSE_STRENGTH: i32 = -5;
 /// Athenian Peltast (replaces the Composite Archer): moves instead of 2, the same shot.
 pub const PELTAST_MOVES: i32 = 3;
+/// Egyptian Chariot Archer (replaces the Archer): moves instead of 2, and percent of its own
+/// ranged strength added to a shot at a melee-line unit (the triangle bonus archers lack).
+pub const CHARIOT_ARCHER_MOVES: i32 = 3;
+pub const CHARIOT_ARCHER_VOLLEY_PERCENT: i32 = 40;
 /// Indian War Elephant (replaces the Knight): this much stronger, with these moves instead of
 /// the Knight's 4, and no mounted penalty charging a city.
 pub const WAR_ELEPHANT_STRENGTH: i32 = 8;
@@ -1300,7 +1304,7 @@ pub fn special_unit(faction: Faction) -> UnitKind {
         Faction::Byzantium => UnitKind::Pikeman,
         Faction::Celts => UnitKind::Phalangite,
         Faction::Athens => UnitKind::CompositeArcher,
-        Faction::Egypt => UnitKind::Spearman,
+        Faction::Egypt => UnitKind::Archer,
         Faction::Rome => UnitKind::Phalangite,
     }
 }
@@ -1326,11 +1330,27 @@ pub fn is_peltast_rules(off: FactionRuleSet, faction: Faction, kind: UnitKind) -
         && !off.contains(FactionRule::AthensPeltast)
 }
 
-/// The Medjay replaces Egypt's Spearman; its sight is applied at the shared sight source.
-pub fn is_medjay_rules(off: FactionRuleSet, faction: Faction, kind: UnitKind) -> bool {
+/// Whether this faction's unit of this kind is an Egyptian Chariot Archer (Sam, 2026-11-25; it
+/// replaced the Medjay): Egypt's Archer, with `CHARIOT_ARCHER_MOVES`, a shot
+/// `CHARIOT_ARCHER_VOLLEY_PERCENT` stronger against the melee line (`combat`), and Forest or Hills
+/// without a road take its whole turn to enter (`chariot_step_cost`).
+pub fn is_chariot_archer_rules(off: FactionRuleSet, faction: Faction, kind: UnitKind) -> bool {
     faction == Faction::Egypt
-        && kind == UnitKind::Spearman
-        && !off.contains(FactionRule::EgyptMedjay)
+        && kind == UnitKind::Archer
+        && !off.contains(FactionRule::EgyptChariotArcher)
+}
+
+/// A Chariot Archer's cost to enter a tile whose ordinary cost is `cost` (`Map::move_cost`, so
+/// a road already made it 1): rough ground (any cost above 1: Forest or Hills) costs one more
+/// than its full moves. Under `rules::movement::can_step` it enters only with its moves untouched
+/// (the start of a turn, a road's extra move included) and has none left after: the step takes
+/// its whole turn. Mirrored by `app/src/data.ts:chariotStepCost`.
+pub fn chariot_step_cost(cost: i32, max_moves: i32) -> i32 {
+    if cost > 1 {
+        cost.max(max_moves + 1)
+    } else {
+        cost
+    }
 }
 
 /// Whether this faction's unit of this kind is an Indian War Elephant.
@@ -1641,6 +1661,7 @@ pub fn unit_stats_made_by_rules(
             s.strength += EAGLE_WARRIOR_STRENGTH;
         }
         (f, k) if is_peltast_rules(off, f, k) => s.moves = PELTAST_MOVES,
+        (f, k) if is_chariot_archer_rules(off, f, k) => s.moves = CHARIOT_ARCHER_MOVES,
         (f, k) if is_war_elephant_rules(off, f, k) => {
             s.strength += WAR_ELEPHANT_STRENGTH;
             s.moves = WAR_ELEPHANT_MOVES;
@@ -1806,7 +1827,7 @@ pub fn unit_name_for(faction: Faction, kind: UnitKind) -> &'static str {
         (Faction::India, UnitKind::Knight) => "War Elephant",
         (Faction::Switzerland, UnitKind::Pikeman) => "Reisläufer",
         (Faction::Germany, UnitKind::Tank) => "Panzer",
-        (Faction::Egypt, UnitKind::Spearman) => "Medjay",
+        (Faction::Egypt, UnitKind::Archer) => "Chariot Archer",
         _ => unit_name(kind),
     }
 }
