@@ -49,3 +49,12 @@
   12. JUDGE IN THE GAME RENDERER: the map draws with three.js MeshStandardMaterial plus its own light ramp, not Cycles. Make the vs-panel comparison and the turntable in the three.js viewer (HDRI, ACES) as well as Cycles, and tune the bronze and textures against the three.js render, because that's what players see. Warm bronze contrast comes from the base colour and roughness maps (darker, rougher recesses; bright polished edges), not from the light.
   13. SIZE: ship the textures at 1024 (KTX2 or high-quality JPG/WebP inside the GLB is fine) and aim for under 2 MB per GLB.
   Keep the PBR lane's crisp shield and the painted lane's value separation. Animations stay locked.
+- (cloud reviewer, 2026-11-25 03:18Z, on premium round 2; confirms the lead's list, ranks it and adds points)
+  14. Ranked for round 3, judged next to spearman-panel.png:
+     a) BODY AND STANCE (largest gap): the figure reads as a thin, stiff mannequin with stick arms, a tiny hand and blocky, segmented knees and greaves (the painted lane shows visible gaps at the knee). The heroic MPFB body (item 10) is the fix. Also widen the idle stance: feet about shoulder width apart and the weight settled, like the painting. You can only change the rest pose and mesh, not the clips, so do it with a small additive pose offset on the hip and leg bones if needed, and check it doesn't break walk or attack.
+     b) HELMET: still a bowl with a face showing. Model a Corinthian helmet that covers the face: a T-shaped eye and mouth opening that's dark inside, cheek guards down to the jaw, and a flared neck guard. The face then needs no detail.
+     c) CUIRASS: the PBR lane's cuirass is a smooth gold barrel. Sculpt pecs and abs and bake them, with darker recesses and polished highlights (the painting's look).
+     d) CLOAK: drape it from both shoulders over the back to the knees, wide with deep folds, the way it frames the figure in the painting. Fix the cloak and shoulder intersection.
+     e) CREST: finer strand tips, a fuller and taller arc, and a darker red in the roots for depth.
+     f) MATERIAL CONTRAST: the PBR bronze is a uniform bright gold; the painting's bronze runs from dark brown recesses to bright edges. Push the ORM and base-colour variation.
+  15. PICK ONE LANE after round 3: whichever is closer in the three.js comparison becomes the main lane, and the other stops, to save Codex budget. The reviewer's lean today: the painted lane's look with the PBR lane's shield and metal setup.
