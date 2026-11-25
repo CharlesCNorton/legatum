@@ -8,8 +8,9 @@ import type { Hex, PlayerView, UnitView } from '../types';
 import { fromOffset, toOffset } from '../hex';
 import { neighborIndex } from '../map/grid';
 import { mapPlayerColor } from '../map/style';
-import { unitMiniatureUrl } from '../unitArt';
-import { seatColorFaction } from '../theme';
+import { mapUnitMiniatureUrl } from '../unitArt';
+import { BARBARIAN_COLOR } from '../theme';
+import { isBarbarian } from '../barbarians';
 import {
   CORNERS, R, ROW, buildField, gridFor, hash2, heightAt, refreshFog, rnd, shapeChanged, tileAt, tileX, tileZ, worldFrom,
   type Field, type World,
@@ -446,11 +447,13 @@ export class MapScene {
     }
     const cityAt = new Set(view.cities.map((c) => tileIndexOf(c.pos, wd.w, wd.h)));
     const disc = new THREE.CylinderGeometry(0.11, 0.115, 0.01, 32);
+    const factionOf = new Map(view.players.map((pl) => [pl.id, pl.faction] as const));
     for (const [i, list] of byTile) {
       list.forEach((u, k) => {
         const g = new THREE.Group();
         g.userData.unit = u.id;
-        const team = new THREE.Color(mapPlayerColor(u.owner));
+        const barbarian = isBarbarian(u.owner);
+        const team = new THREE.Color(barbarian ? BARBARIAN_COLOR : mapPlayerColor(u.owner));
         const ring = new THREE.Mesh(disc, new THREE.MeshStandardMaterial({ color: team, roughness: 0.55, metalness: 0.15, transparent: true, opacity: 0.85 }));
         ring.position.y = 0.004; ring.receiveShadow = true; g.add(ring);
         const off = list.length > 1 ? (k - (list.length - 1) / 2) * 0.24 : 0;
@@ -465,7 +468,7 @@ export class MapScene {
             this.animating = true;
           });
         } else {
-          const url = unitMiniatureUrl(u.kind, seatColorFaction(u.owner));
+          const url = mapUnitMiniatureUrl(u, factionOf, barbarian);
           if (url) {
             const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: this.texture(url), transparent: true, alphaTest: 0.08 }));
             sp.scale.set(0.3, 0.3, 1);
