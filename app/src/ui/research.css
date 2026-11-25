@@ -513,7 +513,6 @@
 .tree-links { position: absolute; inset: 0; pointer-events: none; }
 .tl { fill: none; stroke-width: 2.5; opacity: .32; }
 .tl.lit { opacity: .9; }
-.tl.goal { stroke: var(--goal); opacity: 1; stroke-width: 3; stroke-dasharray: 8 5; }
 .tree-node { position: absolute; display: flex; flex-direction: column; gap: 4px; padding: 7px 9px 6px; border: 1px solid var(--rule-2); background: var(--field); color: var(--ink); text-align: left; cursor: pointer; box-shadow: 2px 2px 0 var(--rule-2); font: inherit; }
 .tree-node:hover { border-color: var(--ink); }
 .tree-node:not([aria-disabled='true']):hover { background: color-mix(in srgb, var(--field) 80%, var(--panel)); }
@@ -522,8 +521,8 @@
 .tn-head { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
 .tn-name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: var(--display-weight) 16px/1.1 var(--display); }
 .tn-mark { color: var(--good); }
-.tn-q, .tn-goal { flex: none; padding: 2px 5px; background: var(--ink); color: var(--field); font: 700 10px/1 var(--sans); letter-spacing: .03em; text-transform: uppercase; }
-.tn-goal { background: var(--goal); }
+.tn-q { flex: none; display: inline-grid; place-items: center; min-width: 16px; height: 16px; border: 1px solid var(--ink); color: var(--ink); font: 700 10.5px/1 var(--sans); }
+.tn-goal { flex: none; color: var(--ink); font: 700 11px/1 var(--sans); }
 .tn-art { display: flex; align-items: center; gap: 4px; flex: 1 1 auto; min-height: 0; align-self: flex-start; }
 .tn-thumb { display: inline-grid; place-items: center; width: 34px; height: 34px; border: 1px solid var(--rule); background: var(--panel); overflow: hidden; }
 .tn-thumb img { width: 100%; height: 100%; object-fit: cover; }
@@ -557,27 +556,36 @@
 .tree-goal-x { display: inline-grid; place-items: center; width: 24px; height: 24px; border: 1px solid var(--rule-2); background: transparent; color: var(--ink); cursor: pointer; }
 .tech-modal.tree-mode .research-scroll { display: none; }
 /* Sideways scrolling shows itself: a fade and an arrow at an edge with more columns past it. */
-.tree-edge { position: absolute; bottom: 0; z-index: 3; display: grid; place-items: center; width: 34px; height: calc(100% - 42px); color: var(--ink); font: 400 30px/1 var(--display); pointer-events: none; opacity: 0; transition: opacity .2s; }
-.tree-edge.left { left: 0; background: linear-gradient(90deg, var(--panel), transparent); }
-.tree-edge.right { right: 0; background: linear-gradient(270deg, var(--panel), transparent); }
-.tech-tree:has(.tree-scroll.more-left) .tree-edge.left, .tech-tree:has(.tree-scroll.more-right) .tree-edge.right { opacity: .9; }
+.tree-edge { position: absolute; bottom: 0; z-index: 3; display: grid; place-items: center; width: 30px; height: calc(100% - 42px); padding: 0; border: 0; color: var(--ink); cursor: pointer; visibility: hidden; }
+.tree-edge-box { display: grid; place-items: center; width: 22px; height: 34px; border: 1px solid var(--ink-2); background: var(--field); }
+.tree-edge:hover .tree-edge-box { border-color: var(--ink); background: var(--panel); }
+.tree-edge:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.tree-edge.left { left: 0; background: linear-gradient(90deg, var(--panel) 40%, transparent); }
+.tree-edge.left .icon { transform: rotate(90deg); }
+.tree-edge.right { right: 0; background: linear-gradient(270deg, var(--panel) 40%, transparent); }
+.tree-edge.right .icon { transform: rotate(-90deg); }
+.tech-tree:has(.tree-scroll.more-left) .tree-edge.left, .tech-tree:has(.tree-scroll.more-right) .tree-edge.right { visibility: visible; }
 /* Era names stay at the top when a short window scrolls the tree down. */
-.tree-era-head { position: sticky; top: 0; z-index: 2; padding-bottom: 6px; background: linear-gradient(180deg, var(--panel) 75%, transparent); }
-.tree-era.current .tree-era-head { background: linear-gradient(180deg, color-mix(in srgb, var(--panel) 92%, var(--accent)) 75%, transparent); }
+.tree-era-head { position: sticky; top: 0; z-index: 2; padding-bottom: 6px; background: var(--panel); box-shadow: 0 1px 0 var(--rule); }
+.tree-era.current .tree-era-head { background: color-mix(in srgb, var(--panel) 92%, var(--accent)); }
+/* Scrolled into view (the advisor), a node never lands under the pinned era names. */
+.tree-node { scroll-margin-top: 64px; scroll-margin-inline: 36px; }
 .tree-peek { position: fixed; z-index: 30; max-height: calc(100dvh - 16px); overflow: hidden; padding: 10px 12px; border: 1px solid var(--ink-2); background: var(--field); box-shadow: 0 8px 24px -8px rgba(43, 36, 25, .45); pointer-events: none; }
 .tree-peek-head { display: flex; flex-direction: column; gap: 2px; margin-bottom: 8px; }
 .tree-peek-head b { font: var(--display-weight) 18px/1.1 var(--display); }
 .tree-peek-head span { color: var(--ink-2); font: 600 11.5px/1.2 var(--sans); }
 @media (prefers-reduced-motion: no-preference) {
-  .tech-tree:not(.still) .tree-node.researching, .tech-tree:not(.still) .tree-node.queued, .tech-tree:not(.still) .tree-node.goal { animation: era-pick .38s ease-out; }
-  .tech-tree:not(.still) .tl.goal { animation: tree-goal-draw .5s ease-out; }
+  /* Only the technology just picked, or the goal and its path just set, glows; reopening replays nothing. */
+  .tech-tree:not(.still) .tree-node.fresh { animation: era-pick .38s ease-out; }
 }
-@keyframes tree-goal-draw { from { stroke-dashoffset: 80; opacity: 0; } to { stroke-dashoffset: 0; opacity: 1; } }
 @media (max-height: 700px) {
   /* The queue stays (remove, reorder, Queue all); the line key folds behind a Key tip to give it room. */
   .tech-modal.tree-mode .tree-keys { display: none; }
   .tech-modal.tree-mode .tree-key-tip { display: inline-flex; }
   .tech-modal.tree-mode .tree-legend { min-height: 34px; padding-block: 3px; }
+  /* One empty slot is enough to say the queue has room; the rest gives the queue's actions their line. */
+  .tech-modal.tree-mode .rq-ghost ~ .rq-ghost { display: none; }
+  .tech-modal.tree-mode .research-queue-actions .btn { white-space: nowrap; }
   /* The foot stays only as the advisor card's spacer, so the card never covers the tree's bottom row. */
   .tech-modal.tree-mode:not(:has(.advisor-card.in-dialog)) .modal-foot { display: none; }
 }

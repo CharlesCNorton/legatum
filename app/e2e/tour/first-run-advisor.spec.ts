@@ -31,6 +31,15 @@ for (const size of SIZES) test.describe(`first run with advisor ${size.name}`, (
       const box = await card.boundingBox();
       if (!box) return;
       if (cta) expect(intersects(box, cta), 'the advisor never covers the turn button').toBe(false);
+      // The advisor scrolls a cut-off target into view after a moment: wait until the ring's placement (its inline
+      // position, not its pulse) has settled, then measure it.
+      const placed = () => ring.evaluate((el) => `${(el as HTMLElement).style.left},${(el as HTMLElement).style.top}`);
+      if (await ring.count()) for (let i = 0, last = await placed(); i < 10; i++) {
+        await page.waitForTimeout(100);
+        const now = await placed();
+        if (now === last) break;
+        last = now;
+      }
       const ringBox = await ring.count() ? await ring.boundingBox() : null;
       if (ringBox) {
         expect(intersects(box, ringBox), 'the advisor never covers its ring').toBe(false);

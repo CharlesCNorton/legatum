@@ -121,6 +121,9 @@ export function TechTree({ view, faction, queue, schedule, goal, locked, open = 
     const frame = requestAnimationFrame(toEra);
     return () => cancelAnimationFrame(frame);
   }, [open, r.era]);
+  // The technology just picked (or 'path' for a goal just set): only it plays the pick glow, never a reopening.
+  const [fresh, setFresh] = useState<TechId | 'path' | null>(null);
+  useLayoutEffect(() => { if (!open) setFresh(null); }, [open]);
   const [peek, setPeek] = useState<{ t: TechId; rect: DOMRect } | null>(null);
   const [edge, setEdge] = useState({ left: false, right: true });
   const onScroll = () => {
@@ -165,8 +168,8 @@ export function TechTree({ view, faction, queue, schedule, goal, locked, open = 
     <span className="tree-key"><i className="ln melee" />Spear line</span>
     <span className="tree-key"><i className="ln ranged" />Bow and gun line</span>
     <span className="tree-key"><i className="ln mounted" />Horse and armour line</span>
-    <span className="tree-key"><i className="ln air" />Aircraft</span>
-    <span className="tree-key"><i className="ln economy" />Buildings</span>
+    <span className="tree-key"><i className="ln air" />Aircraft line</span>
+    <span className="tree-key"><i className="ln economy" />Building line</span>
   </>;
   return <div className={`tech-tree${compact ? ' compact' : ''}${tight ? ' tight' : ''}${still ? ' still' : ''}`} data-testid="tech-tree">
     <div className="tree-legend">
@@ -193,21 +196,24 @@ export function TechTree({ view, faction, queue, schedule, goal, locked, open = 
           </div>;
         })}
         <svg className="tree-links" width={width} height={total} aria-hidden="true">
-          {links.map((k) => <path key={`${k.from}>${k.to}`} d={path(k)} className={`tl ${k.line.toLowerCase()}${known.has(k.from) ? ' lit' : ''}${onPath(k.to) && (onPath(k.from) || known.has(k.from)) ? ' goal' : ''}`} />)}
+          {links.map((k) => <path key={`${k.from}>${k.to}`} d={path(k)} className={`tl ${k.line.toLowerCase()}${known.has(k.from) ? ' lit' : ''}`} />)}
         </svg>
         {columns.flatMap((col) => col).map((t) => <TreeNode key={t} t={t} view={view} faction={faction} pos={pos.get(t)!} w={W} h={H} compact={compact}
           queueIndex={queue.indexOf(t)} slot={schedule[queue.indexOf(t)]} goal={goal === t} onPath={onPath(t) && goal !== t} skipped={skipped.has(t)} locked={locked} touch={touch}
-          onResearchNow={onResearchNow} onQueue={onQueue} onGoal={onGoal} onPeek={(rect) => setPeek(rect ? { t, rect } : null)} />)}
+          fresh={fresh === t || (fresh === 'path' && onPath(t))}
+          onResearchNow={(x) => { setFresh(x); onResearchNow(x); }} onQueue={(x) => { setFresh(x); onQueue(x); }}
+          onGoal={(x) => { setFresh(x ? 'path' : null); onGoal(x); }} onPeek={(rect) => setPeek(rect ? { t, rect } : null)} />)}
       </div>
     </div>
-    <span className="tree-edge left" aria-hidden="true">‹</span><span className="tree-edge right" aria-hidden="true">›</span>
+    <button type="button" className="tree-edge left" aria-label="Earlier eras" tabIndex={edge.left ? 0 : -1} onClick={() => scroller.current?.scrollBy({ left: -(W + GAP), behavior: still ? 'auto' : 'smooth' })}><span className="tree-edge-box"><Icon name="ui-chevron-down" size={18} /></span></button>
+    <button type="button" className="tree-edge right" aria-label="Later eras" tabIndex={edge.right ? 0 : -1} onClick={() => scroller.current?.scrollBy({ left: W + GAP, behavior: still ? 'auto' : 'smooth' })}><span className="tree-edge-box"><Icon name="ui-chevron-down" size={18} /></span></button>
     {peek && <TreePeek t={peek.t} rect={peek.rect} view={view} faction={faction} />}
   </div>;
 }
 
-function TreeNode({ t, view, faction, pos, w, h, compact, queueIndex, slot, goal, onPath, skipped, locked, touch, onResearchNow, onQueue, onGoal, onPeek }: {
+function TreeNode({ t, view, faction, pos, w, h, compact, queueIndex, slot, goal, onPath, skipped, locked, touch, fresh, onResearchNow, onQueue, onGoal, onPeek }: {
   t: TechId; view: PlayerView; faction: Faction; pos: { x: number; y: number; era: number }; w: number; h: number; compact: boolean;
-  queueIndex: number; slot: QueueSlot | undefined; goal: boolean; onPath: boolean; skipped: boolean; locked: boolean; touch: boolean;
+  queueIndex: number; slot: QueueSlot | undefined; goal: boolean; onPath: boolean; skipped: boolean; locked: boolean; touch: boolean; fresh: boolean;
   onResearchNow(t: TechId): void; onQueue(t: TechId): void; onGoal(t: TechId | null): void; onPeek(rect: DOMRect | null): void;
 }) {
   const r = view.research;
@@ -231,7 +237,7 @@ function TreeNode({ t, view, faction, pos, w, h, compact, queueIndex, slot, goal
   const status = isKnown ? (skipped ? 'Not needed by your people' : 'Researched') : researching ? 'Researching' : queueIndex > 0 ? `Queued #${queueIndex + 1}` : current ? 'Available' : goal ? 'Your goal' : `Locked until the ${eraName(pos.era - 1)} era is done`;
   const press = touch ? 'Tap' : 'Click';
   const action = current ? (touch ? 'Tap to research now.' : 'Click to research now, Shift+click to queue.') : later ? (goal ? `${press} to clear the goal.` : `${press} to make it your goal.`) : '';
-  return <button type="button" className={`tree-node ${state}${goal ? ' goal' : ''}${onPath ? ' on-path' : ''}${skipped ? ' skipped' : ''}`}
+  return <button type="button" className={`tree-node ${state}${goal ? ' goal' : ''}${onPath ? ' on-path' : ''}${skipped ? ' skipped' : ''}${fresh ? ' fresh' : ''}`}
     style={{ left: pos.x, top: pos.y, width: w, height: h }} data-tech={t} data-state={state}
     aria-disabled={isKnown || locked || undefined} aria-pressed={later ? goal : undefined}
     aria-label={`${TECH_NAME[t]}. ${status}. Unlocks ${entries.map((e) => e.label).join('; ') || 'nothing new'}.${action ? ` ${action}` : ''}`}
@@ -241,7 +247,7 @@ function TreeNode({ t, view, faction, pos, w, h, compact, queueIndex, slot, goal
     <span className="tn-head">
       <b className="tn-name">{TECH_NAME[t]}</b>
       {isKnown ? <span className="tn-mark"><Icon name="ui-check" size={12} /></span>
-        : queueIndex > 0 ? <span className="tn-q">#{queueIndex + 1}</span>
+        : queueIndex > 0 ? <span className="tn-q">{queueIndex + 1}</span>
         : goal ? <span className="tn-goal">Goal</span> : null}
     </span>
     <span className="tn-art">
