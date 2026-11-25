@@ -20,7 +20,7 @@ describe('battle sound cues', () => {
     ] }))).toEqual(['bow@100', 'arrowHit@600', 'bow@900', 'siegeLaunch@1500', 'siegeHit@2300']);
   });
 
-  it('sounds rifles, cannon, shells and propeller bombers; a musket, a jet, a drone and a gunpowder-age unit’s fall stay silent', () => {
+  it('sounds rifles, cannon, shells and aircraft; a musket, a drone and a gunpowder-age unit’s fall stay silent', () => {
     expect(names(plan({
       shots: ['shot', 'ball', 'shell', 'drone'].map((kind) => ({ kind, launch: 0, flight: 300, hit: true, seed: 1 })),
       clashes: [{ t: 500, mounted: false, guns: true, rifles: true, seed: 1 }, { t: 900, mounted: false, guns: true, seed: 2 }],

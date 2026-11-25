@@ -22,8 +22,8 @@ export const CUE_MERGE_MS = 160;
 const HOOVES_LEAD_MS = 450;
 const AIRCRAFT_LEAD_MS = 1500;
 
-/** The propeller aircraft; every other craft is a jet. */
-const PROPELLER = new Set(['Biplane', 'Bomber', 'Fighter']);
+/** The jets; every other craft is a propeller aircraft, as is a strike with no craft named (combatFx falls back to the Bomber). */
+const JETS = new Set(['JetBomber', 'JetFighter', 'StealthBomber', 'StealthFighter']);
 
 /** Units from before gunpowder: the only ones whose fall has a voice. */
 const OLD_WORLD = new Set<UnitKind>(['Scout', 'Spearman', 'Archer', 'Pikeman', 'Crossbowman', 'Horseman', 'Knight', 'Phalangite', 'CompositeArcher', 'Cataphract', 'HeirToTheThrone']);
@@ -45,7 +45,7 @@ export function battleSoundCues(plan: CombatPlan | null | undefined): BattleCue[
       add(s.launch + s.flight, 'explosion', s.seed);
     } else if (s.kind === 'bombs') {
       // An aircraft is heard on its way in, a propeller one and a jet each by its own recording; the bombs when they land.
-      add(s.launch - AIRCRAFT_LEAD_MS, s.craft && PROPELLER.has(s.craft) ? 'aircraft' : 'jet', s.seed);
+      add(s.launch - AIRCRAFT_LEAD_MS, s.craft && JETS.has(s.craft) ? 'jet' : 'aircraft', s.seed);
       add(s.launch + s.flight, 'explosion', s.seed);
     }
   }
