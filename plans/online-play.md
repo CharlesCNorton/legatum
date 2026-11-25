@@ -46,7 +46,7 @@ Base URL `RELAY` (live: `https://relay.playlegatum.com`). All responses carry
 | GET (WS) | `/rooms/<id>/ws` | A guest connection, piped to the host. Closed with code 1013 when the host tunnel is absent |
 
 ```
-RoomAnnounce = { name: string (<= 80 chars, the host's display name),
+RoomAnnounce = { name: string (<= 80 chars; ignored: the relay lists the room as `listedName(room)`),
                  build: string (<= 40, the app's build label, e.g. "8.9.74"),
                  rules_version: number, protocol: number,
                  locked?: boolean (default false: the host set a join code) }
@@ -58,13 +58,13 @@ RoomInfo     = RoomAnnounce & { room: string, locked: boolean, players: number, 
 `players/humans/open_seats/phase/turn` come from the host's `summary` control frames (below); the relay stores
 them as opaque numbers and strings.
 
-Limits (relay): at most 64 rooms, 8 guest sockets per room, 64 KiB per guest-to-host message, 1 MiB per
+Limits (relay): at most 256 rooms, 8 guest sockets per room, 64 KiB per guest-to-host message, 1 MiB per
 host-to-guest message, room id 10+ and host key 32+ random URL-safe characters. A room is deleted 120 s after
 its host tunnel drops without returning, and immediately on a `bye` frame. Use the WebSocket Hibernation API.
 Since the relay hardening (2026-11-22) it also caps rooms and creations per client address, guest sockets per address,
-message rates (close 4029), cleans room names and has a `LOBBY_OPEN` kill switch; `infra/relay/README.md` ("Limits and
+message rates (close 4029), 8 live rooms per network (IPv4 /24, IPv6 /48), lists every room under a name made from its id (never a typed one; 2026-11-25) and has a `LOBBY_OPEN` kill switch; `infra/relay/README.md` ("Limits and
 kill switch") holds the numbers. Security review (2026-11-22): an IPv6 client counts as its /64 for every per-address limit,
-the `build` label takes only letters, digits, spaces and `. · ( ) _ + -`, a host `status` frame over 64 KiB is dropped, and
+the `build` label must match one of the forms the game makes (`buildOk` in `infra/relay/src/shared.ts`, 2026-11-25), a host `status` frame over 64 KiB is dropped, and
 every relay answer carries `X-Content-Type-Options: nosniff`.
 
 ### Join code, one seat per connection and Remove (2026-11-22 security review)
@@ -117,7 +117,8 @@ the player sees in the app. Player text never says "relay", "socket" or an HTTP 
 | --- | --- | --- |
 | 6 room creations per 10 minutes per address | 429 with `Retry-After` (exposed to browsers by `Access-Control-Expose-Headers`; the body says "too quickly" too) | Host: "You have opened too many games lately. Try again in N minutes." (N from `Retry-After`, rounded up, at least 1; "Try again in a few minutes." when the header cannot be read). Host Game says "Try again in N minutes" and is not the primary; Join Game is. |
 | 2 live rooms per address | 429, no `Retry-After` | Host: "Your internet connection already has 2 games open. Close one before hosting another." (the 2 mirrors `MAX_ROOMS_PER_IP` as `MAX_ROOMS_PER_ADDRESS`). Host Game says "Close one of your games first" and is not the primary. |
-| 64 rooms in all | 503 | Host: "The game list is full right now. Try again in a few minutes." Host Game says "Try again" and stays the primary. |
+| 256 rooms in all | 503 | Host: "The game list is full right now. Try again in a few minutes." Host Game says "Try again" and stays the primary. |
+| 8 live rooms per network (IPv4 /24, IPv6 /48) | 429 "Too many games are open from your network. Try again later." | Not yet matched by the app: `refusalFor` in `app/src/net/browserHost.ts` reads only "too quickly" and "games open", so this 429 shows the generic "Could not open your game. Try again." (open item) |
 | `LOBBY_OPEN=0` kill switch | 503 ("paused") | Host: "Hosting new games is paused. Try again later." Host Game says "Paused for now" and is not the primary. |
 | Relay unreachable | no answer | Host: "Could not open your game. Check your internet connection and try again." |
 | 4 guest sockets per address per room | WebSocket close 1013, reason "too many connections from one address" | Guest: "Too many people on your internet connection have joined this game. Close any extra windows, then pick your seat again." The app stops retrying. Close 1013 for "host not connected" or "room is full" reconnects as usual. |
