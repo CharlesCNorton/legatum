@@ -1,15 +1,15 @@
 """Render the delivered GLB (never the authoring blend) with fixed map camera.
 
 --quick renders four diagnostic poses per clip. Full run writes sprite samples
-and all 36 native attack frames. Package with package.py afterwards.
+at the game frame rates. Package with painted_review.py afterwards.
 """
 import bpy, sys, os, json, math
 from pathlib import Path
 from mathutils import Vector, Matrix
 UNIT=Path(__file__).resolve().parent
 ROOT=Path(os.environ.get('ANIM_ROOT',Path.home()/'LegatumRuns/anim-pilot'))
-ROUND='painted-r1'
-WORK=ROOT/'lanes/spearman-0ad-painted-r1';OUT=WORK/'frames';OUT.mkdir(parents=True,exist_ok=True)
+ROUND='painted-r2'
+WORK=ROOT/'lanes/spearman-0ad-painted-r2';OUT=WORK/'frames';OUT.mkdir(parents=True,exist_ok=True)
 QUICK='--quick' in sys.argv
 STILLS='--stills' in sys.argv
 MAP_ONLY='--map-only' in sys.argv
@@ -130,11 +130,10 @@ for name,a in actions.items():
             meshes[0].hide_render=False;lod1.hide_render=True;lod1.hide_set(True)
             camera.data.ortho_scale=fit['ortho_scale']
     manifest['clips'][name]={'count':counts[name],'duration':(end-start)/30,'loop':loop,'fps':fps[name]}
-    if (name=='attack' or os.environ.get('ANIM_FULLRATE') and name=='hit') and not QUICK and not STILLS and not MAP_ONLY:
+    if os.environ.get('ANIM_FULLRATE') and name in {'attack','hit'} and not QUICK and not STILLS and not MAP_ONLY:
         directory=OUT/(name+'-fullrate');directory.mkdir(exist_ok=True)
         for i,f in enumerate(range(round(start),round(end)+1)):
-            pose(name,f);s.render.filepath=str(directory/f'{i:03}.png')
-        if not MAP_ONLY:bpy.ops.render.render(write_still=True)
+            pose(name,f);s.render.filepath=str(directory/f'{i:03}.png');bpy.ops.render.render(write_still=True)
 (WORK/('map-render.json' if MAP_ONLY else 'quick-render.json' if QUICK else 'render.json')).write_text(json.dumps(manifest,indent=2))
 print('RENDER_REPORT',json.dumps(manifest),flush=True)
 
@@ -149,3 +148,10 @@ if STILLS:
         if label=='helmet':c.z-=.14
         if label=='crest':c.z+=.065
         camera.location=c+direction*8;camera.data.ortho_scale=extent;s.render.filepath=str(OUT/(label+'-close.png'));bpy.ops.render.render(write_still=True)
+
+if STILLS:
+    # Supplemental reverse view makes the cloak's width/folds reviewable.
+    rear=Vector((-direction.x,-direction.y,direction.z)).normalized()
+    camera.rotation_euler=(-rear).to_track_quat('-Z','Y').to_euler()
+    camera.location=Vector((0,0,1.18))+rear*8;camera.data.ortho_scale=2.8
+    s.render.filepath=str(OUT/'rear-idle.png');bpy.ops.render.render(write_still=True)

@@ -20,15 +20,15 @@ class ContractTests(unittest.TestCase):
     def test_clip_name(self):self.rejects(lambda d:d['animations'][0].update(name='Attack'), 'five named clips')
     def test_credit(self):self.rejects(lambda d:d['asset'].pop('copyright'),'exact credit')
     def test_bone_budget(self):self.rejects(lambda d:d['skins'][0]['joints'].extend(d['skins'][0]['joints'][:12]),'40 joints')
-    def test_normal_map(self):self.rejects(lambda d:d['materials'][0].update(normalTexture={'index':0}),'normal or baked AO')
+    def test_normal_map(self):self.rejects(lambda d:d['materials'][0].update(normalTexture={'index':0}),'Base colour, normal and ORM must be distinct textures')
     def test_team(self):
         self.rejects(lambda d:d['meshes'][0]['primitives'][0]['attributes'].pop('COLOR_0'),'Missing team mask')
     def test_extra_material(self):
         self.rejects(lambda d:d['materials'].append(copy.deepcopy(d['materials'][0])),'exactly 1 material')
     def test_extra_mesh(self):
-        self.rejects(lambda d:d['meshes'].append(copy.deepcopy(d['meshes'][0])),'exactly 1 mesh')
+        self.rejects(lambda d:d['meshes'].append(copy.deepcopy(d['meshes'][0])),'exactly 2 meshes')
     def test_extra_primitive(self):
-        self.rejects(lambda d:d['meshes'][0]['primitives'].append(copy.deepcopy(d['meshes'][0]['primitives'][0])),'exactly 1 draw call')
+        self.rejects(lambda d:d['meshes'][0]['primitives'].append(copy.deepcopy(d['meshes'][0]['primitives'][0])),'One primitive per LOD')
     def test_prop_attachment(self):
         def edit(d):
             region=next(r for r in d['meshes'][0]['extras']['vertex_regions'] if r['part']=='spear')
@@ -38,13 +38,19 @@ class ContractTests(unittest.TestCase):
         d=copy.deepcopy(self.g.doc);p=d['meshes'][0]['primitives'][0]
         region=next(r for r in d['meshes'][0]['extras']['vertex_regions'] if r['part']=='spear')
         a=d['accessors'][p['attributes']['WEIGHTS_0']];v=d['bufferViews'][a['bufferView']]
-        blob=bytearray(self.g.bin);struct.pack_into('<4f',blob,v['byteOffset']+region['start']*16,.5,.5,0,0)
+        blob=bytearray(self.g.bin)
+        fmt={5123:'H',5126:'f'}[a['componentType']];half=32767 if fmt=='H' else .5
+        stride=v.get('byteStride',struct.calcsize(fmt)*4)
+        struct.pack_into('<'+fmt*4,blob,v['byteOffset']+region['start']*stride,half,half,0,0)
         self.write(d,blob);self.assertTrue(any('single-bone unit weights' in e for e in validate(self.path)['errors']))
     def test_empty_team_mask(self):
         d=copy.deepcopy(self.g.doc);p=d['meshes'][0]['primitives'][0]
         region=next(r for r in d['meshes'][0]['extras']['vertex_regions'] if r.get('team')=='crest')
         a=d['accessors'][p['attributes']['COLOR_0']];v=d['bufferViews'][a['bufferView']]
-        blob=bytearray(self.g.bin);struct.pack_into('<f',blob,v['byteOffset']+region['start']*16,0)
+        blob=bytearray(self.g.bin)
+        fmt={5121:'B',5123:'H',5126:'f'}[a['componentType']]
+        stride=v.get('byteStride',struct.calcsize(fmt)*4)
+        struct.pack_into('<'+fmt,blob,v.get('byteOffset',0)+a.get('byteOffset',0)+region['start']*stride,0)
         self.write(d,blob);self.assertTrue(any('team mask must be one' in e for e in validate(self.path)['errors']))
     def test_loop_seam(self):
         d=copy.deepcopy(self.g.doc);a=next(a for a in d['animations'] if a['name']=='walk')

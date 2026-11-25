@@ -69,6 +69,23 @@ try {
     if(Number(stream.nb_read_frames)!==count*3||stream.pix_fmt!=='yuv420p')throw new Error(`Invalid encoded clip ${clip}`);
     receipts[clip]={output,framing:framing[clip],...stream};console.log(output);
   }
+  // Actual MeshStandardMaterial/ACES evidence, at the same 512 px size as the panel.
+  await page.setViewportSize({width:512,height:512});
+  await page.evaluate(()=>window.review.sample('idle',0));
+  const heroPath=join(out,`${prefix}-viewer-idle.png`);
+  const hero=await page.locator('canvas').screenshot({path:heroPath});
+  const panel=await readFile(resolve(root,'app/src/assets/units/spearman-panel.png'));
+  const comparison=await browser.newPage({viewport:{width:1024,height:552},deviceScaleFactor:1});
+  await comparison.setContent(`<html><body style="margin:0;background:#f8f4e8;color:#493b2a;font:13px sans-serif;display:flex">
+    <div style="width:512px"><div style="height:32px;padding-left:16px;line-height:32px">Reference painting</div><img style="width:512px;height:512px;object-fit:contain" src="data:image/png;base64,${panel.toString('base64')}"></div>
+    <div style="width:512px"><div style="height:32px;padding-left:16px;line-height:32px">${prefix} | three.js MeshStandardMaterial / ACES</div><img style="width:512px;height:512px" src="data:image/png;base64,${hero.toString('base64')}"></div>
+    </body></html>`);
+  await comparison.locator('img').evaluateAll(images=>Promise.all(images.map(im=>im.decode())));
+  const comparisonPath=join(out,`${prefix}-vs-panel-viewer.png`);
+  await comparison.screenshot({path:comparisonPath});await comparison.close();
+  receipts.comparison={output:comparisonPath,hero:heroPath,renderer:'three.js MeshStandardMaterial / ACES'};
+  await page.setViewportSize({width:960,height:640});
+  await page.evaluate(()=>window.review.sample('idle',0));
   const turnFrames=resolve(out,`.${prefix}-viewer-frames`,assetSha256,'turntable');await mkdir(turnFrames,{recursive:true});
   for(let i=0;i<360;i++) {
     await page.evaluate(t=>window.review.turntable(t,12),i/30);

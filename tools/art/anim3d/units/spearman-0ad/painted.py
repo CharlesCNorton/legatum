@@ -10,7 +10,7 @@ UNIT=Path(__file__).resolve().parent
 sys.path.insert(0,str(Path(__file__).resolve().parent));sys.path.insert(0,str(Path(__file__).resolve().parents[2]))
 from validate_glb import GLB
 ROOT=Path(os.environ.get('ANIM_ROOT',Path.home()/'LegatumRuns/anim-pilot'))
-WORK=ROOT/'lanes/spearman-0ad-painted-r1';WORK.mkdir(parents=True,exist_ok=True)
+WORK=ROOT/'lanes/spearman-0ad-painted-r2';WORK.mkdir(parents=True,exist_ok=True)
 SOURCE=WORK/'approved-r6.glb'
 g=GLB(SOURCE);d=g.doc
 attrs=d['meshes'][0]['primitives'][0]['attributes'];original={k:g.accessor(v) for k,v in attrs.items()}
@@ -35,17 +35,17 @@ def material(name,col,rough,metal,scale=75):
     geo=n.new('ShaderNodeNewGeometry');noise=n.new('ShaderNodeTexNoise');noise.inputs['Scale'].default_value=scale;noise.inputs['Detail'].default_value=2
     l.new(geo.outputs['Position'],noise.inputs['Vector'])
     dot=n.new('ShaderNodeVectorMath');dot.operation='DOT_PRODUCT';dot.inputs[1].default_value=(-.35,.8,.45);l.new(geo.outputs['Normal'],dot.inputs[0])
-    ramp=n.new('ShaderNodeMapRange');ramp.inputs['From Min'].default_value=-1;ramp.inputs['From Max'].default_value=1;ramp.inputs['To Min'].default_value=.20;ramp.inputs['To Max'].default_value=1.55;l.new(dot.outputs['Value'],ramp.inputs[0])
+    ramp=n.new('ShaderNodeMapRange');ramp.inputs['From Min'].default_value=-1;ramp.inputs['From Max'].default_value=1;ramp.inputs['To Min'].default_value=.10;ramp.inputs['To Max'].default_value=1.8;l.new(dot.outputs['Value'],ramp.inputs[0])
     pigment=n.new('ShaderNodeMixRGB');pigment.blend_type='MULTIPLY';pigment.inputs[0].default_value=1;pigment.inputs[1].default_value=(*col,1);l.new(ramp.outputs[0],pigment.inputs[2])
-    grain=n.new('ShaderNodeMixRGB');grain.blend_type='MULTIPLY';grain.inputs[0].default_value=.26;l.new(pigment.outputs[0],grain.inputs[1]);l.new(noise.outputs['Fac'],grain.inputs[2]);l.new(grain.outputs[0],emit.inputs[0]);m['paint_node']=grain.name
+    grain=n.new('ShaderNodeMixRGB');grain.blend_type='MULTIPLY';grain.inputs[0].default_value=.38;l.new(pigment.outputs[0],grain.inputs[1]);l.new(noise.outputs['Fac'],grain.inputs[2]);l.new(grain.outputs[0],emit.inputs[0]);m['paint_node']=grain.name
     return m
 M={
-'bronze':material('Painted ochre bronze',(.45,.215,.046),.63,.32),
-'gold':material('Worn raised gold',(.82,.50,.14),.53,.38),
-'shield':material('Recessed bronze shield field',(.235,.105,.025),.78,.25),
-'dark':material('Engraved umber bronze',(.105,.057,.017),.82,.18),
+'bronze':material('Painted ochre bronze',(.58,.265,.045),.49,.45),
+'gold':material('Worn raised gold',(.95,.61,.20),.35,.55),
+'shield':material('Recessed bronze shield field',(.29,.12,.019),.65,.32),
+'dark':material('Engraved umber bronze',(.065,.027,.009),.76,.24),
 'linen':material('Warm ivory linen',(.72,.57,.35),.95,0,160),
-'red':material('Crimson wool',(.24,.008,.006),.96,0,140),
+'red':material('Crimson wool',(.31,.009,.005),.93,0,140),
 'leather':material('Oiled oxhide',(.11,.044,.017),.78,0,85),
 'skin':material('Warm skin',(.49,.255,.115),.8,0,45),
 'mask':material('Neutral team pigment',(.65,.56,.45),.9,0,100),
@@ -263,17 +263,32 @@ for side,sign in [('L',1),('R',-1)]:
     ob=mesh('greave_'+side,vs,fs,'bronze','leg_'+side);apply(ob,'SOLIDIFY',thickness=.004);apply(ob,'BEVEL',width=.002,segments=2)
     tube('greave_'+side+':ridge',[(x,.115,z+.065),(x,.26,z+.081),(x,.40,z+.077)],[.0035]*3,'gold','leg_'+side,seg=6)
 
+# Round-two silhouette refinement around the unchanged native bone axes.
+from painted_forms import refine
+refine(globals())
+from painted_human import replace_body
+replace_body(globals())
+
 # Explicitly retain separate authoring parts; both runtime LODs get one primitive.
 for ob in objects:
     for p in ob.data.polygons:p.use_smooth=True
-# Spend the mesh budget proportionally, preserving small bevels and round outlines.
-def triangles(ob):return sum(len(p.vertices)-2 for p in ob.data.polygons)
-raw=sum(map(triangles,objects));ratio=min(1,8600/raw)
-for ob in objects:
-    if triangles(ob)>40 and ratio<1:
-        part_ratio=.75 if ob['team']=='shield rim' else .85 if ob['part']=='crest_base' else min(1,ratio*1.4) if ob['part']=='helmet' else ratio
-        apply(ob,'DECIMATE',ratio=part_ratio)
+# Fit full-resolution authoring parts first, then preserve them for actual high-to-low transfer.
 from painted_contact import fit
+fit(objects,g,bones)
+high_parts=[]
+for ob in objects:
+    x=ob.copy();x.data=ob.data.copy();bpy.context.collection.objects.link(x)
+    x.name='HIGH-'+ob.name;x.hide_render=True;x.hide_set(True);high_parts.append(x)
+# Spend the mesh budget proportionally, preserving the circular rim and helmet.
+def triangles(ob):return sum(len(p.vertices)-2 for p in ob.data.polygons)
+from collections import Counter
+raw_by_part=Counter()
+for ob in objects:raw_by_part[ob['part']]+=triangles(ob)
+budgets={'Greek head':160,'Aspis handgrip':40,'body':900,'heroicbody':2100,'sandal':140,'linen':650,'sleeve':250,'aspis':2000,'helmet':650,'crest_base':180,'spear':120,'cuirass':850,'pteruges':350,'greave_L':500,'greave_R':500,'crest':1250,'cloak':650}
+raw=sum(map(triangles,objects))
+for ob in objects:
+    ratio=min(1,budgets[ob['part']]/raw_by_part[ob['part']])
+    if triangles(ob)>12 and ratio<1:apply(ob,'DECIMATE',ratio=ratio)
 fit(objects,g,bones)
 print('GEOMETRY',raw,'->',sum(map(triangles,objects)),flush=True)
 # One packed non-overlapping UV0 shared by all pigments.
@@ -285,19 +300,22 @@ bpy.ops.object.mode_set(mode='EDIT');bpy.ops.mesh.select_all(action='SELECT');bp
 def joined_copies(items,name):
     copies=[]
     for ob in items:
-        x=ob.copy();x.data=ob.data.copy();bpy.context.collection.objects.link(x);copies.append(x)
+        x=ob.copy();x.data=ob.data.copy();bpy.context.collection.objects.link(x);x.hide_render=False;x.hide_set(False);copies.append(x)
     bpy.ops.object.select_all(action='DESELECT')
     for x in copies:x.select_set(True)
-    bpy.context.view_layer.objects.active=copies[0];bpy.ops.object.join();x=bpy.context.object;x.name=name;return x
-low=joined_copies(objects,'Bake low');high=joined_copies(objects,'Sculpt high');pigment=joined_copies(objects,'Paint source')
+    bpy.context.view_layer.objects.active=copies[0]
+    if len(copies)>1:bpy.ops.object.join()
+    x=bpy.context.object;x.name=name;return x
+low=joined_copies(objects,'Bake low');high=joined_copies(high_parts,'Sculpt high');pigment=joined_copies(objects,'Paint source')
 pigment.hide_render=True;pigment.hide_set(True)
 apply(high,'SUBSURF',subdivision_type='SIMPLE',levels=2)
-tex=bpy.data.textures.new('Hammered bronze and woven grain',type='CLOUDS');tex.noise_scale=.009;tex.noise_depth=1
-apply(high,'DISPLACE',texture=tex,strength=.0012,mid_level=.5)
+print('HIGH_POLY_TRIANGLES',triangles(high),flush=True)
+tex=bpy.data.textures.new('Hammered bronze and woven grain',type='CLOUDS');tex.noise_scale=.006;tex.noise_depth=1
+apply(high,'DISPLACE',texture=tex,strength=.0018,mid_level=.5)
 for ob in objects:ob.hide_render=True;ob.hide_set(True)
 s=bpy.context.scene;s.render.engine='CYCLES';s.cycles.device='CPU';s.cycles.samples=8
 s.render.bake.use_selected_to_active=True;s.render.bake.cage_extrusion=.008;s.render.bake.max_ray_distance=.02;s.render.bake.margin=12
-size=2048
+size=int(os.environ.get('PAINTED_BAKE_SIZE','2048'))
 normal=bpy.data.images.new('normal master',size,size,alpha=False,float_buffer=False);normal.colorspace_settings.name='Non-Color'
 ao=bpy.data.images.new('AO master',size,size,alpha=False,float_buffer=False);ao.colorspace_settings.name='Non-Color'
 base=bpy.data.images.new('basecolor master',size,size,alpha=False,float_buffer=False)
@@ -306,10 +324,25 @@ orm=bpy.data.images.new('ORM master',size,size,alpha=False,float_buffer=False);o
 low.data.materials.clear();target=bpy.data.materials.new('Bake receiver');target.use_nodes=True;low.data.materials.append(target)
 for p in low.data.polygons:p.material_index=0
 node=target.node_tree.nodes.new('ShaderNodeTexImage');target.node_tree.nodes.active=node
+# Bake independent part/material groups to prevent rays hitting adjacent kit.
+# Every target keeps its slice of the global UV atlas, with clear disabled after the first group.
+high.hide_render=True;low.hide_render=True;high.hide_set(True);low.hide_set(True)
+groups=sorted(set((ob['part'],ob['mat']) for ob in objects))
 for im,mode in [(normal,'NORMAL'),(ao,'AO')]:
-    node.image=im;active(low);high.select_set(True)
-    print('BAKE',mode,size,flush=True);bpy.ops.object.bake(type=mode)
+    for gi,key in enumerate(groups):
+        targets=[ob for ob in objects if (ob['part'],ob['mat'])==key]
+        sources=[ob for ob in high_parts if (ob['part'],ob['mat'])==key]
+        receiver=joined_copies(targets,'Bake group low');donor=joined_copies(sources,'Bake group high')
+        apply(donor,'SUBSURF',subdivision_type='SIMPLE',levels=2)
+        strength=.0018 if key[1] in {'bronze','gold','shield','dark'} else .00025 if key[1]=='skin' else .0007
+        apply(donor,'DISPLACE',texture=tex,strength=strength,mid_level=.5)
+        receiver.data.materials.clear();receiver.data.materials.append(target)
+        for poly in receiver.data.polygons:poly.material_index=0
+        node.image=im;active(receiver);donor.select_set(True);s.render.bake.use_clear=gi==0
+        print('BAKE',mode,size,key,flush=True);bpy.ops.object.bake(type=mode)
+        bpy.data.objects.remove(receiver,do_unlink=True);bpy.data.objects.remove(donor,do_unlink=True)
     im.filepath_raw=str(WORK/(im.name.replace(' ','-')+'.png'));im.file_format='PNG';im.save()
+s.render.bake.use_clear=True
 # Bake authored base pigment on its own surface, avoiding ray hits on adjacent thin props.
 high.hide_render=True;low.hide_render=True;pigment.hide_render=False;pigment.hide_set(False)
 s.render.bake.use_selected_to_active=False
@@ -325,12 +358,25 @@ pigment.hide_render=True;pigment.hide_set(True);high.hide_render=False;low.hide_
 for m in M.values():
     e=next(n for n in m.node_tree.nodes if n.type=='EMISSION')
     for link in list(e.inputs[0].links):m.node_tree.links.remove(link)
-    e.inputs[0].default_value=(1,m['rough'],m['metal'],1)
-node.image=orm;active(low);high.select_set(True);bpy.ops.object.bake(type='EMIT')
+    n=m.node_tree.nodes;l=m.node_tree.links
+    noise=next(x for x in n if x.type=='TEX_NOISE')
+    rough=n.new('ShaderNodeMapRange');rough.inputs['To Min'].default_value=max(.2,m['rough']-.10);rough.inputs['To Max'].default_value=min(1,m['rough']+.10);l.new(noise.outputs['Fac'],rough.inputs[0])
+    channels=n.new('ShaderNodeCombineColor');channels.inputs[0].default_value=1;channels.inputs[2].default_value=m['metal'];l.new(rough.outputs[0],channels.inputs[1]);l.new(channels.outputs[0],e.inputs[0])
+# Self-bake channel values on the low surface; ORM needs no ray projection.
+high.hide_render=True;low.hide_render=True;pigment.hide_render=False;pigment.hide_set(False)
+s.render.bake.use_selected_to_active=False
+for m in pigment.data.materials:
+    n=m.node_tree.nodes.new('ShaderNodeTexImage');n.image=orm;m.node_tree.nodes.active=n
+active(pigment);bpy.ops.object.bake(type='EMIT')
 pix=np.array(orm.pixels[:],dtype=np.float32).reshape(-1,4);ap=np.array(ao.pixels[:],dtype=np.float32).reshape(-1,4);pix[:,0]=ap[:,0];orm.pixels.foreach_set(pix.ravel());orm.update()
 orm.filepath_raw=str(WORK/'ORM-master.png');orm.file_format='PNG';orm.save()
 for im,name in [(base,'basecolor'),(normal,'normal'),(orm,'orm')]:
     im.scale(1024,1024);im.filepath_raw=str(UNIT/f'spearman-{name}.png');im.save()
+    # Explicit fresh image prevents save() reusing a pre-scale source PNG payload.
+    shipped=bpy.data.images.new('shipped '+name,1024,1024,alpha=False)
+    shipped.colorspace_settings.name=im.colorspace_settings.name
+    shipped.pixels.foreach_set(im.pixels[:]);shipped.update()
+    shipped.filepath_raw=str(UNIT/f'spearman-{name}.png');shipped.file_format='PNG';shipped.save()
 # Restore editable pigment nodes in saved master.
 for m in M.values():
     e=next(n for n in m.node_tree.nodes if n.type=='EMISSION');m.node_tree.links.new(m.node_tree.nodes[m['paint_node']].outputs[0],e.inputs[0])

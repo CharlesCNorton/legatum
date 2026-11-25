@@ -98,6 +98,23 @@ class GLB:
                 else:
                     for p in positions:yield ni,point(worlds[ni],p)
 
+def image_dimensions(data):
+    if data[:8]==b'\x89PNG\r\n\x1a\n':return (*struct.unpack_from('>II',data,16),data[24])
+    if data[:4]==b'RIFF' and data[8:12]==b'WEBP':
+        assert data[12:16]==b'VP8 ','Expected non-animated lossy WebP'
+        width,height=struct.unpack_from('<HH',data,26);return width&0x3fff,height&0x3fff,8
+    assert data[:2]==b'\xff\xd8','Invalid PNG/JPEG/WebP'
+    offset=2
+    while offset<len(data):
+        assert data[offset]==255,'Invalid JPEG marker'
+        while data[offset]==255:offset+=1
+        marker=data[offset];offset+=1
+        size=struct.unpack_from('>H',data,offset)[0]
+        if marker in {0xc0,0xc1,0xc2}:
+            bits,height,width=struct.unpack_from('>BHH',data,offset+2);return width,height,bits
+        offset+=size
+    raise ValueError('JPEG dimensions missing')
+
 def validate(path):
     g=GLB(path);d=g.doc;errors=[];warnings=[]
     def require(test,message):
@@ -143,12 +160,16 @@ def validate(path):
         require(lod_triangles.get(name,0)<=budget,f'{name} triangle budget exceeded: {lod_triangles.get(name)}')
     rigid_counts={}
     for mesh in d['meshes']:
+        lod_team_regions=set()
         regions=mesh.get('extras',{}).get('vertex_regions',[])
         require(bool(regions),'Missing auditable vertex_regions')
         for prim in mesh['primitives']:
             attrs=prim['attributes'];count=d['accessors'][attrs['POSITION']]['count']
             colors=g.accessor(attrs['COLOR_0']) if 'COLOR_0' in attrs else []
             weights=g.accessor(attrs['WEIGHTS_0']);js=g.accessor(attrs['JOINTS_0'])
+            for semantic in ['NORMAL','TANGENT']:
+                require(semantic in attrs,f'Missing {semantic}')
+                if semantic in attrs:require(all(abs(sum(x*x for x in row[:3])-1)<.002 for row in g.accessor(attrs[semantic])),f'{mesh["name"]} {semantic} vectors must be unit length')
             require(all(len(g.accessor(v))==count for v in attrs.values()),'Vertex attribute count mismatch')
             require(all(0<=c[0]<=1 and c[1:]==(0,0,1) for c in colors),'Invalid COLOR_0 team data')
             covered=[]
@@ -169,22 +190,24 @@ def validate(path):
                     require(valid,f'{part} must have single-bone unit weights to {expected}')
                     rigid_counts[part]=rigid_counts.get(part,0)+end-start
                 if region.get('team'):
-                    team_regions.append(region['team'])
+                    team_regions.append(region['team']);lod_team_regions.add(region['team'])
                     require(bool(colors) and all(colors[i][0]==1 for i in range(start,end)),f'{part} team mask must be one')
                 elif colors:require(all(colors[i][0]==0 for i in range(start,end)),f'{part} non-team mask must be zero')
             require(sorted(covered)==list(range(count)),'vertex_regions must partition every vertex exactly once')
+        require({'cloak trim','shield rim','crest'}<=lod_team_regions,f'{mesh["name"]} team mask must cover cloak trim, shield rim and crest')
     require({'spear','aspis','helmet'}<=set(rigid_counts),'Missing required rigid prop regions')
     require({'cloak trim','shield rim','crest'}<=set(team_regions),'team must cover cloak trim, shield rim and crest')
     require(extras.get('team',{}).get('attribute')=='COLOR_0' and extras.get('team',{}).get('channel')=='r','Missing team mask semantics')
     images=d.get('images',[]);require(len(images)==3,'Exactly base colour, normal and ORM images required')
-    texture_size=None
+    texture_size=None;texture_images=[]
+    require(extras.get('texture_master_size')==2048,'Textures must declare 2048 authoring masters')
     for im in images:
-        require('bufferView' in im and im.get('mimeType')=='image/png','Atlas must be embedded PNG')
+        require('bufferView' in im and im.get('mimeType') in {'image/png','image/jpeg','image/webp'},'Atlas must be embedded PNG, JPEG or WebP')
         if 'bufferView' in im:
             view=d['bufferViews'][im['bufferView']];off=view.get('byteOffset',0)
             png=g.bin[off:off+view['byteLength']]
-            require(png[:8]==b'\x89PNG\r\n\x1a\n','Invalid PNG')
-            texture_size=struct.unpack_from('>II',png,16);require(texture_size==(1024,1024),'Atlas must be 1024 x 1024')
+            width,height,depth=image_dimensions(png);texture_size=(width,height);require(texture_size==(1024,1024),'Atlas must be 1024 x 1024')
+            texture_images.append({'name':im.get('name'),'pixels':list(texture_size),'bytes':len(png),'bit_depth':depth,'mime_type':im['mimeType']})
     for mat in d.get('materials',[]):
         require('normalTexture' in mat and 'occlusionTexture' in mat,'Normal and AO textures required')
         pbr=mat.get('pbrMetallicRoughness',{});orm=pbr.get('metallicRoughnessTexture',{});ao=mat.get('occlusionTexture',{})
@@ -223,14 +246,15 @@ def validate(path):
     height=maximum[1]-minimum[1]
     require(1.65<=height<=1.95,f'Figure must be about 1.8m: {height:.3f}')
     bodypts=[p for ni,p in g.vertices(idle,0) if ni in skinned]
-    feet=[p for p in bodypts if p[1]<min(v[1] for v in bodypts)+.035]
+    sole_height=min(v[1] for v in bodypts)
+    feet=[p for p in bodypts if p[1]<sole_height+.035]
     feet_centre=[(min(p[i] for p in feet)+max(p[i] for p in feet))/2 for i in range(3)]
     require(abs(min(p[1] for p in feet))<.02,'Feet must sit at y=0')
     require(abs(feet_centre[0])<.15 and abs(feet_centre[2])<.15,'Origin must be at feet centre')
     # Mesh toes establish +Z, independently of metadata (front-most low vertex).
     require(max(p[2] for p in feet)>abs(min(p[2] for p in feet)), 'Toe geometry must face +Z')
     warnings.append('Painted quality, surface detail, exact team coverage, collisions and game feel require visual review; runtime must display only one LOD.')
-    return {'valid':not errors,'glb':str(Path(path).resolve()),'bytes':Path(path).stat().st_size,'triangles':tris,'lod_triangles':lod_triangles,'joints':len(joints),'skinned_meshes':len(skinned),'atlas_px':texture_size,'figure_height_m':round(height,4),'feet_centre_m':[round(v,4) for v in feet_centre],'meshes':len(d['meshes']),'materials':len(d['materials']),'packaged_primitives':draw_calls,'draw_calls_per_lod':1,'team_regions':team_regions,'rigid_vertices':rigid_counts,'clips':clips,'errors':errors,'review_required':warnings}
+    return {'valid':not errors,'glb':str(Path(path).resolve()),'bytes':Path(path).stat().st_size,'triangles':tris,'lod_triangles':lod_triangles,'joints':len(joints),'skinned_meshes':len(skinned),'atlas_px':texture_size,'texture_images':texture_images,'figure_height_m':round(height,4),'feet_centre_m':[round(v,4) for v in feet_centre],'meshes':len(d['meshes']),'materials':len(d['materials']),'packaged_primitives':draw_calls,'draw_calls_per_lod':1,'team_regions':sorted(set(team_regions)),'rigid_vertices':rigid_counts,'clips':clips,'errors':errors,'review_required':warnings}
 
 if __name__=='__main__':
     p=argparse.ArgumentParser();p.add_argument('glb',type=Path);p.add_argument('--output',type=Path);args=p.parse_args()

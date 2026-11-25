@@ -4,8 +4,8 @@ from pathlib import Path
 from PIL import Image,ImageDraw
 UNIT=Path(__file__).resolve().parent
 ROOT=Path(os.environ.get('ANIM_ROOT',Path.home()/'LegatumRuns/anim-pilot'))
-WORK=ROOT/'lanes/spearman-0ad-painted-r1';OUT=ROOT/'review/3d-v2';OUT.mkdir(parents=True,exist_ok=True)
-PREFIX='spearman-0ad-painted-r1';frames=WORK/'frames'
+WORK=ROOT/'lanes/spearman-0ad-painted-r2';OUT=ROOT/'review/3d-v2';OUT.mkdir(parents=True,exist_ok=True)
+PREFIX='spearman-0ad-painted-r2';frames=WORK/'frames'
 asset=UNIT/'spearman.glb'
 assert (WORK/'render.json').stat().st_mtime>=asset.stat().st_mtime,'Render has not completed for this GLB'
 manifest=json.loads((WORK/'render.json').read_text());receipts={}
@@ -39,7 +39,7 @@ repo=UNIT.parents[4]
 sheet=Image.new('RGB',(1024,552),'#f8f4e8');draw=ImageDraw.Draw(sheet)
 sheet.paste(cream(repo/'app/src/assets/units/spearman-panel.png',(512,512)),(0,32))
 sheet.paste(cream(frames/'still-idle/000.png'),(512,32))
-draw.text((16,12),'Reference painting | 512 px',fill='#493b2a');draw.text((528,12),'Painted r1 | delivered LOD0 | Cycles CPU / AgX',fill='#493b2a')
+draw.text((16,12),'Reference painting | 512 px',fill='#493b2a');draw.text((528,12),'Painted r2 | delivered LOD0 | Cycles CPU / AgX',fill='#493b2a')
 sheet.save(OUT/f'{PREFIX}-vs-panel.png')
 sheet=Image.new('RGB',(1536,552),'#f8f4e8');draw=ImageDraw.Draw(sheet)
 for i,name in enumerate(['shield','helmet','crest']):

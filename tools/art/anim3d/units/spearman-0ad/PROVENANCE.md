@@ -147,3 +147,75 @@ rim, soft shadow filtering, material AO and ACES tonemapping. The display yaw
 remains in the camera. `record.mjs --prefix spearman-0ad-painted-r1` writes five
 native-30-fps viewer clips and a 12-second 360-degree idle turntable. CPU sprites
 and stills use Cycles/AgX and are labelled separately from that browser review.
+
+## Painted premium round 2
+
+Continued from the painted round-one branch, incorporating the lead and cloud
+reviewer notes through 2026-11-25 02:36Z. `painted_human.py` replaces the native
+mannequin body with the CC0 MPFB 2.0.18 body (source/hash/licence in SOURCES.md).
+Male macro targets: muscle 1, weight .72, age .42, height .42, proportions .65;
+additional arm/shoulder muscle targets shape the anatomy. The body is fitted to
+the original rest coordinates. Blender Data Transfer uses POLYINTERP_NEAREST,
+matched native bone names, normalization and a maximum of four influences.
+The temporary fitting rig is deleted; only the approved 30-bone skeleton ships.
+Hidden torso/thigh faces are removed; real hands/feet and sandal straps remain.
+
+`painted_forms.py` broadens/deepens the cuirass with pectoral/abdominal volume,
+adds pleated linen and rounded sleeves, shaped knee greaves, a sagittal crest
+mass with 105 tapered tufts, and a wider knee-length crimson cloak with deep
+folds, darker lining and a shoulder mantle. Helmet/headgear size is increased.
+The 64-segment convex aspis, rolled rim, raised sunburst, Corinthian cheek/nose
+guards, leaf blade, butt spike and pteruges retain rigid original attachments.
+The cloak uses original cape bones and the tunic uses hip/thigh weights.
+Comparing both round-one lanes informed sharper shield contrast and separated
+pigments. No other-lane mesh, texture or animation buffers were copied.
+
+Warm ochre highlights, dark recesses, stronger form shading and roughness grain
+are authored as Blender pigment graphs. Main bronze roughness/metallic is
+.49/.45, raised gold .35/.55 before grain. This is procedural painted shading,
+not a manually brush-painted texture. The result still needs richer surfaces.
+
+High-resolution parts are preserved before decimation: 70,332 source triangles,
+1,131,232 in the combined subdivided/displaced reference. Cycles CPU normal/AO
+transfer runs separately by part/pigment group to reduce ray contamination.
+Base colour and ORM material channels are baked on the game mesh. Lossless
+2048-square base colour, normal, AO and ORM masters and the editable Blender
+file remain under `$ANIM_ROOT/lanes/spearman-0ad-painted-r2/` outside git.
+Shipped base colour/normal/ORM are 1024-square WebP, embedded and beside the GLB;
+quality is 84/85/84 respectively. Compression is lossy, including the data maps.
+ORM is R occlusion, G roughness, B metallic, on UV0.
+
+Final GLB: **1,985,664 bytes; LOD0 9,981 triangles, LOD1 2,634**. Two named
+skinned meshes share one material and one skeleton; show one LOD at a time.
+Both carry red COLOR_0 team masks. Props remain rigid single-bone attachments.
+NORMAL/TANGENT use normalized signed shorts, UV/weights normalized unsigned
+shorts, joint/mask data unsigned bytes and indices unsigned shorts. Positions
+remain floats. Zero quantized weights have zero joint indices; weights sum to
+65535. Required extensions: KHR_mesh_quantization and EXT_texture_webp.
+Repeated identical animation buffer views/accessors are shared without changing
+sample bytes. There is no MSFT_lod. Geometry remains +Z forward with no baked yaw.
+
+SHA-256: `9f860b78aa85c0a292fa3a02e5ebd1c6bef0a61b1bc1214360ad2655259651b1`.
+Exact animation/skeleton fingerprint remains
+`639ad201654bf2a08b90c9b7b35c8f047ac1f5cf3531e7b7224f80e0e1d58f79`.
+Ground fitting changes bind vertices only (maximum initial adjustment 47.21 mm).
+The 120 Hz audit passes both LODs with minimum ground clearance -0.50015 mm.
+It does not certify general mesh intersections or deformation quality.
+
+Contract validation passes; Khronos reports 0 errors/warnings/infos/hints;
+25 validator regression tests pass. Three.js 170 CPU loader/mixer, sharing,
+team material and framing checks pass. The CPU image shim validates dimensions,
+not browser WebP decoding or GPU appearance. Blender imports/renders the final
+WebP GLB. CPU review images and five three-loop game-rate movies are fresh from
+that exact asset, using Cycles/AgX.
+
+The existing Poly Haven CC0 studio HDRI, warm key, cool rim, AO, soft shadows and
+ACES remain in the browser viewer. The recorder accepts the r2 prefix and now
+adds an actual three.js vs-panel PNG alongside the five movies and 12-second
+360-degree idle turntable. Host browser capture is reserved for the lead and
+has not run here. Renderer tuning and playing-speed approval remain pending.
+
+Honest gate verdict: technical contract passes, **premium art gate is not met**.
+Shield-rim faceting, a comb-like crest, angular neckline and insufficient bronze,
+skin and cloth richness remain visible. MPFB anatomy improves the source body,
+but the final silhouette still lacks the reference painting's heroic mass.
