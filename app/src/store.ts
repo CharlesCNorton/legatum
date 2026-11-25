@@ -264,6 +264,8 @@ interface State {
   diplomacyTeam: number | null;
   /** Outcome dismissal belongs to the installed save/session, not the mounted game screen. */
   outcomeDismissed: boolean;
+  /** The local seats still owed the people's introduction (celebrate/PeopleIntro.tsx): every human seat of a game that has just begun; a loaded game has none. */
+  introSeats: Seat[];
   /** Which part of the end of a finished game is showing: the staged reveal, then the post-game report. */
   outcomeStage: 'reveal' | 'report';
   /** Player ids whose elimination dialog has been dismissed in this session. */
@@ -574,6 +576,18 @@ function capitalOrUnit(v: PlayerView): Hex | null {
   if (c) return c.pos;
   const u = v.units.find((u) => u.owner === v.me && u.kind === 'Settler') ?? v.units.find((u) => u.owner === v.me);
   return u?.pos ?? null;
+}
+
+/**
+ * Whether a new game opens with the people's introduction. On for players; automated play-throughs
+ * (the e2e fixtures) turn it off with `legatum.intro.v1 = off` so every test does not have to press Begin.
+ */
+export function introEnabled(): boolean {
+  try {
+    return globalThis.localStorage?.getItem('legatum.intro.v1') !== 'off';
+  } catch {
+    return true;
+  }
 }
 
 export const useGame = create<State>((set, get) => {
@@ -1004,6 +1018,8 @@ export const useGame = create<State>((set, get) => {
             eliminationTurns: {},
             seat: 0,
             screen: 'game',
+            // Joining a game on its first turn is a beginning too; a later turn is a return to a game under way.
+            introSeats: view.turn === 1 && introEnabled() && !orders[0]?.length ? [0] : [],
             ...emptySeats(1),
             orders,
             selection: null,
@@ -1254,6 +1270,7 @@ export const useGame = create<State>((set, get) => {
     forecastTick: 0,
     autosaveNotice: false,
     rewinds: [],
+    introSeats: [],
 
     goto: (screen) => {
       if (screen !== 'game') stopResolving();
@@ -1548,7 +1565,7 @@ export const useGame = create<State>((set, get) => {
         const capital = first?.cities.find((city) => city.owner === first.me && city.is_capital);
         if (capital) get().select({ kind: 'city', id: capital.id }, true);
         if (options?.training) set({ why: { ...NO_WHY, enabled: true } });
-        set({ rewinds: [] });
+        set({ rewinds: [], introSeats: introEnabled() ? get().humans.map((_, i) => i) : [] });
         const views = get().views;
         campaign = newCampaignId();
         if (views) writeAutosave(client, views);
@@ -1573,7 +1590,7 @@ export const useGame = create<State>((set, get) => {
           }
           throw new Error(olderRulesMessage(save.playtest));
         }
-        if (needsOnlineHost(save)) throw new Error('This save has more than one human player. Resume it with Multiplayer, then Host from a save. Guests can rejoin their seats.');
+        if (needsOnlineHost(save)) throw new Error('This game has other players. Open it from Multiplayer with Host from a save, and they rejoin online.');
         if (save.client !== 'wasm') throw new Error('This save used the retired TypeScript engine and cannot be loaded by the Rust engine.');
         const client = await createClient(save.client);
         measureTurn('loadClient', () => client.load(save.game));

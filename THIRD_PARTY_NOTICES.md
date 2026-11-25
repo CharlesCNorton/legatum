@@ -34,7 +34,7 @@ For those, use the standard text of the named licence and the authors in the cra
 
 ## JavaScript packages
 
-`app/package-lock.json` names 100 packages: 8 for production and 92 development-only.
+`app/package-lock.json` names 194 packages: 9 for production and 185 development-only.
 
 Shipped in the web build:
 
@@ -42,6 +42,7 @@ Shipped in the web build:
 | --- | --- | --- |
 | `react`, `react-dom`, `scheduler` | MIT | Meta Platforms, Inc. and affiliates |
 | `zustand` | MIT | 2019 Paul Henschel |
+| `three` (three.js, the opt-in 3D map; a lazy chunk loaded only when the 3D map is switched on) | MIT | 2010-2024 three.js authors |
 | `@fontsource/cormorant` (the Cormorant typeface) | SIL Open Font License 1.1 | 2015 The Cormorant Project Authors (github.com/CatharsisFonts/Cormorant) |
 | `@fontsource/libre-franklin` (the Libre Franklin typeface) | SIL Open Font License 1.1 | 2020 The Libre Franklin Project Authors (github.com/googlefonts/Libre-Franklin) |
 
@@ -54,7 +55,7 @@ in this repository. The OFL requires the copyright notice and licence text to tr
 packages include them (`LICENSE` in each package); a distributed build must carry them too (see "Notices in
 distributed builds").
 
-Development-only tools (Vite, Vitest, Playwright, TypeScript, Testing Library, happy-dom, fake-indexeddb and their dependencies) are not distributed with the game. Their licences are MIT (75 packages in all, including
+Development-only tools (the three.js type declarations, Vite, Vitest, Playwright, TypeScript, Testing Library, happy-dom, fake-indexeddb and their dependencies) are not distributed with the game. Their licences are MIT (75 packages in all, including
 the shipped ones), MPL-2.0 (12), Apache-2.0 (8), OFL-1.1 (2, the fonts above),
 BSD-2-Clause (1), BSD-3-Clause (1) and ISC (1). The MPL-2.0 packages are `lightningcss` and its eleven platform
 binaries, pulled in by Vite, unmodified and build-time only.
@@ -71,12 +72,20 @@ Contributor Covenant 2.1 (CC BY 4.0), as it says.
 
 ## Audio
 
-All shipped music and sound effects (`app/public/audio/`, 39 files) are released under CC0 1.0 (no attribution
-required; courtesy credit is given). The per-file source, author and processing are in `app/public/audio/CREDITS.md`
-and `app/public/audio/manifest.json`: Kenney (kenney.nl: Music Jingles, RPG Audio, Impact Sounds; 34 files),
-Breviceps ("Short Choir", freesound.org; 2 files), Bastianhallo ("Level up", freesound.org; 1 file) and vitalezzz ("Eclipse Legion", opengameart.org; both music
-tracks are edits of that one work). The licence text is in `app/public/audio/licenses/CC0-1.0.txt`. The same credits
-appear in the game under How to Play → Credits.
+The shipped music and sound effects (`app/public/audio/`, 80 files) are third-party works under two licences.
+The per-file source, author and processing are in `app/public/audio/CREDITS.md` and
+`app/public/audio/manifest.json`, and the same credits appear in the game under How to Play → Credits.
+
+- **CC0 1.0** (39 files; no attribution required, courtesy credit is given): Kenney (kenney.nl: Music Jingles,
+  RPG Audio, Impact Sounds; 34 files), Breviceps ("Short Choir", freesound.org; 2 files), Bastianhallo ("Level up", freesound.org; 1 file) and vitalezzz
+  ("Eclipse Legion", opengameart.org; the title piece and the war excerpt are edits of that one work). The licence
+  text is in `app/public/audio/licenses/CC0-1.0.txt`.
+- **CC BY-SA 3.0** (41 files: 16 music tracks, 3 land sounds, 22 battle sounds): from 0 A.D., Copyright Wildfire
+  Games (https://www.wildfiregames.com/), licensed under Creative Commons Attribution-ShareAlike 3.0
+  (https://creativecommons.org/licenses/by-sa/3.0/). They were trimmed, loudness-matched and re-encoded for Legatum
+  (`tools/audio/build_0ad.py`), and the edited files stay under CC BY-SA 3.0. The licence text is in
+  `app/public/audio/licenses/CC-BY-SA-3.0.txt`. This licence covers these audio files only; it does not extend to
+  Legatum's code or art.
 
 ## Art
 

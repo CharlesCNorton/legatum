@@ -61,3 +61,18 @@ they do not add a second haptic or sound. A wired tier hook replaces the semanti
 sound, otherwise the existing semantic sound plays. `discovery` and all four hooks ship CC0 Kenney sounds in the audio manifest: a
 single pluck, short pizzicato, fuller pizzicato, and an orchestral Hit fanfare.
 Interrupted celebrations cancel only their decorated beats; losses still play. Partner celebration cards have no haptic.
+
+## Battle and land sound (no haptic)
+
+These are heard, not felt, and are not `feel.*` events: the map schedules them itself (`app/src/feel/battleSound.ts`, `app/src/feel/sound.ts`).
+
+| Sound | Trigger | Limit |
+| --- | --- | --- |
+| Bow, arrow hit | An archer or crossbow volley in the turn's battle animation leaves, and lands if it did damage | 2 each a turn |
+| Catapult throw, stone hit | A stone shot leaves and lands | 1 throw, 2 hits a turn |
+| Hooves, clash | A melee clash before gunpowder; hooves lead a mounted charge | 1 hooves, 2 clashes a turn |
+| Death cry | A pre-gunpowder unit falls | 2 a turn |
+| Collapse | A city is razed | every one |
+| Land loop (birds, wind, cold wind) | The land under the middle of the map view, read every 1.5 s; two readings must agree | one loop, on the Effects bus at half level |
+
+At most 10 battle sounds a turn, chosen by consequence in the order collapse, death, clash, stone hit, arrow hit, bow, throw, hooves. The same sound inside 160 ms is one sound. Battle sound follows the map-animation setting and plays nothing for guns, cannon, shells or aircraft (no recording we may ship).

@@ -73,7 +73,7 @@ export function GuideContent({ section }: { section: GuideSection }) {
       </div>
       <h3>Make the lobby yours</h3>
       <p>Set names, factions, human or AI seats, and team numbers; close unwanted seats. The same team means shared vision, shared victory and no friendly attacks. Other teams start at Peace, with closed borders. Open Diplomacy from the Victory race to negotiate or declare War.</p>
-      <p>Pick a map size, AI level and a map seed. Every empire’s first city gets the same Food and Production from its start tile and the tiles next to it: 8 of each. What lies farther out differs, so scout for your next resources. Most games end between turn 150 and 220, when an empire reaches the VP target. Movement, combat and yields follow the rules described below.</p>
+      <p>Pick a map size, AI level and a map seed. Every empire’s first city gets the same Food and Production from its start tile and the tiles next to it: 8 of each. What lies farther out differs, so scout for your next resources. Most games end between turn 140 and 220, when an empire reaches the VP target. Movement, combat and yields follow the rules described below.</p>
       <p>A game has no turn limit unless you turn one on. With a turn limit, the game ends after that many turns and the team with the most VP wins. The lobby shows each team’s victory target. Hard AI makes better decisions, but it never gets extra resources.</p>
       <div className="guide-note">If you join a waiting room, take a seat, choose your name and faction, then press Ready. The host starts once everyone is ready. If the host has already started, choose a seat in the running game.</div>
     </>;
@@ -290,7 +290,7 @@ export function GuideContent({ section }: { section: GuideSection }) {
       <p>Select a level {RULES.coloniaLevel} melee veteran and the Settle lens rings each site that counts in gilt, judged from the land you have explored. Its top three picks are then Colonia sites, and on such a site its card offers “Found Colonia Victrix”. If no site you know counts yet, explore within {RULES.coloniaBorderReach} tiles of a rival’s land.</p>
       <p>Every empire sees where the Colonia Victrix stands, even through fog. Whoever holds its city scores {factionGoalVp('Rome')} VP; capturing it takes the points, and retaking it brings them back. If it is razed or sacked, the points are gone and Rome may found another.</p>
       <p><b>The Royal Tomb (Egypt):</b> goes to whoever holds its city. Build the Royal Tomb from the Victory race (G). While the work is on, none of your cities builds or grows. Each city loses its Production and its Food beyond what its people eat; its breakdown shows it. Gold and Science still come in, and you can still buy with Gold. A city short of Food still starves.</p>
-      <p>After {RULES.tombTurns} turns of work the tomb stands in your capital, or in your largest city if you have no capital, and your cities build and grow again. You may pause at any time: the count is kept, and resuming carries on from it. Every empire sees the work, its count and the city where the tomb will stand, and the turn report says when it starts, pauses and finishes.</p>
+      <p>After {RULES.tombTurns} turns of work the tomb stands at your capital, or at your largest city if you have no capital, and your cities build and grow again. You may pause at any time: the count is kept, and resuming carries on from it. Every empire sees the work, its count and the city where the tomb will stand, and the turn report says when it starts, pauses and finishes.</p>
       <p>Whoever holds the tomb’s city scores {factionGoalVp('Egypt')} VP; capturing it takes the points, and retaking it brings them back. If the city is razed or sacked, the tomb is gone and Egypt may build another from the start.</p>
       <p>A gilt-ringed seal on a city banner means that holding the city scores VP: the capital star, Rome’s laurel for the Colonia Victrix, and Egypt’s tomb for the Royal Tomb. A dashed seal means it does not stand yet: while Egypt builds, the tomb seal is dashed on the city where it will stand.</p>
       <p>Action goals have a visible button in the Victory race, even while blocked; the disabled button says what is needed. Press G to open an available goal action. Athens can Share the Learning, the Celts can raise warbands, the Aztecs can kindle the New Fire, and Egypt can build or pause the Royal Tomb. In legacy Sakoku games, the country can be closed for the vow. Sparta can retire a veteran from the Victory race or its unit card. When an action first becomes available, This Turn offers it once; Not now keeps its button in the Victory race. The Celts’ Raise the Warbands is offered only when its {factionGoalVp('Celts')} VP would bring you within 1 VP of victory; before that, use its Victory race button. Athens’ Share the Learning is offered only when its {factionGoalVp('Athens')} VP would win you the game; before that, use its Victory race button. Orders are confirmed first and happen when the turn ends. Share the Learning gives every rival outside Athens’ team {RULES.signalFreeTechs} free technologies, chosen by the rival. A rival that captures an Athenian city also gains one free technology, once per city for each empire. Picks left after an era is finished carry into the next era. A free technology choice you receive stays on your list until you choose.</p>
@@ -347,6 +347,7 @@ export function GuideContent({ section }: { section: GuideSection }) {
         <div><dt>G</dt><dd>Use your goal action when one is available for your empire.</dd></div>
         <div><dt>V</dt><dd>Turn Auto-fire on or off for a ranged unit in your city.</dd></div>
         <div><dt>T</dt><dd>Open Research.</dd></div>
+        <div className="mouse-only"><dt>M</dt><dd>Switch between the 2D map and the 3D map. You can also use the 3D / 2D button on the minimap. The 3D map is an early preview; it stays off until you turn it on. Phones and tablets use the 2D map for now.</dd></div>
         <div><dt>Y / O / N</dt><dd>Turn the map overlays on or off: Yields, Resources and Borders. They stay on over any lens and are remembered on this computer.</dd></div>
         <div><dt>C</dt><dd>Open the Cities overview: every city of yours with its population, Food, Production, Gold, Science, defence and what it is building. Click a heading to sort, click a city to go to it. World wonders and costly buildings say which city builds them fastest, wherever you choose them.</dd></div>
         <div><dt>L</dt><dd>Open or close the Turn report (also Turn report in This Turn). While it is open, <kbd>[</kbd> and <kbd>]</kbd> (or its ◀ ▶) step through the last 20 turns. Lines are marked ▲ good or ▼ bad for you. Click a combat line to centre the map on it, with an arrow from the attacker when you saw where it came from.</dd></div>
@@ -368,32 +369,38 @@ export function GuideContent({ section }: { section: GuideSection }) {
       <p>In an online game, the host’s tab keeps the game: a reload carries on, and closing the tab ends it unless the host saved it. To carry on later, the host chooses Save to file in the menu, then Host from a save on the Multiplayer screen. Players rejoin from the game list and take their old seats. How to Play keeps your screen and pending plans in place, but other players can still finish the turn while you read.</p>
       <h3>Help when you need it</h3>
       <p>Open How to Play from the main menu, Menu in a game, or <kbd>?</kbd>. The advisor is on by default. It explains one recommended action at a time and shows where to click. It never gives orders for you: you make each move yourself. Its advice is what a strong AI empire would do with what you can see. Not now moves to the next decision; turn it off in Settings.</p>
+      <h3>Fill the screen</h3>
+      <p>Settings has Full screen. It also has Install Legatum, which gives the game its own window without browser tabs. Each shows only if your browser supports it.</p>
     </>;
     case 'credits': return <Credits />;
   }
 }
 
-/** Art licence and the music and CC0 sound credits (app/public/audio/manifest.json). */
+/** Art licence and the music and sound credits (app/public/audio/manifest.json). */
 function Credits() {
-  const music = SOUND_MANIFEST.filter((e) => e.file.startsWith('music/'));
-  const sharedMusic = music.length === 2 && music[0].source === music[1].source;
+  const zeroAd = (e: (typeof SOUND_MANIFEST)[number]) => e.license === 'CC-BY-SA-3.0' && e.author === 'Wildfire Games';
+  const title = SOUND_MANIFEST.find((e) => e.file === 'music/atlas.m4a')!;
+  const peopleMusic = SOUND_MANIFEST.filter((e) => e.file.startsWith('music/') && zeroAd(e));
   const packs = [...new Set(SOUND_MANIFEST.filter((e) => e.author === 'Kenney').map((e) => e.title.split(':')[0]))];
   // One line per credited sound: two stings cut from the same recording share one attribution.
   const others = SOUND_MANIFEST.filter((e) => !e.file.startsWith('music/') && e.license === 'CC0-1.0' && e.author !== 'Kenney')
     .filter((e, i, all) => all.findIndex((o) => o.attribution === e.attribution) === i);
+  // CC BY-SA asks for the author's name, a link to the author and a link to the licence.
+  const wildfire = <>0 A.D. by <a href="https://www.wildfiregames.com/" target="_blank" rel="noreferrer">Wildfire Games</a>, <a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noreferrer">CC BY-SA 3.0</a></>;
   return <>
     <h3>Artwork</h3>
     <p>Legatum’s original artwork is offered under CC BY 4.0 to the extent rights exist. The Niter, Oil and Silicon resource medallions were generated with an OpenAI image model, selected and resized for the game. Their prompts and provenance are in the resource art README.</p>
     <h3>Music</h3>
-    {sharedMusic
-      ? <p>{music[0].attribution}. The full piece plays on the title screen and during peaceful play; an intense excerpt plays during an empire war. <a href={music[0].source} target="_blank" rel="noreferrer">Source</a></p>
-      : <ul>{music.map((e) => <li key={e.file}>{e.attribution} <a href={e.source} target="_blank" rel="noreferrer">Source</a></li>)}</ul>}
+    <p>{title.attribution}. The full piece plays on the title screen and during peaceful play; an intense excerpt plays during an empire war. <a href={title.source} target="_blank" rel="noreferrer">Source</a></p>
+    <p>The peoples’ music and the war drums are from {wildfire}, edited for Legatum.</p>
+    <ul className="guide-credit-tracks">{peopleMusic.map((e) => <li key={e.file}>{e.title}</li>)}</ul>
     <h3>Sound effects</h3>
     <ul>
       <li>Kenney (kenney.nl), CC0: {packs.join(', ')}.</li>
       {others.map((e) => <li key={e.file}>{e.attribution}.</li>)}
+      <li>Battle sounds and the sounds of birds, wind and snow are from {wildfire}, edited for Legatum.</li>
     </ul>
-    <p>Sounds were trimmed, loudness-matched and re-encoded; the music loops were crossfaded.</p>
+    <p>Sounds were trimmed, loudness-matched and re-encoded. The edited 0 A.D. files stay under CC BY-SA 3.0.</p>
     <details><summary>Full sound credits</summary><ul>{SOUND_MANIFEST.map((e) => <li key={e.file}>
       {e.title} — {e.attribution} ({e.license}). <a href={e.source} target="_blank" rel="noreferrer">Source</a>
     </li>)}</ul></details>

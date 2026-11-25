@@ -28,6 +28,8 @@ import { buildOverlayTiles, overlayEmpty, useOverlays } from './overlays';
 import { settleTileNote, withProxySettler } from './settleAdvice';
 import { LensSwitcher } from './LensSwitcher';
 import { isColoniaFounder } from '../goalCities';
+import { ambienceFor, cancelBattleSounds, playBattleSounds, setAmbience, type Ambience } from '../feel/sound';
+import { battleSoundCues } from '../feel/battleSound';
 import { isBarbarian } from '../barbarians';
 import { SettlementCard, SettlementDetails } from './SettlementCard';
 import { PING_PULSE_MS, pingsFor } from '../teamPing';
@@ -60,7 +62,7 @@ import { atWar, relationWith } from '../diplomacy';
 import { emptyGesture, gestureStep, isDoubleTap, LONG_PRESS_MS, zoomCamera, type GestureEvent, type Point, type Tap } from './gestures';
 import { sameOrderContext, tapOrder, type TapOrder } from './tapOrders';
 import { coord, setUnitOrder } from '../orders';
-import { notifyMapCamera, registerMapCamera } from './camera';
+import { notifyMapCamera, registerMapCamera, takeMapHandoff } from './camera';
 import { alarmedCities } from '../siege';
 import { useCityAlarms } from '../ui/useCityAlarms';
 import { setBorderVariant, type BorderVariant } from './borderVariant';
@@ -139,6 +141,8 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
   const bannerHits = useRef<ReturnType<typeof draw>['bannerHits']>([]);
   const liftedHits = useRef<ReturnType<typeof draw>['liftedHits']>([]);
   const cam = useRef<Camera>({ x: 0, y: 0, zoom: 0.9 });
+  /** The last jump-to (focus.seq) this map has acted on: a 2D / 3D swap hands its centre over only if no newer jump is waiting. */
+  const appliedSeq = useRef(0);
   const size = useRef({ w: 800, h: 600, dpr: 1 });
   const dirty = useRef(true);
   const hoverDirty = useRef(false);
@@ -164,6 +168,34 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
   const orderErrors = useGame((s) => s.errors[s.seat]);
   const mode = useGame((s) => s.mode);
   const anim = useGame((s) => s.anim);
+  // A battle is heard as it is drawn: the sounds are scheduled against the same plan and clock.
+  useEffect(() => {
+    if (!anim?.plan || still) return;
+    playBattleSounds(battleSoundCues(anim.plan), performance.now() - anim.start);
+    return cancelBattleSounds;
+  }, [anim, still]);
+  // The land under the middle of the view has a quiet sound of its own (birds, wind); the sea and the unexplored are
+  // silent. It is the most common answer over the middle tile and its neighbours, and it changes only when two readings
+  // in a row agree, so one hill in a meadow or a pan along a coast does not flip it back and forth.
+  useEffect(() => {
+    let seen: Ambience | null | undefined;
+    const listen = () => {
+      const v = useGame.getState().views?.[useGame.getState().seat];
+      const mid = pixelToHex(cam.current.x, cam.current.y, HEX_SIZE);
+      const counts = new Map<Ambience | null, number>();
+      for (const [dq, dr] of [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1], [1, -1], [-1, 1]]) {
+        const tile = v?.tiles[tileIndex({ q: mid.q + dq, r: mid.r + dr }, v.width, v.height)];
+        const a = tile?.explored ? ambienceFor(tile.terrain) : null;
+        counts.set(a, (counts.get(a) ?? 0) + 1);
+      }
+      const now = [...counts].sort((x, y) => y[1] - x[1])[0][0];
+      if (now === seen) setAmbience(now);
+      seen = now;
+    };
+    listen();
+    const id = setInterval(listen, 1500);
+    return () => { clearInterval(id); setAmbience(null); };
+  }, []);
   const focus = useGame((s) => s.focus);
   const client = useGame((s) => s.client);
   const forecastTick = useGame((s) => s.forecastTick);
@@ -646,6 +678,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
   // Center on focus requests; a `clear` request (a turn report line) settles on the nearest tile position no panel covers.
   useEffect(() => {
     if (!focus) return;
+    appliedSeq.current = focus.seq;
     let p = hexToPixel(focus.hex, HEX_SIZE);
     const canvas = canvasRef.current, game = canvas?.closest('.game');
     if ((focus.clear || selection) && canvas && game) {
@@ -842,6 +875,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
     // A look change swaps the map palette: redraw.
     const unregister = registerMapCamera({
       viewport: () => ({ ...cam.current, w: size.current.w, h: size.current.h }),
+      focusSeq: () => appliedSeq.current,
       center: (x, y) => {
         cancelAnimationFrame(focusAnimation.current);
         cam.current.x = x;
@@ -849,6 +883,9 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
         dirty.current = true;
       },
     });
+    // Swapped in from the 3D map: keep looking where it looked (this runs after the mount's focus snap).
+    const from = takeMapHandoff(useGame.getState().focus?.seq ?? 0);
+    if (from) { cancelAnimationFrame(focusAnimation.current); cam.current.x = from.x; cam.current.y = from.y; dirty.current = true; }
     return () => {
       setMapProjector(null);
       unregister();
