@@ -96,12 +96,12 @@ manifest = [e for e in manifest if e['license'] != LIC]
 for m in MUSIC: manifest.append(music(*m))
 for n, name in enumerate(['thunderstick', 'thunderstick-miss'], 1):
     manifest.append(one_shot('musket', f'musket-{n}', n, WES_SOUND / f'{name}.ogg', 2.5, {
-        'title': f'{name}.ogg', 'author': 'Richard Kettering (Jetrel)', 'source': WES_RAW % f'sounds/{name}.ogg',
-        'attribution': f'"{name}.ogg" by Richard Kettering (Jetrel), from {WES}, {GPL}, edited for Legatum',
+        'title': f'Musket shot ({name}.ogg)', 'author': 'Richard Kettering (Jetrel)', 'source': WES_RAW % f'sounds/{name}.ogg',
+        'attribution': f'"Musket shot ({name}.ogg)" by Richard Kettering (Jetrel), from {WES}, {GPL}, edited for Legatum',
         'rationale': 'A musket fires.'}))
 manifest.append(one_shot('drone', 'drone', 1, WZ_SOUND / 'vtol-move.ogg', 2.5, {
-    'title': 'vtol-move.ogg', 'author': 'the Warzone 2100 Project', 'source': WZ_SRC,
-    'attribution': f'"vtol-move.ogg" by the Warzone 2100 Project (https://wz2100.net/), {GPL}, edited for Legatum',
+    'title': 'Drone engine (vtol-move.ogg)', 'author': 'the Warzone 2100 Project', 'source': WZ_SRC,
+    'attribution': f'"Drone engine (vtol-move.ogg)" by the Warzone 2100 Project (https://wz2100.net/), {GPL}, edited for Legatum',
     'rationale': 'A combat drone flies in.'}))
 (AUDIO / 'manifest.json').write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + '\n')
 print(len(manifest), 'manifest entries')

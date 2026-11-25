@@ -1791,10 +1791,10 @@
     "events": [
       "fx:musket:1"
     ],
-    "title": "thunderstick.ogg",
+    "title": "Musket shot (thunderstick.ogg)",
     "author": "Richard Kettering (Jetrel)",
     "source": "https://raw.githubusercontent.com/wesnoth/wesnoth/master/data/core/sounds/thunderstick.ogg",
-    "attribution": "\"thunderstick.ogg\" by Richard Kettering (Jetrel), from The Battle for Wesnoth (https://www.wesnoth.org/), GPL v2 or later (https://www.gnu.org/licenses/old-licenses/gpl-2.0.html), edited for Legatum",
+    "attribution": "\"Musket shot (thunderstick.ogg)\" by Richard Kettering (Jetrel), from The Battle for Wesnoth (https://www.wesnoth.org/), GPL v2 or later (https://www.gnu.org/licenses/old-licenses/gpl-2.0.html), edited for Legatum",
     "rationale": "A musket fires.",
     "license": "GPL-2.0-or-later",
     "modified": "silence trimmed, cut to at most 2.5 s, 3 ms fade-in and 10 ms fade-out; static gain -8.0 dB (now -20.0 LUFS, -4.2 dBTP); mixed to mono, resampled to 44.1 kHz, encoded as AAC-LC 64 kb/s .m4a; metadata stripped",
@@ -1805,10 +1805,10 @@
     "events": [
       "fx:musket:2"
     ],
-    "title": "thunderstick-miss.ogg",
+    "title": "Musket shot (thunderstick-miss.ogg)",
     "author": "Richard Kettering (Jetrel)",
     "source": "https://raw.githubusercontent.com/wesnoth/wesnoth/master/data/core/sounds/thunderstick-miss.ogg",
-    "attribution": "\"thunderstick-miss.ogg\" by Richard Kettering (Jetrel), from The Battle for Wesnoth (https://www.wesnoth.org/), GPL v2 or later (https://www.gnu.org/licenses/old-licenses/gpl-2.0.html), edited for Legatum",
+    "attribution": "\"Musket shot (thunderstick-miss.ogg)\" by Richard Kettering (Jetrel), from The Battle for Wesnoth (https://www.wesnoth.org/), GPL v2 or later (https://www.gnu.org/licenses/old-licenses/gpl-2.0.html), edited for Legatum",
     "rationale": "A musket fires.",
     "license": "GPL-2.0-or-later",
     "modified": "silence trimmed, cut to at most 2.5 s, 3 ms fade-in and 10 ms fade-out; static gain +5.2 dB (now -31.4 LUFS, -5.1 dBTP); mixed to mono, resampled to 44.1 kHz, encoded as AAC-LC 64 kb/s .m4a; metadata stripped",
@@ -1819,10 +1819,10 @@
     "events": [
       "fx:drone:1"
     ],
-    "title": "vtol-move.ogg",
+    "title": "Drone engine (vtol-move.ogg)",
     "author": "the Warzone 2100 Project",
     "source": "https://archive.ubuntu.com/ubuntu/pool/universe/w/warzone2100/warzone2100-data_4.4.2-1build3_all.deb (usr/share/games/warzone2100/base.wz: audio/sfx/vehicle/vtol-move.ogg)",
-    "attribution": "\"vtol-move.ogg\" by the Warzone 2100 Project (https://wz2100.net/), GPL v2 or later (https://www.gnu.org/licenses/old-licenses/gpl-2.0.html), edited for Legatum",
+    "attribution": "\"Drone engine (vtol-move.ogg)\" by the Warzone 2100 Project (https://wz2100.net/), GPL v2 or later (https://www.gnu.org/licenses/old-licenses/gpl-2.0.html), edited for Legatum",
     "rationale": "A combat drone flies in.",
     "license": "GPL-2.0-or-later",
     "modified": "silence trimmed, cut to at most 2.5 s, 3 ms fade-in and 10 ms fade-out; static gain -3.4 dB (now -20.2 LUFS, -6.9 dBTP); mixed to mono, resampled to 44.1 kHz, encoded as AAC-LC 64 kb/s .m4a; metadata stripped",

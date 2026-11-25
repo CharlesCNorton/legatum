@@ -395,7 +395,7 @@ function Credits() {
   const peopleMusic = SOUND_MANIFEST.filter((e) => e.file.startsWith('music/') && zeroAd(e));
   const by = (author: RegExp, license: string) => SOUND_MANIFEST.filter((e) => e.file.startsWith('music/') && e.license === license && author.test(e.author));
   const freecol = by(/Zhelanov/, 'CC-BY-4.0'), horizons = by(/Escher|Unknown Horizons/, 'CC-BY-SA-3.0'), warzone = by(/LupusMechanicus/, 'CC-BY-SA-3.0'), wesnoth = by(/./, 'GPL-2.0-or-later');
-  // The GPL asks for the author's name and the licence.
+  // The GPL asks for the author's name and the licence. A Source link opens the project's page, never a file or a package.
   const gplSounds = SOUND_MANIFEST.filter((e) => !e.file.startsWith('music/') && e.license === 'GPL-2.0-or-later');
   // CC BY asks for the author's name and a link to the licence.
   const credited = SOUND_MANIFEST.filter((e) => !e.file.startsWith('music/') && /^CC-BY-\d/.test(e.license));
@@ -426,10 +426,10 @@ function Credits() {
       <li>Kenney (kenney.nl), CC0: {packs.join(', ')}.</li>
       {others.map((e) => <li key={e.file}>{e.attribution}.</li>)}
       {credited.map((e) => <li key={e.file}>“{e.title}” by {e.author} (freesound.org), <a href={ccBy(e.license)} target="_blank" rel="noreferrer">CC BY {e.license.slice(-3)}</a>, edited for Legatum. <a href={e.source.match(/https:\/\/freesound[^)]*/)?.[0]} target="_blank" rel="noreferrer">Source</a></li>)}
-      {gplSounds.map((e) => <li key={e.file}>“{e.title}” by {e.author}, <a href="https://www.gnu.org/licenses/old-licenses/gpl-2.0.html" target="_blank" rel="noreferrer">GPL version 2 or later</a>, edited for Legatum. <a href={e.source.match(/https:\/\/\S+/)?.[0]} target="_blank" rel="noreferrer">Source</a></li>)}
+      {gplSounds.map((e) => <li key={e.file}>“{e.title}” by {e.author}, <a href="https://www.gnu.org/licenses/old-licenses/gpl-2.0.html" target="_blank" rel="noreferrer">GPL version 2 or later</a>, edited for Legatum. <a href={/wesnoth/.test(e.source) ? 'https://www.wesnoth.org/' : 'https://wz2100.net/'} target="_blank" rel="noreferrer">Source</a></li>)}
       <li>Battle sounds and the sounds of birds, wind and snow are from {wildfire}, edited for Legatum.</li>
     </ul>
-    <p>Sounds were trimmed, loudness-matched and re-encoded. The edited 0 A.D., Unknown Horizons and Warzone 2100 files stay under CC BY-SA 3.0, and the edited Battle for Wesnoth and Warzone 2100 sounds under the GPL.</p>
+    <p>Sounds were trimmed, loudness-matched and re-encoded. The edited 0 A.D., Unknown Horizons and Warzone 2100 music stays under CC BY-SA 3.0. The edited Battle for Wesnoth music and musket sounds, and the Warzone 2100 drone sound, stay under the GPL.</p>
     <details><summary>Full sound credits</summary><ul>{SOUND_MANIFEST.map((e) => <li key={e.file}>
       {e.title} — {e.attribution} ({e.license}). <a href={e.source} target="_blank" rel="noreferrer">Source</a>
     </li>)}</ul></details>
