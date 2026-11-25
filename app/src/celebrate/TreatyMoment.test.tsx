@@ -52,11 +52,12 @@ it('Open Borders with Gold received: a small card with both crests, the emblem a
   expect(card.querySelector('.moment-effect')!.textContent).toBe('Your units may enter each other’s land.');
   // The Gold ticks on the treasury counter, and the card is a short story card, not a held takeover.
   expect(host.querySelector('[data-celebrate-delta=gold]')!.textContent).toBe('+40');
+  expect(host.querySelector('[data-celebrate-delta=gold]')!.classList.contains('cost')).toBe(false);
   act(() => vi.advanceTimersByTime(3500));
   expect(host.querySelector('.moment-card')).toBeNull();
 });
 
-it('an Alliance plays the major sting, and an offer between two other empires plays none for an offer between two other empires', async () => {
+it('an Alliance plays the major sting, and an offer between two other empires plays none', async () => {
   const events = await treatyCelebrationFixture('Alliance', 0);
   const after = view();
   const moments = useGame.getState().report!.moments![0];
@@ -97,4 +98,13 @@ it('reduced motion stands the card still', async () => {
   expect(card.getAttribute('data-tier')).toBe('major');
   const cities = Math.max(1, view().cities.filter((c) => c.owner === view().me).length);
   expect(card.querySelector('[data-testid=moment-treaty-upkeep]')!.textContent).toBe(`Upkeep −${cities} Gold a turn`);
+});
+
+it('Gold we paid ticks the treasury counter in red', async () => {
+  await treatyCelebrationFixture('Peace', -60);
+  render();
+  const tick = host.querySelector('[data-celebrate-delta=gold]')!;
+  expect(tick.textContent).toBe('−60');
+  expect(tick.classList.contains('cost')).toBe(true);
+  expect(host.querySelector('.moment-treaty-gold')!.classList.contains('cost')).toBe(true);
 });

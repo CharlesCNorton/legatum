@@ -209,7 +209,7 @@ export function CounterDelta({ counter }: { counter: Counter }) {
   const { active, reduced } = useCelebration();
   const amount = active?.deltas.filter((d) => d.counter === counter).reduce((n, d) => n + d.amount, 0) ?? 0;
   if (!amount) return null;
-  return <span key={active!.id} className={`celebrate-delta ${reduced ? 'reduced' : ''}`} data-celebrate-delta={counter}>{amount > 0 ? '+' : '−'}{Math.abs(amount)}</span>;
+  return <span key={active!.id} className={`celebrate-delta ${amount < 0 ? 'cost' : ''} ${reduced ? 'reduced' : ''}`} data-celebrate-delta={counter}>{amount > 0 ? '+' : '−'}{Math.abs(amount)}</span>;
 }
 
 export function MomentLane() {
