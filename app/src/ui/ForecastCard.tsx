@@ -68,11 +68,21 @@ export function winAction(winLabel: string, defName: string, cityName: string | 
 export function forecastHeadline(p: {
   win: number; loss: number; winLabel: string; unitLabel: string; defName: string; cityName: string | null;
   youLose: number; theyLose: number; ranged: boolean;
+  /** What the hit takes off a city's Walls (breakable Walls, rules 62): the Walls take it before the health. */
+  wallsLose?: number;
 }): ForecastHeadline {
   const action = winAction(p.winLabel, p.defName, p.cityName);
   const target = p.cityName && /capture|0 health/.test(p.winLabel) ? p.cityName : `the ${p.defName}`;
-  const tradeTone: ForecastHeadline['tone'] = p.youLose > p.theyLose ? 'bad' : p.theyLose > p.youLose ? 'good' : 'even';
-  const detail = p.youLose <= 0
+  const walls = p.wallsLose ?? 0;
+  const theyTotal = p.theyLose + walls;
+  const tradeTone: ForecastHeadline['tone'] = p.youLose > theyTotal ? 'bad' : theyTotal > p.youLose ? 'good' : 'even';
+  // A walled city's loss names its Walls: "Berlin's Walls about 9" (and its health, once a hit gets past them).
+  const theirs = walls > 0 ? `${target}'s Walls about ${walls}${p.theyLose > 0 ? ` and its health about ${p.theyLose}` : ''}` : null;
+  const detail = walls > 0
+    ? p.youLose > theyTotal
+      ? `You take more damage: you lose about ${p.youLose} health, ${theirs}.`
+      : `You deal more damage: ${theirs}; you lose about ${p.youLose} health.`
+    : p.youLose <= 0
     ? `You deal more damage: ${target} loses about ${p.theyLose} health, you none.`
     : p.youLose > p.theyLose
       ? `You take more damage: you lose about ${p.youLose} health, ${target} about ${p.theyLose}.`
@@ -145,6 +155,7 @@ export function forecastModel(f: BattleForecast, ranged: boolean, view: PlayerVi
   const headline = forecastHeadline({
     win, loss, winLabel, unitLabel, defName, cityName: city?.name ?? null,
     youLose: f.attacker_hp - hpAfter, theyLose: f.defender_hp - defAfter, ranged,
+    wallsLose: city && !(defUnit && defUnit.military) ? (f.walls?.expected_damage ?? (assault ? Math.max(0, (assault.walls_hp ?? 0) - (assault.walls_hp_after ?? 0)) : 0)) : 0,
   });
   // Sparta kills heal (see `killHeals`); a melee winner advances onto the defender's tile, so what
   // waits there next turn is part of the headline (p881 horseman).

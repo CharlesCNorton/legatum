@@ -1,0 +1,10 @@
+# Breakable Walls: what changed under the hood, and what it cost (2026-11-25)
+
+Rules 62 (Sam: Walls like Civ's outer defence) adds a Walls bar in front of city health. Non-obvious points:
+
+- Store the damage, not the bar: `City::walls_damage` (absent = 0) lets every older save, fixture and scenario load with full Walls, and the bar's size still follows the level (`combat::walls_max_hp`).
+- A city hit is now two layers: `combat::city_hit` applies the Walls percent to the bar and carries the unused share into health at full rate, per hit, in fight order. `Fight::damage_to_defender` for a city became the full-rate damage, with `Fight::wall_percent` beside it; anything that summed city damage from Battle events must add walls + health + carried (the Sparta overflow test caught it).
+- Recorded AI fixtures from rules 61 (Gergovia) changed meaning: the same walled city now has a 100 bar in front of its health. `fixture::with_rules61_walls` converts them to equal pressure (bar = min(max, hp/2)) so the AI's deadline tests still test the deadline, not the new rule.
+- A rules bump needs: `wasm::json::upgrade_from_49` to accept the old version, the scenario stamps (`rehash_scenarios`, scenario files only), the save-fixture stamps (`.json` and the escaped `save_version\":` inside `.current.legatum`), `tools/sim/repin.sh`, and `UPDATE_UI_RULES=1 cargo test -p legatum-ai --test ui_rules`.
+- `cargo test -p a -p b` stops at the first failing test binary; use `--no-fail-fast` to see every failure in one run.
+- Sims: 8-empire census best/worst 2.71 → 2.40, no stalls, captures per game +12%, early-war captures unchanged; duel stalls equal (4 of 192 each). `docs/sim-results/2026-11-25-breakable-walls-census.md`.

@@ -316,7 +316,7 @@
       }
     },
     "UpgradeWalls": {
-      "cityStrength": 5,
+      "cityStrength": 0,
       "cost": 240,
       "requires": null,
       "warBuilding": true,
@@ -1723,7 +1723,7 @@
         }
       },
       "UpgradeWalls": {
-        "cityStrength": 5,
+        "cityStrength": 0,
         "cost": 240,
         "requires": null,
         "warBuilding": true,
@@ -2049,7 +2049,7 @@
         }
       },
       "UpgradeWalls": {
-        "cityStrength": 5,
+        "cityStrength": 0,
         "cost": 240,
         "requires": null,
         "warBuilding": true,
@@ -2375,7 +2375,7 @@
         }
       },
       "UpgradeWalls": {
-        "cityStrength": 5,
+        "cityStrength": 0,
         "cost": 240,
         "requires": null,
         "warBuilding": true,
@@ -2701,7 +2701,7 @@
         }
       },
       "UpgradeWalls": {
-        "cityStrength": 5,
+        "cityStrength": 0,
         "cost": 240,
         "requires": null,
         "warBuilding": true,
@@ -3027,7 +3027,7 @@
         }
       },
       "UpgradeWalls": {
-        "cityStrength": 5,
+        "cityStrength": 0,
         "cost": 240,
         "requires": null,
         "warBuilding": true,
@@ -3353,7 +3353,7 @@
         }
       },
       "UpgradeWalls": {
-        "cityStrength": 5,
+        "cityStrength": 0,
         "cost": 240,
         "requires": null,
         "warBuilding": true,
@@ -3679,7 +3679,7 @@
         }
       },
       "UpgradeWalls": {
-        "cityStrength": 5,
+        "cityStrength": 0,
         "cost": 240,
         "requires": null,
         "warBuilding": true,
@@ -4005,7 +4005,7 @@
         }
       },
       "UpgradeWalls": {
-        "cityStrength": 5,
+        "cityStrength": 0,
         "cost": 240,
         "requires": null,
         "warBuilding": true,
@@ -4331,7 +4331,7 @@
         }
       },
       "UpgradeWalls": {
-        "cityStrength": 5,
+        "cityStrength": 0,
         "cost": 240,
         "requires": null,
         "warBuilding": true,
@@ -4657,7 +4657,7 @@
         }
       },
       "UpgradeWalls": {
-        "cityStrength": 5,
+        "cityStrength": 0,
         "cost": 240,
         "requires": null,
         "warBuilding": true,
@@ -4983,7 +4983,7 @@
         }
       },
       "UpgradeWalls": {
-        "cityStrength": 5,
+        "cityStrength": 0,
         "cost": 240,
         "requires": null,
         "warBuilding": true,
@@ -10019,7 +10019,7 @@
   "rocketArtilleryRange": 3,
   "rollMax": 120,
   "rollMin": 80,
-  "saveVersion": 61,
+  "saveVersion": 62,
   "settlerCostStep": 50,
   "siege": {
     "baseGold": 160,
@@ -10349,7 +10349,7 @@
         }
       },
       "UpgradeWalls": {
-        "cityStrength": 5,
+        "cityStrength": 0,
         "cost": 240,
         "requires": null,
         "warBuilding": true,
@@ -10675,7 +10675,7 @@
         }
       },
       "UpgradeWalls": {
-        "cityStrength": 5,
+        "cityStrength": 0,
         "cost": 240,
         "requires": null,
         "warBuilding": true,
@@ -11001,7 +11001,7 @@
         }
       },
       "UpgradeWalls": {
-        "cityStrength": 5,
+        "cityStrength": 0,
         "cost": 240,
         "requires": null,
         "warBuilding": true,
@@ -11327,7 +11327,7 @@
         }
       },
       "UpgradeWalls": {
-        "cityStrength": 5,
+        "cityStrength": 0,
         "cost": 240,
         "requires": null,
         "warBuilding": true,
@@ -11653,7 +11653,7 @@
         }
       },
       "UpgradeWalls": {
-        "cityStrength": 5,
+        "cityStrength": 0,
         "cost": 240,
         "requires": null,
         "warBuilding": true,
@@ -11979,7 +11979,7 @@
         }
       },
       "UpgradeWalls": {
-        "cityStrength": 5,
+        "cityStrength": 0,
         "cost": 240,
         "requires": null,
         "warBuilding": true,
@@ -12305,7 +12305,7 @@
         }
       },
       "UpgradeWalls": {
-        "cityStrength": 5,
+        "cityStrength": 0,
         "cost": 240,
         "requires": null,
         "warBuilding": true,
@@ -12631,7 +12631,7 @@
         }
       },
       "UpgradeWalls": {
-        "cityStrength": 5,
+        "cityStrength": 0,
         "cost": 240,
         "requires": null,
         "warBuilding": true,
@@ -12957,7 +12957,7 @@
         }
       },
       "UpgradeWalls": {
-        "cityStrength": 5,
+        "cityStrength": 0,
         "cost": 240,
         "requires": null,
         "warBuilding": true,
@@ -13283,7 +13283,7 @@
         }
       },
       "UpgradeWalls": {
-        "cityStrength": 5,
+        "cityStrength": 0,
         "cost": 240,
         "requires": null,
         "warBuilding": true,
@@ -13609,7 +13609,7 @@
         }
       },
       "UpgradeWalls": {
-        "cityStrength": 5,
+        "cityStrength": 0,
         "cost": 240,
         "requires": null,
         "warBuilding": true,
@@ -20840,6 +20840,8 @@
     "damagePercent": 50,
     "siegePartialPercent": 75
   },
+  "wallsBaseHp": 100,
+  "wallsHpPerLevel": 50,
   "woundImmunity": {
     "Athens": [],
     "Aztecs": [],

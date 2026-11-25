@@ -216,10 +216,14 @@ export function wallsLine(f: BattleForecast, cityName: string, _unitLabel: strin
   // Bought Siege still short of these Walls: name the tech that covers the next level.
   const nextTech = !w.built_in && w.covered < w.tier ? NEXT_SIEGE_TECH[w.covered] : undefined;
   const next = nextTech ? ` ${nextTech} covers level ${['', 'I', 'II', 'III'][w.covered + 1]}.` : '';
-  if (w.covered > 0) return { text: `Walls ${level}: ${w.built_in ? 'built-in ' : ''}${cover}, so ${damage} to ${cityName}.${next}`, tone: w.percent >= 100 ? 'good' : 'plain' };
+  // The Walls bar (breakable Walls): what this hit takes off it, and the chance it breaks them.
+  const bar = (w.max_hp ?? 0) > 0
+    ? ` Walls ${w.hp ?? 0}/${w.max_hp}: about ${w.expected_damage ?? 0} off them${(w.break_chance ?? 0) > 0 ? `, ${w.break_chance}% chance to break them` : ''}.`
+    : '';
+  if (w.covered > 0) return { text: `Walls ${level}: ${w.built_in ? 'built-in ' : ''}${cover}, so ${damage} to ${cityName}'s Walls.${bar}${next}`, tone: w.percent >= 100 ? 'good' : 'plain' };
   const withSiege = w.percent > 0 && w.percent < 100 && dealt > 0 ? Math.round((dealt * 100) / w.percent) : 0;
   return {
-    text: `Walls ${level} halve this attack on ${cityName}${siegeTier > 0 && withSiege > 0 ? `: ${dealt} health, or ${withSiege} with Siege` : ''}.`,
+    text: `Walls ${level} take half of this attack on ${cityName}${siegeTier > 0 && withSiege > 0 ? `: ${dealt} damage, or ${withSiege} with Siege` : ''}.${bar}`,
     tone: 'plain',
   };
 }

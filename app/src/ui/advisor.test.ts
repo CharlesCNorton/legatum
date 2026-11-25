@@ -119,7 +119,7 @@ describe('one decision at a time', () => {
     expect(advisorWhy({ type: 'SetProduction', city: city.id, item: { kind: 'Unit', unit: 'Settler' } }, view, city))
       .toBe('A Settler founds a new city, and more cities grow your empire.');
     const upgrade: Order = { type: 'SetProduction', city: city.id, item: { kind: 'Building', building: 'UpgradeWalls' } };
-    expect(advisorWhy(upgrade, view, city)).toBe(`Upgrade Walls adds city strength in ${city.name}.`);
+    expect(advisorWhy(upgrade, view, city)).toBe(`Upgrade Walls adds 50 to ${city.name}'s Walls.`);
     const walled = { ...city, walls: true, walls_level: 2 };
     view.cities = view.cities.map((c) => (c.id === city.id ? walled : c));
     expect(advisorSuggestion(ctx([], null, [upgrade]), ['welcome'], [])?.title).toBe(`Build Upgrade Walls (to III) in ${city.name}`);

@@ -268,7 +268,7 @@ export const BUILDING_STATS: Record<
   Bank: { cost: 200, yields: { gold: 4 }, cityStrength: 0, requires: 'Banking', predecessor: 'Market', minPopulation: 5, summary: '+4 Gold; upgrades your Market', blurb: '+4 Gold' },
   StockExchange: { cost: 360, yields: { gold: 6 }, cityStrength: 0, requires: 'Electricity', predecessor: 'Bank', minPopulation: 8, summary: '+6 Gold; upgrades your Bank', blurb: '+6 Gold, on top of the Market and Bank' },
   Factory: { cost: 440, yields: { production: 5 }, cityStrength: 0, requires: 'Industrialization', predecessor: 'Forge', minPopulation: 6, summary: '+5 Production; upgrades your Forge', blurb: '+5 Production' },
-  UpgradeWalls: { cost: 240, yields: {}, cityStrength: 5, requires: null, warBuilding: true, summary: 'More city strength for each new level', blurb: 'Each new level adds city strength. You can add one level for each era you have reached.' },
+  UpgradeWalls: { cost: 240, yields: {}, cityStrength: 0, requires: null, warBuilding: true, summary: '+50 Walls for each new level; repairs the Walls', blurb: 'Each new level adds 50 to the Walls and repairs them, since Walls never heal. One level for each era you have reached.' },
   GreatLibrary: { cost: 400, yields: {}, cityStrength: 0, requires: 'Philosophy', summary: 'World wonder: whoever holds its tile scores +2 VP', blurb: 'World wonder: whoever holds its tile scores +2 VP. Requires a Library in this city.' },
   Pyramids: { cost: 360, yields: { production: 1 }, cityStrength: 0, requires: 'Masonry', summary: 'World wonder: +1 Production and +2 held VP', blurb: 'The Pyramids can be completed once in the world. The holder gains +1 Production in its city and +2 VP.' },
   HagiaSophia: { cost: 400, yields: { science: 2 }, cityStrength: 0, requires: 'Machinery', summary: 'World wonder: +2 Science and +2 held VP', blurb: 'Hagia Sophia can be completed once in the world. The holder gains +2 Science in its city and +2 VP.' },
@@ -1139,4 +1139,12 @@ const WALL_LEVEL_NUMERALS = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII
 /** A Walls level as a Roman numeral ("III"). */
 export const wallLevelLabel = (level: number): string => WALL_LEVEL_NUMERALS[level] ?? String(level);
 /** The build list name of Upgrade Walls for a city at this Walls level (0: no Walls yet). */
-export const wallsUpgradeName = (level = 0, walls = 'Walls'): string => level < 1 ? `Upgrade ${walls}` : level >= 9 ? `Upgrade ${walls} (top level)` : `Upgrade ${walls} (to ${WALL_LEVEL_NUMERALS[level + 1]})`;
+export const wallsUpgradeName = (level = 0, walls = 'Walls', repair = false): string => repair ? `Repair ${walls}` : level < 1 ? `Upgrade ${walls}` : level >= 9 ? `Upgrade ${walls} (top level)` : `Upgrade ${walls} (to ${WALL_LEVEL_NUMERALS[level + 1]})`;
+/**
+ * Upgrade Walls repairs instead of raising the level: the bar is damaged and the city is at its cap (level IX,
+ * or its owner's era number; `era` is 1-based). Core `rules::cities::complete_item`.
+ */
+export const wallsRepairing = (city: { walls_level?: number; walls_hp?: number; walls_max_hp?: number }, era: number): boolean => {
+  const level = city.walls_level ?? 0;
+  return level > 0 && (city.walls_hp ?? 0) < (city.walls_max_hp ?? 0) && (level >= 9 || level >= era);
+};

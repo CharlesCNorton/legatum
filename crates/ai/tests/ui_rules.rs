@@ -417,6 +417,8 @@ fn ui_rules_match_core() {
         "cityHp": data::CITY_HP,
         "cityHeal": data::CITY_HEAL,
         "maxWallTier": data::MAX_WALL_TIER,
+        "wallsBaseHp": legatum_core::combat::WALLS_BASE_HP,
+        "wallsHpPerLevel": legatum_core::combat::WALLS_HP_PER_LEVEL,
         "wallTiers": [
             [0, 0, 0],
             [

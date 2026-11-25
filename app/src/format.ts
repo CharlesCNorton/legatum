@@ -379,6 +379,9 @@ export function cityStrengthRule(city: Pick<CityView, 'walls' | 'walls_level'>, 
 }
 
 export const CITY_HEAL_RULE = `A city regains ${CITY_HEAL} health at the end of each turn, unless it took damage that turn or an enemy military unit is adjacent. Empty to full takes ${CITY_HP / CITY_HEAL} turns.`;
+/** The Walls bar, in the board-game voice: the short rule (the Guide has the rest). */
+export const WALLS_BAR_RULE = 'Hits land on the Walls first, at half damage without Siege. Walls never heal: Upgrade Walls repairs them. Broken Walls are gone and must be built again, never while the city is under attack.';
+export const WALLS_UNDER_ATTACK_NOTE = "Not while the city is under attack: Production waits until it is safe.";
 
 /**
  * Your own damaged city's healing, for the city card: how much it regains and how soon it is
@@ -1143,6 +1146,19 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
         ],
       });
     }
+    case 'WallsBreached': {
+      const by = e.by ?? null;
+      const text = mine(e.owner)
+        ? `${ctx.cityName(e.city)}'s Walls fell. Build Walls again when the attack is over.`
+        : by != null && mine(by)
+          ? `You broke ${ctx.cityName(e.city)}'s Walls. It can no longer fire.`
+          : `${ctx.cityName(e.city)}'s Walls fell.`;
+      return line('combat', text, {
+        at: ctx.cityPos(e.city), players: by != null ? [e.owner, by] : [e.owner], weight: 2,
+        tone: mine(e.owner) ? 'bad' : by != null && mine(by) ? 'good' : 'neutral',
+        details: ['Broken Walls are gone for good: the city stops firing and must build Walls again from scratch.'],
+      });
+    }
     case 'AthensCityCaptured':
       return line('science', mine(e.to)
         ? `Captured ${ctx.cityName(e.city)} from Athens: you gain one free technology. Choose it.`
@@ -1866,6 +1882,9 @@ const isWallsUpgrade = (item: ProductionItem): boolean => item.kind === 'Buildin
 /** "Agra completed a Granary"-style line; a Walls upgrade names the level reached ("Agra raised its Walls to III"). */
 function completedText(item: ProductionItem, ctx: ReportContext, city: number, faction?: Faction): string {
   const level = isWallsUpgrade(item) ? ctx.cityWallsLevel?.(city, 'after') : null;
+  const before = isWallsUpgrade(item) ? ctx.cityWallsLevel?.(city, 'before') : null;
+  // At the era's cap Upgrade Walls repairs the bar instead (the level stays).
+  if (level && before === level) return `${ctx.cityName(city)} repaired its ${itemName({ kind: 'Building', building: 'Walls' }, faction)}`;
   if (level && level > 1) return `${ctx.cityName(city)} raised its ${itemName({ kind: 'Building', building: 'Walls' }, faction)} to ${wallLevelLabel(level)}`;
   return `${ctx.cityName(city)} completed ${builtName(item, ctx, city, faction)}`;
 }

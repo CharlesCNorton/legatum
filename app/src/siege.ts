@@ -173,8 +173,18 @@ export function captureForecast(view: PlayerView, cityId: number, attackers: rea
   const garrisonDefense = garrison ? unitDefenseStrength(garrison.kind, garrison.hp, view.tiles[tileIndex(garrison.pos, view.width, view.height)]?.terrain ?? 'Plains', garrison.fortify, factionOf(view, garrison.owner), garrison.level ?? 0).total : 0;
   // Turn by turn: wear the city to 0 HP, then (if garrisoned) the garrison, then it is taken.
   let hp = city.hp, grHp = garrison?.hp ?? 0, zeroTurn: number | null = hp <= 0 ? 0 : null, fell: number | null = null;
+  // The Walls bar stands in front (breakable Walls): it takes half of each hit (Siege ignored here)
+  // and never heals; the share of a turn's damage that breaks it carries on into the city's health.
+  let walls = city.walls_hp ?? 0;
   for (let t = 1; t <= HORIZON && fell === null; t++) {
-    if (hp > 0) {
+    if (walls > 0) {
+      const d = turnDamage(hp);
+      const left = walls - Math.floor(d / 2);
+      walls = Math.max(0, left);
+      if (left < 0) hp = Math.max(0, hp + 2 * left);
+      if (hp <= 0) zeroTurn = t;
+      if (hp <= 0 && !garrison && melee) fell = t;
+    } else if (hp > 0) {
       hp = Math.max(0, hp - turnDamage(hp));
       if (hp <= 0) zeroTurn = t;
       if (hp <= 0 && !garrison && melee) fell = t;
@@ -185,7 +195,8 @@ export function captureForecast(view: PlayerView, cityId: number, attackers: rea
   }
   const sum = `${forceText(modes.map((m) => ({ kind: m.u.kind, faction: factionOf(view, m.u.owner) })))} hit for about ${first} health a turn at average rolls against defence ${defense(city.hp)}`;
   const guard = garrison ? ` Its ${itemName({ kind: 'Unit', unit: garrison.kind }, factionOf(view, garrison.owner))} (${garrison.hp} health) must fall before it is taken.` : ' Nothing garrisons it.';
-  const detail = `${sum}; ${city.name} has ${city.hp} health and does not heal while they stand beside it.${guard}${melee ? '' : ' Ranged units wear it down but cannot take it.'}`;
+  const wallsNote = (city.walls_hp ?? 0) > 0 ? ` Its Walls (${city.walls_hp}/${city.walls_max_hp}) take half of each hit first and never heal; once broken they are gone.` : '';
+  const detail = `${sum}; ${city.name} has ${city.hp} health and does not heal while they stand beside it.${wallsNote}${guard}${melee ? '' : ' Ranged units wear it down but cannot take it.'}`;
   if (fell !== null) {
     const text = fell <= 1 ? 'Falls next turn unless reinforced' : `Holds about ${fell} turns unless reinforced`;
     return { perTurn: first, forecast: { turns: fell, text, short: fell <= 1 ? 'falls next turn' : `falls in about ${fell} turns`, detail, level: fell <= 1 ? 'now' : fell <= 3 ? 'soon' : 'holding' } };
