@@ -55,7 +55,8 @@ pub mod rules;
 /// 56: City names follow the faction list in order, so the capital is the historic capital (Rome, Athens, Karakorum, ...); every list holds 60 or more real cities, then "New <name>", before "<Faction> Colony N" (Sam, 2026-11-22). The save shape is unchanged.
 /// 57: The Mongols never have Walls (Sam, 2026-11-22: "no walls ever"): no Walls, Castle, Star Fort or later wall level in any era (it opened in the Medieval era before), and a city they capture loses its Walls line. Their Siege still opens in the Medieval era. The save shape is unchanged.
 /// 58: Walls levels replace Castle and Star Fort; upgrades are capped by era and Siege covers levels by tier. A rules-57 save is refused like any other; `wasm::json::upgrade_from_49` converts an older state for analysis tooling.
-pub const RULES_VERSION: u32 = 58;
+/// 59: The tech tree's research goal: `Order::SetResearchGoal` and `Player::research_goal` (fills an empty research queue toward a later technology). No existing order resolves differently.
+pub const RULES_VERSION: u32 = 59;
 pub mod scenario;
 pub mod scoring;
 pub mod settlement;
