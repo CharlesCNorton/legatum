@@ -51,6 +51,14 @@ it('finds Build on the chosen item in a mounted city panel', () => {
   expect(control('build', itemKey(item))?.getAttribute('aria-label')).toMatch(/^Build /);
 });
 
+it('points at the "Also" list when the build it recommends is folded inside it', () => {
+  document.body.innerHTML = '<div class="city-panel"><details class="unit-line"><summary>Also: Spearman</summary><div class="production-choice" data-item="u:Spearman"><button class="prod">Build</button></div></details></div>';
+  expect(control('build', 'u:Spearman')?.tagName).toBe('SUMMARY');
+  document.querySelector('details')!.open = true;
+  expect(control('build', 'u:Spearman')?.className).toBe('prod');
+  document.body.innerHTML = '';
+});
+
 it('turns off, moves on, and pauses for busy, ready and blocking overlays', async () => {
   render(<div className="game"><Advisor /></div>);
   expect(screen.getByTestId('advisor').dataset.advisorId).toBe('welcome');
@@ -76,4 +84,15 @@ it('turns off, moves on, and pauses for busy, ready and blocking overlays', asyn
   expect(screen.queryByTestId('advisor')).not.toBeNull();
   fireEvent.click(screen.getByRole('button', { name: 'Turn off' }));
   expect(screen.queryByTestId('advisor')).toBeNull();
+});
+
+it('counts routine steps the player does, once per turn', () => {
+  useAdvisor.setState({ practice: {}, practised: [], practisedTurn: -1 });
+  render(<Advisor />);
+  const unit = view.units.find((u) => u.owner === view.me)!;
+  act(() => useGame.setState({ orders: [[{ type: 'SkipUnit', unit: unit.id }]] }));
+  act(() => useGame.setState({ orders: [[{ type: 'SkipUnit', unit: unit.id }, { type: 'SleepUnit', unit: unit.id }]] }));
+  expect(useAdvisor.getState().practice).toEqual({ skip: 1, fortify: 1 });
+  act(() => useGame.setState({ views: [{ ...view, turn: view.turn + 1 }], orders: [[]] }));
+  expect(useAdvisor.getState().practice.endTurn).toBe(1);
 });
