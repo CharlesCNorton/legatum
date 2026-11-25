@@ -72,7 +72,7 @@ Contributor Covenant 2.1 (CC BY 4.0), as it says.
 
 ## Audio
 
-The shipped music and sound effects (`app/public/audio/`, 100 files) are third-party works under four licences.
+The shipped music and sound effects (`app/public/audio/`, 107 files) are third-party works under four licences.
 The per-file source, author and processing are in `app/public/audio/CREDITS.md` and
 `app/public/audio/manifest.json`, and the same credits appear in the game under How to Play → Credits.
 
