@@ -43,8 +43,9 @@ App: when an Age begins (`AgeBegan`), every player gets the **score check** take
 There is no capture requirement for winning by VP
   (designer, 2026-10-31: "you shouldn't be able to win with zero conquest" is to be reached by point
   design and measured, not enforced): the 10-turn VP hold is the ordinary VP win rule. Holding the last original capital also wins (rules 37, below). Turn-limit
-  ranking applies only if a game explicitly configures one; the 1,200-turn simulation safety cap
-  does not award a winner (designer, 2026-11-01: no turn-limit backstop for late stalemates).
+  ranking applies at the configured limit, else at turn 500 (`data::DEFAULT_TURN_LIMIT`, rules 62; the designer's
+  2026-11-01 "no turn-limit backstop" was reversed on 2026-11-25). The simulation safety cap (1,200 by default) now only
+  matters for a game that sets a limit above it; it does not award a winner.
   The deck-against-era report script (`tools/sim/objective-deck-report.py`) was deleted with the era arm on 2026-11-22; its last results are in `docs/sim-results/objectives/deck-2026-11-01.md`.
 - **Target:** the solo target per team member (a pair needs two members' worth), held 10 turns at Standard
   (hold rules below unchanged). The solo target uses the earnable era, goal and world wonder points plus one, at most 10
