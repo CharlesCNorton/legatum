@@ -15,6 +15,8 @@ const root=resolve(here,'../../../..');
 const args=process.argv.slice(2);
 function option(name,fallback){const i=args.indexOf(name);return i<0?fallback:args[i+1];}
 const out=resolve(option('--out',join(homedir(),'LegatumRuns/anim-pilot/review/3d-v2')));
+const round=option('--round','6');
+if(!/^\d+$/.test(round))throw new Error('--round must be a round number');
 const assetSha256=createHash('sha256').update(await readFile(resolve(here,'../units/spearman-0ad/spearman.glb'))).digest('hex');
 let playwright;
 if(process.env.PLAYWRIGHT_MODULE) playwright=await import(pathToFileURL(resolve(process.env.PLAYWRIGHT_MODULE)).href);
@@ -50,13 +52,13 @@ try {
       throw new Error(`Invalid framing for ${clip}: ${JSON.stringify(fit)}`);
   }
   for(const [clip,duration] of Object.entries(state.clips)) {
-    const frames=resolve(out,'.spearman-0ad-r5-viewer-frames',assetSha256,clip);await mkdir(frames,{recursive:true});
+    const frames=resolve(out,`.spearman-0ad-r${round}-viewer-frames`,assetSha256,clip);await mkdir(frames,{recursive:true});
     const count=Math.round(duration*30);
     for(let i=0;i<count;i++) {
       await page.evaluate(({clip,t})=>window.review.sample(clip,t),{clip,t:i/30});
       await page.locator('canvas').screenshot({path:join(frames,`${String(i).padStart(4,'0')}.png`)});
     }
-    const output=join(out,`spearman-0ad-r5-${clip}-viewer.mp4`);
+    const output=join(out,`spearman-0ad-r${round}-${clip}-viewer.mp4`);
     const encode=spawnSync('ffmpeg',['-y','-loglevel','error','-framerate','30','-stream_loop','2','-i',join(frames,'%04d.png'),'-frames:v',String(count*3),'-c:v','libx264','-crf','18','-pix_fmt','yuv420p','-movflags','+faststart',output],{stdio:'inherit'});
     if(encode.status!==0)throw new Error(`ffmpeg failed for ${clip}`);
     const probe=spawnSync('ffprobe',['-v','error','-count_frames','-select_streams','v:0','-show_entries','stream=width,height,pix_fmt,nb_read_frames,r_frame_rate','-of','json',output],{encoding:'utf8'});
@@ -66,7 +68,7 @@ try {
     receipts[clip]={output,framing:framing[clip],...stream};console.log(output);
   }
   if(errors.length)throw new Error(errors.join('\n'));
-  await writeFile(join(out,'spearman-0ad-r5-viewer-validation.json'),JSON.stringify({assetSha256,clips:receipts},null,2));
+  await writeFile(join(out,`spearman-0ad-r${round}-viewer-validation.json`),JSON.stringify({assetSha256,clips:receipts},null,2));
 } finally {
   if(browser)await browser.close();await new Promise(r=>server.close(r));
 }

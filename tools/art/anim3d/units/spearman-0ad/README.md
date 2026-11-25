@@ -1,4 +1,4 @@
-# Spearman — real-time 0 A.D. adaptation, round 5
+# Spearman — real-time 0 A.D. adaptation, round 6
 
 `spearman.glb` is the primary asset. Sprites render this exact GLB, not an
 alternate Blender scene. It contains **2,536 triangles, 30 joints, one skinned
@@ -12,7 +12,59 @@ Five in-place clips are sampled at 30 fps: `idle`, `walk`, `attack`, `hit`,
 `death`. Idle/walk close their loop poses; the skeleton root never translates.
 The spear, shield and helmet remain rigid within the single draw call.
 
-## Round 5 changes
+## Round 6: hit only
+
+`hit.py` changes only the existing hit sample bytes in the delivered GLB. It
+uses idle frame zero as its source; it does not import/re-export meshes or
+resample other clips. Attack, death, walk, idle, geometry, atlas, team mask and
+contract metadata are unchanged. `package_hit.py` verifies this against the
+preserved round 5 GLB and carries the four accepted sprite movies and the
+48 px/attack sheets forward byte for byte.
+
+The 25 keys at 30 fps make a **0.8 s** reaction. Frames 0–4 recoil 15 cm backward
+at the pelvis and drop 6.5 cm, with 25° combined spine/chest bend. Neck recoil
+peaks on frame 5. The shield arm swings back/out with its rigid aspis; the spear
+tip dips while a fixed-length arm solve keeps its butt above the floor. The rear
+foot catches the weight with a 15 cm step during frames 4–8. Frames 8–24 ease
+back to the exact idle-zero channel values; the skeleton root stays fixed.
+
+On the eight delivered 160 px RGBA samples, the opaque alpha-mask centroid
+travels **11.61 px**, the alpha-weighted centroid **11.47 px**, and the top moves
+**17 px**. Centroid travel is maximum pairwise Euclidean distance; opaque mask
+and top use alpha >= 128. Both centroid definitions clear the requested 8 px.
+Hit/idle comparison renders use the same fixed camera. This measures the full
+figure with its props, with no cropping, tracking or pose-dependent zoom.
+
+Run the hit-only rebuild and review from the worktree root:
+
+```sh
+blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python tools/art/anim3d/units/spearman-0ad/hit.py
+ANIM_ROUND=6 ANIM_CLIPS=hit,idle ANIM_SHARED_FIT=1 ANIM_FULLRATE=1 blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python tools/art/anim3d/units/spearman-0ad/render.py
+"$HOME/LegatumRuns/anim-pilot/venv/bin/python" tools/art/anim3d/units/spearman-0ad/package_hit.py
+```
+
+The source evidence for packaging is `oad/r6/approved-r5.glb`, the approved
+round 5 asset (SHA-256 `3c4e74a929d8e619874d45d5e3b2849d0e35d00d9675c1d1e4a9d17bfb5cf3ab`),
+plus `oad/r5/frames/` and the round 5 video receipt. These heavy local inputs
+are under `~/LegatumRuns/anim-pilot/`. `hit.py` is idempotent and can run on
+either round 5 or round 6. For a full historical rebuild below, run `hit.py`
+after `build.py` to apply round 6.
+
+Review files are `review/3d-v2/spearman-0ad-r6-<clip>-160.mp4` and
+`spearman-0ad-r6-hit-vs-idle-160.mp4`. The standalone hit is eight samples at
+12 fps repeated three times (2 s). The comparison is 320 × 180 with two 160 px
+panels and labels: three 3-second cycles, each playing hit at 12 fps then holding
+idle-zero while the right panel completes its 12-frame idle at 4 fps. This
+preserves both game rates. Native GLB playback is 0.8 s; the legacy sprite
+schedule compresses that to 0.667 s. `oad/r6/hit-review.json` records metrics,
+asset hashes, frozen-data checks and ffprobe results.
+
+Contract validation passes; Khronos reports zero errors, warnings, infos or
+hints. The 120 fps ground check passes (hit minimum -1.254 mm, inside the
+existing 2 mm tolerance). Three.js CPU loading/mixing/framing passes. Browser
+capture and the reviewer's playing-speed verdict remain for the lead.
+
+## Approved round 5 baseline (retained except hit)
 
 The aspis has a broad bronze sunburst on an oxidised bronze field with a dark
 rim. The crest is wider across the helmet for readability at 160 px. Darker
@@ -49,7 +101,7 @@ lowers the pelvis as necessary to preserve leg lengths. The shoulders follow
 with four degrees of forward lean. Cape1/2/3 local rotation excursions are
 halved relative to guard, reducing the stiff panel snap.
 
-Hit is reauthored from the native idle guard: **14 degrees** of torso recoil at
+The superseded round 5 hit used the native idle guard: **14 degrees** of torso recoil at
 frame **5**, three more degrees of head follow, and eased recovery by frame
 **20**. The shield moves rigidly with the carrying arm. The clip remains 0.8 s.
 Walk retains the reviewer-approved native gait; no extra bob or altered foot
@@ -152,15 +204,15 @@ Serve the repo with `python3 -m http.server 8765`, then open
 three.js is pinned to 0.170.0. Clip selection, orbit, fixed map view and team
 colour are available. No site is deployed.
 
-Run the recorder **outside the sandbox**, from this worktree root:
+Run the round 6 recorder **outside the sandbox**, from this worktree root:
 
 ```sh
-PLAYWRIGHT_MODULE="$HOME/LegatumRuns/anim-pilot/oad/viewer-runtime/node_modules/playwright/index.mjs" node tools/art/anim3d/viewer/record.mjs
+PLAYWRIGHT_MODULE="$HOME/LegatumRuns/anim-pilot/oad/viewer-runtime/node_modules/playwright/index.mjs" node tools/art/anim3d/viewer/record.mjs --round 6
 ```
 
 It starts/stops a loopback server, captures exact 30 fps frames, writes three
 repeats at 960 × 640, and verifies streams with ffprobe. Outputs are
-`spearman-0ad-r5-<clip>-viewer.mp4` in the review directory. The 3:2 frame keeps the full death spear extent while retaining about 70%
+`spearman-0ad-r6-<clip>-viewer.mp4` in the review directory. The 3:2 frame keeps the full death spear extent while retaining about 70%
 figure height. The receipt includes per-clip framing measurements and the GLB
 SHA-256, so older recordings cannot be mistaken for this build. Host Playwright 1.56.1 needs Chromium installed.
 The agent does not launch Chromium in the sandbox; viewer MP4s must be generated on the host for this asset. Capture frames are

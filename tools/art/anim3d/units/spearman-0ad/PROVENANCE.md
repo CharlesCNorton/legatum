@@ -89,3 +89,12 @@ The accompanying source-manifest.json records SHA-256 hashes of the preserved
 input and every exact source file used. Heavy source/master/review files stay
 under ~/LegatumRuns/anim-pilot/oad/. The final GLB and embedded/separate atlas
 are under 2 MB and ship beside this provenance and LICENSE-ART.
+
+Round 6 replaces only hit, using the delivered idle-zero pose. The new reaction
+has 15 cm pelvis recoil, 6.5 cm drop, 25-degree spine/chest bend, neck follow one
+frame late, a rigid shield-arm jolt, spear dip and a 15 cm rear-foot catching
+step. Fixed-length limb solves retain foot/grip attachment. It eases back to the
+exact idle-zero samples on key 24 (0.8 s), with the skeleton root fixed. The
+GLB is patched only in its existing hit output accessors; approved clips,
+geometry, textures, skin, team mask and attribution are preserved. No new
+third-party inputs were used. Source: hit.py; measured review: package_hit.py.

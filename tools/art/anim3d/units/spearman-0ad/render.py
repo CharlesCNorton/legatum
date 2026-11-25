@@ -8,7 +8,8 @@ from pathlib import Path
 from mathutils import Vector, Matrix
 UNIT=Path(__file__).resolve().parent
 ROOT=Path(os.environ.get('ANIM_ROOT',Path.home()/'LegatumRuns/anim-pilot'))
-WORK=ROOT/'oad/r5';OUT=WORK/'frames';OUT.mkdir(parents=True,exist_ok=True)
+ROUND=os.environ.get('ANIM_ROUND','5')
+WORK=ROOT/f'oad/r{ROUND}';OUT=WORK/'frames';OUT.mkdir(parents=True,exist_ok=True)
 QUICK='--quick' in sys.argv
 bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
 bpy.context.scene.render.fps=30
@@ -17,6 +18,8 @@ s=bpy.context.scene;s.render.fps=30
 rig=next(o for o in s.objects if o.type=='ARMATURE')
 meshes=[o for o in s.objects if o.type=='MESH' and not any(c.hide_render for c in o.users_collection)]
 actions={a.name.split('|')[-1]:a for a in bpy.data.actions}
+if os.environ.get('ANIM_CLIPS'):
+    actions={n:a for n,a in actions.items() if n in os.environ['ANIM_CLIPS'].split(',')}
 print('ACTIONS',list(actions),flush=True)
 # Import COLOR_0 as scalar data, bypassing glTF's default RGB multiplication.
 # The exported unit remains a normal lit material, with no emission or AO.
@@ -72,6 +75,15 @@ for name,a in actions.items():
     centre=right*((bounds[0]+bounds[2])/2)+up*((bounds[1]+bounds[3])/2)
     scale=max(figure_height/config['figure_frame_fraction'],(bounds[2]-bounds[0])/config['extent_frame_fraction'],(bounds[3]-bounds[1])/config['extent_frame_fraction'])
     framing[name]={'target':list(centre),'ortho_scale':scale,'projected_bounds':bounds,'figure_fraction':figure_height/scale}
+if os.environ.get('ANIM_SHARED_FIT'):
+    # A/B clips share one fixed camera; pose differences cannot be zoom/recentre.
+    b=[min(v['projected_bounds'][i] for v in framing.values()) for i in (0,1)]
+    b += [max(v['projected_bounds'][i] for v in framing.values()) for i in (2,3)]
+    scale=max(*(v['ortho_scale'] for v in framing.values()),(b[2]-b[0])/config['extent_frame_fraction'],(b[3]-b[1])/config['extent_frame_fraction'])
+    centre=right*((b[0]+b[2])/2)+up*((b[1]+b[3])/2)
+    for fit in framing.values():
+        fit['figure_fraction']*=fit['ortho_scale']/scale
+        fit.update(target=list(centre),ortho_scale=scale)
 s.render.engine='CYCLES';s.cycles.device='CPU';s.cycles.samples=12;s.cycles.use_denoising=True;s.cycles.max_bounces=2
 s.render.resolution_x=320 if QUICK else 160;s.render.resolution_y=s.render.resolution_x;s.render.resolution_percentage=100
 s.render.film_transparent=True;s.render.image_settings.file_format='PNG';s.render.image_settings.color_mode='RGBA';s.view_settings.view_transform='Standard'
@@ -101,8 +113,8 @@ for name,a in actions.items():
             s.render.filepath=str(tiny/f'{i:03}.png');bpy.ops.render.render(write_still=True)
             camera.data.ortho_scale=fit['ortho_scale']
     manifest['clips'][name]={'count':counts[name],'duration':(end-start)/30,'loop':loop}
-    if name=='attack' and not QUICK:
-        directory=OUT/'attack-fullrate';directory.mkdir(exist_ok=True)
+    if (name=='attack' or os.environ.get('ANIM_FULLRATE') and name=='hit') and not QUICK:
+        directory=OUT/(name+'-fullrate');directory.mkdir(exist_ok=True)
         for i,f in enumerate(range(round(start),round(end)+1)):
             pose(name,f);s.render.filepath=str(directory/f'{i:03}.png');bpy.ops.render.render(write_still=True)
 (WORK/('quick-render.json' if QUICK else 'render.json')).write_text(json.dumps(manifest,indent=2))
