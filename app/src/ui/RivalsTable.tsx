@@ -51,11 +51,13 @@ export function RivalsTable({ view, model, relationOf, onOpen }: {
         <span role="columnheader" title="Science per turn" className="rv-x">Science</span>
       </div>
       {model.rows.map((row) => {
-        const unmet = unmetTeam(view, row);
         const s = teamStats(view, row);
         const rel = row.isMine ? null : relationOf(row);
+        // A War, or your own declaration, names the enemy even before contact.
+        const atWarWith = !!rel?.declared || !!view.diplomacy?.relations.some((r) => r.state === 'War' && (r.a === row.team || r.b === row.team) && (r.a === view.team || r.b === view.team));
+        const unmet = unmetTeam(view, row) && !atWarWith;
         const strong = !row.isMine && !unmet && myArmy >= 0 && s.army > 0 && s.army >= myArmy * STRONG_ARMY_RATIO;
-        const label = row.isMine ? (row.members.length > 1 ? 'Your team' : 'You') : unmet ? 'Unmet empire' : row.label;
+        const label = row.isMine ? (row.members.length > 1 ? 'Your team' : 'You') : unmet ? 'Unknown' : row.label;
         const vp = <span className="rv-num rv-vp" role="cell" data-celebration-counter={row.isMine ? 'vp' : undefined}><b>{row.vp}</b><small>/{row.target}</small>{row.isMine && <CounterDelta counter="vp" />}</span>;
         const cells = unmet
           ? <span className="rv-hidden rv-x" role="cell">Not met yet</span>
@@ -72,17 +74,18 @@ export function RivalsTable({ view, model, relationOf, onOpen }: {
           </span>
           <span className="rv-name-col">
             <span className="rv-name">{label}</span>
-            {!unmet && <span className="rv-status">
-            {rel && <span className={`rv-rel ${rel.kind}${rel.declared ? ' declared' : ''}${rel.isNew ? ' new' : ''}`} title={rel.title} data-relation={rel.text}>
+            {rel && !unmet && <span className={`rv-rel ${rel.kind}${rel.declared ? ' declared' : ''}${rel.isNew ? ' new' : ''}`} title={rel.title} data-relation={rel.text}>
               <TreatyEmblem kind={rel.kind === 'war' ? 'War' : rel.kind === 'alliance' ? 'Alliance' : 'Peace'} size={12} />{rel.text}
             </span>}
-            <ClosedChip members={row.members} />
-            <TombChip members={row.members} />
-            <LeadChip members={row.members} rules={model.raceRules.rules} />
-            <DecadenceChip members={row.members} rules={model.raceRules.rules} />
-            {!row.capitalStands && <CapitalChip row={row} nameOf={(e) => e.isMe ? 'You' : empireOfPlayer(view, e.id)} />}
-            </span>}
           </span>
+        </span>;
+        // Public chips get their own line across the row, so a long one never runs into the numbers.
+        const chips = !unmet && <span className="rv-status">
+          <ClosedChip members={row.members} />
+          <TombChip members={row.members} />
+          <LeadChip members={row.members} rules={model.raceRules.rules} />
+          <DecadenceChip members={row.members} rules={model.raceRules.rules} />
+          {!row.capitalStands && <CapitalChip row={row} nameOf={(e) => e.isMe ? 'You' : empireOfPlayer(view, e.id)} />}
         </span>;
         const bar = <span className="rv-bar" aria-hidden="true"><i style={{ width: `${Math.min(100, (row.vp / Math.max(1, row.target)) * 100)}%` }} /></span>;
         const cls = `rv-grid rv-row${row.isMine ? ' mine' : ''}${unmet ? ' unmet' : ''}${rel?.kind === 'war' ? ' at-war' : ''}${row.hold ? ' holding' : ''}`;
@@ -90,8 +93,8 @@ export function RivalsTable({ view, model, relationOf, onOpen }: {
         const style = unmet ? undefined : empireVars(row.members[0]);
         // A met rival's row opens Diplomacy with it; your own row and an unmet one are not buttons.
         return row.isMine || unmet
-          ? <div key={row.team} className={cls} style={style} role="row" aria-label={aria}>{who}{vp}{cells}{bar}</div>
-          : <button key={row.team} type="button" className={cls} style={style} role="row" aria-label={`${aria}. Open Diplomacy`} title={`${row.members.filter((m) => m.aiLevel).map((m) => `${row.members.length > 1 ? `${empireOfPlayer(view, m.id)}: ` : ''}AI · ${m.aiLevel}. `).join('')}Open Diplomacy`} onClick={() => onOpen(row.team)}>{who}{vp}{cells}{bar}</button>;
+          ? <div key={row.team} className={cls} style={style} role="row" aria-label={aria}>{who}{vp}{cells}{chips}{bar}</div>
+          : <button key={row.team} type="button" className={cls} style={style} role="row" aria-label={`${aria}. Open Diplomacy`} title={`${row.members.filter((m) => m.aiLevel).map((m) => `${row.members.length > 1 ? `${empireOfPlayer(view, m.id)}: ` : ''}AI · ${m.aiLevel}. `).join('')}Open Diplomacy`} onClick={() => onOpen(row.team)}>{who}{vp}{cells}{chips}{bar}</button>;
       })}
     </div>
   );

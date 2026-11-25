@@ -67,11 +67,19 @@ it('an empire you have not met shows only its VP: no name, crest, treaty or numb
   act(() => useGame.setState({ views: [unmet] }));
   const row = host.querySelector<HTMLElement>('.rv-row.unmet')!;
   expect(row.tagName).toBe('DIV');
-  expect(row.querySelector('.rv-name')!.textContent).toBe('Unmet empire');
+  expect(row.querySelector('.rv-name')!.textContent).toBe('Unknown');
   expect(row.querySelector('.rv-hidden')!.textContent).toBe('Not met yet');
   expect(row.querySelector('.rv-rel, .pf-roundel')).toBeNull();
   expect(row.querySelector('.rv-vp')).not.toBeNull();
   expect(row.textContent).not.toContain(String(rival.gold ?? 'x'));
+});
+
+it('a War, or your own declaration, names an empire you have not met yet', () => {
+  const rival = view.players.find((p) => p.team !== view.team && p.alive)!;
+  const unmet = { ...view, diplomacy: { ...view.diplomacy, met: view.diplomacy.met!.filter((t) => t !== rival.team) } };
+  act(() => useGame.setState({ views: [unmet], orders: [[{ type: 'DeclareWar', against: rival.team }]] }));
+  expect(host.querySelector('.rv-row.unmet')).toBeNull();
+  expect(host.querySelector('.rv-rel.declared')!.getAttribute('data-relation')).toBe('War declared');
 });
 
 it(`an army at least ${STRONG_ARMY_RATIO} times yours reads red, with the reason in its tooltip`, () => {
