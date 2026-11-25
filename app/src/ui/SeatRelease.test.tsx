@@ -4,7 +4,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { useGame } from '../store';
 import { keptSeat, rememberSeat, rememberedSeat, setServerBase, type SeatStatus } from '../remote';
-import { awayPlayers, namesList } from '../awayPlayers';
+import { awayLine, awayPlayers, namesList } from '../awayPlayers';
 import { configFromLobby, lobbyFromStaging, type StagingState } from '../staging';
 import { newLobby } from '../lobby';
 import { FakeSocket } from '../test/fakeSocket';
@@ -238,7 +238,8 @@ it('after a restart, the game list offers this device its kept seat back without
 it('names the players who are away, so the turn never ends without them unannounced', () => {
   connectGame();
   sockets[0].push({ type: 'seats', seats });
-  expect(awayPlayers(useGame.getState())).toEqual(['Alice', 'Open empire']);
+  expect(awayPlayers(useGame.getState()).map((a) => a.name)).toEqual(['Alice', 'Open empire']);
+  expect(awayLine(awayPlayers(useGame.getState()).slice(0, 1), 'until')).toBe('Alice is not connected. Byzantium gets no orders until Alice rejoins.');
   expect(namesList(['Alice', 'Bo', 'Cy'])).toBe('Alice, Bo and Cy');
   sockets[0].push({ type: 'seats', seats: seats.map((s) => ({ ...s, connected: true })) });
   expect(awayPlayers(useGame.getState())).toEqual([]);

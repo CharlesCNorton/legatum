@@ -56,12 +56,14 @@ export function JoinScreen() {
             const info = FACTION_INFO[s.faction];
             const wasMine = mine?.seat === s.seat && !!mine.token && !mine.roomId;
             const reserved = !!s.reserved && !wasMine && !net.status.is_local;
+            // Seat 0 is the host's own: a guest never takes it.
+            const host = s.seat === 0 && !net.status.is_local && (s.connected || !!s.reserved);
             return (
               <button
                 key={s.seat}
                 className={`join-seat ${s.connected ? 'taken' : ''} ${wasMine ? 'mine' : ''}`}
                 style={{ ['--pc' as string]: factionColor(colored[i]) }}
-                disabled={!!busy || reserved || (!!net.locked && !codeText && !wasMine)}
+                disabled={!!busy || host || reserved || (!!net.locked && !codeText && !wasMine)}
                 onClick={() => join(s.seat, s.name)}
               >
                 <div className="join-top">
@@ -77,9 +79,9 @@ export function JoinScreen() {
                 </div>
                 <div className="join-status">
                   <span className={`conn-dot ${s.connected ? 'on' : ''}`} />
-                  {s.connected ? 'In use: someone is playing this seat right now' : reserved ? 'Reserved' : wasMine ? 'Your seat' : 'Open'}
+                  {host ? 'Host' : s.connected ? 'In use: someone is playing this seat right now' : reserved ? 'Reserved' : wasMine ? 'Your seat' : 'Open'}
                 </div>
-                <div className="join-cta">{reserved ? 'Ask the host to open this seat' : s.connected ? 'Take over' : `Rejoin as ${s.name}`}</div>
+                {!host && <div className="join-cta">{reserved ? 'Ask the host to open this seat' : s.connected ? 'Take over' : `Rejoin as ${s.name}`}</div>}
               </button>
             );
           })}

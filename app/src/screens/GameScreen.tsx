@@ -1,4 +1,4 @@
-import { awayPlayers, namesList } from '../awayPlayers';
+import { awayLine, awayPlayers } from '../awayPlayers';
 import { TrainingCard } from '../ui/Training';
 import { WhyCard } from '../ui/WhyCard';
 import { CelebrationProvider, MomentLane } from '../celebrate/MomentLane';
@@ -61,8 +61,7 @@ export function GameScreen() {
   const resolvingToEnd = useGame((s) => s.resolvingToEnd);
   const stopResolving = useGame((s) => s.stopResolving);
   const conn = useGame((s) => (s.client?.kind === 'remote' ? s.net?.conn : null));
-  const away = useGame((s) => namesList(awayPlayers(s)));
-  const awayCount = useGame((s) => awayPlayers(s).length);
+  const away = useGame((s) => awayLine(awayPlayers(s), 'until'));
   const credentialRejected = useGame((s) => s.client?.kind === 'remote' && s.net?.credentialRejected);
 
   useEffect(() => {
@@ -154,7 +153,7 @@ export function GameScreen() {
         </div>
       ) : conn === 'open' && away ? (
         <div className="conn-banner away-banner" role="status" data-testid="away-banner">
-          <span className="conn-dot" aria-hidden /> {away} {awayCount === 1 ? 'is' : 'are'} not connected. Their empire{awayCount === 1 ? '' : 's'} get{awayCount === 1 ? 's' : ''} no orders until they rejoin.
+          <span className="conn-dot" aria-hidden /> {away}
         </div>
       ) : (
         conn &&

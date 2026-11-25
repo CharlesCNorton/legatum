@@ -73,8 +73,8 @@ The lobby is public, so a stranger could open a listed game, take every open sea
 could not remove a connected player. The owner chose a short code typed once, not join links, and the game still
 shows in the list.
 
-- **Join code (optional).** The host types 4 to 12 letters or digits in the "Join code" box next to the name on
-  Host Game and Host from a save (empty = an open game). The code lives only in the host engine
+- **Join code (optional).** The host types 4 to 12 letters or digits in the "Lock with a code" box in the
+  Host door, used by Host Game and Host from a save (empty = an open game). The code lives only in the host engine
   (`BrowserHost.set_join_code`, `crates/wasm/src/host/mod.rs`) and in the host tab's `sessionStorage`
   (`legatum.online.joincode`, next to the room key, so a host reload keeps the game locked; a reload that cannot find
   the code does not reopen the game unlocked). It is never in a `Status`, `Summary`, staging state, view, save, game
@@ -185,8 +185,8 @@ already). The host's own in-tab connection never sees chunks.
   over. Seat credentials are not saved. `open_guest_seats` opens every seat but seat 0 (the host's, which
   `hostOnlineFromSave` takes at once), so guests join from the list and take their old seat with its saved name. A new room has a new id and key.
 - Seat credentials are 256-bit random hex from `crypto.getRandomValues`.
-- Kept seat (2026-11-25): `rememberSeat` also writes the last game seat's room, seat, name and credential to `localStorage` (`legatum.online.kept-seat`, `remote.ts::keptSeat`; never a lobby-room seat). After a restart the Join list marks that game "Your seat is here" and lists it even when it shows full, and the seat screen offers "Rejoin as <name>" with the kept credential, so the host need not press Open seat. It is offered, never joined automatically. Best effort: if storage is blocked the host opens the seat as before.
-- A dropped human: the host resolves the turn when every connected human is Ready (`disconnect` -> `resolve_if_ready`); the away empire gets no orders. The game screen names who is not connected (`app/src/awayPlayers.ts`) and Ready opens "End the turn without <name>?" (`EndTurnConfirmation.tsx`), primary "Wait for <name>". No pause: a player who never returns would freeze the game.
+- Kept seat (2026-11-25): `rememberSeat` also writes the last game seat's room, seat, name and credential to `localStorage` (`legatum.online.kept-seat`, `remote.ts::keptSeat`; never a lobby-room seat). After a restart the Join list marks that game "Your seat is here" and lists it even when it shows full; its button reads Rejoin and takes the kept seat straight back with the kept credential (the seat screen also offers "Rejoin as <name>"), so the host need not press Open seat. It is offered, never joined automatically. Best effort: if storage is blocked the host opens the seat as before.
+- A dropped human: the host resolves the turn when every connected human is Ready (`disconnect` -> `resolve_if_ready`); the away empire gets no orders. The game screen names who is not connected and their empire by its faction (`app/src/awayPlayers.ts`); their seat row reads "Away" and Ready opens "End the turn without <name>?" (`EndTurnConfirmation.tsx`), primary "Wait for <name>". No pause: a player who never returns would freeze the game.
 
 ## Build (`scripts/build-web.sh`)
 

@@ -109,6 +109,13 @@
   padding-bottom: 4px;
   border-bottom: 1px solid var(--accent);
 }
+.join-seat.mine .join-cta {
+  /* This device's own seat: its call to action is the screen's one filled button. */
+  padding: 10px 16px;
+  color: var(--primary-ink, var(--panel));
+  background: var(--ink);
+  border: none;
+}
 .join-seat.taken .join-cta {
   color: var(--muted);
   border-color: var(--muted);
@@ -123,6 +130,7 @@ div.seat {
 .mp-name {
   width: 100%;
   max-width: 640px;
+  margin: 2px 0 4px;
 }
 .mp-doors {
   display: grid;
@@ -174,6 +182,22 @@ div.seat {
 .title-actions .mp-door .btn.big:not(.primary) {
   min-width: 0;
   width: 100%;
+}
+.title-actions .mp-door .btn.big.mp-door-main:not(.primary) {
+  /* Each door's main action is an outlined button of the same size, so neither door looks like the default. */
+  min-height: 50px;
+  margin-bottom: 2px;
+  padding: 6px 16px;
+  font: var(--display-weight) 22px/1 var(--display);
+  letter-spacing: 0;
+  text-transform: none;
+  border: 1px solid var(--ink);
+  gap: 8px;
+}
+.title-actions .mp-door .btn.big.mp-door-main:not(.primary) .btn-sub {
+  font: 600 11px/1 var(--sans);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
 }
 .title-actions .mp-door .btn.big.primary {
   min-height: 64px;
@@ -409,4 +433,23 @@ div.seat {
     justify-self: start;
     margin-top: 4px;
   }
+}
+/* Someone is away: the banner sits in the open map between the selection panel and the sidebar, so it never
+   covers a selected unit's or city's card. It wraps instead of widening into them. */
+.conn-banner.away-banner {
+  left: 344px;
+  right: 296px;
+  width: max-content;
+  max-width: calc(100% - 640px);
+  margin: 0 auto;
+  transform: none;
+  font-size: 15px;
+}
+.seat-ready.away {
+  color: var(--muted);
+  border-style: dashed;
+}
+/* Back sits closer under the doors, so the worst case (Resume, a notice and the name note) fits at 1000x600. */
+.title-actions .mp-doors + .btn.quiet:not(.big) {
+  margin-top: 4px;
 }

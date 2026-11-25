@@ -263,7 +263,9 @@ function MultiplayerMenu({ hostSave, onBack }: { hostSave: SaveFile | null; onBa
   const hostPrimary = hosting === 'failed' && !views && !hostCannotRetry;
   // A save brought from the main menu makes hosting it the next action.
   const savePrimary = !views && (!!hostSave || resuming === 'failed') && !hostPrimary;
-  const joinPrimary = !views && !busy && !savePrimary && !hostPrimary;
+  // The doors are equal until the game knows which one this player needs: after a refusal Host Game cannot fix,
+  // Join is the way on.
+  const joinPrimary = !views && !busy && !savePrimary && hostCannotRetry;
   const hostOnline = async () => {
     if (codeNote) return;
     const who = name.trim().slice(0, MAX_PLAYER_NAME) || DEFAULT_PLAYER_NAME;
@@ -322,7 +324,7 @@ function MultiplayerMenu({ hostSave, onBack }: { hostSave: SaveFile | null; onBa
                 <h3 id="mp-host-head" className="mp-door-head">Host</h3>
                 <p className="mp-door-lede">Set up the game. Others join you.</p>
                 <label className="host-name host-code">
-                  <span>Join code</span>
+                  <span>Lock with a code</span>
                   <input
                     className="lobby-input"
                     aria-label="Join code (optional)"
@@ -337,7 +339,7 @@ function MultiplayerMenu({ hostSave, onBack }: { hostSave: SaveFile | null; onBa
                     onKeyDown={(e) => { if (e.key === 'Enter' && !busy) void hostOnline(); }}
                   />
                 </label>
-                <button className={`btn big ${hostPrimary ? 'primary' : ''}`} disabled={busy || !!codeNote} onClick={hostOnline}>
+                <button className={`btn big mp-door-main ${hostPrimary ? 'primary' : ''}`} disabled={busy || !!codeNote} onClick={hostOnline}>
                   Host Game
                   <span className="btn-sub">
                     {hosting === 'starting' ? <><span className="spinner" /> Opening your game…</>
@@ -358,7 +360,7 @@ function MultiplayerMenu({ hostSave, onBack }: { hostSave: SaveFile | null; onBa
               <section className="mp-door" aria-labelledby="mp-join-head">
                 <h3 id="mp-join-head" className="mp-door-head">Join</h3>
                 <p className="mp-door-lede">Take a seat in a game someone is hosting.</p>
-                <button className={`btn big ${joinPrimary ? 'primary' : ''}`} disabled={busy} onClick={() => goto('online')}>
+                <button className={`btn big mp-door-main ${joinPrimary ? 'primary' : ''}`} disabled={busy} onClick={() => goto('online')}>
                   Join Game
                   <span className="btn-sub">See the open games</span>
                 </button>

@@ -384,7 +384,7 @@ export function OnlineSeats() {
               {' · '}
               {count} order{count === 1 ? '' : 's'}
             </span>
-            <span className={`seat-ready ${isReady ? 'on' : ''}`}>{p?.alive === false ? 'Observing' : isReady ? <><Icon name="ui-check" size={12} className="ui-mark" /> Ready</> : 'Planning'}</span>
+            <span className={`seat-ready ${isReady ? 'on' : ''}${!me && !connected && p?.alive !== false ? ' away' : ''}`}>{p?.alive === false ? 'Observing' : !me && !connected ? 'Away' : isReady ? <><Icon name="ui-check" size={12} className="ui-mark" /> Ready</> : 'Planning'}</span>
             {net.status.is_local && !me && !connected && st.reserved !== false && (
               <OpenSeatButton name={st.name} disabled={conn !== 'open'} onOpen={() => releaseSeat(seat)} />
             )}

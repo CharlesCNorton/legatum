@@ -146,6 +146,8 @@ for (const size of SIZES) testWithFailingRequests.describe(`online screens ${siz
   ] as const) testWithFailingRequests(`join screen, six seats: ${id}`, async ({ page }) => {
     await noHints(page);
     await page.goto('/');
+    // Wait for boot: a state set before it finishes is replaced by the title screen.
+    await expect(page.getByRole('button', { name: /^Multiplayer/ })).toBeVisible();
     await page.evaluate((error) => {
       const factions = ['Athens', 'Byzantium', 'Celts', 'Mongols', 'India', 'Germany'] as const;
       const seats = factions.map((faction, i) => ({ seat: i, player: i, name: `Player ${i + 1}`, faction, connected: i === 1, reserved: false, ready: false, orders: 0 }));
@@ -349,7 +351,7 @@ for (const size of SIZES) testWithFailingRequests.describe(`online co-op ${size.
     await host.mouse.move(size.width / 2, size.height - 4);
     await shot(host, size, '55d-host-guest-away');
     await host.locator('.seatbar').getByRole('button', { name: /^(Ready anyway|Ready\b)/ }).first().click();
-    await expect(host.locator('dialog.end-turn-confirmation')).toContainText('Alice is not connected. Their empire will get no orders this turn.');
+    await expect(host.locator('dialog.end-turn-confirmation')).toContainText('Alice is not connected, so');
     await shot(host, size, '55e-host-ready-without-guest');
     await host.keyboard.press('Escape');
     guest = await guestContext.newPage();
@@ -357,12 +359,11 @@ for (const size of SIZES) testWithFailingRequests.describe(`online co-op ${size.
     await guest.getByRole('button', { name: /^Join Game/ }).click({ timeout: 15_000 });
     const again = guest.locator('.online-room').filter({ hasText: hostName });
     await expect(again).toHaveCount(1, { timeout: 20_000 });
-    await again.getByRole('button', { name: /^Join/ }).click({ timeout: 15_000 });
-    const back = guest.getByRole('button', { name: /Rejoin as Alice/ });
-    await expect(back).toBeEnabled();
+    await expect(again).toContainText('Your seat is here');
     await guest.mouse.move(5, 5);
-    await shot(guest, size, '55f-guest-rejoin-after-restart');
-    await back.click();
+    await shot(guest, size, '55f-guest-list-your-seat');
+    // One click: the game list's Rejoin takes this device's seat straight back.
+    await again.getByRole('button', { name: /^Rejoin/ }).click({ timeout: 15_000 });
     await expect(guest.getByTestId('turn-number')).toHaveText('1', { timeout: 60_000 });
     await guest.waitForTimeout(800);
     await begin(guest);

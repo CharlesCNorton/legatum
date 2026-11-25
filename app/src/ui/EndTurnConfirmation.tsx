@@ -1,7 +1,7 @@
 import { useId, useLayoutEffect, useRef } from 'react';
 import { useGame } from '../store';
 import { pendingDecisions } from '../turnFlow';
-import { awayPlayers, namesList } from '../awayPlayers';
+import { awayLine, awayPlayers, namesList, type AwayPlayer } from '../awayPlayers';
 import { closeTips } from './Tip';
 import { Icon } from './bits';
 import './EndTurnConfirmation.css';
@@ -15,7 +15,8 @@ export function EndTurnConfirmation({ onConfirm }: { onConfirm: () => void }) {
   const siegeSeen = useGame((s) => s.siegeSeen);
   const airHeld = useGame((s) => s.airHeld);
   const report = useGame((s) => s.report);
-  const away = useGame((s) => awayPlayers(s).join('\n')).split('\n').filter(Boolean);
+  const awayKey = useGame((s) => JSON.stringify(awayPlayers(s)));
+  const away = JSON.parse(awayKey) as AwayPlayer[];
   const blocked = useGame((s) => !!s.busy || (s.client?.kind === 'remote' && s.net?.conn !== 'open'));
   const dialog = useRef<HTMLDialogElement>(null);
   const firstButton = useRef<HTMLButtonElement>(null);
@@ -36,7 +37,7 @@ export function EndTurnConfirmation({ onConfirm }: { onConfirm: () => void }) {
   if (!current || !review) return null;
   const pending = pendingDecisions(review.view, review.orders, errors[review.seat], { humans, orders, errors, siegeSeen, airHeld, seat: review.seat, report, goalDecisionSeen: useGame.getState().goalDecisionSeen });
   const first = pending[0];
-  const who = namesList(away);
+  const who = namesList(away.map((a) => a.name));
   // Name the decision the primary button leads to (pillar 9), not just "the first one".
   const go = !first ? (away.length ? (away.length === 1 ? `Wait for ${who}` : 'Wait for them') : 'Keep planning') : first.kind === 'diplomacy' ? 'Respond to the offer' : first.kind === 'siege' ? 'Go to the city' : first.kind === 'treasury' ? 'Fix the treasury' : first.kind === 'air' ? 'Review the aircraft'
     : first.kind === 'unit' ? `Give the ${first.label.split(':')[0].replace(/ #\d+$/, '')} orders` : first.kind === 'city' ? 'Choose production' : 'Choose research';
@@ -45,7 +46,7 @@ export function EndTurnConfirmation({ onConfirm }: { onConfirm: () => void }) {
     <button className="icon-btn end-turn-close" onClick={close} aria-label="Keep planning" title="Keep planning (Esc)"><Icon name="ui-cross" size={14} /></button>
     <h2 id={title}>{pending.length ? 'End turn with decisions pending?' : `End the turn without ${who}?`}</h2>
     <p id={description}>
-      {away.length > 0 && <>{who} {away.length === 1 ? 'is' : 'are'} not connected. Their empire{away.length === 1 ? '' : 's'} will get no orders this turn.{pending.length ? ' ' : ''}</>}
+      {away.length > 0 && <>{awayLine(away, 'turn')}{pending.length ? ' ' : ''}</>}
       {pending.length > 0 && <>{pending.length === 1 ? 'This still needs you.' : `These ${pending.length} still need you.`} Units without orders stay put and come back next turn.</>}
     </p>
     {pending.length > 0 && <ul>{pending.map((d) => <li key={`${d.kind}-${'id' in d ? d.id : ''}`}>{d.label}</li>)}</ul>}
