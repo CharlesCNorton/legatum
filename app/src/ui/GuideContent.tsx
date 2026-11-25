@@ -390,14 +390,14 @@ function Credits() {
     <h3>Artwork</h3>
     <p>Legatum’s original artwork is offered under CC BY 4.0 to the extent rights exist. The Niter, Oil and Silicon resource medallions were generated with an OpenAI image model, selected and resized for the game. Their prompts and provenance are in the resource art README.</p>
     <h3>Music</h3>
-    <p>{title.attribution}. The full piece plays on the title screen and in peace; an intense excerpt plays during an empire war. <a href={title.source} target="_blank" rel="noreferrer">Source</a></p>
-    <p>Each people’s music and the war drums are from {wildfire}, edited for Legatum.</p>
+    <p>{title.attribution}. The full piece plays on the title screen and during peaceful play; an intense excerpt plays during an empire war. <a href={title.source} target="_blank" rel="noreferrer">Source</a></p>
+    <p>The peoples’ music and the war drums are from {wildfire}, edited for Legatum.</p>
     <ul className="guide-credit-tracks">{peopleMusic.map((e) => <li key={e.file}>{e.title}</li>)}</ul>
     <h3>Sound effects</h3>
     <ul>
       <li>Kenney (kenney.nl), CC0: {packs.join(', ')}.</li>
       {others.map((e) => <li key={e.file}>{e.attribution}.</li>)}
-      <li>Battle sounds and the sounds of the land are from {wildfire}, edited for Legatum.</li>
+      <li>Battle sounds and the sounds of birds, wind and snow are from {wildfire}, edited for Legatum.</li>
     </ul>
     <p>Sounds were trimmed, loudness-matched and re-encoded. The edited 0 A.D. files stay under CC BY-SA 3.0.</p>
     <details><summary>Full sound credits</summary><ul>{SOUND_MANIFEST.map((e) => <li key={e.file}>

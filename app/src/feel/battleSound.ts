@@ -6,8 +6,16 @@ import type { CombatPlan } from '../map/combatFx';
 import type { UnitKind } from '../types';
 import type { BattleCue, BattleSound } from './sound';
 
-/** A turn with twenty fights is a wall of noise; the first blows carry it. */
+/** A turn with twenty fights is a wall of noise: a few sounds of each kind carry it. */
 export const MAX_BATTLE_CUES = 10;
+/**
+ * What is kept when a turn has more to say than that, most consequential first (a razed city over a
+ * fallen unit over a clash over a volley), with how many of each. Never the first ten by time: the
+ * volleys open every turn and would leave the clash, the deaths and the collapse silent.
+ */
+export const CUE_QUOTA: [BattleSound, number][] = [
+  ['collapse', MAX_BATTLE_CUES], ['death', 2], ['clash', 2], ['siegeHit', 2], ['arrowHit', 2], ['bow', 2], ['siegeLaunch', 1], ['hooves', 1],
+];
 /** The same sound twice inside this window reads as one. */
 export const CUE_MERGE_MS = 160;
 const HOOVES_LEAD_MS = 450;
@@ -37,13 +45,12 @@ export function battleSoundCues(plan: CombatPlan | null | undefined): BattleCue[
   for (const c of plan.captures) if (c.razed) add(c.t, 'collapse', c.city);
   all.sort((a, b) => a.t - b.t);
   const last = new Map<BattleSound, number>();
-  const cues: BattleCue[] = [];
-  for (const cue of all) {
-    if (cues.length >= MAX_BATTLE_CUES) break;
+  const distinct = all.filter((cue) => {
     const prev = last.get(cue.sound);
-    if (prev != null && cue.t - prev < CUE_MERGE_MS) continue;
+    if (prev != null && cue.t - prev < CUE_MERGE_MS) return false;
     last.set(cue.sound, cue.t);
-    cues.push(cue);
-  }
-  return cues;
+    return true;
+  });
+  const kept = CUE_QUOTA.flatMap(([sound, most]) => distinct.filter((c) => c.sound === sound).slice(0, most)).slice(0, MAX_BATTLE_CUES);
+  return kept.sort((a, b) => a.t - b.t);
 }

@@ -33,15 +33,25 @@ describe('battle sound cues', () => {
       clashes: [{ t: 1000, mounted: true, guns: false, seed: 5 }, { t: 100, mounted: true, guns: false, seed: 6 }],
       deaths: [{ unit: { kind: 'Spearman' }, t: 1300, seed: 1 }],
       captures: [{ t: 2000, razed: true, city: 3 }, { t: 2600, razed: false, city: 4 }],
-    }))).toEqual(['hooves@0', 'clash@100', 'hooves@550', 'clash@1000', 'death@1300', 'collapse@2000']);
+    }))).toEqual(['hooves@0', 'clash@100', 'clash@1000', 'death@1300', 'collapse@2000']);
   });
 
-  it('merges the same sound struck together and caps a crowded turn at its first blows', () => {
+  it('merges the same sound struck together and keeps only a few of each kind', () => {
     const together = plan({ clashes: [0, 40, CUE_MERGE_MS - 1, CUE_MERGE_MS + 5].map((t) => ({ t, mounted: false, guns: false, seed: t })) });
     expect(names(together)).toEqual(['clash@0', `clash@${CUE_MERGE_MS + 5}`]);
     const crowded = plan({ clashes: Array.from({ length: 40 }, (_, i) => ({ t: i * 300, mounted: false, guns: false, seed: i })) });
-    const cues = battleSoundCues(crowded);
-    expect(cues).toHaveLength(MAX_BATTLE_CUES);
-    expect(cues.at(-1)!.t).toBe((MAX_BATTLE_CUES - 1) * 300);
+    expect(names(crowded)).toEqual(['clash@0', 'clash@300']);
+  });
+
+  it('a crowded turn keeps what matters most: the volleys never silence the clash, the fall and the collapse', () => {
+    const cues = battleSoundCues(plan({
+      shots: Array.from({ length: 5 }, (_, i) => ({ kind: 'arrows', launch: i * 190, flight: 500, hit: true, seed: i })),
+      clashes: [{ t: 2000, mounted: true, guns: false, seed: 1 }],
+      deaths: [{ unit: { kind: 'Archer' }, t: 2300, seed: 1 }],
+      captures: [{ t: 3000, razed: true, city: 7 }],
+    }));
+    expect(cues.length).toBeLessThanOrEqual(MAX_BATTLE_CUES);
+    expect(cues.map((c) => c.sound)).toEqual(['bow', 'bow', 'arrowHit', 'arrowHit', 'hooves', 'clash', 'death', 'collapse']);
+    expect(cues.map((c) => c.t)).toEqual([...cues.map((c) => c.t)].sort((a, b) => a - b));
   });
 });

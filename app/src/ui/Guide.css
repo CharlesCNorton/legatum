@@ -135,4 +135,5 @@
 
 /* Credits: the track list reads as a short index, not a column of sixteen lines. */
 .guide-credit-tracks { columns: 2; column-gap: 28px; }
+.guide-credit-tracks li { margin: 0; padding: 4px 0; break-inside: avoid; }
 @media (max-width: 560px) { .guide-credit-tracks { columns: 1; } }
