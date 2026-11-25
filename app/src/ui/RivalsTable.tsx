@@ -46,7 +46,7 @@ export function RivalsTable({ view, model, relationOf, onOpen }: {
         <span role="columnheader">Empire</span>
         <span role="columnheader" title="Victory points">VP</span>
         <span role="columnheader" title="Gold in the treasury" className="rv-x">Gold</span>
-        <span role="columnheader" title="Army strength" className="rv-x">Army</span>
+        <span role="columnheader" title="Army points" className="rv-x">Army</span>
         <span role="columnheader" title="Cities" className="rv-x">Cities</span>
         <span role="columnheader" title="Science per turn" className="rv-x">Science</span>
       </div>
@@ -63,7 +63,7 @@ export function RivalsTable({ view, model, relationOf, onOpen }: {
           ? <span className="rv-hidden rv-x" role="cell">Not met yet</span>
           : <>
             <span className="rv-num rv-x" role="cell" title={`Gold in the treasury: ${s.gold}`}>{s.gold}</span>
-            <span className={`rv-num rv-x${strong ? ' strong' : ''}`} role="cell" title={strong ? `Army strength ${s.army}: ${STRONG_ARMY_RATIO} times yours or more` : `Army strength ${s.army}`}>{s.army}</span>
+            <span className={`rv-num rv-x${strong ? ' strong' : ''}`} role="cell" title={strong ? `Army points ${s.army}: ${STRONG_ARMY_RATIO} times yours or more` : `Army points ${s.army}`}>{s.army}</span>
             <span className="rv-num rv-x" role="cell" title={`Cities: ${s.cities}`}>{s.cities}</span>
             <span className="rv-num rv-x" role="cell" title={`Science per turn: ${s.science}`}>{s.science}</span>
           </>;
@@ -89,7 +89,7 @@ export function RivalsTable({ view, model, relationOf, onOpen }: {
         </span>;
         const bar = <span className="rv-bar" aria-hidden="true"><i style={{ width: `${Math.min(100, (row.vp / Math.max(1, row.target)) * 100)}%` }} /></span>;
         const cls = `rv-grid rv-row${row.isMine ? ' mine' : ''}${unmet ? ' unmet' : ''}${rel?.kind === 'war' ? ' at-war' : ''}${row.hold ? ' holding' : ''}`;
-        const aria = `${label}: ${row.vp} of ${row.target} VP${rel && !unmet ? `, ${rel.text}` : ''}${unmet ? '' : `, Gold ${s.gold}, army strength ${s.army}, ${s.cities} cities, Science ${s.science} per turn`}`;
+        const aria = `${label}: ${row.vp} of ${row.target} VP${rel && !unmet ? `, ${rel.text}` : ''}${unmet ? '' : `, Gold ${s.gold}, army points ${s.army}, ${s.cities} cities, Science ${s.science} per turn`}`;
         const style = unmet ? undefined : empireVars(row.members[0]);
         // A met rival's row opens Diplomacy with it; your own row and an unmet one are not buttons.
         return row.isMine || unmet

@@ -88,7 +88,7 @@ it(`an army at least ${STRONG_ARMY_RATIO} times yours reads red, with the reason
   act(() => useGame.setState({ views: [strong] }));
   const red = [...host.querySelectorAll<HTMLElement>('.rv-num.strong')];
   expect(red.map((c) => c.textContent)).toEqual(['150']);
-  expect(red[0].getAttribute('title')).toBe(`Army strength 150: ${STRONG_ARMY_RATIO} times yours or more`);
+  expect(red[0].getAttribute('title')).toBe(`Army points 150: ${STRONG_ARMY_RATIO} times yours or more`);
 });
 
 it('a team holding its target shows an unmistakable countdown above the rows: yours gilt, a rival’s red, both with a meter', () => {
