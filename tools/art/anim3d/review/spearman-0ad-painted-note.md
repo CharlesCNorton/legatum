@@ -1,129 +1,150 @@
-# Spearman painted lane — premium round 3
+# Spearman painted lane — premium round 4
 
-Branch: `astra/unit-anim-3d-spearman-0ad-painted`, continued from round two.
-Main GLB: `tools/art/anim3d/units/spearman-0ad/spearman.glb`.
-SHA-256: `692320d217f41db9f65b791c7a5c71009a35451efd126d1bafda2989746aa175`.
+Branch: `astra/unit-anim-3d-spearman-0ad-painted`, continued from the round-three
+commit and the existing master merge. Main GLB stays at
+`tools/art/anim3d/units/spearman-0ad/spearman.glb`.
+SHA-256: `366f770517d06e23499c0adb221e7243f07095e9396b206159ba167f5dc977d3`.
 
-## Changes
+## What changed
 
-Read feedback through the cloud reviewer at 2026-11-25 03:18Z, both reference
-paintings, the installed Legatum/Blender skills, the prior lane note, source
-provenance and both lanes' round-two Cycles and three.js comparisons.
+Read the full premium feedback through the newest lead entry choosing painted
+as the main lane, including 14a–f and the ranked a–g list. Reviewed the reference
+panel/token and both lanes' round-three three.js comparisons before changing
+forms. Read the Legatum unit skill, Blender modeling/materials/lighting/rendering
+skills, project instructions, source scripts, provenance and prior lane note.
 
-Retained the CC0 MPFB 2.0.18 body pipeline and native nearest-face interpolated
-weight transfer, normalized and limited to four influences. Fuller limbs;
-continuous shoulders, thighs, knees and torso. Initial idle-only face culling
-was rejected when the overhead-attack joint view exposed a missing shoulder.
-Covered central torso vertices now fit inside the cuirass and match its
-spine/chest blend, including vertices previously controlled by hip/spine.
-Concealed facial geometry is replaced by a dark rigid liner inside the helmet.
-No temporary MPFB rig ships.
+- Borrowed the PBR branch's convex aspis, bronze rolled lip, inset team band,
+  broad raised rays and rounded boss. The recipe/palette source is
+  `pbr_build.py` at `2f60247986ffad8cba305d79e2005a6d17b57def`.
+  Rebuilt it in Blender for this lane's atlas; no PBR animation or texture buffers
+  were copied. Protected rays, outer registers and boss against decimation.
+- Tapered the muscle cuirass around the shoulders; added finished bronze hems,
+  an oxhide belt and pectoral chase following the actual shell. Added folded
+  ivory sleeves/cuffs and linen over the shoulders. The chiton has wider pleats
+  and stronger thigh following at the hem. Clean leather strips replace collapsed
+  bevel remnants. A part-ID render identified exposed pelvis skin: it is now
+  fitted inside the chiton with the garment's hip/thigh blend, without cutting
+  anatomical holes. Selection uses bone weights as well as spatial bounds so
+  nearby hand vertices stay untouched.
+- Kept the CC0 MPFB anatomy, with fuller arms, larger palms/fingers and restrained
+  calf/thigh expansion. Replaced separate spherical knees with continuous shaped
+  patella-to-ankle greaves, rolled ends and a shin keel.
+- Jaw-length Corinthian cheeks, a true dark T aperture, curved brow and lifted,
+  flared nape. Restored skin on the exposed neck instead of the previous dark liner
+  pigment. Retained full crest volume with finer painted streaks, irregular tips
+  and darker roots.
+- Rebuilt a full folded cloak from both shoulders to the knees, with integrated
+  team trim, shoulder drapes and brooches. Uses the approved cape bones.
+- Adapted the PBR bronze palette and roughness separation, retaining stronger
+  painted pigment shading and lower metallic response. This is **procedural
+  Blender painted-style authoring**, not manual brushwork. Main bronze is
+  roughness/metallic .57/.55; bright edges .34/.75; recesses .75/.38 before grain.
 
-Closed the helmet around the temples/nape with actual eye and mouth openings,
-nasal bridge and cheek borders. Replaced the 105 spike-like tufts with a rounded
-fluted horsehair mass and painted radial streaks. Rebuilt pectoral/abdominal
-cuirass relief, lowered the shoulder drape, retained the wide folded cloak,
-and integrated its team trim into the cloth surface. The convex aspis retains
-its 64-segment outline, 96-segment rolled rim, continuous inner register and
-protected raised sunburst rays. Greaves, pleated linen, pteruges, leaf spear,
-butt spike and rigid prop sockets remain.
+No paid tools, new downloads, new donors, stance offsets, joint edits or clip
+changes. No zero scales. All Blender calls used the gated `blender` on PATH.
+High-poly source: **38,042 authoring triangles / 611,840 subdivided triangles**.
+Cycles CPU selected-to-active normal/AO bakes use those preserved source parts.
+The inherited opposing-shell tangent repair and 25-degree relief limit remain;
+the normal map is not an untouched bake. Masters and editable .blend remain in
+`$ANIM_ROOT/lanes/spearman-0ad-painted-r4/`, outside git.
 
-Simplify outer shells before adding thickness, including LOD1; triangulate
-before UV packing/baking. Preserve high-resolution parts before decimation.
-Cycles CPU normal/AO transfer uses a **639,712-triangle** subdivided reference
-from **39,624** authoring triangles. Opposing-shell normal rays caused black
-patches: baked tangent vectors are hemisphere-corrected and limited to a
-25-degree relief cone. This bounds the transfer; it is not an untouched bake.
-Paint is procedural Blender shading, not manual brushwork. Main bronze is
-roughness .60 / metallic .32 before grain. No paid tools or new external assets.
+## Exact checks on this GLB
 
-The later reviewer stance-offset suggestion was not used because the task
-explicitly locks round-six motion. The skeleton, timings and clips are unchanged.
-
-## Final exact checks
-
-- Contract **PASS**, errors `[]`: **9,911 / 2,819 triangles**,
-  **30 joints**, two named skinned LODs sharing one skeleton/material,
-  single-bone rigid props, red COLOR_0 mask, UV0 packed ORM, +Z, no baked yaw,
-  exact embedded credit. **1,610,900 bytes**, below the new strict 2 MB gate.
-- Actual **2048×2048** base colour/normal/AO/ORM masters verified outside git;
-  three actual **1024×1024** delivered WebPs, quality 84/85/84. Data maps are lossy.
+- Contract **PASS**, errors `[]`: **9,968 / 2,763 triangles**,
+  **30 joints**, two named skinned LODs, one skeleton, one material, UV0 packed ORM,
+  rigid prop weights, red COLOR_0 mask, +Z forward and exact embedded credit.
+  **1,787,164 bytes**, below 2 MB. Existing strict premium validator retained;
+  its documentation now describes the current layout.
+- Four actual **2048×2048** PNG masters checked by PNG headers. Three actual
+  **1024×1024** embedded WebPs, quality **88 base colour / 92 normal / 90 ORM**.
+  Normal and ORM are lossy. Encoded channel RMSE (8-bit) is
+  3.858 / 4.546 / 10.562;
+  this is compression error, not an art-quality score.
 - Khronos **0 errors / 0 warnings / 0 infos / 0 hints**.
-- Exact animation/skeleton comparison **PASS**; fingerprint unchanged:
+- Exact approved round-six animation and skeleton comparison **PASS**:
   `639ad201654bf2a08b90c9b7b35c8f047ac1f5cf3531e7b7224f80e0e1d58f79`.
-- Three.js 170 CPU loader/mixer, LOD sharing, team material and framing **PASS**.
-  This checks texture dimensions, not browser decoding or GPU pixels.
-- Ground audit at **120 Hz**, both LODs: **PASS**, minimum
-  **-0.50048 mm**.
-  Rest-geometry projection initially moved some vertices by up to **107.23 mm**;
-  this is disclosed and does not alter motion. It is not an intersection certificate.
-- Joint audit at **30 Hz**, all five clips and both LODs: no axis scale below
-  the .20 severe-collapse indicator; minimum **0.222591**.
-  This is substantial elbow compression, not a blanket candy-wrap pass. The
-  final joint sheet was inspected; shoulder continuity is restored. Clothes,
-  joint transitions and intersections still need playing-speed review.
-- Validator regression suite **26/26 pass** (8.859 s).
-- Import checker **0 unresolved imports**; Python compilation, JS syntax,
-  `git diff --check`, and reverse-check of the runner patch **PASS**.
-- Five 160 px movies: H.264/yuv420p, three loops, full ffmpeg decode **PASS**.
-  Encoded frames/fps: attack 51/14, death 18/4, hit 30/12, idle 24/4, walk 24/6.
-  Whole-frame sprite sampling rounds short nonintegral cycles; GLB timing is exact.
-- Cycles turntable: **256×256, 96 frames, 8 fps, 12 s**, full decode **PASS**.
-- `origin/master` is already an ancestor of HEAD; no fetch/merge was needed.
-  No Rust or production UI changes; unrelated full suites were not run.
+- Three.js 170 CPU loader/mixer, shared LOD skeleton/material, team shader and
+  framing checks **PASS**. This is not browser decoding or a rendered-pixel check.
+- Ground audit at **120 Hz**, both LODs **PASS**; minimum **-0.500462 mm**.
+  Initial bind-space contact adjustment reached **46.9243 mm**; the later LOD1
+  fit reached **5.3819 mm**. Motion was not changed. This is ground clearance,
+  not a certificate of clothing or body intersections.
+- Joint audit at **30 Hz**, all five clips and both LODs **PASS** against the
+  .20 severe-collapse indicator; minimum axis scale **0.218389**. Significant
+  elbow compression remains. This does not certify absence of candy wrapping.
+- Validator regression suite **26/26 PASS** (7.274 s). Python parse, JavaScript
+  syntax, import checker (**0 unresolved imports**) and `git diff --check` pass.
+- No Rust or production UI change; unrelated Cargo/app suites were not run.
+  `origin/master` was already an ancestor; no fetch or new merge was needed.
 
-## Delivered evidence
+## Evidence and viewer handoff
 
-All CPU outputs are in `~/LegatumRuns/anim-pilot/review/3d-v2/`, prefix
-**spearman-0ad-painted-r3-**: five `<clip>-160.mp4`, `readability-48.png` (actual
-LOD1), `vs-panel.png`, `closeups.png`, `motion-sheet.png`, `joints.png`, `rear.png`,
-and `turntable-cycles.mp4`. JSON receipts cover contract, exact motion,
-Khronos, runtime, ground, joint deformation, textures, build and video streams.
-Final images and movies were regenerated from the final hashed GLB. A stale
-intermediate delivery was correctly rejected by the hash/freshness guard.
+CPU outputs use the exact final hashed GLB, Cycles/AgX, prefix
+`spearman-0ad-painted-r4-`: five `<clip>-160.mp4`, `readability-48.png` with actual
+LOD1, `vs-panel.png`, `closeups.png`, plus `motion-sheet.png`, `joints.png` and
+`rear.png`. Packaging verifies main/still/joint manifest hashes and frame
+freshness before accepting outputs. Video receipts record H.264/yuv420p,
+three loops, correct game sampling rates and full decode. Native GLB timings
+stay exact; whole sprite-frame sampling rounds nonintegral cycle durations.
+Final encoded frame counts/fps: attack 51/14, death 18/4, hit 30/12, idle 24/4,
+walk 24/6. The requested turntable is the lead's three.js recording, not a
+substitute CPU turntable.
 
-The final panel comparison, close-ups, 48 px sheet, joint sheet and sampled
-turntable angles were inspected. CPU evidence is Cycles/AgX. Browser access
-returned **“The browser access host is unavailable.”** No new three.js still,
-viewer movie or browser turntable was captured here. The host capture remains
-the lead's designated handoff; no renderer parity or premium approval is claimed.
+The existing credited CC0 Poly Haven HDRI, warm key, cool rim, soft shadows,
+AO and ACES remain in the viewer. `record.mjs` now writes the comparison **first**;
+`--stills-only` stops after the quick comparison and hash receipt. Default mode
+still records all five clips and `<prefix>-turntable.mp4`.
 
-From this worktree, outside the sandbox:
+From this worktree, on the lead's host:
 
 ```sh
-PLAYWRIGHT_MODULE="$HOME/LegatumRuns/anim-pilot/oad/viewer-runtime/node_modules/playwright/index.mjs" node tools/art/anim3d/viewer/record.mjs --prefix spearman-0ad-painted-r3 --out "$HOME/LegatumRuns/anim-pilot/review/3d-v2"
+PLAYWRIGHT_MODULE="$HOME/LegatumRuns/anim-pilot/oad/viewer-runtime/node_modules/playwright/index.mjs" node tools/art/anim3d/viewer/record.mjs --prefix spearman-0ad-painted-r4 --out "$HOME/LegatumRuns/anim-pilot/review/3d-v2"
 ```
 
-This writes `spearman-0ad-painted-r3-vs-panel-viewer.png`,
-`spearman-0ad-painted-r3-turntable.mp4`, five viewer movies and an asset-hash
-receipt. The existing CC0 HDRI, warm key/cool rim, AO and ACES are retained.
+Add `--stills-only` for the quick `spearman-0ad-painted-r4-vs-panel-viewer.png`.
+Fresh browser evidence is **pending**: the browser connection returned
+“The browser access host is unavailable”; the native fallback returned
+“Computer Use was not approved to use Google Chrome”. No fresh three.js pixels
+or playing-speed browser approval are claimed. The temporary local review server
+was stopped. A Blender thumbnail cache write outside the sandbox failed harmlessly;
+master save, export and all actual review renders succeeded.
 
 ## Honest verdict
 
-**Technical contract passes; premium art gate is NOT met.** Shield contour,
-sunburst integrity, crest tips and body continuity improve on round two. The
-painting still has much richer bronze, anatomy and cloth. The helmet reads too
-smooth and generic, the torso relief is weak in the review view, hands are small,
-and greaves/knees remain segmented. A small dark collar overlap remains visible;
-there is no claim of collision-free clothing. The crest is cleaner but still a
-sculpted mass, without the painting's fine hair edge. Do not call this excellent.
+**Technical contract passes. Premium art gate is NOT met.** The shield's broad
+rays and rounded boss are cleaner; linen, bronze and leather now read as layers;
+continuous greaves remove the old separate-knee look; the rear view shows a full
+folded cloak. The body and hands still lack the painting's convincing heroic
+weight at the review angle. The helmet is more shaped but still too plain;
+its eye opening and cheek need more character. The crest remains a rounded
+sculpted volume, not convincing fine horsehair. Bronze is still too uniform and
+smooth beside the reference. Small shoulder/yoke overlaps and elbow compression
+need further inspection. Do not call this excellent or approved.
 
-FOCUS a: improve helmet character, torso/limb proportions and knee transitions;
-keep the continuous MPFB body and the exact approved skeleton/clips.
-FOCUS b: richer painted bronze/linen separation and finer crest root/edge detail,
-judged in the actual MeshStandardMaterial/ACES viewer.
-FOCUS c: review all five clips and the 360 turntable at speed for remaining
-clothing overlaps and elbow compression; do not edit the approved motion.
+FOCUS a: convincing helmet/armour silhouette, human hand mass and clean shoulder
+cloth transitions; preserve all round-six motion data.
+FOCUS b: richer local bronze recess/edge painting and less uniform surfaces,
+judged in the fresh three.js comparison before further Cycles tuning.
+FOCUS c: lead playing-speed and 360-degree review of cloth/armour clearance,
+hand grip, sleeves and elbow compression; numerical checks alone do not pass art.
 
-## Git and runner handoff
+Non-obvious lessons: identify a bad patch with a part-ID render before repainting;
+fit hidden anatomy using bone influence as well as spatial bounds; protect the
+shield boss and rays explicitly when distributing the triangle budget.
 
-`git add` failed: sandbox denied `.git/worktrees/lane-7/index.lock`. Nothing was
-pushed or merged. All changes are left on this worktree. Runner files:
-`lanes/spearman-0ad-painted-r3/lane-7.patch` (binary patch including new scripts)
-and `commit-message.txt` (required gpt-6-astra co-author line). The patch passes
-`git apply --check --reverse` against this working tree.
+## Final visual and runner handoff
 
-Non-obvious lessons: visible body coverage must be checked through all clips;
-outer/inner shell decimation must share topology; tangent bakes can hit opposing
-shell faces; preserve shield boundaries and rays explicitly; bind body and armour
-with compatible torso weights; reject media whose source hash is stale.
+Inspected the final same-size panel comparison, close-ups, 48 px LOD1 sheet,
+and all five clips' joint samples after packaging. The shield boss is round;
+the exposed pelvis patch is gone. Visible remaining defects include angular
+shoulder cloth, a small light gap under the crest saddle, and the crest's
+scalloped edge at close zoom. These keep the premium gate open. Playing-speed
+browser review remains pending rather than inferred from stills.
+
+`git add` failed: sandbox denied
+`.git/worktrees/lane-7/index.lock` (Operation not permitted). Changes remain
+uncommitted on this branch. No push or master merge was attempted.
+Runner files in `$ANIM_ROOT/lanes/spearman-0ad-painted-r4/`:
+`lane-7.patch` (includes the new script and binary assets; reverse check PASS)
+and `commit-message.txt` (ends with the required gpt-6-astra co-author line).
+The prior round-three lane note is preserved as `previous-lane-note.md`.
