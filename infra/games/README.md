@@ -19,8 +19,11 @@ promise to players).
   Worker answers 422 "bad rewinds" otherwise; `checkRecord` in `src/index.ts`). The tape holds only the line the
   player kept, so `rewinds` is how analysis learns that other turns were played and discarded. Like
   `coach_answers` it is upload-only: strip it before feeding a record to the engine, and exports drop it.
-- Seat factions and difficulties must be plain words, and `created_at` a real ISO time (it names the storage
-  month): uploads are written by strangers and read on the analysis Mac.
+- Only what the game itself writes is accepted (uploads are written by strangers and read on the analysis Mac):
+  seat factions and difficulties from the lists in `src/names.ts` (a core test keeps that list equal to the
+  game's factions), `engine_commit` a full 40-digit git commit, and `created_at` a real ISO time (it names the
+  storage month) within a day of the start time in the game id, which must fall after 2026-11-01 and not in
+  the future. Anything else is answered 422.
 - Each game has an upload key: 32 random hex digits the page makes the first time it uploads that game, keeps
   in the browser's `localStorage` (`legatum.uploadKeys.v1`, the last 200 games) and sends as `X-Upload-Key`.
   The Worker stores its SHA-256 as the object's `key` metadata and answers `409` to a checkpoint for that game

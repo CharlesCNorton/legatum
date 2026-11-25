@@ -9,6 +9,7 @@
  * and a later checkpoint under another key, or none, is refused with 409.
  */
 
+import { DIFFICULTIES, FACTIONS } from "./names";
 import { Quota, capFrom, clientIp } from "./quota";
 
 export { Quota };
@@ -113,8 +114,18 @@ function rewindOk(x: unknown): boolean {
   return turnOk(o.from_turn) && turnOk(o.to_turn) && (o.to_turn as number) < (o.from_turn as number);
 }
 
-/** The record's shape, and the rule that matters most: no seat carries a name a player typed. */
-export function checkRecord(id: string, record: unknown): Metadata | string {
+/** The engine build that played the game: a full git commit (crates/wasm/build.rs). */
+const ENGINE_RE = /^[0-9a-f]{40}$/;
+/** Game ids carry the time the game started (crates/wasm history `game_id`). Uploads began after this. */
+export const FIRST_GAME_MS = Date.UTC(2026, 10, 1);
+const DAY_MS = 86_400_000;
+
+/**
+ * The record's shape, and the rule that matters most: no seat carries a name a player typed. The engine,
+ * factions, difficulties and start time must be ones the game itself writes, so made-up records are refused.
+ * `now` is for tests only.
+ */
+export function checkRecord(id: string, record: unknown, now: number = Date.now()): Metadata | string {
   if (!record || typeof record !== "object") return "not a game record";
   const r = record as { metadata?: Metadata; tape?: unknown; coach_answers?: unknown; rewinds?: unknown };
   const m = r.metadata;
@@ -124,12 +135,16 @@ export function checkRecord(id: string, record: unknown): Metadata | string {
   if (!OUTCOMES.includes(m.outcome)) return "unknown outcome";
   if (!Number.isInteger(m.turn_count) || m.turn_count < 0 || m.turn_count > 10_000) return "bad turn count";
   if (typeof m.created_at !== "string" || !CREATED_AT_RE.test(m.created_at) || Number.isNaN(Date.parse(m.created_at))) return "bad created_at";
+  // The id's start time and created_at are written together; both must be after launch and not in the future.
+  const started = Number(id.slice(4, 17));
+  if (!(started >= FIRST_GAME_MS && started <= now + DAY_MS) || Math.abs(Date.parse(m.created_at) - started) > DAY_MS) return "bad start time";
+  if (typeof m.engine_commit !== "string" || !ENGINE_RE.test(m.engine_commit)) return "unknown engine";
   if (!Array.isArray(m.seats) || m.seats.length < 1 || m.seats.length > 9) return "bad seats";
   for (const [i, s] of m.seats.entries()) {
     const name = DEFAULT_NAME_RE.exec(String(s?.name));
     if (!name || name[1] !== (s.human ? "Player" : "AI") || Number(name[2]) !== i + 1) return "seat names must be the defaults";
-    // Stored as listing metadata and shown on the analysis Mac: plain words only.
-    if (!/^[A-Za-z][A-Za-z ]{0,23}$/.test(String(s.faction)) || !/^[A-Za-z]{1,12}$/.test(String(s.difficulty))) return "bad faction or difficulty";
+    // Stored as listing metadata and shown on the analysis Mac: only names the game uses.
+    if (!FACTIONS.includes(String(s.faction)) || !DIFFICULTIES.includes(String(s.difficulty))) return "bad faction or difficulty";
   }
   // The player's coach-question answers ride along as an optional list of objects.
   if (r.coach_answers !== undefined) {
@@ -195,7 +210,7 @@ async function putGame(request: Request, env: Env, id: string): Promise<Response
     customMetadata: {
       outcome: m.outcome,
       turns: String(m.turn_count),
-      engine: String(m.engine_commit ?? "").slice(0, 40),
+      engine: m.engine_commit,
       winner: m.winner == null ? "" : String(m.winner),
       seats: m.seats.map((s) => `${s.faction}${s.human ? "*" : ""}:${s.difficulty}`).join(" ").slice(0, 512),
       ...(keyHash || lockedTo ? { key: keyHash || lockedTo } : {}),

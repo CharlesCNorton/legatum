@@ -17,7 +17,7 @@ const record = (seats = [
   { player: 0, name: "Player 1", faction: "Athens", difficulty: "Normal", human: true },
   { player: 1, name: "AI 2", faction: "Celts", difficulty: "Hard", human: false },
 ]) => ({
-  metadata: { schema_version: 1, game_id: ID, created_at: "2026-11-22T01:23:46Z", outcome: "abandoned", turn_count: 145, engine_commit: "abc", seats, winner: null },
+  metadata: { schema_version: 1, game_id: ID, created_at: "2026-11-22T01:23:46Z", outcome: "abandoned", turn_count: 145, engine_commit: "0123456789abcdef0123456789abcdef01234567", seats, winner: null },
   tape: { version: 1, turns: [] },
 });
 
@@ -263,6 +263,29 @@ describe("record check", () => {
     expect(checkRecord(ID, swapped)).toBe("seat names must be the defaults");
     expect(checkRecord("web-other", record())).toBe("game id does not match the address");
     expect(typeof checkRecord(ID, record())).toBe("object");
+  });
+
+  it("refuses engines, factions, difficulties and start times the game never writes", () => {
+    const NOW = Date.UTC(2026, 10, 25);
+    const edit = (f: (m: ReturnType<typeof record>["metadata"]) => void, id = ID) => {
+      const r = record();
+      r.metadata.game_id = id;
+      f(r.metadata);
+      return checkRecord(id, r, NOW);
+    };
+    expect(typeof edit(() => {})).toBe("object");
+    expect(edit((m) => { m.engine_commit = "PENTESTPROBE"; })).toBe("unknown engine");
+    expect(edit((m) => { m.engine_commit = "seedtest"; })).toBe("unknown engine");
+    expect(edit((m) => { m.engine_commit = "0123456789ABCDEF0123456789ABCDEF01234567"; })).toBe("unknown engine");
+    expect(edit((m) => { m.seats[1]!.faction = "Carthage"; })).toBe("bad faction or difficulty");
+    expect(edit((m) => { m.seats[1]!.difficulty = "Deity"; })).toBe("bad faction or difficulty");
+    // A start before launch, a start in the future, or a created_at that disagrees with the id's start time.
+    const old = "web-1111111111111-deadbeefdeadbeef-c0ffee00c0ffee00";
+    expect(edit((m) => { m.created_at = "2005-03-18T01:58:31Z"; }, old)).toBe("bad start time");
+    const later = `web-${NOW + 2 * 86_400_000}-0000000000000001-0000000000000002`;
+    expect(edit((m) => { m.created_at = new Date(NOW + 2 * 86_400_000).toISOString(); }, later)).toBe("bad start time");
+    expect(edit((m) => { m.created_at = "2026-12-22T01:23:46Z"; })).toBe("bad start time");
+    expect(edit((m) => { m.created_at = "2026-11-22T20:00:00Z"; })).not.toBe("bad start time");
   });
 });
 
