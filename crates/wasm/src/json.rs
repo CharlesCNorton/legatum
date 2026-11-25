@@ -107,6 +107,10 @@ pub fn state_from_value(mut v: Value, check_version: bool) -> Result<GameState, 
             legatum_core::RULES_VERSION
         ));
     }
+    // Tooling reads of an older state (upgrades, rehashes) convert the retired Castle and Star Fort.
+    if !check_version && version.is_none_or(|n| n < u64::from(legatum_core::RULES_VERSION)) {
+        migrate_legacy_walls(&mut v);
+    }
     if let Some(setup) = v.get_mut("setup") {
         seed_from_string(setup, "seed")?;
     }
@@ -211,8 +215,7 @@ pub fn carries_rules_49_fields(v: &Value) -> bool {
 /// (`objectives::humbles`, judged each turn from the turn-start VP); rules 55 adds city
 /// automation focuses and the Food project (the old `Balanced` focus parses as `Economy`). None
 /// changes a field before the Walls migration, and a capture counted under the older rules stays counted.
-pub fn upgrade_value_from_50(mut v: Value) -> Result<GameState, String> {
-    migrate_legacy_walls(&mut v);
+pub fn upgrade_value_from_50(v: Value) -> Result<GameState, String> {
     state_from_value(v, false)
 }
 
