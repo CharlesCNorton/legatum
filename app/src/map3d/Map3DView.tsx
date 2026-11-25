@@ -35,6 +35,8 @@ export default function Map3DView() {
   // Swapped in from the 2D map: start where it was looking, not on the capital or an old jump-to.
   const handoff = useRef<ReturnType<typeof takeMapHandoff>>(null);
   const mountFocus = useRef(focus);
+  /** The last jump-to this map has acted on (the one current at mount counts: it starts there or on the handed-over centre). */
+  const appliedSeq = useRef(focus?.seq ?? 0);
   const firstView = useRef(true);
 
   // Scene lifetime.
@@ -56,7 +58,7 @@ export default function Map3DView() {
         const ground = 2 * sc.dist * Math.tan((sc.camera.fov * Math.PI) / 360) * sc.camera.aspect;
         return { x: sc.target.x * PX, y: sc.target.z * PX, zoom: w / Math.max(1, ground * PX), w, h };
       },
-      focusSeq: () => useGame.getState().focus?.seq ?? 0,
+      focusSeq: () => appliedSeq.current,
       center: (x, y) => { sc.target.set(x / PX, 0, y / PX); sc.clampTarget(); sc.placeCamera(); notifyMapCamera(); },
     });
     setMapProjector((hex) => {
@@ -101,7 +103,7 @@ export default function Map3DView() {
   // Jump-to requests (turn report lines, the advisor, Cities seen).
   useEffect(() => {
     if (!focus || focus === mountFocus.current || !sceneRef.current) return;
-    sceneRef.current.centerOn(focus.hex); notifyMapCamera();
+    sceneRef.current.centerOn(focus.hex); appliedSeq.current = focus.seq; notifyMapCamera();
   }, [focus]);
 
   // Overlays: hover ring, selection ring and the selected unit's route preview.

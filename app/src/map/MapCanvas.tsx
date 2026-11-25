@@ -139,6 +139,8 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
   const bannerHits = useRef<ReturnType<typeof draw>['bannerHits']>([]);
   const liftedHits = useRef<ReturnType<typeof draw>['liftedHits']>([]);
   const cam = useRef<Camera>({ x: 0, y: 0, zoom: 0.9 });
+  /** The last jump-to (focus.seq) this map has acted on: a 2D / 3D swap hands its centre over only if no newer jump is waiting. */
+  const appliedSeq = useRef(0);
   const size = useRef({ w: 800, h: 600, dpr: 1 });
   const dirty = useRef(true);
   const hoverDirty = useRef(false);
@@ -646,6 +648,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
   // Center on focus requests; a `clear` request (a turn report line) settles on the nearest tile position no panel covers.
   useEffect(() => {
     if (!focus) return;
+    appliedSeq.current = focus.seq;
     let p = hexToPixel(focus.hex, HEX_SIZE);
     const canvas = canvasRef.current, game = canvas?.closest('.game');
     if ((focus.clear || selection) && canvas && game) {
@@ -842,7 +845,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
     // A look change swaps the map palette: redraw.
     const unregister = registerMapCamera({
       viewport: () => ({ ...cam.current, w: size.current.w, h: size.current.h }),
-      focusSeq: () => useGame.getState().focus?.seq ?? 0,
+      focusSeq: () => appliedSeq.current,
       center: (x, y) => {
         cancelAnimationFrame(focusAnimation.current);
         cam.current.x = x;

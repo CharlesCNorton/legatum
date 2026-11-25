@@ -48,6 +48,13 @@ for (const [w, h] of [[1440, 900]]) {
   await p.keyboard.press('m'); await p.waitForSelector('.map3d-canvas'); const early = await p.evaluate(() => { const sc = window.legatumMap3d; return [sc.target.x, sc.target.z, window.legatum.getState().focus]; }); errs.push('early ' + JSON.stringify(early)); await p.waitForTimeout(2300);
   const after = await p.evaluate(() => { const sc = window.legatumMap3d; return { x: sc.target.x, z: sc.target.z }; });
   errs.push('swap ' + JSON.stringify({ before, mid3d: mid, after }));
+  // Placement: a jump to a city plus a tile picker in one update must land the 2D map on the city.
+  const city = await p.evaluate(() => { const s = window.legatum.getState(); const v = s.views[s.seat]; const c = v.cities.find((x) => x.owner === v.me && !x.is_capital) ?? v.cities.find((x) => x.owner === v.me); s.select({ kind: 'city', id: c.id }); return c; });
+  await p.waitForTimeout(1500);
+  await p.evaluate(() => { const sc = window.legatumMap3d; sc.target.x += 9; sc.placeCamera(); });
+  await p.evaluate((c) => { const s = window.legatum.getState(); s.jumpTo(c.pos); s.set({ place: { city: c.id, building: null, intent: 'tile', pick: null } }); }, city);
+  await p.waitForTimeout(2000);
+  errs.push('place ' + JSON.stringify({ city: city.pos, st: await p.evaluate(() => ({ is3d: !!document.querySelector('.map3d-canvas'), cam: window.legatumMap?.camera })) }));
   await p.close();
 }
 console.log(errs.slice(0, 20).join('\n'));
