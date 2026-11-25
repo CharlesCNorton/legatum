@@ -375,6 +375,7 @@ select.lobby-select option {
   margin-top: -8px;
 }
 .lobby-listed {
+  font-variant-numeric: lining-nums;
   max-width: 760px;
   margin: 0 auto 16px;
   font-size: 15px;

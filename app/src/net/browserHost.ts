@@ -157,7 +157,7 @@ export function retryLine(kind: RefusalKind, retryAfterS: number | null = null):
     case 'closed':
       return 'Paused for now';
     case 'network':
-      return 'Try again later';
+      return 'Too many from your network';
     default:
       return 'Try again';
   }

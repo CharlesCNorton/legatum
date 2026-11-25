@@ -280,6 +280,8 @@ div.seat {
 }
 .online-room-name {
   font: var(--display-weight) 26px/1.1 var(--display);
+  /* Lining figures: the number tells two games apart, and old-style 0 reads as o. */
+  font-variant-numeric: lining-nums;
   overflow-wrap: anywhere;
 }
 .online-room-meta {
