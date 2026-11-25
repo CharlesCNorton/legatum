@@ -96,6 +96,10 @@ pub struct CampaignMemory {
     /// Gene `rome_opening_finish` (`rome_finish.rs`): the rival the opening went to war with.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub rome_victim: Option<legatum_core::PlayerId>,
+    /// Gene `rome_walled_peace`: the opening stalled at observed Walls, allowing an early
+    /// second war even after Peace clears the captured city's occupation record.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub rome_walled_peace_window: bool,
     /// Gene `rome_second_war`: the soft city and its owner held after the first victim.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub rome_second_target: Option<CityId>,

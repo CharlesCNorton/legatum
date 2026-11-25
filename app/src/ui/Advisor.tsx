@@ -94,7 +94,7 @@ export function Advisor() {
   const techOpen = useGame((s) => s.techOpen);
   const client = useGame((s) => s.client);
   const animationsOn = useCombatFx((s) => s.enabled);
-  const paused = useGame((s) => !!s.busy || s.handoff !== null || !!s.endTurnConfirmation || s.reportOpen || s.diplomacyOpen || !!s.ready[s.seat] || !!s.place ||
+  const paused = useGame((s) => !!s.busy || !!s.endTurnConfirmation || s.reportOpen || s.diplomacyOpen || !!s.ready[s.seat] || !!s.place ||
     (s.client?.kind === 'remote' && s.net?.conn !== 'open'));
   const [blockingOverlay, setBlockingOverlay] = useState(false);
   useEffect(() => {
@@ -119,7 +119,7 @@ export function Advisor() {
   const turnLabel = document.querySelector<HTMLElement>('.seatbar .cta-label')?.textContent?.trim()
     ?? document.querySelector<HTMLElement>('.phone-turn-dock button[aria-label^="Next decision"]')?.textContent?.trim() ?? undefined;
   const suggestion = view && enabled ? advisorSuggestion({ view, orders: orders[seat] ?? [], errors: errors[seat], selection,
-    humans: humans.length, touch, techOpen, mode, turnLabel, local: useGame.getState(),
+    humans: humans.length, remote: client?.kind === 'remote', touch, techOpen, mode, turnLabel, local: useGame.getState(),
     forecast: client ? (unit, at, mode) => client.forecast(view.me, unit, at, mode) : undefined }, seen,
     skippedTurn === view.turn ? skipped : []) : null;
   const [modal, setModal] = useState<HTMLDialogElement | null>(null);

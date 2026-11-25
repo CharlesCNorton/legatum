@@ -1,7 +1,7 @@
 import { CALENDAR_NOTE, calendarLabel, FACTION_INFO, factionName } from '../data';
 import type { Faction } from '../types';
 import { useEffect, useRef, useState } from 'react';
-import { currentCampaign, parseAutosave, useGame, type SaveFile } from '../store';
+import { currentCampaign, needsOnlineHost, parseAutosave, useGame, type SaveFile } from '../store';
 import { listAutosaves, type AutosaveRecord } from '../platform/autosaveStore';
 import { ReplaceGameDialog } from '../ui/ReplaceGameDialog';
 import { pickSaveFile } from '../ui/GameMenu';
@@ -25,15 +25,21 @@ import { MAX_PLAYERS } from '../gameSetup';
 /** Autosaves (by save time) that failed to open as an older version's save, so Continue can't repeat the failure. */
 const olderAutosaves = new Set<string>();
 const unreadableAutosaves = new Set<string>();
+/** Why a game with more than one human player cannot carry on in a build with no online play. */
+const OTHER_PLAYERS_OFFLINE = 'This game has other players. Online play is unavailable in this version.';
+
 /** The launch another build opened this page with (platform/versions.ts) is acted on once. */
 let launchHandled = false;
 
-/** Main menu: Single Player, Multiplayer (Hot Seat, Host Game, Join Game), Continue, Load Game. */
+/** Main menu: Single Player, online Multiplayer, Continue, Load Game. */
 export function TitleScreen() {
   const [menu, setMenu] = useState<'main' | 'multi'>(() => {
     const launch = pageLaunch();
     return launch?.kind === 'menu' && launch.menu === 'multi' ? 'multi' : 'main';
   });
+  // A save with more than one human player (an old hot-seat game) chosen from the main menu: it opens
+  // Multiplayer with that save ready to host, so the player never picks the file twice.
+  const [hostSave, setHostSave] = useState<SaveFile | null>(null);
   return (
     <div className="title-screen">
       <TitleArt />
@@ -49,7 +55,9 @@ export function TitleScreen() {
           <Wordmark height={112} />
         </h1>
         <div className="title-menu">
-          {menu === 'main' ? <MainMenu onMultiplayer={() => setMenu('multi')} /> : <MultiplayerMenu onBack={() => setMenu('main')} />}
+          {menu === 'main'
+            ? <MainMenu onMultiplayer={() => setMenu('multi')} onHostSave={(save) => { setHostSave(save); setMenu('multi'); }} />
+            : <MultiplayerMenu hostSave={hostSave} onBack={() => { setHostSave(null); setMenu('main'); }} />}
         </div>
       </div>
       <div className="title-foot">
@@ -73,7 +81,7 @@ function peoplesLabel(faction: string | undefined, names: string[]): string {
   return shortList(peoples.length ? peoples.map(factionName) : names);
 }
 
-/** At most two names, then "+N", so an eight-seat hot seat still fits the menu on one line. */
+/** At most two names, then "+N", so an eight-seat game still fits the menu on one line. */
 function shortList(names: string[]): string {
   return names.length > 2 ? `${names.slice(0, 2).join(', ')} +${names.length - 2}` : names.join(' & ');
 }
@@ -91,7 +99,7 @@ function ResumeButton() {
   );
 }
 
-function MainMenu({ onMultiplayer }: { onMultiplayer: () => void }) {
+function MainMenu({ onMultiplayer, onHostSave }: { onMultiplayer: () => void; onHostSave: (save: SaveFile) => void }) {
   const online = useGame((s) => s.online);
   const openSetup = useGame((s) => s.openSetup);
   const loadSave = useGame((s) => s.loadSave);
@@ -124,11 +132,15 @@ function MainMenu({ onMultiplayer }: { onMultiplayer: () => void }) {
   // While a game is open, Resume returns to it. Continue shows beside it only for a different saved game.
   const client = useGame((s) => s.client);
   const autoIsOpen = !!views && (!slots.length || client?.kind !== 'remote' && slots[0].record.campaign === currentCampaign());
+  // A game with other players carries on only as an online host: Continue takes it there.
+  const autoNeedsHost = !!auto && needsOnlineHost(auto);
+  const autoBlocked = autoNeedsHost && !online?.relay;
   const continueAuto = async (record: AutosaveRecord, save: SaveFile) => {
+    if (needsOnlineHost(save) && online?.relay) return onHostSave(save);
     await continueAutosave(record, save);
     const failure = useGame.getState().error;
     if (isOlderVersionMessage(failure)) olderAutosaves.add(save.savedAt);
-    else if (failure) {
+    else if (failure && !needsOnlineHost(save)) {
       unreadableAutosaves.add(record.id);
       if (slots.some((slot) => slot.save && !unreadableAutosaves.has(slot.record.id))) set({ error: null });
     }
@@ -166,19 +178,27 @@ function MainMenu({ onMultiplayer }: { onMultiplayer: () => void }) {
   // A file chosen with Load Game replaces the saved game in progress, so it asks first, like a new game does.
   const [chosen, setChosen] = useState<{ save: SaveFile; saved: { label: string; turn: number } } | null>(null);
   const askThenLoad = async (save: SaveFile) => {
+    if (needsOnlineHost(save)) {
+      if (online?.relay) onHostSave(save);
+      else set({ error: OTHER_PLAYERS_OFFLINE });
+      return;
+    }
     const [newest] = await listAutosaves();
     if (newest) setChosen({ save, saved: { label: newest.faction || newest.label, turn: newest.turn } });
     else await loadSave(save, true);
   };
   // While a message shows, starting a new game is the way forward, so it takes the primary slot.
-  const newGamePrimary = !views && records !== null && (!auto || !!error || olderAuto || unreadableAuto);
-  const continuePrimary = !views && !!auto && !error && !olderAuto && !unreadableAuto;
+  const newGamePrimary = !views && records !== null && (!auto || !!error || olderAuto || unreadableAuto || autoBlocked);
+  const continuePrimary = !views && !!auto && !error && !olderAuto && !unreadableAuto && !autoBlocked;
   // Carrying on a game has one place: the top of the menu, as Resume or as the primary Continue.
   const continueButton = autoIsOpen ? null : (
-    <button className={`btn big ${continuePrimary ? 'primary' : ''}`} disabled={!auto || !!busy || olderAuto || unreadableAuto} onClick={() => auto && usable[0] && continueAuto(usable[0].record, auto)}>
+    <button className={`btn big ${continuePrimary ? 'primary' : ''}`} disabled={!auto || !!busy || olderAuto || unreadableAuto || autoBlocked} onClick={() => auto && usable[0] && continueAuto(usable[0].record, auto)}>
       {olderAuto ? 'Saved game (older version)' : unreadableAuto ? 'Saved game (unreadable)' : 'Continue'}
       <span className="btn-sub">
         {olderAuto ? 'Cannot continue with these rules' : unreadableAuto ? "This save file is damaged"
+          // The reason (online play is unavailable) is said once, under Multiplayer.
+          : autoBlocked ? 'This game has other players'
+          : auto && autoNeedsHost ? `${peoplesLabel(usable[0].record.faction, auto.names)} · Turn ${auto.turn} · host it online, the others rejoin`
           : auto && elsewhere ? `${peoplesLabel(usable[0].record.faction, auto.names)} · Turn ${auto.turn} · opens in the version it started on`
           : auto ? `${peoplesLabel(usable[0].record.faction, auto.names)} · Turn ${auto.turn} · ${calendarLabel(auto.turn)} · ${new Date(auto.savedAt).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}` : records === null ? 'Looking for your game…' : 'No autosave yet'}
       </span>
@@ -196,9 +216,9 @@ function MainMenu({ onMultiplayer }: { onMultiplayer: () => void }) {
           Single Player
           <span className="btn-sub">{behind ? 'New games start on the newest version' : `You against ${MIN_SEATS - 1} to ${MAX_PLAYERS - 1} AI empires`}</span>
         </button>
-        <button className="btn big" onClick={openMultiplayer}>
+        <button className="btn big" disabled={!online?.relay} onClick={openMultiplayer}>
           Multiplayer
-          <span className="btn-sub">{online?.relay ? 'Hot seat on this computer, or a game online' : 'Hot seat on this computer'}</span>
+          <span className="btn-sub">{online?.relay ? 'Host or join a game online' : 'Online play is unavailable in this version'}</span>
 
         </button>
         {!continuePrimary && continueButton}
@@ -218,15 +238,13 @@ function MainMenu({ onMultiplayer }: { onMultiplayer: () => void }) {
   );
 }
 
-function MultiplayerMenu({ onBack }: { onBack: () => void }) {
+function MultiplayerMenu({ hostSave, onBack }: { hostSave: SaveFile | null; onBack: () => void }) {
   const views = useGame((s) => s.views);
   const goto = useGame((s) => s.goto);
-  const openSetup = useGame((s) => s.openSetup);
   const error = useGame((s) => s.error);
   const online = useGame((s) => s.online);
   const refusal = useGame((s) => s.hostRefusal);
-  // Online play: Host Game runs the game in this tab and opens its game room. A build with no relay has
-  // no game list, so it offers hot seat only.
+  // Host Game runs the game in this tab and opens its online room.
   const [hosting, setHosting] = useState<'idle' | 'starting' | 'failed'>('idle');
   // Host from a save has its own busy and failed state, so a retry stays on the button the player pressed.
   const [resuming, setResuming] = useState<'idle' | 'starting' | 'failed'>('idle');
@@ -243,7 +261,9 @@ function MultiplayerMenu({ onBack }: { onBack: () => void }) {
   // After a refusal that pressing Host Game again cannot fix, Host Game is not the next action: Join Game is.
   const hostCannotRetry = hosting === 'failed' && !!refusal && retryWouldFail(refusal.kind);
   const hostPrimary = hosting === 'failed' && !views && !hostCannotRetry;
-  const joinPrimary = !views && !busy && resuming !== 'failed' && !hostPrimary;
+  // A save brought from the main menu makes hosting it the next action.
+  const savePrimary = !views && (!!hostSave || resuming === 'failed') && !hostPrimary;
+  const joinPrimary = !views && !busy && !savePrimary && !hostPrimary;
   const hostOnline = async () => {
     if (codeNote) return;
     const who = name.trim().slice(0, MAX_PLAYER_NAME) || DEFAULT_PLAYER_NAME;
@@ -264,14 +284,17 @@ function MultiplayerMenu({ onBack }: { onBack: () => void }) {
     rememberPlayerName(who);
     setHostError(null);
     setHosting('idle');
-    void pickSaveFile(async (save) => {
+    const host = async (save: SaveFile) => {
       setResuming('starting');
       const failure = await useGame.getState().hostOnlineFromSave(who, save, code || undefined);
       if (failure) {
         setHostError(failure);
         setResuming('failed');
       }
-    }, (message) => { setHostError(message); setResuming('failed'); });
+    };
+    // The save chosen on the main menu is hosted as it is; otherwise pick the file here.
+    if (hostSave) void host(hostSave);
+    else void pickSaveFile(host, (message) => { setHostError(message); setResuming('failed'); });
   };
 
   return (
@@ -279,10 +302,6 @@ function MultiplayerMenu({ onBack }: { onBack: () => void }) {
       <TitleNotice error={error ?? hostError} />
       <div className="title-actions">
         <ResumeButton />
-        <button className="btn big" onClick={() => openSetup('hotseat')}>
-          Hot Seat
-          <span className="btn-sub">Several players take turns planning on this computer</span>
-        </button>
         {online?.relay ? (
           <>
             <div className="host-fields">
@@ -324,12 +343,13 @@ function MultiplayerMenu({ onBack }: { onBack: () => void }) {
                   : hosting === 'failed' ? (refusal ? retryLine(refusal.kind, refusal.retryAfterS) : 'Try again') : 'Open a game that others can find and join'}
               </span>
             </button>
-            <button className={`btn big ${resuming === 'failed' && !views ? 'primary' : ''}`} disabled={busy || !!codeNote} onClick={hostFromSave}>
-              Host from a save…
+            <button className={`btn big ${savePrimary ? 'primary' : ''}`} disabled={busy || !!codeNote} onClick={hostFromSave}>
+              {hostSave ? 'Host this save' : 'Host from a save…'}
               <span className="btn-sub">
                 {resuming === 'starting' ? <><span className="spinner" /> Opening your game…</>
                   : codeNote ? codeNote
-                  : resuming === 'failed' ? 'Try again' : 'Carry on an online game from its save file'}
+                  : resuming === 'failed' ? 'Try again'
+                  : hostSave ? `${peoplesLabel(undefined, hostSave.names)} · Turn ${hostSave.turn} · the others rejoin online` : 'Carry on a game with other players from its save file'}
               </span>
             </button>
             <button className={`btn big ${joinPrimary ? 'primary' : ''}`} disabled={busy} onClick={() => goto('online')}>
@@ -338,7 +358,7 @@ function MultiplayerMenu({ onBack }: { onBack: () => void }) {
             </button>
           </>
         ) : (
-          <p className="title-hosted-note">This version has no online play. Hot seat still works.</p>
+          <p className="title-hosted-note">Online play is unavailable in this version.</p>
         )}
         <button className="btn quiet" onClick={onBack}>
           ← Back

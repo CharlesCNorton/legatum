@@ -31,10 +31,10 @@ for (const size of SIZES) testWithFailingRequests.describe(`online screens ${siz
     await page.mouse.move(5, 5);
     await shot(page, size, '20-online-menu');
 
-    // A build with no relay offers hot seat only.
+    // A build with no relay disables Multiplayer with a reason.
     await page.getByRole('button', { name: /Back/ }).click();
     await page.evaluate(() => { const s = (window as unknown as GameWindow).legatum; s.setState({ online: { ...s.getState().online!, relay: null } }); });
-    await page.getByRole('button', { name: /^Multiplayer/ }).click();
+    await expect(page.getByRole('button', { name: /^Multiplayer/ })).toBeDisabled();
     await shot(page, size, '21-online-menu-no-relay');
 
     // Opening: the relay never answers the room request.
@@ -278,6 +278,24 @@ for (const size of SIZES) testWithFailingRequests.describe(`online co-op ${size.
     await guest.mouse.move(size.width / 2, size.height - 4);
     await shot(guest, size, '51-guest-turn-one');
 
+    // Team ping controls and the arriving teammate ping, each in its own browser.
+    await expect(host.getByTestId('ping-button')).toHaveText(/^Ping\s*P$/);
+    await host.mouse.move(5, size.height / 2);
+    await shot(host, size, '51a-ping-idle');
+    await host.getByTestId('ping-button').click();
+    await expect(host.getByTestId('ping-hint')).toHaveText('Click a tile to ping it');
+    const map = (await host.locator('[data-game-map]').boundingBox())!;
+    await host.mouse.move(map.x + map.width * 0.5, map.y + map.height * 0.68);
+    await shot(host, size, '51b-ping-armed');
+    expect(await host.evaluate(() => {
+      const s = (window as unknown as GameWindow).legatum.getState();
+      const v = s.views![s.seat];
+      return s.sendPing(v.cities.find((city) => city.owner === v.me)!.pos);
+    })).toBe(true);
+    await expect(guest.getByTestId('ping-go')).toContainText(`${hostName} pinged`);
+    await guest.mouse.move(5, size.height / 2);
+    await shot(guest, size, '51c-ping-from-teammate');
+
     // The connection chip's tooltip, as each side sees it.
     await host.locator('.topbar .net').hover();
     await host.waitForTimeout(500);
@@ -334,6 +352,34 @@ for (const size of SIZES) testWithFailingRequests.describe(`online co-op ${size.
     const host2Context = await browser.newContext({ baseURL, viewport: { width: size.width, height: size.height } });
     const host2 = await host2Context.newPage();
     await noHints(host2);
+    // A save with several human players opened with Load Game: Multiplayer opens with Host this save as the primary.
+    await host2.goto('/');
+    let loadChooser = host2.waitForEvent('filechooser');
+    await host2.getByRole('button', { name: /^Load Game/ }).click();
+    await (await loadChooser).setFiles(savePath);
+    await host2.waitForTimeout(1500);
+    await host2.mouse.move(5, 5);
+    await shot(host2, size, '59-load-multi-human-save');
+    // The same save as the autosave: Continue on the title takes it to Host this save (UI review, 2026-11-25).
+    // The build without online play (Continue disabled with its reason) is covered by TitleScreen.test.tsx: the relay is baked into the build.
+    const saveJson = (await import('node:fs')).readFileSync(savePath, 'utf8');
+    {
+      const ctx = await browser.newContext({ baseURL, viewport: { width: size.width, height: size.height } });
+      const p = await ctx.newPage();
+      await noHints(p);
+      await p.goto('/');
+      await p.evaluate((s) => localStorage.setItem('legatum.autosave.v1', s), saveJson);
+      await p.reload();
+      await expect(p.getByRole('button', { name: /^Continue/ })).toBeVisible();
+      await p.waitForTimeout(1000);
+      await p.mouse.move(5, 5);
+      await shot(p, size, '59b-continue-multi-human-save');
+      await p.getByRole('button', { name: /^Continue/ }).click();
+      await expect(p.getByRole('button', { name: /^Host this save/ })).toBeVisible();
+      await p.mouse.move(5, 5);
+      await shot(p, size, '59c-continue-multi-human-to-host');
+      await ctx.close();
+    }
     await multiplayer(host2);
     await host2.getByLabel('Your name in the game list').fill(hostName);
     // A file that is not a save first: the refusal.

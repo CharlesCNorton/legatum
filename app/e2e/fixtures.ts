@@ -19,6 +19,14 @@ const root = fileURLToPath(new URL('../../', import.meta.url));
 export const E2E_RELAY = process.env.LEGATUM_E2E_RELAY ?? 'http://127.0.0.1:8787';
 const BUILD_HINT = `Build first: LEGATUM_RELAY_URL=${E2E_RELAY} scripts/build-web.sh (needs the WASM engine; add --skip-wasm to reuse it).`;
 
+/**
+ * A new game opens with the people's introduction (celebrate/PeopleIntro.tsx), which waits for Begin. Every test
+ * starts without it, so a test about anything else never has to press it; e2e/tour/people-intro.spec.ts turns it back on.
+ */
+export const skipPeopleIntro = () => {
+  try { if (localStorage.getItem('legatum.intro.v1') === null) localStorage.setItem('legatum.intro.v1', 'off'); } catch { /* storage is blocked: the intro shows */ }
+};
+
 type Fixtures = {
   watchErrors: (context: BrowserContext) => void;
   guestPage: Page;
@@ -108,6 +116,7 @@ export const test = testWithFailingRequests.extend<Fixtures>({
       });
     };
     watch(context);
+    await context.addInitScript(skipPeopleIntro);
     await use(watch);
     expect(errors, 'No browser console errors or uncaught exceptions').toEqual([]);
   }, { auto: true }],
@@ -115,6 +124,7 @@ export const test = testWithFailingRequests.extend<Fixtures>({
   guestPage: async ({ browser, baseURL, viewport, watchErrors }, use) => {
     const context = await browser.newContext({ baseURL, viewport });
     watchErrors(context);
+    await context.addInitScript(skipPeopleIntro);
     try {
       await use(await context.newPage());
     } finally {
