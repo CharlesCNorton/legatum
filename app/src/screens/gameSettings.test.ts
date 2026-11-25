@@ -7,11 +7,11 @@ import { RULES } from '../data';
 import { Victory } from './LobbyScreen';
 
 describe('game settings', () => {
-  it('offers no turn limit by default', () => {
+  it('defaults to the turn-500 limit', () => {
     const lobby = newLobby('solo', '42');
     const html = renderToStaticMarkup(createElement(Settings, { lobby, onChange: () => {} }));
     expect(buildSetup(lobby)).not.toHaveProperty('speed');
-    expect(html).toMatch(/aria-checked="true"[^>]*><span>Off<\/span>/);
+    expect(html).toMatch(new RegExp(`aria-checked="true"[^>]*><span>Turn ${RULES.defaultTurnLimit}</span>`));
     expect(renderToStaticMarkup(createElement(Victory, { lobby }))).toContain(`the most VP at turn ${RULES.defaultTurnLimit}.`);
   });
 
