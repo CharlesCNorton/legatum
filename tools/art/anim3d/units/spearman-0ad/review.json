@@ -1,0 +1,11 @@
+{
+  "display_yaw_degrees": -30,
+  "camera_direction_gltf": [
+    4,
+    1.8,
+    6.265
+  ],
+  "figure_frame_fraction": 0.7,
+  "extent_frame_fraction": 0.92,
+  "round": 4
+}

@@ -11,7 +11,7 @@ from dae import parse, geometry, bind, find, all, matrix
 
 UNIT=Path(__file__).resolve().parent
 ROOT=Path(os.environ.get('ANIM_ROOT',Path.home()/'LegatumRuns/anim-pilot'))
-WORK=ROOT/'oad/r3';WORK.mkdir(parents=True,exist_ok=True)
+WORK=ROOT/'oad/r4';WORK.mkdir(parents=True,exist_ok=True)
 ART=ROOT/'oad/src/binaries/data/mods/public/art'
 CREDIT='0 A.D. art by Wildfire Games, CC BY-SA 3.0; adapted for Legatum'
 bpy.ops.wm.open_mainfile(filepath=str(ROOT/'oad/hoplite.blend'))
@@ -45,7 +45,7 @@ def slots(ob):
 
 def swatch(ob,poly,index,team=False):
     poly.material_index=int(team)
-    uv=(((8 if team else index)+.5)/16, .875)
+    uv=(((9 if team and index==9 else 8 if team else index)+.5)/16, .875)
     for li in poly.loop_indices:ob.data.uv_layers.active.data[li].uv=uv
 
 def paint(ob,index,team=False):
@@ -71,6 +71,10 @@ helmet,tree=prop('meshes/props/helmet/hele_corinthian_a.dae','helmet')
 crestmatrix=matrix(find(tree,'.//c:node[ @ name="prop-crest"]'))
 crest,_=prop('meshes/props/helmet/props/hele_crest_a.dae','crest_base',crestmatrix)
 hair,_=prop('meshes/props/helmet/props/hele_crest_hair_a.dae','crest',crestmatrix)
+# Broaden the existing crest across the helmet (no added triangles), so its
+# crimson silhouette survives the 160 px, near-frontal display camera.
+for v in hair.data.vertices:v.co.x*=1.65
+for v in crest.data.vertices:v.co.x*=1.30
 paint(helmet,0);paint(crest,6);paint(hair,2,True)
 for p in helmet.data.polygons:
     centre=sum((helmet.data.vertices[i].co for i in p.vertices),Vector())/len(p.vertices)
@@ -95,7 +99,7 @@ shield=bpy.data.objects['aspis'];slots(shield)
 for p in shield.data.polygons:
     centre=sum((shield.data.vertices[i].co for i in p.vertices),Vector())/len(p.vertices)
     if math.hypot(centre.x+.105,centre.z)>.92:
-        swatch(shield,p,2,True)
+        swatch(shield,p,9,True)
     else:
         for li in p.loop_indices:
             v=shield.data.vertices[shield.data.loops[li].vertex_index].co
@@ -234,17 +238,13 @@ for name,poses in cache.items():
     for f,pose in enumerate(poses):
         s.frame_set(f+1)
         for p in rig.pose.bones:p.matrix_basis=pose[p.name];p.rotation_mode='QUATERNION'
-        if name=='attack':
-            bpy.context.view_layer.update()
-            hip_pose=rig.pose.bones['hip']
-            hip_pose.matrix=Matrix.Rotation(math.radians(-22),4,'Z') @ hip_pose.matrix
         if name=='death':
             # Relax the head onto its side as the body lands. The native crest
             # otherwise supports the entire body 3 cm above the floor.
             t=max(0,min(1,(f/(len(poses)-1)-.60)/.28));t=t*t*(3-2*t)
             bpy.context.view_layer.update();head=rig.pose.bones['head']
             pivot=head.matrix.translation.copy()
-            head.matrix=Matrix.Translation(pivot) @ Matrix.Rotation(math.radians(12)*t,4,'X') @ Matrix.Translation(-pivot) @ head.matrix
+            head.matrix=Matrix.Translation(pivot) @ Matrix.Rotation(math.radians(16)*t,4,'X') @ Matrix.Translation(-pivot) @ head.matrix
         # Root remains fixed. Ground the actual feet/body, correcting native fall penetration.
         bpy.context.view_layer.update();dep=bpy.context.evaluated_depsgraph_get()
         ev=body.evaluated_get(dep);me=ev.to_mesh()
@@ -253,7 +253,32 @@ for name,poses in cache.items():
             z=min(z,min((o.matrix_world @ v.co).z for o in [helmet,crest,hair,bpy.data.objects['Greek head']] for v in o.data.vertices))
         hip=rig.pose.bones['hip'];world=hip.matrix.copy();world.translation.z-=z/rig.scale.z
         hip.matrix=world;bpy.context.view_layer.update()
-        prop_floor('weapon_R',[spear],(0,0,1))
+        if name=='death':
+            # Release the leaf weapon socket at frame zero. Its vertices remain
+            # rigidly bound to weapon_R; world-space keys cancel the falling hand.
+            socket=rig.pose.bones['weapon_R']
+            if f==0:
+                release=spear.matrix_world.copy()
+                local_centre=sum((v.co for v in spear.data.vertices),Vector())/len(spear.data.vertices)
+                release_centre=release @ local_centre
+                attachment=(rig.matrix_world @ socket.matrix).inverted() @ release
+                axis=(release.to_3x3() @ Vector((0,0,1))).normalized()
+                flat=Vector((0,1 if axis.y>0 else -1,0))
+                rotation=axis.rotation_difference(flat)
+            t=min(1,f/16)  # 0.533 s release-to-ground, then hold.
+            lateral=min(1,f/9);lateral=lateral*lateral*(3-2*lateral)
+            q=Quaternion().slerp(rotation,t*t*(3-2*t))
+            desired=Matrix.Translation(release_centre) @ q.to_matrix().to_4x4() @ Matrix.Translation(-release_centre) @ release
+            centre=release_centre.copy();centre.x+=(-.82-centre.x)*lateral
+            centre.y+=(-1.0-centre.y)*lateral  # +Z in glTF: clear the corpse in screen space too.
+            centre.z*=1-t*t
+            desired.translation+=centre-release_centre
+            floor=min((desired @ v.co).z for v in spear.data.vertices)
+            desired.translation.z+=max(0,.004-floor)
+            socket.matrix=rig.matrix_world.inverted() @ desired @ attachment.inverted()
+            bpy.context.view_layer.update()
+        else:
+            prop_floor('weapon_R',[spear],(0,0,1))
         prop_floor('shield_arm',[shield,bpy.data.objects['Aspis back'],bpy.data.objects['Aspis handgrip']],(0,1,0))
         if name=='death':
             bpy.context.view_layer.update();dep=bpy.context.evaluated_depsgraph_get()
@@ -284,7 +309,7 @@ bpy.ops.export_scene.gltf(filepath=str(UNIT/'spearman.glb'),export_format='GLB',
     export_anim_slide_to_zero=True,export_optimize_animation_size=False)
 # asset.extras is not emitted by Blender's exporter. Preserve all chunks while adding it.
 p=UNIT/'spearman.glb';data=p.read_bytes();size,kind=struct.unpack_from('<II',data,12)
-doc=json.loads(data[20:20+size]);doc['asset']['extras']={'credit':CREDIT,'license':'CC-BY-SA-3.0','license_url':'https://creativecommons.org/licenses/by-sa/3.0/','up_axis':'Y','forward':'+Z','units':'metres','fps':30}
+doc=json.loads(data[20:20+size]);doc['asset']['extras']={'credit':CREDIT,'license':'CC-BY-SA-3.0','license_url':'https://creativecommons.org/licenses/by-sa/3.0/','up_axis':'Y','forward':'+Z','units':'metres','fps':30,'display_yaw_degrees':json.loads((UNIT/'review.json').read_text())['display_yaw_degrees']}
 # Derive each local prop matrix against the exported joint basis. The glTF
 # exporter can change bone bases; assuming Blender's bone-tail convention here
 # produces fixed prop offsets. Measure in both coordinate systems instead.

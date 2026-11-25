@@ -48,14 +48,19 @@ The COLOR_0 red channel replaces the team material on crest, shield rim and cloa
 trim. Green/blue are zero and alpha is one. mesh.extras.vertex_regions records
 part ranges for inspection. A mask-aware runtime shader provides team tint.
 
-The attack_melee_05 stance turns 22 degrees for a clearer map-camera thrust.
-Death_b gains a 12-degree head relaxation while landing, an eased finish and
-four final held frames. Socket corrections keep spear and shield above the
-floor. A measured hip-height envelope handles between-key floor penetration
+Round 4 restores the native attack_melee_05 stance; a documented 30-degree
+display yaw (-30 degrees about +Y) is implemented in the review cameras only. The GLB stays +Z forward.
+Death_b gains a 16-degree head relaxation while landing, an eased finish and
+four final held frames. The spear releases at death frame zero and its weapon_R socket follows a
+0.533-second world-space drop beside the body, then holds. Single-bone rigid
+weights remain unchanged. Socket corrections keep the shield above the floor. A measured hip-height envelope handles between-key floor penetration
 while retaining 30 fps sampling and a fixed skeleton root. Walk receives only
 a small clearance lift; the native gait and prop rigidity remain.
 
-All pigment is newly authored for Legatum: bronze armour and greave ornament,
+Round 4 darkens bronze and crimson base pigments, separates skin and linen
+values, and enlarges the bronze sunburst against an oxidised bronze shield field.
+The dark neutral rim retains its team mask. Crest hair width is multiplied
+by 1.65 and its support by 1.30 without adding triangles, for 160 px readability. All pigment is newly authored for Legatum: bronze armour and greave ornament,
 linen seams/hem stripes, crimson cloak/crest, Corinthian eye slots and a
 12-ray sunburst aspis. No upstream textures, baked illumination, AO, normal
 maps or camera projection are used. Main cloak stays crimson; team trim is

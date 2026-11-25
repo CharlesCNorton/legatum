@@ -8,12 +8,14 @@ import {fileURLToPath, pathToFileURL} from 'node:url';
 import {createRequire} from 'node:module';
 import {spawnSync} from 'node:child_process';
 import {homedir} from 'node:os';
+import {createHash} from 'node:crypto';
 
 const here=dirname(fileURLToPath(import.meta.url));
 const root=resolve(here,'../../../..');
 const args=process.argv.slice(2);
 function option(name,fallback){const i=args.indexOf(name);return i<0?fallback:args[i+1];}
 const out=resolve(option('--out',join(homedir(),'LegatumRuns/anim-pilot/review/3d-v2')));
+const assetSha256=createHash('sha256').update(await readFile(resolve(here,'../units/spearman-0ad/spearman.glb'))).digest('hex');
 let playwright;
 if(process.env.PLAYWRIGHT_MODULE) playwright=await import(pathToFileURL(resolve(process.env.PLAYWRIGHT_MODULE)).href);
 else {
@@ -23,7 +25,7 @@ else {
 }
 const chromium=playwright.chromium||playwright.default?.chromium;
 if(!chromium)throw new Error('Playwright chromium export missing');
-const mime={'.html':'text/html','.mjs':'text/javascript','.js':'text/javascript','.glb':'model/gltf-binary','.png':'image/png'};
+const mime={'.html':'text/html','.mjs':'text/javascript','.js':'text/javascript','.glb':'model/gltf-binary','.png':'image/png','.json':'application/json'};
 const server=createServer(async(req,res)=>{
   try{
     const path=await realpath(resolve(root,'.'+decodeURIComponent(new URL(req.url,'http://localhost').pathname)));
@@ -35,31 +37,36 @@ await new Promise(r=>server.listen(0,'127.0.0.1',r));
 let browser;
 try {
   browser=await chromium.launch({headless:true});
-  const page=await browser.newPage({viewport:{width:640,height:640},deviceScaleFactor:1});
+  const page=await browser.newPage({viewport:{width:960,height:640},deviceScaleFactor:1});
   const errors=[];page.on('pageerror',e=>errors.push(String(e)));
   await page.goto(`http://127.0.0.1:${server.address().port}/tools/art/anim3d/viewer/index.html?record=1`);
   await page.waitForFunction(()=>window.review?.ready||window.review?.error,{},{timeout:60000});
   const state=await page.evaluate(()=>window.review);
   if(!state.ready)throw new Error(state.error);
   await mkdir(out,{recursive:true});const receipts={};
+  const framing=await page.evaluate(()=>window.review.framing());
+  for(const [clip,fit] of Object.entries(framing)) {
+    if(fit.heightFraction>.921||fit.widthFraction>.921||fit.figureFraction<.65)
+      throw new Error(`Invalid framing for ${clip}: ${JSON.stringify(fit)}`);
+  }
   for(const [clip,duration] of Object.entries(state.clips)) {
-    const frames=resolve(out,'.spearman-0ad-r3-viewer-frames',clip);await mkdir(frames,{recursive:true});
+    const frames=resolve(out,'.spearman-0ad-r4-viewer-frames',clip);await mkdir(frames,{recursive:true});
     const count=Math.round(duration*30);
     for(let i=0;i<count;i++) {
       await page.evaluate(({clip,t})=>window.review.sample(clip,t),{clip,t:i/30});
       await page.locator('canvas').screenshot({path:join(frames,`${String(i).padStart(4,'0')}.png`)});
     }
-    const output=join(out,`spearman-0ad-r3-${clip}-viewer.mp4`);
+    const output=join(out,`spearman-0ad-r4-${clip}-viewer.mp4`);
     const encode=spawnSync('ffmpeg',['-y','-loglevel','error','-framerate','30','-stream_loop','2','-i',join(frames,'%04d.png'),'-frames:v',String(count*3),'-c:v','libx264','-crf','18','-pix_fmt','yuv420p','-movflags','+faststart',output],{stdio:'inherit'});
     if(encode.status!==0)throw new Error(`ffmpeg failed for ${clip}`);
     const probe=spawnSync('ffprobe',['-v','error','-count_frames','-select_streams','v:0','-show_entries','stream=width,height,pix_fmt,nb_read_frames,r_frame_rate','-of','json',output],{encoding:'utf8'});
     if(probe.status!==0)throw new Error(`ffprobe failed for ${clip}`);
     const stream=JSON.parse(probe.stdout).streams[0];
     if(Number(stream.nb_read_frames)!==count*3||stream.pix_fmt!=='yuv420p')throw new Error(`Invalid encoded clip ${clip}`);
-    receipts[clip]={output,...stream};console.log(output);
+    receipts[clip]={output,framing:framing[clip],...stream};console.log(output);
   }
   if(errors.length)throw new Error(errors.join('\n'));
-  await writeFile(join(out,'spearman-0ad-r3-viewer-validation.json'),JSON.stringify(receipts,null,2));
+  await writeFile(join(out,'spearman-0ad-r4-viewer-validation.json'),JSON.stringify({assetSha256,clips:receipts},null,2));
 } finally {
   if(browser)await browser.close();await new Promise(r=>server.close(r));
 }

@@ -5,6 +5,7 @@ import {resolve,dirname,join} from 'node:path';
 import {fileURLToPath,pathToFileURL} from 'node:url';
 import assert from 'node:assert/strict';
 import {applyTeamMask} from './team-mask.mjs';
+import {cameraBasis,measureClip,fitClip} from './framing.mjs';
 const here=dirname(fileURLToPath(import.meta.url));
 const modules=process.env.VIEWER_NODE_MODULES;
 if(!modules)throw new Error('Set VIEWER_NODE_MODULES to a directory containing three@0.170.0');
@@ -45,5 +46,15 @@ for(const clip of gltf.animations){
   assert(poseDelta>.0001,`${clip.name} must actually animate`);
   if(['idle','walk'].includes(clip.name))assert(first.distanceTo(last)<.0001,`${clip.name} seam`);
   report.clips[clip.name]={duration:clip.duration,bounds:[bound.min.toArray(),bound.max.toArray()],probeMotionMetres:poseDelta};
+}
+const config=JSON.parse(await readFile(resolve(here,'../units/spearman-0ad/review.json'),'utf8'));
+const basis=cameraBasis(THREE,config);
+report.framing={};
+for(const clip of gltf.animations) {
+  const measured=measureClip(THREE,gltf.scene,mixer,mixer.clipAction(clip),basis);
+  const fit=fitClip(THREE,measured,basis,config,1.5);
+  assert(fit.figureFraction>.65 && fit.figureFraction<=.70001,`${clip.name}: figure fill`);
+  assert(fit.widthFraction<=.92001 && fit.heightFraction<=.92001,`${clip.name}: full extent`);
+  report.framing[clip.name]={...fit,target:fit.target.toArray(),displayYawDegrees:config.display_yaw_degrees};
 }
 console.log(JSON.stringify(report,null,2));
