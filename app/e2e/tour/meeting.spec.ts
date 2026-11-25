@@ -14,6 +14,8 @@ function save(people: Faction, war = false) {
   const setup = wallsFixture();
   const f = setup.fixture;
   // The usual first meeting is at Peace; Sparta's shot keeps the War line in the tour.
+  // The core records the contact too, so Diplomacy afterwards agrees with the plate.
+  f.diplomacy!.contacts = [[0, 1]];
   if (!war) for (const r of f.diplomacy!.relations) if (r.a === 1 || r.b === 1) Object.assign(r, { state: 'Peace', war_id: null, declarers: [] });
   f.players[1].faction = people; f.setup.players[1].faction = people;
   for (const p of [1, 2]) { f.players[p].isHuman = false; f.setup.players[p].is_human = false; }

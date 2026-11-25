@@ -7,6 +7,7 @@ import { feel, useCombatFx } from '../feel';
 import { useGame } from '../store';
 import { Crest } from '../brand/ornaments';
 import { MedallionRow, PortraitFrame } from '../ui/premium';
+import { TreatyEmblem } from '../ui/ringMedallion';
 import { useReducedMotion } from '../ui/useReducedMotion';
 import { eraArt } from './eraArt';
 import { GREETING } from './greetings';
@@ -28,18 +29,15 @@ export function whereLine(where: EmpireLocation | null): string | null {
 
 /**
  * The faction sheet speaks to the people's own player ("Your units get +1 move"); on a rival's plate the same line
- * speaks about them ("Their units get +1 move"). One wording per rule: the sheet's, turned to the third person.
+ * speaks about them ("Their units get +1 move"), and advice meant for their own player (": switch it to Grow ...")
+ * is cut. One wording per rule: the sheet's, turned to the third person.
  */
 export function asTheirs(text: string): string {
   return text
+    .replace(/: (?:switch|build|use|keep|move|choose|train)\b[^.]*\./gi, '.')
     .replace(/\b(?!(?:if|when|until|unless|that|and|but|so|or)\b)(\w+) you\b/g, '$1 them')
     .replace(/\bYour\b/g, 'Their').replace(/\byour\b/g, 'their')
     .replace(/\bYou\b/g, 'They').replace(/\byou\b/g, 'they');
-}
-
-function Pips({ label, value }: { label: string; value: number }) {
-  return <span className="mt-pips" aria-label={`${label} ${value} of 5`}><span>{label}</span>
-    <span aria-hidden="true">{Array.from({ length: 5 }, (_, i) => <i key={i} className={i < value ? 'on' : ''} />)}</span></span>;
 }
 
 /**
@@ -73,7 +71,9 @@ export function MeetingTakeover({ moment, dismiss }: { moment: Moment; dismiss()
   const name = empireNameOf(card.members.map((m) => view.players.find((p) => p.id === m.id)!).filter(Boolean), view.players);
   const me = view.players.find((p) => p.id === view.me);
   const art = eraArt((me?.era ?? 1) - 1);
-  const strengths = sheet.pairs.filter((p) => p.strength && p.strengthIcon).slice(0, 3);
+  // A row the sheet shows on a piece's card leans on that card's header ("Iron Working unlocks it"): left out here.
+  const strengths = sheet.pairs.filter((p) => p.strength && p.strengthIcon && !p.onCard).slice(0, 3);
+  // With two peoples on one team the columns describe the leader's people, and say so.
   const prices = sheet.pairs.filter((p) => p.price && p.priceIcon).slice(0, 2);
   const relation = relationWith(view, card.team)?.state ?? 'Peace';
   const them = view.players.filter((p) => p.team === card.team);
@@ -88,7 +88,9 @@ export function MeetingTakeover({ moment, dismiss }: { moment: Moment; dismiss()
       {art && <img src={art.small} srcSet={`${art.small} 1280w, ${art.large} 1920w`} sizes="100vw" alt="" draggable={false} />}
     </div>
     <div className="et-wash" aria-hidden="true" />
-    {!reduced && <div className="mt-seal" aria-hidden="true"><Crest faction={lead.faction} size={132} /></div>}
+    {!reduced && <div className="mt-seal" aria-hidden="true">
+      {(['l', 'r'] as const).map((half) => <span key={half} className={`mt-half ${half}`}><Crest faction={lead.faction} size={132} /></span>)}
+    </div>}
     <div className="mt-letter">
       <header className="et-head mt-head">
         <div className="mt-portraits">
@@ -97,7 +99,7 @@ export function MeetingTakeover({ moment, dismiss }: { moment: Moment; dismiss()
         <div className="mt-title">
           <div className="et-kicker">First contact</div>
           <h2 className="et-title">{name}</h2>
-          <p className="mt-identity">{sheet.identity}<span className="mt-dot" aria-hidden="true">·</span>“{info.motto}”</p>
+          <p className="mt-identity">“{info.motto}”</p>
           <blockquote className="mt-greeting" data-testid="meeting-greeting">
             {greeting.native && <p className="mt-native">{greeting.native}{greeting.meaning && <span className="mt-meaning"> {greeting.meaning}</span>}</p>}
             <p className="mt-line">{greeting.line}</p>
@@ -106,23 +108,23 @@ export function MeetingTakeover({ moment, dismiss }: { moment: Moment; dismiss()
       </header>
       <section className="et-changes mt-cols" aria-label={`About ${name}`}>
         <div className="et-col" data-testid="meeting-strengths">
-          <h3>What they do well</h3>
+          <h3>{card.members.length > 1 ? `What ${info.name} does well` : 'What they do well'}</h3>
           {strengths.map((p, i) => <MedallionRow key={i} icon={p.strengthIcon!} tone="good" sign="Strength">{asTheirs(p.strength!)}</MedallionRow>)}
         </div>
         <div className="et-col" data-testid="meeting-prices">
-          <h3>Where they are weak</h3>
+          <h3>{card.members.length > 1 ? `Where ${info.name} is weak` : 'Where they are weak'}</h3>
           {prices.map((p, i) => <MedallionRow key={i} icon={p.priceIcon!} tone="bad" sign="Weakness">{asTheirs(p.price!)}</MedallionRow>)}
           {sheet.counteredBy && <p className="mt-counter"><b>To face them:</b> {sheet.counteredBy}</p>}
         </div>
         <div className="et-col mt-between" data-testid="meeting-between">
           <h3>Between you</h3>
-          <p className={`mt-state ${relation === 'War' ? 'war' : ''}`}>{relation === 'War' ? <b>At War.</b> : relation === 'Alliance' ? <b>In an Alliance.</b> : <><b>At Peace.</b> You can offer them an Alliance.</>}</p>
+          <p className={`mt-state ${relation.toLowerCase()}`}><TreatyEmblem kind={relation} size={20} />{relation === 'War' ? <b>At War.</b> : relation === 'Alliance' ? <b>In an Alliance.</b> : <><b>At Peace.</b> You can offer them an Alliance.</>}</p>
           {where && <p>{where}</p>}
           <p className="mt-facts"><span>{cities} {cities === 1 ? 'city' : 'cities'}</span><span>{vp} VP</span></p>
-          <p className="mt-facts"><Pips label="Aggression" value={sheet.ratings.aggression} /><Pips label="Economy" value={sheet.ratings.economy} /></p>
         </div>
       </section>
-      <footer className="et-foot mt-foot">
+    </div>
+    <footer className="et-foot mt-foot">
         <div className="mt-links">
           {card.where && <button className="btn quiet" onClick={showOnMap}>Show on map</button>}
           <button className="btn quiet" onClick={diplomacy}>Diplomacy</button>
@@ -130,7 +132,6 @@ export function MeetingTakeover({ moment, dismiss }: { moment: Moment; dismiss()
         <div className="et-buttons">
           <button ref={primary} className="btn primary" data-primary-action onClick={() => { feel.select(); dismiss(); }}>Continue <span className="kbd">Return</span></button>
         </div>
-      </footer>
-    </div>
+    </footer>
   </div>;
 }
