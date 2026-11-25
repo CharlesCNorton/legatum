@@ -9,20 +9,25 @@ import { playerColor } from '../theme';
 import type { Order, PlayerId, PlayerView } from '../types';
 import { Amount } from './Amounts';
 import { PortraitRoundel } from './premium';
+import { GoldStepper } from './GoldStepper';
+import { GIFT_ARRIVES, freeGold } from '../deals';
 
 /** The short rule, shown under the control. */
-export const GIVE_GOLD_RULE = 'Give Gold to a teammate. They get it next turn, after your purchases this turn.';
-/** Deals: the same rule for another empire. */
-export const GIFT_RIVAL_RULE = 'They get it next turn, after your purchases this turn.';
+export const GIVE_GOLD_RULE = `Give Gold to a teammate. ${GIFT_ARRIVES}`;
+/** Deals: the same rule for another empire, in the Guide's words. */
+export const GIFT_RIVAL_RULE = GIFT_ARRIVES;
 
 /** Gold already queued as gifts this turn, to anyone. */
 export function queuedGifts(orders: Order[]): number {
   return orders.reduce((n, o) => n + (o.type === 'GiveGold' ? o.amount : 0), 0);
 }
 
-/** The forecast for a gift: what you keep and what the teammate has next turn (before either side's income). */
+/**
+ * The forecast for a gift: what you keep and what the teammate has next turn (before either side's
+ * income). Gold already promised in queued orders (gifts, offers you pay for) is not yours to keep.
+ */
 export function giftForecast(view: PlayerView, to: PlayerId, amount: number, orders: Order[]): { keep: number; theirs: number | null } {
-  const keep = view.economy.gold - queuedGifts(orders) - amount;
+  const keep = freeGold(view, orders) - amount;
   const mate = view.players.find((p) => p.id === to);
   const theirs = typeof mate?.gold === 'number' ? mate.gold + amount : null;
   return { keep, theirs };
@@ -61,7 +66,7 @@ export function GiftControl({ view, to, orders, defaultAmount = 50 }: { view: Pl
   const empire = empireOfPlayer(view, to), inSentence = withThe(empire);
   const Cap = inSentence.charAt(0).toUpperCase() + inSentence.slice(1);
   const queued = orders.filter((o): o is Extract<Order, { type: 'GiveGold' }> => o.type === 'GiveGold' && o.to === to);
-  const free = view.economy.gold - queuedGifts(orders);
+  const free = freeGold(view, orders);
   // Text, so clearing the field leaves it empty instead of snapping to 0.
   const [text, setText] = useState(() => String(Math.min(defaultAmount, Math.max(0, free))));
   const amount = text.trim() === '' ? NaN : Number(text);
@@ -72,8 +77,7 @@ export function GiftControl({ view, to, orders, defaultAmount = 50 }: { view: Pl
   return queued.length > 0
     ? <p data-testid="gift-queued">Queued: give <Amount n={queued.reduce((n, o) => n + o.amount, 0)} unit="Gold" /> to {inSentence}. <button className="link" onClick={undo}>Undo</button></p>
     : <div className="gift-control">
-        <label>Amount <input type="number" inputMode="numeric" min={1} max={Math.max(1, free)} step={1} value={text} aria-label={`Gold to give ${inSentence}`}
-          onChange={(e) => setText(e.target.value)} /></label>
+        <GoldStepper value={text} onChange={setText} max={Math.max(1, free)} label={`Gold to give ${inSentence}`} />
         <button className="btn" disabled={!valid} onClick={give} data-testid="give-gold">Give Gold</button>
         {valid
           ? <p className="gift-forecast" data-testid="gift-forecast">You keep <Amount n={f.keep} unit="Gold" />.{f.theirs !== null && <> {Cap} will have <Amount n={f.theirs} unit="Gold" />.</>}</p>

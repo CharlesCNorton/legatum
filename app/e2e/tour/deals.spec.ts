@@ -50,6 +50,7 @@ for (const size of SIZES) test.describe(`deals ${size.name}`, () => {
 
     // More Gold than the treasury holds: the offers are disabled with the reason in place.
     await field.getByRole('spinbutton').fill('200');
+    await expect(field.getByTestId('deal-forecast')).toHaveText('You have 120 Gold, so offer at most 120.');
     await field.evaluate((el) => el.scrollIntoView({ block: 'start' }));
     await page.mouse.move(4, size.height / 2);
     await shot(page, size, 'd1c-offer-cant-pay');
@@ -57,11 +58,13 @@ for (const size of SIZES) test.describe(`deals ${size.name}`, () => {
 
     await field.getByRole('button', { name: 'You ask' }).click();
     await expect(field.getByTestId('deal-forecast')).toHaveText('They pay you 40 Gold when they accept.');
+    await expect(panel.getByRole('button', { name: 'Offer Open Borders', exact: true }).locator('[data-gain-chip]')).toContainText('+40');
     await field.evaluate((el) => el.scrollIntoView({ block: 'start' }));
     await page.mouse.move(4, size.height / 2);
     await shot(page, size, 'd1d-you-ask');
     await panel.getByRole('button', { name: 'Offer Open Borders', exact: true }).click();
-    await expect(panel.getByRole('button', { name: /^Queued: Offer Open Borders, asking 40 Gold/ })).toBeVisible();
+    await expect(panel.getByRole('button', { name: 'Queued: Offer Open Borders', exact: true })).toHaveAttribute('aria-pressed', 'true');
+    await expect(panel.getByTestId('diplomacy-queued')).toHaveText('Queued: Offer Open Borders. You ask 40 Gold. Undo');
     const errors = await page.evaluate(() => { const s = (window as unknown as GameWindow).legatum.getState(); return { orders: s.orders[s.seat], errors: s.errors[s.seat] }; });
     expect(errors.orders).toEqual([{ type: 'ProposeTreaty', to: 1, kind: 'OpenBorders', gold: -40 }]);
     expect.soft(errors.errors, 'the offer validates').toEqual([]);
@@ -93,7 +96,8 @@ for (const size of SIZES) test.describe(`deals ${size.name}`, () => {
     const card = page.locator('.offer-card');
     await expect(card).toBeVisible();
     await expect(card.locator('.offer-headline')).toContainText('asks 40 Gold for Peace');
-    await expect(card).toContainText('You pay 40 Gold. You have 120 Gold');
+    await expect(card.locator('.offer-for-you')).toContainText('You pay 40 Gold.');
+    await expect(card.locator('.offer-for-you')).not.toContainText('You have 120 Gold');
     await page.mouse.move(4, size.height / 2);
     await shot(page, size, 'd4-incoming-peace-asks-gold');
   });
@@ -102,6 +106,7 @@ for (const size of SIZES) test.describe(`deals ${size.name}`, () => {
     await loadFixture(page, dealsSave((s) => { (s.diplomacy as { open_borders?: [number, number][] }).open_borders = [[0, 1]]; }), TURN);
     const panel = await openDiplomacy(page);
     await expect(panel.locator('.empire-relation.open-borders')).toHaveText('Open Borders');
+    await expect(page.getByTestId('rivals-open-borders').getByRole('img', { name: 'Open Borders emblem' })).toBeVisible();
     await expect(panel.getByRole('button', { name: 'Close borders', exact: true })).toBeVisible();
     await panel.locator('.empire-row.open').evaluate((el) => el.scrollIntoView({ block: 'start' }));
     await page.mouse.move(4, size.height / 2);
@@ -120,6 +125,9 @@ for (const size of SIZES) test.describe(`deals ${size.name}`, () => {
     await page.evaluate((report) => (window as unknown as GameWindow).legatum.getState().set({ report, alarmSeen: [], reportOpen: true }), report);
     const turnReport = page.getByRole('complementary', { name: 'Turn report' });
     await expect(turnReport).toContainText('40 Gold for Open Borders');
+    await expect(turnReport).toContainText('Open Borders with Switzerland begin.');
+    await expect(turnReport).toContainText('Switzerland closed the borders.');
+    await expect(turnReport.locator('.rline-tone .te.openborders')).toHaveCount(2);
     await page.mouse.move(4, size.height / 2);
     await shot(page, size, 'd6-report-deal-lines');
   });

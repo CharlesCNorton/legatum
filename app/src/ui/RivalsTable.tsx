@@ -93,7 +93,7 @@ export function RivalsTable({ view, model, relationOf, onOpen }: {
         // Public chips get their own line across the row, so a long one never runs into the numbers.
         const chips = !unmet && <span className="rv-status">
           {!row.isMine && bordersOpen(view, row.team) && <span className="rv-borders" data-testid="rivals-open-borders"
-            title="Open Borders: your units may enter each other's land.">Open Borders</span>}
+            title="Open Borders: your units may enter each other’s land."><TreatyEmblem kind="OpenBorders" size={12} />Open Borders</span>}
           <ClosedChip members={row.members} />
           <TombChip members={row.members} />
           <LeadChip members={row.members} rules={model.raceRules.rules} />

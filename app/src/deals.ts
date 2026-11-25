@@ -6,6 +6,9 @@ import type { Order, PeaceProposal, PlayerId, PlayerView, TeamId, TreatyKind } f
 
 /** Core `diplomacy::MAX_DEAL_GOLD`: an offer carries at most this much Gold either way. */
 export const MAX_DEAL_GOLD = 999;
+/** When a gift arrives, in one wording for the panel and the Guide (plain-language review of PR 184). */
+export const GIFT_ARRIVES = 'It arrives next turn, after this turn’s purchases.';
+
 /** The stepper's step. */
 export const DEAL_GOLD_STEP = 10;
 
@@ -34,9 +37,25 @@ export function withDealGold(order: Order, gold: number): Order {
 export const treatyNoun = (kind: TreatyKind | null | undefined): string =>
   kind === 'Alliance' ? 'an Alliance' : kind === 'OpenBorders' ? 'Open Borders' : 'Peace';
 
-/** The Gold the viewer's team has free for an offer: its treasury less the gifts already queued. */
+/**
+ * Gold already promised by queued orders: gifts, offers we pay for (`gold > 0`), and accepting an
+ * offer that asks us for Gold. Every Gold forecast takes it off the treasury (UI review of PR 184).
+ */
+export function promisedGold(view: Pick<PlayerView, 'team' | 'diplomacy'>, orders: Order[]): number {
+  return orders.reduce((n, o) => {
+    if (o.type === 'GiveGold') return n + o.amount;
+    if (o.type === 'ProposeTreaty') return n + Math.max(0, o.gold ?? 0);
+    if (o.type === 'RespondToProposal' && o.accept) {
+      const p = view.diplomacy?.proposals?.find((x) => x.id === o.proposal);
+      return n + (p ? Math.max(0, -goldForViewer(view, p)) : 0);
+    }
+    return n;
+  }, 0);
+}
+
+/** The Gold the viewer's team has free: its treasury less the Gold queued orders already promise. */
 export function freeGold(view: PlayerView, orders: Order[]): number {
-  return view.economy.gold - orders.reduce((n, o) => n + (o.type === 'GiveGold' ? o.amount : 0), 0);
+  return view.economy.gold - promisedGold(view, orders);
 }
 
 export type DealForecast = { tone: 'cost' | 'gain'; text: string; error?: string };
@@ -51,7 +70,7 @@ export function offerGoldForecast(view: PlayerView, gold: number, orders: Order[
   const have = freeGold(view, orders);
   if (g > 0) return {
     tone: 'cost', text: `You pay ${g} Gold when they accept. You have ${have} Gold.`,
-    ...(g > have ? { error: `You have ${Math.max(0, have)} Gold: offer at most ${Math.max(0, have)}.` } : {}),
+    ...(g > have ? { error: `You have ${Math.max(0, have)} Gold, so offer at most ${Math.max(0, have)}.` } : {}),
   };
   return { tone: 'gain', text: `They pay you ${-g} Gold when they accept.` };
 }

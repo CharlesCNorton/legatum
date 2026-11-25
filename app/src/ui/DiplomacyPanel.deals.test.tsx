@@ -57,14 +57,21 @@ it('an empire at Peace: offers lead under one Gold field whose forecast names th
   expect(labels.findIndex((l) => l?.startsWith('Offer Alliance'))).toBeLessThan(labels.findIndex((l) => l?.startsWith('Declare War')));
   act(() => button('You pay')!.click());
   expect(container.querySelector('[data-testid=deal-forecast]')!.textContent).toBe('You pay 50 Gold when they accept. You have 120 Gold.');
-  act(() => (container.querySelector('button[aria-label="10 Gold less"]') as HTMLButtonElement).click());
+  act(() => (container.querySelector('[data-testid=deal-gold] button[aria-label="10 Gold less"]') as HTMLButtonElement).click());
   expect(container.querySelector('[data-testid=deal-forecast]')!.textContent).toBe('You pay 40 Gold when they accept. You have 120 Gold.');
   act(() => button('Offer Open Borders')!.click());
   expect(orders()).toEqual([{ type: 'ProposeTreaty', to: 1, kind: 'OpenBorders', gold: 40 }]);
-  expect(button('Queued: Offer Open Borders with 40 Gold')).toBeTruthy();
+  // Queued: the button stays pressed, and the sentence-plus-Undo line gifts use says what is queued.
+  expect(button('Offer Open Borders')!.getAttribute('aria-pressed')).toBe('true');
+  expect(container.querySelector('[data-testid=diplomacy-queued]')!.textContent).toBe('Queued: Offer Open Borders. You pay 40 Gold if they accept. Undo');
   // Undo removes the queued offer whatever Gold it carries.
-  act(() => button('Queued: Offer Open Borders')!.click());
+  act(() => (container.querySelector('[data-testid=diplomacy-queued] button') as HTMLButtonElement).click());
   expect(orders()).toEqual([]);
+  // Friendly actions first, then Give Gold, then Declare War last.
+  const order = [...container.querySelectorAll('.empire-detail .diplomacy-action > button, [data-testid=rival-gift]')]
+    .map((el) => el.getAttribute('data-testid') ?? el.textContent);
+  expect(order.indexOf('rival-gift')).toBeGreaterThan(order.findIndex((l) => l?.startsWith('Offer Open Borders')));
+  expect(order.findIndex((l) => l?.startsWith('Declare War'))).toBe(order.length - 1);
 });
 
 it('asking for Gold queues a negative amount, and paying more than you have is refused in place', async () => {
@@ -72,12 +79,14 @@ it('asking for Gold queues a negative amount, and paying more than you have is r
   render();
   act(() => button('You ask')!.click());
   expect(container.querySelector('[data-testid=deal-forecast]')!.textContent).toBe('They pay you 50 Gold when they accept.');
+  // "You ask" shows the Gold you would get on the offer, as "You pay" shows its cost.
+  expect(button('Offer Alliance')!.querySelector('[data-gain-chip]')!.textContent).toContain('+50');
   act(() => button('Offer Alliance')!.click());
   expect(orders()).toEqual([{ type: 'ProposeTreaty', to: 1, kind: 'Alliance', gold: -50 }]);
-  act(() => button('Queued: Offer Alliance')!.click());
+  act(() => button('Offer Alliance')!.click());
   act(() => button('You pay')!.click());
   expect(container.querySelector('[data-testid=deal-forecast]')!.getAttribute('role')).toBe('alert');
-  expect(text()).toContain('You have 30 Gold: offer at most 30.');
+  expect(text()).toContain('You have 30 Gold, so offer at most 30.');
   expect(button('Offer Alliance')!.disabled).toBe(true);
   act(() => button('No Gold')!.click());
   expect(container.querySelector('[data-testid=deal-forecast]')).toBeNull();
@@ -89,7 +98,9 @@ it('Give Gold to a met empire at Peace queues a gift to its leader', async () =>
   const leader = view.players.find((p) => p.team === 1)!.id;
   render();
   const gift = container.querySelector('[data-testid=rival-gift]')!;
-  expect(gift.textContent).toContain('They get it next turn');
+  expect(gift.textContent).toContain('It arrives next turn, after this turn’s purchases.');
+  // The same stepper as the offer's Gold field.
+  expect(gift.querySelector('.gold-stepper')).toBeTruthy();
   act(() => (gift.querySelector('[data-testid=give-gold]') as HTMLButtonElement).click());
   expect(orders()).toEqual([{ type: 'GiveGold', to: leader, amount: 50 }]);
   expect(gift.querySelector('[data-testid=gift-queued]')).toBeTruthy();
@@ -100,7 +111,9 @@ it('Open Borders: the mark beside the treaty state, the passage line and Close b
   expect(view.diplomacy.open_borders).toEqual([[0, 1]]);
   render();
   expect(container.querySelector('.empire-relation.open-borders')?.textContent).toBe('Open Borders');
-  expect(text()).toContain('Open Borders let both sides’ units enter each other’s land');
+  // The mark names the treaty; the relation sentence gives only its effect.
+  expect(text()).toContain('borders open both ways');
+  expect(container.querySelector('.empire-relation.open-borders [role=img]')!.getAttribute('aria-label')).toBe('Open Borders emblem');
   expect(button('Offer Open Borders')).toBeUndefined();
   act(() => button('Close borders')!.click());
   expect(orders()).toEqual([{ type: 'BreakTreaty', with: 1, agreement: 'OpenBorders' }]);
@@ -112,7 +125,8 @@ it('an incoming offer says its Gold in the headline and the For-you terms', asyn
   render();
   const card = () => container.querySelector('.offer-card')!;
   expect(card().querySelector('.offer-headline')!.textContent).toMatch(/asks 40 Gold for Open Borders$/);
-  expect(card().textContent).toContain('You pay 40 Gold. You have 120 Gold');
+  expect(card().querySelector('.offer-for-you')!.textContent).toContain('You pay 40 Gold.');
+  expect(card().querySelector('.offer-for-you')!.textContent).not.toContain('You have');
   expect(button('Accept Open Borders')).toBeTruthy();
   act(() => root.unmount()); root = createRoot(container);
   view = await start({ proposals: [{ ...asks, kind: 'Peace', gold: 40 }] });
