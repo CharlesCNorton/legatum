@@ -171,6 +171,27 @@ says whether it is on.
 - The one-diplomatic-order-per-other-team-per-turn rule holds for all of it.
 - **View:** with deals on, `DiplomacyView::actions` adds, per other living team, `ProposeTreaty{kind: OpenBorders,
   gold: 0}` and `BreakTreaty{agreement: OpenBorders}` with their `blocked_reason`; Gold amounts are the client's to set.
-- **AI:** no deal use yet. Hard and the proxies decline Open Borders offers and any offer that asks them for Gold
-  (`ai/src/diplomacy.rs::treaty_score`, `proxy_v4.rs`); an offer that pays them is scored as the plain treaty.
+- **AI** (`crates/ai/src/deals.rs`, wired into `diplomacy.rs::plan_diplomacy`; every scripted difficulty unless noted,
+  only when `DiplomacyView::deals` is on, so games without deals plan exactly as before). "Losing" a war: an enemy army
+  presses one of our cities (`endangered_by`), a city is collapsing, or our side's public army is at most 70% of theirs;
+  "winning": at least 150% and none of our cities in danger.
+  - A losing AI's Peace offer pays 20% of its free Gold, at most 200 (nothing if that is under 20). It pays for a Peace
+    it is asked to pay for only while losing, and only up to a third of its free Gold, at most 300.
+  - A winning AI asks 25% of the smallest public treasury among the enemy team's empires, at most 250 (no price under
+    20): its own Peace offers carry that ask, and it refuses a Peace that pays under half of it (it must still want
+    Peace: with no plan, an army at 130% of the enemy's or more wants it only to leave a coalition's war).
+  - Gold paid to the AI adds a point of treaty score per 10 Gold; it never pays for an Alliance or for Open Borders.
+  - Gold its open offers may still pay is held back from the turn's purchases (`Planner::gold_left`), as is Gold it
+    agrees to pay.
+  - Open Borders: offered and accepted when a known city of the partner lies between one of ours and a known city (within
+    20 hexes) of a team we are at War with or our diplomatic target, and the partner is no threat: not the strict VP
+    leader or our top threat, no army stronger than ours within 10 hexes, no military unit within 5 hexes of our
+    cities. A harmless partner that pays for them is accepted anyway. Ended (`BreakTreaty`) when the partner becomes a
+    threat with a margin: the strict leader at half its target or our diplomatic target, an army 25% stronger nearby,
+    or three military units within 3 hexes of our cities.
+  - Coalition Gold (Hard only): every fifth turn, a solvent AI (positive income, not bankrupt) gives 10% of its Gold
+    above its reserve, 10 to 50, to the weakest met partner at War with the leader it fights itself
+    (`shared_leader_war`), or an ally at War with its diplomatic target (`Order::GiveGold`).
+  - The proxies (`proxy_v4`..`v8`, sim benchmarks where deals are off) still decline Open Borders and offers that ask
+    them for Gold.
 - **Tests:** `crates/core/tests/deals.rs`.

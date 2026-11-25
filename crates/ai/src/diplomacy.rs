@@ -550,6 +550,11 @@ impl Planner<'_> {
         };
         let mut handled = BTreeSet::new();
         let mut decisions = Vec::new();
+        let deals = v.diplomacy.deals;
+        if deals {
+            // Deals (rules 59): Gold our open offers may still pay is not spent this turn.
+            self.hold_offer_gold();
+        }
         // Answer the most valuable treaty offers first, accounting for the
         // treaty count earlier acceptances leave (no cap; just the sum).
         let mut budget = TreatyBudget::of(v);
@@ -578,14 +583,18 @@ impl Planner<'_> {
                 accept: true,
                 explanation: None,
             };
-            // Deals (rules 59): the AI does not use them yet, so it never pays Gold it is asked for.
             let score = if (oath_target == Some(other) && p.kind == TreatyKind::Alliance)
                 || (p.kind == TreatyKind::Peace && !self.wants_peace(other))
-                || p.gold < 0
             {
                 Some(-100)
             } else {
                 self.treaty_score(other, p.kind, &accept, &budget)
+            };
+            // Deals (rules 59): count the offer's Gold (`deals.rs`).
+            let score = if deals {
+                self.deal_response_score(p, other, score)
+            } else {
+                score
             };
             let order = Order::RespondToProposal {
                 proposal: p.id,
@@ -598,6 +607,11 @@ impl Planner<'_> {
                     && p.kind == TreatyKind::Alliance
                 {
                     budget.commit();
+                }
+                // Gold we agreed to pay is not spent on anything else this turn.
+                if matches!(order, Order::RespondToProposal { accept: true, .. }) {
+                    let pays_us = if p.from == other { p.gold } else { -p.gold };
+                    self.gold_left -= (-pays_us).max(0);
                 }
                 decisions.push(order);
                 handled.insert(other);
@@ -628,6 +642,8 @@ impl Planner<'_> {
         }
         let mut offers = Vec::new();
         let mut declarations = Vec::new();
+        // Deals (rules 59): Open Borders partners that have become a threat.
+        let closing = self.borders_to_close();
         for a in &v.diplomacy.actions {
             if a.blocked_reason.is_some() {
                 continue;
@@ -671,6 +687,13 @@ impl Planner<'_> {
                     decisions.push(a.order.clone());
                     handled.insert(with);
                 }
+                Order::BreakTreaty {
+                    with,
+                    agreement: legatum_core::diplomacy::Agreement::OpenBorders,
+                } if !handled.contains(&with) && closing.contains(&with) => {
+                    decisions.push(a.order.clone());
+                    handled.insert(with);
+                }
                 Order::ProposeTreaty { to, kind, .. } if !handled.contains(&to) => {
                     if oath_target == Some(to) && kind == TreatyKind::Alliance {
                         continue;
@@ -690,7 +713,14 @@ impl Planner<'_> {
                     }
                     let score = self.treaty_score(to, kind, &a.order, &budget);
                     if let Some(score) = score.filter(|s| *s >= 0) {
-                        offers.push((std::cmp::Reverse(score), to, kind, a.order.clone()));
+                        // Deals (rules 59): a losing AI pays for its truce, a winning one asks.
+                        let gold = if deals { self.offer_gold(to, kind) } else { 0 };
+                        let order = if gold == 0 {
+                            a.order.clone()
+                        } else {
+                            Order::ProposeTreaty { to, kind, gold }
+                        };
+                        offers.push((std::cmp::Reverse(score), to, kind, order));
                     }
                 }
                 Order::DeclareWar { against, breach } if !handled.contains(&against) => {
@@ -940,6 +970,8 @@ impl Planner<'_> {
             offers.sort_by_key(|(score, team, kind, _)| {
                 (
                     std::cmp::Reverse(*kind == TreatyKind::Peace && self.rome_walled_peace(*team)),
+                    // Deals: Open Borders wait for any Peace or Alliance worth offering.
+                    *kind == TreatyKind::OpenBorders,
                     std::cmp::Reverse(slot_limited(v, *team)),
                     *score,
                     *team,
@@ -949,6 +981,9 @@ impl Planner<'_> {
             if let Some((_, _, _, order)) =
                 offers.into_iter().find(|(_, t, _, _)| !handled.contains(t))
             {
+                if let Order::ProposeTreaty { gold, .. } = order {
+                    self.gold_left -= gold.max(0);
+                }
                 decisions.push(order);
             }
         }
@@ -971,6 +1006,10 @@ impl Planner<'_> {
         if let Some(order) = self.rome_second_declaration() {
             decisions.retain(|existing| !matches!(existing, Order::DeclareWar { .. }));
             decisions.push(order);
+        }
+        // Deals (rules 59): Hard's coalition Gold to a partner fighting the leader.
+        if deals && let Some(gift) = self.plan_coalition_gift() {
+            decisions.push(gift);
         }
         self.orders.extend(decisions);
     }
@@ -1364,9 +1403,9 @@ impl Planner<'_> {
         order: &Order,
         budget: &TreatyBudget,
     ) -> Option<i32> {
-        // Deals (rules 59): the AI neither offers nor accepts Open Borders yet.
+        // Deals (rules 59): Open Borders with a useful neighbour that is no threat (`deals.rs`).
         if kind == TreatyKind::OpenBorders {
-            return None;
+            return self.open_borders_score(other);
         }
         // The walled Roman opening has no open victim city left to win. Rome's side
         // offers and accepts at once; the defender's ordinary score is untouched.

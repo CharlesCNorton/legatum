@@ -40,7 +40,7 @@ spends it from next turn. The AI never issues it (`ai/src/fixture.rs` panics on 
 diplomacy panel (`app/src/ui/GiveGold.tsx`), with a forecast of both treasuries. **Deals (rules 59, `GameSetup::deals`):**
 the receiver may also be a living empire of another team that the giver's team has met and is not at War with ("you are
 at War with X"); otherwise "X is not on your team" as before. `GoldGiven` is then seen by both empires' teams
-(`event_visibility.rs`). The AI still never gives Gold.
+(`event_visibility.rs`). The AI gives Gold only with deals on (Hard's coalition Gold, `diplomacy.md` "Deals").
 
 **One order per unit per turn.** A unit is marked `acted` after its order; a second order for it is
 rejected. The UI never offers a multi-step per-unit queue. A unit that attacked stays where it fought (a melee winner that kills advances into the

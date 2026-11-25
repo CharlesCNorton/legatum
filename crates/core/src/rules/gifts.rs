@@ -5,8 +5,8 @@
 //! A gift is checked against the giver's Gold at the start of the turn (all its gifts together).
 //! It moves after every empire's city orders and actions, so the giver's own purchases this turn
 //! are paid first and the gift is capped at the Gold left then; the teammate can spend it from
-//! next turn. Gifts resolve in player-id order, then in each giver's order list. The AI never
-//! gives Gold (for now).
+//! next turn. Gifts resolve in player-id order, then in each giver's order list. The AI gives Gold
+//! only with deals on (`legatum_ai` `deals.rs`, coalition Gold).
 use crate::events::Event;
 use crate::orders::{Order, OrderError};
 use crate::state::GameState;
