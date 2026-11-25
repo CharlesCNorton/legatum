@@ -143,8 +143,8 @@
   },
   {
    "path": "app/src/assets/units/chariot-archer-source.png",
-   "bytes": 1732685,
-   "sha256": "0be0e058d3ecbba6acc0f9c35bd14a6d8cac305677815d0c8ef861c12cf44e55"
+   "bytes": 1650607,
+   "sha256": "8fcfe79e48e8dbaf2144ab50f411396aab26d55fb736eec5cf654fab65a87827"
   },
   {
    "path": "app/src/assets/units/composite-archer-source.png",
