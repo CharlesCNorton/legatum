@@ -37,6 +37,8 @@ describe('first contact', () => {
     expect(card.meeting!.where).toMatchObject({ kind: 'city', name: 'Roma', from: 'Athenai' });
     expect(whereLine(card.meeting!.where)).toMatch(/^Their city Roma lies \d+ tiles [a-z-]+ of Athenai\.$/);
     expect(whereLine(null)).toBeNull();
+    expect(whereLine({ at: { q: 0, r: 0 }, kind: 'unit', name: 'Scout', tiles: 0, direction: 'N', from: null })).toBe('You have seen their Scout.');
+    expect(whereLine({ at: { q: 0, r: 0 }, kind: 'unit', name: 'Scout', tiles: 0, direction: 'N', from: 'Athenai' })).toBe('Their Scout was seen in Athenai.');
   });
 
   it('plays every meeting after the era-up and score check, and never folds one away', () => {
@@ -63,6 +65,7 @@ describe('first contact', () => {
   it('turns every sheet line about a people into a line about them', () => {
     expect(asTheirs('Cities other than your capital send you no Gold.')).toBe('Cities other than their capital send them no Gold.');
     expect(asTheirs('You buy buildings at 175%.')).toBe('They buy buildings at 175%.');
+    expect(asTheirs('It lets you move, and if you win it costs you 5 Gold.')).toBe('It lets them move, and if they win it costs them 5 Gold.');
     for (const sheet of Object.values(FACTION_SHEETS)) for (const p of sheet.pairs) for (const line of [p.strength, p.price]) {
       if (line) expect(asTheirs(line)).not.toMatch(/\b(you|your)\b/i);
     }

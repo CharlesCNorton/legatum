@@ -21,8 +21,9 @@ const DIRECTION: Record<EmpireLocation['direction'], string> = {
 /** Where they are, in one line: "Their city Roma lies 9 tiles north-east of Athens." */
 export function whereLine(where: EmpireLocation | null): string | null {
   if (!where) return null;
-  const off = where.from === null ? '' : where.tiles === 0 ? ` beside ${where.from}` : ` ${where.tiles} ${where.tiles === 1 ? 'tile' : 'tiles'} ${DIRECTION[where.direction]} of ${where.from}`;
-  return where.kind === 'city' ? `Their city ${where.name} lies${off}.` : `Their ${where.name} was seen${off}.`;
+  if (where.from === null) return where.kind === 'city' ? `You have seen their city ${where.name}.` : `You have seen their ${where.name}.`;
+  const off = where.tiles === 0 ? `in ${where.from}` : `${where.tiles} ${where.tiles === 1 ? 'tile' : 'tiles'} ${DIRECTION[where.direction]} of ${where.from}`;
+  return where.kind === 'city' ? `Their city ${where.name} lies ${off}.` : `Their ${where.name} was seen ${off}.`;
 }
 
 /**
@@ -31,7 +32,7 @@ export function whereLine(where: EmpireLocation | null): string | null {
  */
 export function asTheirs(text: string): string {
   return text
-    .replace(/\b(send|sends|give|gives|pay|pays) you\b/g, '$1 them')
+    .replace(/\b(?!(?:if|when|until|unless|that|and|but|so|or)\b)(\w+) you\b/g, '$1 them')
     .replace(/\bYour\b/g, 'Their').replace(/\byour\b/g, 'their')
     .replace(/\bYou\b/g, 'They').replace(/\byou\b/g, 'they');
 }
@@ -115,7 +116,7 @@ export function MeetingTakeover({ moment, dismiss }: { moment: Moment; dismiss()
         </div>
         <div className="et-col mt-between" data-testid="meeting-between">
           <h3>Between you</h3>
-          <p className={`mt-state ${relation === 'War' ? 'war' : ''}`}><b>{relation === 'War' ? 'At War' : 'At Peace'}</b>{relation === 'War' ? '.' : '. You can now offer them an Alliance.'}</p>
+          <p className={`mt-state ${relation === 'War' ? 'war' : ''}`}>{relation === 'War' ? <b>At War.</b> : relation === 'Alliance' ? <b>In an Alliance.</b> : <><b>At Peace.</b> You can offer them an Alliance.</>}</p>
           {where && <p>{where}</p>}
           <p className="mt-facts"><span>{cities} {cities === 1 ? 'city' : 'cities'}</span><span>{vp} VP</span></p>
           <p className="mt-facts"><Pips label="Aggression" value={sheet.ratings.aggression} /><Pips label="Economy" value={sheet.ratings.economy} /></p>

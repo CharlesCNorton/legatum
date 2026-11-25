@@ -10,8 +10,9 @@ import type { Faction } from '../types';
  * aside); "eirene hymin", the Greek Christian greeting of the Byzantine court and liturgy; the Egyptian letter formula
  * ankh wedja seneb ("life, prosperity, health") after a king's name; Nahuatl "nimitztlahpaloa" (tlahpaloa, to greet,
  * in Molina's 1571 dictionary); the opening of Guyuk Khan's 1246 letter to Pope Innocent IV, "by the power of
- * Eternal Heaven"; Old Irish "failte" (welcome); German "seid gegruesst"; Swiss German "grueezi" (from "Gott gruez
- * i", God greet you); Sanskrit "namaste".
+ * Eternal Heaven"; Old Irish "failte" (welcome); German "seid gegruesst"; Sanskrit "namaste". Nahuatl
+ * "nimitztlahpaloa" is the dictionary verb, not a recorded court formula. Switzerland has no native line: "grüezi" is
+ * first recorded in the 19th century.
  */
 export interface Greeting { native?: string; meaning?: string; line: string }
 
@@ -25,6 +26,6 @@ export const GREETING: Record<Faction, Greeting> = {
   Mongols: { native: 'Möngke Tengri-yin küchün-dür.', meaning: 'By the power of Eternal Heaven.', line: 'The Great Khan has heard of you. Those who bow are spared. Those who resist are remembered.' },
   Celts: { native: 'Fáilte.', meaning: 'Welcome.', line: 'The tribes have seen your fires. A guest is sacred at our hearths. A raider is not.' },
   Germany: { native: 'Seid gegrüßt.', meaning: 'Be greeted.', line: 'The German Empire greets you. Our forges never rest. Let us be neighbours, not rivals.' },
-  Switzerland: { native: 'Grüezi.', meaning: 'God greet you.', line: 'The Confederates greet you. Come as a guest and the passes are open. Come as an army and they are not.' },
+  Switzerland: { line: 'The Confederates greet you. Come as a guest and the passes are open. Come as an army and they are not.' },
   India: { native: 'Namaste.', meaning: 'I bow to you.', line: 'The court of Hindustan greets you. Many peoples live under one emperor here. There is room for one more friend.' },
 };
