@@ -204,6 +204,9 @@ export function assaultSummary(a: CityAssaultForecast, cityName: string, garriso
  * has Siege. An Industrial or later land unit has Siege built in at its own era tier. `siegeTier` is the viewer's own siege tier (core `data::siege_tier`), so the hint to buy Siege is shown only to a
  * player who knows Mathematics. Null when the target has no Walls.
  */
+/** The tech whose Siege covers the next Walls level, keyed by the level bought Siege covers now. */
+const NEXT_SIEGE_TECH: Record<number, string> = { 1: 'Machinery', 2: 'Metallurgy' };
+
 export function wallsLine(f: BattleForecast, cityName: string, _unitLabel: string, siegeTier: number, dealt = 0): { text: string; tone: 'good' | 'plain' } | null {
   const w = f.walls;
   if (!w) return null;
@@ -211,7 +214,10 @@ export function wallsLine(f: BattleForecast, cityName: string, _unitLabel: strin
   const coveredLevel = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'][Math.min(w.covered, w.tier)] ?? String(w.covered);
   const cover = `Siege covers level${Math.min(w.covered, w.tier) > 1 ? `s I–${coveredLevel}` : ' I'}`;
   const damage = w.percent >= 100 ? 'full damage' : `${w.percent}% damage`;
-  if (w.covered > 0) return { text: `Walls ${level}: ${w.built_in ? 'built-in ' : ''}${cover}, so ${damage} to ${cityName}.`, tone: w.percent >= 100 ? 'good' : 'plain' };
+  // Bought Siege still short of these Walls: name the tech that covers the next level.
+  const nextTech = !w.built_in && w.covered < w.tier ? NEXT_SIEGE_TECH[w.covered] : undefined;
+  const next = nextTech ? ` ${nextTech} covers level ${['', 'I', 'II', 'III'][w.covered + 1]}.` : '';
+  if (w.covered > 0) return { text: `Walls ${level}: ${w.built_in ? 'built-in ' : ''}${cover}, so ${damage} to ${cityName}.${next}`, tone: w.percent >= 100 ? 'good' : 'plain' };
   const withSiege = w.percent > 0 && w.percent < 100 && dealt > 0 ? Math.round((dealt * 100) / w.percent) : 0;
   return {
     text: `Walls ${level} halve this attack on ${cityName}${siegeTier > 0 && withSiege > 0 ? `: ${dealt} HP, or ${withSiege} with Siege` : ''}.`,

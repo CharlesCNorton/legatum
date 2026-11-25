@@ -415,7 +415,7 @@ describe('wallsLine', () => {
   it('shows both numbers when Siege would help, and names the missing tech when it only half helps', () => {
     expect(wallsLine(f({ tier: 1, covered: 0, percent: 50 }), 'Athens', 'Spearman', 1, 18)).toEqual({ text: 'Walls I halve this attack on Athens: 18 HP, or 36 with Siege.', tone: 'plain' });
     expect(wallsLine(f({ tier: 1, covered: 0, percent: 50 }), 'Athens', 'Spearman', 0, 18)!.text).toBe('Walls I halve this attack on Athens.');
-    expect(wallsLine(f({ tier: 2, covered: 1, percent: 75 }), 'Athens', 'Spearman', 1, 27)).toEqual({ text: 'Walls II: Siege covers level I, so 75% damage to Athens.', tone: 'plain' });
+    expect(wallsLine(f({ tier: 2, covered: 1, percent: 75 }), 'Athens', 'Spearman', 1, 27)).toEqual({ text: 'Walls II: Siege covers level I, so 75% damage to Athens. Machinery covers level II.', tone: 'plain' });
     expect(wallsLine(f({ tier: 1, covered: 1, percent: 100 }), 'Athens', 'Spearman', 1, 36)!.tone).toBe('good');
     // Covered, the line says what is ignored; the red City fire row says the city still fires. Never "no Walls penalty" beside a red "Walls: ... fires first".
     expect(wallsLine(f({ tier: 1, covered: 1, percent: 100 }), 'Athens', 'Spearman', 1, 36)!.text).toBe('Walls I: Siege covers level I, so full damage to Athens.');

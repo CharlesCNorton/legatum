@@ -675,17 +675,23 @@ pub fn city_strength_vs_viewer(view: &PlayerView, c: &CityView) -> i32 {
     if view.team_of(c.owner) == view.team {
         return c.strength;
     }
-    let covered = combat::city_defense_vs(
-        view.rule_experiments,
-        view.faction_of(c.owner),
-        c.population,
-        u8::from(c.walls) + c.fort_tier(),
-        viewer_siege_cover(view),
-        c.hp,
-        view.era_of(c.owner),
-    )
-    .total;
-    c.strength.min(covered)
+    let defense = |covered| {
+        combat::city_defense_vs(
+            view.rule_experiments,
+            view.faction_of(c.owner),
+            c.population,
+            u8::from(c.walls) + c.fort_tier(),
+            covered,
+            c.hp,
+            view.era_of(c.owner),
+        )
+        .total
+    };
+    let cover = viewer_siege_cover(view);
+    if cover == 0 {
+        return c.strength;
+    }
+    (c.strength - (defense(0) - defense(cover))).max(0)
 }
 
 /// A city's own defensive weight (walls included), scaled by its HP on the unit HP scale: a

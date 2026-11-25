@@ -983,9 +983,7 @@ fn siege_is_built_in_from_the_industrial_era_never_bought_and_dropped_on_upgrade
         .map(|e| e.message.clone())
         .unwrap();
     assert!(
-        reason.contains(
-            "Rifleman needs no Siege: it covers Walls through level IV in the Industrial era, one more level in each later era"
-        ),
+        reason.contains("Rifleman needs no Siege: it already covers Walls up to level IV."),
         "{reason}"
     );
     let view = player_view(&s, P0);

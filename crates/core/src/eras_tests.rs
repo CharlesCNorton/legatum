@@ -1322,8 +1322,18 @@ fn walls_levels_add_era_scaled_strength_and_siege_removes_covered_levels() {
             at(0, 0, era).total + data::era_scaled(5, era)
         );
         assert_eq!(at(3, 3, era).total, at(0, 0, era).total);
-        assert!(three.parts.iter().any(|(label, _)| label == "Walls II"));
-        assert!(three.parts.iter().any(|(label, _)| label == "Walls III"));
+        assert!(
+            three
+                .parts
+                .iter()
+                .any(|(label, _)| label == "Alpine Redoubt II–III")
+        );
+        assert!(
+            at(3, 2, era)
+                .parts
+                .iter()
+                .any(|(label, _)| label == "Alpine Redoubt III")
+        );
     }
     assert_eq!(data::siege_cover(UnitKind::CombatDrone, None), 8);
     assert_eq!(

@@ -1282,7 +1282,7 @@ pub fn city_production_cost(state: &GameState, city: &City, item: ProductionItem
                     building: BuildingKind::UpgradeWalls,
                 })
             {
-                80 * (i32::from(city.wall_tier()) + 2)
+                data::upgrade_walls_cost(city.wall_tier())
             } else {
                 production_cost(state, city.owner, item)
             }
@@ -1382,7 +1382,7 @@ pub fn buy_quote(state: &GameState, city: &City, item: ProductionItem) -> Option
         ProductionItem::Building {
             building: BuildingKind::UpgradeWalls,
         } => {
-            let cost = 80 * (i32::from(city.wall_tier()) + 2);
+            let cost = data::upgrade_walls_cost(city.wall_tier());
             (cost, cost)
         }
         ProductionItem::Unit { unit } => (

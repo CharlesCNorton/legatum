@@ -88,6 +88,11 @@ fn walls_upgrade_one_level_at_a_time_with_era_caps_and_gold_quotes() {
         economy::production_blocker(&state, city(&state, id), upgrade, true),
         Some("Build Walls first.".into())
     );
+    // Before Walls, the forecast quotes the first upgrade (to level II), not a level-I price.
+    assert_eq!(
+        economy::city_production_cost(&state, city(&state, id), upgrade),
+        240
+    );
     assert!(complete_item(
         &mut state,
         id,

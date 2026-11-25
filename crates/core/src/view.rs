@@ -2670,6 +2670,14 @@ fn city_detail(
             !matches!(item, ProductionItem::Building { building }
                 if data::has_building(&c.buildings, *building))
         })
+        // Walls at the top level: nothing more to build, so the upgrade leaves the list.
+        .filter(|item| {
+            *item
+                != (ProductionItem::Building {
+                    building: BuildingKind::UpgradeWalls,
+                })
+                || c.wall_tier() < data::MAX_WALL_TIER
+        })
         .filter_map(|item| {
             worded(
                 full,
@@ -3397,6 +3405,12 @@ pub(crate) mod tests {
         let detail = city(&view, id).unwrap().detail.as_ref().unwrap();
         assert!(detail.unavailable.iter().all(|entry| entry.item != upgrade));
         assert!(detail.options.iter().any(|entry| entry.item == upgrade));
+
+        s.cities.get_mut(&id).unwrap().walls_level = data::MAX_WALL_TIER;
+        let view = player_view(&s, P0);
+        let detail = city(&view, id).unwrap().detail.as_ref().unwrap();
+        assert!(detail.unavailable.iter().all(|entry| entry.item != upgrade));
+        assert!(detail.options.iter().all(|entry| entry.item != upgrade));
     }
 
     #[test]

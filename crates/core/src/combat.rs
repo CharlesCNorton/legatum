@@ -877,13 +877,24 @@ pub fn city_defense_covered_rules(
             ),
         );
     }
-    for level in 2..=wall_tier {
-        if level > covered {
-            b.add(
-                format!("Walls {}", data::wall_level_label(level)),
-                data::era_scaled(5, era),
-            );
-        }
+    // Upgrade levels past Siege cover share one row ("Walls III–VI"), each adding the same
+    // era-scaled amount.
+    let first = covered.saturating_add(1).max(2);
+    if wall_tier >= first {
+        let walls = data::building_name_for(faction, BuildingKind::Walls);
+        let label = if first == wall_tier {
+            format!("{walls} {}", data::wall_level_label(first))
+        } else {
+            format!(
+                "{walls} {}–{}",
+                data::wall_level_label(first),
+                data::wall_level_label(wall_tier)
+            )
+        };
+        b.add(
+            label,
+            i32::from(wall_tier - first + 1) * data::era_scaled(5, era),
+        );
     }
     wounded(&mut b, hp, CITY_HP, 20);
     b

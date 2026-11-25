@@ -49,8 +49,8 @@ pub fn check(
     let name = data::unit_name_for(state.player(player).faction, u.kind);
     if data::built_in_siege(u.kind) {
         return Err(format!(
-            "{name} needs no Siege: it {}",
-            data::BUILT_IN_SIEGE_NOTE
+            "{name} needs no Siege: it already covers Walls up to level {}.",
+            data::wall_level_label(data::siege_cover(u.kind, None))
         ));
     }
     if !data::can_have_siege(u.kind) {

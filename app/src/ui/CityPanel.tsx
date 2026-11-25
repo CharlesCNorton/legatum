@@ -99,6 +99,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
   const meterName = (item: ProductionItem): string => item.kind === 'Improvement'
     ? improvementShortTitle(item, city.pos, view.tiles[tileIndex(item.tile, view.width, view.height)]?.resource)
     : item.kind === 'Wonder' ? `${baseItemName(item, owner?.faction)} ${bearing(city.pos, item.tile)}`
+    : item.kind === 'Building' && item.building === 'UpgradeWalls' ? wallsUpgradeName(city.walls_level ?? Number(city.walls), itemName({ kind: 'Building', building: 'Walls' }, owner?.faction))
     : itemName(item, owner?.faction);
   const improve = useGame((s) => s.improve);
   const place = useGame((s) => s.place);

@@ -2065,6 +2065,12 @@ pub fn tech_era(tech: TechId) -> &'static str {
 }
 
 /// Completed level of a city's Walls, including the per-city upgrades.
+/// Production for the next Walls level: level n costs 80 x (n + 1). A city without Walls is
+/// quoted the first upgrade (to level II), the price it will pay once Walls are built.
+pub fn upgrade_walls_cost(level: u8) -> i32 {
+    80 * (i32::from(level.max(1)) + 2)
+}
+
 pub fn wall_tier(city: &crate::state::City) -> u8 {
     city.walls_level.max(legacy_wall_tier(&city.buildings))
 }
