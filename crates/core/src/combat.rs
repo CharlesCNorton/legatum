@@ -335,7 +335,7 @@ pub fn fight_reislaufer_bonus_for_rules(
 }
 
 /// The breakdown line of the Chariot Archer's volley against the melee line (states the percentage).
-pub const CHARIOT_VOLLEY_LABEL: &str = "Chariot Archer shooting melee units (+40%)";
+pub const CHARIOT_VOLLEY_LABEL: &str = "Shooting melee units (+40%)";
 
 /// The extra an Egyptian Chariot Archer's shot gets against a melee-line unit
 /// (`data::CHARIOT_ARCHER_VOLLEY_PERCENT` of its own ranged strength, rounded down; Sam,

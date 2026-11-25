@@ -572,6 +572,7 @@ const CARD_SUMMARY: Partial<Record<Faction, Partial<Record<string, string>>>> = 
   Germany: { 'b:Forge': '+6 Production', 'b:Factory': '+5 Production; upgrades your Ruhr Foundry' },
   Mongols: { 'u:Cataphract': 'Rides or shoots at range 2; a shot cannot take a city' },
   Athens: { 'b:Library': '+6 Science' },
+  Egypt: { 'u:Archer': `${RULES.specialUnitNumbers.chariotArcherMoves} moves, +${RULES.specialUnitNumbers.chariotArcherVolleyPercent}% shooting melee units; Forest or Hills take its whole turn` },
 };
 
 /** Core `goals::spec`, exported with the rules: every number a goal counts toward comes from here. */
@@ -1075,7 +1076,7 @@ export function specialUnitEdge(faction: Faction): string {
     case 'Aztecs': return `+${n.eagleWarriorStrength} strength, +${n.eagleWarriorCost} Production`;
     case 'Celts': return `+${n.gaesataeAttack} strength attacking, −${-n.gaesataeDefense} defending`;
     case 'Athens': return `${n.peltastMoves} moves instead of ${plain.moves}, the same shot`;
-    case 'Egypt': return `${n.chariotArcherMoves} moves instead of ${plain.moves}, +${n.chariotArcherVolleyPercent}% when shooting melee units; Forest and Hills take its whole turn`;
+    case 'Egypt': return `${n.chariotArcherMoves} moves instead of ${plain.moves}, +${n.chariotArcherVolleyPercent}% when shooting melee units; entering Forest or Hills takes its whole turn`;
     case 'India': return `+${n.warElephantStrength} strength, ${n.warElephantMoves} moves instead of ${plain.moves}, no penalty charging a city`;
     case 'Switzerland': return `+${n.reislauferMountedPercent}% against mounted units, on top of the usual bonus`;
     case 'Germany': return `+${n.panzerMoves - plain.moves} move`;

@@ -58,6 +58,8 @@ This file holds the current rules, one line each. The user's words, dates, as-bu
 - Forecast headlines include every consequence (walled-city fire, Siege); a line that changes a number shows both numbers.
 - Costs are loud (red), including ongoing upkeep on every build card; neutral "nothing yet" lines are muted ink, never green; colour is from the viewer's side.
 - Anything that ticks over time has a progress bar with turns left; a goal's progress is a meter with its number.
+- A unit's own movement rule shows where the move is made: the tile card names it for the selected unit (the Chariot Archer's "Entering takes your Chariot Archer's whole turn."), not only the terrain's base cost (UI review, 2026-11-25).
+- A special unit's closed build card names what is special about it (a `CARD_SUMMARY` entry in `data.ts`); the replaced unit's generic summary is not enough. A breakdown row under a unit's strength does not repeat the unit's name (UI review, 2026-11-25).
 - Every way to score is visible, with ownership unmistakable (user, 2026-10-06); a scoring option that becomes available is announced every time (user, 2026-11-11).
 
 ## Map

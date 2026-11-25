@@ -108,6 +108,15 @@ export function isChariotArcher(view: PlayerView, u: Mover): boolean {
   return u.kind === 'Archer' && (u.origin ?? view.players.find((p) => p.id === u.owner)?.faction) === 'Egypt';
 }
 
+/** The tile card's line for a Chariot Archer hovering rough ground (Forest or Hills without a road): entering takes its whole turn. */
+export function chariotTerrainNote(view: PlayerView, mover: Mover, h: Hex): string | undefined {
+  if (!isChariotArcher(view, mover)) return undefined;
+  const t = view.tiles[tileIndex(h, view.width, view.height)];
+  if (!t?.explored) return undefined;
+  const cost = tileMoveCost(t.terrain, t.road);
+  return cost != null && cost > 1 ? 'Entering takes your Chariot Archer’s whole turn.' : undefined;
+}
+
 /** Land movement over explored tiles of a view, for `mover` when given (core `GameState::unit_step_cost`). */
 function viewCost(view: PlayerView, mover?: Mover): CostFn {
   const chariot = !!mover && isChariotArcher(view, mover);

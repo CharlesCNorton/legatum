@@ -11,7 +11,7 @@ import { isEliminated, useGame } from '../store';
 import type { AlongsideAttack, BattleForecast, CityAssaultForecast, CityBuildFocus, Hex, PlayerView, ProductionItem } from '../types';
 import { cityAutomationFocus, cityAutomationPreview } from '../automation';
 import { distance, hexEq, hexToPixel, pixelToHex, tileIndex, within } from '../hex';
-import { planTurns, previewRoute, roadBonusNote, routeTurnsText, routeRiskText, routeDangerText, isCalmRouteNote, type PathStep, type RouteRisk } from '../path';
+import { chariotTerrainNote, planTurns, previewRoute, roadBonusNote, routeTurnsText, routeRiskText, routeDangerText, isCalmRouteNote, type PathStep, type RouteRisk } from '../path';
 import { draw, HEX_SIZE, perf, screenToWorld, terrainStats, worldBounds, ambientClipRects, hoverClipBoxes, idleClipBoxes, type Camera, type SelectionRing, type ImproveOverlay, type PendingMark, type TerritoryOverlay } from './render';
 import { fontEpoch } from './sprites';
 import { onIconLoad } from '../icons';
@@ -1627,7 +1627,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
       )}
       {/* One card at a time: the Peace hint is the decision here, so the tile card waits (both used the same spot). */}
       {!touchInfo && !hoveredBanner && !forecast && !airForecast && !peaceHere && hover && hoverTile && (hoverTile.explored || (view?.units.some((u) => u.heir_of != null && hexEq(u.pos, hover.hex)) ?? false)) && tileHoverReady && view && !gesture.current.contacts.length && (
-        inspectedSite ? <SettlementCard site={inspectedSite} anchor={cardAnchor!} faction={view?.players.find((p) => p.id === view.me)?.faction} /> : <TileCard view={view} hex={hover.hex} anchor={cardAnchor!} blockedReason={blockedShot || undefined} routeWarning={ownSel ? routeWarningAt(hover.hex) : undefined} reinforcement={reinforcementAt(hover.hex)} note={placeNote ?? blockedSiteNote} refusal={placeRefusal} />
+        inspectedSite ? <SettlementCard site={inspectedSite} anchor={cardAnchor!} faction={view?.players.find((p) => p.id === view.me)?.faction} /> : <TileCard view={view} hex={hover.hex} anchor={cardAnchor!} blockedReason={blockedShot || undefined} routeWarning={ownSel ? routeWarningAt(hover.hex) : undefined} reinforcement={reinforcementAt(hover.hex)} note={placeNote ?? blockedSiteNote ?? (ownSel ? chariotTerrainNote(view, ownSel, hover.hex) : undefined)} refusal={placeRefusal} />
       )}
     </div>
   );
