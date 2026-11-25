@@ -43,13 +43,13 @@ try {
   if(!state.ready)throw new Error(state.error);
   await mkdir(out,{recursive:true});const receipts={};
   for(const [clip,duration] of Object.entries(state.clips)) {
-    const frames=resolve(out,'.spearman-0ad-r2-viewer-frames',clip);await mkdir(frames,{recursive:true});
+    const frames=resolve(out,'.spearman-0ad-r3-viewer-frames',clip);await mkdir(frames,{recursive:true});
     const count=Math.round(duration*30);
     for(let i=0;i<count;i++) {
       await page.evaluate(({clip,t})=>window.review.sample(clip,t),{clip,t:i/30});
       await page.locator('canvas').screenshot({path:join(frames,`${String(i).padStart(4,'0')}.png`)});
     }
-    const output=join(out,`spearman-0ad-r2-${clip}-viewer.mp4`);
+    const output=join(out,`spearman-0ad-r3-${clip}-viewer.mp4`);
     const encode=spawnSync('ffmpeg',['-y','-loglevel','error','-framerate','30','-stream_loop','2','-i',join(frames,'%04d.png'),'-frames:v',String(count*3),'-c:v','libx264','-crf','18','-pix_fmt','yuv420p','-movflags','+faststart',output],{stdio:'inherit'});
     if(encode.status!==0)throw new Error(`ffmpeg failed for ${clip}`);
     const probe=spawnSync('ffprobe',['-v','error','-count_frames','-select_streams','v:0','-show_entries','stream=width,height,pix_fmt,nb_read_frames,r_frame_rate','-of','json',output],{encoding:'utf8'});
@@ -59,7 +59,7 @@ try {
     receipts[clip]={output,...stream};console.log(output);
   }
   if(errors.length)throw new Error(errors.join('\n'));
-  await writeFile(join(out,'spearman-0ad-r2-viewer-validation.json'),JSON.stringify(receipts,null,2));
+  await writeFile(join(out,'spearman-0ad-r3-viewer-validation.json'),JSON.stringify(receipts,null,2));
 } finally {
   if(browser)await browser.close();await new Promise(r=>server.close(r));
 }

@@ -5,17 +5,11 @@ and all 36 native attack frames. Package with package.py afterwards.
 """
 import bpy, sys, os, json, math
 from pathlib import Path
-from mathutils import Matrix, Vector
-from bpy_extras.object_utils import world_to_camera_view
+from mathutils import Vector
 UNIT=Path(__file__).resolve().parent
 ROOT=Path(os.environ.get('ANIM_ROOT',Path.home()/'LegatumRuns/anim-pilot'))
-WORK=ROOT/'oad/r2';OUT=WORK/'frames';OUT.mkdir(parents=True,exist_ok=True)
+WORK=ROOT/'oad/r3';OUT=WORK/'frames';OUT.mkdir(parents=True,exist_ok=True)
 QUICK='--quick' in sys.argv
-sys.path.insert(0,str(Path(__file__).resolve().parents[2]))
-from validate_glb import GLB
-source=GLB(UNIT/'spearman.glb')
-gltf_clips={a['name']:a for a in source.doc['animations']}
-axis=Matrix.Rotation(-math.pi/2,4,'X')
 bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
 bpy.context.scene.render.fps=30
 bpy.ops.import_scene.gltf(filepath=str(UNIT/'spearman.glb'),bone_heuristic='BLENDER')
@@ -24,15 +18,23 @@ rig=next(o for o in s.objects if o.type=='ARMATURE')
 meshes=[o for o in s.objects if o.type=='MESH' and not any(c.hide_render for c in o.users_collection)]
 actions={a.name.split('|')[-1]:a for a in bpy.data.actions}
 print('ACTIONS',list(actions),flush=True)
-rigid={}
-for i,node in enumerate(source.doc['nodes']):
-    if 'mesh' in node and 'skin' not in node:
-        ob=bpy.data.objects[node['name']];ob.parent=None;rigid[i]=ob
+# Import COLOR_0 as scalar data, bypassing glTF's default RGB multiplication.
+# The exported unit remains a normal lit material, with no emission or AO.
+for ob in meshes:
+    for mat in ob.data.materials:
+        nodes=mat.node_tree.nodes;links=mat.node_tree.links
+        shader=nodes.get('Principled BSDF')
+        texture=next(n for n in nodes if n.type=='TEX_IMAGE')
+        color=nodes.new('ShaderNodeVertexColor');color.layer_name=ob.data.color_attributes[0].name
+        separate=nodes.new('ShaderNodeSeparateColor');links.new(color.outputs['Color'],separate.inputs['Color'])
+        mix=nodes.new('ShaderNodeMixRGB');mix.inputs[1].default_value=(1,1,1,1)
+        mix.inputs[2].default_value=(.3763,.0194,.0203,1)
+        links.new(separate.outputs['Red'],mix.inputs[0])
+        multiply=nodes.new('ShaderNodeMixRGB');multiply.blend_type='MULTIPLY';multiply.inputs[0].default_value=1
+        links.new(texture.outputs['Color'],multiply.inputs[1]);links.new(mix.outputs[0],multiply.inputs[2])
+        links.new(multiply.outputs[0],shader.inputs['Base Color'])
 def pose(name,frame):
     s.frame_set(int(frame),subframe=frame%1)
-    worlds=source.worlds(gltf_clips[name],(frame-actions[name].frame_range[0])/30)
-    for i,ob in rigid.items():
-        w=worlds[i];ob.matrix_world=axis.inverted() @ Matrix([[w[c*4+r] for c in range(4)] for r in range(4)]) @ axis
     bpy.context.view_layer.update()
 
 # Disable imported NLA: the explicitly selected action is the sole motion source.

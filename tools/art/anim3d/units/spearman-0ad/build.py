@@ -11,7 +11,7 @@ from dae import parse, geometry, bind, find, all, matrix
 
 UNIT=Path(__file__).resolve().parent
 ROOT=Path(os.environ.get('ANIM_ROOT',Path.home()/'LegatumRuns/anim-pilot'))
-WORK=ROOT/'oad/r2';WORK.mkdir(parents=True,exist_ok=True)
+WORK=ROOT/'oad/r3';WORK.mkdir(parents=True,exist_ok=True)
 ART=ROOT/'oad/src/binaries/data/mods/public/art'
 CREDIT='0 A.D. art by Wildfire Games, CC BY-SA 3.0; adapted for Legatum'
 bpy.ops.wm.open_mainfile(filepath=str(ROOT/'oad/hoplite.blend'))
@@ -111,9 +111,24 @@ for p in body.data.polygons:
     elif abs(c.x)<.55 and c.z<3.4:colour=0
     if 2.13<c.z<2.28:colour=4
     swatch(body,p,colour)
+    if colour==0:
+        for li in p.loop_indices:
+            v=body.data.vertices[body.data.loops[li].vertex_index].co
+            if c.z>2.25:
+                # Same decorative bronze cuirass on front and back; no directional light.
+                u=max(0,min(1,(v.x+.60)/1.20));z=max(0,min(1,(v.z-2.25)/1.15))
+                body.data.uv_layers.active.data[li].uv=((580+u*184)/1024,1-(250-z*244)/1024)
+            else:
+                # Shin ornament wraps each greave, repeated symmetrically.
+                u=max(0,min(1,(abs(v.x)-.04)/.48));z=max(0,min(1,(v.z-.18)/.94))
+                body.data.uv_layers.active.data[li].uv=((900+u*120)/1024,1-(632-z*304)/1024)
+    elif colour==1:
+        for li in p.loop_indices:
+            v=body.data.vertices[body.data.loops[li].vertex_index].co
+            body.data.uv_layers.active.data[li].uv=((8+(v.x+.9)/1.8*112)/1024,1-(620-(v.z-1.12)/1.13*280)/1024)
 cape_tree=parse(ART/'meshes/props/new/capes/cape_hd_hoplite.dae')
 cape=geometry(cape_tree,'cloak',materials[0]);bind(cape,cape_tree,rig);paint(cape,2)
-# Edge trim: actual faces belong to the team slot, so runtime tint remains cheap.
+# Authoring team faces become COLOR_0 during the one-draw-call export.
 cape_minz=min(v.co.z for v in cape.data.vertices)
 cape_maxx=max(abs(v.co.x) for v in cape.data.vertices)
 for p in cape.data.polygons:
@@ -171,6 +186,13 @@ for name,source in sources.items():
                 # first derivative agree across the periodic boundary.
                 target=poses[0][bone].lerp(poses[1][bone],f-length)
                 poses[f][bone]=poses[f][bone].lerp(target,t)
+    if name=='death':
+        # Ease the final quarter-second into a held rest instead of cutting motion.
+        start=length-8;first=poses[start];last=poses[-1]
+        for f in range(start,length+1):
+            t=(f-start)/8;t=t*t*t*(10+t*(-15+6*t))
+            poses[f]={bone:first[bone].lerp(last[bone],t) for bone in keep}
+        poses.extend(dict(poses[-1]) for _ in range(4))
     cache[name]=poses
 rig.animation_data.action=None
 for a in list(bpy.data.actions):bpy.data.actions.remove(a)
@@ -212,6 +234,17 @@ for name,poses in cache.items():
     for f,pose in enumerate(poses):
         s.frame_set(f+1)
         for p in rig.pose.bones:p.matrix_basis=pose[p.name];p.rotation_mode='QUATERNION'
+        if name=='attack':
+            bpy.context.view_layer.update()
+            hip_pose=rig.pose.bones['hip']
+            hip_pose.matrix=Matrix.Rotation(math.radians(-22),4,'Z') @ hip_pose.matrix
+        if name=='death':
+            # Relax the head onto its side as the body lands. The native crest
+            # otherwise supports the entire body 3 cm above the floor.
+            t=max(0,min(1,(f/(len(poses)-1)-.60)/.28));t=t*t*(3-2*t)
+            bpy.context.view_layer.update();head=rig.pose.bones['head']
+            pivot=head.matrix.translation.copy()
+            head.matrix=Matrix.Translation(pivot) @ Matrix.Rotation(math.radians(12)*t,4,'X') @ Matrix.Translation(-pivot) @ head.matrix
         # Root remains fixed. Ground the actual feet/body, correcting native fall penetration.
         bpy.context.view_layer.update();dep=bpy.context.evaluated_depsgraph_get()
         ev=body.evaluated_get(dep);me=ev.to_mesh()
@@ -283,5 +316,9 @@ for index,node in enumerate(doc['nodes']):
         doc['scenes'][doc.get('scene',0)]['nodes'].append(index)
 raw=json.dumps(doc,separators=(',',':')).encode();raw+=b' '*((-len(raw))%4)
 rest=data[20+size:];p.write_bytes(struct.pack('<4sII',b'glTF',2,20+len(raw)+len(rest))+struct.pack('<II',len(raw),kind)+raw+rest)
-report.update(bones=len(keep),triangles=sum(sum(len(p.vertices)-2 for p in o.data.polygons) for o in meshes),glb_bytes=p.stat().st_size)
+from merge import merge
+merge(p)
+from clearance import correct
+report["interpolation_clearance"]=correct(p)
+report.update(bones=len(keep)+1,triangles=sum(sum(len(p.vertices)-2 for p in o.data.polygons) for o in meshes),glb_bytes=p.stat().st_size)
 (WORK/'build-report.json').write_text(json.dumps(report,indent=2));print(json.dumps(report,indent=2))

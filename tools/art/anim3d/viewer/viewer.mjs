@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {applyTeamMask} from './team-mask.mjs';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 
 const query = new URLSearchParams(location.search);
@@ -57,9 +58,9 @@ try {
   gltf.scene.traverse(o=>{
     if (!o.isMesh) return;
     o.castShadow=true; o.receiveShadow=false; o.frustumCulled=false;
-    for(const m of (Array.isArray(o.material)?o.material:[o.material])) if(m.name==='team') teamMaterials.add(m);
+    for(const m of (Array.isArray(o.material)?o.material:[o.material])) if(m.userData.team?.attribute==='COLOR_0') {applyTeamMask(m, THREE);teamMaterials.add(m);}
   });
-  document.querySelector('#team').addEventListener('input', e=>teamMaterials.forEach(m=>m.color.set(e.target.value)));
+  document.querySelector('#team').addEventListener('input', e=>teamMaterials.forEach(m=>m.userData.teamUniform.value.set(e.target.value)));
   // Frame all five clips once; never chase the actor during playback.
   const bounds=new THREE.Box3();
   for(const clip of gltf.animations) {

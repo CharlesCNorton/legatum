@@ -28,6 +28,25 @@ def paint(path):
         d.line([hp(sign*.035,.35),hp(sign*.20,.36)],fill=PALETTE[6],width=5)
         d.line([hp(sign*.20,.23),hp(sign*.15,-.05)],fill=PALETTE[7],width=4)
     d.line([hp(-.055,-.035),hp(.055,-.035)],fill=PALETTE[5],width=4)
+    # Broad painted ornament, not shading: bronze borders and engraved cuirass.
+    d.rectangle((576,0,767,255),fill=PALETTE[0])
+    d.rectangle((580,5,763,251),outline=PALETTE[7],width=4)
+    d.line([(585,24),(614,45),(672,52),(730,45),(759,24)],fill=PALETTE[6],width=7)
+    for x in [624,720]:
+        d.arc((x-40,45,x+40,135),10,170,fill=PALETTE[7],width=5)
+        d.arc((x-34,48,x+34,125),12,168,fill=PALETTE[6],width=3)
+    for y in [152,184,215]:
+        d.line([(596,y-6),(630,y),(672,y+3),(714,y),(748,y-6)],fill=PALETTE[7],width=3)
+    for x in range(592,760,16):d.ellipse((x-2,235,x+2,239),fill=PALETTE[6])
+    # Linen hem stripes: surface dye and seams, not occlusion between folds.
+    d.rectangle((0,320,128,640),fill=PALETTE[1])
+    for x in range(4,128,19):d.line([(x,324),(x+2,636)],fill=(188,157,110),width=2)
+    for y in [596,608]:d.line([(2,y),(126,y)],fill=PALETTE[2],width=4)
+    # Greave border and central incised motif.
+    d.rectangle((896,320,1023,640),fill=PALETTE[0])
+    d.rectangle((900,325,1019,636),outline=PALETTE[7],width=4)
+    d.line([(960,334),(960,626)],fill=PALETTE[6],width=5)
+    d.arc((930,336,990,435),0,180,fill=PALETTE[7],width=4)
     path.parent.mkdir(parents=True,exist_ok=True);image.save(path)
 if __name__=='__main__':
     p=argparse.ArgumentParser();p.add_argument('output',type=Path);paint(p.parse_args().output)

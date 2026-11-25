@@ -3,7 +3,7 @@ import json, os, subprocess
 from pathlib import Path
 from PIL import Image, ImageDraw
 ROOT=Path(os.environ.get('ANIM_ROOT',Path.home()/'LegatumRuns/anim-pilot'))
-WORK=ROOT/'oad/r2';OUT=ROOT/'review/3d-v2';OUT.mkdir(parents=True,exist_ok=True)
+WORK=ROOT/'oad/r3';OUT=ROOT/'review/3d-v2';OUT.mkdir(parents=True,exist_ok=True)
 FPS={'idle':4,'walk':6,'attack':14,'hit':12,'death':4}
 COUNTS={'idle':12,'walk':16,'attack':18,'hit':8,'death':16}
 report={}
@@ -13,7 +13,7 @@ for name,fps in FPS.items():
     encoded=WORK/'cream-frames'/name;encoded.mkdir(parents=True,exist_ok=True)
     for frame in files:
         image=Image.open(frame).convert('RGBA');cream=Image.new('RGBA',image.size,'#f8f4e8');cream.alpha_composite(image);cream.convert('RGB').save(encoded/frame.name)
-    output=OUT/f'spearman-0ad-r2-{name}-160.mp4'
+    output=OUT/f'spearman-0ad-r3-{name}-160.mp4'
     subprocess.run(['ffmpeg','-y','-loglevel','error','-framerate',str(fps),'-stream_loop','2','-i',str(encoded/'%03d.png'),'-frames:v',str(len(files)*3),'-c:v','libx264','-crf','16','-pix_fmt','yuv420p','-movflags','+faststart',str(output)],check=True)
     probe=json.loads(subprocess.check_output(['ffprobe','-v','error','-count_frames','-select_streams','v:0','-show_entries','stream=codec_name,width,height,pix_fmt,nb_read_frames,r_frame_rate,duration','-of','json',str(output)]))['streams'][0]
     assert probe['codec_name']=='h264' and probe['pix_fmt']=='yuv420p'
@@ -24,6 +24,6 @@ sheet=Image.new('RGB',(6*160,6*180),'#f8f4e8');draw=ImageDraw.Draw(sheet)
 for i,p in enumerate(files):
     img=Image.open(p).convert('RGBA');x=i%6*160;y=i//6*180;sheet.paste(img,(x,y),img)
     draw.text((x+5,y+162),f'{i:02d}  {i/30:.3f}s',fill='#493b2a')
-sheet.save(OUT/'spearman-0ad-r2-attack-fullrate.png')
-(OUT/'spearman-0ad-r2-video-validation.json').write_text(json.dumps(report,indent=2)+'\n')
+sheet.save(OUT/'spearman-0ad-r3-attack-fullrate.png')
+(OUT/'spearman-0ad-r3-video-validation.json').write_text(json.dumps(report,indent=2)+'\n')
 print(json.dumps(report,indent=2))
