@@ -10,7 +10,7 @@
  */
 
 import { DIFFICULTIES, FACTIONS } from "./names";
-import { Quota, capFrom, clientIp } from "./quota";
+import { DEFAULT_MAX_NEW_GAMES_TOTAL_PER_DAY, Quota, capFrom, clientIp } from "./quota";
 
 export { Quota };
 
@@ -20,6 +20,8 @@ export interface Env {
   QUOTA: DurableObjectNamespace<Quota>;
   /** New games one client address may store per UTC day (default 50). A bad value falls back to the default. */
   MAX_NEW_GAMES_PER_DAY?: string;
+  /** New games all addresses together may store per UTC day (default 5000). A bad value falls back to the default. */
+  MAX_NEW_GAMES_TOTAL_PER_DAY?: string;
   ALLOWED_ORIGINS: string;
   /** Secret (`wrangler secret put READ_TOKEN`) for the private read API the analysis job on the developer's Mac uses. Unset = no read API. */
   READ_TOKEN?: string;
@@ -27,7 +29,8 @@ export interface Env {
 
 /** A 300-turn game is a few hundred KB gzipped; this bounds what a stranger can store per request. */
 export const MAX_GZIP_BYTES = 4 * 1024 * 1024;
-export const MAX_JSON_BYTES = 64 * 1024 * 1024;
+/** Unpacked: the largest real record (285 turns) is about 1.4 MB, so 16 MB leaves room and stops a gzip bomb early. */
+export const MAX_JSON_BYTES = 16 * 1024 * 1024;
 export const GAME_ID_RE = /^web-\d{13}-[0-9a-f]{16}-[0-9a-f]{16}$/;
 const DEFAULT_NAME_RE = /^(Player|AI) ([1-9])$/;
 const OUTCOMES = ["in-progress", "vp", "draw", "elimination", "turn-limit", "stalled", "panic", "abandoned"];
@@ -196,7 +199,10 @@ async function putGame(request: Request, env: Env, id: string): Promise<Response
   const lockedTo = existing?.customMetadata?.key ?? "";
   if (lockedTo && !sameHash(lockedTo, keyHash)) return json({ error: "this game belongs to another upload key" }, 409);
   if (!existing) {
-    const taken = await env.QUOTA.getByName("quota").take(clientIp(request), capFrom(env.MAX_NEW_GAMES_PER_DAY));
+    const taken = await env.QUOTA.getByName("quota").take(
+      clientIp(request), capFrom(env.MAX_NEW_GAMES_PER_DAY), Date.now(),
+      capFrom(env.MAX_NEW_GAMES_TOTAL_PER_DAY, DEFAULT_MAX_NEW_GAMES_TOTAL_PER_DAY),
+    );
     if (!taken.ok) {
       return new Response(JSON.stringify({ error: "too many new games today" }), {
         status: 429,

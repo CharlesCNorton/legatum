@@ -33,11 +33,13 @@ export async function ipHash(salt: string, ip: string): Promise<string> {
 export const clientIp = (request: Request): string => request.headers.get("CF-Connecting-IP") ?? "";
 
 export const DEFAULT_MAX_NEW_GAMES_PER_DAY = 50;
+/** New games from all addresses together per UTC day: many addresses still cannot grow the bucket without limit. */
+export const DEFAULT_MAX_NEW_GAMES_TOTAL_PER_DAY = 5000;
 
-/** The cap from the Worker var; anything that is not a whole number of at least 1 falls back to the default. */
-export function capFrom(raw: string | undefined): number {
+/** A cap from a Worker var; anything that is not a whole number of at least 1 falls back to `fallback`. */
+export function capFrom(raw: string | undefined, fallback: number = DEFAULT_MAX_NEW_GAMES_PER_DAY): number {
   const n = Number(raw);
-  return raw !== undefined && /^\d{1,6}$/.test(raw.trim()) && n >= 1 ? n : DEFAULT_MAX_NEW_GAMES_PER_DAY;
+  return raw !== undefined && /^\d{1,6}$/.test(raw.trim()) && n >= 1 ? n : fallback;
 }
 
 export const utcDay = (ms: number): string => new Date(ms).toISOString().slice(0, 10);
@@ -58,6 +60,7 @@ export class Quota extends DurableObject {
     const sql = ctx.storage.sql;
     sql.exec("CREATE TABLE IF NOT EXISTS kv (k TEXT PRIMARY KEY, v TEXT NOT NULL)");
     sql.exec("CREATE TABLE IF NOT EXISTS counts (day TEXT NOT NULL, ip_hash TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (day, ip_hash))");
+    sql.exec("CREATE TABLE IF NOT EXISTS totals (day TEXT PRIMARY KEY, n INTEGER NOT NULL)");
     const row = sql.exec("SELECT v FROM kv WHERE k = 'salt'").toArray()[0];
     if (row) this.salt = row.v as string;
     else {
@@ -66,16 +69,23 @@ export class Quota extends DurableObject {
     }
   }
 
-  /** Count one new game for this address today, or refuse it when the address is at `cap`. `now` is for tests only. */
-  async take(ip: string, cap: number, now: number = Date.now()): Promise<TakeResult> {
+  /**
+   * Count one new game for this address today, or refuse it when the address is at `cap` or all addresses
+   * together are at `totalCap`. `now` is for tests only.
+   */
+  async take(ip: string, cap: number, now: number = Date.now(), totalCap: number = DEFAULT_MAX_NEW_GAMES_TOTAL_PER_DAY): Promise<TakeResult> {
     const sql = this.ctx.storage.sql;
     const day = utcDay(now);
     sql.exec("DELETE FROM counts WHERE day <> ?", day);
+    sql.exec("DELETE FROM totals WHERE day <> ?", day);
     const hash = await ipHash(this.salt, ip);
     const row = sql.exec("SELECT n FROM counts WHERE day = ? AND ip_hash = ?", day, hash).toArray()[0];
     const n = row ? (row.n as number) : 0;
-    if (n >= cap) return { ok: false, retryAfter: secondsToMidnight(now) };
+    const totalRow = sql.exec("SELECT n FROM totals WHERE day = ?", day).toArray()[0];
+    const total = totalRow ? (totalRow.n as number) : 0;
+    if (n >= cap || total >= totalCap) return { ok: false, retryAfter: secondsToMidnight(now) };
     sql.exec("INSERT INTO counts (day, ip_hash, n) VALUES (?, ?, 1) ON CONFLICT (day, ip_hash) DO UPDATE SET n = n + 1", day, hash);
+    sql.exec("INSERT INTO totals (day, n) VALUES (?, 1) ON CONFLICT (day) DO UPDATE SET n = n + 1", day);
     return { ok: true };
   }
 }

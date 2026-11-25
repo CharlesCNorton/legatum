@@ -223,6 +223,17 @@ describe("new games per address per day", () => {
     expect(days).toEqual(["2031-01-06"]);
   });
 
+  it("refuses every address once all of them together reach the daily total", async () => {
+    const stub = env.QUOTA.getByName("quota");
+    const now = Date.UTC(2032, 2, 1, 12, 0, 0);
+    expect(await stub.take("192.0.2.1", 50, now, 2)).toEqual({ ok: true });
+    expect(await stub.take("192.0.2.2", 50, now, 2)).toEqual({ ok: true });
+    expect(await stub.take("192.0.2.3", 50, now, 2)).toEqual({ ok: false, retryAfter: 43_200 });
+    expect(await stub.take("192.0.2.3", 50, now + 43_200_000, 2)).toEqual({ ok: true });
+    expect(capFrom(undefined, 5000)).toBe(5000);
+    expect(capFrom("x", 5000)).toBe(5000);
+  });
+
   it("cuts addresses as the relay does", () => {
     expect(addressKey("203.0.113.9")).toBe("203.0.113.9");
     expect(addressKey("::ffff:203.0.113.9")).toBe("203.0.113.9");

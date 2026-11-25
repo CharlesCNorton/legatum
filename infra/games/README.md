@@ -32,12 +32,15 @@ promise to players).
   browser with no storage) stays open until a keyed checkpoint locks it. A browser that lost its keys gets
   `409` for its unfinished games and drops them from its queue; what was stored stays.
 - Only pages listed in `ALLOWED_ORIGINS` (`wrangler.jsonc`) may upload: the site, its preview deploys and
-  local dev. Bodies are capped at 4 MiB gzipped and 64 MiB unpacked.
+  local dev. Bodies are capped at 4 MiB gzipped and 16 MiB unpacked.
 - One client address (`CF-Connecting-IP`, an IPv6 address cut to its /64) may store at most 50 new games per
   UTC day: the Worker var `MAX_NEW_GAMES_PER_DAY` in `wrangler.jsonc` (a bad value means 50). A new game is a
   `PUT` whose R2 key does not exist yet; one more is answered `429` with `{"error":"too many new games today"}`
   and a `Retry-After` (seconds until 00:00 UTC), and nothing is stored. A later checkpoint of a stored game is
   never counted or refused. The page keeps such a record queued and retries later.
+- All addresses together may store at most 5000 new games per UTC day (`MAX_NEW_GAMES_TOTAL_PER_DAY`, a bad
+  value means 5000), so many addresses cannot grow the bucket without limit; past it every new game gets the
+  same `429`. Bodies may unpack to at most 16 MiB (the largest real record is about 1.4 MB).
 - What is kept about a sender: a salted SHA-256 of the address (cut to /64 for IPv6) and its count, for the
   current UTC day only, inside the `Quota` Durable Object (SQLite-backed; the salt is made once and never
   leaves it; older rows are deleted on every call). The raw address is never stored or logged.
