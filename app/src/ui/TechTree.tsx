@@ -10,6 +10,7 @@ import { techCardUnlocks, type TechCardUnlock } from './techCardUnlocks';
 import { unitCardUrl } from '../unitArt';
 import { itemArtUrl, unlockEntryArt } from '../unlockArt';
 import { Icon } from './bits';
+import { useCoarsePointer } from './useCoarsePointer';
 
 /** Row order inside each era, so the lines run straight: the spear line, the bow and gun line, the horse
  * and armour line, then aircraft and the buildings. A technology missing here goes to the end of its era. */
@@ -134,6 +135,7 @@ export function TechTree({ view, faction, queue, schedule, goal, locked, onResea
     return `M ${x1} ${y1} C ${ex} ${y1}, ${ex} ${y1}, ${ex} ${(y1 + lane) / 2} L ${ex} ${lane + 6} Q ${ex} ${lane} ${ex + 6} ${lane} L ${sx - 6} ${lane} Q ${sx} ${lane} ${sx} ${lane + 6} L ${sx} ${(y2 + lane) / 2} C ${sx} ${y2}, ${sx} ${y2}, ${x2} ${y2}`;
   };
   const eraState = (era: number) => era < r.era ? 'past' : era === r.era ? 'current' : 'future';
+  const touch = useCoarsePointer(), press = touch ? 'Tap' : 'Click';
   return <div className={`tech-tree${compact ? ' compact' : ''}`} data-testid="tech-tree">
     <div className="tree-legend">
       <span className="tree-key" aria-hidden="true"><i className="ln melee" />Spear line</span>
@@ -146,7 +148,7 @@ export function TechTree({ view, faction, queue, schedule, goal, locked, onResea
         <span className="tree-goal-text"><b>{TECH_NAME[goal]}</b>{forecast.before ? `, after ${forecast.before} more technolog${forecast.before === 1 ? 'y' : 'ies'}` : ''}. {forecast.arrival === null ? 'Needs Science.' : <b>About turn {forecast.arrival}</b>}</span>
         <button type="button" className="tree-goal-x" disabled={locked} onClick={() => onGoal(null)} aria-label={`Clear the goal ${TECH_NAME[goal]}`} title="Clear the goal"><Icon name="ui-cross" size={11} /></button>
       </span>
-        : <span className="tree-hint">Click a technology of your era to research it, or a later one to make it your goal.</span>}
+        : <span className="tree-hint">{press} a technology to research it. {press} a later one to make it your goal.</span>}
     </div>
     <div className="tree-scroll" ref={scroller} tabIndex={-1}
       onWheel={(e) => { const el = e.currentTarget; if (el.scrollHeight <= el.clientHeight && Math.abs(e.deltaY) > Math.abs(e.deltaX)) el.scrollLeft += e.deltaY; }}>
@@ -166,16 +168,16 @@ export function TechTree({ view, faction, queue, schedule, goal, locked, onResea
           {links.map((k) => <path key={`${k.from}>${k.to}`} d={path(k)} className={`tl ${k.line.toLowerCase()}${known.has(k.from) ? ' lit' : ''}${onPath(k.to) && (onPath(k.from) || known.has(k.from)) ? ' goal' : ''}`} />)}
         </svg>
         {columns.flatMap((col) => col).map((t) => <TreeNode key={t} t={t} view={view} faction={faction} pos={pos.get(t)!} w={W} h={H} compact={compact}
-          queueIndex={queue.indexOf(t)} slot={schedule[queue.indexOf(t)]} goal={goal === t} onPath={onPath(t) && goal !== t} skipped={skipped.has(t)} locked={locked}
+          queueIndex={queue.indexOf(t)} slot={schedule[queue.indexOf(t)]} goal={goal === t} onPath={onPath(t) && goal !== t} skipped={skipped.has(t)} locked={locked} touch={touch}
           onResearchNow={onResearchNow} onQueue={onQueue} onGoal={onGoal} />)}
       </div>
     </div>
   </div>;
 }
 
-function TreeNode({ t, view, faction, pos, w, h, compact, queueIndex, slot, goal, onPath, skipped, locked, onResearchNow, onQueue, onGoal }: {
+function TreeNode({ t, view, faction, pos, w, h, compact, queueIndex, slot, goal, onPath, skipped, locked, touch, onResearchNow, onQueue, onGoal }: {
   t: TechId; view: PlayerView; faction: Faction; pos: { x: number; y: number; era: number }; w: number; h: number; compact: boolean;
-  queueIndex: number; slot: QueueSlot | undefined; goal: boolean; onPath: boolean; skipped: boolean; locked: boolean;
+  queueIndex: number; slot: QueueSlot | undefined; goal: boolean; onPath: boolean; skipped: boolean; locked: boolean; touch: boolean;
   onResearchNow(t: TechId): void; onQueue(t: TechId): void; onGoal(t: TechId | null): void;
 }) {
   const r = view.research;
@@ -197,7 +199,8 @@ function TreeNode({ t, view, faction, pos, w, h, compact, queueIndex, slot, goal
   const onClick = (e: MouseEvent<HTMLButtonElement>) => act(e.shiftKey);
   const onKeyDown = (e: KeyboardEvent<HTMLButtonElement>) => { if (e.key === 'Enter') { e.preventDefault(); act(e.shiftKey); } };
   const status = isKnown ? (skipped ? 'Not needed by your people' : 'Researched') : researching ? 'Researching' : queueIndex > 0 ? `Queued #${queueIndex + 1}` : current ? 'Available' : goal ? 'Your goal' : `Locked until the ${eraName(pos.era - 1)} era is done`;
-  const action = current ? 'Click to research now, Shift+click to queue.' : later ? (goal ? 'Click to clear the goal.' : 'Click to make it your goal.') : '';
+  const press = touch ? 'Tap' : 'Click';
+  const action = current ? (touch ? 'Tap to research now.' : 'Click to research now, Shift+click to queue.') : later ? (goal ? `${press} to clear the goal.` : `${press} to make it your goal.`) : '';
   return <button type="button" className={`tree-node ${state}${goal ? ' goal' : ''}${onPath ? ' on-path' : ''}${skipped ? ' skipped' : ''}`}
     style={{ left: pos.x, top: pos.y, width: w, height: h }} data-tech={t} data-state={state}
     title={`${TECH_NAME[t]}: ${entries.map((e) => e.label).join('; ') || 'nothing new'}`}

@@ -6,6 +6,9 @@ test.describe.configure({ mode: 'parallel' });
 for (const size of SIZES) test.describe(`first run with advisor ${size.name}`, () => {
   test.use({ viewport: { width: size.width, height: size.height } });
   test('welcome, build, move, research and end turn', async ({ page }) => {
+    // The laptop size runs on the tech tree (the default view); the large size keeps the era cards.
+    const onTree = size.name === '1000x600';
+    await page.addInitScript((view) => { try { localStorage.setItem('legatum.research-view.v1', view); } catch { /* blocked */ } }, onTree ? 'tree' : 'era');
     await page.goto('/?client=wasm');
     await page.getByRole('button', { name: /^Single Player/ }).click();
     await page.getByLabel('Map seed', { exact: true }).fill('424242');
@@ -83,7 +86,16 @@ for (const size of SIZES) test.describe(`first run with advisor ${size.name}`, (
     await expect(card).toContainText('Step 2 of 2');
     await expect(ring).toBeVisible();
     await capture('05-research-card-ring');
-    await tech.getByRole('button', { name: 'Research now' }).first().click();
+    if (onTree) {
+      // The ring surrounds the recommended technology's node in the tree; clicking it researches it.
+      const name = /^Click (.+)\.$/.exec((await card.locator('.advisor-step strong').textContent()) ?? '')?.[1];
+      expect(name, 'the advisor names the technology').toBeTruthy();
+      const node = tech.locator('.tree-node', { has: page.locator('.tn-name', { hasText: new RegExp(`^${name}$`) }) });
+      const nodeBox = (await node.boundingBox())!, techRing = (await ring.boundingBox())!;
+      expect(techRing.x <= nodeBox.x && techRing.x + techRing.width >= nodeBox.x + nodeBox.width
+        && techRing.y <= nodeBox.y && techRing.y + techRing.height >= nodeBox.y + nodeBox.height, 'the ring surrounds the tree node').toBe(true);
+      await node.click();
+    } else await tech.getByRole('button', { name: 'Research now' }).first().click();
     // With research chosen, the advisor's next step is closing the panel, and its ring is on Close.
     await expect(card).toHaveAttribute('data-advisor-id', 'closeResearch');
     await expect(ring).toBeVisible();

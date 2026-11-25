@@ -77,7 +77,10 @@ function AdvisorRing({ target, still }: { target: AdvisorTarget; still: boolean 
     const scroll = window.setTimeout(() => {
       if (target.kind !== 'control') return;
       const el = targetElement(target), r = el?.getBoundingClientRect();
-      if (el && r && (r.top < 0 || r.bottom > innerHeight || !targetRect(target))) el.scrollIntoView({ block: 'center', inline: 'nearest' });
+      // A tree node can sit cut off at the edge of the tree's own scroll area while still inside the window.
+      const box = el?.closest('.tree-scroll')?.getBoundingClientRect();
+      const clipped = !!box && !!r && (r.top < box.top || r.bottom > box.bottom || r.left < box.left || r.right > box.right);
+      if (el && r && (r.top < 0 || r.bottom > innerHeight || clipped || !targetRect(target))) el.scrollIntoView({ block: clipped ? 'nearest' : 'center', inline: 'nearest' });
     }, 150);
     return () => { cancelAnimationFrame(frame); window.clearTimeout(scroll); };
   }, [target?.kind, target?.kind === 'tile' ? `${target.hex.q},${target.hex.r}` : target?.kind === 'control' ? `${target.name}:${target.value}` : '']);

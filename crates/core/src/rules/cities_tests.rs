@@ -3547,10 +3547,12 @@ fn research_goal_fills_an_empty_queue_across_eras_and_clears_once_known() {
     assert!(s.player(P0).techs.contains(&Writing));
     // The queue ran out, so the goal refilled it with the Ancient techs still unknown.
     assert!(!s.player(P0).research_queue.is_empty());
-    assert!(s.player(P0)
-        .research_queue
-        .iter()
-        .all(|t| crate::eras::era_of_tech(*t) == 0));
+    assert!(
+        s.player(P0)
+            .research_queue
+            .iter()
+            .all(|t| crate::eras::era_of_tech(*t) == 0)
+    );
     // Finish the era: on entering the Classical era the goal goes first.
     for _ in 0..3 {
         process_research(&mut s, &mut Vec::new());
