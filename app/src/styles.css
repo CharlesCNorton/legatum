@@ -626,6 +626,12 @@ dialog.settings-modal::backdrop {
 .settings-body {
   padding: 4px 24px 12px;
 }
+/* A short window (the 1000x600 laptop) with every row showing: tighter rows, so the dialog is whole without scrolling.
+   The body still scrolls as a last resort on a shorter window than that. */
+dialog.settings-modal {
+  max-height: calc(100dvh - 24px);
+  overflow: hidden auto;
+}
 .settings-body > .settings-row,
 .settings-body > .hint-settings {
   justify-content: space-between;
@@ -635,6 +641,22 @@ dialog.settings-modal::backdrop {
 }
 .settings-body > :first-child {
   border-top: 0;
+}
+@media (max-height: 700px) {
+  .settings-head {
+    padding: 12px 24px 10px;
+  }
+  .settings-head h2 {
+    font-size: 26px;
+  }
+  .settings-body > .settings-row,
+  .settings-body > .hint-settings {
+    min-height: 0;
+    padding: 8px 0;
+  }
+  .settings-body {
+    padding-bottom: 6px;
+  }
 }
 .settings-body .seg.small button {
   min-width: 84px;
