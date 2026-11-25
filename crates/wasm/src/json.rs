@@ -100,18 +100,7 @@ fn parse_state_with_version(json: &str, check_version: bool) -> Result<GameState
 /// Fields that are not part of the state, such as a session's archive, are ignored.
 pub fn state_from_value(mut v: Value, check_version: bool) -> Result<GameState, String> {
     let version = v.get("save_version").and_then(Value::as_u64);
-    if version == Some(49) {
-        return upgrade_value_from_49(v);
-    }
-    if version.is_some_and(|n| (50..u64::from(legatum_core::RULES_VERSION)).contains(&n))
-        || (!check_version && version.is_none())
-    {
-        migrate_legacy_walls(&mut v);
-    }
-    if check_version
-        && !version.is_some_and(|n| (50..u64::from(legatum_core::RULES_VERSION)).contains(&n))
-        && version != Some(u64::from(legatum_core::RULES_VERSION))
-    {
+    if check_version && version != Some(u64::from(legatum_core::RULES_VERSION)) {
         return Err(format!(
             "incompatible rules version: saved {:?}, current {}",
             version,
@@ -222,7 +211,8 @@ pub fn carries_rules_49_fields(v: &Value) -> bool {
 /// (`objectives::humbles`, judged each turn from the turn-start VP); rules 55 adds city
 /// automation focuses and the Food project (the old `Balanced` focus parses as `Economy`). None
 /// changes a field before the Walls migration, and a capture counted under the older rules stays counted.
-pub fn upgrade_value_from_50(v: Value) -> Result<GameState, String> {
+pub fn upgrade_value_from_50(mut v: Value) -> Result<GameState, String> {
+    migrate_legacy_walls(&mut v);
     state_from_value(v, false)
 }
 
@@ -297,7 +287,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn supported_old_saves_migrate_castle_and_star_fort_to_walls_levels() {
+    fn old_states_upgrade_castle_and_star_fort_to_walls_levels_for_tooling() {
         let state = legatum_core::new_game(&GameSetup::all_ai(3));
         for version in 49..=57 {
             let mut save = state_to_value(&state);
@@ -314,7 +304,9 @@ mod tests {
                 });
                 city.as_object_mut().unwrap().remove("walls_level");
             }
-            let loaded = parse_state(&save.to_string()).unwrap();
+            // The app refuses the old save; analysis tooling upgrades it.
+            assert!(parse_state(&save.to_string()).is_err(), "rules {version}");
+            let loaded = upgrade_from_49(&save.to_string()).unwrap();
             for (i, id) in ids.iter().enumerate() {
                 let city = &loaded.cities[&legatum_core::CityId(id.parse().unwrap())];
                 assert_eq!(
@@ -411,7 +403,7 @@ mod tests {
     }
 
     #[test]
-    fn rules_58_saves_round_trip_and_a_version_56_save_migrates() {
+    fn rules_58_saves_round_trip_and_a_version_57_save_is_refused() {
         // Rules 47: held shots at fallen cities; 48: Egypt's Nile and its Grow project. The save
         // shape only gains the project value, so a city growing on the Nile round-trips at 48,
         // and a 47 save is refused rather than migrated. Rules 49: Egypt starts knowing the Bronze
@@ -458,8 +450,15 @@ mod tests {
         assert!(save.contains("\"Grow\""));
         assert_eq!(parse_state(&save).unwrap(), state);
         let mut old: Value = serde_json::from_str(&save).unwrap();
-        old["save_version"] = Value::from(56);
-        assert_eq!(parse_state(&old.to_string()).unwrap(), state);
+        old["save_version"] = Value::from(57);
+        assert!(
+            parse_state(&old.to_string())
+                .unwrap_err()
+                .contains(&format!(
+                    "incompatible rules version: saved Some(57), current {}",
+                    legatum_core::RULES_VERSION
+                ))
+        );
         assert_eq!(upgrade_from_49(&old.to_string()).unwrap(), state);
     }
 
@@ -467,7 +466,7 @@ mod tests {
     fn different_rules_version_is_refused_before_decoding() {
         let state = legatum_core::new_game(&GameSetup::all_ai(3));
         let mut save: Value = serde_json::from_str(&state_to_json(&state)).unwrap();
-        save["save_version"] = Value::from(48);
+        save["save_version"] = Value::from(legatum_core::RULES_VERSION - 1);
         save["players"] = Value::Null;
         assert!(
             parse_state(&save.to_string())
