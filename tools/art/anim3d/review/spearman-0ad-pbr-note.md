@@ -125,3 +125,10 @@ Changes are uncommitted for the runner. `oad/pbr-r3/commit-message.txt` contains
 the required co-author trailer; `oad/pbr-r3/lane-only.patch` includes tracked
 and new files plus binary diffs. `origin/master` is already an ancestor of HEAD.
 No fetch, merge into master, commit or push was performed.
+
+Final delivery verification: all 11 visual review files exist. ffprobe confirms
+160-square H.264/yuv420p sprites with 36/48/54/24/48 frames at 4/6/14/12/4 fps
+(three repeats), plus a 256-square, 96-frame, 12-second Cycles turntable at 8 fps.
+Both video receipts match the delivered hash. Shipping maps, 2048 masters and
+the preserved final copy match source-manifest.json. The final comparison,
+close-ups, 48 px LOD1 sheet, joint sheet and motion samples were inspected.
