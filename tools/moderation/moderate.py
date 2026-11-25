@@ -24,12 +24,14 @@ changes nothing: the way to check the model and the rules on a known case.
 import datetime
 import json
 import os
+import re
 import sys
 import urllib.error
 import urllib.request
 
 API = "https://api.github.com"
-MODELS_URL = "https://models.github.ai/inference/chat/completions"
+# The GitHub Models endpoint, then its older address as a fallback (both take the workflow token).
+MODELS_URLS = ("https://models.github.ai/inference/chat/completions", "https://models.inference.ai.azure.com/chat/completions")
 MODEL = os.environ.get("MODERATION_MODEL", "openai/gpt-4.1-mini")
 TRUSTED_ASSOCIATIONS = {"OWNER", "MEMBER", "COLLABORATOR", "CONTRIBUTOR"}
 MIN_CONFIDENCE = 0.9
@@ -45,6 +47,12 @@ PR_COMMENT = (
     f"[Code of Conduct]({COC}) (\"keep discussion on the project\")." + FOOTER
 )
 MAX_TEXT = 4000
+
+# Fallback when the model can't be reached (the Models endpoint answered "OK" as plain text on 2026-11-25): words
+# that mark the 2026-11-25 wave (posts about the maintainer's government job). No game text uses them. A match in
+# the title or body, or in lines a pull request adds, closes it. Matching is case-insensitive on word starts.
+WAVE_WORDS = ("treasury department", "u.s. treasury", "us treasury", "treasury cio", "fincen", "vibecod", "vibe-cod", "vibe cod", "bessent", "taxpayer", "doge ",
+              "government job", "chief information officer", "bsa e-filing", "bsaefiling")
 MAX_DIFF = 6000
 
 POLICY = """You moderate the public GitHub repository of Legatum, an open-source historical 4X strategy game on a
@@ -118,21 +126,43 @@ def parse_verdict(text):
     return {"verdict": verdict, "confidence": confidence, "reason": str(data.get("reason", ""))[:200]}
 
 
+def wave_verdict(text):
+    """The keyword fallback: off_topic when the text carries a wave word, else unsure."""
+    lowered = (text or "").lower()
+    hits = [w.strip() for w in WAVE_WORDS if re.search(r"(?<![a-z])" + re.escape(w), lowered)]
+    if hits:
+        return {"verdict": "off_topic", "confidence": 0.95, "reason": "keyword fallback: " + ", ".join(hits[:3])}
+    return {"verdict": "unsure", "confidence": 0.0, "reason": "keyword fallback: no match"}
+
+
+def added_lines(diff):
+    return "\n".join(line[1:] for line in diff.splitlines() if line.startswith("+") and not line.startswith("+++"))
+
+
 def should_close(verdict):
     return bool(verdict) and verdict["verdict"] == "off_topic" and verdict["confidence"] >= MIN_CONFIDENCE
 
 
-def request(method, url, token, payload=None):
+def request(method, url, token, payload=None, github_api=True):
     data = json.dumps(payload).encode() if payload is not None else None
     req = urllib.request.Request(url, data=data, method=method)
     req.add_header("Authorization", f"Bearer {token}")
-    req.add_header("Accept", "application/vnd.github+json")
-    req.add_header("X-GitHub-Api-Version", "2022-11-28")
+    if github_api:
+        req.add_header("Accept", "application/vnd.github+json")
+        req.add_header("X-GitHub-Api-Version", "2022-11-28")
+    else:
+        req.add_header("Accept", "application/json")
     if data is not None:
         req.add_header("Content-Type", "application/json")
     with urllib.request.urlopen(req, timeout=60) as resp:
-        raw = resp.read()
-    return json.loads(raw) if raw else None
+        raw, status, ctype = resp.read(), resp.status, resp.headers.get("Content-Type", "")
+    if not raw:
+        return None
+    try:
+        return json.loads(raw)
+    except json.JSONDecodeError:
+        # Say what came back (status, type, the start of the body) so a failed run can be diagnosed.
+        raise ValueError(f"{method} {url.split('?')[0]}: HTTP {status}, {ctype}, not JSON: {raw[:200]!r}") from None
 
 
 def pr_diff(repo, number, token):
@@ -151,8 +181,16 @@ def judge(prompt, token):
         "temperature": 0,
         "messages": [{"role": "system", "content": POLICY}, {"role": "user", "content": prompt}],
     }
-    answer = request("POST", MODELS_URL, token, payload)
-    return parse_verdict(answer["choices"][0]["message"]["content"])
+    errors = []
+    for url in MODELS_URLS:
+        try:
+            answer = request("POST", url, token, payload, github_api=False)
+            return parse_verdict(answer["choices"][0]["message"]["content"])
+        except urllib.error.HTTPError as err:
+            errors.append(f"{url}: HTTP {err.code} {err.read()[:200]!r}")
+        except (urllib.error.URLError, KeyError, IndexError, TypeError, ValueError) as err:
+            errors.append(f"{url}: {err.__class__.__name__}: {err}")
+    raise ValueError("; ".join(errors))
 
 
 def summary(line):
@@ -195,9 +233,9 @@ def main():
     diff = pr_diff(repo, number, token) if kind == "pull request" else ""
     try:
         verdict = judge(build_prompt(kind, item.get("title"), item.get("body"), diff), token)
-    except (urllib.error.URLError, KeyError, IndexError, ValueError) as err:
-        summary(f"#{number}: model unavailable ({err.__class__.__name__}); left open for the hourly sweep.")
-        return 0
+    except (urllib.error.URLError, KeyError, IndexError, TypeError, ValueError) as err:
+        summary(f"#{number}: model unavailable ({err.__class__.__name__}: {str(err)[:300]}); using the keyword fallback.")
+        verdict = wave_verdict("\n".join([item.get("title") or "", item.get("body") or "", added_lines(diff)]))
     summary(f"#{number} ({kind}): {verdict}")
     if not should_close(verdict) or dry:
         return 0
