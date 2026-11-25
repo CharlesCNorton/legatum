@@ -263,7 +263,7 @@ export default function Map3DView() {
         tabIndex={0}
         data-game-map
         data-overlay-slot="map-viewport"
-        aria-label="World map in 3D. Drag to pan, scroll to zoom, arrow keys or WASD pan. Click selects; right-click moves or attacks with the selected unit."
+        aria-label="3D world map. Press M for the 2D map."
         className="map-canvas map3d-canvas"
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
