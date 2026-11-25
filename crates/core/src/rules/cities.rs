@@ -719,7 +719,7 @@ pub(crate) fn check_found_city(state: &GameState, settler: UnitId) -> Result<(),
         }
         if unit.hp < data::UNIT_HP {
             return Err(format!(
-                "Roman founder needs full health ({} of {} HP)",
+                "Roman founder needs full health ({} of {})",
                 unit.hp,
                 data::UNIT_HP
             ));
