@@ -28,7 +28,7 @@ guest tab                 --wss-->  Cloudflare Worker (infra/relay)  <--wss (dia
 - **Limits**: the game lives in the host's tab. Closing that tab (or its browser) ends the game for everyone
   (the relay drops the room after 120 s, or at once on `bye` when the host leaves through the menu). A reload of
   the host tab resumes the game in the same room from the save kept in `sessionStorage`; a reload of a guest
-  tab rejoins its room and seat. A new tab cannot take over a hosted game. To outlive the tab, the host
+  tab rejoins its room and seat (a restarted device does too: see "Kept seat"). A new tab cannot take over a hosted game. To outlive the tab, the host
   saves to a file (game menu, host only) and later hosts from it (see "Save to file and host from a save"). A WASM panic (a host bug) stops the
   game: Rust's `catch_unwind` does not work in WASM.
 
@@ -185,6 +185,8 @@ already). The host's own in-tab connection never sees chunks.
   over. Seat credentials are not saved. `open_guest_seats` opens every seat but seat 0 (the host's, which
   `hostOnlineFromSave` takes at once), so guests join from the list and take their old seat with its saved name. A new room has a new id and key.
 - Seat credentials are 256-bit random hex from `crypto.getRandomValues`.
+- Kept seat (2026-11-25): `rememberSeat` also writes the last game seat's room, seat, name and credential to `localStorage` (`legatum.online.kept-seat`, `remote.ts::keptSeat`; never a lobby-room seat). After a restart the Join list marks that game "Your seat is here" and lists it even when it shows full, and the seat screen offers "Rejoin as <name>" with the kept credential, so the host need not press Open seat. It is offered, never joined automatically. Best effort: if storage is blocked the host opens the seat as before.
+- A dropped human: the host resolves the turn when every connected human is Ready (`disconnect` -> `resolve_if_ready`); the away empire gets no orders. The game screen names who is not connected (`app/src/awayPlayers.ts`) and Ready opens "End the turn without <name>?" (`EndTurnConfirmation.tsx`), primary "Wait for <name>". No pause: a player who never returns would freeze the game.
 
 ## Build (`scripts/build-web.sh`)
 
@@ -196,7 +198,8 @@ already). The host's own in-tab connection never sees chunks.
 
 ## UI (`app/src`)
 
-- **Multiplayer > Host Game**: asks for the name shown in the game list, starts the in-tab host and lands in the
+- **Multiplayer menu** (2026-11-25): one "Your name" field (used for hosting and for the seat you take), then two doors side by side: Host (join code, Host Game, Host from a save) and Join (Join Game).
+- **Multiplayer > Host Game**: starts the in-tab host and lands in the
   existing staging room. In a running game the host's menu item is **End the game for everyone** (after a confirm);
   it sends `bye`, closes the room and returns to the title. A guest's item is **Leave the game (free this seat)**.
 - **Multiplayer > Join Game**: a lobby list from `GET /lobby` (refresh every 3 s): host name,
