@@ -31,8 +31,10 @@ export function targetElement(target: Exclude<NonNullable<AdvisorTarget>, { kind
     case 'build': return [...document.querySelectorAll<HTMLElement>('.city-panel .production-choice')]
       .find((e) => e.dataset.item === target.value)?.querySelector<HTMLElement>('button.prod') ?? null;
     case 'closeResearch': return first('dialog.tech-modal[open] button[aria-label="Close research"]');
-    case 'tech': return [...document.querySelectorAll<HTMLElement>('dialog.tech-modal .era-card')]
-      .find((e) => e.dataset.tech === target.value)?.querySelector<HTMLElement>('button[data-testid="research-now"]') ?? null;
+    // The tech tree's node for it, or on the This era view its card's Research now.
+    case 'tech': return [...document.querySelectorAll<HTMLElement>('dialog.tech-modal .tree-node')].find((e) => e.dataset.tech === target.value)
+      ?? [...document.querySelectorAll<HTMLElement>('dialog.tech-modal .era-card')]
+        .find((e) => e.dataset.tech === target.value)?.querySelector<HTMLElement>('button[data-testid="research-now"]') ?? null;
   }
 }
 function targetRect(target: AdvisorTarget): { x: number; y: number; width: number; height: number; tile: boolean } | null {

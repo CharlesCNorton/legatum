@@ -90,7 +90,7 @@ describe('one decision at a time', () => {
   it('uses plain facts and exact controls on touch', async () => {
     const { view, city, unit, tech, ctx } = await opening();
     const military: Order = { type: 'SetProduction', city: city.id, item: { kind: 'Unit', unit: 'Spearman' } };
-    expect(advisorSuggestion({ ...ctx(), techOpen: true, touch: true }, ['welcome'], [])?.steps[1].instruction).toMatch(/^Tap Research now on /);
+    expect(advisorSuggestion({ ...ctx(), techOpen: true, touch: true }, ['welcome'], [])?.steps[1].instruction).toMatch(/^Tap [A-Z][\w ]+\.$/);
     const found = advisorSuggestion({ ...ctx([{ type: 'SetProduction', city: city.id, item: city.detail!.options[0].item }]),
       plan: [{ type: 'FoundCity', unit: unit.id }], touch: true }, ['welcome'], []);
     expect(found?.steps[1].instruction).toBe('Tap Found City.');

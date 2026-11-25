@@ -475,26 +475,27 @@
   .research-queue-cta .btn.primary { min-height: 32px; padding-inline: 10px; letter-spacing: .04em; }
 }
 
-/* ---------- PROTOTYPE: the tech tree view (thread "Bring back a Civ-style tech tree") ---------- */
-.research-mode { display: inline-flex; border: 1px solid var(--rule-2); background: var(--field); }
-.research-mode button { padding: 6px 14px; border: 0; background: transparent; color: var(--ink-2); font: 600 13px/1 var(--sans); cursor: pointer; }
+/* ---------- The tech tree view (TechTree.tsx) ---------- */
+.tech-modal { --line-melee: #a3392a; --line-ranged: #3d6427; --line-mounted: #2f5f8c; --line-air: #6b4f8a; --line-economy: #a07a2c; --goal: #8a6420; }
+.research-mode { display: inline-flex; flex: none; width: max-content; align-self: center; border: 1px solid var(--ink-2); background: var(--field); }
+.research-mode button { min-height: 30px; padding: 6px 14px; border: 0; background: transparent; color: var(--ink); font: 600 13px/1 var(--sans); cursor: pointer; }
+.research-mode button + button { border-left: 1px solid var(--ink-2); }
 .research-mode button[aria-pressed='true'] { background: var(--ink); color: var(--field); }
-.tech-modal.tree-mode { width: min(1400px, calc(100vw - 24px)); max-width: none; }
+.research-mode button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .tech-tree { position: relative; display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
-.tree-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; padding: 6px 18px; border-bottom: 1px solid var(--rule); color: var(--ink-2); font: 600 11.5px/1.2 var(--sans); }
-.tree-legend span { display: inline-flex; align-items: center; gap: 6px; }
-.tree-legend .ln { display: inline-block; width: 22px; height: 0; border-top: 3px solid; }
-.tree-legend .tree-hint { margin-left: auto; font: italic 400 13px/1.2 var(--display); color: var(--ink); }
-.ln.melee, .tl.melee { border-color: #a3392a; stroke: #a3392a; }
-.ln.ranged, .tl.ranged { border-color: #3d6427; stroke: #3d6427; }
-.ln.mounted, .tl.mounted { border-color: #2f5f8c; stroke: #2f5f8c; }
-.ln.air, .tl.air { border-color: #6b4f8a; stroke: #6b4f8a; }
-.ln.economy, .tl.economy { border-color: #a07a2c; stroke: #a07a2c; }
-.ln.prereq { border-top: 2px dashed var(--ink-2); }
-.tree-scroll { flex: 1 1 auto; min-height: 0; overflow: auto; position: relative; background:
-  linear-gradient(180deg, rgba(43,36,25,.035), transparent 60px), var(--panel); }
+.tree-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; min-height: 40px; padding: 5px 18px; border-bottom: 1px solid var(--rule); color: var(--ink-2); font: 600 11.5px/1.2 var(--sans); }
+.tree-key { display: inline-flex; align-items: center; gap: 6px; }
+.tree-key .ln { display: inline-block; width: 22px; height: 0; border-top: 3px solid; }
+.tree-hint { margin-left: auto; color: var(--ink); font: italic 400 14px/1.2 var(--display); }
+.ln.melee { border-color: var(--line-melee); } .tl.melee { stroke: var(--line-melee); }
+.ln.ranged { border-color: var(--line-ranged); } .tl.ranged { stroke: var(--line-ranged); }
+.ln.mounted { border-color: var(--line-mounted); } .tl.mounted { stroke: var(--line-mounted); }
+.ln.air { border-color: var(--line-air); } .tl.air { stroke: var(--line-air); }
+.ln.economy { border-color: var(--line-economy); } .tl.economy { stroke: var(--line-economy); }
+.tree-scroll { flex: 1 1 auto; min-height: 0; overflow: auto; position: relative; outline: none;
+  background: linear-gradient(180deg, rgba(43, 36, 25, .035), transparent 60px), var(--panel); }
 .tree-canvas { position: relative; }
-.tree-era { position: absolute; top: 0; border-inline: 1px solid transparent; }
+.tree-era { position: absolute; top: 0; border-inline: 1px solid transparent; pointer-events: none; }
 .tree-era.current { background: rgba(154, 51, 34, .055); border-inline-color: rgba(154, 51, 34, .25); }
 .tree-era.past { background: rgba(61, 100, 39, .04); }
 .tree-era-head { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 8px; padding: 10px 10px 0; }
@@ -502,25 +503,26 @@
 .tree-era.current .tree-era-numeral { border-color: var(--accent); color: var(--field); background: var(--accent); }
 .tree-era.past .tree-era-numeral { border-color: var(--good); color: var(--good); }
 .tree-era-name { font: var(--display-weight) 19px/1 var(--display); color: var(--ink); }
-.tree-era.future .tree-era-name { color: var(--ink-2); }
 .tree-era-state { flex-basis: 100%; padding-left: 32px; color: var(--ink-2); font: 600 11px/1.2 var(--sans); }
 .tree-era.current .tree-era-state { color: var(--accent); }
 .tree-links { position: absolute; inset: 0; pointer-events: none; }
 .tl { fill: none; stroke-width: 2.5; opacity: .32; }
 .tl.lit { opacity: .9; }
-.tl.goal { opacity: 1; stroke-width: 4; }
-.tl.prereq { stroke: var(--ink-2); stroke-width: 2; stroke-dasharray: 5 4; opacity: .8; }
+.tl.goal { stroke: var(--goal); opacity: 1; stroke-width: 4; }
 .tree-node { position: absolute; display: flex; flex-direction: column; gap: 4px; padding: 7px 9px 6px; border: 1px solid var(--rule-2); background: var(--field); color: var(--ink); text-align: left; cursor: pointer; box-shadow: 2px 2px 0 var(--rule-2); font: inherit; }
 .tree-node:hover { border-color: var(--ink); }
+.tree-node:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.tree-node[aria-disabled='true'] { cursor: default; }
 .tn-head { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
-.tn-name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: var(--display-weight) 16px/1.05 var(--display); }
+.tn-name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: var(--display-weight) 16px/1.1 var(--display); }
 .tn-mark { color: var(--good); }
 .tn-q, .tn-goal { flex: none; padding: 2px 5px; background: var(--ink); color: var(--field); font: 700 10px/1 var(--sans); letter-spacing: .03em; text-transform: uppercase; }
-.tn-goal { background: #a07a2c; }
-.tn-art { display: flex; align-items: center; gap: 4px; flex: 1 1 auto; min-height: 0; }
+.tn-goal { background: var(--goal); }
+.tn-art { display: flex; align-items: center; gap: 4px; flex: 1 1 auto; min-height: 0; align-self: flex-start; }
 .tn-thumb { display: inline-grid; place-items: center; width: 34px; height: 34px; border: 1px solid var(--rule); background: var(--panel); overflow: hidden; }
 .tn-thumb img { width: 100%; height: 100%; object-fit: cover; }
 .tn-more { color: var(--ink-2); font: 600 11px/1 var(--sans); }
+
 .tn-foot { display: flex; align-items: center; gap: 6px; color: var(--ink-2); font: 600 11px/1.1 var(--sans); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tn-bar { flex: 1 1 auto; height: 5px; background: var(--rule); }
 .tn-bar i { display: block; height: 100%; background: var(--good); }
@@ -529,21 +531,21 @@
 .tree-node.known .tn-thumb { filter: saturate(.55); opacity: .8; }
 .tree-node.available { border: 2px solid var(--accent); padding: 6px 8px 5px; }
 .tree-node.available .tn-foot { color: var(--ink); }
-.tree-node.researching { border: 2px solid var(--good); padding: 6px 8px 5px; box-shadow: 0 0 0 3px rgba(61,100,39,.18), 2px 2px 0 var(--rule-2); }
+.tree-node.researching { border: 2px solid var(--good); padding: 6px 8px 5px; box-shadow: 0 0 0 3px rgba(61, 100, 39, .18), 2px 2px 0 var(--rule-2); }
 .tree-node.queued { border: 2px solid var(--ink); padding: 6px 8px 5px; }
-.tree-node.locked, .tree-node.blocked { background: color-mix(in srgb, var(--field) 55%, var(--panel)); box-shadow: none; }
-.tree-node.locked .tn-name, .tree-node.blocked .tn-name { color: var(--ink-2); }
-.tree-node.blocked { border-style: dashed; }
-.tree-node.blocked .tn-foot { color: var(--bad); }
-.tree-node.on-path { border-color: #a07a2c; border-width: 2px; padding: 6px 8px 5px; }
-.tree-node.goal { border: 2px solid #a07a2c; padding: 6px 8px 5px; box-shadow: 0 0 0 3px rgba(160,122,44,.28), 2px 2px 0 var(--rule-2); background: var(--field); }
+.tree-node.locked { background: color-mix(in srgb, var(--field) 60%, var(--panel)); box-shadow: none; }
+.tree-node.locked .tn-name { color: var(--ink-2); }
+.tree-node.on-path { border: 2px solid var(--goal); padding: 6px 8px 5px; }
+.tree-node.goal { border: 2px solid var(--goal); padding: 6px 8px 5px; background: var(--field); box-shadow: 0 0 0 3px rgba(160, 122, 44, .3), 2px 2px 0 var(--rule-2); }
 .tree-node.goal .tn-name { color: var(--ink); }
-.tree-node.compact, .tech-tree.compact .tree-node { gap: 2px; padding-block: 5px 4px; }
+.tech-tree.compact .tree-node { gap: 2px; padding-block: 5px 4px; }
 .tech-tree.compact .tn-thumb { width: 24px; height: 24px; }
-.tech-tree.compact .tn-foot { font-size: 10.5px; }
 .tech-tree.compact .tn-name { font-size: 14.5px; }
-.tree-goal { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; padding: 3px 4px 3px 3px; border: 1px solid #a07a2c; background: var(--field); color: var(--ink); font: 400 12.5px/1.2 var(--sans); }
-.tree-goal-x { display: inline-grid; place-items: center; width: 24px; height: 24px; border: 1px solid var(--rule-2); background: transparent; cursor: pointer; }
-.tree-mode .research-queue { display: none; }
-@media (max-height: 700px) { .tree-mode .modal-foot { display: none; } .tree-mode .tree-legend { padding-block: 4px; } }
-.tree-goal-flag { padding: 3px 6px; background: #a07a2c; color: var(--field); font: 700 10px/1 var(--sans); text-transform: uppercase; letter-spacing: .04em; }
+.tech-tree.compact .tn-foot { font-size: 11px; }
+.tree-goal { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; padding: 3px 3px 3px 3px; border: 1px solid var(--goal); background: var(--field); color: var(--ink); font: 400 13px/1.2 var(--sans); }
+.tree-goal-flag { padding: 3px 6px; background: var(--goal); color: var(--field); font: 700 10px/1 var(--sans); text-transform: uppercase; letter-spacing: .04em; }
+.tree-goal-x { display: inline-grid; place-items: center; width: 24px; height: 24px; border: 1px solid var(--rule-2); background: transparent; color: var(--ink); cursor: pointer; }
+.tech-modal.tree-mode .research-scroll { display: none; }
+@media (max-height: 700px) {
+  .tech-modal.tree-mode .research-queue, .tech-modal.tree-mode .modal-foot { display: none; }
+}
