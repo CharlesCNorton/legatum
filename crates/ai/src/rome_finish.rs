@@ -69,8 +69,10 @@ impl Planner<'_> {
     pub(crate) fn rome_victim(&self) -> Option<PlayerId> {
         let v = self.view();
         let victim = self.campaigns.rome_victim.filter(|_| self.rome_finish())?;
-        (v.turn <= FINISH_LAST_TURN && v.players.iter().any(|p| p.id == victim && p.alive))
-            .then_some(victim)
+        (v.turn <= FINISH_LAST_TURN
+            && v.players.iter().any(|p| p.id == victim && p.alive)
+            && !(self.campaigns.rome_walled_peace_window && !v.at_war(v.me, victim)))
+        .then_some(victim)
     }
 
     /// The last turn the opening runs.
@@ -86,6 +88,39 @@ impl Planner<'_> {
     pub(crate) fn rome_finish_refuses_peace(&self, against: TeamId) -> bool {
         self.rome_victim()
             .is_some_and(|victim| self.view().team_of(victim) == against)
+            && !self.rome_walled_peace(against)
+    }
+
+    /// A captured city is frozen and the victim's remaining known cities have completed
+    /// Walls. Observed Walls persist, so a stale positive observation is still safe to use;
+    /// unseen new Walls are not guessed. With all known cities walled, no known open city is
+    /// reachable by the Roman army.
+    pub(crate) fn rome_walled_peace(&self, against: TeamId) -> bool {
+        let v = self.view();
+        if !self.rome_finish()
+            || self.decisions.rome_walled_peace == 0
+            || !v.teams_at_war(v.team, against)
+        {
+            return false;
+        }
+        let Some(victim) = self.rome_victim() else {
+            return false;
+        };
+        if v.team_of(victim) != against
+            || !self
+                .ctx
+                .own_cities
+                .iter()
+                .any(|city| city.occupation_lock == Some(victim))
+        {
+            return false;
+        }
+        let known: Vec<_> = v
+            .cities
+            .iter()
+            .filter(|city| city.owner == victim)
+            .collect();
+        !known.is_empty() && known.iter().all(|city| city.walls)
     }
 
     /// A city taken from the victim is kept, never burnt, while the opening runs.
