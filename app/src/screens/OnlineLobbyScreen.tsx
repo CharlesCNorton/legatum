@@ -5,12 +5,14 @@ import {
   LOBBY_POLL_MS,
   fetchLobby,
   phaseText,
+  roomBase,
   seatsText,
   versionProblem,
   type RoomInfo,
 } from '../platform/relayLobby';
 import { buildForRoom, buildUrl, navigate } from '../platform/versions';
 import { useSiteBuilds } from '../ui/useSiteBuilds';
+import { keptSeat } from '../remote';
 
 type Load = { kind: 'loading' } | { kind: 'ready'; rooms: RoomInfo[] } | { kind: 'failed' };
 
@@ -101,7 +103,9 @@ export function OnlineLobbyScreen() {
               // A game on another version the site still serves is joined there: Join opens that version.
               const other = versionProblem(room, online) ? buildForRoom(builds, room) : null;
               const mismatch = other ? null : versionProblem(room, online);
-              const full = room.open_seats <= 0;
+              // A seat this device held (before a restart) can be taken back even when the game shows as full.
+              const yours = !!keptSeat(roomBase(relay, room.room));
+              const full = room.open_seats <= 0 && !yours;
               const note = mismatch ?? (joinError?.room === room.room ? joinError.text : other ? 'This game is on another version. Joining opens that version.' : null);
               return (
                 <li key={room.room} className={`online-room ${mismatch ? 'blocked' : ''}`}>
@@ -117,6 +121,7 @@ export function OnlineLobbyScreen() {
                     <div className="online-room-name">{room.name || 'Unnamed game'}</div>
                     <div className="online-room-meta">
                       <span>{seatsText(room)}</span>
+                      {yours && <span className="online-room-yours">Your seat is here</span>}
                       <span className="online-room-phase">{phaseText(room)}</span>
                       {room.locked && (
                         <span className="online-room-lock">

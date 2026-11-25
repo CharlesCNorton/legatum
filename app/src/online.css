@@ -128,14 +128,14 @@ div.seat {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 300px));
   gap: 0;
-  margin: 4px 0 4px;
+  margin: 0;
 }
 .mp-door {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 4px;
-  padding: 4px 20px 0;
+  gap: 2px;
+  padding: 0 20px;
 }
 .mp-door + .mp-door {
   border-left: 1px solid var(--rule);
@@ -148,14 +148,26 @@ div.seat {
   text-align: center;
 }
 .mp-door-lede {
-  margin: 0 0 6px;
+  margin: 0 0 4px;
   font: italic 400 14px/1.25 var(--display);
   color: var(--ink-2);
   text-align: center;
 }
+/* The join code's label sits beside its box, so the Host door stays short at 1000x600. */
 .mp-door .host-code {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
   width: 100%;
-  margin: 0 0 4px;
+  margin: 0 0 2px;
+}
+.mp-door .host-code > span {
+  flex: none;
+}
+.mp-door .host-code .lobby-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 36px;
 }
 .title-actions .mp-door .btn.big,
 .title-actions .mp-door .btn.big.primary,
@@ -261,6 +273,10 @@ div.seat {
 }
 .online-room-phase {
   font-style: italic;
+}
+.online-room-yours {
+  font-weight: 600;
+  color: var(--good);
 }
 .online-room-lock {
   display: inline-flex;

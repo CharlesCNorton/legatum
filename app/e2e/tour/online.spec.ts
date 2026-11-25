@@ -14,6 +14,13 @@ const noHints = (p: Page) => p.addInitScript(() => {
   if (location.protocol.startsWith('http')) localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
 });
 
+/** The people's introduction opens on a new game's first turn (PR 135); Begin closes it. */
+async function begin(page: Page) {
+  const intro = page.getByTestId('people-intro');
+  if (await intro.isVisible().catch(() => false)) await intro.getByRole('button', { name: /^Begin/ }).click();
+  await expect(intro).toHaveCount(0);
+}
+
 async function multiplayer(page: Page) {
   await page.goto('/');
   await page.getByRole('button', { name: /^Multiplayer/ }).click();
@@ -114,8 +121,8 @@ for (const size of SIZES) testWithFailingRequests.describe(`online screens ${siz
     await expect(worst.locator('.title-notice')).toBeVisible();
     await worst.mouse.move(5, 5);
     await expect(worst.locator('.host-name .host-name-note')).toHaveText('Shown in the game list as “Ada”.');
-    await expectMenuAboveFooter(worst, '25a worst case (Resume + notice + name note)');
     await shot(worst, size, '25a-menu-worst-case');
+    await expectMenuAboveFooter(worst, '25a worst case (Resume + notice + name note)');
     await worst.getByLabel('Your name', { exact: true }).fill('\u{1F600}\u{1F600}');
     await expect(worst.locator('.host-name .host-name-note')).toHaveText('Listed as “Game” and four characters.');
     await expectMenuAboveFooter(worst, '25b worst case, nothing showable');
@@ -271,6 +278,8 @@ for (const size of SIZES) testWithFailingRequests.describe(`online co-op ${size.
     for (const p of [host, guest]) {
       await expect(p.getByTestId('turn-number')).toHaveText('1', { timeout: 90_000 });
       await expect(p.locator('.loading-screen')).toHaveCount(0);
+      await p.waitForTimeout(800);
+      await begin(p);
       await dismissInterstitials(p);
     }
     await host.mouse.move(size.width / 2, size.height - 4);
@@ -345,14 +354,18 @@ for (const size of SIZES) testWithFailingRequests.describe(`online co-op ${size.
     await host.keyboard.press('Escape');
     guest = await guestContext.newPage();
     await multiplayer(guest);
-    await guest.getByRole('button', { name: /^Join Game/ }).click();
-    await guest.locator('.online-room').filter({ hasText: hostName }).getByRole('button', { name: /^Join/ }).click();
+    await guest.getByRole('button', { name: /^Join Game/ }).click({ timeout: 15_000 });
+    const again = guest.locator('.online-room').filter({ hasText: hostName });
+    await expect(again).toHaveCount(1, { timeout: 20_000 });
+    await again.getByRole('button', { name: /^Join/ }).click({ timeout: 15_000 });
     const back = guest.getByRole('button', { name: /Rejoin as Alice/ });
     await expect(back).toBeEnabled();
     await guest.mouse.move(5, 5);
     await shot(guest, size, '55f-guest-rejoin-after-restart');
     await back.click();
     await expect(guest.getByTestId('turn-number')).toHaveText('1', { timeout: 60_000 });
+    await guest.waitForTimeout(800);
+    await begin(guest);
     await dismissInterstitials(guest);
     await expect(host.getByTestId('away-banner')).toHaveCount(0);
 
@@ -419,6 +432,7 @@ for (const size of SIZES) testWithFailingRequests.describe(`online co-op ${size.
     await (await chooser).setFiles(savePath);
     await expect(host2.getByTestId('turn-number')).toBeVisible({ timeout: 90_000 });
     await host2.waitForTimeout(1500);
+    await begin(host2);
     await dismissInterstitials(host2);
     await host2.mouse.move(size.width / 2, size.height - 4);
     await shot(host2, size, '61-host-from-save-turn');
@@ -443,6 +457,7 @@ for (const size of SIZES) testWithFailingRequests.describe(`online co-op ${size.
     await guest2.getByRole('button', { name: /Rejoin as Alice/ }).click();
     await expect(guest2.getByTestId('turn-number')).toBeVisible({ timeout: 60_000 });
     await guest2.waitForTimeout(1500);
+    await begin(guest2);
     await dismissInterstitials(guest2);
     await guest2.mouse.move(size.width / 2, size.height - 4);
     await shot(guest2, size, '65-guest-resumed-seated');
