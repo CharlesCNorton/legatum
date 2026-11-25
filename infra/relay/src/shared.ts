@@ -61,9 +61,8 @@ export const msgTooManyRooms = (n: number): string =>
     : `You already have ${n} games open. Close one before hosting another.`;
 
 /**
- * Terms that may not appear in a lobby name, matched case-insensitively against the name's letters and
- * digits with spaces and punctuation removed. A name containing one is replaced by "Game <id>".
- * Add entries here; nothing else needs to change.
+ * Terms that may not appear in a build label (`buildOk`), matched case-insensitively against its letters and
+ * digits with spaces and punctuation removed. Lobby names no longer come from hosts (`listedName`).
  */
 export const BLOCKED_NAME_TERMS: readonly string[] = [
   // A first filter for the words that make a public list unpleasant, not a complete one. A term is matched
@@ -144,7 +143,7 @@ function graphemes(s: string): string[] {
 const foldForBlocklist = (s: string): string => s.toLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
 
 /**
- * Cleans a host-supplied lobby name. Keeps letters (any script), digits, spaces and a small punctuation
+ * Cleans a host-supplied name (the lobby no longer lists one; kept for callers and tests). Keeps letters (any script), digits, spaces and a small punctuation
  * set; drops everything else, including emoji, symbols, and invisible or direction-changing characters;
  * collapses whitespace; keeps at most 3 combining marks on a letter and at most 40 visible characters.
  * Returns "" when nothing is left or the name contains a blocked term.
@@ -174,7 +173,7 @@ export const LISTED_ADJECTIVES: readonly string[] = [
   "Indigo", "Ivory", "Jade", "Marble", "Olive", "Saffron", "Silver", "Scarlet",
 ];
 export const LISTED_NOUNS: readonly string[] = [
-  "Banner", "Bridge", "Citadel", "Compass", "Delta", "Forum", "Garden", "Harbor",
+  "Banner", "Bridge", "Citadel", "Compass", "Delta", "Forum", "Garden", "Harbour",
   "Highland", "Lantern", "Meadow", "Oasis", "Ridge", "River", "Steppe", "Valley",
 ];
 

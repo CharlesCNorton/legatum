@@ -44,10 +44,9 @@ function forgetHostRoom(roomId: string | undefined) {
 }
 
 
-/** The host's line under the title. Once the room is open it names the game as the public list shows it, so the host can tell friends which one to join. */
-function hostSubtitle(roomId: string | null): string {
-  const base = 'You are the host. Players who join take the Online player seats and choose their own faction.';
-  return roomId ? `${base} In the game list, this game is “${listedRoomName(roomId)}”.` : base;
+/** Once the host's room is open: the game's name as the public list shows it, so the host can tell friends which one to join. */
+function listedLine(roomId: string | null): string | undefined {
+  return roomId ? `In the game list, this game is “${listedRoomName(roomId)}”.` : undefined;
 }
 
 /** An online host's first seat carries the player's saved name. */
@@ -184,7 +183,8 @@ export function LobbyScreen() {
   return (
     <LobbyFrame
       title={TITLES[mode]}
-      subtitle={mode === 'host' ? hostSubtitle(room && staging ? hostedRoomId() : null) : undefined}
+      subtitle={mode === 'host' ? 'You are the host. Players who join take the Online player seats and choose their own faction.' : undefined}
+      note={mode === 'host' ? listedLine(room && staging ? hostedRoomId() : null) : undefined}
       onBack={back} backDisabled={!!busy} error={error} dock={dock}
     >
       <div className="lobby-body">
@@ -240,7 +240,7 @@ function useStagingHost(room: boolean, lobby: Lobby | null, writeSettings: boole
   };
 }
 
-export function LobbyFrame({ title, subtitle, onBack, backDisabled = false, error, dock, children }: { title: string; subtitle?: string; onBack: () => void; backDisabled?: boolean; error: string | null; dock?: ReactNode; children: ReactNode }) {
+export function LobbyFrame({ title, subtitle, note, onBack, backDisabled = false, error, dock, children }: { title: string; subtitle?: string; note?: string; onBack: () => void; backDisabled?: boolean; error: string | null; dock?: ReactNode; children: ReactNode }) {
   return (
     <div className="setup-screen lobby-screen">
       <HexBackdrop />
@@ -253,6 +253,7 @@ export function LobbyFrame({ title, subtitle, onBack, backDisabled = false, erro
           <div />
         </div>
         {subtitle && <p className="setup-lede lobby-role">{subtitle}</p>}
+        {note && <p className="setup-lede lobby-listed">{note}</p>}
         {error === HOST_AWAY ? (
           <div className="toast bad inline host-away" role="status">
             <div>{error}</div>

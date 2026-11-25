@@ -7,7 +7,7 @@ const ADJECTIVES = [
   'Indigo', 'Ivory', 'Jade', 'Marble', 'Olive', 'Saffron', 'Silver', 'Scarlet',
 ];
 const NOUNS = [
-  'Banner', 'Bridge', 'Citadel', 'Compass', 'Delta', 'Forum', 'Garden', 'Harbor',
+  'Banner', 'Bridge', 'Citadel', 'Compass', 'Delta', 'Forum', 'Garden', 'Harbour',
   'Highland', 'Lantern', 'Meadow', 'Oasis', 'Ridge', 'River', 'Steppe', 'Valley',
 ];
 const ID_ALPHABET = 'abcdefghijkmnpqrstuvwxyz23456789';

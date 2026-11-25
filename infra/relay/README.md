@@ -97,7 +97,7 @@ under the Worker's Variables) without a code change; a missing or unusable value
   see the desktop host's protocol pings. A pinging host costs one Lobby call about every 40 s.
 - The list never shows text a host typed. Anyone can host, so a free-text name would let anyone put any message
   in front of every player. Each room is listed as two words and a number picked by its room id (`listedName` in
-  `src/shared.ts`, for example "Amber Harbor 07"); `POST /rooms` returns it as `name`, and the app shows the host
+  `src/shared.ts`, for example "Amber Harbour 07"); `POST /rooms` returns it as `name`, and the app shows the host
   the same name (`app/src/net/roomName.ts` mirrors the rule). A `name` an older page still sends is checked for
   type and length, then dropped. `sanitizeName` and `BLOCKED_NAME_TERMS` remain for the build-label check.
 - The build label must be one the game makes (`buildOk`): `Version <n.n.n>` with an optional `· web <hash>` or

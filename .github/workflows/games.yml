@@ -54,7 +54,8 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: infra/games/package-lock.json
-      - run: npm ci
+      # No install scripts: they would run before the deploy step and could change what it runs with the token.
+      - run: npm ci --ignore-scripts
       - name: Deploy (skipped until the Cloudflare secrets exist)
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

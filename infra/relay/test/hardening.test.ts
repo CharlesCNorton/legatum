@@ -98,6 +98,21 @@ describe("room names", () => {
     host.ws.close(1000);
   });
 
+  it("never lists a typed name or a loose build label kept by an older relay", async () => {
+    const { room, host } = await hostedRoom();
+    const loose = { name: "typed by an old page", build: "Visit some site for prizes", rules_version: 3, protocol: 1, locked: false };
+    await runInDurableObject(lobbyStub(), (_i, state: DurableObjectState) => {
+      state.storage.sql.exec("UPDATE rooms SET announce = ? WHERE room = ?", JSON.stringify({ ...loose, build: "8.9.74" }), room);
+    });
+    const row = (await lobbyRooms()).find((x) => x.room === room)!;
+    expect(row.name).toBe(listedName(room));
+    await runInDurableObject(lobbyStub(), (_i, state: DurableObjectState) => {
+      state.storage.sql.exec("UPDATE rooms SET announce = ? WHERE room = ?", JSON.stringify(loose), room);
+    });
+    expect((await lobbyRooms()).find((x) => x.room === room)).toBeUndefined();
+    host.ws.close(1000);
+  });
+
   it("uses only its own words, for every room id", () => {
     const alphabet = "abcdefghijkmnpqrstuvwxyz23456789";
     for (const a of alphabet) for (const b of alphabet) {

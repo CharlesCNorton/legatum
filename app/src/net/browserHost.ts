@@ -109,7 +109,7 @@ const browserTimers: Timers = {
 };
 
 /** Why the relay would not list a room. The `message` is a short plain sentence the host can read as it is. */
-export type RefusalKind = 'too_fast' | 'too_many' | 'full' | 'closed' | 'offline' | 'other';
+export type RefusalKind = 'too_fast' | 'too_many' | 'network' | 'full' | 'closed' | 'offline' | 'other';
 
 export class RelayRefusal extends Error {
   constructor(readonly kind: RefusalKind, readonly detail: string, readonly retryAfterS: number | null = null) {
@@ -131,6 +131,8 @@ export function refusalMessage(kind: RefusalKind, retryAfterS: number | null = n
     }
     case 'too_many':
       return `Your internet connection already has ${MAX_ROOMS_PER_ADDRESS} games open. Close one before hosting another.`;
+    case 'network':
+      return 'Too many games are open from your network. Try again later.';
     case 'full':
       return 'The game list is full right now. Try again in a few minutes.';
     case 'closed':
@@ -154,13 +156,15 @@ export function retryLine(kind: RefusalKind, retryAfterS: number | null = null):
       return 'Close one of your games first';
     case 'closed':
       return 'Paused for now';
+    case 'network':
+      return 'Try again later';
     default:
       return 'Try again';
   }
 }
 
 /** A refusal where pressing Host Game again right away cannot work, so it is not the next action. */
-export const retryWouldFail = (kind: RefusalKind): boolean => kind === 'too_fast' || kind === 'too_many' || kind === 'closed';
+export const retryWouldFail = (kind: RefusalKind): boolean => kind === 'too_fast' || kind === 'too_many' || kind === 'network' || kind === 'closed';
 
 /**
  * The relay answers POST /rooms: 429 (the creation rate, or the per-address room cap) and 503 (paused or full).
@@ -172,6 +176,7 @@ export function refusalFor(status: number, error: string | undefined, retryAfter
   if (status === 429) {
     const secs = retryAfter !== null && /^\d{1,6}$/.test(retryAfter.trim()) ? Number(retryAfter.trim()) : null;
     if (secs !== null || /too quickly|too fast/i.test(error ?? '')) return new RelayRefusal('too_fast', detail, secs);
+    if (/from your network/i.test(error ?? '')) return new RelayRefusal('network', detail);
     if (/games? open/i.test(error ?? '')) return new RelayRefusal('too_many', detail);
     return new RelayRefusal('other', detail);
   }

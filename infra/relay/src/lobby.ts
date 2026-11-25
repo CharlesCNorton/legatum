@@ -10,7 +10,9 @@ import {
   RoomAnnounce,
   RoomInfo,
   Summary,
+  buildOk,
   ipHash,
+  listedName,
   msUntil,
   networkKey,
   newSalt,
@@ -166,7 +168,10 @@ export class Lobby extends DurableObject<Env> {
     for (const r of rows) {
       const a = JSON.parse(r.announce as string) as RoomAnnounce;
       const s = JSON.parse(r.summary as string) as Summary;
-      out.push({ ...a, locked: a.locked === true, ...s, room: r.room as string, updated_ms: r.updated_ms as number });
+      // Rows stored by an older relay hold a typed name and a looser build label: the name is always made
+      // again from the id, and a row whose label would not be accepted today is left out.
+      if (!buildOk(String(a.build))) continue;
+      out.push({ ...a, name: listedName(r.room as string), locked: a.locked === true, ...s, room: r.room as string, updated_ms: r.updated_ms as number });
     }
     return out;
   }
