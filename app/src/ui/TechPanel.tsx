@@ -16,6 +16,7 @@ import { Amount, Amounts, YieldAmounts } from './Amounts';
 import { EraCard, EraRows } from './EraCards';
 import { UnlockDetail } from './TechDetail';
 import { EraObjectivesResearch } from './EraObjectives';
+import { TechTree, type TreeVariant } from './TechTree';
 import { techCardUnlocks } from './techCardUnlocks';
 import { appendToQueue, costParts, currentEraTechs, diffusionLine, eraFirst, eraRows, eraName, eraNumeral, queueSchedule, researchCatalog, researchFirst, type QueueSlot } from './eraResearch';
 import './research.css';
@@ -55,6 +56,9 @@ export function TechPanel() {
   // The tech just picked: its card glows and a chip flies into the queue strip (about 0.4 s, never moves layout).
   const [picked, setPicked] = useState<{ tech: TechId; n: number } | null>(null);
   const pickCount = useRef(0);
+  const params = new URLSearchParams(location.search);
+  const [mode, setMode] = useState<'era' | 'tree'>(params.get('tree') ? 'tree' : 'era');
+  const variant = (params.get('tree') || 'tree') as TreeVariant;
   const visible = open && !!view;
   useEffect(() => { inspect(null); }, [visible, view?.me]);
   useLayoutEffect(() => {
@@ -145,7 +149,7 @@ export function TechPanel() {
   };
   const remove = (tech: TechId) => editQueue(view, queue.filter((t) => t !== tech));
 
-  return <dialog ref={dialog} className="modal tech-modal" aria-labelledby={titleId} data-dismissible="research"
+  return <dialog ref={dialog} className={`modal tech-modal${mode === 'tree' ? ' tree-mode' : ''}`} aria-labelledby={titleId} data-dismissible="research"
     onCancel={(e) => { e.preventDefault(); set({ techOpen: false }); }}
     onClose={(e) => { if (!closing.current && !e.currentTarget.open) set({ techOpen: false }); }}
     onPointerDown={(e) => {
@@ -167,10 +171,12 @@ export function TechPanel() {
       <div className="modal-head">
         <div className="research-head-main"><h2 id={titleId}>Research</h2><div className="muted"><Amount n={science} unit="Science" /> per turn · <Amount n={r.progress} unit="Science" /> stored · {knownCount} of {catalog.length} technologies known</div>
           {noScience && <p className="research-no-science"><Amounts text={noScience} /></p>}</div>
+        <div className="research-mode" role="group" aria-label="Research view"><button type="button" aria-pressed={mode === 'era'} onClick={() => setMode('era')}>This era</button><button type="button" aria-pressed={mode === 'tree'} onClick={() => setMode('tree')}>Tech tree</button></div>
         <EraBadge view={view} />
         <div className="research-head-actions"><button ref={closeButton} className="btn quiet" onClick={() => set({ techOpen: false })} aria-label="Close research">Close <kbd>Esc</kbd></button></div>
       </div>
       <ResearchQueue view={view} orders={orders} slotCount={cards.filter((c) => c.researchable && !r.known.includes(c.tech)).length} landed={picked?.tech} />
+      {mode === 'tree' ? <TechTree view={view} faction={faction} queue={queue} schedule={schedule} variant={variant} onResearchNow={researchNow} onQueue={addToQueue} /> :
       <div className="research-scroll">
         {knownCount === catalog.length && <section className="science-conversion" aria-label="Science after research">
           <h3>After the last technology</h3>
@@ -201,7 +207,7 @@ export function TechPanel() {
         {selected && <TechDetails ref={detail} view={view} tech={selected} faction={faction} slot={schedule[queue.indexOf(selected)]} gold={pendingSpend(view, orders ?? [], errors ?? []).gold} />}
         <EraObjectivesResearch view={view} />
         <EraRows view={view} />
-      </div>
+      </div>}
       <div className="modal-foot muted">Forecasts use today's Science, prices and discounts; other empires and city growth can change them. Stored Science carries over, with at most one technology finished per turn.</div>
   </dialog>;
 }
