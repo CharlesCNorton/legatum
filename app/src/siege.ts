@@ -195,7 +195,7 @@ export function captureForecast(view: PlayerView, cityId: number, attackers: rea
   }
   const sum = `${forceText(modes.map((m) => ({ kind: m.u.kind, faction: factionOf(view, m.u.owner) })))} hit for about ${first} health a turn at average rolls against defence ${defense(city.hp)}`;
   const guard = garrison ? ` Its ${itemName({ kind: 'Unit', unit: garrison.kind }, factionOf(view, garrison.owner))} (${garrison.hp} health) must fall before it is taken.` : ' Nothing garrisons it.';
-  const wallsNote = (city.walls_hp ?? 0) > 0 ? ` Its Walls (${city.walls_hp}/${city.walls_max_hp}) take half of each hit first and never heal; once broken they are gone.` : '';
+  const wallsNote = (city.walls_hp ?? 0) > 0 ? ` Its Walls (${city.walls_hp}/${city.walls_max_hp}) take the hits first and never heal.` : '';
   const detail = `${sum}; ${city.name} has ${city.hp} health and does not heal while they stand beside it.${wallsNote}${guard}${melee ? '' : ' Ranged units wear it down but cannot take it.'}`;
   if (fell !== null) {
     const text = fell <= 1 ? 'Falls next turn unless reinforced' : `Holds about ${fell} turns unless reinforced`;

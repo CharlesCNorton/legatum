@@ -85,6 +85,8 @@ export function advisorWhy(order: Order, view: PlayerView, city?: CityView, unit
       if (!units) return `You have no military units guarding ${city.name}.`;
       return `You have ${units} military ${units === 1 ? 'unit' : 'units'} for ${cities} ${cities === 1 ? 'city' : 'cities'}.`;
     }
+    // No Walls work finishes while the city is under attack (core `walls_work_blocked`).
+    if (item.kind === 'Building' && (item.building === 'UpgradeWalls' || item.building === 'Walls') && city.detail?.walls_blocked) return `Walls can't be finished while ${city.name} is under attack. Production waits.`;
     if (item.kind === 'Building' && item.building === 'UpgradeWalls') return (city.walls_hp ?? 0) < (city.walls_max_hp ?? 0) ? `${city.name}'s Walls are damaged and never regrow. This build restores them.` : `Upgrade Walls adds ${WALLS_HP_PER_LEVEL} to ${city.name}'s Walls.`;
     if (item.kind === 'Building') {
       const yields = buildingStatsFor(factionOf(view), item.building).yields;

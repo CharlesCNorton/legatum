@@ -233,14 +233,15 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
         {capKicker('bottom')}
       </div>
       <div className="cp-name">{city.name}</div>
-      {city.visible && <div className="cp-meta">
+      {city.visible && <div className={(city.walls_max_hp ?? 0) > 0 ? 'cp-meta cp-meta-walls' : 'cp-meta'}>
         <span className="cp-population" title={`${city.population} population`}>
-          <span className="cp-pop">{city.population}</span>{(city.walls_max_hp ?? 0) > 0 ? null : ' population'}
+          <span className="cp-pop">{city.population}</span> population
         </span>
         <Tip content={cityStrengthRule(city, owner?.faction, owner ? owner.era - 1 : 0)}>
           <span className="lbl">Strength</span>
           <b>{city.strength}</b>
         </Tip>
+        {(city.walls_max_hp ?? 0) > 0 && <span className="cp-break" aria-hidden="true" />}
         {(city.walls_max_hp ?? 0) > 0 && <Tip content={WALLS_BAR_RULE}>
           <span className="lbl">Walls</span>
           <b data-testid="city-walls-bar">{city.walls_hp ?? 0}</b>
@@ -249,7 +250,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
         <Tip content={`City health. ${CITY_HEAL_RULE}`}>
           <span className="lbl">Health</span>
           <b>{city.hp}</b>
-          {(city.walls_max_hp ?? 0) > 0 ? null : <span className="muted"> / {city.max_hp}</span>}
+          <span className="muted"> / {city.max_hp}</span>
         </Tip>
       </div>}
       {yieldsRow}

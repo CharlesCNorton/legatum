@@ -77,7 +77,7 @@ export function forecastHeadline(p: {
   const theyTotal = p.theyLose + walls;
   const tradeTone: ForecastHeadline['tone'] = p.youLose > theyTotal ? 'bad' : theyTotal > p.youLose ? 'good' : 'even';
   // A walled city's loss names its Walls: "Berlin's Walls about 9" (and its health, once a hit gets past them).
-  const theirs = walls > 0 ? `${target}'s Walls about ${walls}${p.theyLose > 0 ? ` and its health about ${p.theyLose}` : ''}` : null;
+  const theirs = walls > 0 ? `${target} loses about ${walls} Walls${p.theyLose > 0 ? ` and ${p.theyLose} city health` : ''}` : null;
   const detail = walls > 0
     ? p.youLose > theyTotal
       ? `You take more damage: you lose about ${p.youLose} health, ${theirs}.`
