@@ -379,5 +379,5 @@ const SIEGE_REACH = ['', 'I', 'II', 'III'];
 function siegeNote(view: PlayerView, unit: UnitView): string {
   if (builtInSiege(unit.kind as UnitKind)) return `Siege built in: covers Walls up to level ${wallLevelLabel(unitEraTier(unit.kind as UnitKind))} when it attacks a city.`;
   const tier = unit.owner === view.me ? siegeTier(view.research.known) : 0;
-  return tier > 1 ? `Siege: covers Walls through level ${SIEGE_REACH[tier]} when it attacks a city.` : 'Siege: covers Walls through level I when it attacks a city.';
+  return tier > 1 ? `Siege: covers Walls up to level ${SIEGE_REACH[tier]} when it attacks a city.` : 'Siege: covers Walls up to level I when it attacks a city.';
 }

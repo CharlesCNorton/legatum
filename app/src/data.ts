@@ -157,10 +157,10 @@ const WALLS_HALF_RULE = `attacks on the city's HP do ${RULES.walls.damagePercent
 /** Siege's rule, in one wording for the unit card, tech card and Guide. */
 /** Indirect fire on a card or tip: the headline (the Guide prints ARTILLERY_RULE in full). */
 export const ARTILLERY_HEADLINE = 'Fires over terrain at targets your team can see, with built-in Siege.';
-export const ARTILLERY_RULE = 'From Steel, Howitzers, Artillery, Rocket Artillery and Combat Drones fire over terrain at targets your team can see. They have Siege built in. It covers Walls through level IV in the Industrial era and one more level in each later era. Cities still fire and defend.';
+export const ARTILLERY_RULE = 'From Steel, Howitzers, Artillery, Rocket Artillery and Combat Drones fire over terrain at targets your team can see. They have Siege built in. It covers Walls up to level IV in the Industrial era and one more level in each later era. Cities still fire and defend.';
 /** Siege on a card or tip: the headline (the Guide prints SIEGE_RULE in full). */
-export const SIEGE_HEADLINE = 'A unit with Siege ignores enemy Walls it covers when it attacks a city.';
-export const SIEGE_RULE = "A unit with Siege ignores enemy Walls up to a set level when it attacks a city. Mathematics covers level I, Machinery level II and Metallurgy level III. It is bought once with Gold, in your own territory, and the unit keeps it for good. Industrial and later units have it built in: their Siege covers Walls through level IV in the Industrial era and one more level in each later era.";
+export const SIEGE_HEADLINE = 'Siege lets a unit ignore enemy Walls up to a set level when it attacks a city.';
+export const SIEGE_RULE = "A unit with Siege ignores enemy Walls up to a set level when it attacks a city. Mathematics covers level I, Machinery level II and Metallurgy level III. It is bought once with Gold, in your own territory, and the unit keeps it for good. Industrial and later units have it built in: their Siege covers Walls up to level IV in the Industrial era and one more level in each later era.";
 /** Core `data::siege_gold`: Gold for Siege on a unit of this kind, the base price scaled by the unit's era. */
 export const siegeGold = (kind: UnitKind): number => eraScaled(RULES.siege.baseGold, unitEraTier(kind));
 /** Core `data::SIEGE_USES_IRON`: each Siege unit uses 1 Iron supply while it exists. */
@@ -201,10 +201,10 @@ const UNIT_COPY: Record<UnitKind, { summary: string; blurb: string }> = {
   Crossbowman: { summary: 'Strikes from 2 tiles away without retaliation', blurb: 'Medieval crossbow line. Strikes from 2 tiles away, with no retaliation.' },
   Arquebusier: { summary: 'Strikes from 2 tiles away without retaliation', blurb: 'Renaissance gunpowder shooters. Strike from 2 tiles away, with no retaliation.' },
   FieldCannon: { summary: 'Strikes from 2 tiles away without retaliation', blurb: 'Industrial gun line. Strikes from 2 tiles away, with no retaliation.' },
-  Howitzer: { summary: 'Indirect fire and built-in Siege', blurb: 'Machine Age gun line. Fires over terrain from 2 tiles away. Its built-in Siege covers Walls through level V.' },
-  Artillery: { summary: 'Indirect fire and built-in Siege', blurb: 'World War gun line. Fires over terrain at visible targets. Its built-in Siege covers Walls through level VI.' },
-  RocketArtillery: { summary: `Indirect fire from ${RULES.rocketArtilleryRange} tiles away; built-in Siege`, blurb: `Modern rocket launchers. Fire over terrain from ${RULES.rocketArtilleryRange} tiles away. Their built-in Siege covers Walls through level VII.` },
-  CombatDrone: { summary: 'Quick indirect fire and built-in Siege', blurb: 'Future strike drones. Quick, and fire over terrain at visible targets. Their built-in Siege covers Walls through level VIII.' },
+  Howitzer: { summary: 'Indirect fire and built-in Siege', blurb: 'Machine Age gun line. Fires over terrain from 2 tiles away. Its built-in Siege covers Walls up to level V.' },
+  Artillery: { summary: 'Indirect fire and built-in Siege', blurb: 'World War gun line. Fires over terrain at visible targets. Its built-in Siege covers Walls up to level VI.' },
+  RocketArtillery: { summary: `Indirect fire from ${RULES.rocketArtilleryRange} tiles away; built-in Siege`, blurb: `Modern rocket launchers. Fire over terrain from ${RULES.rocketArtilleryRange} tiles away. Their built-in Siege covers Walls up to level VII.` },
+  CombatDrone: { summary: 'Quick indirect fire and built-in Siege', blurb: 'Future strike drones. Quick, and fire over terrain at visible targets. Their built-in Siege covers Walls up to level VIII.' },
   Horseman: { summary: 'Fast riders; strong against ranged units', blurb: `Fast riders. ${MOUNTED_NOTE}` },
   Cataphract: { summary: 'Armoured riders; strong against ranged units', blurb: `Armoured lancers of the Classical age. ${MOUNTED_NOTE}` },
   Knight: { summary: 'Armoured riders; strong against ranged units', blurb: `Armoured riders of the Medieval age. ${MOUNTED_NOTE}` },
@@ -287,7 +287,7 @@ const TECH_BLURB: Record<TechId, string> = {
   Masonry: "Unlocks Walls and the Pyramids; Quarries +1 Production (walled cities take half damage to their HP and fire back)",
   Currency: "Unlocks Market",
   Writing: "Unlocks Library",
-  Mathematics: `Unlocks Phalangite; Spearmen can upgrade. Units can buy Siege, which covers Walls level I.`,
+  Mathematics: `Unlocks Phalangite; Spearmen can upgrade. Units can buy Siege, which covers Walls up to level I.`,
   Engineering: "Unlocks Roadworks and Composite Archer; Archers can upgrade",
   IronWorking: "Unlocks Forge and Cataphract. Mines improve; Horsemen can upgrade",
   CodeOfLaws: "Each city claims its best tile 2 tiles out",
@@ -309,7 +309,7 @@ const TECH_BLURB: Record<TechId, string> = {
   Railways: "Road start +2 moves. Roadworks link cities within 12 tiles. Mines gain 1 Production",
   ReplaceableParts: "Unlocks Trench Infantry; Riflemen can upgrade. Factories +2 Production",
   Combustion: "Unlocks Early Tank; Cavalry can upgrade. Oil Wells +1 Gold. Reveals Oil",
-  Steel: `Unlocks Howitzer and the Eiffel Tower; Field Cannons can upgrade. Howitzers fire over terrain; their built-in Siege covers Walls through level V.`,
+  Steel: `Unlocks Howitzer and the Eiffel Tower; Field Cannons can upgrade. Howitzers fire over terrain; their built-in Siege covers Walls up to level V.`,
   Flight: `Unlocks Biplane (sees ${RULES.aircraftSight} tiles around its city, strikes ${RULES.biplaneStrikeRange} tiles out, guards ${RULES.biplaneGuardRange}); it lives in a city's hangar`,
   Electricity: "Bank → Stock Exchange",
   MassMobilisation: "Unlocks Infantry; Trench Infantry can upgrade",
