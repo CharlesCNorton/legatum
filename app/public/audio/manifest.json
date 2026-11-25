@@ -1471,7 +1471,7 @@
     "source": "https://raw.githubusercontent.com/yairm210/Unciv/master/android/assets/sounds/shot.mp3 (a copy of https://freesound.org/people/Deganoth/sounds/348685/)",
     "attribution": "\"uzzi_full_single\" by Deganoth (freesound.org), CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), edited for Legatum",
     "license": "CC-BY-4.0",
-    "rationale": "Muskets and rifles fire.",
+    "rationale": "Rifles fire as the lines close, from the Industrial era.",
     "modified": "taken from the copy in Unciv (24 kHz MP3); silence trimmed, cut to at most 1.0 s, 3 ms fade-in and 10 ms fade-out; static gain -6.7 dB (now -20.5 LUFS, -0.4 dBTP); mixed to mono, resampled to 44.1 kHz, encoded as AAC-LC 64 kb/s .m4a; metadata stripped",
     "gain": 0.67
   },
@@ -1525,9 +1525,9 @@
     "title": "VHCL_S_Airplane_Prop_001.wav",
     "author": "conleec",
     "source": "https://raw.githubusercontent.com/karolpiczak/ESC-50/master/audio/3-193767-A-47.wav (a clip of https://freesound.org/people/conleec/sounds/193767/)",
-    "attribution": "conleec (freesound.org), CC0",
+    "attribution": "\"VHCL_S_Airplane_Prop_001.wav\" by conleec (freesound.org), CC0, edited for Legatum",
     "license": "CC0-1.0",
-    "rationale": "A propeller aircraft passes on its bombing run.",
+    "rationale": "A biplane or propeller bomber passes on its bombing run.",
     "modified": "a 5 s clip of the recording from the ESC-50 dataset; silence trimmed, cut to at most 4.0 s, 3 ms fade-in and 10 ms fade-out; static gain +0.2 dB (now -20.0 LUFS, -6.4 dBTP); mixed to mono, resampled to 44.1 kHz, encoded as AAC-LC 64 kb/s .m4a; metadata stripped",
     "gain": 0.63
   },
@@ -1539,7 +1539,7 @@
     "title": "sea waves atmo.wav",
     "author": "monotraum",
     "source": "https://raw.githubusercontent.com/karolpiczak/ESC-50/master/audio/5-208810-A-11.wav and https://raw.githubusercontent.com/karolpiczak/ESC-50/master/audio/5-208810-B-11.wav (clips of https://freesound.org/people/monotraum/sounds/208810/)",
-    "attribution": "monotraum (freesound.org), CC0",
+    "attribution": "\"sea waves atmo.wav\" by monotraum (freesound.org), CC0, edited for Legatum",
     "license": "CC0-1.0",
     "modified": "two 5 s clips of the one recording joined with a 0.5 s equal-power crossfade and closed into a 8.99 s loop the same way; 40 Hz high-pass; static gain -12.0 dB to -29.9 LUFS; encoded as AAC-LC 64 kb/s stereo .m4a",
     "rationale": "Waves when the view is over the sea."

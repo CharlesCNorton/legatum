@@ -62,7 +62,7 @@ UNCIV_SRC = 'https://raw.githubusercontent.com/yairm210/Unciv/master/android/ass
 FS = 'https://freesound.org/people/%s/sounds/%s/'
 # group, slug, Unciv file, title, author, licence, original, why, cap seconds
 FX = [
-    ('gunshot', 'gunshot', 'shot', 'uzzi_full_single', 'Deganoth', 'CC-BY-4.0', FS % ('Deganoth', 348685), 'Muskets and rifles fire.', 1.0),
+    ('gunshot', 'gunshot', 'shot', 'uzzi_full_single', 'Deganoth', 'CC-BY-4.0', FS % ('Deganoth', 348685), 'Rifles fire as the lines close, from the Industrial era.', 1.0),
     ('cannon', 'cannon', 'cannon', 'ceremonial cannon fire', 'DylanSmithSound', 'CC-BY-4.0', FS % ('DylanSmithSound', 274826), 'A cannon fires.', 2.5),
     ('shellFire', 'shell-fire', 'tankshot', 'Tanks Shooting (excerpt)', 'qubodup', 'CC0-1.0', FS % ('qubodup', 189344), 'Artillery and tank guns fire.', 2.5),
     ('explosion', 'explosion', 'artillery', 'Incoming Artillery Strike Cinematic Explosion', 'EvanBoyerman', 'CC-BY-3.0', FS % ('EvanBoyerman', 530886), 'A shell or a bomb lands.', 2.5),
@@ -132,7 +132,7 @@ def sea():
     print('ambience/sea.m4a', round(L / SR, 2), lufs, pk, flush=True)
     return {'file': 'ambience/sea.m4a', 'events': ['ambience:sea'], 'title': 'sea waves atmo.wav', 'author': 'monotraum',
             'source': ' and '.join(ESC_SRC % t for t in takes) + ' (clips of ' + FS % ('monotraum', 208810) + ')',
-            'attribution': 'monotraum (freesound.org), CC0', 'license': 'CC0-1.0',
+            'attribution': '"sea waves atmo.wav" by monotraum (freesound.org), CC0, edited for Legatum', 'license': 'CC0-1.0',
             'modified': f'two 5 s clips of the one recording joined with a 0.5 s equal-power crossfade and closed into a {L / SR:.2f} s loop the same way; 40 Hz high-pass; static gain {gain:+.1f} dB to {lufs} LUFS; encoded as AAC-LC 64 kb/s stereo .m4a',
             'rationale': 'Waves when the view is over the sea.'}
 
@@ -155,7 +155,7 @@ for group, slug, name, title, author, lic, original, why, cap in FX:
 manifest.append(one_shot('aircraft', 'aircraft', b.decode(str(ESC / '3-193767-A-47.wav'), 1), 4.0, 1, {
     'title': 'VHCL_S_Airplane_Prop_001.wav', 'author': 'conleec',
     'source': f"{ESC_SRC % '3-193767-A-47.wav'} (a clip of {FS % ('conleec', 193767)})",
-    'attribution': 'conleec (freesound.org), CC0', 'license': 'CC0-1.0', 'rationale': 'A propeller aircraft passes on its bombing run.',
+    'attribution': '"VHCL_S_Airplane_Prop_001.wav" by conleec (freesound.org), CC0, edited for Legatum', 'license': 'CC0-1.0', 'rationale': 'A biplane or propeller bomber passes on its bombing run.',
 }, 'a 5 s clip of the recording from the ESC-50 dataset'))
 manifest.append(sea())
 (AUDIO / 'manifest.json').write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + '\n')

@@ -8,8 +8,8 @@ import { pixelToHex, tileIndex } from '../hex';
 import { ambienceFor, setAmbience, type Ambience } from '../feel/sound';
 
 /**
- * It is the most common answer over the middle tile and its neighbours, and it changes only when two readings in a
- * row agree, so one hill in a meadow or a pan along a coast does not flip it back and forth.
+ * It is the most common answer over the middle tile and its neighbours, and after the first it changes only when two
+ * readings in a row agree, so one hill in a meadow or a pan along a coast does not flip it back and forth.
  */
 export function useLandSound(): void {
   useEffect(() => {
@@ -26,7 +26,8 @@ export function useLandSound(): void {
         counts.set(a, (counts.get(a) ?? 0) + 1);
       }
       const now = [...counts].sort((x, y) => y[1] - x[1])[0][0];
-      if (now === seen) setAmbience(now);
+      // The first reading counts at once, so a swap between the 2D and 3D maps does not leave a silence.
+      if (seen === undefined || now === seen) setAmbience(now);
       seen = now;
     };
     listen();

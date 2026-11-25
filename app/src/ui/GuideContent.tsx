@@ -399,7 +399,7 @@ function Credits() {
     <p>{title.attribution}. The full piece plays on the title screen and during peaceful play; an intense excerpt plays during an empire war. <a href={title.source} target="_blank" rel="noreferrer">Source</a></p>
     <p>The peoples’ music and the war drums are from {wildfire}, edited for Legatum.</p>
     <ul className="guide-credit-tracks">{peopleMusic.map((e) => <li key={e.file}>{e.title}</li>)}</ul>
-    <p>From the Renaissance on, and for the Aztecs, the music is by Alexander Zhelanov and Stian Grenborgen, from <a href="https://www.freecol.org/" target="_blank" rel="noreferrer">FreeCol</a>, <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer">CC BY 4.0</a>, edited for Legatum.</p>
+    <p>From the Renaissance on, and for the Aztecs, much of the music is by Alexander Zhelanov and Stian Grenborgen, from <a href="https://www.freecol.org/" target="_blank" rel="noreferrer">FreeCol</a>, <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer">CC BY 4.0</a>, edited for Legatum.</p>
     <ul className="guide-credit-tracks">{freecol.map((e) => <li key={e.file}>{e.title}</li>)}</ul>
     <p>More of the later music is by Tobias Escher and the <a href="https://unknown-horizons.org/" target="_blank" rel="noreferrer">Unknown Horizons</a> team, <a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noreferrer">CC BY-SA 3.0</a>, edited for Legatum.</p>
     <ul className="guide-credit-tracks">{horizons.map((e) => <li key={e.file}>{e.title}</li>)}</ul>

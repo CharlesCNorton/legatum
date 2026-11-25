@@ -436,6 +436,8 @@ export function playBattleSounds(cues: BattleCue[], elapsedMs = 0): void {
       const gain = e.ctx.createGain(), src = e.ctx.createBufferSource();
       gain.gain.value = take.gain;
       src.buffer = loaded.buffer;
+      // A sound with one take is never the same sample twice in a row: the cue's seed bends its pitch a little.
+      if (takes!.length === 1) src.playbackRate.value = 0.94 + (Math.abs(cue.seed) % 7) * 0.02;
       src.connect(gain);
       gain.connect(e.sfx);
       const voice = { src, gain };

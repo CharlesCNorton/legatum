@@ -1,7 +1,7 @@
 // Which sounds a battle makes, and when: read off the same plan the map animates (map/combatFx.ts),
 // so a volley is heard as it leaves the bow and a clash as the lines meet. Only weapons we have a
-// recording for make a sound (docs/design/sound-sources.md): a drone strike and the fall of a
-// gunpowder-age unit stay silent. Pure, so it is tested without audio.
+// recording for make a sound (docs/design/sound-sources.md): a musket, a jet, a drone strike and
+// the fall of a gunpowder-age unit stay silent. Pure, so it is tested without audio.
 import type { CombatPlan } from '../map/combatFx';
 import type { UnitKind } from '../types';
 import type { BattleCue, BattleSound } from './sound';
@@ -36,19 +36,18 @@ export function battleSoundCues(plan: CombatPlan | null | undefined): BattleCue[
     } else if (s.kind === 'stone') {
       add(s.launch, 'siegeLaunch', s.seed);
       add(s.launch + s.flight, 'siegeHit', s.seed);
-    } else if (s.kind === 'shot') add(s.launch, 'gunshot', s.seed);
-    else if (s.kind === 'ball') add(s.launch, 'cannon', s.seed);
+    } else if (s.kind === 'ball') add(s.launch, 'cannon', s.seed);
     else if (s.kind === 'shell') {
       add(s.launch, 'shellFire', s.seed);
       add(s.launch + s.flight, 'explosion', s.seed);
     } else if (s.kind === 'bombs') {
-      // The aircraft is heard on its way in; the bombs when they land.
-      add(s.launch - AIRCRAFT_LEAD_MS, 'aircraft', s.seed);
+      // A propeller aircraft is heard on its way in (the recording is one; a jet has none); the bombs when they land.
+      if (s.craft === 'Biplane' || s.craft === 'Bomber') add(s.launch - AIRCRAFT_LEAD_MS, 'aircraft', s.seed);
       add(s.launch + s.flight, 'explosion', s.seed);
     }
   }
   for (const c of plan.clashes) {
-    if (c.guns) { add(c.t, 'gunshot', c.seed); continue; }
+    if (c.guns) { if (c.rifles) add(c.t, 'gunshot', c.seed); continue; }
     if (c.mounted) add(c.t - HOOVES_LEAD_MS, 'hooves', c.seed);
     add(c.t, 'clash', c.seed);
   }
