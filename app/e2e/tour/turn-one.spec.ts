@@ -171,8 +171,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await expect(page.getByTestId('turn-number')).toHaveText('2', { timeout: 60_000 });
 
     // A routine first turn has no founding celebration, but its report remains available.
-    await page.getByRole('button', { name: 'Menu', exact: true }).click();
-    await page.getByRole('button', { name: 'Turn report (L)', exact: true }).click();
+    await page.locator('button.last-turn').first().click();
     await expect(page.getByRole('complementary', { name: 'Turn report' })).toBeVisible();
     await shot(page, size, '09-turn-report');
     await closeReportIfOpen(page);
@@ -235,7 +234,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await page.getByRole('region', { name: 'Victory race', exact: true }).getByRole('button', { name: 'Score ledger', exact: true }).click();
     await expect(page.getByTestId('objective-sheet')).toBeVisible();
     await shot(page, size, '13-vp-race');
-    await page.getByRole('button', { name: 'Close objectives', exact: true }).click();
+    await page.getByRole('button', { name: 'Close score ledger', exact: true }).click();
     await expect(page.getByTestId('objective-sheet')).toHaveCount(0);
 
     // The game menu (in-game settings live here).
@@ -409,11 +408,11 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     test.setTimeout(90_000);
     const setup = turnReportFixture();
     await loadFixture(page, coreFixture(setup.fixture), 2);
-    await page.evaluate(({ ranger, enemy }) => {
+    await page.evaluate(({ archer, enemy }) => {
       const s = (window as unknown as GameWindow).legatum.getState(), view = s.views![s.seat];
       const target = view.units.find((u) => u.id === enemy)!.pos;
-      s.editOrders((o) => [...o, { type: 'RangedAttack', unit: ranger, target }]);
-    }, { ranger: setup.ranger, enemy: setup.enemy });
+      s.editOrders((o) => [...o, { type: 'RangedAttack', unit: archer, target }]);
+    }, { archer: setup.archer, enemy: setup.enemy });
     await endPlanning(page);
     await expect(page.getByTestId('turn-number')).toHaveText('3');
     await openReport(page);

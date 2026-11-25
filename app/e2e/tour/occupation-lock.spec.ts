@@ -1,5 +1,5 @@
 // The occupation lock experiment as the player meets it (UI review, rules 27): the capture forecast that warns the capturer will be
-// locked, the locked unit's panel, the frozen city's panel and pending list, and the World Ages ledger opened from "See how you win".
+// locked, the locked unit's panel, the frozen city's panel and pending list, and the World Ages ledger opened from "Score ledger".
 // Run alone: `npx playwright test e2e/tour/occupation-lock`.
 import type { Page } from '@playwright/test';
 import { test, expect } from '../fixtures';
@@ -8,7 +8,7 @@ import { CAPTURE_AT, captureOrdersFixture } from '../../src/test/captureOrdersFi
 import { endPlanning } from '../turnActions';
 import { SIZES, hexPoint, loadFixture, selectThing, shot, type GameWindow } from './helpers';
 
-/** The capture fixture: five Soldiers around a fallen city held by one wounded garrison. */
+/** The capture fixture: five Spearmen around a fallen city held by one wounded garrison. */
 function lockedCapture() {
   const { state, attackers } = captureOrdersFixture();
   return { game: coreFixture(state), attackers };

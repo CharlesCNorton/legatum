@@ -164,6 +164,8 @@ impl ViewBuilder {
                 cities: 0,
                 faction_goal_done: true,
                 sakoku_turns: None,
+                tomb_work: false,
+                tomb_turns: 0,
                 goal_rule: None,
                 era: 1,
                 gold: 0,
@@ -181,6 +183,7 @@ impl ViewBuilder {
             view: PlayerView {
                 army_breakdown: Vec::new(),
                 rule_experiments: legatum_core::experiments::RuleExperiments::default(),
+                ai_alliances: false,
                 // Existing tactical fixtures explicitly model the legacy all-war rules.
                 diplomacy: legatum_core::diplomacy::DiplomacyView {
                     replies: Vec::new(),
@@ -258,6 +261,9 @@ impl ViewBuilder {
                 actions: Default::default(),
                 courier_halls: Vec::new(),
                 imperial_diwans: Vec::new(),
+                colonias: Vec::new(),
+                royal_tombs: Vec::new(),
+                tomb_sites: Vec::new(),
                 aircraft: Vec::new(),
                 air_sightings: Vec::new(),
                 air_contacts: Vec::new(),
@@ -497,6 +503,7 @@ impl ViewBuilder {
             has_air_defence: false,
             occupation_lock: None,
             construction: None,
+            walls_building: false,
             great_works: detail
                 .as_ref()
                 .map(|d| {
@@ -538,8 +545,17 @@ impl ViewBuilder {
                     .iter()
                     .map(|b| ProductionItem::Building { building: *b }),
             )
+            // Every empire's Gold, Science and Food projects, as in core.
+            .chain(
+                [
+                    legatum_core::IndustryProject::Gold,
+                    legatum_core::IndustryProject::Science,
+                    legatum_core::IndustryProject::Food,
+                ]
+                .map(|project| ProductionItem::Project { project }),
+            )
             .filter(|i| data::item_requires(*i).is_none_or(|t| known.contains(&t)))
-            // The Brood Hall, Courier Hall and Heir belong to one faction each, as in core.
+            // The Rice Storehouse, Yam Relay Station and Heir belong to one faction each, as in core.
             .filter(|i| {
                 data::available_to_faction(self.view.faction_of(ME), *i)
                     || !matches!(
@@ -900,6 +916,13 @@ pub fn assert_valid(view: &PlayerView, orders: &[Order]) {
                             "Sakoku ordered while unavailable"
                         )
                     }
+                    Action::Tomb { build } => assert!(
+                        view.actions
+                            .tomb
+                            .as_ref()
+                            .is_some_and(|t| t.working != *build && t.blocker.is_none()),
+                        "Royal tomb ordered while unavailable"
+                    ),
                     Action::Broadcast => assert!(
                         view.actions
                             .broadcast

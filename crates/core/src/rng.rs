@@ -8,6 +8,8 @@ pub mod purpose {
     pub const COMBAT: u64 = 2;
     pub const RUINS: u64 = 3;
     pub const AI: u64 = 4;
+    /// Retired (rules 56): city names no longer start at a seeded place in the list. Kept so the
+    /// number is never reused.
     pub const NAMES: u64 = 5;
     pub const SETUP: u64 = 6;
     pub const CITY_CAPTURE: u64 = 7;
@@ -21,6 +23,8 @@ pub mod purpose {
     pub const WONDER_RACE: u64 = 12;
     /// Units of teams not at war, equally strong, stepping onto one tile (Sam, 2026-11-22).
     pub const UNIT_CONTEST: u64 = 13;
+    /// Which AI teams start allied (`GameSetup::ai_alliance_pairs`).
+    pub const AI_ALLIANCES: u64 = 14;
 }
 
 /// `items` in a seeded random order, the same for the same `(seed, parts)` whatever order they

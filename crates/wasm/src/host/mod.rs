@@ -132,16 +132,24 @@ struct Seat {
     /// The connection and planning turn of this seat's last full join (welcome + view). A repeat
     /// join from the same connection in the same turn is answered with nothing.
     joined_at: Option<(ConnectionId, u32)>,
+    /// The planning turn and how many map pings this seat has sent in it.
+    pings: (u32, u32),
 }
 
 /// Most orders one seat may stage per turn. A real turn stages a few hundred at most.
 const MAX_STAGED_ORDERS: usize = 2000;
+/// Most map pings one seat may send per planning turn; later ones are dropped without an error.
+const MAX_PINGS_PER_TURN: u32 = 24;
 /// Most validation errors sent back in one reply.
 const MAX_VALIDATION_ERRORS: usize = 100;
 
 struct Game {
     session: Session,
+    /// Random, so it reveals nothing about the state (a state-derived id let a guest test guesses
+    /// at a short map seed offline).
     id: String,
+    /// Secret key for the hash sent with each turn report; see `credentials::masked_hash`.
+    hash_key: (u64, u64),
     seats: Vec<Seat>,
 }
 
@@ -166,10 +174,12 @@ impl Game {
                 ready: false,
                 orders: Vec::new(),
                 joined_at: None,
+                pings: (0, 0),
             })
             .collect();
         Ok(Self {
-            id: format!("{}-{}", state.hash(), now_nanos()),
+            id: credentials::game_id()?,
+            hash_key: credentials::hash_key()?,
             session: {
                 if let Some(h) = &mut session.history {
                     // A networked game (the archive's name for it predates online play).
@@ -761,6 +771,7 @@ impl Host {
                 seat,
                 game_id: game.id.clone(),
                 orders: s.orders.clone(),
+                map_pings: true,
             };
             let player = s.player;
             let view = ServerMessage::View {
@@ -870,6 +881,38 @@ impl Host {
                 let assault = forecast_city_assault(&view, unit, target, mode, &alongside);
                 self.send(connection, &ServerMessage::Assault { req_id, assault });
             }
+            ClientMessage::MapPing { hex } => {
+                // Team talk only: never stored, never sent to another team, off the queue of
+                // guaranteed deliveries (a slow reader loses old pings, not its connection).
+                if game.session.state.finished {
+                    return Ok(());
+                }
+                if game.session.state.map.index(hex).is_none() {
+                    return Err("That tile is off the map".into());
+                }
+                let turn = game.session.state.turn;
+                if seat.pings.0 != turn {
+                    seat.pings = (turn, 0);
+                }
+                if seat.pings.1 >= MAX_PINGS_PER_TURN {
+                    return Ok(());
+                }
+                seat.pings.1 += 1;
+                let from = seat.player;
+                let team = game.session.state.team_of(from);
+                let text: Arc<str> =
+                    serde_json::to_string(&ServerMessage::MapPing { from, hex, turn })
+                        .expect("protocol serializes")
+                        .into();
+                let state = &game.session.state;
+                for mate in game.seats.iter().filter(|s| {
+                    s.player != from && s.connection.is_some() && state.team_of(s.player) == team
+                }) {
+                    if let Some(sender) = mate.connection.and_then(|c| self.connections.get(&c)) {
+                        sender.sender.ping(&text);
+                    }
+                }
+            }
             _ => unreachable!("join, ping and staging handled above"),
         }
         Ok(())
@@ -899,7 +942,8 @@ impl Host {
             self.recordings
                 .push(serde_json::to_string(history).expect("recordings serialize"));
         }
-        let hash = state.hash().to_string();
+        // Guests never get the real state hash: it would let them test guesses at hidden state.
+        let hash = credentials::masked_hash(game.hash_key, state.hash()).to_string();
         let mut messages = Vec::new();
         for (seat, before) in game.seats.iter().zip(&before) {
             if let Some(connection) = seat.connection {
@@ -1682,6 +1726,98 @@ mod tests {
         .unwrap();
     }
 
+    /// Three human seats: 0 and 1 are teammates, 2 plays for itself. All three are joined.
+    fn ping_host() -> (Host, [(ConnectionId, outbox::Receiver); 3]) {
+        let mut setup = GameSetup::standard(7, [Faction::India, Faction::Byzantium]);
+        for p in setup.players.iter_mut().take(3) {
+            p.is_human = true;
+        }
+        let mut host = Host::new(None, 5).unwrap();
+        host.new_game(setup).unwrap();
+        let peers = [0, 1, 2].map(|seat| {
+            let (id, receiver) = peer(&mut host);
+            join_as(&mut host, id, seat, &format!("P{seat}"));
+            (id, receiver)
+        });
+        (host, peers)
+    }
+
+    fn pings(receiver: &outbox::Receiver) -> Vec<Value> {
+        drain(receiver)
+            .into_iter()
+            .filter(|m| m["type"] == "map_ping")
+            .collect()
+    }
+
+    fn ping_at(q: i32, r: i32) -> ClientMessage {
+        ClientMessage::MapPing {
+            hex: legatum_core::Hex { q, r },
+        }
+    }
+
+    #[test]
+    fn a_map_ping_reaches_the_teammate_only_and_is_never_stored() {
+        let (mut host, [(a, ra), (_b, rb), (_c, rc)]) = ping_host();
+        let hash = host.game.as_ref().unwrap().session.state.hash();
+        let save = host.game.as_ref().unwrap().session.save_json();
+        host.message(a, ping_at(3, 4)).unwrap();
+        let got = pings(&rb);
+        assert_eq!(got.len(), 1);
+        assert_eq!(got[0]["from"], 0);
+        assert_eq!(got[0]["hex"], serde_json::json!({"q": 3, "r": 4}));
+        assert_eq!(got[0]["turn"], 1);
+        assert!(pings(&ra).is_empty(), "the sender is not echoed");
+        assert!(pings(&rc).is_empty(), "another team never sees it");
+        let game = host.game.as_ref().unwrap();
+        assert_eq!(game.session.state.hash(), hash);
+        assert_eq!(game.session.save_json(), save);
+    }
+
+    #[test]
+    fn the_welcome_says_the_host_relays_map_pings() {
+        let mut host = two_seat_host();
+        let (a, receiver) = peer(&mut host);
+        join_as(&mut host, a, 0, "Ada");
+        let welcome = drain(&receiver)
+            .into_iter()
+            .find(|m| m["type"] == "welcome")
+            .unwrap();
+        assert_eq!(welcome["map_pings"], true);
+    }
+
+    #[test]
+    fn a_map_ping_off_the_map_is_refused_and_a_seat_has_a_turn_budget() {
+        let (mut host, [(a, _ra), (_b, rb), (_c, _rc)]) = ping_host();
+        assert!(host.message(a, ping_at(-5, -5)).is_err());
+        assert!(host.message(a, ping_at(10_000, 3)).is_err());
+        assert!(pings(&rb).is_empty());
+        for i in 0..MAX_PINGS_PER_TURN + 10 {
+            host.message(a, ping_at(2, (i % 5) as i32)).unwrap();
+            // Draining keeps the receiver's own pending limit out of the way.
+            if i % 4 == 3 {
+                let _ = rb.drain();
+            }
+        }
+        let _ = rb.drain();
+        // After the budget a further ping is dropped, not an error and not delivered.
+        host.message(a, ping_at(2, 2)).unwrap();
+        assert!(pings(&rb).is_empty());
+        // A new planning turn restores the budget.
+        for id in [0usize, 1, 2] {
+            host.game.as_mut().unwrap().seats[id].ready = true;
+        }
+        host.resolve_if_ready();
+        host.message(a, ping_at(2, 2)).unwrap();
+        assert_eq!(pings(&rb).len(), 1);
+    }
+
+    #[test]
+    fn a_connection_without_a_seat_cannot_ping() {
+        let (mut host, _peers) = ping_host();
+        let (stranger, _r) = peer(&mut host);
+        assert!(host.message(stranger, ping_at(2, 2)).is_err());
+    }
+
     #[test]
     fn a_repeat_join_on_the_same_connection_is_answered_with_nothing_but_a_new_connection_still_joins()
      {
@@ -1886,7 +2022,9 @@ mod tests {
             .position(|m| m["type"] == "turn")
             .expect("a turn report");
         assert_eq!(written[at]["turn"], 2);
-        assert_eq!(written[at]["hash"], native.state.hash().to_string());
+        // The turn report carries a masked value, never the state hash itself.
+        let sent: u64 = written[at]["hash"].as_str().unwrap().parse().unwrap();
+        assert_ne!(sent, native.state.hash());
         assert_eq!(written[at + 1]["type"], "view");
         assert_eq!(written[at + 1]["view"]["me"], 0);
         assert_eq!(written[at + 1]["view"]["turn"], 2);

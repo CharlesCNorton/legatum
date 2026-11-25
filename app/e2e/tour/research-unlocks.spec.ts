@@ -23,10 +23,8 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     test.setTimeout(120_000);
     const research = page.locator('dialog.tech-modal');
     const openResearch = async (p: Page) => {
-      // A crowded top bar (the Cities button shares its room) drops the Technologies button first; the research cell
-      // opens the same dialog. Click whichever shows, and fail in 5 s naming it rather than waiting out the test.
-      const nav = p.locator('.topbar .tb-nav-tech');
-      const opener = (await nav.isVisible()) ? nav : p.locator('.topbar .research-chip');
+      // The Research chip is the one top-bar opener.
+      const opener = p.locator('.topbar .research-chip');
       await expect(opener).toBeVisible({ timeout: 5000 });
       await opener.click();
       await expect(p.locator('dialog.tech-modal')).toBeVisible();
@@ -50,7 +48,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await expect(research.locator('.era-card[data-tech="Writing"]')).not.toContainText(/salvage/i);
     await shot(page, size, '60-research-byzantium');
 
-    // The Mongols cannot raise Masonry's Walls before the Medieval era: the card says so in place of the build line.
+    // The Mongols never raise Walls (rules 57): Masonry's card lists only its Quarry bonus for them.
     {
       const context0 = await browser.newContext({ viewport: { width: size.width, height: size.height } });
       try {
@@ -59,7 +57,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
         await openResearch(p);
         await inspectTech(p, 'Masonry');
         const masonry = p.locator('dialog.tech-modal .era-card[data-tech="Masonry"]');
-        await expect(masonry).toContainText('Walls for the Mongols from the Medieval era');
+        await expect(masonry).not.toContainText('Walls');
         await expect(masonry).not.toContainText('city strength');
         await expect(masonry).not.toContainText('No benefit');
         await expect(masonry).toContainText('Quarries +1 Production');
@@ -85,7 +83,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
   });
 
   test('Science hover: the capital, cities and buildings, for Byzantium and a faction with a renamed Library', async ({ page, browser }) => {
-    // A College and Writing so the buildings line has something to add (legatum-ui: "Yield
+    // A University and Writing so the buildings line has something to add (legatum-ui: "Yield
     // hovers show where the number comes from").
     const byzantium = researchFixture('Byzantium');
     const byzantiumCapital = byzantium.cities.find((c) => c.owner === 0 && c.isCapital)!;
@@ -106,7 +104,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
       const p = await context.newPage();
       const normal = researchFixture('Athens');
       const normalCapital = normal.cities.find((c) => c.owner === 0 && c.isCapital)!;
-      normalCapital.buildings = ['Library']; // Athens' Listening House, by its own rename.
+      normalCapital.buildings = ['Library']; // Athens' Lyceum, by its own rename.
       await loadFixture(p, coreFixture(normal), 2);
       await p.locator('.science-stat').hover();
       const normalHover = p.locator('.science-hover');
@@ -303,13 +301,13 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     for (const [faction, tech, text, file] of [
       ['Byzantium', 'Writing', 'Build a Library in any city', '80f-unlock-card-library'],
       ['Switzerland', 'BronzeWorking', 'Build a Workshop in any city: +2 Production', '80c-unlock-card-switzerland'],
-      ['Mongols', 'Masonry', 'Walls for the Mongols from the Medieval era', '80d-unlock-card-stepping-stone'],
+      ['Mongols', 'Masonry', 'Quarries +1 Production', '80d-unlock-card-stepping-stone'],
     ] as const) {
       const context = await browser.newContext({ viewport: { width: size.width, height: size.height } });
       try {
         const p = await context.newPage();
         await loadFixture(p, coreFixture(researchFixture(faction)), 2);
-        // The Mongols' Walls card is staged with no research set: Choose research is its primary, and the card shows no Build price.
+        // The Mongols' Masonry card is staged with no research set: Choose research is its primary (it unlocks nothing they can build).
         await unlockReport(p, tech, faction !== 'Mongols' || tech !== 'Masonry');
         await expect(p.locator('.moment-card.unlock')).toContainText(text);
         if (tech === 'Masonry') {
@@ -421,7 +419,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     }
   });
 
-  test('the Guide: Eras section', async ({ page }) => {
+  test('How to Play: Eras section', async ({ page }) => {
     await page.goto('/?client=wasm');
     await page.getByRole('button', { name: /^How to Play/ }).click();
     const guide = page.getByRole('dialog', { name: 'How to Play', exact: true });

@@ -192,7 +192,8 @@ impl Planner<'_> {
                 // Gene `roman_found_first`: a stand staged against a neighbour's visible
                 // units does not recall the veteran founding a city this turn (or walking
                 // to its site); the site's own danger gates already priced them.
-                .filter(|u| Some(u.id) != self.roman_founder)
+                .filter(|u| Some(u.id) != self.roman_founder && Some(u.id) != self.colonia_founder)
+                .filter(|u| !self.rome_founders_now.contains(&u.id))
                 .filter(|u| self.support_path_this_turn(u, city.pos).is_some())
                 .max_by_key(|u| {
                     (
@@ -212,6 +213,16 @@ impl Planner<'_> {
                 assigned = Some(u.id);
             }
         }
+        // Gene `rome_opening_finish`: against a neighbour still at peace the garrison stays,
+        // and the opening march is not recalled.
+        if self.rome_finish()
+            && self.rome_opening_active()
+            && attackers
+                .iter()
+                .all(|e| !self.view().at_war(self.view().me, e.owner))
+        {
+            return;
+        }
         let mut staging = Vec::new();
         for _ in 0..2 {
             let choice = self
@@ -221,7 +232,8 @@ impl Planner<'_> {
                 .copied()
                 .filter(|u| u.military && u.ranged == 0 && u.pos != city.pos)
                 .filter(|u| Some(u.id) != assigned && !staging.contains(&u.id))
-                .filter(|u| Some(u.id) != self.roman_founder)
+                .filter(|u| Some(u.id) != self.roman_founder && Some(u.id) != self.colonia_founder)
+                .filter(|u| !self.rome_founders_now.contains(&u.id))
                 .filter(|u| !self.ctx.own_cities.iter().any(|c| c.pos == u.pos))
                 .filter(|u| u.pos.distance(city.pos) > 1 && u.pos.distance(city.pos) <= 5)
                 .filter_map(|u| {
@@ -465,7 +477,7 @@ impl Planner<'_> {
                         && self.support_path_this_turn(u, city.pos).is_some()
                 });
                 if !melee_reaches
-                    && let Some(ranger) = self
+                    && let Some(archer) = self
                         .ctx
                         .own_units
                         .iter()
@@ -475,9 +487,9 @@ impl Planner<'_> {
                         .min_by_key(|u| (u.pos.distance(city.pos), u.id))
                 {
                     self.replace_supported_order(
-                        ranger.id,
+                        archer.id,
                         Order::MoveUnit {
-                            unit: ranger.id,
+                            unit: archer.id,
                             to: city.pos,
                         },
                     );
@@ -2394,7 +2406,7 @@ mod tests {
         );
         assert!(
             walks,
-            "the Soldier must walk to the Settler: {:?}",
+            "the Spearman must walk to the Settler: {:?}",
             p.orders
         );
     }
@@ -3073,6 +3085,8 @@ mod tests {
             let mut p = planner(&v);
             p.decisions.roman_founders = 1;
             p.decisions.roman_found_first = found_first;
+            // `rome_found_now` also exempts founders from this recall; off, to test this gene alone.
+            p.decisions.rome_found_now = 0;
             p.decisions.settler_min_site_score = 1000;
             p.plan_settlers();
             assert!(

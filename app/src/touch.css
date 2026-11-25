@@ -195,8 +195,9 @@
   .game .vp:not(.open) .vp-num b { font: 600 13px/1 var(--num-font); }
   .game .vp:not(.open) .vp-foot { padding: 0; }
   .game .vp:not(.open) .vp-foot .link { min-height: 44px; }
-  .game .first-game-hint, .game .report { width: calc(100% - 16px); }
-  .game .first-game-hint { top: var(--story-top); left: var(--story-left); transform: none; }
+  .game .advisor-card, .game .report { width: calc(100% - 16px); }
+  .game .advisor-card { top: var(--story-top); left: var(--story-left); transform: none; }
+  .game:has(.advisor-card):has(.city-panel) .left-dock { top: calc(var(--hint-bottom, var(--story-top)) + 8px); }
   .game .report { max-height: calc(100% - var(--story-top) - 16px); }
   .game .left-dock { top: var(--story-top); }
   .game:has(.moment-card) .left-dock { top: calc(var(--story-top) + var(--moment-lane-height, 0px) + 8px); }

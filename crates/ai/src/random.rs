@@ -51,13 +51,33 @@ impl Brain for RandomBrain {
             .filter(|c| c.owner == me && c.detail.is_some())
             .collect();
         cities.sort_by_key(|c| c.id);
+        let germany = view
+            .players
+            .iter()
+            .any(|p| p.id == me && p.faction == legatum_core::Faction::Germany);
         for c in cities {
             let d = c.detail.as_ref().expect("filtered");
-            if d.producing.is_none() && !d.options.is_empty() {
-                let i = pick(&mut rng, d.options.len());
+            // The options it had before every empire could run a Gold or Science project (only
+            // Germany then) or a Food project, so its games, and the tests built on them, stay the same.
+            let finite: Vec<_> = d
+                .options
+                .iter()
+                .filter(|o| {
+                    use legatum_core::IndustryProject::{Food, Grow};
+                    match o.item {
+                        legatum_core::ProductionItem::Project { project: Food } => false,
+                        legatum_core::ProductionItem::Project { project } if project != Grow => {
+                            germany
+                        }
+                        _ => true,
+                    }
+                })
+                .collect();
+            if d.producing.is_none() && !finite.is_empty() {
+                let i = pick(&mut rng, finite.len());
                 orders.push(Order::SetProduction {
                     city: c.id,
-                    item: d.options[i].item,
+                    item: finite[i].item,
                 });
             }
         }

@@ -662,10 +662,10 @@ export function drawPip(ctx: CanvasRenderingContext2D, look: LookId, owner: numb
 /** A city's seal when zoomed out: a parchment disc ringed in the seat colour, the faction glyph (or population) in ink, the founder's star for an original capital. */
 export function sealSprite(look: LookId, b: BannerSpec, r: number, dpr: number): Sprite {
   const q = Math.round(r * 2) / 2;
-  return cached(`seal|${look}|${b.owner}|${b.pop}|${starKey(b.capital)}|${b.selected}|${b.glyph}|${q}|${dpr}`, () => {
+  return cached(`seal|${look}|${b.owner}|${b.pop}|${starKey(b.capital)}|${goalKey(b.goal)}|${b.selected}|${b.glyph}|${q}|${dpr}`, () => {
     const I = INK.atlas, { pen, seat } = ATLAS;
-    // The capital's star stands out past the disc, so a marked seal gets the room it needs.
-    const pad = b.capital ? Math.max(4, Math.ceil(q * 0.95) + 1) : 4, size = 2 * q + 2 * pad;
+    // The capital's star and a goal city's mark stand out past the disc, so a marked seal gets the room it needs.
+    const pad = b.capital || b.goal ? Math.max(4, Math.ceil(q * 0.95) + 1) : 4, size = 2 * q + 2 * pad;
     const [c, g] = canvas(size, size, dpr);
     const o = pad + q;
     g.beginPath(); g.arc(o + 1, o + 1.4, q, 0, Math.PI * 2); g.fillStyle = ATLAS.tone.shadow; g.fill();
@@ -689,6 +689,18 @@ export function sealSprite(look: LookId, b: BannerSpec, r: number, dpr: number):
       g.strokeStyle = I.ink; g.lineWidth = pen.thin; g.stroke();
       g.beginPath(); g.arc(sx, sy, rd - 1.5, 0, Math.PI * 2); g.strokeStyle = CAPITAL_GILT; g.lineWidth = 1.1; g.stroke();
       drawCapitalStar(g, b.capital, sx, sy, q * 0.6, seat.plate, 0.3);
+    }
+    if (b.goal) {
+      // A goal city's mark, small, on the upper left (the capital's star keeps the upper right): the same plate, rule and gilt ring.
+      // Its glyph is drawn in ink, as the capital's star beside it is, at the same size and weight.
+      const sx = o - q * 1.1, sy = o - q * 1.1, rd = q * 0.75;
+      g.beginPath(); g.arc(sx, sy, rd, 0, Math.PI * 2); g.fillStyle = seat.plate; g.fill();
+      if (b.goal.dashed) g.setLineDash([2, 1.6]);
+      g.strokeStyle = I.ink; g.lineWidth = pen.thin; g.stroke();
+      g.beginPath(); g.arc(sx, sy, rd - 1.5, 0, Math.PI * 2); g.strokeStyle = CAPITAL_GILT; g.lineWidth = 1.1; g.stroke();
+      g.setLineDash([]);
+      const gw = rd * 1.55 * goalGlyphScale(b.goal.icon), ic = tintedIcon(b.goal.icon, I.ink, gw * dpr);
+      if (ic) g.drawImage(ic, sx - gw / 2, sy - gw / 2, gw, gw);
     }
     return { c, ax: o, ay: o, w: size, h: size };
   });
@@ -724,10 +736,19 @@ export interface BannerSpec {
   color: string;
   /** The original-capital star, kept for the whole game: its ink and whether the viewer holds its 1 VP now. */
   capital: CapitalStar | null;
+  /** A goal city (Rome's Colonia Victrix, Egypt's Royal Tomb): its mark, in the ink of the empire whose goal it is. Public to every empire. */
+  goal?: GoalSeal | null;
   selected: boolean;
   glyph: string | null;
-  walls: boolean;
+  /** Visible wall level: 0 none, 1 Walls, 2 Castle, 3 Star Fort. Drawn after the name as the Walls mark and the level. */
+  wallTier: number;
 }
+
+/**
+ * The banner's level after the Walls mark: none for plain Walls, II for a Castle, III for a Star Fort. One mark plus a numeral,
+ * not each building's icon: the Star Fort icon reads as a star at banner size, and a star on a banner means the capital seal.
+ */
+export const WALL_TIER_LABEL = ['', '', 'II', 'III'] as const;
 
 /** Draw a city banner with its bottom center at (x, y). Returns the drawn rect (CSS px). */
 export function drawBanner(ctx: CanvasRenderingContext2D, look: LookId, b: BannerSpec, x: number, y: number, fs: number, dpr: number, alpha = 1) {
@@ -748,7 +769,7 @@ export function bannerRect(look: LookId, b: BannerSpec, x: number, y: number, fs
 
 function bannerSprite(look: LookId, b: BannerSpec, fs: number, dpr: number): Sprite {
   const q = Math.round(fs * 2) / 2;
-  return cached(`ban|${look}|${b.owner}|${b.name}|${b.pop}|${b.color}|${starKey(b.capital)}|${b.selected}|${b.glyph}|${b.walls}|${q}|${dpr}`, () =>
+  return cached(`ban|${look}|${b.owner}|${b.name}|${b.pop}|${b.color}|${starKey(b.capital)}|${goalKey(b.goal)}|${b.selected}|${b.glyph}|${b.wallTier}|${q}|${dpr}`, () =>
     atlasBanner(b, q, dpr),
   );
 }
@@ -770,6 +791,8 @@ export interface BannerMeter {
   auto?: { label: string; icon: string };
   /** The icon is a label, not an item in progress: ink, not the meter's colour. */
   inkIcon?: boolean;
+  /** An exact icon colour (a yield's ink for a Gold, Science or Food focus), over `paused` and `inkIcon`. */
+  iconColor?: string;
 }
 
 /** Food green and production orange, matching --y-food in brand/tokens.css. */
@@ -790,7 +813,7 @@ export function bannerMetersSize(look: LookId, meters: BannerMeter[], dpr: numbe
 }
 
 function metersSprite(look: LookId, meters: BannerMeter[], dpr: number): Sprite {
-  const key = meters.map((m) => `${m.kind}:${m.fraction}:${m.text}:${m.bad ? 1 : 0}:${m.paused ? 1 : 0}:${m.icon ?? ''}:${m.inkIcon ? 1 : 0}:${m.auto ? `${m.auto.label}/${m.auto.icon}` : ''}`).join(',');
+  const key = meters.map((m) => `${m.kind}:${m.fraction}:${m.text}:${m.bad ? 1 : 0}:${m.paused ? 1 : 0}:${m.icon ?? ''}:${m.inkIcon ? 1 : 0}:${m.iconColor ?? ''}:${m.auto ? `${m.auto.label}/${m.auto.icon}` : ''}`).join(',');
   return cached(`meters|${look}|${key}|${dpr}`, () => {
     const font = `700 11px ${FONTS[look].sans}`;
     const [, m] = canvas(1, 1, 1);
@@ -815,7 +838,7 @@ function metersSprite(look: LookId, meters: BannerMeter[], dpr: number): Sprite 
         else { g.fillStyle = color; g.beginPath(); g.arc(cx + icon / 2, mid, icon / 2 - 1, 0, Math.PI * 2); g.fill(); }
       } else if (mt.icon) {
         // Production: the icon of the item being built.
-        const ic = tintedIcon(mt.icon, mt.inkIcon ? INK.atlas.ink : color, icon * dpr);
+        const ic = tintedIcon(mt.icon, mt.iconColor ?? (mt.inkIcon ? INK.atlas.ink : color), icon * dpr);
         if (ic) g.drawImage(ic, cx, mid - icon / 2, icon, icon);
         else { g.fillStyle = color; g.beginPath(); g.arc(cx + icon / 2, mid, icon / 2 - 1, 0, Math.PI * 2); g.fill(); }
       } else {
@@ -885,8 +908,20 @@ function drawCapitalStar(g: CanvasRenderingContext2D, star: CapitalStar, x: numb
 
 const starKey = (star: CapitalStar | null) => (star ? `${star.ink}${star.scored ? 'h' : 'f'}` : '-');
 
+/** A goal city's banner mark: the goal's icon in the ink of the empire whose goal it is. */
+export interface GoalSeal {
+  icon: string; ink: string;
+  /** A solid, heavier variant for the small far-zoom seal, where a thin-line glyph would not read. */
+  /** Not yet standing (the Royal Tomb under construction): the seal's rule and gilt ring are dashed. */
+  dashed?: boolean;
+}
+const goalKey = (goal: GoalSeal | null | undefined) => (goal ? `${goal.icon}${goal.ink}${goal.dashed ? 'd' : ''}` : '-');
+
 /** The fine ring on an original capital's seals (gilt is the house's VP colour). */
-const CAPITAL_GILT = '#c9a227';
+/** The laurel's round wreath leaves its gate small in the box: drawn larger, it fills its seal as the tomb and the capital's star do. */
+const goalGlyphScale = (icon: string) => (icon === 'goal-colonia' ? 1.17 : 1);
+/** The gilt of a scoring seal's ring (capital star, goal cities, the Colonia founder's badge and the Settle lens's Colonia marks). */
+export const CAPITAL_GILT = '#c9a227';
 
 /** Radius of the banner's star seal: a disc about 1.4 banners tall (never under 16 px across at the smallest banner). */
 export function capitalSealRadius(fs: number): number {
@@ -905,23 +940,32 @@ function atlasBanner(b: BannerSpec, fs: number, dpr: number): Sprite {
   const nameW = smallCaps(m, b.name, 0, 0, disp, fs, fs * 0.06, false);
   const popS = b.pop === null ? 0 : Math.round(h * 0.69);
   const glyphW = b.glyph ? fs * 0.95 + 4 : 0;
+  const wallLabel = b.wallTier > 0 ? WALL_TIER_LABEL[b.wallTier] ?? '' : null;
+  const wallFont = disp(Math.round(fs * 0.8));
+  m.font = wallFont;
+  const wallLabelW = wallLabel ? m.measureText(wallLabel).width + 1 : 0;
+  const wallW = wallLabel !== null ? fs * 1.05 + 4 + wallLabelW : 0;
   // An original capital ends in a star seal in place of the right swallowtail: a disc about 1.4 banners tall, so the star
   // reads at a glance. The banner is widened by the seal's radius so the name never runs under it.
+  // A goal city (Colonia Victrix, Royal Tomb) ends in a seal of the same size in place of the left swallowtail, so a goal
+  // city that is also an original capital wears both marks, one at each end.
   const R = b.capital ? capitalSealRadius(fs) : 0;
-  const pad = b.capital ? Math.max(0, Math.ceil(R - (h + 1) / 2)) + 1 : 0;
-  const inner = 4 + (popS ? 11 + popS + 8 : 0) + glyphW + nameW + 8 + R;
+  const L = b.goal ? capitalSealRadius(fs) : 0;
+  const pad = b.capital || b.goal ? Math.max(0, Math.ceil(Math.max(R, L) - (h + 1) / 2)) + 1 : 0;
+  const inner = 4 + (popS ? 11 + popS + 8 : 0) + glyphW + nameW + wallW + 8 + R + L;
   const W = Math.ceil(inner);
-  const totalW = cap + W + (b.capital ? R + 2 : cap);
+  const left = b.goal ? L + 2 : cap;
+  const totalW = left + W + (b.capital ? R + 2 : cap);
   const [c, g] = canvas(totalW, h + 2 + 2 * pad, dpr);
   g.translate(0, pad);
-  const x0 = cap;
+  const x0 = left;
   g.fillStyle = I.vellum;
   g.fillRect(x0, 0.5, W, h);
   // Diamond end caps.
   const d = h * 0.3;
   g.strokeStyle = b.selected ? I.red : I.ink;
   g.lineWidth = 1;
-  for (const cx of b.capital ? [x0] : [x0, x0 + W]) {
+  for (const cx of [...(b.goal ? [] : [x0]), ...(b.capital ? [] : [x0 + W])]) {
     g.beginPath();
     g.moveTo(cx - d, 0.5 + h / 2);
     g.lineTo(cx, 0.5 + h / 2 - d);
@@ -942,7 +986,7 @@ function atlasBanner(b: BannerSpec, fs: number, dpr: number): Sprite {
   g.strokeRect(x0 + 2.8, 3.3, W - 5.6, h - 5.6);
   // The three heads label population without another bare number. Removing the seat badge
   // leaves room for this mark even at the smallest named zoom.
-  let cx = x0 + 4;
+  let cx = x0 + 4 + L;
   if (popS) {
     const mid = 0.5 + h / 2;
     g.fillStyle = I.ink2;
@@ -975,6 +1019,18 @@ function atlasBanner(b: BannerSpec, fs: number, dpr: number): Sprite {
   }
   g.fillStyle = I.ink;
   smallCaps(g, b.name, cx, base, disp, fs, fs * 0.06);
+  if (wallLabel !== null) {
+    // The wall level after the name, so an attacker sees how strong the Walls are before the city fires.
+    const ww = fs * 1.05, wx = cx + nameW + 4;
+    const ic = tintedIcon('building-walls', I.ink, ww * dpr);
+    if (ic) g.drawImage(ic, wx, 0.5 + (h - ww) / 2, ww, ww);
+    if (wallLabel) {
+      g.font = wallFont;
+      g.textBaseline = 'middle';
+      g.fillText(wallLabel, wx + ww + 1, 0.5 + h / 2 + 0.5);
+      g.textBaseline = 'alphabetic';
+    }
+  }
   if (b.capital) {
     // The seal: vellum disc, ink rule, a fine gilt ring and the founder's star (outlined once you have scored it).
     const sx = x0 + W, sy = 0.5 + h / 2;
@@ -984,6 +1040,20 @@ function atlasBanner(b: BannerSpec, fs: number, dpr: number): Sprite {
     g.beginPath(); g.arc(sx, sy, R - 2.8, 0, Math.PI * 2);
     g.strokeStyle = CAPITAL_GILT; g.lineWidth = 1.3; g.stroke();
     drawCapitalStar(g, b.capital, sx, sy, R * 0.62, I.vellum, 0.32);
+  }
+  if (b.goal) {
+    // The goal seal: the same vellum disc, ink rule and gilt ring, with the goal's mark in the ink of the empire whose goal it is.
+    const sx = x0, sy = 0.5 + h / 2;
+    g.beginPath(); g.arc(sx, sy, L, 0, Math.PI * 2);
+    g.fillStyle = I.vellum; g.fill();
+    // Dashed: not yet standing (a Royal Tomb under construction); solid: it stands, and holding the city scores.
+    if (b.goal.dashed) g.setLineDash([3, 2.2]);
+    g.strokeStyle = b.selected ? I.red : I.ink; g.lineWidth = b.selected ? 1.6 : 1.2; g.stroke();
+    g.beginPath(); g.arc(sx, sy, L - 2.8, 0, Math.PI * 2);
+    g.strokeStyle = CAPITAL_GILT; g.lineWidth = 1.3; g.stroke();
+    g.setLineDash([]);
+    const gw = (L - 3.5) * 1.45 * goalGlyphScale(b.goal.icon), ic = tintedIcon(b.goal.icon, b.goal.ink, gw * dpr);
+    if (ic) g.drawImage(ic, sx - gw / 2, sy - gw / 2, gw, gw);
   }
   return { c, ax: totalW / 2, ay: pad + h + 1, w: totalW, h: h + 2 + 2 * pad };
 }

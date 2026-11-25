@@ -96,7 +96,7 @@ it('a build with no relay offers hot seat only, and says so', async () => {
 });
 
 it('with a game open, Resume stays the only primary button when hosting fails', async () => {
-  act(() => useGame.setState({ views: [{ turn: 5 }] as never }));
+  act(() => useGame.setState({ views: [{ turn: 5, players: [{ id: 0, is_human: true, faction: 'Rome' }] }] as never }));
   hosting(async () => 'Could not open your game. Try again.');
   await act(async () => must(/^Host Game/).click());
   await flush();
@@ -146,6 +146,6 @@ it('the name note replaces the label, so it adds no height', async () => {
   await type('Ada \u{1F600}');
   expect(label().textContent).toBe('Shown in the game list as “Ada”.');
   await type('\u{1F600}\u{1F600}');
-  expect(label().textContent).toBe('The game list will show “Game” and four characters.');
+  expect(label().textContent).toBe('Listed as “Game” and four characters.');
   expect(host.querySelectorAll('.host-name:not(.host-code) > span').length).toBe(1);
 });

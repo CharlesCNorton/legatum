@@ -945,6 +945,26 @@ impl Planner<'_> {
                 decisions.push(order);
             }
         }
+        if let Some(city) = self.rome_opening_city() {
+            let against = v.team_of(city.owner);
+            // Keep the opening's one target. The normal prospective siege forecast waits
+            // for a complete assault; here the three melee are already at its door.
+            decisions.retain(|order| !matches!(order, Order::DeclareWar { .. }));
+            if !city.walls
+                && !v.teams_at_war(v.team, against)
+                && self.rome_opening_ready(city)
+                && let Some(order) = v.diplomacy.actions.iter().find(|action| {
+                    action.blocked_reason.is_none()
+                        && matches!(action.order, Order::DeclareWar { against: team, breach: false } if team == against)
+                })
+            {
+                decisions.push(order.order.clone());
+            }
+        }
+        if let Some(order) = self.rome_second_declaration() {
+            decisions.retain(|existing| !matches!(existing, Order::DeclareWar { .. }));
+            decisions.push(order);
+        }
         self.orders.extend(decisions);
     }
 
@@ -2226,6 +2246,13 @@ impl Planner<'_> {
         } else {
             self.endangered()
         };
+        // Gene `rome_opening_finish`: the opening's victim gets no Peace while it runs.
+        if self.rome_finish_refuses_peace(against) {
+            return (false, "Roman opening victim");
+        }
+        if self.rome_second_refuses_peace(against) {
+            return (false, "Roman second war open city");
+        }
         // Gene `operations`: a committed strike on this team refuses Peace while it runs.
         if self.operation_refuses_peace(against) {
             return (false, "committed operation");

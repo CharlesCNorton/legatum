@@ -11,7 +11,8 @@ import { itemIcon, sameItem } from '../data';
 import { isFighter } from '../airText';
 import { capitalStar } from '../capitalMark';
 import { hexToPixel, tileIndex } from '../hex';
-import { healthColor, rgba } from '../theme';
+import { healthColor, playerInk, rgba } from '../theme';
+import { GOAL_CITY_ICON, goalCities, goalSealFor, isColoniaFounder, tombChip, tombStatus, type GoalCityKind, type TombStatus } from '../goalCities';
 import type { PathStep } from '../path';
 import { tintedIcon } from '../icons';
 import type { LookId } from '../brand/look';
@@ -31,34 +32,35 @@ import { attackableEnemies, drawEraPlaque, drawStrengthChip, matchupStrength, pl
 import { contractLeft } from '../company';
 import { heirTag } from '../heir';
 import { rankLevel } from '../rankInsignia';
-import { FONTS, type BannerSpec, bannerMetersSize, bannerRect, drawBadge, drawBanner, drawBannerMeters, type BannerMeter, barbarianMiniature, drawBarbarianToken, drawContractPip, drawContractTag, drawHeirHalo, drawLabel, drawPip, drawPromotion, drawRankInsignia, drawSprite, drawTag, drawToken, drawTokenHealth, miniatureGeometry, nameSprite, sealSprite, TOKEN_INK, capitalSealRadius } from './sprites';
+import { FONTS, type BannerSpec, type GoalSeal, bannerMetersSize, bannerRect, drawBadge, drawBanner, drawBannerMeters, type BannerMeter, barbarianMiniature, drawBarbarianToken, drawContractPip, drawContractTag, drawHeirHalo, drawLabel, drawPip, drawPromotion, drawRankInsignia, drawSprite, drawTag, drawToken, drawTokenHealth, miniatureGeometry, nameSprite, sealSprite, TOKEN_INK, capitalSealRadius, CAPITAL_GILT } from './sprites';
 import { mapFeatureImage } from './mapFeatures';
 import { BARBARIAN, isBarbarian } from '../barbarians';
 import type { Rect } from './compass';
 import type { LensTile, MapLens } from './lenses';
 import { drawLens, drawOwnerOverlay } from './drawLens';
 import { artFadeFor, DEFAULT_OVERLAYS, ownerWashScale, type OverlaySet } from './overlays';
-import { drawYieldIcons, yieldClusterRects } from './yieldIcons';
+import { drawYieldIcons, yieldClusterRects, YIELD_FILL } from './yieldIcons';
 import { drawImprovements } from './improvementArt';
-import { drawResourceIcons, medallionTop, resourceDetail, STACK_LIFT } from './resourceIcons';
-import type { ScenarioTarget } from '../scenarios/scenarios';
+import { drawResourceIcons, medallionTop, resourceDetail, STACK_LIFT, type Cover } from './resourceIcons';
 import { drawRoads } from './roadArt';
 import { drawClosedLand } from './sakokuLand';
-import { drawHallBadge, drawHallLand, hallBadgeAt, hallSites } from './courierHall';
+import { drawStationBadge, drawStationLand, stationBadgeAt, stationSites } from './yamRelayStation';
 import { drawWonderArt, drawWonderBadges } from './wonderArt';
 import { deathPos, hpAt, type CombatPlan, type FxGhost } from './combatFx';
 import { aircraftPassProgress, drawCombatFx, drawSiegeAmbient, siegeAmbientBox } from './combatFxDraw';
 import { smoulderVisible } from './smoulder';
 import type { March, MomentHold, MomentPlan } from './momentFx';
 import { drawChimneySmoke, drawWaterGlints, idleBoxes, type IdleView } from './idleLife';
-import { drawLandmarks, landmarkBoxes, landmarksOf } from './landmarks';
+import { drawLandmarks, LANDMARK_REF_ZOOM, landmarkBoxes, landmarksOf, townCover } from './landmarks';
 import { drawConstructionSites } from './constructionFx';
 import { constructionStage, sitesOf, type ConstructionSite } from './constructionSites';
 import { CONSTRUCTION_ANIMATION, buildPhases } from './momentFx';
+import { drawPingGhost, drawPings, type PingMark } from './pingDraw';
 import { drawMarchDust, drawMomentFx, drawMomentGround, drawRevealed, revealAt, type MomentView } from './momentFxDraw';
 import { drawAirCandidates, drawAirLabels, drawAirOffscreen, drawAirRings, drawTileCandidates, type AirOverlay } from './airOverlay';
 import { aircraftAsUnit } from '../airWing';
 import { unworkedClaimIndexes } from './unworkedClaims';
+import { cityRing, wallTierOf } from './cityArt';
 
 export { HEX_SIZE } from './grid';
 
@@ -113,9 +115,13 @@ export interface RenderInput {
   cues?: MapCue[];
   /** A clicked combat line: attacker → target arrow (or a target ring when the attacker went unseen). */
   reportArrow?: ReportArrow | null;
+  /** Teammates' map pings (teamPing.ts), with each ring's age for its pulse. */
+  pings?: PingMark[];
   celebration?: MapCelebration;
   /** The hovered tile holds the player's own unit or city: draw a select ring, not a path. */
   hoverSelect?: boolean;
+  /** Ping is armed: no move preview, and the hovered tile shows a ghost ping ring. */
+  pingArmed?: boolean;
   selectedUnit: number | null;
   selectedAir?: number | null;
   selectedCity: number | null;
@@ -156,8 +162,6 @@ export interface RenderInput {
   /** Idle life's clock (idleLife.ts), when it differs from `time`: an idle tick advances only idle life. */
   idleT?: number;
   seatColor: string;
-  /** The scenario objective's cities, ringed even in fog. */
-  scenarioTargets?: ScenarioTarget[];
   /** Own cities under attack (city id → how soon it falls): drawn alarmed (siegeMark.ts). */
   siege?: ReadonlyMap<number, SiegeLevel>;
   reducedMotion: boolean;
@@ -287,19 +291,20 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
   const bannerView = held?.size ? { ...view, cities: view.cities.map((c) => held.has(c.id) ? { ...c, owner: held.get(c.id)! } : c) } : view;
   const focusOf = (c: CityView) => c.owner === view.me ? (inp.cityFocuses?.has(c.id) ? inp.cityFocuses.get(c.id) : c.detail?.build_automation) ?? null : null;
   const banners = cityBanners(bannerView, cam, w, h, dpr, look, inp.selectedCity, siege, focusOf, moments?.hold.unscored, inp.cityBuilds);
-  // Landmarks use a fixed footprint chosen from banners and other landmarks, never moving units.
+  // What labels, badges and medallions keep clear of: the banners as drawn this frame (screen px).
   const bannerCovers = banners.map((b) => b.cover);
   const toScreen = (p: { x: number; y: number }) => worldToScreen(cam, w, h, p.x, p.y);
   const landmarkSites = [...landmarksOf(view), ...sitesOf(view).filter((s) => !s.walls), ...(moments?.plan.builds.filter((b) => b.wonder).map((b) => ({ tile: b.tile, hex: b.at })) ?? [])];
-  const fixedLandmarkBoxes = landmarkBoxes(landmarkSites, toScreen, hexPx, bannerCovers);
+  // Landmarks use a fixed footprint chosen from every banner at one reference zoom (never these screen covers, never moving units).
+  const fixedLandmarkBoxes = landmarkBoxes(landmarkSites, toScreen, hexPx, referenceBannerCovers(bannerView, look, siege));
   // The ink-and-wash landmark sits in the land, under everything else the map draws (full colour belongs to its cards).
-  drawWonderArt(ctx, view, cam, w, h, dpr, inp.lens, overlays.yields);
+  drawWonderArt(ctx, view, cam, w, h, dpr, inp.lens, overlays.yields, (g, near) => terrain.stampTowns(g, cam, w, h, dpr, near));
   // Improvements change the land itself: drawn on it, under every lens, overlay, unit and banner.
   const momentView: MomentView | null = moments ? {
     toScreen: (p) => worldToScreen(cam, w, h, p.x, p.y), hexPx, zoom: z, dpr, far: isFar(hexPx), w, h, colorOf: mapBorderColor,
     eraOf: (owner) => Math.max(0, (view.players.find((p) => p.id === owner)?.era ?? 1) - 1),
     factionOf: (owner) => factionOf.get(owner),
-    city: (id) => { const c = view.cities.find((x) => x.id === id); return c ? { population: c.population, owner: c.owner } : null; },
+    city: (id) => { const c = view.cities.find((x) => x.id === id); return c ? { population: c.population, owner: c.owner, ring: cityRing(view, c) } : null; },
     unitAt: (id) => { const u = view.units.find((x) => x.id === id); return u ? inp.unitPos.get(id) ?? hexToPixel(u.pos, HEX_SIZE) : null; },
     tokenHalf: isFar(hexPx) ? PIP_HALF : tokenHalf(hexPx),
     landmarkAt: (city, building) => { const l = landmarksOf(view).find((x) => x.city === city && x.building === building); return l ? hexToPixel(l.hex, HEX_SIZE) : null; },
@@ -311,7 +316,7 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
   else drawImprovements(ctx, view, cam, w, h, dpr, look);
   // Constructed wonders stand on their chosen tile (landmarks.ts); one being built this turn waits for its construction.
   const building = moments && CONSTRUCTION_ANIMATION ? moments.plan.builds.filter((b) => b.wonder && moments.t < b.t + buildPhases(b).done) : [];
-  drawLandmarks(ctx, view, toScreen, hexPx, w, h, dpr, building.length ? (l) => building.some((b) => b.city === l.city) : undefined, fixedLandmarkBoxes);
+  drawLandmarks(ctx, view, toScreen, hexPx, w, h, dpr, building.length ? (l) => building.some((b) => b.city === l.city) : undefined, fixedLandmarkBoxes, (g, near) => terrain.stampTowns(g, cam, w, h, dpr, near));
   // A completion removes the site from the after-view. Keep its old state until the finish begins,
   // then let the moment draw it alone; otherwise two semi-transparent cranes ghost over each other.
   const activeSites = !CONSTRUCTION_ANIMATION ? [] : moments?.plan.builds.filter((b) => (b.wonder || b.walls) && moments.t >= b.t && moments.t < b.t + buildPhases(b).done) ?? [];
@@ -330,16 +335,23 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
   // Overlays draw over the lens tint, so a lens never hides them: owned land first, then the yield icons on top of both.
   if (inp.borderTiles?.length) drawOwnerOverlay(ctx, inp.borderTiles, cam, w, h, view.width, dpr, look, 'tint', ownerWashScale(inp.lens));
   // Tile yields sit under every unit and banner: quiet enough to leave on.
-  if (inp.yieldTiles?.length) drawYieldIcons(ctx, inp.yieldTiles, cam, w, h, view.width, dpr, look, inp.lens === 'settle');
+  // A neighbour's medallion, yield cluster or wonder badge never sits on a town (or its walls): they keep clear of its footprint.
+  const townCovers = cityArtCovers(view, toScreen, z, hexPx);
+  if (inp.yieldTiles?.length) drawYieldIcons(ctx, inp.yieldTiles, cam, w, h, view.width, dpr, look, inp.lens === 'settle', townCovers);
   // Banner positions are known up front so the resource medallions below them can keep clear.
   const bannerMotion = moments?.hold.banner;
   // Known resources, on every lens (as in Civ): top of the hex, under units and banners.
   const iconView = moments?.hold.resources.size
     ? { ...view, tiles: view.tiles.map((tile, i) => moments.hold.resources.has(i) ? { ...tile, resource: null } : tile) }
     : view;
-  drawResourceIcons(ctx, iconView, cam, w, h, dpr, look, bannerCovers, overlays.resources);
+  drawResourceIcons(ctx, iconView, cam, w, h, dpr, look, bannerCovers, overlays.resources, townCovers);
   // A natural wonder's bonus, on its tile: above the lens tint and yield icons, under units and banners.
-  drawWonderBadges(ctx, view, cam, w, h, dpr, overlays.yields, bannerCovers);
+  // A unit resting on the wonder's tile covers its middle: the pill keeps clear of its counter.
+  const tokenCovers = isFar(hexPx) ? [] : view.units.filter((u) => view.tiles[tileIndex(u.pos, view.width, view.height)]?.wonder).map((u) => {
+    const p = toScreen(inp.unitPos.get(u.id) ?? hexToPixel(u.pos, HEX_SIZE)), t = tokenHalf(hexPx);
+    return { x: p.x - t, y: p.y - t, w: t * 2, h: t * 2 };
+  });
+  const wonderPillsOverUnits = drawWonderBadges(ctx, view, cam, w, h, dpr, overlays.yields, [...bannerCovers, ...townCovers], tokenCovers);
 
   // World transform for vector overlays.
   const worldT = () => ctx.setTransform(dpr * z, 0, 0, dpr * z, dpr * (w / 2 - cam.x * z), dpr * (h / 2 - cam.y * z));
@@ -679,10 +691,10 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
   // ---- screen space ----
   screenT();
 
-  // Roads, then the Courier Hall's rhumb lines and compass-rose plaque: above terrain, below banners and units.
+  // Roads, then the Yam Relay Station's rhumb lines and compass-rose plaque: above terrain, below banners and units.
   if (reveal?.roads) drawRevealed(ctx, dpr, w, h, reveal.roads, view, (v) => drawRoads(ctx, v, S2, hexPx, w, h));
   else drawRoads(ctx, view, S2, hexPx, w, h);
-  drawHallLand(ctx, view, S2, hexPx, w, h);
+  drawStationLand(ctx, view, S2, hexPx, w, h);
   // A closed country (Sakoku): its palisade border.
   drawClosedLand(ctx, view, S2, hexPx, w, h);
 
@@ -804,12 +816,6 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
     }
   }
 
-  // Scenario objective: every target city is ringed from the first turn, fog or not.
-  for (const t of inp.scenarioTargets ?? []) {
-    const p = S2(t.pos);
-    if (p.x < -120 || p.x > w + 120 || p.y < -120 || p.y > h + 120) continue;
-    drawTargetMark(ctx, look, S, t, p.x, p.y, hexPx, pulse, !view.cities.some((c) => c.id === t.city));
-  }
 
   // A damaged city burns for the whole turn: smoke and fires over its art, under banners and units.
   // Each box is what a clipped ambient frame repaints (MapCanvas: smoke and siege rings move without a full redraw).
@@ -840,7 +846,19 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
     if (siege.has(c.id)) drawSiegeBar(ctx, far.x, far.y - far.seal.ay + far.seal.h + 2, Math.max(30, far.seal.w), c.hp, c.max_hp, FONTS[look].sans, false);
   }
 
-  drawHallBadge(ctx, view, S2, hexPx, w, h);
+  drawStationBadge(ctx, view, S2, hexPx, w, h);
+
+  // Rome's Colonia and Egypt's tomb are public to every empire, like the Heir: where the viewer has never seen the city,
+  // its banner (or far seal) still stands on the map, faded, so every player can find the points.
+  for (const g of goalCities(view)) {
+    if (view.cities.some((c) => c.id === g.city)) continue;
+    const p = S2(g.at);
+    if (p.x < -200 || p.x > w + 200 || p.y < -80 || p.y > h + 120) continue;
+    const spec: BannerSpec = { owner: g.holder, name: g.name, pop: null, color: mapPlayerColor(g.holder), capital: null,
+      goal: goalSeal({ kind: g.kind, of: g.of, dashed: false }), selected: false, glyph: null, wallTier: 0 };
+    if (isFar(hexPx)) drawSprite(ctx, sealSprite(look, spec, sealRadius(hexPx), dpr), p.x, p.y - hexPx * 0.1, 0.85);
+    else drawBanner(ctx, look, spec, p.x, p.y - hexPx * BANNER_BOTTOM, Math.round(Math.max(11, Math.min(16, hexPx * 0.42)) * 2) / 2, dpr, 0.85);
+  }
 
   // Units. Sharing a tile, they fan out side by side (military right, civilian left) so both
   // tokens read; three or more also carry a count badge.
@@ -924,9 +942,11 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
       continue;
     }
     if (u.occupation_lock != null) lockMarks.push({ x, y, w: tw });
-    drawUnit(ctx, look, u, x, y, tw, dpr, u.owner === view.me, inp.pendingMarks.get(u.id), u.origin ?? factionOf.get(u.owner), strengthCue, siegePropFor(view, u), hexBox, contractLeft(u, view), heirTag(view, u));
+    drawUnit(ctx, look, u, x, y, tw, dpr, u.owner === view.me, inp.pendingMarks.get(u.id), u.origin ?? factionOf.get(u.owner), strengthCue, siegePropFor(view, u), hexBox, contractLeft(u, view), heirTag(view, u), u.owner === view.me && isColoniaFounder(view, u.id));
     if (stack.length > 2 && stack[0].id === u.id) drawBadge(ctx, look, x - tw, y - tw, tw * 0.45, String(stack.length), true);
   }
+  // A natural wonder's bonus pill that a resting counter would hide goes above the units (still under the banners).
+  wonderPillsOverUnits();
 
   // Units that fell this turn stand (from the view before the turn) until their blow lands, then sink and fade.
   for (const g of inp.ghosts ?? []) {
@@ -943,6 +963,10 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
     else drawToken(ctx, look, g.unit.kind as UnitKind, mapPlayerColor(g.unit.owner), g.unit.military, x, y, tw, dpr, g.unit.owner, 1, factionOf.get(g.unit.owner));
     ctx.restore();
   }
+
+  // Team pings sit above the tokens and under every city banner. Armed, the hovered tile shows a ghost ring.
+  if (inp.pings?.length) drawPings(ctx, inp.pings, S2, hexPx, S.tone.vellum, !!inp.reducedMotion);
+  if (inp.pingArmed && inp.hover && tileIndex(inp.hover, W, H) >= 0) drawPingGhost(ctx, S2(inp.hover), hexPx, S.tone.vellum);
 
   // Zoomed out, the names go over the units, so a stack never hides a city's name.
   for (const { far: city, alpha } of banners) if (city?.name) drawSprite(ctx, city.name.sprite, city.name.x, city.name.y, alpha);
@@ -1023,7 +1047,7 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
     const unitsAt = new Map<number, number>();
     for (const u of view.units) { const t = tileIndex(u.pos, W, H); unitsAt.set(t, (unitsAt.get(t) ?? 0) + 1); }
     drawLens(ctx, inp.lensTiles, cam, w, h, W, dpr, look, 'labels', unitBottoms, [...(inp.lensAvoid ?? []), ...bannerCovers],
-      (i) => medallions && view.tiles[i]?.resource && view.tiles[i]?.explored ? medallionTop(hexPx, cityAt.has(i), (unitsAt.get(i) ?? 0) > 1) : 0, { yieldsOn: overlays.yields, yieldRects: overlays.yields && inp.lensTiles.some((t) => t.rank) ? yieldClusterRects(inp.yieldTiles ?? [], cam, w, h, W) : [] });
+      (i) => medallions && view.tiles[i]?.resource && view.tiles[i]?.explored ? medallionTop(hexPx, cityAt.has(i), (unitsAt.get(i) ?? 0) > 1) : 0, { yieldsOn: overlays.yields, yieldRects: overlays.yields && inp.lensTiles.some((t) => t.rank) ? yieldClusterRects(inp.yieldTiles ?? [], cam, w, h, W, cityArtCovers(view, (p) => worldToScreen(cam, w, h, p.x, p.y), z, hexPx)) : [] });
   }
 
   if (inp.reportArrow && inp.reportArrow.alpha > 0) {
@@ -1233,7 +1257,7 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
     performance.measure('legatum:mapDraw', { start: t0, end: t0 + ms });
   perf.frames++;
   perf.drawMs += ms;
-  noteMapDraw(ms);
+  noteMapDraw(ms, terrain.lastWorkMs);
   perf.workMs += terrain.lastWorkMs;
   perf.maxMs = Math.max(perf.maxMs, ms);
   // City banners, so hover cards can keep clear of them (a card over your own city's banner hides it).
@@ -1250,91 +1274,27 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
     idle: idleLive > 0, ring, ambient };
 }
 
-/** A scenario target: a double ring around the city's hex (red to take or contain, ink to hold)
- *  with the objective's mark on top: crosshair, shield or dashed ring. A city the seat hasn't
- *  seen yet is named under the ring, so the objective is findable from turn 1. */
-function drawTargetMark(ctx: CanvasRenderingContext2D, look: LookId, S: MapStyle, t: ScenarioTarget, x: number, y: number, hexPx: number, pulse: number, unseen: boolean) {
-  const halo = S.tone.vellum;
-  const ink = t.kind === 'Hold' ? TOKEN_INK.atlas.ink : S.ink.attack;
-  const r = Math.max(14, hexPx * 0.92);
-  ctx.save();
-  ctx.lineCap = 'round';
-  for (const [color, width] of [[halo, 5], [ink, 2.2]] as const) {
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, Math.PI * 2);
-    ctx.strokeStyle = color;
-    ctx.lineWidth = width;
-    ctx.setLineDash(t.kind === 'Contain' && color === ink ? [7, 4] : []);
-    ctx.stroke();
-  }
-  ctx.setLineDash([]);
-  ctx.globalAlpha = 0.35 + 0.35 * pulse;
-  ctx.beginPath();
-  ctx.arc(x, y, r + 5, 0, Math.PI * 2);
-  ctx.strokeStyle = ink;
-  ctx.lineWidth = 1.2;
-  ctx.stroke();
-  ctx.globalAlpha = 1;
-  // The mark sits on the ring's upper right, on a halo disc.
-  const bx = x + r * 0.72, by = y - r * 0.72, br = Math.max(7, Math.min(11, hexPx * 0.3));
-  ctx.beginPath();
-  ctx.arc(bx, by, br, 0, Math.PI * 2);
-  ctx.fillStyle = halo;
-  ctx.fill();
-  ctx.strokeStyle = ink;
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
-  const m = br * 0.62;
-  ctx.beginPath();
-  if (t.kind === 'Take') {
-    ctx.arc(bx, by, m * 0.62, 0, Math.PI * 2);
-    ctx.moveTo(bx, by - m); ctx.lineTo(bx, by - m * 0.35);
-    ctx.moveTo(bx, by + m); ctx.lineTo(bx, by + m * 0.35);
-    ctx.moveTo(bx - m, by); ctx.lineTo(bx - m * 0.35, by);
-    ctx.moveTo(bx + m, by); ctx.lineTo(bx + m * 0.35, by);
-  } else if (t.kind === 'Hold') {
-    ctx.moveTo(bx, by - m);
-    ctx.lineTo(bx + m * 0.85, by - m * 0.6);
-    ctx.lineTo(bx + m * 0.75, by + m * 0.2);
-    ctx.quadraticCurveTo(bx + m * 0.5, by + m * 0.8, bx, by + m);
-    ctx.quadraticCurveTo(bx - m * 0.5, by + m * 0.8, bx - m * 0.75, by + m * 0.2);
-    ctx.lineTo(bx - m * 0.85, by - m * 0.6);
-    ctx.closePath();
-  } else {
-    ctx.arc(bx, by, m * 0.75, 0, Math.PI * 2);
-  }
-  ctx.strokeStyle = ink;
-  ctx.lineWidth = 1.6;
-  ctx.stroke();
-  if (unseen) {
-    const fs = Math.round(Math.max(11, Math.min(14, hexPx * 0.36)));
-    ctx.font = `600 ${fs}px ${FONTS[look].sans}`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'top';
-    ctx.lineJoin = 'round';
-    ctx.lineWidth = 4;
-    ctx.strokeStyle = halo;
-    const label = `${t.name} (not yet seen)`;
-    ctx.strokeText(label, x, y + r + 4);
-    ctx.fillStyle = ink;
-    ctx.fillText(label, x, y + r + 4);
-  }
-  ctx.restore();
-}
-
 /** The icon each automatic-build focus wears on the banner. */
-const FOCUS_ICON: Record<CityBuildFocus, string> = { Balanced: 'ui-random', Science: 'yield-science', Gold: 'yield-gold', Military: 'unit-spearman' };
+/** A project focus's icon is drawn in its yield's ink; Military and Economy are labels, in ink. */
+const FOCUS_YIELD = { Gold: 'gold', Science: 'science', Food: 'food' } as const;
+const FOCUS_ICON: Record<CityBuildFocus, string> = { Military: 'unit-spearman', Economy: 'building-workshop', Gold: 'yield-gold', Science: 'yield-science', Food: 'yield-food' };
 
 const q24 = (f: number) => Math.round(Math.max(0, Math.min(1, f)) * 24) / 24;
 
 /** Growth (the territory bar: each growth claims a tile) and production meters for an own city's banner, from the same forecasts as the city panel. */
-export function bannerMeters(c: CityView, faction?: Faction, focus: CityBuildFocus | null = null, chosen: ProductionItem | null = null): BannerMeter[] {
+export function bannerMeters(c: CityView, faction?: Faction, focus: CityBuildFocus | null = null, chosen: ProductionItem | null = null, tomb: TombStatus | null = null): BannerMeter[] {
   const growth = growthProgress(c);
   if (!growth) return [];
+  // Egypt's Royal Tomb stops every city: growth is paused, and the production meter is the tomb's mark and count.
+  const stopped = !!tomb?.working;
   const out: BannerMeter[] = [{
     kind: 'growth', fraction: q24(growth.needed > 0 ? growth.stored / growth.needed : 0),
-    text: growth.turns !== null ? String(growth.turns) : '–', bad: growth.state === 'starving', paused: growth.state !== 'growing' && growth.state !== 'starving',
+    text: stopped ? '–' : growth.turns !== null ? String(growth.turns) : '–', bad: !stopped && growth.state === 'starving', paused: stopped || (growth.state !== 'growing' && growth.state !== 'starving'),
   }];
+  if (stopped) {
+    out.push({ kind: 'production', fraction: q24(tomb.turns / Math.max(1, tomb.target)), text: tombChip(tomb), paused: true, icon: GOAL_CITY_ICON.tomb, inkIcon: true });
+    return out;
+  }
   const production = productionProgress(c);
   // Occupation lock experiment: a frozen city shows the seal of a held city, not the red Build prompt.
   if (production && c.occupation_lock != null) out.push({ kind: 'production', fraction: 0, text: 'Held', paused: true, icon: 'fortify', inkIcon: true });
@@ -1350,7 +1310,7 @@ export function bannerMeters(c: CityView, faction?: Faction, focus: CityBuildFoc
     const auto = focus ? { label: 'Auto', icon: FOCUS_ICON[focus] } : undefined;
     out.push(production.state === 'idle'
       // An automated idle city chooses at Ready: it shows its focus, not the red "Build" prompt.
-      ? auto ? { kind: 'production', fraction: 0, text: 'Auto', paused: true, icon: auto.icon, inkIcon: true } : { kind: 'production', fraction: 0, text: 'Build', bad: true, icon: null }
+      ? auto ? { kind: 'production', fraction: 0, text: 'Auto', paused: true, icon: auto.icon, ...(focus === 'Military' || focus === 'Economy' ? { inkIcon: true } : { iconColor: YIELD_FILL[FOCUS_YIELD[focus as keyof typeof FOCUS_YIELD]] }) } : { kind: 'production', fraction: 0, text: 'Build', bad: true, icon: null }
       : {
         kind: 'production', fraction: q24(production.needed > 0 ? production.stored / production.needed : 0),
         text: production.state === 'building' ? (production.turns !== null ? String(production.turns) : '–') : '–',
@@ -1363,9 +1323,18 @@ export function bannerMeters(c: CityView, faction?: Faction, focus: CityBuildFoc
 /** A city zoomed out: its seal (centred on the hex) and, if there is clear room, its name beside it. */
 interface FarCity { x: number; y: number; seal: ReturnType<typeof sealSprite>; name: { sprite: ReturnType<typeof nameSprite>; x: number; y: number } | null }
 
+/** A goal city's banner seal: its mark (and the solid far variant) in the ink of the empire whose goal it is; dashed while not yet standing. */
+function goalSeal(g: { kind: GoalCityKind; of: number; dashed: boolean }): GoalSeal {
+  return { icon: GOAL_CITY_ICON[g.kind], ink: playerInk(g.of), dashed: g.dashed };
+}
+
 /** What a city's banner and far-zoom seal show. The star marks the original capital for the whole game, in the founder's ink; a replacement capital gets none. */
-export function bannerSpec(view: Pick<PlayerView, 'me' | 'team' | 'players'>, c: CityView, glyph: string | null, selected: boolean): BannerSpec {
-  return { owner: c.owner, name: c.name, pop: c.visible ? c.population : null, color: mapPlayerColor(c.owner), capital: capitalStar(view, c), selected, glyph, walls: c.visible && c.walls };
+export function bannerSpec(view: Pick<PlayerView, 'me' | 'team' | 'players'> & Partial<Pick<PlayerView, 'colonias' | 'royal_tombs' | 'tomb_sites'>>, c: CityView, glyph: string | null, selected: boolean): BannerSpec {
+  // Rome's Colonia and Egypt's tomb wear their mark in the ink of the empire whose goal it is (the tomb first if a city holds both);
+  // a tomb still being built wears it dashed on the city where it will stand.
+  const goal = goalSealFor(view, c.id);
+  return { owner: c.owner, name: c.name, pop: c.visible ? c.population : null, color: mapPlayerColor(c.owner), capital: capitalStar(view, c),
+    goal: goal ? goalSeal(goal) : null, selected, glyph, wallTier: wallTierOf(c) };
 }
 
 /** Every on-screen city banner: its spec, anchor and the screen rect it covers (health bar included). Zoomed out, the banner is a seal and a name instead. */
@@ -1373,6 +1342,8 @@ function cityBanners(view: PlayerView, cam: Camera, w: number, h: number, dpr: n
   const hexPx = HEX_SIZE * cam.zoom;
   const far = isFar(hexPx);
   const fs = Math.round(Math.max(11, Math.min(16, hexPx * 0.42)) * 2) / 2;
+  // The viewer's own Royal Tomb work, public on its player row: while it is on, every own banner shows its count.
+  const myTomb = tombStatus(view.players.find((pl) => pl.id === view.me) ?? {});
   const items = view.cities.flatMap((c) => {
     const p = worldToScreen(cam, w, h, hexToPixel(c.pos, HEX_SIZE).x, hexToPixel(c.pos, HEX_SIZE).y);
     if (p.x < -200 || p.x > w + 200 || p.y < -80 || p.y > h + 120) return [];
@@ -1394,23 +1365,51 @@ function cityBanners(view: PlayerView, cam: Camera, w: number, h: number, dpr: n
     // Own cities only (rivals' Food, borders and production are private): growth, border and
     // production meters, readable from normal zoom in, so the player can watch them without
     // opening the city.
-    const meters = mine && c.visible && hexPx >= 20 ? bannerMeters(c, faction, focusOf(c), builds?.get(c.id) ?? null) : [];
-    const metersH = meters.length ? bannerMetersSize(look, meters, dpr).h + 1 : 0;
-    // The block (plate and meters) ends BANNER_BOTTOM above the centre, over the town's roofline: the meters are a fixed
-    // 17 px, so hung under the plate they covered the top of the town, most of it at small zoom.
-    const y = p.y - hexPx * BANNER_BOTTOM - metersH;
-    const rect = bannerRect(look, spec, p.x, y, fs, dpr);
-    const cover = { ...rect, h: rect.h + (siege.has(c.id) ? SIEGE_BAR_H + SIEGE_BAR_GAP + 3 : c.visible && c.hp < c.max_hp ? 6 : 0) + metersH };
+    const meters = mine && c.visible && hexPx >= 20 ? bannerMeters(c, faction, focusOf(c), builds?.get(c.id) ?? null, myTomb) : [];
+    const { y, cover } = bannerBlock(c, spec, meters, p, hexPx, fs, look, dpr, siege);
     return [{ c, spec, x: p.x, y, fs, alpha, meters, cover, far: null as FarCity | null }];
   });
-  // The Courier Hall's badge sits beside its city's seal: names keep clear of it.
-  const badges = far ? hallSites(view).map(({ city }) => {
+  // The Yam Relay Station's badge sits beside its city's seal: names keep clear of it.
+  const badges = far ? stationSites(view).map(({ city }) => {
     const q = worldToScreen(cam, w, h, hexToPixel(city.pos, HEX_SIZE).x, hexToPixel(city.pos, HEX_SIZE).y);
-    const b = hallBadgeAt(q, hexPx);
+    const b = stationBadgeAt(q, hexPx);
     return { x: b.x - b.r, y: b.y - b.r, w: b.r * 2, h: b.r * 2 };
   }) : [];
   if (far) placeFarNames(items, view.me, selectedCity, dpr, look, badges);
   return items;
+}
+
+/** A named banner's block (plate, meters, siege or damage bar) for a city centred at `p`, in screen px. */
+function bannerBlock(c: CityView, spec: BannerSpec, meters: BannerMeter[], p: { x: number; y: number }, hexPx: number, fs: number, look: LookId, dpr: number, siege: ReadonlyMap<number, SiegeLevel>) {
+  const metersH = meters.length ? bannerMetersSize(look, meters, dpr).h + 1 : 0;
+  // The block (plate and meters) ends BANNER_BOTTOM above the centre, over the town's roofline: the meters are a fixed
+  // 17 px, so hung under the plate they covered the top of the town, most of it at small zoom.
+  const y = p.y - hexPx * BANNER_BOTTOM - metersH;
+  const rect = bannerRect(look, spec, p.x, y, fs, dpr);
+  return { y, cover: { ...rect, h: rect.h + (siege.has(c.id) ? SIEGE_BAR_H + SIEGE_BAR_GAP + 3 : c.visible && c.hp < c.max_hp ? 6 : 0) + metersH } };
+}
+
+/**
+ * Every city's banner block and painted town as they stand at LANDMARK_REF_ZOOM, in world units × LANDMARK_REF_ZOOM: what a wonder's footprint
+ * is chosen against (landmarks.ts), so the choice depends on neither the camera's zoom nor what is on screen.
+ */
+const refCoverMemo = new WeakMap<PlayerView, { look: LookId; siege: ReadonlyMap<number, SiegeLevel>; covers: Rect[] }>();
+export function referenceBannerCovers(view: PlayerView, look: LookId, siege: ReadonlyMap<number, SiegeLevel>): Rect[] {
+  const hit = refCoverMemo.get(view);
+  if (hit && hit.look === look && hit.siege === siege) return hit.covers;
+  const hexPx = HEX_SIZE * LANDMARK_REF_ZOOM;
+  const fs = Math.round(Math.max(11, Math.min(16, hexPx * 0.42)) * 2) / 2;
+  const covers = view.cities.map((c) => {
+    const world = hexToPixel(c.pos, HEX_SIZE);
+    const faction = view.players.find((pl) => pl.id === c.owner)?.faction;
+    const spec = bannerSpec(view, c, faction ? `glyph-${faction.toLowerCase()}` : null, false);
+    const meters = c.owner === view.me && c.visible ? bannerMeters(c, faction) : [];
+    const at = { x: world.x * LANDMARK_REF_ZOOM, y: world.y * LANDMARK_REF_ZOOM };
+    // The painted town too, so a wonder beside a city never stands on its towers (UI review, 2026-11-22).
+    return [bannerBlock(c, spec, meters, at, hexPx, fs, look, 1, siege).cover, townCover(at, hexPx)];
+  }).flat();
+  refCoverMemo.set(view, { look, siege, covers });
+  return covers;
 }
 
 /** Names beside the seals, own and capital cities first: right of the seal, else left, below, above; no name where all four would print over another seal or name. */
@@ -1468,7 +1467,7 @@ export function hoverClipBoxes(inp: Pick<RenderInput, 'view' | 'cam' | 'width' |
   const around = (hx: Hex, half: number): Rect => { const p = at(hx); return { x: p.x - half, y: p.y - half, w: half * 2, h: half * 2 }; };
   const out: Rect[] = [];
   // The hover hex (radius 0.94 of a hex) and its select ring, with room for the stroke.
-  if (inp.hover) out.push(around(inp.hover, hexPx + 4));
+  if (inp.hover) out.push(around(inp.hover, Math.max(hexPx + 4, 26))); // 26: room for the armed Ping ghost on a small hex
   const unit = inp.selectedUnit !== null ? view.units.find((u) => u.id === inp.selectedUnit) ?? null : null;
   if (unit && inp.path?.length) {
     // The route line, its shadow and turn roundels (radius 11), and the risk mark on one of its tiles.
@@ -1527,7 +1526,7 @@ function drawLockMark(ctx: CanvasRenderingContext2D, look: LookId, x: number, y:
   drawBadge(ctx, look, x - w * 0.95, y - w * 0.85, w * 0.55, '', false, 'mark-lock');
 }
 
-function drawUnit(ctx: CanvasRenderingContext2D, look: LookId, u: UnitView, x: number, y: number, w: number, dpr: number, mine: boolean, mark: PendingMark | undefined, faction?: Faction, cue?: StrengthCue | null, prop?: SiegeProp | null, hexBox?: { cx: number; half: number }, contract?: number | null, heirLabel?: string | null) {
+function drawUnit(ctx: CanvasRenderingContext2D, look: LookId, u: UnitView, x: number, y: number, w: number, dpr: number, mine: boolean, mark: PendingMark | undefined, faction?: Faction, cue?: StrengthCue | null, prop?: SiegeProp | null, hexBox?: { cx: number; half: number }, contract?: number | null, heirLabel?: string | null, colonia = false) {
   if (isBarbarian(u.owner)) drawBarbarianToken(ctx, look, u.kind as UnitKind, u.military, x, y, w, dpr);
   else drawToken(ctx, look, u.kind as UnitKind, mapPlayerColor(u.owner), u.military, x, y, w, dpr, u.owner, 1, faction, u.heir_of == null ? undefined : { crestColor: u.heir_of === u.owner ? undefined : mapPlayerColor(u.heir_of) });
   // A unit an Engineer covers wears its siege gear in front of its feet, on the hex's right side and always inside the hex: the
@@ -1549,6 +1548,16 @@ function drawUnit(ctx: CanvasRenderingContext2D, look: LookId, u: UnitView, x: n
   }
   if (u.hp < 100) drawTokenHealth(ctx, look, u.hp, x, y, w, drop);
   if (u.military && u.level) drawPromotion(ctx, look, u.level, x, y, w, faction);
+  // Rome: a veteran that founds the Colonia Victrix wears its laurel on a gilt-ringed seal over the token's head (16 px or more),
+  // clear of the owner roundel (upper left) and the order badge (upper right).
+  if (colonia) {
+    const r = Math.max(8, w * 0.42), cx = x, cy = y - w * 1.12;
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fillStyle = TOKEN_INK.atlas.paper; ctx.fill();
+    ctx.strokeStyle = TOKEN_INK.atlas.ink; ctx.lineWidth = 1; ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx, cy, r - 1.8, 0, Math.PI * 2); ctx.strokeStyle = CAPITAL_GILT; ctx.lineWidth = 1.3; ctx.stroke();
+    const s = (r - 2) * 1.6, ic = tintedIcon('goal-colonia', TOKEN_INK.atlas.ink, s * dpr);
+    if (ic) ctx.drawImage(ic, cx - s / 2, cy - s / 2, s, s);
+  }
   const bx = x + w * 0.95;
   if (u.fortify > 0) {
     const ic = tintedIcon('fortify', TOKEN_INK.atlas.ink, 14 * dpr);
@@ -1668,4 +1677,17 @@ function drawRoute(
   const xs = pts.map((p) => p.x), ys = pts.map((p) => p.y);
   const x0 = Math.min(...xs) - pad, y0 = Math.min(...ys) - pad;
   return { x: x0, y: y0, w: Math.max(...xs) + pad - x0, h: Math.max(...ys) + pad - y0 };
+}
+
+/**
+ * Screen rects of the painted towns in view (their ground oval and roofs, walls included), tagged with the town's tile.
+ * Zoomed out the town is a small mark and nothing needs to move, so there are none.
+ */
+export function cityArtCovers(view: PlayerView, toScreen: (p: { x: number; y: number }) => { x: number; y: number }, zoom: number, hexPx: number): (Cover & { tile: number })[] {
+  if (isFar(hexPx)) return [];
+  return view.cities.flatMap((c) => {
+    const tile = tileIndex(c.pos, view.width, view.height);
+    if (tile < 0 || !view.tiles[tile]?.explored) return [];
+    return [{ ...townCover(toScreen(hexToPixel(c.pos, HEX_SIZE)), HEX_SIZE * zoom), tile }];
+  });
 }

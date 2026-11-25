@@ -36,7 +36,7 @@ beforeEach(async () => {
   const target = { q: mine.pos.q + 1, r: mine.pos.r };
   const from = { q: mine.pos.q + 3, r: mine.pos.r };
   const enemy = view.players.find((p) => p.team !== view.team)!.id;
-  // Turn 1: quiet. Turn 2: a Byzantium Ranger shot our Soldier from two tiles away.
+  // Turn 1: quiet. Turn 2: a Byzantium Archer shot our Spearman from two tiles away.
   const quiet = report(1, [{ type: 'TechResearched', player: 0, tech: 'BronzeWorking' }]);
   const shot = report(2, [{
     type: 'Battle', attacker: 900, attacker_owner: enemy, defender: { kind: 'Unit', unit: mine.id, owner: 0, unit_kind: 'Spearman' }, at: target,
@@ -158,7 +158,7 @@ it('a World Age line in the report opens the score ledger from its control', () 
   expect(row.textContent).toContain('entered the');
   expect(row.textContent).toContain('Its card is open to every empire.');
   const links = [...row.querySelectorAll<HTMLButtonElement>('.rline-show-card')];
-  expect(links.map((b) => b.textContent)).toEqual(['Show score check', 'See how you win']);
+  expect(links.map((b) => b.textContent)).toEqual(['Show score check', 'Score ledger']);
   act(() => links[1].click());
   expect(useGame.getState().vpExpanded).toBe(true);
   // Every player can see the Age's score check again, not only the empire that opened it.

@@ -364,7 +364,7 @@ pub enum BuildingKind {
     GrandBazaar,
     #[serde(alias = "InferenceCore")]
     ResearchLab,
-    /// Mongols's Courier Hall: a pricey landmark, one per Mongols empire. While it stands,
+    /// Mongols's Yam Relay Station: a pricey landmark, one per Mongols empire. While it stands,
     /// its holder (whoever owns its city) scores the Mongols goal and every empire crosses
     /// the holder's land at Peace (`goals`, `GameState::passage_allowed`). Only Mongols can
     /// build it.
@@ -664,6 +664,8 @@ pub enum ImprovementKind {
 pub enum IndustryProject {
     Gold,
     Science,
+    /// Part of the city's Production becomes Food (every empire but Nile Egypt, which has Grow).
+    Food,
     /// Egypt's Nile: the city grows instead of building (`economy::nile`).
     Grow,
 }
@@ -718,13 +720,32 @@ pub enum Automation {
     Explore,
 }
 
-/// A human city's saved production delegation. This does not change tile claims.
+/// A human city's saved production delegation (Sam, 2026-11-22). This does not change tile claims.
+/// Military and Economy pick builds; Gold, Science and Food run that project as a standing stream.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum CityBuildFocus {
-    Balanced,
-    Science,
-    Gold,
+    /// The most advanced military units the empire can build with its strategic resources.
     Military,
+    /// Buildings and tile improvements; a project once nothing is left (`#[serde]` alias: the
+    /// Balanced focus it replaced).
+    #[serde(alias = "Balanced")]
+    Economy,
+    Gold,
+    Science,
+    /// Nile Egypt's Food stream is Grow.
+    Food,
+}
+
+impl CityBuildFocus {
+    /// The project a stream focus runs, or `None` for Military and Economy.
+    pub fn stream(self) -> Option<IndustryProject> {
+        match self {
+            CityBuildFocus::Gold => Some(IndustryProject::Gold),
+            CityBuildFocus::Science => Some(IndustryProject::Science),
+            CityBuildFocus::Food => Some(IndustryProject::Food),
+            CityBuildFocus::Military | CityBuildFocus::Economy => None,
+        }
+    }
 }
 
 /// Explicit standing orders, separate from the defense earned by any resting unit.

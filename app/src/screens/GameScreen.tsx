@@ -6,6 +6,7 @@ import { useEffect } from 'react';
 import { useGame } from '../store';
 import { MapCanvas } from '../map/MapCanvas';
 import { Minimap } from '../map/Minimap';
+import { PingControl } from '../ui/PingControl';
 import { TopBar } from '../ui/TopBar';
 import { VpTrack } from '../ui/VpTrack';
 import { UnitPanel } from '../ui/UnitPanel';
@@ -27,11 +28,10 @@ import { TurnReport } from '../ui/TurnReport';
 import { HandoffScreen } from '../ui/HandoffScreen';
 import { GameOver } from '../ui/GameOver';
 import { plainOrderError } from '../format';
-import { ScenarioBar, ScenarioResult } from '../ui/ScenarioHud';
 import { handleAircraftKey, handleGameKey } from './gameKeyHandler';
 import { handleOverlayKey, notePointerDown, returnFocusAfterPointer } from '../gameplayKeys';
 import { playerColor } from '../theme';
-import { FirstGameHints } from '../ui/FirstGameHints';
+import { Advisor } from '../ui/Advisor';
 import { ReclaimSeatButton } from '../ui/ReclaimSeatButton';
 import '../ui/sidebar.css';
 
@@ -89,10 +89,9 @@ export function GameScreen() {
       <MapCanvas />
       <div className="seat-frame" />
       <TopBar />
-      <ScenarioBar />
       <MomentLane />
       <ObjectiveSheet />
-      <aside className="right-sidebar paper-grain" aria-label="Empire sidebar"><SeatBar race={<VpTrack />} /><Minimap /></aside>
+      <aside className="right-sidebar paper-grain" aria-label="Empire sidebar"><SeatBar race={<VpTrack />} /><Minimap /><PingControl /></aside>
       <div className="command-docks">
       <div className="left-dock" data-overlay-slot="selection-dock">
         {selection && <button className="btn quiet selection-close touch-only" onClick={() => useGame.getState().select(null)}>Close selection</button>}
@@ -113,11 +112,10 @@ export function GameScreen() {
       <TechPanel />
       <CitiesOverview />
       <GameOver />
-      <ScenarioResult />
       <HandoffScreen />
       <AlarmScreen />
       <FreeTechsPrompt />
-      <FirstGameHints />
+      <Advisor />
       <WhyCard />
       {busy && (
         <div className={`busy${training?.waiting ? ' training-wait' : ''}`}>

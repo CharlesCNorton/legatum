@@ -246,13 +246,13 @@ it('a captured city is a major card with what you gain; a lost city is a sober l
   const rival = view.players.find((p) => p.team !== view.team)!;
   const taken: Event = { type: 'CityCaptured', city: city.id, from: rival.id, to: 0 };
   const [gain] = map([taken]);
-  expect(gain).toMatchObject({ tier: 'major', title: city.name, effect: `Captured from ${rival.name}`, kicker: 'A city taken', at: city.pos });
+  expect(gain).toMatchObject({ tier: 'major', title: city.name, effect: `Captured from ${empireOfPlayer(view, rival.id)}`, kicker: 'A city taken', at: city.pos });
   expect(gain.loss).toBeUndefined();
   expect(gain.details[0]).toBe(`Population ${city.population}.`);
   expect(soundHooksForMoments([gain], [taken])).toEqual({ cityCaptured: 'sting.major' });
   const lost: Event = { type: 'CityCaptured', city: city.id, from: 0, to: rival.id };
   const [loss] = map([lost]);
-  expect(loss).toMatchObject({ tier: 'major', effect: `Taken by ${rival.name}`, kicker: 'A city is lost', loss: true });
+  expect(loss).toMatchObject({ tier: 'major', effect: `Taken by ${empireOfPlayer(view, rival.id)}`, kicker: 'A city is lost', loss: true });
   // No triumphant hook: the consequential cityLost feedback stays in charge.
   expect(soundHooksForMoments([loss], [lost])).toEqual({});
   // Captures between two other empires are not ours to celebrate.
@@ -412,9 +412,14 @@ describe('reward emblems and gain lists', () => {
     for (const [event, emblem] of kinds) expect(map([event])[0]?.emblem, event.type).toBe(emblem);
   });
 
+  it('a generic goal card shows the faction’s own goal building where one is painted', () => {
+    expect(map([{ type: 'FactionGoalCompleted', player: 0, faction: 'Athens', vp: 2 }])[0]).toMatchObject({ title: 'An inheritance fulfilled', building: 'Library' });
+    expect(map([{ type: 'FactionGoalCompleted', player: 0, faction: 'Switzerland', vp: 2 }])[0]).toMatchObject({ title: 'An inheritance fulfilled', artSlug: 'goal-reserve' });
+  });
+
   describe('India’s Imperial Diwan', () => {
     it('holding the Diwan the first time is a legendary card and regaining it is a report line', () => {
-      expect(map([{ type: 'FactionGoalCompleted', player: 0, faction: 'India', vp: 2 }]).map((m) => [m.tier, m.title])).toEqual([['legendary', 'The Imperial Diwan']]);
+      expect(map([{ type: 'FactionGoalCompleted', player: 0, faction: 'India', vp: 2 }]).map((m) => [m.tier, m.title, m.building])).toEqual([['legendary', 'The Imperial Diwan', 'ImperialDiwan']]);
       expect(map([{ type: 'FactionGoalCompleted', player: 0, faction: 'India', vp: 2, again: true }])).toEqual([]);
       expect(map([{ type: 'FactionGoalLost', player: 0, faction: 'India', vp: 2 }])).toEqual([]);
     });
@@ -424,7 +429,7 @@ describe('reward emblems and gain lists', () => {
     it('the last retirement is the goal’s legendary card, earlier ones are major cards, and a rival’s retirement is no moment of yours', () => {
       const retired = (n: number): Event => ({ type: 'VeteranRetired', player: 0, unit: 3, kind: 'Spearman', city: 1, retired: n, of: 3 });
       expect(map([retired(1)]).map((m) => [m.tier, m.title, m.effect])).toEqual([['major', 'A veteran retires with honour', '1 of 3 retired']]);
-      expect(map([retired(3), { type: 'FactionGoalCompleted', player: 0, faction: 'Sparta', vp: 2 }]).map((m) => [m.tier, m.title])).toEqual([['legendary', 'The veterans are honoured']]);
+      expect(map([retired(3), { type: 'FactionGoalCompleted', player: 0, faction: 'Sparta', vp: 2 }]).map((m) => [m.tier, m.title, m.building])).toEqual([['legendary', 'The veterans are honoured', 'Agoge']]);
     });
     it('the Celts’ first call is legendary, a regained goal is a report line, a lost camp is a sober major card', () => {
       expect(map([{ type: 'FactionGoalCompleted', player: 0, faction: 'Celts', vp: 2 }]).map((m) => [m.tier, m.title])).toEqual([['legendary', 'The warbands gather']]);
@@ -466,7 +471,7 @@ describe('the Mongols’ Yam Relay Station moments', () => {
   const lost = (player: number): Event => ({ type: 'FactionGoalLost', player, faction: 'Mongols', vp: 2 });
   const got = (player: number, again?: boolean): Event => ({ type: 'FactionGoalCompleted', player, faction: 'Mongols', vp: 2, ...(again ? { again } : {}) });
   it('building it is the legendary moment, rebuilding a major card', () => {
-    expect(map([got(0)])[0]).toMatchObject({ tier: 'legendary', title: 'The Yam Network', deltas: [{ counter: 'vp', amount: 2 }] });
+    expect(map([got(0)])[0]).toMatchObject({ tier: 'legendary', title: 'The Yam Network', deltas: [{ counter: 'vp', amount: 2 }], building: 'YamRelayStation' });
     expect(map([got(0, true)])[0]).toMatchObject({ tier: 'major', title: 'The Yam Relay Station stands again' });
   });
   it('capturing it is a major card for the captor and a sober loss for the loser', () => {
@@ -479,13 +484,13 @@ describe('the Mongols’ Yam Relay Station moments', () => {
     expect(theirs[0]).toMatchObject({ tier: 'major', loss: true, partner: true, owner: 1 });
     expect(theirs[0].effect).toContain('−2 VP');
   });
-  it('a sacked Hall is a loss that says it can be built again; a rival-to-rival hand-over shows nothing', () => {
+  it('a sacked Station is a loss that says it can be built again; a rival-to-rival hand-over shows nothing', () => {
     const razed = map([{ type: 'CityRazed', city: 1, from: 0, by: 3, at: { q: 2, r: 2 } }, lost(0)]);
-    expect(razed.find((m) => m.loss)).toMatchObject({ title: 'The Yam Relay Station is sacked' });
+    expect(razed.find((m) => m.loss)).toMatchObject({ title: 'The Yam Relay Station is sacked', building: 'YamRelayStation' });
     expect(razed.find((m) => m.loss)!.details.join(' ')).toContain('built again');
     expect(map([got(2), lost(3)])).toEqual([]);
   });
-  it('a captured Hall city has one card, not the Hall’s and a plain capture', () => {
+  it('a captured Station city has one card, not the Station’s and a plain capture', () => {
     const after = structuredClone(view);
     const city = after.cities.find((c) => c.owner === 0)!;
     after.courier_halls = [{ of: 2, holder: 0, city: city.id }];
@@ -533,7 +538,7 @@ describe('world wonder moments', () => {
       { type: 'GreatWorkCompleted', player: 0, of: r.id, building: 'Pyramids', vp: 2, again: true },
     ], 0, view, withWonder(c.id, r.id));
     expect(moments).toHaveLength(1);
-    expect(moments[0]).toMatchObject({ tier: 'legendary', title: 'Pyramids', kicker: 'World wonder taken', place: c.name, effect: `+2 VP · captured from ${r.name}`, deltas: [{ counter: 'vp', amount: 2 }] });
+    expect(moments[0]).toMatchObject({ tier: 'legendary', title: 'Pyramids', kicker: 'World wonder taken', place: c.name, effect: `+2 VP · captured from ${empireOfPlayer(view, r.id)}`, deltas: [{ counter: 'vp', amount: 2 }] });
     expect(moments[0].loss).toBeFalsy();
   });
 
@@ -554,7 +559,7 @@ describe('world wonder moments', () => {
       { type: 'GreatWorkCompleted', player: r.id, of: 0, building: 'Pyramids', vp: 2, again: true },
     ], 0, view, withWonder(c.id, 0));
     expect(moments).toHaveLength(1);
-    expect(moments[0]).toMatchObject({ tier: 'major', loss: true, title: 'Pyramids', kicker: 'World wonder lost', place: c.name, effect: `−2 VP · taken by ${r.name}`, deltas: [{ counter: 'vp', amount: -2 }] });
+    expect(moments[0]).toMatchObject({ tier: 'major', loss: true, title: 'Pyramids', kicker: 'World wonder lost', place: c.name, effect: `−2 VP · taken by ${empireOfPlayer(view, r.id)}`, deltas: [{ counter: 'vp', amount: -2 }] });
   });
 
   it('a wonder destroyed with a razed city is a loss card that says it cannot be built again', () => {
@@ -565,5 +570,25 @@ describe('world wonder moments', () => {
     ], 0, view, view).filter((m) => m.title === 'Pyramids');
     expect(loss).toMatchObject({ tier: 'major', loss: true, kicker: 'World wonder destroyed', effect: '−2 VP · destroyed with its city' });
     expect(loss.details).toContain('It can never be built again.');
+  });
+});
+
+describe('goal city moments', () => {
+  it('a rival starting the Royal Tomb wears the tomb mark and says where it will stand', () => {
+    const after = structuredClone(view);
+    const me = after.players.find((p) => p.id === 0)!;
+    const rival = after.players.find((p) => p.team !== me.team)!;
+    rival.faction = 'Egypt';
+    after.tomb_sites = [{ of: rival.id, holder: rival.id, city: 99, at: { q: 3, r: 3 }, name: 'Thebes' }];
+    const [card] = momentsForTurn([{ type: 'TombStarted', player: rival.id, turns: 6 }], 0, view, after);
+    expect(card).toMatchObject({ goalMark: 'goal-royal-tomb', at: { q: 3, r: 3 } });
+    expect(card.effect).toMatch(/is building its Royal Tomb in Thebes: 2 VP to whoever holds the city\. 9 turns of work left\.$/);
+  });
+
+  it('the owner’s own Colonia Victrix card wears the laurel', () => {
+    const after = structuredClone(view);
+    after.players[0].faction = 'Rome';
+    const [card] = momentsForTurn([{ type: 'FactionGoalCompleted', player: 0, faction: 'Rome', vp: 2 }], 0, view, after);
+    expect(card).toMatchObject({ tier: 'legendary', title: 'Colonia Victrix', goalMark: 'goal-colonia' });
   });
 });

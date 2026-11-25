@@ -4,6 +4,7 @@ import type { Hex, Order, PlayerView, UnitView } from './types';
 import { distance, hexAt, hexEq, neighbors, tileIndex } from './hex';
 import { atWar, borderSteps, canEnter, neutralBlocker, relationWith } from './diplomacy';
 import { RAILWAY_MOVES, ROAD_MOVES, itemName, tileMoveCost } from './data';
+import { empireOfPlayer } from './empires';
 import { enemyReach } from './enemyReach';
 
 export type CostFn = (h: Hex) => number | null;
@@ -246,11 +247,11 @@ export interface RouteRisk {
   destination?: boolean;
 }
 
-/** The route warning, from the viewer's side: "Path may be blocked by your Soldier". */
+/** The route warning, from the viewer's side: "Path may be blocked by your Spearman". */
 export function routeRiskText(view: PlayerView, risk: RouteRisk): string {
   const owner = view.players?.find((p) => p.id === risk.unit.owner);
   const name = itemName({ kind: 'Unit', unit: risk.unit.kind }, owner?.faction);
-  const whose = risk.unit.owner === view.me ? 'your' : `${owner?.name ?? 'an ally'}'s`;
+  const whose = risk.unit.owner === view.me ? 'your' : `${owner ? empireOfPlayer(view, owner.id) : 'an ally'}'s`;
   const Whose = `${whose[0].toUpperCase()}${whose.slice(1)}`;
   if (risk.destination) return `${Whose} ${name} stays on that tile: this unit can't end its move on it and stops beside it.`;
   if (risk.reserved && risk.persistent && !risk.detour) return `Path blocked by ${whose} ${name}, which stops on this tile this turn: this unit waits behind it.`;

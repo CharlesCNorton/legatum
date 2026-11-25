@@ -8,7 +8,8 @@
 // grid, glyphs, towns, fog, territory, fog hatch, unexplored veil, known edge.
 import type { CityView, PlayerView, Terrain } from '../types';
 import { PLAYER_BORDER_DASH, rgba } from '../theme';
-import { CITY_CANVAS, CITY_GROUND, cityArtArrivals, cityArtEpoch, cityImage, cityStem, cityTier, markStem, spriteSize, traceCityArt, wallStem } from './cityArt';
+import { CITY_CANVAS, CITY_GROUND, WALLED_TOWN_SCALE, cityArtArrivals, drawCityCanvas, cityArtEpoch, cityImage, cityStem, cityTier, footingsStem, walledTown, markStem, spriteSize, traceCityArt, wallStem } from './cityArt';
+import { sitesOf } from './constructionSites';
 import { mapBorderColor, mapPlayerColor, type BorderSpec, type MapStyle } from './style';
 import { getBorderVariant, type BorderVariant } from './borderVariant';
 import { cacheLimit, evictionPlan, fallbackLevels } from './chunkCache';
@@ -73,6 +74,12 @@ const ZOOM_HOLD_MS = 250;
 const flushDeferredChunkDraws = typeof navigator !== 'undefined'
   && /AppleWebKit\//.test(navigator.userAgent)
   && !/(?:Chrome|Chromium|CriOS|Edg|OPR)\//.test(navigator.userAgent);
+/**
+ * Every how many chunk renders one is read back to see that the platform gave it a backing store. The readback waits
+ * for the GPU (about 3 ms on a fast Mac, a third of chunk rendering time during a zoom), and the blank chunks it
+ * guards against were WebKit's, so other engines are sampled a quarter as often.
+ */
+const BLANK_CHECK_EVERY = flushDeferredChunkDraws ? 6 : 24;
 /** Device px per world px of a cached level, or of the stand-in. */
 const scaleOf = (lv: number) => (lv === STANDIN ? LEVELS[OVERVIEW] : LEVELS[lv]);
 /** Time a frame may spend rendering chunks while some visible chunk has never been drawn (the veil would show through). */
@@ -143,6 +150,47 @@ function jitter(c: string, j: number): string {
   return `rgb(${f(r)},${f(g)},${f(b)})`;
 }
 
+let dispReach = -1;
+/** How far from 0.5 the two displacement noise tiles ever get (a bilinear sample stays inside the texels' range). */
+function displacementReach(dx: { data: ArrayLike<number> }, dy: { data: ArrayLike<number> }): number {
+  if (dispReach < 0) {
+    let far = 0;
+    for (const t of [dx, dy]) for (let i = 0; i < t.data.length; i++) far = Math.max(far, Math.abs(t.data[i] - 0.5));
+    dispReach = far;
+  }
+  return dispReach;
+}
+
+/**
+ * The field value past which the coast formula is settled: with `above`, the smallest value whose signed distance
+ * `ds` (increasing in the value) is at least `target`; otherwise the largest whose distance is at most `target`.
+ * Returns a value no field cell reaches (2 or -1) when the distance never gets there.
+ */
+export function coastBound(ds: (a: number) => number, target: number, above: boolean): number {
+  if (above ? ds(1) < target : ds(0) > target) return above ? 2 : -1;
+  let lo = 0;
+  let hi = 1;
+  for (let i = 0; i < 40; i++) {
+    const mid = (lo + hi) / 2;
+    if (above ? ds(mid) >= target : ds(mid) > target) hi = mid;
+    else lo = mid;
+  }
+  return above ? hi : lo;
+}
+
+/**
+ * Whether a tile's signature change (TerrainCache.update) touches what the blurred land fields are built from: the
+ * tile being explored, its terrain, a city standing on it (organic features keep clear of cities) or its organic
+ * region. Sight, owners, population, walls and eras repaint chunks but leave the fields as they are; in a late game
+ * sight changes on hundreds of tiles every turn, and rebuilding the whole map's fields for it was the slowest map
+ * frame of each turn.
+ */
+export function landChanged(before: number, after: number): boolean {
+  const LAND = 1 | (0xf << 2) | (0x7f << 25);
+  const city = (s: number) => ((s >>> 11) & 0x3f) !== 0;
+  return ((before ^ after) & LAND) !== 0 || city(before) !== city(after);
+}
+
 /** What payoff moments hold back from the cache (momentFx.ts `MomentHold`): `sig` changes when any of it does. */
 export interface TerrainHold {
   towns: ReadonlySet<number>;
@@ -156,7 +204,8 @@ const NO_HOLD: TerrainHold = { towns: new Set(), walls: new Set(), pop: new Map(
 
 interface Wall {
   bastion: boolean;
-  citadel: boolean;
+  /** Walls under construction: the painted footings, not the finished ring. */
+  building: boolean;
 }
 
 export class TerrainCache {
@@ -171,7 +220,7 @@ export class TerrainCache {
   private plans: { near: Plan; far: Plan } | null = null;
   private sig: Int32Array;
   private cityAt = new Map<number, CityView>();
-  /** Walled cities by tile (only they fire): the Switzerland' Customs Bastion has its own trace. */
+  /** Walled cities, and cities building Walls, by tile: the Swiss Alpine Redoubt has its own trace. */
   private wallAt = new Map<number, Wall>();
   /** Each empire's current era, 0-based (public): a city is painted in its owner's era. */
   private ownerEra = new Map<number, number>();
@@ -264,12 +313,19 @@ export class TerrainCache {
       cityAt.set(i, c);
       if (c.visible && c.walls) {
         const bastion = view.players.find((p) => p.id === c.owner)?.faction === 'Switzerland';
-        wallAt.set(i, { bastion, citadel: !!c.citadel });
+        wallAt.set(i, { bastion, building: false });
       }
+    }
+    for (const site of sitesOf(view)) {
+      if (!site.walls || wallAt.has(site.tile)) continue;
+      const bastion = view.players.find((p) => p.id === site.owner)?.faction === 'Switzerland';
+      wallAt.set(site.tile, { bastion, building: true });
     }
     let regions: Regions | null = null;
     if (this.organic) regions = computeRegions(this.w, this.h, (i) => (view.tiles[i].explored ? organicKind(view.tiles[i].terrain) : null));
     let dirty = false;
+    // Whether the land itself changed (see landChanged): only then are the blurred land fields rebuilt.
+    let land = false;
     let minX = Infinity;
     let minY = Infinity;
     let maxX = -Infinity;
@@ -287,10 +343,11 @@ export class TerrainCache {
         (c?.visible && c.is_capital ? 1 << 17 : 0) |
         (wallAt.has(i) ? 1 << 18 : 0) |
         (wallAt.get(i)?.bastion ? 1 << 19 : 0) |
-        (wallAt.get(i)?.citadel ? 1 << 20 : 0) |
+        (wallAt.get(i)?.building ? 1 << 20 : 0) |
         (c ? (Math.min(7, ownerEra.get(c.owner) ?? 0) + 1) << 21 : 0) |
         (regions ? organicSig(regions, i) << 25 : 0);
       if (s === this.sig[i]) continue;
+      if (landChanged(this.sig[i], s)) land = true;
       this.sig[i] = s;
       dirty = true;
       const x = centerX(i, this.w);
@@ -312,7 +369,7 @@ export class TerrainCache {
       this.regions = regions;
       this.plans = { near: planOrganic({ regions, isCity, tundraNear, far: false }), far: planOrganic({ regions, isCity, tundraNear, far: true }) };
     }
-    this.rebuildFields();
+    if (land) this.rebuildFields();
     this.staleNear(rects);
   }
 
@@ -707,8 +764,8 @@ export class TerrainCache {
         try {
           this.renderChunk(lv, cx, cy);
           // Every chunk is opaque, so a transparent centre means the platform did not give the canvas a backing store.
-          // A readback stalls the GPU, so only every sixth chunk is sampled; a blank one audits the rest of the level.
-          if (this.renders % 6 === 0 && this.isBlank(this.chunks.get(key)!)) {
+          // A readback stalls the GPU, so only one chunk in BLANK_CHECK_EVERY is sampled; a blank one audits the rest of the level.
+          if (this.renders % BLANK_CHECK_EVERY === 0 && this.isBlank(this.chunks.get(key)!)) {
             this.auditLevel = lv;
             throw new Error('blank chunk');
           }
@@ -1147,6 +1204,35 @@ export class TerrainCache {
     };
     const B = 16;
     const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
+    // Most pixels near a coast are still plainly land or plainly sea: past `aHi` the mask is full and no line is
+    // drawn, under `aLo` nothing is drawn at all (the same result the full formula gives, without its noise and
+    // probit lookups). A block whose field cells all lie on one side is settled without visiting its pixels.
+    const dsOf = (a: number) => SIG * (probit(a) - P0) * s;
+    const reach = Math.max(coastW, r1b, r2b);
+    const aHi = coastBound(dsOf, 0.5 + 1e-3, true);
+    const aLo = coastBound(dsOf, -0.5 - reach - 1e-3, false);
+    const half = DSC * displacementReach(dx, dy);
+    const Q = 4;
+    // Settles a square of pixels when every field value its pixels can read (its world box, widened by the
+    // displacement's reach) lies on one side: all land (the mask filled) or all open sea (nothing drawn).
+    const settled = (px: number, py: number, size: number): boolean => {
+      const c0 = Math.min(fw - 1, Math.max(0, Math.floor((x0 + px * inv - half - fx0) / G)));
+      const c1 = Math.min(fw - 1, Math.max(0, Math.floor((x0 + (px + size) * inv + half - fx0) / G) + 1));
+      const r0 = Math.min(fh - 1, Math.max(0, Math.floor((y0 + py * inv - half - fy0) / G)));
+      const r1 = Math.min(fh - 1, Math.max(0, Math.floor((y0 + (py + size) * inv + half - fy0) / G) + 1));
+      let lo = Infinity;
+      let hi = -Infinity;
+      for (let r = r0; r <= r1; r++)
+        for (let c = c0, o = r * fw + c0; c <= c1; c++, o++) {
+          const v = f[o];
+          if (v < lo) lo = v;
+          if (v > hi) hi = v;
+        }
+      if (hi <= aLo) return true;
+      if (lo < aHi) return false;
+      for (let y = py; y < py + size; y++) m32.fill(WHITE, y * CHUNK + px, y * CHUNK + px + size);
+      return true;
+    };
     for (let by = 0; by < CHUNK; by += B) {
       for (let bx = 0; bx < CHUNK; bx += B) {
         const wxa = x0 + bx * inv;
@@ -1164,31 +1250,43 @@ export class TerrainCache {
             for (let y = by; y < by + B; y++) m32.fill(full, y * CHUNK + bx, y * CHUNK + bx + B);
           continue;
         }
-        for (let y = by; y < by + B; y++) {
-          const wy = y0 + (y + 0.5) * inv;
-          for (let x = bx; x < bx + B; x++) {
-            const wx = x0 + (x + 0.5) * inv;
-            const ox = (sampleTile(dx, wx / 2, wy / 2) - 0.5) * DSC;
-            const oy = (sampleTile(dy, wx / 2, wy / 2) - 0.5) * DSC;
-            const a = fieldAt(wx + ox, wy + oy);
-            const ds = SIG * (probit(a) - P0) * s; // device px, positive on land
-            const mA = clamp01(0.5 + ds);
-            const k = y * CHUNK + x;
-            if (mA > 0) {
-              const v = Math.round(mA * 255);
-              m32[k] = (v << 24) | 0x00ffffff;
+        if (settled(bx, by, B)) continue;
+        // The same test on each quarter of the block's side, then pixel by pixel in what is left.
+        for (let qy = by; qy < by + B; qy += Q) {
+          for (let qx = bx; qx < bx + B; qx += Q) {
+            if (settled(qx, qy, Q)) continue;
+            for (let y = qy; y < qy + Q; y++) {
+              const wy = y0 + (y + 0.5) * inv;
+              for (let x = qx; x < qx + Q; x++) {
+                const wx = x0 + (x + 0.5) * inv;
+                const ox = (sampleTile(dx, wx / 2, wy / 2) - 0.5) * DSC;
+                const oy = (sampleTile(dy, wx / 2, wy / 2) - 0.5) * DSC;
+                const a = fieldAt(wx + ox, wy + oy);
+                if (a <= aLo) continue;
+                if (a >= aHi) {
+                  m32[y * CHUNK + x] = WHITE;
+                  continue;
+                }
+                const ds = SIG * (probit(a) - P0) * s; // device px, positive on land
+                const mA = clamp01(0.5 + ds);
+                const k = y * CHUNK + x;
+                if (mA > 0) {
+                  const v = Math.round(mA * 255);
+                  m32[k] = (v << 24) | 0x00ffffff;
+                }
+                if (ds > 1) continue;
+                const coast = clamp01(0.5 + ds + coastW) - mA;
+                const ring = (clamp01(0.5 + ds + r1b) - clamp01(0.5 + ds + r1a)) * wA + (clamp01(0.5 + ds + r2b) - clamp01(0.5 + ds + r2a)) * wA * 0.5;
+                const al = coast + (1 - coast) * ring;
+                if (al <= 0.004) continue;
+                const wc = ((1 - coast) * ring) / al;
+                const o = 4 * k;
+                l8[o] = cr + (wr - cr) * wc;
+                l8[o + 1] = cg + (wg - cg) * wc;
+                l8[o + 2] = cb + (wb - cb) * wc;
+                l8[o + 3] = al * 255;
+              }
             }
-            if (ds > 1) continue;
-            const coast = clamp01(0.5 + ds + coastW) - mA;
-            const ring = (clamp01(0.5 + ds + r1b) - clamp01(0.5 + ds + r1a)) * wA + (clamp01(0.5 + ds + r2b) - clamp01(0.5 + ds + r2a)) * wA * 0.5;
-            const al = coast + (1 - coast) * ring;
-            if (al <= 0.004) continue;
-            const wc = ((1 - coast) * ring) / al;
-            const o = 4 * k;
-            l8[o] = cr + (wr - cr) * wc;
-            l8[o + 1] = cg + (wg - cg) * wc;
-            l8[o + 2] = cb + (wb - cb) * wc;
-            l8[o + 3] = al * 255;
           }
         }
       }
@@ -1499,31 +1597,75 @@ export class TerrainCache {
       const ci = this.cityAt.get(i);
       const t = this.tiles[i];
       if (!ci || !t.explored || this.hold.towns.has(i) || t.visible !== inSight) continue;
-      const era = this.hold.era.get(i) ?? this.ownerEra.get(ci.owner) ?? 0;
-      const tier = cityTier(this.hold.pop.get(i) ?? ci.population);
       g.save();
       g.translate(centerX(i, this.w), centerY(i, this.w));
-      g.imageSmoothingEnabled = true;
-      g.imageSmoothingQuality = 'high';
       g.globalAlpha = t.visible ? 1 : 0.75;
-      const stem = far ? markStem(tier) : cityStem(era, tier);
-      const px = CITY_WORLD * s;
-      const img = stem ? cityImage(stem, spriteSize(px)) : null;
-      if (img) this.drawSprite(g, img);
-      const wall = this.hold.walls.has(i) ? undefined : this.wallAt.get(i);
-      if (wall) {
-        const wstem = wallStem(era, wall.bastion);
-        const wimg = wstem ? cityImage(wstem, spriteSize(px)) : null;
-        if (wimg) this.drawSprite(g, wimg);
-      }
+      this.drawTown(g, i, ci, s, far);
       g.restore();
     }
   }
 
-  /** One city-art canvas, its ground oval centred on the hex (a little low, so tall roofs rise into the hex's top half). */
-  private drawSprite(g: Ctx2D, img: CanvasImageSource) {
+  /**
+   * Stamps the towns `near` accepts onto a screen canvas (CSS px transform already set), opaque: the shape of each painted
+   * town and its walls, for art drawn later over the land to cut itself away from (a natural wonder's painting).
+   */
+  stampTowns(g: CanvasRenderingContext2D, cam: { x: number; y: number; zoom: number }, w: number, h: number, dpr: number, near: (tile: number) => boolean) {
+    const far = isFar(HEX_SIZE * cam.zoom);
+    for (const [i, ci] of this.cityAt) {
+      const t = this.tiles[i];
+      if (!t?.explored || this.hold.towns.has(i) || !near(i)) continue;
+      g.save();
+      g.translate((centerX(i, this.w) - cam.x) * cam.zoom + w / 2, (centerY(i, this.w) - cam.y) * cam.zoom + h / 2);
+      g.scale(cam.zoom, cam.zoom);
+      this.drawTown(g, i, ci, cam.zoom * dpr, far);
+      g.restore();
+    }
+  }
+
+  /** One town in world units about its hex centre, at `s` device px per world px: the mark zoomed out, else the painted town in its ring. */
+  private drawTown(g: Ctx2D | CanvasRenderingContext2D, i: number, ci: CityView, s: number, far: boolean) {
+    const era = this.hold.era.get(i) ?? this.ownerEra.get(ci.owner) ?? 0;
+    const tier = cityTier(this.hold.pop.get(i) ?? ci.population);
+    g.imageSmoothingEnabled = true;
+    g.imageSmoothingQuality = 'high';
+    const stem = far ? markStem(tier) : cityStem(era, tier);
+    const size = spriteSize(CITY_WORLD * s);
+    const img = stem ? cityImage(stem, size) : null;
+    const rstem = this.ringStem(i, era);
+    const ring = rstem ? cityImage(rstem, size) : null;
+    if (far || !rstem) {
+      if (img) this.drawSprite(g, img);
+      if (ring) this.drawSprite(g, ring);
+      return;
+    }
+    // The town stands inside its ring: the far wall behind it, the near wall in front (never a ring painted across the houses).
+    if (ring) this.drawSprite(g, ring, 'back');
+    // Clipped to the ring's court, so no house stands on a rampart; until the ring loads, just the scaled town.
+    const fitted = img && ring ? walledTown(img, ring) : null;
+    if (fitted) this.drawSprite(g, fitted);
+    else if (img) this.drawSprite(g, img, 'all', WALLED_TOWN_SCALE);
+    if (ring) this.drawSprite(g, ring, 'front');
+  }
+
+  /**
+   * The wall ring a town shows: finished Walls in its owner's era, else the footings of Walls being built (also while a
+   * finishing moment holds the finished ring back), else none.
+   */
+  private ringStem(i: number, era: number): string | null {
+    const wall = this.wallAt.get(i);
+    if (!wall) return null;
+    return wall.building || this.hold.walls.has(i) ? footingsStem(era, wall.bastion) : wallStem(era, wall.bastion);
+  }
+
+  /**
+   * One city-art canvas, its ground oval centred on the hex (a little low, so tall roofs rise into the hex's top half),
+   * drawn at `scale` about the oval's centre, whole or as a wall ring's `back` or `front` part (`drawCityCanvas`).
+   */
+  private drawSprite(g: Ctx2D | CanvasRenderingContext2D, img: HTMLImageElement | HTMLCanvasElement, part: 'all' | 'back' | 'front' = 'all', scale = 1) {
     const k = CITY_WORLD / CITY_CANVAS;
-    g.drawImage(img, -(CITY_GROUND.x0 + CITY_GROUND.x1) / 2 * k, -CITY_GROUND.middle * k + CITY_DROP, CITY_WORLD, CITY_WORLD);
+    const size = CITY_WORLD * scale;
+    const x = -(CITY_GROUND.x0 + CITY_GROUND.x1) / 2 * k * scale, y = -CITY_GROUND.middle * k * scale + CITY_DROP;
+    drawCityCanvas(g, img, x, y, size, part);
   }
 
   private drawTerritory(g: Ctx2D, tiles: number[], x0: number, y0: number, s: number, px: number) {

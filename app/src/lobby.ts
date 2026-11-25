@@ -34,6 +34,8 @@ export interface Lobby {
   turnLimit: number | null;
   /** Barbarian camps (core `GameSetup::barbarians`). On for new games; missing reads as on. */
   barbarians?: boolean;
+  /** The AI-only teams start in Alliances of two (core `GameSetup::ai_alliances`). Co-op turns it on; missing reads as off. */
+  aiAlliances?: boolean;
   seed: string;
   /** Default for new AI seats; setting it applies to every AI seat. */
   difficulty: AiDifficulty;
@@ -80,7 +82,7 @@ export const offeredLevels = (): AiLevel[] => levelsFor(trainingOffered());
 /** Stable across releases: the previous lobby had no difficulty preference to carry forward. */
 export const LOBBY_DIFFICULTY_KEY = 'legatum.lobby.difficulty';
 
-interface DifficultyPreference { level: AiLevel; seats?: Record<string, AiLevel> }
+interface DifficultyPreference { level: AiLevel }
 const isLevel = (value: unknown): value is AiLevel => offeredLevels().includes(value as AiLevel);
 /** A stored Training (or the older `HardSearch`) reads as Hard unless the developer switch is on. */
 const storedLevel = (value: unknown): unknown => value === 'HardSearch' || value === 'Training' ? (trainingOffered() ? 'Training' : 'Hard') : value;
@@ -91,24 +93,17 @@ export function readDifficultyPreference(): DifficultyPreference | null {
     if (raw) {
       const value = JSON.parse(raw) as DifficultyPreference;
       const level = storedLevel(value?.level);
-      if (value && isLevel(level)) return {
-        level,
-        seats: Object.fromEntries(Object.entries(value.seats ?? {}).map(([seat, l]) => [seat, storedLevel(l)]).filter(([, l]) => isLevel(l))),
-      };
+      // Older preferences may have per-seat overrides. The saved game-wide level wins.
+      if (value && isLevel(level)) return { level };
     }
   } catch { /* Storage can be unavailable. */ }
   return null;
 }
 
 export function rememberDifficulty(lobby: Lobby): boolean {
-  const seats: Record<string, AiLevel> = Object.fromEntries(Object.entries(readDifficultyPreference()?.seats ?? {})
-    .filter(([key]) => !key.startsWith(`${lobby.mode}:`)));
-  lobby.slots.forEach((slot, i) => {
-    if (slot.kind === 'ai' && levelOf(slot) !== levelOf(lobby)) seats[`${lobby.mode}:${i}`] = levelOf(slot);
-  });
   try {
     if (!globalThis.localStorage) return false;
-    globalThis.localStorage.setItem(LOBBY_DIFFICULTY_KEY, JSON.stringify({ level: levelOf(lobby), seats }));
+    globalThis.localStorage.setItem(LOBBY_DIFFICULTY_KEY, JSON.stringify({ level: levelOf(lobby) }));
     return true;
   } catch { return false; }
 }
@@ -188,6 +183,8 @@ function ai(i: number, team: number, level: AiLevel): Slot {
  */
 export function applyPreset(l: Lobby, preset: PresetId): Lobby {
   if (preset === 'custom') return { ...l, preset };
+  // Co-op: two humans on one team would face six uncoordinated AIs, so the AIs start allied in pairs.
+  const aiAlliances = preset === 'coop';
   const humans = l.mode === 'solo' ? 1 : 2;
   const keep = l.slots.filter((s) => humanKind(s.kind));
   const slots: Slot[] = [];
@@ -206,19 +203,15 @@ export function applyPreset(l: Lobby, preset: PresetId): Lobby {
       });
     } else slots.push(ai(i, team, levelOf(l)));
   }
-  return { ...l, preset, slots, mapSize: typeof l.mapSize === 'string' ? recommendedSize(slots.length) : l.mapSize };
+  return { ...l, preset, aiAlliances, slots, mapSize: typeof l.mapSize === 'string' ? recommendedSize(slots.length) : l.mapSize };
 }
 
 export function newLobby(mode: LobbyMode, seed: string): Lobby {
   const preference = readDifficultyPreference();
   const base: Lobby = { mode, preset: 'custom', slots: [], mapSize: 'Standard', turnLimit: null, barbarians: true, seed, ...levelFields(preference?.level ?? 'Hard') };
   const lobby = applyPreset(base, mode === 'solo' ? 'ffa' : 'coop');
-  const restored = { ...lobby, slots: lobby.slots.map((slot, i) => {
-    const override = preference?.seats?.[`${mode}:${i}`];
-    return slot.kind === 'ai' && isLevel(override) ? { ...slot, ...levelFields(override) } : slot;
-  }) };
-  rememberDifficulty(restored);
-  return restored;
+  rememberDifficulty(lobby);
+  return lobby;
 }
 
 /** Edit one seat. Changing who sits there or their team makes the preset Custom. */
@@ -386,6 +379,16 @@ export function teams(l: Lobby): TeamSummary[] {
   return out;
 }
 
+/** Teams made only of AI seats: the ones `aiAlliances` puts into pairs. */
+export function aiOnlyTeams(l: Lobby): number {
+  return teams(l).filter((t) => t.slots.every((i) => l.slots[i].kind === 'ai')).length;
+}
+
+/** True when the setup turns AI alliances on: the same condition `buildSetup` uses. */
+export function aiAlliancesOn(l: Lobby): boolean {
+  return !!l.aiAlliances && aiOnlyTeams(l) >= 2;
+}
+
 /** Problems that block starting the game, locally or on the online host. */
 export function problems(l: Lobby): string[] {
   const p: string[] = [];
@@ -426,5 +429,5 @@ export function buildSetup(l: Lobby): GameSetup {
     return p;
   });
   const size = mapDimensions(l.mapSize);
-  return { seed: l.seed, width: size.width, height: size.height, players, turn_limit: l.turnLimit, barbarians: l.barbarians !== false };
+  return { seed: l.seed, width: size.width, height: size.height, players, turn_limit: l.turnLimit, barbarians: l.barbarians !== false, ...(aiAlliancesOn(l) ? { ai_alliances: true } : {}) };
 }
