@@ -29,8 +29,8 @@ All paths below are relative to `binaries/data/mods/public/art/` at that commit.
 | `animation/biped/infantry/death_b.dae` | death |
 
 `actors/units/athenians/infantry_spearman_b.xml` informed the assembly. Round one
-also imported `meshes/props/helmet/hele_pilos_a1.dae`, `hoplite/attack_melee_04.dae`
-and `death_a.dae`; those meshes/clips are excluded from the delivered GLB.
+also imported `meshes/props/helmet/hele_pilos_a1.dae`, `animation/biped/infantry/hoplite/attack_melee_04.dae`
+and `animation/biped/infantry/death_a.dae`; those meshes/clips are excluded from the delivered GLB.
 The preserved source download inventory and hashes are in
 `~/LegatumRuns/anim-pilot/oad/PROVENANCE.md`; its old local-only permission text
 is superseded by Sam's explicit round-two approval.
@@ -38,9 +38,11 @@ is superseded by Sam's explicit round-two approval.
 Changes: removed unused helpers; merged body and cloak into one skinned mesh;
 retained strongest four native weights and normalized them; attached rigid props
 directly to head, weapon_R and shield_arm; converted to metres, Y-up and +Z;
-resampled to 30 fps; closed idle/walk endpoints; corrected body floor penetration;
+resampled to 30 fps; closed idle/walk poses and incoming tangents; corrected body and prop floor penetration;
 retained the authored additive torso/neck hit with the shield moving rigidly.
 Replaced materials with a new flat pigment atlas: bronze armour, crimson crest
 and cloak, linen skirt, leather and a twelve-ray sunburst aspis. No upstream
 texture files, baked illumination, AO, normal maps or camera projection are used.
-The crest, shield rim and cloak trim reference a material named `team`.
+The crest, shield rim and cloak trim reference a material named `team`, using neutral atlas samples and a crimson base-colour factor. The spear grip location was shifted 0.109 m along the shaft; weapon and shield sockets rotate for floor clearance during the fall. The body rises at most a few centimetres at the end to seat the helmet crest instead of intersecting the floor.
+
+The accompanying `source-manifest.json` records SHA-256 hashes of the preserved input and every exact source file used in this round.

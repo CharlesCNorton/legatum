@@ -1,0 +1,74 @@
+{
+  "upstream_commit": "61a3b9507d974084e6badb88a0826bd89a6d5b8b",
+  "root": "~/LegatumRuns/anim-pilot",
+  "files": {
+    "oad/hoplite.blend": {
+      "bytes": 2635953,
+      "sha256": "fb73fb845bd7e2d7cb2b8214486fc2ad4ca860ab557362adb3df61dae5056451"
+    },
+    "oad/import_hoplite.py": {
+      "bytes": 9750,
+      "sha256": "dee0d88d4e19d0b6ccd2a798e0ac5af3e5bbe74a4b4724a2ac9a32420c3a6228"
+    },
+    "oad/import-report.json": {
+      "bytes": 3167,
+      "sha256": "f44bc53eb49e1134739ea13bb5ed54a3d924451807370411c5adcdcc7054be0e"
+    },
+    "oad/src/binaries/data/mods/public/art/meshes/skeletal/new/m_tunic_short.dae": {
+      "bytes": 226271,
+      "sha256": "749666d1046f4a0f2b3f42fed0715ecc3bd5a00a8514acfb521a0b3dd3e93e98"
+    },
+    "oad/src/binaries/data/mods/public/art/meshes/props/new/dude_head.dae": {
+      "bytes": 24596,
+      "sha256": "cd9b853b175feb8d89ada520ca5079edfa2de8e9aa20292c1d0ad3366740795e"
+    },
+    "oad/src/binaries/data/mods/public/art/meshes/props/helmet/hele_corinthian_a.dae": {
+      "bytes": 45846,
+      "sha256": "4cf38c57649b615b5b0e93c360c3a983aa7c56d2c6c0d6f937bb24ab4bc4968c"
+    },
+    "oad/src/binaries/data/mods/public/art/meshes/props/helmet/props/hele_crest_a.dae": {
+      "bytes": 27081,
+      "sha256": "7fe5cdbd4afc0e7b9ec68b6eec4eea925412e92bb153d13ce53b88e572ed397c"
+    },
+    "oad/src/binaries/data/mods/public/art/meshes/props/helmet/props/hele_crest_hair_a.dae": {
+      "bytes": 20833,
+      "sha256": "74ff3bafaa344f5284ff543f4fda520d4cdc5b108c7e8c35562f2210d5197a46"
+    },
+    "oad/src/binaries/data/mods/public/art/meshes/props/new/capes/cape_hd_hoplite.dae": {
+      "bytes": 115634,
+      "sha256": "baca6e0877ab1e971e5fa9d6b5baf3bee4311df19a7e33ee95e8f7d2db4c0f1b"
+    },
+    "oad/src/binaries/data/mods/public/art/meshes/props/spear_hoplite.dae": {
+      "bytes": 12889,
+      "sha256": "14c44f11ea2a33cd6cec8311125b3dc6013480e029f5e271ebbc0159bd8eb8fd"
+    },
+    "oad/src/binaries/data/mods/public/art/meshes/props/shield/aspis_01_front.dae": {
+      "bytes": 30957,
+      "sha256": "85e7d300af2072da5f69a3ff17de83609025f2031d49256e7004b51378cf19f1"
+    },
+    "oad/src/binaries/data/mods/public/art/meshes/props/shield/aspis_01_back.dae": {
+      "bytes": 14459,
+      "sha256": "a71d5714a6683093118dc1cbc142eec7439736609b85cae23082350dfe9d97f4"
+    },
+    "oad/src/binaries/data/mods/public/art/meshes/props/shield/props/aspis_handgrip_01.dae": {
+      "bytes": 8900,
+      "sha256": "a13ce210ea3672409745cdc7f6bf2d1efb6b35447100ad656b037f08a73ef9aa"
+    },
+    "oad/src/binaries/data/mods/public/art/animation/biped/infantry/hoplite/idle_relax_01.dae": {
+      "bytes": 1392557,
+      "sha256": "d3d24e10285d95c7fbce3ccffe078447e24604e3a091087bf63b5b5f7eb53f32"
+    },
+    "oad/src/binaries/data/mods/public/art/animation/biped/infantry/hoplite/walk_relax.dae": {
+      "bytes": 1056959,
+      "sha256": "2386226422203d277cac7c35fda725e60365471d23f32962f9f277b3e43c09a7"
+    },
+    "oad/src/binaries/data/mods/public/art/animation/biped/infantry/hoplite/attack_melee_05.dae": {
+      "bytes": 971958,
+      "sha256": "daaf7edad547587c6527e0ae613af2d49af5d0d13baa6fadfa0ceb96aa0f4319"
+    },
+    "oad/src/binaries/data/mods/public/art/animation/biped/infantry/death_b.dae": {
+      "bytes": 1102893,
+      "sha256": "46793fd672b98bdd301b4e4fe9607634d2b05a639b6651cea50419497b1eda9d"
+    }
+  }
+}

@@ -1,0 +1,88 @@
+"""Render the delivered GLB (never the authoring blend) with fixed map camera.
+
+--quick renders four diagnostic poses per clip. Full run writes sprite samples
+and all 36 native attack frames. Package with package.py afterwards.
+"""
+import bpy, sys, os, json, math
+from pathlib import Path
+from mathutils import Matrix, Vector
+from bpy_extras.object_utils import world_to_camera_view
+UNIT=Path(__file__).resolve().parent
+ROOT=Path(os.environ.get('ANIM_ROOT',Path.home()/'LegatumRuns/anim-pilot'))
+WORK=ROOT/'oad/r2';OUT=WORK/'frames';OUT.mkdir(parents=True,exist_ok=True)
+QUICK='--quick' in sys.argv
+sys.path.insert(0,str(Path(__file__).resolve().parents[2]))
+from validate_glb import GLB
+source=GLB(UNIT/'spearman.glb')
+gltf_clips={a['name']:a for a in source.doc['animations']}
+axis=Matrix.Rotation(-math.pi/2,4,'X')
+bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
+bpy.context.scene.render.fps=30
+bpy.ops.import_scene.gltf(filepath=str(UNIT/'spearman.glb'),bone_heuristic='BLENDER')
+s=bpy.context.scene;s.render.fps=30
+rig=next(o for o in s.objects if o.type=='ARMATURE')
+meshes=[o for o in s.objects if o.type=='MESH' and not any(c.hide_render for c in o.users_collection)]
+actions={a.name.split('|')[-1]:a for a in bpy.data.actions}
+print('ACTIONS',list(actions),flush=True)
+rigid={}
+for i,node in enumerate(source.doc['nodes']):
+    if 'mesh' in node and 'skin' not in node:
+        ob=bpy.data.objects[node['name']];ob.parent=None;rigid[i]=ob
+def pose(name,frame):
+    s.frame_set(int(frame),subframe=frame%1)
+    worlds=source.worlds(gltf_clips[name],(frame-actions[name].frame_range[0])/30)
+    for i,ob in rigid.items():
+        w=worlds[i];ob.matrix_world=axis.inverted() @ Matrix([[w[c*4+r] for c in range(4)] for r in range(4)]) @ axis
+    bpy.context.view_layer.update()
+
+# Disable imported NLA: the explicitly selected action is the sole motion source.
+for track in rig.animation_data.nla_tracks:track.mute=True
+# Match the old game camera pitch; view from the spear arm side.
+base=Vector((4,-6.265,1.8));direction=base.normalized()
+bpy.ops.object.camera_add();camera=bpy.context.object;camera.data.type='ORTHO';s.camera=camera
+camera.rotation_euler=(-direction).to_track_quat('-Z','Y').to_euler()
+right=camera.rotation_euler.to_matrix() @ Vector((1,0,0));up=camera.rotation_euler.to_matrix() @ Vector((0,1,0))
+bounds=[1e6,1e6,-1e6,-1e6];worldbounds={}
+for name,a in actions.items():
+    rig.animation_data.action=a;rig.animation_data.action_slot=a.slots[0]
+    lo=1e9;hi=-1e9
+    for frame in range(round(a.frame_range[0]),round(a.frame_range[1])+1):
+        pose(name,frame);dep=bpy.context.evaluated_depsgraph_get()
+        for o in meshes:
+            ev=o.evaluated_get(dep);me=ev.to_mesh()
+            for v in me.vertices:
+                p=ev.matrix_world @ v.co;x=p.dot(right);y=p.dot(up)
+                bounds=[min(bounds[0],x),min(bounds[1],y),max(bounds[2],x),max(bounds[3],y)]
+                lo=min(lo,p.z);hi=max(hi,p.z)
+            ev.to_mesh_clear()
+    worldbounds[name]=[lo,hi]
+# One camera for every clip and frame, including the full fall and spear.
+centre=right*((bounds[0]+bounds[2])/2)+up*((bounds[1]+bounds[3])/2)
+camera.location=centre+direction*8;camera.data.ortho_scale=max(bounds[2]-bounds[0],bounds[3]-bounds[1])*1.14
+s.render.engine='CYCLES';s.cycles.device='CPU';s.cycles.samples=12;s.cycles.use_denoising=True;s.cycles.max_bounces=2
+s.render.resolution_x=320 if QUICK else 160;s.render.resolution_y=s.render.resolution_x;s.render.resolution_percentage=100
+s.render.film_transparent=True;s.render.image_settings.file_format='PNG';s.render.image_settings.color_mode='RGBA';s.view_settings.view_transform='Standard'
+s.world.use_nodes=True;s.world.node_tree.nodes.get('Background').inputs[0].default_value=(.65,.65,.65,1);s.world.node_tree.nodes.get('Background').inputs[1].default_value=.5
+for loc,energy,size in [((-3,-4,7),220,5),((4,-1,4),90,4)]:
+    bpy.ops.object.light_add(type='AREA',location=loc);light=bpy.context.object;light.data.energy=energy;light.data.shape='DISK';light.data.size=size;light.rotation_euler=(Vector((0,0,1))-light.location).to_track_quat('-Z','Y').to_euler()
+# Cream plane receives real-time-style lighting; no baked contact or AO.
+bpy.ops.mesh.primitive_plane_add(size=200)
+floor=bpy.context.object;floor.name='Review floor';floor.is_shadow_catcher=True;mat=bpy.data.materials.new('cream');mat.use_nodes=True
+mat.node_tree.nodes.get('Principled BSDF').inputs['Base Color'].default_value=(.938,.905,.807,1);mat.node_tree.nodes.get('Principled BSDF').inputs['Roughness'].default_value=1;floor.data.materials.append(mat)
+counts={'idle':12,'walk':16,'attack':18,'hit':8,'death':16}
+manifest={'camera':{'location':list(camera.location),'target':list(centre),'ortho_scale':camera.data.ortho_scale,'pitch_degrees':math.degrees(math.asin(direction.z))},'bounds':worldbounds,'clips':{}}
+for name,a in actions.items():
+    rig.animation_data.action=a;rig.animation_data.action_slot=a.slots[0]
+    start,end=a.frame_range;count=4 if QUICK else counts[name]
+    directory=OUT/('quick-'+name if QUICK else name);directory.mkdir(exist_ok=True)
+    loop=name in {'idle','walk'}
+    for i in range(count):
+        f=start+(end-start)*i/(count if loop else count-1)
+        pose(name,f);s.render.filepath=str(directory/f'{i:03}.png');bpy.ops.render.render(write_still=True)
+    manifest['clips'][name]={'count':counts[name],'duration':(end-start)/30,'loop':loop}
+    if name=='attack' and not QUICK:
+        directory=OUT/'attack-fullrate';directory.mkdir(exist_ok=True)
+        for i,f in enumerate(range(round(start),round(end)+1)):
+            pose(name,f);s.render.filepath=str(directory/f'{i:03}.png');bpy.ops.render.render(write_still=True)
+(WORK/('quick-render.json' if QUICK else 'render.json')).write_text(json.dumps(manifest,indent=2))
+print('RENDER_REPORT',json.dumps(manifest),flush=True)

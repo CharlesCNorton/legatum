@@ -56,8 +56,22 @@ class GLB:
         if animation:
             for ch in animation['channels']:
                 sampler=animation['samplers'][ch['sampler']];times=self.accessor(sampler['input'])
-                values=self.accessor(sampler['output']);idx=min(range(len(times)),key=lambda i:abs(times[i][0]-time))
-                nodes[ch['target']['node']][ch['target']['path']]=values[idx]
+                values=self.accessor(sampler['output'])
+                idx=max(0,min(len(times)-1,bisect.bisect_right([t[0] for t in times],time)-1))
+                value=values[idx]
+                if idx+1<len(times) and sampler.get('interpolation','LINEAR')=='LINEAR':
+                    t=max(0,min(1,(time-times[idx][0])/(times[idx+1][0]-times[idx][0])))
+                    a=values[idx];b=values[idx+1]
+                    if ch['target']['path']=='rotation':
+                        dot=sum(x*y for x,y in zip(a,b))
+                        if dot<0:b=tuple(-x for x in b);dot=-dot
+                        if dot<.9995:
+                            angle=math.acos(min(1,dot));denom=math.sin(angle)
+                            value=tuple((x*math.sin((1-t)*angle)+y*math.sin(t*angle))/denom for x,y in zip(a,b))
+                        else:
+                            v=tuple(x*(1-t)+y*t for x,y in zip(a,b));length=math.sqrt(sum(x*x for x in v));value=tuple(x/length for x in v)
+                    else:value=tuple(x*(1-t)+y*t for x,y in zip(a,b))
+                nodes[ch['target']['node']][ch['target']['path']]=value
         worlds={}
         def walk(i,parent):
             worlds[i]=multiply(parent,matrix(nodes[i]))
@@ -98,7 +112,8 @@ def validate(path):
     skinned=[i for i,n in enumerate(nodes) if 'skin' in n]
     require(len(skinned)==1 and len(d.get('skins',[]))==1,'Must have exactly one skinned mesh')
     joints=set(j for skin in d.get('skins',[]) for j in skin['joints'])
-    require(len(joints)<=40,'More than 40 joints')
+    require(all(len(skin['joints'])<=40 for skin in d.get('skins',[])),'More than 40 joints')
+    require(all(len(set(skin['joints']))==len(skin['joints']) for skin in d.get('skins',[])),'Duplicate joint index')
     tris=0;team_regions=[]
     for ni,node in enumerate(nodes):
         require(all(abs(v)>1e-6 for v in node.get('scale',[1,1,1])),'Zero-scaled node')
@@ -155,6 +170,9 @@ def validate(path):
             loop_error=max(loop_error,diff)
         if a['name'] in {'idle','walk'}:require(loop_error<1e-4,f'{a["name"]} loop endpoint mismatch: {loop_error}')
         clips[a['name']]={'duration_s':round(duration,6),'fps':30,'loop_endpoint_max_error':round(loop_error,7)}
+    if any(len(skin['joints'])!=d['accessors'][skin['inverseBindMatrices']]['count'] for skin in d.get('skins',[])):
+        errors.append('Inverse-bind count must equal joint count')
+        return {'valid':False,'errors':errors}
     idle=next((a for a in animations if a['name']=='idle'),None)
     pts=[p for _,p in g.vertices(idle,0,exclude=('spear',))]
     minimum=[min(p[i] for p in pts) for i in range(3)];maximum=[max(p[i] for p in pts) for i in range(3)]

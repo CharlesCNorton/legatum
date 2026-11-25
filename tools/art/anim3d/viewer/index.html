@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Legatum · Spearman review</title>
+<style>
+  body { margin:0; background:#f8f4e8; color:#493b2a; font:16px Georgia,serif; }
+  canvas { display:block; width:100vw; height:100vh; }
+  #controls { position:fixed; left:20px; top:16px; display:flex; align-items:center; gap:12px; padding:12px; background:#f8f4e8e8; }
+  button,select { font:inherit; color:inherit; padding:6px 10px; background:#eee5d2; border:1px solid #ab9672; }
+  #status { position:fixed; left:20px; bottom:16px; max-width:80vw; }
+  .record #controls,.record #status { display:none; }
+</style>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}
+</script>
+<div id="controls">
+  <strong>Spearman</strong>
+  <select id="clip" aria-label="Animation"><option>idle</option><option>walk</option><option>attack</option><option>hit</option><option>death</option></select>
+  <button id="pause">Pause</button>
+  <button id="orbit">Orbit</button>
+  <button id="map">Map camera</button>
+  <label>Team <input id="team" type="color" value="#a52627"></label>
+</div>
+<div id="status">Loading the real-time GLB…</div>
+<script type="module" src="viewer.mjs"></script>
+</html>
