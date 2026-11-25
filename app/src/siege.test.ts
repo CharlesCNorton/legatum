@@ -70,6 +70,17 @@ describe('cities under attack', () => {
     expect(forecast.detail).toContain('Nothing garrisons it');
   });
 
+  it('Siege makes the attackers hit the Walls bar in full, not at half', () => {
+    const { view, own, attackers } = setup();
+    const plain = captureForecast(view, own, view.units.filter((u) => attackers.includes(u.id)));
+    const sieged = { ...view, units: view.units.map((u) => attackers.includes(u.id) ? { ...u, siege: true } : u) };
+    const withSiege = captureForecast(sieged, own, sieged.units.filter((u) => attackers.includes(u.id)));
+    expect(plain.wallsPerTurn).toBeGreaterThan(0);
+    // Siege covers the Walls: the full hit lands on the bar, and the Walls' strength no longer counts.
+    expect(withSiege.wallsPerTurn).toBe(withSiege.perTurn);
+    expect(withSiege.wallsPerTurn).toBeGreaterThan(plain.wallsPerTurn * 2 - 2);
+  });
+
   it('counts the turns it holds, and a garrison adds the turns it takes to fall', () => {
     const { view: walled, own, attackers } = setup();
     // Breakable Walls (rules 62): with the Walls already broken, only the health stands.

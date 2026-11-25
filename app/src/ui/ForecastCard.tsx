@@ -479,6 +479,17 @@ function Side({
       </div>
       <div className="fside-owner">{owner}{era !== undefined && <> <EraTab era={era} /></>}</div>
       <div className="fside-str">{right ? <><span className="fside-str-label">Strength</span>{strength}</> : <>{strength}<span className="fside-str-label">Strength</span></>}</div>
+      {walls && <>
+        {/* The Walls take the hit first, so their stone bar and before → after come above health (UI review, PR 212). */}
+        <div className="hpbar fside-walls-bar">
+          <div className="hp-after" style={{ width: `${((walls.hp - walls.loss) / walls.max) * 100}%`, background: WALLS_STONE }} />
+          <div className="hp-lost" style={{ width: `${(walls.loss / walls.max) * 100}%` }} />
+        </div>
+        <div className="fside-hp" data-testid="forecast-defender-walls">
+          <span className="fside-hp-word">Walls</span> {walls.hp} → <b>{walls.hp - walls.loss}</b>
+        </div>
+        {walls.loss > 0 && <div className="fside-lost fside-delta">−{walls.loss} Walls</div>}
+      </>}
       <div className="hpbar">
         <div className="hp-after" style={{ width: `${(lost ? 0 : after / max) * 100}%` }} />
         <div className="hp-lost" style={{ width: `${((lost ? hp - shot : hp - after - shot) / max) * 100}%` }} />
@@ -489,17 +500,6 @@ function Side({
         <span className="fside-hp-word">Health</span> {hp} → {lost ? <b className="fside-lost">lost</b> : <b>{after}</b>}
       </div>
       {!lost && hp > after && <div className="fside-lost fside-delta">−{hp - after} health</div>}
-      {walls && <>
-        {/* The Walls take the hit first, so they get their own stone bar and before → after (UI review, PR 212). */}
-        <div className="hpbar fside-walls-bar">
-          <div className="hp-after" style={{ width: `${((walls.hp - walls.loss) / walls.max) * 100}%`, background: WALLS_STONE }} />
-          <div className="hp-lost" style={{ width: `${(walls.loss / walls.max) * 100}%` }} />
-        </div>
-        <div className="fside-hp" data-testid="forecast-defender-walls">
-          <span className="fside-hp-word">Walls</span> {walls.hp} → <b>{walls.hp - walls.loss}</b>
-        </div>
-        {walls.loss > 0 && <div className="fside-lost fside-delta">−{walls.loss} Walls</div>}
-      </>}
       {fire !== undefined && <div className="fside-split">−{fire} city fire{attack ? `, −${attack} attack` : ''}</div>}
     </div>
   );

@@ -25,7 +25,7 @@ import { BANNER_BOTTOM, CITY_UNIT_DROP, HEX_SIZE, K, PIP_HALF, sealRadius, bound
 import { computeLabels, type MapLabel } from './labels';
 import { reachTiles } from './reach';
 import type { MapCue, ReportArrow } from './cues';
-import { drawSiegeBadge, drawSiegeBar, drawSiegeRing, drawSiegeSealRing, SIEGE_BAR_GAP, SIEGE_BAR_H, siegeRingBox, siegeSealRingBox, drawWallsTower, WALLS_STONE, WALLS_TRACK } from './siegeMark';
+import { drawSiegeBadge, drawSiegeBar, drawSiegeRing, drawSiegeSealRing, SIEGE_BAR_GAP, SIEGE_BAR_H, siegeRingBox, siegeSealRingBox, WALLS_STONE, WALLS_TRACK } from './siegeMark';
 import type { SiegeLevel } from '../siege';
 import { miniatureImage } from '../unitArt';
 import { siegePropFor, siegePropImage, siegePropRect, type SiegeProp } from '../siegeProps';
@@ -1034,7 +1034,11 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
           ctx.fillStyle = bar.walls ? WALLS_TRACK : TOKEN_INK.atlas.paper; ctx.fillRect(bx, by, bw, 4);
           ctx.fillStyle = bar.walls ? WALLS_STONE : healthColor(f); ctx.fillRect(bx, by, bw * f, 4);
           ctx.strokeStyle = TOKEN_INK.atlas.ink; ctx.lineWidth = 0.8; ctx.strokeRect(bx, by, bw, 4);
-          if (bar.walls) drawWallsTower(ctx, bx - 7, by - 2);
+          if (bar.walls) {
+            // The banner's own Walls icon, not a second drawing of it (art review, PR 212).
+            const ic = tintedIcon('building-walls', TOKEN_INK.atlas.ink, Math.ceil(10 * dpr));
+            if (ic) ctx.drawImage(ic, bx - 11, by - 3, 10, 10);
+          }
         }
       }
       if (motion && motion.sx !== 1) ctx.restore();

@@ -15,7 +15,7 @@ function whoLine(a: CityAlarm): string {
   if (a.kind === 'approach') return `${a.force} from ${a.from} within 3 tiles`;
   if (a.attackers.length) {
     const more = a.approaching.length ? ` · ${a.approaching.length} more within 3 tiles` : '';
-    const loss = a.walls > 0 ? `about −${Math.floor(a.perTurn / 2)} Walls a turn` : `about −${a.perTurn} health a turn`;
+    const loss = a.walls > 0 ? `about −${a.wallsPerTurn} Walls a turn` : `about −${a.perTurn} health a turn`;
     return `${a.force} from ${a.from}: ${loss}${more}`;
   }
   return 'Hit last turn; nothing can strike it next turn';

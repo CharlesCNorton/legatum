@@ -4515,4 +4515,5 @@ dialog.gameover::backdrop {
 .rival-offer { display: inline-flex; flex-direction: column; gap: 2px; }
 .rival-cost { color: var(--bad); font-weight: 600; }
 .alarm-block .rival-win, .hold-block .rival-win { margin-bottom: 14px; }
-.fside-walls-bar { margin-top: 6px; }
+.fside-walls-bar { margin-bottom: 2px; }
+.fside-walls-bar + .fside-hp + .fside-delta, .fside-walls-bar + .fside-hp { margin-bottom: 6px; }

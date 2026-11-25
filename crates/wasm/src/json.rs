@@ -461,7 +461,7 @@ mod tests {
         assert!(save.contains("\"Grow\""));
         assert_eq!(parse_state(&save).unwrap(), state);
         let mut old: Value = serde_json::from_str(&save).unwrap();
-        old["save_version"] = Value::from(60);
+        old["save_version"] = Value::from(61);
         assert!(
             parse_state(&old.to_string())
                 .unwrap_err()

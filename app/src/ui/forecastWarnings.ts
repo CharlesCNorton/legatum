@@ -217,9 +217,8 @@ export function wallsLine(f: BattleForecast, cityName: string, _unitLabel: strin
   const nextTech = !w.built_in && w.covered < w.tier ? NEXT_SIEGE_TECH[w.covered] : undefined;
   const next = nextTech ? ` ${nextTech} covers level ${['', 'I', 'II', 'III'][w.covered + 1]}.` : '';
   // The Walls bar (breakable Walls): what this hit takes off it, and the chance it breaks them.
-  const bar = (w.max_hp ?? 0) > 0
-    ? ` Walls ${w.hp ?? 0}/${w.max_hp}: about ${w.expected_damage ?? 0} damage${(w.break_chance ?? 0) > 0 ? `, ${w.break_chance}% chance to break` : ''}.`
-    : '';
+  // The before → after sits in the defender's Walls row; this line keeps only the chance to break them.
+  const bar = (w.max_hp ?? 0) > 0 && (w.break_chance ?? 0) > 0 ? ` ${w.break_chance}% chance to break them.` : '';
   if (w.covered > 0) return { text: `Walls ${level}: ${w.built_in ? 'built-in ' : ''}${cover}, so ${damage} to ${cityName}'s Walls.${bar}${next}`, tone: w.percent >= 100 ? 'good' : 'plain' };
   const withSiege = w.percent > 0 && w.percent < 100 && dealt > 0 ? Math.round((dealt * 100) / w.percent) : 0;
   return {

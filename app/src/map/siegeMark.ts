@@ -31,18 +31,6 @@ export const WALLS_STONE = '#a39a8a';
 /** The dark track behind a Walls bar (the siege bar's own track). */
 export const WALLS_TRACK = '#4a3b2a';
 
-/** A tiny tower (5x8 with two merlons) that marks a bar as the Walls, not health: never colour alone. */
-export function drawWallsTower(ctx: CanvasRenderingContext2D, x: number, y: number) {
-  ctx.save();
-  ctx.fillStyle = WALLS_STONE;
-  ctx.strokeStyle = INK;
-  ctx.lineWidth = 0.8;
-  ctx.beginPath();
-  ctx.moveTo(x, y + 8); ctx.lineTo(x, y); ctx.lineTo(x + 1.5, y); ctx.lineTo(x + 1.5, y + 1.5);
-  ctx.lineTo(x + 3.5, y + 1.5); ctx.lineTo(x + 3.5, y); ctx.lineTo(x + 5, y); ctx.lineTo(x + 5, y + 8); ctx.closePath();
-  ctx.fill(); ctx.stroke();
-  ctx.restore();
-}
 
 export function drawSiegeBar(ctx: CanvasRenderingContext2D, cx: number, y: number, w: number, hp: number, maxHp: number, fontFamily: string, withText = true, walls = false) {
   const h = withText ? SIEGE_BAR_H : 6;
