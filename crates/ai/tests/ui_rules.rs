@@ -367,6 +367,8 @@ fn ui_rules_match_core() {
             "warElephantMoves": data::unit_stats_for(Faction::India, UnitKind::Knight).moves,
             "reislauferMountedPercent": data::REISLAUFER_MOUNTED_PERCENT,
             "panzerMoves": data::unit_stats_for(Faction::Germany, UnitKind::Tank).moves,
+            "chariotArcherMoves": data::unit_stats_for(Faction::Egypt, UnitKind::Archer).moves,
+            "chariotArcherVolleyPercent": data::CHARIOT_ARCHER_VOLLEY_PERCENT,
         },
         "indiaCapitalRadius": data::INDIA_CAPITAL_RADIUS,
         "indiaNetworkRadius": data::INDIA_NETWORK_RADIUS,
