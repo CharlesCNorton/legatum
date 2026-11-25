@@ -110,7 +110,7 @@ faction_rules! {
     SwissReislaufer => ("swiss_reislaufer", Switzerland, Strength),
     GermanyPanzer => ("germany_panzer", Germany, Strength),
     EgyptConstruction => ("egypt_construction", Egypt, Strength),
-    // Keep bit 58 vacant: retired Egyptian Medjay (replaced by the Chariot Archer, rules 58).
+    // Keep bit 58 vacant: retired Egyptian Medjay (replaced by the Chariot Archer, rules 59).
     EgyptRoyalGranary = 59 => ("egypt_royal_granary", Egypt, Strength),
     RomeVeteranCities => ("rome_veteran_cities", Rome, Strength),
     RomeNoSettlers => ("rome_no_settlers", Rome, Drawback),
