@@ -1,0 +1,8 @@
+# 3D map stage 1: gotchas (2026-11-25)
+
+- WebGL draws `THREE.Line`/`LineLoop` 1 px wide at every zoom (linewidth is ignored), so a hover or selection ring made of lines all but disappears on the 3D map. Build rings and route ribbons as thin triangle bands that follow the terrain height instead.
+- `@types/three` adds a WebGPU overload to `HTMLCanvasElement.getContext`, which broke the 2D map test's `getContext` mock type. The mock now ends `as never`.
+- To open a sim-made game in the app (`crates/sim/examples/map3d_dump.rs`): play every seat as AI, then set `is_human = true` on both `state.setup.players[0]` and `state.players[0]` ("Damaged save" otherwise), and drop the save's `archive` key before wrapping it in the `legatum-save` envelope ("saved archive does not match game state" otherwise). Load it through the title screen's Load game file chooser.
+- Unit models carry the owner colour as a mask in COLOR_0's red channel. Read it in the shader as a mask (mix toward the team colour scaled by the albedo's brightness), never as vertex colour: three.js would multiply the albedo by it and darken the whole figure.
+- Hovering a tile that holds one of your own units previews selection, not a route (`pointerIntent` returns `select`), so a route check must hover an empty tile.
+- three.js adds about 160 KB gzip as a lazy chunk (`Map3DView-*.js`); the 2D-only download is unchanged.

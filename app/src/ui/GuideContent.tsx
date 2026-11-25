@@ -348,6 +348,7 @@ export function GuideContent({ section }: { section: GuideSection }) {
         <div><dt>G</dt><dd>Use your goal action when one is available for your empire.</dd></div>
         <div><dt>V</dt><dd>Turn Auto-fire on or off for a ranged unit in your city.</dd></div>
         <div><dt>T</dt><dd>Open Research.</dd></div>
+        <div className="mouse-only"><dt>M</dt><dd>Switch between the flat map and the 3D map (also the 3D / 2D button on the minimap). The 3D map is an early preview and is off until you turn it on.</dd></div>
         <div><dt>Y / O / N</dt><dd>Turn the map overlays on or off: Yields, Resources and Borders. They stay on over any lens and are remembered on this computer.</dd></div>
         <div><dt>C</dt><dd>Open the Cities overview: every city of yours with its population, Food, Production, Gold, Science, defence and what it is building. Click a heading to sort, click a city to go to it. World wonders and costly buildings say which city builds them fastest, wherever you choose them.</dd></div>
         <div><dt>L</dt><dd>Open or close the Turn report (also Turn report in This Turn). While it is open, <kbd>[</kbd> and <kbd>]</kbd> (or its ◀ ▶) step through the last 20 turns. Lines are marked ▲ good or ▼ bad for you. Click a combat line to centre the map on it, with an arrow from the attacker when you saw where it came from.</dd></div>

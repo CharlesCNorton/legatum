@@ -459,32 +459,48 @@ const loader = new GLTFLoader();
 loader.load(window.UNIT_GLB, (gltf) => {
   const base = gltf.scene;
   const box = new THREE.Box3().setFromObject(base); const hgt = box.max.y - box.min.y || 1;
-  const scale = 0.2 / hgt;
-  const clip = gltf.animations[0];
-  const disc = new THREE.CylinderGeometry(0.075, 0.08, 0.012, 24);
+  const scale = 0.17 / hgt;
+  const clipOf = (n) => gltf.animations.find((a) => a.name === n) || gltf.animations[0];
+  const idle = clipOf('idle'), walk = clipOf('walk');
+  const disc = new THREE.CylinderGeometry(0.11, 0.115, 0.01, 32);
   const byTile = new Map();
   for (const u of D.units) { if (FOG[u.i] !== 2) continue; (byTile.get(u.i) || byTile.set(u.i, []).get(u.i)).push(u); }
+  const SQUAD = [[0, 0.045], [-0.05, -0.03], [0.05, -0.03]]; // three figures per unit, Civ-style
   for (const [i, list] of byTile) {
     list.forEach((u, k) => {
       const g = new THREE.Group();
-      const fig = SkeletonUtils.clone(base); fig.scale.setScalar(scale);
-      fig.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.frustumCulled = false; } });
-      g.add(fig);
-      const ring = new THREE.Mesh(disc, new THREE.MeshStandardMaterial({ color: ownerColor(u.o), roughness: 0.5, metalness: 0.2 }));
-      ring.position.y = 0.006; ring.receiveShadow = true; g.add(ring);
-      const off = list.length > 1 ? (k - (list.length - 1) / 2) * 0.16 : 0;
+      const team = ownerColor(u.o);
+      const figs = [];
+      SQUAD.forEach(([sx, sz], f) => {
+        const fig = SkeletonUtils.clone(base); fig.scale.setScalar(scale);
+        fig.position.set(sx, 0, sz);
+        fig.traverse((o) => {
+          if (!o.isMesh) return;
+          o.castShadow = true; o.frustumCulled = false;
+          if (/crest|aspis/i.test(o.name) || /crest|aspis/i.test(o.parent?.name || '')) { o.material = o.material.clone(); o.material.color = team.clone().lerp(new THREE.Color('#ffffff'), 0.1); }
+        });
+        g.add(fig); figs.push(fig);
+      });
+      const ring = new THREE.Mesh(disc, new THREE.MeshStandardMaterial({ color: team, roughness: 0.55, metalness: 0.15, transparent: true, opacity: 0.85 }));
+      ring.position.y = 0.004; ring.receiveShadow = true; g.add(ring);
+      const off = list.length > 1 ? (k - (list.length - 1) / 2) * 0.24 : 0;
       const inCity = D.cities.some((c) => c.i === i);
       const x = cx(i) + off, z = cz(i) + (inCity ? 0.2 : 0.05);
       g.position.set(x, Math.max(0, heightAt(x, z)), z);
       g.rotation.y = rnd(i, k) * 0.8 - 0.4;
       scene.add(g);
-      const mx = new THREE.AnimationMixer(fig); const act = mx.clipAction(clip); act.play();
-      act.time = rnd(i, k + 5) * clip.duration; act.timeScale = 0; // standing pose until it moves
-      mixers.push(mx);
-      if (!walker && u.o === D.me && FOG[i] === 2) walker = { g, act, i, u };
+      const acts = figs.map((fig, f) => {
+        const mx = new THREE.AnimationMixer(fig); mixers.push(mx);
+        const a = mx.clipAction(idle); a.play(); a.time = rnd(i * 3 + f, k + 5) * idle.duration;
+        return { mx, a };
+      });
+      if (!walker && u.o === D.me) walker = { g, acts, i, u };
     });
   }
-  if (walker) startWalk();
+  if (walker) {
+    for (const { mx, a } of walker.acts) { const w = mx.clipAction(walk); w.play(); a.crossFadeTo(w, 0.3, false); }
+    startWalk();
+  }
   document.getElementById('status').textContent = '';
 });
 
@@ -499,7 +515,6 @@ function startWalk() {
     if (nxt < 0) break; path.push(nxt); cur = nxt;
   }
   walkPath = path.concat(path.slice(0, -1).reverse().slice(0, -1));
-  walker.act.timeScale = 1;
   select(walker.i);
 }
 function updateWalk(dt) {
