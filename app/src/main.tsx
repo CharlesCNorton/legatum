@@ -10,6 +10,7 @@ import { App } from './App';
 import { useGame } from './store';
 import { retryGameHistory } from './platform/archive';
 import { installSound } from './feel';
+import { installDisplay } from './platform/display';
 import { setMusicForView } from './feel/sound';
 import { loadTerrainSprites } from './map/terrainVariant';
 import { loadWasmModule, wasmAvailable } from './wasmClient';
@@ -22,6 +23,8 @@ installGlobalErrorHandlers();
 // Sound unlocks on the first gesture (autoplay rules). The committed viewer's
 // diplomacy state selects the theme; title and other screens use the full piece.
 installSound();
+// Full screen and the browser's install offer (Settings shows them where the browser supports them).
+installDisplay();
 useGame.subscribe((state) => setMusicForView(state.screen === 'game' ? state.views?.[state.seat] ?? null : null));
 
 // The terrain art (organic S2; `?terrain=current` skips it) must be decoded before the first map chunk is baked.
