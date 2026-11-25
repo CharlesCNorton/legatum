@@ -7,7 +7,6 @@ export async function dismissInterstitials(page: Page) {
     await page.keyboard.press('Escape');
     await expect(screen).toHaveCount(0);
   }
-  await closeMeetings(page);
   // A new Age opens with its takeover and then the score check: each is closed as a player would.
   for (let i = 0; i < 4; i++) {
     const age = page.locator('[data-testid="era-takeover"], [data-testid="score-check"]').first();
@@ -16,17 +15,6 @@ export async function dismissInterstitials(page: Page) {
     if (await age.getAttribute('data-testid') === 'era-takeover') await page.keyboard.press('Escape');
     else await age.locator('[data-primary-action]').click();
     await expect(age).toHaveCount(0);
-  }
-}
-
-/** First contact with another empire opens a full-screen plate; Return (its focused Continue) closes it, as for a player. */
-export async function closeMeetings(page: Page) {
-  for (let i = 0; i < 8; i++) {
-    const plate = page.getByTestId('meeting-takeover');
-    if (!(await plate.isVisible())) break;
-    const people = await plate.getAttribute('data-people');
-    await plate.getByRole('button', { name: /^Continue/ }).click();
-    await expect(page.locator(`[data-testid="meeting-takeover"][data-people="${people}"]`)).toHaveCount(0);
   }
 }
 

@@ -34,6 +34,7 @@ async function meet(page: import('@playwright/test').Page) {
 }
 
 test.describe.configure({ mode: 'parallel' });
+test.use({ meetings: 'show' });
 for (const size of SIZES) test.describe(`first contact ${size.name}`, () => {
   test.use({ viewport: { width: size.width, height: size.height } });
   for (const people of size.height <= 640 ? ALL : ['Mongols', 'Sparta', 'Byzantium', 'Rome'] as Faction[]) test(`${people}: met, then Return closes it`, async ({ page }) => {
