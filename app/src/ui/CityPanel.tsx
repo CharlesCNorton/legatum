@@ -9,7 +9,7 @@ import type { BuildingKind, CityView, Faction, Order, PlayerView, ProductionItem
 import { comparisonSentence, pieceAgainst, pieceComparison } from '../pieceCompare';
 import { PieceVsLine } from './PieceVs';
 import { razeLossLines, razeLosses, razeWorkText } from '../razeLosses';
-import { BUILDING_NAME, BUILDING_STATS, TERRAIN_NAME, FIRST_GROWTH, GROWTH_BASE, GROWTH_PER_POP, WORK_RADIUS, projectPercent, costInFactionYield, costYield, isGrow, greatWorkRules, greatWorkRequirement, GREAT_WORKS, isGreatWork, isProductionBuilding, TECH_NAME, CAPTURE_RESISTANCE_TURNS, itemCardText, itemDescription, itemSummary, moreText, itemKey, itemName as baseItemName, IMPROVEMENT_INFO, sameItem, buildingFamily, RULES, HORSE_MOUNTED, wallsUpgradeName } from '../data';
+import { BUILDING_NAME, BUILDING_STATS, TERRAIN_NAME, FIRST_GROWTH, GROWTH_BASE, GROWTH_PER_POP, WORK_RADIUS, projectPercent, costInFactionYield, costYield, isGrow, greatWorkRules, greatWorkRequirement, GREAT_WORKS, isGreatWork, isProductionBuilding, TECH_NAME, CAPTURE_RESISTANCE_TURNS, itemCardText, itemDescription, itemSummary, moreText, eraScaled, itemKey, itemName as baseItemName, IMPROVEMENT_INFO, sameItem, buildingFamily, RULES, HORSE_MOUNTED, wallsUpgradeName } from '../data';
 import { effectiveProduction, errorsWhere, orderCity, productionQueue, queueAfterBuild, setProductionQueue, toggleBuy } from '../orders';
 import { distance, hexEq, tileIndex } from '../hex';
 import { WONDER_INFO, WONDER_PERCENT, cityWonders, wonderArt, wonderBonusSentence, wonderYieldWord } from '../wonders';
@@ -95,6 +95,13 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
     : item.kind === 'Wonder'
       ? `${baseItemName(item, faction)} · ${wonderWhere(item.tile)}`
     : baseItemName(item, faction);
+  /** Upgrade Walls states this city's own gain: +5 city strength scaled to the owner's era (core `data::era_scaled`). */
+  const wallsGain = (): number => eraScaled(BUILDING_STATS.UpgradeWalls.cityStrength, (view.players.find((p) => p.id === city.owner)?.era ?? 1) - 1);
+  const isUpgradeWalls = (item: ProductionItem): boolean => item.kind === 'Building' && item.building === 'UpgradeWalls';
+  const summaryOf = (item: ProductionItem, faction?: Faction): string => isUpgradeWalls(item) ? `+${wallsGain()} city strength for the next level` : itemSummary(item, faction);
+  const descriptionOf = (item: ProductionItem, faction?: Faction): string => isUpgradeWalls(item)
+    ? `The next level adds ${wallsGain()} city strength. You can add one level for each era you have reached.`
+    : itemDescription(item, faction);
   /** The production meter's label is one line, so an improvement or a placed site uses the short form ("Quarry, Stone NE", "Yam Relay Station W"). */
   const meterName = (item: ProductionItem): string => item.kind === 'Improvement'
     ? improvementShortTitle(item, city.pos, view.tiles[tileIndex(item.tile, view.width, view.height)]?.resource)
@@ -566,7 +573,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
     const name = o.item.kind === 'Building' && o.item.building === 'UpgradeWalls' ? wallsUpgradeName(city.walls_level ?? Number(city.walls), itemName({ kind: 'Building', building: 'Walls' }, owner?.faction)) : o.item.kind === 'Wonder' && !siteChosen(o) ? baseItemName(o.item, owner?.faction) : itemName(o.item, owner?.faction);
     if (o.item.kind === 'Project') {
       return <div className="production-choice project-choice" key={itemKey(o.item)} data-item={itemKey(o.item)}>
-        <Tip as="div" placement="right" summary={itemDescription(o.item, owner?.faction)} content={itemDescription(o.item, owner?.faction)}>
+        <Tip as="div" placement="right" summary={descriptionOf(o.item, owner?.faction)} content={descriptionOf(o.item, owner?.faction)}>
           <button className="prod" aria-label={`Run ${name}`} onClick={() => buildNow(o.item)} disabled={view.finished}>
             <span className="prod-icons"><ItemArt item={o.item} faction={owner?.faction} size={20} /></span>
             <span className="prod-name">{name}</span>
@@ -574,7 +581,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
             <span className="prod-go">{sameItem(producing, o.item) ? 'Active' : isGrow(o.item) ? 'Grow →' : 'Run project →'}</span>
           </button>
         </Tip>
-        <EffectMore effect={itemSummary(o.item, owner?.faction)}><Amounts text={moreText(itemDescription(o.item, owner?.faction), itemSummary(o.item, owner?.faction))} /></EffectMore>
+        <EffectMore effect={summaryOf(o.item, owner?.faction)}><Amounts text={moreText(descriptionOf(o.item, owner?.faction), summaryOf(o.item, owner?.faction))} /></EffectMore>
       </div>;
     }
     const positions = queue.flatMap((item, i) => sameItem(item, o.item) ? [i + 1] : []);
@@ -628,12 +635,13 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
     const againstCost = against && !sameItem(against, o.item) ? costOf(against) : null;
     // The gap is between the two prices this city quotes now (faction prices included), not the static tables.
     const vs = owner ? pieceComparison(owner.faction, o.item, againstCost !== null ? { now: o.cost, was: againstCost } : null) : null;
-    const description = itemDescription(o.item, owner?.faction);
-    const cardText = itemCardText(o.item, owner?.faction);
+    const description = descriptionOf(o.item, owner?.faction);
+    // Upgrade Walls' text is computed for this city, so its static card text would repeat it.
+    const cardText = isUpgradeWalls(o.item) ? description : itemCardText(o.item, owner?.faction);
     const fullCopy = cardText === description ? description : `${cardText} ${description}`;
     const hallDetail = o.item.kind === 'Building' && o.item.building === 'YamRelayStation' ? hallCardText() : null;
     const detail = [fullCopy, effect, hallDetail, site && isGreatWork(site.building) ? `Only one empire can complete it. ${rivalBuilders.length ? `Known builders: ${rivalBuilders.join(', ')}.` : 'No known rival builder.'}` : null].filter(Boolean).join(' ');
-    const cardLineBase = site && isGreatWork(site.building) ? `${itemSummary(o.item, owner?.faction).replace(/^World wonder: /, '').replace(/^whoever holds its tile scores (\+\d+ VP)$/, '$1 to its tile holder')} · one in the world${rivalBuilders.length ? `, also building: ${rivalBuilders.join(', ')}` : ''}` : [keeps, gains || itemSummary(o.item, owner?.faction)].filter(Boolean).join(' · ');
+    const cardLineBase = site && isGreatWork(site.building) ? `${summaryOf(o.item, owner?.faction).replace(/^World wonder: /, '').replace(/^whoever holds its tile scores (\+\d+ VP)$/, '$1 to its tile holder')} · one in the world${rivalBuilders.length ? `, also building: ${rivalBuilders.join(', ')}` : ''}` : [keeps, gains || summaryOf(o.item, owner?.faction)].filter(Boolean).join(' · ');
     const cardLine = industryFood(o.item) ? `${cardLineBase} · −1 Food` : cardLineBase;
     const card = <>
         <button className={`prod ${active ? 'active' : ''} ${chosen ? 'pending' : ''}`} aria-label={`Build ${name}`} aria-pressed={active}
@@ -672,7 +680,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
         </> : null}
       </div>
       {resourceBlocked && <div className="production-blocker prod-blocked"><Icon name="ui-alert" size={11} className="ui-mark" /><Amounts text={o.resource_blocker!} /></div>}
-      <EffectMore effect={cardLine}><Amounts text={moreText(detail, cardLine, itemSummary(o.item, owner?.faction))} />{vs && <PieceVsLine comparison={vs} />}</EffectMore>
+      <EffectMore effect={cardLine}><Amounts text={moreText(detail, cardLine, summaryOf(o.item, owner?.faction))} />{vs && <PieceVsLine comparison={vs} />}</EffectMore>
       {reason === "Walls must be built with Production; they can't be bought." && o.item.kind === 'Building' && buildingFamily(o.item.building) === 'Walls' &&
         <div className="production-refusal"><Amounts text={reason} /></div>}
       {o.item.kind === 'Building' && <WhereToBuild item={o.item} here={city.id} onEdit={keepInPlace} />}
@@ -704,7 +712,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
     const buyReason = wallsOnly ? "Walls must be built with Production; they can't be bought." : `Can't buy ${name} yet: ${lowerFirst(why.short)}.`;
     const key = itemKey(u.item);
     return <div className="production-choice unavailable" key={key} data-item={key} data-unavailable="true">
-      <Tip as="div" placement="right" summary={why.full} content={<p><Amounts text={`${why.full} ${itemDescription(u.item, faction)}`} /></p>}>
+      <Tip as="div" placement="right" summary={why.full} content={<p><Amounts text={`${why.full} ${descriptionOf(u.item, faction)}`} /></p>}>
         <button className="prod" aria-label={`Build ${name}`} aria-disabled="true" aria-description={why.line} disabled={view.finished} onClick={() => refuse(u)}>
           <ItemArt item={u.item} faction={owner?.faction} size={20} />
           <span className="prod-name">{name}</span>
@@ -723,7 +731,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
       {notice?.key === key && notice.city === city.id
         ? <div className={`production-notice ${notice.tone}`} role="status"><Amounts text={notice.text} /></div>
         : <div className="production-blocker prod-unavailable"><Amounts text={why.line} /></div>}
-      <EffectMore effect={`${itemSummary(u.item, faction)}${industryFood(u.item) ? ' · −1 Food' : ''}`}><Amounts text={moreText(itemDescription(u.item, faction), itemSummary(u.item, faction))} /></EffectMore>
+      <EffectMore effect={`${summaryOf(u.item, faction)}${industryFood(u.item) ? ' · −1 Food' : ''}`}><Amounts text={moreText(descriptionOf(u.item, faction), summaryOf(u.item, faction))} /></EffectMore>
       {wallsOnly && <div className="production-refusal"><Amounts text={buyReason} /></div>}
       {u.item.kind === 'Building' && <WhereToBuild item={u.item} here={city.id} onEdit={keepInPlace} hideNone />}
     </div>;
@@ -755,7 +763,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
     const missing = path.filter((item) => item.kind === 'Building' && !d?.buildings.includes(item.building) && !queue.some((queued) => sameItem(queued, item)));
     return <div className="upgrade-branch" key={itemKey(locked.item)}>
       <div className="upgrade-line">
-        <Tip as="span" className="upgrade-detail" placement="right" summary={`${name} · ${locked.cost} Production`} content={<><p><Amounts text={`${itemDescription(locked.item, faction)} ${whyUnavailable(locked).full}`} /></p><WhereToBuildLine item={locked.item} /></>}>
+        <Tip as="span" className="upgrade-detail" placement="right" summary={`${name} · ${locked.cost} Production`} content={<><p><Amounts text={`${descriptionOf(locked.item, faction)} ${whyUnavailable(locked).full}`} /></p><WhereToBuildLine item={locked.item} /></>}>
           <ItemArt item={locked.item} faction={owner?.faction} size={14} />
           <span>Leads to: {name} <span style={{ whiteSpace: 'nowrap' }}>({locked.cost} <YieldIcon k="production" size={11} />)</span></span>
         </Tip>

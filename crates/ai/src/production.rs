@@ -5128,6 +5128,16 @@ impl Planner<'_> {
         class(data::is_veteran_infantry(unit), d.veteran_infantry_bonus)
             + class(data::is_infantry(unit), d.infantry_bonus)
             + class(self.mongol_horde() && unit == UnitKind::Cataphract, 100)
+            + class(self.chariot_archer(unit), d.chariot_archer_bonus)
+    }
+
+    /// Whether `unit` is our Chariot Archer (Egypt's Archer with its rule on).
+    fn chariot_archer(&self, unit: UnitKind) -> bool {
+        data::is_chariot_archer_rules(
+            self.view().rule_experiments.faction_rules_off,
+            self.faction,
+            unit,
+        )
     }
 
     pub(crate) fn mongol_horde(&self) -> bool {

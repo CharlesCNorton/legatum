@@ -58,8 +58,11 @@ This file holds the current rules, one line each. The user's words, dates, as-bu
 - Every number has a breakdown on hover or click; hover is for reading, click opens breakdowns; a hoverable bubble never covers its trigger.
 - A number shown is the number in force, and a limit that applies is named in the same line (user, 2026-10-17). Label gross versus net; each number once per card; one source per number.
 - Forecast headlines include every consequence (walled-city fire, Siege); a line that changes a number shows both numbers.
+- When an era-scaled number makes a fixed figure wrong, show the number computed for this city and era ("+6 city strength for the next level"), never a vague word like "more" (UI review of PR 137, 2026-11-25). Compute the item's card text the same way, or a tooltip that joins the two shows both versions (PR 159).
 - Costs are loud (red), including ongoing upkeep on every build card; neutral "nothing yet" lines are muted ink, never green; colour is from the viewer's side.
 - Anything that ticks over time has a progress bar with turns left; a goal's progress is a meter with its number.
+- A unit's own movement rule shows where the move is made: the tile card names it for the selected unit (the Chariot Archer's "Entering takes your Chariot Archer's whole turn."), not only the terrain's base cost (UI review, 2026-11-25).
+- A special unit's closed build card names what is special about it (a `CARD_SUMMARY` entry in `data.ts`); the replaced unit's generic summary is not enough. A breakdown row under a unit's strength does not repeat the unit's name (UI review, 2026-11-25).
 - Every way to score is visible, with ownership unmistakable (user, 2026-10-06); a scoring option that becomes available is announced every time (user, 2026-11-11).
 
 ## Map
@@ -174,6 +177,7 @@ Every word a player reads (sheets, cards, the Guide, tooltips, breakdowns, repor
 | Gold project, Science project, Food project | what a city runs instead of building, turning part of its Production (Egypt: its Food-made build progress) into Gold, Science or Food; every empire since 2026-11-22 (Food: rules 55, not Egypt). The automation menu names its stream focuses by these project names | Industry project, Industry: Gold (a copy test bans "Industry project") |
 | Grow | Egypt's project that grows a city with its surplus Food instead of building (2026-11-21); "surplus Food" is Food beyond 2 per population | growth project, grow mode |
 | tribute | Byzantium buying peace | bribe, peace payment |
+| melee units | the Melee line class (Warrior, Spearman and their upgrades); "Melee line" in the class name | foot soldiers, infantry as a class (a copy test bans "foot soldier"; plain-language review 2026-11-25) |
 | level | a unit's promotion level ("level 4 or higher") | rank, promotion tier |
 | technology | in rules text; "tech diffusion" is the one fixed phrase | techs |
 | British spelling | defence, labour, centre, armour, honour, colour, favour | defense, labor, center (in player text; code identifiers may differ) |

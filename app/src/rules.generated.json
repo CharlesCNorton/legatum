@@ -5126,8 +5126,8 @@
       "Phalangite": "Gaesatae"
     },
     "Egypt": {
-      "Granary": "Royal Granary",
-      "Spearman": "Medjay"
+      "Archer": "Chariot Archer",
+      "Granary": "Royal Granary"
     },
     "Germany": {
       "Forge": "Ruhr Foundry",
@@ -6645,7 +6645,7 @@
       "Archer": {
         "cost": 132,
         "military": true,
-        "moves": 2,
+        "moves": 3,
         "range": 2,
         "ranged": 15,
         "requires": null,
@@ -10019,7 +10019,7 @@
   "rocketArtilleryRange": 3,
   "rollMax": 120,
   "rollMin": 80,
-  "saveVersion": 58,
+  "saveVersion": 59,
   "settlerCostStep": 50,
   "siege": {
     "baseGold": 160,
@@ -10045,6 +10045,8 @@
   },
   "spartaRetireLevel": 3,
   "specialUnitNumbers": {
+    "chariotArcherMoves": 3,
+    "chariotArcherVolleyPercent": 40,
     "eagleWarriorCost": 10,
     "eagleWarriorStrength": 4,
     "gaesataeAttack": 8,
@@ -10060,7 +10062,7 @@
     "Aztecs": "Spearman",
     "Byzantium": "Pikeman",
     "Celts": "Phalangite",
-    "Egypt": "Spearman",
+    "Egypt": "Archer",
     "Germany": "Tank",
     "India": "Knight",
     "Mongols": "Cataphract",
