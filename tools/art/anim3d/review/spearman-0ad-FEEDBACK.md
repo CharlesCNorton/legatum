@@ -19,3 +19,4 @@
   5. IDLE: fine. The aspis hiding the torso is acceptable (that's how a hoplite stands), and the -30° yaw shows the spear side.
   6. FRAMING: better, but the figure is still only about 30-40% of the frame height in attack and walk. Aim for about 70%.
   Gate for calling round 5 the candidate: items 2 and 3 fixed and 4 shortened, with the contract still valid (validate_glb plus Khronos).
+  7. MAP READABILITY (from the 3D map thread): at the map's working zoom the figure is about 0.17 hex tall and trees partly hide it, so the silhouette has to read when small. Exaggerate it slightly: a chunkier and taller crest (about 1.3x), a spear shaft about 1.5x thicker with a brighter bronze tip, and strong value contrast between the crest, the shield face and the body. Check this with a 48 px-tall render of idle and attack beside the 160 px one. The display yaw stays out of the asset (the GLB faces +Z; the map applies its own yaw).
