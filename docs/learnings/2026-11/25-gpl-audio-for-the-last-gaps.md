@@ -1,6 +1,6 @@
 # GPL audio for the gaps CC sources left (2026-11-25)
 
-- **Decision:** the designer allowed GPL audio from open-source games (decision card, 17:30Z), with the GPL noted in the credits. It is for gaps only; a CC source wins where one is as good.
+- **Decision:** GPL audio from open-source games is allowed, with the GPL noted in the credits. It is for gaps only; a CC source wins where one is as good.
 - **What it bought:** orchestral music for the Machine Age and the World War era and a black-powder musket from The Battle for Wesnoth, and a drone engine from Warzone 2100 (`tools/audio/build_gpl.py`). Wesnoth's `copyrights.csv` gives the author, licence and MD5 of every file, and its files download by exact path from `raw.githubusercontent.com`, so each download can be checked against the MD5.
 - **Check the fidelity before the licence.** Advanced Strategic Command's music looked ideal by title and setting, but the files are 22 kHz, 80 kb/s MP3s. `ffprobe` on the sample rate and bit rate takes a second and would have saved the search.
 - **A tribe is not a soundtrack.** Widelands has an Amazons tribe but its music is one shared pool of untitled-style pieces, with nothing Mesoamerican. Mesoamerican music is still missing after CC and GPL sources.

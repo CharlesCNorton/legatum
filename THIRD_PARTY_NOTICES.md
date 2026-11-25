@@ -97,7 +97,7 @@ The per-file source, author and processing are in `app/public/audio/CREDITS.md` 
   Ubuntu's `warzone2100-music` package), licensed under Creative Commons Attribution-ShareAlike 3.0
   (https://creativecommons.org/licenses/by-sa/3.0/). Cut to the first four minutes, loudness-matched and re-encoded
   (`tools/audio/build_later.py`); the edited files stay under CC BY-SA 3.0.
-- **GPL version 2 or later** (9 files; allowed by the maintainer on 2026-11-25 for sounds no CC source covered):
+- **GPL version 2 or later** (9 files, for sounds no CC source covered):
   6 music tracks for the Machine Age and the World War era from The Battle for Wesnoth (https://www.wesnoth.org/),
   by Mattias Westlund, Jeremy Nicoll, Tyler Johnson and Doug Kaufman; two musket shots by Richard Kettering (Jetrel),
   also from The Battle for Wesnoth (author and licence of each file in the game's `copyrights.csv`); and one drone

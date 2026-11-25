@@ -148,7 +148,7 @@ Looked at and not used: the original Warzone 2100 soundtrack, Bos Wars, Advanced
 
 So at the defaults a battle sound sits about 6 dB over the music, a sting about 10 dB over it, and the land loop about 6 dB under it. 19 of the 107 files (clicks, order sounds, single hits) are too short for an integrated loudness figure; their peaks are between -1 and -8 dBTP. One fault was found and fixed: six 0 A.D. battle sounds (three bow releases, an arrow hit, the hoofbeats) had a `gain` that lifted their true peak to as much as +2 dBTP, which would clip with both sliders near full. `import_0ad.py` now caps each gain so the peak stays at or under -1 dBTP; those six are 1 to 3 dB quieter. This is measurement only. Whether the mix sounds right is a question for a person's ear.
 
-**Status (2026-11-25, fourth pass): GPL audio allowed, for the gaps CC sources left.** The designer chose "Allow GPL audio from open games" on 2026-11-25 (17:30Z), with the GPL noted in the credits. Built by `tools/audio/build_gpl.py`; every file is GPL-2.0-or-later and stays so after editing, and `licenses/GPL-2.0-or-later.txt` ships.
+**Status (2026-11-25, fourth pass): GPL audio allowed, for the gaps CC sources left.** GPL audio from open-source games is allowed for these gaps, with the GPL noted in the credits. Built by `tools/audio/build_gpl.py`; every file is GPL-2.0-or-later and stays so after editing, and `licenses/GPL-2.0-or-later.txt` ships.
 
 | Source | What we ship | Licence, and where it is stated |
 | --- | --- | --- |

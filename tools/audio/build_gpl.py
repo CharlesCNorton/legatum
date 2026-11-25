@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Adds the GPL audio: Machine Age and World War music, the musket and the drone.
 
-The designer allowed GPL audio from open-source games on 2026-11-25, for the gaps no CC source a
+GPL audio from open-source games is allowed for the gaps no CC source a
 cloud session can reach would fill (docs/design/sound-sources.md). Each file is GPL-2.0-or-later
 and stays so after editing; the licence text is app/public/audio/licenses/GPL-2.0-or-later.txt.
 
