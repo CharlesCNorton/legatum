@@ -217,6 +217,6 @@ Issues and pull requests are welcome from anyone. The maintainer decides what me
 
 ## Licence
 
-The code is MIT licensed ([LICENSE](LICENSE)). The 2D art is AI-generated and is offered under CC BY 4.0 to the extent rights exist; the 3D unit models are adapted from 0 A.D. by Wildfire Games and stay under CC BY-SA 3.0 ([LICENSE-ART](LICENSE-ART)). The music and sound effects are third-party CC0 works, credited in [app/public/audio/CREDITS.md](app/public/audio/CREDITS.md). The interface bundles the Cormorant and Libre Franklin typefaces under the SIL Open Font License. Dependencies are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+The code is MIT licensed ([LICENSE](LICENSE)). The art is AI-generated and is offered under CC BY 4.0 to the extent rights exist ([LICENSE-ART](LICENSE-ART)). The music and sound effects are third-party CC0 works, credited in [app/public/audio/CREDITS.md](app/public/audio/CREDITS.md). The interface bundles the Cormorant and Libre Franklin typefaces under the SIL Open Font License. Dependencies are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 Legatum is an independent project and is not affiliated with, endorsed by or derived from Sid Meier's Civilization, Take-Two Interactive Software, Inc. or Firaxis Games; "Civilization" is their trademark and is named only to describe the genre.

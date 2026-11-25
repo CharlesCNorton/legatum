@@ -17,8 +17,9 @@ import {
 
 const PARCH = new THREE.Color('#d9c9a3');
 const UP = new THREE.Vector3(0, 1, 0);
-/** Units with a finished 3D model; every other kind stands as its painted miniature until its model lands. */
-const MODELS: Partial<Record<string, string>> = { Spearman: 'spearman' };
+/** Units with a finished 3D model (app/public/models/units/<slug>.glb); every other kind stands as its painted
+ *  miniature. Empty until the designer approves the first model (the Spearman) for the game. */
+const MODELS: Partial<Record<string, string>> = {};
 const MODEL_URL = (slug: string) => `${import.meta.env.BASE_URL}models/units/${slug}.glb`;
 
 export interface Overlays {

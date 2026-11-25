@@ -31,14 +31,6 @@ What this does not cover
 - Everything that is not an image or a video: source code, scripts, documentation, in-game
   text, the art prompts (`*.prompt.txt`), scenarios, saves, test fixtures, simulation results
   and other data files. These are under the MIT licence (LICENSE).
-- 3D models (app/public/models/). These are adapted from 0 A.D. by Wildfire Games and stay under
-  Creative Commons Attribution-ShareAlike 3.0 (CC BY-SA 3.0,
-  https://creativecommons.org/licenses/by-sa/3.0/), including our changes: the spearman
-  (spearman.glb) is a hand-assembled adaptation of 0 A.D. meshes and animations with new flat
-  materials. Credit "0 A.D. art by Wildfire Games, CC BY-SA 3.0; adapted for Legatum", and
-  share any adaptation under the same licence. The exact source files and changes are in
-  app/public/models/units/PROVENANCE-spearman.md. The painted textures and the shader that draws
-  them are ours.
 - Audio (app/public/audio/). All shipped music and sound effects are third-party works released
   under CC0 1.0 (Kenney, Breviceps and vitalezzz). See app/public/audio/CREDITS.md and
   app/public/audio/licenses/.
@@ -48,7 +40,7 @@ What this does not cover
 
 How the art was made
 --------------------
-All of the 2D art is AI-generated; the 3D unit models are adapted from 0 A.D. (above). Most of it was generated with OpenAI image models (through
+All of the art is AI-generated. Most of it was generated with OpenAI image models (through
 ChatGPT and the Codex image tool) from prompts, many of which are stored beside the files in
 the source tree (`*.prompt.txt`). The results were then selected, cropped, resized and
 composed for the game. The full-size masters of several sets are in this repository beside
