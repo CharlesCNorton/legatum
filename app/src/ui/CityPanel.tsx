@@ -678,6 +678,23 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
       {flash?.key === key && flash.city === city.id && <span className="sr-only" role="status">{`${name}: ${flash.label} in the queue`}</span>}
     </div>;
   };
+  /** The newer unit of a line that its strategic resource holds back: one line under the unit the city can build now. */
+  const renderBetter = (o: ProductionOption) => {
+    const name = itemName(o.item, owner?.faction);
+    const key = itemKey(o.item);
+    const short = o.supply_need ? `${name} needs ${o.supply_need}` : `${name} can't start yet`;
+    const headOnly = queue.length === 0;
+    const flashed = flash?.key === key && flash.city === city.id;
+    return <div className="upgrade-line unit-better" key={key} data-better={key}>
+      <Tip as="span" className="upgrade-detail" placement="right" summary={o.resource_blocker!} content={<p><Amounts text={`${o.resource_blocker} Queued behind another build, it starts by itself once the resource is there. ${itemDescription(o.item, owner?.faction)}`} /></p>}>
+        <ItemArt item={o.item} faction={owner?.faction} size={14} />
+        <span>{o.supply_need ? <ResourceReason text={short} resource={o.supply_need} /> : short}</span>
+      </Tip>
+      <button className="upgrade-queue" aria-label={`Queue ${name}`} disabled={view.finished || headOnly || queue.length >= 50}
+        title={headOnly ? 'Queue it behind another build: it starts once the resource is there' : 'Add to the end of the production queue: it starts once the resource is there'}
+        onClick={(event) => append(o.item, event.currentTarget)}>{flashed ? <><Icon name="ui-check" size={11} className="ui-mark" /> {flash.label}</> : '+ Queue'}</button>
+    </div>;
+  };
   /** A researched item this city can't choose yet: greyed out in its section, with the reason. */
   const renderUnavailable = (u: UnavailableOption) => {
     const name = itemName(u.item, faction);
@@ -1013,6 +1030,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
       <div className={`prod-list ${producing ? '' : 'choosing'}`}>
         {withUnavailable(unitLines(listOptions, owner?.faction ?? 'India'), (line) => line.main.item, listUnavailable.filter((u) => u.item.kind === 'Unit' && !isPermanentlyUnavailable(u, faction))).map((r) => r.row ? <div key={itemKey(r.row.main.item)}>
           {renderOption(r.row.main, r.row.keeps)}
+          {r.row.better && renderBetter(r.row.better)}
           {r.row.older.length > 0 && <details className="unit-line"><summary>Also: {r.row.older.map((o) => itemName(o.item, owner?.faction)).join(', ')}</summary>{r.row.older.map((o) => renderOption(o))}</details>}
         </div> : renderUnavailable(r.unavailable))}{permanentLine(listUnavailable.filter((u) => u.item.kind === 'Unit'), listOptions.filter((o) => o.item.kind === 'Unit')) && <p className="prod-faction-rule" role="note">{permanentLine(listUnavailable.filter((u) => u.item.kind === 'Unit'), listOptions.filter((o) => o.item.kind === 'Unit'))}</p>}
       </div>
