@@ -51,6 +51,8 @@ Direct URLs:
 
 **Status (2026-09-27): downloaded and shipped.** Licenses re-verified on each source page; raw files are in `~/LegatumData/audio-src/` (not in git). The game ships AAC `.m4a` (not Ogg: WebKit/iOS can't decode Vorbis or Opus in every version we target), built by `tools/audio/build_audio.py`; measurements in `docs/sound-qa.md`, event mapping and rationale in `app/public/audio/manifest.json`.
 
+**Status (2026-11-25): 0 A.D. music, land sounds and battle sounds shipped** (the designer approved credit-required licences). 16 music tracks (a pool per people, plus war drums), 3 land loops and 22 battle one-shots, all CC-BY-SA-3.0 from the 0 A.D. GitHub mirror, built by `tools/audio/build_0ad.py` and added to the manifest by `tools/audio/import_0ad.py`. Run `import_0ad.py` again after any run of `build_audio.py`, which rewrites the manifest. Not covered, because 0 A.D. stops before gunpowder and has no sea: guns, cannon, shells, aircraft, the sea, and later-era or Aztec music. Those need a second source.
+
 **Total download: about 35.5 MB.** We ship only the files we choose. Transcoding the music to ~96 kbps Opus or Ogg should bring the shipped total to about 8 MB; CC-BY allows this. File names inside the Kenney packs were not verified (nothing was downloaded), so pick them by listening. Skip the 8-bit jingles because they clash with the Art Deco tone.
 
 ## Repo layout

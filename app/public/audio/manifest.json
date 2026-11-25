@@ -495,7 +495,9 @@
     "license": "CC0-1.0",
     "attribution": "\"Eclipse Legion\" by vitalezzz (https://opengameart.org/content/eclipse-legion), CC0 1.0",
     "modified": "trimmed silence, loudness-normalised toward -18 LUFS (reached -18.1 LUFS), 6 s equal-power loop crossfade (the end blends into the opening), transcoded to AAC 96k",
-    "rationale": "The complete piece for the opening and peaceful play; its quiet opening and ending make a natural loop."
+    "rationale": "The complete piece for the opening and peaceful play; its quiet opening and ending make a natural loop.",
+    "mood": "peace",
+    "peoples": []
   },
   {
     "file": "music/war.m4a",
@@ -509,6 +511,628 @@
     "license": "CC0-1.0",
     "attribution": "\"Eclipse Legion\" by vitalezzz (https://opengameart.org/content/eclipse-legion), CC0 1.0",
     "modified": "cut from 110.35 to 208.7 s, trimmed silence, loudness-normalised toward -18 LUFS (reached -18.1 LUFS), 6 s equal-power loop crossfade (the end blends into the opening), transcoded to AAC 96k",
-    "rationale": "The sustained climax for an empire war, after the quiet break and before the outro fade."
+    "rationale": "The sustained climax for an empire war, after the quiet break and before the outro fade.",
+    "mood": "war",
+    "peoples": []
+  },
+  {
+    "file": "music/juno-protect-you.m4a",
+    "events": [
+      "music:juno-protect-you"
+    ],
+    "title": "Juno Protect You",
+    "author": "Wildfire Games",
+    "source": "https://raw.githubusercontent.com/0ad/0ad/master/binaries/data/mods/public/audio/music/Juno_Protect_You.ogg",
+    "license": "CC-BY-SA-3.0",
+    "attribution": "\"Juno Protect You\" from 0 A.D. by Wildfire Games (https://www.wildfiregames.com/), CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/), edited for Legatum",
+    "modified": "leading 1.44 s and trailing 0.62 s below -60 dBFS trimmed; no fade added (source already ends in silence: final 0.3 s at -63.4 dBFS RMS); two-pass ffmpeg loudnorm to -20.0 LUFS (source measured -16.81 LUFS, 0.05 dBTP; normalisation type: linear); resampled to 44.1 kHz where needed; transcoded Ogg Vorbis to AAC-LC 96 kb/s stereo .m4a; metadata stripped",
+    "rationale": "Peace music for Rome.",
+    "mood": "peace",
+    "peoples": [
+      "Rome"
+    ]
+  },
+  {
+    "file": "music/forging-a-city-state.m4a",
+    "events": [
+      "music:forging-a-city-state"
+    ],
+    "title": "Forging a City-State",
+    "author": "Wildfire Games",
+    "source": "https://raw.githubusercontent.com/0ad/0ad/master/binaries/data/mods/public/audio/music/Forging_a_City-State.ogg",
+    "license": "CC-BY-SA-3.0",
+    "attribution": "\"Forging a City-State\" from 0 A.D. by Wildfire Games (https://www.wildfiregames.com/), CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/), edited for Legatum",
+    "modified": "leading 0.02 s and trailing 1.00 s below -60 dBFS trimmed; no fade added (source already ends in silence: final 0.3 s at -69.1 dBFS RMS); two-pass ffmpeg loudnorm to -20.0 LUFS (source measured -13.91 LUFS, 0.43 dBTP; normalisation type: linear); resampled to 44.1 kHz where needed; transcoded Ogg Vorbis to AAC-LC 96 kb/s stereo .m4a; metadata stripped",
+    "rationale": "Peace music for Athens, Sparta.",
+    "mood": "peace",
+    "peoples": [
+      "Athens",
+      "Sparta"
+    ]
+  },
+  {
+    "file": "music/harvest-festival.m4a",
+    "events": [
+      "music:harvest-festival"
+    ],
+    "title": "Harvest Festival",
+    "author": "Wildfire Games",
+    "source": "https://raw.githubusercontent.com/0ad/0ad/master/binaries/data/mods/public/audio/music/Harvest_Festival.ogg",
+    "license": "CC-BY-SA-3.0",
+    "attribution": "\"Harvest Festival\" from 0 A.D. by Wildfire Games (https://www.wildfiregames.com/), CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/), edited for Legatum",
+    "modified": "leading 0.05 s and trailing 0.71 s below -60 dBFS trimmed; no fade added (source already ends in silence: final 0.3 s at -68.3 dBFS RMS); two-pass ffmpeg loudnorm to -20.0 LUFS (source measured -17.01 LUFS, -0.16 dBTP; normalisation type: linear); resampled to 44.1 kHz where needed; transcoded Ogg Vorbis to AAC-LC 96 kb/s stereo .m4a; metadata stripped",
+    "rationale": "Peace music for Athens, Celts.",
+    "mood": "peace",
+    "peoples": [
+      "Athens",
+      "Celts"
+    ]
+  },
+  {
+    "file": "music/only-300-stood.m4a",
+    "events": [
+      "music:only-300-stood"
+    ],
+    "title": "Only 300 Stood",
+    "author": "Wildfire Games",
+    "source": "https://raw.githubusercontent.com/0ad/0ad/master/binaries/data/mods/public/audio/music/Only_300_Stood.ogg",
+    "license": "CC-BY-SA-3.0",
+    "attribution": "\"Only 300 Stood\" from 0 A.D. by Wildfire Games (https://www.wildfiregames.com/), CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/), edited for Legatum",
+    "modified": "leading 0.57 s and trailing 1.69 s below -60 dBFS trimmed; no fade added (source already ends in silence: final 0.3 s at -65.5 dBFS RMS); two-pass ffmpeg loudnorm to -21.84 LUFS (target lowered from -20 so that a plain gain change keeps the true peak under the ceiling, instead of compressing the track) (source measured -19.02 LUFS, 0.67 dBTP; normalisation type: linear); resampled to 44.1 kHz where needed; transcoded Ogg Vorbis to AAC-LC 96 kb/s stereo .m4a; metadata stripped",
+    "rationale": "Peace music for Sparta.",
+    "mood": "peace",
+    "peoples": [
+      "Sparta"
+    ]
+  },
+  {
+    "file": "music/the-hellespont.m4a",
+    "events": [
+      "music:the-hellespont"
+    ],
+    "title": "The Hellespont",
+    "author": "Wildfire Games",
+    "source": "https://raw.githubusercontent.com/0ad/0ad/master/binaries/data/mods/public/audio/music/The_Hellespont.ogg",
+    "license": "CC-BY-SA-3.0",
+    "attribution": "\"The Hellespont\" from 0 A.D. by Wildfire Games (https://www.wildfiregames.com/), CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/), edited for Legatum",
+    "modified": "leading 0.08 s and trailing 1.37 s below -60 dBFS trimmed; no fade added (source already ends in silence: final 0.3 s at -62.6 dBFS RMS); two-pass ffmpeg loudnorm to -20.0 LUFS (source measured -17.17 LUFS, 0.15 dBTP; normalisation type: linear); resampled to 44.1 kHz where needed; transcoded Ogg Vorbis to AAC-LC 96 kb/s stereo .m4a; metadata stripped",
+    "rationale": "Peace music for Athens, Sparta, Byzantium.",
+    "mood": "peace",
+    "peoples": [
+      "Athens",
+      "Sparta",
+      "Byzantium"
+    ]
+  },
+  {
+    "file": "music/cradle-of-civilization.m4a",
+    "events": [
+      "music:cradle-of-civilization"
+    ],
+    "title": "Cradle of Civilization",
+    "author": "Wildfire Games",
+    "source": "https://raw.githubusercontent.com/0ad/0ad/master/binaries/data/mods/public/audio/music/Cradle_of_Civilization.ogg",
+    "license": "CC-BY-SA-3.0",
+    "attribution": "\"Cradle of Civilization\" from 0 A.D. by Wildfire Games (https://www.wildfiregames.com/), CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/), edited for Legatum",
+    "modified": "leading 0.11 s and trailing 0.75 s below -60 dBFS trimmed; no fade added (source already ends in silence: final 0.3 s at -66.6 dBFS RMS); two-pass ffmpeg loudnorm to -20.0 LUFS (source measured -21.82 LUFS, -5.41 dBTP; normalisation type: linear); resampled to 44.1 kHz where needed; transcoded Ogg Vorbis to AAC-LC 96 kb/s stereo .m4a; metadata stripped",
+    "rationale": "Peace music for Byzantium.",
+    "mood": "peace",
+    "peoples": [
+      "Byzantium"
+    ]
+  },
+  {
+    "file": "music/valley-of-the-nile.m4a",
+    "events": [
+      "music:valley-of-the-nile"
+    ],
+    "title": "Valley of the Nile",
+    "author": "Wildfire Games",
+    "source": "https://raw.githubusercontent.com/0ad/0ad/master/binaries/data/mods/public/audio/music/Valley_of_the_Nile.ogg",
+    "license": "CC-BY-SA-3.0",
+    "attribution": "\"Valley of the Nile\" from 0 A.D. by Wildfire Games (https://www.wildfiregames.com/), CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/), edited for Legatum",
+    "modified": "leading 0.25 s and trailing 0.90 s below -60 dBFS trimmed; no fade added (source already ends in silence: final 0.3 s at -62.1 dBFS RMS); two-pass ffmpeg loudnorm to -20.0 LUFS (source measured -14.76 LUFS, 0.07 dBTP; normalisation type: linear); resampled to 44.1 kHz where needed; transcoded Ogg Vorbis to AAC-LC 96 kb/s stereo .m4a; metadata stripped",
+    "rationale": "Peace music for Egypt.",
+    "mood": "peace",
+    "peoples": [
+      "Egypt"
+    ]
+  },
+  {
+    "file": "music/karmic-confluence.m4a",
+    "events": [
+      "music:karmic-confluence"
+    ],
+    "title": "Karmic Confluence",
+    "author": "Wildfire Games",
+    "source": "https://raw.githubusercontent.com/0ad/0ad/master/binaries/data/mods/public/audio/music/Karmic_Confluence.ogg",
+    "license": "CC-BY-SA-3.0",
+    "attribution": "\"Karmic Confluence\" from 0 A.D. by Wildfire Games (https://www.wildfiregames.com/), CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/), edited for Legatum",
+    "modified": "leading 0.02 s and trailing 1.80 s below -60 dBFS trimmed; no fade added (source already ends in silence: final 0.3 s at -64.3 dBFS RMS); two-pass ffmpeg loudnorm to -20.0 LUFS (source measured -15.44 LUFS, 0.56 dBTP; normalisation type: linear); resampled to 44.1 kHz where needed; transcoded Ogg Vorbis to AAC-LC 96 kb/s stereo .m4a; metadata stripped",
+    "rationale": "Peace music for India.",
+    "mood": "peace",
+    "peoples": [
+      "India"
+    ]
+  },
+  {
+    "file": "music/eastern-dreams.m4a",
+    "events": [
+      "music:eastern-dreams"
+    ],
+    "title": "Eastern Dreams",
+    "author": "Wildfire Games",
+    "source": "https://raw.githubusercontent.com/0ad/0ad/master/binaries/data/mods/public/audio/music/Eastern_Dreams.ogg",
+    "license": "CC-BY-SA-3.0",
+    "attribution": "\"Eastern Dreams\" from 0 A.D. by Wildfire Games (https://www.wildfiregames.com/), CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/), edited for Legatum",
+    "modified": "leading 0.05 s and trailing 0.71 s below -60 dBFS trimmed; no fade added (source already ends in silence: final 0.3 s at -59.0 dBFS RMS); two-pass ffmpeg loudnorm to -20.0 LUFS (source measured -13.32 LUFS, 0.95 dBTP; normalisation type: linear); resampled to 44.1 kHz where needed; transcoded Ogg Vorbis to AAC-LC 96 kb/s stereo .m4a; metadata stripped",
+    "rationale": "Peace music for India, Mongols.",
+    "mood": "peace",
+    "peoples": [
+      "India",
+      "Mongols"
+    ]
+  },
+  {
+    "file": "music/red-dawn.m4a",
+    "events": [
+      "music:red-dawn"
+    ],
+    "title": "Red Dawn",
+    "author": "Wildfire Games",
+    "source": "https://raw.githubusercontent.com/0ad/0ad/master/binaries/data/mods/public/audio/music/Red_Dawn.ogg",
+    "license": "CC-BY-SA-3.0",
+    "attribution": "\"Red Dawn\" from 0 A.D. by Wildfire Games (https://www.wildfiregames.com/), CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/), edited for Legatum",
+    "modified": "leading 0.90 s and trailing 2.39 s below -60 dBFS trimmed; no fade added (source already ends in silence: final 0.3 s at -68.7 dBFS RMS); two-pass ffmpeg loudnorm to -20.0 LUFS (source measured -17.58 LUFS, -0.30 dBTP; normalisation type: linear); resampled to 44.1 kHz where needed; transcoded Ogg Vorbis to AAC-LC 96 kb/s stereo .m4a; metadata stripped",
+    "rationale": "Peace music for Mongols.",
+    "mood": "peace",
+    "peoples": [
+      "Mongols"
+    ]
+  },
+  {
+    "file": "music/celtic-pride.m4a",
+    "events": [
+      "music:celtic-pride"
+    ],
+    "title": "Celtic Pride",
+    "author": "Wildfire Games",
+    "source": "https://raw.githubusercontent.com/0ad/0ad/master/binaries/data/mods/public/audio/music/Celtic_Pride.ogg",
+    "license": "CC-BY-SA-3.0",
+    "attribution": "\"Celtic Pride\" from 0 A.D. by Wildfire Games (https://www.wildfiregames.com/), CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/), edited for Legatum",
+    "modified": "leading 0.26 s and trailing 2.84 s below -60 dBFS trimmed; no fade added (source already ends in silence: final 0.3 s at -69.8 dBFS RMS); two-pass ffmpeg loudnorm to -20.0 LUFS (source measured -12.55 LUFS, -0.23 dBTP; normalisation type: linear); resampled to 44.1 kHz where needed; transcoded Ogg Vorbis to AAC-LC 96 kb/s stereo .m4a; metadata stripped",
+    "rationale": "Peace music for Celts.",
+    "mood": "peace",
+    "peoples": [
+      "Celts"
+    ]
+  },
+  {
+    "file": "music/northern-frontier.m4a",
+    "events": [
+      "music:northern-frontier"
+    ],
+    "title": "Northern Frontier",
+    "author": "Wildfire Games",
+    "source": "https://raw.githubusercontent.com/0ad/0ad/master/binaries/data/mods/public/audio/music/Northern_Frontier.ogg",
+    "license": "CC-BY-SA-3.0",
+    "attribution": "\"Northern Frontier\" from 0 A.D. by Wildfire Games (https://www.wildfiregames.com/), CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/), edited for Legatum",
+    "modified": "leading 0.81 s and trailing 0.83 s below -60 dBFS trimmed; no fade added (source already ends in silence: final 0.3 s at -63.1 dBFS RMS); two-pass ffmpeg loudnorm to -20.28 LUFS (target lowered from -20 so that a plain gain change keeps the true peak under the ceiling, instead of compressing the track) (source measured -18.55 LUFS, -0.42 dBTP; normalisation type: linear); resampled to 44.1 kHz where needed; transcoded Ogg Vorbis to AAC-LC 96 kb/s stereo .m4a; metadata stripped",
+    "rationale": "Peace music for Germany, Switzerland.",
+    "mood": "peace",
+    "peoples": [
+      "Germany",
+      "Switzerland"
+    ]
+  },
+  {
+    "file": "music/midwinter.m4a",
+    "events": [
+      "music:midwinter"
+    ],
+    "title": "Midwinter",
+    "author": "Wildfire Games",
+    "source": "https://raw.githubusercontent.com/0ad/0ad/master/binaries/data/mods/public/audio/music/Midwinter.ogg",
+    "license": "CC-BY-SA-3.0",
+    "attribution": "\"Midwinter\" from 0 A.D. by Wildfire Games (https://www.wildfiregames.com/), CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/), edited for Legatum",
+    "modified": "leading 0.10 s and trailing 0.94 s below -60 dBFS trimmed; no fade added (source already ends in silence: final 0.3 s at -67.0 dBFS RMS); two-pass ffmpeg loudnorm to -20.0 LUFS (source measured -14.66 LUFS, -1.33 dBTP; normalisation type: linear); resampled to 44.1 kHz where needed; transcoded Ogg Vorbis to AAC-LC 96 kb/s stereo .m4a; metadata stripped",
+    "rationale": "Peace music for Germany, Switzerland.",
+    "mood": "peace",
+    "peoples": [
+      "Germany",
+      "Switzerland"
+    ]
+  },
+  {
+    "file": "music/tale-of-warriors.m4a",
+    "events": [
+      "music:tale-of-warriors"
+    ],
+    "title": "Tale of Warriors",
+    "author": "Wildfire Games",
+    "source": "https://raw.githubusercontent.com/0ad/0ad/master/binaries/data/mods/public/audio/music/Tale_of_Warriors.ogg",
+    "license": "CC-BY-SA-3.0",
+    "attribution": "\"Tale of Warriors\" from 0 A.D. by Wildfire Games (https://www.wildfiregames.com/), CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/), edited for Legatum",
+    "modified": "leading 0.65 s and trailing 2.93 s below -60 dBFS trimmed; no fade added (source already ends in silence: final 0.3 s at -62.2 dBFS RMS); two-pass ffmpeg loudnorm to -20.0 LUFS (source measured -16.23 LUFS, -0.06 dBTP; normalisation type: linear); resampled to 44.1 kHz where needed; transcoded Ogg Vorbis to AAC-LC 96 kb/s stereo .m4a; metadata stripped",
+    "rationale": "Peace music every people hears.",
+    "mood": "peace",
+    "peoples": []
+  },
+  {
+    "file": "music/taiko-1.m4a",
+    "events": [
+      "music:taiko-1"
+    ],
+    "title": "Taiko 1",
+    "author": "Wildfire Games",
+    "source": "https://raw.githubusercontent.com/0ad/0ad/master/binaries/data/mods/public/audio/music/Taiko_1.ogg",
+    "license": "CC-BY-SA-3.0",
+    "attribution": "\"Taiko 1\" from 0 A.D. by Wildfire Games (https://www.wildfiregames.com/), CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/), edited for Legatum",
+    "modified": "leading 0.12 s and trailing 0.45 s below -60 dBFS trimmed; no fade added (source already ends in silence: final 0.3 s at -64.6 dBFS RMS); two-pass ffmpeg loudnorm to -20.0 LUFS (source measured -11.45 LUFS, 1.36 dBTP; normalisation type: linear); resampled to 44.1 kHz where needed; transcoded Ogg Vorbis to AAC-LC 96 kb/s stereo .m4a; metadata stripped",
+    "rationale": "Plays during an empire war.",
+    "mood": "war",
+    "peoples": []
+  },
+  {
+    "file": "music/taiko-2.m4a",
+    "events": [
+      "music:taiko-2"
+    ],
+    "title": "Taiko 2",
+    "author": "Wildfire Games",
+    "source": "https://raw.githubusercontent.com/0ad/0ad/master/binaries/data/mods/public/audio/music/Taiko_2.ogg",
+    "license": "CC-BY-SA-3.0",
+    "attribution": "\"Taiko 2\" from 0 A.D. by Wildfire Games (https://www.wildfiregames.com/), CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/), edited for Legatum",
+    "modified": "leading 0.20 s and trailing 0.13 s below -60 dBFS trimmed; no fade added (source already ends in silence: final 0.3 s at -56.2 dBFS RMS); two-pass ffmpeg loudnorm to -20.0 LUFS (source measured -11.65 LUFS, 1.28 dBTP; normalisation type: linear); resampled to 44.1 kHz where needed; transcoded Ogg Vorbis to AAC-LC 96 kb/s stereo .m4a; metadata stripped",
+    "rationale": "Plays during an empire war.",
+    "mood": "war",
+    "peoples": []
+  },
+  {
+    "file": "ambience/grassland-birds-day.m4a",
+    "events": [
+      "ambience:birds"
+    ],
+    "title": "day_temperate_gen_03.ogg",
+    "author": "Wildfire Games",
+    "source": "https://raw.githubusercontent.com/0ad/0ad/master/binaries/data/mods/public/audio/ambient/dayscape/day_temperate_gen_03.ogg",
+    "license": "CC-BY-SA-3.0",
+    "attribution": "\"day_temperate_gen_03.ogg\" from 0 A.D. by Wildfire Games (https://www.wildfiregames.com/), CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/), edited for Legatum",
+    "modified": "40 Hz high-pass (removes sub-bass); 39.985 s excerpt taken from 54.0 s of the 115.9 s source (the window with the steadiest 1 s RMS level: 17.2 dB spread); loop ends joined with a 1 s equal-power crossfade (the second following the loop end is blended under the loop start), then the loop rotated by 38.051 s so the file starts at its quietest point; static gain +20.0 dB to -30 LUFS (source excerpt -50.0 LUFS); resampled to 44.1 kHz where needed; transcoded Ogg Vorbis to AAC-LC 64 kb/s stereo .m4a; metadata stripped",
+    "rationale": "Birdsong over grassland, plains and forest."
+  },
+  {
+    "file": "ambience/wind.m4a",
+    "events": [
+      "ambience:wind"
+    ],
+    "title": "wind_11.ogg",
+    "author": "Wildfire Games",
+    "source": "https://raw.githubusercontent.com/0ad/0ad/master/binaries/data/mods/public/audio/ambient/weather/wind_11.ogg",
+    "license": "CC-BY-SA-3.0",
+    "attribution": "\"wind_11.ogg\" from 0 A.D. by Wildfire Games (https://www.wildfiregames.com/), CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/), edited for Legatum",
+    "modified": "40 Hz high-pass (removes sub-bass); 44.977 s excerpt taken from 82.0 s of the 167.6 s source (the window with the steadiest 1 s RMS level: 45.7 dB spread); loop ends joined with a 1 s equal-power crossfade (the second following the loop end is blended under the loop start), then the loop rotated by 13.309 s so the file starts at its quietest point; static gain -1.4 dB to -30 LUFS (source excerpt -28.6 LUFS); resampled to 44.1 kHz where needed; transcoded Ogg Vorbis to AAC-LC 64 kb/s stereo .m4a; metadata stripped",
+    "rationale": "Wind over desert, hills and mountains."
+  },
+  {
+    "file": "ambience/snowstorm.m4a",
+    "events": [
+      "ambience:snow"
+    ],
+    "title": "snowstorm_11.ogg",
+    "author": "Wildfire Games",
+    "source": "https://raw.githubusercontent.com/0ad/0ad/master/binaries/data/mods/public/audio/ambient/weather/snowstorm_11.ogg",
+    "license": "CC-BY-SA-3.0",
+    "attribution": "\"snowstorm_11.ogg\" from 0 A.D. by Wildfire Games (https://www.wildfiregames.com/), CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/), edited for Legatum",
+    "modified": "40 Hz high-pass (removes sub-bass); 44.977 s excerpt taken from 50.0 s of the 167.6 s source (the window with the steadiest 1 s RMS level: 55.9 dB spread); loop ends joined with a 1 s equal-power crossfade (the second following the loop end is blended under the loop start), then the loop rotated by 35.834 s so the file starts at its quietest point; static gain -7.1 dB to -30 LUFS (source excerpt -22.9 LUFS); resampled to 44.1 kHz where needed; transcoded Ogg Vorbis to AAC-LC 64 kb/s stereo .m4a; metadata stripped",
+    "rationale": "Cold wind over tundra."
+  },
+  {
+    "file": "fx/bow-release-1.m4a",
+    "events": [
+      "fx:bow:1"
+    ],
+    "title": "bow_attack_07.ogg",
+    "author": "Wildfire Games",
+    "source": "https://raw.githubusercontent.com/0ad/0ad/master/binaries/data/mods/public/audio/attack/weapon/bow_attack_07.ogg",
+    "license": "CC-BY-SA-3.0",
+    "attribution": "\"bow_attack_07.ogg\" from 0 A.D. by Wildfire Games (https://www.wildfiregames.com/), CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/), edited for Legatum",
+    "modified": "leading 0.535 s and trailing 0.499 s below -55 dBFS trimmed; 3 ms fade-in and 10 ms fade-out to avoid clicks; static gain +0.6 dB toward -20 LUFS (source -31.8 LUFS, -2.6 dBTP); gain was held back by the -1.5 dBTP peak ceiling, so the file is quieter than -20 LUFS; mixed to mono and resampled to 44.1 kHz where needed; transcoded Ogg Vorbis to AAC-LC 64 kb/s mono .m4a; metadata stripped",
+    "rationale": "An archer or crossbow volley leaves the string.",
+    "gain": 1.6
+  },
+  {
+    "file": "fx/bow-release-2.m4a",
+    "events": [
+      "fx:bow:2"
+    ],
+    "title": "bow_attack_02.ogg",
+    "author": "Wildfire Games",
+    "source": "https://raw.githubusercontent.com/0ad/0ad/master/binaries/data/mods/public/audio/attack/weapon/bow_attack_02.ogg",
+    "license": "CC-BY-SA-3.0",
+    "attribution": "\"bow_attack_02.ogg\" from 0 A.D. by Wildfire Games (https://www.wildfiregames.com/), CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/), edited for Legatum",
+    "modified": "leading 0.584 s and trailing 0.518 s below -55 dBFS trimmed; 3 ms fade-in and 10 ms fade-out to avoid clicks; static gain +5.4 dB toward -20 LUFS (source -34.5 LUFS, -7.4 dBTP); gain was held back by the -1.5 dBTP peak ceiling, so the file is quieter than -20 LUFS; mixed to mono and resampled to 44.1 kHz where needed; transcoded Ogg Vorbis to AAC-LC 64 kb/s mono .m4a; metadata stripped",
+    "rationale": "An archer or crossbow volley leaves the string.",
+    "gain": 1.6
+  },
+  {
+    "file": "fx/bow-release-3.m4a",
+    "events": [
+      "fx:bow:3"
+    ],
+    "title": "bow_attack_05.ogg",
+    "author": "Wildfire Games",
+    "source": "https://raw.githubusercontent.com/0ad/0ad/master/binaries/data/mods/public/audio/attack/weapon/bow_attack_05.ogg",
+    "license": "CC-BY-SA-3.0",
+    "attribution": "\"bow_attack_05.ogg\" from 0 A.D. by Wildfire Games (https://www.wildfiregames.com/), CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/), edited for Legatum",
+    "modified": "leading 0.314 s and trailing 0.650 s below -55 dBFS trimmed; 3 ms fade-in and 10 ms fade-out to avoid clicks; static gain +4.0 dB toward -20 LUFS (source -33.5 LUFS, -6.0 dBTP); gain was held back by the -1.5 dBTP peak ceiling, so the file is quieter than -20 LUFS; mixed to mono and resampled to 44.1 kHz where needed; transcoded Ogg Vorbis to AAC-LC 64 kb/s mono .m4a; metadata stripped",
+    "rationale": "An archer or crossbow volley leaves the string.",
+    "gain": 1.6
+  },
+  {
+    "file": "fx/arrow-impact-1.m4a",
+    "events": [
+      "fx:arrowHit:1"
+    ],
+    "title": "arrow_dirt_01.ogg",
+    "author": "Wildfire Games",
+    "source": "https://raw.githubusercontent.com/0ad/0ad/master/binaries/data/mods/public/audio/attack/impact/arrow_dirt_01.ogg",
+    "license": "CC-BY-SA-3.0",
+    "attribution": "\"arrow_dirt_01.ogg\" from 0 A.D. by Wildfire Games (https://www.wildfiregames.com/), CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/), edited for Legatum",
+    "modified": "leading 0.001 s and trailing 0.225 s below -55 dBFS trimmed; 3 ms fade-in and 10 ms fade-out to avoid clicks; static gain +11.0 dB toward -20 LUFS (source -32.2 LUFS, -13.0 dBTP); gain was held back by the -1.5 dBTP peak ceiling, so the file is quieter than -20 LUFS; mixed to mono and resampled to 44.1 kHz where needed; transcoded Ogg Vorbis to AAC-LC 64 kb/s mono .m4a; metadata stripped",
+    "rationale": "The volley lands.",
+    "gain": 0.74
+  },
+  {
+    "file": "fx/arrow-impact-2.m4a",
+    "events": [
+      "fx:arrowHit:2"
+    ],
+    "title": "arrow_dirt_02.ogg",
+    "author": "Wildfire Games",
+    "source": "https://raw.githubusercontent.com/0ad/0ad/master/binaries/data/mods/public/audio/attack/impact/arrow_dirt_02.ogg",
+    "license": "CC-BY-SA-3.0",
+    "attribution": "\"arrow_dirt_02.ogg\" from 0 A.D. by Wildfire Games (https://www.wildfiregames.com/), CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/), edited for Legatum",
+    "modified": "leading 0.005 s and trailing 0.182 s below -55 dBFS trimmed; 3 ms fade-in and 10 ms fade-out to avoid clicks; static gain +12.4 dB toward -20 LUFS (source -35.8 LUFS, -14.4 dBTP); gain was held back by the -1.5 dBTP peak ceiling, so the file is quieter than -20 LUFS; mixed to mono and resampled to 44.1 kHz where needed; transcoded Ogg Vorbis to AAC-LC 64 kb/s mono .m4a; metadata stripped",
+    "rationale": "The volley lands.",
+    "gain": 0.99
+  },
+  {
+    "file": "fx/arrow-impact-3.m4a",
+    "events": [
+      "fx:arrowHit:3"
+    ],
+    "title": "arrow_dirt_03.ogg",
+    "author": "Wildfire Games",
+    "source": "https://raw.githubusercontent.com/0ad/0ad/master/binaries/data/mods/public/audio/attack/impact/arrow_dirt_03.ogg",
+    "license": "CC-BY-SA-3.0",
+    "attribution": "\"arrow_dirt_03.ogg\" from 0 A.D. by Wildfire Games (https://www.wildfiregames.com/), CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/), edited for Legatum",
+    "modified": "leading 0.000 s and trailing 0.084 s below -55 dBFS trimmed; 3 ms fade-in and 10 ms fade-out to avoid clicks; static gain +10.0 dB toward -20 LUFS (source -37.3 LUFS, -12.0 dBTP); gain was held back by the -1.5 dBTP peak ceiling, so the file is quieter than -20 LUFS; mixed to mono and resampled to 44.1 kHz where needed; transcoded Ogg Vorbis to AAC-LC 64 kb/s mono .m4a; metadata stripped",
+    "rationale": "The volley lands.",
+    "gain": 1.48
+  },
+  {
+    "file": "fx/sword-clash-1.m4a",
+    "events": [
+      "fx:clash:1"
+    ],
+    "title": "swordhit_10a.ogg",
+    "author": "Wildfire Games",
+    "source": "https://raw.githubusercontent.com/0ad/0ad/master/binaries/data/mods/public/audio/attack/weapon/swordhit_10a.ogg",
+    "license": "CC-BY-SA-3.0",
+    "attribution": "\"swordhit_10a.ogg\" from 0 A.D. by Wildfire Games (https://www.wildfiregames.com/), CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/), edited for Legatum",
+    "modified": "leading 0.000 s and trailing 0.165 s below -55 dBFS trimmed; 3 ms fade-in and 10 ms fade-out to avoid clicks; static gain +0.9 dB toward -20 LUFS (source -25.3 LUFS, -2.9 dBTP); gain was held back by the -1.5 dBTP peak ceiling, so the file is quieter than -20 LUFS; mixed to mono and resampled to 44.1 kHz where needed; transcoded Ogg Vorbis to AAC-LC 64 kb/s mono .m4a; metadata stripped",
+    "rationale": "Melee lines meet.",
+    "gain": 1.4
+  },
+  {
+    "file": "fx/sword-clash-2.m4a",
+    "events": [
+      "fx:clash:2"
+    ],
+    "title": "swordhit_11a.ogg",
+    "author": "Wildfire Games",
+    "source": "https://raw.githubusercontent.com/0ad/0ad/master/binaries/data/mods/public/audio/attack/weapon/swordhit_11a.ogg",
+    "license": "CC-BY-SA-3.0",
+    "attribution": "\"swordhit_11a.ogg\" from 0 A.D. by Wildfire Games (https://www.wildfiregames.com/), CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/), edited for Legatum",
+    "modified": "leading 0.000 s and trailing 0.251 s below -55 dBFS trimmed; 3 ms fade-in and 10 ms fade-out to avoid clicks; static gain +0.7 dB toward -20 LUFS (source -23.4 LUFS, -2.7 dBTP); gain was held back by the -1.5 dBTP peak ceiling, so the file is quieter than -20 LUFS; mixed to mono and resampled to 44.1 kHz where needed; transcoded Ogg Vorbis to AAC-LC 64 kb/s mono .m4a; metadata stripped",
+    "rationale": "Melee lines meet.",
+    "gain": 1.02
+  },
+  {
+    "file": "fx/sword-clash-3.m4a",
+    "events": [
+      "fx:clash:3"
+    ],
+    "title": "swordhit_12.ogg",
+    "author": "Wildfire Games",
+    "source": "https://raw.githubusercontent.com/0ad/0ad/master/binaries/data/mods/public/audio/attack/weapon/swordhit_12.ogg",
+    "license": "CC-BY-SA-3.0",
+    "attribution": "\"swordhit_12.ogg\" from 0 A.D. by Wildfire Games (https://www.wildfiregames.com/), CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/), edited for Legatum",
+    "modified": "leading 0.000 s and trailing 0.051 s below -55 dBFS trimmed; 3 ms fade-in and 10 ms fade-out to avoid clicks; static gain -0.5 dB toward -20 LUFS (source -21.3 LUFS, -1.5 dBTP); gain was held back by the -1.5 dBTP peak ceiling, so the file is quieter than -20 LUFS; mixed to mono and resampled to 44.1 kHz where needed; transcoded Ogg Vorbis to AAC-LC 64 kb/s mono .m4a; metadata stripped",
+    "rationale": "Melee lines meet.",
+    "gain": 0.9
+  },
+  {
+    "file": "fx/hoofbeats-1.m4a",
+    "events": [
+      "fx:hooves:1"
+    ],
+    "title": "mstep110.ogg",
+    "author": "Wildfire Games",
+    "source": "https://raw.githubusercontent.com/0ad/0ad/master/binaries/data/mods/public/audio/actor/mounted/movement/mstep110.ogg",
+    "license": "CC-BY-SA-3.0",
+    "attribution": "\"mstep110.ogg\" from 0 A.D. by Wildfire Games (https://www.wildfiregames.com/), CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/), edited for Legatum",
+    "modified": "leading 0.233 s and trailing 0.196 s below -55 dBFS trimmed; 3 ms fade-in and 10 ms fade-out to avoid clicks; static gain -1.3 dB toward -20 LUFS (source -28.3 LUFS, -0.7 dBTP); gain was held back by the -1.5 dBTP peak ceiling, so the file is quieter than -20 LUFS; mixed to mono and resampled to 44.1 kHz where needed; transcoded Ogg Vorbis to AAC-LC 64 kb/s mono .m4a; metadata stripped",
+    "rationale": "A mounted charge closes.",
+    "gain": 1.6
+  },
+  {
+    "file": "fx/hoofbeats-2.m4a",
+    "events": [
+      "fx:hooves:2"
+    ],
+    "title": "mstep111.ogg",
+    "author": "Wildfire Games",
+    "source": "https://raw.githubusercontent.com/0ad/0ad/master/binaries/data/mods/public/audio/actor/mounted/movement/mstep111.ogg",
+    "license": "CC-BY-SA-3.0",
+    "attribution": "\"mstep111.ogg\" from 0 A.D. by Wildfire Games (https://www.wildfiregames.com/), CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/), edited for Legatum",
+    "modified": "leading 0.259 s and trailing 0.311 s below -55 dBFS trimmed; 3 ms fade-in and 10 ms fade-out to avoid clicks; static gain +7.6 dB toward -20 LUFS (source -33.0 LUFS, -9.6 dBTP); gain was held back by the -1.5 dBTP peak ceiling, so the file is quieter than -20 LUFS; mixed to mono and resampled to 44.1 kHz where needed; transcoded Ogg Vorbis to AAC-LC 64 kb/s mono .m4a; metadata stripped",
+    "rationale": "A mounted charge closes.",
+    "gain": 1.22
+  },
+  {
+    "file": "fx/hoofbeats-3.m4a",
+    "events": [
+      "fx:hooves:3"
+    ],
+    "title": "mstep112.ogg",
+    "author": "Wildfire Games",
+    "source": "https://raw.githubusercontent.com/0ad/0ad/master/binaries/data/mods/public/audio/actor/mounted/movement/mstep112.ogg",
+    "license": "CC-BY-SA-3.0",
+    "attribution": "\"mstep112.ogg\" from 0 A.D. by Wildfire Games (https://www.wildfiregames.com/), CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/), edited for Legatum",
+    "modified": "leading 0.223 s and trailing 0.260 s below -55 dBFS trimmed; 3 ms fade-in and 10 ms fade-out to avoid clicks; static gain +5.5 dB toward -20 LUFS (source -31.9 LUFS, -7.5 dBTP); gain was held back by the -1.5 dBTP peak ceiling, so the file is quieter than -20 LUFS; mixed to mono and resampled to 44.1 kHz where needed; transcoded Ogg Vorbis to AAC-LC 64 kb/s mono .m4a; metadata stripped",
+    "rationale": "A mounted charge closes.",
+    "gain": 1.35
+  },
+  {
+    "file": "fx/siege-launch-1.m4a",
+    "events": [
+      "fx:siegeLaunch:1"
+    ],
+    "title": "ballist_attack_01.ogg",
+    "author": "Wildfire Games",
+    "source": "https://raw.githubusercontent.com/0ad/0ad/master/binaries/data/mods/public/audio/attack/siege/ballist_attack_01.ogg",
+    "license": "CC-BY-SA-3.0",
+    "attribution": "\"ballist_attack_01.ogg\" from 0 A.D. by Wildfire Games (https://www.wildfiregames.com/), CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/), edited for Legatum",
+    "modified": "leading 0.002 s and trailing 0.014 s below -55 dBFS trimmed; 3 ms fade-in and 10 ms fade-out to avoid clicks; static gain -1.3 dB toward -20 LUFS (source -23.3 LUFS, -0.7 dBTP); gain was held back by the -1.5 dBTP peak ceiling, so the file is quieter than -20 LUFS; mixed to mono and resampled to 44.1 kHz where needed; transcoded Ogg Vorbis to AAC-LC 64 kb/s mono .m4a; metadata stripped",
+    "rationale": "A catapult or trebuchet throws.",
+    "gain": 1.08
+  },
+  {
+    "file": "fx/siege-launch-2.m4a",
+    "events": [
+      "fx:siegeLaunch:2"
+    ],
+    "title": "ballist_attack_02.ogg",
+    "author": "Wildfire Games",
+    "source": "https://raw.githubusercontent.com/0ad/0ad/master/binaries/data/mods/public/audio/attack/siege/ballist_attack_02.ogg",
+    "license": "CC-BY-SA-3.0",
+    "attribution": "\"ballist_attack_02.ogg\" from 0 A.D. by Wildfire Games (https://www.wildfiregames.com/), CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/), edited for Legatum",
+    "modified": "leading 0.000 s and trailing 0.070 s below -55 dBFS trimmed; 3 ms fade-in and 10 ms fade-out to avoid clicks; static gain -1.9 dB toward -20 LUFS (source -22.7 LUFS, -0.1 dBTP); gain was held back by the -1.5 dBTP peak ceiling, so the file is quieter than -20 LUFS; mixed to mono and resampled to 44.1 kHz where needed; transcoded Ogg Vorbis to AAC-LC 64 kb/s mono .m4a; metadata stripped",
+    "rationale": "A catapult or trebuchet throws.",
+    "gain": 1.07
+  },
+  {
+    "file": "fx/siege-impact-1.m4a",
+    "events": [
+      "fx:siegeHit:1"
+    ],
+    "title": "siegeprojectilehit_03.ogg",
+    "author": "Wildfire Games",
+    "source": "https://raw.githubusercontent.com/0ad/0ad/master/binaries/data/mods/public/audio/attack/impact/siegeprojectilehit_03.ogg",
+    "license": "CC-BY-SA-3.0",
+    "attribution": "\"siegeprojectilehit_03.ogg\" from 0 A.D. by Wildfire Games (https://www.wildfiregames.com/), CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/), edited for Legatum",
+    "modified": "leading 0.005 s and trailing 0.000 s below -55 dBFS trimmed; 3 ms fade-in and 10 ms fade-out to avoid clicks; static gain -7.5 dB toward -20 LUFS (source -12.7 LUFS, 5.5 dBTP); gain was held back by the -1.5 dBTP peak ceiling, so the file is quieter than -20 LUFS; mixed to mono and resampled to 44.1 kHz where needed; transcoded Ogg Vorbis to AAC-LC 64 kb/s mono .m4a; metadata stripped",
+    "rationale": "The stone lands.",
+    "gain": 0.65
+  },
+  {
+    "file": "fx/siege-impact-2.m4a",
+    "events": [
+      "fx:siegeHit:2"
+    ],
+    "title": "siegeprojectilehit_04.ogg",
+    "author": "Wildfire Games",
+    "source": "https://raw.githubusercontent.com/0ad/0ad/master/binaries/data/mods/public/audio/attack/impact/siegeprojectilehit_04.ogg",
+    "license": "CC-BY-SA-3.0",
+    "attribution": "\"siegeprojectilehit_04.ogg\" from 0 A.D. by Wildfire Games (https://www.wildfiregames.com/), CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/), edited for Legatum",
+    "modified": "leading 0.030 s and trailing 0.109 s below -55 dBFS trimmed; 3 ms fade-in and 10 ms fade-out to avoid clicks; static gain -5.2 dB toward -20 LUFS (source -14.8 LUFS, 1.8 dBTP); mixed to mono and resampled to 44.1 kHz where needed; transcoded Ogg Vorbis to AAC-LC 64 kb/s mono .m4a; metadata stripped",
+    "rationale": "The stone lands.",
+    "gain": 0.64
+  },
+  {
+    "file": "fx/siege-impact-3.m4a",
+    "events": [
+      "fx:siegeHit:3"
+    ],
+    "title": "siegeprojectilehit_01.ogg",
+    "author": "Wildfire Games",
+    "source": "https://raw.githubusercontent.com/0ad/0ad/master/binaries/data/mods/public/audio/attack/impact/siegeprojectilehit_01.ogg",
+    "license": "CC-BY-SA-3.0",
+    "attribution": "\"siegeprojectilehit_01.ogg\" from 0 A.D. by Wildfire Games (https://www.wildfiregames.com/), CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/), edited for Legatum",
+    "modified": "leading 0.015 s and trailing 0.276 s below -55 dBFS trimmed; cut to 2.5 s with a 0.3 s fade-out (trimmed source was longer); 3 ms fade-in and 10 ms fade-out to avoid clicks; static gain -4.2 dB toward -20 LUFS (source -15.8 LUFS, 1.6 dBTP); mixed to mono and resampled to 44.1 kHz where needed; transcoded Ogg Vorbis to AAC-LC 64 kb/s mono .m4a; metadata stripped",
+    "rationale": "The stone lands.",
+    "gain": 0.68
+  },
+  {
+    "file": "fx/death-cry-1.m4a",
+    "events": [
+      "fx:death:1"
+    ],
+    "title": "male_death_01.ogg",
+    "author": "Wildfire Games",
+    "source": "https://raw.githubusercontent.com/0ad/0ad/master/binaries/data/mods/public/audio/actor/human/death/male_death_01.ogg",
+    "license": "CC-BY-SA-3.0",
+    "attribution": "\"male_death_01.ogg\" from 0 A.D. by Wildfire Games (https://www.wildfiregames.com/), CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/), edited for Legatum",
+    "modified": "leading 0.284 s and trailing 0.272 s below -55 dBFS trimmed; 3 ms fade-in and 10 ms fade-out to avoid clicks; static gain +6.1 dB toward -20 LUFS (source -26.1 LUFS, -9.6 dBTP); mixed to mono and resampled to 44.1 kHz where needed; transcoded Ogg Vorbis to AAC-LC 64 kb/s mono .m4a; metadata stripped",
+    "rationale": "A unit falls.",
+    "gain": 0.65
+  },
+  {
+    "file": "fx/death-cry-2.m4a",
+    "events": [
+      "fx:death:2"
+    ],
+    "title": "death_15.ogg",
+    "author": "Wildfire Games",
+    "source": "https://raw.githubusercontent.com/0ad/0ad/master/binaries/data/mods/public/audio/actor/human/death/death_15.ogg",
+    "license": "CC-BY-SA-3.0",
+    "attribution": "\"death_15.ogg\" from 0 A.D. by Wildfire Games (https://www.wildfiregames.com/), CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/), edited for Legatum",
+    "modified": "leading 0.000 s and trailing 0.000 s below -55 dBFS trimmed; 3 ms fade-in and 10 ms fade-out to avoid clicks; static gain -5.7 dB toward -20 LUFS (source -14.3 LUFS, -0.7 dBTP); mixed to mono and resampled to 44.1 kHz where needed; transcoded Ogg Vorbis to AAC-LC 64 kb/s mono .m4a; metadata stripped",
+    "rationale": "A unit falls.",
+    "gain": 0.63
+  },
+  {
+    "file": "fx/death-cry-3.m4a",
+    "events": [
+      "fx:death:3"
+    ],
+    "title": "death_14.ogg",
+    "author": "Wildfire Games",
+    "source": "https://raw.githubusercontent.com/0ad/0ad/master/binaries/data/mods/public/audio/actor/human/death/death_14.ogg",
+    "license": "CC-BY-SA-3.0",
+    "attribution": "\"death_14.ogg\" from 0 A.D. by Wildfire Games (https://www.wildfiregames.com/), CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/), edited for Legatum",
+    "modified": "leading 0.000 s and trailing 0.007 s below -55 dBFS trimmed; 3 ms fade-in and 10 ms fade-out to avoid clicks; static gain -4.5 dB toward -20 LUFS (source -15.5 LUFS, -1.0 dBTP); mixed to mono and resampled to 44.1 kHz where needed; transcoded Ogg Vorbis to AAC-LC 64 kb/s mono .m4a; metadata stripped",
+    "rationale": "A unit falls.",
+    "gain": 0.63
+  },
+  {
+    "file": "fx/building-collapse-1.m4a",
+    "events": [
+      "fx:collapse:1"
+    ],
+    "title": "building_collapse_large_01.ogg",
+    "author": "Wildfire Games",
+    "source": "https://raw.githubusercontent.com/0ad/0ad/master/binaries/data/mods/public/audio/attack/destruction/building_collapse_large_01.ogg",
+    "license": "CC-BY-SA-3.0",
+    "attribution": "\"building_collapse_large_01.ogg\" from 0 A.D. by Wildfire Games (https://www.wildfiregames.com/), CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/), edited for Legatum",
+    "modified": "leading 0.000 s and trailing 0.048 s below -55 dBFS trimmed; cut to 4.0 s with a 0.5 s fade-out (trimmed source was longer); 3 ms fade-in and 10 ms fade-out to avoid clicks; static gain +2.2 dB toward -20 LUFS (source -22.2 LUFS, -4.4 dBTP); mixed to mono and resampled to 44.1 kHz where needed; transcoded Ogg Vorbis to AAC-LC 64 kb/s mono .m4a; metadata stripped",
+    "rationale": "A city is razed.",
+    "gain": 0.64
+  },
+  {
+    "file": "fx/building-collapse-2.m4a",
+    "events": [
+      "fx:collapse:2"
+    ],
+    "title": "building_collapse_large_02.ogg",
+    "author": "Wildfire Games",
+    "source": "https://raw.githubusercontent.com/0ad/0ad/master/binaries/data/mods/public/audio/attack/destruction/building_collapse_large_02.ogg",
+    "license": "CC-BY-SA-3.0",
+    "attribution": "\"building_collapse_large_02.ogg\" from 0 A.D. by Wildfire Games (https://www.wildfiregames.com/), CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/), edited for Legatum",
+    "modified": "leading 0.000 s and trailing 0.696 s below -55 dBFS trimmed; cut to 4.0 s with a 0.5 s fade-out (trimmed source was longer); 3 ms fade-in and 10 ms fade-out to avoid clicks; static gain -0.4 dB toward -20 LUFS (source -21.0 LUFS, -1.6 dBTP); gain was held back by the -1.5 dBTP peak ceiling, so the file is quieter than -20 LUFS; mixed to mono and resampled to 44.1 kHz where needed; transcoded Ogg Vorbis to AAC-LC 64 kb/s mono .m4a; metadata stripped",
+    "rationale": "A city is razed.",
+    "gain": 0.75
   }
 ]

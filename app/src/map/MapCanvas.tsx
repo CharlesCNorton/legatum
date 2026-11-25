@@ -28,6 +28,8 @@ import { buildOverlayTiles, overlayEmpty, useOverlays } from './overlays';
 import { settleTileNote, withProxySettler } from './settleAdvice';
 import { LensSwitcher } from './LensSwitcher';
 import { isColoniaFounder } from '../goalCities';
+import { ambienceFor, cancelBattleSounds, playBattleSounds, setAmbience, type Ambience } from '../feel/sound';
+import { battleSoundCues } from '../feel/battleSound';
 import { isBarbarian } from '../barbarians';
 import { SettlementCard, SettlementDetails } from './SettlementCard';
 import { PING_PULSE_MS, pingsFor } from '../teamPing';
@@ -166,6 +168,34 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
   const orderErrors = useGame((s) => s.errors[s.seat]);
   const mode = useGame((s) => s.mode);
   const anim = useGame((s) => s.anim);
+  // A battle is heard as it is drawn: the sounds are scheduled against the same plan and clock.
+  useEffect(() => {
+    if (!anim?.plan || still) return;
+    playBattleSounds(battleSoundCues(anim.plan), performance.now() - anim.start);
+    return cancelBattleSounds;
+  }, [anim, still]);
+  // The land under the middle of the view has a quiet sound of its own (birds, wind); the sea and the unexplored are
+  // silent. It is the most common answer over the middle tile and its neighbours, and it changes only when two readings
+  // in a row agree, so one hill in a meadow or a pan along a coast does not flip it back and forth.
+  useEffect(() => {
+    let seen: Ambience | null | undefined;
+    const listen = () => {
+      const v = useGame.getState().views?.[useGame.getState().seat];
+      const mid = pixelToHex(cam.current.x, cam.current.y, HEX_SIZE);
+      const counts = new Map<Ambience | null, number>();
+      for (const [dq, dr] of [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1], [1, -1], [-1, 1]]) {
+        const tile = v?.tiles[tileIndex({ q: mid.q + dq, r: mid.r + dr }, v.width, v.height)];
+        const a = tile?.explored ? ambienceFor(tile.terrain) : null;
+        counts.set(a, (counts.get(a) ?? 0) + 1);
+      }
+      const now = [...counts].sort((x, y) => y[1] - x[1])[0][0];
+      if (now === seen) setAmbience(now);
+      seen = now;
+    };
+    listen();
+    const id = setInterval(listen, 1500);
+    return () => { clearInterval(id); setAmbience(null); };
+  }, []);
   const focus = useGame((s) => s.focus);
   const client = useGame((s) => s.client);
   const forecastTick = useGame((s) => s.forecastTick);
