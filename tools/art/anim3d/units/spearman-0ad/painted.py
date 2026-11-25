@@ -10,7 +10,7 @@ UNIT=Path(__file__).resolve().parent
 sys.path.insert(0,str(Path(__file__).resolve().parent));sys.path.insert(0,str(Path(__file__).resolve().parents[2]))
 from validate_glb import GLB
 ROOT=Path(os.environ.get('ANIM_ROOT',Path.home()/'LegatumRuns/anim-pilot'))
-WORK=ROOT/'lanes/spearman-0ad-painted-r3';WORK.mkdir(parents=True,exist_ok=True)
+WORK=ROOT/'lanes/spearman-0ad-painted-r4';WORK.mkdir(parents=True,exist_ok=True)
 SOURCE=WORK/'approved-r6.glb'
 g=GLB(SOURCE);d=g.doc
 attrs=d['meshes'][0]['primitives'][0]['attributes'];original={k:g.accessor(v) for k,v in attrs.items()}
@@ -274,6 +274,8 @@ from painted_human import replace_body
 replace_body(globals())
 from painted_premium import finish_forms
 finish_forms(globals())
+from painted_refine import refine_round_four
+refine_round_four(globals())
 
 # Explicitly retain separate authoring parts; both runtime LODs get one primitive.
 for ob in objects:
@@ -290,14 +292,14 @@ def triangles(ob):return sum(len(p.vertices)-2 for p in ob.data.polygons)
 from collections import Counter
 raw_by_part=Counter()
 for ob in objects:raw_by_part[ob['part']]+=triangles(ob)*(2.15 if ob.get('shell_thickness') else 1)
-budgets={'Greek head':160,'Aspis handgrip':40,'body':900,'heroicbody':2200,'sandal':140,'linen':600,'sleeve':180,'aspis':2400,'helmet':1050,'crest_base':130,'spear':120,'cuirass':1150,'pteruges':270,'greave_L':380,'greave_R':380,'crest':750,'cloak':1000}
+budgets={'Greek head':160,'Aspis handgrip':40,'body':900,'heroicbody':2300,'sandal':140,'linen':650,'sleeve':380,'aspis':2100,'helmet':1700,'crest_base':130,'spear':120,'cuirass':1350,'pteruges':250,'greave_L':400,'greave_R':400,'crest':650,'cloak':1150}
 raw=sum(map(triangles,objects))
 protected=Counter()
 for ob in objects:
     if ob.get('keep_contour'):protected[ob['part']]+=triangles(ob)*(2.15 if ob.get('shell_thickness') else 1)
 for ob in objects:
     ratio=min(1,max(0,budgets[ob['part']]-protected[ob['part']])/max(1,raw_by_part[ob['part']]-protected[ob['part']]))
-    ratio*=.85
+    ratio*=.72
     if ob.get('keep_contour'):ratio=1
     if triangles(ob)>12 and ratio<1:apply(ob,'DECIMATE',ratio=ratio)
     if ob.get('shell_thickness'):

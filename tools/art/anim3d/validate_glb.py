@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """Validate Legatum's real-time unit contract directly from GLB JSON/BIN.
 
-No dependencies. Checks actual geometry, hierarchy, pixels, animation samples and
-skinned bounds; aesthetic flatness and recognisability still require visual review.
+Premium layout: two named skinned LODs, one skeleton/material, 10k/3k triangles,
+1024 base colour/normal/UV0 ORM and red COLOR_0 team weights. No dependencies.
+Checks geometry, hierarchy, image headers, animation samples and skinned bounds;
+premium appearance and recognisability still require visual review.
 """
 import argparse, bisect, copy, json, math, struct
 from pathlib import Path

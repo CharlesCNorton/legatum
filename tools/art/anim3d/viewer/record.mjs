@@ -53,22 +53,6 @@ try {
     if(fit.heightFraction>.921||fit.widthFraction>.921||fit.figureFraction<.65)
       throw new Error(`Invalid framing for ${clip}: ${JSON.stringify(fit)}`);
   }
-  for(const [clip,duration] of Object.entries(state.clips)) {
-    const frames=resolve(out,`.${prefix}-viewer-frames`,assetSha256,clip);await mkdir(frames,{recursive:true});
-    const count=Math.round(duration*30);
-    for(let i=0;i<count;i++) {
-      await page.evaluate(({clip,t})=>window.review.sample(clip,t),{clip,t:i/30});
-      await page.locator('canvas').screenshot({path:join(frames,`${String(i).padStart(4,'0')}.png`)});
-    }
-    const output=join(out,`${prefix}-${clip}-viewer.mp4`);
-    const encode=spawnSync('ffmpeg',['-y','-loglevel','error','-framerate','30','-stream_loop','2','-i',join(frames,'%04d.png'),'-frames:v',String(count*3),'-c:v','libx264','-crf','18','-pix_fmt','yuv420p','-movflags','+faststart',output],{stdio:'inherit'});
-    if(encode.status!==0)throw new Error(`ffmpeg failed for ${clip}`);
-    const probe=spawnSync('ffprobe',['-v','error','-count_frames','-select_streams','v:0','-show_entries','stream=width,height,pix_fmt,nb_read_frames,r_frame_rate','-of','json',output],{encoding:'utf8'});
-    if(probe.status!==0)throw new Error(`ffprobe failed for ${clip}`);
-    const stream=JSON.parse(probe.stdout).streams[0];
-    if(Number(stream.nb_read_frames)!==count*3||stream.pix_fmt!=='yuv420p')throw new Error(`Invalid encoded clip ${clip}`);
-    receipts[clip]={output,framing:framing[clip],...stream};console.log(output);
-  }
   // Actual MeshStandardMaterial/ACES evidence, at the same 512 px size as the panel.
   await page.setViewportSize({width:512,height:512});
   await page.evaluate(()=>window.review.sample('idle',0));
@@ -84,23 +68,49 @@ try {
   const comparisonPath=join(out,`${prefix}-vs-panel-viewer.png`);
   await comparison.screenshot({path:comparisonPath});await comparison.close();
   receipts.comparison={output:comparisonPath,hero:heroPath,renderer:'three.js MeshStandardMaterial / ACES'};
-  await page.setViewportSize({width:960,height:640});
-  await page.evaluate(()=>window.review.sample('idle',0));
-  const turnFrames=resolve(out,`.${prefix}-viewer-frames`,assetSha256,'turntable');await mkdir(turnFrames,{recursive:true});
-  for(let i=0;i<360;i++) {
-    await page.evaluate(t=>window.review.turntable(t,12),i/30);
-    await page.locator('canvas').screenshot({path:join(turnFrames,`${String(i).padStart(4,'0')}.png`)});
+  console.log(comparisonPath);
+  // Still-first mode lets the lead review game-renderer pigment before spending
+  // time recording every clip. Default mode continues to all movies/turntable.
+  if(args.includes('--stills-only')) {
+    if(errors.length)throw new Error(errors.join('\n'));
+    await writeFile(join(out,`${prefix}-viewer-still-validation.json`),JSON.stringify({assetSha256,clips:receipts},null,2));
+  } else {
+    await page.setViewportSize({width:960,height:640});
+    await page.evaluate(()=>window.review.sample('idle',0));
+    for(const [clip,duration] of Object.entries(state.clips)) {
+      const frames=resolve(out,`.${prefix}-viewer-frames`,assetSha256,clip);await mkdir(frames,{recursive:true});
+      const count=Math.round(duration*30);
+      for(let i=0;i<count;i++) {
+        await page.evaluate(({clip,t})=>window.review.sample(clip,t),{clip,t:i/30});
+        await page.locator('canvas').screenshot({path:join(frames,`${String(i).padStart(4,'0')}.png`)});
+      }
+      const output=join(out,`${prefix}-${clip}-viewer.mp4`);
+      const encode=spawnSync('ffmpeg',['-y','-loglevel','error','-framerate','30','-stream_loop','2','-i',join(frames,'%04d.png'),'-frames:v',String(count*3),'-c:v','libx264','-crf','18','-pix_fmt','yuv420p','-movflags','+faststart',output],{stdio:'inherit'});
+      if(encode.status!==0)throw new Error(`ffmpeg failed for ${clip}`);
+      const probe=spawnSync('ffprobe',['-v','error','-count_frames','-select_streams','v:0','-show_entries','stream=width,height,pix_fmt,nb_read_frames,r_frame_rate','-of','json',output],{encoding:'utf8'});
+      if(probe.status!==0)throw new Error(`ffprobe failed for ${clip}`);
+      const stream=JSON.parse(probe.stdout).streams[0];
+      if(Number(stream.nb_read_frames)!==count*3||stream.pix_fmt!=='yuv420p')throw new Error(`Invalid encoded clip ${clip}`);
+      receipts[clip]={output,framing:framing[clip],...stream};console.log(output);
+    }
+    await page.setViewportSize({width:960,height:640});
+    await page.evaluate(()=>window.review.sample('idle',0));
+    const turnFrames=resolve(out,`.${prefix}-viewer-frames`,assetSha256,'turntable');await mkdir(turnFrames,{recursive:true});
+    for(let i=0;i<360;i++) {
+      await page.evaluate(t=>window.review.turntable(t,12),i/30);
+      await page.locator('canvas').screenshot({path:join(turnFrames,`${String(i).padStart(4,'0')}.png`)});
+    }
+    const turntable=join(out,`${prefix}-turntable.mp4`);
+    const turnEncode=spawnSync('ffmpeg',['-y','-loglevel','error','-framerate','30','-i',join(turnFrames,'%04d.png'),'-frames:v','360','-c:v','libx264','-crf','18','-pix_fmt','yuv420p','-movflags','+faststart',turntable],{stdio:'inherit'});
+    if(turnEncode.status!==0)throw new Error('Turntable encoding failed');
+    const turnProbe=spawnSync('ffprobe',['-v','error','-count_frames','-select_streams','v:0','-show_entries','stream=width,height,pix_fmt,nb_read_frames,r_frame_rate','-of','json',turntable],{encoding:'utf8'});
+    if(turnProbe.status!==0)throw new Error('Turntable probe failed');
+    const turnStream=JSON.parse(turnProbe.stdout).streams[0];
+    if(Number(turnStream.nb_read_frames)!==360||turnStream.pix_fmt!=='yuv420p')throw new Error('Invalid turntable');
+    receipts.turntable={output:turntable,duration:12,...turnStream};console.log(turntable);
+    if(errors.length)throw new Error(errors.join('\n'));
+    await writeFile(join(out,`${prefix}-viewer-validation.json`),JSON.stringify({assetSha256,clips:receipts},null,2));
   }
-  const turntable=join(out,`${prefix}-turntable.mp4`);
-  const turnEncode=spawnSync('ffmpeg',['-y','-loglevel','error','-framerate','30','-i',join(turnFrames,'%04d.png'),'-frames:v','360','-c:v','libx264','-crf','18','-pix_fmt','yuv420p','-movflags','+faststart',turntable],{stdio:'inherit'});
-  if(turnEncode.status!==0)throw new Error('Turntable encoding failed');
-  const turnProbe=spawnSync('ffprobe',['-v','error','-count_frames','-select_streams','v:0','-show_entries','stream=width,height,pix_fmt,nb_read_frames,r_frame_rate','-of','json',turntable],{encoding:'utf8'});
-  if(turnProbe.status!==0)throw new Error('Turntable probe failed');
-  const turnStream=JSON.parse(turnProbe.stdout).streams[0];
-  if(Number(turnStream.nb_read_frames)!==360||turnStream.pix_fmt!=='yuv420p')throw new Error('Invalid turntable');
-  receipts.turntable={output:turntable,duration:12,...turnStream};console.log(turntable);
-  if(errors.length)throw new Error(errors.join('\n'));
-  await writeFile(join(out,`${prefix}-viewer-validation.json`),JSON.stringify({assetSha256,clips:receipts},null,2));
 } finally {
   if(browser)await browser.close();await new Promise(r=>server.close(r));
 }

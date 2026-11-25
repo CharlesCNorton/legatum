@@ -6,7 +6,7 @@ UNIT=Path(__file__).resolve().parent
 sys.path.insert(0,str(Path(__file__).resolve().parent));sys.path.insert(0,str(Path(__file__).resolve().parents[2]))
 from validate_glb import GLB
 ROOT=Path(os.environ.get('ANIM_ROOT',Path.home()/'LegatumRuns/anim-pilot'))
-WORK=ROOT/'lanes/spearman-0ad-painted-r3'
+WORK=ROOT/'lanes/spearman-0ad-painted-r4'
 g=GLB(WORK/'approved-r6.glb');d=g.doc
 bones=[d['nodes'][j]['name'] for j in d['skins'][0]['joints']]
 bpy.ops.wm.open_mainfile(filepath=str(WORK/'painted-master.blend'))

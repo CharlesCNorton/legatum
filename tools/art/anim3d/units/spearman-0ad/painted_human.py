@@ -29,9 +29,9 @@ def replace_body(ctx):
     for side in ['l','r']:
         S=side.upper()
         for src,dst,end in [('clavicle','shoulder','arm'),('upperarm','arm','forearm'),('lowerarm','forearm','hand'),('thigh','thigh','leg'),('calf','leg','foot')]:
-            maps[src+'_'+side]=(source[src+'_'+side][0],source[src+'_'+side][1],target[dst+'_'+S],target[end+'_'+S],1.30)
+            maps[src+'_'+side]=(source[src+'_'+side][0],source[src+'_'+side][1],target[dst+'_'+S],target[end+'_'+S],1.60 if src in {'upperarm','lowerarm'} else 1.32)
         palm=source['hand_'+side][0];finger=source['middle_01_'+side][0]
-        maps['hand_'+side]=(palm,finger,target['hand_'+S],target['finger_'+S],1.12)
+        maps['hand_'+side]=(palm,finger,target['hand_'+S],target['finger_'+S],1.48)
         # Common finger-frame transforms retain the spacing/anatomy of all five digits.
         for name in source:
             if name.endswith('_'+side) and name.startswith(('index_','middle_','ring_','pinky_','thumb_')):
@@ -39,7 +39,7 @@ def replace_body(ctx):
                 a,b=source['middle_0'+str(stage)+'_'+side]
                 dst=target['finger_'+S] if stage==1 else target['fingertip_'+S]
                 end=target['fingertip_'+S] if stage==1 else dst+Vector((-.012 if side=='l' else .012,-.010,-.006))
-                maps[name]=(a,b,dst,end,.78)
+                maps[name]=(a,b,dst,end,1.02)
     def transform(p,name):
         if name in maps:
             a,b,c,d,radial=maps[name];u=b-a;v=d-c;q=u.rotation_difference(v)

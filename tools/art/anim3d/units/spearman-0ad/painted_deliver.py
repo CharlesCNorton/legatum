@@ -1,4 +1,4 @@
-"""Encode delivery WebP textures (quality 84–85) and compact only GLB image buffers.
+"""Encode delivery WebP textures (quality 88–92) and compact only GLB image buffers.
 
 Run with ANIM_ROOT/venv/bin/python after Blender export. The 2048 PNG masters
 remain lossless. This packaging step does not edit geometry, rig or animation.
@@ -11,13 +11,13 @@ UNIT=Path(__file__).resolve().parent
 sys.path.insert(0,str(UNIT.parents[1]))
 from validate_glb import GLB
 ROOT=Path(os.environ.get('ANIM_ROOT',Path.home()/'LegatumRuns/anim-pilot'))
-WORK=ROOT/'lanes/spearman-0ad-painted-r3'
+WORK=ROOT/'lanes/spearman-0ad-painted-r4'
 g=GLB(UNIT/'spearman.glb');d=g.doc;replacements={};report={}
 for im in d['images']:
     name=im['name'];png=UNIT/f'spearman-{name}.png';jpg=UNIT/f'spearman-{name}.webp'
     source=png if png.exists() else WORK/f'shipped-lossless-{name}.png'
     image=Image.open(source).convert('RGB');assert image.size==(1024,1024)
-    quality=85 if name=='normal' else 84
+    quality={'basecolor':88,'normal':92,'orm':90}[name]
     image.save(jpg,format='WEBP',quality=quality,method=6)
     decoded=Image.open(jpg).convert('RGB')
     delta=np.asarray(image,dtype=float)-np.asarray(decoded,dtype=float)
@@ -45,7 +45,7 @@ for i,v in enumerate(d['bufferViews']):
     old=g.bin[v.get('byteOffset',0):v.get('byteOffset',0)+v['byteLength']]
     raw=replacements.get(i,old);blob.extend(b'\0'*(-len(blob)%4));v['byteOffset']=len(blob);v['byteLength']=len(raw);blob.extend(raw)
 d['buffers']=[{'byteLength':len(blob)}];blob.extend(b'\0'*(-len(blob)%4))
-d['asset']['extras']['texture_delivery']={'quality':84,'encoding':'WebP','pixels':1024}
+d['asset']['extras']['texture_delivery']={'quality_by_image':{name:entry['quality'] for name,entry in report.items()},'encoding':'WebP','pixels':1024}
 raw=json.dumps(d,separators=(',',':')).encode();raw+=b' '*(-len(raw)%4)
 path=UNIT/'spearman.glb';path.write_bytes(struct.pack('<4sII',b'glTF',2,28+len(raw)+len(blob))+struct.pack('<II',len(raw),0x4e4f534a)+raw+struct.pack('<II',len(blob),0x004e4942)+blob)
 for name in ['basecolor','normal','orm']:

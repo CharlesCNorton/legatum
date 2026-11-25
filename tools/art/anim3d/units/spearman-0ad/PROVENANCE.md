@@ -289,3 +289,73 @@ checks pass; Khronos reports zero errors, warnings, infos and hints. The matchin
 motion/skeleton fingerprint is unchanged from round six:
 `639ad201654bf2a08b90c9b7b35c8f047ac1f5cf3531e7b7224f80e0e1d58f79`.
 These technical checks do not establish premium art approval.
+
+
+## Painted premium round 4
+
+Continues the round-three painted commit, now selected as the main lane. Reads
+the latest lead ranking (a–g) and reviewer items 14a–f. `painted_refine.py`
+adapts the PBR lane's convex aspis, thick bronze lip, inset team band, broad
+bevelled raised rays and boss; the precise source commit is in SOURCES.md.
+Bronze uses its ochre/bright-edge/dark-recess palette and roughness separation,
+with the painted lane's fixed pigment shading and lower metallic response.
+Main bronze roughness/metallic .57/.55, raised edges .34/.75, shield .58/.62,
+and recesses .75/.38 before roughness grain. One runtime material still uses
+three baked maps. These are Blender-authored procedural painted pigments,
+not manual brush painting or a projection of the reference image.
+
+The cuirass now tapers around the shoulders and has a finished rolled neckline,
+waist hem, oxhide belt and chased pectoral detail following the actual shell.
+A linen chiton covers the shoulder anatomy, with separate folded ivory sleeves
+and finished cuffs. MPFB limb radial fitting is fuller on the arms; palms and
+digits are enlarged about their original bone frames. Calf/thigh expansion is
+more restrained than the first round-four experiment so it fits the armour.
+The separate spherical knee pieces are replaced by continuous shaped greaves
+extending from the patella to the ankle, with rolled ends and a shin keel.
+Leather pteruges use clean low-complexity surfaces instead of collapsing bevels.
+
+The Corinthian shell has jaw-length cheek guards, an actual dark T aperture,
+a raised curved brow and an outward-flared nape that rises behind the jaw.
+The previous dark material on exposed neck anatomy is removed. The crest
+retains a full sagittal volume, with finer painted strands, irregular tips and
+darker roots. The cloak is rebuilt from both shoulders to the knees with deep
+folds and an integrated team edge. Small shoulder drapes and bronze brooches
+replace the flat collar disc. The native three cape bones drive the cloth.
+
+Every change is to bind geometry, transferred weights, textures or review
+code. No stance offset, pose edit, key edit, timing adjustment, new rig or
+animation donor. `check_painted.py` compares all delivered skeleton and
+animation data against the preserved approved round-six GLB. Ground fitting
+only adjusts bind vertices; it is not a certificate of clothing clearance.
+
+The existing Cycles selected-to-active normal/AO pipeline, 25-degree tangent
+normal relief bound, 2048 masters and 1024 WebP delivery remain. The high-poly
+copy is retained before decimation, with subdivision and geometric grain.
+Source `.blend`, PNG masters and trial bakes stay outside git. Both named LODs
+share one skeleton/material; one LOD is shown at a time. UV0 ORM is R occlusion,
+G roughness, B metallic. COLOR_0 red, rigid prop sockets, +Z and attribution
+remain intact. Final counts and exact check receipts are in the round-four lane
+note and review JSONs; technical validation is not premium art approval.
+
+The three.js viewer retains the credited Poly Haven HDRI, warm key, cool rim,
+soft shadows, AO and ACES. `record.mjs` now captures the viewer comparison first
+and supports `--stills-only` for a quick renderer review. Default recording with
+`--prefix spearman-0ad-painted-r4` still writes all five movies and the exact
+`spearman-0ad-painted-r4-turntable.mp4`. Host recording is the lead's handoff.
+
+Final round-four delivery: **9,968 / 2,763 triangles, 30 bones, 1,787,164 bytes**.
+Asset SHA-256: `366f770517d06e23499c0adb221e7243f07095e9396b206159ba167f5dc977d3`.
+Authoring surfaces: 38,042 triangles; subdivided reference: 611,840 triangles.
+The rounded boss and raised rays are explicitly protected from decimation.
+The linen skirt has wider pleats and follows its thigh at the hem to reduce
+skin showing through in the locked idle. Shipped WebP quality is 88 base colour,
+92 normal, 90 ORM; the normal/ORM delivery remains lossy. The actual PNG masters
+are 2048 square and all three embedded WebPs are 1024 square. Exact approved
+motion/skeleton fingerprint remains
+`639ad201654bf2a08b90c9b7b35c8f047ac1f5cf3531e7b7224f80e0e1d58f79`.
+
+A final part-ID render identified the large brown patch over the linen as
+concealed body geometry. Pelvis/upper-thigh vertices now fit inside the chiton
+and share its hip/thigh blend, retaining a continuous anatomical surface.
+The fit is selected by bone influence as well as spatial bounds: nearby hand
+vertices must not be included. No skeleton or animation values are changed.

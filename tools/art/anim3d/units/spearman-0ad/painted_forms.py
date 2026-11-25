@@ -88,9 +88,9 @@ def refine(ctx):
         t=j/rows
         for i in range(segments):
             a=i*math.tau/segments;fold=(.004+.012*t)*math.cos(a*16+.25*t)
-            x=(.176+.066*t+fold)*math.cos(a);z=(.143+.050*t+fold)*math.sin(a)
+            x=(.176+.085*t+fold)*math.cos(a);z=(.143+.050*t+fold)*math.sin(a)
             vs.append((x,.875-.29*t+.008*t*math.cos(a*16),z))
-            leg='thigh_L' if x>=0 else 'thigh_R';w=.28*t
+            leg='thigh_L' if x>=0 else 'thigh_R';w=.65*t
             ww.append([(bones.index('hip'),1-w),(bones.index(leg),w)])
     for j in range(rows):
         for i in range(segments):a=j*segments+i;b=j*segments+(i+1)%segments;fs.append((a,b,b+segments,a+segments))

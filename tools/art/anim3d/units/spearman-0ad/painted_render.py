@@ -8,8 +8,8 @@ from pathlib import Path
 from mathutils import Vector, Matrix
 UNIT=Path(__file__).resolve().parent
 ROOT=Path(os.environ.get('ANIM_ROOT',Path.home()/'LegatumRuns/anim-pilot'))
-ROUND='painted-r3'
-WORK=ROOT/'lanes/spearman-0ad-painted-r3';OUT=WORK/'frames';OUT.mkdir(parents=True,exist_ok=True)
+ROUND='painted-r4'
+WORK=ROOT/'lanes/spearman-0ad-painted-r4';OUT=WORK/'frames';OUT.mkdir(parents=True,exist_ok=True)
 QUICK='--quick' in sys.argv
 STILLS='--stills' in sys.argv
 MAP_ONLY='--map-only' in sys.argv

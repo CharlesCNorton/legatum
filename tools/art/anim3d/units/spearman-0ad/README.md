@@ -311,3 +311,33 @@ general art licence. Credit is embedded in `asset.copyright` and `asset.extras`:
 “0 A.D. art by Wildfire Games, CC BY-SA 3.0; adapted for Legatum”. Provenance
 names the exact source files at commit
 `61a3b9507d974084e6badb88a0826bd89a6d5b8b` and our modifications.
+
+
+## Current painted premium round 4
+
+The painted branch continues the approved round-six rig/animations with two
+skinned LODs and the look described in PROVENANCE.md. Rebuild on this branch:
+
+```sh
+source tools/art/anim3d/env.sh
+blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python tools/art/anim3d/units/spearman-0ad/painted.py
+"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/spearman-0ad/painted_deliver.py
+```
+
+The preserved `lanes/spearman-0ad-painted-r4/approved-r6.glb`, MPFB assets and
+Blender resource environment are required. Bakes default to 2048 masters;
+`PAINTED_BAKE_SIZE=512` is an iteration-only setting and fails the delivery gate.
+All large intermediates stay outside git. Validate with `validate_glb.py`,
+`check_painted.py`, Khronos, `check_painted_contact.py` and
+`check_painted_joints.py`. Render delivery sprites with `painted_render.py`, then
+repeat with `-- --stills` and `-- --joints`; package using `painted_review.py`.
+
+The lead's three.js review command is:
+
+```sh
+PLAYWRIGHT_MODULE="$HOME/LegatumRuns/anim-pilot/oad/viewer-runtime/node_modules/playwright/index.mjs" node tools/art/anim3d/viewer/record.mjs --prefix spearman-0ad-painted-r4 --out "$HOME/LegatumRuns/anim-pilot/review/3d-v2"
+```
+
+Add `--stills-only` for the quick comparison; default recording also writes
+all five viewer movies and `spearman-0ad-painted-r4-turntable.mp4`.
+Technical validation is not art approval; see the external round-four lane note.

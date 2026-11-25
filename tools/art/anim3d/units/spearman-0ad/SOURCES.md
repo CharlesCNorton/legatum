@@ -1,4 +1,4 @@
-# Painted premium inputs (rounds 1–3)
+# Painted premium inputs (rounds 1–4)
 
 - Approved round-six `spearman.glb`, from commit `5199b147` on the 0 A.D. lane.
   SHA-256: `84bf794f543fd4a1af2d1b9c2b48c89a6c52533a00d7803e553b49a22513f92c`.
@@ -38,3 +38,14 @@ lane retained rougher bronze and stronger pigment separation; the PBR lane's
 shield edge contrast informed the aspis work. No other-lane buffers were copied.
 Masters, bakes and logs: `$ANIM_ROOT/lanes/spearman-0ad-painted-r3/`.
 The Poly Haven HDRI and its attribution remain in `../../viewer/SOURCES.md`.
+
+Round 4 adapts the aspis construction and bronze palette/roughness setup from
+`astra/unit-anim-3d-spearman-0ad-pbr`, commit
+`2f60247986ffad8cba305d79e2005a6d17b57def`,
+`tools/art/anim3d/units/spearman-0ad/pbr_build.py`. The borrowed construction is
+rebuilt in Blender with the painted lane's shared atlas and lower metallic
+response; no PBR animation, skeleton or texture buffers are copied. This
+in-project derivative retains the asset-specific CC BY-SA 3.0 licence.
+No new external assets or downloads. The existing CC0 HDRI and MPFB source
+remain as credited above. Round-four masters, bakes and evidence are in
+`$ANIM_ROOT/lanes/spearman-0ad-painted-r4/`.
