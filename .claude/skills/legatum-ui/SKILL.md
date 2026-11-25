@@ -56,6 +56,7 @@ This file holds the current rules, one line each. The user's words, dates, as-bu
 - Every number has a breakdown on hover or click; hover is for reading, click opens breakdowns; a hoverable bubble never covers its trigger.
 - A number shown is the number in force, and a limit that applies is named in the same line (user, 2026-10-17). Label gross versus net; each number once per card; one source per number.
 - Forecast headlines include every consequence (walled-city fire, Siege); a line that changes a number shows both numbers.
+- When an era-scaled number makes a fixed figure wrong, show the number computed for this city and era ("+6 city strength for the next level"), never a vague word like "more" (UI review of PR 137, 2026-11-25).
 - Costs are loud (red), including ongoing upkeep on every build card; neutral "nothing yet" lines are muted ink, never green; colour is from the viewer's side.
 - Anything that ticks over time has a progress bar with turns left; a goal's progress is a meter with its number.
 - Every way to score is visible, with ownership unmistakable (user, 2026-10-06); a scoring option that becomes available is announced every time (user, 2026-11-11).
