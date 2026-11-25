@@ -715,4 +715,8 @@ it('leads the unit list with the best unit the city can build, the one short of 
   expect(container.querySelector('.production-choice[data-item="u:Pikeman"]')).toBeNull();
   // Nothing queued: it can't be queued yet, so the button is off.
   expect(better.querySelector<HTMLButtonElement>('[aria-label="Queue Reisläufer"]')!.disabled).toBe(true);
+  // Queued behind a build, its queue row says what it waits for instead of a turn count.
+  Object.assign(city.detail!, { producing: spear.item, production_queue: [pike.item] });
+  act(() => root.render(<CityPanel city={city} view={view} />));
+  expect(container.querySelector('[data-testid="production-queue"] li .queue-turns')!.textContent).toBe('needs Iron');
 });
