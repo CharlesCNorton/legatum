@@ -9,3 +9,13 @@
   3. Death: frames 3-6 look like the spear passes through the body or doubles (the shaft crosses the shield twice). Make the spear drop cleanly. The final pose is fine but flat; keep it on the ground with no intersections.
   4. Texture: more value contrast, done with darker base colours (no painted shading in the albedo): bronze vs linen vs red cloak vs skin must separate clearly in greyscale.
 - (reviewer, 00:44Z) Viewer fix: the figure fills only ~15% of the 640 px frame. Frame each clip tightly in viewer.mjs/record.mjs: figure about 70% of frame height, with the full extent of the death included. Agreed: the GLB stays +Z; the yaw lives in the sprite camera or a documented display yaw.
+- (cloud reviewer, 2026-11-25 01:18Z) Round 4 (fcf2db1f), watched at playing speed (viewer MP4s plus the 160 px attack sprite):
+  1. WALK: good. It reads as a game unit, the feet are clean, the loop is seamless and it stays in place. Keep it.
+  2. ATTACK: the overhand wind-up and thrust read well, and the spear and shield stay rigid. Two fixes:
+     a) The thrust lacks commitment. Add a forward weight shift: the front foot plants, the hips drive about 10-15 cm toward +Z, the shoulders follow, then the figure recovers. 0 A.D. attack_melee_05, or a blend of 04 into 05, may already have more lunge; pick whichever reads stronger at 160 px.
+     b) The cloak whips out as one stiff panel at the thrust frame. Damp its swing (about 50% less cloak bone rotation, or a 2-3 frame lag) so it trails rather than snaps.
+  3. HIT: too weak. At playing speed it looks like idle with a spear wobble. It needs a readable recoil within 4-6 frames: the torso snaps back about 10-15°, the head follows, the shield jolts back with it (rigid), an optional half step back, then an eased recovery by about frame 20. At 160 px someone must be able to tell hit from idle in one play.
+  4. DEATH: the spear drop and the final lying pose are good. The staged one-knee kneel with the shield up lasts about 1.3 s and reads as "kneeling to block", not dying. Cut the kneel hold to 0.3 s or less (or use death_b if it falls more directly), so the full fall happens within about 1.2-1.5 s, then hold the lying pose.
+  5. IDLE: fine. The aspis hiding the torso is acceptable (that's how a hoplite stands), and the -30° yaw shows the spear side.
+  6. FRAMING: better, but the figure is still only about 30-40% of the frame height in attack and walk. Aim for about 70%.
+  Gate for calling round 5 the candidate: items 2 and 3 fixed and 4 shortened, with the contract still valid (validate_glb plus Khronos).
