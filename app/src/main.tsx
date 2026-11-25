@@ -21,11 +21,16 @@ import { NarrowGate } from './ui/NarrowPlate';
 installGlobalErrorHandlers();
 
 // Sound unlocks on the first gesture (autoplay rules). The committed viewer's
-// diplomacy state selects the theme; title and other screens use the full piece.
+// people and diplomacy state select the music; title and other screens use the title piece.
 installSound();
 // Full screen and the browser's install offer (Settings shows them where the browser supports them).
 installDisplay();
-useGame.subscribe((state) => setMusicForView(state.screen === 'game' ? state.views?.[state.seat] ?? null : null));
+useGame.subscribe((state) => {
+  const view = state.screen === 'game' ? state.views?.[state.seat] ?? null : null;
+  // Several people at one screen (hot seat) share the music every people hears; one player hears their own people's.
+  const people = view && state.humans.length === 1 ? view.players.find((p) => p.id === view.me)?.faction ?? null : null;
+  setMusicForView(view, people);
+});
 
 // The terrain art (organic S2; `?terrain=current` skips it) must be decoded before the first map chunk is baked.
 // Until React mounts, index.html's static loading plate fills #root. An engine that is in the build but

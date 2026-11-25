@@ -72,12 +72,20 @@ Contributor Covenant 2.1 (CC BY 4.0), as it says.
 
 ## Audio
 
-All shipped music and sound effects (`app/public/audio/`, 39 files) are released under CC0 1.0 (no attribution
-required; courtesy credit is given). The per-file source, author and processing are in `app/public/audio/CREDITS.md`
-and `app/public/audio/manifest.json`: Kenney (kenney.nl: Music Jingles, RPG Audio, Impact Sounds; 34 files),
-Breviceps ("Short Choir", freesound.org; 2 files), Bastianhallo ("Level up", freesound.org; 1 file) and vitalezzz ("Eclipse Legion", opengameart.org; both music
-tracks are edits of that one work). The licence text is in `app/public/audio/licenses/CC0-1.0.txt`. The same credits
-appear in the game under How to Play → Credits.
+The shipped music and sound effects (`app/public/audio/`, 80 files) are third-party works under two licences.
+The per-file source, author and processing are in `app/public/audio/CREDITS.md` and
+`app/public/audio/manifest.json`, and the same credits appear in the game under How to Play → Credits.
+
+- **CC0 1.0** (39 files; no attribution required, courtesy credit is given): Kenney (kenney.nl: Music Jingles,
+  RPG Audio, Impact Sounds; 34 files), Breviceps ("Short Choir", freesound.org; 2 files), Bastianhallo ("Level up", freesound.org; 1 file) and vitalezzz
+  ("Eclipse Legion", opengameart.org; the title piece and the war excerpt are edits of that one work). The licence
+  text is in `app/public/audio/licenses/CC0-1.0.txt`.
+- **CC BY-SA 3.0** (41 files: 16 music tracks, 3 land sounds, 22 battle sounds): from 0 A.D., Copyright Wildfire
+  Games (https://www.wildfiregames.com/), licensed under Creative Commons Attribution-ShareAlike 3.0
+  (https://creativecommons.org/licenses/by-sa/3.0/). They were trimmed, loudness-matched and re-encoded for Legatum
+  (`tools/audio/build_0ad.py`), and the edited files stay under CC BY-SA 3.0. The licence text is in
+  `app/public/audio/licenses/CC-BY-SA-3.0.txt`. This licence covers these audio files only; it does not extend to
+  Legatum's code or art.
 
 ## Art
 
