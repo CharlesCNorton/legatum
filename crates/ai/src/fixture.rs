@@ -200,6 +200,8 @@ impl ViewBuilder {
                     peace_cooldowns: vec![],
                     met: vec![],
                     actions: vec![],
+                    deals: false,
+                    open_borders: Default::default(),
                 }
                 .into(),
                 turn: 20,

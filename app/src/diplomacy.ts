@@ -37,7 +37,9 @@ export function diplomaticTeams(event: Event): TeamId[] {
     ? event.proposal.required_teams : [event.proposal.from, event.proposal.to];
   if ('call' in event) return [event.call.ally, event.call.team];
   switch (event.type) {
-    case 'TreatyEnded': return [event.a, event.b];
+    case 'TreatyEnded':
+    case 'BordersOpened':
+    case 'BordersClosed': return [event.a, event.b];
     case 'TreatyBreached': return [event.by, event.with];
     case 'AllianceBetrayed': return [event.betrayal.by, event.betrayal.against];
     case 'OrderSuperseded': return [event.decision.team];
@@ -193,7 +195,7 @@ export function withLocalDiplomacy(view: PlayerView, humans: number[], orders: O
 }
 /** Player-facing name of a proposal kind (a missing kind is a Peace offer). */
 export const offerLabel = (p: { kind?: TreatyKind | null }) => treatyLabel(p.kind);
-export const treatyLabel = (kind?: TreatyKind | null) => kind ?? 'Peace';
+export const treatyLabel = (kind?: TreatyKind | null) => kind === 'OpenBorders' ? 'Open Borders' : kind ?? 'Peace';
 /** Betrayal records still refusing Alliances where `team` broke an alliance. */
 export function betrayalsBy(view: PlayerView, team: TeamId) {
   return (view.diplomacy?.betrayals ?? []).filter((b) => b.by === team);

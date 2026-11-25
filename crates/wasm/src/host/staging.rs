@@ -559,6 +559,7 @@ impl Room {
             barbarians: self.config.barbarians,
             ai_alliances: self.config.ai_alliances,
             rule_experiments: legatum_core::experiments::RuleExperiments::default(),
+            deals: false,
         }
     }
 }

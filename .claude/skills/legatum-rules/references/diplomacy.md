@@ -7,7 +7,7 @@ Moved verbatim from `game-rules.md` on 2026-11-22, in the original order; the or
 
 **Peace, Alliance or War** (since 2026-10-03, user decision; Pacts, minimum terms, exit notice
 periods, trust and call commitments were removed; Call to Arms was removed 2026-10-18 for shared wars, below). `RelationState`: `Peace | War | Alliance`
-(`diplomacy.rs`); all start at Peace. `TreatyKind`: `Peace | Alliance`.
+(`diplomacy.rs`); all start at Peace. `TreatyKind`: `Peace | Alliance | OpenBorders` (Open Borders only with deals on, see "Deals" below).
 
 | | Cost (Gold) | Notes |
 |---|---|---|
@@ -88,7 +88,7 @@ pair as met; tapes before version 5 replay without it (`wasm/src/tape.rs::initia
 **War**: declaring against a team at plain Peace is a **surprise war** — effective immediately,
 same turn, before ranged fire/movement; a unit can be ordered into enemy territory with the
 declaration in one submission (G20). **At Peace a unit cannot enter the other empire's territory**
-(except Mongols's Scouts and civilians, §8); allies may, but not into a closed country (§8, Sakoku). Only an Alliance shares vision.
+(except with Open Borders, deals only, below; and except Mongols's Scouts and civilians, §8); allies may, but not into a closed country (§8, Sakoku). Only an Alliance shares vision.
 The AI uses that same opening turn for ranged attacks and eligible melee attacks. Its combat
 forecast projects valid surprise declarations before planning the assault
 (`crates/ai/src/scripted.rs::attack_view`, `city_assault.rs::city_assault_succeeds`,
@@ -134,3 +134,43 @@ would open at home (`inherited_front_cost`: up to 40 for the share of the army n
 site value by 40% per travel turn after the first city, up from 10%, so both UI advice and AI
 value reaching a city before rival borders close (`core::settlement::analyze_sites`,
 `ai::civilians::choose_site`).
+
+## Deals (rules 59, behind GameSetup::deals)
+
+Sam approved the first slice of "more ways to deal with other empires than war or peace" on 2026-11-25. Everything here
+needs `GameSetup::deals` (serde default false, omitted when false); off, each deal is refused with
+`diplomacy::DEALS_OFF` ("Deals are off in this game") and nothing else changes: simulations, the hill climb, old saves,
+tapes and fixtures serialize and resolve exactly as before. The app turns it on for new games. `DiplomacyView::deals`
+says whether it is on.
+
+- **Gold in offers.** `Order::ProposeTreaty { to, kind, gold }` and `PeaceProposal::gold` (both omitted when 0) apply to
+  Peace, Alliance and Open Borders offers. Positive: the proposing empire pays that much Gold to the accepting empire;
+  negative: the accepting empire pays |gold| to the proposer. At most 999 either way (`MAX_DEAL_GOLD`). Checks
+  (`check_order`): the proposer must afford a positive amount now (`afford`, "This offer costs N Gold; ..."), and the
+  accepting player must afford an asked amount now ("Accepting this offer costs N Gold; ..."). At resolution
+  (`resolve_boundary`, after the turn's purchases), when the treaty would take effect, the payer must still have the
+  Gold; if not, the offer ends with `ProposalInvalidated` reason "<Faction> could not pay N Gold" and nothing is signed.
+  Otherwise the Gold moves and `Event::GoldGiven { from, to, amount }` follows `ProposalAccepted`. A Peace pays only when
+  the Peace is made. `DiplomaticAction::cost` quotes the Gold the ordering empire would pay (an accept of an offer that
+  asks for Gold). Deal Gold moves after income, so it is not part of this turn's Swiss interest.
+- **Open Borders** (`TreatyKind::OpenBorders`, no upkeep, no breach cost). Offered and accepted only between two teams
+  that have met, are at Peace (not War, not Alliance) and don't already have them; never with a closed country
+  (Sakoku, `closed_refusal`: "a closed country can't open its borders"; `vow_conflict` likewise). State:
+  `DiplomacyState::open_borders` (team pairs, lower id first; omitted when empty); public in
+  `DiplomacyView::open_borders`. Accepting emits `ProposalAccepted` (then `GoldGiven` if any) and
+  `Event::BordersOpened { a, b, effective_turn }`. Effect: `GameState::passage_allowed` (and its mirror
+  `PlayerView::passage_allowed`) let a unit enter land of a team it has Open Borders with; never a closed country, never
+  barbarians. No vision, no war duties.
+- **Open Borders end** (`Event::BordersClosed { a, b, effective_turn, reason }`, public) when either side orders
+  `BreakTreaty { with, agreement: Agreement::OpenBorders }` (free, no betrayal, next turn; "No Open Borders to end"
+  otherwise), when the two go to War by any path (surprise war, boundary declaration, defenders joining, calls answered)
+  or sign an Alliance (which includes passage), or when a team is eliminated (`close_lapsed_borders`, run after
+  `declare_surprise_wars` and at the end of `resolve_boundary`). Units inside stay, like units left in former allied
+  land (not expelled; closed-land limits apply). Closing borders does not change the relation's `version`.
+- **Gifts:** see `turn-and-orders.md` "Co-op Gold gifts": with deals on, Gold may go to any met empire not at War.
+- The one-diplomatic-order-per-other-team-per-turn rule holds for all of it.
+- **View:** with deals on, `DiplomacyView::actions` adds, per other living team, `ProposeTreaty{kind: OpenBorders,
+  gold: 0}` and `BreakTreaty{agreement: OpenBorders}` with their `blocked_reason`; Gold amounts are the client's to set.
+- **AI:** no deal use yet. Hard and the proxies decline Open Borders offers and any offer that asks them for Gold
+  (`ai/src/diplomacy.rs::treaty_score`, `proxy_v4.rs`); an offer that pays them is scored as the plain treaty.
+- **Tests:** `crates/core/tests/deals.rs`.

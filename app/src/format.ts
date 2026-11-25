@@ -768,6 +768,9 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
         details: [ALLIANCE_SHARES, `Each empire pays ${upkeep}.`,
           ...(until ? [`Protected until turn ${until}: leaving before then costs ${terms ? `${terms.breachCost} Gold` : 'Gold'} and is a betrayal.`] : [])] });
     }
+    // Deals: Open Borders let each side's units enter the other's land at Peace.
+    case 'BordersOpened': return diplomacyLine(`Open Borders ${between(e.a, e.b)} · begins turn ${e.effective_turn}`, { weight: 2 });
+    case 'BordersClosed': return diplomacyLine(`Open Borders ${between(e.a, e.b)} ended turn ${e.effective_turn}: ${rename(e.reason)}`, { weight: 2 });
     case 'TreatyEnded': {
       // "<team> left the Alliance": named from the viewer's side. An ally leaving you is bad news.
       const left = /^(.*) left the Alliance$/.exec(e.reason);

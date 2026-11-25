@@ -407,9 +407,9 @@ function OfferCard({ p, view, forecastView, orders, current, ending }: {
     <div className="offer-top">
       {leader
         ? <PortraitFrame faction={leader.faction} crest={false} className="offer-portrait">
-            <span className="offer-emblem"><TreatyEmblem kind={kind} size={36} /></span>
+            <span className="offer-emblem"><TreatyEmblem kind={kind === 'OpenBorders' ? 'Peace' : kind} size={36} /></span>
           </PortraitFrame>
-        : <TreatyEmblem kind={kind} size={44} />}
+        : <TreatyEmblem kind={kind === 'OpenBorders' ? 'Peace' : kind} size={44} />}
       <div className="offer-top-text">
         <h4 className="offer-headline" id={`offer-${p.id}`}>
           <EmpireMark view={view} team={p.from} size={26} />
