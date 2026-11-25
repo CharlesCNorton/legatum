@@ -49,7 +49,7 @@ export const DEFAULT_MAX_NEW_GAMES_PER_DAY = 50;
 /** New games one network (`networkKey`) may store per UTC day. */
 export const MAX_NEW_GAMES_PER_NETWORK_PER_DAY = 200;
 /** New games from all addresses together per UTC day: many addresses still cannot grow the bucket without limit. */
-export const DEFAULT_MAX_NEW_GAMES_TOTAL_PER_DAY = 5000;
+export const DEFAULT_MAX_NEW_GAMES_TOTAL_PER_DAY = 50000;
 
 /** A cap from a Worker var; anything that is not a whole number of at least 1 falls back to `fallback`. */
 export function capFrom(raw: string | undefined, fallback: number = DEFAULT_MAX_NEW_GAMES_PER_DAY): number {

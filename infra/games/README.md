@@ -41,9 +41,9 @@ promise to players).
   never counted or refused. The page keeps such a record queued and retries later.
 - One network (an IPv4 /24 or IPv6 /48, `networkKey` in `src/quota.ts`) may store at most 200 new games per UTC
   day, so one host with many /64s cannot spend the total below by itself. Its row is a salted hash too.
-- All addresses together may store at most 5000 new games per UTC day (`MAX_NEW_GAMES_TOTAL_PER_DAY`, a bad
-  value means 5000), so many addresses cannot grow the bucket without limit; past it every new game gets the
-  same `429`. Bodies may unpack to at most 16 MiB (the largest real record is about 1.4 MB).
+- All addresses together may store at most 50000 new games per UTC day (`MAX_NEW_GAMES_TOTAL_PER_DAY`, a bad
+  value means 50000), so many addresses cannot grow the bucket without limit; past it every new game gets the
+  same `429`. It is far above real traffic (about 1,500 new games on the busiest day so far) and only stops a flood; play is never limited, only what is saved for analysis. Bodies may unpack to at most 16 MiB (the largest real record is about 1.4 MB).
 - What is kept about a sender: a salted SHA-256 of the address (cut to /64 for IPv6) and of its network, each with a count, for the
   current UTC day only, inside the `Quota` Durable Object (SQLite-backed; the salt is made once and never
   leaves it; older rows are deleted on every call). The raw address is never stored or logged.

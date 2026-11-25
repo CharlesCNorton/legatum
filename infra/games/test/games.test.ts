@@ -230,8 +230,8 @@ describe("new games per address per day", () => {
     expect(await stub.take("192.0.2.2", 50, now, 2)).toEqual({ ok: true });
     expect(await stub.take("192.0.2.3", 50, now, 2)).toEqual({ ok: false, retryAfter: 43_200 });
     expect(await stub.take("192.0.2.3", 50, now + 43_200_000, 2)).toEqual({ ok: true });
-    expect(capFrom(undefined, 5000)).toBe(5000);
-    expect(capFrom("x", 5000)).toBe(5000);
+    expect(capFrom(undefined, 50000)).toBe(50000);
+    expect(capFrom("x", 50000)).toBe(50000);
   });
 
   it("counts a wider network on its own, so one host with many /64s cannot spend the total", async () => {

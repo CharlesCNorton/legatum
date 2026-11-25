@@ -20,7 +20,7 @@ export interface Env {
   QUOTA: DurableObjectNamespace<Quota>;
   /** New games one client address may store per UTC day (default 50). A bad value falls back to the default. */
   MAX_NEW_GAMES_PER_DAY?: string;
-  /** New games all addresses together may store per UTC day (default 5000). A bad value falls back to the default. */
+  /** New games all addresses together may store per UTC day (default 50000). A bad value falls back to the default. */
   MAX_NEW_GAMES_TOTAL_PER_DAY?: string;
   ALLOWED_ORIGINS: string;
   /** Secret (`wrangler secret put READ_TOKEN`) for the private read API the analysis job on the developer's Mac uses. Unset = no read API. */
