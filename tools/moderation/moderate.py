@@ -69,7 +69,10 @@ INSULTS = ("fuck you", "fuck off", "eat shit", "asshole", "do your fucking job",
 PROFANITY_RE = re.compile(r"(?<![a-z])(fuck[a-z]*|shit(?:s|ty|head)?|bitch(?:es|y)?|cunts?|bastards?|slop|idiots?|"
                           r"morons?|dumbass|do your job|get back to work)(?![a-z])")
 OWN_TEXT_MIN = 40
-TEMPLATE_LINES = ("**", "- build:", "- how you ran it", "- os and browser", "steps, and the game seed",
+# The issue templates' headings (.github/ISSUE_TEMPLATE), each a bold line of its own. Other bold text is the author's.
+TEMPLATE_HEADINGS = ("what happened", "what you expected", "how to reproduce it", "where", "anything else",
+                     "what you noticed or want", "the game it came from", "why it matters", "a suggestion, if you have one")
+TEMPLATE_LINES = ("- build:", "- how you ran it", "- os and browser", "steps, and the game seed",
                   "most useful thing you can attach", "screenshots, or errors", "people, difficulty, map size",
                   "feedback, a save file", "what it did to your choices", "number has no breakdown",
                   "the project balances by", "people's signature strength")
@@ -152,7 +155,8 @@ def _hits(words, lowered):
 def own_text(body):
     """The body without the issue template's headings and hint lines: what the author actually wrote."""
     kept = [line for line in (body or "").splitlines()
-            if line.strip() and not any(line.strip().lower().startswith(t) or t in line.lower() for t in TEMPLATE_LINES)]
+            if line.strip() and line.strip().strip("*").strip().lower() not in TEMPLATE_HEADINGS
+            and not any(line.strip().lower().startswith(t) or t in line.lower() for t in TEMPLATE_LINES)]
     return "\n".join(kept)
 
 

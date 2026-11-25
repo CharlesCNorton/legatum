@@ -65,6 +65,14 @@ class Moderate(unittest.TestCase):
         for bare in ("idiot", "do your job", "get back to work, morons"):
             self.assertTrue(m.should_close(m.wave_verdict(bare, title=bare, body="")), bare)
 
+    def test_a_report_written_in_bold_is_the_authors_own_text(self):
+        bold = "**Loading my turn-120 save and pressing End Turn freezes the city panel; every button stops responding.**"
+        self.assertEqual(m.own_text(bold), bold)
+        title = "Shitty freeze on End Turn"
+        self.assertFalse(m.should_close(m.wave_verdict(title + "\n" + bold, title=title, body=bold)))
+        # The templates' own bold headings are still not the author's text.
+        self.assertEqual(m.own_text("**What happened**\n\n" + bold + "\n\n**Where**\n\n**A suggestion, if you have one**"), bold)
+
     def test_added_lines_only(self):
         diff = "--- a/README.md\n+++ b/README.md\n-built for people who love Civilization.\n+paid for with taxpayer dollars."
         self.assertEqual(m.added_lines(diff), "paid for with taxpayer dollars.")
