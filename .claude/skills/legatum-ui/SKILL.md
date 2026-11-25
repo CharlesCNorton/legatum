@@ -174,7 +174,7 @@ Every word a player reads (sheets, cards, the Guide, tooltips, breakdowns, repor
 | health | a unit's or city's life, shown as a bar; at 0 a unit is destroyed. Every screen says "health": "Health 63 / 100", "−37 health", "200/200 health" (user, 2026-11-25: a new player did not know "HP"; the copy lint bans HP) | HP, hit points |
 | city health | a city's own health bar (200 at full) | city HP, "the walls" |
 | city strength | the city's combat strength; Walls add to it | city defence strength |
-| Walls | the level-I building and its numbered upgrades; "walled city" is fine | walls (lowercase) for city health |
+| Walls | the level-I building and its numbered upgrades; "walled city" is fine. Also the grey bar in front of city health ("Walls 150 / 200", rules 62): hits land on it first, it never regrows, at 0 the Walls are destroyed ("broke the Walls", "the Walls fell") | walls (lowercase) for city health; "wall HP" |
 | military unit | any unit that fights; say "except Scouts" when a rule leaves them out | armed unit, regiment, troops |
 | VP | victory points (the Guide spells it out once) | victory points elsewhere |
 | World Age card | the Age's one card, worth 1 VP (rules 50; "era objectives" is retired) | era objectives, era goals |
