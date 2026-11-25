@@ -6,8 +6,8 @@
   "compatibility_date": "2026-10-01",
   // The public address. A custom domain puts the Worker behind the zone's rate-limiting rule (README "Edge rule").
   "routes": [{ "pattern": "relay.playlegatum.com", "custom_domain": true }],
-  // The workers.dev address stays on for builds published before the domain; it is outside the edge rule.
-  "workers_dev": true,
+  // No workers.dev address: it would sit outside the edge rule, and no kept build calls it.
+  "workers_dev": false,
   "durable_objects": {
     "bindings": [
       { "name": "LOBBY", "class_name": "Lobby" },

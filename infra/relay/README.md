@@ -124,9 +124,8 @@ plan allows one rule with a 10-second window, shared with `games.playlegatum.com
 - Same characteristics: IP. Requests: 40. Period: 10 seconds. Action: Block for 10 seconds.
 
 A player sends a handful of requests a minute (the list refreshes, one socket per game; messages inside a
-socket are not requests), so the rule only meets scripts. The `workers.dev` address stays on for builds
-published before the domain and is outside the rule; turn it off (`"workers_dev": false`) once no kept
-build uses it.
+socket are not requests), so the rule only meets scripts. Both Workers have their `workers.dev` address
+turned off (`"workers_dev": false`), so the custom domains, and the rule, are the only way in.
 
 ## Security model
 
