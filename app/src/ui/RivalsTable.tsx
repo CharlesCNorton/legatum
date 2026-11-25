@@ -5,6 +5,7 @@ import { CounterDelta } from '../celebrate/MomentLane';
 import { PortraitRoundel } from './premium';
 import { TreatyEmblem } from './ringMedallion';
 import { empireVars } from './vpParts';
+import { Icon } from './bits';
 import { CapitalChip, ClosedChip, DecadenceChip, LeadChip, TombChip, type RowRelation } from './VpHoldings';
 import './rivals.css';
 
@@ -12,6 +13,11 @@ import './rivals.css';
 export const STRONG_ARMY_RATIO = 1.5;
 
 export interface RivalStats { gold: number; army: number; cities: number; science: number }
+
+/** A table number: "1,396", and "23k" from 10,000 up so five digits never overrun a narrow column. */
+export function shortNumber(n: number): string {
+  return Math.abs(n) >= 10_000 ? `${Math.round(n / 1000)}k` : n.toLocaleString('en-US');
+}
 
 /** A team's public numbers: its members' Gold, army, cities and Science per turn added up. */
 export function teamStats(view: PlayerView, row: VpRow): RivalStats {
@@ -45,10 +51,10 @@ export function RivalsTable({ view, model, relationOf, onOpen }: {
       <div className="rv-grid rv-head" role="row">
         <span role="columnheader">Empire</span>
         <span role="columnheader" title="Victory points">VP</span>
-        <span role="columnheader" title="Gold in the treasury" className="rv-x">Gold</span>
-        <span role="columnheader" title="Army points" className="rv-x">Army</span>
-        <span role="columnheader" title="Cities" className="rv-x">Cities</span>
-        <span role="columnheader" title="Science per turn" className="rv-x">Science</span>
+        <span role="columnheader" title="Gold in the treasury" aria-label="Gold" className="rv-x"><Icon name="yield-gold" size={13} /></span>
+        <span role="columnheader" title="Army points" aria-label="Army points" className="rv-x"><Icon name="title-strongest-army" size={13} /></span>
+        <span role="columnheader" title="Cities" aria-label="Cities" className="rv-x"><Icon name="city" size={13} /></span>
+        <span role="columnheader" title="Science per turn" aria-label="Science per turn" className="rv-x"><Icon name="yield-science" size={13} /></span>
       </div>
       {model.rows.map((row) => {
         const s = teamStats(view, row);
@@ -62,10 +68,10 @@ export function RivalsTable({ view, model, relationOf, onOpen }: {
         const cells = unmet
           ? <span className="rv-hidden rv-x" role="cell">Not met yet</span>
           : <>
-            <span className="rv-num rv-x" role="cell" title={`Gold in the treasury: ${s.gold}`}>{s.gold}</span>
-            <span className={`rv-num rv-x${strong ? ' strong' : ''}`} role="cell" title={strong ? `Army points ${s.army}: ${STRONG_ARMY_RATIO} times yours or more` : `Army points ${s.army}`}>{s.army}</span>
-            <span className="rv-num rv-x" role="cell" title={`Cities: ${s.cities}`}>{s.cities}</span>
-            <span className="rv-num rv-x" role="cell" title={`Science per turn: ${s.science}`}>{s.science}</span>
+            <span className="rv-num rv-x" role="cell" title={`Gold in the treasury: ${s.gold}`}>{shortNumber(s.gold)}</span>
+            <span className={`rv-num rv-x${strong ? ' strong' : ''}`} role="cell" title={strong ? `Army points ${s.army}: ${STRONG_ARMY_RATIO} times yours or more` : `Army points ${s.army}`}>{shortNumber(s.army)}</span>
+            <span className="rv-num rv-x" role="cell" title={`Cities: ${s.cities}`}>{shortNumber(s.cities)}</span>
+            <span className="rv-num rv-x" role="cell" title={`Science per turn: ${s.science}`}>{shortNumber(s.science)}</span>
           </>;
         const who = <span className="rv-who" role="cell">
           <span className="rv-crests">
@@ -75,7 +81,7 @@ export function RivalsTable({ view, model, relationOf, onOpen }: {
           <span className="rv-name-col">
             <span className="rv-name">{label}</span>
             {rel && !unmet && <span className={`rv-rel ${rel.kind}${rel.declared ? ' declared' : ''}${rel.isNew ? ' new' : ''}`} title={rel.title} data-relation={rel.text}>
-              <TreatyEmblem kind={rel.kind === 'war' ? 'War' : rel.kind === 'alliance' ? 'Alliance' : 'Peace'} size={12} />{rel.text}
+              <TreatyEmblem kind={rel.kind === 'war' ? 'War' : rel.kind === 'alliance' ? 'Alliance' : 'Peace'} size={12} /><span className="rv-rel-text">{rel.text}</span>
             </span>}
           </span>
         </span>;

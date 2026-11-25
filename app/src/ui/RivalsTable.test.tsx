@@ -6,7 +6,7 @@ import { FixtureClient } from '../test/fixtureEngine';
 import { VpTrack } from './VpTrack';
 import { useGame } from '../store';
 import type { PlayerView, VpSource } from '../types';
-import { STRONG_ARMY_RATIO } from './RivalsTable';
+import { STRONG_ARMY_RATIO, shortNumber } from './RivalsTable';
 import { withV2 } from '../test/vpV2Fixture';
 import { decadenceCurveText, decadencePercent } from '../data';
 
@@ -46,7 +46,7 @@ it('lists every living empire ranked by VP, yours marked, with its public Gold, 
   const team = view.players.filter((p) => p.team === view.team);
   expect(mine.getAttribute('aria-label')).toContain(`Gold ${team.reduce((n, p) => n + (p.gold ?? 0), 0)}`);
   expect(mine.getAttribute('aria-label')).toContain(`Science ${team.reduce((n, p) => n + (p.science ?? 0), 0)} per turn`);
-  expect(host.querySelector('.rivals .rv-head')!.textContent).toBe('EmpireVPGoldArmyCitiesScience');
+  expect([...host.querySelectorAll('.rivals .rv-head > span')].map((h) => h.getAttribute('aria-label') ?? h.textContent)).toEqual(['Empire', 'VP', 'Gold', 'Army points', 'Cities', 'Science per turn']);
   // No Era column (user, 2026-11-25: Science per turn instead).
   expect(host.textContent).not.toMatch(/\bEra\b/);
 });
@@ -180,4 +180,8 @@ it('after the game ends the race shows final standings without countdowns, rival
   expect(host.querySelector('.era-hud')).toBeNull();
   expect(host.querySelector('.vp-foot')).toBeNull();
   expect(host.textContent).not.toMatch(/wins this turn|Next: .* era/);
+});
+
+it('table numbers group thousands and shorten from 10,000 up', () => {
+  expect([999, 1396, 9999, 10_000, 23_456, -12_400].map(shortNumber)).toEqual(['999', '1,396', '9,999', '10k', '23k', '-12k']);
 });
