@@ -21,7 +21,7 @@ import { YieldsAfter } from './bits';
 import { CityYieldHover } from './CityYieldHover';
 import { OwnDecadenceNote, decadenceLinePercent, isDecadenceLine } from './DecadenceNote';
 import { TILE_PRIORITY_INFO, YIELD_KEYS, YIELD_LABEL, signed } from './bits';
-import { CITY_HEAL_RULE, CITY_STRIKE_RULE, WALLS_BAR_RULE, WALLS_UNDER_ATTACK_NOTE, cityFireStatus, cityHealStatus, cityStrengthRule, upkeepText } from '../format';
+import { CITY_HEAL_RULE, CITY_STRIKE_RULE, wallsBarRule, WALLS_UNDER_ATTACK_NOTE, cityFireStatus, cityHealStatus, cityStrengthRule, upkeepText } from '../format';
 import { WALLS_HP_PER_LEVEL } from '../combat';
 import { Icon, ToneIcon } from './bits';
 import { PlayerBadge } from './PlayerBadge';
@@ -242,7 +242,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
           <b>{city.strength}</b>
         </Tip>
         {(city.walls_max_hp ?? 0) > 0 && <span className="cp-break" aria-hidden="true" />}
-        {(city.walls_max_hp ?? 0) > 0 && <Tip content={WALLS_BAR_RULE}>
+        {(city.walls_max_hp ?? 0) > 0 && <Tip content={wallsBarRule(`${wallsRepairing(city, owner?.era ?? 1) ? 'Repair' : 'Upgrade'} ${baseItemName({ kind: 'Building', building: 'Walls' }, owner?.faction)}`)}>
           <span className="lbl">Walls</span>
           <b data-testid="city-walls-bar">{city.walls_hp ?? 0}</b>
           <span className="muted">/{city.walls_max_hp}</span>

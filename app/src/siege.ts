@@ -114,6 +114,9 @@ export interface CityAlarm {
   name: string;
   hp: number;
   maxHp: number;
+  /** The Walls bar in front of the city's health (0 when it has none or they are broken). */
+  walls: number;
+  wallsMax: number;
   /** Last turn's hit, when the turn report is at hand (null after a load). */
   hit: CityHit | null;
   /** The city took damage last turn (from the report or the city's own record). */
@@ -193,9 +196,14 @@ export function captureForecast(view: PlayerView, cityId: number, attackers: rea
       if (grHp <= 0 && melee) fell = t;
     } else if (melee) fell = t;
   }
-  const sum = `${forceText(modes.map((m) => ({ kind: m.u.kind, faction: factionOf(view, m.u.owner) })))} hit for about ${first} health a turn at average rolls against defence ${defense(city.hp)}`;
+  const standing = (city.walls_hp ?? 0) > 0;
+  const wallLoss = Math.floor(first / 2);
+  const force = forceText(modes.map((m) => ({ kind: m.u.kind, faction: factionOf(view, m.u.owner) })));
+  const sum = standing
+    ? `${force} deal about ${wallLoss} to ${city.name}'s Walls each turn; once they break, the hits land on its health`
+    : `${force} hit for about ${first} health a turn against defence ${defense(city.hp)}`;
   const guard = garrison ? ` Its ${itemName({ kind: 'Unit', unit: garrison.kind }, factionOf(view, garrison.owner))} (${garrison.hp} health) must fall before it is taken.` : ' Nothing garrisons it.';
-  const wallsNote = (city.walls_hp ?? 0) > 0 ? ` Its Walls (${city.walls_hp}/${city.walls_max_hp}) take the hits first and never heal.` : '';
+  const wallsNote = standing ? ` Its Walls (${city.walls_hp}/${city.walls_max_hp}) never heal.` : '';
   const detail = `${sum}; ${city.name} has ${city.hp} health and does not heal while they stand beside it.${wallsNote}${guard}${melee ? '' : ' Ranged units wear it down but cannot take it.'}`;
   if (fell !== null) {
     const text = fell <= 1 ? 'Falls next turn unless reinforced' : `Holds about ${fell} turns unless reinforced`;
@@ -204,7 +212,7 @@ export function captureForecast(view: PlayerView, cityId: number, attackers: rea
   if (!melee && zeroTurn !== null) {
     return { perTurn: first, forecast: { turns: null, short: city.hp <= 0 ? 'at 0 health' : zeroTurn <= 1 ? '0 health next turn' : `0 health in ${zeroTurn} turns`, text: city.hp <= 0 ? 'At 0 health; no melee unit to take it yet' : zeroTurn <= 1 ? 'Drops to 0 health next turn; no melee unit to take it yet' : `Drops to 0 health in about ${zeroTurn} turns; no melee unit to take it yet`, detail, level: zeroTurn <= 1 ? 'soon' : 'holding' } };
   }
-  return { perTurn: first, forecast: { turns: null, short: 'holding for now', text: `Holds for now: it loses about ${first} health a turn`, detail, level: 'holding' } };
+  return { perTurn: first, forecast: { turns: null, short: 'holding for now', text: standing ? `Holds for now: its Walls lose about ${wallLoss} a turn` : `Holds for now: it loses about ${first} health a turn`, detail, level: 'holding' } };
 }
 
 /**
@@ -226,7 +234,7 @@ export function citiesUnderAttack(view: PlayerView, lastHits: readonly CityHit[]
     const nearby = hostile.filter((u) => distance(u.pos, city.pos) <= APPROACH_RANGE && !attackers.includes(u));
     if (attackers.length || attackedLastTurn) {
       const { forecast, perTurn } = captureForecast(view, city.id, attackers);
-      out.push({ kind: 'attack', cityId: city.id, name: city.name, hp: city.hp, maxHp: city.max_hp, hit, attackedLastTurn, attackers, approaching: nearby, perTurn, forecast,
+      out.push({ kind: 'attack', cityId: city.id, name: city.name, hp: city.hp, maxHp: city.max_hp, walls: city.walls_hp ?? 0, wallsMax: city.walls_max_hp ?? 0, hit, attackedLastTurn, attackers, approaching: nearby, perTurn, forecast,
         force: forceText(attackers.map((u) => ({ kind: u.kind, faction: factionOf(view, u.owner) }))),
         from: fromText(attackers.map((u) => u.owner), (id) => empireOfPlayer(view, id)) });
       continue;
@@ -237,7 +245,7 @@ export function citiesUnderAttack(view: PlayerView, lastHits: readonly CityHit[]
     const army = [...byOwner.values()].filter((g) => g.length >= ARMY_SIZE).sort((a, b) => b.length - a.length)[0];
     if (!army) continue;
     const nearest = Math.min(...army.map((u) => distance(u.pos, city.pos)));
-    out.push({ kind: 'approach', cityId: city.id, name: city.name, hp: city.hp, maxHp: city.max_hp, hit: null, attackedLastTurn: false, attackers: [], approaching: army, perTurn: 0,
+    out.push({ kind: 'approach', cityId: city.id, name: city.name, hp: city.hp, maxHp: city.max_hp, walls: city.walls_hp ?? 0, wallsMax: city.walls_max_hp ?? 0, hit: null, attackedLastTurn: false, attackers: [], approaching: army, perTurn: 0,
       force: forceText(army.map((u) => ({ kind: u.kind, faction: factionOf(view, u.owner) }))),
       from: fromText(army.map((u) => u.owner), (id) => empireOfPlayer(view, id)),
       forecast: { turns: null, level: 'soon', short: `army ${nearest} tiles away`, text: `Reaches it ${nearest <= 2 ? 'next turn' : 'in about 2 turns'}: reinforce or prepare`,

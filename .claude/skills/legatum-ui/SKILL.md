@@ -18,6 +18,7 @@ This file holds the current rules, one line each. The user's words, dates, as-bu
 - Test layouts with two humans as well as one; test controls with their longest label.
 - A wording change that makes a word longer is checked in the narrowest place it shows: the 1000x600 right sidebar while a unit is selected (about 170px wide), not only the default tour shots (UI review, PR 170: "health" made the siege card's loss text overlap its number there). A row with a big number and a status wraps instead of squeezing: flex-wrap with `white-space: nowrap` on each part, never a `minmax(0, 1fr)` / `auto` grid.
 - A rewrite that drops an established interaction (click targets, shortcuts) is a regression: list a screen's interactions before rewriting it (user, 2026-10-11).
+- Review a moving checkout from a clean worktree of the commit under review: a shared working tree with uncommitted edits shows screens that no commit has (UI review, PR 212).
 - Never override a stated user preference for a general guideline; satisfy both or ask (user, 2026-10-17).
 - Question every requirement on every screen: review each screen and map piece for what can be removed or merged without losing a decision, and before each release check one icon, word, colour and component per concept (user, 2026-11-22). Art quality belongs to `legatum-art-reviewer`.
 
@@ -70,6 +71,9 @@ This file holds the current rules, one line each. The user's words, dates, as-bu
 - Anything that ticks over time has a progress bar with turns left; a goal's progress is a meter with its number.
 - A unit's own movement rule shows where the move is made: the tile card names it for the selected unit (the Chariot Archer's "Entering takes your Chariot Archer's whole turn."), not only the terrain's base cost (UI review, 2026-11-25).
 - A special unit's closed build card names what is special about it (a `CARD_SUMMARY` entry in `data.ts`); the replaced unit's generic summary is not enough. A breakdown row under a unit's strength does not repeat the unit's name (UI review, 2026-11-25).
+- **A layer in front of a number is shown first everywhere** (UI review, PR 212): when a mechanic adds a bar in front of another (the Walls bar in front of city health), every surface that forecasts or alarms on that number (attack forecast with its own "Walls 90 → 81" row, This Turn alarm and its hover, tile card, Guide) shows the front layer first. Grep the old wording ("loses about N health") in the same change.
+- **A bar that can stand in for another carries its own mark** at every zoom (a glyph or a label), never colour alone: a rival's Walls bar sits on the dark track with a small tower at its left end.
+- **A building with a faction name uses that name in every rule line** that tells the player to build it (Rome's "Repair Castrum", not "Upgrade Walls"), and a tooltip never names an item the build list doesn't show (UI review, PR 212).
 - Every way to score is visible, with ownership unmistakable (user, 2026-10-06); a scoring option that becomes available is announced every time (user, 2026-11-11).
 
 ## Map
@@ -172,7 +176,7 @@ Every word a player reads (sheets, cards, the Guide, tooltips, breakdowns, repor
 | population | a city's size | pop, citizens |
 | Food, Production, Gold, Science | the four yields, always capitalised | food, hammers, gold |
 | health | a unit's or city's life, shown as a bar; at 0 a unit is destroyed. Every screen says "health": "Health 63 / 100", "−37 health", "200/200 health" (user, 2026-11-25: a new player did not know "HP"; the copy lint bans HP) | HP, hit points |
-| city health | a city's own health bar (200 at full) | city HP, "the walls" |
+| city health | a city's own health bar (200 at full) | city HP |
 | city strength | the city's combat strength; Walls add to it | city defence strength |
 | Walls | the level-I building and its numbered upgrades; "walled city" is fine. Also the grey bar in front of city health ("Walls 150 / 200", rules 62): hits land on it first, it never regrows, at 0 the Walls are destroyed ("broke the Walls", "the Walls fell") | walls (lowercase) for city health; "wall HP" |
 | military unit | any unit that fights; say "except Scouts" when a rule leaves them out | armed unit, regiment, troops |

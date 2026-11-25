@@ -13,6 +13,7 @@ import { useGame } from '../store';
 import { cityFireStatus } from '../format';
 import { CITY_HEAL, cityTileDefender, siegeTier, exactOdds, splitCounterattackLoss, outriderBlocks } from '../combat';
 import { attackAftermath } from '../aftermath';
+import { WALLS_STONE } from '../map/siegeMark';
 import { assaultSummary, attackerRisk, occupationLockWarning, cityEntryWarning, cityFireOutcome, cityShotTarget, cityStrikeWarning, forecastWinLabel, garrisonHeadline, wallsLine } from './forecastWarnings';
 import { usePlacedCard, type CardAnchor } from './usePlacedCard';
 import { forecastEraHeadline, outclasses, unitEra } from '../map/unitEra';
@@ -352,6 +353,8 @@ export function ForecastCard({
           hp={f.defender_hp}
           max={m.defMax}
           after={m.defAfter}
+          walls={city && !(m.defUnit && m.defUnit.military) && f.walls && (f.walls.max_hp ?? 0) > 0
+            ? { hp: f.walls.hp ?? 0, max: f.walls.max_hp ?? 0, loss: Math.min(f.walls.hp ?? 0, f.walls.expected_damage ?? 0) } : undefined}
           right
         />
       </div>
@@ -381,7 +384,7 @@ export function ForecastCard({
       {strike && !fire && <div className="forecast-foot forecast-strike" data-testid="forecast-city-fire-elsewhere">
         {m.elsewhereText ?? strike.text} <details><summary>How city fire works</summary><span className="forecast-strike-math">{strike.details}</span></details>
       </div>}
-      {city && !strike && m.quiet && <div className="forecast-foot" data-testid="forecast-no-city-fire">{city.name} cannot fire back: it has no Walls.</div>}
+      {city && !strike && m.quiet && <div className="forecast-foot" data-testid="forecast-no-city-fire">{city.name} cannot fire back: it has no standing Walls.</div>}
       {spartaKill && <div className="forecast-foot forecast-note">A kill heals your surviving attackers +100 health, shared with Spartan units that damaged this target this turn.</div>}
       {!ranged && <div className="forecast-foot forecast-note">Based on visible positions. Incoming units can change the defender and fight without terrain or fortify bonuses.</div>}
       {/* With the whole-fight block the card already says whether the city is captured; the capture rules fold away (they scroll open when wanted). */}
@@ -446,6 +449,7 @@ function Side({
   right,
   lost,
   era,
+  walls,
 }: {
   name: string;
   level?: number;
@@ -464,6 +468,8 @@ function Side({
   lost?: boolean;
   /** The unit's era (0-6): the same tab its miniature wears on the map. */
   era?: number;
+  /** A walled city's Walls bar, which takes the hit before its health (rules 62). */
+  walls?: { hp: number; max: number; loss: number };
 }) {
   const shot = Math.min(fire ?? 0, hp);
   return (
@@ -483,6 +489,17 @@ function Side({
         <span className="fside-hp-word">Health</span> {hp} → {lost ? <b className="fside-lost">lost</b> : <b>{after}</b>}
       </div>
       {!lost && hp > after && <div className="fside-lost fside-delta">−{hp - after} health</div>}
+      {walls && <>
+        {/* The Walls take the hit first, so they get their own stone bar and before → after (UI review, PR 212). */}
+        <div className="hpbar fside-walls-bar">
+          <div className="hp-after" style={{ width: `${((walls.hp - walls.loss) / walls.max) * 100}%`, background: WALLS_STONE }} />
+          <div className="hp-lost" style={{ width: `${(walls.loss / walls.max) * 100}%` }} />
+        </div>
+        <div className="fside-hp" data-testid="forecast-defender-walls">
+          <span className="fside-hp-word">Walls</span> {walls.hp} → <b>{walls.hp - walls.loss}</b>
+        </div>
+        {walls.loss > 0 && <div className="fside-lost fside-delta">−{walls.loss} Walls</div>}
+      </>}
       {fire !== undefined && <div className="fside-split">−{fire} city fire{attack ? `, −${attack} attack` : ''}</div>}
     </div>
   );

@@ -78,7 +78,7 @@ describe('cities under attack', () => {
     expect(open.forecast.turns).toBe(2);
     const standing = captureForecast(walled, own, walled.units.filter((u) => attackers.includes(u.id)));
     expect(standing.forecast.turns!).toBeGreaterThan(open.forecast.turns!);
-    expect(standing.forecast.detail).toContain('take the hits first and never heal');
+    expect(standing.forecast.detail).toContain('never heal');
     expect(open.forecast).toMatchObject({ level: 'soon', text: 'Holds about 2 turns unless reinforced' });
     const ownCity = view.cities.find((c) => c.id === own)!;
     const garrisoned = { ...view, units: [...view.units, { ...view.units.find((u) => u.owner === view.me)!, id: 800, kind: 'Spearman' as const, military: true, strength: 9, ranged: 0, range: 0, hp: 100, fortify: 2, pos: ownCity.pos }] };

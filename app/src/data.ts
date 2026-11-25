@@ -152,8 +152,6 @@ export const CLASS_NOTE: Record<UnitClass, string> = {
   Air: 'Based in a city; strikes from the air.',
 };
 
-/** The Walls bar rule (core `combat::WALLS_DAMAGE_PERCENT`, breakable Walls), and Siege, the answer to it. */
-const WALLS_HALF_RULE = `hits do ${RULES.walls.damagePercent === 50 ? 'half damage' : `${RULES.walls.damagePercent}% damage`} to the Walls first`;
 /** Siege's rule, in one wording for the unit card, tech card and Guide. */
 /** Indirect fire on a card or tip: the headline (the Guide prints ARTILLERY_RULE in full). */
 export const ARTILLERY_HEADLINE = 'Fires over terrain at targets your team can see, with built-in Siege.';
@@ -257,7 +255,7 @@ export const BUILDING_STATS: Record<
   Market: { cost: 60, yields: { gold: 3 }, cityStrength: 0, requires: 'Currency', summary: '+3 Gold', blurb: '+3 Gold' },
   ImperialDiwan: { cost: 300, yields: {}, cityStrength: 0, requires: 'Currency', summary: 'Build after every city has a Revenue Office; whoever holds its city scores 2 VP', blurb: 'India only: build after every owned city has a Revenue Office. Whoever holds its city scores 2 VP.' },
   Library: { cost: 80, yields: { science: 3 }, cityStrength: 0, requires: 'Writing', summary: '+3 Science', blurb: '+3 Science' },
-  Walls: { cost: 100, yields: {}, cityStrength: 10, requires: 'Masonry', warBuilding: true, summary: '+10 city strength and a Walls bar of 100 that takes hits first. Fires at nearby enemies', blurb: `+10 city strength; ${WALLS_HALF_RULE}, and ${WALLS_FIRE_RULE}` },
+  Walls: { cost: 100, yields: {}, cityStrength: 10, requires: 'Masonry', warBuilding: true, summary: '+10 city strength and a Walls bar of 100 that takes hits first. Fires at enemies', blurb: '+10 city strength. Hits land on the Walls first; the city fires at enemies within 2 tiles.' },
   Supermarket: { cost: 360, yields: { food: 4 }, cityStrength: 0, requires: 'GreenRevolution', predecessor: 'Mill', summary: '+4 Food; upgrades your Mill', blurb: '+4 Food, on top of the Granary and Mill' },
   AirDefence: { cost: 320, yields: {}, cityStrength: 0, requires: 'GuidedMissiles', summary: 'Meets enemy air strikes on this city', blurb: 'Stops one enemy air strike on this city each turn. Stealth Bombers pass it.' },
   Mill: { cost: 200, yields: { food: 3 }, cityStrength: 0, requires: 'Feudalism', predecessor: 'Granary', summary: '+3 Food; upgrades your Granary', blurb: '+3 Food' },
@@ -284,7 +282,7 @@ export const BUILDING_STATS: Record<
 const TECH_BLURB: Record<TechId, string> = {
   Irrigation: "+1 Food in every city",
   BronzeWorking: "Unlocks Workshop",
-  Masonry: "Unlocks Walls and the Pyramids; Quarries +1 Production (walled cities have a Walls bar that takes hits first, and fire back)",
+  Masonry: "Unlocks Walls and the Pyramids; Quarries +1 Production",
   Currency: "Unlocks Market",
   Writing: "Unlocks Library",
   Mathematics: `Unlocks Phalangite; Spearmen can upgrade. Units can buy Siege, which covers Walls up to level I.`,

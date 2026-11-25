@@ -380,7 +380,8 @@ export function cityStrengthRule(city: Pick<CityView, 'walls' | 'walls_level'>, 
 
 export const CITY_HEAL_RULE = `A city regains ${CITY_HEAL} health at the end of each turn, unless it took damage that turn or an enemy military unit is adjacent. Empty to full takes ${CITY_HP / CITY_HEAL} turns.`;
 /** The Walls bar, in the board-game voice: the short rule (the Guide has the rest). */
-export const WALLS_BAR_RULE = 'Hits land on the Walls first. Walls never heal; Upgrade Walls repairs them.';
+/** The Walls bar's rule, naming the build item the player actually sees (Rome's "Repair Castrum", UI review PR 212). */
+export const wallsBarRule = (repairItem = 'Upgrade Walls'): string => `Hits land on the Walls first. Walls never heal; ${repairItem} repairs them.`;
 export const WALLS_UNDER_ATTACK_NOTE = "Not while the city is under attack. Production waits.";
 
 /**
