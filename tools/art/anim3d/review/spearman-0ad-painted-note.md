@@ -74,7 +74,7 @@ playing-speed look, shadows and the full 360-degree view still need lead review.
 ## Honest verdict
 
 **Technical contract passes; premium art gate is NOT met yet.** The shield,
-helmet and crest are much rounder and the sunburst has genuine relief. At 48 px
+helmet and crest are much rounder and the sunburst has genuine relief. At 48 px (the actual LOD1, not a downscaled LOD0)
 it reads as a spear/shield unit. Beside the panel painting, however, the bronze
 still looks too uniform/matte, cloth and skin remain plain, and the crest reads
 as a sculpted fluted fan rather than convincing horsehair. Some neckline/skirt
@@ -91,3 +91,12 @@ ground envelope prevents a larger crest/rim from invalidating approved death key
 FOCUS a: refine crest strands and neckline/skirt transitions without new motion.
 FOCUS b: richer bronze edge wear, engraved contrast and more convincing cloth/leather detail.
 FOCUS c: keep all motion frozen; inspect browser clips and turntable at playing speed.
+
+## Git handoff
+
+The sandbox denied creation of `.git/worktrees/lane-7/index.lock`; nothing was
+committed or pushed. All task changes remain in this worktree. The runner can
+use `lanes/spearman-0ad-painted-r1/commit-message.txt` (with the required
+Co-Authored-By line). A scoped binary patch is at
+`lanes/spearman-0ad-painted-r1/lane-7.patch`. `origin/master` is already an
+ancestor of HEAD; no fetch, merge into master or push was performed.
