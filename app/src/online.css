@@ -117,24 +117,66 @@ div.seat {
   cursor: default;
 }
 
-/* Online play: the lobby list of hosted games. */
-/* The name box and the optional join code share one row, so the menu keeps its height. */
-.host-fields {
+/* Online play: the Multiplayer menu. One name for every game this player is in, then two doors side by
+   side, Host and Join, so who does what is plain before anything is pressed. The doors are shorter than the
+   old single column, so the menu keeps its height at 1000x600. */
+.mp-name {
+  width: 100%;
+  max-width: 640px;
+}
+.mp-doors {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 300px));
+  gap: 0;
+  margin: 4px 0 4px;
+}
+.mp-door {
   display: flex;
-  gap: 12px;
-  align-items: flex-end;
-  width: 360px;
-  max-width: 100%;
-  margin: 4px 0 8px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  padding: 4px 20px 0;
 }
-.host-fields .host-name {
-  flex: 1 1 auto;
+.mp-door + .mp-door {
+  border-left: 1px solid var(--rule);
+}
+.mp-door-head {
+  font: var(--head-font);
+  letter-spacing: var(--head-track);
+  text-transform: var(--head-transform);
+  color: var(--head-color);
+  text-align: center;
+}
+.mp-door-lede {
+  margin: 0 0 6px;
+  font: italic 400 14px/1.25 var(--display);
+  color: var(--ink-2);
+  text-align: center;
+}
+.mp-door .host-code {
+  width: 100%;
+  margin: 0 0 4px;
+}
+.title-actions .mp-door .btn.big,
+.title-actions .mp-door .btn.big.primary,
+.title-actions .mp-door .btn.big:not(.primary) {
   min-width: 0;
-  width: auto;
-  margin: 0;
+  width: 100%;
 }
-.host-fields .host-code {
-  flex: 0 0 112px;
+.title-actions .mp-door .btn.big.primary {
+  min-height: 64px;
+  margin-bottom: 4px;
+  font-size: 24px;
+}
+@media (max-width: 720px) {
+  .mp-doors {
+    grid-template-columns: minmax(0, 360px);
+  }
+  .mp-door + .mp-door {
+    border-left: none;
+    border-top: 1px solid var(--rule);
+    padding-top: 8px;
+  }
 }
 .host-name {
   display: flex;

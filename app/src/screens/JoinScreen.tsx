@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useGame } from '../store';
-import { rememberedSeat } from '../remote';
+import { keptSeat, rememberSeat, rememberedSeat, serverBase } from '../remote';
 import { FACTION_INFO } from '../data';
 import { FACTION_SHEETS } from '../factionSheets';
 import { colorFactions, factionColor } from '../theme';
@@ -24,7 +24,14 @@ export function JoinScreen() {
     return () => clearInterval(t);
   }, [refresh]);
   if (!net) return null;
-  const mine = rememberedSeat();
+  // This tab's seat, or else the seat this device held before a restart or a closed tab.
+  const kept = rememberedSeat() ? null : keptSeat(serverBase());
+  const mine = rememberedSeat() ?? (kept && { seat: kept.seat, name: kept.name, gameId: null, token: kept.token });
+  const join = (seat: number, name: string) => {
+    // Taking back a kept seat proves it with the kept credential, as a reload does.
+    if (kept && kept.seat === seat) rememberSeat({ seat, name: kept.name, gameId: null, token: kept.token });
+    joinSeat(seat, name);
+  };
   const seats = net.status.seats;
   const colored = colorFactions(seats.map((s) => s.faction));
   return (
@@ -55,7 +62,7 @@ export function JoinScreen() {
                 className={`join-seat ${s.connected ? 'taken' : ''} ${wasMine ? 'mine' : ''}`}
                 style={{ ['--pc' as string]: factionColor(colored[i]) }}
                 disabled={!!busy || reserved || (!!net.locked && !codeText && !wasMine)}
-                onClick={() => joinSeat(s.seat, s.name)}
+                onClick={() => join(s.seat, s.name)}
               >
                 <div className="join-top">
                   <FactionMark faction={s.faction} size={64} />
@@ -70,7 +77,7 @@ export function JoinScreen() {
                 </div>
                 <div className="join-status">
                   <span className={`conn-dot ${s.connected ? 'on' : ''}`} />
-                  {s.connected ? 'In use: someone is playing this seat right now' : reserved ? 'Reserved' : wasMine ? 'Your seat in this tab' : 'Open'}
+                  {s.connected ? 'In use: someone is playing this seat right now' : reserved ? 'Reserved' : wasMine ? 'Your seat' : 'Open'}
                 </div>
                 <div className="join-cta">{reserved ? 'Ask the host to open this seat' : s.connected ? 'Take over' : `Rejoin as ${s.name}`}</div>
               </button>
