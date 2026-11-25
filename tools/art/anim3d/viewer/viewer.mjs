@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import {RGBELoader} from 'three/addons/loaders/RGBELoader.js';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {applyTeamMask} from './team-mask.mjs';
 import {cameraBasis, measureClip, fitClip} from './framing.mjs';
@@ -15,7 +16,8 @@ const renderer = new THREE.WebGLRenderer({antialias: true, preserveDrawingBuffer
 renderer.setPixelRatio(recording ? 1 : Math.min(devicePixelRatio, 2));
 renderer.setSize(innerWidth, innerHeight);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
-renderer.toneMapping = THREE.NoToneMapping;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.body.appendChild(renderer.domElement);
@@ -43,12 +45,19 @@ function mapCamera() {
   controls.target.copy(target); controls.update();
 }
 mapCamera();
-scene.add(new THREE.HemisphereLight(0xfff7e6, 0x716148, 2));
-const light = new THREE.DirectionalLight(0xfff5dd, 2.2);
+const environment = await new RGBELoader().loadAsync('./studio_small_09_1k.hdr');
+environment.mapping = THREE.EquirectangularReflectionMapping;
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromEquirectangular(environment).texture;
+scene.environmentIntensity = .65;
+environment.dispose(); pmrem.dispose();
+scene.add(new THREE.HemisphereLight(0xfff7e6, 0x716148, .35));
+const light = new THREE.DirectionalLight(0xffd5a2, 2.8);
 light.position.set(-3, 7, 4); light.castShadow = true;
-light.shadow.mapSize.set(1024, 1024);
+light.shadow.mapSize.set(2048, 2048);
 Object.assign(light.shadow.camera, {left:-4,right:4,top:4,bottom:-4,near:.1,far:20});
-light.shadow.bias = -.0002; scene.add(light);
+light.shadow.bias = -.0002; light.shadow.normalBias=.006; light.shadow.radius=3; scene.add(light);
+const rim=new THREE.DirectionalLight(0x99c6ff, 1.8);rim.position.set(3,4,-4);scene.add(rim);
 const floor = new THREE.Mesh(new THREE.PlaneGeometry(200,200), new THREE.MeshStandardMaterial({color:'#f8f4e8', roughness:1}));
 floor.rotation.x = -Math.PI/2; floor.position.y=-.004; floor.receiveShadow=true; scene.add(floor);
 const status = document.querySelector('#status');
@@ -68,8 +77,12 @@ try {
   const teamMaterials=new Set();
   gltf.scene.traverse(o=>{
     if (!o.isMesh) return;
-    o.castShadow=true; o.receiveShadow=false; o.frustumCulled=false;
+    o.visible=o.name!=='spearman_LOD1';
+    o.castShadow=true; o.receiveShadow=true; o.frustumCulled=false;
     for(const m of (Array.isArray(o.material)?o.material:[o.material])) if(m.userData.team?.attribute==='COLOR_0') {applyTeamMask(m, THREE);teamMaterials.add(m);}
+  });
+  document.querySelector('#lod').addEventListener('change',e=>{
+    gltf.scene.traverse(o=>{if(o.isMesh)o.visible=o.name===e.target.value;});
   });
   document.querySelector('#team').addEventListener('input', e=>teamMaterials.forEach(m=>m.userData.teamUniform.value.set(e.target.value)));
   // Project actual skinned vertices, never a world AABB or the review floor.
@@ -77,7 +90,7 @@ try {
     measured[clip.name]=measureClip(THREE,gltf.scene,mixer,actions[clip.name],basis);
   }
   select(query.get('clip')||'idle');
-  status.textContent='0 A.D. art by Wildfire Games, CC BY-SA 3.0; adapted for Legatum';
+  status.textContent=gltf.asset?.copyright||'0 A.D. art by Wildfire Games, CC BY-SA 3.0; adapted for Legatum';
   // Deterministic screenshot API: exact frames, no wall-clock capture jitter.
   window.review={
     ready:true,
@@ -85,6 +98,16 @@ try {
     sample(name,time) {
       if(clipSelect.value!==name)select(name);
       current.time=time; mixer.update(0); controls.update(); renderer.render(scene,camera);
+    },
+    turntable(time, duration=12) {
+      if(clipSelect.value!=='idle')select('idle');
+      current.time=time % actions.idle.getClip().duration;mixer.update(0);
+      const angle=time/duration*Math.PI*2;
+      const orbit=basis.direction.clone().applyAxisAngle(new THREE.Vector3(0,1,0),angle);
+      // Fixed full-figure close fit for all angles; no yaw baked into the asset.
+      extent=Math.max(measured.idle.figureHeight/.70,2.65);
+      const aspect=innerWidth/innerHeight;camera.left=-extent*aspect/2;camera.right=extent*aspect/2;camera.top=extent/2;camera.bottom=-extent/2;camera.updateProjectionMatrix();
+      camera.position.copy(target).addScaledVector(orbit,8);camera.lookAt(target);renderer.render(scene,camera);
     },
     framing:()=>Object.fromEntries(Object.entries(measured).map(([name,m])=>{
       const fit=fitClip(THREE,m,basis,config,innerWidth/innerHeight);

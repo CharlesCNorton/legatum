@@ -98,29 +98,52 @@ class GLB:
                 else:
                     for p in positions:yield ni,point(worlds[ni],p)
 
+def image_dimensions(data):
+    if data[:8]==b'\x89PNG\r\n\x1a\n':return (*struct.unpack_from('>II',data,16),data[24])
+    if data[:4]==b'RIFF' and data[8:12]==b'WEBP':
+        assert data[12:16]==b'VP8 ','Expected non-animated lossy WebP'
+        width,height=struct.unpack_from('<HH',data,26);return width&0x3fff,height&0x3fff,8
+    assert data[:2]==b'\xff\xd8','Invalid PNG/JPEG/WebP'
+    offset=2
+    while offset<len(data):
+        assert data[offset]==255,'Invalid JPEG marker'
+        while data[offset]==255:offset+=1
+        marker=data[offset];offset+=1
+        size=struct.unpack_from('>H',data,offset)[0]
+        if marker in {0xc0,0xc1,0xc2}:
+            bits,height,width=struct.unpack_from('>BHH',data,offset+2);return width,height,bits
+        offset+=size
+    raise ValueError('JPEG dimensions missing')
+
 def validate(path):
     g=GLB(path);d=g.doc;errors=[];warnings=[]
     def require(test,message):
         if not test:errors.append(message)
+    require(Path(path).stat().st_size<2_000_000,'GLB must be under 2 MB (2000000 bytes)')
     require(d['asset']['version']=='2.0','Must be glTF 2.0')
     require(len(d.get('buffers',[]))==1 and 'uri' not in d['buffers'][0],'Must be self-contained')
     extras=d['asset'].get('extras',{})
-    require(d['asset'].get('copyright')==CREDIT and extras.get('credit')==CREDIT,'Missing exact credit')
+    # The 0 A.D. rig and clips are always credited; a fitted third-party model adds its own credit.
+    require(CREDIT in d['asset'].get('copyright','') and CREDIT in extras.get('credit',''),'Missing exact credit')
     require(extras.get('license')=='CC-BY-SA-3.0','Missing licence in asset.extras')
     require(extras.get('up_axis')=='Y' and extras.get('forward')=='+Z' and extras.get('units')=='metres','Missing axis/metre declarations')
     require(Path(path).with_name('PROVENANCE.md').is_file(),'Missing adjacent PROVENANCE.md')
     require(Path(path).with_name('LICENSE-ART').is_file(),'Missing adjacent LICENSE-ART')
     nodes=d['nodes']
     skinned=[i for i,n in enumerate(nodes) if 'skin' in n]
-    require(len(skinned)==1 and len(d.get('skins',[]))==1,'Must have exactly one skinned mesh')
+    require(len(skinned)==2 and len(d.get('skins',[]))==1,'Must have exactly two skinned LODs sharing one skeleton')
+    require(all(nodes[i]['skin']==0 for i in skinned),'Both LODs must use skin 0')
+    require('MSFT_lod' not in d.get('extensionsUsed',[]) and not any('MSFT_lod' in n.get('extensions',{}) for n in nodes),'MSFT_lod is forbidden')
     joints=set(j for skin in d.get('skins',[]) for j in skin['joints'])
     require(all(len(skin['joints'])<=40 for skin in d.get('skins',[])),'More than 40 joints')
     require(all(len(set(skin['joints']))==len(skin['joints']) for skin in d.get('skins',[])),'Duplicate joint index')
-    tris=0;team_regions=[]
-    require(len(d.get('meshes',[]))==1,'Must have exactly 1 mesh')
+    tris=0;team_regions=[];lod_triangles={}
+    require(len(d.get('meshes',[]))==2,'Must have exactly 2 meshes')
+    require({m.get('name') for m in d['meshes']}=={'spearman_LOD0','spearman_LOD1'},'Expected named LOD0 and LOD1 meshes')
+    require({nodes[i].get('name') for i in skinned}=={'spearman_LOD0','spearman_LOD1'},'Expected named LOD0 and LOD1 nodes')
     require(len(d.get('materials',[]))==1,'Must have exactly 1 material')
     draw_calls=sum(len(d['meshes'][n['mesh']]['primitives']) for n in nodes if 'mesh' in n)
-    require(draw_calls==1,'Must have exactly 1 draw call')
+    require(draw_calls==2 and all(len(m['primitives'])==1 for m in d['meshes']),'One primitive per LOD, two packaged draws; runtime selects one')
     for ni,node in enumerate(nodes):
         require(all(abs(v)>1e-6 for v in node.get('scale',[1,1,1])),'Zero-scaled node')
         if 'mesh' not in node:continue
@@ -128,20 +151,30 @@ def validate(path):
             require(prim.get('mode',4)==4,'Only triangle primitives supported')
             count=d['accessors'][prim['indices']]['count'] if 'indices' in prim else d['accessors'][prim['attributes']['POSITION']]['count']
             tris+=count//3
+            name=d['meshes'][node['mesh']]['name'];lod_triangles[name]=lod_triangles.get(name,0)+count//3
+            require(prim.get('material')==0,'Both LODs must share material 0')
             require('TEXCOORD_0' in prim['attributes'],'Missing albedo UVs')
             require('COLOR_0' in prim['attributes'],'Missing team mask COLOR_0')
             if 'skin' in node:
                 weights=g.accessor(prim['attributes']['WEIGHTS_0'])
                 require(all(abs(sum(w)-1)<.001 for w in weights),'Weights do not sum to one')
-    require(tris<=3000,f'Triangle budget exceeded: {tris}')
+    for name,budget in [('spearman_LOD0',10000),('spearman_LOD1',3000)]:
+        require(lod_triangles.get(name,0)<=budget,f'{name} triangle budget exceeded: {lod_triangles.get(name)}')
     rigid_counts={}
+    # Cloak trim is required only when the unit has a cloak (a fitted model may not).
+    has_cloak=any(r['part']=='cloak' or r.get('team')=='cloak trim' for m in d['meshes'] for r in m.get('extras',{}).get('vertex_regions',[]))
+    required_team={'shield rim','crest'}|({'cloak trim'} if has_cloak else set())
     for mesh in d['meshes']:
+        lod_team_regions=set()
         regions=mesh.get('extras',{}).get('vertex_regions',[])
         require(bool(regions),'Missing auditable vertex_regions')
         for prim in mesh['primitives']:
             attrs=prim['attributes'];count=d['accessors'][attrs['POSITION']]['count']
             colors=g.accessor(attrs['COLOR_0']) if 'COLOR_0' in attrs else []
             weights=g.accessor(attrs['WEIGHTS_0']);js=g.accessor(attrs['JOINTS_0'])
+            for semantic in ['NORMAL','TANGENT']:
+                require(semantic in attrs,f'Missing {semantic}')
+                if semantic in attrs:require(all(abs(sum(x*x for x in row[:3])-1)<.002 for row in g.accessor(attrs[semantic])),f'{mesh["name"]} {semantic} vectors must be unit length')
             require(all(len(g.accessor(v))==count for v in attrs.values()),'Vertex attribute count mismatch')
             require(all(0<=c[0]<=1 and c[1:]==(0,0,1) for c in colors),'Invalid COLOR_0 team data')
             covered=[]
@@ -151,7 +184,7 @@ def validate(path):
                 if not 0<=start<end<=count:continue
                 covered.extend(range(start,end))
                 bone=region.get('bone');part=region['part']
-                expected={'spear':'weapon_R','aspis':'shield_arm','Aspis back':'shield_arm','Aspis handgrip':'shield_arm','helmet':'helmet','crest':'helmet','crest_base':'helmet','Greek head':'head'}.get(part)
+                expected={'spear':'weapon_R','aspis':'shield_arm','Aspis back':'shield_arm','Aspis handgrip':'shield_arm','helmet':'helmet','crest':'helmet','crest_base':'helmet','Greek head':'head'}.get(part) or bone
                 if expected:
                     require(bone==expected,f'{part} must attach to {expected}')
                     valid=True
@@ -162,24 +195,31 @@ def validate(path):
                     require(valid,f'{part} must have single-bone unit weights to {expected}')
                     rigid_counts[part]=rigid_counts.get(part,0)+end-start
                 if region.get('team'):
-                    team_regions.append(region['team'])
+                    team_regions.append(region['team']);lod_team_regions.add(region['team'])
                     require(bool(colors) and all(colors[i][0]==1 for i in range(start,end)),f'{part} team mask must be one')
                 elif colors:require(all(colors[i][0]==0 for i in range(start,end)),f'{part} non-team mask must be zero')
             require(sorted(covered)==list(range(count)),'vertex_regions must partition every vertex exactly once')
+        require(required_team<=lod_team_regions,f'{mesh["name"]} team mask must cover {", ".join(sorted(required_team))}')
     require({'spear','aspis','helmet'}<=set(rigid_counts),'Missing required rigid prop regions')
-    require({'cloak trim','shield rim','crest'}<=set(team_regions),'team must cover cloak trim, shield rim and crest')
+    require(required_team<=set(team_regions),f'team must cover {", ".join(sorted(required_team))}')
     require(extras.get('team',{}).get('attribute')=='COLOR_0' and extras.get('team',{}).get('channel')=='r','Missing team mask semantics')
-    images=d.get('images',[]);require(len(images)==1,'Exactly one atlas image required')
-    texture_size=None
-    if images:
-        im=images[0];require('bufferView' in im and im.get('mimeType')=='image/png','Atlas must be embedded PNG')
+    images=d.get('images',[]);require(len(images)==3,'Exactly base colour, normal and ORM images required')
+    texture_size=None;texture_images=[]
+    require(extras.get('texture_master_size')==2048,'Textures must declare 2048 authoring masters')
+    for im in images:
+        require('bufferView' in im and im.get('mimeType') in {'image/png','image/jpeg','image/webp'},'Atlas must be embedded PNG, JPEG or WebP')
         if 'bufferView' in im:
             view=d['bufferViews'][im['bufferView']];off=view.get('byteOffset',0)
             png=g.bin[off:off+view['byteLength']]
-            require(png[:8]==b'\x89PNG\r\n\x1a\n','Invalid PNG')
-            texture_size=struct.unpack_from('>II',png,16);require(texture_size==(1024,1024),'Atlas must be 1024 x 1024')
+            width,height,depth=image_dimensions(png);texture_size=(width,height);require(texture_size==(1024,1024),'Atlas must be 1024 x 1024')
+            texture_images.append({'name':im.get('name'),'pixels':list(texture_size),'bytes':len(png),'bit_depth':depth,'mime_type':im['mimeType']})
     for mat in d.get('materials',[]):
-        require('normalTexture' not in mat and 'occlusionTexture' not in mat,'No normal or baked AO texture')
+        require('normalTexture' in mat and 'occlusionTexture' in mat,'Normal and AO textures required')
+        pbr=mat.get('pbrMetallicRoughness',{});orm=pbr.get('metallicRoughnessTexture',{});ao=mat.get('occlusionTexture',{})
+        require(orm.get('index') is not None and orm.get('index')==ao.get('index'),'Occlusion and metallic/roughness must share packed ORM')
+        maps=[pbr.get('baseColorTexture',{}),mat.get('normalTexture',{}),orm,ao]
+        require(all(t.get('texCoord',0)==0 for t in maps),'All maps must use UV0')
+        require(len({t.get('index') for t in maps})==3,'Base colour, normal and ORM must be distinct textures')
         require('baseColorTexture' in mat.get('pbrMetallicRoughness',{}),'Every material needs the atlas')
         require('KHR_materials_unlit' not in mat.get('extensions',{}),'Material must accept runtime lighting')
         require(not any(mat.get('emissiveFactor',[0,0,0])),'No emission-projection material')
@@ -211,14 +251,15 @@ def validate(path):
     height=maximum[1]-minimum[1]
     require(1.65<=height<=1.95,f'Figure must be about 1.8m: {height:.3f}')
     bodypts=[p for ni,p in g.vertices(idle,0) if ni in skinned]
-    feet=[p for p in bodypts if p[1]<min(v[1] for v in bodypts)+.035]
+    sole_height=min(v[1] for v in bodypts)
+    feet=[p for p in bodypts if p[1]<sole_height+.035]
     feet_centre=[(min(p[i] for p in feet)+max(p[i] for p in feet))/2 for i in range(3)]
     require(abs(min(p[1] for p in feet))<.02,'Feet must sit at y=0')
     require(abs(feet_centre[0])<.15 and abs(feet_centre[2])<.15,'Origin must be at feet centre')
     # Mesh toes establish +Z, independently of metadata (front-most low vertex).
     require(max(p[2] for p in feet)>abs(min(p[2] for p in feet)), 'Toe geometry must face +Z')
-    warnings.append('Flat albedo, exact team region coverage, seamless velocity and game feel require visual review.')
-    return {'valid':not errors,'glb':str(Path(path).resolve()),'bytes':Path(path).stat().st_size,'triangles':tris,'joints':len(joints),'skinned_meshes':len(skinned),'atlas_px':texture_size,'figure_height_m':round(height,4),'feet_centre_m':[round(v,4) for v in feet_centre],'meshes':len(d['meshes']),'materials':len(d['materials']),'draw_calls':draw_calls,'team_regions':team_regions,'rigid_vertices':rigid_counts,'clips':clips,'errors':errors,'review_required':warnings}
+    warnings.append('Painted quality, surface detail, exact team coverage, collisions and game feel require visual review; runtime must display only one LOD.')
+    return {'valid':not errors,'glb':str(Path(path).resolve()),'bytes':Path(path).stat().st_size,'triangles':tris,'lod_triangles':lod_triangles,'joints':len(joints),'skinned_meshes':len(skinned),'atlas_px':texture_size,'texture_images':texture_images,'figure_height_m':round(height,4),'feet_centre_m':[round(v,4) for v in feet_centre],'meshes':len(d['meshes']),'materials':len(d['materials']),'packaged_primitives':draw_calls,'draw_calls_per_lod':1,'team_regions':sorted(set(team_regions)),'rigid_vertices':rigid_counts,'clips':clips,'errors':errors,'review_required':warnings}
 
 if __name__=='__main__':
     p=argparse.ArgumentParser();p.add_argument('glb',type=Path);p.add_argument('--output',type=Path);args=p.parse_args()

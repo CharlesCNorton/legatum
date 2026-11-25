@@ -17,7 +17,12 @@ function option(name,fallback){const i=args.indexOf(name);return i<0?fallback:ar
 const out=resolve(option('--out',join(homedir(),'LegatumRuns/anim-pilot/review/3d-v2')));
 const round=option('--round','6');
 if(!/^\d+$/.test(round))throw new Error('--round must be a round number');
-const assetSha256=createHash('sha256').update(await readFile(resolve(here,'../units/spearman-0ad/spearman.glb'))).digest('hex');
+const prefix=option('--prefix',`spearman-0ad-r${round}`);
+if(!/^[a-zA-Z0-9_-]+$/.test(prefix))throw new Error('--prefix must contain only letters, digits, underscores and hyphens');
+// --glb records any unit GLB (e.g. a fitted model kept outside the repo); it is
+// served at a fixed loopback path and passed to the viewer as ?model=.
+const glb=resolve(option('--glb',resolve(here,'../units/spearman-0ad/spearman.glb')));
+const assetSha256=createHash('sha256').update(await readFile(glb)).digest('hex');
 let playwright;
 if(process.env.PLAYWRIGHT_MODULE) playwright=await import(pathToFileURL(resolve(process.env.PLAYWRIGHT_MODULE)).href);
 else {
@@ -30,6 +35,9 @@ if(!chromium)throw new Error('Playwright chromium export missing');
 const mime={'.html':'text/html','.mjs':'text/javascript','.js':'text/javascript','.glb':'model/gltf-binary','.png':'image/png','.json':'application/json'};
 const server=createServer(async(req,res)=>{
   try{
+    if(new URL(req.url,'http://localhost').pathname==='/__model__.glb'){
+      res.writeHead(200,{'Content-Type':mime['.glb']});res.end(await readFile(glb));return;
+    }
     const path=await realpath(resolve(root,'.'+decodeURIComponent(new URL(req.url,'http://localhost').pathname)));
     if(!path.startsWith(root+sep)) {res.writeHead(403);res.end();return;}
     const body=await readFile(path);res.writeHead(200,{'Content-Type':mime[extname(path)]||'application/octet-stream'});res.end(body);
@@ -41,7 +49,7 @@ try {
   browser=await chromium.launch({headless:true});
   const page=await browser.newPage({viewport:{width:960,height:640},deviceScaleFactor:1});
   const errors=[];page.on('pageerror',e=>errors.push(String(e)));
-  await page.goto(`http://127.0.0.1:${server.address().port}/tools/art/anim3d/viewer/index.html?record=1`);
+  await page.goto(`http://127.0.0.1:${server.address().port}/tools/art/anim3d/viewer/index.html?record=1&model=/__model__.glb`);
   await page.waitForFunction(()=>window.review?.ready||window.review?.error,{},{timeout:60000});
   const state=await page.evaluate(()=>window.review);
   if(!state.ready)throw new Error(state.error);
@@ -52,13 +60,13 @@ try {
       throw new Error(`Invalid framing for ${clip}: ${JSON.stringify(fit)}`);
   }
   for(const [clip,duration] of Object.entries(state.clips)) {
-    const frames=resolve(out,`.spearman-0ad-r${round}-viewer-frames`,assetSha256,clip);await mkdir(frames,{recursive:true});
+    const frames=resolve(out,`.${prefix}-viewer-frames`,assetSha256,clip);await mkdir(frames,{recursive:true});
     const count=Math.round(duration*30);
     for(let i=0;i<count;i++) {
       await page.evaluate(({clip,t})=>window.review.sample(clip,t),{clip,t:i/30});
       await page.locator('canvas').screenshot({path:join(frames,`${String(i).padStart(4,'0')}.png`)});
     }
-    const output=join(out,`spearman-0ad-r${round}-${clip}-viewer.mp4`);
+    const output=join(out,`${prefix}-${clip}-viewer.mp4`);
     const encode=spawnSync('ffmpeg',['-y','-loglevel','error','-framerate','30','-stream_loop','2','-i',join(frames,'%04d.png'),'-frames:v',String(count*3),'-c:v','libx264','-crf','18','-pix_fmt','yuv420p','-movflags','+faststart',output],{stdio:'inherit'});
     if(encode.status!==0)throw new Error(`ffmpeg failed for ${clip}`);
     const probe=spawnSync('ffprobe',['-v','error','-count_frames','-select_streams','v:0','-show_entries','stream=width,height,pix_fmt,nb_read_frames,r_frame_rate','-of','json',output],{encoding:'utf8'});
@@ -67,8 +75,38 @@ try {
     if(Number(stream.nb_read_frames)!==count*3||stream.pix_fmt!=='yuv420p')throw new Error(`Invalid encoded clip ${clip}`);
     receipts[clip]={output,framing:framing[clip],...stream};console.log(output);
   }
+  // Actual MeshStandardMaterial/ACES evidence, at the same 512 px size as the panel.
+  await page.setViewportSize({width:512,height:512});
+  await page.evaluate(()=>window.review.sample('idle',0));
+  const heroPath=join(out,`${prefix}-viewer-idle.png`);
+  const hero=await page.locator('canvas').screenshot({path:heroPath});
+  const panel=await readFile(resolve(root,'app/src/assets/units/spearman-panel.png'));
+  const comparison=await browser.newPage({viewport:{width:1024,height:552},deviceScaleFactor:1});
+  await comparison.setContent(`<html><body style="margin:0;background:#f8f4e8;color:#493b2a;font:13px sans-serif;display:flex">
+    <div style="width:512px"><div style="height:32px;padding-left:16px;line-height:32px">Reference painting</div><img style="width:512px;height:512px;object-fit:contain" src="data:image/png;base64,${panel.toString('base64')}"></div>
+    <div style="width:512px"><div style="height:32px;padding-left:16px;line-height:32px">${prefix} | three.js MeshStandardMaterial / ACES</div><img style="width:512px;height:512px" src="data:image/png;base64,${hero.toString('base64')}"></div>
+    </body></html>`);
+  await comparison.locator('img').evaluateAll(images=>Promise.all(images.map(im=>im.decode())));
+  const comparisonPath=join(out,`${prefix}-vs-panel-viewer.png`);
+  await comparison.screenshot({path:comparisonPath});await comparison.close();
+  receipts.comparison={output:comparisonPath,hero:heroPath,renderer:'three.js MeshStandardMaterial / ACES'};
+  await page.setViewportSize({width:960,height:640});
+  await page.evaluate(()=>window.review.sample('idle',0));
+  const turnFrames=resolve(out,`.${prefix}-viewer-frames`,assetSha256,'turntable');await mkdir(turnFrames,{recursive:true});
+  for(let i=0;i<360;i++) {
+    await page.evaluate(t=>window.review.turntable(t,12),i/30);
+    await page.locator('canvas').screenshot({path:join(turnFrames,`${String(i).padStart(4,'0')}.png`)});
+  }
+  const turntable=join(out,`${prefix}-turntable.mp4`);
+  const turnEncode=spawnSync('ffmpeg',['-y','-loglevel','error','-framerate','30','-i',join(turnFrames,'%04d.png'),'-frames:v','360','-c:v','libx264','-crf','18','-pix_fmt','yuv420p','-movflags','+faststart',turntable],{stdio:'inherit'});
+  if(turnEncode.status!==0)throw new Error('Turntable encoding failed');
+  const turnProbe=spawnSync('ffprobe',['-v','error','-count_frames','-select_streams','v:0','-show_entries','stream=width,height,pix_fmt,nb_read_frames,r_frame_rate','-of','json',turntable],{encoding:'utf8'});
+  if(turnProbe.status!==0)throw new Error('Turntable probe failed');
+  const turnStream=JSON.parse(turnProbe.stdout).streams[0];
+  if(Number(turnStream.nb_read_frames)!==360||turnStream.pix_fmt!=='yuv420p')throw new Error('Invalid turntable');
+  receipts.turntable={output:turntable,duration:12,...turnStream};console.log(turntable);
   if(errors.length)throw new Error(errors.join('\n'));
-  await writeFile(join(out,`spearman-0ad-r${round}-viewer-validation.json`),JSON.stringify({assetSha256,clips:receipts},null,2));
+  await writeFile(join(out,`${prefix}-viewer-validation.json`),JSON.stringify({assetSha256,clips:receipts},null,2));
 } finally {
   if(browser)await browser.close();await new Promise(r=>server.close(r));
 }

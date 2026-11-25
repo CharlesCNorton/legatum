@@ -1,0 +1,683 @@
+"""Fit a third-party character model onto the approved 0 A.D. hoplite rig.
+
+Headless Blender. Imports a glTF/GLB or FBX source in any pose, unposes it
+onto the 0 A.D. bind pose and bone lengths, seats the spear, shield and helmet
+as rigid props, transfers the 0 A.D. skin weights, builds two LODs, bakes the
+source's materials into one atlas (base colour, normal, packed ORM) in Cycles on
+the CPU, adds the COLOR_0 team mask, and writes a contract GLB whose skeleton
+and five clips are copied byte for byte from the approved GLB.
+
+    source tools/art/anim3d/env.sh
+    ~/LegatumRuns/anim-pilot/bin/blender-slot --factory-startup --python-exit-code 1 \\
+      --python tools/art/anim3d/kit/fit_source_to_0ad.py -- \\
+      --source model.glb --out out/spearman.glb --credit '"Model" by Author, CC BY 4.0'
+
+See kit/FIT.md for every option, how the pose fit works and its limits.
+"""
+import argparse, hashlib, json, math, os, re, shutil, sys, time
+from pathlib import Path
+import bpy, bmesh
+import numpy as np
+from mathutils import Matrix, Vector
+
+KIT = Path(__file__).resolve().parent
+sys.path.insert(0, str(Path(__file__).resolve().parent)); sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from fit_rig import Rig, CHAINS, OAD_CREDIT, RIGID
+from fit_landmarks import sample_surface, Skeleton, calibrate, joints_from_mesh, map_armature, project
+from fit_pose import fix_hip, fit_heels, heal, unpose, apply_map, apply_blend, _swing
+from fit_props import components, classify, find_helmet, seat_spear, seat_shield
+from fit_ground import clip_planes, fit as ground_fit
+from fit_pack import pack
+
+ROOT = Path(os.environ.get('ANIM_ROOT', Path.home() / 'LegatumRuns/anim-pilot'))
+APPROVED = KIT.parent / 'units/spearman-0ad/spearman.glb'
+PART_ORDER = ['body', 'cloak', 'helmet', 'shield', 'spear']
+GROUPS = {'torso': ['hip', 'spine', 'spine1', 'chest', 'neck', 'head', 'shoulder_L', 'shoulder_R'],
+          'arm_L': ['shoulder_L', 'arm_L', 'forearm_L', 'hand_L', 'finger_L', 'fingertip_L', 'shield_arm'],
+          'arm_R': ['shoulder_R', 'arm_R', 'forearm_R', 'hand_R', 'finger_R', 'fingertip_R', 'weapon_R'],
+          'leg_L': ['hip', 'thigh_L', 'leg_L', 'foot_L'], 'leg_R': ['hip', 'thigh_R', 'leg_R', 'foot_R']}
+
+argv = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else []
+ap = argparse.ArgumentParser(prog='fit_source_to_0ad.py')
+ap.add_argument('--source', type=Path, required=True, help='glTF/GLB or FBX model')
+ap.add_argument('--out', type=Path, required=True, help='output .glb (PROVENANCE.md and LICENSE-ART are written beside it if missing)')
+ap.add_argument('--credit', required=True, help='credit for the source model, e.g. \'"Hoplite Warrior" by caseydedore, CC BY 4.0\'')
+ap.add_argument('--rig', type=Path, default=APPROVED, help='approved GLB with the 0 A.D. skeleton and the five clips')
+ap.add_argument('--work', type=Path, help='heavy outputs (.blend, 2048 masters); default ANIM_ROOT/fit/<out stem>')
+ap.add_argument('--part', action='append', default=[], metavar='PART=REGEX',
+                help='force objects/materials matching REGEX to PART (spear, shield, helmet, cloak, body, drop); repeatable')
+ap.add_argument('--team', action='append', default=[], metavar='REGION=REGEX',
+                help='faces whose material or object matches REGEX are team colour (REGION: crest, shield rim, cloak trim)')
+ap.add_argument('--no-auto-team', action='store_true', help='use only --team rules')
+ap.add_argument('--landmarks', type=Path, help='JSON {joint: [x,y,z]} in the source file\'s own glTF coordinates; overrides detected joints')
+ap.add_argument('--yaw', type=float, help='degrees about +Y to make the model face +Z (default: from the toes)')
+ap.add_argument('--stop-after-landmarks', action='store_true', help='write work/landmarks.blend and stop (debugging)')
+ap.add_argument('--flip-spear', action='store_true', help='blade/butt detection got it backwards')
+ap.add_argument('--max-height', type=float, default=1.93, help='helmet/crest ceiling in metres (contract: 1.65-1.95 m)')
+ap.add_argument('--lod0', type=int, default=9600); ap.add_argument('--lod1', type=int, default=2900)
+ap.add_argument('--bake-size', type=int, default=2048); ap.add_argument('--ship-size', type=int, default=1024)
+ap.add_argument('--ao-samples', type=int, default=16)
+ap.add_argument('--jpeg-quality', type=int, default=88)
+ap.add_argument('--license', default='CC-BY-SA-3.0', help='licence of the combined asset (the 0 A.D. clips are CC BY-SA 3.0)')
+args = ap.parse_args(argv)
+t0 = time.time()
+out = args.out.resolve(); out.parent.mkdir(parents=True, exist_ok=True)
+work = (args.work or ROOT / 'fit' / out.stem).resolve(); work.mkdir(parents=True, exist_ok=True)
+overrides = dict(p.split('=', 1) for p in args.part)
+report = {'source': str(args.source), 'source_sha256': hashlib.sha256(args.source.read_bytes()).hexdigest(), 'args': argv}
+
+
+def log(*a): print('FIT', f'{time.time() - t0:6.1f}s', *a, flush=True)
+
+
+# ---------------------------------------------------------------------------------- import
+rig = Rig(args.rig)
+bpy.ops.wm.read_factory_settings(use_empty=True)
+src = str(args.source)
+if src.lower().endswith(('.glb', '.gltf')): bpy.ops.import_scene.gltf(filepath=src, merge_vertices=True)
+elif src.lower().endswith('.fbx'): bpy.ops.import_scene.fbx(filepath=src, automatic_bone_orientation=True)
+else: raise SystemExit('Source must be .glb, .gltf or .fbx')
+CONV = Matrix(((1, 0, 0, 0), (0, 0, 1, 0), (0, -1, 0, 0), (0, 0, 0, 1)))  # Blender Z-up -> glTF Y-up
+dep = bpy.context.evaluated_depsgraph_get()
+armature = next((o for o in bpy.context.scene.objects if o.type == 'ARMATURE'), None)
+arm_joints = {}
+if armature:
+    for pb in armature.pose.bones:
+        arm_joints[pb.name] = np.array(CONV @ armature.matrix_world @ pb.head)
+objects = []
+for ob in [o for o in bpy.context.scene.objects if o.type == 'MESH' and o.visible_get()]:
+    me = bpy.data.meshes.new_from_object(ob.evaluated_get(dep), preserve_all_data_layers=True, depsgraph=dep)
+    me.transform(CONV @ ob.matrix_world)
+    if ob.matrix_world.determinant() < 0: me.flip_normals()
+    # Weld split vertices (glTF/FBX split at UV and normal seams) so loose parts
+    # and decimation see real topology; UVs and normals stay per corner.
+    bm = bmesh.new(); bm.from_mesh(me)
+    bmesh.ops.remove_doubles(bm, verts=list(bm.verts), dist=1e-5 * max(ob.dimensions))
+    bm.to_mesh(me); bm.free()
+    new = bpy.data.objects.new(ob.name, me); objects.append(new)
+for ob in list(bpy.context.scene.objects): bpy.data.objects.remove(ob, do_unlink=True)
+for ob in objects:
+    bpy.context.scene.collection.objects.link(ob)
+    if ob.data.shape_keys: ob.shape_key_clear()  # morph targets block modifier_apply
+log('imported', len(objects), 'meshes', sum(len(o.data.polygons) for o in objects), 'faces', 'armature' if armature else 'no armature')
+
+
+def co(ob):
+    a = np.empty(len(ob.data.vertices) * 3); ob.data.vertices.foreach_get('co', a); return a.reshape(-1, 3)
+
+
+def set_co(ob, a):
+    ob.data.vertices.foreach_set('co', np.ascontiguousarray(a, dtype=np.float64).ravel()); ob.data.update()
+
+
+def tris(ob):
+    me = ob.data; me.calc_loop_triangles()
+    t = np.empty(len(me.loop_triangles) * 3, dtype=np.int64); me.loop_triangles.foreach_get('vertices', t)
+    p = np.empty(len(me.loop_triangles), dtype=np.int64); me.loop_triangles.foreach_get('polygon_index', p)
+    return t.reshape(-1, 3), p
+
+
+# ------------------------------------------------------- loose parts and prop classification
+pieces = []; info = {}
+for ob in objects:
+    V = co(ob); F, poly = tris(ob)
+    mats = [m.name if m else '' for m in ob.data.materials]
+    pmat = np.empty(len(ob.data.polygons), dtype=np.int64); ob.data.polygons.foreach_get('material_index', pmat)
+    lab = components(F, len(V)); info[ob.name] = dict(V=V, F=F, poly=poly, lab=lab, pmat=pmat)
+    for c in np.unique(lab[F[:, 0]]) if len(F) else []:
+        vid = np.nonzero(lab == c)[0]; fsel = lab[F[:, 0]] == c
+        used = sorted(set(pmat[poly[fsel]].tolist()))
+        pieces.append(dict(object=ob.name, comp=int(c), vid=vid, points=V[vid],
+                           materials=[mats[i] for i in used if i < len(mats)]))
+allp = np.concatenate([p['points'] for p in pieces])
+height0 = np.percentile(allp[:, 1], 99.5) - allp[:, 1].min()
+classify(pieces, height0, overrides)
+log('parts', {k: sum(1 for p in pieces if p['part'] == k) for k in set(p['part'] for p in pieces)})
+
+
+def gather(parts):
+    """Concatenated vertices and triangles of every piece in parts, with a back-map."""
+    Vs, Fs, back, off = [], [], [], 0
+    for ob in objects:
+        d = info[ob.name]; want = np.zeros(len(d['V']), bool)
+        for p in pieces:
+            if p['object'] == ob.name and p['part'] in parts: want[p['vid']] = True
+        if not want.any(): continue
+        idx = np.nonzero(want)[0]; remap = -np.ones(len(d['V']), np.int64); remap[idx] = np.arange(len(idx)) + off
+        F = d['F'][want[d['F']].all(1)]
+        Vs.append(d['V'][idx]); Fs.append(remap[F]); back.append((ob.name, idx)); off += len(idx)
+    return np.concatenate(Vs), np.concatenate(Fs), back
+
+
+def transform_all(M):
+    for ob in objects:
+        d = info[ob.name]; d['V'] = d['V'] @ M[:3, :3].T + M[:3, 3]
+    for p in pieces:
+        p['points'] = info[p['object']]['V'][p['vid']]
+
+
+# -------------------------------------------------------------- orientation and scale
+cal, cal_sk, _ = calibrate(rig)
+report['calibration'] = {'span_m': cal['span'], 'arc_m': cal['arc']}
+V, F, _ = gather({'body'})
+sk = Skeleton(sample_surface(V, F))
+if args.yaw is not None:
+    a = math.radians(args.yaw); R = np.array([[math.cos(a), 0, math.sin(a)], [0, 1, 0], [-math.sin(a), 0, math.cos(a)]])
+else:
+    R = _swing(sk.forward(), np.array([0, 0, 1.]))
+s = cal['span'] / sk.span
+M = np.eye(4); M[:3, :3] = R * s; transform_all(M)
+report['normalise'] = {'scale': s, 'yaw_deg': math.degrees(math.atan2(R[0, 2], R[0, 0]))}
+log('normalised: scale', round(s, 4), 'yaw', round(report['normalise']['yaw_deg'], 1))
+landmarks = None
+if args.landmarks:
+    landmarks = {k: (M[:3, :3] @ np.array(v)) + M[:3, 3] for k, v in json.loads(args.landmarks.read_text()).items()}
+
+
+def locate():
+    V, F, back = gather({'body'})
+    pts = sample_surface(V, F)
+    joints, sk, chains, names = joints_from_mesh(pts, cal, landmarks)
+    if armature:
+        mapped = map_armature(list(arm_joints))
+        for j, b in mapped.items():
+            if j in rig.joint: joints[j] = M[:3, :3] @ arm_joints[b] + M[:3, 3]
+        for chain, (line, s_, arcs) in chains.items():
+            for j in CHAINS[chain]:
+                if j in mapped: arcs[j] = float(project(line, s_, joints[j][None])[0][0])
+        report['armature_map'] = mapped
+    return V, F, back, joints, sk, chains
+
+
+V, F, back, joints, sk, chains = locate()
+if not any(p['part'] == 'helmet' for p in pieces):
+    found = find_helmet(pieces, joints['head'], joints['head_tip'])
+    if found:
+        log('helmet: loose parts around the head', len(found))
+        V, F, back, joints, sk, chains = locate()
+joints = fix_hip(joints, rig.joint)
+report['tips'] = {k: dict(pos=np.round(t['pos'], 3).tolist(), branch=round(t['branch'], 3), geodesic=round(t['geodesic'], 3))
+                  for k, t in sk.tips.items()}
+report['extra_tips'] = [np.round(t['pos'], 3).tolist() for t in sk.extra_tips]
+log('tips', report['tips'], 'extra', report['extra_tips'])
+# Landmark check scene: the normalised source pose with a marker at every joint.
+for ob in objects: set_co(ob, info[ob.name]['V'])
+markers = []
+for name, pos in joints.items():
+    bpy.ops.mesh.primitive_ico_sphere_add(radius=.025, location=tuple(pos)); m = bpy.context.object
+    m.name = 'joint-' + name; markers.append(m)
+    mat = bpy.data.materials.get('marker') or bpy.data.materials.new('marker'); mat.diffuse_color = (0, .9, .2, 1)
+    m.data.materials.append(mat)
+for chain, (line, s_, arcs) in chains.items():
+    cu = bpy.data.curves.new('line-' + chain, 'CURVE'); cu.dimensions = '3D'; cu.bevel_depth = .006
+    sp = cu.splines.new('POLY'); sp.points.add(len(line) - 1)
+    for i, q in enumerate(line): sp.points[i].co = (*q, 1)
+    c = bpy.data.objects.new('line-' + chain, cu); bpy.context.scene.collection.objects.link(c); markers.append(c)
+bpy.context.preferences.filepaths.save_version = 0
+bpy.ops.wm.save_as_mainfile(filepath=str(work / 'landmarks.blend'))
+for m in markers: bpy.data.objects.remove(m, do_unlink=True)
+if args.stop_after_landmarks:
+    (work / 'fit-report.json').write_text(json.dumps(report, indent=2, default=float) + '\n'); raise SystemExit(0)
+report['joints_source'] = {k: [round(float(x), 4) for x in v] for k, v in joints.items()}
+log('landmarks', {k: np.round(v, 3).tolist() for k, v in joints.items() if k in ('head', 'arm_L', 'hand_R', 'leg_L', 'foot_R')})
+
+# ------------------------------------------------------------------------ unpose
+blend = .035 * sk.height
+fitted, weights, maps, spec = unpose(V, sk.graph.point_voxel[:len(V)], sk, chains, joints, rig.joint, blend)
+order = list(chains)
+wsum = np.zeros((len(V), len(order)))
+# Group membership for the weight-transfer masks: the chain each vertex was unposed with.
+for ci, chain in enumerate(order):
+    bones = set(CHAINS[chain][:-1])
+    wsum[:, ci] = sum(w for b, w in weights.items() if b in bones)
+group_mask = {chain: wsum[:, ci] for ci, chain in enumerate(order)}
+# Chest/hip weight carried by a limb label belongs to the torso group.
+group_mask['torso'] = 1 - sum(group_mask[c] for c in order if c != 'torso')
+
+
+def scatter(back, values, key):
+    off = 0
+    for name, idx in back:
+        info[name].setdefault(key, np.zeros((len(info[name]['V']),) + values.shape[1:]))[idx] = values[off:off + len(idx)]
+        off += len(idx)
+
+
+# Shoulders carry the largest unposing rotations (a raised arm comes down to
+# the 0 A.D. A-pose); relax the displacement around them as well as at tears.
+shoulders = np.zeros(len(V), bool)
+for j in ('arm_L', 'arm_R'):
+    shoulders |= np.linalg.norm(V - joints[j], axis=1) < .07 * sk.height
+fitted, report['torn_edges_healed'] = heal(V, fitted, F, extra=shoulders)
+report['heel_scale'] = fit_heels(fitted, weights, rig)
+scatter(back, fitted, 'fitted')
+if os.environ.get('FIT_DEBUG'):
+    pal = {b: np.random.default_rng(abs(hash(b)) % 2**32).random(3) for b in rig.bones}
+    lo_, hi_, _, t_ = spec
+    scatter(back, np.array([pal[a] * (1 - t) + pal[b] * t for a, b, t in zip(lo_, hi_, t_)]), 'debug_col')
+scatter(back, np.stack([group_mask[c] for c in order], 1), 'groups')
+# Cloaks follow the nearest body vertex's map blend.
+cV, cF, cback = gather({'cloak'}) if any(p['part'] == 'cloak' for p in pieces) else (np.zeros((0, 3)), None, [])
+if len(cV):
+    # Cloaks hang from the torso: follow the nearest torso vertex, never an arm or
+    # leg (a raised arm would otherwise drag the cloak's corner with it).
+    torso = np.nonzero(np.isin(spec[0], CHAINS['torso']))[0]
+    near = np.empty(len(cV), np.int64)
+    for k in range(0, len(cV), 2048):
+        near[k:k + 2048] = torso[np.argmin(((cV[k:k + 2048, None] - V[torso][None]) ** 2).sum(2), 1)]
+    # Same per-vertex blend as the nearest body vertex, applied at the cloak vertex.
+    cfit = apply_blend(maps, joints, cV, *(x[near] for x in spec))
+    # No longer than the 0 A.D. cape: its bones were animated for that hem, and a
+    # longer cloak sinks into the floor in walk and death.
+    hem = rig.P[np.unique(rig.cloak_faces), 1].min() if len(rig.cloak_faces) else cfit[:, 1].min()
+    top = cfit[:, 1].max()
+    if cfit[:, 1].min() < hem:
+        k = (top - hem) / (top - cfit[:, 1].min()); cfit[:, 1] = top - (top - cfit[:, 1]) * k
+        report['cloak_length_scale'] = round(float(k), 4)
+    scatter(cback, cfit, 'fitted')
+    scatter(cback, np.stack([group_mask[c][near] for c in order], 1), 'groups')
+
+# ---------------------------------------------------------------------- rigid props
+seats = {}
+hV, _, hback = gather({'helmet'}) if any(p['part'] == 'helmet' for p in pieces) else (np.zeros((0, 3)), None, [])
+if len(hV):
+    hfit = apply_map(maps['head'], hV)
+    # Contract ceiling: the figure (crest included) stays under 1.95 m. Shrink the
+    # helmet about the head joint only when the source crest would exceed it.
+    ceiling = args.max_height
+    if hfit[:, 1].max() > ceiling:
+        piv = rig.joint['head']; k = (ceiling - piv[1]) / (hfit[:, 1].max() - piv[1])
+        hfit = piv + (hfit - piv) * k; report['helmet_scaled'] = round(float(k), 4)
+    scatter(hback, hfit, 'fitted')
+for part, fn in (('spear', lambda p: seat_spear(p, rig.spear_frame(), args.flip_spear)),
+                 ('shield', lambda p: seat_shield(p, rig.shield_frame(), np.array([0, 1., 0])))):
+    pV, _, pback = gather({part}) if any(p['part'] == part for p in pieces) else (np.zeros((0, 3)), None, [])
+    if not len(pV): raise SystemExit(f'No {part} found: pass --part {part}=REGEX (object or material name)')
+    Mp, meta = fn(pV); seats[part] = meta
+    scatter(pback, pV @ Mp[:3, :3].T + Mp[:3, 3], 'fitted')
+report['props'] = seats
+missing = [p for p in ('helmet',) if not any(q['part'] == p for q in pieces)]
+if missing: raise SystemExit('No helmet found: pass --part helmet=REGEX (object or material name)')
+
+# --------------------------------------------- write fitted geometry, split by part
+fitted_objects = {}
+for ob in objects:
+    d = info[ob.name]
+    if 'fitted' not in d:
+        bpy.data.objects.remove(ob, do_unlink=True); continue
+    set_co(ob, d['fitted'])
+    vpart = np.empty(len(d['V']), dtype=object)
+    for p in pieces:
+        if p['object'] == ob.name: vpart[p['vid']] = p['part']
+    if 'groups' in d:
+        for ci, chain in enumerate(order):
+            vg = ob.vertex_groups.new(name='grp_' + chain)
+            for i in np.nonzero(d['groups'][:, ci] > 1e-4)[0]: vg.add([int(i)], float(d['groups'][i, ci]), 'REPLACE')
+    if 'debug_col' in d:
+        ca = ob.data.color_attributes.new('debug', 'FLOAT_COLOR', 'POINT')
+        ca.data.foreach_set('color', np.hstack([d['debug_col'], np.ones((len(d['V']), 1))]).ravel())
+    for part in PART_ORDER:
+        if not (vpart == part).any(): continue
+        x = ob.copy(); x.data = ob.data.copy(); bpy.context.scene.collection.objects.link(x)
+        bm = bmesh.new(); bm.from_mesh(x.data); bm.verts.ensure_lookup_table()
+        bmesh.ops.delete(bm, geom=[v for v in bm.verts if vpart[v.index] != part], context='VERTS')
+        bm.to_mesh(x.data); bm.free(); x.name = f'HIGH-{part}-{ob.name}'; x['part'] = part
+        fitted_objects.setdefault(part, []).append(x)
+    bpy.data.objects.remove(ob, do_unlink=True)
+for part in [p for p in PART_ORDER if p in fitted_objects]:
+    for x in fitted_objects[part]:
+        for poly in x.data.polygons: poly.use_smooth = True
+log('fitted', {k: sum(len(o.data.polygons) for o in v) for k, v in fitted_objects.items()})
+bpy.context.preferences.filepaths.save_version = 0
+bpy.ops.wm.save_as_mainfile(filepath=str(work / 'fitted-high.blend'))
+# Check scene: the fitted figure with the 0 A.D. joints it was fitted to.
+markers = []
+for name, pos in rig.joint.items():
+    if name.startswith('cape'): continue
+    bpy.ops.mesh.primitive_ico_sphere_add(radius=.02, location=tuple(pos)); m = bpy.context.object
+    m.name = 'joint-' + name; markers.append(m)
+    mat = bpy.data.materials.get('marker') or bpy.data.materials.new('marker'); mat.diffuse_color = (0, .9, .2, 1)
+    m.data.materials.append(mat)
+bpy.ops.wm.save_as_mainfile(filepath=str(work / 'fitted-check.blend'))
+for m in markers: bpy.data.objects.remove(m, do_unlink=True)
+
+
+# ------------------------------------------------------------------------- LODs
+def active(o):
+    bpy.ops.object.select_all(action='DESELECT'); o.select_set(True); bpy.context.view_layer.objects.active = o
+
+
+def apply_mod(o, kind, **kw):
+    active(o); m = o.modifiers.new(kind, kind)
+    for k, v in kw.items(): setattr(m, k, v)
+    bpy.ops.object.modifier_apply(modifier=m.name)
+
+
+def ntris(o): return sum(len(p.vertices) - 2 for p in o.data.polygons)
+
+
+def joined_copy(items, name):
+    copies = []
+    for o in items:
+        x = o.copy(); x.data = o.data.copy(); bpy.context.scene.collection.objects.link(x); copies.append(x)
+    bpy.ops.object.select_all(action='DESELECT')
+    for x in copies: x.select_set(True)
+    bpy.context.view_layer.objects.active = copies[0]
+    if len(copies) > 1: bpy.ops.object.join()
+    x = bpy.context.view_layer.objects.active; x.name = name; return x
+
+
+def budgets(total, parts):
+    raw = {p: sum(ntris(o) for o in fitted_objects[p]) for p in parts}
+    floor = {'spear': 90, 'shield': 300, 'helmet': 250, 'cloak': 200, 'body': 1000}
+    weight = {p: raw[p] ** .75 * {'body': 1.6}.get(p, 1) for p in parts}
+    share = {p: max(floor.get(p, 100), total * weight[p] / sum(weight.values())) for p in parts}
+    scale = total / sum(share.values())
+    return {p: int(share[p] * scale) for p in parts}, raw
+
+
+parts = [p for p in PART_ORDER if p in fitted_objects]
+b0, raw = budgets(args.lod0, parts)
+lod0 = {}
+for p in parts:
+    o = joined_copy(fitted_objects[p], f'LOD0-{p}'); o['part'] = p
+    apply_mod(o, 'TRIANGULATE')
+    if ntris(o) > b0[p]: apply_mod(o, 'DECIMATE', ratio=b0[p] / ntris(o), use_collapse_triangulate=True)
+    lod0[p] = o
+# One shared atlas over every LOD0 part.
+bpy.ops.object.select_all(action='DESELECT')
+for o in lod0.values(): o.select_set(True)
+bpy.context.view_layer.objects.active = lod0['body']
+for o in lod0.values():
+    while o.data.uv_layers: o.data.uv_layers.remove(o.data.uv_layers[0])
+    o.data.uv_layers.new(name='atlas')
+bpy.ops.object.mode_set(mode='EDIT'); bpy.ops.mesh.select_all(action='SELECT')
+bpy.ops.uv.smart_project(angle_limit=math.radians(60), island_margin=.003, area_weight=1.0)
+bpy.ops.uv.pack_islands(margin=.004, rotate=True)
+bpy.ops.object.mode_set(mode='OBJECT')
+b1, _ = budgets(args.lod1, parts)
+lod1 = {}
+for p in parts:
+    o = joined_copy([lod0[p]], f'LOD1-{p}'); o['part'] = p
+    if ntris(o) > b1[p]: apply_mod(o, 'DECIMATE', ratio=b1[p] / ntris(o), use_collapse_triangulate=True)
+    lod1[p] = o
+report['triangles'] = {'source': raw, 'lod0': {p: ntris(o) for p, o in lod0.items()}, 'lod1': {p: ntris(o) for p, o in lod1.items()}}
+log('lods', report['triangles'])
+
+# ------------------------------------------------------------------- skin weights
+def donor(name, faces):
+    used = np.unique(faces); remap = -np.ones(len(rig.P), np.int64); remap[used] = np.arange(len(used))
+    me = bpy.data.meshes.new(name); me.from_pydata(rig.P[used].tolist(), [], remap[faces].tolist()); me.update()
+    o = bpy.data.objects.new(name, me); bpy.context.scene.collection.objects.link(o)
+    groups = [o.vertex_groups.new(name=b) for b in rig.bones]
+    for i, v in enumerate(used):
+        for j, w in zip(rig.J[v], rig.W[v]):
+            if w > 0: groups[j].add([i], float(w), 'ADD')
+    return o
+
+
+def group_faces(bones):
+    k = [rig.bones.index(b) for b in bones]
+    share = (rig.W * np.isin(rig.J, k)).sum(1)
+    return rig.body_faces[share[rig.body_faces].mean(1) > .3]
+
+
+donors = {chain: donor('donor_' + chain, group_faces(GROUPS[chain])) for chain in order}
+donors['cloak'] = donor('donor_cloak', rig.cloak_faces) if len(rig.cloak_faces) else None
+
+
+def transfer(o, src, mask=None):
+    m = o.modifiers.new('xfer', 'DATA_TRANSFER'); m.object = src
+    m.use_vert_data = True; m.data_types_verts = {'VGROUP_WEIGHTS'}; m.vert_mapping = 'POLYINTERP_NEAREST'
+    m.layers_vgroup_select_src = 'ALL'; m.layers_vgroup_select_dst = 'NAME'; m.mix_mode = 'ADD'
+    if mask: m.vertex_group = mask
+    active(o); bpy.ops.object.modifier_apply(modifier=m.name)
+
+
+for lod in (lod0, lod1):
+    for p, o in lod.items():
+        for b in rig.bones:
+            if b not in o.vertex_groups: o.vertex_groups.new(name=b)
+        if p in RIGID or p in ('spear', 'shield', 'helmet'):
+            bone = {'spear': 'weapon_R', 'shield': 'shield_arm', 'helmet': 'helmet'}[p]
+            o.vertex_groups[bone].add(list(range(len(o.data.vertices))), 1., 'REPLACE')
+        elif p == 'cloak' and donors['cloak']:
+            transfer(o, donors['cloak'])
+        else:
+            for chain in order: transfer(o, donors[chain], 'grp_' + chain)
+        for g in list(o.vertex_groups):
+            if g.name.startswith('grp_'): o.vertex_groups.remove(g)
+        active(o)
+        bpy.ops.object.vertex_group_limit_total(limit=4)
+        bpy.ops.object.vertex_group_normalize_all(lock_active=False)
+for o in list(bpy.data.objects):
+    if o.name.startswith('donor_'): bpy.data.objects.remove(o, do_unlink=True)
+log('weights transferred')
+
+# -------------------------------------------------------------------------- bake
+scene = bpy.context.scene; scene.render.engine = 'CYCLES'; scene.cycles.device = 'CPU'
+scene.cycles.samples = 1; scene.render.threads_mode = 'FIXED'; scene.render.threads = 3
+bake = scene.render.bake; bake.use_selected_to_active = True; bake.margin = 16; bake.target = 'IMAGE_TEXTURES'
+diag = float(np.ptp(np.concatenate([co(o) for o in lod0.values()]), 0).max())
+bake.cage_extrusion = .006 * diag; bake.max_ray_distance = .02 * diag
+N = args.bake_size
+
+
+def img(name, data):
+    im = bpy.data.images.new(name, N, N, alpha=False, float_buffer=False)
+    if data: im.colorspace_settings.name = 'Non-Color'
+    return im
+
+
+maps_img = {'basecolor': img('basecolor', False), 'normal': img('normal', True), 'ao': img('ao', True),
+            'roughness': img('roughness', True), 'metallic': img('metallic', True)}
+receiver = bpy.data.materials.new('bake receiver'); receiver.use_nodes = True
+node = receiver.node_tree.nodes.new('ShaderNodeTexImage'); receiver.node_tree.nodes.active = node
+for o in lod0.values():
+    o['source_materials'] = [m.name for m in o.data.materials if m]
+    o.data.materials.clear(); o.data.materials.append(receiver)
+    for poly in o.data.polygons: poly.material_index = 0
+
+
+def run_bake(kind, im, **kw):
+    node.image = im; first = True
+    for p in parts:
+        bpy.ops.object.select_all(action='DESELECT')
+        for h in fitted_objects[p]: h.select_set(True)
+        lod0[p].select_set(True); bpy.context.view_layer.objects.active = lod0[p]
+        bake.use_clear = first; first = False
+        bpy.ops.object.bake(type=kind, use_clear=bake.use_clear, **kw)
+    im.filepath_raw = str(work / f'{im.name}-master.png'); im.file_format = 'PNG'; im.save()
+    log('baked', kind, im.name)
+
+
+run_bake('NORMAL', maps_img['normal'], normal_space='TANGENT')
+# Thin double-sided shells (cloaks, shield dishes) can return the opposite
+# surface. Keep each texel in the receiving hemisphere and limit relief to a
+# 30-degree cone: form shading belongs to the mesh normals (painted-lane fix).
+pix = np.array(maps_img['normal'].pixels[:], dtype=np.float32).reshape(-1, 4)
+vec = pix[:, :3] * 2 - 1; vec[vec[:, 2] < 0] *= -1; vec[:, 2] = np.maximum(vec[:, 2], .001)
+lim = vec[:, 2] * math.tan(math.radians(30)); ln = np.linalg.norm(vec[:, :2], axis=1)
+vec[:, :2] *= np.minimum(1, lim / np.maximum(ln, 1e-8))[:, None]; vec /= np.linalg.norm(vec, axis=1)[:, None]
+pix[:, :3] = vec * .5 + .5; maps_img['normal'].pixels.foreach_set(pix.ravel()); maps_img['normal'].save()
+# Ambient occlusion of the low mesh itself, short range, with every LOD0 part
+# present (3 cm reach): selected-to-active AO from the high shells gave black blotches.
+scene.world = scene.world or bpy.data.worlds.new('fit'); scene.world.light_settings.distance = .03
+scene.cycles.samples = args.ao_samples; bake.use_selected_to_active = False; node.image = maps_img['ao']
+for i, p in enumerate(parts):
+    active(lod0[p]); bpy.ops.object.bake(type='AO', use_clear=i == 0)
+ao_px = np.array(maps_img['ao'].pixels[:], dtype=np.float32).reshape(-1, 4)
+ao_px[:, :3] = .35 + .65 * ao_px[:, :3]  # never fully black: the runtime adds its own shadowing
+maps_img['ao'].pixels.foreach_set(ao_px.ravel())
+maps_img['ao'].filepath_raw = str(work / 'ao-master.png'); maps_img['ao'].file_format = 'PNG'; maps_img['ao'].save()
+bake.use_selected_to_active = True; scene.cycles.samples = 1; log('baked AO (low mesh, 3 cm)')
+
+
+def emission_from(socket_name):
+    """Route each source material's <socket> into an emission shader."""
+    for m in {m for ps in fitted_objects.values() for o in ps for m in o.data.materials if m}:
+        if not m.use_nodes: m.use_nodes = True
+        nt = m.node_tree; bsdf = next((n for n in nt.nodes if n.type == 'BSDF_PRINCIPLED'), None)
+        outn = next((n for n in nt.nodes if n.type == 'OUTPUT_MATERIAL' and n.is_active_output), None) or \
+            next((n for n in nt.nodes if n.type == 'OUTPUT_MATERIAL'), None)
+        if outn is None: outn = nt.nodes.new('ShaderNodeOutputMaterial')
+        em = nt.nodes.get('FIT emission') or nt.nodes.new('ShaderNodeEmission'); em.name = 'FIT emission'
+        for l in list(em.inputs['Color'].links): nt.links.remove(l)
+        fallback = {'Base Color': (.5, .5, .5, 1), 'Roughness': .6, 'Metallic': 0.}[socket_name]
+        if bsdf is None:
+            v = fallback
+        else:
+            sock = bsdf.inputs[socket_name]
+            if sock.links: nt.links.new(sock.links[0].from_socket, em.inputs['Color']); v = None
+            else: v = sock.default_value
+        if v is not None:
+            em.inputs['Color'].default_value = tuple(v)[:4] if hasattr(v, '__len__') else (v, v, v, 1)
+        nt.links.new(em.outputs['Emission'], outn.inputs['Surface'])
+
+
+for chan, name in (('Base Color', 'basecolor'), ('Roughness', 'roughness'), ('Metallic', 'metallic')):
+    emission_from(chan); run_bake('EMIT', maps_img[name])
+
+
+def px(im): return np.array(im.pixels[:], dtype=np.float32).reshape(N, N, 4)
+
+
+orm = bpy.data.images.new('orm', N, N, alpha=False); orm.colorspace_settings.name = 'Non-Color'
+o_px = np.ones((N, N, 4), np.float32)
+o_px[..., 0] = px(maps_img['ao'])[..., 0]; o_px[..., 1] = px(maps_img['roughness'])[..., 0]; o_px[..., 2] = px(maps_img['metallic'])[..., 0]
+orm.pixels.foreach_set(o_px.ravel()); orm.filepath_raw = str(work / 'orm-master.png'); orm.file_format = 'PNG'; orm.save()
+base_px = px(maps_img['basecolor'])
+
+# --------------------------------------------------------------------- team mask
+team_rules = [r.split('=', 1) for r in args.team]
+
+
+def hsv(rgb):
+    mx = rgb.max(-1); mn = rgb.min(-1); d = mx - mn + 1e-9
+    r, g, b = rgb[..., 0], rgb[..., 1], rgb[..., 2]
+    h = np.where(mx == r, ((g - b) / d) % 6, np.where(mx == g, (b - r) / d + 2, (r - g) / d + 4)) * 60
+    return h, np.where(mx > 0, d / (mx + 1e-9), 0), mx
+
+
+shield_frame = rig.shield_frame()
+
+
+def team_faces(o, p):
+    """Per-polygon team region name (or '') for one LOD part."""
+    me = o.data; n = len(me.polygons); region = np.array([''] * n, dtype=object)
+    uv = np.empty(len(me.loops) * 2); me.uv_layers.active.data.foreach_get('uv', uv); uv = uv.reshape(-1, 2)
+    li = np.empty(n, np.int64); me.polygons.foreach_get('loop_start', li)
+    lt = np.empty(n, np.int64); me.polygons.foreach_get('loop_total', lt)
+    cuv = np.array([uv[a:a + b].mean(0) for a, b in zip(li, lt)])
+    col = base_px[np.clip((cuv[:, 1] * N).astype(int), 0, N - 1), np.clip((cuv[:, 0] * N).astype(int), 0, N - 1), :3]
+    centre = np.empty(n * 3); me.polygons.foreach_get('center', centre); centre = centre.reshape(-1, 3)
+    src_mats = o.get('source_materials', [])
+    if not args.no_auto_team:
+        if p == 'helmet':
+            h, s_, v = hsv(col ** (1 / 2.2))
+            red = ((h < 22) | (h > 335)) & (s_ > .45) & (v > .12)
+            region[red] = 'crest'
+        if p == 'shield':
+            q = centre - shield_frame['centre']; hgt = q @ shield_frame['normal']
+            r = np.linalg.norm(q - np.outer(hgt, shield_frame['normal']), axis=1)
+            region[r > .86 * r.max()] = 'shield rim'
+        if p == 'cloak':
+            y = centre[:, 1]; x = np.abs(centre[:, 0])
+            region[(y < y.min() + .12 * np.ptp(y)) | (x > .88 * x.max())] = 'cloak trim'
+    for name, rx in team_rules:
+        if any(re.search(rx, m, re.I) for m in src_mats) or re.search(rx, o.name, re.I):
+            region[:] = name
+    return region
+
+
+# ------------------------------------------------------------------------- export
+names = {'body': 'body', 'cloak': 'cloak', 'helmet': 'helmet', 'shield': 'aspis', 'spear': 'spear'}
+team_part = {'crest': 'crest', 'shield rim': 'aspis', 'cloak trim': 'cloak'}
+planes = clip_planes(rig.g)
+log('clip floor planes', len(planes))
+
+
+def export_lod(lod, mesh_name):
+    attrs = {k: [] for k in ['POSITION', 'NORMAL', 'TANGENT', 'TEXCOORD_0', 'JOINTS_0', 'WEIGHTS_0', 'COLOR_0']}
+    idx = []; regions = []
+    for p in parts:
+        o = lod[p]; region = team_faces(o, p)
+        tattr = o.data.attributes.new('fit_team', 'INT', 'FACE')
+        kinds = sorted(set(region.tolist()))
+        for i, r in enumerate(region): tattr.data[i].value = kinds.index(r)
+        apply_mod(o, 'TRIANGULATE'); me = o.data
+        me.calc_tangents(uvmap=me.uv_layers.active.name)
+        team_of = [kinds[a.value] for a in me.attributes['fit_team'].data]
+        gname = {g.index: g.name for g in o.vertex_groups}
+        bone = {'spear': 'weapon_R', 'shield': 'shield_arm', 'helmet': 'helmet'}.get(p)
+        for kind in kinds:
+            start = len(attrs['POSITION']); mapping = {}
+            for poly in me.polygons:
+                if team_of[poly.index] != kind: continue
+                for li in poly.loop_indices:
+                    loop = me.loops[li]; v = me.vertices[loop.vertex_index]
+                    uv = me.uv_layers.active.data[li].uv; n = Vector(me.corner_normals[li].vector).normalized()
+                    if n.length < .5: n = poly.normal.normalized()
+                    t = loop.tangent - n * loop.tangent.dot(n)
+                    t = t.normalized() if t.length > 1e-6 else n.orthogonal().normalized()
+                    ww = sorted([(rig.bones.index(gname[g.group]), g.weight) for g in v.groups
+                                 if g.weight > 1e-6 and gname[g.group] in rig.bones], key=lambda x: -x[1])[:4]
+                    if not ww: ww = [(rig.bones.index('hip'), 1.)]
+                    tot = sum(w for _, w in ww); js = [j for j, _ in ww] + [0] * (4 - len(ww))
+                    ws = [w / tot for _, w in ww] + [0] * (4 - len(ww))
+                    key = (v.index, tuple(round(x, 5) for x in n), tuple(round(x, 6) for x in uv))
+                    if key not in mapping:
+                        mapping[key] = len(attrs['POSITION'])
+                        attrs['POSITION'].append(tuple(v.co)); attrs['NORMAL'].append(tuple(n))
+                        attrs['TANGENT'].append((*t, -loop.bitangent_sign if loop.bitangent_sign else 1.))
+                        attrs['TEXCOORD_0'].append((uv.x, 1 - uv.y)); attrs['JOINTS_0'].append(js)
+                        attrs['WEIGHTS_0'].append(ws); attrs['COLOR_0'].append((1. if kind else 0., 0., 0., 1.))
+                    idx.append((mapping[key],))
+            count = len(attrs['POSITION']) - start
+            if count:
+                part = team_part[kind] if kind else names[p]
+                regions.append({'part': part, 'start': start, 'count': count, 'bone': bone, 'team': kind or None})
+    before = np.array(attrs['POSITION'])
+    xyz, rep = ground_fit(before, np.array(attrs['JOINTS_0']), np.array(attrs['WEIGHTS_0']), planes)
+    moved = np.linalg.norm(xyz - before, axis=1)
+    rep['max_by_part_m'] = {r['part']: round(float(moved[r['start']:r['start'] + r['count']].max()), 4) for r in regions}
+    attrs['POSITION'] = [tuple(map(float, r)) for r in xyz]
+    log(mesh_name, len(idx) // 3, 'triangles; ground fit', rep)
+    return {'name': mesh_name, 'attrs': attrs, 'indices': idx, 'regions': regions}, rep
+
+
+meshes = []; report['ground_fit'] = {}
+for lod, name in ((lod0, 'spearman_LOD0'), (lod1, 'spearman_LOD1')):
+    m, rep = export_lod(lod, name); meshes.append(m); report['ground_fit'][name] = rep
+report['team_regions'] = {m['name']: sorted({r['team'] for r in m['regions'] if r['team']}) for m in meshes}
+images = []
+for name, im in (('basecolor', maps_img['basecolor']), ('normal', maps_img['normal']), ('orm', orm)):
+    small = im.copy(); small.scale(args.ship_size, args.ship_size)
+    path = work / f'{name}-{args.ship_size}.jpg'
+    small.filepath_raw = str(path); small.file_format = 'JPEG'
+    small.save(filepath=str(path), quality=args.jpeg_quality)
+    images.append((name, 'image/jpeg', path.read_bytes()))
+credit = f'{args.credit}; animation and rig: {OAD_CREDIT}'
+pack(rig.g, meshes, images, out, credit, args.license,
+     extras={'texture_master_size': args.bake_size, 'texture_delivery': {'encoding': 'JPEG', 'quality': args.jpeg_quality, 'pixels': args.ship_size},
+             'source_model': {'file': args.source.name, 'sha256': report['source_sha256'], 'credit': args.credit},
+             'fit': 'tools/art/anim3d/kit/fit_source_to_0ad.py'},
+     material_name='Fitted ' + args.source.stem)
+for name in ('LICENSE-ART',):
+    if not (out.parent / name).exists(): shutil.copy(APPROVED.parent / name, out.parent / name)
+prov = out.parent / 'PROVENANCE.md'
+if not prov.exists():
+    prov.write_text(f"""# {out.name}: provenance
+
+Generated by `tools/art/anim3d/kit/fit_source_to_0ad.py`; replace this stub with a reviewed record before shipping.
+
+- Model: {args.credit}. Source file `{args.source.name}`, SHA-256 `{report['source_sha256']}`.
+- Rig and the five clips (idle, walk, attack, hit, death): {OAD_CREDIT}. Copied byte for byte from
+  `{args.rig.name}` (SHA-256 `{hashlib.sha256(args.rig.read_bytes()).hexdigest()}`).
+- Changes: unposed to the 0 A.D. bind pose, proportions fitted to the 0 A.D. bone lengths, re-skinned with
+  0 A.D. weights, props re-seated, decimated to two LODs, materials baked to one atlas, team mask added.
+- Combined asset licence: {args.license}.
+""")
+report.update(glb=str(out), glb_bytes=out.stat().st_size, seconds=round(time.time() - t0, 1))
+bpy.ops.wm.save_as_mainfile(filepath=str(work / 'fitted-lods.blend'))
+(work / 'fit-report.json').write_text(json.dumps(report, indent=2, default=float) + '\n')
+log('wrote', out, out.stat().st_size, 'bytes')
