@@ -23,7 +23,7 @@ Moved verbatim from `game-rules.md` on 2026-11-22, in the original order; the or
 | Ancient | Masonry | 30 | Walls (Production only); Pyramids (world wonder); Quarries +1 Production (Deep Quarry) |
 | Ancient | Currency | 32 | Market |
 | Ancient | Writing | 38 | Library |
-| Classical | Mathematics | 48 | Phalangite (Spearmen upgrade to it); units can buy **Siege** (siege tier 1: ignores Walls; Industrial and later units have it built in) |
+| Classical | Mathematics | 48 | Phalangite (Spearmen upgrade to it); units can buy **Siege** (siege tier 1: covers Walls level I; Machinery covers II, Metallurgy III; Industrial and later units have it built in through their own era tier) |
 | Classical | Engineering | 48 | Roadworks (every faction); Composite Archer (Archers upgrade to it) |
 | Classical | Iron Working | 56 | Reveals Iron; Forge; Mine upgrade (Deep Mine); Cataphract (Horsemen upgrade to it) |
 | Classical | Code of Laws (`CodeOfLaws`) | 62 | **Every existing city claims its best available ring-2 tile on research; later cities do so on founding** |

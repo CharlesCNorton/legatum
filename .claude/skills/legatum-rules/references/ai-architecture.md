@@ -580,7 +580,7 @@ Moved verbatim from `game-rules.md` on 2026-11-22, in the original order; the or
     rest of each rival's public army title is filled with its known unit kinds at its cities;
     rival Gold scales ours by the public economy value; rival technology is approximated from
     our known technologies; rival cities hold only the Walls and
-    Castles we've seen (so rival economies are underestimated: about 20-40% under the public
+    Walls levels we've seen (so rival economies are underestimated: about 20-40% under the public
     economy title mid-game). `omniscient` rolls out from the true state instead: a flagged
     diagnostic upper bound only.
   - Events: `Brain::search_events` (`SearchEvent`: turn, trigger, horizon, every option with
