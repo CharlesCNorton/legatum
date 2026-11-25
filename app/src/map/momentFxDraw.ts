@@ -395,6 +395,8 @@ function drawGlint(ctx: CanvasRenderingContext2D, g: FxGlint, t: number, v: Mome
   ctx.restore();
 }
 
+/** A warm gilt light, laid on in soft light: near-white screened over pale stone washed the masonry out flat (UI and art review, PR 205). */
+const WALL_LIGHT = '#ffe0a0';
 const lit = new Map<string, HTMLCanvasElement | null>();
 /**
  * The stones of a wall ring as one flat light colour, in the ring's own frame: the whole front half, and the back half
@@ -421,7 +423,7 @@ function litRing(ring: HTMLImageElement, town: HTMLImageElement | null): HTMLCan
         g.restore();
       }
       g.globalCompositeOperation = 'source-in';
-      g.fillStyle = '#fff6da';
+      g.fillStyle = WALL_LIGHT;
       g.fillRect(0, 0, n, n);
       out = c;
     }
@@ -449,18 +451,20 @@ function drawWalls(ctx: CanvasRenderingContext2D, x: FxWalls, t: number, v: Mome
   // The ring spans about 3% to 97% of its box: the band's middle travels that span, so the light is on the stones throughout.
   const s = box.s, band = s * 0.2;
   const mid = box.x + s * (0.03 + 0.94 * easeInOut(k));
-  const envelope = Math.sin(Math.PI * k);
+  // Zoomed out the ring is small and the band thin: a little stronger there so it still reads as a payoff.
+  const envelope = Math.sin(Math.PI * k) * (v.zoom < 1 ? 1.3 : 1);
   ctx.save();
-  // Screened, so the stones brighten and keep their painting; three nested widths give the band a soft edge.
-  ctx.globalCompositeOperation = 'screen';
-  for (const [wide, alpha] of [[1, 0.22], [0.6, 0.26], [0.28, 0.32]] as const) {
+  // Soft light: the stones warm and brighten but keep their masonry (screened, pale stone went flat cream); three nested
+  // widths give the band a soft edge.
+  ctx.globalCompositeOperation = 'soft-light';
+  for (const [wide, alpha] of [[1, 0.5], [0.6, 0.7], [0.28, 0.9]] as const) {
     const half = band * wide / 2, lean = band * 0.5;
     ctx.save();
     ctx.beginPath();
     ctx.moveTo(mid - half + lean, box.y); ctx.lineTo(mid + half + lean, box.y);
     ctx.lineTo(mid + half - lean, box.y + s); ctx.lineTo(mid - half - lean, box.y + s); ctx.closePath();
     ctx.clip();
-    ctx.globalAlpha = alpha * envelope;
+    ctx.globalAlpha = Math.min(1, alpha * envelope);
     ctx.drawImage(light, box.x, box.y, s, s);
     ctx.restore();
   }

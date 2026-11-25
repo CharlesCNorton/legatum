@@ -61,7 +61,7 @@ import { drawMarchDust, drawMomentFx, drawMomentGround, drawRevealed, revealAt, 
 import { drawAirCandidates, drawAirLabels, drawAirOffscreen, drawAirRings, drawTileCandidates, type AirOverlay } from './airOverlay';
 import { aircraftAsUnit } from '../airWing';
 import { unworkedClaimIndexes } from './unworkedClaims';
-import { cityRing, clearOfTown, wallTierOf } from './cityArt';
+import { cityRing, clearOfTown, TOWN_GAP, wallTierOf } from './cityArt';
 
 export { HEX_SIZE } from './grid';
 
@@ -766,15 +766,18 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
       // Beside a town, the ruins step back and shrink so they never run into its walls (UI review, PR 129: Cologne).
       if (!isFar(hexPx)) {
         const k = hexPx / HEX_SIZE;
+        let ox = 0, oy = 0;
         for (let e = 0; e < 6; e++) {
           const j = neighborIndex(i, e, W, view.height);
           if (j < 0 || !view.tiles[j]?.explored || !townTiles.has(j)) continue;
           const half = r / k;
-          const out = clearOfTown(centerX(i, W) - centerX(j, W), centerY(i, W) - centerY(j, W), half * RUIN_MASS.ha, half * RUIN_MASS.hb, TOWN_OVAL, { gap: 1.5, maxPush: HEX_SIZE * 0.4, minScale: 0.7 });
-          p.x += (out.dx - (centerX(i, W) - centerX(j, W))) * k;
-          p.y += (out.dy - (centerY(i, W) - centerY(j, W))) * k;
+          // From where the ruin stands now (a ruin between two towns moves for each in turn, not twice from its centre).
+          const dx = centerX(i, W) - centerX(j, W) + ox, dy = centerY(i, W) - centerY(j, W) + oy;
+          const out = clearOfTown(dx, dy, half * RUIN_MASS.ha, half * RUIN_MASS.hb, TOWN_OVAL, { gap: TOWN_GAP, maxPush: HEX_SIZE * 0.4, minScale: 0.7 });
+          ox += out.dx - dx; oy += out.dy - dy;
           r *= out.scale;
         }
+        p.x += ox * k; p.y += oy * k;
       }
       ctx.drawImage(image, p.x - r, p.y - r, r * 2, r * 2);
     }

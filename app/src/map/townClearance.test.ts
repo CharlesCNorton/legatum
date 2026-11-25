@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { readdirSync } from 'node:fs';
 import { alphaOf } from '../test/pngAlpha';
 import { hexToPixel, neighbors } from '../hex';
-import { CITY_CANVAS, CITY_ERAS, CITY_GROUND, CITY_TIERS, WALLED_TOWN_SCALE, WALL_CUT, clearOfTown } from './cityArt';
+import { CITY_CANVAS, CITY_ERAS, CITY_GROUND, CITY_TIERS, WALLED_TOWN_SCALE, WALL_CUT, TOWN_GAP, clearOfTown } from './cityArt';
 import { TOWN_OVAL } from './terrain';
 import { RUIN_MASS } from './mapFeatures';
 import { HEX_SIZE, isFar } from './grid';
@@ -138,8 +138,8 @@ describe('ruins beside a town keep clear of it', () => {
   for (const n of neighbors(city)) it(`neighbour ${JSON.stringify(n)}`, () => {
     const p = hexToPixel(n, HEX_SIZE);
     const dx = p.x - centre.x, dy = p.y - centre.y;
-    const out = clearOfTown(dx, dy, half * RUIN_MASS.ha, half * RUIN_MASS.hb, TOWN_OVAL, { gap: 1.5, maxPush: HEX_SIZE * 0.4, minScale: 0.7 });
-    const inside = (out.dx / (TOWN_OVAL.a + half * RUIN_MASS.ha * out.scale)) ** 2 + ((out.dy - TOWN_OVAL.cy) / (TOWN_OVAL.b + half * RUIN_MASS.hb * out.scale)) ** 2;
+    const out = clearOfTown(dx, dy, half * RUIN_MASS.ha, half * RUIN_MASS.hb, TOWN_OVAL, { gap: TOWN_GAP, maxPush: HEX_SIZE * 0.4, minScale: 0.7 });
+    const inside = (out.dx / (TOWN_OVAL.a + half * RUIN_MASS.ha * out.scale + TOWN_GAP)) ** 2 + ((out.dy - TOWN_OVAL.cy) / (TOWN_OVAL.b + half * RUIN_MASS.hb * out.scale + TOWN_GAP)) ** 2;
     expect(inside).toBeGreaterThanOrEqual(1);
     // It stays on its own tile: never pushed more than 0.4 of a hex radius, never shrunk below 70%.
     expect(Math.hypot(out.dx - dx, out.dy - dy)).toBeLessThanOrEqual(HEX_SIZE * 0.4 + 1e-6);

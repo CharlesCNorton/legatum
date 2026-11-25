@@ -128,7 +128,7 @@ for (const [width, height] of [[1000, 600], [1440, 900]] as const) {
 }
 
 // Walls finishing (momentFx `walls`): the capital's Walls are new this turn, and the light runs along the ring. Frames
-// at fixed times through the payoff, at two zooms, so a reviewer can see it start, cross the ring and leave nothing behind.
+// at about these times through the payoff (the screenshot itself takes a few frames, so each lands a little later), at two zooms, so a reviewer can see it start, cross the ring and leave nothing behind.
 for (const [width, height] of [[1000, 600], [1440, 900]] as const) {
   test.describe(`${width}x${height}`, () => {
     test.use({ viewport: { width, height } });

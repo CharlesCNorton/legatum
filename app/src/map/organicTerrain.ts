@@ -14,7 +14,7 @@
 import type { Terrain } from '../types';
 import { HEX_SIZE, HEX_W, centerX, centerY, nearestTile, neighborIndex } from './grid';
 import { rnd } from './noise';
-import { clearOfTown, type TownOval } from './cityArt';
+import { clearOfTown, TOWN_GAP, type TownOval } from './cityArt';
 import { organicSide } from './terrainVariant';
 
 export type OrganicKind = 'Forest' | 'Hills' | 'Mountains';
@@ -476,7 +476,7 @@ function ranges(inp: PlanInput, out: OrganicElem[], covered: Uint8Array) {
 /** Half the painted mass of each kind's sprite (its alpha box, measured on the 256 px art), as a share of the sprite's side. */
 export const ORGANIC_MASS: Record<OrganicKind, { ha: number; hb: number; dy: number }> = {
   // Peaks fill the box's width only at their foot: the oval stands inside the box, a little low.
-  Mountains: { ha: 0.4, hb: 0.34, dy: 0.04 },
+  Mountains: { ha: 0.4, hb: 0.42, dy: 0 },
   Hills: { ha: 0.45, hb: 0.2, dy: 0.06 },
   Forest: { ha: 0.42, hb: 0.38, dy: 0 },
 };
@@ -501,7 +501,7 @@ function keepClearOfTowns(inp: PlanInput, elems: OrganicElem[], town: TownOval):
       const dx = e.x - tx, dy = e.y + m.dy * side * e.scale - ty;
       if (Math.abs(dx) > reach || Math.abs(dy) > reach || dy < -R * 0.75) continue;
       const ha = m.ha * side * e.scale, hb = m.hb * side * e.scale;
-      const out = clearOfTown(dx, dy, ha, hb, town, { gap: 1.5, maxPush: R * 0.4, minScale: 0.72 });
+      const out = clearOfTown(dx, dy, ha, hb, town, { gap: TOWN_GAP, maxPush: R * 0.4, minScale: 0.72 });
       if (out.scale === 1 && out.dx === dx && out.dy === dy) continue;
       const centred = Math.hypot(e.x - centerX(e.tile, w), e.y - centerY(e.tile, w)) < 1;
       if (!centred && (out.dx / (town.a + ha * out.scale)) ** 2 + ((out.dy - town.cy) / (town.b + hb * out.scale)) ** 2 < 1) { drop.add(e); continue; }

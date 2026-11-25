@@ -297,6 +297,8 @@ export function cityArtFootprint(world: number, drop: number): { x0: number; x1:
 
 /** A town's footprint (`cityArtFootprint`) as an oval about its hex centre, in world units: what painted neighbours keep clear of. */
 export interface TownOval { cy: number; a: number; b: number }
+/** The clear ground (world units, about 5 px at z1.1) between a town's footprint and a painting beside it: wall towers and bastions stand a little past the ground oval, and a touching neighbour still reads as crowding (UI review, PR 205). */
+export const TOWN_GAP = 5;
 export function townOval(world: number, drop: number): TownOval {
   const f = cityArtFootprint(world, drop);
   return { cy: (f.y0 + f.y1) / 2, a: (f.x1 - f.x0) / 2, b: (f.y1 - f.y0) / 2 };
