@@ -8,7 +8,7 @@ promise to players).
   five turns and when the game ends or is abandoned. A later checkpoint replaces the earlier one.
 - Every seat is under its default name ("Player 1", "AI 2"): the engine's `public_archive` renames seats and
   replays the orders to recompute the hashes (`Recording::anonymized`). The Worker refuses any other seat name.
-- Stored as `games/<YYYY-MM>/<game id>.json.gz`, with custom metadata for listing without downloading:
+- Stored as `games/<YYYY-MM>/<game id>.json.gz` (the month of the start time in the game id), with custom metadata for listing without downloading:
   `outcome`, `turns`, `engine`, `winner`, `seats` (`Faction*:Difficulty`, `*` for a human seat).
 - The record may carry the player's coach-question answers as a top-level `coach_answers` list (at most 2000
   objects with the answer line's own keys, text up to 2000 characters, evidence up to 32,000; the Worker
@@ -22,8 +22,9 @@ promise to players).
 - Only what the game itself writes is accepted (uploads are written by strangers and read on the analysis Mac):
   seat factions and difficulties from the lists in `src/names.ts` (a core test keeps that list equal to the
   game's factions), `engine_commit` a full 40-digit git commit, and `created_at` a real ISO time (it names the
-  storage month) within a day of the start time in the game id, which must fall after 2026-11-01 and not in
-  the future. Anything else is answered 422.
+  no more than a day after the start time in the game id (earlier is fine: a save loaded from a file gets a
+  new id and keeps its `created_at`). That start time must fall after 2026-11-01 and not in the future, and it
+  names the storage month, so a sender cannot pick the month. Anything else is answered 422.
 - Each game has an upload key: 32 random hex digits the page makes the first time it uploads that game, keeps
   in the browser's `localStorage` (`legatum.uploadKeys.v1`, the last 200 games) and sends as `X-Upload-Key`.
   The Worker stores its SHA-256 as the object's `key` metadata and answers `409` to a checkpoint for that game
@@ -38,6 +39,8 @@ promise to players).
   `PUT` whose R2 key does not exist yet; one more is answered `429` with `{"error":"too many new games today"}`
   and a `Retry-After` (seconds until 00:00 UTC), and nothing is stored. A later checkpoint of a stored game is
   never counted or refused. The page keeps such a record queued and retries later.
+- One network (an IPv4 /24 or IPv6 /48, `networkKey` in `src/quota.ts`) may store at most 200 new games per UTC
+  day, so one host with many /64s cannot spend the total below by itself. Its row is a salted hash too.
 - All addresses together may store at most 5000 new games per UTC day (`MAX_NEW_GAMES_TOTAL_PER_DAY`, a bad
   value means 5000), so many addresses cannot grow the bucket without limit; past it every new game gets the
   same `429`. Bodies may unpack to at most 16 MiB (the largest real record is about 1.4 MB).

@@ -2,7 +2,7 @@ import { env as workerEnv, exports } from "cloudflare:workers";
 import { runInDurableObject } from "cloudflare:test";
 import { describe, expect, it } from "vitest";
 import worker, { checkRecord, originAllowed, tokenMatches, type Env } from "../src/index";
-import { addressKey, capFrom, ipHash } from "../src/quota";
+import { MAX_NEW_GAMES_PER_NETWORK_PER_DAY, addressKey, capFrom, ipHash, networkKey } from "../src/quota";
 
 const env = workerEnv as unknown as Env;
 
@@ -234,6 +234,28 @@ describe("new games per address per day", () => {
     expect(capFrom("x", 5000)).toBe(5000);
   });
 
+  it("counts a wider network on its own, so one host with many /64s cannot spend the total", async () => {
+    const stub = env.QUOTA.getByName("quota");
+    const now = Date.UTC(2033, 4, 1, 0, 0, 0);
+    let ok = 0;
+    for (let i = 0; i < 205; i++) if ((await stub.take(`2001:db8:77:${i.toString(16)}::1`, 50, now)).ok) ok++;
+    expect(ok).toBe(MAX_NEW_GAMES_PER_NETWORK_PER_DAY);
+    expect((await stub.take("2001:db8:78::1", 50, now)).ok).toBe(true);
+    expect(networkKey("203.0.113.9")).toBe("203.0.113.0/24");
+    expect(networkKey("2001:db8:12:34:aaaa::1")).toBe("2001:db8:12::/48");
+    expect(networkKey("::ffff:203.0.113.9")).toBe("203.0.113.0/24");
+  });
+
+  it("stores a game under the month of its id, whatever created_at says", async () => {
+    const id = "web-1795310626072-0000000000000005-0000000000000006";
+    const r = record();
+    r.metadata.game_id = id;
+    r.metadata.created_at = "2026-10-30T09:00:00Z";
+    const res = await put(r, ORIGIN, id);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ stored: `games/2026-11/${id}.json.gz` });
+  });
+
   it("cuts addresses as the relay does", () => {
     expect(addressKey("203.0.113.9")).toBe("203.0.113.9");
     expect(addressKey("::ffff:203.0.113.9")).toBe("203.0.113.9");
@@ -297,6 +319,8 @@ describe("record check", () => {
     expect(edit((m) => { m.created_at = new Date(NOW + 2 * 86_400_000).toISOString(); }, later)).toBe("bad start time");
     expect(edit((m) => { m.created_at = "2026-12-22T01:23:46Z"; })).toBe("bad start time");
     expect(edit((m) => { m.created_at = "2026-11-22T20:00:00Z"; })).not.toBe("bad start time");
+    // A save loaded from a file gets a new id but keeps its older created_at (History::fork).
+    expect(typeof edit((m) => { m.created_at = "2026-11-02T09:00:00Z"; })).toBe("object");
   });
 });
 

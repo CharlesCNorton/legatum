@@ -11,6 +11,11 @@ and game ids whose start time was 2005 or late 2025, so they were stored under o
   a determined sender; it only bounds each one.
 - The fix is to accept only what the game writes: known factions and difficulties (`infra/games/src/names.ts`,
   kept equal to `Faction::ALL` by a core test), a 40-digit engine commit, and a game-id start time after
-  launch, not in the future, and within a day of `created_at`.
+  launch and not in the future. The storage month now comes from the id, not `created_at`.
+- Gotcha: `created_at` is NOT always the id's time. Loading a save from a file (`History::fork`) gives the game
+  a new id stamped now but keeps the original `created_at`, so a check that the two agree refuses those games
+  forever. Only "created_at no later than the id time" is safe.
+- A total daily cap alone is a lockout lever: one IPv6 host with a /48 holds 65k /64s, each with its own
+  per-address allowance. A per-network tier (IPv4 /24, IPv6 /48) sits between the two.
 - The analysis job already ignores records whose engine is not a trusted commit, so forged records never
   reached a model review; they still show up in raw counts read from the listing (filter on a 40-hex engine).

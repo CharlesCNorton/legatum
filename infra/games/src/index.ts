@@ -122,6 +122,8 @@ const ENGINE_RE = /^[0-9a-f]{40}$/;
 /** Game ids carry the time the game started (crates/wasm history `game_id`). Uploads began after this. */
 export const FIRST_GAME_MS = Date.UTC(2026, 10, 1);
 const DAY_MS = 86_400_000;
+/** The start time inside a game id (`web-<ms>-…`, already checked by GAME_ID_RE). */
+const gameStartMs = (id: string): number => Number(id.slice(4, 17));
 
 /**
  * The record's shape, and the rule that matters most: no seat carries a name a player typed. The engine,
@@ -138,9 +140,10 @@ export function checkRecord(id: string, record: unknown, now: number = Date.now(
   if (!OUTCOMES.includes(m.outcome)) return "unknown outcome";
   if (!Number.isInteger(m.turn_count) || m.turn_count < 0 || m.turn_count > 10_000) return "bad turn count";
   if (typeof m.created_at !== "string" || !CREATED_AT_RE.test(m.created_at) || Number.isNaN(Date.parse(m.created_at))) return "bad created_at";
-  // The id's start time and created_at are written together; both must be after launch and not in the future.
-  const started = Number(id.slice(4, 17));
-  if (!(started >= FIRST_GAME_MS && started <= now + DAY_MS) || Math.abs(Date.parse(m.created_at) - started) > DAY_MS) return "bad start time";
+  // The id's start time must be after launch and not in the future. created_at is written with it, or is older
+  // when a save loaded from a file starts a new game id (History::fork keeps created_at), but never later.
+  const started = gameStartMs(id);
+  if (!(started >= FIRST_GAME_MS && started <= now + DAY_MS) || Date.parse(m.created_at) > started + DAY_MS) return "bad start time";
   if (typeof m.engine_commit !== "string" || !ENGINE_RE.test(m.engine_commit)) return "unknown engine";
   if (!Array.isArray(m.seats) || m.seats.length < 1 || m.seats.length > 9) return "bad seats";
   for (const [i, s] of m.seats.entries()) {
@@ -191,7 +194,9 @@ async function putGame(request: Request, env: Env, id: string): Promise<Response
   try { record = JSON.parse(text); } catch { return json({ error: "body must be gzipped JSON" }, 400); }
   const m = checkRecord(id, record);
   if (typeof m === "string") return json({ error: m }, 422);
-  const key = `games/${m.created_at.slice(0, 7)}/${id}.json.gz`;
+  // The month comes from the id, not from created_at, so a sender cannot store a second copy of a game under
+  // another month, past the upload-key lock on the first.
+  const key = `games/${new Date(gameStartMs(id)).toISOString().slice(0, 7)}/${id}.json.gz`;
   // A later checkpoint of a stored game replaces it and is never counted. A new game spends the address's daily quota.
   // A game first stored with a key takes checkpoints only under that key. A game stored without one (an older
   // build) is open as before, and the first keyed checkpoint locks it.

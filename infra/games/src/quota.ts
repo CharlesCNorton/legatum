@@ -23,6 +23,19 @@ export function addressKey(ip: string): string {
   return `${groups.slice(0, 4).map((g) => g.toLowerCase().replace(/^0+(?=.)/, "")).join(":")}::/64`;
 }
 
+/**
+ * The wider network an address belongs to: an IPv4 /24 or an IPv6 /48. One host that owns many /64s (a /56 or /48
+ * from a VPS or tunnel broker) still counts as one network here, so it cannot spend the daily total alone.
+ */
+export function networkKey(ip: string): string {
+  const one = addressKey(ip);
+  if (!one.includes(":")) {
+    const parts = one.split(".");
+    return parts.length === 4 ? `${parts.slice(0, 3).join(".")}.0/24` : one;
+  }
+  return `${one.split(":").slice(0, 3).join(":")}::/48`;
+}
+
 /** A salted SHA-256 of a client address (see `addressKey`), 128 bits of hex. The raw address is never stored or logged. */
 export async function ipHash(salt: string, ip: string): Promise<string> {
   const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`${salt}|${addressKey(ip)}`)));
@@ -33,6 +46,8 @@ export async function ipHash(salt: string, ip: string): Promise<string> {
 export const clientIp = (request: Request): string => request.headers.get("CF-Connecting-IP") ?? "";
 
 export const DEFAULT_MAX_NEW_GAMES_PER_DAY = 50;
+/** New games one network (`networkKey`) may store per UTC day. */
+export const MAX_NEW_GAMES_PER_NETWORK_PER_DAY = 200;
 /** New games from all addresses together per UTC day: many addresses still cannot grow the bucket without limit. */
 export const DEFAULT_MAX_NEW_GAMES_TOTAL_PER_DAY = 5000;
 
@@ -70,8 +85,8 @@ export class Quota extends DurableObject {
   }
 
   /**
-   * Count one new game for this address today, or refuse it when the address is at `cap` or all addresses
-   * together are at `totalCap`. `now` is for tests only.
+   * Count one new game for this address today, or refuse it when the address is at `cap`, its network
+   * (`networkKey`) at MAX_NEW_GAMES_PER_NETWORK_PER_DAY, or all addresses together at `totalCap`. `now` is for tests only.
    */
   async take(ip: string, cap: number, now: number = Date.now(), totalCap: number = DEFAULT_MAX_NEW_GAMES_TOTAL_PER_DAY): Promise<TakeResult> {
     const sql = this.ctx.storage.sql;
@@ -79,12 +94,20 @@ export class Quota extends DurableObject {
     sql.exec("DELETE FROM counts WHERE day <> ?", day);
     sql.exec("DELETE FROM totals WHERE day <> ?", day);
     const hash = await ipHash(this.salt, ip);
-    const row = sql.exec("SELECT n FROM counts WHERE day = ? AND ip_hash = ?", day, hash).toArray()[0];
-    const n = row ? (row.n as number) : 0;
+    // The network row hashes "net|<network>", so it never equals an address row.
+    const netHash = await ipHash(this.salt, `net|${networkKey(ip)}`);
+    const count = (h: string) => {
+      const row = sql.exec("SELECT n FROM counts WHERE day = ? AND ip_hash = ?", day, h).toArray()[0];
+      return row ? (row.n as number) : 0;
+    };
     const totalRow = sql.exec("SELECT n FROM totals WHERE day = ?", day).toArray()[0];
     const total = totalRow ? (totalRow.n as number) : 0;
-    if (n >= cap || total >= totalCap) return { ok: false, retryAfter: secondsToMidnight(now) };
-    sql.exec("INSERT INTO counts (day, ip_hash, n) VALUES (?, ?, 1) ON CONFLICT (day, ip_hash) DO UPDATE SET n = n + 1", day, hash);
+    if (count(hash) >= cap || count(netHash) >= Math.max(cap, MAX_NEW_GAMES_PER_NETWORK_PER_DAY) || total >= totalCap) {
+      return { ok: false, retryAfter: secondsToMidnight(now) };
+    }
+    for (const h of [hash, netHash]) {
+      sql.exec("INSERT INTO counts (day, ip_hash, n) VALUES (?, ?, 1) ON CONFLICT (day, ip_hash) DO UPDATE SET n = n + 1", day, h);
+    }
     sql.exec("INSERT INTO totals (day, n) VALUES (?, 1) ON CONFLICT (day) DO UPDATE SET n = n + 1", day);
     return { ok: true };
   }
