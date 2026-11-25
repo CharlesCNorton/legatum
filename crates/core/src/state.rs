@@ -68,7 +68,7 @@ pub struct GameSetup {
     /// tape and hash is unchanged.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub ai_alliances: bool,
-    /// Deals (rules 60, Sam 2026-11-25): Gold in Peace, Alliance and Open Borders offers, Gold
+    /// Deals (rules 61, Sam 2026-11-25): Gold in Peace, Alliance and Open Borders offers, Gold
     /// gifts to any met empire not at War, and Open Borders as a third treaty
     /// (`diplomacy::TreatyKind::OpenBorders`). The app turns it on for new games. Off, every
     /// deal is refused and nothing changes; omitted when false, so every existing setup, save,
@@ -765,6 +765,10 @@ pub struct Player {
     /// Ordered research plan, including `researching` at the front.
     #[serde(default)]
     pub research_queue: Vec<TechId>,
+    /// A later technology the player is heading for (the tech tree's goal). When the queue runs
+    /// out it picks what comes next (`rules::cities::follow_research_goal`); cleared once known.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub research_goal: Option<TechId>,
     pub techs: BTreeSet<TechId>,
     /// Tiles this player has ever seen (index = map index).
     pub explored: BitSet,
@@ -994,6 +998,7 @@ static BARBARIAN_PLAYER: std::sync::LazyLock<Player> = std::sync::LazyLock::new(
     science_conversion: ScienceConversion::Gold,
     researching: None,
     research_queue: Vec::new(),
+    research_goal: None,
     techs: BTreeSet::new(),
     explored: BitSet::new(0),
     tile_memory: Vec::new(),

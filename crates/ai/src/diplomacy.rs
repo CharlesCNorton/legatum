@@ -552,7 +552,7 @@ impl Planner<'_> {
         let mut decisions = Vec::new();
         let deals = v.diplomacy.deals;
         if deals {
-            // Deals (rules 60): Gold our open offers may still pay is not spent this turn.
+            // Deals (rules 61): Gold our open offers may still pay is not spent this turn.
             self.hold_offer_gold();
         }
         // Answer the most valuable treaty offers first, accounting for the
@@ -590,7 +590,7 @@ impl Planner<'_> {
             } else {
                 self.treaty_score(other, p.kind, &accept, &budget)
             };
-            // Deals (rules 60): count the offer's Gold (`deals.rs`).
+            // Deals (rules 61): count the offer's Gold (`deals.rs`).
             let score = if deals {
                 self.deal_response_score(p, other, score)
             } else {
@@ -642,7 +642,7 @@ impl Planner<'_> {
         }
         let mut offers = Vec::new();
         let mut declarations = Vec::new();
-        // Deals (rules 60): Open Borders partners that have become a threat.
+        // Deals (rules 61): Open Borders partners that have become a threat.
         let closing = self.borders_to_close();
         for a in &v.diplomacy.actions {
             if a.blocked_reason.is_some() {
@@ -713,7 +713,7 @@ impl Planner<'_> {
                     }
                     let score = self.treaty_score(to, kind, &a.order, &budget);
                     if let Some(score) = score.filter(|s| *s >= 0) {
-                        // Deals (rules 60): a losing AI pays for its truce, a winning one asks.
+                        // Deals (rules 61): a losing AI pays for its truce, a winning one asks.
                         let gold = if deals { self.offer_gold(to, kind) } else { 0 };
                         let order = if gold == 0 {
                             a.order.clone()
@@ -1007,7 +1007,7 @@ impl Planner<'_> {
             decisions.retain(|existing| !matches!(existing, Order::DeclareWar { .. }));
             decisions.push(order);
         }
-        // Deals (rules 60): Hard's coalition Gold to a partner fighting the leader.
+        // Deals (rules 61): Hard's coalition Gold to a partner fighting the leader.
         if deals && let Some(gift) = self.plan_coalition_gift() {
             decisions.push(gift);
         }
@@ -1403,7 +1403,7 @@ impl Planner<'_> {
         order: &Order,
         budget: &TreatyBudget,
     ) -> Option<i32> {
-        // Deals (rules 60): Open Borders with a useful neighbour that is no threat (`deals.rs`).
+        // Deals (rules 61): Open Borders with a useful neighbour that is no threat (`deals.rs`).
         if kind == TreatyKind::OpenBorders {
             return self.open_borders_score(other);
         }

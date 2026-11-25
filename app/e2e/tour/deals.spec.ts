@@ -1,4 +1,4 @@
-// Deals (rules 60, `GameSetup::deals`): the diplomacy panel with an empire at Peace (the Gold field on
+// Deals (rules 61, `GameSetup::deals`): the diplomacy panel with an empire at Peace (the Gold field on
 // its offers and Offer Open Borders), an incoming Peace offer that asks for Gold, Give Gold to a met
 // empire, Open Borders in force, and the turn report lines for a paid deal.
 // Run alone: `npx playwright test e2e/tour/deals`. Shots land in test-results/screen-tour/<size>/deals/.
@@ -48,8 +48,18 @@ for (const size of SIZES) test.describe(`deals ${size.name}`, () => {
     await panel.getByRole('button', { name: 'Offer Open Borders', exact: true }).evaluate((el) => el.scrollIntoView({ block: 'center' }));
     await shot(page, size, 'd1b-offer-open-borders');
 
+    // More Gold than the treasury holds: the offers are disabled with the reason in place.
+    await field.getByRole('spinbutton').fill('200');
+    await field.evaluate((el) => el.scrollIntoView({ block: 'start' }));
+    await page.mouse.move(4, size.height / 2);
+    await shot(page, size, 'd1c-offer-cant-pay');
+    await field.getByRole('spinbutton').fill('40');
+
     await field.getByRole('button', { name: 'You ask' }).click();
     await expect(field.getByTestId('deal-forecast')).toHaveText('They pay you 40 Gold when they accept.');
+    await field.evaluate((el) => el.scrollIntoView({ block: 'start' }));
+    await page.mouse.move(4, size.height / 2);
+    await shot(page, size, 'd1d-you-ask');
     await panel.getByRole('button', { name: 'Offer Open Borders', exact: true }).click();
     await expect(panel.getByRole('button', { name: /^Queued: Offer Open Borders, asking 40 Gold/ })).toBeVisible();
     const errors = await page.evaluate(() => { const s = (window as unknown as GameWindow).legatum.getState(); return { orders: s.orders[s.seat], errors: s.errors[s.seat] }; });

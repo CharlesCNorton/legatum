@@ -661,6 +661,8 @@ export interface ResearchView {
   known: TechId[];
   /** Techs this faction skips: known from the start because they give it nothing. Research screens leave them out; `era_total` and `era_known` exclude them. */
   skipped?: TechId[];
+  /** The tech tree's goal: a later technology the engine researches toward whenever the queue runs out. */
+  goal?: TechId | null;
   available: TechOption[];
   catalog: TechOption[];
   unlocks: TechUnlock[];
@@ -738,7 +740,7 @@ export interface Relation {
   war_id: number | null;
   declarers: TeamId[];
 }
-/** `OpenBorders` exists only with deals on (core `GameSetup::deals`, rules 60). */
+/** `OpenBorders` exists only with deals on (core `GameSetup::deals`, rules 61). */
 export type TreatyKind = 'Peace' | 'Alliance' | 'OpenBorders';
 /** What `BreakTreaty` ends: `Security` an Alliance, `OpenBorders` Open Borders (deals). */
 export type Agreement = 'Security' | 'OpenBorders';
@@ -1088,6 +1090,7 @@ export type Order =
   | { type: 'BuyItem'; city: CityId; item: ProductionItem }
   | { type: 'SetResearch'; tech: TechId }
   | { type: 'SetResearchQueue'; techs: TechId[] }
+  | { type: 'SetResearchGoal'; tech: TechId | null }
   | { type: 'SetScienceConversion'; to: 'Gold' | 'Food' | 'Production' }
   | { type: 'RangedAttack'; unit: UnitId; target: Hex }
   /** An aircraft in a city's hangar strikes a tile within its range: a Bomber's 5, a Fighter's 3 (core `rules::air`). A striking Fighter does not intercept that turn. */
@@ -1396,7 +1399,7 @@ export interface GameSetup {
   barbarians?: boolean;
   /** The teams with no human seat start in Alliances of two (core `GameSetup::ai_alliances`). Omitted when off. */
   ai_alliances?: boolean;
-  /** Deals (rules 60): Gold in offers, gifts to any met empire not at War, Open Borders. Omitted when off. */
+  /** Deals (rules 61): Gold in offers, gifts to any met empire not at War, Open Borders. Omitted when off. */
   deals?: boolean;
   /** Core rule experiments (only the switches the app reads); omitted when all default. */
   rule_experiments?: RuleSwitches;

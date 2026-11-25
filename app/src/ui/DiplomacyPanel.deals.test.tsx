@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-// Deals (rules 60) in the diplomacy panel: the Gold field on an empire's offers and its forecast,
+// Deals (rules 61) in the diplomacy panel: the Gold field on an empire's offers and its forecast,
 // Offer Open Borders and Close borders, Give Gold to a met empire at Peace, incoming offers that
 // carry Gold, and the Open Borders mark.
 import { act } from 'react';

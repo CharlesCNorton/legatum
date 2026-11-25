@@ -39,7 +39,7 @@ export interface StagingConfig {
   barbarians?: boolean;
   /** The AI-only teams start in Alliances of two; servers from before it omit it (read as off). */
   ai_alliances?: boolean;
-  /** Deals (rules 60); hosts from before deals omit it (read as off). New rooms turn it on. */
+  /** Deals (rules 61); hosts from before deals omit it (read as off). New rooms turn it on. */
   deals?: boolean;
   seats: StagingSeat[];
 }

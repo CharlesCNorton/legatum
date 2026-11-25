@@ -834,7 +834,7 @@ impl Diplomat<'_> {
                 && match p.kind {
                     TreatyKind::Peace => self.wants_peace(p.from),
                     TreatyKind::Alliance => self.alliance_useful(p.from, reserve),
-                    // Deals (rules 60): the proxies do not use them.
+                    // Deals (rules 61): the proxies do not use them.
                     TreatyKind::OpenBorders => false,
                 };
             let yes = Order::RespondToProposal {

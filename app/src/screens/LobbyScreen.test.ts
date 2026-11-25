@@ -307,7 +307,7 @@ it.each([
   expect(start.disabled).toBe(true);
   expect(posted).toEqual([]);
   await act(async () => vi.advanceTimersByTimeAsync(250));
-  // A room is a game not yet started: the edit also turns deals on (rules 60), like every new game.
+  // A room is a game not yet started: the edit also turns deals on (rules 61), like every new game.
   expect(posted).toEqual([{ ...saved, turn_limit: null, deals: true }]);
   expect(start.disabled).toBe(true);
   await act(async () => settingsResponse.resolve());

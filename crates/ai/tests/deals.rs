@@ -1,4 +1,4 @@
-//! Deals (rules 60, `GameSetup::deals`): how the AI uses Gold in offers, coalition Gold and Open
+//! Deals (rules 61, `GameSetup::deals`): how the AI uses Gold in offers, coalition Gold and Open
 //! Borders (`crates/ai/src/deals.rs`).
 use legatum_ai::{Brain, ScriptedBrain};
 use legatum_core::diplomacy::{Agreement, ProposalId, RelationState, TreatyKind};

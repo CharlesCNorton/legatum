@@ -31,7 +31,7 @@ pub enum TreatyKind {
     #[default]
     Peace,
     Alliance,
-    /// Deals (rules 60, `GameSetup::deals`): each team's units may enter the other's land at
+    /// Deals (rules 61, `GameSetup::deals`): each team's units may enter the other's land at
     /// Peace. No vision, no war duties, no upkeep; either side ends it for free
     /// (`Agreement::OpenBorders`), and War or an Alliance ends it.
     OpenBorders,
@@ -72,7 +72,7 @@ pub const BETRAYAL_TURNS: u32 = 20;
 pub enum Agreement {
     /// An Alliance.
     Security,
-    /// Open Borders (deals, rules 60).
+    /// Open Borders (deals, rules 61).
     OpenBorders,
 }
 
@@ -224,7 +224,7 @@ pub struct PeaceProposal {
     pub created_turn: u32,
     pub respond_by: u32,
     pub relation_version: u32,
-    /// Deals (rules 60): Gold that changes hands when the treaty takes effect. Positive: the
+    /// Deals (rules 61): Gold that changes hands when the treaty takes effect. Positive: the
     /// proposing empire pays it to the other team's accepting empire; negative: the accepting
     /// empire pays its absolute value to the proposer. Omitted when 0.
     #[serde(default, skip_serializing_if = "is_zero")]
@@ -308,7 +308,7 @@ pub struct DiplomacyState {
     /// Open calls to arms.
     #[serde(default)]
     pub calls: Vec<WarCall>,
-    /// Team pairs (lower id first) with Open Borders (deals, rules 60): each may enter the
+    /// Team pairs (lower id first) with Open Borders (deals, rules 61): each may enter the
     /// other's land at Peace (`GameState::passage_allowed`).
     #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
     pub open_borders: BTreeSet<(TeamId, TeamId)>,
@@ -402,7 +402,7 @@ impl DiplomacyState {
                 .is_none_or(|c| c.contains(&pair(a, b)))
     }
 
-    /// Whether `a` and `b` have Open Borders (deals, rules 60).
+    /// Whether `a` and `b` have Open Borders (deals, rules 61).
     pub fn borders_open(&self, a: TeamId, b: TeamId) -> bool {
         a != b && self.open_borders.contains(&pair(a, b))
     }
@@ -624,7 +624,7 @@ impl GameState {
             })
     }
 
-    /// Whether the two empires' teams have Open Borders (deals, rules 60).
+    /// Whether the two empires' teams have Open Borders (deals, rules 61).
     pub fn borders_open(&self, a: PlayerId, b: PlayerId) -> bool {
         self.diplomacy
             .as_ref()
@@ -1195,7 +1195,7 @@ pub struct DiplomacyView {
     /// Other teams this team has met (see `DiplomacyState::contacts`), ascending.
     #[serde(default)]
     pub met: Vec<TeamId>,
-    /// Public: every team pair (lower id first) with Open Borders (deals, rules 60).
+    /// Public: every team pair (lower id first) with Open Borders (deals, rules 61).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub open_borders: Vec<(TeamId, TeamId)>,
     /// Deals are on in this game (`GameSetup::deals`): Gold in offers, gifts to met empires not

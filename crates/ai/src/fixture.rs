@@ -251,6 +251,7 @@ impl ViewBuilder {
                     turns_left: None,
                     known: Vec::new(),
                     skipped: Vec::new(),
+                    goal: None,
                     available: Vec::new(),
                     catalog: Vec::new(),
                     unlocks: Vec::new(),
@@ -737,7 +738,7 @@ pub fn assert_valid(view: &PlayerView, orders: &[Order]) {
             Order::SetAutoFire { .. } => panic!("AI seats do not set human garrison automation"),
             Order::SetCityAutomation { .. } => panic!("AI seats do not delegate city production"),
             Order::BuyTile { .. } => panic!("AI seats do not buy tiles"),
-            // Deals (rules 60): Hard's coalition Gold, only with deals on.
+            // Deals (rules 61): Hard's coalition Gold, only with deals on.
             Order::GiveGold { to, amount } => {
                 assert!(
                     view.diplomacy.deals,
@@ -975,6 +976,7 @@ pub fn assert_valid(view: &PlayerView, orders: &[Order]) {
             Order::SetScienceConversion { .. } => {
                 assert_eq!(view.research.known.len(), legatum_core::TechId::ALL.len());
             }
+            Order::SetResearchGoal { .. } => panic!("the AI never sets a research goal"),
         }
     }
     assert!(research <= 1, "more than one research order");
