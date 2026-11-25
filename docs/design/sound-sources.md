@@ -114,3 +114,14 @@ node app/scripts/audio-credits.mjs
 This runs the same silence trim, -20 LUFS normalization, post-encode true-peak check
 and AAC bitrates. Measurements: [celebration sound QA](../celebration-sound-qa.md).
 Existing sounds and music stay byte-identical. Listening and device review are pending.
+
+**Status (2026-11-25, later): later-era music, the Aztecs' music, the sea and gunpowder-age battle sounds shipped.** Built by `tools/audio/build_later.py` from sources a cloud session can reach:
+
+| Source | What we ship | Licence, and where it is stated |
+| --- | --- | --- |
+| FreeCol (Ubuntu package `freecol` 1.1.0-1) | 8 music tracks by Alexander Zhelanov and Stian Grenborgen: 6 for every people from the Renaissance on, and *El Dorado* and *Lost City* as the Aztecs' own | CC BY 4.0: `debian/copyright`, `data/default/resources/music/default/*` |
+| Unknown Horizons (Ubuntu package `unknown-horizons` 2019.1-7) | 4 peace tracks by Tobias Escher and 2 war tracks (*Battle*, *Sea Fight*), from the Renaissance on | CC BY-SA 3.0: `debian/copyright`, `content/*` |
+| Unciv's copies of Freesound recordings | gunshot (Deganoth, CC BY 4.0), cannon (DylanSmithSound, CC BY 4.0), shell fire (qubodup, CC0), explosion (EvanBoyerman, CC BY 3.0, edited by the Unciv team) | Per file in Unciv's `docs/Credits.md`. 24 kHz MP3 copies, not the originals |
+| ESC-50 dataset clips | a propeller aircraft (conleec) and the sea loop (monotraum) | CC0 per clip in the dataset's `LICENSE`. The dataset as a whole is CC BY-NC, so only clips it marks CC0 are used |
+
+Not used: FreeCol's and Wesnoth's sound effects and most of Wesnoth's music (GPL; the designer approved credit-required CC licences only), and Unciv's `bombing`, `jetgun` and `torpedo` (the Unciv team's mixes of several recordings, with no licence stated for the mix). Still missing: music written for the Machine Age and later (the later eras share the age-of-sail pieces), Mesoamerican music for the Aztecs (their two tracks are New World pieces from a colonisation game), a jet, a drone and the fall of a gunpowder-age unit. Nobody has listened to any of it: it was chosen by title, source and measurement.
