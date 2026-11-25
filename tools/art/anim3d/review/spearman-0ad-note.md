@@ -1,150 +1,105 @@
-# Spearman 0 A.D. — round 5 candidate handoff
+# Spearman 0 A.D. — round 6, hit only
 
-Primary deliverable: `tools/art/anim3d/units/spearman-0ad/spearman.glb`.
-SHA-256: `3c4e74a929d8e619874d45d5e3b2849d0e35d00d9675c1d1e4a9d17bfb5cf3ab`.
+Primary asset: `tools/art/anim3d/units/spearman-0ad/spearman.glb`.
+SHA-256: `84bf794f543fd4a1af2d1b9c2b48c89a6c52533a00d7803e553b49a22513f92c`.
+**578,476 bytes; 2,536 triangles; 30 joints; one mesh, material and draw call;
+1024 × 1024 embedded base-colour atlas; 1.9361 m figure height.**
+The adjacent atlas is unchanged and the combined deliverables remain under 2 MB.
 
-**Candidate for lead playback review; not art-approved.** The contract, Khronos,
-CPU runtime, exported combat motion and clearance checks pass. I inspected the
-rendered 160 px sequences/contact sheets, the full-rate attack sheet, and the
-48 px figure-height comparison. Chromium playback/recording was not run here.
+Only hit changed. Frozen comparison against approved round 5 SHA-256
+`3c4e74a929d8e619874d45d5e3b2849d0e35d00d9675c1d1e4a9d17bfb5cf3ab` proves identical sampler data for
+attack, death, walk and idle, and identical geometry, atlas, materials, skin,
+team mask, hierarchy and attribution. No full rebuild or mesh re-export was
+used. The r6 copies of approved movies/sheets are byte-identical to r5.
 
-## What changed
+## Hit and measurement
 
-- Idle carrying arm opens outward with a fixed-length two-bone solve and a
-  35-degree forearm roll. The bronze cuirass now reads beside the aspis; the
-  original grip and rigid shield attachment remain. Hit shares this guard.
-- Death uses **death_a** instead of death_b. It falls backward directly, ends
-  prone, eases into rest and holds the final four keys. The full clip is 1.4 s;
-  there is no kneeling hold. The head relaxes 32 degrees so the crest does not
-  suspend the body. A maximum 9.38 mm shield-socket clearance correction lays
-  the shield down instead of lifting the corpse. The body touches the ground.
-- The spear keeps the clean 0.533 s release beside the body. The thicker shaft
-  still passes the 120 fps post-release crossing check.
-- Attack retains attack_melee_05 with a longer takeback and faster thrust,
-  **13.25 cm total forward hip drive**, planted ankles, reachable fixed-length
-  legs, and four degrees of shoulder follow. Cape1/2/3 local swing is halved.
-- Hit is reauthored over idle: **14-degree torso recoil peaking on frame 5**,
-  three-degree neck follow, and eased recovery by frame 20 (0.8 s total).
-- Walk stays unchanged: the round-four and round-five walk joint positions
-  match exactly at all 41 exported samples. New crest/spear dimensions apply
-  to every clip.
-- Crest thickness is another **1.3x**, height **1.2x**. A 1.3x height trial made
-  the figure 1.9784 m and failed the unchanged 1.95 m contract ceiling; the
-  accepted figure is **1.9361 m**. Spear cross-section is **1.5x** wider and its
-  tip has a brighter bronze pigment swatch. No triangles were added.
-- Kept round four's sunburst, darker flat pigments, wider crest, -30-degree
-  display yaw, separate per-clip camera fit, clean spear release, one-draw-call
-  contract, team mask and licence. GLB remains +Z forward, Y-up, metres.
-- Recorder now targets r5 and partitions capture frames by GLB SHA-256, so a
-  shortened death cannot accidentally reuse stale trailing frames.
+25 sampled keys at 30 fps, duration 0.8 s. Frames 0–4 move the pelvis 15 cm
+back and 6.5 cm down, with 14° spine plus 11° chest bend. The drop is 1.5 cm
+stronger than the feedback's approximate 5 cm to retain small-scale readability.
+The neck adds 9° follow and peaks at frame 5, one frame after the torso.
+The carrying arm moves the rigid shield backward/outward. The spear tip dips;
+a fixed-length arm solve lifts the actual grip 9 cm relative to the sinking
+pose so the butt stays clear. The rear foot steps 15 cm back during frames 4–8,
+with 4.5 cm swing clearance. Frames 8–24 ease back to idle-zero. All **87** hit
+channels have first and last values exactly equal to the corresponding idle-zero
+values. The skeleton root has zero translation or matrix change.
 
-## Feedback coverage
+Acceptance on the **eight delivered 160 px RGBA sprite samples**, shared fixed
+camera with idle, no moving crop/zoom:
 
-Re-read `spearman-0ad-FEEDBACK.md` after the new 2026-11-25 01:18Z playback notes
-arrived. All seven items are addressed: preserved walk; added attack commitment
-and cape damping; replaced weak hit; shortened death; opened idle per Sam's
-explicit priority; checked tight viewer framing; produced a real 48 px
-figure-height render beside the 160 px sprites. Framing is measured over all
-30 fps evaluated poses, with one fixed camera per clip. Viewer figure fractions:
-attack 70.00%, death 70.00%, hit 70.00%, idle 70.00%, walk 70.00%.
-The square death sprite is smaller to retain the entire fall and spear; the
-960x640 viewer keeps approximately 70% figure height.
+| Measurement | Round 6 | Requirement |
+| --- | ---: | ---: |
+| Alpha-weighted centroid maximum pairwise distance | 11.4674 px | ≥8 px |
+| Opaque-silhouette centroid maximum pairwise distance | 11.6116 px | ≥8 px |
+| Top excursion, alpha ≥128 | 17 px | ≥8 px |
 
-## Honest clip verdicts
+Opaque centroid/top use alpha ≥128; alpha-weighted centroid weights each pixel
+by alpha/255. Both definitions are recorded to avoid an opaque-mask versus
+alpha-weighting ambiguity. Full figure includes props. Lossless RGBA samples
+are the measurement authority, not colour thresholds on H.264. Round 5's saved
+samples under this opaque definition measured
+1.3106 px centroid travel and
+2 px top travel. This is consistent with the
+reviewer's weak-reaction finding; codec/threshold differences explain small
+numerical differences from their 1 px / 3 px report.
 
-| Clip | Verdict from rendered sequence / exported motion |
-| --- | --- |
-| idle | Clear torso, crest, sunburst and upright spear; quiet breathing. The shield is more edge-on but still recognizable. |
-| walk | Retained the reviewer-approved gait, clean feet and loop. The legacy 6 fps sprite cadence is slower than the native 1.333 s GLB cycle. |
-| attack | More committed weight transfer over stable feet; takeback, thrust and recovery are distinct. The cloak is less whippy, though this low-poly cape remains visibly simple. |
-| hit | Readable torso/head recoil rather than only a spear wobble; peak and recovery are verified. Lead should confirm that one play at native speed is sufficiently emphatic. |
-| death | Direct fall with no staged kneel, grounded prone finish, held corpse and separate spear. Whole extent is framed. Ground and spear checks do not prove every possible body self-intersection. |
+The first trial missed at 7.84 px centroid / 7 px top. A deeper drop and spear
+dip exposed 8 cm of spear-butt penetration; lifting the grip anatomically and
+correcting the shield's outward swing resolved it. Final 120 fps ground audit:
+minimum hit height **-0.001253642 m**, within the existing 2 mm tolerance. This
+is not a claim of mathematically zero penetration or general self-collision QA.
 
-At 48 px figure height the enlarged red crest and shaft remain legible; the
-bronze/linen/crimson separation survives. Fine sunburst rays and cuirass detail
-naturally simplify. This is an isolated cream-background check, not validation
-against trees in the live 3D map.
+## Review files
 
-## Files and playback
+All paths below are under `/Users/samcorcos/LegatumRuns/anim-pilot/review/3d-v2`:
 
-GLB: **578,452 bytes**, **2,536 triangles**, **30 joints**, one skinned
-mesh, one indexed primitive, one material/draw call. Atlas: **1024x1024**, RGB,
-**20,606 bytes** separately; embedded in the GLB.
-No normal map, AO, baked lighting or projection. Both final files are in git scope.
-PROVENANCE.md names the exact 0 A.D. files at
-`61a3b9507d974084e6badb88a0826bd89a6d5b8b`; LICENSE-ART accompanies the GLB.
-Required credit is in copyright and extras.
+- `spearman-0ad-r6-hit-160.mp4`: 160 × 160, H.264/yuv420p, 8 frames at 12 fps,
+  three repetitions, 24 encoded frames, 2.000 s.
+- `spearman-0ad-r6-hit-vs-idle-160.mp4`: 320 × 180, two 160 px panels plus labels,
+  H.264/yuv420p, 108 frames at 12 fps, 9.000 s. Three comparison cycles: hit plays
+  at 12 fps then holds the recovered idle-zero pose; idle completes its 12 frames
+  at 4 fps. This preserves both game rates while showing three full repetitions.
+- `spearman-0ad-r6-hit-contact.png`: all eight delivered hit samples.
+- `spearman-0ad-r6-{idle,walk,attack,death}-160.mp4`,
+  `spearman-0ad-r6-attack-fullrate.png`, `spearman-0ad-r6-readability-48.png`:
+  copied byte-for-byte from the approved r5 evidence.
+- `spearman-0ad-r6-hit-validation.json`: measurement, frozen-data and video receipts.
 
-Review directory: `~/LegatumRuns/anim-pilot/review/3d-v2/`:
+Native GLB hit timing is 0.8 s. The inherited 8-frame/12-fps sprite schedule
+plays it in 0.667 s. Raw 30 fps hit frames and comparison masters are under
+`/Users/samcorcos/LegatumRuns/anim-pilot/oad/r6/frames/`; all heavy outputs remain outside git.
 
-- `spearman-0ad-r5-idle-160.mp4`
-- `spearman-0ad-r5-walk-160.mp4`
-- `spearman-0ad-r5-attack-160.mp4`
-- `spearman-0ad-r5-hit-160.mp4`
-- `spearman-0ad-r5-death-160.mp4`
-- `spearman-0ad-r5-attack-fullrate.png` (all 36 frames)
-- `spearman-0ad-r5-readability-48.png` (fresh small-scale renders)
-- `spearman-0ad-r5-video-validation.json` (asset hash and ffprobe receipts)
+Motion verdict: **hit now has a clearly different silhouette from idle**, with
+an immediate recoil, outward shield jolt, spear dip and eased recovery. I
+inspected the rendered poses and encoded-frame evidence. The numerical gate
+passes, but the lead's playing-speed browser review is still required. Attack,
+death, walk and idle retain the reviewer's round 5 pass; no new aesthetic claim
+or changes are made for them. The 48 px accepted evidence is unchanged.
 
-Each MP4 is H.264/yuv420p, 160x160, cream background, three repeats. Source
-counts/rates: idle 12/4 fps, walk 16/6, attack 18/14, hit 8/12, death 16/4.
-These existing game rates change apparent duration: 9, 8, 3.857, 2 and 12 s
-respectively for three repeats. Native GLB durations are 2, 1.333, 1.167, 0.8,
-and 1.4 s. Judge native cadence in the host viewer.
+## Checks
 
-From this worktree root, outside the sandbox:
-
-```sh
-PLAYWRIGHT_MODULE="$HOME/LegatumRuns/anim-pilot/oad/viewer-runtime/node_modules/playwright/index.mjs" node tools/art/anim3d/viewer/record.mjs
-```
-
-This writes `spearman-0ad-r5-<clip>-viewer.mp4` for all five clips and a hash-bound
-viewer receipt in the review directory, 960x640, 30 fps, three repeats. No r5
-viewer files were present at the final local inventory; the agent has not
-created or viewed them. Older recordings cannot approve this asset hash.
-
-Authoring master, frames, logs and all verification receipts:
-`~/LegatumRuns/anim-pilot/oad/r5/`. `spearman.blend` is an authoring intermediate;
-render.py imports the final GLB, which includes the export/clearance corrections.
-
-## Checks and limits
-
-- Contract validator: PASS; exact output below.
-- Validator regression suite: **14 tests passed**.
-- Khronos: **0 errors, 0 warnings, 0 infos, 0 hints**.
-- three.js 0.170.0 GLTFLoader / AnimationMixer / team shader / framing CPU check: PASS.
-- 120 fps ground check: PASS. Worst penetration is numerical, **0.0206 mm**;
-  final death body ground height **0.00017 mm**, held last-key motion **0.00254 mm**.
-- Combat check: PASS. Hip drive **132.46 mm**, horizontal ankle drift **0.319 mm**,
-  leg-length variation **0.0023 mm**. Hit **13.997 degrees**, peak frame **5**,
-  recovered by **20**.
-- Spear check: PASS, **169 samples**, zero post-release intersections after 0.1 s;
-  only the intended initial grip contacts through 0.0417 s are reported.
-- Source manifest: **18 files verified**, zero hash mismatches.
-- Blender import check: **0 unresolved imports**. Recorder `node --check`: PASS.
-- MP4 ffprobe checks: PASS for all five clips, including frame counts and formats.
-- `git diff --check`: PASS.
-- Repository-wide `python3 tools/gates/art.py` did **not** pass: its legacy art-set
-  renderer `tools/art/render-sets.mjs` exited 1. Its truncated error did not expose
-  the underlying reason. It ran on HEAD, not these uncommitted assets, and does
-  not replace the GLB checks. Lead/host art review remains outstanding.
-- Requested `git show 0ca57b93:LICENSE-ART` and the named branch ref were unavailable
-  in this checkout. No fetch was attempted. The existing unit-specific Wildfire
-  Games licence, provenance and embedded credit are retained; Sam's explicit
-  source approval governs this task.
-
-Useful lesson: a shield pivot below its shell thickness must be laid flat before
-applying a small socket clearance correction. Lifting the entire actor to fix
-that prop can leave a prone body visibly hovering. Likewise, a planted-foot lunge
-needs a reachable knee solve: forcing a distant ankle stretches the lower leg.
-
-## Contract validator output
+- `validate_glb.py`: PASS (full output below).
+- Khronos gltf-validator: PASS, 0 errors/warnings/infos/hints (output below).
+- Repository-wide `tools/gates/art.py`: FAILED in the `render-sets.mjs` subprocess (the gate renders unrelated art sets through Chromium). No broad art-gate pass is claimed; host review remains necessary.
+- Contract validator unit tests: 14/14 PASS.
+- `check_combat.py`: PASS; 15 cm recoil, 6.5 cm drop, 25° spine/chest bend,
+  frame-5 neck peak, 15 cm catching step, stationary root and idle recovery.
+  The unchanged attack remains 13.246 cm drive / 0.319 mm ankle drift.
+- `check_motion.py`: PASS for all five clips at 120 fps (809 samples total).
+- `check_spear.py`: PASS, 169 death samples, no post-release crossings.
+- Three.js r170 CPU GLTFLoader/AnimationMixer/team-mask/framing check: PASS.
+  This is not a Chromium/WebGL pixel check.
+- `kit/check_imports.py`: PASS, zero unresolved local imports.
+- `node --check viewer/record.mjs`: PASS.
+- `package_hit.py`: PASS, frozen-data/atlas equality, both centroid definitions,
+  top excursion, ffprobe H.264/yuv420p/dimension/frame-count checks.
 
 ```json
 {
   "valid": true,
   "glb": "/Users/samcorcos/LegatumRuns/anim-pilot/legatum/.claude/worktrees/lane-6/tools/art/anim3d/units/spearman-0ad/spearman.glb",
-  "bytes": 578452,
+  "bytes": 578476,
   "triangles": 2536,
   "joints": 30,
   "skinned_meshes": 1,
@@ -210,19 +165,36 @@ needs a reachable knee solve: forcing a distant ankle stretches the lower leg.
 }
 ```
 
-Next: lead runs the host recorder and judges attack commitment, hit readability
-and corpse settling at native speed; then checks the 48 px silhouette in the
-3D map under trees. No owner approval or full browser rendering is claimed.
+```json
+{
+  "numErrors": 0,
+  "numWarnings": 0,
+  "numInfos": 0,
+  "numHints": 0,
+  "messages": [],
+  "truncated": false
+}
+```
 
-FOCUS a: retain the larger crest/shaft; check the live-map silhouette at working zoom.
-FOCUS b: retain the flat dark pigments and sunburst; validate with the map's light ramp.
-FOCUS c: play the new lunge, recoil and direct fall at 30 fps before art approval.
+## Host recorder handoff
 
-## Git handoff
+The recorder now accepts `--round` and defaults to 6; framing/rendering behavior
+is unchanged. Run **outside the sandbox**, from this worktree root:
 
-Commit could not be made: creating `.git/worktrees/lane-6/index.lock` returned
-Operation not permitted. All changes remain unstaged for the runner. Scoped
-binary patch: `~/LegatumRuns/anim-pilot/oad/r5/spearman-0ad-r5.patch`. Commit
-message with the required co-author line: `~/LegatumRuns/anim-pilot/oad/r5/commit-message.txt`.
-`origin/master` is already an ancestor of HEAD. No fetch, push or master merge
-was performed.
+```sh
+PLAYWRIGHT_MODULE="$HOME/LegatumRuns/anim-pilot/oad/viewer-runtime/node_modules/playwright/index.mjs" node tools/art/anim3d/viewer/record.mjs --round 6
+```
+
+It produces `spearman-0ad-r6-<clip>-viewer.mp4` and a receipt with the current
+GLB hash. No browser capture was run in this sandbox. Prior viewer captures do
+not certify this revised hit; regenerate and review at speed before approval.
+
+Licence/provenance remain adjacent to the GLB and the exact required credit
+is embedded. `git show 0ca57b93:LICENSE-ART` failed because that object is absent
+from this checkout; the existing asset-specific CC BY-SA 3.0 licence and exact
+0 A.D. source provenance were read and retained. Round 6 introduces no new
+third-party inputs.
+
+Next: lead regenerates viewer clips and judges this hit once beside idle.
+
+Commit handoff: Git could not create `.git/worktrees/lane-6/index.lock` (Operation not permitted). Changes remain uncommitted for the runner. `oad/r6/commit-message.txt` contains the required co-author trailer; `oad/r6/spearman-r6.patch` includes the binary GLB and both new scripts. No push was attempted. `origin/master` is already an ancestor of HEAD.
