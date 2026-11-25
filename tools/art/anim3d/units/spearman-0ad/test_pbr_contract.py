@@ -16,6 +16,9 @@ class Contract(unittest.TestCase):
             p.write_bytes(struct.pack('<4sII',b'glTF',2,28+len(raw)+len(blob))+struct.pack('<II',len(raw),0x4e4f534a)+raw+struct.pack('<II',len(blob),0x004e4942)+blob)
             return validate(p)
     def test_delivered_contract(self):self.assertTrue(validate(UNIT/'spearman.glb')['valid'])
+    def test_oversized_glb_rejected(self):
+        r=self.mutated(lambda d:d['asset']['extras'].update(oversized_test='x'*2_000_000))
+        self.assertIn('Shipping GLB must be under 2 MB (decimal)',r['errors'])
     def test_wrong_lod_name_rejected(self):
         def edit(d):next(n for n in d['nodes'] if n.get('name')=='spearman_LOD1')['name']='accidental_duplicate'
         r=self.mutated(edit);self.assertIn('Named LOD nodes required',r['errors'])

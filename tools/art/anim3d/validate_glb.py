@@ -126,6 +126,7 @@ def validate(path):
     def require(test,message):
         if not test:errors.append(message)
     require(d['asset']['version']=='2.0','Must be glTF 2.0')
+    require(Path(path).stat().st_size<2_000_000,'Shipping GLB must be under 2 MB (decimal)')
     require(len(d.get('buffers',[]))==1 and 'uri' not in d['buffers'][0],'Must be self-contained')
     extras=d['asset'].get('extras',{})
     require(d['asset'].get('copyright')==CREDIT and extras.get('credit')==CREDIT,'Missing exact credit')

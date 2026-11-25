@@ -16,7 +16,7 @@ from pbr_export import extract,write_glb
 import pbr_forms
 import pbr_human
 ROOT=Path(os.environ.get('ANIM_ROOT',Path.home()/'LegatumRuns/anim-pilot'))
-WORK=ROOT/'oad/pbr-r2';WORK.mkdir(parents=True,exist_ok=True)
+WORK=ROOT/'oad/pbr-r3';WORK.mkdir(parents=True,exist_ok=True)
 SOURCE=ROOT/'oad/pbr-r1/approved-r6.glb'
 assert hashlib.sha256(SOURCE.read_bytes()).hexdigest()=='84bf794f543fd4a1af2d1b9c2b48c89a6c52533a00d7803e553b49a22513f92c', 'Expected approved round-6 motion source'
 g=GLB(SOURCE);d=g.doc;prim=d['meshes'][0]['primitives'][0]
@@ -26,7 +26,7 @@ SIZE=512 if '--preview' in sys.argv else 2048
 bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
 parts=[];catalog={}
 # All procedural colour uses bind-space position and pigment variation only.
-PALETTES={'bronze':('#b88a46',.43,1),'edge':('#e2b96a',.23,1),'darkbronze':('#604528',.59,1),'linen':('#e5d8b8',.91,0),'leather':('#442c20',.56,0),'wool':('#921921',.94,0),'wooldark':('#4b1019',.96,0),'skin':('#bb865e',.62,0),'wood':('#705036',.55,0),'team':('#b2a596',.88,0)}
+PALETTES={'bronze':('#a87938',.48,1),'edge':('#dcb260',.28,1),'darkbronze':('#604528',.59,1),'linen':('#e5d8b8',.91,0),'leather':('#442c20',.56,0),'wool':('#921921',.94,0),'wooldark':('#4b1019',.96,0),'skin':('#bb865e',.62,0),'wood':('#705036',.55,0),'team':('#b2a596',.88,0)}
 def linear(c):
     v=int(c,16)/255;return v/12.92 if v<=.04045 else ((v+.055)/1.055)**2.4
 
@@ -37,13 +37,13 @@ def material(kind,part,bone=None,team=None):
     bs.inputs['Metallic'].default_value=metal;bs.inputs['Roughness'].default_value=rough
     pos=nodes.new('ShaderNodeNewGeometry');sep=nodes.new('ShaderNodeSeparateXYZ');links.new(pos.outputs['Position'],sep.inputs[0])
     ramp=nodes.new('ShaderNodeMapRange');ramp.inputs['From Min'].default_value=0;ramp.inputs['From Max'].default_value=1.95;ramp.inputs['To Min'].default_value=.76;ramp.inputs['To Max'].default_value=1.05;links.new(sep.outputs['Y'],ramp.inputs['Value'])
-    noise=nodes.new('ShaderNodeTexNoise');noise.inputs['Scale'].default_value=55 if metal else 90;noise.inputs['Detail'].default_value=3;links.new(pos.outputs['Position'],noise.inputs['Vector'])
-    vary=nodes.new('ShaderNodeMapRange');vary.inputs['To Min'].default_value=.58 if metal else .84;vary.inputs['To Max'].default_value=1.20 if metal else 1.05;links.new(noise.outputs['Fac'],vary.inputs['Value'])
+    noise=nodes.new('ShaderNodeTexNoise');noise.inputs['Scale'].default_value=38 if metal else 70;noise.inputs['Detail'].default_value=3;links.new(pos.outputs['Position'],noise.inputs['Vector'])
+    vary=nodes.new('ShaderNodeMapRange');vary.inputs['To Min'].default_value=.75 if metal else .88;vary.inputs['To Max'].default_value=1.12 if metal else 1.05;links.new(noise.outputs['Fac'],vary.inputs['Value'])
     mult=nodes.new('ShaderNodeMath');mult.operation='MULTIPLY';links.new(ramp.outputs[0],mult.inputs[0]);links.new(vary.outputs[0],mult.inputs[1])
     color=nodes.new('ShaderNodeMixRGB');color.blend_type='MULTIPLY';color.inputs[0].default_value=1;color.inputs[1].default_value=(*rgb,1);links.new(mult.outputs[0],color.inputs[2]);links.new(color.outputs[0],bs.inputs['Base Color'])
     rmap=nodes.new('ShaderNodeMapRange');rmap.inputs['To Min'].default_value=max(.15,rough-(.16 if metal else .09));rmap.inputs['To Max'].default_value=min(1,rough+(.16 if metal else .08));links.new(noise.outputs['Fac'],rmap.inputs['Value']);links.new(rmap.outputs[0],bs.inputs['Roughness'])
     fine=nodes.new('ShaderNodeTexNoise');fine.inputs['Scale'].default_value=430 if kind in ('wool','linen','team') else 180;fine.inputs['Detail'].default_value=2;links.new(pos.outputs['Position'],fine.inputs['Vector'])
-    bump=nodes.new('ShaderNodeBump');bump.inputs['Strength'].default_value=.25;bump.inputs['Distance'].default_value=.0012 if metal else .0007;links.new(fine.outputs['Fac'],bump.inputs['Height']);links.new(bump.outputs[0],bs.inputs['Normal'])
+    bump=nodes.new('ShaderNodeBump');bump.inputs['Strength'].default_value=.25;bump.inputs['Distance'].default_value=.0008 if metal else .00045;links.new(fine.outputs['Fac'],bump.inputs['Height']);links.new(bump.outputs[0],bs.inputs['Normal'])
     if kind in ('linen','wool','team'):
         weave=nodes.new('ShaderNodeTexWave');weave.bands_direction='X';weave.inputs['Scale'].default_value=350
         links.new(pos.outputs['Position'],weave.inputs['Vector'])
@@ -95,60 +95,25 @@ def ring(name,c,u,v,r,minor,mat,bone,n=64,k=6):
         for j in range(k):faces.append((i*k+j,((i+1)%n)*k+j,((i+1)%n)*k+(j+1)%k,i*k+(j+1)%k))
     return mesh(name,verts,faces,mat,bone)
 
-# Retain body anatomy and native weights, including the three cloth bones.
+# Retain only the rigid aspis handgrip. Round-three clothing is continuous new
+# geometry; the old painted tunic's mixed surface patches caused sliver edges.
 for reg in d['meshes'][0]['extras']['vertex_regions']:
-    if reg['part'] not in ('body','Aspis handgrip'):continue
-    start,end=reg['start'],reg['start']+reg['count'];faces=[ix[i:i+3] for i in range(0,len(ix),3) if start<=ix[i]<end]
-    verts=old['POSITION'][start:end];weights=[{int(j):w for j,w in zip(js,ws) if w>0} for js,ws in zip(old['JOINTS_0'][start:end],old['WEIGHTS_0'][start:end])]
-    ob=mesh(reg['part'],verts,[[i-start for i in f] for f in faces],material('skin' if reg['part']=='Greek head' else 'leather','Greek head' if reg['part']=='Greek head' else reg['part'],reg['bone'],reg['team']),weights=weights)
-    if reg['part']=='body':
-        mats={k:material(k,'body',None,reg['team']) for k in PALETTES}
-        ob.data.materials.clear()
-        for m in mats.values():ob.data.materials.append(m)
-        keys=list(mats)
-        for p in ob.data.polygons:
-            c=sum((ob.data.vertices[i].co for i in p.vertices),Vector())/len(p.vertices)
-            cape=any(any(j in (4,5,6) and w>.01 for j,w in weights[i].items()) for i in p.vertices)
-            arm_weight=sum(sum(w for j,w in weights[i].items() if j in (10,11,12,13,14,17,18,19,20,21)) for i in p.vertices)/len(p.vertices)
-            if cape:kind='team' if reg['team'] else 'wool'
-            elif arm_weight>.45:kind='skin'
-            elif c.y<.070:kind='leather'
-            elif c.y<.437:kind='bronze'
-            elif c.y<.61:kind='skin'
-            elif c.y<.877:kind='linen'
-            elif abs(c.x)<.215 and c.y<1.326:kind='bronze'
-            elif abs(c.x)<.23:kind='wool'
-            else:kind='skin'
-            if .83<c.y<.89 and not cape:kind='leather'
-            p.material_index=keys.index(kind)
-        active(ob);bm=bmesh.new();bm.from_mesh(ob.data)
-        deform=bm.verts.layers.deform.active
-        cape_groups={i for i,vg in enumerate(ob.vertex_groups) if vg.name in ('j4','j5','j6')}
-        old_cloak=[f for f in bm.faces if any(sum(w for j,w in v[deform].items() if j in cape_groups)>.2 for v in f.verts)]
-        bare=[f for f in bm.faces if ob.data.materials[f.material_index].get('kind') in ('skin','wool','wooldark') or (sum(v.co.y for v in f.verts)/len(f.verts)<.61 and ob.data.materials[f.material_index].get('kind')=='bronze')]
-        bmesh.ops.delete(bm,geom=list(set(old_cloak+bare)),context='FACES')
-        bmesh.ops.remove_doubles(bm,verts=list(bm.verts),dist=.00001);bm.to_mesh(ob.data);bm.free()
-        mod(ob,'SUBSURF',levels=1,subdivision_type='CATMULL_CLARK')
-        pbr_forms.bulk_body(ob,g,bones)
-        # Cloth follows the approved cape weights; folds are rest-space geometry.
-        for v in ob.data.vertices:
-            cape=sum(w.weight for w in v.groups if ob.vertex_groups[w.group].name in ('j4','j5','j6'))
-            if v.co.y<.1:v.co.y=max(0,(v.co.y-.007)*.1/.093)
-            if cape>.2:v.co.z+=.010*(1+sin(v.co.x*86+v.co.y*3))*min(1,(1.3-v.co.y)*2)*cape
-        bm=bmesh.new();bm.from_mesh(ob.data)
-        buried=[f for f in bm.faces if all(.92<v.co.y<1.30 and abs(v.co.x)<.22 and v.co.z>-.14 for v in f.verts) and ob.data.materials[f.material_index].get('kind')=='bronze']
-        bmesh.ops.delete(bm,geom=buried,context='FACES');bm.to_mesh(ob.data);bm.free()
-        mod(ob,'DECIMATE',ratio=.68)
-    elif reg['part']=='Greek head':mod(ob,'SUBSURF',levels=1)
+    if reg['part']!='Aspis handgrip':continue
+    start,end=reg['start'],reg['start']+reg['count']
+    faces=[ix[i:i+3] for i in range(0,len(ix),3) if start<=ix[i]<end]
+    mesh('Aspis handgrip',old['POSITION'][start:end],[[i-start for i in f] for f in faces],
+         material('leather','Aspis handgrip','shield_arm'),'shield_arm')
 
 pbr_human.build(mesh,mod,material,parts,old,ix,g,bones,WORK)
 pbr_forms.cloak(mesh,material)
 pbr_forms.mantle(mesh,material)
+pbr_forms.chiton(mesh,mod,material)
 
 # Aspis: measured socket frame, 64-segment convex dish, rolled lip, raised device.
 regs=[r for r in d['meshes'][0]['extras']['vertex_regions'] if r['part']=='aspis']
 rim=regs[-1];pts=np.array(old['POSITION'][rim['start']:rim['start']+rim['count']]);c=Vector(pts.mean(axis=0));val,vec=np.linalg.eigh(np.cov(pts.T));n=Vector(vec[:,0]);n*=1 if n.x>0 else -1
 u=(Vector((0,1,0))-n*n.y).normalized();v=n.cross(u).normalized()
+shield_c,shield_u,shield_v=c.copy(),u.copy(),v.copy()
 bronze=material('bronze','aspis','shield_arm');edge=material('edge','aspis','shield_arm');dark=material('darkbronze','aspis','shield_arm');team=material('team','aspis','shield_arm','shield rim')
 verts=[c+n*.105];faces=[];N=64
 for radius in (.09,.20,.30,.375,.389):
@@ -157,7 +122,7 @@ for radius in (.09,.20,.30,.375,.389):
 for j in range(N):faces.append((0,1+j,1+(j+1)%N))
 for row in range(4):
     for j in range(N):faces.append((1+row*N+j,1+(row+1)*N+j,1+(row+1)*N+(j+1)%N,1+row*N+(j+1)%N))
-shield=mesh('aspis dish',verts,faces,bronze,'shield_arm');mod(shield,'SOLIDIFY',thickness=.009,offset=-1)
+shield=mesh('aspis dish',verts,faces,bronze,'shield_arm');# Double-sided dish; rolled rim owns the visible edge thickness.
 ring('aspis rolled lip',c+n*.008,u,v,.392,.012,edge,'shield_arm')
 ring('aspis team inset',c+n*.013,u,v,.374,.005,team,'shield_arm',k=4)
 ring('aspis inner bead',c+n*.045,u,v,.316,.004,edge,'shield_arm',k=4)
@@ -193,24 +158,8 @@ for dist,width in [(.21,.010),(.16,.032),(.08,.023),(.001,.0004)]:
 for k in range(3):
     for j in range(4):faces.append((k*4+j,k*4+(j+1)%4,(k+1)*4+(j+1)%4,(k+1)*4+j))
 faces.extend([(3,2,1,0),(12,13,14,15)]);blade=mesh('leaf blade',verts,faces,metal,'weapon_R',smooth=False);mod(blade,'BEVEL',width=.0005,segments=2)
-# Corinthian helmet: round dome, open eye line, cheek guards and nose guard.
-helm=material('bronze','helmet','helmet');hem=material('edge','helmet','helmet');lining=material('leather','helmet','helmet')
-verts=[(0,1.701,.003)];faces=[];N=40
-for row in range(1,9):
-    theta=row*pi/16
-    for j in range(N):
-        a=j*2*pi/N;verts.append((.103*sin(theta)*cos(a),1.565+.136*cos(theta),.003+.137*sin(theta)*sin(a)))
-for j in range(N):faces.append((0,1+j,1+(j+1)%N))
-for row in range(7):
-    for j in range(N):faces.append((1+row*N+j,1+(row+1)*N+j,1+(row+1)*N+(j+1)%N,1+row*N+(j+1)%N))
-o=mesh('helmet dome',verts,faces,helm,'helmet');mod(o,'SOLIDIFY',thickness=.004)
-for side in (-1,1):
-    coords=[(.021,1.526,.135),(.085,1.548,.094),(.105,1.56,.014),(.096,1.411,.026),(.057,1.378,.111),(.025,1.438,.136)]
-    o=mesh('Corinthian cheek',[(x*side,y,z) for x,y,z in coords],[(0,1,2,3,4,5)],helm,'helmet');mod(o,'SOLIDIFY',thickness=.006);mod(o,'BEVEL',width=.004,segments=3)
-    tube('brow ridge',[(side*.006,1.568,.143),(side*.044,1.572,.134),(side*.086,1.568,.099)],[.007]*3,hem,'helmet',8)
-    tube('cheek edging',[(side*.022,1.524,.14),(side*.026,1.441,.14),(side*.057,1.381,.113),(side*.096,1.414,.028)],[.0025]*4,hem,'helmet',6)
-nose=mesh('nose guard',[(-.012,1.568,.144),(.012,1.568,.144),(.014,1.467,.153),(-.014,1.467,.153)],[(0,1,2,3)],hem,'helmet');mod(nose,'SOLIDIFY',thickness=.005);mod(nose,'BEVEL',width=.003,segments=3)
-# Round-two full sagittal horsehair arc; all vertices stay on helmet.
+# A closed wraparound Corinthian shell with actual eye and mouth apertures.
+pbr_forms.helmet(mesh,mod,tube,material)
 pbr_forms.crest(mesh,mod,tube,material)
 # Curved bronze greave shells: anatomical taper, actual thickness and rolled
 # edges, attached to the unchanged calf sockets rather than painted on skin.
@@ -230,6 +179,8 @@ for side,bone in [(-1,'leg_R'),(1,'leg_L')]:
         tube('rolled greave lip',row,[.003]*len(row),lip,bone,5)
     # Raised central rib reads in the material without a painted highlight.
     tube('greave keel',[(side*.147,y,zc+rz+.003) for y,rx,rz,zc in levels],[.0025]*len(levels),lip,bone,6)
+    # Rounded patella cup: visibly shaped knee rather than a flat shin plate.
+    ellipsoid('greave knee', (side*.147,.468,.019),(.053,.043,.026),greave,bone,12,6)
 # Sandals wrap the anatomical CC0 feet; all straps follow the native foot joints.
 for side,bone in [(-1,'foot_R'),(1,'foot_L')]:
     strap=material('leather','sandal',bone)
@@ -268,25 +219,33 @@ for ob in parts:
     if catalog[ob.data.materials[0].name]['part'] in ('helmet','crest','crest_base'):
         for vert in ob.data.vertices:
             vert.co.x*=1.10;vert.co.y=1.472+(vert.co.y-1.472)*1.045;vert.co.z=-.01+(vert.co.z+.01)*1.08
-# Reserve the round silhouettes before reducing the rest of LOD0. A global
-# decimator otherwise turns a 64-sided lip back into a visibly polygonal one.
-protected={'GEO-aspis rolled lip','GEO-helmet dome','GEO-aspis dish','GEO-CC0 muscular anatomy'}
-protected_count=other_count=0
+# Decimate by construction, never one global ratio that destroys thin props.
+# Reserves are measured on the actual part rather than inferred from modifiers.
+budgets={'GEO-CC0 muscular anatomy':2100,'GEO-aspis dish':640,
+ 'GEO-aspis rolled lip':640,'GEO-aspis team inset':80,'GEO-aspis inner bead':80,
+ 'GEO-sunburst ray':16,'GEO-sun boss':120,'GEO-rim rivet':4,
+ 'GEO-spear ash shaft':44,'GEO-spear butt spike':40,'GEO-spear socket':44,
+ 'GEO-leaf blade':48,'GEO-helmet dome':600,'GEO-closed Corinthian face':360,
+ 'GEO-arched brow':40,'GEO-eye recess':2,'GEO-cheek rim':40,'GEO-nasal keel':32,
+ 'GEO-helmet lower nape':60,'GEO-full horsehair arc':780,
+ 'GEO-horsehair groove ridge':12,'GEO-crest mounting rail':100,
+ 'GEO-greave knee':80,'GEO-greave shell':220,'GEO-rolled greave lip':40,'GEO-greave keel':24,
+ 'GEO-leather sandal strap':24,'GEO-pteruges':20,'GEO-pteruges rivet':4,
+ 'GEO-sculpted muscle cuirass':832,'GEO-cuirass finished hem':80,
+ 'GEO-pectoral incised border':24,'GEO-cuirass waist belt':64,
+ 'GEO-wide folded wool cloak':256,'GEO-cloak dark lining':256,
+ 'GEO-folded shoulder mantle':320,'GEO-pleated linen chiton':512}
 for ob in parts:
-    ob.data.calc_loop_triangles();ntri=len(ob.data.loop_triangles)
-    if ob.name in protected:protected_count+=ntri
-    else:other_count+=ntri
-ratio=min(1,(9700-protected_count-80)/other_count)
-assert ratio>0
-for ob in parts:
-    if ob.name not in protected:mod(ob,'DECIMATE',ratio=ratio)
-print('SILHOUETTE_BUDGET',protected_count,other_count,ratio,flush=True)
+    ob.data.calc_loop_triangles();count=len(ob.data.loop_triangles)
+    name=ob.name.split('.')[0];budget=budgets.get(name,count)
+    if count>budget:mod(ob,'DECIMATE',ratio=budget/count)
+(WORK/'part-budget.json').write_text(json.dumps({ob.name:sum(len(p.vertices)-2 for p in ob.data.polygons) for ob in parts},indent=2))
 # Assemble the game mesh, globally unwrap, then build actual dense bake source.
 active(parts[0])
 for o in parts:o.select_set(True)
 bpy.ops.object.join();low=bpy.context.object;low.name='GEO-spearman_LOD0'
 low.data.calc_loop_triangles();count=len(low.data.loop_triangles)
-if count>9700:mod(low,'DECIMATE',ratio=9700/count)
+assert count<=10000, ('Part budgets must fit without a global silhouette decimation',count)
 # Geometry-only contact fit against frozen round-6 animation. Project only
 # vertices below the existing 2mm tolerance; never alter a joint or key.
 # This resolves changed silhouette contact at the floor, not mesh intersections.
@@ -304,14 +263,38 @@ def fit_contact(ob):
             worlds=g.worlds(clip,duration*f/count);world=np.array([worlds[j] for j in skin['joints']]).reshape(-1,4,4).transpose(0,2,1)
             planes.append((world@inv)[:,1,:])
     original_pos=pos.copy()
+    # Link the cloak and lining during contact fitting. Independent floor
+    # projection can collapse two parallel layers onto each other in death.
+    outer=set();inner=set()
+    for polygon in ob.data.polygons:
+        mat=ob.data.materials[polygon.material_index]
+        meta=catalog[mat.name]
+        if meta['part']=='body':
+            if mat.get('kind') in ('wool','team'):outer.update(polygon.vertices)
+            elif mat.get('kind')=='wooldark':inner.update(polygon.vertices)
+    key=lambda i:tuple(round(float(x),5) for x in original_pos[i,:2])
+    inner_by_xy={key(i):i for i in inner}
+    linked=[(i,inner_by_xy[key(i)]) for i in outer if key(i) in inner_by_xy]
+
     for iteration in range(3):
         for plane in planes:
             transform=sum(plane[js[:,k]]*ws[:,k,None] for k in range(4));height=np.einsum('ij,ij->i',transform[:,:3],pos)+transform[:,3]
             mask=height<-.0015
             if mask.any():
-                normals=transform[mask,:3];pos[mask]+=normals*((-.001-height[mask])/np.einsum('ij,ij->i',normals,normals))[:,None]
+                normals=transform[mask,:3];delta=np.zeros_like(pos)
+                delta[mask]=normals*((-.001-height[mask])/np.einsum('ij,ij->i',normals,normals))[:,None]
+                for a,b in linked:
+                    chosen=delta[a] if np.dot(delta[a],delta[a])>np.dot(delta[b],delta[b]) else delta[b]
+                    delta[a]=chosen;delta[b]=chosen
+                pos+=delta
     for vert,p in zip(ob.data.vertices,pos):vert.co=p
-    print('REST_CONTACT_FIT_MAX_METRES',float(np.linalg.norm(pos-original_pos,axis=1).max()),flush=True)
+    dist=np.linalg.norm(pos-original_pos,axis=1)
+    print('REST_CONTACT_FIT_MAX_METRES',float(dist.max()),'linked cloak pairs',len(linked),flush=True)
+    perpart={}
+    for polygon in ob.data.polygons:
+        part=catalog[ob.data.materials[polygon.material_index].name]['part']
+        perpart[part]=max(perpart.get(part,0),float(dist[list(polygon.vertices)].max()))
+    (WORK/(ob.name+'-contact-fit.json')).write_text(json.dumps(perpart,indent=2))
 fit_contact(low)
 # Freeze triangulation before the high/low bake. Nonplanar cheek n-gons must
 # use the same surface on both sides of the projection.
@@ -322,6 +305,45 @@ high=low.copy();high.data=low.data.copy();bpy.context.collection.objects.link(hi
 mod(high,'SUBSURF',levels=2,subdivision_type='SIMPLE')
 texture=bpy.data.textures.new('Hammer and fibres',type='CLOUDS');texture.noise_scale=.006;texture.noise_depth=2
 mod(high,'DISPLACE',texture=texture,strength=.00045,mid_level=.5,texture_coords='GLOBAL')
+# High-only chased borders and shin ornament. Recess pigment is material
+# patina, not AO or directional lighting; the same relief bakes to normals.
+craft=high.data.attributes.new('CraftPatina','FLOAT','POINT')
+vertex_mats={}
+for polygon in high.data.polygons:
+    for i in polygon.vertices:vertex_mats[i]=high.data.materials[polygon.material_index]
+high_normals=[v.normal.copy() for v in high.data.vertices]
+for vert in high.data.vertices:
+    if vert.index not in vertex_mats:
+        craft.data[vert.index].value=1;continue
+    mat=vertex_mats[vert.index];meta=catalog[mat.name];p=vert.co;groove=0.
+    if mat.get('kind') in ('bronze','edge','darkbronze'):
+        if meta['part']=='aspis':
+            radial=p-shield_c;r=math.hypot(radial.dot(shield_u),radial.dot(shield_v))
+            if .323<r<.350:
+                angle=math.atan2(radial.dot(shield_v),radial.dot(shield_u));phase=(angle/(2*pi)*32)%1
+                band=.329+(.013 if phase>.5 else 0)
+                groove=math.exp(-((r-band)/.0014)**2)
+                if min(phase,abs(phase-.5),1-phase)<.027:groove=max(groove,1.)
+        elif meta['part']=='greave' and .16<p.y<.43 and p.z>-.015:
+            centre=.147 if p.x>0 else -.147
+            path=centre+.020*sin((p.y-.16)*40)
+            groove=math.exp(-((p.x-path)/.0022)**2)
+        elif meta['part']=='muscle cuirass':
+            if .953<p.y<.975:
+                a=math.atan2(p.z,p.x);line=.962+.005*sin(a*28)
+                groove=math.exp(-((p.y-line)/.0014)**2)
+    if meta['part']=='crest' and abs(p.x)>.018:
+        angle=math.atan2((p.y-1.574)/.337,(p.z-.007)/.257)
+        groove=(.5+.5*sin(angle*64))**8
+        craft.data[vert.index].value=1-.25*groove
+    else:craft.data[vert.index].value=1-.48*groove
+    if groove>1e-5:vert.co-=high_normals[vert.index]*(.00065*groove)
+for mat in high.data.materials:
+    nodes=mat.node_tree.nodes;links=mat.node_tree.links;bs=nodes.get('Principled BSDF')
+    attr=nodes.new('ShaderNodeAttribute');attr.attribute_name='CraftPatina'
+    color_in=bs.inputs['Base Color'].links[0].from_socket
+    mix=nodes.new('ShaderNodeMixRGB');mix.blend_type='MULTIPLY';mix.inputs[0].default_value=1
+    links.new(color_in,mix.inputs[1]);links.new(attr.outputs['Fac'],mix.inputs[2]);links.new(mix.outputs[0],bs.inputs['Base Color'])
 scene=bpy.context.scene;scene.render.engine='CYCLES';scene.cycles.device='CPU';scene.cycles.samples=8;scene.render.bake.margin=8 if SIZE==512 else 16;scene.render.bake.use_selected_to_active=True;scene.render.bake.cage_extrusion=.0009;scene.render.bake.max_ray_distance=.002
 images={}
 for name in ['basecolor','normal','ao','roughness','metallic']:
@@ -329,7 +351,7 @@ for name in ['basecolor','normal','ao','roughness','metallic']:
     for mat in low.data.materials:
         node=mat.node_tree.nodes.get('Bake Target') or mat.node_tree.nodes.new('ShaderNodeTexImage');node.name='Bake Target';node.image=im;mat.node_tree.nodes.active=node
     active(low);high.select_set(True)
-    scene.render.bake.use_selected_to_active=name in ('normal','ao')
+    scene.render.bake.use_selected_to_active=True
     if name=='normal':bpy.ops.object.bake(type='NORMAL',normal_space='TANGENT')
     elif name=='ao':bpy.ops.object.bake(type='AO')
     else:

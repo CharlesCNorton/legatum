@@ -67,7 +67,7 @@ def write_glb(source, lods, textures, path, master_size=2048):
     team=source.doc['asset']['extras']['team']
     d['materials']=[{'name':'Spearman PBR','doubleSided':True,'pbrMetallicRoughness':{'baseColorTexture':{'index':0,'texCoord':0},'metallicRoughnessTexture':{'index':2,'texCoord':0},'metallicFactor':1,'roughnessFactor':1},'normalTexture':{'index':1,'texCoord':0,'scale':.45},'occlusionTexture':{'index':2,'texCoord':0,'strength':.65},'extras':{'team':team}}]
     d['extensionsUsed']=['KHR_mesh_quantization','EXT_texture_webp'];d['extensionsRequired']=['KHR_mesh_quantization','EXT_texture_webp']
-    d['asset']['extras'].update(lods={'nodes':['spearman_LOD0','spearman_LOD1'],'policy':'Select exactly one LOD; shared skeleton and material; no MSFT_lod'},texture_master_px=master_size,look='pbr-r2',approved_motion_sha256=hashlib.sha256(source.path.read_bytes()).hexdigest())
+    d['asset']['extras'].update(lods={'nodes':['spearman_LOD0','spearman_LOD1'],'policy':'Select exactly one LOD; shared skeleton and material; no MSFT_lod'},texture_master_px=master_size,look='pbr-r3',approved_motion_sha256=hashlib.sha256(source.path.read_bytes()).hexdigest())
     d['buffers']=[{'byteLength':len(blob)}];blob.extend(b'\0'*(-len(blob)%4))
     raw=json.dumps(d,separators=(',',':')).encode();raw+=b' '*(-len(raw)%4)
     Path(path).write_bytes(struct.pack('<4sII',b'glTF',2,28+len(raw)+len(blob))+struct.pack('<II',len(raw),0x4e4f534a)+raw+struct.pack('<II',len(blob),0x004e4942)+blob)

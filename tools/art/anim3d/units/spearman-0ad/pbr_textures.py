@@ -8,7 +8,7 @@ from pathlib import Path
 from PIL import Image
 import numpy as np
 work,unit=map(Path,sys.argv[1:3]);report={}
-for name,quality in [('basecolor',85),('normal',90),('orm',85)]:
+for name,quality in [('basecolor',85),('normal',90),('orm',88)]:
     source=Image.open(work/f'{name}-1024.png').convert('RGB')
     assert source.size==(1024,1024)
     out=unit/f'spearman-{name}.webp'

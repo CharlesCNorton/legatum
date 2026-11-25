@@ -1,4 +1,4 @@
-# Spearman — premium PBR round 2
+# Spearman — premium PBR round 3
 
 The primary asset remains `spearman.glb`. Two explicitly named skinned meshes,
 `spearman_LOD0` (under 10k triangles) and `spearman_LOD1` (under 3k), share one
@@ -11,13 +11,15 @@ would incorrectly tint the entire mesh black/red.
 The three embedded 1024-square WebP maps are base colour (sRGB), tangent normal
 (linear), and ORM (linear R occlusion / G roughness / B metallic), all on UV0.
 2048-square masters and the editable dense/LOD Blender source live under
-`~/LegatumRuns/anim-pilot/oad/pbr-r2/`. See PROVENANCE.md and SOURCES.md for inputs.
+`~/LegatumRuns/anim-pilot/oad/pbr-r3/`. See PROVENANCE.md and SOURCES.md for inputs.
 The body now uses the CC0 MPFB muscular base, fitted to the 0 A.D. rest pose,
 with native weights transferred by nearest face interpolation. The temporary
 MPFB fitting rig is discarded. `pbr_forms.py` builds the muscle cuirass,
-volumetric crest, and broad folded cloak. `KHR_mesh_quantization` stores compact
+closed Corinthian shell, continuous rounded crest, pleated chiton, muscle cuirass and broad folded cloak. Round 3 replaces global decimation with per-part budgets and links cloak/lining floor fitting to prevent layer crossings. `KHR_mesh_quantization` stores compact
 normals/tangents; `EXT_texture_webp` stores the shipping maps. Both are supported
 by the pinned viewer. The source bakes remain lossless 2048 PNGs.
+
+The validator now enforces the under-2-MB shipping cap.
 
 All five clips, their timestamps, inverse binds and original skeleton node
 transforms are copied byte-for-byte from the approved round-6 asset.
@@ -41,16 +43,20 @@ the shipping build must run without that flag to produce 2048 masters.
 Lead's host capture (Chromium outside the sandbox):
 
 ```sh
-node tools/art/anim3d/viewer/record.mjs --prefix spearman-0ad-pbr-r2
+node tools/art/anim3d/viewer/record.mjs --prefix spearman-0ad-pbr-r3
 ```
 
 This records five 30 fps viewer clips (three repeats each) and a 12-second
-360-degree idle `spearman-0ad-pbr-r2-turntable.mp4`. It also writes `-viewer-still.png` and `-viewer-vs-panel.png` from the actual
+360-degree idle `spearman-0ad-pbr-r3-turntable.mp4`. It also writes `-viewer-still.png` and `-vs-panel-viewer.png` from the actual
 MeshStandardMaterial/ACES canvas, at 512 px beside the painting. It writes ffprobe receipts
 and the asset hash. The five `-160.mp4` files use the established game sprite
 rates (idle 4, walk 6, attack 14, hit 12, death 4 fps), each repeated three times.
 The GLB's native timings remain unchanged. Review images use the actual shipped
 GLB: `-readability-48.png`, `-vs-panel.png`, and `-closeups.png`.
+`check_deformation.py` samples local skin-blend compression at 60 fps; run the
+renderer with `-- --joint-check` after writing its report to `oad/pbr-r3/deformation.json`
+for worst-pose crops. `-- --turntable-only` renders the additional Cycles 12-second
+turntable; the packager encodes it as `-cycles-turntable.mp4`.
 
 Passing structural checks is not premium art approval. The lane note records
 remaining visible gaps and the lead owns the playing-speed/browser verdict.

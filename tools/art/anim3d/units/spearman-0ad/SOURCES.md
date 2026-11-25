@@ -1,4 +1,4 @@
-# PBR round 2 sources
+# PBR round 3 sources
 
 - Approved motion: round-6 0 A.D. adaptation, SHA-256 `84bf794f543fd4a1af2d1b9c2b48c89a6c52533a00d7803e553b49a22513f92c`. Exact upstream file list, commit, attribution and CC BY-SA 3.0 terms: [PROVENANCE.md](PROVENANCE.md), [source-manifest.json](source-manifest.json), [LICENSE-ART](LICENSE-ART).
 - HDRI: [Studio Small 09](https://polyhaven.com/a/studio_small_09), Sergej Majboroda / Poly Haven, [CC0](https://polyhaven.com/license), downloaded 2026-11-25 UTC. [Exact 1K HDR](https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/studio_small_09_1k.hdr), SHA-256 `e7cfda5f4e98e623db12b8bfd0184e048488e4855d9c83e2751fb44a32e80c45`. Stored at `../../viewer/studio_small_09_1k.hdr`.
@@ -7,3 +7,7 @@
 
 - Round 2 body: MPFB **2.0.18** / MakeHuman Community, existing local installation. [Pinned source archive](https://codeload.github.com/makehumancommunity/mpfb2/zip/refs/tags/v2.0.18), SHA-256 `ada7c4ff11e79cf6ed9b441bccabc52c9359f2848b988f66e89c14c30b21fed7`. Body, macro targets and rig output are CC0, as verified in the archive's `LICENSE.ASSETS.md`; software is GPL. The fitting rig is discarded, with no MPFB animations exported. Generated anatomy uses gender 1, muscle 1, weight .72, height .55, age .35. `pbr_human.py` fits it and transfers native 0 A.D. weights; no upstream skin texture is used.
 - Round 2 reuses the same HDRI and approved motion source. New rest geometry, scalar textures, baked normals and AO are authored in Blender. Pillow only encodes those finished maps to 1024 WebP; it does not repaint them.
+
+- Round 3 reuses exactly the pinned round-2 MPFB and HDRI inputs. All new
+  silhouette/garment/armour geometry, chased relief and pigments are authored
+  in Blender. No paid service, external texture or new animation is used.

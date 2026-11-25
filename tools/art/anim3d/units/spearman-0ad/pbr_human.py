@@ -55,7 +55,7 @@ def build(mesh, mod, material, parts, old, indices, source, bones, work):
         axis=b-a;target_axis=end-target
         rotation=axis.rotation_difference(target_axis)
         scale=target_axis.length/axis.length
-        radial_scale=1.38 if name.startswith('upperarm') else 1.30 if name.startswith('lowerarm') else 1.14 if name.startswith(('thigh','calf')) else 1.10
+        radial_scale=1.50 if name.startswith('upperarm') else 1.40 if name.startswith('lowerarm') else 1.14 if name.startswith(('thigh','calf')) else 1.25 if name.startswith(('hand','index','middle','ring','pinky','thumb')) else 1.10
         transforms[name]=(a,target,axis.normalized(),rotation,scale,radial_scale)
     for vertex in human.data.vertices:
         p=convert(vertex.co);result=Vector();total=0
@@ -82,6 +82,16 @@ def build(mesh, mod, material, parts, old, indices, source, bones, work):
     for v in human.data.vertices:
         foot=sum(w.weight for w in v.groups if human.vertex_groups[w.group].name in ('j25','j28'))
         v.co.z+=.040*foot
+    # Fit covered torso volume inside the cuirass without deleting connected
+    # arm surfaces. Only vertices supported by spine/hip weights are narrowed.
+    for v in human.data.vertices:
+        torso=sum(w.weight for w in v.groups if human.vertex_groups[w.group].name in ('j0','j1','j2','j3'))
+        if .86<v.co.y<1.31 and torso>.5:
+            radius=((v.co.x/.176)**2+((v.co.z-.006)/.119)**2)**.5
+            if radius>1:
+                blend=min(1,(torso-.5)*2)
+                scale=1+(1/radius-1)*blend
+                v.co.x*=scale;v.co.z=.006+(v.co.z-.006)*scale
     # The native body donor ends at the neck; the rigid original head was a
     # separate prop. Complete that missing transfer surface with its same bone.
     for v in human.data.vertices:
@@ -91,13 +101,23 @@ def build(mesh, mod, material, parts, old, indices, source, bones, work):
     bpy.ops.object.vertex_group_limit_total(limit=4);bpy.ops.object.vertex_group_normalize_all(lock_active=False)
     parts.remove(donor);bpy.data.objects.remove(donor,do_unlink=True);bpy.data.objects.remove(guide,do_unlink=True)
     human.data.materials.clear();human.data.materials.append(material('skin','body'))
-    for p in human.data.polygons:p.material_index=0;p.use_smooth=True
+    human.data.materials.append(material('linen','body'))
+    # The short linen shoulder facing is fitted directly to the CC0 anatomy,
+    # so its seam follows the same native arm weights instead of a rigid poncho.
+    for p in human.data.polygons:
+        c=sum((human.data.vertices[i].co for i in p.vertices),Vector())/len(p.vertices)
+        p.material_index=int(1.235<c.y<1.415 and abs(c.x)<.34)
+        p.use_smooth=True
     bpy.data.libraries.write(str(work/'cc0-fitted-anatomy.blend'),{human},fake_user=True)
-    # Hidden torso / head detail cannot spend the game budget. The entire sculpt
-    # is retained in the separate source blend; visible anatomy gets 2500 tris.
+    # The dense fitted sculpt stays in the separate source blend. The complete
+    # body gets a 2300-triangle intermediate budget before final part reduction.
     bm=bmesh.new();bm.from_mesh(human.data)
-    hidden=[f for f in bm.faces if all(.70<v.co.y<1.27 and abs(v.co.x)<.20 for v in f.verts)]
+    # Retain the complete body: spatial torso culls cut the inner upper arm
+    # in this fitted rest pose and opened a hole when the approved arm raised.
+    # Only the fully helmet-covered upper head is culled; the opening stays
+    # entirely inside the rigid closed helmet in every pose.
+    hidden=[f for f in bm.faces if all(v.co.y>1.49 for v in f.verts)]
     bmesh.ops.delete(bm,geom=hidden,context='FACES');bm.to_mesh(human.data);bm.free()
-    human.data.calc_loop_triangles();mod(human,'DECIMATE',ratio=min(1,2400/len(human.data.loop_triangles)))
+    human.data.calc_loop_triangles();mod(human,'DECIMATE',ratio=min(1,2300/len(human.data.loop_triangles)))
     parts.append(human)
     return human

@@ -8,8 +8,8 @@ from pathlib import Path
 from mathutils import Vector, Matrix
 UNIT=Path(__file__).resolve().parent
 ROOT=Path(os.environ.get('ANIM_ROOT',Path.home()/'LegatumRuns/anim-pilot'))
-ROUND='pbr-r2'
-WORK=ROOT/('oad/pbr-r2-no-normal' if '--no-normal' in sys.argv else 'oad/pbr-r2');OUT=WORK/'frames';OUT.mkdir(parents=True,exist_ok=True)
+ROUND='pbr-r3'
+WORK=ROOT/('oad/pbr-r3-no-normal' if '--no-normal' in sys.argv else 'oad/pbr-r3');OUT=WORK/'frames';OUT.mkdir(parents=True,exist_ok=True)
 QUICK='--quick' in sys.argv
 bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
 bpy.context.scene.render.fps=30
@@ -100,8 +100,24 @@ bpy.ops.mesh.primitive_plane_add(size=200)
 floor=bpy.context.object;floor.name='Review floor';floor.is_shadow_catcher=True;mat=bpy.data.materials.new('cream');mat.use_nodes=True
 mat.node_tree.nodes.get('Principled BSDF').inputs['Base Color'].default_value=(.938,.905,.807,1);mat.node_tree.nodes.get('Principled BSDF').inputs['Roughness'].default_value=1;floor.data.materials.append(mat)
 counts={'idle':12,'walk':16,'attack':18,'hit':8,'death':16}
+# At map scale the shipped LOD1 must earn readability, not the hero mesh.
+if '--map48-only' in sys.argv:
+    for ob in meshes:ob.hide_render=True
+    lod1=next(ob for ob in s.objects if ob.type=='MESH' and 'LOD1' in ob.name)
+    lod1.hide_render=False;lod1.hide_set(False)
+    for name,indices in [('idle',[0]),('attack',[0,6,9,13])]:
+        rig.animation_data.action=actions[name];rig.animation_data.action_slot=actions[name].slots[0]
+        fit=framing[name];camera.location=Vector(fit['target'])+direction*8
+        camera.data.ortho_scale=fit['ortho_scale']*fit['figure_fraction']/(48/160)
+        start,end=actions[name].frame_range;count=counts[name]
+        directory=OUT/('map48-'+name);directory.mkdir(exist_ok=True)
+        for index in indices:
+            f=start+(end-start)*index/(count if name=='idle' else count-1)
+            pose(name,f);s.render.filepath=str(directory/f'{index:03}.png');bpy.ops.render.render(write_still=True)
+    raise SystemExit(0)
+
 manifest={'display_yaw_degrees':config['display_yaw_degrees'],'pitch_degrees':math.degrees(math.asin(direction.z)),'framing':framing,'bounds':worldbounds,'clips':{}}
-for name,a in actions.items():
+for name,a in ([] if '--turntable-only' in sys.argv else actions.items()):
     rig.animation_data.action=a;rig.animation_data.action_slot=a.slots[0]
     fit=framing[name];camera.location=Vector(fit['target'])+direction*8;camera.data.ortho_scale=fit['ortho_scale']
     start,end=a.frame_range;count=4 if QUICK else counts[name]
@@ -115,15 +131,34 @@ for name,a in actions.items():
             # on a 160 px canvas. This is a fresh render, not a thumbnail crop.
             tiny=OUT/('map48-'+name);tiny.mkdir(exist_ok=True)
             camera.data.ortho_scale=fit['ortho_scale']*fit['figure_fraction']/(48/160)
+            lod1=next(ob for ob in s.objects if ob.type=='MESH' and 'LOD1' in ob.name)
+            for ob in meshes:ob.hide_render=True
+            lod1.hide_render=False;lod1.hide_set(False)
             s.render.filepath=str(tiny/f'{i:03}.png');bpy.ops.render.render(write_still=True)
+            lod1.hide_render=True;lod1.hide_set(True)
+            for ob in meshes:ob.hide_render=False
             camera.data.ortho_scale=fit['ortho_scale']
     manifest['clips'][name]={'count':counts[name],'duration':(end-start)/30,'loop':loop}
     if os.environ.get('ANIM_FULLRATE') and name in ('attack','hit') and not QUICK:
         directory=OUT/(name+'-fullrate');directory.mkdir(exist_ok=True)
         for i,f in enumerate(range(round(start),round(end)+1)):
             pose(name,f);s.render.filepath=str(directory/f'{i:03}.png');bpy.ops.render.render(write_still=True)
-(WORK/('quick-render.json' if QUICK else 'render.json')).write_text(json.dumps(manifest,indent=2))
+if '--turntable-only' not in sys.argv:
+    (WORK/('quick-render.json' if QUICK else 'render.json')).write_text(json.dumps(manifest,indent=2))
 print('RENDER_REPORT',json.dumps(manifest),flush=True)
+
+if '--turntable-only' in sys.argv:
+    rig.animation_data.action=actions['idle'];rig.animation_data.action_slot=actions['idle'].slots[0]
+    s.render.resolution_x=s.render.resolution_y=256;s.cycles.samples=8
+    folder=WORK/'cycles-turntable';folder.mkdir(exist_ok=True)
+    start,end=actions['idle'].frame_range
+    for i in range(96):
+        pose('idle',start+((i/8*30)%(end-start)))
+        orbit=Matrix.Rotation(i/96*math.tau,3,'Z')@direction
+        camera.location=Vector((0,0,1.15))+orbit*8
+        camera.rotation_euler=(-orbit).to_track_quat('-Z','Y').to_euler();camera.data.ortho_scale=2.8
+        s.render.filepath=str(folder/f'{i:03}.png');bpy.ops.render.render(write_still=True)
+    raise SystemExit(0)
 
 # Review the actual delivered LOD0 at close zoom, with the same material setup.
 rig.animation_data.action=actions['idle'];rig.animation_data.action_slot=actions['idle'].slots[0];pose('idle',actions['idle'].frame_range[0])
@@ -139,3 +174,19 @@ for label,bone,extent,offset in [('shield','shield_arm',1.0,0),('helmet','helmet
     centre=Vector(tuple((min(p[i] for p in points)+max(p[i] for p in points))/2 for i in range(3)));centre.z+=offset
     camera.location=centre+direction*8;camera.data.ortho_scale=extent
     s.render.filepath=str(WORK/(label+'-close.png'));bpy.ops.render.render(write_still=True)
+
+# Worst blend-compression samples selected from the independent GLB audit.
+if '--joint-check' in sys.argv:
+    audit=json.loads((WORK/'deformation.json').read_text())
+    folder=WORK/'joints';folder.mkdir(exist_ok=True)
+    s.render.resolution_x=s.render.resolution_y=320;s.cycles.samples=12
+    for name,groups in audit['clips'].items():
+        rig.animation_data.action=actions[name];rig.animation_data.action_slot=actions[name].slots[0]
+        for group,row in groups.items():
+            pose(name,actions[name].frame_range[0]+row['sample_time_s']*30)
+            joint=row['joint'];centre=rig.matrix_world@rig.pose.bones[joint].head
+            side=-1 if joint.endswith('_R') else 1
+            orbit=Vector((side*.55,-1,.18)).normalized()
+            camera.location=centre+orbit*8;camera.rotation_euler=(-orbit).to_track_quat('-Z','Y').to_euler()
+            camera.data.ortho_scale=.78 if group=='shoulders' else .62
+            s.render.filepath=str(folder/f'{name}-{group}.png');bpy.ops.render.render(write_still=True)

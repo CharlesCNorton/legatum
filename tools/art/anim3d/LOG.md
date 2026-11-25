@@ -210,3 +210,9 @@ Show Sam if GPU matches. Updated round note and skill replace the preliminary
 "no visible sandal gain" conclusion; no new art edits after that review.
 
 - Spearman round 15 GPU receipt: IoU 0.9537; blurred ΔE 3.42; raw ΔE 6.19; atlas 187440 bytes / q80; 40 frames. Visual review pending.
+
+## 0 A.D. Spearman — premium PBR lane
+
+| Round | Date (UTC) | Cost | Asset metrics before → after | Work and verdict |
+| --- | --- | --- | --- | --- |
+| pbr 3 | 2026-11-25 | CPU Cycles; final sprite/closeup/joint render about 2 min, plus 91 s for the 96-frame turntable; total lane wall time and tokens not instrumented | 9,504/2,847 → 9,855/2,848 LOD triangles; 1,895,720 → 1,836,304 GLB bytes; 1024 maps from 2048 masters | Continuous chiton and crest, closed helmet, fuller MPFB arms/hands, paired cloak/lining contact fit, chased bronze; attack joint crop caught and fixed an open upper arm from torso culling. Round-6 rig/clip bytes preserved; structural checks pass. Premium visual gate still FAIL; actual three.js capture pending lead. |

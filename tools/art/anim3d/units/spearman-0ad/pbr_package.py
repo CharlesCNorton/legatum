@@ -3,8 +3,8 @@ import hashlib, json, os, subprocess
 from pathlib import Path
 from PIL import Image, ImageDraw
 ROOT=Path(os.environ.get('ANIM_ROOT',Path.home()/'LegatumRuns/anim-pilot'))
-WORK=ROOT/'oad/pbr-r2';OUT=ROOT/'review/3d-v2';UNIT=Path(__file__).resolve().parent
-PREFIX='spearman-0ad-pbr-r2'
+WORK=ROOT/'oad/pbr-r3';OUT=ROOT/'review/3d-v2';UNIT=Path(__file__).resolve().parent
+PREFIX='spearman-0ad-pbr-r3'
 FPS={'idle':4,'walk':6,'attack':14,'hit':12,'death':4};COUNTS={'idle':12,'walk':16,'attack':18,'hit':8,'death':16}
 OUT.mkdir(parents=True,exist_ok=True)
 def cream(path):
@@ -21,13 +21,13 @@ for name,fps in FPS.items():
     report[name]={'game_fps':fps,'source_frames':len(files),**stream}
 small=[('idle',0),('attack',0),('attack',6),('attack',9),('attack',13)]
 sheet=Image.new('RGB',(320,24+len(small)*184),'#f8f4e8');draw=ImageDraw.Draw(sheet)
-draw.text((4,5),'160 px sprite',fill='#493b2a');draw.text((164,5),'48 px figure',fill='#493b2a')
+draw.text((4,5),'160 px sprite',fill='#493b2a');draw.text((164,5),'48 px figure | LOD1',fill='#493b2a')
 for row,(name,i) in enumerate(small):
     for col,folder in enumerate([name,'map48-'+name]):
         sheet.paste(cream(WORK/'frames'/folder/f'{i:03}.png'),(col*160,24+row*184));draw.text((col*160+4,24+row*184+162),f'{name} {i:02}',fill='#493b2a')
 sheet.save(OUT/f'{PREFIX}-readability-48.png')
 panel=UNIT.parents[4]/'app/src/assets/units/spearman-panel.png'
-sheet=Image.new('RGB',(1024,544),'#f8f4e8');sheet.paste(cream(panel),(0,0));sheet.paste(cream(WORK/'hero.png'),(512,0));draw=ImageDraw.Draw(sheet);draw.text((16,520),'Reference painting | 512 px',fill='#493b2a');draw.text((528,520),'PBR r2 | delivered GLB | Cycles CPU',fill='#493b2a');sheet.save(OUT/f'{PREFIX}-vs-panel.png')
+sheet=Image.new('RGB',(1024,544),'#f8f4e8');sheet.paste(cream(panel),(0,0));sheet.paste(cream(WORK/'hero.png'),(512,0));draw=ImageDraw.Draw(sheet);draw.text((16,520),'Reference painting | 512 px',fill='#493b2a');draw.text((528,520),'PBR r3 | delivered GLB | Cycles CPU',fill='#493b2a');sheet.save(OUT/f'{PREFIX}-vs-panel.png')
 sheet=Image.new('RGB',(1536,544),'#f8f4e8');draw=ImageDraw.Draw(sheet)
 for i,name in enumerate(['shield','helmet','crest']):
     sheet.paste(cream(WORK/f'{name}-close.png'),(i*512,0));draw.text((i*512+16,520),name+' | LOD0, shipped 1024 textures',fill='#493b2a')
@@ -42,3 +42,24 @@ for col,name in enumerate(FPS):
 sheet.save(OUT/f'{PREFIX}-motion-contact.png')
 receipt={'asset_sha256':hashlib.sha256((UNIT/'spearman.glb').read_bytes()).hexdigest(),'clips':report,'render':'Cycles CPU, AgX, actual shipped GLB; browser ACES evidence is a separate host capture','timing':'Legacy game sprite rates, three loops. GLB clip timings remain round-6 exact.'}
 (OUT/f'{PREFIX}-video-validation.json').write_text(json.dumps(receipt,indent=2)+'\n');print(json.dumps(receipt,indent=2))
+
+if (WORK/'deformation.json').exists() and (WORK/'joints').exists():
+    audit=json.loads((WORK/'deformation.json').read_text())
+    sheet=Image.new('RGB',(960,5*352),'#f8f4e8');draw=ImageDraw.Draw(sheet)
+    for row,name in enumerate(FPS):
+        for col,group in enumerate(('shoulders','elbows','knees')):
+            sample=audit['clips'][name][group]
+            sheet.paste(cream(WORK/'joints'/f'{name}-{group}.png'),(col*320,row*352))
+            draw.text((col*320+4,row*352+323),f"{name} {group} | {sample['sample_time_s']:.3f}s",fill='#493b2a')
+            draw.text((col*320+4,row*352+337),f"minimum LBS axis scale {sample['minimum_axis_scale']:.3f}",fill='#493b2a')
+    sheet.save(OUT/f'{PREFIX}-joint-check.png')
+turn=sorted((WORK/'cycles-turntable').glob('*.png'))
+if turn:
+    assert len(turn)==96
+    directory=WORK/'cream-turntable';directory.mkdir(exist_ok=True)
+    for p in turn:cream(p).save(directory/p.name)
+    output=OUT/f'{PREFIX}-cycles-turntable.mp4'
+    subprocess.run(['ffmpeg','-y','-loglevel','error','-framerate','8','-i',str(directory/'%03d.png'),'-frames:v','96','-c:v','libx264','-crf','16','-pix_fmt','yuv420p',str(output)],check=True)
+    stream=json.loads(subprocess.check_output(['ffprobe','-v','error','-count_frames','-show_entries','stream=width,height,nb_read_frames,r_frame_rate,duration,pix_fmt','-of','json',str(output)]))['streams'][0]
+    assert int(stream['nb_read_frames'])==96 and stream['width']==stream['height']==256
+    (OUT/f'{PREFIX}-cycles-turntable-validation.json').write_text(json.dumps({'asset_sha256':receipt['asset_sha256'],'render':'Cycles CPU, AgX, delivered GLB',**stream},indent=2)+'\n')

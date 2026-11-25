@@ -254,5 +254,89 @@
         "p99_absolute_channel_error_255": 54.0
       }
     }
+  },
+  "premium_pbr_r3": {
+    "continued_from_commit": "ba93c3dc",
+    "approved_motion_sha256": "84bf794f543fd4a1af2d1b9c2b48c89a6c52533a00d7803e553b49a22513f92c",
+    "master_directory": "/Users/samcorcos/LegatumRuns/anim-pilot/oad/pbr-r3",
+    "masters": {
+      "basecolor-2048.png": {
+        "bytes": 2861682,
+        "sha256": "aa1b8061d8d3476d4e8601679bf52e2892b15439e6712dbda3bdff6634ad5ced"
+      },
+      "normal-2048.png": {
+        "bytes": 3517162,
+        "sha256": "7aabcd1d512d671d775f3a9c7b17fe4c87a74d890aa8ec54310fe11d10e6cc9e"
+      },
+      "orm-2048.png": {
+        "bytes": 4000497,
+        "sha256": "09949e24c7963fb67447a0b3008fdea45a4d59be0e752a71b3e541babfa2e6c8"
+      }
+    },
+    "shipped": {
+      "spearman.glb": {
+        "bytes": 1836304,
+        "sha256": "6dd1c8b15456b6a97d6341fa6532cf860a331fc1a23e8430ede23178f5bf8622"
+      },
+      "spearman-basecolor.webp": {
+        "bytes": 214834,
+        "sha256": "57fc415e67722f05f1f948cfae921896aaa1db2ed48143e273d98c08929d13ac"
+      },
+      "spearman-normal.webp": {
+        "bytes": 180050,
+        "sha256": "a6ee3f04ac71df1b0794ed3129c4e06c3d45abc783d6d0ce8d9da25fd8324f94"
+      },
+      "spearman-orm.webp": {
+        "bytes": 336312,
+        "sha256": "44dc709d2703180e0b4c9a115a1a1e527a19b2f6684b2f6ff2544ac76fe9b329"
+      }
+    },
+    "encoding": {
+      "basecolor": {
+        "bytes": 214834,
+        "size": [
+          1024,
+          1024
+        ],
+        "quality": 85,
+        "encoding": "WebP",
+        "mean_channel_error_255": [
+          2.9130630493164062,
+          1.4478464126586914,
+          2.8878841400146484
+        ],
+        "p99_absolute_channel_error_255": 18.0
+      },
+      "normal": {
+        "bytes": 180050,
+        "size": [
+          1024,
+          1024
+        ],
+        "quality": 90,
+        "encoding": "WebP",
+        "mean_channel_error_255": [
+          3.4053726196289062,
+          2.2296886444091797,
+          3.424633026123047
+        ],
+        "p99_absolute_channel_error_255": 25.0
+      },
+      "orm": {
+        "bytes": 336312,
+        "size": [
+          1024,
+          1024
+        ],
+        "quality": 88,
+        "encoding": "WebP",
+        "mean_channel_error_255": [
+          6.33299446105957,
+          3.8351402282714844,
+          6.934835433959961
+        ],
+        "p99_absolute_channel_error_255": 48.0
+      }
+    }
   }
 }

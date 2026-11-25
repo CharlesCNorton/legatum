@@ -87,7 +87,7 @@ try {
     ctx.fillStyle='#493b2a';ctx.font='14px sans-serif';ctx.fillText('Reference painting | 512 px',16,532);
     ctx.fillText('Delivered GLB | three.js MeshStandardMaterial / ACES',528,532);
   },viewerPixels);
-  const comparison=join(out,`${prefix}-viewer-vs-panel.png`);
+  const comparison=join(out,`${prefix}-vs-panel-viewer.png`);
   await page.locator('#comparison').screenshot({path:comparison});
   await page.evaluate(()=>document.querySelector('#comparison').remove());
   await page.setViewportSize({width:960,height:640});

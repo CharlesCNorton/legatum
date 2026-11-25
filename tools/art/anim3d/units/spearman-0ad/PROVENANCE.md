@@ -215,3 +215,68 @@ step. Cycles/AgX sheets are separate evidence and do not claim browser parity.
 The combined unit and derived renders remain CC BY-SA 3.0. The new MakeHuman
 anatomy is CC0 input; no paid service, third-party skin texture or new animation
 source was used. Structural validity does not establish premium art approval.
+
+
+## Premium PBR round 3
+
+Continues the round-2 PBR commit `ba93c3dc` (after its master merge). The same
+approved round-6 GLB remains the immutable motion source. All five sampler
+input/output buffers, original node transforms, hierarchy and inverse binds
+are copied exactly; no animation keys, timestamps, root yaw or sockets change.
+
+The CC0 MPFB anatomy and nearest-face-interpolated native weight transfer from
+round 2 remain. Forearms/upper arms and hands are fuller in rest space. A fitted
+linen shoulder facing uses the same skin topology and weights. The complete body is retained after transfer, normalisation and the
+four-influence limit; only the fully helmet-covered upper head is culled.
+A torso-position cull was rejected after the attack joint crop revealed that
+it also opened the inner upper arm.
+Spine-weighted torso volume is fitted inside the cuirass without cutting the
+connected arm surfaces. The original rig remains the sole exported skeleton.
+
+The old mixed-material tunic is replaced with a continuous pleated linen chiton,
+softly weighted to the corresponding thighs below the pelvis. The cuirass has
+more densely sampled pectoral/abdominal relief, an incised pectoral border and a
+leather waist belt. The closed Corinthian shell has wraparound cheeks/nape,
+actual eye and breathing openings, brow/nasal ridges and a flared lower edge.
+A single rounded sagittal crest mass replaces decimated independent strand tips.
+The continuous outer arc keeps its small scalloped silhouette. Greaves gain
+modelled patella cups. The 64-segment convex aspis, rolled rim, sunburst, leaf
+spear and butt spike are retained with individual simplification budgets.
+
+Per-part decimation replaces the destructive common ratio; a global reduction
+is now prohibited. The wide shoulder-to-knee cloak and darker lining keep
+matching topology. Their corresponding vertices receive the same rest-space
+floor-fit correction, preventing two independent projections from collapsing
+layers together. This addresses the observed attack lining breakthrough;
+it is not a claim of complete mesh/mesh collision clearance. No object is
+scaled to zero. Carried props remain single-bone rigid.
+
+Cycles CPU bakes normals, AO, pigment and scalar maps from **236,568 dense
+triangles**. High-only chased shield-border and greave grooves produce both
+small geometric recesses and darker patina. This patina is surface colour,
+not baked lighting or AO. Bronze is metallic with roughness variation and
+polished edge pigment; linen is matte, leather semi-matte, wool crimson.
+AO is packed only into ORM.R. The base colour retains gentle height/pigment
+variation and low-foot darkening. Authoring masters are 2048 PNGs; shipping
+maps are 1024 WebP at quality 85/90/88 (base/normal/ORM). Compression errors
+are measured against the authored 1024 PNGs in the encoding receipt.
+
+Final GLB: **1,836,304 bytes**, **9,855 LOD0 / 2,848 LOD1 triangles**,
+30 bones, one shared PBR material and skin. The same two named meshes, UV0 ORM,
+COLOR_0.r masks, +Z facing, asset.extras credit and CC BY-SA 3.0 terms remain.
+`validate_glb.py` additionally enforces an under-2,000,000-byte shipping cap.
+The source manifest records the delivered hash and all three masters/maps.
+
+Round-3 editable sources, bakes and receipts are in `oad/pbr-r3/`; the
+`final-verified/` copy preserves the intended delivery independently of
+intermediate bakes. `check_deformation.py` samples the singular values of
+native linear skinning blends at 60 fps to select shoulder/elbow/knee review
+poses. These numbers detect local compression, not collisions or art quality.
+
+The pinned Poly Haven CC0 HDRI, warm key, cool rim, soft shadows, SSAO and ACES
+viewer remain. `record.mjs --prefix spearman-0ad-pbr-r3` writes the requested
+`-vs-panel-viewer.png` and the twelve-second `-turntable.mp4` from actual
+three.js MeshStandardMaterial pixels. The lead runs this outside the sandbox.
+The separate Cycles/AgX comparison, joint crops and `-cycles-turntable.mp4`
+render the exact shipped GLB. No browser-pixel approval is implied by CPU
+GLTFLoader checks. No new third-party asset or motion source was introduced.
