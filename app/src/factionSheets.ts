@@ -39,7 +39,7 @@ export interface FactionSheet {
   piecePairs?: boolean;
   /** Three-word identity shown on the gallery tile. */
   identity: string;
-  /** An early design, tagged on the tile and sheet: not yet through a playtest (Egypt, until the user has played it), or with no faction goal yet (none now). */
+  /** An early design, tagged on the tile and sheet: not yet through a playtest, or with no faction goal yet (none now). */
   early?: true;
   /** 2-3 sentence lore paragraph in the existing voice. */
   lore: string;
@@ -99,7 +99,6 @@ export function sheetCards(faction: Faction): SheetCard[] {
 export const FACTION_SHEETS: Record<Faction, FactionSheet> = {
   Egypt: {
     identity: 'The river builds everything',
-    early: true,
     lore: 'The Nile flood fed the builders of Egypt. In play, each city chooses between building with its Food and growing with it.',
     ratings: { aggression: 2, economy: 5, complexity: 3 },
     pairs: [

@@ -1,6 +1,6 @@
 # Game event → haptic map
 
-This is the single source of truth for Legatum haptics. Add a row before adding a haptic anywhere. The semantic names are the `feel.*` functions in `app/src/feel/haptics.ts`. "Viewer" means the local player whose screen is shown (in hot seat, the active seat).
+This is the single source of truth for Legatum haptics. Add a row before adding a haptic anywhere. The semantic names are the `feel.*` functions in `app/src/feel/haptics.ts`. "Viewer" means the local player whose screen is shown.
 
 ## Direct interactions (fire at the moment of user intent)
 
@@ -47,6 +47,7 @@ This is the single source of truth for Legatum haptics. Add a row before adding 
 | `partnerReady` | A teammate or other human marks Ready | `impactFeedback('light')` |
 | `allReady` | The last human readies and the turn begins resolving | `impactFeedback('medium')` |
 | `seatTaken` | Your seat was taken over on another device | `notificationFeedback('warning')` |
+| `teamPing` | A teammate pings a tile (not your own pings) | `impactFeedback('light')` |
 
 ## Never
 
