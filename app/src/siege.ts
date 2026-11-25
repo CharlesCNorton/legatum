@@ -223,7 +223,7 @@ export function captureForecast(view: PlayerView, cityId: number, attackers: rea
   const force = forceText(modes.map((m) => ({ kind: m.u.kind, faction: factionOf(view, m.u.owner) })));
   const sum = standing
     ? `${city.name}'s Walls lose about ${wallLoss} a turn to ${force}. Once they break, hits land on ${city.name}'s ${city.hp} health. ${city.name} doesn't heal while enemies stand next to it`
-    : `${force} hit for about ${first} health a turn against defence ${defense(city.hp)}; ${city.name} has ${city.hp} health and does not heal while enemy units stand beside it`;
+    : `${city.name} loses about ${first} health a turn to ${force}. ${city.name} doesn't heal while enemies stand next to it`;
   const guard = garrison ? ` Its ${itemName({ kind: 'Unit', unit: garrison.kind }, factionOf(view, garrison.owner))} (${garrison.hp} health) must fall before it is taken.` : ' Nothing garrisons it.';
   const wallsNote = standing ? ' Walls never heal.' : '';
   const detail = `${sum}.${wallsNote}${guard}${melee ? '' : ' Ranged units wear it down but cannot take it.'}`;

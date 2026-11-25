@@ -393,7 +393,7 @@ export function aiAlliancesOn(l: Lobby): boolean {
 export function problems(l: Lobby): string[] {
   const p: string[] = [];
   const active = l.slots.filter(isActive);
-  if (!validTurnLimit(l.turnLimit)) p.push('Turn limit must be a whole number between 1 and 4,294,967,294, or Off.');
+  if (!validTurnLimit(l.turnLimit)) p.push('Turn limit must be a whole number between 1 and 4,294,967,294, or the default.');
   if (active.length < MIN_SEATS) p.push('A game needs at least two empires.');
   if (teams(l).length < 2) p.push('Everyone is on one team: put at least one empire on another team.');
   if (active.some((s) => humanKind(s.kind) && !s.name.trim())) p.push('Every human seat needs a name.');

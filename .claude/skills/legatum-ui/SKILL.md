@@ -74,6 +74,8 @@ This file holds the current rules, one line each. The user's words, dates, as-bu
 - **A layer in front of a number is shown first everywhere** (UI review, PR 212): when a mechanic adds a bar in front of another (the Walls bar in front of city health), every surface that forecasts or alarms on that number (attack forecast with its own "Walls 90 → 81" row, This Turn alarm and its hover, tile card, Guide) shows the front layer first. Grep the old wording ("loses about N health") in the same change.
 - **A bar that can stand in for another carries its own mark** at every zoom (a glyph or a label), never colour alone: a rival's Walls bar sits on the dark track with a small tower at its left end.
 - **A building with a faction name uses that name in every rule line** that tells the player to build it (Rome's "Repair Castrum", not "Upgrade Walls"), and a tooltip never names an item the build list doesn't show (UI review, PR 212).
+- **A setting's label never contradicts its effect** (UI review, PR 212): something that still applies is never "Off"; name the default instead ("Turn 500 / Custom"). When a rule gains a default (a turn limit), route every player-facing branch on the old "none" value through one helper (`effectiveTurnLimit`).
+- **Generated sentences don't depend on verb agreement with a force phrase** ("a Spearman", "3 Spearmen"): put the force after the verb ("Rome's Walls lose about 11 a turn to 3 Spearmen").
 - Every way to score is visible, with ownership unmistakable (user, 2026-10-06); a scoring option that becomes available is announced every time (user, 2026-11-11).
 
 ## Map

@@ -222,7 +222,7 @@ export function wallsLine(f: BattleForecast, cityName: string, _unitLabel: strin
   if (w.covered > 0) return { text: `Walls ${level}: ${w.built_in ? 'built-in ' : ''}${cover}, so ${damage} to ${cityName}'s Walls.${bar}${next}`, tone: w.percent >= 100 ? 'good' : 'plain' };
   const withSiege = w.percent > 0 && w.percent < 100 && dealt > 0 ? Math.round((dealt * 100) / w.percent) : 0;
   return {
-    text: `Walls ${level} take half of this attack on ${cityName}${siegeTier > 0 && withSiege > 0 ? `: ${dealt} damage, or ${withSiege} with Siege` : ''}.${bar}`,
+    text: `Walls ${level} take this hit at half damage${siegeTier > 0 && withSiege > 0 ? `: ${dealt} damage, or ${withSiege} with Siege` : ''}.${bar}`,
     tone: 'plain',
   };
 }

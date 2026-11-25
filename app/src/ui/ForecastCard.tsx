@@ -363,7 +363,7 @@ export function ForecastCard({
       {m.lockWarning && <div className="forecast-risk bad" role="alert" data-testid="forecast-occupation-lock">{m.lockWarning}</div>}
       {city && !m.assault && f.garrison && <div className="forecast-shield" data-testid="forecast-garrison">{garrisonHeadline(f, view, city.name, ranged)}</div>}
       {city && walls && <div className={`forecast-shield forecast-walls${walls.tone === 'good' ? ' good' : ''}`} data-testid="forecast-walls">{walls.text}</div>}
-      {city && city.hp > 0 && m.dealt > 0 && <div className="forecast-foot forecast-note" data-testid="forecast-city-heal">Damaging {city.name} stops its +{CITY_HEAL} health end-of-turn heal this turn.</div>}
+      {city && city.hp > 0 && city.hp < city.max_hp && m.dealt > 0 && <div className="forecast-foot forecast-note" data-testid="forecast-city-heal">Damaging {city.name} stops its +{CITY_HEAL} health end-of-turn heal this turn.</div>}
       {m.counterText && <div className="forecast-foot forecast-counter" data-testid="forecast-counter-split">{m.counterText}</div>}
       {/* The city's shot changes the outcome, so it is a red risk row up top, never a footnote. */}
       {fire && city && strike && <div className="forecast-risk bad forecast-city-fire" data-testid="forecast-city-fire" role="alert">

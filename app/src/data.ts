@@ -18,6 +18,9 @@ import coreRules from './rules.generated.json' with { type: 'json' };
 
 /** Offline presentation data exported and checked by crates/ai/tests/ui_rules.rs. */
 export const RULES = coreRules;
+
+/** The turn the game ends on: the configured limit, else the default (core `data::DEFAULT_TURN_LIMIT`, rules 62). */
+export const effectiveTurnLimit = (limit: number | null | undefined): number => limit ?? RULES.defaultTurnLimit;
 type UnitNumbers = Pick<(typeof UNIT_STATS)[UnitKind], 'cost' | 'moves' | 'strength' | 'ranged' | 'range' | 'military' | 'requires' | 'upgradesTo'>;
 type BuildingNumbers = Pick<(typeof BUILDING_STATS)[BuildingKind], 'cost' | 'yields' | 'cityStrength' | 'requires' | 'warBuilding'>;
 const factionUnitStats = RULES.factionUnitStats as Record<Faction, Record<UnitKind, UnitNumbers>>;

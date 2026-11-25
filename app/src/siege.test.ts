@@ -66,7 +66,7 @@ describe('cities under attack', () => {
     const { forecast, perTurn } = captureForecast(weak, own, citiesUnderAttack(weak, null)[0].attackers);
     expect(forecast).toMatchObject({ turns: 1, level: 'now', text: 'Falls next turn unless reinforced' });
     expect(perTurn).toBeGreaterThan(40);
-    expect(forecast.detail).toContain('3 Spearmen hit for about');
+    expect(forecast.detail).toContain('loses about 84 health a turn to 3 Spearmen');
     expect(forecast.detail).toContain('Nothing garrisons it');
   });
 
