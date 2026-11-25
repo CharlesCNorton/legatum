@@ -4,8 +4,8 @@ A Cloudflare Worker that receives the record of every game played on the hosted 
 private R2 bucket, so the AI's strength can be measured and bugs found (the README's Privacy section is the
 promise to players).
 
-- The page (`app/src/platform/gameUpload.ts`) sends `PUT /v1/games/<game id>` with the gzipped record every
-  five turns and when the game ends or is abandoned. A later checkpoint replaces the earlier one.
+- The page (`app/src/platform/gameUpload.ts`) sends `PUT /v1/games/<game id>` with the gzipped record after each
+  of the first five turns, then every five turns, and when the game ends or is abandoned. A later checkpoint replaces the earlier one.
 - Every seat is under its default name ("Player 1", "AI 2"): the engine's `public_archive` renames seats and
   replays the orders to recompute the hashes (`Recording::anonymized`). The Worker refuses any other seat name.
 - Stored as `games/<YYYY-MM>/<game id>.json.gz` (the month of the start time in the game id), with custom metadata for listing without downloading:
@@ -33,7 +33,7 @@ promise to players).
   browser with no storage) stays open until a keyed checkpoint locks it. A browser that lost its keys gets
   `409` for its unfinished games and drops them from its queue; what was stored stays.
 - Only pages listed in `ALLOWED_ORIGINS` (`wrangler.jsonc`) may upload: the site, its preview deploys and
-  local dev. Bodies are capped at 4 MiB gzipped and 16 MiB unpacked.
+  local dev. Bodies are capped at 2 MiB gzipped and 16 MiB unpacked.
 - One client address (`CF-Connecting-IP`, an IPv6 address cut to its /64) may store at most 50 new games per
   UTC day: the Worker var `MAX_NEW_GAMES_PER_DAY` in `wrangler.jsonc` (a bad value means 50). A new game is a
   `PUT` whose R2 key does not exist yet; one more is answered `429` with `{"error":"too many new games today"}`

@@ -1,6 +1,6 @@
 /**
  * Legatum game uploads. The hosted web build posts each game's record (gzipped JSON, every seat under its
- * default name) to `PUT /v1/games/<game id>`, at least every five turns and when the game ends. The Worker
+ * default name) to `PUT /v1/games/<game id>`, after each of the first five turns, then every five turns, and when the game ends. The Worker
  * checks the shape and stores it in R2 as `games/<YYYY-MM>/<game id>.json.gz`, replacing the previous
  * checkpoint of the same game. A client address may start at most MAX_NEW_GAMES_PER_DAY new games per UTC day
  * (the `Quota` Durable Object). The only thing kept about a sender is a salted hash of that address (cut to
@@ -27,8 +27,8 @@ export interface Env {
   READ_TOKEN?: string;
 }
 
-/** A 300-turn game is a few hundred KB gzipped; this bounds what a stranger can store per request. */
-export const MAX_GZIP_BYTES = 4 * 1024 * 1024;
+/** The largest real record (285 turns) is about 115 KB gzipped; this bounds what a stranger can store per request. */
+export const MAX_GZIP_BYTES = 2 * 1024 * 1024;
 /** Unpacked: the largest real record (285 turns) is about 1.4 MB, so 16 MB leaves room and stops a gzip bomb early. */
 export const MAX_JSON_BYTES = 16 * 1024 * 1024;
 export const GAME_ID_RE = /^web-\d{13}-[0-9a-f]{16}-[0-9a-f]{16}$/;
