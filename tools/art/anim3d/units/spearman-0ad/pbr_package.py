@@ -3,8 +3,8 @@ import hashlib, json, os, subprocess
 from pathlib import Path
 from PIL import Image, ImageDraw
 ROOT=Path(os.environ.get('ANIM_ROOT',Path.home()/'LegatumRuns/anim-pilot'))
-WORK=ROOT/'oad/pbr-r1';OUT=ROOT/'review/3d-v2';UNIT=Path(__file__).resolve().parent
-PREFIX='spearman-0ad-pbr-r1'
+WORK=ROOT/'oad/pbr-r2';OUT=ROOT/'review/3d-v2';UNIT=Path(__file__).resolve().parent
+PREFIX='spearman-0ad-pbr-r2'
 FPS={'idle':4,'walk':6,'attack':14,'hit':12,'death':4};COUNTS={'idle':12,'walk':16,'attack':18,'hit':8,'death':16}
 OUT.mkdir(parents=True,exist_ok=True)
 def cream(path):
@@ -27,7 +27,7 @@ for row,(name,i) in enumerate(small):
         sheet.paste(cream(WORK/'frames'/folder/f'{i:03}.png'),(col*160,24+row*184));draw.text((col*160+4,24+row*184+162),f'{name} {i:02}',fill='#493b2a')
 sheet.save(OUT/f'{PREFIX}-readability-48.png')
 panel=UNIT.parents[4]/'app/src/assets/units/spearman-panel.png'
-sheet=Image.new('RGB',(1024,544),'#f8f4e8');sheet.paste(cream(panel),(0,0));sheet.paste(cream(WORK/'hero.png'),(512,0));draw=ImageDraw.Draw(sheet);draw.text((16,520),'Reference painting | 512 px',fill='#493b2a');draw.text((528,520),'PBR r1 | delivered GLB | Cycles CPU',fill='#493b2a');sheet.save(OUT/f'{PREFIX}-vs-panel.png')
+sheet=Image.new('RGB',(1024,544),'#f8f4e8');sheet.paste(cream(panel),(0,0));sheet.paste(cream(WORK/'hero.png'),(512,0));draw=ImageDraw.Draw(sheet);draw.text((16,520),'Reference painting | 512 px',fill='#493b2a');draw.text((528,520),'PBR r2 | delivered GLB | Cycles CPU',fill='#493b2a');sheet.save(OUT/f'{PREFIX}-vs-panel.png')
 sheet=Image.new('RGB',(1536,544),'#f8f4e8');draw=ImageDraw.Draw(sheet)
 for i,name in enumerate(['shield','helmet','crest']):
     sheet.paste(cream(WORK/f'{name}-close.png'),(i*512,0));draw.text((i*512+16,520),name+' | LOD0, shipped 1024 textures',fill='#493b2a')

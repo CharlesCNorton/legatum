@@ -29,7 +29,7 @@ else {
 }
 const chromium=playwright.chromium||playwright.default?.chromium;
 if(!chromium)throw new Error('Playwright chromium export missing');
-const mime={'.html':'text/html','.mjs':'text/javascript','.js':'text/javascript','.glb':'model/gltf-binary','.png':'image/png','.json':'application/json'};
+const mime={'.html':'text/html','.mjs':'text/javascript','.js':'text/javascript','.glb':'model/gltf-binary','.png':'image/png','.jpg':'image/jpeg','.json':'application/json'};
 const server=createServer(async(req,res)=>{
   try{
     const path=await realpath(resolve(root,'.'+decodeURIComponent(new URL(req.url,'http://localhost').pathname)));
@@ -69,6 +69,29 @@ try {
     if(Number(stream.nb_read_frames)!==count*3||stream.pix_fmt!=='yuv420p')throw new Error(`Invalid encoded clip ${clip}`);
     receipts[clip]={output,framing:framing[clip],...stream};console.log(output);
   }
+  // Compare actual MeshStandardMaterial / ACES pixels with the art, at 512 px.
+  // The source is captured before the comparison canvas changes the viewport.
+  await page.setViewportSize({width:512,height:512});
+  await page.evaluate(()=>window.review.sample('idle',0));
+  const viewerStill=join(out,`${prefix}-viewer-still.png`);
+  await page.locator('canvas').screenshot({path:viewerStill});
+  const viewerPixels=await page.evaluate(()=>document.querySelector('canvas').toDataURL('image/png'));
+  await page.setViewportSize({width:1024,height:544});
+  await page.evaluate(async pixels=>{
+    const load=src=>new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=reject;image.src=src;});
+    const [reference,render]=await Promise.all([load('/app/src/assets/units/spearman-panel.png'),load(pixels)]);
+    const sheet=document.createElement('canvas');sheet.id='comparison';sheet.width=1024;sheet.height=544;
+    Object.assign(sheet.style,{position:'fixed',left:'0',top:'0',zIndex:'1000',width:'1024px',height:'544px'});
+    document.body.appendChild(sheet);const ctx=sheet.getContext('2d');ctx.fillStyle='#f8f4e8';ctx.fillRect(0,0,1024,544);
+    ctx.drawImage(reference,0,0,512,512);ctx.drawImage(render,512,0,512,512);
+    ctx.fillStyle='#493b2a';ctx.font='14px sans-serif';ctx.fillText('Reference painting | 512 px',16,532);
+    ctx.fillText('Delivered GLB | three.js MeshStandardMaterial / ACES',528,532);
+  },viewerPixels);
+  const comparison=join(out,`${prefix}-viewer-vs-panel.png`);
+  await page.locator('#comparison').screenshot({path:comparison});
+  await page.evaluate(()=>document.querySelector('#comparison').remove());
+  await page.setViewportSize({width:960,height:640});
+  receipts.comparison={output:comparison,still:viewerStill,renderer:'three.js MeshStandardMaterial, HDRI, ACES'};
   const turnFrames=join(out,`.${prefix}-viewer-frames`,assetSha256,'turntable');
   await mkdir(turnFrames,{recursive:true});
   for(let i=0;i<360;i++) {

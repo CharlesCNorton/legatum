@@ -153,3 +153,65 @@ The GLB, textures and derived renders remain CC BY-SA 3.0.
 Final round-1 counts: **9,686 triangles LOD0**, **2,838 triangles LOD1**;
 dense bake source **232,752 triangles**. Both LODs share the same three maps.
 The source manifest records the final GLB, shipping textures and 2048 masters.
+
+
+## Premium PBR round 2
+
+This continues the round-1 PBR branch and follows the lead's round-1 critique
+and the 02:36Z reviewer additions. The approved round-6 input, all five clip
+input/output buffers, timestamps, original skeleton transforms and inverse binds
+are still copied directly, without resampling. Geometry fitting and skinning
+changes are confined to the look. The +Z axis and camera-only display yaw remain.
+
+The thin exposed source anatomy is replaced by a muscular **MPFB 2.0.18 CC0**
+body. The installed add-on version and its `LICENSE.ASSETS.md` were read locally.
+Archive SHA-256: `ada7c4ff11e79cf6ed9b441bccabc52c9359f2848b988f66e89c14c30b21fed7`;
+installed `data/3dobjs/base.obj` SHA-256:
+`8e761e6624b8f54536409135d1636da63b32486a90d4897f84e121d144f6fb4c`.
+Macros: gender 1, muscle 1, weight .72, height .55, age .35. The temporary
+MakeHuman skeleton fits the mesh to 0 A.D. rest landmarks and is discarded.
+The native weights transfer by Blender Data Transfer, nearest face interpolated,
+then normalization and a four-influence limit. The missing native head surface
+is completed with the original head bone; foot shape is fitted around the
+existing sandal footprint without changing ankle rotation or clip data.
+MakeHuman helper masks are applied before stripping modifiers.
+
+New fitted muscle cuirass has pectoral and abdominal relief and continuous
+spine/chest weights, avoiding the upper-arm weights that nearest transfer could
+pick for a broad breastplate. Calf/knee greaves are fuller; leather pteruges
+are longer and sit outside the pleated linen. Straps wrap the anatomical feet.
+The crest is a thick sagittal mass with layered, tapered locks and an irregular
+edge. Headgear is modestly enlarged around its unchanged socket. The cloak is
+a broad folded surface with a darker lining, on the same three cape bones; a
+continuous folded shoulder mantle replaces the inherited scarf. Its shield-side
+width is fitted for clearance. The 64-segment shield dish/lip and smooth helmet
+dome are reserved before decimating the remaining geometry. No object is scaled
+to zero, and the rigid carried props retain their original socket bones.
+
+Cycles CPU bakes tangent normals and AO from **228,144**
+dense triangles. Pigment has gentle height gradients and local variation; it
+contains no baked directional lighting or AO. Bronze has a warmer pigment,
+rougher dark regions and polished edge material; linen, leather and wool have
+distinct roughness, and cloth has procedural weave. Normal strength is .45.
+2048 PNG masters and editable Blender sources remain in `oad/pbr-r2/`.
+
+Shipping: **1,895,720 bytes** for the self-contained GLB, with
+**9,504/2,847 triangles**, 30 bones,
+one shared material, three **1024-square WebP** maps, and COLOR_0.r on both LODs.
+ORM remains UV0: R occlusion / G roughness / B metallic. `EXT_texture_webp`
+encodes base/normal/ORM at quality 85/90/85. `KHR_mesh_quantization` stores
+normalized signed-byte normals/tangents, ushort UVs/weights, and byte joints/team
+mask. Positions, inverse binds and animation remain float32. Weight rounding
+sums to exactly 65535 and zero-weight joint entries are cleared. Compression is
+lossy; decoded channel error measurements are in `texture-encoding.json`.
+The shipping GLB, rather than an uncompressed look-alike, is rendered for review.
+
+The existing pinned Studio Small 09 CC0 HDRI, warm key, cool rim, SSAO, soft
+shadows and ACES viewer are retained. `record.mjs --prefix spearman-0ad-pbr-r2`
+also captures a 512 px three.js still and side-by-side painting comparison, plus
+the twelve-second idle turntable. These browser captures are the lead's host
+step. Cycles/AgX sheets are separate evidence and do not claim browser parity.
+
+The combined unit and derived renders remain CC BY-SA 3.0. The new MakeHuman
+anatomy is CC0 input; no paid service, third-party skin texture or new animation
+source was used. Structural validity does not establish premium art approval.

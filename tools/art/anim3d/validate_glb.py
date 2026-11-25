@@ -98,6 +98,29 @@ class GLB:
                 else:
                     for p in positions:yield ni,point(worlds[ni],p)
 
+def image_dimensions(data):
+    """Read dimensions of PNG, JPEG and EXT_texture_webp encodings without dependencies."""
+    if data[:8]==b'\x89PNG\r\n\x1a\n':return struct.unpack_from('>II',data,16)
+    if data[:4]==b'RIFF' and data[8:12]==b'WEBP':
+        kind=data[12:16]
+        if kind==b'VP8 ':return tuple(x&0x3fff for x in struct.unpack_from('<HH',data,26))
+        if kind==b'VP8L':
+            bits=struct.unpack_from('<I',data,21)[0];return (bits&0x3fff)+1,((bits>>14)&0x3fff)+1
+        if kind==b'VP8X':return int.from_bytes(data[24:27],'little')+1,int.from_bytes(data[27:30],'little')+1
+        raise ValueError('Unsupported WebP header')
+    assert data[:2]==b'\xff\xd8','Expected PNG, JPEG or WebP'
+    pos=2
+    while pos<len(data):
+        assert data[pos]==255,'Malformed JPEG marker'
+        while data[pos]==255:pos+=1
+        marker=data[pos];pos+=1
+        if marker in (0xd8,0xd9):continue
+        length=struct.unpack_from('>H',data,pos)[0]
+        if marker in (0xc0,0xc1,0xc2):
+            height,width=struct.unpack_from('>HH',data,pos+3);return width,height
+        pos+=length
+    raise ValueError('JPEG dimensions missing')
+
 def validate(path):
     g=GLB(path);d=g.doc;errors=[];warnings=[]
     def require(test,message):
@@ -185,12 +208,11 @@ def validate(path):
     images=d.get('images',[]);require(len(images)==3,'Exactly three PBR atlas images required')
     texture_size=[]
     for im in images:
-        require('bufferView' in im and im.get('mimeType')=='image/png','PBR atlas must be embedded PNG')
+        require('bufferView' in im and im.get('mimeType') in ('image/png','image/jpeg','image/webp'),'PBR atlas must be embedded PNG, JPEG or WebP')
         if 'bufferView' in im:
             view=d['bufferViews'][im['bufferView']];off=view.get('byteOffset',0)
             png=g.bin[off:off+view['byteLength']]
-            require(png[:8]==b'\x89PNG\r\n\x1a\n','Invalid PNG')
-            size=struct.unpack_from('>II',png,16);texture_size.append(size)
+            size=image_dimensions(png);texture_size.append(size)
             require(size==(1024,1024),'Every shipped texture must be 1024 square')
     require(extras.get('texture_master_px')==2048,'Declare 2048 master textures')
     for mat in d.get('materials',[]):
@@ -238,7 +260,7 @@ def validate(path):
     # Mesh toes establish +Z, independently of metadata (front-most low vertex).
     require(max(p[2] for p in feet)>abs(min(p[2] for p in feet)), 'Toe geometry must face +Z')
     warnings.append('Premium quality, material separation, close-up faceting and animation collisions require visual review. Runtime must select one LOD.')
-    return {'valid':not errors,'glb':str(Path(path).resolve()),'bytes':Path(path).stat().st_size,'triangles':lod_triangles,'total_stored_triangles':tris,'joints':len(joints),'skinned_meshes':len(skinned),'atlas_px':texture_size,'figure_height_m':round(height,4),'feet_centre_m':[round(v,4) for v in feet_centre],'meshes':len(d['meshes']),'materials':len(d['materials']),'draw_calls_per_lod':1,'stored_primitives':draw_calls,'team_regions':team_regions,'rigid_vertices':rigid_counts,'clips':clips,'errors':errors,'review_required':warnings}
+    return {'valid':not errors,'glb':str(Path(path).resolve()),'bytes':Path(path).stat().st_size,'triangles':lod_triangles,'total_stored_triangles':tris,'joints':len(joints),'skinned_meshes':len(skinned),'atlas_px':texture_size,'texture_master_px':extras.get('texture_master_px'),'texture_bytes':[d['bufferViews'][im['bufferView']]['byteLength'] for im in images],'figure_height_m':round(height,4),'feet_centre_m':[round(v,4) for v in feet_centre],'meshes':len(d['meshes']),'materials':len(d['materials']),'draw_calls_per_lod':1,'stored_primitives':draw_calls,'team_regions':team_regions,'rigid_vertices':rigid_counts,'clips':clips,'errors':errors,'review_required':warnings}
 
 if __name__=='__main__':
     p=argparse.ArgumentParser();p.add_argument('glb',type=Path);p.add_argument('--output',type=Path);args=p.parse_args()

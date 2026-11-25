@@ -8,8 +8,8 @@ from pathlib import Path
 from mathutils import Vector, Matrix
 UNIT=Path(__file__).resolve().parent
 ROOT=Path(os.environ.get('ANIM_ROOT',Path.home()/'LegatumRuns/anim-pilot'))
-ROUND='pbr-r1'
-WORK=ROOT/'oad/pbr-r1';OUT=WORK/'frames';OUT.mkdir(parents=True,exist_ok=True)
+ROUND='pbr-r2'
+WORK=ROOT/('oad/pbr-r2-no-normal' if '--no-normal' in sys.argv else 'oad/pbr-r2');OUT=WORK/'frames';OUT.mkdir(parents=True,exist_ok=True)
 QUICK='--quick' in sys.argv
 bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
 bpy.context.scene.render.fps=30
@@ -29,6 +29,8 @@ for ob in meshes:
     for mat in ob.data.materials:
         nodes=mat.node_tree.nodes;links=mat.node_tree.links
         shader=nodes.get('Principled BSDF')
+        if '--no-normal' in sys.argv:
+            for link in list(shader.inputs['Normal'].links):links.remove(link)
         texture=next(n for n in nodes if n.type=='TEX_IMAGE' and n.image and 'basecolor' in n.image.name.lower())
         color=nodes.new('ShaderNodeVertexColor');color.layer_name=ob.data.color_attributes[0].name
         separate=nodes.new('ShaderNodeSeparateColor');links.new(color.outputs['Color'],separate.inputs['Color'])

@@ -25,6 +25,15 @@ class Contract(unittest.TestCase):
     def test_separate_ao_rejected(self):
         def edit(d):d['materials'][0]['occlusionTexture']['index']=0
         r=self.mutated(edit);self.assertIn('AO and metallic/roughness must share packed ORM',r['errors'])
+    def test_small_authoring_master_rejected(self):
+        r=self.mutated(lambda d:d['asset']['extras'].update(texture_master_px=512))
+        self.assertIn('Declare 2048 master textures',r['errors'])
+    def test_orm_must_use_uv0(self):
+        def edit(d):d['materials'][0]['pbrMetallicRoughness']['metallicRoughnessTexture']['texCoord']=1
+        self.assertIn('All maps must use UV0',self.mutated(edit)['errors'])
+    def test_shared_material_required(self):
+        def edit(d):d['meshes'][1]['primitives'][0]['material']=1
+        self.assertIn('LODs must share material 0',self.mutated(edit)['errors'])
     def test_lod1_cannot_drop_team_region(self):
         def edit(d):
             for r in d['meshes'][1]['extras']['vertex_regions']:

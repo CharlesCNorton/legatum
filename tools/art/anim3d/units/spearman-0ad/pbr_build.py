@@ -4,20 +4,20 @@ source tools/art/anim3d/env.sh
 blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python tools/art/anim3d/units/spearman-0ad/pbr_build.py
 Use -- --preview for 512 bake iteration; final defaults to 2048 masters.
 """
-import bpy, bmesh, sys, os, math, json, hashlib
+import bpy, bmesh, sys, os, math, json, hashlib, subprocess
 import numpy as np
 from pathlib import Path
 from mathutils import Vector, Matrix
-from mathutils.kdtree import KDTree
-from mathutils.bvhtree import BVHTree
 from math import sin,cos,pi
 UNIT=Path(__file__).resolve().parent
 sys.path.insert(0,str(Path(__file__).resolve().parent));sys.path.insert(0,str(Path(__file__).resolve().parents[2]))
 from validate_glb import GLB
 from pbr_export import extract,write_glb
+import pbr_forms
+import pbr_human
 ROOT=Path(os.environ.get('ANIM_ROOT',Path.home()/'LegatumRuns/anim-pilot'))
-WORK=ROOT/'oad/pbr-r1';WORK.mkdir(parents=True,exist_ok=True)
-SOURCE=WORK/'approved-r6.glb'
+WORK=ROOT/'oad/pbr-r2';WORK.mkdir(parents=True,exist_ok=True)
+SOURCE=ROOT/'oad/pbr-r1/approved-r6.glb'
 assert hashlib.sha256(SOURCE.read_bytes()).hexdigest()=='84bf794f543fd4a1af2d1b9c2b48c89a6c52533a00d7803e553b49a22513f92c', 'Expected approved round-6 motion source'
 g=GLB(SOURCE);d=g.doc;prim=d['meshes'][0]['primitives'][0]
 old={k:g.accessor(v) for k,v in prim['attributes'].items()};ix=[v[0] for v in g.accessor(prim['indices'])]
@@ -26,7 +26,7 @@ SIZE=512 if '--preview' in sys.argv else 2048
 bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
 parts=[];catalog={}
 # All procedural colour uses bind-space position and pigment variation only.
-PALETTES={'bronze':('#aa7c3f',.46,1),'edge':('#d0a35b',.29,1),'darkbronze':('#79613c',.57,1),'linen':('#ded2ad',.91,0),'leather':('#583526',.56,0),'wool':('#841b23',.94,0),'skin':('#bb865e',.62,0),'wood':('#705036',.55,0),'team':('#b2a596',.88,0)}
+PALETTES={'bronze':('#b88a46',.43,1),'edge':('#e2b96a',.23,1),'darkbronze':('#604528',.59,1),'linen':('#e5d8b8',.91,0),'leather':('#442c20',.56,0),'wool':('#921921',.94,0),'wooldark':('#4b1019',.96,0),'skin':('#bb865e',.62,0),'wood':('#705036',.55,0),'team':('#b2a596',.88,0)}
 def linear(c):
     v=int(c,16)/255;return v/12.92 if v<=.04045 else ((v+.055)/1.055)**2.4
 
@@ -38,12 +38,17 @@ def material(kind,part,bone=None,team=None):
     pos=nodes.new('ShaderNodeNewGeometry');sep=nodes.new('ShaderNodeSeparateXYZ');links.new(pos.outputs['Position'],sep.inputs[0])
     ramp=nodes.new('ShaderNodeMapRange');ramp.inputs['From Min'].default_value=0;ramp.inputs['From Max'].default_value=1.95;ramp.inputs['To Min'].default_value=.76;ramp.inputs['To Max'].default_value=1.05;links.new(sep.outputs['Y'],ramp.inputs['Value'])
     noise=nodes.new('ShaderNodeTexNoise');noise.inputs['Scale'].default_value=55 if metal else 90;noise.inputs['Detail'].default_value=3;links.new(pos.outputs['Position'],noise.inputs['Vector'])
-    vary=nodes.new('ShaderNodeMapRange');vary.inputs['To Min'].default_value=.78 if metal else .88;vary.inputs['To Max'].default_value=1.10 if metal else 1.04;links.new(noise.outputs['Fac'],vary.inputs['Value'])
+    vary=nodes.new('ShaderNodeMapRange');vary.inputs['To Min'].default_value=.58 if metal else .84;vary.inputs['To Max'].default_value=1.20 if metal else 1.05;links.new(noise.outputs['Fac'],vary.inputs['Value'])
     mult=nodes.new('ShaderNodeMath');mult.operation='MULTIPLY';links.new(ramp.outputs[0],mult.inputs[0]);links.new(vary.outputs[0],mult.inputs[1])
     color=nodes.new('ShaderNodeMixRGB');color.blend_type='MULTIPLY';color.inputs[0].default_value=1;color.inputs[1].default_value=(*rgb,1);links.new(mult.outputs[0],color.inputs[2]);links.new(color.outputs[0],bs.inputs['Base Color'])
-    rmap=nodes.new('ShaderNodeMapRange');rmap.inputs['To Min'].default_value=max(.15,rough-.09);rmap.inputs['To Max'].default_value=min(1,rough+.08);links.new(noise.outputs['Fac'],rmap.inputs['Value']);links.new(rmap.outputs[0],bs.inputs['Roughness'])
-    fine=nodes.new('ShaderNodeTexNoise');fine.inputs['Scale'].default_value=700 if kind in ('wool','linen','team') else 350;fine.inputs['Detail'].default_value=2;links.new(pos.outputs['Position'],fine.inputs['Vector'])
-    bump=nodes.new('ShaderNodeBump');bump.inputs['Strength'].default_value=.25;bump.inputs['Distance'].default_value=.0007 if metal else .0005;links.new(fine.outputs['Fac'],bump.inputs['Height']);links.new(bump.outputs[0],bs.inputs['Normal'])
+    rmap=nodes.new('ShaderNodeMapRange');rmap.inputs['To Min'].default_value=max(.15,rough-(.16 if metal else .09));rmap.inputs['To Max'].default_value=min(1,rough+(.16 if metal else .08));links.new(noise.outputs['Fac'],rmap.inputs['Value']);links.new(rmap.outputs[0],bs.inputs['Roughness'])
+    fine=nodes.new('ShaderNodeTexNoise');fine.inputs['Scale'].default_value=430 if kind in ('wool','linen','team') else 180;fine.inputs['Detail'].default_value=2;links.new(pos.outputs['Position'],fine.inputs['Vector'])
+    bump=nodes.new('ShaderNodeBump');bump.inputs['Strength'].default_value=.25;bump.inputs['Distance'].default_value=.0012 if metal else .0007;links.new(fine.outputs['Fac'],bump.inputs['Height']);links.new(bump.outputs[0],bs.inputs['Normal'])
+    if kind in ('linen','wool','team'):
+        weave=nodes.new('ShaderNodeTexWave');weave.bands_direction='X';weave.inputs['Scale'].default_value=350
+        links.new(pos.outputs['Position'],weave.inputs['Vector'])
+        thread=nodes.new('ShaderNodeMixRGB');thread.blend_type='MULTIPLY';thread.inputs[0].default_value=.65
+        links.new(fine.outputs['Fac'],thread.inputs[1]);links.new(weave.outputs['Color'],thread.inputs[2]);links.new(thread.outputs[0],bump.inputs['Height'])
     catalog[m.name]={'part':part,'bone':bone,'team':team};m['kind']=kind
     return m
 
@@ -92,7 +97,7 @@ def ring(name,c,u,v,r,minor,mat,bone,n=64,k=6):
 
 # Retain body anatomy and native weights, including the three cloth bones.
 for reg in d['meshes'][0]['extras']['vertex_regions']:
-    if reg['part'] not in ('body','Greek head','Aspis handgrip'):continue
+    if reg['part'] not in ('body','Aspis handgrip'):continue
     start,end=reg['start'],reg['start']+reg['count'];faces=[ix[i:i+3] for i in range(0,len(ix),3) if start<=ix[i]<end]
     verts=old['POSITION'][start:end];weights=[{int(j):w for j,w in zip(js,ws) if w>0} for js,ws in zip(old['JOINTS_0'][start:end],old['WEIGHTS_0'][start:end])]
     ob=mesh(reg['part'],verts,[[i-start for i in f] for f in faces],material('skin' if reg['part']=='Greek head' else 'leather','Greek head' if reg['part']=='Greek head' else reg['part'],reg['bone'],reg['team']),weights=weights)
@@ -109,21 +114,36 @@ for reg in d['meshes'][0]['extras']['vertex_regions']:
             elif arm_weight>.45:kind='skin'
             elif c.y<.070:kind='leather'
             elif c.y<.437:kind='bronze'
+            elif c.y<.61:kind='skin'
             elif c.y<.877:kind='linen'
             elif abs(c.x)<.215 and c.y<1.326:kind='bronze'
             elif abs(c.x)<.23:kind='wool'
             else:kind='skin'
             if .83<c.y<.89 and not cape:kind='leather'
             p.material_index=keys.index(kind)
-        active(ob);bm=bmesh.new();bm.from_mesh(ob.data);bmesh.ops.remove_doubles(bm,verts=list(bm.verts),dist=.00001);bm.to_mesh(ob.data);bm.free()
+        active(ob);bm=bmesh.new();bm.from_mesh(ob.data)
+        deform=bm.verts.layers.deform.active
+        cape_groups={i for i,vg in enumerate(ob.vertex_groups) if vg.name in ('j4','j5','j6')}
+        old_cloak=[f for f in bm.faces if any(sum(w for j,w in v[deform].items() if j in cape_groups)>.2 for v in f.verts)]
+        bare=[f for f in bm.faces if ob.data.materials[f.material_index].get('kind') in ('skin','wool','wooldark') or (sum(v.co.y for v in f.verts)/len(f.verts)<.61 and ob.data.materials[f.material_index].get('kind')=='bronze')]
+        bmesh.ops.delete(bm,geom=list(set(old_cloak+bare)),context='FACES')
+        bmesh.ops.remove_doubles(bm,verts=list(bm.verts),dist=.00001);bm.to_mesh(ob.data);bm.free()
         mod(ob,'SUBSURF',levels=1,subdivision_type='CATMULL_CLARK')
+        pbr_forms.bulk_body(ob,g,bones)
         # Cloth follows the approved cape weights; folds are rest-space geometry.
         for v in ob.data.vertices:
             cape=sum(w.weight for w in v.groups if ob.vertex_groups[w.group].name in ('j4','j5','j6'))
             if v.co.y<.1:v.co.y=max(0,(v.co.y-.007)*.1/.093)
             if cape>.2:v.co.z+=.010*(1+sin(v.co.x*86+v.co.y*3))*min(1,(1.3-v.co.y)*2)*cape
-        mod(ob,'DECIMATE',ratio=.74)
+        bm=bmesh.new();bm.from_mesh(ob.data)
+        buried=[f for f in bm.faces if all(.92<v.co.y<1.30 and abs(v.co.x)<.22 and v.co.z>-.14 for v in f.verts) and ob.data.materials[f.material_index].get('kind')=='bronze']
+        bmesh.ops.delete(bm,geom=buried,context='FACES');bm.to_mesh(ob.data);bm.free()
+        mod(ob,'DECIMATE',ratio=.68)
     elif reg['part']=='Greek head':mod(ob,'SUBSURF',levels=1)
+
+pbr_human.build(mesh,mod,material,parts,old,ix,g,bones,WORK)
+pbr_forms.cloak(mesh,material)
+pbr_forms.mantle(mesh,material)
 
 # Aspis: measured socket frame, 64-segment convex dish, rolled lip, raised device.
 regs=[r for r in d['meshes'][0]['extras']['vertex_regions'] if r['part']=='aspis']
@@ -156,8 +176,8 @@ def ellipsoid(name,center,radii,mat,bone,segments=24,rings=12):
     parts.append(o);return o
 boss=ellipsoid('sun boss',(0,0,0),(.06,.06,.026),edge,'shield_arm',24,8)
 for vert in boss.data.vertices:vert.co=c+u*vert.co.x+v*vert.co.y+n*(.116+vert.co.z)
-for j in range(16):
-    a=2*pi*j/16;p=c+(u*cos(a)+v*sin(a))*.354+n*.029
+for j in range(12):
+    a=2*pi*j/12;p=c+(u*cos(a)+v*sin(a))*.354+n*.029
     ellipsoid('rim rivet',p,(.004,)*3,edge,'shield_arm',8,4)
 # Spear retains exact grip/axis/endpoints; blade gets a true lenticular leaf section.
 r=next(r for r in d['meshes'][0]['extras']['vertex_regions'] if r['part']=='spear');pts=np.array(old['POSITION'][r['start']:r['start']+r['count']]);center=Vector(pts.mean(axis=0));val,vec=np.linalg.eigh(np.cov(pts.T));axis=Vector(vec[:,-1]);axis*=1 if axis.z<0 else -1
@@ -190,29 +210,13 @@ for side in (-1,1):
     tube('brow ridge',[(side*.006,1.568,.143),(side*.044,1.572,.134),(side*.086,1.568,.099)],[.007]*3,hem,'helmet',8)
     tube('cheek edging',[(side*.022,1.524,.14),(side*.026,1.441,.14),(side*.057,1.381,.113),(side*.096,1.414,.028)],[.0025]*4,hem,'helmet',6)
 nose=mesh('nose guard',[(-.012,1.568,.144),(.012,1.568,.144),(.014,1.467,.153),(-.014,1.467,.153)],[(0,1,2,3)],hem,'helmet');mod(nose,'SOLIDIFY',thickness=.005);mod(nose,'BEVEL',width=.003,segments=3)
-# Full crest: continuous softly rounded mass plus tapered strand ridges.
-hair=material('team','crest','helmet','crest');support=material('darkbronze','crest_base','helmet')
-verts=[];faces=[];N=40;K=6
-for i in range(N+1):
-    t=-.25+(pi+.5)*i/N
-    inner=Vector((0,1.57+.149*sin(t),.006+.141*cos(t)));outer=Vector((0,1.57+.355*sin(t),.006+.245*cos(t)))
-    for j in range(K):
-        a=j*2*pi/K;f=(1+cos(a))/2;p=inner.lerp(outer,f);p.x=.033*sin(a)*(1-.25*f);verts.append(p)
-for i in range(N):
-    for j in range(K):faces.append((i*K+j,i*K+(j+1)%K,(i+1)*K+(j+1)%K,(i+1)*K+j))
-faces.extend([tuple(reversed(range(K))),tuple(N*K+j for j in range(K))]);o=mesh('horsehair mass',verts,faces,hair,'helmet');mod(o,'SUBSURF',levels=1);mod(o,'DECIMATE',ratio=.45)
-for side in (-1,1):
-    for i in range(33):
-        t=-.22+(pi+.44)*i/32
-        p=Vector((side*.023,1.57+.18*sin(t),.006+.16*cos(t)));q=Vector((side*.004,1.57+.343*sin(t),.006+.237*cos(t)))
-        q.x=side*.014;mid=p.lerp(q,.5);mid.x=side*.0308
-        tube('crest strand',[p,mid,q],[.0015,.0018,.0006],hair,'helmet',4)
-tube('crest mounting rail',[(0,1.57+.146*sin(t),.006+.142*cos(t)) for t in np.linspace(-.2,pi+.2,30)],[.014]*30,support,'helmet',8)
+# Round-two full sagittal horsehair arc; all vertices stay on helmet.
+pbr_forms.crest(mesh,mod,tube,material)
 # Curved bronze greave shells: anatomical taper, actual thickness and rolled
 # edges, attached to the unchanged calf sockets rather than painted on skin.
 for side,bone in [(-1,'leg_R'),(1,'leg_L')]:
     greave=material('bronze','greave',bone);lip=material('edge','greave',bone)
-    levels=[(.098,.034,.050,-.058),(.16,.043,.058,-.061),(.29,.053,.063,-.064),(.39,.051,.061,-.057),(.438,.044,.054,-.044)]
+    levels=[(.098,.034,.050,-.058),(.16,.049,.066,-.061),(.26,.068,.077,-.064),(.36,.065,.074,-.057),(.438,.057,.065,-.044),(.475,.046,.052,-.035)]
     verts=[];faces=[];N=20
     for y,rx,rz,zc in levels:
         for j in range(N+1):
@@ -226,53 +230,57 @@ for side,bone in [(-1,'leg_R'),(1,'leg_L')]:
         tube('rolled greave lip',row,[.003]*len(row),lip,bone,5)
     # Raised central rib reads in the material without a painted highlight.
     tube('greave keel',[(side*.147,y,zc+rz+.003) for y,rx,rz,zc in levels],[.0025]*len(levels),lip,bone,6)
+# Sandals wrap the anatomical CC0 feet; all straps follow the native foot joints.
+for side,bone in [(-1,'foot_R'),(1,'foot_L')]:
+    strap=material('leather','sandal',bone)
+    for z,y in [(-.005,.072),(.055,.065),(.105,.044)]:
+        tube('leather sandal strap',[(side*.147+dx,y+dy,z) for dx,dy in [(-.050,-.035),(-.040,0),(0,.008),(.040,0),(.050,-.035)]],[.006]*5,strap,bone,5)
 # Layered leather pteruges around the waist, following the existing pelvis.
 pter=material('leather','pteruges','hip');gold=material('edge','pteruges','hip')
 for j in range(14):
-    a=2*pi*j/14;u=Vector((cos(a),0,sin(a)));v=Vector((-sin(a),0,cos(a)));p=Vector((.182*cos(a),.858,.105*sin(a)))
-    verts=[p+v*dx+Vector((0,dy,0))+u*push for dx,dy,push in [(-.025,0,0),(.025,0,0),(.025,-.17,.025),(.018,-.19,.028),(-.018,-.19,.028),(-.025,-.17,.025)]]
+    a=2*pi*j/14;u=Vector((cos(a),0,sin(a)));v=Vector((-sin(a),0,cos(a)));p=Vector((.232*cos(a),.912,.181*sin(a)))
+    verts=[p+v*dx+Vector((0,dy,0))+u*push for dx,dy,push in [(-.025,0,0),(.025,0,0),(.025,-.22,.055),(.018,-.24,.058),(-.018,-.24,.058),(-.025,-.22,.055)]]
     o=mesh('pteruges',verts,[tuple(range(6))],pter,'hip');mod(o,'SOLIDIFY',thickness=.004);mod(o,'BEVEL',width=.003,segments=2)
     ellipsoid('pteruges rivet',p+u*.006+Vector((0,-.022,0)),(.004,)*3,gold,'hip',8,4)
-# Worn rolled cuirass hems and embossed scrollwork; same native torso bones.
-trim=material('edge','cuirass trim','chest');belt=material('leather','belt','hip')
-for height,rx,rz,bone,mat in [(.91,.179,.124,'hip',belt),(1.02,.179,.139,'chest',trim),(1.255,.208,.135,'chest',trim)]:
-    # Use matching part metadata for each socket, so rigid regions remain auditable.
-    mat=material('leather' if height<1 else 'edge','belt' if height<1 else 'cuirass trim',bone)
-    tube('cuirass rolled hem',[(rx*cos(a),height,rz*sin(a)) for a in np.linspace(0,2*pi,49)],[.007 if height<1 else .004]*49,mat,bone,6)
-for side in (-1,1):
-    for k in range(2):
-        points=[]
-        for i in range(18):
-            a=i*2*pi/17;radius=.026*(1-i/22)
-            points.append((side*(.07+k*.045)+radius*cos(a),1.12+radius*sin(a),.145))
-        tube('cuirass embossed curl',points,[.002]*len(points),trim,'chest',5)
-# Armour piping inherits the nearest native torso weights, so it follows the
-# bending cuirass rather than swinging as a rigid chest-level hoop.
-body_ids=[i for r in d['meshes'][0]['extras']['vertex_regions'] if r['part']=='body' and not r['team'] for i in range(r['start'],r['start']+r['count'])]
-tree=KDTree(len(body_ids))
-for i in body_ids:tree.insert(old['POSITION'][i],i)
-tree.balance()
-body_faces=[ix[i:i+3] for i in range(0,len(ix),3) if ix[i] in set(body_ids)]
-body_surface=BVHTree.FromPolygons([Vector(p) for p in old['POSITION']],body_faces,all_triangles=True)
-for ob in parts:
-    meta=catalog[ob.data.materials[0].name]
-    if meta['part']!='cuirass trim':continue
-    meta['bone']=None
-    ob.vertex_groups.clear()
-    groups=[ob.vertex_groups.new(name='j'+str(i)) for i in range(len(bones))]
-    for vert in ob.data.vertices:
-        surface,normal,_,_=body_surface.find_nearest(vert.co)
-        # Relief sits on the actual weighted garment, including its curvature.
-        vert.co=surface+normal*.0025
-        _,i,_=tree.find(vert.co)
-        for j,w in zip(old['JOINTS_0'][i],old['WEIGHTS_0'][i]):
-            if w>0:groups[int(j)].add([vert.index],w,'REPLACE')
+# Fit sculpted armour to native body weights; all animation data stays frozen.
+def torso_weights(verts):
+    # Continuous torso-only skinning: nearest-surface transfer can accidentally
+    # attach a broad breastplate to an upper arm and crease it on raised poses.
+    anchors=[(.856,0),(.926,1),(.994,2),(1.096,3)]
+    result=[]
+    for v in verts:
+        y=v[1]
+        if y>=anchors[-1][0]:result.append({3:1.0});continue
+        if y<=anchors[0][0]:result.append({0:1.0});continue
+        for (lo,a),(hi,b) in zip(anchors,anchors[1:]):
+            if lo<=y<=hi:
+                t=(y-lo)/(hi-lo);result.append({a:1-t,b:t});break
+    return result
+pbr_forms.cuirass(mesh,mod,tube,material,torso_weights)
 # Keep the new shield relief inside the approved death-contact depth envelope.
 # Only its rest geometry changes; the shield socket and all animation are frozen.
 for ob in parts:
     if catalog[ob.data.materials[0].name]['part']=='aspis':
         for vert in ob.data.vertices:
             depth=(vert.co-c).dot(n);vert.co-=n*depth*.36
+# Slightly oversize the helmet and crest around the unchanged head socket.
+for ob in parts:
+    if catalog[ob.data.materials[0].name]['part'] in ('helmet','crest','crest_base'):
+        for vert in ob.data.vertices:
+            vert.co.x*=1.10;vert.co.y=1.472+(vert.co.y-1.472)*1.045;vert.co.z=-.01+(vert.co.z+.01)*1.08
+# Reserve the round silhouettes before reducing the rest of LOD0. A global
+# decimator otherwise turns a 64-sided lip back into a visibly polygonal one.
+protected={'GEO-aspis rolled lip','GEO-helmet dome','GEO-aspis dish','GEO-CC0 muscular anatomy'}
+protected_count=other_count=0
+for ob in parts:
+    ob.data.calc_loop_triangles();ntri=len(ob.data.loop_triangles)
+    if ob.name in protected:protected_count+=ntri
+    else:other_count+=ntri
+ratio=min(1,(9700-protected_count-80)/other_count)
+assert ratio>0
+for ob in parts:
+    if ob.name not in protected:mod(ob,'DECIMATE',ratio=ratio)
+print('SILHOUETTE_BUDGET',protected_count,other_count,ratio,flush=True)
 # Assemble the game mesh, globally unwrap, then build actual dense bake source.
 active(parts[0])
 for o in parts:o.select_set(True)
@@ -314,7 +322,7 @@ high=low.copy();high.data=low.data.copy();bpy.context.collection.objects.link(hi
 mod(high,'SUBSURF',levels=2,subdivision_type='SIMPLE')
 texture=bpy.data.textures.new('Hammer and fibres',type='CLOUDS');texture.noise_scale=.006;texture.noise_depth=2
 mod(high,'DISPLACE',texture=texture,strength=.00045,mid_level=.5,texture_coords='GLOBAL')
-scene=bpy.context.scene;scene.render.engine='CYCLES';scene.cycles.device='CPU';scene.cycles.samples=8;scene.render.bake.margin=12;scene.render.bake.use_selected_to_active=True;scene.render.bake.cage_extrusion=.0009;scene.render.bake.max_ray_distance=.002
+scene=bpy.context.scene;scene.render.engine='CYCLES';scene.cycles.device='CPU';scene.cycles.samples=8;scene.render.bake.margin=8 if SIZE==512 else 16;scene.render.bake.use_selected_to_active=True;scene.render.bake.cage_extrusion=.0009;scene.render.bake.max_ray_distance=.002
 images={}
 for name in ['basecolor','normal','ao','roughness','metallic']:
     im=bpy.data.images.new('pbr-'+name,SIZE,SIZE,alpha=False,float_buffer=False);im.colorspace_settings.name='sRGB' if name=='basecolor' else 'Non-Color';images[name]=im
@@ -341,7 +349,12 @@ orm=np.ones((SIZE*SIZE,4),dtype=np.float32);orm[:,0]=a.reshape(-1,4)[:,0];orm[:,
 im=bpy.data.images.new('pbr-orm',SIZE,SIZE,alpha=False);im.colorspace_settings.name='Non-Color';im.pixels.foreach_set(orm.ravel());im.filepath_raw=str(WORK/f'orm-{SIZE}.png');im.file_format='PNG';im.save();images['orm']=im
 paths={}
 for name in ['basecolor','normal','orm']:
-    im=images[name];im.scale(1024,1024);im.filepath_raw=str(UNIT/f'spearman-{name}.png');im.save();paths[name]=im.filepath_raw
+    im=images[name];im.scale(1024,1024)
+    ship=bpy.data.images.new('ship-'+name,1024,1024,alpha=False,float_buffer=False)
+    ship.colorspace_settings.name=im.colorspace_settings.name
+    px=np.empty(1024*1024*4,dtype=np.float32);im.pixels.foreach_get(px);ship.pixels.foreach_set(px)
+    ship.filepath_raw=str(WORK/f'{name}-1024.png');ship.file_format='PNG';ship.save();paths[name]=str(UNIT/f'spearman-{name}.webp')
+subprocess.run([str(ROOT/'venv/bin/python'),str(UNIT/'pbr_textures.py'),str(WORK),str(UNIT)],check=True)
 high.hide_render=True;high.hide_set(True)
 # LOD1 keeps UV islands, material boundaries and weights; the skeleton is shared.
 lod=low.copy();lod.data=low.data.copy();bpy.context.collection.objects.link(lod);lod.name='GEO-spearman_LOD1'

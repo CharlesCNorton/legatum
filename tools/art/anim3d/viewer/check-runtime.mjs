@@ -14,13 +14,33 @@ const {GLTFLoader}=await import(pathToFileURL(join(modules,'three/examples/jsm/l
 globalThis.self=globalThis;
 globalThis.ProgressEvent=class {constructor(type,data){this.type=type;Object.assign(this,data);}};
 // Texture dimensions only: no pixel rendering is claimed by this CPU test.
-globalThis.createImageBitmap=async blob=>{const b=Buffer.from(await blob.arrayBuffer());return {width:b.readUInt32BE(16),height:b.readUInt32BE(20),close(){}};};
+function dimensions(b){let width,height;
+  if(b.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10]))) {width=b.readUInt32BE(16);height=b.readUInt32BE(20);}
+  else if(b.toString('ascii',0,4)==='RIFF' && b.toString('ascii',8,12)==='WEBP') {
+    const kind=b.toString('ascii',12,16);
+    if(kind==='VP8 '){width=b.readUInt16LE(26)&0x3fff;height=b.readUInt16LE(28)&0x3fff;}
+    else if(kind==='VP8L'){const bits=b.readUInt32LE(21);width=(bits&0x3fff)+1;height=((bits>>>14)&0x3fff)+1;}
+    else if(kind==='VP8X'){width=b.readUIntLE(24,3)+1;height=b.readUIntLE(27,3)+1;}
+  }
+  else {assert.equal(b.readUInt16BE(0),0xffd8);let p=2;
+    while(p<b.length){assert.equal(b[p++],255);while(b[p]===255)p++;const marker=b[p++],length=b.readUInt16BE(p);
+      if([0xc0,0xc1,0xc2].includes(marker)){height=b.readUInt16BE(p+3);width=b.readUInt16BE(p+5);break;}p+=length;}
+  }
+  assert(width && height);return {width,height,close(){}};}
+globalThis.createImageBitmap=async blob=>dimensions(Buffer.from(await blob.arrayBuffer()));
+// GLTFLoader's WebP feature probe uses HTMLImageElement even with ImageBitmap.
+// This remains a header-only CPU shim; the host recorder proves browser decode.
+globalThis.Image=class {set src(value){
+  assert(value.startsWith('data:image/webp;base64,'));
+  Object.assign(this,dimensions(Buffer.from(value.split(',')[1],'base64')));
+  queueMicrotask(()=>this.onload?.());
+}};
 const path=process.argv[2]||resolve(here,'../units/spearman-0ad/spearman.glb');
 const bytes=await readFile(path);
 const gltf=await new GLTFLoader().parseAsync(bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength),'');
 assert.deepEqual(gltf.animations.map(a=>a.name).sort(),['attack','death','hit','idle','walk']);
 const mixer=new THREE.AnimationMixer(gltf.scene);
-const report={three:THREE.REVISION,clips:{},teamMaterials:0};
+const report={three:THREE.REVISION,coverage:'CPU loader, skinning, framing and texture headers; no browser pixel or codec-support claim',clips:{},teamMaterials:0};
 const mats=new Set();gltf.scene.traverse(o=>{for(const m of (Array.isArray(o.material)?o.material:o.material?[o.material]:[]))if(m.userData.team?.attribute==='COLOR_0')mats.add(m);});
 assert.equal(mats.size,1);
 const lod0=gltf.scene.getObjectByName('spearman_LOD0'),lod1=gltf.scene.getObjectByName('spearman_LOD1');

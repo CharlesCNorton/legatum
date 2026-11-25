@@ -1,4 +1,4 @@
-# Spearman — premium PBR round 1
+# Spearman — premium PBR round 2
 
 The primary asset remains `spearman.glb`. Two explicitly named skinned meshes,
 `spearman_LOD0` (under 10k triangles) and `spearman_LOD1` (under 3k), share one
@@ -8,10 +8,17 @@ MSFT_lod extension is used. Each LOD is one draw call and carries COLOR_0.r
 for team tint. Use `viewer/team-mask.mjs`; ordinary vertex RGB multiplication
 would incorrectly tint the entire mesh black/red.
 
-The three embedded 1024-square maps are base colour (sRGB), tangent normal
+The three embedded 1024-square WebP maps are base colour (sRGB), tangent normal
 (linear), and ORM (linear R occlusion / G roughness / B metallic), all on UV0.
 2048-square masters and the editable dense/LOD Blender source live under
-`~/LegatumRuns/anim-pilot/oad/pbr-r1/`. See PROVENANCE.md and SOURCES.md for inputs.
+`~/LegatumRuns/anim-pilot/oad/pbr-r2/`. See PROVENANCE.md and SOURCES.md for inputs.
+The body now uses the CC0 MPFB muscular base, fitted to the 0 A.D. rest pose,
+with native weights transferred by nearest face interpolation. The temporary
+MPFB fitting rig is discarded. `pbr_forms.py` builds the muscle cuirass,
+volumetric crest, and broad folded cloak. `KHR_mesh_quantization` stores compact
+normals/tangents; `EXT_texture_webp` stores the shipping maps. Both are supported
+by the pinned viewer. The source bakes remain lossless 2048 PNGs.
+
 All five clips, their timestamps, inverse binds and original skeleton node
 transforms are copied byte-for-byte from the approved round-6 asset.
 
@@ -34,11 +41,12 @@ the shipping build must run without that flag to produce 2048 masters.
 Lead's host capture (Chromium outside the sandbox):
 
 ```sh
-node tools/art/anim3d/viewer/record.mjs --prefix spearman-0ad-pbr-r1
+node tools/art/anim3d/viewer/record.mjs --prefix spearman-0ad-pbr-r2
 ```
 
 This records five 30 fps viewer clips (three repeats each) and a 12-second
-360-degree idle `spearman-0ad-pbr-r1-turntable.mp4`. It writes ffprobe receipts
+360-degree idle `spearman-0ad-pbr-r2-turntable.mp4`. It also writes `-viewer-still.png` and `-viewer-vs-panel.png` from the actual
+MeshStandardMaterial/ACES canvas, at 512 px beside the painting. It writes ffprobe receipts
 and the asset hash. The five `-160.mp4` files use the established game sprite
 rates (idle 4, walk 6, attack 14, hit 12, death 4 fps), each repeated three times.
 The GLB's native timings remain unchanged. Review images use the actual shipped

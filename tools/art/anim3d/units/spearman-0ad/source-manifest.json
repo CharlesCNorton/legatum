@@ -140,5 +140,119 @@
       "bytes": 1615248,
       "sha256": "e7cfda5f4e98e623db12b8bfd0184e048488e4855d9c83e2751fb44a32e80c45"
     }
+  },
+  "premium_pbr_r2": {
+    "build_report": {
+      "bake_master_px": 2048,
+      "shipped_px": 1024,
+      "lod_triangles": [
+        9504,
+        2847
+      ],
+      "high_source_triangles": 228144
+    },
+    "approved_round6": {
+      "bytes": 578476,
+      "sha256": "84bf794f543fd4a1af2d1b9c2b48c89a6c52533a00d7803e553b49a22513f92c"
+    },
+    "mpfb_archive": {
+      "bytes": 45601989,
+      "sha256": "ada7c4ff11e79cf6ed9b441bccabc52c9359f2848b988f66e89c14c30b21fed7"
+    },
+    "mpfb_base_obj": {
+      "bytes": 1749303,
+      "sha256": "8e761e6624b8f54536409135d1636da63b32486a90d4897f84e121d144f6fb4c"
+    },
+    "masters": {
+      "oad/pbr-r2/ao-2048.png": {
+        "bytes": 2536590,
+        "sha256": "6c6fc9ad3a5f25f5546ecc182382802af97afd7e692185120acf2fce18f6e864"
+      },
+      "oad/pbr-r2/basecolor-2048.png": {
+        "bytes": 2381249,
+        "sha256": "61d945761add2d321a77525b746284b5a2e42761abe0202abc059c1dc3fb8711"
+      },
+      "oad/pbr-r2/metallic-2048.png": {
+        "bytes": 327310,
+        "sha256": "4472cf8b8852e21e8cf3ff48e3695ec73652c8f6443471d611f103924acf90c2"
+      },
+      "oad/pbr-r2/normal-2048.png": {
+        "bytes": 3785924,
+        "sha256": "ce8d893bbc4a6acd88ee64376c5e10338d72ac86674f22e02ded2df2bee8de8f"
+      },
+      "oad/pbr-r2/orm-2048.png": {
+        "bytes": 3816783,
+        "sha256": "1fdf7f3b4cdb89202f8e4a04deb071cc4c1ea2c15a8ba2bf15c00aa3b7134cbb"
+      },
+      "oad/pbr-r2/roughness-2048.png": {
+        "bytes": 2027775,
+        "sha256": "4199c906ca3719998ecfe17400584e98515a9ad53abd284e202a840a4465e247"
+      }
+    },
+    "shipped": {
+      "spearman.glb": {
+        "bytes": 1895720,
+        "sha256": "dd0070b9fbc87cca685e24f7707df0b93e2a3d884fa18c27f9ad21ae74283acf"
+      },
+      "spearman-basecolor.webp": {
+        "bytes": 225642,
+        "sha256": "e5711245cbd2931fac71c0ab9be3f3658c542452aaecc47f63c22acfc0da1ab0"
+      },
+      "spearman-normal.webp": {
+        "bytes": 204224,
+        "sha256": "a4675adf00b781768be7e30df00ead84836ff7aa49d12cbe0e8771e6c6c5ef9b"
+      },
+      "spearman-orm.webp": {
+        "bytes": 341798,
+        "sha256": "1c0d9c40ef32cf08e97f7742cd260a7776a8126491c3852e06cd689781cd5d96"
+      }
+    },
+    "encoding": {
+      "basecolor": {
+        "bytes": 225642,
+        "size": [
+          1024,
+          1024
+        ],
+        "quality": 85,
+        "encoding": "WebP",
+        "mean_channel_error_255": [
+          2.868851661682129,
+          1.4074831008911133,
+          2.7195539474487305
+        ],
+        "p99_absolute_channel_error_255": 18.0
+      },
+      "normal": {
+        "bytes": 204224,
+        "size": [
+          1024,
+          1024
+        ],
+        "quality": 90,
+        "encoding": "WebP",
+        "mean_channel_error_255": [
+          4.051639556884766,
+          2.5693540573120117,
+          4.141058921813965
+        ],
+        "p99_absolute_channel_error_255": 27.0
+      },
+      "orm": {
+        "bytes": 341798,
+        "size": [
+          1024,
+          1024
+        ],
+        "quality": 85,
+        "encoding": "WebP",
+        "mean_channel_error_255": [
+          8.518203735351562,
+          4.6475725173950195,
+          7.004712104797363
+        ],
+        "p99_absolute_channel_error_255": 54.0
+      }
+    }
   }
 }
