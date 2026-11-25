@@ -42,8 +42,8 @@ const PIECES: Partial<Record<Faction, Record<string, PieceSpec>>> = {
     'u:Archer': {
       against: unit('Archer'),
       rules: [
-        { text: `+${RULES.specialUnitNumbers.chariotArcherVolleyPercent}% strength shooting foot soldiers.`, tone: 'good' },
-        { text: 'Forest and Hills take its whole turn to enter, unless a road runs there.', tone: 'bad' },
+        { text: `+${RULES.specialUnitNumbers.chariotArcherVolleyPercent}% strength when it shoots melee units.`, tone: 'good' },
+        { text: 'Entering Forest or Hills takes its whole turn.', tone: 'bad' },
       ],
     },
   },
@@ -245,8 +245,10 @@ export function standardText(c: PieceComparison): string {
 export function comparisonSentence(c: PieceComparison): string {
   if (c.mode === 'adds') return `${c.name}: ${addsText(c).replace(/^Not a replacement: a/, 'not a replacement, a')}`;
   if (c.same) return `${c.name}: ${sameText(c).replace(/^Same/, 'same')}`;
-  const bits = [...inGoodFirstOrder(c.diffs).map(deltaText), ...c.rules.map(ruleClause)];
-  return `${c.name} compared with ${the(c.against)}: ${bits.join(c.rules.length > 1 ? '; ' : ', ')}.`;
+  // The numbers and the first rule read as one list; each further rule gets its own clause, so a sentence holds at most one semicolon per extra rule.
+  const [first, ...rest] = c.rules.map(ruleClause);
+  const head = [...inGoodFirstOrder(c.diffs).map(deltaText), ...(first ? [first] : [])].join(', ');
+  return `${c.name} compared with ${the(c.against)}: ${[head, ...rest].join('; ')}.`;
 }
 
 /** The faction's own pieces that have a comparison, as items (the faction sheet's piece first). */

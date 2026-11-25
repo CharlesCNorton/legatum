@@ -1062,6 +1062,11 @@ export const SPECIAL_UNIT: Record<Faction, UnitKind> = RULES.specialUnits as Rec
 /** A faction's special unit, as its own people name it ("Eagle Warrior"). */
 export const specialUnitName = (faction: Faction): string => itemName({ kind: 'Unit', unit: SPECIAL_UNIT[faction] }, faction);
 /** What sets the special unit apart from the plain unit it replaces, in words and from the core's numbers (the stat line shows the rest). */
+/** Guide-only fine print for a special unit, a sentence or ''. The card says the short rule (specialUnitEdge). */
+export function specialUnitGuideNote(faction: Faction): string {
+  return faction === 'Egypt' ? 'A road through Forest or Hills lets it in at the road’s cost.' : '';
+}
+
 export function specialUnitEdge(faction: Faction): string {
   const n = RULES.specialUnitNumbers;
   const own = unitStatsFor(faction, SPECIAL_UNIT[faction]);
@@ -1070,7 +1075,7 @@ export function specialUnitEdge(faction: Faction): string {
     case 'Aztecs': return `+${n.eagleWarriorStrength} strength, +${n.eagleWarriorCost} Production`;
     case 'Celts': return `+${n.gaesataeAttack} strength attacking, −${-n.gaesataeDefense} defending`;
     case 'Athens': return `${n.peltastMoves} moves instead of ${plain.moves}, the same shot`;
-    case 'Egypt': return `${n.chariotArcherMoves} moves instead of ${plain.moves}, +${n.chariotArcherVolleyPercent}% shooting foot soldiers; Forest and Hills take its whole turn`;
+    case 'Egypt': return `${n.chariotArcherMoves} moves instead of ${plain.moves}, +${n.chariotArcherVolleyPercent}% when shooting melee units; Forest and Hills take its whole turn`;
     case 'India': return `+${n.warElephantStrength} strength, ${n.warElephantMoves} moves instead of ${plain.moves}, no penalty charging a city`;
     case 'Switzerland': return `+${n.reislauferMountedPercent}% against mounted units, on top of the usual bonus`;
     case 'Germany': return `+${n.panzerMoves - plain.moves} move`;

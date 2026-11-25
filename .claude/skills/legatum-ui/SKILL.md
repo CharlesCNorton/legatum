@@ -168,6 +168,7 @@ Every word a player reads (sheets, cards, the Guide, tooltips, breakdowns, repor
 | Gold project, Science project, Food project | what a city runs instead of building, turning part of its Production (Egypt: its Food-made build progress) into Gold, Science or Food; every empire since 2026-11-22 (Food: rules 55, not Egypt). The automation menu names its stream focuses by these project names | Industry project, Industry: Gold (a copy test bans "Industry project") |
 | Grow | Egypt's project that grows a city with its surplus Food instead of building (2026-11-21); "surplus Food" is Food beyond 2 per population | growth project, grow mode |
 | tribute | Byzantium buying peace | bribe, peace payment |
+| melee units | the Melee line class (Warrior, Spearman and their upgrades); "Melee line" in the class name | foot soldiers, infantry as a class (a copy test bans "foot soldier"; plain-language review 2026-11-25) |
 | level | a unit's promotion level ("level 4 or higher") | rank, promotion tier |
 | technology | in rules text; "tech diffusion" is the one fixed phrase | techs |
 | British spelling | defence, labour, centre, armour, honour, colour, favour | defense, labor, center (in player text; code identifiers may differ) |

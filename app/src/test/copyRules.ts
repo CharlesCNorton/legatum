@@ -20,6 +20,7 @@ export interface CopyRule {
 
 /** Mechanics-speak and code terms: describe what the player gets, not the integer maths behind it. */
 export const BANNED: CopyRule[] = [
+  { pattern: /\bfoot soldiers?\b/i, reason: 'the class is the Melee line (plain-language review, 2026-11-25)', instead: '"melee units"', source: true },
   { pattern: /\bspare Food\b/i, reason: 'glossary: the Food beyond what a city eats is surplus Food (plain-language review, 2026-11-23)', instead: '"surplus Food"', source: true },
   { pattern: /\brace sidebar\b/i, reason: 'the panel is called the Victory race (master, 2026-11-22)', instead: '"Victory race"', source: true },
   { pattern: /\bresolve[sd]? when the turn ends\b/i, reason: 'code-speak (plain-language review, 2026-11-22)', instead: '"it happens when the turn ends"', source: true },
