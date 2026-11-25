@@ -17,6 +17,8 @@ function option(name,fallback){const i=args.indexOf(name);return i<0?fallback:ar
 const out=resolve(option('--out',join(homedir(),'LegatumRuns/anim-pilot/review/3d-v2')));
 const round=option('--round','6');
 if(!/^\d+$/.test(round))throw new Error('--round must be a round number');
+const prefix=option('--prefix',`spearman-0ad-r${round}`);
+if(!/^[a-zA-Z0-9_-]+$/.test(prefix))throw new Error('--prefix must contain only letters, digits, underscores and hyphens');
 const assetSha256=createHash('sha256').update(await readFile(resolve(here,'../units/spearman-0ad/spearman.glb'))).digest('hex');
 let playwright;
 if(process.env.PLAYWRIGHT_MODULE) playwright=await import(pathToFileURL(resolve(process.env.PLAYWRIGHT_MODULE)).href);
@@ -52,13 +54,13 @@ try {
       throw new Error(`Invalid framing for ${clip}: ${JSON.stringify(fit)}`);
   }
   for(const [clip,duration] of Object.entries(state.clips)) {
-    const frames=resolve(out,`.spearman-0ad-r${round}-viewer-frames`,assetSha256,clip);await mkdir(frames,{recursive:true});
+    const frames=resolve(out,`.${prefix}-viewer-frames`,assetSha256,clip);await mkdir(frames,{recursive:true});
     const count=Math.round(duration*30);
     for(let i=0;i<count;i++) {
       await page.evaluate(({clip,t})=>window.review.sample(clip,t),{clip,t:i/30});
       await page.locator('canvas').screenshot({path:join(frames,`${String(i).padStart(4,'0')}.png`)});
     }
-    const output=join(out,`spearman-0ad-r${round}-${clip}-viewer.mp4`);
+    const output=join(out,`${prefix}-${clip}-viewer.mp4`);
     const encode=spawnSync('ffmpeg',['-y','-loglevel','error','-framerate','30','-stream_loop','2','-i',join(frames,'%04d.png'),'-frames:v',String(count*3),'-c:v','libx264','-crf','18','-pix_fmt','yuv420p','-movflags','+faststart',output],{stdio:'inherit'});
     if(encode.status!==0)throw new Error(`ffmpeg failed for ${clip}`);
     const probe=spawnSync('ffprobe',['-v','error','-count_frames','-select_streams','v:0','-show_entries','stream=width,height,pix_fmt,nb_read_frames,r_frame_rate','-of','json',output],{encoding:'utf8'});
@@ -67,8 +69,21 @@ try {
     if(Number(stream.nb_read_frames)!==count*3||stream.pix_fmt!=='yuv420p')throw new Error(`Invalid encoded clip ${clip}`);
     receipts[clip]={output,framing:framing[clip],...stream};console.log(output);
   }
+  const turnFrames=resolve(out,`.${prefix}-viewer-frames`,assetSha256,'turntable');await mkdir(turnFrames,{recursive:true});
+  for(let i=0;i<360;i++) {
+    await page.evaluate(t=>window.review.turntable(t,12),i/30);
+    await page.locator('canvas').screenshot({path:join(turnFrames,`${String(i).padStart(4,'0')}.png`)});
+  }
+  const turntable=join(out,`${prefix}-turntable.mp4`);
+  const turnEncode=spawnSync('ffmpeg',['-y','-loglevel','error','-framerate','30','-i',join(turnFrames,'%04d.png'),'-frames:v','360','-c:v','libx264','-crf','18','-pix_fmt','yuv420p','-movflags','+faststart',turntable],{stdio:'inherit'});
+  if(turnEncode.status!==0)throw new Error('Turntable encoding failed');
+  const turnProbe=spawnSync('ffprobe',['-v','error','-count_frames','-select_streams','v:0','-show_entries','stream=width,height,pix_fmt,nb_read_frames,r_frame_rate','-of','json',turntable],{encoding:'utf8'});
+  if(turnProbe.status!==0)throw new Error('Turntable probe failed');
+  const turnStream=JSON.parse(turnProbe.stdout).streams[0];
+  if(Number(turnStream.nb_read_frames)!==360||turnStream.pix_fmt!=='yuv420p')throw new Error('Invalid turntable');
+  receipts.turntable={output:turntable,duration:12,...turnStream};console.log(turntable);
   if(errors.length)throw new Error(errors.join('\n'));
-  await writeFile(join(out,`spearman-0ad-r${round}-viewer-validation.json`),JSON.stringify({assetSha256,clips:receipts},null,2));
+  await writeFile(join(out,`${prefix}-viewer-validation.json`),JSON.stringify({assetSha256,clips:receipts},null,2));
 } finally {
   if(browser)await browser.close();await new Promise(r=>server.close(r));
 }

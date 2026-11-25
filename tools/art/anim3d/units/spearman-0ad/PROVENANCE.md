@@ -98,3 +98,52 @@ exact idle-zero samples on key 24 (0.8 s), with the skeleton root fixed. The
 GLB is patched only in its existing hit output accessors; approved clips,
 geometry, textures, skin, team mask and attribution are preserved. No new
 third-party inputs were used. Source: hit.py; measured review: package_hit.py.
+
+## Painted premium round 1
+
+This section supersedes the earlier single-mesh / flat-atlas delivery contract.
+The main file now contains `spearman_LOD0` and `spearman_LOD1`, each one indexed
+skinned primitive, sharing skin 0 and material 0. A consumer must show one LOD
+at a time. No `MSFT_lod` is used. Both have the red-channel COLOR_0 team mask;
+crest, outer shield rim and cloak trim retain their team semantics.
+
+`painted.py` rebuilds the aspis from 64 radial segments with a convex dish,
+rolled rim, raised twelve-ray sunburst, boss, engraved registers and rivets.
+It adds a rounded Corinthian dome, separate cheek/nose guards and open eye
+slots; a full fluted horsehair mass and rounded support; a leaf spearhead,
+ferrules and butt spike; greaves; a shaped bronze cuirass with palmette and
+pectoral ornament; leather pteruges; and folds in the native skinned cloak.
+Native body weights are retained and interpolated by subdivision/decimation.
+Coincident exported seam vertices are welded for smooth shading. The original
+bronze torso surfaces covered by the new cuirass are removed to avoid overlap.
+
+All props remain rigid, weighted 100% to their original sockets. Geometry is
+built in the original bind coordinates. A ground-envelope fit adjusts only
+rest-mesh vertices against the unchanged animation's sampled ground planes;
+it does not edit weights, sockets, actions, timings, transforms or baked yaw.
+`check_painted.py` compares every animation channel, input/output sample, joint,
+inverse bind, bone transform and ancestor relationship to the preserved
+round-six GLB. The matching motion/skeleton SHA-256 is
+`639ad201654bf2a08b90c9b7b35c8f047ac1f5cf3531e7b7224f80e0e1d58f79`.
+
+The high-poly baking copy uses two extra subdivision levels and small geometric
+noise displacement. Cycles CPU selected-to-active bakes provide tangent-space
+normals and AO. The painted lane bakes authored pigment graphs with stronger
+fixed form shading, warm highlights, darker recesses and grain, plus a partial
+AO contribution to base colour. This deliberately carries more shading than
+the PBR lane. Bronze is rougher and less metallic (roughness .53-.82, metallic
+.18-.38 across raised and recessed bronze); linen, wool and leather remain
+matte dielectrics. Separate regions carry distinct painted values.
+
+Base colour, normal and packed ORM are authored/baked at 2048 and downsampled
+to 1024 for delivery. ORM uses R occlusion, G roughness, B metallic, on UV0.
+All three PNGs are embedded in the GLB and also available beside it. The Blender
+master, high-poly copy, 2048 images, logs and receipts are retained under
+`$ANIM_ROOT/lanes/spearman-0ad-painted-r1/`. The original round-six animations
+are copied directly, without passing through a Blender animation export.
+
+The viewer now uses the documented CC0 Poly Haven studio HDRI, warm key, cool
+rim, soft shadow filtering, material AO and ACES tonemapping. The display yaw
+remains in the camera. `record.mjs --prefix spearman-0ad-painted-r1` writes five
+native-30-fps viewer clips and a 12-second 360-degree idle turntable. CPU sprites
+and stills use Cycles/AgX and are labelled separately from that browser review.

@@ -1,16 +1,75 @@
-# Spearman — real-time 0 A.D. adaptation, round 6
+# Spearman — painted premium round 1
 
-`spearman.glb` is the primary asset. Sprites render this exact GLB, not an
-alternate Blender scene. It contains **2,536 triangles, 30 joints, one skinned
-mesh, one indexed primitive and one material**. The figure including crest is
-**1.9361 m** tall. Metres, Y-up, +Z forward, feet centred at the origin. There is
-one embedded **1024 × 1024** RGB base-colour atlas, with no normal map, AO,
-baked illumination or emission projection. GLB and separate atlas total less
-than 0.7 MB and belong in git.
+`spearman.glb` is the primary asset. Both review renderers load that exact GLB.
+It contains **spearman_LOD0 (at most 10,000 triangles)** and **spearman_LOD1
+(at most 3,000 triangles)**, sharing **30 joints and one material**. Each LOD
+has one indexed skinned primitive; display only one at a time. There is no
+MSFT_lod extension. The viewer defaults to LOD0 and provides an explicit LOD
+selector. Metres, Y-up, +Z forward; display yaw stays in the camera.
 
-Five in-place clips are sampled at 30 fps: `idle`, `walk`, `attack`, `hit`,
-`death`. Idle/walk close their loop poses; the skeleton root never translates.
-The spear, shield and helmet remain rigid within the single draw call.
+The three 1024-square textures are base colour, tangent-space normal, and ORM
+(R occlusion, G roughness, B metallic), all on UV0, derived from 2048 masters.
+COLOR_0 red is the team weight, interpreted with `viewer/team-mask.mjs`.
+The painted lane intentionally includes stronger form shading in albedo and
+uses rougher, less metallic bronze than a conventional PBR bronze material.
+This is a round-one art candidate, not a premium-quality approval.
+
+All five round-six clips and the skeleton are preserved exactly, including the
+hit reaction and the round-five attack/death fixes. `check_painted.py` verifies
+that independently of geometry and texture changes. Read PROVENANCE.md and
+SOURCES.md for the source licence, original asset hash and build details.
+
+## Rebuild the painted candidate
+
+Run from this worktree. Preserve the approved input once; never use the new
+painted GLB as its own input:
+
+```sh
+source tools/art/anim3d/env.sh
+mkdir -p "$ANIM_ROOT/lanes/spearman-0ad-painted-r1"
+git show 5199b147:tools/art/anim3d/units/spearman-0ad/spearman.glb > "$ANIM_ROOT/lanes/spearman-0ad-painted-r1/approved-r6.glb"
+blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python tools/art/anim3d/units/spearman-0ad/painted.py
+blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python tools/art/anim3d/units/spearman-0ad/painted_render.py -- --stills
+blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python tools/art/anim3d/units/spearman-0ad/painted_render.py
+"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/spearman-0ad/painted_review.py
+```
+
+`painted_export.py` repackages the saved master without repeating Cycles bakes.
+The master and baking copies remain under ANIM_ROOT. No changes to game rules,
+in-game art selection or the production renderer are made by these scripts.
+The old flat atlas remains only for the historical builder below.
+
+## Verify and record
+
+```sh
+python3 tools/art/anim3d/validate_glb.py tools/art/anim3d/units/spearman-0ad/spearman.glb
+python3 tools/art/anim3d/units/spearman-0ad/check_painted.py "$ANIM_ROOT/lanes/spearman-0ad-painted-r1/approved-r6.glb" tools/art/anim3d/units/spearman-0ad/spearman.glb
+"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/spearman-0ad/check_painted_contact.py tools/art/anim3d/units/spearman-0ad/spearman.glb
+python3 -m unittest discover -s tools/art/anim3d -p test_validate_premium.py -v
+GLTF_VALIDATOR_MODULE="$ANIM_ROOT/oad/validator/node_modules/gltf-validator" node tools/art/anim3d/viewer/validate-khronos.mjs tools/art/anim3d/units/spearman-0ad/spearman.glb
+VIEWER_NODE_MODULES="$ANIM_ROOT/oad/viewer-runtime/node_modules" node tools/art/anim3d/viewer/check-runtime.mjs
+```
+
+The lead runs this host-only capture, outside the sandbox:
+
+```sh
+PLAYWRIGHT_MODULE="$HOME/LegatumRuns/anim-pilot/oad/viewer-runtime/node_modules/playwright/index.mjs" node tools/art/anim3d/viewer/record.mjs --prefix spearman-0ad-painted-r1 --out "$HOME/LegatumRuns/anim-pilot/review/3d-v2"
+```
+
+It writes `<prefix>-<clip>-viewer.mp4`, `<prefix>-turntable.mp4` and a validation
+receipt with the asset SHA-256. The turntable is 12 seconds at 30 fps. Viewer
+clips repeat three times at native timing. CPU sprite movies repeat three times
+at game sampling rates (idle/death 4, walk 6, attack 14, hit 12 fps); their
+rounding to whole frames is recorded in the video receipt. The 160-square
+camera contains the entire weapon/death extent, so attack and death fill less
+of the square than the 960-by-640 browser capture. Camera fitting is fixed per
+clip, not tracked per frame. CPU stills use Cycles/AgX; the browser uses ACES.
+
+## Historical round-six motion baseline
+
+The sections below document the approved motion input and earlier builders.
+They describe the old single-mesh flat-atlas assets, not the current packaging.
+Do not run them on top of the painted candidate.
 
 ## Round 6: hit only
 

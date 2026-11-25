@@ -18,12 +18,17 @@ globalThis.createImageBitmap=async blob=>{const b=Buffer.from(await blob.arrayBu
 const path=process.argv[2]||resolve(here,'../units/spearman-0ad/spearman.glb');
 const bytes=await readFile(path);
 const gltf=await new GLTFLoader().parseAsync(bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength),'');
+const lods=['spearman_LOD0','spearman_LOD1'].map(n=>gltf.scene.getObjectByName(n));
+assert(lods.every(o=>o?.isSkinnedMesh));
+assert.equal(lods[0].skeleton,lods[1].skeleton);
+assert.equal(lods[0].material,lods[1].material);
+lods[1].visible=false;
 assert.deepEqual(gltf.animations.map(a=>a.name).sort(),['attack','death','hit','idle','walk']);
 const mixer=new THREE.AnimationMixer(gltf.scene);
 const report={three:THREE.REVISION,clips:{},teamMaterials:0};
 const mats=new Set();gltf.scene.traverse(o=>{for(const m of (Array.isArray(o.material)?o.material:o.material?[o.material]:[]))if(m.userData.team?.attribute==='COLOR_0')mats.add(m);});
-assert(mats.size>0);report.teamMaterials=mats.size;
-for(const m of mats){assert.equal(m.map.image.width,1024);assert.equal(m.map.image.height,1024);applyTeamMask(m,THREE);m.userData.teamUniform.value.set('#306bda');
+assert.equal(mats.size,1);report.teamMaterials=mats.size;
+for(const m of mats){assert.equal(m.map.image.width,1024);assert.equal(m.map.image.height,1024);assert(m.normalMap);assert.equal(m.aoMap,m.roughnessMap);assert.equal(m.metalnessMap,m.roughnessMap);applyTeamMask(m,THREE);m.userData.teamUniform.value.set('#306bda');
   const shader={uniforms:{},fragmentShader:'#include <color_fragment>'};m.onBeforeCompile(shader);
   assert(shader.fragmentShader.includes('vColor.r'));assert.equal(shader.uniforms.teamColor.value.getHexString(),'306bda');}
 for(const clip of gltf.animations){
@@ -40,7 +45,7 @@ for(const clip of gltf.animations){
     gltf.scene.traverse(o=>{if(!o.isMesh)return;draws++;assert(o.isSkinnedMesh);
       const color=o.geometry.getAttribute('color');assert(color);assert.equal(color.itemSize,4);
       assert.equal(o.skeleton.bones.length,30);assert(!Array.isArray(o.material));
-    });assert.equal(draws,1);
+    });assert.equal(draws,2);
 
   }
   assert(poseDelta>.0001,`${clip.name} must actually animate`);
