@@ -197,7 +197,7 @@ export function TechPanel() {
         <div className="research-head-actions"><button ref={closeButton} className="btn quiet" onClick={() => set({ techOpen: false })} aria-label="Close research">Close <kbd>Esc</kbd></button></div>
       </div>
       <ResearchQueue view={view} orders={orders} slotCount={cards.filter((c) => c.researchable && !r.known.includes(c.tech)).length} landed={picked?.tech} />
-      {shown === 'tree' ? <TechTree view={view} faction={faction} queue={queue} schedule={schedule} goal={goal} locked={view.finished} onResearchNow={researchNow} onQueue={addToQueue} onGoal={setGoal} /> :
+      {shown === 'tree' ? <TechTree view={view} faction={faction} queue={queue} schedule={schedule} goal={goal} locked={view.finished} open={visible} onResearchNow={researchNow} onQueue={addToQueue} onGoal={setGoal} /> :
       <div className="research-scroll">
         {knownCount === catalog.length && <section className="science-conversion" aria-label="Science after research">
           <h3>After the last technology</h3>

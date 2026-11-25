@@ -10,6 +10,11 @@ import { techCardUnlocks, type TechCardUnlock } from './techCardUnlocks';
 import { unitCardUrl } from '../unitArt';
 import { itemArtUrl, unlockEntryArt } from '../unlockArt';
 import { Icon } from './bits';
+import { Tip } from './Tip';
+import { useCombatFx } from '../feel';
+import { useReducedMotion } from './useReducedMotion';
+import { motionStill } from './motion';
+import { BenefitLedger } from './BenefitLedger';
 import { useCoarsePointer } from './useCoarsePointer';
 
 /** Row order inside each era, so the lines run straight: the spear line, the bow and gun line, the horse
@@ -87,12 +92,14 @@ interface Props {
   schedule: QueueSlot[];
   goal: TechId | null;
   locked: boolean;
+  /** The dialog is open: the tree scrolls to your era each time it opens, once it is laid out. */
+  open?: boolean;
   onResearchNow(t: TechId): void;
   onQueue(t: TechId): void;
   onGoal(t: TechId | null): void;
 }
 
-export function TechTree({ view, faction, queue, schedule, goal, locked, onResearchNow, onQueue, onGoal }: Props) {
+export function TechTree({ view, faction, queue, schedule, goal, locked, open = true, onResearchNow, onQueue, onGoal }: Props) {
   const r = view.research;
   const scroller = useRef<HTMLDivElement>(null);
   const [height, setHeight] = useState(520);
@@ -102,16 +109,32 @@ export function TechTree({ view, faction, queue, schedule, goal, locked, onResea
     const ro = new ResizeObserver(() => setHeight(el.clientHeight));
     ro.observe(el);
     setHeight(el.clientHeight);
-    // Open on your era, with the one before it in view.
-    el.scrollLeft = Math.max(0, (r.era - 1) * (W + GAP) - 12);
     return () => ro.disconnect();
-  }, [r.era]);
+  }, []);
+  // Open on your era, with the one before it in view. A closed dialog has no layout, so this runs on every
+  // opening, after the frame that lays it out.
+  useLayoutEffect(() => {
+    const el = scroller.current;
+    if (!el || !open) return;
+    const toEra = () => { el.scrollLeft = Math.max(0, (r.era - 1) * (W + GAP) - 12); el.scrollTop = 0; };
+    toEra();
+    const frame = requestAnimationFrame(toEra);
+    return () => cancelAnimationFrame(frame);
+  }, [open, r.era]);
+  const [peek, setPeek] = useState<{ t: TechId; rect: DOMRect } | null>(null);
+  const [edge, setEdge] = useState({ left: false, right: true });
+  const onScroll = () => {
+    const el = scroller.current;
+    if (el) setEdge({ left: el.scrollLeft > 4, right: el.scrollLeft + el.clientWidth < el.scrollWidth - 4 });
+    setPeek(null);
+  };
   const columns = useMemo(() => treeColumns(r.catalog), [r.catalog]);
   const rows = Math.max(1, ...columns.map((c) => c.length));
   const short = height < 520;
   const RG = short ? 8 : 14, HEAD = short ? 50 : 58, PAD = short ? 10 : 18;
-  const H = Math.max(64, Math.min(98, Math.floor((height - HEAD - PAD * 2 - (rows - 1) * RG - 4) / rows)));
+  const H = Math.max(short ? 54 : 64, Math.min(98, Math.floor((height - HEAD - PAD * 2 - (rows - 1) * RG - 4) / rows)));
   const compact = H < 82;
+  const tight = H < 64;
   const pos = useMemo(() => {
     const m = new Map<TechId, { x: number; y: number; era: number }>();
     columns.forEach((col, era) => col.forEach((t, row) => m.set(t, { x: PAD + era * (W + GAP), y: HEAD + PAD + row * (H + RG), era })));
@@ -135,32 +158,37 @@ export function TechTree({ view, faction, queue, schedule, goal, locked, onResea
     return `M ${x1} ${y1} C ${ex} ${y1}, ${ex} ${y1}, ${ex} ${(y1 + lane) / 2} L ${ex} ${lane + 6} Q ${ex} ${lane} ${ex + 6} ${lane} L ${sx - 6} ${lane} Q ${sx} ${lane} ${sx} ${lane + 6} L ${sx} ${(y2 + lane) / 2} C ${sx} ${y2}, ${sx} ${y2}, ${x2} ${y2}`;
   };
   const eraState = (era: number) => era < r.era ? 'past' : era === r.era ? 'current' : 'future';
-  const touch = useCoarsePointer(), press = touch ? 'Tap' : 'Click';
-  return <div className={`tech-tree${compact ? ' compact' : ''}`} data-testid="tech-tree">
+  const touch = useCoarsePointer();
+  const still = motionStill(useReducedMotion(), useCombatFx((st) => st.enabled));
+  const keys = <>
+    <span className="tree-key-note">Lines show upgrades, not requirements.</span>
+    <span className="tree-key"><i className="ln melee" />Spear line</span>
+    <span className="tree-key"><i className="ln ranged" />Bow and gun line</span>
+    <span className="tree-key"><i className="ln mounted" />Horse and armour line</span>
+    <span className="tree-key"><i className="ln air" />Aircraft</span>
+    <span className="tree-key"><i className="ln economy" />Buildings</span>
+  </>;
+  return <div className={`tech-tree${compact ? ' compact' : ''}${tight ? ' tight' : ''}${still ? ' still' : ''}`} data-testid="tech-tree">
     <div className="tree-legend">
-      <span className="tree-key" aria-hidden="true"><i className="ln melee" />Spear line</span>
-      <span className="tree-key" aria-hidden="true"><i className="ln ranged" />Bow and gun line</span>
-      <span className="tree-key" aria-hidden="true"><i className="ln mounted" />Horse and armour line</span>
-      <span className="tree-key" aria-hidden="true"><i className="ln air" />Aircraft</span>
-      <span className="tree-key" aria-hidden="true"><i className="ln economy" />Buildings</span>
+      <span className="tree-keys">{keys}</span>
+      <Tip className="tree-key-tip" content={<div className="tree-key-list">{keys}</div>}><span className="tree-key-button">Key</span></Tip>
       {goal && forecast ? <span className="tree-goal" data-testid="tree-goal">
-        <span className="tree-goal-flag">Goal</span>
-        <span className="tree-goal-text"><b>{TECH_NAME[goal]}</b>{forecast.before ? `, after ${forecast.before} more technolog${forecast.before === 1 ? 'y' : 'ies'}` : ''}. {forecast.arrival === null ? 'Needs Science.' : <b>About turn {forecast.arrival}</b>}</span>
+        <span className="tree-goal-text">Goal: <b>{TECH_NAME[goal]}</b>{forecast.before ? `, after ${forecast.before} more technolog${forecast.before === 1 ? 'y' : 'ies'}` : ''}. {forecast.arrival === null ? 'Needs Science.' : <b>About turn {forecast.arrival}</b>}</span>
         <button type="button" className="tree-goal-x" disabled={locked} onClick={() => onGoal(null)} aria-label={`Clear the goal ${TECH_NAME[goal]}`} title="Clear the goal"><Icon name="ui-cross" size={11} /></button>
       </span>
-        : <span className="tree-hint">{press} a technology to research it. {press} a later one to make it your goal.</span>}
+        : <span className="tree-hint">{touch ? 'Tap a technology in your era to research it. Tap one in a later era to make it your goal.'
+          : 'Click a technology in your era to research it, Shift+click to queue it. Click one in a later era to make it your goal.'}</span>}
     </div>
-    <div className="tree-scroll" ref={scroller} tabIndex={-1}
+    <div className={`tree-scroll${edge.left ? ' more-left' : ''}${edge.right ? ' more-right' : ''}`} ref={scroller} tabIndex={-1} onScroll={onScroll}
       onWheel={(e) => { const el = e.currentTarget; if (el.scrollHeight <= el.clientHeight && Math.abs(e.deltaY) > Math.abs(e.deltaX)) el.scrollLeft += e.deltaY; }}>
       <div className="tree-canvas" style={{ width, height: total }}>
         {columns.map((_, era) => {
           const state = eraState(era);
-          const count = columns[era].filter((t) => !skipped.has(t));
-          return <div key={era} className={`tree-era ${state}`} data-era={era} style={{ left: PAD + era * (W + GAP) - GAP / 2 + 6, width: W + GAP - 12, height: total }}>
+          return <div key={era} className={`tree-era ${state}`} data-era={era} style={{ left: Math.max(0, PAD + era * (W + GAP) - GAP / 2 + 6), width: W + GAP - 12 - Math.max(0, -(PAD + era * (W + GAP) - GAP / 2 + 6)), height: total }}>
             <div className="tree-era-head">
               <span className="tree-era-numeral">{state === 'past' ? <Icon name="ui-check" size={12} /> : eraNumeral(era)}</span>
               <span className="tree-era-name">{eraName(era)}</span>
-              <span className="tree-era-state">{state === 'past' ? 'Done' : state === 'current' ? `Your era · ${count.filter((t) => known.has(t)).length} of ${count.length} known` : `Opens after the ${eraName(era - 1)} era`}</span>
+              <span className="tree-era-state">{state === 'past' ? 'Done' : state === 'current' ? 'Your era' : `Opens after the ${eraName(era - 1)} era`}</span>
             </div>
           </div>;
         })}
@@ -169,16 +197,18 @@ export function TechTree({ view, faction, queue, schedule, goal, locked, onResea
         </svg>
         {columns.flatMap((col) => col).map((t) => <TreeNode key={t} t={t} view={view} faction={faction} pos={pos.get(t)!} w={W} h={H} compact={compact}
           queueIndex={queue.indexOf(t)} slot={schedule[queue.indexOf(t)]} goal={goal === t} onPath={onPath(t) && goal !== t} skipped={skipped.has(t)} locked={locked} touch={touch}
-          onResearchNow={onResearchNow} onQueue={onQueue} onGoal={onGoal} />)}
+          onResearchNow={onResearchNow} onQueue={onQueue} onGoal={onGoal} onPeek={(rect) => setPeek(rect ? { t, rect } : null)} />)}
       </div>
     </div>
+    <span className="tree-edge left" aria-hidden="true">‹</span><span className="tree-edge right" aria-hidden="true">›</span>
+    {peek && <TreePeek t={peek.t} rect={peek.rect} view={view} faction={faction} />}
   </div>;
 }
 
-function TreeNode({ t, view, faction, pos, w, h, compact, queueIndex, slot, goal, onPath, skipped, locked, touch, onResearchNow, onQueue, onGoal }: {
+function TreeNode({ t, view, faction, pos, w, h, compact, queueIndex, slot, goal, onPath, skipped, locked, touch, onResearchNow, onQueue, onGoal, onPeek }: {
   t: TechId; view: PlayerView; faction: Faction; pos: { x: number; y: number; era: number }; w: number; h: number; compact: boolean;
   queueIndex: number; slot: QueueSlot | undefined; goal: boolean; onPath: boolean; skipped: boolean; locked: boolean; touch: boolean;
-  onResearchNow(t: TechId): void; onQueue(t: TechId): void; onGoal(t: TechId | null): void;
+  onResearchNow(t: TechId): void; onQueue(t: TechId): void; onGoal(t: TechId | null): void; onPeek(rect: DOMRect | null): void;
 }) {
   const r = view.research;
   const isKnown = r.known.includes(t);
@@ -203,10 +233,11 @@ function TreeNode({ t, view, faction, pos, w, h, compact, queueIndex, slot, goal
   const action = current ? (touch ? 'Tap to research now.' : 'Click to research now, Shift+click to queue.') : later ? (goal ? `${press} to clear the goal.` : `${press} to make it your goal.`) : '';
   return <button type="button" className={`tree-node ${state}${goal ? ' goal' : ''}${onPath ? ' on-path' : ''}${skipped ? ' skipped' : ''}`}
     style={{ left: pos.x, top: pos.y, width: w, height: h }} data-tech={t} data-state={state}
-    title={`${TECH_NAME[t]}: ${entries.map((e) => e.label).join('; ') || 'nothing new'}`}
     aria-disabled={isKnown || locked || undefined} aria-pressed={later ? goal : undefined}
     aria-label={`${TECH_NAME[t]}. ${status}. Unlocks ${entries.map((e) => e.label).join('; ') || 'nothing new'}.${action ? ` ${action}` : ''}`}
-    onClick={onClick} onKeyDown={onKeyDown} onMouseDown={(e) => { if (e.shiftKey) e.preventDefault(); }}>
+    onClick={onClick} onKeyDown={onKeyDown} onMouseDown={(e) => { if (e.shiftKey) e.preventDefault(); }}
+    onMouseEnter={(e) => onPeek(e.currentTarget.getBoundingClientRect())} onMouseLeave={() => onPeek(null)}
+    onFocus={(e) => onPeek(e.currentTarget.getBoundingClientRect())} onBlur={() => onPeek(null)}>
     <span className="tn-head">
       <b className="tn-name">{TECH_NAME[t]}</b>
       {isKnown ? <span className="tn-mark"><Icon name="ui-check" size={12} /></span>
@@ -217,9 +248,25 @@ function TreeNode({ t, view, faction, pos, w, h, compact, queueIndex, slot, goal
       {entries.slice(0, 3).map((e, i) => { const url = unlockArt(e, faction); return <span key={i} className="tn-thumb">{url ? <img src={url} alt="" draggable={false} /> : <Icon name={e.icon} size={compact ? 16 : 20} />}</span>; })}
       {entries.length > 3 && <span className="tn-more">+{entries.length - 3}</span>}
     </span>
-    <span className="tn-foot">{isKnown ? (skipped ? 'Not needed' : 'Researched')
+    <span className="tn-foot">{isKnown ? (skipped ? 'Not needed' : '')
       : researching ? <><span className="tn-bar" role="progressbar" aria-label={`${TECH_NAME[t]} research progress`} aria-valuemin={0} aria-valuemax={cost} aria-valuenow={progress}><i style={{ width: `${cost ? progress * 100 / cost : 0}%` }} /></span>{turns === null ? 'Needs Science' : turnsText(turns)}</>
       : current ? `${cost} Science · ${turns === null ? 'needs Science' : slot?.arrivalTurn ? `turn ${slot.arrivalTurn}` : turnsText(turns)}`
       : `${cost} Science`}</span>
   </button>;
+}
+
+/** What a technology gives, with the era card's big art, beside the node under the pointer or focus. It never
+ * takes the pointer, so moving across the tree is not interrupted. */
+function TreePeek({ t, rect, view, faction }: { t: TechId; rect: DOMRect; view: PlayerView; faction: Faction }) {
+  const r = view.research;
+  const option = r.catalog.find((c) => c.tech === t);
+  const entries = techCardUnlocks(r, t, faction);
+  const width = 320;
+  const right = rect.right + 12 + width <= innerWidth - 8;
+  const left = right ? rect.right + 12 : Math.max(8, rect.left - 12 - width);
+  const top = Math.max(8, Math.min(rect.top, innerHeight - 8 - 300));
+  return <div className="tree-peek" role="tooltip" style={{ left, top, width }}>
+    <div className="tree-peek-head"><b>{TECH_NAME[t]}</b>{option && <span>Era {eraNumeral(option.era)} · {eraName(option.era)} · {option.cost.total} Science</span>}</div>
+    {entries.length ? <BenefitLedger entries={entries} faction={faction} /> : <p className="muted">Nothing new for your people.</p>}
+  </div>;
 }

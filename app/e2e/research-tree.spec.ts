@@ -16,11 +16,11 @@ const SIZES = [{ width: 1000, height: 600 }, { width: 1440, height: 900 }];
 const out = fileURLToPath(new URL('../test-results/research-tree/', import.meta.url));
 const KNOWN: TechId[] = ['Irrigation', 'BronzeWorking', 'Masonry', 'Currency', 'Writing', 'Mathematics', 'Engineering', 'IronWorking', 'CodeOfLaws', 'Philosophy', 'Feudalism', 'Education', 'CropRotation'];
 
-async function load(page: Page) {
+async function load(page: Page, known: TechId[] = KNOWN) {
   const f = researchFixture('Switzerland');
-  f.players[0].techs = [...KNOWN];
+  f.players[0].techs = [...known];
   f.players[0].science = 60;
-  f.players[1].techs = [...KNOWN, 'Chivalry'];
+  f.players[1].techs = [...known, 'Chivalry'];
   f.players[0].research = null as never;
   f.players[0].research_queue = [] as never;
   for (const c of f.cities) c.population = 6;
@@ -71,6 +71,12 @@ for (const size of SIZES) {
     await expect(tree.locator('.tree-node[data-tech="Mathematics"]')).toHaveAttribute('data-state', 'known');
     await expect(tree.locator('.tree-node[data-tech="Gunpowder"]')).toHaveAttribute('data-state', 'locked');
     expect(await tree.locator('.tree-links path').count()).toBeGreaterThan(20);
+    // The queue stays on screen at every size, and hovering a technology shows what it gives.
+    await expect(page.locator('.research-queue')).toBeVisible();
+    await tree.locator('.tree-node[data-tech="Gunpowder"]').hover();
+    await expect(page.locator('.tree-peek')).toContainText('Gunpowder');
+    await page.mouse.move(2, 2);
+    await expect(page.locator('.tree-peek')).toHaveCount(0);
     await shot(page, size, '01-tree');
 
     await tree.locator('.tree-node[data-tech="Chivalry"]').click();
@@ -112,5 +118,28 @@ for (const size of SIZES) {
     await dismissInterstitials(page);
     const goal = await page.evaluate(() => { const s = (window as unknown as GameWindow).legatum.getState(); return s.views?.[s.seat]?.research.goal; });
     expect(goal).toBe('Rifling');
+  });
+}
+
+// In a late era your column is far from the first screen: the tree must still open on it, every time it opens.
+const LATE: TechId[] = ['Irrigation', 'Masonry', 'BronzeWorking', 'Currency', 'Writing', 'Mathematics', 'Engineering', 'IronWorking', 'CodeOfLaws', 'Philosophy',
+  'Feudalism', 'Machinery', 'Chivalry', 'CropRotation', 'Education', 'Gunpowder', 'MilitaryEngineering', 'Metallurgy', 'Banking', 'PrintingPress',
+  'Rifling', 'Cannonry', 'MilitaryScience', 'Industrialization', 'Railways'];
+for (const size of SIZES) {
+  test(`the tech tree opens on your era late in the game at ${size.width}x${size.height}`, async ({ page }) => {
+    test.setTimeout(120_000);
+    await page.setViewportSize(size);
+    await load(page, LATE);
+    const tree = page.getByTestId('tech-tree');
+    const current = await tree.locator('.tree-era.current').getAttribute('data-era');
+    expect(Number(current)).toBeGreaterThanOrEqual(5);
+    await expect(tree.locator('.tree-node.available').first()).toBeInViewport({ ratio: 0.9 });
+    await shot(page, size, '03-late');
+    // Closed and opened again (after scrolling away), it opens on your era again.
+    await tree.locator('.tree-scroll').evaluate((el) => { el.scrollLeft = 0; });
+    await page.keyboard.press('Escape');
+    await expect(page.locator('dialog.tech-modal')).toHaveCount(0);
+    await page.locator('.topbar .research-chip').click();
+    await expect(page.getByTestId('tech-tree').locator('.tree-node.available').first()).toBeInViewport({ ratio: 0.9 });
   });
 }
