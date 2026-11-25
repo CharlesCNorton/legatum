@@ -10,3 +10,9 @@
   third person with `asTheirs` rather than keeping a second wording; a test checks every sheet line.
 - Playwright in this repo pins a newer browser build than the cloud image ships; run the tour with
   `launchOptions.executablePath: '/opt/pw-browsers/chromium'` (a local config file, not committed).
+
+**Mid-game fixtures meet strangers on their first turn.** Most e2e fixtures (researchFixture, siegeFixture,
+wallsFixture, captureOrdersFixture, warPromptFixture) leave `diplomacy.contacts` empty, so the first resolved turn
+meets every AI in sight and the held first-contact plate covers whatever the test waits for (24 tests in 8 specs).
+`e2e/fixtures.ts` closes the plate by default (`meetings: 'close'`); a spec about first contact sets
+`test.use({ meetings: 'show' })`.
