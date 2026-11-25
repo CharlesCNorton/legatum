@@ -1,5 +1,5 @@
 import { revealSidebar } from './sidebarAssertions';
-import { endPlanning } from './turnActions';
+import { closeMeetings, endPlanning } from './turnActions';
 import { chooseCapitalProduction } from './opening';
 import { writeFile } from 'node:fs/promises';
 import type { Page, TestInfo } from '@playwright/test';
@@ -233,6 +233,9 @@ test(`${look}: the tech unlock card and city build list keep AA label contrast i
   await expect(page.getByTestId('turn-number')).toHaveText('2');
   await endPlanning(page);
   const card = page.locator('.moment-card.unlock');
+  // The turn may also meet another empire: its plate plays first and is closed as a player would.
+  await expect(card.or(page.getByTestId('meeting-takeover')).first()).toBeVisible();
+  await closeMeetings(page);
   await expect(card).toBeVisible();
   await page.waitForTimeout(500);
   const readings: ContrastReading[] = [...await auditContrast(page, 'unlock card')];
