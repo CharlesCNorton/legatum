@@ -41,13 +41,16 @@ for (const size of SIZES) test.describe(`people intro ${size.name}`, () => {
     await expect(page.getByTestId('advisor')).toHaveCount(0);
     if (people === 'Switzerland') {
       // How to Play opened over the plate keeps its own Esc; the introduction stays up underneath.
-      await intro.getByRole('button', { name: 'Full rules in How to Play' }).click();
+      // Return on the focused link follows it (a mouse click would not catch the plate taking Return for Begin).
+      await intro.getByRole('button', { name: 'Full rules in How to Play' }).focus();
+      await page.keyboard.press('Enter');
       const guide = page.getByRole('dialog', { name: 'How to Play' });
       await expect(guide).toBeVisible();
       await expect(guide.getByRole('button', { name: 'The peoples' })).toHaveAttribute('aria-current', 'page');
       await page.keyboard.press('Escape');
       await expect(guide).toHaveCount(0);
       await expect(intro).toBeVisible();
+      await begin.focus();
     }
     await page.keyboard.press('Enter');
     await expect(intro).toHaveCount(0);

@@ -27,5 +27,5 @@
   .pi-goal p { font-size: 12px; }
 }
 /* The way to the rulebook: a link on the dark plate, not a second button beside Begin. */
-.pi-rules { color: var(--et-gold); font: 600 12.5px/1.4 var(--sans); text-shadow: 0 1px 8px rgb(0 0 0 / .7); min-height: 32px; }
+.pi-rules { color: var(--et-gold); font: 600 13px/1.4 var(--sans); text-shadow: 0 1px 8px rgb(0 0 0 / .7); min-height: 32px; }
 .pi-rules:hover, .pi-rules:focus-visible { color: #fff; }

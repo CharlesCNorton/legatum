@@ -42,6 +42,8 @@ export function PeopleIntro() {
       if (e.key !== 'Enter' && e.key !== 'Escape') return;
       // How to Play (or any dialog) opened over the plate owns its own keys: Esc closes it, not the introduction.
       if (document.querySelector('dialog[open]')) return;
+      // Return on the plate's own link follows the link; it does not begin the game.
+      if (e.key === 'Enter' && e.target instanceof HTMLElement && e.target.closest('.pi-rules')) return;
       e.preventDefault();
       e.stopPropagation();
       if (e.repeat || e.isComposing) return;
