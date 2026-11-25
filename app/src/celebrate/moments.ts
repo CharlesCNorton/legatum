@@ -26,8 +26,8 @@ export const DURATION: Record<Tier, number> = { minor: 1000, notable: 3500, majo
 export const OWN_HEIR_BIRTH_TITLE = 'The Heir lives';
 export const RAIDER_SACK_KICKER = 'A city sacked';
 /**
- * The engraved emblem a reward kind wears on its card (`assets/rewards/`). Moments with none (faction goal)
- * keep the player's faction crest.
+ * The engraved emblem a reward kind wears on its card (`assets/rewards/`). A faction goal wears its goal mark
+ * (the Royal Tomb standing wears `emblem-tomb` through `goalMark`), or else the player's faction crest.
  */
 export type Emblem = 'camp' | 'hall' | 'ruin' | 'captured' | 'founded' | 'growth' | 'milestone' | 'greatwork' | 'tech' | 'tomb';
 /** One thing a reward gave you: a yield or item icon (`yield-gold`, `unit-scout`) and its text ("+50 Gold"). */
@@ -448,7 +448,7 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
                 deltas: [{ counter: 'vp', amount: e.vp }], seal: e.vp });
             } else {
               push(i, e.player, { goalMark: 'emblem-tomb', tier: 'legendary', at, title: 'The Royal Tomb', kicker: name ? `It stands in ${name}` : 'The tomb stands', artSlug: GOAL_ART.Egypt,
-                effect: `+${e.vp} VP while you hold it · your cities build and grow again`, lore: 'Cut into the cliff, sealed for eternity.',
+                effect: `+${e.vp} VP while you hold it · your cities build and grow again`, lore: 'Raised in stone, sealed for eternity.',
                 details: ['Every empire sees where it stands. A rival that captures its city takes the points.'],
                 deltas: [{ counter: 'vp', amount: e.vp }], seal: e.vp });
             }
@@ -459,7 +459,7 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
               effect: goalKind === 'colonia'
                 ? `${who} founded its Colonia Victrix${name ? ` at ${name}` : ''}: ${e.vp} VP to whoever holds it`
                 : `The Royal Tomb stands${name ? ` in ${name}` : ''}: ${e.vp} VP to whoever holds it`,
-              lore: goalKind === 'colonia' ? 'Veterans settle on the frontier.' : 'Cut into the cliff, sealed for eternity.',
+              lore: goalKind === 'colonia' ? 'Veterans settle on the frontier.' : 'Raised in stone, sealed for eternity.',
               details: ['Every empire sees where it stands, even through fog. Be at War with its holder and capture the city to take the points.'], deltas: [], seal: e.vp });
           }
           break;

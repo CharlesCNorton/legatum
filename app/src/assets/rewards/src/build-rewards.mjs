@@ -281,8 +281,10 @@ function tomb(S) {
   S.solid(mast, { halo: 4 });
   S.half(poly([[330, 236], [352, 330], [336, 330], [318, 236]]), { op: 0.62 });
   for (const y of [258, 282, 306]) S.cut(`M${f(166 - (y - 236) * 0.234)} ${y}H${f(330 + (y - 236) * 0.234)}`, 1.2);
-  S.cutFill(rect(238, 262, 36, 68));
-  S.solid(rect(246, 272, 20, 58));
+  // the false door: a recessed panel (engraved frames and hatching) with a narrow slot, not an opening
+  S.cut(rect(238, 262, 36, 68) + rect(244, 268, 24, 62), 2);
+  S.shade(rect(244, 268, 24, 62), { a: 90, s: 3.4 });
+  S.cutFill(rect(253, 280, 6, 50));
   S.cut('M228 256H284', 2);
   // the enclosure wall: a cornice, recessed niches and the gate in the middle
   S.solid(rect(84, 318, 344, 96) + rect(78, 310, 356, 12), { halo: 4 });
@@ -311,7 +313,7 @@ const EMBLEMS = {
   milestone: ['A milestone: the relay star in a laurel', milestone, [51, 60, 410]],
   greatwork: ['A great work: a monument in a laurel', greatwork, [38, 34, 436]],
   tech: ['A technology: the relay star within its orbits', tech],
-  tomb: ['The Royal Tomb: the pyramid over the mastaba inside its niched wall', tomb, [60, 76, 392]],
+  tomb: ['The Royal Tomb: a pyramid over a tomb inside a walled court', tomb, [60, 76, 392]],
 };
 
 const only = process.argv[2];
