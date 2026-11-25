@@ -19,6 +19,22 @@ describe('yieldCluster', () => {
     for (let i = 1; i < YIELD_ORDER.length; i++) expect(left(YIELD_ORDER[i])).toBeGreaterThan(right(YIELD_ORDER[i - 1]));
   });
 
+  it("folds a natural wonder's +25% into the cluster: after its yield's icons, or with the icon when the tile has none", () => {
+    const tagged = yieldCluster([{ kind: 'food', value: 2 }, { kind: 'science', value: 1 }], 10, 'food');
+    const plain = yieldCluster([{ kind: 'food', value: 2 }, { kind: 'science', value: 1 }], 10);
+    const tag = tagged.marks.find((m) => m.tag);
+    expect(tag).toMatchObject({ kind: 'food', tag: '+25%' });
+    expect(tag!.tagIcon).toBeFalsy();
+    // The tag sits after the food icons and before the science icon, and the cluster grows to hold it.
+    expect(tag!.x).toBeGreaterThan(Math.max(...tagged.marks.filter((m) => m.kind === 'food' && !m.tag).map((m) => m.x)));
+    expect(tag!.x).toBeLessThan(tagged.marks.find((m) => m.kind === 'science')!.x);
+    expect(tagged.width).toBeGreaterThan(plain.width);
+    expect(count(tagged.marks.filter((m) => !m.tag), 'food')).toBe(2);
+    // No production on the tile: the tag carries the production icon itself, and no icon counts as a point.
+    const none = yieldCluster([{ kind: 'food', value: 2 }], 10, 'production');
+    expect(none.marks.filter((m) => m.kind === 'production')).toEqual([expect.objectContaining({ tag: '+25%', tagIcon: true })]);
+  });
+
   it('collapses large values to one icon with a numeral', () => {
     const { marks } = yieldCluster([{ kind: 'food', value: COLLAPSE_AT }, { kind: 'production', value: 12 }, { kind: 'gold', value: COLLAPSE_AT - 1 }], 10);
     expect(marks.filter((m) => m.kind === 'food')).toEqual([expect.objectContaining({ numeral: COLLAPSE_AT })]);

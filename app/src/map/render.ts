@@ -40,7 +40,7 @@ import type { Rect } from './compass';
 import type { LensTile, MapLens } from './lenses';
 import { drawLens, drawOwnerOverlay } from './drawLens';
 import { artFadeFor, DEFAULT_OVERLAYS, ownerWashScale, type OverlaySet } from './overlays';
-import { drawYieldIcons, yieldClusterRects, YIELD_FILL } from './yieldIcons';
+import { drawYieldIcons, yieldClusterRects, yieldDetail, YIELD_FILL } from './yieldIcons';
 import { drawImprovements } from './improvementArt';
 import { drawResourceIcons, medallionTop, resourceDetail, STACK_LIFT, type Cover } from './resourceIcons';
 import { drawRoads } from './roadArt';
@@ -354,7 +354,9 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
     const p = toScreen(inp.unitPos.get(u.id) ?? hexToPixel(u.pos, HEX_SIZE)), t = tokenHalf(hexPx);
     return { x: p.x - t, y: p.y - t, w: t * 2, h: t * 2 };
   });
-  const wonderPillsOverUnits = drawWonderBadges(ctx, view, cam, w, h, dpr, overlays.yields, [...bannerCovers, ...townCovers], tokenCovers);
+  // Where the yield icons show, a wonder tile's bonus is folded into its cluster ("+25%" after the boosted yield), so it gets no pill.
+  const folded = new Set(overlays.yields && yieldDetail(hexPx) === 'icons' ? (inp.yieldTiles ?? []).filter((t) => t.bonus).map((t) => t.index) : []);
+  const wonderPillsOverUnits = drawWonderBadges(ctx, view, cam, w, h, dpr, overlays.yields, [...bannerCovers, ...townCovers], tokenCovers, folded);
 
   // World transform for vector overlays.
   const worldT = () => ctx.setTransform(dpr * z, 0, 0, dpr * z, dpr * (w / 2 - cam.x * z), dpr * (h / 2 - cam.y * z));

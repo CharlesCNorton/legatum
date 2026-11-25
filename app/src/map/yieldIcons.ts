@@ -7,6 +7,7 @@ import { FONTS } from './sprites';
 import { ATLAS } from './style';
 import { centerX, centerY, HEX_SIZE } from './grid';
 import type { LensTile, LensYield } from './lenses';
+import { wonderBadgeText } from '../wonders';
 import type { Camera } from './render';
 import type { Rect } from './compass';
 
@@ -25,7 +26,8 @@ export const YIELD_FILL = FILL;
 const RIM: Record<LookId, string> = { atlas: 'rgba(247, 241, 227, 0.92)' };
 const NUMERAL = '#2b2419';
 
-interface YieldMark { kind: YieldKind; x: number; y: number; numeral?: number }
+/** `tag`: the natural wonder's bonus ("+25%") set in the yield's ink after its icons; `tagIcon` when the tile has none of that yield, so the tag carries the icon itself. */
+interface YieldMark { kind: YieldKind; x: number; y: number; numeral?: number; tag?: string; tagIcon?: boolean }
 export interface YieldCluster { marks: YieldMark[]; width: number; height: number }
 
 /**
@@ -33,17 +35,21 @@ export interface YieldCluster { marks: YieldMark[]; width: number; height: numbe
  * like a Civ stack: 1 alone, 2 side by side, 3 as a triangle, 4 as a square; 5+ collapse to one
  * icon plus a numeral. Zero or negative values draw nothing.
  */
-export function yieldCluster(yields: readonly { kind: YieldKind; value: number }[], icon: number): YieldCluster {
+export function yieldCluster(yields: readonly { kind: YieldKind; value: number }[], icon: number, bonus?: YieldKind): YieldCluster {
   const step = icon * 0.68, gap = icon * 0.2;
   const numeralW = (value: number) => icon * (0.12 + 0.56 * String(value).length);
+  const tagW = () => icon * (0.16 + 0.5 * wonderBadgeText().length);
   const groups = YIELD_ORDER.flatMap((kind) => {
     const value = yields.find((y) => y.kind === kind)?.value ?? 0;
     if (value <= 0) return [];
     const collapsed = value >= COLLAPSE_AT;
     const n = collapsed ? 1 : value;
     const cols = n === 1 ? 1 : 2;
-    return [{ kind, value, collapsed, n, width: icon + (cols - 1) * step + (collapsed ? numeralW(value) : 0), height: icon + (n > 2 ? step : 0) }];
+    const tag = kind === bonus ? tagW() : 0;
+    return [{ kind, value, collapsed, n, tag: kind === bonus, tagIcon: false, width: icon + (cols - 1) * step + (collapsed ? numeralW(value) : 0) + tag, height: icon + (n > 2 ? step : 0) }];
   });
+  // The wonder's bonus ends its yield's icons ("+25%"); a tile with none of that yield gets the tag with the icon after it.
+  if (bonus && !groups.some((g) => g.kind === bonus)) groups.push({ kind: bonus, value: 0, collapsed: false, n: 0, tag: true, tagIcon: true, width: tagW() + icon, height: icon });
   if (!groups.length) return { marks: [], width: 0, height: 0 };
   const width = groups.reduce((w, g) => w + g.width, 0) + gap * (groups.length - 1);
   const height = Math.max(...groups.map((g) => g.height));
@@ -52,11 +58,14 @@ export function yieldCluster(yields: readonly { kind: YieldKind; value: number }
   for (const g of groups) {
     const base = height / 2 - icon / 2; // bottom row's center
     const at = (col: number, row: number) => ({ x: left + icon / 2 + col * step, y: base - row * step });
-    if (g.collapsed) marks.push({ kind: g.kind, ...at(0, 0), numeral: g.value });
+    if (g.tagIcon) marks.push({ kind: g.kind, x: left, y: base, tag: wonderBadgeText(), tagIcon: true });
+    else if (g.collapsed) marks.push({ kind: g.kind, ...at(0, 0), numeral: g.value });
     else if (g.n === 1) marks.push({ kind: g.kind, ...at(0, 0) });
     else if (g.n === 2) marks.push({ kind: g.kind, ...at(0, 0) }, { kind: g.kind, ...at(1, 0) });
     else if (g.n === 3) marks.push({ kind: g.kind, ...at(0.5, 1) }, { kind: g.kind, ...at(0, 0) }, { kind: g.kind, ...at(1, 0) });
     else marks.push({ kind: g.kind, ...at(0, 1) }, { kind: g.kind, ...at(1, 1) }, { kind: g.kind, ...at(0, 0) }, { kind: g.kind, ...at(1, 0) });
+    // The tag starts where the group's icons (and numeral) end.
+    if (g.tag && !g.tagIcon) marks.push({ kind: g.kind, x: left + g.width - tagW(), y: base, tag: wonderBadgeText() });
     left += g.width + gap;
   }
   return { marks, width, height };
@@ -86,10 +95,10 @@ function rimmed(kind: YieldKind, look: LookId, px: number, pad: number): HTMLCan
 }
 
 /** A crowded tile shrinks its icons rather than spill into the neighbouring hexes. */
-function fittedCluster(yields: readonly LensYield[], r: number): { cluster: YieldCluster; size: number } {
+function fittedCluster(yields: readonly LensYield[], r: number, bonus?: YieldKind): { cluster: YieldCluster; size: number } {
   const icon = yieldIconSize(r);
-  let cluster = yieldCluster(yields, icon), size = icon;
-  if (cluster.width > r * 1.2) { size = Math.max(icon * 0.6, icon * r * 1.2 / cluster.width); cluster = yieldCluster(yields, size); }
+  let cluster = yieldCluster(yields, icon, bonus), size = icon;
+  if (cluster.width > r * 1.2) { size = Math.max(icon * 0.6, icon * r * 1.2 / cluster.width); cluster = yieldCluster(yields, size, bonus); }
   return { cluster, size };
 }
 
@@ -115,11 +124,11 @@ export function yieldClusterRects(tiles: readonly LensTile[], cam: Camera, width
   if (yieldDetail(r) !== 'icons') return [];
   const rects: Rect[] = [];
   for (const tile of tiles) {
-    if (!tile.yields?.length) continue;
+    if (!tile.yields?.length && !tile.bonus) continue;
     const x = (centerX(tile.index, mapWidth) - cam.x) * cam.zoom + width / 2;
     const cy = (centerY(tile.index, mapWidth) - cam.y) * cam.zoom + height / 2;
     if (x < -r || x > width + r || cy < -r || cy > height + r) continue;
-    const { cluster } = fittedCluster(tile.yields, r);
+    const { cluster } = fittedCluster(tile.yields ?? [], r, tile.bonus);
     const top = cy + r * 0.64 - cluster.height, dx = clusterShift(x, top, cluster.width, cluster.height, r, towns);
     rects.push({ x: x + dx - cluster.width / 2, y: top, w: cluster.width, h: cluster.height });
   }
@@ -139,13 +148,13 @@ export function drawYieldIcons(ctx: CanvasRenderingContext2D, tiles: readonly Le
   ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
   ctx.lineJoin = 'round';
   for (const tile of tiles) {
-    if (!tile.yields?.length) continue;
+    if (!tile.yields?.length && !tile.bonus) continue;
     const cx = (centerX(tile.index, mapWidth) - cam.x) * cam.zoom + width / 2;
     const cy = (centerY(tile.index, mapWidth) - cam.y) * cam.zoom + height / 2;
     if (cx < -r || cx > width + r || cy < -r || cy > height + r) continue;
     ctx.globalAlpha = tile.faded ? 0.7 : 1;
     if (detail === 'dots') {
-      const kinds = YIELD_ORDER.filter((k) => tile.yields!.some((y) => y.kind === k && y.value > 0));
+      const kinds = YIELD_ORDER.filter((k) => tile.yields?.some((y) => y.kind === k && y.value > 0));
       kinds.forEach((k, i) => {
         ctx.beginPath();
         ctx.arc(cx + (i - (kinds.length - 1) / 2) * dot * 2.6, cy + r * 0.55, dot, 0, Math.PI * 2);
@@ -154,11 +163,24 @@ export function drawYieldIcons(ctx: CanvasRenderingContext2D, tiles: readonly Le
       });
       continue;
     }
-    const { cluster, size } = fittedCluster(tile.yields, r);
+    const { cluster, size } = fittedCluster(tile.yields ?? [], r, tile.bonus);
     // Bottom-centre of the hex (pointy-top), clear of the bottom vertex, slid aside off a neighbouring town's walls.
     const oy = cy + r * 0.64 - cluster.height / 2;
     const x = cx + clusterShift(cx, oy - cluster.height / 2, cluster.width, cluster.height, r, towns);
     for (const m of cluster.marks) {
+      if (m.tag !== undefined) {
+        // "+25%" in the boosted yield's ink, rimmed like the numerals; with its own icon after it when the tile has none of that yield.
+        const tx = x + m.x + size * 0.1, ty = oy + m.y + size * 0.08;
+        ctx.font = `700 ${Math.round(size * 0.78)}px ${FONTS[look].sans}`;
+        ctx.lineWidth = ATLAS.pen.heavy; ctx.strokeStyle = RIM[look]; ctx.strokeText(m.tag, tx, ty);
+        ctx.fillStyle = FILL[m.kind]; ctx.fillText(m.tag, tx, ty);
+        if (m.tagIcon) {
+          const s = rimmed(m.kind, look, Math.round(size * dpr), pad);
+          const ix = x + m.x + size * (0.16 + 0.5 * m.tag.length) + size / 2;
+          if (s) ctx.drawImage(s, ix - size / 2 - pad / dpr, oy + m.y - size / 2 - pad / dpr, s.width / dpr, s.height / dpr);
+        }
+        continue;
+      }
       const s = rimmed(m.kind, look, Math.round(size * dpr), pad);
       if (s) ctx.drawImage(s, x + m.x - size / 2 - pad / dpr, oy + m.y - size / 2 - pad / dpr, s.width / dpr, s.height / dpr);
       if (m.numeral !== undefined) {

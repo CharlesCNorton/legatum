@@ -1,0 +1,5 @@
+## 2026-11-25: A natural wonder's "+25%" belongs in the tile's yield icons when they show
+
+- **Change.** With the Yields overlay's icons on, a wonder tile carried four marks (painting, yield cluster, "+25%" pill, medallion), and the pill needed a slot hunt around banners, towns and unit counters (`wonderBadgeAt`). The bonus is now part of the cluster: `LensTile.bonus` names the boosted yield (`overlays.ts`), and `yieldCluster` sets "+25%" in that yield's ink right after its icons. `drawWonderBadges` skips the pill for those tiles (`folded`, from `render.ts`); the pill stays wherever no icons are drawn (Yields off, dots zoom).
+- **Gotcha.** A tile can have none of the boosted yield (Giant's Causeway on Hills: no Production). Appending a lone icon there would read as 1 Production, since the cluster's rule is one icon per point. The tag then carries the icon after the text, as the pill did ("+25% [icon]"), and the icon is not a point.
+- **Gotcha.** The cluster's width now includes the tag, so `fittedCluster` may shrink the icons on a wonder tile and `clusterShift` moves the whole cluster, tag included, off a neighbouring town.
