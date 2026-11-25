@@ -4,8 +4,8 @@ A Cloudflare Worker that receives the record of every game played on the hosted 
 private R2 bucket, so the AI's strength can be measured and bugs found (the README's Privacy section is the
 promise to players).
 
-- The page (`app/src/platform/gameUpload.ts`) sends `PUT /v1/games/<game id>` with the gzipped record every
-  five turns and when the game ends or is abandoned. A later checkpoint replaces the earlier one.
+- The page (`app/src/platform/gameUpload.ts`) sends `PUT /v1/games/<game id>` with the gzipped record after each
+  of the first five turns, then every five turns, and when the game ends or is abandoned. A later checkpoint replaces the earlier one.
 - Every seat is under its default name ("Player 1", "AI 2"): the engine's `public_archive` renames seats and
   replays the orders to recompute the hashes (`Recording::anonymized`). The Worker refuses any other seat name.
 - Stored as `games/<YYYY-MM>/<game id>.json.gz` (the month of the start time in the game id), with custom metadata for listing without downloading:

@@ -1,6 +1,6 @@
 /**
  * Legatum game uploads. The hosted web build posts each game's record (gzipped JSON, every seat under its
- * default name) to `PUT /v1/games/<game id>`, at least every five turns and when the game ends. The Worker
+ * default name) to `PUT /v1/games/<game id>`, after each of the first five turns, then every five turns, and when the game ends. The Worker
  * checks the shape and stores it in R2 as `games/<YYYY-MM>/<game id>.json.gz`, replacing the previous
  * checkpoint of the same game. A client address may start at most MAX_NEW_GAMES_PER_DAY new games per UTC day
  * (the `Quota` Durable Object). The only thing kept about a sender is a salted hash of that address (cut to
