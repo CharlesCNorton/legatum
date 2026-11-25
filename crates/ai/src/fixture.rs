@@ -172,6 +172,7 @@ impl ViewBuilder {
                 economy: 0,
                 army: 0,
                 advancement: 0,
+                science: 0,
                 power: 0,
                 lead_percent: 0,
                 decadence_percent: 0,
