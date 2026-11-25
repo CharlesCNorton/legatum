@@ -250,6 +250,11 @@ test('a visitor plays: title, a people, turns, a second city, save and load, wit
   await expect(page.getByRole('button', { name: /^Seat 1 faction:/ })).toContainText('Athens');
   await page.getByRole('button', { name: /^Start game/ }).click();
   await expect(page.getByTestId('turn-number')).toHaveText('1', { timeout: 60_000 });
+  // A new game opens on the people's introduction; Begin starts the first turn.
+  const intro = page.getByTestId('people-intro');
+  await expect(intro.getByRole('heading', { name: 'Athens', exact: true })).toBeVisible();
+  await intro.getByRole('button', { name: /^Begin/ }).click();
+  await expect(intro).toHaveCount(0);
 
   // Play until a second city stands: grow the capital, build a Settler, walk it to a site, found.
   const capital = (await empire(page)).capital!;
