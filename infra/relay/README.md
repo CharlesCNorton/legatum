@@ -31,7 +31,7 @@ export CLOUDFLARE_API_TOKEN=...      # a token with "Edit Cloudflare Workers"
 npx wrangler deploy
 ```
 
-The URL is `https://relay.playlegatum.com` (the `routes` entry in `wrangler.jsonc`; a fork changes it to a domain in its own Cloudflare account, or removes it and uses `https://legatum-relay.<your-subdomain>.workers.dev`). Nothing secret is
+The URL is `https://relay.playlegatum.com` (the `routes` entry in `wrangler.jsonc`; a fork changes it to a domain in its own Cloudflare account, or removes it and sets `"workers_dev": true` to get `https://legatum-relay.<your-subdomain>.workers.dev`). Nothing secret is
 committed. If the token sees several accounts, also set `CLOUDFLARE_ACCOUNT_ID`.
 
 The limits' vars deploy with the Worker from `wrangler.jsonc`. To stop new rooms in an emergency without a
