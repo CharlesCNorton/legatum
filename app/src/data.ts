@@ -156,11 +156,11 @@ export const CLASS_NOTE: Record<UnitClass, string> = {
 const WALLS_HALF_RULE = `attacks on the city's HP do ${RULES.walls.damagePercent === 50 ? 'half damage' : `${RULES.walls.damagePercent}% damage`}`;
 /** Siege's rule, in one wording for the unit card, tech card and Guide. */
 /** Indirect fire on a card or tip: the headline (the Guide prints ARTILLERY_RULE in full). */
-export const ARTILLERY_HEADLINE = 'Fires over terrain at targets your team can see. Its built-in Siege covers Walls up to its own era.';
-export const ARTILLERY_RULE = 'From Steel, Howitzers, Artillery, Rocket Artillery and Combat Drones fire over terrain at targets your team can see. They have full Siege built in, so their Siege covers Walls through level IV in the Industrial era and one more level in each later era. Cities still fire and defend.';
+export const ARTILLERY_HEADLINE = 'Fires over terrain at targets your team can see, with built-in Siege.';
+export const ARTILLERY_RULE = 'From Steel, Howitzers, Artillery, Rocket Artillery and Combat Drones fire over terrain at targets your team can see. They have Siege built in. It covers Walls through level IV in the Industrial era and one more level in each later era. Cities still fire and defend.';
 /** Siege on a card or tip: the headline (the Guide prints SIEGE_RULE in full). */
-export const SIEGE_HEADLINE = 'A unit with Siege ignores enemy Walls up to its level when it attacks a city.';
-export const SIEGE_RULE = "A unit with Siege ignores enemy Walls when it attacks a city. Mathematics covers Walls, Machinery covers level II, and Metallurgy covers level III. It is bought once with Gold, in your own territory, and the unit keeps it for good. Industrial and later units have it built in: their Siege covers Walls through level IV in the Industrial era and one more level in each later era.";
+export const SIEGE_HEADLINE = 'A unit with Siege ignores enemy Walls it covers when it attacks a city.';
+export const SIEGE_RULE = "A unit with Siege ignores enemy Walls up to a set level when it attacks a city. Mathematics covers level I, Machinery level II and Metallurgy level III. It is bought once with Gold, in your own territory, and the unit keeps it for good. Industrial and later units have it built in: their Siege covers Walls through level IV in the Industrial era and one more level in each later era.";
 /** Core `data::siege_gold`: Gold for Siege on a unit of this kind, the base price scaled by the unit's era. */
 export const siegeGold = (kind: UnitKind): number => eraScaled(RULES.siege.baseGold, unitEraTier(kind));
 /** Core `data::SIEGE_USES_IRON`: each Siege unit uses 1 Iron supply while it exists. */
@@ -201,10 +201,10 @@ const UNIT_COPY: Record<UnitKind, { summary: string; blurb: string }> = {
   Crossbowman: { summary: 'Strikes from 2 tiles away without retaliation', blurb: 'Medieval crossbow line. Strikes from 2 tiles away, with no retaliation.' },
   Arquebusier: { summary: 'Strikes from 2 tiles away without retaliation', blurb: 'Renaissance gunpowder shooters. Strike from 2 tiles away, with no retaliation.' },
   FieldCannon: { summary: 'Strikes from 2 tiles away without retaliation', blurb: 'Industrial gun line. Strikes from 2 tiles away, with no retaliation.' },
-  Howitzer: { summary: 'Indirect fire and full Siege built in', blurb: 'Machine Age gun line. Fires over terrain from 2 tiles away and ignores Walls, Castles and Star Forts.' },
-  Artillery: { summary: 'Indirect fire and full Siege built in', blurb: 'World War gun line. Fires over terrain at visible targets and ignores every tier of Walls.' },
-  RocketArtillery: { summary: `Indirect fire from ${RULES.rocketArtilleryRange} tiles away; full Siege built in`, blurb: `Modern rocket launchers. Fire over terrain from ${RULES.rocketArtilleryRange} tiles away and ignore Walls, Castles and Star Forts.` },
-  CombatDrone: { summary: 'Quick indirect fire and full Siege built in', blurb: 'Future strike drones. Quick, fire over terrain at visible targets, and ignore every tier of Walls.' },
+  Howitzer: { summary: 'Indirect fire and built-in Siege', blurb: 'Machine Age gun line. Fires over terrain from 2 tiles away. Its built-in Siege covers Walls through level V.' },
+  Artillery: { summary: 'Indirect fire and built-in Siege', blurb: 'World War gun line. Fires over terrain at visible targets. Its built-in Siege covers Walls through level VI.' },
+  RocketArtillery: { summary: `Indirect fire from ${RULES.rocketArtilleryRange} tiles away; built-in Siege`, blurb: `Modern rocket launchers. Fire over terrain from ${RULES.rocketArtilleryRange} tiles away. Their built-in Siege covers Walls through level VII.` },
+  CombatDrone: { summary: 'Quick indirect fire and built-in Siege', blurb: 'Future strike drones. Quick, and fire over terrain at visible targets. Their built-in Siege covers Walls through level VIII.' },
   Horseman: { summary: 'Fast riders; strong against ranged units', blurb: `Fast riders. ${MOUNTED_NOTE}` },
   Cataphract: { summary: 'Armoured riders; strong against ranged units', blurb: `Armoured lancers of the Classical age. ${MOUNTED_NOTE}` },
   Knight: { summary: 'Armoured riders; strong against ranged units', blurb: `Armoured riders of the Medieval age. ${MOUNTED_NOTE}` },
@@ -268,7 +268,7 @@ export const BUILDING_STATS: Record<
   Bank: { cost: 200, yields: { gold: 4 }, cityStrength: 0, requires: 'Banking', predecessor: 'Market', minPopulation: 5, summary: '+4 Gold; upgrades your Market', blurb: '+4 Gold' },
   StockExchange: { cost: 360, yields: { gold: 6 }, cityStrength: 0, requires: 'Electricity', predecessor: 'Bank', minPopulation: 8, summary: '+6 Gold; upgrades your Bank', blurb: '+6 Gold, on top of the Market and Bank' },
   Factory: { cost: 440, yields: { production: 5 }, cityStrength: 0, requires: 'Industrialization', predecessor: 'Forge', minPopulation: 6, summary: '+5 Production; upgrades your Forge', blurb: '+5 Production' },
-  UpgradeWalls: { cost: 240, yields: {}, cityStrength: 5, requires: null, warBuilding: true, summary: '+5 city strength for each new level', blurb: '+5 city strength per level, scaled by era. Each upgrade costs 80 Production times the new level plus one.' },
+  UpgradeWalls: { cost: 240, yields: {}, cityStrength: 5, requires: null, warBuilding: true, summary: '+5 city strength for each new level', blurb: '+5 city strength for each new level. You can add one level for each era you have reached.' },
   GreatLibrary: { cost: 400, yields: {}, cityStrength: 0, requires: 'Philosophy', summary: 'World wonder: whoever holds its tile scores +2 VP', blurb: 'World wonder: whoever holds its tile scores +2 VP. Requires a Library in this city.' },
   Pyramids: { cost: 360, yields: { production: 1 }, cityStrength: 0, requires: 'Masonry', summary: 'World wonder: +1 Production and +2 held VP', blurb: 'The Pyramids can be completed once in the world. The holder gains +1 Production in its city and +2 VP.' },
   HagiaSophia: { cost: 400, yields: { science: 2 }, cityStrength: 0, requires: 'Machinery', summary: 'World wonder: +2 Science and +2 held VP', blurb: 'Hagia Sophia can be completed once in the world. The holder gains +2 Science in its city and +2 VP.' },
@@ -287,18 +287,18 @@ const TECH_BLURB: Record<TechId, string> = {
   Masonry: "Unlocks Walls and the Pyramids; Quarries +1 Production (walled cities take half damage to their HP and fire back)",
   Currency: "Unlocks Market",
   Writing: "Unlocks Library",
-  Mathematics: `Unlocks Phalangite; Spearmen can upgrade. Units can buy Siege, which ignores enemy Walls.`,
+  Mathematics: `Unlocks Phalangite; Spearmen can upgrade. Units can buy Siege, which covers Walls level I.`,
   Engineering: "Unlocks Roadworks and Composite Archer; Archers can upgrade",
   IronWorking: "Unlocks Forge and Cataphract. Mines improve; Horsemen can upgrade",
   CodeOfLaws: "Each city claims its best tile 2 tiles out",
   Philosophy: "Unlocks the Great Library; +1 Science in every city",
   Feudalism: "Unlocks Pikeman and Mill; Phalangites can upgrade",
-  Machinery: "Unlocks Crossbowman and Hagia Sophia. Workshops gain 1 Production. Siege covers Walls through level II",
+  Machinery: "Unlocks Crossbowman and Hagia Sophia. Workshops gain 1 Production. Siege covers Walls up to level II",
   Chivalry: "Unlocks Knight and Sparta's Agoge. Cataphracts can upgrade to Knights.",
   Education: "Library → University",
   CropRotation: "Farms and Pastures upgrade; Granaries +1 Food",
   Gunpowder: "Unlocks Musketman and Arquebusier; Pikemen and Crossbowmen can upgrade. Reveals Niter",
-  Metallurgy: "Unlocks Cuirassier; Knights can upgrade. Siege covers Walls through level III",
+  Metallurgy: "Unlocks Cuirassier; Knights can upgrade. Siege covers Walls up to level III",
   MilitaryEngineering: "Upgrading units costs half the Gold",
   Banking: "Market → Bank; unlocks Grand Bazaar",
   PrintingPress: "+1 Science per Library; +1 Gold per Market",
@@ -309,7 +309,7 @@ const TECH_BLURB: Record<TechId, string> = {
   Railways: "Road start +2 moves. Roadworks link cities within 12 tiles. Mines gain 1 Production",
   ReplaceableParts: "Unlocks Trench Infantry; Riflemen can upgrade. Factories +2 Production",
   Combustion: "Unlocks Early Tank; Cavalry can upgrade. Oil Wells +1 Gold. Reveals Oil",
-  Steel: `Unlocks Howitzer and the Eiffel Tower; Field Cannons can upgrade. Howitzers fire over terrain and ignore Walls.`,
+  Steel: `Unlocks Howitzer and the Eiffel Tower; Field Cannons can upgrade. Howitzers fire over terrain; their built-in Siege covers Walls through level V.`,
   Flight: `Unlocks Biplane (sees ${RULES.aircraftSight} tiles around its city, strikes ${RULES.biplaneStrikeRange} tiles out, guards ${RULES.biplaneGuardRange}); it lives in a city's hangar`,
   Electricity: "Bank → Stock Exchange",
   MassMobilisation: "Unlocks Infantry; Trench Infantry can upgrade",
@@ -1123,3 +1123,7 @@ export const SWISS_INTEREST_THRESHOLD = RULES.swissInterestThreshold;
 export const SWISS_TOLL_POPULATION = RULES.swissTollPopulation;
 /** Every empire's starting treasury (core `data::START_GOLD`). */
 export const START_GOLD = RULES.startGold;
+
+const WALL_LEVEL_NUMERALS = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'];
+/** The build list name of Upgrade Walls for a city at this Walls level (0: no Walls yet). */
+export const wallsUpgradeName = (level = 0, walls = 'Walls'): string => level < 1 ? `Upgrade ${walls}` : level >= 9 ? `Upgrade ${walls} (top level)` : `Upgrade ${walls} (to ${WALL_LEVEL_NUMERALS[level + 1]})`;

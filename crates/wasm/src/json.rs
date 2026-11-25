@@ -158,10 +158,10 @@ fn migrate_legacy_walls(value: &mut Value) {
                 };
                 object.insert("walls_level".into(), Value::from(level));
             }
-            if let Some(Value::String(kind)) = object.get_mut("building") {
-                if kind == "Castle" || kind == "Citadel" || kind == "StarFort" {
-                    *kind = "UpgradeWalls".into();
-                }
+            if let Some(Value::String(kind)) = object.get_mut("building")
+                && (kind == "Castle" || kind == "Citadel" || kind == "StarFort")
+            {
+                *kind = "UpgradeWalls".into();
             }
             for nested in object.values_mut() {
                 migrate_legacy_walls(nested);

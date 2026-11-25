@@ -204,14 +204,14 @@ export function assaultSummary(a: CityAssaultForecast, cityName: string, garriso
  * has Siege. An Industrial or later land unit has Siege built in at its own era tier. `siegeTier` is the viewer's own siege tier (core `data::siege_tier`), so the hint to buy Siege is shown only to a
  * player who knows Mathematics. Null when the target has no Walls.
  */
-export function wallsLine(f: BattleForecast, cityName: string, unitLabel: string, siegeTier: number, dealt = 0): { text: string; tone: 'good' | 'plain' } | null {
+export function wallsLine(f: BattleForecast, cityName: string, _unitLabel: string, siegeTier: number, dealt = 0): { text: string; tone: 'good' | 'plain' } | null {
   const w = f.walls;
   if (!w) return null;
   const level = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'][w.tier] ?? String(w.tier);
-  const cover = w.covered > 0 ? `Siege covers levels I–${['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'][w.covered] ?? w.covered}` : 'No Siege coverage';
-  if (w.built_in) return { text: `Walls ${level}: ${unitLabel} has Siege built in; ${cover}; ${w.percent}% damage to ${cityName}.`, tone: w.percent === 100 ? 'good' : 'plain' };
-  if (w.covered >= w.tier) return { text: `Walls ${level}: ${cover}; full damage to ${cityName}.`, tone: 'good' };
-  if (w.covered > 0) return { text: `Walls ${level}: ${cover}; ${w.percent}% damage to ${cityName}.`, tone: 'plain' };
+  const coveredLevel = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'][Math.min(w.covered, w.tier)] ?? String(w.covered);
+  const cover = `Siege covers level${Math.min(w.covered, w.tier) > 1 ? `s I–${coveredLevel}` : ' I'}`;
+  const damage = w.percent >= 100 ? 'full damage' : `${w.percent}% damage`;
+  if (w.covered > 0) return { text: `Walls ${level}: ${w.built_in ? 'built-in ' : ''}${cover}, so ${damage} to ${cityName}.`, tone: w.percent >= 100 ? 'good' : 'plain' };
   const withSiege = w.percent > 0 && w.percent < 100 && dealt > 0 ? Math.round((dealt * 100) / w.percent) : 0;
   return {
     text: `Walls ${level} halve this attack on ${cityName}${siegeTier > 0 && withSiege > 0 ? `: ${dealt} HP, or ${withSiege} with Siege` : ''}.`,

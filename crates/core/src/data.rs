@@ -909,7 +909,7 @@ pub fn tech_card_effect_list(tech: TechId) -> &'static [(&'static str, CardEffec
         CodeOfLaws => &[("Every city claims its best available ring-2 tile", Other)],
         Mathematics => &[
             ("Spearmen can upgrade to Phalangites", Other),
-            ("Units can buy Siege: they ignore enemy Walls", Siege),
+            ("Units can buy Siege: it covers Walls level I", Siege),
         ],
         Engineering => &[("Archers can upgrade to Composite Archers", Other)],
         IronWorking => &[
@@ -922,7 +922,7 @@ pub fn tech_card_effect_list(tech: TechId) -> &'static [(&'static str, CardEffec
         Feudalism => &[("Phalangites can upgrade to Pikemen", Other)],
         Machinery => &[
             ("Composite Archers can upgrade to Crossbowmen", Other),
-            ("Siege covers Walls through level II", Siege),
+            ("Siege covers Walls up to level II", Siege),
             ("+1 Production per Workshop family", Production),
         ],
         CropRotation => &[
@@ -938,7 +938,7 @@ pub fn tech_card_effect_list(tech: TechId) -> &'static [(&'static str, CardEffec
         ],
         Metallurgy => &[
             ("Knights can upgrade to Cuirassiers", HorseUpgrade),
-            ("Siege covers Walls through level III", Siege),
+            ("Siege covers Walls up to level III", Siege),
         ],
         MilitaryEngineering => &[("Upgrade Gold costs -50%", Other)],
         PrintingPress => &[

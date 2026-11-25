@@ -124,11 +124,17 @@ fn walls_upgrade_one_level_at_a_time_with_era_caps_and_gold_quotes() {
         assert_eq!(city(&state, id).wall_tier(), level);
         assert_eq!(
             economy::production_blocker(&state, city(&state, id), upgrade, true),
-            Some(format!(
-                "Walls are at level {}, the most the {} era allows.",
-                data::wall_level_label(level),
-                data::era_name(level)
-            ))
+            Some(if level == data::MAX_WALL_TIER {
+                format!(
+                    "Walls are at level {}, the top level.",
+                    data::wall_level_label(level)
+                )
+            } else {
+                format!(
+                    "Walls are at level {}, the most you can have until you reach the next era.",
+                    data::wall_level_label(level)
+                )
+            })
         );
     }
     assert!(!city(&state, id).buildings.contains(&BuildingKind::Castle));

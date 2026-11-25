@@ -366,7 +366,7 @@ export const CITY_STRIKE_RULE = 'Walled cities fire back: each city with Walls a
 /** The rule behind a city's strength number, with the walls it has (one wording for the city panel and the Cities overview). */
 export function cityStrengthRule(city: Pick<CityView, 'walls' | 'walls_level'>, faction?: Faction, era = 0): string {
   const at = (design: number) => eraScaled(design, era);
-  return `City strength: ${at(10)} + ${at(2)} × population${city.walls ? (faction === 'Switzerland' ? ` + ${at(15)} Alpine Redoubt` : ` + ${at(10)} Walls`) : ''}${(city.walls_level ?? Number(city.walls)) > 1 ? ` + ${at(5)} × ${(city.walls_level ?? 1) - 1} Walls upgrades` : ''}, less damage. Every part grows with its owner's era. Hits land one at a time. The hit that empties the city's HP carries on to the garrison with the part of its damage the city did not absorb. Later hits strike the garrison in full.`;
+  return `City strength: ${at(10)} + ${at(2)} × population${city.walls ? (faction === 'Switzerland' ? ` + ${at(15)} Alpine Redoubt` : ` + ${at(10)} Walls`) : ''}${(city.walls_level ?? Number(city.walls)) > 1 ? ` + ${at(5)} × ${(city.walls_level ?? 1) - 1} Walls ${(city.walls_level ?? 1) - 1 > 1 ? 'upgrades' : 'upgrade'}` : ''}, less damage. Every part grows with its owner's era. Hits land one at a time. The hit that empties the city's HP carries on to the garrison with the part of its damage the city did not absorb. Later hits strike the garrison in full.`;
 }
 
 export const CITY_HEAL_RULE = `A city regains ${CITY_HEAL} HP at the end of each turn, unless it took damage that turn or an enemy military unit is adjacent. Empty to full takes ${CITY_HP / CITY_HEAL} turns.`;

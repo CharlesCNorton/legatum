@@ -1959,12 +1959,18 @@ pub(crate) fn production_check_at_era<R: Reason>(
             let level = city.wall_tier();
             if level == 0 {
                 Some(R::word(|| "Build Walls first.".into()))
-            } else if level >= era + 1 {
+            } else if level >= data::MAX_WALL_TIER {
                 Some(R::word(|| {
                     format!(
-                        "Walls are at level {}, the most the {} era allows.",
-                        data::wall_level_label(level),
-                        data::era_name(era + 1)
+                        "Walls are at level {}, the top level.",
+                        data::wall_level_label(level)
+                    )
+                }))
+            } else if level > era {
+                Some(R::word(|| {
+                    format!(
+                        "Walls are at level {}, the most you can have until you reach the next era.",
+                        data::wall_level_label(level)
                     )
                 }))
             } else {

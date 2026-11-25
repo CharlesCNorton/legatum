@@ -9,7 +9,7 @@ import type { BuildingKind, CityView, Faction, Order, PlayerView, ProductionItem
 import { comparisonSentence, pieceAgainst, pieceComparison } from '../pieceCompare';
 import { PieceVsLine } from './PieceVs';
 import { razeLossLines, razeLosses, razeWorkText } from '../razeLosses';
-import { BUILDING_NAME, BUILDING_STATS, TERRAIN_NAME, FIRST_GROWTH, GROWTH_BASE, GROWTH_PER_POP, WORK_RADIUS, projectPercent, costInFactionYield, costYield, isGrow, greatWorkRules, greatWorkRequirement, GREAT_WORKS, isGreatWork, isProductionBuilding, TECH_NAME, CAPTURE_RESISTANCE_TURNS, itemCardText, itemDescription, itemSummary, moreText, itemKey, itemName as baseItemName, IMPROVEMENT_INFO, sameItem, buildingFamily, RULES, HORSE_MOUNTED } from '../data';
+import { BUILDING_NAME, BUILDING_STATS, TERRAIN_NAME, FIRST_GROWTH, GROWTH_BASE, GROWTH_PER_POP, WORK_RADIUS, projectPercent, costInFactionYield, costYield, isGrow, greatWorkRules, greatWorkRequirement, GREAT_WORKS, isGreatWork, isProductionBuilding, TECH_NAME, CAPTURE_RESISTANCE_TURNS, itemCardText, itemDescription, itemSummary, moreText, itemKey, itemName as baseItemName, IMPROVEMENT_INFO, sameItem, buildingFamily, RULES, HORSE_MOUNTED, wallsUpgradeName } from '../data';
 import { effectiveProduction, errorsWhere, orderCity, productionQueue, queueAfterBuild, setProductionQueue, toggleBuy } from '../orders';
 import { distance, hexEq, tileIndex } from '../hex';
 import { WONDER_INFO, WONDER_PERCENT, cityWonders, wonderArt, wonderBonusSentence, wonderYieldWord } from '../wonders';
@@ -52,8 +52,6 @@ import { TILE_RELEASE_RULE } from './cityTerritoryText';
 
 const lowerFirst = (text: string) => text.charAt(0).toLowerCase() + text.slice(1);
 const upperFirst = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
-const WALL_LEVELS = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'];
-const wallsUpgradeName = (level = 1) => level >= 9 ? 'Upgrade Walls (at cap)' : `Upgrade Walls (to ${WALL_LEVELS[Math.max(level, 1) + 1]})`;
 
 /** What each automatic-build focus does, for the select's tooltip. */
 const FOCUS_TIP: Record<CityBuildFocus, string> = {
@@ -571,7 +569,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
     owner?.faction === 'Germany' && (item.kind === 'Building' || item.kind === 'Wonder') && isProductionBuilding(item.building);
   const renderOption = (o: ProductionOption, keeps?: string) => {
     // A tile-chosen build not yet placed stands for every eligible tile, so it goes by its plain name.
-    const name = o.item.kind === 'Building' && o.item.building === 'UpgradeWalls' ? wallsUpgradeName(city.walls_level) : o.item.kind === 'Wonder' && !siteChosen(o) ? baseItemName(o.item, owner?.faction) : itemName(o.item, owner?.faction);
+    const name = o.item.kind === 'Building' && o.item.building === 'UpgradeWalls' ? wallsUpgradeName(city.walls_level ?? Number(city.walls), itemName({ kind: 'Building', building: 'Walls' }, owner?.faction)) : o.item.kind === 'Wonder' && !siteChosen(o) ? baseItemName(o.item, owner?.faction) : itemName(o.item, owner?.faction);
     if (o.item.kind === 'Project') {
       return <div className="production-choice project-choice" key={itemKey(o.item)} data-item={itemKey(o.item)}>
         <Tip as="div" placement="right" summary={itemDescription(o.item, owner?.faction)} content={itemDescription(o.item, owner?.faction)}>
@@ -689,7 +687,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
   };
   /** A researched item this city can't choose yet: greyed out in its section, with the reason. */
   const renderUnavailable = (u: UnavailableOption) => {
-    const name = u.item.kind === 'Building' && u.item.building === 'UpgradeWalls' ? wallsUpgradeName(city.walls_level) : itemName(u.item, faction);
+    const name = u.item.kind === 'Building' && u.item.building === 'UpgradeWalls' ? wallsUpgradeName(city.walls_level ?? Number(city.walls), itemName({ kind: 'Building', building: 'Walls' }, faction)) : itemName(u.item, faction);
     const why = whyUnavailable(u);
     const wallsOnly = u.item.kind === 'Building' && buildingFamily(u.item.building) === 'Walls';
     const buyReason = wallsOnly ? "Walls must be built with Production; they can't be bought." : `Can't buy ${name} yet: ${lowerFirst(why.short)}.`;

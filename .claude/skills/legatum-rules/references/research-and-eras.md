@@ -34,7 +34,7 @@ Moved verbatim from `game-rules.md` on 2026-11-22, in the original order; the or
 | Medieval | Education | 136 | University |
 | Medieval | Crop Rotation | 140 | Farm/Pasture upgrade (Irrigated Farm, Ranch); +1 Food per Granary family |
 | Renaissance | Gunpowder | 216 | Musketman (`Musketman`; Pikemen upgrade to it); Arquebusier (Crossbowmen upgrade to it); Niter visible |
-| Renaissance | Metallurgy | 224 | Cuirassier (Knights upgrade to it); Siege covers Walls through level III; Machinery covers level II |
+| Renaissance | Metallurgy | 224 | Cuirassier (Knights upgrade to it); Siege covers Walls up to level III; Machinery covers level II |
 | Renaissance | Military Engineering | 230 | **unit upgrades cost half**  |
 | Renaissance | Banking | 238 | Bank; Grand Bazaar (world wonder) |
 | Renaissance | Printing Press | 248 | **+1 Science per Library and +1 Gold per Market** |
