@@ -23,6 +23,7 @@ Don't copy those rules here; extend them there and keep this skill to direction 
 
 ## The house style
 
+- **The map is moving to real-time 3D (user, 2026-11-25):** lit, painted 3D in the Civ 6 manner, built with three.js; unexplored land stays our parchment and the 2D atlas map stays as the strategic view and an option. 3D assets are .glb with flat painted albedo and no baked light; the painted look comes from our shader. City styles start from 0 A.D. buildings (CC BY-SA, credited to Wildfire Games, same exception as the hoplite). Plan: `tools/map3d/` and the 3D map plan doc. The atlas rule below governs the 2D map.
 - **Map art is atlas ink on vellum:** engraved or pen-and-wash line, hatching for tone, muted earth pigments, one accent red (`--accent`). Think a surveyor's atlas or an engraved estate map, not a painted game board. No glossy gradients, bevels, drop-shadow stickers, cartoon outlines or saturated flat fills on the map.
 - **One line language:** the same pen weights everywhere on the map at a given zoom (set in `style.ts`). New sprites reuse those weights, never their own.
 - **Player colour is a tint, not a fill:** ornaments, borders and seals take the player colour through `currentColor` or a translucent wash; the terrain still reads underneath (overlays about 0.5–0.6 opacity). Territory is the exception to "only a thin accent line stronger" (revised 2026-10-09, after a target player could not tell whose land was whose): a territory border is a bold seat-colour line with an ink edge over an 0.18 tint, drawn like an atlas's coloured outline and wash. The terrain still reads under the tint; the line is the strong part.
@@ -71,6 +72,7 @@ Don't copy those rules here; extend them there and keep this skill to direction 
 - Rejected: an era-metal ring on unit bases, and a raw strength number on every base (user, 2026-10-11).
 - Rejected: construction and payoff animation rounds 1 and 2 (generic scaffold, image reveals, sunbursts) (user, 2026-10-24).
 - Rejected: Landship as a name on screen; it shows as "Early Tank", painted as a WWI rhomboid tank (user, 2026-11-14).
+- Superseded: "no real-time 3D, units as rendered sprite sheets" (2026-11-22) by the real-time 3D map (user, 2026-11-25); sprite sheets are a stopgap for the 2D map only.
 - Superseded: the fantasy and sci-fi directions (Japan insects, Mongol elves, relay-star iconography) by the historical re-theme (user, 2026-10-10).
 - Superseded: engraved-ink-only improvement drawings by painted improvements (user, 2026-10-25).
 

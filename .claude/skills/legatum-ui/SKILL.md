@@ -60,6 +60,8 @@ This file holds the current rules, one line each. The user's words, dates, as-bu
 
 ## Map
 
+- 3D map (user, 2026-11-25): a real-time 3D map like Civ 6 is coming as an opt-in setting first, then the default once it holds 60 fps on the user's Mac and passes UI review. The 2D map stays as an option and as the strategic view (one key swaps). Phones and tablets stay on 2D for now. Banners, tooltips and the advisor stay HTML over the 3D scene. Quality bar: iterate until it is something we'd be proud of before showing it as done.
+
 - Territory is readable at a glance; borders and cities stay live through fog; overlays and lenses are translucent with the terrain readable under them (user, 2026-10-08/09, 2026-10-04).
 - Map options are stackable overlays (Yields, Resources, Borders) plus one exclusive lens; the Settle lens shows every legal site on an absolute scale in shades of one green, with a plain one-sentence hover, and never depends on a Settler (user, 2026-10-11/17).
 - The map never moves under a mouse that is aiming (user, 2026-11-11). Clicks never shift content under the pointer (user, 2026-10-06).
