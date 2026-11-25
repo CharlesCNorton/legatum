@@ -111,7 +111,8 @@ for (const size of SIZES) testWithFailingRequests.describe(`online screens ${siz
     await off.mouse.move(5, 5);
     await shot(off, size, '24e-refused-offline');
 
-    // Worst case: a game is open (Resume row), a two-line notice, and the name note, all at once.
+    // Worst case: a game is open (Resume row) and a two-line notice, at once. The name field has no note: the public
+    // game list never shows a typed name.
     const worst = await page.context().newPage();
     await refuse(worst, REFUSALS[0]);
     await multiplayer(worst);
@@ -120,22 +121,9 @@ for (const size of SIZES) testWithFailingRequests.describe(`online screens ${siz
     await worst.getByRole('button', { name: /^Host Game/ }).click();
     await expect(worst.locator('.title-notice')).toBeVisible();
     await worst.mouse.move(5, 5);
-    await expect(worst.locator('.host-name .host-name-note')).toHaveText('Shown in the game list as “Ada”.');
+    await expect(worst.locator('.host-name .host-name-note')).toHaveCount(0);
     await shot(worst, size, '25a-menu-worst-case');
-    await expectMenuAboveFooter(worst, '25a worst case (Resume + notice + name note)');
-    await worst.getByLabel('Your name', { exact: true }).fill('\u{1F600}\u{1F600}');
-    await expect(worst.locator('.host-name .host-name-note')).toHaveText('Listed as “Game” and four characters.');
-    await expectMenuAboveFooter(worst, '25b worst case, nothing showable');
-    await shot(worst, size, '25b-menu-name-note-empty');
-
-    // The name note with a game open and no other message.
-    const note = await page.context().newPage();
-    await multiplayer(note);
-    await note.evaluate(() => { (window as unknown as GameWindow).legatum.setState({ views: [{ turn: 14, players: [{ id: 0, is_human: true, faction: 'Rome' }] }] as never }); });
-    await note.getByLabel('Your name', { exact: true }).fill('Ada \u{1F600} of Rome');
-    await note.mouse.move(5, 5);
-    await expectMenuAboveFooter(note, '25c name note, game open');
-    await shot(note, size, '25c-menu-name-note-game-open');
+    await expectMenuAboveFooter(worst, '25a worst case (Resume + notice)');
   });
 
   // The two ways a guest's connection can be stopped, on the Join screen with six seats: the notice sits under the

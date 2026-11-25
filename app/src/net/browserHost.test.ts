@@ -325,7 +325,7 @@ it('never shows the relay or its status code in a refusal message', () => {
   }
 });
 
-it('sends the room name as the game list will show it', async () => {
+it('never sends the host name to the public game list', async () => {
   let body = '';
   const host = new BrowserHost(options({
     announce: { name: '  Ada \u{1F600} of   Rome  ', build: 'b', rules_version: 1, protocol: 1 },
@@ -335,7 +335,8 @@ it('sends the room name as the game list will show it', async () => {
     },
   }));
   await host.start();
-  expect(JSON.parse(body).name).toBe('Ada of Rome');
+  expect(JSON.parse(body).name).toBe('');
+  expect(body).not.toContain('Ada');
   host.stop();
 });
 

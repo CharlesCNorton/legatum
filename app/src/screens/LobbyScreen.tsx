@@ -33,6 +33,8 @@ import { Settings } from './lobby/Settings';
 import { randomSeed } from './lobby/randomSeed';
 import { rememberPlayerName, savedPlayerName } from '../platform/online';
 import { HOST_AWAY } from '../platform/relayLobby';
+import { hostedRoomId } from '../net/hosting';
+import { listedRoomName } from '../net/roomName';
 import '../lobby.css';
 
 const TITLES: Record<LobbyMode, string> = { solo: 'Single Player', host: 'Game room' };
@@ -42,7 +44,13 @@ function forgetHostRoom(roomId: string | undefined) {
 }
 
 
-/** An online host's first seat carries the name typed for the game list. */
+/** The host's line under the title. Once the room is open it names the game as the public list shows it, so the host can tell friends which one to join. */
+function hostSubtitle(roomId: string | null): string {
+  const base = 'You are the host. Players who join take the Online player seats and choose their own faction.';
+  return roomId ? `${base} In the game list, this game is “${listedRoomName(roomId)}”.` : base;
+}
+
+/** An online host's first seat carries the player's saved name. */
 function hostNamed(lobby: Lobby, mode: LobbyMode): Lobby {
   const name = mode === 'host' ? savedPlayerName() : null;
   return name ? setSlot(lobby, 0, { name }) : lobby;
@@ -70,7 +78,7 @@ export function LobbyScreen() {
   }));
   const { lobby, writeSettings } = draft;
   const setLobby = (next: Lobby) => {
-    // The host's own name is the one the game list shows next time.
+    // The host's own name is the one offered next time.
     if (mode === 'host' && next.slots[0]?.name !== lobby?.slots[0]?.name) rememberPlayerName(next.slots[0]?.name ?? '');
     const changedLevel = lobby && levelOf(next) !== levelOf(lobby);
     if (!rememberDifficulty(next) && changedLevel) set({ error: 'AI level could not be saved on this device. It will reset when you leave this lobby.' });
@@ -176,7 +184,7 @@ export function LobbyScreen() {
   return (
     <LobbyFrame
       title={TITLES[mode]}
-      subtitle={mode === 'host' ? 'You are the host. Players who join take the Online player seats and choose their own faction.' : undefined}
+      subtitle={mode === 'host' ? hostSubtitle(room && staging ? hostedRoomId() : null) : undefined}
       onBack={back} backDisabled={!!busy} error={error} dock={dock}
     >
       <div className="lobby-body">

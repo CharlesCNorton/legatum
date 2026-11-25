@@ -5,7 +5,6 @@
 //   - the host's own UI: an in-tab socket and status/admin calls, so RemoteClient and the staging room work
 //     unchanged, as the one `local` (host) connection.
 import type { FetchLike, ServerStatus, SocketLike } from '../remote';
-import { cleanRoomName } from './roomName';
 import { type Frame, CHUNK_BYTES, KIND_BYE, KIND_CLOSE, KIND_DATA, KIND_OPEN, KIND_PING, KIND_STATUS, KIND_SUMMARY, chunkText, decodeFrame, encodeFrame, frameText } from './tunnel';
 
 /** The engine's host, as wasm-bindgen exports it. */
@@ -396,7 +395,8 @@ export class BrowserHost {
       res = await fetchImpl(`${this.relay}/rooms`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ ...this.options.announce, name: cleanRoomName(this.options.announce.name), build: this.options.announce.build.slice(0, 40) }),
+        // The list names the room from its id (roomName.ts), so the host's name stays in the room and is not sent.
+        body: JSON.stringify({ ...this.options.announce, name: '', build: this.options.announce.build.slice(0, 40) }),
       });
     } catch (e) {
       throw new RelayRefusal('offline', `Cannot reach the relay: ${String(e)}`);

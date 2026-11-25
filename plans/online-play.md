@@ -122,7 +122,7 @@ the player sees in the app. Player text never says "relay", "socket" or an HTTP 
 | Relay unreachable | no answer | Host: "Could not open your game. Check your internet connection and try again." |
 | 4 guest sockets per address per room | WebSocket close 1013, reason "too many connections from one address" | Guest: "Too many people on your internet connection have joined this game. Close any extra windows, then pick your seat again." The app stops retrying. Close 1013 for "host not connected" or "room is full" reconnects as usual. |
 | Per-socket message and byte budgets | WebSocket close 4029 | Guest: "You are sending too much, too fast. Pausing for 30 seconds, then reconnecting." One retry; a second 4029 before any game state arrives stops it with "You are still sending too much, too fast. Wait a minute, then pick your seat again." The host's own tunnel just reconnects. |
-| Room names cut to 40 visible characters, symbols and emoji dropped | name cleaned, "Game XXXX" when empty | Host: the name box holds 40 characters and says "Shown in the game list as “X”." when the list will show something else, or "Listed as “Game” and four characters." when nothing showable is left (the Worker names an empty game "Game" and the first four characters of its id). The note replaces the label above the box, so it adds no height (`app/src/net/roomName.ts` mirrors the Worker's rule, minus its word blocklist) |
+| The list never shows a typed name | every room listed as two fixed words and a number from its id ("Amber Harbor 07", `listedName`) | Host: the name box is only "Your name" (it names the host's seat, never the list entry). Once the room is open, the game room's line under the title says "In the game list, this game is “Amber Harbor 07”." (`app/src/net/roomName.ts` mirrors the Worker's rule) |
 | 60 s host heartbeat | room leaves the list | The app's tunnel sends a ping every 20 s, so nothing shows; a host whose tab sleeps drops off the list |
 
 When the relay forgets a room while the host's tunnel is down, the host announces a new room; if that is refused, the
@@ -202,7 +202,7 @@ already). The host's own in-tab connection never sees chunks.
 - **Multiplayer > Host Game**: starts the in-tab host and lands in the
   existing staging room. In a running game the host's menu item is **End the game for everyone** (after a confirm);
   it sends `bye`, closes the room and returns to the title. A guest's item is **Leave the game (free this seat)**.
-- **Multiplayer > Join Game**: a lobby list from `GET /lobby` (refresh every 3 s): host name,
+- **Multiplayer > Join Game**: a lobby list from `GET /lobby` (refresh every 3 s): the listed name (never a typed one),
   players, open seats, "Waiting in lobby" or "Turn N", and "Locked" with a lock mark for a game with a join code. One
   primary action per row: **Join**. On a locked game the seat screen asks for the code once ("Join code", seat buttons
   wait for it). A row whose
