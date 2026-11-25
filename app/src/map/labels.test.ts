@@ -23,7 +23,7 @@ describe('map place names', () => {
     expect(placeName('Range', 2, 0, 5, 5, 0)).toMatch(/^The Northern /);
     const middle = placeName('Desert', 2, 2, 5, 5, 0)!;
     expect(middle).not.toMatch(/North|South|East|West/);
-    const plain = /^The (North-Western|Northern|North-Eastern|Western|Eastern|South-Western|Southern|South-Eastern|Inner|Middle|Great|Narrow|Central|High|Old|Empty|Cold) [A-Z][a-z]+$|^The Heartland$|^The Great Divide$/;
+    const plain = /^The (North-Western|Northern|North-Eastern|Western|Eastern|South-Western|Southern|South-Eastern|Inner|Middle|Great|Central|High|Deep|Open|Cold) [A-Z][a-z]+$|^The Heartland$|^The Great Divide$/;
     for (const [nx, ny] of GRIDS)
       for (const feature of FEATURES)
         for (let gy = 0; gy < ny; gy++) for (let gx = 0; gx < nx; gx++) expect(placeName(feature, gx, gy, nx, ny, 7)).toMatch(plain);

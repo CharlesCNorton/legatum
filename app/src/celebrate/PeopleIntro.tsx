@@ -6,6 +6,7 @@ import { useGame } from '../store';
 import { Amounts } from '../ui/Amounts';
 import { Icon } from '../ui/bits';
 import { MedallionRow, PortraitFrame } from '../ui/premium';
+import { useGuide } from '../ui/guideState';
 import { useReducedMotion } from '../ui/useReducedMotion';
 import { eraArt } from './eraArt';
 import './eraTakeover.css';
@@ -17,27 +18,31 @@ import './peopleIntro.css';
  * motto, then what the faction sheet already says in the same words: what you are good at, what it costs you and
  * the goal only you can score. One primary, Begin (Return; Esc does the same: there is nothing to cancel).
  *
- * It shows once, for a game that has just begun (`store.intro`, set by `startGame` and by joining an online game
- * on its first turn), never for a loaded game, and with a Random people it is where you learn who you drew.
+ * It shows once per human seat, for a game that has just begun (`store.introSeats`, set by `startGame` and by
+ * joining an online game on its first turn), never for a loaded game, and with a Random people it is where you learn who you drew.
  * Narration, when recorded, plays from here (`data-people` names the people for it).
  */
 export function PeopleIntro() {
-  const intro = useGame((s) => s.intro);
+  // Hot seat: each human is introduced to their own people, once they hold the device.
+  const intro = useGame((s) => s.introSeats.includes(s.seat) && s.handoff === null);
+  const seat = useGame((s) => s.seat);
   const view = useGame((s) => s.views?.[s.seat] ?? null);
   const motionOff = useReducedMotion();
   const animationsOn = useCombatFx((s) => s.enabled);
   const primary = useRef<HTMLButtonElement>(null);
   const up = intro && !!view && view.turn === 1;
-  const begin = () => { feel.select(); useGame.setState({ intro: false }); };
+  const begin = () => { feel.select(); useGame.setState((s) => ({ introSeats: s.introSeats.filter((x) => x !== seat) })); };
 
   useEffect(() => { if (up) primary.current?.focus({ preventScroll: true }); }, [up]);
   // Leaving the game (exit to title, a loaded save) ends the introduction with it.
-  useEffect(() => () => useGame.setState({ intro: false }), []);
+  useEffect(() => () => useGame.setState({ introSeats: [] }), []);
   useEffect(() => {
     if (!up) return;
     // Capture phase, ahead of the game's own keys: nothing under this plate may act on them.
     const key = (e: KeyboardEvent) => {
       if (e.key !== 'Enter' && e.key !== 'Escape') return;
+      // How to Play (or any dialog) opened over the plate owns its own keys: Esc closes it, not the introduction.
+      if (document.querySelector('dialog[open]')) return;
       e.preventDefault();
       e.stopPropagation();
       if (e.repeat || e.isComposing) return;
@@ -77,7 +82,7 @@ export function PeopleIntro() {
         {rows.map((p, i) => p.strength && p.strengthIcon && <MedallionRow key={i} icon={p.strengthIcon} tone="good" sign="Strength">{p.strength}</MedallionRow>)}
       </div>
       {rows.some((p) => p.price) && <div className="et-col" data-testid="people-intro-prices">
-        <h3>What they cost</h3>
+        <h3>What it costs you</h3>
         {rows.map((p, i) => p.price && p.priceIcon && <MedallionRow key={i} icon={p.priceIcon} tone="bad" sign="Price">{p.price}</MedallionRow>)}
       </div>}
       {goal && <div className="et-col pi-goal" data-testid="people-intro-goal">
@@ -87,7 +92,7 @@ export function PeopleIntro() {
       </div>}
     </section>
     <footer className="et-foot pi-foot">
-      <p className="et-rule-line">Your people’s full rules are in How to Play (?).</p>
+      <button className="link pi-rules" onClick={() => useGuide.getState().show('factions')}>Full rules in How to Play</button>
       <div className="et-buttons">
         <button ref={primary} className="btn primary" data-primary-action onClick={begin}>Begin <span className="kbd">Return</span></button>
       </div>

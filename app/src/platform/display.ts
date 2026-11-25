@@ -20,7 +20,7 @@ export function fullscreenSupported(): boolean {
 
 /** True when the game already runs in its own window (installed) rather than in a browser tab. */
 export function runningInstalled(): boolean {
-  return typeof matchMedia === 'function' && (matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches);
+  return typeof matchMedia === 'function' && matchMedia('(display-mode: standalone)').matches;
 }
 
 interface DisplayState {

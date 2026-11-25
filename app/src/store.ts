@@ -256,8 +256,8 @@ interface State {
   diplomacyTeam: number | null;
   /** Outcome dismissal belongs to the installed save/session, not the mounted game screen. */
   outcomeDismissed: boolean;
-  /** A game that has just begun shows the people's introduction once (celebrate/PeopleIntro.tsx); a loaded game never does. */
-  intro: boolean;
+  /** The local seats still owed the people's introduction (celebrate/PeopleIntro.tsx): every human seat of a game that has just begun; a loaded game has none. */
+  introSeats: Seat[];
   /** Which part of the end of a finished game is showing: the staged reveal, then the post-game report. */
   outcomeStage: 'reveal' | 'report';
   /** Player ids whose elimination dialog has been dismissed in this session. */
@@ -1014,7 +1014,7 @@ export const useGame = create<State>((set, get) => {
             seat: 0,
             screen: 'game',
             // Joining a game on its first turn is a beginning too; a later turn is a return to a game under way.
-            intro: view.turn === 1 && introEnabled(),
+            introSeats: view.turn === 1 && introEnabled() && !orders[0]?.length ? [0] : [],
             ...emptySeats(1),
             orders,
             selection: null,
@@ -1266,7 +1266,7 @@ export const useGame = create<State>((set, get) => {
     forecastTick: 0,
     autosaveNotice: false,
     rewinds: [],
-    intro: false,
+    introSeats: [],
 
     goto: (screen) => {
       if (screen !== 'game') stopResolving();
@@ -1557,7 +1557,7 @@ export const useGame = create<State>((set, get) => {
         const capital = first?.cities.find((city) => city.owner === first.me && city.is_capital);
         if (capital) get().select({ kind: 'city', id: capital.id }, true);
         if (options?.training) set({ why: { ...NO_WHY, enabled: true } });
-        set({ rewinds: [], intro: introEnabled() });
+        set({ rewinds: [], introSeats: introEnabled() ? get().humans.map((_, i) => i) : [] });
         const views = get().views;
         campaign = newCampaignId();
         if (views) writeAutosave(client, views);

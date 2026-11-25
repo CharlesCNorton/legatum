@@ -21,7 +21,7 @@ const BUILD_HINT = `Build first: LEGATUM_RELAY_URL=${E2E_RELAY} scripts/build-we
 
 /**
  * A new game opens with the people's introduction (celebrate/PeopleIntro.tsx), which waits for Begin. Every test
- * starts without it, so a test about anything else never has to press it; e2e/people-intro.spec.ts turns it back on.
+ * starts without it, so a test about anything else never has to press it; e2e/tour/people-intro.spec.ts turns it back on.
  */
 export const skipPeopleIntro = () => {
   try { if (localStorage.getItem('legatum.intro.v1') === null) localStorage.setItem('legatum.intro.v1', 'off'); } catch { /* storage is blocked: the intro shows */ }

@@ -190,7 +190,8 @@ test('Online: host in one browser, a guest joins from the game list, both Ready 
   await host.getByRole('button', { name: /^Host Game/ }).click();
   await expect(host.getByRole('heading', { name: 'Host Game', exact: true })).toBeVisible();
   // The host holds one tunnel to the relay, and plays its own seat inside the tab.
-  expect(tunnel.filter((u) => u.startsWith(relay.replace(/^http/, 'ws')))).toEqual([expect.stringMatching(/\/rooms\/[^/]+\/host\?key=/)]);
+  // Polled: the browser reports the socket to the test a moment after the lobby heading can already be seen.
+  await expect.poll(() => tunnel.filter((u) => u.startsWith(relay.replace(/^http/, 'ws')))).toEqual([expect.stringMatching(/\/rooms\/[^/]+\/host\?key=/)]);
   await configureLobby(host, '20240926');
   const start = host.getByRole('button', { name: /^Start game/ });
   // The room is open and synced, but the open online seat blocks the start.

@@ -23,19 +23,19 @@ type Feature = 'Sea' | 'Range' | 'Forest' | 'Desert' | 'Tundra' | 'Hills' | 'Ope
 const OUTER: Record<Feature, string[]> = {
   Sea: ['The {D} Sea', 'The {D} Gulf', 'The {D} Straits', 'The {D} Deep'],
   Range: ['The {D} Mountains', 'The {D} Range', 'The {D} Heights', 'The {D} Peaks'],
-  Forest: ['The {D} Forest', 'The {D} Woods', 'The {D} Woodlands', 'The {D} Timberlands'],
+  Forest: ['The {D} Forest', 'The {D} Woods', 'The {D} Woodlands', 'The {D} Wilds'],
   Desert: ['The {D} Desert', 'The {D} Sands', 'The {D} Dunes', 'The {D} Drylands'],
   Tundra: ['The {D} Tundra', 'The {D} Wastes', 'The {D} Snowfields', 'The {D} Barrens'],
-  Hills: ['The {D} Hills', 'The {D} Uplands', 'The {D} Downs', 'The {D} Highlands'],
+  Hills: ['The {D} Hills', 'The {D} Uplands', 'The {D} Ridges', 'The {D} Highlands'],
   Open: ['The {D} Plains', 'The {D} Steppe', 'The {D} Lowlands', 'The {D} Grasslands'],
 };
 const MIDDLE: Record<Feature, string[]> = {
-  Sea: ['The Inner Sea', 'The Middle Sea', 'The Great Gulf', 'The Narrow Sea'],
+  Sea: ['The Inner Sea', 'The Middle Sea', 'The Great Gulf', 'The Middle Straits'],
   Range: ['The Central Mountains', 'The Great Divide', 'The High Passes', 'The Middle Range'],
-  Forest: ['The Great Forest', 'The Central Woods', 'The Old Forest', 'The Middle Woodlands'],
-  Desert: ['The Great Desert', 'The Empty Quarter', 'The Central Sands', 'The Inner Drylands'],
+  Forest: ['The Great Forest', 'The Central Woods', 'The Deep Forest', 'The Middle Woodlands'],
+  Desert: ['The Great Desert', 'The Open Desert', 'The Central Sands', 'The Inner Drylands'],
   Tundra: ['The Great Tundra', 'The Cold Plain', 'The Central Wastes', 'The Inner Snowfields'],
-  Hills: ['The Central Hills', 'The High Country', 'The Middle Uplands', 'The Inner Downs'],
+  Hills: ['The Central Hills', 'The High Country', 'The Middle Uplands', 'The Inner Ridges'],
   Open: ['The Great Plain', 'The Heartland', 'The Central Steppe', 'The Middle Lowlands'],
 };
 const COMPASS = ['North-Western', 'Northern', 'North-Eastern', 'Western', '', 'Eastern', 'South-Western', 'Southern', 'South-Eastern'];
@@ -60,7 +60,7 @@ export function placeName(feature: Feature, gx: number, gy: number, nx: number, 
   if (rank >= list.length) return null;
   const turn = (salt ^ hashString(feature)) >>> 0;
   // Each ninth starts at a different place in the list, so neighbouring regions are not all "Steppe".
-  return list[(rank + turn + sector) % list.length].replace('{D}', COMPASS[sector]);
+  return list[(turn + sector * 2 + rank) % list.length].replace('{D}', COMPASS[sector]);
 }
 
 /** A per-game salt from things every seat sees identically. */
