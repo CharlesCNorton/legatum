@@ -320,5 +320,5 @@ describe("room cap", () => {
     expect(refused).not.toBeNull();
     expect(created + before).toBeLessThanOrEqual(256);
     expect(created).toBeGreaterThan(0);
-  });
+  }, 60_000); // 256 creations take several seconds on a CI runner
 });
