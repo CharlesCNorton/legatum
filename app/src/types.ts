@@ -557,6 +557,8 @@ export interface PlayerPublic {
   army?: number;
   /** Public technological progress: furthest era entered (times 1000) plus technologies known (0 once dead). */
   advancement?: number;
+  /** Public Science per turn, the same total the owner sees in its top bar (0 once dead). */
+  science?: number;
   /** The trailing average of this empire's total yields (Food + Production + Gold + Science). */
   power?: number;
   /** Its Power over the mean living empire's, in percent (negative below it). */
