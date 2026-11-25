@@ -225,6 +225,10 @@ pub const SWISS_TOLL_POPULATION: i32 = 2;
 
 /// Consecutive turn ends a team must hold its VP target to win by VP.
 pub const VP_HOLD_TURNS: u32 = 10;
+/// The turn a game with no configured turn limit ends on (rules 62): the team with the most VP
+/// wins, a tie is a draw (`scoring::check_victory`). A backstop like Civ's score victory, so no
+/// game runs forever when nobody can finish a victory.
+pub const DEFAULT_TURN_LIMIT: u32 = 500;
 pub const MAP_WIDTH: i32 = 48;
 pub const MAP_HEIGHT: i32 = 32;
 /// Every faction goal is worth exactly this (user rule, 2026-10-06): goals are tuned by their

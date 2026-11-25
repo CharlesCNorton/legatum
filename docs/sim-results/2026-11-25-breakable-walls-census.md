@@ -1,6 +1,6 @@
 # Breakable Walls (rules 62): faction census and duels, before and after (2026-11-25)
 
-Published as measured, no tuning. Spec: Sam's Civ-style Walls (a one-time Walls bar of 100, +50 per level, that never regrows; repaired or rebuilt only with Production, never under attack).
+Published as measured, no tuning. Spec: Civ-style Walls (a one-time Walls bar of 100, +50 per level, that never regrows; repaired or rebuilt only with Production, never under attack).
 
 ## Setup
 

@@ -1,3 +1,4 @@
+import { RULES } from '../../data';
 import { aiOnlyTeams, offeredLevels, DIFFICULTY_INFO, MAP_SIZES, MAX_TURN_LIMIT, levelOf, mapSizeLabel, notes, setDifficulty, setMapSize, type AiLevel, type Lobby, type MapSizeId, validTurnLimit } from '../../lobby';
 import { randomSeed } from './randomSeed';
 
@@ -63,7 +64,7 @@ export function Settings({ lobby, onChange }: { lobby: Lobby; onChange?: (l: Lob
         </div>
       ))}
       <Segmented label="Turn limit" value={lobby.turnLimit === null ? 'Off' : 'On'} options={[
-        { id: 'Off', label: 'Off', sub: 'Play until victory' },
+        { id: 'Off', label: 'Off', sub: `Ends at turn ${RULES.defaultTurnLimit}` },
         { id: 'On', label: 'On', sub: 'Most VP at the limit' },
       ]} onChange={change && ((value: 'Off' | 'On') => change({ turnLimit: value === 'Off' ? null : (lobby.turnLimit ?? 300) }))} />
       {lobby.turnLimit !== null && <div className="lobby-field">

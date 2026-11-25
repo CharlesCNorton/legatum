@@ -1603,7 +1603,7 @@ pub(crate) fn bankruptcy_victim(state: &GameState, p: PlayerId) -> Option<UnitId
 }
 
 /// Walls cannot be built, upgraded, repaired or bought while the city is under attack (breakable
-/// Walls, Sam 2026-11-25): it was hit this turn or last turn, or an at-war military unit stands
+/// Walls, 2026-11-25): it was hit this turn or last turn, or an at-war military unit stands
 /// next to it ([`heal_blocked_by_adjacent_enemy`]). Production toward them waits.
 pub fn walls_work_blocked(state: &GameState, c: &City) -> bool {
     c.last_attacked_turn.is_some_and(|t| t + 1 >= state.turn)

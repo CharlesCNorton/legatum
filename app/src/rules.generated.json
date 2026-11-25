@@ -1396,6 +1396,7 @@
   "decadence": {
     "powerWindowTurns": 50
   },
+  "defaultTurnLimit": 500,
   "earlyTankMoves": 3,
   "egyptNileBuildPercent": 100,
   "egyptNileFoodPercent": 200,

@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, type RefObject } from 'react';
 import { CounterDelta } from '../celebrate/MomentLane';
 import { useGame } from '../store';
-import { CALENDAR_NOTE, TECH_NAME, calendarLabel, decadenceRules } from '../data';
+import { CALENDAR_NOTE, RULES, TECH_NAME, calendarLabel, decadenceRules } from '../data';
 import { effectiveResearchQueue, pendingResearchQueue } from '../orders';
 import { firstScienceForecast } from '../research';
 import { eraName, eraNumeral, queueSchedule } from './eraResearch';
@@ -100,7 +100,7 @@ export function TopBar() {
     <div className="bd-note">{FORECAST_ASSUMPTIONS}</div>
   </> : null;
   const turnTip = `${view.turn_limit === null
-    ? 'No turn limit; play until victory.'
+    ? `${Math.max(0, RULES.defaultTurnLimit - view.turn)} turns until turn ${RULES.defaultTurnLimit}, when the highest VP wins.`
     : `${Math.max(0, view.turn_limit - view.turn)} turns until the turn limit. At turn ${view.turn_limit} the highest VP wins.`} ${CALENDAR_NOTE}`;
   return (
     <header ref={bar} className="topbar" data-overlay-slot="top-bar">

@@ -464,7 +464,7 @@ pub fn damage_to_city_hp(percent: i32, normal_damage: i32) -> i32 {
     normal_damage * percent / 100
 }
 
-/// The Walls bar of a city at Walls `level` (breakable Walls, Sam 2026-11-25): 100 for level I and
+/// The Walls bar of a city at Walls `level` (breakable Walls, 2026-11-25): 100 for level I and
 /// +50 for each level above it, 0 without Walls. Hits on a walled city land on this bar first.
 pub fn walls_max_hp(level: u8) -> i32 {
     if level == 0 {

@@ -586,7 +586,7 @@ pub fn soak(state: &GameState, unit: UnitId, attackers: &[UnitId], terrain: Terr
 }
 
 /// Take a city's Walls down: every building of the Walls line goes, the level is 0 and the bar's
-/// damage record is cleared (breakable Walls, Sam 2026-11-25). Used when the bar is broken and
+/// damage record is cleared (breakable Walls, 2026-11-25). Used when the bar is broken and
 /// when the Mongols capture a walled city.
 pub fn destroy_walls(city: &mut crate::state::City) {
     city.buildings.retain(|b| !data::is_walls_line(*b));
@@ -842,7 +842,7 @@ fn apply_stage(
             defender_leaving: f.defender_leaving,
         });
     }
-    // A Walls bar at 0 destroys the Walls (breakable Walls, Sam 2026-11-25): the level is gone
+    // A Walls bar at 0 destroys the Walls (breakable Walls, 2026-11-25): the level is gone
     // and the city must build Walls again from scratch.
     for id in breached {
         let by = fights

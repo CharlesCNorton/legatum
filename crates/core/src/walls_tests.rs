@@ -1,4 +1,4 @@
-//! Breakable Walls (Sam, 2026-11-25; rules 62): the Walls bar takes hits before the city's HP,
+//! Breakable Walls (2026-11-25; rules 62): the Walls bar takes hits before the city's HP,
 //! never heals, breaks for good, and is rebuilt only with Production while not under attack.
 use crate::rules::battle::{self, FightKind, Target};
 use crate::rules::test_support::{city, game as fixture, hex, unit};
