@@ -26,7 +26,7 @@ beforeEach(() => {
 afterEach(() => { act(() => root.unmount()); useGame.setState({ views: null, introSeats: [] }); localStorage.clear(); vi.unstubAllGlobals(); });
 
 const as = (faction: (typeof FACTIONS)[number], turn = 1): PlayerView => ({ ...view, turn, players: view.players.map((p) => (p.id === view.me ? { ...p, faction } : p)) });
-const show = (v: PlayerView, intro = true) => act(() => { useGame.setState({ views: [v], seat: 0, handoff: null, introSeats: intro ? [0] : [] }); root.render(<PeopleIntro />); });
+const show = (v: PlayerView, intro = true) => act(() => { useGame.setState({ views: [v], seat: 0, introSeats: intro ? [0] : [] }); root.render(<PeopleIntro />); });
 const plate = () => document.querySelector<HTMLElement>('[data-testid="people-intro"]');
 
 describe('the people introduction', () => {
@@ -67,19 +67,6 @@ describe('the people introduction', () => {
       expect(useGame.getState().introSeats).toEqual([]);
       expect(under, `${close} stays with the plate`).not.toHaveBeenCalled();
     }
-  });
-
-  it('hot seat: introduces each human once they hold the device, and Begin settles only their seat', () => {
-    act(() => { useGame.setState({ views: [as('Rome'), as('Egypt')], seat: 0, handoff: null, introSeats: [0, 1] }); root.render(<PeopleIntro />); });
-    expect(plate()!.dataset.people).toBe('Rome');
-    act(() => plate()!.querySelector<HTMLButtonElement>('[data-primary-action]')!.click());
-    expect(plate()).toBeNull();
-    expect(useGame.getState().introSeats).toEqual([1]);
-    // The device is changing hands: the next player's people stays covered until they take it.
-    act(() => useGame.setState({ seat: 1, handoff: 1 }));
-    expect(plate()).toBeNull();
-    act(() => useGame.setState({ handoff: null }));
-    expect(plate()!.dataset.people).toBe('Egypt');
   });
 
   it('leaves Esc and Return to a dialog opened over it (How to Play)', () => {

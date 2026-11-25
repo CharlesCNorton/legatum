@@ -23,8 +23,7 @@ import './peopleIntro.css';
  * Narration, when recorded, plays from here (`data-people` names the people for it).
  */
 export function PeopleIntro() {
-  // Hot seat: each human is introduced to their own people, once they hold the device.
-  const intro = useGame((s) => s.introSeats.includes(s.seat) && s.handoff === null);
+  const intro = useGame((s) => s.introSeats.includes(s.seat));
   const seat = useGame((s) => s.seat);
   const view = useGame((s) => s.views?.[s.seat] ?? null);
   const motionOff = useReducedMotion();
