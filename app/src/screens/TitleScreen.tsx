@@ -41,6 +41,7 @@ export function TitleScreen() {
   // A save with more than one human player (an old hot-seat game) chosen from the main menu: it opens
   // Multiplayer with that save ready to host, so the player never picks the file twice.
   const [hostSave, setHostSave] = useState<SaveFile | null>(null);
+  const note = browserNote();
   return (
     <div className="title-screen">
       <TitleArt />
@@ -63,7 +64,7 @@ export function TitleScreen() {
       </div>
       <div className="title-foot">
         <span>{buildTime ? `${buildLabel} · Last updated ${buildTime}` : buildLabel}</span>
-        {browserNote() && <span data-testid="browser-note">{browserNote()}</span>}
+        {note && <span className="title-foot-note" data-testid="browser-note">{note}</span>}
       </div>
     </div>
   );
