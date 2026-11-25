@@ -16,11 +16,14 @@ const STORM_MAX_LOSS: u32 = 25;
 const STORM_MIN_DAMAGE: i32 = 40;
 
 impl Planner<'_> {
-    fn rome_second_on(&self) -> bool {
+    pub(crate) fn rome_second_on(&self) -> bool {
         self.faction == Faction::Rome
             && self.difficulty == AiDifficulty::Hard
             && self.decisions.rome_second_war > 0
-            && (FIRST_TURN..=LAST_TURN).contains(&self.view().turn)
+            && self.view().turn <= LAST_TURN
+            && (self.view().turn >= FIRST_TURN
+                || (self.decisions.rome_walled_peace > 0
+                    && self.campaigns.rome_walled_peace_window))
     }
 
     fn rome_second_fit(&self, unit: &UnitView) -> bool {
@@ -117,6 +120,11 @@ impl Planner<'_> {
     }
 
     pub(crate) fn choose_rome_second_war(&mut self) {
+        if let Some(victim) = self.campaigns.rome_victim
+            && self.rome_walled_peace(self.view().team_of(victim))
+        {
+            self.campaigns.rome_walled_peace_window = true;
+        }
         if !self.rome_second_on() || self.takes_no_cities() {
             return;
         }

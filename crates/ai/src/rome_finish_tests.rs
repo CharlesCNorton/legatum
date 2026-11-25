@@ -194,3 +194,77 @@ fn the_war_names_the_victim_and_the_opening_runs_until_it_is_gone() {
     assert_eq!(p.campaigns.rome_opening_target, None);
     assert!(!p.rome_opening_active() && !p.rome_finish_refuses_peace(v.team_of(ENEMY)));
 }
+
+fn walled_victim_after_capture() -> PlayerView {
+    let mut v = siege(200, &[100, 100, 100, 100], false);
+    v.turn = 40;
+    let mut captured = v
+        .cities
+        .iter()
+        .find(|city| city.owner == ME)
+        .unwrap()
+        .clone();
+    captured.id = CityId(9);
+    captured.pos = Hex::new(14, 8);
+    captured.occupation_lock = Some(ENEMY);
+    v.cities.push(captured);
+    v.cities
+        .iter_mut()
+        .find(|city| city.owner == ENEMY)
+        .unwrap()
+        .walls = true;
+    v
+}
+
+#[test]
+fn walled_peace_requires_a_capture_and_observed_walls() {
+    let mut v = walled_victim_after_capture();
+    let mut p = hard(&v, 1);
+    p.campaigns.rome_victim = Some(ENEMY);
+    p.decisions.rome_walled_peace = 0;
+    let enemy_team = v.team_of(ENEMY);
+    assert!(p.rome_finish_refuses_peace(enemy_team));
+    p.decisions.rome_walled_peace = 1;
+    assert!(p.rome_walled_peace(enemy_team));
+    assert!(!p.rome_finish_refuses_peace(enemy_team));
+    assert_eq!(p.wants_peace_why(enemy_team), (true, "Roman victim walled"));
+    assert_eq!(p.peace_diagnosis(enemy_team).score, Some(0));
+    assert_eq!(p.peace_diagnosis(enemy_team).veto, None);
+
+    v.cities
+        .iter_mut()
+        .find(|city| city.owner == ENEMY)
+        .unwrap()
+        .walls = false;
+    let mut open = hard(&v, 1);
+    open.decisions.rome_walled_peace = 1;
+    open.campaigns.rome_victim = Some(ENEMY);
+    assert!(!open.rome_walled_peace(enemy_team));
+    v.cities
+        .iter_mut()
+        .find(|city| city.id == CityId(9))
+        .unwrap()
+        .occupation_lock = None;
+    v.cities
+        .iter_mut()
+        .find(|city| city.owner == ENEMY)
+        .unwrap()
+        .walls = true;
+    let mut no_capture = hard(&v, 1);
+    no_capture.decisions.rome_walled_peace = 1;
+    no_capture.campaigns.rome_victim = Some(ENEMY);
+    assert!(!no_capture.rome_walled_peace(enemy_team));
+}
+
+#[test]
+fn only_walled_peace_opens_the_second_war_early() {
+    let v = walled_victim_after_capture();
+    let mut p = hard(&v, 1);
+    p.decisions.rome_second_war = 1;
+    p.campaigns.rome_victim = Some(ENEMY);
+    assert!(!p.rome_second_on());
+    p.decisions.rome_walled_peace = 1;
+    p.choose_rome_second_war();
+    assert!(p.campaigns.rome_walled_peace_window);
+    assert!(p.rome_second_on());
+}
