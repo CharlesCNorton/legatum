@@ -842,6 +842,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
     // A look change swaps the map palette: redraw.
     const unregister = registerMapCamera({
       viewport: () => ({ ...cam.current, w: size.current.w, h: size.current.h }),
+      focusSeq: () => useGame.getState().focus?.seq ?? 0,
       center: (x, y) => {
         cancelAnimationFrame(focusAnimation.current);
         cam.current.x = x;
@@ -850,7 +851,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
       },
     });
     // Swapped in from the 3D map: keep looking where it looked (this runs after the mount's focus snap).
-    const from = takeMapHandoff();
+    const from = takeMapHandoff(useGame.getState().focus?.seq ?? 0);
     if (from) { cancelAnimationFrame(focusAnimation.current); cam.current.x = from.x; cam.current.y = from.y; dirty.current = true; }
     return () => {
       setMapProjector(null);

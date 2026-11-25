@@ -11,6 +11,12 @@ describe('map camera handoff', () => {
   });
   it('ignores a map that closed a while ago, so a new game starts on its capital', () => {
     registerMapCamera(host(5, 6))();
-    expect(takeMapHandoff(Date.now() + 5000)).toBeNull();
+    expect(takeMapHandoff(0, Date.now() + 5000)).toBeNull();
+  });
+  it('drops the old centre when a jump-to was made with the swap (placing a wonder jumps to the city)', () => {
+    registerMapCamera({ ...host(7, 8), focusSeq: () => 4 })();
+    expect(takeMapHandoff(5)).toBeNull();
+    registerMapCamera({ ...host(7, 8), focusSeq: () => 4 })();
+    expect(takeMapHandoff(4)).toMatchObject({ x: 7, y: 8 });
   });
 });

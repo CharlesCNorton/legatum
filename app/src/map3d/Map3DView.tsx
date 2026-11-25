@@ -40,7 +40,7 @@ export default function Map3DView() {
   // Scene lifetime.
   useEffect(() => {
     firstView.current = true; // a new scene (StrictMode remounts too) is placed again by the view effect
-    handoff.current = takeMapHandoff();
+    handoff.current = takeMapHandoff(useGame.getState().focus?.seq ?? 0);
     const canvas = canvasRef.current!;
     const sc = new MapScene(canvas);
     sceneRef.current = sc;
@@ -56,6 +56,7 @@ export default function Map3DView() {
         const ground = 2 * sc.dist * Math.tan((sc.camera.fov * Math.PI) / 360) * sc.camera.aspect;
         return { x: sc.target.x * PX, y: sc.target.z * PX, zoom: w / Math.max(1, ground * PX), w, h };
       },
+      focusSeq: () => useGame.getState().focus?.seq ?? 0,
       center: (x, y) => { sc.target.set(x / PX, 0, y / PX); sc.clampTarget(); sc.placeCamera(); notifyMapCamera(); },
     });
     setMapProjector((hex) => {
