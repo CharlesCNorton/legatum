@@ -1041,7 +1041,7 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
       });
     }
     case 'SpartaKillHeal':
-      return line('combat', `Spartan units healed ${e.hp_healed} health by destroying ${possessive(ctx, e.victim_owner)} ${itemName({ kind: 'Unit', unit: e.unit_kind })}`, {
+      return line('combat', `Spartan units regained ${e.hp_healed} health by destroying ${possessive(ctx, e.victim_owner)} ${itemName({ kind: 'Unit', unit: e.unit_kind })}`, {
         players: [e.player], tone: toneFor(e.player), weight: 2,
       });
     case 'UnitAwakened':

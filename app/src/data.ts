@@ -257,7 +257,7 @@ export const BUILDING_STATS: Record<
   Market: { cost: 60, yields: { gold: 3 }, cityStrength: 0, requires: 'Currency', summary: '+3 Gold', blurb: '+3 Gold' },
   ImperialDiwan: { cost: 300, yields: {}, cityStrength: 0, requires: 'Currency', summary: 'Build after every city has a Revenue Office; whoever holds its city scores 2 VP', blurb: 'India only: build after every owned city has a Revenue Office. Whoever holds its city scores 2 VP.' },
   Library: { cost: 80, yields: { science: 3 }, cityStrength: 0, requires: 'Writing', summary: '+3 Science', blurb: '+3 Science' },
-  Walls: { cost: 100, yields: {}, cityStrength: 10, requires: 'Masonry', warBuilding: true, summary: '+10 city strength; halves damage to its health and fires at nearby enemies', blurb: `+10 city strength; ${WALLS_HALF_RULE}, and ${WALLS_FIRE_RULE}` },
+  Walls: { cost: 100, yields: {}, cityStrength: 10, requires: 'Masonry', warBuilding: true, summary: '+10 city strength; halves damage to city health and fires at nearby enemies', blurb: `+10 city strength; ${WALLS_HALF_RULE}, and ${WALLS_FIRE_RULE}` },
   Supermarket: { cost: 360, yields: { food: 4 }, cityStrength: 0, requires: 'GreenRevolution', predecessor: 'Mill', summary: '+4 Food; upgrades your Mill', blurb: '+4 Food, on top of the Granary and Mill' },
   AirDefence: { cost: 320, yields: {}, cityStrength: 0, requires: 'GuidedMissiles', summary: 'Meets enemy air strikes on this city', blurb: 'Stops one enemy air strike on this city each turn. Stealth Bombers pass it.' },
   Mill: { cost: 200, yields: { food: 3 }, cityStrength: 0, requires: 'Feudalism', predecessor: 'Granary', summary: '+3 Food; upgrades your Granary', blurb: '+3 Food' },
@@ -284,7 +284,7 @@ export const BUILDING_STATS: Record<
 const TECH_BLURB: Record<TechId, string> = {
   Irrigation: "+1 Food in every city",
   BronzeWorking: "Unlocks Workshop",
-  Masonry: "Unlocks Walls and the Pyramids; Quarries +1 Production (walled cities take half damage to their health and fire back)",
+  Masonry: "Unlocks Walls and the Pyramids; Quarries +1 Production (walled cities take half damage to city health and fire back)",
   Currency: "Unlocks Market",
   Writing: "Unlocks Library",
   Mathematics: `Unlocks Phalangite; Spearmen can upgrade. Units can buy Siege, which covers Walls up to level I.`,
@@ -565,7 +565,7 @@ const CARD_TEXT: Partial<Record<Faction, Partial<Record<string, string>>>> = {
 
 /** Faction variants change the item's effect; the build list reads this instead of the base summary. */
 const CARD_SUMMARY: Partial<Record<Faction, Partial<Record<string, string>>>> = {
-  Switzerland: { 'b:Walls': '+15 city strength; halves damage to its health and fires at enemies' },
+  Switzerland: { 'b:Walls': '+15 city strength; halves damage to city health and fires at enemies' },
   Byzantium: { 'u:Pikeman': 'Stronger Pikeman; holds ground and takes cities' },
   Germany: { 'b:Forge': '+6 Production', 'b:Factory': '+5 Production; upgrades your Ruhr Foundry' },
   Mongols: { 'u:Cataphract': 'Rides or shoots at range 2; a shot cannot take a city' },

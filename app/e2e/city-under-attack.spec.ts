@@ -86,7 +86,7 @@ for (const size of SIZES) test.describe(`city under attack ${size.name}`, () => 
     await expect(card).toBeVisible();
     await expect(card).toContainText('Waypost Seven is under attack');
     await expect(card.locator('.siege-num')).toHaveText('200/200 health');
-    await expect(card.locator('.siege-who')).toContainText(/3 Spearmen from .+: about \d+ health a turn/);
+    await expect(card.locator('.siege-who')).toContainText(/3 Spearmen from .+: about −\d+ health a turn/);
     await expect(card.locator('.siege-forecast')).toHaveText(/^(Falls next turn|Holds about \d+ turns?) unless reinforced$/);
     await expect(card.getByRole('button', { name: 'Go to Waypost Seven' })).toBeVisible();
     const top = await dock.locator('.turn-body').evaluate((body) => [...body.children].find((c) => c.matches('.siege-alerts, .sidebar-turn-more, .seats, .city-list, .orders-box'))?.className);
@@ -154,7 +154,7 @@ for (const size of SIZES) test.describe(`city under attack ${size.name}`, () => 
     await page.evaluate(() => (window as unknown as GameWindow).legatum.getState().select(null));
     const next = dock.locator('.siege-card').first();
     await expect(next).toBeVisible();
-    await expect(next.locator('.siege-lost')).toHaveText(/^−\d+ health last turn$/);
+    await expect(next.locator('.siege-lost')).toHaveText(/^−\d+ last turn$/);
     await expect(next.locator('.siege-num')).toHaveText(/^\d+\/200 health$/);
     await expect(dock.locator('.cta .cta-label')).toHaveText('City under attack');
     expect(await page.evaluate(() => (window as unknown as GameWindow).legatumMap.siege)).toEqual([setup.own]);

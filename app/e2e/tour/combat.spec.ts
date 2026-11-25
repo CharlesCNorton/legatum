@@ -191,7 +191,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await page.evaluate(() => (window as unknown as GameWindow).legatum.getState().select(null));
     // The battle's damage numbers float over the map for a few seconds: shoot after they clear.
     await page.waitForTimeout(4000);
-    await expect(card.locator('.siege-lost')).toHaveText(/^−\d+ health last turn$/);
+    await expect(card.locator('.siege-lost')).toHaveText(/^−\d+ last turn$/);
     await page.mouse.move(5, size.height / 2);
     await shot(page, size, '21m-city-attacked-aftermath');
   });

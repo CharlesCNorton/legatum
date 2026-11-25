@@ -9,19 +9,19 @@ import './siege.css';
 /** The most cards shown in full; any others are one line each, still one click from their city. */
 const FULL_CARDS = 3;
 
-/** What the attackers are doing, in one line, with the damage they do: "3 Spearmen beside it · about 84 HP a turn". */
+/** What the attackers are doing, in one line, with the damage they do: "3 Spearmen from Byzantium: about −84 health a turn". */
 function whoLine(a: CityAlarm): string {
   if (a.kind === 'approach') return `${a.force} from ${a.from} within 3 tiles`;
   if (a.attackers.length) {
     const more = a.approaching.length ? ` · ${a.approaching.length} more within 3 tiles` : '';
-    return `${a.force} from ${a.from}: about ${a.perTurn} health a turn${more}`;
+    return `${a.force} from ${a.from}: about −${a.perTurn} health a turn${more}`;
   }
   return 'Hit last turn; nothing can strike it next turn';
 }
 
 /** "−80 last turn", or the plain fact when only the city's own record is left (a loaded game). */
 function lostText(a: CityAlarm): string | null {
-  if (a.hit) return `−${a.hit.lost} health last turn`;
+  if (a.hit) return `−${a.hit.lost} last turn`;
   return a.attackedLastTurn ? 'Took damage last turn' : null;
 }
 
