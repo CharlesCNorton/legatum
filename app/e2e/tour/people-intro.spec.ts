@@ -50,7 +50,7 @@ for (const size of SIZES) test.describe(`people intro ${size.name}`, () => {
       await page.keyboard.press('Escape');
       await expect(guide).toHaveCount(0);
       await expect(intro).toBeVisible();
-      await begin.focus();
+      await expect(begin).toBeFocused();
     }
     await page.keyboard.press('Enter');
     await expect(intro).toHaveCount(0);

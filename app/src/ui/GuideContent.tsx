@@ -376,27 +376,31 @@ export function GuideContent({ section }: { section: GuideSection }) {
   }
 }
 
-/** Art licence and the music and CC0 sound credits (app/public/audio/manifest.json). */
+/** Art licence and the music and sound credits (app/public/audio/manifest.json). */
 function Credits() {
-  const music = SOUND_MANIFEST.filter((e) => e.file.startsWith('music/'));
-  const sharedMusic = music.length === 2 && music[0].source === music[1].source;
+  const zeroAd = (e: (typeof SOUND_MANIFEST)[number]) => e.license === 'CC-BY-SA-3.0' && e.author === 'Wildfire Games';
+  const title = SOUND_MANIFEST.find((e) => e.file === 'music/atlas.m4a')!;
+  const peopleMusic = SOUND_MANIFEST.filter((e) => e.file.startsWith('music/') && zeroAd(e));
   const packs = [...new Set(SOUND_MANIFEST.filter((e) => e.author === 'Kenney').map((e) => e.title.split(':')[0]))];
   // One line per credited sound: two stings cut from the same recording share one attribution.
   const others = SOUND_MANIFEST.filter((e) => !e.file.startsWith('music/') && e.license === 'CC0-1.0' && e.author !== 'Kenney')
     .filter((e, i, all) => all.findIndex((o) => o.attribution === e.attribution) === i);
+  // CC BY-SA asks for the author's name, a link to the author and a link to the licence.
+  const wildfire = <>0 A.D. by <a href="https://www.wildfiregames.com/" target="_blank" rel="noreferrer">Wildfire Games</a>, <a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noreferrer">CC BY-SA 3.0</a></>;
   return <>
     <h3>Artwork</h3>
     <p>Legatum’s original artwork is offered under CC BY 4.0 to the extent rights exist. The Niter, Oil and Silicon resource medallions were generated with an OpenAI image model, selected and resized for the game. Their prompts and provenance are in the resource art README.</p>
     <h3>Music</h3>
-    {sharedMusic
-      ? <p>{music[0].attribution}. The full piece plays on the title screen and during peaceful play; an intense excerpt plays during an empire war. <a href={music[0].source} target="_blank" rel="noreferrer">Source</a></p>
-      : <ul>{music.map((e) => <li key={e.file}>{e.attribution} <a href={e.source} target="_blank" rel="noreferrer">Source</a></li>)}</ul>}
+    <p>{title.attribution}. The full piece plays on the title screen and during peaceful play; an intense excerpt plays during an empire war. <a href={title.source} target="_blank" rel="noreferrer">Source</a></p>
+    <p>The peoples’ music and the war drums are from {wildfire}, edited for Legatum.</p>
+    <ul className="guide-credit-tracks">{peopleMusic.map((e) => <li key={e.file}>{e.title}</li>)}</ul>
     <h3>Sound effects</h3>
     <ul>
       <li>Kenney (kenney.nl), CC0: {packs.join(', ')}.</li>
       {others.map((e) => <li key={e.file}>{e.attribution}.</li>)}
+      <li>Battle sounds and the sounds of birds, wind and snow are from {wildfire}, edited for Legatum.</li>
     </ul>
-    <p>Sounds were trimmed, loudness-matched and re-encoded; the music loops were crossfaded.</p>
+    <p>Sounds were trimmed, loudness-matched and re-encoded. The edited 0 A.D. files stay under CC BY-SA 3.0.</p>
     <details><summary>Full sound credits</summary><ul>{SOUND_MANIFEST.map((e) => <li key={e.file}>
       {e.title} — {e.attribution} ({e.license}). <a href={e.source} target="_blank" rel="noreferrer">Source</a>
     </li>)}</ul></details>

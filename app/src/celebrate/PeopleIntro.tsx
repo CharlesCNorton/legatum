@@ -32,7 +32,15 @@ export function PeopleIntro() {
   const up = intro && !!view && view.turn === 1;
   const begin = () => { feel.select(); useGame.setState((s) => ({ introSeats: s.introSeats.filter((x) => x !== seat) })); };
 
-  useEffect(() => { if (up) primary.current?.focus({ preventScroll: true }); }, [up]);
+  // Begin holds focus when the plate opens, and again when How to Play closes over it: its Return chip stays true.
+  const guideOpen = useGuide((s) => s.open);
+  useEffect(() => {
+    if (!up || guideOpen) return;
+    primary.current?.focus({ preventScroll: true });
+    // A closing dialog hands focus back to the control that opened it (the rules link) a moment later; take it again.
+    const id = setTimeout(() => primary.current?.focus({ preventScroll: true }), 60);
+    return () => clearTimeout(id);
+  }, [up, guideOpen]);
   // Leaving the game (exit to title, a loaded save) ends the introduction with it.
   useEffect(() => () => useGame.setState({ introSeats: [] }), []);
   useEffect(() => {
