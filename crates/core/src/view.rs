@@ -2326,14 +2326,6 @@ fn unit_view(state: &GameState, me: PlayerId, u: &Unit) -> UnitView {
         sight: own.then(|| {
             data::UNIT_SIGHT
                 + i32::from(
-                    !u.owner.is_barbarian()
-                        && data::is_medjay_rules(
-                            state.setup.rule_experiments.faction_rules_off,
-                            state.made_by(u),
-                            u.kind,
-                        ),
-                )
-                + i32::from(
                     state
                         .map
                         .get(u.pos)
