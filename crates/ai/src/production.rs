@@ -4751,7 +4751,7 @@ impl Planner<'_> {
                                 40
                             }) + self.agoge_value(c)
                         }
-                        BuildingKind::Castle | BuildingKind::StarFort => {
+                        BuildingKind::UpgradeWalls => {
                             if threatened {
                                 500 + k.military
                             } else {
@@ -4895,6 +4895,7 @@ impl Planner<'_> {
                                 return 0;
                             }
                         }
+                        BuildingKind::Castle | BuildingKind::StarFort => return 0,
                     }
             }
         }
@@ -6654,18 +6655,12 @@ mod automation_tests {
         use legatum_core::objectives::{Family, Objective};
         use legatum_core::view::{EraView, ObjectiveProgress, ObjectiveView};
         let mut view = ViewBuilder::new(20, 20)
-            .known_techs(&[TechId::Chivalry])
+            .known_techs(&[TechId::Currency])
             .city(1, ME, off(8, 8), 6)
             .build();
         view.players[0].era = 3;
-        view.cities[0]
-            .detail
-            .as_mut()
-            .unwrap()
-            .buildings
-            .push(BuildingKind::Walls);
         let objective = Objective::Buildings {
-            building: BuildingKind::Castle,
+            building: BuildingKind::Market,
             cities: 1,
         };
         view.eras = vec![EraView {
@@ -6709,12 +6704,12 @@ mod automation_tests {
         let granary = ProductionItem::Building {
             building: BuildingKind::Granary,
         };
-        let castle = ProductionItem::Building {
-            building: BuildingKind::Castle,
+        let market = ProductionItem::Building {
+            building: BuildingKind::Market,
         };
         assert_eq!(
             p.objective_production_choice(0, &view.cities[0], &tally, Some(granary)),
-            Some(castle)
+            Some(market)
         );
     }
 
