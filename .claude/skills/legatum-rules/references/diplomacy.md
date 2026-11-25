@@ -172,15 +172,22 @@ says whether it is on.
 - **View:** with deals on, `DiplomacyView::actions` adds, per other living team, `ProposeTreaty{kind: OpenBorders,
   gold: 0}` and `BreakTreaty{agreement: OpenBorders}` with their `blocked_reason`; Gold amounts are the client's to set.
 - **UI** (`app/src/ui/DiplomacyPanel.tsx`, `app/src/deals.ts`, shown only when `DiplomacyView.deals`): an empire's
-  offers share one "Gold with your offer" field (`DealGold`: No Gold, You pay, You ask, a stepper of 10 up to 999, and
-  the forecast "You pay 40 Gold when they accept. You have 120 Gold." from the treasury less queued gifts); paying more
-  than that disables the offers with the reason in place. With deals on the offers come first, then Close borders,
-  then Declare War. Offer Open Borders shows at Peace while closed, Close borders while open. Give Gold sits in the
-  detail of a met empire not at War (`RivalGift`, a gift to the team's first living member). An incoming offer's
-  headline carries its Gold ("Switzerland asks 40 Gold for Peace", "… offers Peace and 40 Gold") and its For-you terms
-  say "You pay 40 Gold. You have 120 Gold" or "You get 40 Gold". Open Borders wear a dashed ring with a move arrow
-  (`TreatyEmblem kind="OpenBorders"`), under the empire's name and beside the relation emblem. The report says "You
-  gave Sparta 40 Gold for Open Borders" (a `GoldGiven` right after a `ProposalAccepted` with Gold) and an offer line
+  offers share one "Gold with your offer" field (`DealGold`: No Gold, You pay, You ask, and the shared `GoldStepper` of
+  10 up to 999), with the forecast "You pay 40 Gold when they accept. You have 120 Gold." from the treasury less the Gold
+  queued orders already promise (`deals.ts::promisedGold`: gifts, offers we pay for, accepting an offer that asks us for
+  Gold); paying more than that disables the offers with "You have N Gold, so offer at most N." in place. "You pay" puts
+  a red cost chip on each offer, "You ask" a green "+N if accepted" chip. With deals on an empire's detail runs: the
+  Gold field, the offers, Give Gold (`RivalGift`, a met empire not at War, a gift to the team's first living member,
+  same `GoldStepper`), Close borders or Leave the Alliance, then Declare War below a rule. Offer Open Borders shows at
+  Peace while closed ("If they accept, it starts on turn N."), Close borders while open. A queued action keeps its
+  button pressed with a "Queued: Offer Open Borders. You ask 40 Gold. Undo" line under it, as gifts do. An incoming
+  offer's headline carries its Gold ("Switzerland asks 40 Gold for Peace", "… offers Peace and 40 Gold") and its
+  For-you terms say "You pay 40 Gold." or "You get 40 Gold."; the turn button and the advisor name it by kind
+  (`turnFlow.ts::offerDecisionLabel`: "Open Borders with X: your units may enter each other’s land · asks 40 Gold ·
+  respond by turn N"). Open Borders are drawn as emblem plus word, like Peace, on every surface (panel row, rivals
+  table, report lines): `TreatyEmblem kind="OpenBorders"` is Peace's ring with a two-way arrow in place of the star.
+  The report says "Open Borders with X begin.", "X closed the borders." (or "Open Borders with X end: War."), "You
+  gave Sparta 40 Gold for Open Borders" (a `GoldGiven` right after a `ProposalAccepted` with Gold), and an offer line
   adds "they ask 40 Gold". App passage (`diplomacy.ts::canEnter`, used by routes, reach and the unit card) honours
   `open_borders`; cities stay closed. Closing borders ends no pending offer (`endsOffers`), and the same treaty with
   other Gold counts as the same offer (`sameDiplomaticAction`). New local games and online rooms set `deals: true`
