@@ -3,9 +3,13 @@ import { WhyCard } from '../ui/WhyCard';
 import { CelebrationProvider, MomentLane } from '../celebrate/MomentLane';
 import { AlarmScreen } from '../celebrate/AlarmScreen';
 import { PeopleIntro } from '../celebrate/PeopleIntro';
-import { useEffect } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
+import { canUse3d, needsFlatMap, useMapView } from '../map3d/mapPrefs';
 import { useGame } from '../store';
 import { MapCanvas } from '../map/MapCanvas';
+
+// The 3D map loads only for players who switch it on (three.js stays out of the 2D download).
+const Map3DView = lazy(() => import('../map3d/Map3DView'));
 import { Minimap } from '../map/Minimap';
 import { PingControl } from '../ui/PingControl';
 import { TopBar } from '../ui/TopBar';
@@ -77,6 +81,10 @@ export function GameScreen() {
   }, []);
 
   useGoalActionKey();
+  const mapKind = useMapView((m) => m.kind);
+  const [can3d] = useState(canUse3d);
+  const picking = useGame(needsFlatMap);
+  const show3d = can3d && mapKind === '3d' && !picking;
   if (!views) return null;
   const view = views[seat];
   const unit = selection?.kind === 'unit' ? view.units.find((u) => u.id === selection.id) : null;
@@ -86,7 +94,7 @@ export function GameScreen() {
 
   return (
     <CelebrationProvider><div className="game" style={{ ['--seat' as string]: playerColor(view.me) }}>
-      <MapCanvas />
+      {show3d ? <Suspense fallback={<MapCanvas />}><Map3DView /></Suspense> : <MapCanvas />}
       <div className="seat-frame" />
       <TopBar />
       <MomentLane />
