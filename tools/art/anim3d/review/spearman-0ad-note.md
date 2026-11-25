@@ -1,116 +1,142 @@
-# Spearman 0 A.D. — round 4 handoff
+# Spearman 0 A.D. — round 5 candidate handoff
 
 Primary deliverable: `tools/art/anim3d/units/spearman-0ad/spearman.glb`.
-SHA-256: `d534283aa791de1936d680f825e939be97d00a2de54c2fb6a01d1299588f0e5f`.
-601,936 bytes; separate atlas 20,584 bytes. Both remain below 2 MB and are in the
-worktree, beside LICENSE-ART and updated PROVENANCE.md. No push or merge.
+SHA-256: `3c4e74a929d8e619874d45d5e3b2849d0e35d00d9675c1d1e4a9d17bfb5cf3ab`.
 
-## Changes
+**Candidate for lead playback review; not art-approved.** The contract, Khronos,
+CPU runtime, exported combat motion and clearance checks pass. I inspected the
+rendered 160 px sequences/contact sheets, the full-rate attack sheet, and the
+48 px figure-height comparison. Chromium playback/recording was not run here.
 
-- Bronze sunburst enlarged into a readable 12-ray device on an oxidised bronze
-  field. Dark neutral rim keeps the COLOR_0 team mask. Flat pigment only.
-- Bronze and crimson base colours darkened; skin and linen separate in greyscale.
-  Approximate sRGB luma (0–255): bronze 99.4, linen 200.1, crimson 44.8, skin 144.5.
-  These are pigment values, not baked directional shading.
-- Existing crest hair widened 1.65x and support 1.30x, with no extra triangles.
-- Display yaw is **-30 degrees around glTF +Y**, implemented as inverse camera
-  orbit in both render.py and viewer.mjs, documented in review.json and GLB extras.
-  Camera pitch remains 13.613 degrees. The GLB stays +Z forward. Removed the old
-  attack-only 22-degree stance turn. Opposite yaw was rejected after the full-rate
-  sheet showed a foreshortened thrust.
-- Death spear releases from the initial grip, drops beside the body over 0.533 s,
-  then holds. The existing weapon_R socket carries the baked trajectory; all spear
-  vertices still have one unit weight to that bone. No extra mesh or draw call.
-  Final spear centre is x=-0.82, z=+1.0 m in glTF ground coordinates. A 16-degree
-  head relaxation keeps the widened crest from propping the corpse above ground.
-- Each clip is framed from evaluated skinned vertices in camera-plane coordinates.
-  One fixed camera per clip, no animated zoom. Viewer capture is 960 x 640 to keep
-  the full fall/weapon extent and about 70% figure height. Square sprites retain
-  every frame of the fall at a smaller scale.
+## What changed
 
-## Verification
+- Idle carrying arm opens outward with a fixed-length two-bone solve and a
+  35-degree forearm roll. The bronze cuirass now reads beside the aspis; the
+  original grip and rigid shield attachment remain. Hit shares this guard.
+- Death uses **death_a** instead of death_b. It falls backward directly, ends
+  prone, eases into rest and holds the final four keys. The full clip is 1.4 s;
+  there is no kneeling hold. The head relaxes 32 degrees so the crest does not
+  suspend the body. A maximum 9.38 mm shield-socket clearance correction lays
+  the shield down instead of lifting the corpse. The body touches the ground.
+- The spear keeps the clean 0.533 s release beside the body. The thicker shaft
+  still passes the 120 fps post-release crossing check.
+- Attack retains attack_melee_05 with a longer takeback and faster thrust,
+  **13.25 cm total forward hip drive**, planted ankles, reachable fixed-length
+  legs, and four degrees of shoulder follow. Cape1/2/3 local swing is halved.
+- Hit is reauthored over idle: **14-degree torso recoil peaking on frame 5**,
+  three-degree neck follow, and eased recovery by frame 20 (0.8 s total).
+- Walk stays unchanged: the round-four and round-five walk joint positions
+  match exactly at all 41 exported samples. New crest/spear dimensions apply
+  to every clip.
+- Crest thickness is another **1.3x**, height **1.2x**. A 1.3x height trial made
+  the figure 1.9784 m and failed the unchanged 1.95 m contract ceiling; the
+  accepted figure is **1.9361 m**. Spear cross-section is **1.5x** wider and its
+  tip has a brighter bronze pigment swatch. No triangles were added.
+- Kept round four's sunburst, darker flat pigments, wider crest, -30-degree
+  display yaw, separate per-clip camera fit, clean spear release, one-draw-call
+  contract, team mask and licence. GLB remains +Z forward, Y-up, metres.
+- Recorder now targets r5 and partitions capture frames by GLB SHA-256, so a
+  shortened death cannot accidentally reuse stale trailing frames.
 
-- Contract validator: **PASS**, full output below. One mesh/material/primitive,
-  2,536 triangles, 30 joints, 1.8528 m figure, 1024 x 1024 atlas, five 30 fps clips,
-  rigid single-bone props, COLOR_0 team regions, exact attribution.
-- Contract regression tests: **14/14 passed**.
-- Khronos gltf-validator 2.0.0-dev.3.10: **0 errors, 0 warnings, 0 infos, 0 hints**.
-- three.js r170 GLTFLoader / AnimationMixer / team shader / framing CPU checks:
-  **PASS** for every clip. Figure height in the 3:2 capture is
-  attack 70.0%, death 70.0%, hit 69.0%, idle 69.9%, walk 70.0%.
-- Ground clearance: **PASS**, 889 samples total at 120 fps. Worst penetration
-  0.030 mm. Final body-floor distance 0.000085 mm; last-frame maximum motion
-  0.00117 mm. These checks cover the final exported GLB, not the authoring master.
-- Spear/figure mesh-edge crossings: **PASS**, 249 samples at 120 fps. Grip contact
-  ends at 0.050 s; no crossing at or after the 0.1 s release allowance. The same
-  check rejects the round 3 GLB, including the reported middle death frames.
-  Scope: spear edges against other triangles; not a general body self-collision,
-  coplanar-contact or cloth solver.
-- Import-path audit: **0 unresolved local imports**. JavaScript syntax checks
-  passed for viewer, recorder, framing and runtime checker. `git diff --check`
-  passed. All 17 preserved source-file sizes and SHA-256 hashes match the manifest.
-- All five sprite encodes: **PASS** via ffprobe, H.264/yuv420p, 160 x 160, cream
-  background, exactly three repeats. Inspected the full-rate attack sheet, all
-  walk/hit/death sprite poses and idle in greyscale. No cropped geometry in the
-  inspected sprite frames. Browser pixels/native-time playback await the lead.
+## Feedback coverage
 
-## Motion verdict
+Re-read `spearman-0ad-FEEDBACK.md` after the new 2026-11-25 01:18Z playback notes
+arrived. All seven items are addressed: preserved walk; added attack commitment
+and cape damping; replaced weak hit; shortened death; opened idle per Sam's
+explicit priority; checked tight viewer framing; produced a real 48 px
+figure-height render beside the 160 px sprites. Framing is measured over all
+30 fps evaluated poses, with one fixed camera per clip. Viewer figure fractions:
+attack 70.00%, death 70.00%, hit 70.00%, idle 70.00%, walk 70.00%.
+The square death sprite is smaller to retain the entire fall and spear; the
+960x640 viewer keeps approximately 70% figure height.
 
-| Clip | Verdict from the rendered frame sequence |
+## Honest clip verdicts
+
+| Clip | Verdict from rendered sequence / exported motion |
 | --- | --- |
-| idle | Stable guard; sunburst and crest now read at 160 px. The shield still hides part of the torso and carrying arm from this view. Motion is deliberately restrained. |
-| walk | Native gait reads as alternating steps, with a rigid carried spear/shield and visible cloak response. Loop endpoints pass. Foot slip against map travel speed and velocity continuity still need runtime review. |
-| attack | Native attack_melee_05 now shows the overarm spear sweep/thrust in profile. Clearer than the opposite yaw, but broad/slow anticipation remains. No claim of AoE/Civ polish from a validator. |
-| hit | Short procedural flinch with shield movement and recovery; readable but mild, not mocap-quality impact. |
-| death | Shaft drops to one side, stays separate, and final body is grounded and held. The native clip has a staged crouch before the fall; the 4 fps stopgap sprite rate exaggerates that pause. Square framing makes the figure about 50% tall to include the complete spear footprint. |
+| idle | Clear torso, crest, sunburst and upright spear; quiet breathing. The shield is more edge-on but still recognizable. |
+| walk | Retained the reviewer-approved gait, clean feet and loop. The legacy 6 fps sprite cadence is slower than the native 1.333 s GLB cycle. |
+| attack | More committed weight transfer over stable feet; takeback, thrust and recovery are distinct. The cloak is less whippy, though this low-poly cape remains visibly simple. |
+| hit | Readable torso/head recoil rather than only a spear wobble; peak and recovery are verified. Lead should confirm that one play at native speed is sufficiently emphatic. |
+| death | Direct fall with no staged kneel, grounded prone finish, held corpse and separate spear. Whole extent is framed. Ground and spear checks do not prove every possible body self-intersection. |
 
-This is a stronger, contract-ready strategy-game asset with recognisable bronze,
-crimson and sunburst identity. It remains visibly low-poly with flat albedo. Lead
-art approval and live-map/browser playback are outstanding; I am not marking an
-art PASS. No general body self-intersection clearance is claimed.
+At 48 px figure height the enlarged red crest and shaft remain legible; the
+bronze/linen/crimson separation survives. Fine sunburst rays and cuirass detail
+naturally simplify. This is an isolated cream-background check, not validation
+against trees in the live 3D map.
 
-## Files and host recording
+## Files and playback
 
-Sprite files (all regenerated for this GLB):
+GLB: **578,452 bytes**, **2,536 triangles**, **30 joints**, one skinned
+mesh, one indexed primitive, one material/draw call. Atlas: **1024x1024**, RGB,
+**20,606 bytes** separately; embedded in the GLB.
+No normal map, AO, baked lighting or projection. Both final files are in git scope.
+PROVENANCE.md names the exact 0 A.D. files at
+`61a3b9507d974084e6badb88a0826bd89a6d5b8b`; LICENSE-ART accompanies the GLB.
+Required credit is in copyright and extras.
 
-- `/Users/samcorcos/LegatumRuns/anim-pilot/review/3d-v2/spearman-0ad-r4-idle-160.mp4`
-- `/Users/samcorcos/LegatumRuns/anim-pilot/review/3d-v2/spearman-0ad-r4-walk-160.mp4`
-- `/Users/samcorcos/LegatumRuns/anim-pilot/review/3d-v2/spearman-0ad-r4-attack-160.mp4`
-- `/Users/samcorcos/LegatumRuns/anim-pilot/review/3d-v2/spearman-0ad-r4-hit-160.mp4`
-- `/Users/samcorcos/LegatumRuns/anim-pilot/review/3d-v2/spearman-0ad-r4-death-160.mp4`
+Review directory: `~/LegatumRuns/anim-pilot/review/3d-v2/`:
 
-Full-rate sheet: `/Users/samcorcos/LegatumRuns/anim-pilot/review/3d-v2/spearman-0ad-r4-attack-fullrate.png`.
-Video receipt: `/Users/samcorcos/LegatumRuns/anim-pilot/review/3d-v2/spearman-0ad-r4-video-validation.json` (includes GLB hash).
-Heavy master, frames and JSON receipts: `/Users/samcorcos/LegatumRuns/anim-pilot/oad/r4/`.
+- `spearman-0ad-r5-idle-160.mp4`
+- `spearman-0ad-r5-walk-160.mp4`
+- `spearman-0ad-r5-attack-160.mp4`
+- `spearman-0ad-r5-hit-160.mp4`
+- `spearman-0ad-r5-death-160.mp4`
+- `spearman-0ad-r5-attack-fullrate.png` (all 36 frames)
+- `spearman-0ad-r5-readability-48.png` (fresh small-scale renders)
+- `spearman-0ad-r5-video-validation.json` (asset hash and ffprobe receipts)
 
-The viewer MP4s are **not regenerated by this sandbox run**. Existing r4-named
-viewer files, if present from the earlier lead run, are stale relative to this
-asset. From the worktree root, outside the sandbox, run:
+Each MP4 is H.264/yuv420p, 160x160, cream background, three repeats. Source
+counts/rates: idle 12/4 fps, walk 16/6, attack 18/14, hit 8/12, death 16/4.
+These existing game rates change apparent duration: 9, 8, 3.857, 2 and 12 s
+respectively for three repeats. Native GLB durations are 2, 1.333, 1.167, 0.8,
+and 1.4 s. Judge native cadence in the host viewer.
+
+From this worktree root, outside the sandbox:
 
 ```sh
 PLAYWRIGHT_MODULE="$HOME/LegatumRuns/anim-pilot/oad/viewer-runtime/node_modules/playwright/index.mjs" node tools/art/anim3d/viewer/record.mjs
 ```
 
-This generates `/Users/samcorcos/LegatumRuns/anim-pilot/review/3d-v2/spearman-0ad-r4-<clip>-viewer.mp4` for all five clip names,
-at exact 30 fps and three repeats. The viewer receipt contains the GLB SHA-256 and
-framing measurements. Next: review these videos and the map squad with the team
-mask shader, then decide whether the remaining idle occlusion and staged death
-need another motion round.
+This writes `spearman-0ad-r5-<clip>-viewer.mp4` for all five clips and a hash-bound
+viewer receipt in the review directory, 960x640, 30 fps, three repeats. No r5
+viewer files were present at the final local inventory; the agent has not
+created or viewed them. Older recordings cannot approve this asset hash.
 
-Git staging failed with `Operation not permitted` creating
-`.git/worktrees/lane-6/index.lock`; changes are left for the runner to commit.
-The fetched `origin/master` has no commits outside this branch (`HEAD..origin/master`
-count 0), so no merge was needed. No Rust/game rules changed; engine checks were
-not run. The requested licence commit `0ca57b93` and branch
-`claude/project-thread-yarkpd` are absent locally. The existing unit-local
-Wildfire Games CC BY-SA 3.0 licence was retained with the exact required credit;
-source provenance records the requested 0 A.D. commit and exact files.
+Authoring master, frames, logs and all verification receipts:
+`~/LegatumRuns/anim-pilot/oad/r5/`. `spearman.blend` is an authoring intermediate;
+render.py imports the final GLB, which includes the export/clearance corrections.
 
-Non-obvious learnings: camera-space evaluated-vertex bounds avoid excessive
-world-AABB padding; the sign of a display yaw must be judged against the full-rate
-attack, not just an idle pose; widening a crest can alter the corpse's ground
-support; rigid single-bone props can release through an animated leaf socket
-without adding a draw call. No shared learnings files were edited.
+## Checks and limits
+
+- Contract validator: PASS; exact output below.
+- Validator regression suite: **14 tests passed**.
+- Khronos: **0 errors, 0 warnings, 0 infos, 0 hints**.
+- three.js 0.170.0 GLTFLoader / AnimationMixer / team shader / framing CPU check: PASS.
+- 120 fps ground check: PASS. Worst penetration is numerical, **0.0206 mm**;
+  final death body ground height **0.00017 mm**, held last-key motion **0.00254 mm**.
+- Combat check: PASS. Hip drive **132.46 mm**, horizontal ankle drift **0.319 mm**,
+  leg-length variation **0.0023 mm**. Hit **13.997 degrees**, peak frame **5**,
+  recovered by **20**.
+- Spear check: PASS, **169 samples**, zero post-release intersections after 0.1 s;
+  only the intended initial grip contacts through 0.0417 s are reported.
+- Source manifest: **18 files verified**, zero hash mismatches.
+- Blender import check: **0 unresolved imports**. Recorder `node --check`: PASS.
+- MP4 ffprobe checks: PASS for all five clips, including frame counts and formats.
+- `git diff --check`: PASS.
+- Repository-wide `python3 tools/gates/art.py` did **not** pass: its legacy art-set
+  renderer `tools/art/render-sets.mjs` exited 1. Its truncated error did not expose
+  the underlying reason. It ran on HEAD, not these uncommitted assets, and does
+  not replace the GLB checks. Lead/host art review remains outstanding.
+- Requested `git show 0ca57b93:LICENSE-ART` and the named branch ref were unavailable
+  in this checkout. No fetch was attempted. The existing unit-specific Wildfire
+  Games licence, provenance and embedded credit are retained; Sam's explicit
+  source approval governs this task.
+
+Useful lesson: a shield pivot below its shell thickness must be laid flat before
+applying a small socket clearance correction. Lifting the entire actor to fix
+that prop can leave a prone body visibly hovering. Likewise, a planted-foot lunge
+needs a reachable knee solve: forcing a distant ankle stretches the lower leg.
 
 ## Contract validator output
 
@@ -118,7 +144,7 @@ without adding a draw call. No shared learnings files were edited.
 {
   "valid": true,
   "glb": "/Users/samcorcos/LegatumRuns/anim-pilot/legatum/.claude/worktrees/lane-6/tools/art/anim3d/units/spearman-0ad/spearman.glb",
-  "bytes": 601936,
+  "bytes": 578452,
   "triangles": 2536,
   "joints": 30,
   "skinned_meshes": 1,
@@ -126,11 +152,11 @@ without adding a draw call. No shared learnings files were edited.
     1024,
     1024
   ],
-  "figure_height_m": 1.8528,
+  "figure_height_m": 1.9361,
   "feet_centre_m": [
     -0.0206,
     0.0168,
-    0.0089
+    0.009
   ],
   "meshes": 1,
   "materials": 1,
@@ -154,12 +180,12 @@ without adding a draw call. No shared learnings files were edited.
     "attack": {
       "duration_s": 1.166667,
       "fps": 30,
-      "loop_endpoint_max_error": 0.0003753
+      "loop_endpoint_max_error": 0.0003331
     },
     "death": {
-      "duration_s": 2.066667,
+      "duration_s": 1.4,
       "fps": 30,
-      "loop_endpoint_max_error": 3.7910993
+      "loop_endpoint_max_error": 5.9781834
     },
     "hit": {
       "duration_s": 0.8,
@@ -183,3 +209,20 @@ without adding a draw call. No shared learnings files were edited.
   ]
 }
 ```
+
+Next: lead runs the host recorder and judges attack commitment, hit readability
+and corpse settling at native speed; then checks the 48 px silhouette in the
+3D map under trees. No owner approval or full browser rendering is claimed.
+
+FOCUS a: retain the larger crest/shaft; check the live-map silhouette at working zoom.
+FOCUS b: retain the flat dark pigments and sunburst; validate with the map's light ramp.
+FOCUS c: play the new lunge, recoil and direct fall at 30 fps before art approval.
+
+## Git handoff
+
+Commit could not be made: creating `.git/worktrees/lane-6/index.lock` returned
+Operation not permitted. All changes remain unstaged for the runner. Scoped
+binary patch: `~/LegatumRuns/anim-pilot/oad/r5/spearman-0ad-r5.patch`. Commit
+message with the required co-author line: `~/LegatumRuns/anim-pilot/oad/r5/commit-message.txt`.
+`origin/master` is already an ancestor of HEAD. No fetch, push or master merge
+was performed.
