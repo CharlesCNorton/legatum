@@ -57,6 +57,7 @@ This file holds the current rules, one line each. The user's words, dates, as-bu
 - Every number has a breakdown on hover or click; hover is for reading, click opens breakdowns; a hoverable bubble never covers its trigger.
 - A number shown is the number in force, and a limit that applies is named in the same line (user, 2026-10-17). Label gross versus net; each number once per card; one source per number.
 - Forecast headlines include every consequence (walled-city fire, Siege); a line that changes a number shows both numbers.
+- A forecast opens with the outcome in words a first-time player understands ("Both units survive", "You will likely destroy the Archer", "Your Horseman could be destroyed") and who takes more damage, with both numbers; the odds, strength tables and notes come after. No bare verdict word ("Risky") and no row of 0% / 0% (user, 2026-11-25: a first-time player could not read the old card). A bonus always says what it adds to ("+6 strength"), never a bare number (plain-language review, PR 157). The title's colour follows its own claim (green: the target dies or the city falls; red: your unit may die; ink otherwise); the HP trade colours the detail line with a ▲/▼ sign. Outcome words use fixed thresholds on both sides: 100% "will", 60%+ "will likely", 40%+ "good chance", 20%+ "some chance", below that "small chance". A loss headline never sits beside an average HP figure that implies survival. No 0% / 0% row on any forecast surface (card, touch summary, Keshig card) (UI review, PR 157). Health is said in words, never colour alone: each side reads "Health 100 → 63" with "−37 health" in red under it, and a likely loss reads "→ lost" (user, 2026-11-25: a new player read neither the bar colours nor "HP"). On touch, Confirm stays pinned in view while the card scrolls.
 - When an era-scaled number makes a fixed figure wrong, show the number computed for this city and era ("+6 city strength for the next level"), never a vague word like "more" (UI review of PR 137, 2026-11-25). Compute the item's card text the same way, or a tooltip that joins the two shows both versions (PR 159).
 - Costs are loud (red), including ongoing upkeep on every build card; neutral "nothing yet" lines are muted ink, never green; colour is from the viewer's side.
 - Anything that ticks over time has a progress bar with turns left; a goal's progress is a meter with its number.
@@ -162,7 +163,8 @@ Every word a player reads (sheets, cards, the Guide, tooltips, breakdowns, repor
 | tile | one map cell; distances are in tiles ("within 5 tiles") | hex, hexes (code and docs may say hex) |
 | population | a city's size | pop, citizens |
 | Food, Production, Gold, Science | the four yields, always capitalised | food, hammers, gold |
-| city HP | a city's own health bar (200 at full) | city health, "the walls" |
+| health | a unit's or city's life, shown as a bar; at 0 a unit is destroyed. The battle forecast says "health" (user, 2026-11-25: a new player did not know "HP"); other screens still say HP until they are swept | HP on the forecast |
+| city HP | a city's own health bar (200 at full); "health" on the forecast | "the walls" |
 | city strength | the city's combat strength; Walls add to it | city defence strength |
 | Walls | the level-I building and its numbered upgrades; "walled city" is fine | walls (lowercase) for city HP |
 | military unit | any unit that fights; say "except Scouts" when a rule leaves them out | armed unit, regiment, troops |
