@@ -2,7 +2,7 @@
 
 Branch: `astra/unit-anim-3d-spearman-0ad-pbr`; continues round-2 `ba93c3dc`
 after its master merge. Main asset: `tools/art/anim3d/units/spearman-0ad/spearman.glb`.
-SHA-256: `a7d9ba1a1a95044713416782669fc9843c06915d1f438e672304dc9c954bcbd5`.
+SHA-256: `6dd1c8b15456b6a97d6341fa6532cf860a331fc1a23e8430ede23178f5bf8622`.
 
 **Verdict: technical gates PASS; premium visual gate FAIL.** This is a review
 candidate, not art approval. The construction is cleaner than round 2, but the
@@ -31,18 +31,16 @@ Actual three.js pixels and playing-speed approval remain the lead's host step.
   exposed this as dark patches. Pairing removed that visible breakthrough.
 - Worst-pose joint crops caught an open upper arm caused by a spatial torso
   cull. The final model retains the complete body; only the enclosed upper head
-  is culled. The raised-arm opening is closed in the final joint crops.
-- Cycles CPU bakes from **236,592 dense triangles**, with high-only chased bronze
-  border/shin grooves, patina, hammered relief, cloth weave and AO. Bronze is
+  is culled. The raised-arm opening is closed in the final joint crops. Spine-weighted torso volume is fitted inside the cuirass without cutting connected arm surfaces.
+- Cycles CPU bakes from **236,568 dense triangles**, with high-only chased bronze
+  border/shin grooves, patina, hair striations, hammered relief, cloth weave and AO. Bronze is
   metallic, linen matte, leather semi-matte, wool crimson. Pigment contains gentle
   gradients and material variation; directional lighting/AO stay out of it.
-- **9,856 LOD0 / 2,848 LOD1 triangles; 30 joints; one shared material and skin.**
+- **9,855 LOD0 / 2,848 LOD1 triangles; 30 joints; one shared material and skin.**
   Both named LODs keep COLOR_0.r, UV0 ORM and the exact +Z-facing skeleton.
-- **1,853,668 bytes (1.854 MB decimal)**. Three embedded **1024×1024 WebP** maps,
-  authored as **2048×2048 PNGs**. Base/normal/ORM payloads: 215,606 / 178,240 /
-  344,274 bytes, quality 85/90/88. Normal strength .45. Encoding remains lossy;
-  measured mean RGB channel errors are 2.92/1.44/2.86, 3.39/2.25/3.41 and
-  6.20/3.76/6.92 on a 0–255 scale. Do not treat CPU texture-header checks as
+- **1,836,304 bytes (1.836 MB decimal)**. Three embedded **1024×1024 WebP** maps,
+  authored as **2048×2048 PNGs**. Base/normal/ORM payloads: 214,834 / 180,050 / 336,312 bytes, quality 85/90/88. Normal strength .45. Encoding remains lossy;
+  measured mean RGB channel errors are 2.91/1.45/2.89, 3.41/2.23/3.42, 6.33/3.84/6.93 on a 0–255 scale. Do not treat CPU texture-header checks as
   browser decoding or pixel proof.
 - Retained the pinned CC0 Poly Haven HDRI, warm key, cool rim, soft shadows,
   SSAO and ACES viewer. Recorder now uses the requested `-vs-panel-viewer.png`
