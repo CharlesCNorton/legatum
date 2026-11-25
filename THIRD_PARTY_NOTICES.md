@@ -34,7 +34,7 @@ For those, use the standard text of the named licence and the authors in the cra
 
 ## JavaScript packages
 
-`app/package-lock.json` names 100 packages: 8 for production and 92 development-only.
+`app/package-lock.json` names 194 packages: 9 for production and 185 development-only.
 
 Shipped in the web build:
 
@@ -42,6 +42,7 @@ Shipped in the web build:
 | --- | --- | --- |
 | `react`, `react-dom`, `scheduler` | MIT | Meta Platforms, Inc. and affiliates |
 | `zustand` | MIT | 2019 Paul Henschel |
+| `three` (three.js, the opt-in 3D map; a lazy chunk loaded only when the 3D map is switched on) | MIT | 2010-2024 three.js authors |
 | `@fontsource/cormorant` (the Cormorant typeface) | SIL Open Font License 1.1 | 2015 The Cormorant Project Authors (github.com/CatharsisFonts/Cormorant) |
 | `@fontsource/libre-franklin` (the Libre Franklin typeface) | SIL Open Font License 1.1 | 2020 The Libre Franklin Project Authors (github.com/googlefonts/Libre-Franklin) |
 
@@ -54,7 +55,7 @@ in this repository. The OFL requires the copyright notice and licence text to tr
 packages include them (`LICENSE` in each package); a distributed build must carry them too (see "Notices in
 distributed builds").
 
-Development-only tools (Vite, Vitest, Playwright, TypeScript, Testing Library, happy-dom, fake-indexeddb and their dependencies) are not distributed with the game. Their licences are MIT (75 packages in all, including
+Development-only tools (the three.js type declarations, Vite, Vitest, Playwright, TypeScript, Testing Library, happy-dom, fake-indexeddb and their dependencies) are not distributed with the game. Their licences are MIT (75 packages in all, including
 the shipped ones), MPL-2.0 (12), Apache-2.0 (8), OFL-1.1 (2, the fonts above),
 BSD-2-Clause (1), BSD-3-Clause (1) and ISC (1). The MPL-2.0 packages are `lightningcss` and its eleven platform
 binaries, pulled in by Vite, unmodified and build-time only.
