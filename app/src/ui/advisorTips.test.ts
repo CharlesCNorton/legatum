@@ -31,7 +31,7 @@ describe('situational tips', () => {
   it('warns that a much stronger neighbour may attack, with the numbers', async () => {
     const v = await game();
     const r = rival(v);
-    // Team totals, as in the rivals table: your ally has no army here.
+    // Team totals: your ally has no army here.
     v.players = v.players.map((p) => p.id === v.me ? { ...p, army: 12 } : p.team === v.team ? { ...p, army: 0 } : p.id === r.id ? { ...p, army: 40 } : p);
     const city = mine(v);
     v.cities.push({ ...city, id: 7001, owner: r.id, name: 'Rival town', pos: neighbors(neighbors(city.pos)[0])[0] });

@@ -31,7 +31,7 @@ const tile = (hex: Hex) => ({ kind: 'tile' as const, hex });
 
 function armyTip(v: PlayerView): Tip | null {
   if (v.turn < 10) return null;
-  // Team totals, the same numbers as the Army column in the Victory race's rivals table.
+  // Team totals: an ally's army counts as yours, and a rival's team counts as one.
   const teamArmy = (team: number) => v.players.filter((p) => p.alive && p.team === team).reduce((n, p) => n + (p.army ?? 0), 0);
   const mine = teamArmy(v.team);
   const cities = ownCities(v);
