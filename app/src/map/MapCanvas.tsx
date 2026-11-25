@@ -60,7 +60,7 @@ import { atWar, relationWith } from '../diplomacy';
 import { emptyGesture, gestureStep, isDoubleTap, LONG_PRESS_MS, zoomCamera, type GestureEvent, type Point, type Tap } from './gestures';
 import { sameOrderContext, tapOrder, type TapOrder } from './tapOrders';
 import { coord, setUnitOrder } from '../orders';
-import { notifyMapCamera, registerMapCamera } from './camera';
+import { notifyMapCamera, registerMapCamera, takeMapHandoff } from './camera';
 import { alarmedCities } from '../siege';
 import { useCityAlarms } from '../ui/useCityAlarms';
 import { setBorderVariant, type BorderVariant } from './borderVariant';
@@ -849,6 +849,9 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
         dirty.current = true;
       },
     });
+    // Swapped in from the 3D map: keep looking where it looked (this runs after the mount's focus snap).
+    const from = takeMapHandoff();
+    if (from) { cancelAnimationFrame(focusAnimation.current); cam.current.x = from.x; cam.current.y = from.y; dirty.current = true; }
     return () => {
       setMapProjector(null);
       unregister();

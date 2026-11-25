@@ -41,6 +41,13 @@ for (const [w, h] of [[1440, 900]]) {
   await p.evaluate(() => { const sc = window.legatumMap3d; sc.dist = 8; sc.placeCamera(); });
   await p.setViewportSize({ width: 1000, height: 600 }); await p.waitForTimeout(3000); await p.screenshot({ path: `${out}/select-1000x600.png` });
   errs.push(`select: ${ok}`);
+  // Swap test: pan, M to 2D, M back to 3D; the centre should survive.
+  const before = await p.evaluate(() => { const sc = window.legatumMap3d; sc.target.x += 6; sc.target.z += 4; sc.clampTarget(); sc.placeCamera(); return { x: sc.target.x, z: sc.target.z }; });
+  await p.locator('.map3d-canvas').focus(); await p.keyboard.press('m'); await p.waitForTimeout(2500);
+  const mid = await p.evaluate(() => ({ is3d: !!document.querySelector('.map3d-canvas'), cam2d: window.legatumMap?.camera ?? Object.keys(window.legatumMap ?? {}) }));
+  await p.keyboard.press('m'); await p.waitForSelector('.map3d-canvas'); const early = await p.evaluate(() => { const sc = window.legatumMap3d; return [sc.target.x, sc.target.z, window.legatum.getState().focus]; }); errs.push('early ' + JSON.stringify(early)); await p.waitForTimeout(2300);
+  const after = await p.evaluate(() => { const sc = window.legatumMap3d; return { x: sc.target.x, z: sc.target.z }; });
+  errs.push('swap ' + JSON.stringify({ before, mid3d: mid, after }));
   await p.close();
 }
 console.log(errs.slice(0, 20).join('\n'));

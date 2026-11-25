@@ -9,7 +9,7 @@ import { moveSelected, rangedSelected, selectedOwnUnit } from '../commands';
 import { pointerIntent, previewDestination } from '../map/intent';
 import { previewRoute } from '../path';
 import { UNIT_ACTIONS, orderUnit } from '../orders';
-import { registerMapCamera, notifyMapCamera } from '../map/camera';
+import { registerMapCamera, notifyMapCamera, takeMapHandoff } from '../map/camera';
 import { setMapProjector } from '../map/screenPos';
 import { gameplayFocusAllowed, gameplayKeyAllowed } from '../gameplayKeys';
 import { mapPlayerColor } from '../map/style';
@@ -32,8 +32,15 @@ export default function Map3DView() {
   const view = views?.[seat] ?? null;
   const [hover, setHover] = useState<Hex | null>(null);
 
+  // Swapped in from the 2D map: start where it was looking, not on the capital or an old jump-to.
+  const handoff = useRef<ReturnType<typeof takeMapHandoff>>(null);
+  const mountFocus = useRef(focus);
+  const firstView = useRef(true);
+
   // Scene lifetime.
   useEffect(() => {
+    firstView.current = true; // a new scene (StrictMode remounts too) is placed again by the view effect
+    handoff.current = takeMapHandoff();
     const canvas = canvasRef.current!;
     const sc = new MapScene(canvas);
     sceneRef.current = sc;
@@ -75,22 +82,25 @@ export default function Map3DView() {
   }, []);
 
   // A new view (turn, seat or fog change) rebuilds what changed.
-  const firstView = useRef(true);
   useEffect(() => {
     const sc = sceneRef.current;
     if (!sc || !view) return;
     sc.setView(view);
     if (firstView.current) {
       firstView.current = false;
+      const from = handoff.current;
       const home = view.cities.find((c) => c.owner === view.me && c.is_capital) ?? view.cities.find((c) => c.owner === view.me) ?? view.units.find((u) => u.owner === view.me);
-      if (home) sc.centerOn(home.pos);
+      if (from) { sc.target.set(from.x / PX, 0, from.y / PX); sc.clampTarget(); sc.placeCamera(); }
+      else if (mountFocus.current) sc.centerOn(mountFocus.current.hex);
+      else if (home) sc.centerOn(home.pos);
       notifyMapCamera();
     }
   }, [view]);
 
   // Jump-to requests (turn report lines, the advisor, Cities seen).
   useEffect(() => {
-    if (focus && sceneRef.current) { sceneRef.current.centerOn(focus.hex); notifyMapCamera(); }
+    if (!focus || focus === mountFocus.current || !sceneRef.current) return;
+    sceneRef.current.centerOn(focus.hex); notifyMapCamera();
   }, [focus]);
 
   // Overlays: hover ring, selection ring and the selected unit's route preview.

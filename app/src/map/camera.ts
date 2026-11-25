@@ -18,11 +18,25 @@ interface Host {
 
 let host: Host | null = null;
 const listeners = new Set<() => void>();
+/** Where the map that just unmounted was looking, so the 2D and 3D maps can swap in place. */
+let handoff: { vp: MapViewport; at: number } | null = null;
 
-/** MapCanvas only. Returns the unregister function. */
+/** MapCanvas and Map3DView only. Returns the unregister function. */
 export function registerMapCamera(h: Host): () => void {
   host = h;
-  return () => { if (host === h) host = null; };
+  return () => {
+    if (host !== h) return;
+    try { handoff = { vp: h.viewport(), at: Date.now() }; } catch { handoff = null; }
+    host = null;
+  };
+}
+
+/** A map that mounts right after another unmounted (a 2D / 3D swap, not a new game) takes over its centre.
+ *  Returns null when the last map closed more than a moment ago, e.g. before a new game. */
+export function takeMapHandoff(now = Date.now()): MapViewport | null {
+  const h = handoff;
+  handoff = null;
+  return h && now - h.at < 1500 ? h.vp : null;
 }
 
 /** MapCanvas only: the camera or canvas size changed this frame. */
