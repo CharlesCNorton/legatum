@@ -38,7 +38,8 @@ export function eventIcon(e: Event, faction?: (player: number) => Faction | unde
     case 'CapitalSacked': return 'vp';
     case 'GoldGiven': return 'yield-gold';
     case 'CapitalLost': return 'vp';
-    case 'FactionGoalCompleted': return FACTION_GOAL[e.faction]?.icon ?? 'emblem-milestone';
+    // The Royal Tomb raised wears its engraved reward emblem; its mark stays on the progress lines.
+    case 'FactionGoalCompleted': return e.faction === 'Egypt' ? 'emblem-tomb' : FACTION_GOAL[e.faction]?.icon ?? 'emblem-milestone';
     case 'FactionGoalLost': return e.faction === 'Byzantium' ? 'unit-heirtothethrone' : e.faction === 'Mongols' ? 'building-yamrelaystation' : e.faction === 'Rome' ? 'goal-colonia' : e.faction === 'Egypt' ? 'goal-royal-tomb' : 'ui-trend-down';
     case 'SwarmUnleashed': return SWARM_GOAL.icon;
     case 'SakokuClosed': case 'SakokuReopened': return 'ui-sakoku';

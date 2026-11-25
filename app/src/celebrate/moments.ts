@@ -29,7 +29,7 @@ export const RAIDER_SACK_KICKER = 'A city sacked';
  * The engraved emblem a reward kind wears on its card (`assets/rewards/`). Moments with none (faction goal)
  * keep the player's faction crest.
  */
-export type Emblem = 'camp' | 'hall' | 'ruin' | 'captured' | 'founded' | 'growth' | 'milestone' | 'greatwork' | 'tech';
+export type Emblem = 'camp' | 'hall' | 'ruin' | 'captured' | 'founded' | 'growth' | 'milestone' | 'greatwork' | 'tech' | 'tomb';
 /** One thing a reward gave you: a yield or item icon (`yield-gold`, `unit-scout`) and its text ("+50 Gold"). */
 export interface Gain { icon: string; text: string }
 export interface Moment {
@@ -447,7 +447,7 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
                 details: ['Every empire sees where it stands. A rival that captures it takes the points.', 'If it is razed, found another.'],
                 deltas: [{ counter: 'vp', amount: e.vp }], seal: e.vp });
             } else {
-              push(i, e.player, { goalMark: GOAL_CITY_ICON[goalKind], tier: 'legendary', at, title: 'The Royal Tomb', kicker: name ? `It stands in ${name}` : 'The tomb stands', artSlug: GOAL_ART.Egypt,
+              push(i, e.player, { goalMark: 'emblem-tomb', tier: 'legendary', at, title: 'The Royal Tomb', kicker: name ? `It stands in ${name}` : 'The tomb stands', artSlug: GOAL_ART.Egypt,
                 effect: `+${e.vp} VP while you hold it · your cities build and grow again`, lore: 'Cut into the cliff, sealed for eternity.',
                 details: ['Every empire sees where it stands. A rival that captures its city takes the points.'],
                 deltas: [{ counter: 'vp', amount: e.vp }], seal: e.vp });
@@ -455,7 +455,7 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
           } else if (!captured) {
             // Every empire is told when a goal city appears, and where: 2 VP to whoever holds it.
             const who = empireOfPlayer(after, e.player);
-            publicCard(i, e.player, { goalMark: GOAL_CITY_ICON[goalKind], tier: 'major', at, title, kicker: who,
+            publicCard(i, e.player, { goalMark: goalKind === 'tomb' ? 'emblem-tomb' : GOAL_CITY_ICON[goalKind], tier: 'major', at, title, kicker: who,
               effect: goalKind === 'colonia'
                 ? `${who} founded its Colonia Victrix${name ? ` at ${name}` : ''}: ${e.vp} VP to whoever holds it`
                 : `The Royal Tomb stands${name ? ` in ${name}` : ''}: ${e.vp} VP to whoever holds it`,
