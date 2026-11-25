@@ -73,6 +73,20 @@ export async function expectRaceWhole(page: Page) {
   await scroll.evaluate((el, top) => { el.scrollTop = top; }, top);
 }
 
+/**
+ * Render only: this seat has met every team. The rivals table shows a rival's Peace or War and its chips only once
+ * you have met it (an unmet rival's row shows only its VP), and some fixtures predate contact.
+ */
+export async function meetEveryone(page: Page) {
+  await page.evaluate(() => {
+    const store = (window as unknown as GameWindow).legatum, s = store.getState();
+    const v = structuredClone(s.views![s.seat]);
+    if (v.diplomacy) v.diplomacy.met = [...new Set(v.players.map((p) => p.team))].filter((t) => t !== v.team);
+    store.setState({ views: s.views!.map((x, i) => (i === s.seat ? v : x)) });
+  });
+  await expect(page.locator('.rivals .rv-row.unmet')).toHaveCount(0);
+}
+
 /** Open the Score ledger from the Victory race (if it is not open already). */
 export async function openLedger(page: Page) {
   const sheet = page.getByTestId('objective-sheet');

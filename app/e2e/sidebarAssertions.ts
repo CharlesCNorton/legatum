@@ -17,8 +17,13 @@ export async function expectSidebarGlance(page: Page) {
   await expect(sidebar).toBeVisible();
   for (const selector of ['.race-headline', '.sidebar-objective', '.sidebar-goal > summary, .sidebar-goal-action .goal-action-btn', '.cta', '.minimap']) {
     const el = sidebar.locator(selector);
-    if (await el.count() && await el.isVisible()) await whole(el);
+    if (!await el.count() || !await el.isVisible()) continue;
+    // The next-Age objective sits below the always-open rivals table, so a short window scrolls to it.
+    if (selector === '.sidebar-objective') await el.evaluate(x => x.scrollIntoView({ block: 'center' }));
+    await whole(el);
+    await sidebar.locator('.sidebar-scroll').evaluate(el => { el.scrollTop = 0; });
   }
+  await sidebar.locator('.sidebar-scroll').evaluate(el => { el.scrollTop = 0; });
   // No persistent panel on the bottom centre. The selection task owns the left side.
   const mini = await sidebar.locator('.minimap').boundingBox();
   if (mini) {

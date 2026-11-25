@@ -188,11 +188,11 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     }, held);
     await page.mouse.move(5, size.height / 2);
     await stage(true);
-    // Your goal's line in the Score ledger: the rule, and that it is lost below the hoard.
+    // Your goal's line in the Score ledger: the rule, and that it is lost the turn it stops holding.
     const held = await ledgerGoal(page, { mine: true });
     await expect(held).toContainText(factionGoalRule('Switzerland'));
     await expect(held).not.toContainText(/Quick|Standard/);
-    await expect(held).toContainText('lost the turn it falls below 5,000');
+    await expect(held).toContainText('Lost the turn it stops holding');
     await shot(page, size, '79h-switzerland-hoard-held');
     await closeLedger(page);
     await stage(false);
