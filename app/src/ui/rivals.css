@@ -7,6 +7,7 @@
 .rivals .rv-row { position: relative; width: 100%; padding: 4px 4px 6px 7px; border: 0; border-bottom: 1px solid var(--rule); background: none; color: inherit; font: inherit; text-align: left; }
 .rivals button.rv-row { cursor: pointer; }
 .rivals button.rv-row:hover, .rivals button.rv-row:focus-visible { background: var(--panel-2); }
+.rivals button.rv-row:hover .rv-vp small, .rivals button.rv-row:focus-visible .rv-vp small { color: var(--ink); } /* AA on the darker hover fill */
 .rivals .rv-row::before { content: ''; position: absolute; left: 0; top: 4px; bottom: 5px; width: 3px; background: var(--oi, var(--rule-2)); }
 .rivals .rv-row.mine { background: var(--panel-2); box-shadow: inset 0 0 0 1px var(--gilt, var(--rule-2)); }
 .rivals .rv-who { display: flex; align-items: center; gap: 6px; min-width: 0; }
