@@ -26,9 +26,11 @@ describe('battle sound cues', () => {
       clashes: [{ t: 500, mounted: false, guns: true, rifles: true, seed: 1 }, { t: 900, mounted: false, guns: true, seed: 2 }],
       deaths: [{ unit: { kind: 'Rifleman' }, t: 700, seed: 1 }, { unit: { kind: 'Tank' }, t: 900, seed: 1 }],
     }))).toEqual(['cannon@0', 'shellFire@0', 'explosion@300', 'gunshot@500']);
-    // A propeller aircraft is heard before its bombs land; a jet's bombs land without it.
+    // An aircraft is heard before its bombs land: a propeller one and a jet each by its own recording.
     expect(names(plan({ shots: [{ kind: 'bombs', craft: 'Bomber', launch: 2000, flight: 600, hit: true, seed: 1 }] }))).toEqual(['aircraft@500', 'explosion@2600']);
-    expect(names(plan({ shots: [{ kind: 'bombs', craft: 'JetBomber', launch: 2000, flight: 600, hit: true, seed: 1 }] }))).toEqual(['explosion@2600']);
+    expect(names(plan({ shots: [{ kind: 'bombs', craft: 'JetBomber', launch: 2000, flight: 600, hit: true, seed: 1 }] }))).toEqual(['jet@500', 'explosion@2600']);
+    expect(names(plan({ shots: [{ kind: 'bombs', craft: 'Fighter', launch: 2000, flight: 600, hit: true, seed: 1 }] }))).toEqual(['aircraft@500', 'explosion@2600']);
+    expect(names(plan({ shots: [{ kind: 'bombs', craft: 'StealthFighter', launch: 2000, flight: 600, hit: true, seed: 1 }] }))).toEqual(['jet@500', 'explosion@2600']);
   });
 
   it('leads a mounted charge with hooves, voices an old-world unit’s fall and a razed city’s collapse', () => {
