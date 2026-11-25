@@ -2,6 +2,7 @@ import { TrainingCard } from '../ui/Training';
 import { WhyCard } from '../ui/WhyCard';
 import { CelebrationProvider, MomentLane } from '../celebrate/MomentLane';
 import { AlarmScreen } from '../celebrate/AlarmScreen';
+import { PeopleIntro } from '../celebrate/PeopleIntro';
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { canUse3d, needsFlatMap, useMapView } from '../map3d/mapPrefs';
 import { useGame } from '../store';
@@ -120,6 +121,7 @@ export function GameScreen() {
       <CitiesOverview />
       <GameOver />
       <AlarmScreen />
+      <PeopleIntro />
       <FreeTechsPrompt />
       <Advisor />
       <WhyCard />

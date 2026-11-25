@@ -3,6 +3,7 @@ import { AdvisorSettings } from './Advisor';
 import { HapticsSettings } from './HapticsSettings';
 import { SoundSettings } from './SoundSettings';
 import { CombatFxSettings } from './CombatFxSettings';
+import { DisplaySettings } from './DisplaySettings';
 import { usePerfOverlay } from './PerfOverlay';
 
 export function SettingsDialog({ onClose }: { onClose: () => void }) {
@@ -44,6 +45,7 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
         <HapticsSettings />
         <SoundSettings />
         <CombatFxSettings />
+        <DisplaySettings />
         <div className="settings-row">
           <span className="lbl">Frame rate</span>
           <div className="seg small">
