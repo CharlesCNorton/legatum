@@ -3,3 +3,9 @@
   2. Team areas (crest, shield rim, cloak trim) go in a vertex-colour mask (COLOR_0, red channel = team weight) instead of separate meshes or materials.
   3. Extend tools/art/anim3d/validate_glb.py to check: 1 mesh, 1 material, 1 draw call; each prop's vertices weighted to a single bone; the team mask (COLOR_0) is present.
   4. Keep the same file path and name (tools/art/anim3d/units/spearman-0ad/spearman.glb) so it drops in.
+- (reviewer, on 0 A.D. round 2, 2026-11-25 00:44Z) This finally reads as a strategy-game unit. For round 3, after the contract merge:
+  1. Identity: the aspis is a plain tan disc. Paint the Spearman's bronze sunburst device with a dark rim, and make the bronze helmet with its red crest read clearly at 160 px. These make it "our" Spearman.
+  2. Facing: in idle, walk and attack the aspis faces the camera and hides the body and spear arm. Yaw the unit about 25-35 degrees so the spear side shows at the map's 3/4 camera, as in the painting. This fixes thrust readability too. (Keep the GLB's own forward axis at +Z per the contract: do the yaw in the sprite camera/turntable or as a documented per-unit display yaw, not by rotating the asset, unless the map thread asks otherwise; note which.)
+  3. Death: frames 3-6 look like the spear passes through the body or doubles (the shaft crosses the shield twice). Make the spear drop cleanly. The final pose is fine but flat; keep it on the ground with no intersections.
+  4. Texture: more value contrast, done with darker base colours (no painted shading in the albedo): bronze vs linen vs red cloak vs skin must separate clearly in greyscale.
+- (reviewer, 00:44Z) Viewer fix: the figure fills only ~15% of the 640 px frame. Frame each clip tightly in viewer.mjs/record.mjs: figure about 70% of frame height, with the full extent of the death included. Agreed: the GLB stays +Z; the yaw lives in the sprite camera or a documented display yaw.
