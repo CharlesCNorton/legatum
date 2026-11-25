@@ -665,7 +665,8 @@ function goalCityGoalLine(e: GoalEvent, ctx: ReportContext): ReportLine {
     const text = kind === 'colonia'
       ? (taker === ctx.me ? `You founded ${name ?? 'a city'}: it is your Colonia Victrix${gain}` : `${who(ctx, taker)} founded its Colonia Victrix${name ? ` at ${name}` : ''}: ${e.vp} VP to whoever holds it`)
       : (taker === ctx.me ? `The Royal Tomb stands in ${name ?? 'your capital'}: your cities build and grow again${gain}` : `${possessiveOf(who(ctx, taker))} Royal Tomb stands${name ? ` in ${name}` : ''}: ${e.vp} VP to whoever holds it`);
-    return line('victory', text, { ...base, players: [taker], ...(where ? { at: where } : {}), tone: mine(taker) ? 'good' : 'neutral' });
+    // The tomb standing wears its engraved reward emblem, like its card; the progress lines keep the goal mark.
+    return line('victory', text, { ...base, ...(kind === 'tomb' ? { icon: 'emblem-tomb' } : {}), players: [taker], ...(where ? { at: where } : {}), tone: mine(taker) ? 'good' : 'neutral' });
   }
   const from = captured.from;
   const city = ctx.cityName(captured.city);
