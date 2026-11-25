@@ -72,7 +72,8 @@ export function MeetingTakeover({ moment, dismiss }: { moment: Moment; dismiss()
   const me = view.players.find((p) => p.id === view.me);
   const art = eraArt((me?.era ?? 1) - 1);
   // A row the sheet shows on a piece's card leans on that card's header ("Iron Working unlocks it"): left out here.
-  const strengths = sheet.pairs.filter((p) => p.strength && p.strengthIcon && !p.onCard).slice(0, 3);
+  // A row written for the piece's own card stays out only when it leans on that card's header ("Iron Working unlocks it").
+  const strengths = sheet.pairs.filter((p) => p.strength && p.strengthIcon && !(p.onCard && /\bunlocks it\b/.test(p.strength))).slice(0, 3);
   // With two peoples on one team the columns describe the leader's people, and say so.
   const prices = sheet.pairs.filter((p) => p.price && p.priceIcon).slice(0, 2);
   const relation = relationWith(view, card.team)?.state ?? 'Peace';
