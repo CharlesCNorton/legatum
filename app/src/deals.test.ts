@@ -1,6 +1,6 @@
 // Deals (rules 61): the pure helpers, the order lines and the turn report lines.
 import { describe, expect, it } from 'vitest';
-import { bordersOpen, clampDealGold, goldForViewer, incomingOfferHeadline, offerGoldForecast, sentOfferGold, withDealGold } from './deals';
+import { bordersOpen, clampDealGold, freeGold, goldForViewer, incomingOfferHeadline, offerGoldForecast, sentOfferGold, withDealGold } from './deals';
 import { canEnter, endsOffers, sameDiplomaticAction } from './diplomacy';
 import { formatEvents, type ReportContext } from './format';
 import type { Event, PeaceProposal, PlayerView } from './types';
@@ -27,7 +27,10 @@ describe('deal Gold', () => {
     expect(offerGoldForecast(view(120), 40, [])).toEqual({ tone: 'cost', text: 'You pay 40 Gold when they accept. You have 120 Gold.' });
     // Gifts already queued come out of the same treasury.
     expect(offerGoldForecast(view(120), 40, [{ type: 'GiveGold', to: 1, amount: 100 }])).toEqual({
-      tone: 'cost', text: 'You pay 40 Gold when they accept. You have 20 Gold.', error: 'You have 20 Gold: offer at most 20.' });
+      tone: 'cost', text: 'You pay 40 Gold when they accept. You have 20 Gold.', error: 'You have 20 Gold, so offer at most 20.' });
+    // So is Gold promised in another queued offer.
+    expect(offerGoldForecast(view(120), 40, [{ type: 'ProposeTreaty', to: 2, kind: 'OpenBorders', gold: 100 }])?.error).toBe('You have 20 Gold, so offer at most 20.');
+    expect(freeGold(view(120), [{ type: 'ProposeTreaty', to: 2, kind: 'OpenBorders', gold: -100 }, { type: 'GiveGold', to: 1, amount: 30 }])).toBe(90);
     expect(offerGoldForecast(view(120), -40, [])).toEqual({ tone: 'gain', text: 'They pay you 40 Gold when they accept.' });
   });
 
@@ -76,7 +79,8 @@ describe('report lines', () => {
       { type: 'BordersOpened', a: 0, b: 1, effective_turn: 6 },
     ]);
     expect(lines.some((t) => /You gave .*Sparta 40 Gold for Open Borders/.test(t))).toBe(true);
-    expect(lines, lines.join(' | ')).toContain('Open Borders with Sparta · begins turn 6');
+    expect(lines, lines.join(' | ')).toContain('Open Borders with Sparta begin.');
+    expect(formatEvents([{ type: 'BordersOpened', a: 0, b: 1, effective_turn: 6 }], ctx)[0].treaty).toBe('OpenBorders');
   });
 
   it('a plain gift says nothing about a deal; a closed border names who closed it', () => {
@@ -85,7 +89,8 @@ describe('report lines', () => {
       { type: 'BordersClosed', a: 0, b: 1, effective_turn: 9, reason: 'Sparta closed the borders' },
     ]);
     expect(lines.some((t) => /gave you 25 Gold$/.test(t))).toBe(true);
-    expect(lines).toContain('Open Borders with Sparta ended turn 9: Sparta closed the borders');
+    expect(lines).toContain('Sparta closed the borders.');
+    expect(texts([{ type: 'BordersClosed', a: 0, b: 1, effective_turn: 9, reason: 'They went to War' }])).toEqual(['Open Borders with Sparta end: War.']);
   });
 
   it('an offer that arrives with Gold says so', () => {

@@ -22,7 +22,7 @@ export const TREATY_DEFINITION = {
   Alliance: `${ALLIANCE_SHARES} Each ally pays Gold a turn for its cities, but nothing while at War with an empire close to winning.`,
   War: `You can attack each other, and so can the allies who joined each side. A Peace treaty ends only the war between its two teams once both agree, then starts a ${guaranteeTurns}-turn truce for that pair. Other wars continue.`,
   /** Deals only (rules 61). */
-  OpenBorders: 'Your units may enter each other’s land. No shared sight and no war duties. Either side may close them at any time, free.',
+  OpenBorders: 'Your units may enter each other’s land. Either side can close the borders for free.',
 } as const;
 
 export type DefinedTreaty = keyof typeof TREATY_DEFINITION;

@@ -90,6 +90,8 @@ export interface ReportLine {
   hp?: HpMark[];
   /** The line's own medallion icon; the report falls back to its category's. */
   icon?: string;
+  /** A treaty line wears that treaty's emblem in place of the medallion (Open Borders, deals). */
+  treaty?: 'OpenBorders';
   /** A newly earned promotion, shown with the same insignia as its unit. */
   promotion?: { level: number; faction?: Faction };
 }
@@ -777,10 +779,18 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
           ...(until ? [`Protected until turn ${until}: leaving before then costs ${terms ? `${terms.breachCost} Gold` : 'Gold'} and is a betrayal.`] : [])] });
     }
     // Deals: Open Borders let each side's units enter the other's land at Peace.
-    case 'BordersOpened': return diplomacyLine(`Open Borders ${between(e.a, e.b)} · begins turn ${e.effective_turn}`, { weight: 2,
+    case 'BordersOpened': return diplomacyLine(`Open Borders ${between(e.a, e.b)} begin.`, { weight: 2, treaty: 'OpenBorders',
       details: [[e.a, e.b].includes(ctx.teamId ?? -1) ? 'Your units may enter their land, and theirs may enter yours.' : 'Their units may enter each other’s land.'] });
-    case 'BordersClosed': return diplomacyLine(`Open Borders ${between(e.a, e.b)} ended turn ${e.effective_turn}: ${rename(e.reason)}`, { weight: 2,
-      ...([e.a, e.b].includes(ctx.teamId ?? -1) && e.reason.endsWith('closed the borders') ? { details: ['Units already inside may stay, but cannot heal or fortify there.'] } : {}) });
+    case 'BordersClosed': {
+      // Short, as the opening line: who closed them, or why they lapsed.
+      const ours = [e.a, e.b].includes(ctx.teamId ?? -1);
+      const closed = e.reason.endsWith('closed the borders');
+      const why = closed ? `${rename(e.reason)}.` : e.reason === 'They went to War' ? 'War.'
+        : e.reason.startsWith('They signed an Alliance') ? 'the Alliance includes them.' : 'an empire fell.';
+      const text = closed && ours ? why : `Open Borders ${between(e.a, e.b)} end: ${why}`;
+      return diplomacyLine(text, { weight: 2, treaty: 'OpenBorders',
+        ...(ours && closed ? { details: ['Units already inside may stay, but cannot heal or fortify there.'] } : {}) });
+    }
     case 'TreatyEnded': {
       // "<team> left the Alliance": named from the viewer's side. An ally leaving you is bad news.
       const left = /^(.*) left the Alliance$/.exec(e.reason);
