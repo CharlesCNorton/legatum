@@ -172,7 +172,7 @@ describe('event -> sound mapping', () => {
         expect(t.gain, t.file).toBeLessThanOrEqual(1.6);
       }
     }
-    for (const name of ['gunshot', 'cannon', 'shellFire', 'explosion', 'aircraft', 'jet', 'musket', 'drone'] as const) expect(sound.BATTLE_FILES[name]?.length, name).toBeGreaterThanOrEqual(1);
+    for (const name of ['gunshot', 'cannon', 'shellFire', 'explosion', 'aircraft', 'jet', 'musket', 'drone', 'fall'] as const) expect(sound.BATTLE_FILES[name]?.length, name).toBeGreaterThanOrEqual(1);
     for (const file of Object.values(sound.AMBIENCE_FILES)) expect(fs.existsSync(path.join(AUDIO, file)), file).toBe(true);
     expect(Object.keys(sound.AMBIENCE_FILES).sort()).toEqual(['birds', 'sea', 'snow', 'wind']);
     expect(sound.ambienceFor('Forest')).toBe('birds');

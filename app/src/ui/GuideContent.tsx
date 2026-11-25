@@ -432,7 +432,7 @@ function Credits() {
       {gplSounds.map((e) => <li key={e.file}>“{e.title}” by {e.author}, <a href="https://www.gnu.org/licenses/old-licenses/gpl-2.0.html" target="_blank" rel="noreferrer">GPL version 2 or later</a>, edited for Legatum. <a href={/wesnoth/.test(e.source) ? 'https://www.wesnoth.org/' : 'https://wz2100.net/'} target="_blank" rel="noreferrer">Source</a></li>)}
       <li>Battle sounds and the sounds of birds, wind and snow are from {wildfire}, edited for Legatum.</li>
     </ul>
-    <p>Sounds were trimmed, loudness-matched and re-encoded. The edited 0 A.D., Unknown Horizons and Warzone 2100 music stays under CC BY-SA 3.0. The edited Battle for Wesnoth music and musket sounds, and the Warzone 2100 drone sound, stay under the GPL.</p>
+    <p>Sounds were trimmed, loudness-matched and re-encoded. The edited 0 A.D., Unknown Horizons and Warzone 2100 music stays under CC BY-SA 3.0. The edited Battle for Wesnoth music and sounds, and the Warzone 2100 drone sound, stay under the GPL.</p>
     <details><summary>Full sound credits</summary><ul>{SOUND_MANIFEST.map((e) => <li key={e.file}>
       {e.title} — {e.attribution} ({e.license}). <a href={e.source} target="_blank" rel="noreferrer">Source</a>
     </li>)}</ul></details>
