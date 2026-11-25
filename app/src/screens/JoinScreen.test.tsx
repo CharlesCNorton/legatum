@@ -102,7 +102,8 @@ it('focuses the join code box on a locked game and marks a refused code in the b
   expect(host.querySelector('.toast')).toBeNull();
   expect(host.querySelector('.join-code')!.classList.contains('wrong')).toBe(true);
   expect(input.getAttribute('aria-invalid')).toBe('true');
-  expect(host.querySelector('#join-code-hint')!.textContent).toBe('Wrong code. Check it with the host and try again.');
+  expect(host.querySelector('#join-code-hint')!.textContent!.trim()).toBe('Wrong code. Check it with the host and try again.');
+  expect(host.querySelector('#join-code-hint .ui-mark')).not.toBeNull();
   expect(document.activeElement).toBe(input);
 
   // Changing the code clears the warning.

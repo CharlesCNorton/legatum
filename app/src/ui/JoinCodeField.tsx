@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useGame } from '../store';
 import { typedJoinCode, JOIN_CODE_MAX } from '../net/joinCode';
+import { Icon } from './bits';
 
 /** A guest's box for the host's join code on a locked game. Typed once; the seat buttons wait for it. */
 export function JoinCodeField() {
@@ -32,7 +33,7 @@ export function JoinCodeField() {
         onChange={(e) => setText(typedJoinCode(e.target.value))}
       />
       <span id="join-code-hint" className="join-code-hint" role={wrong ? 'alert' : undefined}>
-        {wrong ? 'Wrong code. Check it with the host and try again.' : text ? 'Now pick a seat.' : 'Type the code the host gave you, then pick a seat.'}
+        {wrong ? <><Icon name="ui-alert" size={12} className="ui-mark" /> Wrong code. Check it with the host and try again.</> : text ? 'Now pick a seat.' : 'Type the code the host gave you, then pick a seat.'}
       </span>
     </div>
   );
