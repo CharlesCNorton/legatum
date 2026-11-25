@@ -3,7 +3,7 @@
 `unitLines` (app/src/ui/productionChoices.ts) folds a unit's upgrade chain under its newest available
 unit. "Available" came from the core's options list, which includes units short of their strategic
 resource (they carry `resource_blocker`). So with Feudalism and no Iron, the Pikeman led the line,
-greyed out, and the buildable Spearman hid under "Also: ...". A first-time player (Sam's wife) took
+greyed out, and the buildable Spearman hid under "Also: ...". A first-time playtester took
 the line as "you can't build an army here".
 
 Fix: when the line's newest unit is resource-blocked, the newest startable unit leads, and the
