@@ -44,7 +44,7 @@ export class MapScene {
   readonly camera = new THREE.PerspectiveCamera(32, 1, 0.05, 200);
   /** Camera target on the ground (world units) and distance from it. */
   readonly target = new THREE.Vector3();
-  dist = 8;
+  dist = 13;
   private sun = new THREE.DirectionalLight('#fff1d6', 2.4);
   private uniforms = { uTime: { value: 0 }, uParch: { value: PARCH } };
   private world: World | null = null;
