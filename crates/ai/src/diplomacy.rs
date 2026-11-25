@@ -117,6 +117,8 @@ pub struct PeaceDiagnosis {
     pub gate: &'static str,
     /// The Peace score (`treaty_score`); None when a veto refuses outright. Accepted at 0+.
     pub score: Option<i32>,
+    /// The first veto that returned `None` instead of a numeric Peace score.
+    pub veto: Option<&'static str>,
     pub terms: Vec<(&'static str, i32)>,
     pub vp_cost: i32,
     /// Turns since our units last attacked this enemy (or since the war began).
@@ -933,6 +935,7 @@ impl Planner<'_> {
             // human ally is never the one called when an AI ally has a lower TeamId.
             offers.sort_by_key(|(score, team, kind, _)| {
                 (
+                    std::cmp::Reverse(*kind == TreatyKind::Peace && self.rome_walled_peace(*team)),
                     std::cmp::Reverse(slot_limited(v, *team)),
                     *score,
                     *team,
@@ -1357,6 +1360,11 @@ impl Planner<'_> {
         order: &Order,
         budget: &TreatyBudget,
     ) -> Option<i32> {
+        // The walled Roman opening has no open victim city left to win. Rome's side
+        // offers and accepts at once; the defender's ordinary score is untouched.
+        if kind == TreatyKind::Peace && self.rome_walled_peace(other) {
+            return Some(0);
+        }
         // Apply the same campaign assessment to incoming peace as to our own offers.
         // Otherwise an opponent can end a live siege by proposing peace, only for us
         // to declare again once the same border opportunity reappears.
@@ -1649,10 +1657,34 @@ impl Planner<'_> {
             .map_or(0, |r| v.turn.saturating_sub(r.effective_turn));
         let advantage =
             (strength(v, v.team) * 100 / strength(v, against).max(1) - 100).clamp(-50, 50);
+        let score = self.treaty_score(against, TreatyKind::Peace, &order, &TreatyBudget::of(v));
+        let plan_peace = self.decisions.peace_follows_plan > 0
+            && (!self.campaigns.plan.searched.is_empty() || self.decisions.peace_follows_plan >= 2)
+            && self.routed_plan().is_some_and(
+                |plan| matches!(plan.kind, crate::plan::PlanKind::Peace { with } if with == against),
+            );
+        let veto = if score.is_some() {
+            None
+        } else if !wants {
+            Some(gate)
+        } else if !plan_peace && self.strike_against(against).is_some() && !self.endangered() {
+            Some("winning strike")
+        } else if !plan_peace
+            && self.hard_defense()
+            && self.diplomatic_target() == Some(against)
+            && !self.endangered()
+        {
+            Some("diplomatic target")
+        } else if self.primitive_persist_siege(against) {
+            Some("persistent siege")
+        } else {
+            Some("other treaty veto")
+        };
         PeaceDiagnosis {
             wants,
             gate,
-            score: self.treaty_score(against, TreatyKind::Peace, &order, &TreatyBudget::of(v)),
+            score,
+            veto,
             terms: self.peace_terms(against, age, advantage, coalition_disengage(v, against)),
             vp_cost: self.vp_peace_cost(against),
             idle_turns: self.idle_war_turns(against),
@@ -2246,6 +2278,9 @@ impl Planner<'_> {
         } else {
             self.endangered()
         };
+        if self.rome_walled_peace(against) {
+            return (true, "Roman victim walled");
+        }
         // Gene `rome_opening_finish`: the opening's victim gets no Peace while it runs.
         if self.rome_finish_refuses_peace(against) {
             return (false, "Roman opening victim");
