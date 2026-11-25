@@ -60,7 +60,7 @@ for (const size of SIZES) test.describe(`first contact ${size.name}`, () => {
     await expect.poll(() => page.evaluate(() => (window as unknown as GameWindow).legatum.getState().meetingPeople)).toBeNull();
   });
 
-  test('a team of two: both portraits, headings name the leader', async ({ page }) => {
+  test('a team of two: both portraits, and each column describes both peoples', async ({ page }) => {
     const { game, turn } = save('Egypt');
     await loadFixture(page, game, turn);
     const view = await page.evaluate(() => { const s = (window as unknown as GameWindow).legatum.getState(); return s.views![s.seat]; }) as PlayerView;
@@ -74,9 +74,18 @@ for (const size of SIZES) test.describe(`first contact ${size.name}`, () => {
     const plate = page.getByTestId('meeting-takeover');
     await expect(plate).toBeVisible();
     await expect(plate.locator('.mt-portrait')).toHaveCount(2);
-    await expect(plate.getByTestId('meeting-strengths')).toContainText('What Egypt does well');
+    for (const col of ['meeting-strengths', 'meeting-prices']) {
+      await expect(plate.getByTestId(col).locator('.mt-people-name')).toHaveText([/Egypt/i, /Switzerland/i]);
+      for (const people of ['Egypt', 'Switzerland']) await expect(plate.getByTestId(col).locator(`[data-people=${people}] .mr`).first()).toBeVisible();
+    }
     await page.mouse.move(5, size.height / 2);
     await page.waitForTimeout(2600);
+    // Both peoples fit: every column whole and inside the window.
+    for (const part of await plate.locator('.et-col, .mt-head, .et-foot .btn').all()) {
+      const box = (await part.boundingBox())!;
+      expect(box.y + box.height, 'bottom inside the window').toBeLessThanOrEqual(size.height);
+      if (await part.evaluate((el) => el.classList.contains('et-col'))) expect(await part.evaluate((el) => el.scrollHeight - el.clientHeight), 'nothing is cut inside it').toBeLessThanOrEqual(1);
+    }
     await shot(page, size, '03-meet-team-of-two');
   });
 
