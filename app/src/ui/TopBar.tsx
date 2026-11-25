@@ -67,8 +67,8 @@ const FINAL_TURNS = 25;
 
 /** The Online chip's tip for the host: keep the tab open, and the game's name in the public list so friends can find it. */
 function hostTip(roomId: string | null): string {
-  const keep = 'You host this game in this tab. Keep it open.';
-  return roomId ? `${keep} In the game list, this game is “${listedRoomName(roomId)}”.` : keep;
+  const keep = 'You host this game in this tab, so keep it open.';
+  return roomId ? `${keep} In the game list it is “${listedRoomName(roomId)}”.` : keep;
 }
 
 export function TopBar() {
