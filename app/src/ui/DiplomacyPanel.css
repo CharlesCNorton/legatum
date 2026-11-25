@@ -198,7 +198,7 @@
 }
 .offer-card .offer-actions .btn { white-space: nowrap; text-align: center; max-width: 100%; }
 .diplomacy-action .btn { white-space: normal; max-width: 100%; }
-/* Deals (rules 59): the Gold an empire's offers carry, Give Gold, and the Open Borders mark. */
+/* Deals (rules 60): the Gold an empire's offers carry, Give Gold, and the Open Borders mark. */
 .deal-gold { margin: 8px 0 4px; padding: 7px 9px; border: 1px solid var(--rule-2); border-radius: 3px; }
 .deal-gold-label { display: block; font-size: 12px; color: var(--ink-2); margin-bottom: 5px; }
 .deal-gold-modes { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }

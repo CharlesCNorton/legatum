@@ -557,6 +557,8 @@ export interface PlayerPublic {
   army?: number;
   /** Public technological progress: furthest era entered (times 1000) plus technologies known (0 once dead). */
   advancement?: number;
+  /** Public Science per turn, the same total the owner sees in its top bar (0 once dead). */
+  science?: number;
   /** The trailing average of this empire's total yields (Food + Production + Gold + Science). */
   power?: number;
   /** Its Power over the mean living empire's, in percent (negative below it). */
@@ -736,7 +738,7 @@ export interface Relation {
   war_id: number | null;
   declarers: TeamId[];
 }
-/** `OpenBorders` exists only with deals on (core `GameSetup::deals`, rules 59). */
+/** `OpenBorders` exists only with deals on (core `GameSetup::deals`, rules 60). */
 export type TreatyKind = 'Peace' | 'Alliance' | 'OpenBorders';
 /** What `BreakTreaty` ends: `Security` an Alliance, `OpenBorders` Open Borders (deals). */
 export type Agreement = 'Security' | 'OpenBorders';
@@ -1394,7 +1396,7 @@ export interface GameSetup {
   barbarians?: boolean;
   /** The teams with no human seat start in Alliances of two (core `GameSetup::ai_alliances`). Omitted when off. */
   ai_alliances?: boolean;
-  /** Deals (rules 59): Gold in offers, gifts to any met empire not at War, Open Borders. Omitted when off. */
+  /** Deals (rules 60): Gold in offers, gifts to any met empire not at War, Open Borders. Omitted when off. */
   deals?: boolean;
   /** Core rule experiments (only the switches the app reads); omitted when all default. */
   rule_experiments?: RuleSwitches;

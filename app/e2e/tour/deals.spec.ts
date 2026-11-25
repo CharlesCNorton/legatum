@@ -1,4 +1,4 @@
-// Deals (rules 59, `GameSetup::deals`): the diplomacy panel with an empire at Peace (the Gold field on
+// Deals (rules 60, `GameSetup::deals`): the diplomacy panel with an empire at Peace (the Gold field on
 // its offers and Offer Open Borders), an incoming Peace offer that asks for Gold, Give Gold to a met
 // empire, Open Borders in force, and the turn report lines for a paid deal.
 // Run alone: `npx playwright test e2e/tour/deals`. Shots land in test-results/screen-tour/<size>/deals/.

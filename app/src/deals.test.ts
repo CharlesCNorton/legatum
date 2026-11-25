@@ -1,4 +1,4 @@
-// Deals (rules 59): the pure helpers, the order lines and the turn report lines.
+// Deals (rules 60): the pure helpers, the order lines and the turn report lines.
 import { describe, expect, it } from 'vitest';
 import { bordersOpen, clampDealGold, goldForViewer, incomingOfferHeadline, offerGoldForecast, sentOfferGold, withDealGold } from './deals';
 import { canEnter, endsOffers, sameDiplomaticAction } from './diplomacy';

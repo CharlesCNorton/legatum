@@ -1,4 +1,4 @@
-//! Deals (rules 59, `GameSetup::deals`): how the AI uses Gold in offers, Gold gifts and Open
+//! Deals (rules 60, `GameSetup::deals`): how the AI uses Gold in offers, Gold gifts and Open
 //! Borders. Everything here is reached only when `DiplomacyView::deals` is on, so games without
 //! deals (simulations, the hill climb, old saves) plan exactly as before.
 //!

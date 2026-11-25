@@ -68,7 +68,7 @@ pub struct GameSetup {
     /// tape and hash is unchanged.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub ai_alliances: bool,
-    /// Deals (rules 59, Sam 2026-11-25): Gold in Peace, Alliance and Open Borders offers, Gold
+    /// Deals (rules 60, Sam 2026-11-25): Gold in Peace, Alliance and Open Borders offers, Gold
     /// gifts to any met empire not at War, and Open Borders as a third treaty
     /// (`diplomacy::TreatyKind::OpenBorders`). The app turns it on for new games. Off, every
     /// deal is refused and nothing changes; omitted when false, so every existing setup, save,
@@ -1057,6 +1057,28 @@ impl GameState {
     /// The moves `u` gets a turn.
     pub fn unit_moves_of(&self, u: &Unit) -> i32 {
         self.unit_stats_of(u).moves
+    }
+
+    /// What `u` pays to enter `h`: `Map::move_cost` under its own unit rules, or `None` when
+    /// impassable. An Egyptian Chariot Archer pays its whole turn for Forest or Hills without a
+    /// road (`data::chariot_step_cost`). Movement resolution and route previews both use this.
+    pub fn unit_step_cost(&self, u: &Unit, h: Hex) -> Option<i32> {
+        let cost = self.map.move_cost(h)?;
+        Some(if self.is_chariot_archer(u) {
+            crate::data::chariot_step_cost(cost, self.unit_moves_of(u))
+        } else {
+            cost
+        })
+    }
+
+    /// Whether `u` is an Egyptian Chariot Archer (`data::is_chariot_archer_rules`).
+    pub fn is_chariot_archer(&self, u: &Unit) -> bool {
+        !u.owner.is_barbarian()
+            && crate::data::is_chariot_archer_rules(
+                self.setup.rule_experiments.faction_rules_off,
+                self.made_by(u),
+                u.kind,
+            )
     }
 
     pub fn player(&self, id: PlayerId) -> &Player {

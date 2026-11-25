@@ -172,6 +172,7 @@ impl ViewBuilder {
                 economy: 0,
                 army: 0,
                 advancement: 0,
+                science: 0,
                 power: 0,
                 lead_percent: 0,
                 decadence_percent: 0,
@@ -736,7 +737,7 @@ pub fn assert_valid(view: &PlayerView, orders: &[Order]) {
             Order::SetAutoFire { .. } => panic!("AI seats do not set human garrison automation"),
             Order::SetCityAutomation { .. } => panic!("AI seats do not delegate city production"),
             Order::BuyTile { .. } => panic!("AI seats do not buy tiles"),
-            // Deals (rules 59): Hard's coalition Gold, only with deals on.
+            // Deals (rules 60): Hard's coalition Gold, only with deals on.
             Order::GiveGold { to, amount } => {
                 assert!(
                     view.diplomacy.deals,

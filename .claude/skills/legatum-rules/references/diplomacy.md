@@ -135,7 +135,7 @@ site value by 40% per travel turn after the first city, up from 10%, so both UI 
 value reaching a city before rival borders close (`core::settlement::analyze_sites`,
 `ai::civilians::choose_site`).
 
-## Deals (rules 59, behind GameSetup::deals)
+## Deals (rules 60, behind GameSetup::deals)
 
 Sam approved the first slice of "more ways to deal with other empires than war or peace" on 2026-11-25. Everything here
 needs `GameSetup::deals` (serde default false, omitted when false); off, each deal is refused with

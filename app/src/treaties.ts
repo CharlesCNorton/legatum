@@ -21,7 +21,7 @@ export const TREATY_DEFINITION = {
   Peace: `You can’t attack each other. Peace signed after a War starts a ${guaranteeTurns}-turn truce; neither side can declare War or be pulled into War with the other during it. After it ends, a declaration starts War at once.`,
   Alliance: `${ALLIANCE_SHARES} Each ally pays Gold a turn for its cities, but nothing while at War with an empire close to winning.`,
   War: `You can attack each other, and so can the allies who joined each side. A Peace treaty ends only the war between its two teams once both agree, then starts a ${guaranteeTurns}-turn truce for that pair. Other wars continue.`,
-  /** Deals only (rules 59). */
+  /** Deals only (rules 60). */
   OpenBorders: 'Your units may enter each other’s land. No shared sight and no war duties. Either side may close them at any time, free.',
 } as const;
 

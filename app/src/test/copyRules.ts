@@ -20,6 +20,7 @@ export interface CopyRule {
 
 /** Mechanics-speak and code terms: describe what the player gets, not the integer maths behind it. */
 export const BANNED: CopyRule[] = [
+  { pattern: /\bfoot soldiers?\b/i, reason: 'the class is the Melee line (plain-language review, 2026-11-25)', instead: '"melee units"', source: true },
   { pattern: /\bspare Food\b/i, reason: 'glossary: the Food beyond what a city eats is surplus Food (plain-language review, 2026-11-23)', instead: '"surplus Food"', source: true },
   { pattern: /\brace sidebar\b/i, reason: 'the panel is called the Victory race (master, 2026-11-22)', instead: '"Victory race"', source: true },
   { pattern: /\bresolve[sd]? when the turn ends\b/i, reason: 'code-speak (plain-language review, 2026-11-22)', instead: '"it happens when the turn ends"', source: true },
@@ -118,7 +119,7 @@ export const BANNED: CopyRule[] = [
   { pattern: /\bClick for the full breakdown\b/, reason: 'a yield hover does not nag; the ⓘ remains for controls', instead: 'no footer', source: true },
   { pattern: /\bera rule\b/i, reason: 'internal wording for a resource requirement', instead: 'say which units or buildings needed the resource', source: true },
   { pattern: /\bSleep stops\b/i, reason: 'Sleep is a retired player-facing order name', instead: '"Wait stops it asking each turn."', source: true },
-  { pattern: /\bCounted above\b/i, reason: 'does not say which forecast number includes this damage', instead: 'name the unit HP loss above', source: true },
+  { pattern: /\bCounted above\b/i, reason: 'does not say which forecast number includes this damage', instead: 'name the unit health loss above', source: true },
   { pattern: /\bMine on one for \+\d+ (Niter|Oil|Silicon)\b/, reason: 'Niter, Oil and Silicon take their own works, not a Mine (era resources UI review, 2026-10-22)', instead: '"build an Oil Well on one for +1 Oil"', source: true },
   { pattern: /(Niter|Oil|Silicon)[^.]{0,60}\bwith a Mine\b/, reason: 'Niter, Oil and Silicon take their own works, not a Mine (era resources UI review, 2026-10-22)', instead: '"3 Oil with an Oil Well"', source: true },
   { pattern: /\ban (Coal|Stone|Copper|Niter|Silicon)\b/, reason: 'wrong article', instead: '"a Coal deposit"', source: true },

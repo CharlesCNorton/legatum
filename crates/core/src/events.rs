@@ -161,14 +161,14 @@ pub enum Event {
         effective_turn: u32,
         reason: String,
     },
-    /// Public (deals, rules 59): teams `a` and `b` (lower id first) opened their borders to each
+    /// Public (deals, rules 60): teams `a` and `b` (lower id first) opened their borders to each
     /// other's units from `effective_turn` (`diplomacy::TreatyKind::OpenBorders`).
     BordersOpened {
         a: TeamId,
         b: TeamId,
         effective_turn: u32,
     },
-    /// Public (deals, rules 59): Open Borders between `a` and `b` ended: one side closed them,
+    /// Public (deals, rules 60): Open Borders between `a` and `b` ended: one side closed them,
     /// they went to War, signed an Alliance (which includes passage), or a team was eliminated.
     BordersClosed {
         a: TeamId,
@@ -427,7 +427,7 @@ pub enum Event {
     },
     /// Seen by both empires' teams: Gold one empire gave another (`Order::GiveGold`, after this
     /// turn's purchases; `amount` is what moved, capped at the Gold the giver had left), or Gold
-    /// paid in a deal when its treaty took effect (deals, rules 59).
+    /// paid in a deal when its treaty took effect (deals, rules 60).
     GoldGiven {
         from: PlayerId,
         to: PlayerId,

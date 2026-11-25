@@ -1,5 +1,5 @@
 //! Co-op Gold gifts (`Order::GiveGold`, rules 50): an empire gives Gold to a living teammate.
-//! With deals on (`GameSetup::deals`, rules 59) it may also give Gold to a living empire of
+//! With deals on (`GameSetup::deals`, rules 60) it may also give Gold to a living empire of
 //! another team that its team has met and is not at War with.
 //!
 //! A gift is checked against the giver's Gold at the start of the turn (all its gifts together).
@@ -40,7 +40,7 @@ pub fn gift_blocker(
     if mine == theirs {
         return None;
     }
-    // Deals (rules 59): Gold to any empire your team has met and is not at War with.
+    // Deals (rules 60): Gold to any empire your team has met and is not at War with.
     if state.setup.deals {
         if state.teams_at_war(mine, theirs) {
             return Some(format!("you are at War with {}", target.name));

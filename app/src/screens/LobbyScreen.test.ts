@@ -268,7 +268,7 @@ it.each([
   sockets[0].push({ type: 'staging_taken', room_id: publicRoom.room_id, seat: 0, token: 'host-secret' });
   if (arrival === 'before') sockets[0].push({ type: 'staging', state: privateRoom });
   await act(async () => root.render(createElement(HostFlow)));
-  expect(container.querySelector('h2')?.textContent).toBe('Host Game');
+  expect(container.querySelector('h2')?.textContent).toBe('Game room');
   expect(sockets).toHaveLength(1);
 
   if (arrival === 'after') {
@@ -307,7 +307,7 @@ it.each([
   expect(start.disabled).toBe(true);
   expect(posted).toEqual([]);
   await act(async () => vi.advanceTimersByTimeAsync(250));
-  // A room is a game not yet started: the edit also turns deals on (rules 59), like every new game.
+  // A room is a game not yet started: the edit also turns deals on (rules 60), like every new game.
   expect(posted).toEqual([{ ...saved, turn_limit: null, deals: true }]);
   expect(start.disabled).toBe(true);
   await act(async () => settingsResponse.resolve());

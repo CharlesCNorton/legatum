@@ -98,7 +98,7 @@ pub struct StagingConfig {
     /// host turns it on; omitted when off, so rooms from older clients are unchanged.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub ai_alliances: bool,
-    /// Deals (`GameSetup::deals`, rules 59): Gold in offers, gifts to met empires, Open Borders.
+    /// Deals (`GameSetup::deals`, rules 60): Gold in offers, gifts to met empires, Open Borders.
     /// Off unless the host's client turns it on; omitted when off, so older rooms are unchanged.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub deals: bool,

@@ -1,4 +1,4 @@
-//! Deals (rules 59, `GameSetup::deals`): Gold in Peace, Alliance and Open Borders offers, Gold
+//! Deals (rules 60, `GameSetup::deals`): Gold in Peace, Alliance and Open Borders offers, Gold
 //! gifts to met empires not at War, and Open Borders as a third treaty.
 use legatum_core::diplomacy::{Agreement, DEALS_OFF, ProposalId, RelationState, TreatyKind};
 use legatum_core::game::{blank_game, spawn_unit};

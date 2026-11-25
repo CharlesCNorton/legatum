@@ -54,7 +54,7 @@ function GiftRow({ view, to, orders }: { view: PlayerView; to: PlayerId; orders:
 
 /**
  * The amount field, Give Gold button and forecast for one recipient: a teammate's row, or (deals,
- * rules 59) a met empire not at War in its empire detail. Queued, it shows the gift with Undo.
+ * rules 60) a met empire not at War in its empire detail. Queued, it shows the gift with Undo.
  */
 export function GiftControl({ view, to, orders, defaultAmount = 50 }: { view: PlayerView; to: PlayerId; orders: Order[]; defaultAmount?: number }) {
   // Named as the empire rows and the report name it: "Aztecs" on the row, "the Aztecs" in a sentence.

@@ -1,4 +1,4 @@
-// Deals (core rules 59, `GameSetup::deals`): Gold in Peace, Alliance and Open Borders offers,
+// Deals (core rules 60, `GameSetup::deals`): Gold in Peace, Alliance and Open Borders offers,
 // Gold gifts to any met empire not at War, and Open Borders. Pure helpers for the diplomacy
 // panel and the report; nothing here works out a rule the core does not state.
 import { empireMembers } from './empires';
