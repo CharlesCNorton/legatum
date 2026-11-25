@@ -21,7 +21,7 @@ export function measureClip(THREE, scene, mixer, action, basis) {
     mixer.update(0); scene.updateMatrixWorld(true);
     let low = Infinity, high = -Infinity;
     scene.traverse(o => {
-      if (!o.isMesh) return;
+      if (!o.isMesh || !o.visible) return;
       const spear = (o.userData.vertex_regions || []).filter(r => r.part === 'spear');
       for (let i = 0; i < o.geometry.attributes.position.count; i++) {
         o.getVertexPosition(i, p).applyMatrix4(o.matrixWorld);

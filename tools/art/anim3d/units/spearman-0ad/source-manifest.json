@@ -74,5 +74,71 @@
       "bytes": 867565,
       "sha256": "78802e0531e0881c38ffa28fb6b281ea18edcd8c95f3acfa2a883e287f1f8df4"
     }
+  },
+  "premium_pbr_r1": {
+    "approved_round6": {
+      "bytes": 578476,
+      "sha256": "84bf794f543fd4a1af2d1b9c2b48c89a6c52533a00d7803e553b49a22513f92c"
+    },
+    "build_report": {
+      "bake_master_px": 2048,
+      "shipped_px": 1024,
+      "lod_triangles": [
+        9686,
+        2838
+      ],
+      "high_source_triangles": 232752
+    },
+    "masters": {
+      "oad/pbr-r1/basecolor-2048.png": {
+        "bytes": 1807730,
+        "sha256": "5a169f149a3556fffb4b839cd441065281bb4dc205e8e47f99539bcc31f254b1"
+      },
+      "oad/pbr-r1/normal-2048.png": {
+        "bytes": 3134981,
+        "sha256": "3caa9eefe3568b845013f2f10d3b836aa4e5257f221ea9c2576f70c5eeffaf15"
+      },
+      "oad/pbr-r1/orm-2048.png": {
+        "bytes": 3033978,
+        "sha256": "4acbdb58e592e9c64728f0065666c8c08c3bf28fc425c2b85ec7415fdd833eb1"
+      },
+      "oad/pbr-r1/ao-2048.png": {
+        "bytes": 2082996,
+        "sha256": "1eceed8413c8dc451f8551a808c8aad9fd24575fa4e2e5a8e2c726e39af092ce"
+      },
+      "oad/pbr-r1/roughness-2048.png": {
+        "bytes": 1676519,
+        "sha256": "f3c9c01018a49ab177b283cfc074ba6ba1fa65012e2e23c10f1384fbe3336d0e"
+      },
+      "oad/pbr-r1/metallic-2048.png": {
+        "bytes": 326140,
+        "sha256": "e9a9d5cfd604d6b1a355c5da21c68c9f9020e44b80c96c2759d9b44a2cc57d3e"
+      }
+    },
+    "shipped": {
+      "spearman.glb": {
+        "bytes": 4915340,
+        "sha256": "6d1a6fc8b320f61d3632606dac8c6c7f3442164ff195f447b120d7879825503f"
+      },
+      "spearman-basecolor.png": {
+        "bytes": 755905,
+        "sha256": "b466ed811e5d37907fe115e097eadaf82d385c819a8e8bacf4f0975795bf76bf"
+      },
+      "spearman-normal.png": {
+        "bytes": 1129757,
+        "sha256": "914b4c97fb0337db1d909c0e977991105fc8c9255ca4d8bcacbb75e99e575d30"
+      },
+      "spearman-orm.png": {
+        "bytes": 1052006,
+        "sha256": "d02f4e0e2ed2a200e90d2df040b6b88cf6d03066539c6a467787e2f712e5081f"
+      }
+    },
+    "environment": {
+      "path": "../../viewer/studio_small_09_1k.hdr",
+      "license": "CC0",
+      "url": "https://polyhaven.com/a/studio_small_09",
+      "bytes": 1615248,
+      "sha256": "e7cfda5f4e98e623db12b8bfd0184e048488e4855d9c83e2751fb44a32e80c45"
+    }
   }
 }

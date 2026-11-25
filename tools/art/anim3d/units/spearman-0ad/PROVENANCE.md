@@ -98,3 +98,58 @@ exact idle-zero samples on key 24 (0.8 s), with the skeleton root fixed. The
 GLB is patched only in its existing hit output accessors; approved clips,
 geometry, textures, skin, team mask and attribution are preserved. No new
 third-party inputs were used. Source: hit.py; measured review: package_hit.py.
+
+
+## Premium PBR round 1
+
+Motion source is the approved round-6 GLB, SHA-256
+`84bf794f543fd4a1af2d1b9c2b48c89a6c52533a00d7803e553b49a22513f92c`.
+Preserved locally as `~/LegatumRuns/anim-pilot/oad/pbr-r1/approved-r6.glb`.
+`pbr_build.py` authors only rest geometry and material data in Blender;
+`pbr_export.py` copies every animation input/output buffer, inverse bind and
+original joint transform directly from that source. `check_pbr.py` independently
+compares the payload bytes and evaluates floor clearance at 120 fps.
+The round-5 attack/cloth/death fixes and round-6 hit are not resampled or edited.
+
+New geometry: 64-segment convex aspis, rolled rim, inner bead, 12 raised bronze
+rays, boss and rivets; round Corinthian dome, open eye line, cheek plates, nasal
+and edge trim; full rounded horsehair crest with tapered strand ridges; ash
+shaft, lenticular leaf blade, socket and butt spike. New tapered bronze greave shells have thickness, rolled lips and a raised shin
+rib on the unchanged calf sockets. The native weighted body and cloak are subdivided/refined; cloak folds are authored in rest
+space, with leather pteruges, cuirass piping and embossed scrollwork added.
+Rigid carried props keep their original weapon_R, shield_arm and helmet sockets.
+Cuirass decoration inherits nearby native garment weights. A geometry-only
+floor fit checks both LODs against frozen animation; no keys are changed.
+
+The dense source uses two levels of simple subdivision, actual small hammered
+surface displacement, and procedural fibre/skin/metal bump. Cycles CPU bakes
+its tangent normals and AO onto the game mesh. Pigment and material scalars are
+baked independently through emission; the delivered material is lit Principled
+PBR, with no emission. Bronze is metallic with varying roughness, brighter and
+smoother edge pigment; linen is off-white and matte, leather semi-matte, and
+cloak/scarf crimson. Pigment has small colour variation and a gentle vertical
+value gradient, with darker low areas; it contains no directional illumination
+or AO. AO is stored only in ORM.R, roughness in G and metallic in B, all UV0.
+
+`oad/pbr-r1/` holds the editable `.blend`, dense mesh and **2048 square**
+texture masters. The three **1024 square** shipping maps are embedded in
+`spearman.glb` and provided as adjacent PNGs. One GLB contains two skinned meshes,
+`spearman_LOD0` and `spearman_LOD1`, sharing one 30-joint skeleton and one material.
+Select exactly one mesh at runtime (one primitive/draw per selected LOD).
+No MSFT_lod extension. COLOR_0.r remains the team mask on both LODs.
+The main asset path and +Z facing are unchanged; display yaw remains camera-only.
+
+Review lighting uses Poly Haven **Studio Small 09**, Sergej Majboroda, CC0:
+https://polyhaven.com/a/studio_small_09 and https://polyhaven.com/license.
+Exact file: https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/studio_small_09_1k.hdr
+SHA-256 `e7cfda5f4e98e623db12b8bfd0184e048488e4855d9c83e2751fb44a32e80c45`.
+It is checked in beside the viewer; it is not baked into the base colour.
+The viewer adds a warm key, cool rim, soft shadow filtering, SSAO and ACES.
+Blender review renders use the same asset and HDRI with Cycles CPU/AgX; these
+are explicitly distinct from the lead's browser/ACES captures.
+No other third-party inputs, paid services or motion libraries were added.
+The GLB, textures and derived renders remain CC BY-SA 3.0.
+
+Final round-1 counts: **9,686 triangles LOD0**, **2,838 triangles LOD1**;
+dense bake source **232,752 triangles**. Both LODs share the same three maps.
+The source manifest records the final GLB, shipping textures and 2048 masters.

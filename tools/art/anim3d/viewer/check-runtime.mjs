@@ -22,7 +22,13 @@ assert.deepEqual(gltf.animations.map(a=>a.name).sort(),['attack','death','hit','
 const mixer=new THREE.AnimationMixer(gltf.scene);
 const report={three:THREE.REVISION,clips:{},teamMaterials:0};
 const mats=new Set();gltf.scene.traverse(o=>{for(const m of (Array.isArray(o.material)?o.material:o.material?[o.material]:[]))if(m.userData.team?.attribute==='COLOR_0')mats.add(m);});
-assert(mats.size>0);report.teamMaterials=mats.size;
+assert.equal(mats.size,1);
+const lod0=gltf.scene.getObjectByName('spearman_LOD0'),lod1=gltf.scene.getObjectByName('spearman_LOD1');
+assert(lod0?.isSkinnedMesh && lod1?.isSkinnedMesh);
+assert.equal(lod0.material,lod1.material);
+assert.deepEqual(lod0.skeleton.bones,lod1.skeleton.bones);lod1.visible=false;
+assert(lod0.material.normalMap && lod0.material.aoMap && lod0.material.metalnessMap);
+assert.equal(lod0.material.aoMap.image,lod0.material.metalnessMap.image);report.teamMaterials=mats.size;
 for(const m of mats){assert.equal(m.map.image.width,1024);assert.equal(m.map.image.height,1024);applyTeamMask(m,THREE);m.userData.teamUniform.value.set('#306bda');
   const shader={uniforms:{},fragmentShader:'#include <color_fragment>'};m.onBeforeCompile(shader);
   assert(shader.fragmentShader.includes('vColor.r'));assert.equal(shader.uniforms.teamColor.value.getHexString(),'306bda');}
@@ -37,7 +43,7 @@ for(const clip of gltf.animations){
     const pos=bone.getWorldPosition(new THREE.Vector3());
     if(!first)first=pos.clone();poseDelta=Math.max(poseDelta,first.distanceTo(pos));last=pos;
     let draws=0;
-    gltf.scene.traverse(o=>{if(!o.isMesh)return;draws++;assert(o.isSkinnedMesh);
+    gltf.scene.traverse(o=>{if(!o.isMesh || !o.visible)return;draws++;assert(o.isSkinnedMesh);
       const color=o.geometry.getAttribute('color');assert(color);assert.equal(color.itemSize,4);
       assert.equal(o.skeleton.bones.length,30);assert(!Array.isArray(o.material));
     });assert.equal(draws,1);

@@ -1,4 +1,55 @@
-# Spearman — real-time 0 A.D. adaptation, round 6
+# Spearman — premium PBR round 1
+
+The primary asset remains `spearman.glb`. Two explicitly named skinned meshes,
+`spearman_LOD0` (under 10k triangles) and `spearman_LOD1` (under 3k), share one
+30-joint skeleton and one PBR material. Runtime must select **one LOD**; both
+are stored in the scene for explicit discovery. The viewer hides LOD1. No
+MSFT_lod extension is used. Each LOD is one draw call and carries COLOR_0.r
+for team tint. Use `viewer/team-mask.mjs`; ordinary vertex RGB multiplication
+would incorrectly tint the entire mesh black/red.
+
+The three embedded 1024-square maps are base colour (sRGB), tangent normal
+(linear), and ORM (linear R occlusion / G roughness / B metallic), all on UV0.
+2048-square masters and the editable dense/LOD Blender source live under
+`~/LegatumRuns/anim-pilot/oad/pbr-r1/`. See PROVENANCE.md and SOURCES.md for inputs.
+All five clips, their timestamps, inverse binds and original skeleton node
+transforms are copied byte-for-byte from the approved round-6 asset.
+
+Rebuild and render from the repository root:
+
+```sh
+source tools/art/anim3d/env.sh
+blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python tools/art/anim3d/units/spearman-0ad/pbr_build.py
+blender -b --disable-autoexec --factory-startup --python-exit-code 1 --python tools/art/anim3d/units/spearman-0ad/pbr_render.py
+"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/spearman-0ad/pbr_package.py
+python3 tools/art/anim3d/validate_glb.py tools/art/anim3d/units/spearman-0ad/spearman.glb
+"$ANIM_ROOT/venv/bin/python" tools/art/anim3d/units/spearman-0ad/check_pbr.py "$ANIM_ROOT/oad/pbr-r1/approved-r6.glb" tools/art/anim3d/units/spearman-0ad/spearman.glb
+```
+
+The immutable input must already exist; obtain the approved round-6 GLB from
+the motion branch and verify its hash in PROVENANCE.md. Never replace it with
+a previous PBR export. `-- --preview` uses a 512 bake for iteration only;
+the shipping build must run without that flag to produce 2048 masters.
+
+Lead's host capture (Chromium outside the sandbox):
+
+```sh
+node tools/art/anim3d/viewer/record.mjs --prefix spearman-0ad-pbr-r1
+```
+
+This records five 30 fps viewer clips (three repeats each) and a 12-second
+360-degree idle `spearman-0ad-pbr-r1-turntable.mp4`. It writes ffprobe receipts
+and the asset hash. The five `-160.mp4` files use the established game sprite
+rates (idle 4, walk 6, attack 14, hit 12, death 4 fps), each repeated three times.
+The GLB's native timings remain unchanged. Review images use the actual shipped
+GLB: `-readability-48.png`, `-vs-panel.png`, and `-closeups.png`.
+
+Passing structural checks is not premium art approval. The lane note records
+remaining visible gaps and the lead owns the playing-speed/browser verdict.
+
+---
+
+## Historical approved motion: round 6
 
 `spearman.glb` is the primary asset. Sprites render this exact GLB, not an
 alternate Blender scene. It contains **2,536 triangles, 30 joints, one skinned
