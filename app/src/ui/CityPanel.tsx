@@ -636,7 +636,8 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
     // The gap is between the two prices this city quotes now (faction prices included), not the static tables.
     const vs = owner ? pieceComparison(owner.faction, o.item, againstCost !== null ? { now: o.cost, was: againstCost } : null) : null;
     const description = descriptionOf(o.item, owner?.faction);
-    const cardText = itemCardText(o.item, owner?.faction);
+    // Upgrade Walls' text is computed for this city, so its static card text would repeat it.
+    const cardText = isUpgradeWalls(o.item) ? description : itemCardText(o.item, owner?.faction);
     const fullCopy = cardText === description ? description : `${cardText} ${description}`;
     const hallDetail = o.item.kind === 'Building' && o.item.building === 'YamRelayStation' ? hallCardText() : null;
     const detail = [fullCopy, effect, hallDetail, site && isGreatWork(site.building) ? `Only one empire can complete it. ${rivalBuilders.length ? `Known builders: ${rivalBuilders.join(', ')}.` : 'No known rival builder.'}` : null].filter(Boolean).join(' ');
